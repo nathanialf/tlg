@@ -14,9 +14,17 @@ Check the address first. Below 0x1a3e00 the function is library code of the
 LLVM 3.3 generation and goes under `src/libs/`; from 0x1a3e00 it is the game's,
 built by the 4.0 generation, and goes under `src/game/`. Each prefix has its
 compiler and flags in `config/flags.base.txt` (`docs/TARGETS.md`, "Two
-compiler generations"). A function whose home file is not known goes in that
-prefix's `unknown/`, one function per file, until a string, a vtable or a
-caller places it.
+compiler generations"). Then look the function up in `config/homes.base.txt`
+(`tools/source_homes.py`): where the function loads an assert or log string
+naming its own source file, that file is its home, mapped to our tree
+(`src/game/anzu/engine_src/render/ps4/JsDevice.cpp`,
+`src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp`,
+`src/game/sndx/runtime/source/sndx/sndx_voice.c`), and the function goes in
+that file with the others the row names, under the original root's layout. A
+function with no row goes in the prefix's `unknown/`, one function per file,
+until a string, a vtable or a caller places it; a function whose row lists
+several source files (the comment block at the top of the homes file) is
+placed by the reviewer from the bodies, not by the row.
 
 ## The loop
 

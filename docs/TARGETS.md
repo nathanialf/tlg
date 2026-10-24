@@ -129,7 +129,14 @@ The full survey, program header by program header and library by library, is
   (the engine, "anzu"; the output path above is under it),
   `C:/sound/sndx/trico/` (the sound engine, "sndx"),
   `Y:/NightlyJobs/20141121-01/Source/` (a middleware built on 2014-11-21)
-  and `C:/Work/P4/depot/`. `src/<dir>/` follows those roots.
+  and `C:/Work/P4/depot/`. `src/<dir>/` follows those roots: `anzu/` (the
+  engine and game, with HavokScript 2013.3 under its `external/havok/`),
+  `havok/` (the 2014.2 physics nightly and the P4 geometry-processing file,
+  one tree), `sndx/`. `tools/source_homes.py` maps each path string to the
+  functions that load it and writes `config/homes.base.txt`: 519 functions
+  name a path, 360 of them one source file (291 under `anzu/`, 48 under
+  `havok/`, 21 under `sndx/`), 22 several (a unity build or an inlined
+  function of another file), 130 only headers.
 - **Libraries.** The needed modules and import libraries are Sony's system
   libraries (`libSceGnmDriver`, `libSceNgs2`, `libSceFios2`, `libScePad`,
   `libkernel`, `libc`, and the rest in `SURVEY.md`); the `PT_SCE_LIBVERSION`
