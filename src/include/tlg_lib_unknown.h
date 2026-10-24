@@ -22,12 +22,35 @@ struct Mode40Owner {
 };
 
 /* FUN_0003d7d0 reads +8 through FUN_00010650 and +0xc through FUN_00034840
- * on the same object (its own +0x18) and sign-extends the first. */
+ * on the same object (its own +0x18) and sign-extends the first.
+ * FUN_00161cc0 reads the byte at +2 (FUN_000348c0), +8, +0xc and the byte
+ * at +5 (FUN_00034890) of one object. The functions at 0x2b010 to 0x2b120
+ * walk `count` 32-byte entries from +0x40 (floats at +0xc and +0x1c of
+ * each); FUN_0002b0b0 sets the byte at +5 to 3, FUN_00072dc0 then clears
+ * the pointer at +0x38 through FUN_00034950, and FUN_0002b180 adds into the
+ * object it points to. The forwarders at 0x34810 to 0x34970 call the
+ * 0x2b0xx functions from another file. */
+struct Pair08Target; /* a u16 at +0x20 and a 16-byte sum at +0x40 */
+
 struct Pair08Owner {
-    u8 unknown0[8];
+    u8 unknown0[2];
+    u8 count;
+    u8 unknown3[2];
+    u8 state;
+    u8 unknown6[2];
     s32 first;
     s32 second;
+    u8 unknown10[0x28];
+    Pair08Target *target;
 };
+
+float *FUN_0002b010(Pair08Owner *self, int index);                /* derived name */
+float *FUN_0002b030(Pair08Owner *self, int index);                /* derived name */
+void FUN_0002b040(Pair08Owner *self, float scaleA, float scaleB); /* derived name */
+void FUN_0002b0b0(Pair08Owner *self);                             /* derived name */
+void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived name */
+void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
+void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
 
 /* FUN_000ad770 and FUN_000ad780 sit in adjacent slots of one vtable
  * (0x16a3a78, 0x16a3a80): a getter and a setter of the int at +0x2c. The
