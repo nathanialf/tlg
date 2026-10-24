@@ -1,0 +1,12 @@
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_reflect.h"
+
+/* derived names: the finish callback of hkcdPlanarSolid's type info (0x57ba470):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+void FUN_0001d680(void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    FUN_00095800(static_cast<hkcdPlanarSolid *>(object), flag);
+}

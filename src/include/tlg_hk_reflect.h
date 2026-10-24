@@ -55,6 +55,11 @@ struct hkStringPtr {
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0000e5d0(hkStringPtr *self);                                /* derived name */
 
+/* Sets the string from (string, length): drops an owned copy, then stores a
+ * new one (copied through the arena of the thread's block) or null; the
+ * constructor at 0xe540 clears the pointer and tail-calls it. */
+void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived name */
+
 /* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
  * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot. */
 class hkMonitorStreamColorTable
@@ -130,5 +135,25 @@ class hkSimpleLocalFrame
     hkLocalFrameGroup *group;
     hkStringPtr name;
 };
+
+/* Polymorphic classes whose finish constructors are out of line, each
+ * storing the class's vtable (and clearing a few members): */
+struct hkGeometry;                          /* FUN_00093c60, vtable 0x1692500 */
+struct hkcdPlanarGeometryPolygonCollection; /* FUN_00095fb0, vtable 0x16a3680 */
+struct hkcdShape;                           /* FUN_0001cf40, vtable 0x168f300 */
+struct hkcdPlanarGeometry;                  /* FUN_0009a860, vtable 0x16a3700 */
+struct hkcdPlanarCsgOperand;                /* FUN_0009c0a0, vtable 0x16a3740 */
+struct hkcdPlanarGeometryPlanesCollection;  /* FUN_0009c400, vtable 0x16a3780 */
+struct hkcdPlanarSolid;                     /* FUN_00095800, vtable 0x16a3640 */
+
+void FUN_00093c60(hkGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00095fb0(hkcdPlanarGeometryPolygonCollection *self,
+                  hkFinishLoadedObjectFlag flag);                             /* derived name */
+void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);            /* derived name */
+void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag);   /* derived name */
+void FUN_0009c0a0(hkcdPlanarCsgOperand *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0009c400(hkcdPlanarGeometryPlanesCollection *self,
+                  hkFinishLoadedObjectFlag flag);                        /* derived name */
+void FUN_00095800(hkcdPlanarSolid *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 #endif
