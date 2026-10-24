@@ -145,6 +145,9 @@ struct hkcdPlanarGeometry;                  /* FUN_0009a860, vtable 0x16a3700 */
 struct hkcdPlanarCsgOperand;                /* FUN_0009c0a0, vtable 0x16a3740 */
 struct hkcdPlanarGeometryPlanesCollection;  /* FUN_0009c400, vtable 0x16a3780 */
 struct hkcdPlanarSolid;                     /* FUN_00095800, vtable 0x16a3640 */
+struct hkcdSimdTree;                        /* FUN_00021a20, vtable 0x1690d70 */
+struct hkcdStaticAabbTree;                  /* FUN_00022700, vtable 0x1690df0 */
+struct hkcdDynamicAabbTree;                 /* FUN_0009fc10, vtable 0x16a37c0 */
 
 void FUN_00093c60(hkGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00095fb0(hkcdPlanarGeometryPolygonCollection *self,
@@ -153,7 +156,55 @@ void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);            /*
 void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag);   /* derived name */
 void FUN_0009c0a0(hkcdPlanarCsgOperand *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0009c400(hkcdPlanarGeometryPlanesCollection *self,
-                  hkFinishLoadedObjectFlag flag);                        /* derived name */
-void FUN_00095800(hkcdPlanarSolid *self, hkFinishLoadedObjectFlag flag); /* derived name */
+                  hkFinishLoadedObjectFlag flag);                            /* derived name */
+void FUN_00095800(hkcdPlanarSolid *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);        /* derived name */
+void FUN_00022700(hkcdStaticAabbTree *self, hkFinishLoadedObjectFlag flag);  /* derived name */
+void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkMemoryMeshBody, polymorphic, 0x80 bytes (type info 0x57bccf0, vtable
+ * 0x1691610 stored by its finish constructor FUN_00023190): members from
+ * its record table at 0x1691530, transform (type 0x11) at +0x10,
+ * transformSet (pointer) at +0x50, shape (pointer to hkMeshShape) at +0x58,
+ * vertexBuffers (array of pointers) at +0x60, name (hkStringPtr) at +0x70. */
+struct hkMeshShape;
+struct hkIndexedTransformSet;
+
+class hkMemoryMeshBody
+{
+  public:
+    virtual ~hkMemoryMeshBody();
+
+    hkMeshShape *FUN_000230d0() const; /* vtable slot 5; derived name */
+
+    u8 unknown8[0x48];
+    hkIndexedTransformSet *transformSet;
+    hkMeshShape *shape;
+};
+
+void FUN_00023190(hkMemoryMeshBody *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* Classes without a vtable whose finish constructor or destructor is out of
+ * line (type info: vtable 0): */
+
+/* hkcdPlanarGeometryPrimitives::Plane (type info 0x57ba4e0, size 0x40): its
+ * finish constructor runs only when finishing. */
+struct hkcdPlanarGeometryPrimitivesPlane;
+
+void FUN_00095aa0(hkcdPlanarGeometryPrimitivesPlane *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkcdStaticPvs (type info 0x57ba5e0, size 0x70): its destructor frees the
+ * arrays at +0x58 and +0x48 through the thread's heap allocator. */
+struct hkcdStaticPvs;
+
+void FUN_0001d9e0(hkcdStaticPvs *self); /* derived name */
+
+/* hkcdStaticMeshTreeBase (type info 0x57bc360, size 0x70): an empty finish
+ * constructor (one shared body) and an out-of-line destructor. */
+struct hkcdStaticMeshTreeBase;
+
+void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00020700(hkcdStaticMeshTreeBase *self);                                /* derived name */
 
 #endif

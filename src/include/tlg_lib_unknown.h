@@ -108,4 +108,13 @@ struct MemorySystem {
 
 void FUN_0000c360(MemorySystem *self); /* derived name */
 
+/* A polymorphic class with an empty virtual destructor and the global
+ * operator delete: its deleting destructor FUN_00021a00 (beside hkcdSimdTree's
+ * code) is one shared body in slot 1 of 182 vtables, whose slot 0 is an
+ * empty complete destructor (FUN_0003b640, FUN_000add50, FUN_001af750, ...). */
+class PlainPolymorphic
+{
+  public:
+    virtual ~PlainPolymorphic();
+};
 #endif
