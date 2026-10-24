@@ -137,3 +137,10 @@ FUN_00034930 src/libs/unknown/func_00034930.cpp
 FUN_00034940 src/libs/unknown/leaf_00034940.cpp
 FUN_00034950 src/libs/unknown/leaf_00034950.cpp
 FUN_00034970 src/libs/unknown/func_00034970.cpp
+FUN_00034b20 src/libs/unknown/func_00034b20.cpp
+FUN_00034e30 src/libs/unknown/func_00034e30.cpp
+FUN_000358b0 src/libs/unknown/func_000358b0.cpp
+FUN_00036780 src/libs/unknown/func_00036780.cpp
+FUN_000367b0 src/libs/unknown/func_000367b0.cpp
+_ZN32hknpStaticCompoundShapeInternalsD1Ev src/libs/unknown/func_00033f30.cpp
+FUN_00038120 src/libs/unknown/func_00038120.cpp _ZN15hknpMaskedShape12FUN_00038120Ev

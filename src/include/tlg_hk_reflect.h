@@ -154,6 +154,9 @@ struct hkSkinBinding;                       /* FUN_000aa4f0, vtable 0x16a3860 */
 struct hkMemoryMeshMaterial;                /* FUN_000accf0, vtable 0x16a3920 */
 struct hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
 struct hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
+struct hknpDynamicCompoundShape;            /* FUN_000469a0, vtable 0x1697ef0 */
+struct hknpMaskedShapeMaskWrapper;          /* FUN_00038230, vtable 0x1693bb0 */
+class hknpMaskedShape;                      /* FUN_00037b90, vtable 0x1693a90 */
 
 void FUN_00093c60(hkGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00095fb0(hkcdPlanarGeometryPolygonCollection *self,
@@ -174,6 +177,17 @@ void FUN_000accf0(hkMemoryMeshMaterial *self, hkFinishLoadedObjectFlag flag);  /
 void FUN_000ae680(hkStorageSkinnedMeshShape *self,
                   hkFinishLoadedObjectFlag flag);                                 /* derived name */
 void FUN_000274e0(hkMemoryMeshVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_000469a0(hknpDynamicCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00038230(hknpMaskedShapeMaskWrapper *self,
+                  hkFinishLoadedObjectFlag flag);                        /* derived name */
+void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpCompressedMeshShapeData, polymorphic (type info 0x57be1f0, vtable
+ * 0x1692b10): slot 0, the complete destructor FUN_00034b20, runs the
+ * out-of-line FUN_00034b80, which restores the vtable. */
+struct hknpCompressedMeshShapeData;
+
+void FUN_00034b80(hknpCompressedMeshShapeData *self); /* derived name */
 
 /* hkIndexedTransformSet, polymorphic (type info 0x57bd358, vtable 0x1691770
  * stored by its finish constructor FUN_000236e0): slot 0, the complete
@@ -237,6 +251,14 @@ struct hkcdStaticMeshTreeBase;
 void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00020700(hkcdStaticMeshTreeBase *self);                                /* derived name */
 
+/* hknpCompressedMeshShapeTree (type info 0x57be2f0, size 0xa0) and the
+ * hkcdStaticMeshTree instance it is built on (type info 0x57be570) register
+ * one finish callback; the finish constructor is the shared empty body. */
+struct hknpCompressedMeshShapeTree;
+
+void FUN_000a9140(hknpCompressedMeshShapeTree *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+
 /* hkSkinnedMeshShape::BoneSection (type info 0x57bdc18, size 0x10): an
  * empty finish constructor (one shared body). */
 struct hkSkinnedMeshShapeBoneSection;
@@ -244,4 +266,44 @@ struct hkSkinnedMeshShapeBoneSection;
 void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
+/* hknpStaticCompoundShape, polymorphic, 0xc0 bytes (type info 0x57c2818,
+ * parent hknpCompoundShape): its finish callback FUN_0006c310 runs the
+ * finish constructor FUN_000385d0, which stores the vtable 0x1693f40, whose
+ * slot 0 is the destructor at 0x386c0. */
+class hknpStaticCompoundShape
+{
+  public:
+    virtual ~hknpStaticCompoundShape();
+};
+
+/* hknpStaticCompoundShapeInternals, 0xc0 bytes (type info 0x57bde70, vtable
+ * 0x1692840), reflected with hknpStaticCompoundShape as its parent and no
+ * members of its own. */
+class hknpStaticCompoundShapeInternals : public hknpStaticCompoundShape
+{
+  public:
+    virtual ~hknpStaticCompoundShapeInternals();
+};
+
+/* hknpShapeSignals, a reflected struct (hkClass at 0x57c2478); at most 16
+ * bytes, the member after it in hknpMaskedShape sitting at +0x60. */
+struct hknpShapeSignals {
+    u8 unknown0[0x10];
+};
+
+/* hknpMaskedShape, polymorphic, 0x70 bytes (type info 0x57bea28, vtable
+ * 0x1693a90): members from its record table at 0x16936b0, mask (pointer)
+ * at +0x38, maskWrapper (struct) at +0x40, mutationSignals (struct
+ * hknpShapeSignals) at +0x50, maskSize (int) at +0x60. */
+class hknpMaskedShape
+{
+  public:
+    virtual ~hknpMaskedShape();
+
+    hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
+
+    u8 unknown8[0x48];
+    hknpShapeSignals mutationSignals;
+    s32 maskSize;
+};
 #endif
