@@ -24,3 +24,11 @@ FUN_004eee50 src/game/unknown/func_004eee50.cpp _Z12FUN_004eee50P11Owner4eee50
 FUN_00583950 src/game/unknown/func_00583950.cpp _Z12FUN_00583950P11Owner583950Pv
 FUN_00599980 src/game/unknown/func_00599980.cpp _Z12FUN_00599980P11Owner583950Pv
 FUN_0059d3b0 src/game/unknown/func_0059d3b0.cpp _Z12FUN_0059d3b0P11Owner583950Pv
+FUN_00000270 src/libs/unknown/leaf_00000270.cpp
+FUN_00006660 src/libs/unknown/leaf_00006660.cpp
+FUN_00006c80 src/libs/unknown/leaf_00006c80.cpp
+FUN_00008d60 src/libs/unknown/leaf_00008d60.cpp
+FUN_0000d500 src/libs/unknown/leaf_0000d500.cpp
+FUN_0000d940 src/libs/unknown/leaf_0000d940.cpp
+FUN_0000dbc0 src/libs/unknown/leaf_0000dbc0.cpp
+FUN_0000e5c0 src/libs/unknown/leaf_0000e5c0.cpp
