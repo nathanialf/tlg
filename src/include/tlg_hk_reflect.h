@@ -148,6 +148,12 @@ struct hkcdPlanarSolid;                     /* FUN_00095800, vtable 0x16a3640 */
 struct hkcdSimdTree;                        /* FUN_00021a20, vtable 0x1690d70 */
 struct hkcdStaticAabbTree;                  /* FUN_00022700, vtable 0x1690df0 */
 struct hkcdDynamicAabbTree;                 /* FUN_0009fc10, vtable 0x16a37c0 */
+struct hkSkinnedRefMeshShape;               /* FUN_000aa660, vtable 0x16a38c0 */
+struct hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
+struct hkSkinBinding;                       /* FUN_000aa4f0, vtable 0x16a3860 */
+struct hkMemoryMeshMaterial;                /* FUN_000accf0, vtable 0x16a3920 */
+struct hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
+struct hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
 
 void FUN_00093c60(hkGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00095fb0(hkcdPlanarGeometryPolygonCollection *self,
@@ -156,11 +162,36 @@ void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);            /*
 void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag);   /* derived name */
 void FUN_0009c0a0(hkcdPlanarCsgOperand *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0009c400(hkcdPlanarGeometryPlanesCollection *self,
-                  hkFinishLoadedObjectFlag flag);                            /* derived name */
-void FUN_00095800(hkcdPlanarSolid *self, hkFinishLoadedObjectFlag flag);     /* derived name */
-void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);        /* derived name */
-void FUN_00022700(hkcdStaticAabbTree *self, hkFinishLoadedObjectFlag flag);  /* derived name */
-void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag); /* derived name */
+                  hkFinishLoadedObjectFlag flag);                              /* derived name */
+void FUN_00095800(hkcdPlanarSolid *self, hkFinishLoadedObjectFlag flag);       /* derived name */
+void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);          /* derived name */
+void FUN_00022700(hkcdStaticAabbTree *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag);   /* derived name */
+void FUN_000aa660(hkSkinnedRefMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0002a940(hkMemoryMeshShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_000aa4f0(hkSkinBinding *self, hkFinishLoadedObjectFlag flag);         /* derived name */
+void FUN_000accf0(hkMemoryMeshMaterial *self, hkFinishLoadedObjectFlag flag);  /* derived name */
+void FUN_000ae680(hkStorageSkinnedMeshShape *self,
+                  hkFinishLoadedObjectFlag flag);                                 /* derived name */
+void FUN_000274e0(hkMemoryMeshVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkIndexedTransformSet, polymorphic (type info 0x57bd358, vtable 0x1691770
+ * stored by its finish constructor FUN_000236e0): slot 0, the complete
+ * destructor FUN_00023490, runs the out-of-line FUN_000234f0, which restores
+ * the vtable and frees the arrays at +0x50 (16-byte elements), +0x40
+ * (hkStringPtr) and below. */
+struct hkIndexedTransformSet;
+
+void FUN_000236e0(hkIndexedTransformSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_000234f0(hkIndexedTransformSet *self);                                /* derived name */
+
+/* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
+ * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): slot 0,
+ * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0. */
+struct hkMultipleVertexBuffer;
+
+void FUN_00024fa0(hkMultipleVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00024db0(hkMultipleVertexBuffer *self);                                /* derived name */
 
 /* hkMemoryMeshBody, polymorphic, 0x80 bytes (type info 0x57bccf0, vtable
  * 0x1691610 stored by its finish constructor FUN_00023190): members from
@@ -168,7 +199,6 @@ void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag); /* 
  * transformSet (pointer) at +0x50, shape (pointer to hkMeshShape) at +0x58,
  * vertexBuffers (array of pointers) at +0x60, name (hkStringPtr) at +0x70. */
 struct hkMeshShape;
-struct hkIndexedTransformSet;
 
 class hkMemoryMeshBody
 {
@@ -206,5 +236,12 @@ struct hkcdStaticMeshTreeBase;
 
 void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00020700(hkcdStaticMeshTreeBase *self);                                /* derived name */
+
+/* hkSkinnedMeshShape::BoneSection (type info 0x57bdc18, size 0x10): an
+ * empty finish constructor (one shared body). */
+struct hkSkinnedMeshShapeBoneSection;
+
+void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 #endif

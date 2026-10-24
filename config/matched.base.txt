@@ -114,3 +114,14 @@ FUN_00021a00 src/libs/unknown/func_00021a00.cpp _ZN16PlainPolymorphicD0Ev
 FUN_000224f0 src/libs/unknown/func_000224f0.cpp
 FUN_00022fb0 src/libs/unknown/func_00022fb0.cpp
 FUN_000230d0 src/libs/unknown/func_000230d0.cpp _ZNK16hkMemoryMeshBody12FUN_000230d0Ev
+FUN_00023380 src/libs/unknown/func_00023380.cpp
+FUN_00023490 src/libs/unknown/func_00023490.cpp
+FUN_000238d0 src/libs/unknown/func_000238d0.cpp
+FUN_00023df0 src/libs/unknown/func_00023df0.cpp
+FUN_000242e0 src/libs/unknown/func_000242e0.cpp
+FUN_00024400 src/libs/unknown/func_00024400.cpp
+FUN_000246d0 src/libs/unknown/func_000246d0.cpp
+FUN_00024b70 src/libs/unknown/func_00024b70.cpp
+FUN_00027b80 src/libs/unknown/func_00027b80.cpp
+FUN_00027be0 src/libs/unknown/func_00027be0.cpp
+FUN_0002ae10 src/libs/unknown/func_0002ae10.cpp
