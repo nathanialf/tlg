@@ -1,48 +1,66 @@
 # Compiler flags per source prefix, for tools/compile_cpp.sh. The longest
 # prefix that matches the source path wins; flags apply to every file under it
-# (per directory, never per file or per function). The compiler is the
-# prebuilt upstream LLVM 3.6.2 under tools/cc/ (tools/setup.sh); TLG_CXX
-# overrides it for experiments (tools/compiler_probe.sh).
+# (per directory, never per file or per function). A line may start with
+# `cxx=<version>` to compile that prefix with that prebuilt release under
+# tools/cc/ (tools/fetch_llvm.sh); otherwise the project default applies.
 #
-# Evidence, from the functions matched so far (docs/TARGETS.md has the probe):
+# The executable holds two compiler generations (docs/TARGETS.md, "Two
+# compiler generations"; docs/DECISIONS.md D6):
+#   src/libs/   code below 0x1a3e00: third-party and Sony libraries built
+#               years earlier (Havok 2014.2 nightly of 2014-11-21 among them)
+#               with an LLVM 3.3-generation compiler: movsxd rax,eax never
+#               shrunk to cdqe (678 sites), constant stores not merged, no
+#               post-RA scheduling. Upstream 3.3 knows no PS4 triple; the
+#               FreeBSD 9 x86-64 target is the ABI the PS4's was derived from.
+#               394 of its 3,389 functions load the stack canary, so the
+#               protector was on; 3.3 has no -fstack-protector-strong (upstream
+#               3.5), so -fstack-protector is passed until a canary-bearing
+#               function is matched and settles the level.
+#   src/game/   code from 0x1a3e00 up, the game and engine, built with the
+#               SDK 3.5 compiler: cdqe, merged constant stores (3,065), ud2
+#               after noreturn calls (503), int 0x41 debug traps, no
+#               vzeroupper around 32k ymm uses. Upstream 4.0.0 shows all of
+#               those for the PS4 triple and reproduces the probe 12/12.
+#               Only 80 of its 16,344 functions load a stack canary, scattered
+#               (tools/fingerprint.py --range 0x1a3e00:), so the game was
+#               built with the Orbis default protector turned OFF
+#               (-fno-stack-protector); the 80 are revisited when one is
+#               matched.
+#
+# Evidence for the common flags, from the matched functions:
 #   -O2                             -O1 and -Os lose the vectorised and
 #                                   scheduled forms the base has
 #   -march=btver2                   the Jaguar: its instruction set is in use
-#                                   (movbe 410 times, andn 207, lzcnt 69 in the
-#                                   executable)
-#   -mllvm -disable-post-ra         upstream's BtVer2Model turns on the post-RA
-#                                   list scheduler, which reorders the register
-#                                   copies of 0xbc30 and the loads of 0x137c0
-#                                   against the base; Sony's compiler did not
-#                                   schedule that way (docs/TARGETS.md)
+#                                   (bextr 1,328, andn 108, lzcnt 69, movbe 14)
+#   -mllvm -pre-RA-sched=list-ilp   the game region's instruction order: with
+#                                   upstream's default source-order DAG
+#                                   scheduler two independent loads come out
+#                                   in the other order (0x639e60, 0x779070);
+#                                   list-ilp, list-burr and list-hybrid all
+#                                   give the base's order on the probe
+#   -fPIC                           the executable is position independent
+#                                   (ET_SCE_DYNEXEC, 29k relocations); an
+#                                   Orbis driver default (Sony's 2013 LLVM dev
+#                                   meeting slides, docs/TARGETS.md)
+#   stack protector                 an Orbis driver default (same slides,
+#                                   -fstack-protector-strong); the executable
+#                                   imports __stack_chk_fail and
+#                                   __stack_chk_guard; 474 functions load the
+#                                   canary, 394 of them in the library region:
+#                                   on for src/libs/, off for src/game/
+#   -fno-exceptions -fno-rtti       Orbis driver defaults (same slides)
+#   -fno-math-errno                 the upstream PS4 toolchain's default
 #   -fwrapv                         the base subtracts in 32 bits and then
 #                                   sign-extends (0x12120); with signed
 #                                   overflow undefined clang widens first
 #   -fno-strict-aliasing            the base reloads a field after a store
-#                                   through another type (0x12120)
-#   -fno-omit-frame-pointer         every non-leaf keeps rbp (push rbp; mov
-#   -momit-leaf-frame-pointer       rbp, rsp), every leaf omits it
-#   -fPIC                           the executable is position independent
-#                                   (ET_SCE_DYNEXEC, 29k relocations); the
-#                                   Orbis driver defaults to -fPIC (Sony's 2013
-#                                   LLVM dev meeting slides, docs/TARGETS.md)
-#                                   and upstream 3.6.2 does not for this triple
-#   -fstack-protector-strong        an Orbis driver default (same slides); the
-#                                   executable imports __stack_chk_fail and
-#                                   __stack_chk_guard
-#   -fno-exceptions -fno-rtti       Orbis driver defaults (same slides)
-#   -fno-math-errno                 the upstream PS4 toolchain's default
-#                                   (IsMathErrnoDefault false)
+#                                   through another type (0x12120, 0x79a5d0)
+#   -fno-omit-frame-pointer         14,410 of 14,414 non-leaf functions keep
+#   -momit-leaf-frame-pointer       rbp; 5,200 of 5,304 leaves omit it
 #   -std=gnu++11                    the Orbis driver's default dialect (slides)
 #   -fshort-wchar -D__ORBIS__       the PS4 target's wchar_t is unsigned short
-#   -D__PS4__                       and these are its macros (clang 3.7+'s
-#                                   PS4 target info); 3.6.2 knows no PS4 target
-#
-# A line may start with `cxx=<path or tools/cc version>` after the prefix to
-# compile that prefix with another release (tools/compile_cpp.sh): the
-# executable's components were built in different years (the Havok 2014.2
-# nightly of 2014-11-21, the sound engine on 2016-09-30, the game with SDK
-# 3.5), so one compiler need not fit all of src/.
+#   -D__PS4__                       and these are its macros (clang 3.7+)
 #   -ffreestanding -nostdlibinc     no host libc headers; the compiler's own
 #   -nostdinc++                     intrinsic headers (xmmintrin.h) stay
-src/ --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -disable-post-ra -fPIC -fstack-protector-strong -fno-math-errno -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/libs/ cxx=3.3 -target x86_64-pc-freebsd9 -O2 -march=btver2 -fPIC -fstack-protector -fno-math-errno -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/ cxx=4.0.0 --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -fPIC -fno-stack-protector -fno-math-errno -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # tools/compile_cpp.sh <source> <object>: compile one C/C++ source with the
 # flags config/flags.<slug>.txt gives its prefix (longest match wins), into
-# <object>. The compiler is $TLG_CXX, default tools/cc/llvm-3.6.2/bin/clang. Run from the repo root
+# <object>. The compiler is the prefix line's cxx=<version>, else $TLG_CXX, else
+# tools/cc/llvm-4.0.0/bin/clang. Run from the repo root
 # (gen_ninja.py's commands are); paths are repo-relative.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,9 +11,9 @@ cd "$ROOT"
 . tools/tlg_version.sh
 tlg_version_init "$ROOT"
 src="$1"; obj="$2"
-# The project compiler is the prebuilt LLVM 3.6.2 under tools/cc/ (tools/setup.sh,
-# docs/TARGETS.md); TLG_CXX overrides it (tools/compiler_probe.sh compares others).
-DEFAULT_CXX="$ROOT/tools/cc/llvm-3.6.2/bin/clang"
+# The project default is the prebuilt LLVM 4.0.0 under tools/cc/ (tools/setup.sh,
+# docs/TARGETS.md); a prefix's cxx=<version> or TLG_CXX overrides it.
+DEFAULT_CXX="$ROOT/tools/cc/llvm-4.0.0/bin/clang"
 [[ -x "$DEFAULT_CXX" ]] || DEFAULT_CXX=clang-19
 CXX="${TLG_CXX:-$DEFAULT_CXX}"
 # A prebuilt LLVM release under tools/cc/ links against libtinfo.so.5, which

@@ -4,11 +4,23 @@
 # tools/check_elf.py --gate compiles each TU and requires every row to compare
 # equal to the base (tools/match_check.py); a row that no longer matches fails
 # the gate. Add a row when a function reaches 1.0; never remove one to pass.
-FUN_000104b0 src/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord
-FUN_00004450 src/unknown/leaf_00004450.cpp _Z12FUN_00004450P6Pool40i
-FUN_00011320 src/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
-FUN_00014af0 src/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
-FUN_0000df30 src/unknown/leaf_0000df30.cpp _Z12FUN_0000df30PK12MatrixHolderP4Mat4
-FUN_000137c0 src/unknown/leaf_000137c0.cpp _Z12FUN_000137c0P4Mat4PKS_
-FUN_0000bc30 src/unknown/func_0000bc30.cpp _Z12FUN_0000bc30P5Arenai
-FUN_00017a60 src/unknown/func_00017a60.cpp _Z12FUN_00017a60P10Owner17a60
+FUN_000104b0 src/libs/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord
+FUN_00004450 src/libs/unknown/leaf_00004450.cpp _Z12FUN_00004450P6Pool40i
+FUN_00011320 src/libs/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
+FUN_00014af0 src/libs/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
+FUN_0000df30 src/libs/unknown/leaf_0000df30.cpp _Z12FUN_0000df30PK12MatrixHolderP4Mat4
+FUN_000137c0 src/libs/unknown/leaf_000137c0.cpp _Z12FUN_000137c0P4Mat4PKS_
+FUN_0000bc30 src/libs/unknown/func_0000bc30.cpp _Z12FUN_0000bc30P5Arenai
+FUN_00017a60 src/libs/unknown/func_00017a60.cpp _Z12FUN_00017a60P10Owner17a60
+FUN_004ba5f0 src/game/unknown/leaf_004ba5f0.cpp _Z12FUN_004ba5f0PK11Owner4ba5f0PDv4_fS3_
+FUN_004ba630 src/game/unknown/leaf_004ba630.cpp _Z12FUN_004ba630PK11Owner4ba630
+FUN_00639e60 src/game/unknown/leaf_00639e60.cpp _Z12FUN_00639e60PK11Owner639e60
+FUN_00778dc0 src/game/unknown/leaf_00778dc0.cpp _Z12FUN_00778dc0PK11Owner778dc0
+FUN_00779070 src/game/unknown/leaf_00779070.cpp _Z12FUN_00779070PK11Owner779070PK12Source779070
+FUN_007793f0 src/game/unknown/leaf_007793f0.cpp _Z12FUN_007793f0PK11Owner779070PK12Source779070
+FUN_0079a5d0 src/game/unknown/leaf_0079a5d0.cpp _Z12FUN_0079a5d0PK11Owner779070
+FUN_0046b3f0 src/game/unknown/func_0046b3f0.cpp _Z12FUN_0046b3f0P11Owner46b3f0
+FUN_004eee50 src/game/unknown/func_004eee50.cpp _Z12FUN_004eee50P11Owner4eee50
+FUN_00583950 src/game/unknown/func_00583950.cpp _Z12FUN_00583950P11Owner583950Pv
+FUN_00599980 src/game/unknown/func_00599980.cpp _Z12FUN_00599980P11Owner583950Pv
+FUN_0059d3b0 src/game/unknown/func_0059d3b0.cpp _Z12FUN_0059d3b0P11Owner583950Pv

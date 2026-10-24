@@ -18,9 +18,9 @@ sudo apt-get install -y clang-19 lld-19 llvm-19 openjdk-25-jdk-headless python3-
 ```
 
 - `clang-19`, `llvm-19`, `lld-19`: `llvm-objdump-19`, `llvm-readelf-19`,
-  `llvm-nm-19`, and the fallback compiler. The project compiler is the
-  prebuilt LLVM 3.6.2 `setup.sh` fetches (below). Upstream LLVM knows the
-  PS4 triple; no SDK is involved.
+  `llvm-nm-19`, and the fallback compiler. The compilers are the prebuilt
+  LLVM 3.3 and 4.0.0 `setup.sh` fetches (below). Upstream LLVM knows the
+  PS4 triple from 3.7; no SDK is involved.
 - `openjdk-25-jdk-headless`: for Ghidra 12.2 (optional; the survey does not
   need it).
 
@@ -32,7 +32,7 @@ Everything else is fetched by `tools/setup.sh` into `tools/ext/` and
 | Python venv (`tools/requirements.txt`: pyelftools, capstone, ninja, clang-format) | `.venv/` | every Python tool; ninja; the formatter |
 | .NET 8 runtime (`dotnet-install.sh`, user-local) | `tools/ext/dotnet/` | runs PkgTool.Core |
 | LibOrbisPkg PkgTool.Core 0.2.231, framework-dependent build | `tools/ext/pkgtool/` | extracts the package (the self-contained Linux build bundles a 2020 .NET Core 3 that needs libssl 1.x and ICU, neither on a current host) |
-| LLVM 3.6.2 prebuilt + Debian's `libtinfo5` (`tools/fetch_llvm.sh`) | `tools/cc/llvm-3.6.2/`, `tools/cc/shim/` | the project compiler (`docs/TARGETS.md`); other releases for `tools/compiler_probe.sh` on demand |
+| LLVM 3.3 and 4.0.0 prebuilt + Debian's `libtinfo5` (`tools/fetch_llvm.sh`) | `tools/cc/llvm-3.3/`, `tools/cc/llvm-4.0.0/`, `tools/cc/shim/` | the compilers of the two regions (`docs/TARGETS.md`); other releases for `tools/compiler_probe.sh` on demand |
 | objdiff-cli 3.8.3 | `tools/ext/objdiff/` | optional interactive object diff viewer |
 | Ghidra 12.2 | `tools/ghidra/ghidra_12.2_PUBLIC/` | optional analysis (`SKIP_GHIDRA=1` skips the 570 MB download) |
 

@@ -1,4 +1,4 @@
-/* src/unknown/: functions matched before their translation unit is known. */
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_types.h"
 
 /* derived names: calls FUN_00015ae0 on the object at +0x18, then clears a

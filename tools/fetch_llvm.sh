@@ -11,6 +11,12 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 declare -A URL SHA
+URL[3.3]=https://releases.llvm.org/3.3/clang+llvm-3.3-amd64-Ubuntu-12.04.2.tar.gz
+SHA[3.3]=60d8f69f032d62ef61bf527857ebb933741ec3352d4d328c5516aa520662dab7
+URL[3.4]=https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10.tar.xz
+SHA[3.4]=5f1df4c12ccafa5e0938993a29aa66a50707a9c0b31d3bd6dd714d15ad375425
+URL[3.4.2]=https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz
+SHA[3.4.2]=ef0d8faeb31c731b46ef5859855766ec7eb71f9a32cc6407ac5ddb4ccc35c3dc
 URL[3.5.2]=https://releases.llvm.org/3.5.2/clang+llvm-3.5.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz
 SHA[3.5.2]=0290692714479c4b169e5f02408fc6d2d76f89e873aa04a795024ccde59ec482
 URL[3.6.2]=https://releases.llvm.org/3.6.2/clang+llvm-3.6.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz
@@ -68,8 +74,10 @@ for v in "$@"; do
     [[ -n "${URL[$v]:-}" ]] || { echo "fetch_llvm: unknown version $v (known: ${!URL[*]})" >&2; exit 2; }
     dir="tools/cc/llvm-$v"
     if [[ -x "$dir/bin/clang" ]]; then echo "==> LLVM $v already at $dir"; continue; fi
-    fetch_pinned "LLVM $v" "${URL[$v]}" "${SHA[$v]}" "tools/cc/llvm-$v.tar.xz"
+    ext=xz; [[ "${URL[$v]}" == *.tar.gz ]] && ext=gz
+    fetch_pinned "LLVM $v" "${URL[$v]}" "${SHA[$v]}" "tools/cc/llvm-$v.tar.$ext"
     mkdir -p "$dir"
-    tar -xJf "tools/cc/llvm-$v.tar.xz" -C "$dir" --strip-components=1
+    if [[ $ext == gz ]]; then tar -xzf "tools/cc/llvm-$v.tar.gz" -C "$dir" --strip-components=1
+    else tar -xJf "tools/cc/llvm-$v.tar.xz" -C "$dir" --strip-components=1; fi
     echo "==> LLVM $v at $dir ($(LD_LIBRARY_PATH="$ROOT/tools/cc/shim" "$dir/bin/clang" --version | head -n1))"
 done

@@ -6,7 +6,7 @@
 #
 #   1. Create a Python venv at .venv and install tools/requirements.txt.
 #   2. Fetch the pinned external tools into tools/ext/ and tools/ghidra/:
-#        LLVM 3.6.2     the project compiler (tools/fetch_llvm.sh; docs/TARGETS.md)
+#        LLVM 3.3, 4.0.0 the compilers (tools/fetch_llvm.sh; docs/TARGETS.md)
 #        .NET 8         runtime, user-local via dotnet-install.sh, to run:
 #        PkgTool.Core   LibOrbisPkg 0.2.231 (MIT): extracts the user's own
 #                       PKG (tools/extract_pkg.py)
@@ -117,14 +117,14 @@ else
     fi
 fi
 
-# --- 2a. The project compiler: upstream LLVM 3.6.2, prebuilt ------------------
+# --- 2a. The compilers: upstream LLVM 3.3 (library region) and 4.0.0 (game) ---
 # The compiler that reproduces the most of the executable's functions in the
 # probe (tools/compiler_probe.sh; docs/TARGETS.md). tools/fetch_llvm.sh pins
 # the tarball and the libtinfo.so.5 it links against.
 if [[ "${SKIP_TOOLCHAIN:-0}" == "1" ]]; then
     echo "==> SKIP_TOOLCHAIN=1; not fetching the project compiler"
 else
-    bash tools/fetch_llvm.sh 3.6.2
+    bash tools/fetch_llvm.sh 3.3 4.0.0
 fi
 
 # --- 2b. Host packages: LLVM 19 (disassembly, the tooling clang) and JDK 25 ---

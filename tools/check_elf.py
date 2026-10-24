@@ -95,6 +95,7 @@ def check_all() -> tuple[dict[str, dict], bool]:
                 print(f"check_elf: {fn} is not a row of config/functions.{VERSION}.txt", file=sys.stderr)
                 ok = False
                 continue
+            sym = mc.resolve_symbol(objfuncs, sym and sym or fn, sym) or sym
             if sym not in objfuncs:
                 print(f"check_elf: {tu} does not define {sym} (for {fn})", file=sys.stderr)
                 ok = False

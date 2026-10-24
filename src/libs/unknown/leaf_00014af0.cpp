@@ -1,4 +1,4 @@
-/* src/unknown/: functions matched before their translation unit is known. */
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_types.h"
 
 /* derived names: push onto an intrusive singly linked list whose head is at

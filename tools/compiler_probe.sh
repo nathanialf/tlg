@@ -39,8 +39,12 @@ for tu in "${TUS[@]}"; do
         ver="$("$cc" --version 2>/dev/null | head -n1)"
         if [[ -z "$ver" ]]; then printf '%-12s does not run on this host\n' "$name"; continue; fi
         obj="$OUT/$name.o"
+        flags="$FLAGS"
+        # clang 3.3 and 3.4 know no PS4 triple: compile for FreeBSD x86-64, the
+        # ABI the PS4 target was derived from.
+        case "$ver" in "clang version 3.3"*|"clang version 3.4"*) flags="${flags/--target=x86_64-scei-ps4/-target x86_64-pc-freebsd9}" ;; esac
         # shellcheck disable=SC2086
-        if ! "$cc" $FLAGS -c "$tu" -o "$obj" 2>"$OUT/$name.err"; then
+        if ! "$cc" $flags -c "$tu" -o "$obj" 2>"$OUT/$name.err"; then
             printf '%-12s compile failed: %s\n' "$name" "$(head -n1 "$OUT/$name.err")"; continue
         fi
         printf '%-12s ' "$name"

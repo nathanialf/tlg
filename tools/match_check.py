@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -89,6 +90,17 @@ def object_functions(obj: Path) -> dict[str, tuple[bytes, list[tuple[int, int, i
                   for ro, rt in relocs_by_sec.get(shndx, []) if lo <= ro < lo + size]
             out[sym.name] = (data, sorted(rl))
     return out
+
+
+def resolve_symbol(objfuncs: dict, fn: str, sym: str) -> str | None:
+    """The object's symbol for a row: `sym` itself, or, failing that, the one
+    Itanium-mangled symbol whose base identifier is `fn` (so a FUN_<addr> row
+    needs no symbol column while its signature is a guess)."""
+    if sym in objfuncs:
+        return sym
+    pat = re.compile(rf"^_Z{len(fn)}{re.escape(fn)}(?![0-9A-Za-z_])")
+    hits = [s for s in objfuncs if pat.match(s)]
+    return hits[0] if len(hits) == 1 else None
 
 
 def disasm(code: bytes, base: int):
@@ -184,6 +196,7 @@ def main(argv=None) -> int:
         if fn not in funcs:
             print(f"match_check: {fn} is not in config/functions.{ver}.txt", file=sys.stderr)
             return 2
+        sym = resolve_symbol(objfuncs, fn, sym) or sym
         if sym not in objfuncs:
             print(f"match_check: symbol {sym} not defined in {obj} "
                   f"(have: {', '.join(sorted(objfuncs)[:8])}{'...' if len(objfuncs) > 8 else ''})",

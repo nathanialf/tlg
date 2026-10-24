@@ -18,7 +18,7 @@ executable says about its own build.
 <!-- progress:begin -->
 | Target | Matched |
 | --- | --- |
-| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![text progress](https://img.shields.io/badge/text-0.00%20%25-orange.svg) ![functions progress](https://img.shields.io/badge/functions-0.04%20%25-orange.svg) |
+| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![text progress](https://img.shields.io/badge/text-0.00%20%25-orange.svg) ![functions progress](https://img.shields.io/badge/functions-0.10%20%25-orange.svg) |
 <!-- progress:end -->
 
 **[Progress dashboard](https://nathanialf.github.io/tlg/)**: every function
@@ -79,10 +79,14 @@ functions covering 21.5 MB of the 23.6 MB segment.
 ## Layout
 
 ```
-src/<dir>/                  the rebuilt sources, one directory per original
-                            source root as the executable names them
-                            (docs/SURVEY.md); src/unknown/ holds functions
-                            matched before their home is known, one per file
+src/libs/                   the library region of the executable (below
+                            0x1a3e00; LLVM 3.3): one directory per library
+                            once known, src/libs/unknown/ before that
+src/game/                   the game and engine (from 0x1a3e00; LLVM 4.0.0):
+                            one directory per original source root as the
+                            executable names them (docs/SURVEY.md),
+                            src/game/unknown/ before that; one function per
+                            file while its home is unknown
 src/include/                shared headers
 config/                     per target <slug>: sha256sums (the base files),
                             functions (every function: address, size, name),
@@ -103,19 +107,20 @@ pinned by SHA-256; nothing comes from a Sony SDK.
 
 | tool | role | source | licence |
 | --- | --- | --- | --- |
-| LLVM 3.6.2, prebuilt | compiles every source, `--target=x86_64-scei-ps4` with generic tuning and the Jaguar's features (`config/flags.base.txt`) | releases.llvm.org `clang+llvm-3.6.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz`, sha256 pinned in `tools/fetch_llvm.sh`; Debian bookworm's `libtinfo5` beside it | Apache-2.0 with LLVM exception |
+| LLVM 3.3, prebuilt | compiles `src/libs/` (the library region, built years earlier) | releases.llvm.org `clang+llvm-3.3-amd64-Ubuntu-12.04.2.tar.gz`, sha256 pinned in `tools/fetch_llvm.sh`; Debian bookworm's `libtinfo5` beside it | Apache-2.0 with LLVM exception |
+| LLVM 4.0.0, prebuilt | compiles `src/game/` (the game and engine), `--target=x86_64-scei-ps4` | releases.llvm.org `clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz`, pinned likewise | Apache-2.0 with LLVM exception |
 | clang 19 (host package) | `llvm-objdump`, `llvm-readelf`, `llvm-nm`; the fallback compiler | Debian `clang-19`, `llvm-19`, `lld-19` | Apache-2.0 with LLVM exception |
 | LibOrbisPkg PkgTool.Core 0.2.231 | extracts the user's package | github.com/maxton/LibOrbisPkg release v0.2, on a user-local .NET 8 runtime (`dotnet-install.sh`) | MIT |
 | `tools/unfself.py` | converts the fake-signed SELFs to ELF | this repository | MIT |
 | objdiff-cli 3.8.3 | an interactive diff viewer for objects, optional | github.com/encounter/objdiff release v3.8.3 | MIT / Apache-2.0 |
 | Ghidra 12.2 | analysis, optional (needs a JDK 25) | github.com/NationalSecurityAgency/ghidra release | Apache-2.0 |
 
-The compiler is the upstream release that reproduces the most of the
-executable's functions in the probe (`tools/compiler_probe.sh`,
-[`docs/TARGETS.md`](docs/TARGETS.md)); the original is Sony's own build of
-that era, and two of its code-generation choices no upstream release makes,
-so a few functions will not match byte for byte. The flags are per source
-prefix in `config/flags.base.txt`, never per function.
+The executable holds two compiler generations, the libraries linked first
+and the game after them, and each gets the upstream release that reproduces
+its region's functions byte for byte (`tools/compiler_probe.sh`,
+`tools/fingerprint.py`, [`docs/TARGETS.md`](docs/TARGETS.md),
+[`docs/DECISIONS.md`](docs/DECISIONS.md)). The flags and the compiler are per
+source prefix in `config/flags.base.txt`, never per function.
 
 ## Legal and licence
 

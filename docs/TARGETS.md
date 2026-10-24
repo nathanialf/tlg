@@ -35,62 +35,61 @@ The full survey, program header by program header and library by library, is
   AVX (`vmovaps`, `vdpps`) and the AMD Jaguar scheduling clang's
   `x86_64-scei-ps4` target selects (`-march=btver2`), position-independent
   addressing, and unwind tables for every function.
-- **Which public clang.** Upstream LLVM 3.6.2, provisionally, tuned as the
-  Jaguar without the post-RA scheduler. The probe (`tools/compiler_probe.sh`
-  over `tools/probe/batch1.cpp` and `batch2.cpp`, ten small functions written
-  from their disassembly) scored every prebuilt release from 3.5 to 9.0 and
-  the host's clang 19 under the same flags:
+- **Two compiler generations.** `tools/fingerprint.py --range` over the
+  whole executable splits `.text` at 0x1a3e00:
 
-  | LLVM | functions equal (of 10) | what breaks |
-  | --- | ---: | --- |
-  | 3.5.2, 3.6.2 | 7 | 0x7180, 0x12120 (below); 0xdf30 only as a struct copy |
-  | 3.7.1 to 4.0.0 | 6 | also merge the two scalar stores of 0x104b0 into one vector store |
-  | 5.0.2 | 5 | hoists the loads of 0x137c0 |
-  | 6.0.1 | 4 | also reorders 0x14af0 |
-  | 7.0.1 to 9.0.0 | 2 | also 0xbc30 and 0x17a60 |
-  | clang 19 | 4 | 0xbc30, 0x17a60, 0x137c0 differ in register choice or order |
+  | | below 0x1a3e00 (3,389 functions) | from 0x1a3e00 (16,344 functions) |
+  | --- | ---: | ---: |
+  | `movsxd rax, eax` (never shrunk) / `cdqe` | 679 / 79 | 0 / 1,027 |
+  | adjacent constant 8-byte stores left unmerged / merged into one vector store | 258 / 2 | 15 / 3,229 |
+  | `ud2` after a call (trap after noreturn) | 1 | 512 |
+  | `int 0x41` (PS4 debug trap) | 0 | 492 |
+  | functions loading a stack canary | 394 | 80 |
+  | leaves keeping a frame pointer | 0 of 1,326 | 104 of 3,978 |
 
-  Reading upstream's source settles what the triple does per release
-  (`clang/lib/Driver`, `lib/Target/X86`; the agent report's citations are in
-  `docs/NOTES.md`): **3.6.2 does not know the PS4 triple at all** (the `ps4`
-  OS parses from 3.7), so it compiles `x86_64-scei-ps4` as generic x86-64 ELF
-  with the SandyBridge scheduling model and every Orbis default has to be
-  passed by hand. From 3.7 the triple selects `btver2`, whose scheduling
-  model (`BtVer2Model`, in LLVM since 2014-09, so 3.6.2 has it when asked
-  for) sets `PostRAScheduler = 1`: the post-RA list scheduler is what swaps
-  the register copies of 0xbc30 and reorders 0x137c0 against the base, and
-  `-mllvm -disable-post-ra` with `-march=btver2` scores the same as generic
-  tuning while keeping the Jaguar instruction set the executable uses (410
-  `movbe`, 207 `andn`, 69 `lzcnt`). No upstream release has any other
-  PS4-specific hook in the X86 backend: no scheduler, register allocator,
-  isel or vector-width change.
+  The lower region is library code linked first and built years earlier
+  (the Havok 2014.2 nightly of 2014-11-21 and others; it has sub-runs of
+  both kinds at 0xafaa0 to 0xc68d0 and 0x18adc0 to 0x18cf50). The
+  `movsxd`-to-`cdqe` shrink is unconditional in upstream since LLVM 3.4
+  (`X86MCInstLower.cpp`, commit 068a2253e925), so that region's compiler is
+  of the 3.3 generation; the upper region, the game and its engine, is of the
+  3.7-or-later generation (constant-store merging) with the PS4 behaviours
+  upstream gained in 3.7 (`int 0x41`), 3.9 (`ud2` after noreturn calls) and
+  4.0 (no `vzeroupper` for the Jaguar). What looked like two Sony-only
+  code-generation traits in the first probe (the register order of 0x7180,
+  the unshrunk `movsxd`) were LLVM 3.3 behaviours: every probe function of
+  the lower region matches under upstream 3.3.
 
-  Three behaviours the executable shows that upstream added for PS4 only
-  LATER than 3.6, so Sony's SDK 3.5 compiler carried them ahead of upstream:
-  492 `int 0x41` debug traps (upstream 3.7), 874 `ud2`, 508 of them directly
-  after a `call`, the trap after a noreturn call (upstream 3.9), and 32,321
-  `ymm` uses with no `vzeroupper` anywhere (upstream 4.0, the
-  `fast-partial-ymm-write` feature of btver2; 3.6.2 always emits it). 4.0.0
-  with the same flags reproduces all three and seven of the eight claimed
-  functions; it loses 0x104b0 to store merging, which the executable shows
-  rarely (13 of 272 adjacent 8-byte immediate store pairs are merged). A
-  function that uses `ymm` registers or ends in a trap is therefore tried
-  under 4.0.0 (`TLG_CXX=tools/cc/llvm-4.0.0/bin/clang`, or a `cxx=4.0.0`
-  prefix in `config/flags.base.txt`), and the compiler question stays open
-  until the matched set is large enough to decide it. The components were in
-  any case built in different years: the Havok 2014.2 nightly on 2014-11-21,
-  the sound engine on 2016-09-30 (its build string), the game with SDK 3.5.
+- **Which public clang.** Two, one per region, both prebuilt upstream
+  releases (`tools/fetch_llvm.sh`), selected per source prefix in
+  `config/flags.base.txt` (`cxx=`):
 
-  Two differences no upstream release can reproduce, so they are Sony's own
-  changes to the compiler: the register assignment of 0x7180 (the base moves
-  `this` out of `rdi` first and loads the callee object straight into `rdi`;
-  upstream keeps `this` in `rdi` and copies at the end), and `movsxd rax,
-  eax` for a 32-to-64 sign extension (679 times, against 1,106 `cdqe`).
-  Upstream shrinks that `movsxd` to `cdqe` unconditionally at MC lowering
-  (`SimplifyMOVSX`, `X86MCInstLower.cpp`, since 3.4; `X86::optimizeMOVSX`
-  today), with no option or feature to stop it, so Sony's fork changed or
-  conditioned that step. A function whose only difference is one of these is
-  recorded in `docs/NOTES.md` and left unclaimed.
+  | region | prefix | compiler | tuning | probe |
+  | --- | --- | --- | --- | --- |
+  | libraries, below 0x1a3e00 | `src/libs/` | LLVM 3.3 (`-target x86_64-pc-freebsd9`; 3.3 knows no PS4 triple) | `-march=btver2`, default schedulers | batch 1 and 2: 10 of 10 with the right source forms |
+  | game, from 0x1a3e00 | `src/game/` | LLVM 4.0.0 (`--target=x86_64-scei-ps4`) | `-march=btver2 -mllvm -pre-RA-sched=list-ilp` | batch 3: 12 of 12 |
+
+  The probe table that led here (`tools/compiler_probe.sh`, every prebuilt
+  release 3.3 to 9.0 and clang 19):
+
+  | LLVM | batch 1+2, library region (14 fns) | batch 3, game region (12 fns) |
+  | --- | ---: | ---: |
+  | 3.3 | 14 | 8 |
+  | 3.4, 3.4.2, 3.5.2 | 9 | 4 to 8 |
+  | 3.6.2 to 5.0.2 | 8 | 12 (with list-ilp; 7 with the default scheduler) |
+  | 6.0.1 to 8.0.0 | 4 to 6 | 8 |
+  | 9.0.0, clang 19 | 2 to 4 | 4 to 8 |
+
+  On the game region 3.6.2 through 5.0.2 tie; 4.0.0 is chosen because it is
+  the only one of them that also shows all three PS4 behaviours the region
+  has (no `vzeroupper`, `ud2` after noreturn, `int 0x41`) without a patch,
+  and because its generic behaviour (store merging, scheduling) matches where
+  3.6.2's does not. The pre-RA scheduler differs from upstream's x86 default
+  (source order): `list-ilp`, `list-burr` and `list-hybrid` all reproduce the
+  probe; `list-ilp` is used until a function tells them apart. Nothing in
+  the executable so far needs a change to the compiler itself; the
+  from-source build (`tools/build_llvm.sh`) stays as the instrument for the
+  day one does.
 - **What Sony's driver did by default.** Sony's 2013 LLVM developer meeting
   talk on the PS4 toolchain (Paul Robinson, "PS4 Toolchain", slide 23,
   https://llvm.org/devmtg/2013-11/slides/Robinson-PS4Toolchain.pdf) lists
@@ -122,10 +121,9 @@ The full survey, program header by program header and library by library, is
   tuning, while 3.6.2 always emits it, so Sony's 3.5-era compiler carried a
   Jaguar tuning upstream did not yet have; functions that touch `ymm`
   registers will not match under 3.6.2 until that is reproduced. `cdqe`
-  appears 1,106 times and `movsxd rax, eax` 679 times, so the sign-extension
-  choice is situational, not a blanket change. Of 272 pairs of adjacent
-  8-byte immediate stores, 13 show the 3.7+ vector-store merge signature, so
-  the compiler did little or no such merging.
+  appears 1,106 times and `movsxd rax, eax` 679 times, and the two never mix
+  within a region: the `movsxd` form is the lower region's older compiler
+  (above). The same split explains the constant-store merging.
 - **Source layout.** The assert and `__FILE__` strings name 119 source files
   under four roots (`SURVEY.md`, "Source roots"): `D:/trico/engine/anzu/`
   (the engine, "anzu"; the output path above is under it),
