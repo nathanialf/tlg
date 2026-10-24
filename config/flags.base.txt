@@ -7,4 +7,9 @@
 # What the binary says about its build (docs/SURVEY.md): Orbis SDK 03.508,
 # AVX code (btver2, the PS4's Jaguar, which the x86_64-scei-ps4 triple
 # selects), position-independent executable, unwind tables for every function.
-src/ --target=x86_64-scei-ps4 -O2 -fno-exceptions -fno-rtti -ffreestanding -nostdinc -nostdinc++ -std=c++11 -Isrc/include
+src/ --target=x86_64-scei-ps4 -O2 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=c++11 -Isrc/include
+#
+# Evidence for the flags, from matched functions: every non-leaf function
+# keeps a frame pointer (push rbp; mov rbp, rsp) and leaves omit it, so
+# -fno-omit-frame-pointer -momit-leaf-frame-pointer. -nostdlibinc keeps the
+# compiler's own headers (immintrin.h) and drops the host libc's.

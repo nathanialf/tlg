@@ -5,3 +5,6 @@
 # equal to the base (tools/match_check.py); a row that no longer matches fails
 # the gate. Add a row when a function reaches 1.0; never remove one to pass.
 FUN_000104b0 src/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord
+FUN_00004450 src/unknown/leaf_00004450.cpp _Z12FUN_00004450P6Pool40i
+FUN_00011320 src/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
+FUN_00014af0 src/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
