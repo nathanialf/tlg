@@ -89,7 +89,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     tmp="$(mktemp -d)"
     trap 'rm -rf "$tmp"; git -C "$ROOT" worktree prune' EXIT
     git -C "$ROOT" worktree add -q --detach "$tmp" "$local_sha"
-    for d in .venv tools/ext tools/ghidra baserom; do
+    for d in .venv tools/cc tools/ext tools/ghidra baserom; do
         [[ -e "$ROOT/$d" ]] && ln -s "$ROOT/$d" "$tmp/$d"
     done
     echo "pre-push: gate-all on $local_ref ($local_sha)"
