@@ -79,7 +79,19 @@ the score is their share over the longer stream, and 1.0 is a match. Sizes
 differing is a difference. Nothing else is masked: an immediate, a stack
 offset or a register choice that differs is a real difference.
 
-The original is a position-independent executable with 29,413 relocations
-applied by Sony's loader; the masked fields are exactly those. An `objdiff`
-view of a TU against a carved target object is possible (`tools/ext/objdiff/`)
-and not part of the gate.
+The masked fields are then checked for real where the base can place the
+symbol (`tools/base_elf.py`): a call to `FUN_x` must encode `FUN_x`'s
+address in the base, a reference to `D_<hex>` that address, a call to an
+import its PLT stub, a GOT load its slot. A wrong target fails the function
+whatever the score, so a callee or a data label is never a guess that
+happens to encode the same way.
+
+The gate goes one step further (`tools/layout_link.py`, `docs/DECISIONS.md`
+D7): it rebuilds the whole text segment, every claimed function at its
+address with its relocations resolved, everything else from the base, and
+requires the image byte-identical to the base. A string literal the TU
+defines resolves to the one place the base holds those bytes; a data
+reference needs a `D_<hex>` name (its address in the base); a relocation the
+resolver cannot place fails the function with a message. An `objdiff` view of
+a TU against a carved target object is possible (`tools/ext/objdiff/`) and
+not part of the gate.

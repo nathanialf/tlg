@@ -10,7 +10,10 @@ where the object's instruction carries a relocation, the field the linker
 fills (a RIP-relative displacement, a call target, a GOT or PLT slot) is
 masked on both sides, and nothing else is. The score is the share of
 instructions equal after masking, over the longer of the two streams: 1.0 is
-a match.
+a match. The masked fields are then checked for real where the base can
+place the symbol: a call to FUN_x must encode, in the base, the address of
+FUN_x; a reference to D_<hex> that address; a call to an import its PLT
+stub. A wrong target fails the function whatever the score (tools/base_elf.py).
 
     match_check.py --tu src/x/y.cpp --func <name> [--symbol <mangled>] [--diff]
     match_check.py --tu src/x/y.cpp --all          every function the TU defines
@@ -38,6 +41,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tlg_version import baseelf_path, build_dir, config_path, detect_version  # noqa: E402
 from survey_elf import read_phdrs, vaddr_to_off  # noqa: E402
+from base_elf import BaseElf  # noqa: E402
 
 # R_X86_64_* relocation types -> field width in bytes.
 RELOC_WIDTH = {1: 8, 2: 4, 3: 4, 4: 4, 5: 8, 6: 8, 7: 8, 8: 8, 9: 4, 10: 4, 11: 4,
@@ -66,30 +70,71 @@ def compile_tu(tu: str, ver: str) -> Path:
     return obj
 
 
-def object_functions(obj: Path) -> dict[str, tuple[bytes, list[tuple[int, int, int]]]]:
-    """symbol -> (bytes, [(offset_in_func, width, type)]) for every STT_FUNC."""
+class Reloc:
+    """One relocation inside a function of a compiled object."""
+    __slots__ = ("offset", "width", "type", "symbol", "addend", "sym_section", "sym_value", "sym_size")
+
+    def __init__(self, offset, width, type_, symbol, addend, sym_section, sym_value, sym_size):
+        self.offset, self.width, self.type = offset, width, type_
+        self.symbol, self.addend = symbol, addend
+        self.sym_section, self.sym_value, self.sym_size = sym_section, sym_value, sym_size
+
+    def __iter__(self):  # (offset, width, type), the shape compare() masks with
+        yield self.offset
+        yield self.width
+        yield self.type
+
+
+def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
+    """symbol -> (bytes, [Reloc]) for every STT_FUNC the object defines."""
     from elftools.elf.elffile import ELFFile
     from elftools.elf.relocation import RelocationSection
     out = {}
     with obj.open("rb") as f:
         elf = ELFFile(f)
         symtab = elf.get_section_by_name(".symtab")
+        syms = list(symtab.iter_symbols())
         relocs_by_sec: dict[int, list] = {}
         for sec in elf.iter_sections():
             if isinstance(sec, RelocationSection):
-                relocs_by_sec.setdefault(sec["sh_info"], []).extend(
-                    (r["r_offset"], r["r_info_type"]) for r in sec.iter_relocations())
-        for sym in symtab.iter_symbols():
+                for r in sec.iter_relocations():
+                    sym = syms[r["r_info_sym"]]
+                    name = sym.name
+                    # a section symbol (a string literal in .rodata.str1.1): name it
+                    # by its section so the resolver can look the bytes up
+                    if sym["st_info"]["type"] == "STT_SECTION":
+                        name = elf.get_section(sym["st_shndx"]).name
+                    relocs_by_sec.setdefault(sec["sh_info"], []).append(
+                        Reloc(r["r_offset"], RELOC_WIDTH.get(r["r_info_type"], 4), r["r_info_type"],
+                              name, r["r_addend"] if "r_addend" in r.entry else 0,
+                              sym["st_shndx"], sym["st_value"], sym["st_size"]))
+        for sym in syms:
             if sym["st_info"]["type"] != "STT_FUNC" or sym["st_shndx"] in ("SHN_UNDEF", "SHN_ABS"):
                 continue
             shndx = sym["st_shndx"]
             sec = elf.get_section(shndx)
             lo, size = sym["st_value"], sym["st_size"]
             data = sec.data()[lo:lo + size]
-            rl = [(ro - lo, RELOC_WIDTH.get(rt, 4), rt)
-                  for ro, rt in relocs_by_sec.get(shndx, []) if lo <= ro < lo + size]
-            out[sym.name] = (data, sorted(rl))
+            rl = []
+            for r in relocs_by_sec.get(shndx, []):
+                if lo <= r.offset < lo + size:
+                    rl.append(Reloc(r.offset - lo, r.width, r.type, r.symbol, r.addend,
+                                    r.sym_section, r.sym_value, r.sym_size))
+            out[sym.name] = (data, sorted(rl, key=lambda r: r.offset))
     return out
+
+
+def object_bytes_of(obj: Path, section_index: int, value: int, size: int) -> bytes:
+    """The bytes a local data symbol (a string literal) covers in the object."""
+    from elftools.elf.elffile import ELFFile
+    with obj.open("rb") as f:
+        elf = ELFFile(f)
+        sec = elf.get_section(section_index)
+        d = sec.data()
+        if size == 0:  # a section symbol: the literal runs to the next NUL
+            end = d.find(b"\0", value)
+            size = (end + 1 if end >= 0 else len(d)) - value
+        return d[value:value + size]
 
 
 def resolve_symbol(objfuncs: dict, fn: str, sym: str) -> str | None:
@@ -98,7 +143,7 @@ def resolve_symbol(objfuncs: dict, fn: str, sym: str) -> str | None:
     needs no symbol column while its signature is a guess)."""
     if sym in objfuncs:
         return sym
-    pat = re.compile(rf"^_Z{len(fn)}{re.escape(fn)}(?![0-9A-Za-z_])")
+    pat = re.compile(rf"^_Z{len(fn)}{re.escape(fn)}")
     hits = [s for s in objfuncs if pat.match(s)]
     return hits[0] if len(hits) == 1 else None
 
@@ -109,7 +154,43 @@ def disasm(code: bytes, base: int):
     return list(md.disasm(code, base))
 
 
-def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int) -> dict:
+def verify_targets(relocs, base_bytes: bytes, base_addr: int, base) -> tuple[list[str], int]:
+    """For every relocation whose symbol the base can place (a function of the
+    table, a D_<hex> label, an import's PLT stub), compute the target the
+    base's own displacement encodes and compare. Returns (mismatches,
+    unverified count). PC-relative: S + A - P = disp, so S = disp + P - A."""
+    import struct as _st
+    bad, unverified = [], 0
+    for r in relocs:
+        if r.width != 4 or r.offset + 4 > len(base_bytes):
+            unverified += 1
+            continue
+        expected = base.address_of(r.symbol) if base is not None else None
+        if expected is None:
+            unverified += 1
+            continue
+        P = base_addr + r.offset
+        disp = _st.unpack_from("<i", base_bytes, r.offset)[0]
+        if r.type in (2, 4):            # PC32, PLT32
+            actual = disp + P - r.addend
+        elif r.type in (9, 41, 42):     # GOTPCREL*: the GOT slot, not the symbol
+            slot = base.got_slots().get(r.symbol)
+            if slot is None:
+                unverified += 1
+                continue
+            expected, actual = slot, disp + P - r.addend
+        elif r.type in (10, 11):        # 32, 32S: absolute
+            actual = disp - r.addend
+        else:
+            unverified += 1
+            continue
+        if actual != expected:
+            bad.append(f"{r.symbol}: base refers to 0x{actual:x}, source to 0x{expected:x} "
+                       f"(reloc at +0x{r.offset:x})")
+    return bad, unverified
+
+
+def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int, base=None) -> dict:
     a = disasm(obj_bytes, 0)
     b = disasm(base_bytes, base_addr)
     n = max(len(a), len(b))
@@ -132,9 +213,12 @@ def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int) -> dict
         if not ok and first_diff is None:
             first_diff = i
         rows.append((ok, ia, ib))
+    bad_targets, unverified = verify_targets(relocs, base_bytes, base_addr, base) if relocs else ([], 0)
     return {"obj_insns": len(a), "base_insns": len(b), "equal": equal,
             "score": (equal / n) if n else 1.0, "first_diff": first_diff, "rows": rows,
-            "obj_size": len(obj_bytes), "base_size": len(base_bytes)}
+            "obj_size": len(obj_bytes), "base_size": len(base_bytes),
+            "bad_targets": bad_targets, "unverified_relocs": unverified,
+            "targets_ok": not bad_targets}
 
 
 def fmt(ins, side_addr=None) -> str:
@@ -145,8 +229,12 @@ def fmt(ins, side_addr=None) -> str:
 
 def print_diff(name: str, r: dict) -> None:
     fd = r["first_diff"]
+    for t in r.get("bad_targets", []):
+        print(f"{name}: WRONG TARGET {t}")
     if fd is None:
-        print(f"{name}: equal ({r['equal']} instructions, {r['obj_size']} bytes)")
+        extra = f", {r['unverified_relocs']} relocation(s) unverified" if r.get("unverified_relocs") else ""
+        print(f"{name}: {'equal' if r.get('targets_ok', True) else 'equal bytes, wrong targets'} "
+              f"({r['equal']} instructions, {r['obj_size']} bytes{extra})")
         return
     print(f"{name}: {r['equal']}/{max(r['obj_insns'], r['base_insns'])} instructions equal "
           f"(score {r['score']:.4f}); object {r['obj_size']} bytes, base {r['base_size']} bytes; "
@@ -176,9 +264,8 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     ver = detect_version(REPO_ROOT)
     funcs = load_functions(ver)
-    elf = baseelf_path(REPO_ROOT, ver)
-    data = elf.read_bytes()
-    phdrs = read_phdrs(data)
+    base = BaseElf(REPO_ROOT, ver)
+    data, phdrs = base.data, base.phdrs
     obj = compile_tu(a.tu, ver) if a.tu else Path(a.obj)
     objfuncs = object_functions(obj)
 
@@ -206,14 +293,16 @@ def main(argv=None) -> int:
         off = vaddr_to_off(phdrs, addr)
         base_bytes = data[off:off + size]
         ob, rl = objfuncs[sym]
-        r = compare(ob, rl, base_bytes, addr)
-        worst = min(worst, r["score"])
+        r = compare(ob, rl, base_bytes, addr, base)
+        worst = min(worst, r["score"] if r["targets_ok"] else 0.0)
         if a.json:
             print(json.dumps({"func": fn, "symbol": sym, "addr": addr, "size": size,
                               "score": r["score"], "equal": r["equal"],
                               "obj_insns": r["obj_insns"], "base_insns": r["base_insns"],
-                              "obj_size": r["obj_size"], "base_size": r["base_size"]}))
-        elif a.diff or r["first_diff"] is not None:
+                              "obj_size": r["obj_size"], "base_size": r["base_size"],
+                              "targets_ok": r["targets_ok"], "bad_targets": r["bad_targets"],
+                              "unverified_relocs": r["unverified_relocs"]}))
+        elif a.diff or r["first_diff"] is not None or not r["targets_ok"]:
             print_diff(fn if fn == sym else f"{fn} ({sym})", r)
         else:
             print(f"{fn}: equal")

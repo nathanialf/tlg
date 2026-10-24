@@ -6,9 +6,13 @@ check_elf.py: the match gate and the progress files.
               is compiled (tools/compile_cpp.sh, or the object ninja built under
               build/<slug>/obj/) and compared with the base executable at the
               function's address (tools/match_check.py): every instruction
-              equal, only the linker-filled fields masked. Any row below 1.0
-              fails the gate, as does a row naming an unknown function or a
-              symbol the object does not define. Exit 1 on failure.
+              equal, the linker-filled fields masked and then checked for real
+              where the base can place the symbol. Then the whole text segment
+              is rebuilt (tools/layout_link.py): the claimed functions laid out
+              at their addresses with relocations resolved, the rest from the
+              base, and compared with the base byte for byte. Any row below
+              1.0, any wrong target, any differing byte, any row naming an
+              unknown function or symbol fails the gate. Exit 1 on failure.
 
   --progress  The same comparison, then docs/<slug>/progress.json (the
               dashboard's data, schema 2), the table between the
@@ -35,7 +39,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tlg_version import (PKGS, VERSIONS, baseelf_path, build_dir, config_path, detect_version,  # noqa: E402
                          docs_dir, pkg_name)
 from survey_elf import read_phdrs, vaddr_to_off, PT_LOAD  # noqa: E402
+from base_elf import BaseElf  # noqa: E402
 import match_check as mc  # noqa: E402
+import layout_link  # noqa: E402
 
 VERSION = detect_version(REPO_ROOT)
 DASHBOARD = "https://nathanialf.github.io/tlg/"
@@ -69,8 +75,8 @@ def load_functions_ordered() -> list[tuple[int, int, str]]:
 def check_all() -> tuple[dict[str, dict], bool]:
     """Compile and compare every matched row. Returns ({func: result}, all_ok)."""
     funcs = {n: (a, s) for a, s, n in load_functions_ordered()}
-    data = baseelf_path(REPO_ROOT, VERSION).read_bytes()
-    phdrs = read_phdrs(data)
+    base = BaseElf(REPO_ROOT, VERSION)
+    data, phdrs = base.data, base.phdrs
     rows = load_matched()
     by_tu: dict[str, list[tuple[str, str]]] = {}
     for fn, tu, sym in rows:
@@ -102,10 +108,11 @@ def check_all() -> tuple[dict[str, dict], bool]:
                 continue
             addr, size = funcs[fn]
             off = vaddr_to_off(phdrs, addr)
-            r = mc.compare(*objfuncs[sym], data[off:off + size], addr)
+            r = mc.compare(*objfuncs[sym], data[off:off + size], addr, base)
             results[fn] = {"tu": tu, "symbol": sym, "score": r["score"], "equal": r["equal"],
-                           "insns": max(r["obj_insns"], r["base_insns"]), "size": size}
-            if r["score"] < 1.0:
+                           "insns": max(r["obj_insns"], r["base_insns"]), "size": size,
+                           "targets_ok": r["targets_ok"], "bad_targets": r["bad_targets"]}
+            if r["score"] < 1.0 or not r["targets_ok"]:
                 ok = False
     return results, ok
 
@@ -114,9 +121,27 @@ def run_gate(_args) -> int:
     results, ok = check_all()
     print(f"gate ({VERSION}): {len(results)} claimed function(s)")
     for fn, r in sorted(results.items(), key=lambda kv: kv[1]["tu"]):
-        flag = "equal" if r["score"] == 1.0 else f"DIFFERS {r['equal']}/{r['insns']} ({r['score']:.4f})"
+        if r["score"] == 1.0 and r["targets_ok"]:
+            flag = "equal"
+        elif r["score"] == 1.0:
+            flag = "WRONG TARGET " + "; ".join(r["bad_targets"])
+        else:
+            flag = f"DIFFERS {r['equal']}/{r['insns']} ({r['score']:.4f})"
         print(f"  {fn:<40} {r['tu']:<48} {flag}")
-    if not ok:
+    # the whole-text gate: every claimed function laid out at its address with
+    # its relocations resolved, the rest of the segment from the base, and the
+    # image compared with the base byte for byte (tools/layout_link.py)
+    lay = layout_link.build_image(VERSION)
+    for fn, why in sorted(lay["errors"].items()):
+        print(f"  LAYOUT ERROR {fn}: {why}")
+    for d in lay["differing"]:
+        print(f"  LAYOUT DIFFERS {d['function']}: {d['bytes']} byte(s)")
+    if lay["gap_bytes_differing"]:
+        print(f"  LAYOUT DIFFERS outside functions: {lay['gap_bytes_differing']} byte(s)")
+    print(f"  text segment: {lay['text_size']:,} bytes, "
+          f"{sum(f['relocs'] for f in lay['functions'].values())} relocation(s) resolved, "
+          f"{'IDENTICAL to the base' if lay['identical'] else 'DIFFERS from the base'}")
+    if not ok or not lay["identical"]:
         print("gate: FAILED", file=sys.stderr)
         return 1
     print("gate: OK")
@@ -134,7 +159,7 @@ def build_tree(results: dict[str, dict]) -> dict:
 
     groups: dict[str, dict[str, dict]] = {}
     for addr, size, name in funcs:
-        matched = name in results and results[name]["score"] == 1.0
+        matched = name in results and results[name]["score"] == 1.0 and results[name]["targets_ok"]
         if name in matched_rows:
             tu = matched_rows[name][0]
             parts = tu.split("/")
@@ -183,6 +208,7 @@ def build_tree(results: dict[str, dict]) -> dict:
             "extracted": {".text": 0},
             "nobits_sections": [],
             "sections_from_symbols": {".text": [tot_mb, tot_b]},
+            "text_identical": layout_link.build_image(VERSION, log=lambda *a, **k: None)["identical"],
         },
         "programmers": prog_list,
     }

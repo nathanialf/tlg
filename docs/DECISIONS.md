@@ -165,3 +165,35 @@ canary-loading functions in the game region.
 **Trigger to revisit.** A function in either region that its compiler
 cannot reproduce after source-form and flag review, classified in
 `docs/NOTES.md`.
+
+## D7. The gate is the whole text segment (2026-10-24)
+
+**Problem.** D1's per-function comparison masks the fields the linker fills.
+A call to the wrong function with the same encoding, or a reference to the
+wrong data, passed. ico never had that hole: its gate links every object at
+the original addresses with the unwritten functions stubbed from the user's
+ELF and compares the whole file.
+
+**Decision.** The same gate, without Sony's linker: `tools/layout_link.py`
+starts from the base text segment, lays every claimed function's compiled
+bytes at its address with its relocations resolved the way the original link
+did (a function of the table to its address, `D_<hex>` to that address, an
+import to its PLT stub, a GOT load to its slot, a literal the object defines
+to the one place the base holds those bytes), and compares the image with
+the base byte for byte. `tools/check_elf.py --gate` requires the image
+identical, and `tools/match_check.py` checks every maskable field it can
+place, so the inner loop reports a wrong target too. A relocation the
+resolver cannot place fails the function with a message; nothing is guessed.
+
+**Evidence.** A deliberate wrong callee (`FUN_00470da1` for
+`FUN_00470da0`) compiles to the same bytes and now fails both the quick diff
+and the gate. All 20 claimed functions resolve and the rebuilt text segment
+(23,635,436 bytes) is identical to the base.
+
+**Not rebuilt.** The PLT, the GOT, the dynamic tables and the data segments
+are Sony's linker's output and are read from the base; a data function will
+reference them by address. Data-only ranges stay a later decision (ico
+generates them from the user's ELF at build time; the same is planned).
+
+**Trigger to revisit.** A public linker that reproduces Sony's section
+layout, which would let the image be a real link.

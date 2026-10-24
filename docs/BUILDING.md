@@ -107,10 +107,16 @@ every row of `config/matched.base.txt` (`<function> <tu> [<symbol>]`), the
 function's bytes in the TU's object are compared with the base executable's
 at the function's address (`config/functions.base.txt`), instruction by
 instruction, with only the linker-filled fields masked
-(`tools/match_check.py`; `docs/MATCH.md` explains the masking). Every row must
-score 1.0; a row naming an unknown function, a missing symbol or a TU that
-does not compile fails too. There is no link step: the original's linker and
-SDK libraries are Sony's, so the proof is per function.
+(`tools/match_check.py`; `docs/MATCH.md` explains the masking and the target
+check). Then `tools/layout_link.py` rebuilds the text segment, every claimed
+function at its address with its relocations resolved and the rest from the
+base, and the image must equal the base byte for byte
+(`build/base/text.bin`, `build/base/layout.json`). Every row must score 1.0
+with correct targets; a row naming an unknown function, a missing symbol, a
+TU that does not compile, or a relocation the resolver cannot place fails
+too. There is no real link: the original's linker and SDK libraries are
+Sony's, so the layout is done by the tool and the PLT, GOT and data are read
+from the base.
 
 The inner loop is `tools/quick_diff.sh <tu> <function> [<symbol>]`.
 
