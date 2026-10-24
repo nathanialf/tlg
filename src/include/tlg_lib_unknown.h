@@ -74,4 +74,38 @@ class TwoBaseAllocator : public TwoBaseAllocatorBase, public TwoBaseAllocatorInt
 
 void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
 
+/* An arena that hands out blocks with a 16-byte header before the payload
+ * (owner, size): FUN_0000bc30 allocates through the third virtual method,
+ * FUN_0000bc60 reads the size back, FUN_0000bc70 finds the header. */
+struct ArenaVtable {
+    void *slot0;
+    void *slot1;
+    void *(*allocate)(void *self, int size);
+};
+
+struct Arena {
+    ArenaVtable *vtable;
+};
+
+struct ArenaBlockHeader {
+    Arena *owner;
+    s32 size;
+    s32 unknown;
+};
+
+/* The memory system with vtable 0x168d690, whose slot 4 (FUN_0000c590)
+ * loads the path of hkFreeListMemorySystem.cpp (config/homes.base.txt). Its
+ * constructor FUN_0000c270 stores its second, third and fourth arguments at
+ * +8, +0x18 and +0x20; the object at +0x20 is called through its fifth and
+ * sixth virtual slots (FUN_0000d230, FUN_0000d250). Complete destructor
+ * FUN_0000c360, deleting destructor FUN_0000c350. */
+struct MemorySystemAllocator;
+
+struct MemorySystem {
+    u8 unknown0[0x18];
+    MemorySystemAllocator *allocator18;
+};
+
+void FUN_0000c360(MemorySystem *self); /* derived name */
+
 #endif

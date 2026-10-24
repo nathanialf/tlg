@@ -101,4 +101,34 @@ struct hkUuidObject;
 
 void FUN_0000dc40(hkUuidObject *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
+/* hkRefCountedProperties, 16 bytes: entries, an array (type 0x16) of
+ * hkRefCountedProperties::Entry, at +0 (type info at 0x57b85d8, registered
+ * by the initializer at 0xd390). Its finish constructor (FUN_0001c1e0,
+ * empty) and destructor (FUN_0001c1f0, releases each entry) are out of
+ * line. */
+struct hkRefCountedProperties;
+
+void FUN_0001c1e0(hkRefCountedProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0001c1f0(hkRefCountedProperties *self);                                /* derived name */
+
+/* hkSimpleLocalFrame, polymorphic (vtable 0x168d8f0, stored by its finish
+ * callback 0x37f0): members from its record table at 0x168c7d0, transform
+ * (type 0x12) at +0x10, children (array of pointers) at +0x50, parentFrame
+ * (pointer) at +0x60, group (pointer) at +0x68, name (hkStringPtr) at +0x70.
+ * FUN_0000df30 copies the transform out, FUN_0000e160 reads the child count
+ * at +0x58. */
+struct hkLocalFrame;
+struct hkLocalFrameGroup;
+
+class hkSimpleLocalFrame
+{
+  public:
+    virtual ~hkSimpleLocalFrame();
+
+    u8 unknown8[0x58];
+    hkLocalFrame *parentFrame;
+    hkLocalFrameGroup *group;
+    hkStringPtr name;
+};
+
 #endif
