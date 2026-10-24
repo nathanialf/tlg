@@ -28,6 +28,14 @@ done < "$flags_file"
 if [[ $bestlen -lt 0 ]]; then
     echo "compile_cpp: no flags prefix in $flags_file matches $src" >&2; exit 1
 fi
+# `cxx=<path>` or `cxx=<version>` as the first flag selects another compiler for
+# this prefix (a tools/cc/llvm-<version>/bin/clang, or any path).
+if [[ "$best" == cxx=* ]]; then
+    sel="${best%% *}"; sel="${sel#cxx=}"; best="${best#* }"
+    if [[ -x "$ROOT/tools/cc/llvm-$sel/bin/clang" ]]; then CXX="$ROOT/tools/cc/llvm-$sel/bin/clang"
+    else CXX="$sel"; fi
+    case "$CXX" in */tools/cc/*|tools/cc/*) export LD_LIBRARY_PATH="$ROOT/tools/cc/shim${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;; esac
+fi
 mkdir -p "$(dirname "$obj")"
 # shellcheck disable=SC2086
 exec "$CXX" $best -c "$src" -o "$obj"

@@ -7,11 +7,14 @@
 # Evidence, from the functions matched so far (docs/TARGETS.md has the probe):
 #   -O2                             -O1 and -Os lose the vectorised and
 #                                   scheduled forms the base has
-#   -march=x86-64 + the features    the Jaguar's instruction set (AVX, SSE4a,
-#                                   AES, PCLMUL, BMI, F16C, LZCNT, POPCNT,
-#                                   PRFCHW) with GENERIC tuning: under the
-#                                   btver2 scheduling model the register copies
-#                                   in 0xbc30 come out in the other order
+#   -march=btver2                   the Jaguar: its instruction set is in use
+#                                   (movbe 410 times, andn 207, lzcnt 69 in the
+#                                   executable)
+#   -mllvm -disable-post-ra         upstream's BtVer2Model turns on the post-RA
+#                                   list scheduler, which reorders the register
+#                                   copies of 0xbc30 and the loads of 0x137c0
+#                                   against the base; Sony's compiler did not
+#                                   schedule that way (docs/TARGETS.md)
 #   -fwrapv                         the base subtracts in 32 bits and then
 #                                   sign-extends (0x12120); with signed
 #                                   overflow undefined clang widens first
@@ -19,9 +22,27 @@
 #                                   through another type (0x12120)
 #   -fno-omit-frame-pointer         every non-leaf keeps rbp (push rbp; mov
 #   -momit-leaf-frame-pointer       rbp, rsp), every leaf omits it
-#   -fno-exceptions -fno-rtti       no unwinding landing pads or type info
-#                                   seen yet; revisit when a throwing or
-#                                   dynamic_cast site is matched
+#   -fPIC                           the executable is position independent
+#                                   (ET_SCE_DYNEXEC, 29k relocations); the
+#                                   Orbis driver defaults to -fPIC (Sony's 2013
+#                                   LLVM dev meeting slides, docs/TARGETS.md)
+#                                   and upstream 3.6.2 does not for this triple
+#   -fstack-protector-strong        an Orbis driver default (same slides); the
+#                                   executable imports __stack_chk_fail and
+#                                   __stack_chk_guard
+#   -fno-exceptions -fno-rtti       Orbis driver defaults (same slides)
+#   -fno-math-errno                 the upstream PS4 toolchain's default
+#                                   (IsMathErrnoDefault false)
+#   -std=gnu++11                    the Orbis driver's default dialect (slides)
+#   -fshort-wchar -D__ORBIS__       the PS4 target's wchar_t is unsigned short
+#   -D__PS4__                       and these are its macros (clang 3.7+'s
+#                                   PS4 target info); 3.6.2 knows no PS4 target
+#
+# A line may start with `cxx=<path or tools/cc version>` after the prefix to
+# compile that prefix with another release (tools/compile_cpp.sh): the
+# executable's components were built in different years (the Havok 2014.2
+# nightly of 2014-11-21, the sound engine on 2016-09-30, the game with SDK
+# 3.5), so one compiler need not fit all of src/.
 #   -ffreestanding -nostdlibinc     no host libc headers; the compiler's own
 #   -nostdinc++                     intrinsic headers (xmmintrin.h) stay
-src/ --target=x86_64-scei-ps4 -O2 -march=x86-64 -mavx -msse4a -maes -mpclmul -mbmi -mf16c -mlzcnt -mpopcnt -mprfchw -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=c++11 -Isrc/include
+src/ --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -disable-post-ra -fPIC -fstack-protector-strong -fno-math-errno -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
