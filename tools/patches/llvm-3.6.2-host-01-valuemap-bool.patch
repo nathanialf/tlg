@@ -1,0 +1,22 @@
+llvm-3.6.2 host patch 01: include/llvm/IR/ValueMap.h
+
+ValueMap::hasMD() returns a std::unique_ptr as bool. unique_ptr's operator
+bool is explicit, so `return MDMap;` is an ill-formed implicit conversion;
+the gcc 4.8-era hosts 3.6.2 was released with accepted it, GCC 14 (and
+recent libstdc++) rejects it ("cannot convert 'const std::unique_ptr<...>'
+to 'bool' in return", 20 TUs under lib/CodeGen and lib/Transforms). Spell
+the conversion out; same value, no effect on generated code.
+
+diff --git a/include/llvm/IR/ValueMap.h b/include/llvm/IR/ValueMap.h
+index f2ea405..f9a1a62 100644
+--- a/include/llvm/IR/ValueMap.h
++++ b/include/llvm/IR/ValueMap.h
+@@ -101,7 +101,7 @@ public:
+ 
+   ~ValueMap() {}
+ 
+-  bool hasMD() const { return MDMap; }
++  bool hasMD() const { return static_cast<bool>(MDMap); }
+   MDMapT &MD() {
+     if (!MDMap)
+       MDMap.reset(new MDMapT);

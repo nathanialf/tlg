@@ -1,42 +1,55 @@
 #!/usr/bin/env bash
-# tools/build_llvm.sh [--verify] [--force]: build upstream LLVM 3.6.2 + clang
-# 3.6.2 from the release sources on this host, into tools/cc/llvm-3.6.2-src/.
-# This is the pristine baseline on which Sony-behaviour backports are applied
-# one at a time later (docs/TARGETS.md); it must compile every probe TU and
-# every file under src/ to the same code as the prebuilt release under
-# tools/cc/llvm-3.6.2/ (tools/fetch_llvm.sh), which --verify checks.
+# tools/build_llvm.sh [<version>] [--verify] [--force]: build upstream LLVM +
+# clang <version> (default 4.0.0; 3.6.2 also known) from the release sources
+# on this host, into tools/cc/llvm-<version>-src/. This is the pristine
+# baseline on which Sony-behaviour backports are applied one at a time later
+# (docs/TARGETS.md); it must compile every probe TU and every file under src/
+# to the same code as the prebuilt release under tools/cc/llvm-<version>/
+# (tools/fetch_llvm.sh), which --verify checks.
 #
-#   1. Fetch llvm-3.6.2.src.tar.xz and cfe-3.6.2.src.tar.xz from
-#      releases.llvm.org, pinned by SHA-256 (both also carry Tom Stellard's
-#      release signature, key 11E5 21D6 4698 2372 EB57 7A1F 8F08 71F2 0211
-#      9294, checked when this pin was taken), unpack them into
-#      tools/cc/src/llvm-3.6.2.src/ with clang at tools/clang.
-#   2. Apply tools/patches/llvm-3.6.2-host-*.patch in order (-p1 from the
-#      llvm source root). These only make the 2015 sources build with a
+#   1. Fetch llvm-<version>.src.tar.xz and cfe-<version>.src.tar.xz from
+#      releases.llvm.org, pinned by SHA-256 (the release signatures were
+#      checked when the pins were taken: 3.6.2 by Tom Stellard, key 11E5 21D6
+#      4698 2372 EB57 7A1F 8F08 71F2 0211 9294; 4.0.0 by Hans Wennborg, key
+#      B6C8 F982 82B9 44E3 B0D5 C253 0FC3 042E 345A D05D), unpack them into
+#      tools/cc/src/llvm-<version>.src/ with clang at tools/clang.
+#   2. Apply tools/patches/llvm-<version>-host-*.patch in order (-p1 from the
+#      llvm source root). These only make the old sources build with a
 #      current host toolchain; none changes code generation.
 #   3. Configure (CMake + ninja, Release, X86 only, no assertions), build the
 #      `clang` target and install it with its resource headers
-#      (lib/clang/3.6.2/include, which -nostdlibinc relies on for xmmintrin.h).
+#      (lib/clang/<version>/include, which -nostdlibinc relies on for xmmintrin.h).
 #
-# Skipped when the install exists and is newer than every patch and this
-# script; --force rebuilds. --verify (alone, or after a build) compiles
+# Skipped when the install exists, is newer than every patch and was built
+# from the same patch set (hashes in <prefix>/.build-stamp); --force
+# rebuilds. --verify (alone, or after a build) compiles
 # tools/probe/batch*.cpp and src/**/*.cpp with the prebuilt and the built
-# clang under the src/ flags of config/flags.<slug>.txt and requires
-# `llvm-objdump-19 -d` of every object to be identical.
+# clang under every flag line of config/flags.<slug>.txt (prefix and cxx=
+# dropped; for 4.0.0 `-mllvm -pre-RA-sched=list-ilp` replaces any `-mllvm
+# -disable-post-ra`) and requires `llvm-objdump-19 -d` (and -dr) of every
+# object to be identical. VERBOSE=1 lists each identical object too.
 #
 # Host: gcc/g++ (14 tested), cmake >= 3.5, ninja (.venv/bin/ninja or PATH).
 # JOBS sets the parallelism (default 3). Everything here is upstream LLVM
-# (Apache-2.0 with LLVM exception for later releases; 3.6.2 is under the
-# University of Illinois/NCSA licence); nothing comes from a Sony SDK.
+# (3.6.2 and 4.0.0 are under the University of Illinois/NCSA licence);
+# nothing comes from a Sony SDK.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-VER=3.6.2
+declare -A LLVM_SHA CFE_SHA VERIFY_SUBST
+LLVM_SHA[3.6.2]=f60dc158bfda6822de167e87275848969f0558b3134892ff54fced87e4667b94
+CFE_SHA[3.6.2]=ae9180466a23acb426d12444d866b266ff2289b266064d362462e44f8d4699f3
+LLVM_SHA[4.0.0]=8d10511df96e73b8ff9e7abbfb4d4d432edbdbe965f1f4f07afaf370b8a533be
+CFE_SHA[4.0.0]=cea5f88ebddb30e296ca89130c83b9d46c2d833685e2912303c828054c4dc98a
+# --verify: "<from>|<to>" applied to every flags line for this version
+VERIFY_SUBST[4.0.0]='-mllvm -disable-post-ra|-mllvm -pre-RA-sched=list-ilp'
+
+VER=4.0.0
+if [[ $# -gt 0 && "$1" != -* ]]; then VER="$1"; shift; fi
+[[ -n "${LLVM_SHA[$VER]:-}" ]] || { echo "build_llvm: unknown version $VER (known: ${!LLVM_SHA[*]})" >&2; exit 2; }
 LLVM_URL=https://releases.llvm.org/$VER/llvm-$VER.src.tar.xz
-LLVM_SHA=f60dc158bfda6822de167e87275848969f0558b3134892ff54fced87e4667b94
 CFE_URL=https://releases.llvm.org/$VER/cfe-$VER.src.tar.xz
-CFE_SHA=ae9180466a23acb426d12444d866b266ff2289b266064d362462e44f8d4699f3
 
 SRCROOT="$ROOT/tools/cc/src"
 SRC="$SRCROOT/llvm-$VER.src"
@@ -52,8 +65,8 @@ for a in "$@"; do
     case "$a" in
         --verify) do_verify=1 ;;
         --force) force=1 ;;
-        -h|--help) sed -n '2,32p' "$0"; exit 0 ;;
-        *) echo "usage: $0 [--verify] [--force]" >&2; exit 2 ;;
+        -h|--help) sed -n '2,35p' "$0"; exit 0 ;;
+        *) echo "usage: $0 [<version>] [--verify] [--force]" >&2; exit 2 ;;
     esac
 done
 # `--verify` alone verifies an existing install without rebuilding it.
@@ -76,7 +89,7 @@ shopt -u nullglob
 up_to_date() {  # the install exists and is newer than every input
     local stamp="$PREFIX/.build-stamp" p
     [[ -x "$PREFIX/bin/clang" && -f "$stamp" ]] || return 1
-    for p in "${PATCHES[@]}" "$0"; do [[ "$p" -nt "$stamp" ]] && return 1; done
+    for p in "${PATCHES[@]}"; do [[ "$p" -nt "$stamp" ]] && return 1; done
     # the patch set must be the same list as last time (a removed patch too)
     [[ "$(cat "$stamp")" == "$(patch_list)" ]]
 }
@@ -84,8 +97,8 @@ patch_list() { local p; for p in "${PATCHES[@]}"; do sha256sum "$p" | sed "s|$RO
 
 build() {
     [[ -n "$NINJA" ]] || { echo "build_llvm: ninja not found (.venv/bin/ninja or PATH)" >&2; exit 1; }
-    fetch_pinned "llvm-$VER.src" "$LLVM_URL" "$LLVM_SHA" "$SRCROOT/llvm-$VER.src.tar.xz"
-    fetch_pinned "cfe-$VER.src" "$CFE_URL" "$CFE_SHA" "$SRCROOT/cfe-$VER.src.tar.xz"
+    fetch_pinned "llvm-$VER.src" "$LLVM_URL" "${LLVM_SHA[$VER]}" "$SRCROOT/llvm-$VER.src.tar.xz"
+    fetch_pinned "cfe-$VER.src" "$CFE_URL" "${CFE_SHA[$VER]}" "$SRCROOT/cfe-$VER.src.tar.xz"
     # Always start from fresh sources, so the tree is exactly tarball + patches.
     echo "==> unpacking into $SRC"
     rm -rf "$SRC" "$SRC.tmp"
@@ -115,15 +128,25 @@ build() {
         -DLLVM_ENABLE_TERMINFO=OFF \
         -DLLVM_ENABLE_ZLIB=OFF \
         -Wno-dev > "$BLD/cmake.log" 2>&1 || { tail -n 30 "$BLD/cmake.log" >&2; exit 1; }
-    echo "==> building clang (-j$JOBS; about an hour on 3 cores)"
+    echo "==> building clang (-j$JOBS; 30-60 min on 3 cores)"
     local t0=$SECONDS
-    "$NINJA" -C "$BLD" -j"$JOBS" clang
+    # The 2015-2017 sources trip many GCC 14 warnings; keep them in a log.
+    "$NINJA" -C "$BLD" -j"$JOBS" clang > "$BLD/ninja.log" 2>&1 ||
+        { grep -E '^FAILED|error:' "$BLD/ninja.log" | head -n 40 >&2; echo "build_llvm: build failed, log $BLD/ninja.log" >&2; exit 1; }
     echo "==> installing into $PREFIX"
     rm -rf "$PREFIX"
     # The clang component installs bin/clang (+ the clang++ link); the
     # clang-headers component installs lib/clang/$VER/include.
     cmake -DCOMPONENT=clang -P "$BLD/cmake_install.cmake" >/dev/null
     cmake -DCOMPONENT=clang-headers -P "$BLD/cmake_install.cmake" >/dev/null
+    # 3.6.2's CMake has no install components (the calls above install
+    # nothing); copy the driver and the resource headers the clang target
+    # staged in the build tree instead.
+    if [[ ! -x "$PREFIX/bin/clang" ]]; then
+        mkdir -p "$PREFIX/bin" "$PREFIX/lib/clang/$VER"
+        cp -a "$BLD"/bin/clang "$BLD"/bin/clang++ "$BLD"/bin/clang-[0-9]* "$PREFIX/bin/"
+        cp -a "$BLD/lib/clang/$VER/include" "$PREFIX/lib/clang/$VER/"
+    fi
     [[ -x "$PREFIX/bin/clang" && -f "$PREFIX/lib/clang/$VER/include/xmmintrin.h" ]] ||
         { echo "build_llvm: install incomplete under $PREFIX" >&2; exit 1; }
     patch_list > "$PREFIX/.build-stamp"
@@ -134,34 +157,70 @@ verify() {
     # shellcheck source=tools/tlg_version.sh
     . tools/tlg_version.sh
     tlg_version_init "$ROOT"
-    local flags out f name rc=0 n=0
-    flags="$(grep -m1 '^src/ ' "config/flags.${TLG_VERSION}.txt" | cut -d' ' -f2-)"
-    [[ -n "$flags" ]] || { echo "build_llvm: no src/ line in config/flags.${TLG_VERSION}.txt" >&2; exit 1; }
     [[ -x "$PREBUILT/bin/clang" ]] || { echo "build_llvm: no prebuilt at $PREBUILT (tools/fetch_llvm.sh $VER)" >&2; exit 1; }
-    out="$TLG_BUILD_DIR/scratch/llvm_verify"
-    rm -rf "$out"; mkdir -p "$out/prebuilt" "$out/source"
-    echo "==> verifying $PREFIX against $PREBUILT"
-    while IFS= read -r f; do
-        name="$(echo "${f%.cpp}" | tr / _)"
-        # shellcheck disable=SC2086
-        LD_LIBRARY_PATH="$ROOT/tools/cc/shim" "$PREBUILT/bin/clang" $flags -c "$f" -o "$out/prebuilt/$name.o"
-        # shellcheck disable=SC2086
-        "$PREFIX/bin/clang" $flags -c "$f" -o "$out/source/$name.o"
-        local which
-        for which in prebuilt source; do
-            llvm-objdump-19 -d "$out/$which/$name.o" | tail -n +3 > "$out/$which/$name.dis"
-            llvm-objdump-19 -dr "$out/$which/$name.o" | tail -n +3 > "$out/$which/$name.disr"
-        done
-        n=$((n + 1))
-        if ! cmp -s "$out/prebuilt/$name.dis" "$out/source/$name.dis"; then
-            echo "DIFF  $f (disassembly)"; diff "$out/prebuilt/$name.dis" "$out/source/$name.dis" | head -n 20; rc=1
-        elif ! cmp -s "$out/prebuilt/$name.disr" "$out/source/$name.disr"; then
-            echo "DIFF  $f (relocations)"; diff "$out/prebuilt/$name.disr" "$out/source/$name.disr" | head -n 20; rc=1
-        else
-            echo "same  $f"
+    # Flag sets: every prefix line of config/flags.<slug>.txt, prefix and any
+    # cxx= token removed (so each TU is compiled under every configured flag
+    # set, not only its own prefix's: more codegen paths compared). A line
+    # still carrying -mllvm -disable-post-ra gets VERIFY_SUBST for versions
+    # that use another scheduler flag.
+    local -a sets=()
+    local line rest
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        rest="${line#* }"
+        [[ "$rest" == cxx=* ]] && rest="${rest#* }"
+        if [[ -n "${VERIFY_SUBST[$VER]:-}" ]]; then
+            local from="${VERIFY_SUBST[$VER]%%|*}" to="${VERIFY_SUBST[$VER]#*|}"
+            rest="${rest/"$from"/"$to"}"
         fi
-    done < <(ls tools/probe/batch*.cpp; find src -name '*.cpp' | sort)
-    if [[ $rc == 0 ]]; then echo "==> $n TUs: disassembly and relocations identical"; else echo "==> divergence (objects in $out)" >&2; fi
+        sets+=("$rest")
+    done < "config/flags.${TLG_VERSION}.txt"
+    [[ ${#sets[@]} -gt 0 ]] || { echo "build_llvm: no flag lines in config/flags.${TLG_VERSION}.txt" >&2; exit 1; }
+    local out="$TLG_BUILD_DIR/scratch/llvm_verify-$VER"
+    rm -rf "$out"; mkdir -p "$out"
+    echo "==> verifying $PREFIX against $PREBUILT"
+    local -a tus
+    mapfile -t tus < <(ls tools/probe/batch*.cpp; find src -name '*.cpp' | sort)
+    local rc=0 n=0 same=0 raw=0 bothfail=0 i f name w o
+    for i in "${!sets[@]}"; do
+        echo "==> flag set $i: ${sets[$i]}"
+        mkdir -p "$out/$i/prebuilt" "$out/$i/source"
+        for f in "${tus[@]}"; do
+            name="$(echo "${f%.cpp}" | tr / _)"
+            n=$((n + 1))
+            local okp=1 oks=1
+            # shellcheck disable=SC2086
+            LD_LIBRARY_PATH="$ROOT/tools/cc/shim" "$PREBUILT/bin/clang" ${sets[$i]} -c "$f" \
+                -o "$out/$i/prebuilt/$name.o" 2>"$out/$i/prebuilt/$name.err" || okp=0
+            # shellcheck disable=SC2086
+            "$PREFIX/bin/clang" ${sets[$i]} -c "$f" -o "$out/$i/source/$name.o" \
+                2>"$out/$i/source/$name.err" || oks=0
+            if [[ $okp == 0 && $oks == 0 ]]; then
+                if cmp -s "$out/$i/prebuilt/$name.err" "$out/$i/source/$name.err"; then
+                    echo "both-fail  [$i] $f (same diagnostics)"; bothfail=$((bothfail + 1)); continue
+                fi
+                echo "DIFF  [$i] $f (both fail, different diagnostics)"; rc=1; continue
+            elif [[ $okp != "$oks" ]]; then
+                echo "DIFF  [$i] $f (compiles with only one of them)"; rc=1; continue
+            fi
+            for w in prebuilt source; do
+                o="$out/$i/$w/$name"
+                llvm-objdump-19 -d "$o.o" | tail -n +3 > "$o.dis"
+                llvm-objdump-19 -dr "$o.o" | tail -n +3 > "$o.disr"
+            done
+            o="$out/$i"
+            if ! cmp -s "$o/prebuilt/$name.dis" "$o/source/$name.dis"; then
+                echo "DIFF  [$i] $f (disassembly)"; diff "$o/prebuilt/$name.dis" "$o/source/$name.dis" | head -n 20; rc=1
+            elif ! cmp -s "$o/prebuilt/$name.disr" "$o/source/$name.disr"; then
+                echo "DIFF  [$i] $f (relocations)"; diff "$o/prebuilt/$name.disr" "$o/source/$name.disr" | head -n 20; rc=1
+            else
+                same=$((same + 1)); [[ -n "${VERBOSE:-}" ]] && echo "same  [$i] $f"
+                cmp -s "$o/prebuilt/$name.o" "$o/source/$name.o" && raw=$((raw + 1))
+            fi
+        done
+    done
+    echo "==> $n compiles (${#tus[@]} TUs x ${#sets[@]} flag sets): $same identical (disassembly and relocations; $raw of them byte-identical .o files), $bothfail fail identically under both"
+    if [[ $rc != 0 ]]; then echo "==> divergence (objects in $out)" >&2; fi
     return $rc
 }
 

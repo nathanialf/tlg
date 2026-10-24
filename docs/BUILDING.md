@@ -33,6 +33,7 @@ Everything else is fetched by `tools/setup.sh` into `tools/ext/` and
 | .NET 8 runtime (`dotnet-install.sh`, user-local) | `tools/ext/dotnet/` | runs PkgTool.Core |
 | LibOrbisPkg PkgTool.Core 0.2.231, framework-dependent build | `tools/ext/pkgtool/` | extracts the package (the self-contained Linux build bundles a 2020 .NET Core 3 that needs libssl 1.x and ICU, neither on a current host) |
 | LLVM 3.3 and 4.0.0 prebuilt + Debian's `libtinfo5` (`tools/fetch_llvm.sh`) | `tools/cc/llvm-3.3/`, `tools/cc/llvm-4.0.0/`, `tools/cc/shim/` | the compilers of the two regions (`docs/TARGETS.md`); other releases for `tools/compiler_probe.sh` on demand |
+| LLVM 3.6.2 / 4.0.0 built from source (`tools/build_llvm.sh`, optional, about 20 and 40 minutes) | `tools/cc/llvm-<version>-src/` | verified byte-identical to the prebuilt releases; the base for any future backport patch |
 | objdiff-cli 3.8.3 | `tools/ext/objdiff/` | optional interactive object diff viewer |
 | Ghidra 12.2 | `tools/ghidra/ghidra_12.2_PUBLIC/` | optional analysis (`SKIP_GHIDRA=1` skips the 570 MB download) |
 

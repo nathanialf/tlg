@@ -1,0 +1,41 @@
+llvm-4.0.0 host patch 01: clang/lib/CodeGen/CGOpenMPRuntime.cpp
+
+GCC 14 rejects a lambda whose parameter has the same name as one of its
+captures ("lambda parameter 'CGF' previously declared as a capture";
+ill-formed since C++11 per [expr.prim.lambda]/CWG 2211, which older GCCs and
+clang accepted). Three lambdas in the OpenMP target-data codegen capture the
+enclosing `CGF` by reference and also take a `CodeGenFunction &CGF`
+parameter; inside the body the parameter shadowed the capture, so the
+capture was never used. Dropping `&CGF` from the three capture lists keeps
+the meaning exactly and touches only OpenMP `target data` codegen, which the
+project never exercises. No effect on code generation for our TUs.
+
+--- a/tools/clang/lib/CodeGen/CGOpenMPRuntime.cpp
++++ b/tools/clang/lib/CodeGen/CGOpenMPRuntime.cpp
+@@ -6271,7 +6271,7 @@
+   // Generate the code for the opening of the data environment. Capture all the
+   // arguments of the runtime call by reference because they are used in the
+   // closing of the region.
+-  auto &&BeginThenGen = [&D, &CGF, Device, &Info, &CodeGen, &NoPrivAction](
++  auto &&BeginThenGen = [&D, Device, &Info, &CodeGen, &NoPrivAction](
+       CodeGenFunction &CGF, PrePostActionTy &) {
+     // Fill up the arrays with all the mapped variables.
+     MappableExprsHandler::MapBaseValuesArrayTy BasePointers;
+@@ -6318,7 +6318,7 @@
+   };
+ 
+   // Generate code for the closing of the data region.
+-  auto &&EndThenGen = [&CGF, Device, &Info](CodeGenFunction &CGF,
++  auto &&EndThenGen = [Device, &Info](CodeGenFunction &CGF,
+                                             PrePostActionTy &) {
+     assert(Info.isValid() && "Invalid data environment closing arguments.");
+ 
+@@ -6397,7 +6397,7 @@
+          "Expecting either target enter, exit data, or update directives.");
+ 
+   // Generate the code for the opening of the data environment.
+-  auto &&ThenGen = [&D, &CGF, Device](CodeGenFunction &CGF, PrePostActionTy &) {
++  auto &&ThenGen = [&D, Device](CodeGenFunction &CGF, PrePostActionTy &) {
+     // Fill up the arrays with all the mapped variables.
+     MappableExprsHandler::MapBaseValuesArrayTy BasePointers;
+     MappableExprsHandler::MapValuesArrayTy Pointers;
