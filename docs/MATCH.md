@@ -117,6 +117,11 @@ data the program's own logic treats as volatile (a value another thread or
 the hardware writes), with its reason in a comment; a store to a real field;
 the engine's own idioms. The question to ask of every line: would the
 engine's developer have written this to express what the function does?
+`tools/check_dev_native.py` refuses the spellings of this that a tool can
+see (inline asm, register pins, codegen attributes, pragmas and builtins,
+empty `do { } while (0)`, a `volatile` with no reason beside it) in the
+pre-commit hook; the rest is the reviewer's test, and a new spelling that
+gets through joins the tool's list (`docs/DECISIONS.md` D9).
 
 ## The compiler is fixed inside the loop
 

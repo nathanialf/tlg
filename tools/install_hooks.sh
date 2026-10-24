@@ -21,21 +21,28 @@ cat > "$HOOK" <<'EOF2'
 #!/usr/bin/env bash
 # Auto-installed by tools/install_hooks.sh. Runs, in order:
 #   1. tools/check_no_rom.sh        IP-safety scan of the staged files
-#   2. tools/format.sh --check      staged C/C++ must be clang-formatted
-#   3. tools/build.sh gate-all      for EVERY configured target: its base files
+#   2. tools/check_dev_native.py    refuses crutches in the staged sources (inline
+#                                   asm, register pins, codegen attributes and
+#                                   pragmas, empty do-while, unexplained volatile)
+#   3. tools/format.sh --check      staged C/C++ must be clang-formatted
+#   4. tools/build.sh gate-all      for EVERY configured target: its base files
 #                                   are required, then setup, ninja and the
 #                                   match gate (tools/check_elf.py --gate)
-#   4. tools/build.sh progress-all  refresh docs/<slug>/PROGRESS.md,
+#   5. tools/build.sh progress-all  refresh docs/<slug>/PROGRESS.md,
 #                                   docs/<slug>/progress.json and README.md's
 #                                   progress block, then `git add` them
 #
-# Steps 3 and 4 run only when a staged path can affect the build (src/,
+# Steps 4 and 5 run only when a staged path can affect the build (src/,
 # config/, tools/). Bypass with --no-verify only for a commit that cannot touch
 # the build and when the build is known green.
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
 
 "$ROOT/tools/check_no_rom.sh"
+
+# Staged sources must be developer-native: no construct that emits no bytes
+# and exists to steer the compiler (CLAUDE.md, docs/MATCH.md "Crutches").
+"$ROOT/.venv/bin/python" -I "$ROOT/tools/check_dev_native.py"
 
 STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACMR -z | tr '\0' '\n' |
     grep -E '^src/.*\.(c|cpp|cc|h|hpp|inl)$' || true)

@@ -149,6 +149,7 @@ GitHub Pages on a push to `main` that changes one of them
 `tools/install_hooks.sh` (run by `setup.sh`) writes two hooks:
 
 - **pre-commit**: `tools/check_no_rom.sh` (the IP scan of the staged files),
+  `tools/check_dev_native.py` (no crutches in the staged sources),
   `tools/format.sh --check` on staged sources, and when a staged path is under
   `src/`, `config/` or `tools/`: `tools/build.sh gate-all`, then
   `tools/build.sh progress-all`, whose refreshed files are staged into the

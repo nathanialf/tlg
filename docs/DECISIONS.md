@@ -226,3 +226,40 @@ build time from a committed schema, as ico does (a later decision).
 
 **Trigger to revisit.** The first data object claimed from source (to
 exercise the pointer-slot rule on real data); a public linker.
+
+## D9. Developer-native code is enforced mechanically (2026-10-24)
+
+**Decision.** `tools/check_dev_native.py` runs in the pre-commit hook on every
+staged source under `src/` and refuses: inline assembly in any spelling;
+`register` and register pins; attributes, pragmas and builtins that steer
+code generation (`noinline`, `always_inline`, `flatten`, `optnone`,
+`optimize`, `hot`, `cold`, `section`, `alias`, `__forceinline`, `#pragma
+clang optimize`, `#pragma unroll`, `__builtin_expect`, and the rest listed
+in the tool); an empty `do { } while (0)`; a symbol-name alias; and
+`volatile` without a comment on its line or the line above giving the data
+model reason. A ruled exception goes in `tools/dev_native_allow.txt` with
+its reason and is reported as allowed on every run, never silent.
+Alignment (`alignas`, `aligned`), `inline`, `const`, `#pragma once` and
+`#pragma pack` are layout and language, not steering, and pass.
+
+**Why.** ICO's rulings record that the same rule, written as prose in its
+CLAUDE.md and briefs, did not hold: register pins, empty asm barriers,
+`do { } while (0)` wrappers and dead stores entered as ordinary-looking C
+under narrower readings of "crutch", every audit missed some, and retiring
+them later cost more than matching without them. The user's instruction for
+this project: "we want to make sure we dont do the crutches the same. we
+want dev native code." A gate the hook runs is the only form of the rule
+that has held.
+
+**What the checker cannot see.** A dead store after the last read, an
+orphan carrier local, a block scope that exists to move a live range, a
+`volatile` with a plausible comment on a value the program does not treat
+as volatile. Those remain the reviewer's and the harvest audit's job: the
+test is whether the engine's developer would have written the line to
+express what the function does. The checker's list grows when a landing or
+an audit shows a new spelling; the test does not change.
+
+**Trigger to revisit.** A construct the executable proves the developer used
+that the checker refuses (an alignment or packing attribute, a real
+`volatile`); it is allowed by evidence in `tools/dev_native_allow.txt`, or
+the rule is loosened for that construct with its evidence recorded here.
