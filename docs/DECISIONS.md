@@ -197,3 +197,32 @@ generates them from the user's ELF at build time; the same is planned).
 
 **Trigger to revisit.** A public linker that reproduces Sony's section
 layout, which would let the image be a real link.
+
+## D8. Every loaded segment is in the gate; data comes from source by claim (2026-10-24)
+
+**Decision.** `tools/layout_link.py` rebuilds all three loaded segments
+(`.text`: code, read-only data, PLT, unwind tables; `.relro`: vtables and the
+GOT; `.data`, with its NOBITS tail `.bss`) and the gate requires each equal
+to the base. A data object is claimed in `config/data.base.txt`
+(`D_<hex> <tu> [<symbol>]`): the TU defines it as typed C++ under its
+`D_<hex>` name, the layout takes its bytes from the object, resolves its
+pointer fields the way the file holds them (a RELATIVE slot carries the
+target address; an import's address slot carries 0) and requires that the
+base has the matching dynamic relocation at every pointer slot. A `.bss`
+object has no bytes to compare and counts as owned. The progress JSON
+reports every segment as ico's schema does: the share from source, and the
+share taken from the user's own executable at build time.
+
+**Why.** ico's gate compares every allocated section; a text-only gate
+would let data drift unmeasured and would give a data-referencing function
+nothing to resolve against. Measuring the share "from the base" keeps the
+honest number visible: today it is everything but 582 bytes.
+
+**Not reproduced.** The PLT, the GOT and the dynamic tables are the
+linker's output; they are compared but come from the base. The data-only
+ranges of the game (tables, strings) are content and are never committed;
+when they are needed they will be generated from the user's executable at
+build time from a committed schema, as ico does (a later decision).
+
+**Trigger to revisit.** The first data object claimed from source (to
+exercise the pointer-slot rule on real data); a public linker.

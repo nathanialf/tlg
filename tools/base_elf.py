@@ -46,8 +46,24 @@ class BaseElf:
         self._import_names = None
 
     # --- bytes -------------------------------------------------------------
+    PT_SCE_RELRO = 0x61000010
+
+    def loaded_segments(self) -> list[dict]:
+        """The file-backed segments the loader maps: the PT_LOADs and the
+        PT_SCE_RELRO (which is not a PT_LOAD but is mapped like one)."""
+        return [p for p in self.phdrs if p["type"] in (PT_LOAD, self.PT_SCE_RELRO)]
+
+    def segment_of(self, va: int) -> dict | None:
+        for p in self.loaded_segments():
+            if p["vaddr"] <= va < p["vaddr"] + p["memsz"]:
+                return p
+        return None
+
     def off(self, va: int) -> int | None:
-        return vaddr_to_off(self.phdrs, va)
+        p = self.segment_of(va)
+        if p is None or va >= p["vaddr"] + p["filesz"]:
+            return None
+        return p["offset"] + (va - p["vaddr"])
 
     def read(self, va: int, size: int) -> bytes:
         o = self.off(va)
@@ -175,9 +191,7 @@ class BaseElf:
         """Every address at which `blob` occurs in a loaded segment (for a
         string literal or a constant the object defines locally)."""
         hits = []
-        for p in self.phdrs:
-            if p["type"] != PT_LOAD:
-                continue
+        for p in self.loaded_segments():
             seg = self.data[p["offset"]:p["offset"] + p["filesz"]]
             i = seg.find(blob)
             while i >= 0:

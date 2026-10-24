@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-layout_link.py: rebuild the executable's text segment and compare it whole.
+layout_link.py: rebuild the executable's loaded segments and compare them whole.
 
 The ico project's gate links every object at the original addresses, fills
 the functions still unwritten with stubs taken from the user's own ELF, and
@@ -8,9 +8,10 @@ compares the result with the base byte for byte. This is that gate for a
 target whose linker is not public: instead of a linker, the image is laid
 out here.
 
-    1. Start from the base text segment (the user's own eboot.elf): every
-       function not yet claimed, the padding between functions, the PLT
-       stubs, everything, exactly as shipped.
+    1. Start from the base's loaded segments (the user's own eboot.elf): the
+       text segment (code, read-only data, the PLT, the unwind tables), the
+       RELRO (vtables, the GOT) and the data segment, every byte not yet
+       claimed exactly as shipped.
     2. For every row of config/matched.<slug>.txt, take the function's bytes
        from the compiled object and RESOLVE its relocations the way the
        original link did: a call to FUN_x becomes the displacement to FUN_x's
@@ -18,18 +19,25 @@ out here.
        to an import to its PLT stub; a GOT load to the import's GOT slot; a
        string literal the object defines to the one place the base holds
        those bytes. Write the result at the function's address.
-    3. Compare the image with the base text segment, whole. Any differing
-       byte names the function it falls in (or the gap, which would mean a
-       claimed function overran its size).
+    2b. For every row of config/data.<slug>.txt (`D_<hex> <tu> [<symbol>]`),
+       take the object the TU defines under that name, resolve its pointer
+       fields (an R_X86_64_64 to a function or a D_<hex> becomes the address,
+       which is what the base's file holds at a slot its loader relocates;
+       the base must carry a RELATIVE relocation at that slot) and write it
+       at the address. An object in the NOBITS tail of the data segment
+       (.bss) has no bytes to compare; it counts as owned.
+    3. Compare every segment with the base, whole. Any differing byte names
+       the function or data object it falls in (or the gap, which would mean
+       a claimed object overran its size).
 
 A relocation the resolver cannot place (a data symbol without a D_<hex>
 name, a literal the base holds in two places) fails the function with a
-message, never a guess. Only the text segment is rebuilt: the PLT, GOT,
-dynamic tables and data segments are Sony's linker's and are read from the
-base as they are.
+message, never a guess. The PLT, the GOT and the dynamic tables are Sony's
+linker's output: they are compared like everything else and come from the
+base until a source for them exists.
 
-    layout_link.py              build/<slug>/text.bin and build/<slug>/layout.json;
-                                prints the differing functions; exit 1 if any
+    layout_link.py              build/<slug>/<segment>.bin and build/<slug>/layout.json;
+                                prints the differing functions and objects; exit 1 if any
     layout_link.py --quiet
 """
 from __future__ import annotations
@@ -60,6 +68,53 @@ def load_matched(ver: str) -> list[tuple[str, str, str]]:
     return rows
 
 
+def load_data_rows(ver: str) -> list[tuple[str, str, str]]:
+    rows = []
+    p = config_path(REPO_ROOT, ver, "data", "txt")
+    if p.exists():
+        for line in p.read_text().splitlines():
+            s = line.split("#", 1)[0].split()
+            if len(s) >= 2:
+                rows.append((s[0], s[1], s[2] if len(s) > 2 else s[0]))
+    return rows
+
+
+def object_data_symbols(obj: Path) -> dict[str, tuple[bytes, list[mc.Reloc], bool]]:
+    """symbol -> (bytes, [Reloc], is_nobits) for every STT_OBJECT the object
+    defines (its initialised bytes from .data/.rodata, or zeros for .bss)."""
+    from elftools.elf.elffile import ELFFile
+    from elftools.elf.relocation import RelocationSection
+    out = {}
+    with obj.open("rb") as f:
+        elf = ELFFile(f)
+        symtab = elf.get_section_by_name(".symtab")
+        syms = list(symtab.iter_symbols())
+        relocs_by_sec: dict[int, list] = {}
+        for sec in elf.iter_sections():
+            if isinstance(sec, RelocationSection):
+                for r in sec.iter_relocations():
+                    sym = syms[r["r_info_sym"]]
+                    name = sym.name
+                    if sym["st_info"]["type"] == "STT_SECTION":
+                        name = elf.get_section(sym["st_shndx"]).name
+                    relocs_by_sec.setdefault(sec["sh_info"], []).append(
+                        mc.Reloc(r["r_offset"], mc.RELOC_WIDTH.get(r["r_info_type"], 4), r["r_info_type"],
+                                 name, r["r_addend"] if "r_addend" in r.entry else 0,
+                                 sym["st_shndx"], sym["st_value"], sym["st_size"]))
+        for sym in syms:
+            if sym["st_info"]["type"] != "STT_OBJECT" or sym["st_shndx"] in ("SHN_UNDEF", "SHN_ABS", "SHN_COMMON"):
+                continue
+            shndx = sym["st_shndx"]
+            sec = elf.get_section(shndx)
+            lo, size = sym["st_value"], sym["st_size"]
+            nobits = sec["sh_type"] == "SHT_NOBITS"
+            data = bytes(size) if nobits else sec.data()[lo:lo + size]
+            rl = [mc.Reloc(r.offset - lo, r.width, r.type, r.symbol, r.addend, r.sym_section, r.sym_value, r.sym_size)
+                  for r in relocs_by_sec.get(shndx, []) if lo <= r.offset < lo + size]
+            out[sym.name] = (data, sorted(rl, key=lambda r: r.offset), nobits)
+    return out
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why)."""
     s = base.address_of(r.symbol)
@@ -87,11 +142,42 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc) -> tuple[int |
     return None, f"{r.symbol}: no address in the base (name it D_<hex> or FUN_<hex>, or add it to the function table)"
 
 
-def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], addr: int) -> tuple[bytearray, list[str]]:
+def base_dynamic_relocs(base: BaseElf) -> dict[int, tuple[int, str, int]]:
+    """slot address -> (type, symbol name, addend) for every dynamic relocation
+    of the base (RELATIVE slots hold the target address in the file; a
+    R_X86_64_64 against an import holds 0)."""
+    syms, rels = base._dynamic()
+    return {r_off: (r_type, syms[r_sym][0] if r_sym < len(syms) else "", r_add) for r_off, r_type, r_sym, r_add in rels}
+
+
+def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], addr: int,
+                 in_data: bool = False) -> tuple[bytearray, list[str]]:
     out = bytearray(code)
     errors = []
+    dyn = base_dynamic_relocs(base) if in_data else {}
     for r in relocs:
         P = addr + r.offset
+        if in_data and r.type == R_X86_64_64:
+            # a pointer field: the file holds the target address and the loader
+            # adds the load base (RELATIVE), or holds 0 for an import's address
+            # (R_X86_64_64 against the import); the base must have that
+            # relocation at this slot, or the layout is wrong
+            d = dyn.get(P)
+            if d is None:
+                errors.append(f"+0x{r.offset:x} {r.symbol}: pointer slot 0x{P:x} has no dynamic relocation in the base")
+                continue
+            S, why = resolve_symbol_address(base, obj, r)
+            if S is None and d[0] == R_X86_64_64:
+                struct.pack_into("<Q", out, r.offset, 0)   # an import's address: filled by the loader
+                continue
+            if S is None:
+                errors.append(f"+0x{r.offset:x} {why}")
+                continue
+            if d[0] == 8 and d[2] != S + r.addend:  # RELATIVE: addend is the target
+                errors.append(f"+0x{r.offset:x} {r.symbol}: base relocates slot 0x{P:x} to 0x{d[2]:x}, source to 0x{S + r.addend:x}")
+                continue
+            struct.pack_into("<Q", out, r.offset, (S + r.addend) & 0xFFFFFFFFFFFFFFFF)
+            continue
         if r.type in (R_X86_64_GOTPCREL, R_X86_64_GOTPCRELX, R_X86_64_REX_GOTPCRELX):
             slot = base.got_slots().get(BaseElf.base_identifier(r.symbol))
             if slot is None:
@@ -119,20 +205,44 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
     return out, errors
 
 
+SEGMENT_NAMES = {5: ".text", 4: ".relro", 6: ".data"}   # by p_flags of the loaded segments
+
+
 def build_image(ver: str, log=print) -> dict:
     base = BaseElf(REPO_ROOT, ver)
-    text_lo = base.text["vaddr"]
-    image = bytearray(base.text_bytes())
-    original = bytes(image)
-    report = {"version": ver, "text_vaddr": text_lo, "text_size": len(image), "functions": {},
-              "errors": {}, "differing": []}
+    segs = []
+    for p in base.loaded_segments():
+        name = SEGMENT_NAMES.get(p["flags"], f".seg{p['index']}")
+        img = bytearray(base.data[p["offset"]:p["offset"] + p["filesz"]])
+        segs.append({"name": name, "vaddr": p["vaddr"], "filesz": p["filesz"], "memsz": p["memsz"],
+                     "image": img, "original": bytes(img), "from_source": 0, "owned_nobits": 0,
+                     "claims": []})   # (lo, hi, name) of every object laid out
+
+    def seg_for(va: int):
+        for sg in segs:
+            if sg["vaddr"] <= va < sg["vaddr"] + sg["memsz"]:
+                return sg
+        return None
+
+    report = {"version": ver, "functions": {}, "data": {}, "errors": {}, "segments": {}}
+
+    # --- functions ------------------------------------------------------------
     by_tu: dict[str, list[tuple[str, str]]] = {}
     for fn, tu, sym in load_matched(ver):
         by_tu.setdefault(tu, []).append((fn, sym))
+    objcache: dict[str, Path | None] = {}
+
+    def compiled(tu: str) -> Path | None:
+        if tu not in objcache:
+            try:
+                objcache[tu] = mc.compile_tu(tu, ver)
+            except subprocess.CalledProcessError:
+                objcache[tu] = None
+        return objcache[tu]
+
     for tu, pairs in sorted(by_tu.items()):
-        try:
-            obj = mc.compile_tu(tu, ver)
-        except subprocess.CalledProcessError:
+        obj = compiled(tu)
+        if obj is None:
             for fn, _ in pairs:
                 report["errors"][fn] = f"{tu} failed to compile"
             continue
@@ -153,35 +263,104 @@ def build_image(ver: str, log=print) -> dict:
             if len(resolved) != size:
                 report["errors"][fn] = (report["errors"].get(fn, "") +
                                         f"; size {len(resolved)} differs from the base's {size}").lstrip("; ")
-            off = addr - text_lo
+            sg = seg_for(addr)
+            off = addr - sg["vaddr"]
             n = min(len(resolved), size)
-            image[off:off + n] = resolved[:n]
+            sg["image"][off:off + n] = resolved[:n]
+            sg["from_source"] += n
+            sg["claims"].append((addr, addr + size, fn))
             report["functions"][fn] = {"tu": tu, "symbol": sym, "addr": addr, "size": size,
-                                       "relocs": len(relocs), "resolved": not errs}
-    # compare
-    starts = [a for a, _, _ in base.functions]
-    import bisect
-    diffs: dict[str, int] = {}
-    gap_bytes = 0
-    i = 0
-    n = len(image)
-    while i < n:
-        if image[i] == original[i]:
-            i += 1
+                                       "relocs": len(relocs), "resolved": not errs, "segment": sg["name"]}
+
+    # --- data objects -----------------------------------------------------------
+    for dn, tu, sym in load_data_rows(ver):
+        try:
+            addr = int(dn[2:], 16) if dn.startswith("D_") else None
+        except ValueError:
+            addr = None
+        if addr is None:
+            report["errors"][dn] = "a data row is named D_<hex>, its address in the base"
             continue
-        va = text_lo + i
-        k = bisect.bisect_right(starts, va) - 1
-        if k >= 0 and va < base.functions[k][0] + base.functions[k][1]:
-            diffs[base.functions[k][2]] = diffs.get(base.functions[k][2], 0) + 1
+        obj = compiled(tu)
+        if obj is None:
+            report["errors"][dn] = f"{tu} failed to compile"
+            continue
+        objs = object_data_symbols(obj)
+        if sym not in objs:
+            cands = [k for k in objs if BaseElf.base_identifier(k) == dn]
+            if len(cands) == 1:
+                sym = cands[0]
+        if sym not in objs:
+            report["errors"][dn] = f"{tu} does not define {sym}"
+            continue
+        data, relocs, nobits = objs[sym]
+        sg = seg_for(addr)
+        if sg is None or addr + len(data) > sg["vaddr"] + sg["memsz"]:
+            report["errors"][dn] = f"0x{addr:x}+{len(data)} is not inside one loaded segment"
+            continue
+        in_file = addr + len(data) <= sg["vaddr"] + sg["filesz"]
+        if in_file:
+            resolved, errs = apply_relocs(base, obj, data, relocs, addr, in_data=True)
+            if errs:
+                report["errors"][dn] = "; ".join(errs)
+            off = addr - sg["vaddr"]
+            sg["image"][off:off + len(resolved)] = resolved
+            sg["from_source"] += len(resolved)
+        elif addr >= sg["vaddr"] + sg["filesz"]:
+            if relocs:
+                report["errors"][dn] = "a .bss object cannot carry relocations"
+            sg["owned_nobits"] += len(data)
         else:
-            gap_bytes += 1
-        i += 1
-    report["differing"] = [{"function": k, "bytes": v} for k, v in sorted(diffs.items())]
-    report["gap_bytes_differing"] = gap_bytes
-    report["identical"] = not diffs and not gap_bytes and not report["errors"]
+            report["errors"][dn] = f"0x{addr:x}+{len(data)} straddles the file/NOBITS boundary"
+            continue
+        sg["claims"].append((addr, addr + len(data), dn))
+        report["data"][dn] = {"tu": tu, "symbol": sym, "addr": addr, "size": len(data),
+                              "relocs": len(relocs), "nobits": not in_file, "segment": sg["name"]}
+
+    # --- compare ------------------------------------------------------------------
+    import bisect
+    fstarts = [a for a, _, _ in base.functions]
+    identical = not report["errors"]
     bd = build_dir(REPO_ROOT, ver)
     bd.mkdir(parents=True, exist_ok=True)
-    (bd / "text.bin").write_bytes(image)
+    for sg in segs:
+        img, orig = sg["image"], sg["original"]
+        diffs: dict[str, int] = {}
+        gap = 0
+        claims = sorted(sg["claims"])
+        cstarts = [c[0] for c in claims]
+        i = 0
+        while i < len(img):
+            if img[i] == orig[i]:
+                i += 1
+                continue
+            va = sg["vaddr"] + i
+            k = bisect.bisect_right(cstarts, va) - 1
+            if k >= 0 and va < claims[k][1]:
+                diffs[claims[k][2]] = diffs.get(claims[k][2], 0) + 1
+            else:
+                k = bisect.bisect_right(fstarts, va) - 1
+                if k >= 0 and va < base.functions[k][0] + base.functions[k][1]:
+                    diffs[base.functions[k][2]] = diffs.get(base.functions[k][2], 0) + 1
+                else:
+                    gap += 1
+            i += 1
+        if diffs or gap:
+            identical = False
+        (bd / f"{sg['name'].lstrip('.')}.bin").write_bytes(img)
+        report["segments"][sg["name"]] = {
+            "vaddr": sg["vaddr"], "filesz": sg["filesz"], "memsz": sg["memsz"],
+            "from_source": sg["from_source"], "from_base": sg["filesz"] - sg["from_source"],
+            "nobits": sg["memsz"] - sg["filesz"], "owned_nobits": sg["owned_nobits"],
+            "differing": [{"name": k, "bytes": v} for k, v in sorted(diffs.items())],
+            "gap_bytes_differing": gap, "identical": not diffs and not gap}
+    report["identical"] = identical
+    # compatibility fields for the text segment
+    t = report["segments"].get(".text", {})
+    report["text_vaddr"] = t.get("vaddr", 0)
+    report["text_size"] = t.get("filesz", 0)
+    report["differing"] = t.get("differing", [])
+    report["gap_bytes_differing"] = t.get("gap_bytes_differing", 0)
     (bd / "layout.json").write_text(json.dumps(report, indent=1))
     return report
 
@@ -193,16 +372,20 @@ def main(argv=None) -> int:
     ver = detect_version(REPO_ROOT)
     r = build_image(ver)
     if not a.quiet:
-        print(f"layout ({ver}): {len(r['functions'])} function(s) from source, "
-              f"{sum(f['relocs'] for f in r['functions'].values())} relocation(s) resolved, "
-              f"text segment {r['text_size']:,} bytes")
+        print(f"layout ({ver}): {len(r['functions'])} function(s) and {len(r['data'])} data object(s) from source, "
+              f"{sum(f['relocs'] for f in list(r['functions'].values()) + list(r['data'].values()))} relocation(s) resolved")
         for fn, why in sorted(r["errors"].items()):
             print(f"  ERROR {fn}: {why}")
-        for d in r["differing"]:
-            print(f"  DIFFERS {d['function']}: {d['bytes']} byte(s)")
-        if r["gap_bytes_differing"]:
-            print(f"  DIFFERS outside functions: {r['gap_bytes_differing']} byte(s)")
-        print(f"layout: text segment {'IDENTICAL to the base' if r['identical'] else 'DIFFERS from the base'}")
+        for name, sg in r["segments"].items():
+            for d in sg["differing"]:
+                print(f"  DIFFERS {name} {d['name']}: {d['bytes']} byte(s)")
+            if sg["gap_bytes_differing"]:
+                print(f"  DIFFERS {name} outside claimed objects: {sg['gap_bytes_differing']} byte(s)")
+            print(f"  {name:<7} {sg['filesz']:>12,} bytes: {sg['from_source']:,} from source, "
+                  f"{sg['from_base']:,} from the base"
+                  + (f", NOBITS {sg['nobits']:,} ({sg['owned_nobits']:,} owned)" if sg['nobits'] else "")
+                  + f": {'identical' if sg['identical'] else 'DIFFERS'}")
+        print(f"layout: {'every segment IDENTICAL to the base' if r['identical'] else 'DIFFERS from the base'}")
     return 0 if r["identical"] else 1
 
 

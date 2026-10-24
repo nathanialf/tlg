@@ -623,12 +623,17 @@ function loadVersion(v){
         + `instruction of the compiled function equals the base's at its address, with only the fields `
         + `the linker fills (RIP-relative displacements, call targets, PLT and GOT slots) masked. `
         + `Republished when a push to <code>main</code> changes the data.</p>`
-        + `<p>The strip under the summary lists the loaded segments of the base executable. `
-        + `The headline byte figure is the executable segment only: the bytes of every function the `
-        + `compiler emitted unwind information for (<code>.eh_frame</code>). Functions not yet claimed `
-        + `by a source file are grouped by address range under <b>unassigned</b>. `
-        + `The original compiler is Sony's Orbis clang (SDK 03.508); this tree is built with a public `
-        + `clang, so a match is per function, not per file: see <code>docs/MATCH.md</code>. `
+        + `<p>The strip under the summary lists every loaded segment of the executable: `
+        + `<code>.text</code> (code, read-only data, the PLT, the unwind tables), <code>.relro</code> `
+        + `(vtables and the GOT), <code>.data</code> and <code>.bss</code>. The first segment of a bar is the `
+        + `share rebuilt from the tracked sources (functions and data objects laid out at their `
+        + `addresses with relocations resolved); the second, grey segment is the share taken from the `
+        + `user's own executable at build time. The gate requires the whole of every segment to equal `
+        + `the base byte for byte. <code>.bss</code> holds no file bytes, so its figure is ownership. `
+        + `The headline byte figure is the <code>.text</code> segment. Functions not yet claimed by a `
+        + `source file are grouped by address range under <b>unassigned</b>. The executable holds two `
+        + `compiler generations, the libraries below 0x1a3e00 and the game above; each is built with the `
+        + `upstream LLVM release that reproduces it (<code>docs/TARGETS.md</code>, <code>docs/DECISIONS.md</code>). `
         + `Policy: <code>docs/LEGAL.md</code>.</p>`; })
     .catch(e=>{
       // Neither copy loaded (a target whose branch has published nothing

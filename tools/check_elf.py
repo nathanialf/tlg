@@ -134,13 +134,16 @@ def run_gate(_args) -> int:
     lay = layout_link.build_image(VERSION)
     for fn, why in sorted(lay["errors"].items()):
         print(f"  LAYOUT ERROR {fn}: {why}")
-    for d in lay["differing"]:
-        print(f"  LAYOUT DIFFERS {d['function']}: {d['bytes']} byte(s)")
-    if lay["gap_bytes_differing"]:
-        print(f"  LAYOUT DIFFERS outside functions: {lay['gap_bytes_differing']} byte(s)")
-    print(f"  text segment: {lay['text_size']:,} bytes, "
-          f"{sum(f['relocs'] for f in lay['functions'].values())} relocation(s) resolved, "
-          f"{'IDENTICAL to the base' if lay['identical'] else 'DIFFERS from the base'}")
+    for name, sg in lay["segments"].items():
+        for d in sg["differing"]:
+            print(f"  LAYOUT DIFFERS {name} {d['name']}: {d['bytes']} byte(s)")
+        if sg["gap_bytes_differing"]:
+            print(f"  LAYOUT DIFFERS {name} outside claimed objects: {sg['gap_bytes_differing']} byte(s)")
+        print(f"  {name:<7} {sg['filesz']:>12,} bytes, {sg['from_source']:,} from source"
+              + (f", NOBITS {sg['nobits']:,} ({sg['owned_nobits']:,} owned)" if sg["nobits"] else "")
+              + f": {'IDENTICAL to the base' if sg['identical'] else 'DIFFERS'}")
+    print(f"  {len(lay['data'])} data object(s), "
+          f"{sum(f['relocs'] for f in list(lay['functions'].values()) + list(lay['data'].values()))} relocation(s) resolved")
     if not ok or not lay["identical"]:
         print("gate: FAILED", file=sys.stderr)
         return 1
@@ -198,17 +201,29 @@ def build_tree(results: dict[str, dict]) -> dict:
         prog_list.append(entry)
         tot_mf += pmf; tot_f += pf; tot_mb += pmb; tot_b += pb
 
+    lay = layout_link.build_image(VERSION, log=lambda *a, **k: None)
+    sections: dict[str, list[int]] = {}
+    extracted: dict[str, int] = {}
+    for name, sg in lay["segments"].items():
+        # from source / total; the rest of the segment is taken from the user's
+        # own executable at build time, the "extracted" share of ico's schema
+        sections[name] = [sg["from_source"], sg["filesz"]]
+        extracted[name] = sg["from_base"]
+        if sg["nobits"] and name == ".data":   # the RELRO's tail is padding, not .bss
+            sections[".bss"] = [sg["owned_nobits"], sg["nobits"]]
+            extracted[".bss"] = 0
     return {
         "schema": 2,
         "version": VERSION,
         "totals": {
             "matched_funcs": tot_mf, "total_funcs": tot_f, "stub_funcs": 0,
             "matched_bytes": tot_mb, "total_bytes": text["filesz"],
-            "sections": {".text": [tot_mb, text["filesz"]]},
-            "extracted": {".text": 0},
-            "nobits_sections": [],
+            "sections": sections,
+            "extracted": extracted,
+            "nobits_sections": [".bss"] if ".bss" in sections else [],
             "sections_from_symbols": {".text": [tot_mb, tot_b]},
-            "text_identical": layout_link.build_image(VERSION, log=lambda *a, **k: None)["identical"],
+            "segments_identical": lay["identical"],
+            "data_objects": len(lay["data"]),
         },
         "programmers": prog_list,
     }
@@ -237,20 +252,31 @@ def _badge(label: str, m: int, t: int) -> str:
 
 
 def _badges(t: dict) -> str:
-    text = t["sections"][".text"]
-    return " ".join([_badge("text", text[0], text[1]),
-                     _badge("functions", t["matched_funcs"], t["total_funcs"])])
+    out = [_badge("functions", t["matched_funcs"], t["total_funcs"])]
+    for sec, (m, tot) in t["sections"].items():
+        if tot:
+            out.append(_badge(sec.lstrip("."), m, tot))
+    return " ".join(out)
 
 
 def _table(tree: dict) -> str:
     t = tree["totals"]
     text = t["sections"][".text"]
     fb = t["sections_from_symbols"][".text"]
-    lines = ["| Measure | Matched | Total | % |", "| --- | ---: | ---: | ---: |",
+    lines = ["| Measure | From source | Total | % |", "| --- | ---: | ---: | ---: |",
              f"| functions | {t['matched_funcs']} | {t['total_funcs']} | "
              f"{_fmt_pct(t['matched_funcs'], t['total_funcs'])} |",
-             f"| bytes in functions | {fb[0]} | {fb[1]} | {_fmt_pct(fb[0], fb[1])} |",
-             f"| `.text` segment bytes | {text[0]} | {text[1]} | {_fmt_pct(text[0], text[1])} |",
+             f"| bytes in functions | {fb[0]} | {fb[1]} | {_fmt_pct(fb[0], fb[1])} |"]
+    for sec, (m, tot) in t["sections"].items():
+        kind = " (owned)" if sec in t.get("nobits_sections", []) else ""
+        lines.append(f"| `{sec}` segment bytes{kind} | {m} | {tot} | {_fmt_pct(m, tot)} |")
+    lines += ["",
+             "Every loaded segment of the executable is rebuilt (`tools/layout_link.py`): the bytes "
+             "**from source** are the claimed functions and data objects laid out at their addresses "
+             "with relocations resolved; the rest is taken from the user's own executable at build "
+             "time, and the whole must equal the base byte for byte, which the gate requires. "
+             "`.bss` holds no file bytes, so its figure is ownership: how much of it a claimed object "
+             "defines.",
              "",
              "A function is **matched** when its compiled instructions equal the base "
              "executable's at its address, with only the fields the linker fills (RIP-relative "

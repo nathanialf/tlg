@@ -49,6 +49,19 @@ The unit of work is one function of the base executable
    row in `config/functions.base.txt` to the mangled symbol, drop the third
    column of its `matched` row, and move the file out of `src/unknown/`.
 
+## Data
+
+A global the code references is named `D_<hex>` (its address in the base)
+until its real name is known, and that name alone lets the layout resolve
+the reference. To rebuild the object itself, define it as typed C++ in a TU
+under that name (a struct, an array of records, a string: never a byte
+array, which `tools/check_no_rom.sh` refuses) and add
+`D_<hex> <tu> [<symbol>]` to `config/data.base.txt`. The gate lays the
+object's bytes at the address, resolves its pointer fields (each must sit on
+a slot the base relocates), and requires the segment byte-identical. An
+object in `.bss` has no bytes and counts as owned. Game content (tables,
+strings, assets) is never committed in any form (`docs/LEGAL.md`).
+
 ## When it will not match
 
 - **A flag, not the code.** If a whole family of functions differs the same
