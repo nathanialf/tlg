@@ -4,6 +4,7 @@
 #ifndef TLG_LIB_UNKNOWN_H
 #define TLG_LIB_UNKNOWN_H
 
+#include "tlg_simd.h"
 #include "tlg_types.h"
 
 /* FUN_00180f50 reads +0x10 through FUN_00004580 and, when it differs from
@@ -139,5 +140,17 @@ class PlainPolymorphic
 {
   public:
     virtual ~PlainPolymorphic();
+};
+
+/* A reference-counted object, 0x50 bytes (vtable 0x16969d0, constructor
+ * FUN_0003e840: takes a counted reference to the object at +0x10, stores the
+ * int argument at +0x18 and +0x1c, clears the int at +0xc and the vector at
+ * +0x30). The game code at 0xeaa625 sets +0xc to 1 through FUN_0003ea60;
+ * FUN_0003ea80 returns the address of the vector. */
+struct Object0003ea60 {
+    u8 unknown0[0xc];
+    s32 value;
+    u8 unknown10[0x20];
+    Vec4 vector; /* +0x30 */
 };
 #endif

@@ -10,6 +10,7 @@
 #ifndef TLG_HK_REFLECT_H
 #define TLG_HK_REFLECT_H
 
+#include "tlg_simd.h"
 #include "tlg_types.h"
 
 /* hkClass, the reflection's class record: name (char*, type 0x1d) at +0
@@ -368,4 +369,43 @@ void FUN_00159b40(hknpConstraintCollisionFilter *self,
 void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
 void FUN_0015bf30(hknpWorldSnapshot *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00078230(hknpTriangleShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+struct hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
+struct
+    hknpScaledConvexShape; /* 0x57c0c48; FUN_0016ce90 runs hknpDecoratorShape's, vtable 0x16a54a0 */
+struct
+    hknpScaledConvexShapeBase; /* 0x57c0c78; FUN_0016a810 runs hknpDecoratorShape's, vtable 0x16a5390 */
+struct hknpPairCollisionFilter; /* 0x57c1160; FUN_001673f0, vtable 0x16a52f0 */
+
+void FUN_00166900(hknpMountedBallGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_0016ce90(hknpScaledConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0016a810(hknpScaledConvexShapeBase *self,
+                  hkFinishLoadedObjectFlag flag);                                /* derived name */
+void FUN_001673f0(hknpPairCollisionFilter *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkRelArray, the reflection's type 0x22 (the type-name table at 0x14b30e4):
+ * an array stored after its owner, a 16-bit size and a 16-bit offset. */
+template <typename T> class hkRelArray
+{
+  public:
+    int getSize() const
+    {
+        return size;
+    }
+
+    u16 size;   /* derived name */
+    u16 offset; /* derived name */
+};
+
+/* hknpConvexShape, 0x30 bytes (type info 0x57c1958, hkClass 0x57c1908 with
+ * hknpShape as parent, vtable 0x1697d90 stored by its finish constructor
+ * FUN_00042e90): one reflected member, vertices (hkRelArray of hkVector4,
+ * subtype 12) at +0x28 (record 0x1699720). */
+class hknpConvexShape : public hknpShape
+{
+  public:
+    int FUN_00045ac0() const; /* vtable slot 9; derived name */
+
+    u8 unknown8[0x20];
+    hkRelArray<Vec4> vertices;
+};
 #endif
