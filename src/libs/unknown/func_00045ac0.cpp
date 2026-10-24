@@ -4,7 +4,7 @@
 /* derived name: slot 9 of hknpConvexShape's vtable (0x1697d90) returns the
  * number of its vertices. The same body fills slot 9 of the vtables of
  * hknpTriangleShape (0x169b670), hknpConvexPolytopeShape (0x16a4460) and
- * the class at 0x1695c10. */
+ * hknpSphereShape (0x1695c10). */
 int hknpConvexShape::FUN_00045ac0() const /* derived name */
 {
     return vertices.getSize();

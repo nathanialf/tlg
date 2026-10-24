@@ -353,7 +353,8 @@ struct hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 struct hknpPhysicsSystemData;         /* 0x57c0198; FUN_00165a80, vtable 0x16a5130 */
 struct hknpDefaultBroadPhaseConfig;   /* 0x57c02e8; FUN_00154d90, vtable 0x16a45f0 */
 struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
-struct hknpLodShape;      /* 0x57c05b8; FUN_00068160 runs hknpShape's, vtable 0x1697c80 */
+struct
+    hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
 struct hknpWorldSnapshot; /* 0x57c0638; FUN_0015bf30, vtable 0x16a4d50 */
 struct
     hknpTriangleShape; /* 0x57c0838; FUN_00078230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
@@ -434,4 +435,27 @@ struct hknpMaterialDescriptor;
 
 void FUN_0006c6f0(hknpMaterial *self, hkFinishLoadedObjectFlag flag);           /* derived name */
 void FUN_0006c800(hknpMaterialDescriptor *self, hkFinishLoadedObjectFlag flag); /* derived name */
+/* hknpRefMaterial (type info 0x57c2040): its finish constructor
+ * FUN_0006c7e0 stores the vtable 0x169ac60 and runs hkStringPtr's on +0x10. */
+struct hknpRefMaterial;
+struct hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
+struct
+    hknpCompressedHeightFieldShape; /* 0x57c2378; FUN_00175de0 runs hknpShape's, then vtable 0x16a5980 */
+struct
+    hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs FUN_0007d520, vtable 0x1695b10 */
+struct hknpDestructionShapeProperties; /* 0x57c2648; FUN_00175a50, vtable 0x16a5940 */
+struct
+    hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
+struct hknpSphereShape;      /* 0x57c2798; FUN_0003c540 runs hknpConvexShape's, vtable 0x1695c10 */
+
+void FUN_0006c7e0(hknpRefMaterial *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00157e00(hknpBallGun *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_00175de0(hknpCompressedHeightFieldShape *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0003c240(hknpBreakableConstraintData *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00175a50(hknpDestructionShapeProperties *self,
+                  hkFinishLoadedObjectFlag flag);                                /* derived name */
+void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0003c540(hknpSphereShape *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 #endif
