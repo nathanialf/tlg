@@ -306,11 +306,28 @@ class hknpMaskedShape
     hknpShapeSignals mutationSignals;
     s32 maskSize;
 };
+
+/* hknpShape, polymorphic (type info 0x57bf210, vtable 0x169ad20 stored by
+ * its finish constructor FUN_0006fa90): its destructor, slot 0, is out of
+ * line (0x6fb50: restores the vtable, releases the properties at +0x20). */
+class hknpShape
+{
+  public:
+    virtual ~hknpShape();
+};
+
+/* hknpDecoratorShape (type info 0x57bf020, vtable 0x16958d0 stored by its
+ * finish constructor FUN_0003b0f0, which runs hknpShape's first): adds
+ * nothing to destroy. */
+class hknpDecoratorShape : public hknpShape
+{
+  public:
+    virtual ~hknpDecoratorShape();
+};
+
 /* hknp classes registered by the reflection TU at 0x38b10 onward, each with
  * an out-of-line finish constructor (type info, the vtable it stores): */
-struct hknpDecoratorShape;          /* 0x57bf020; FUN_0003b0f0 runs hknpShape's, vtable 0x16958d0 */
 struct hknpMotionPropertiesLibrary; /* 0x57bf0a0; FUN_00036de0, vtable 0x1693770 */
-struct hknpShape;                   /* 0x57bf210; FUN_0006fa90, vtable 0x169ad20 */
 struct hknpShapeMassProperties;     /* 0x57bf290; FUN_0006fa80, vtable 0x1693ef0 */
 struct hknpPhysicsSceneData;        /* 0x57bf360; FUN_00046790, vtable 0x1697ea0 */
 struct
@@ -327,4 +344,28 @@ void FUN_00046790(hknpPhysicsSceneData *self, hkFinishLoadedObjectFlag flag);   
 void FUN_000730d0(hknpCapsuleShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
 void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+/* More hknp classes with an out-of-line finish constructor (type info, the
+ * vtable it stores): */
+struct hknpProjectileGun;  /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
+struct hknpDummyShape;     /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
+struct hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
+struct hknpPhysicsSystemData;         /* 0x57c0198; FUN_00165a80, vtable 0x16a5130 */
+struct hknpDefaultBroadPhaseConfig;   /* 0x57c02e8; FUN_00154d90, vtable 0x16a45f0 */
+struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
+struct hknpLodShape;      /* 0x57c05b8; FUN_00068160 runs hknpShape's, vtable 0x1697c80 */
+struct hknpWorldSnapshot; /* 0x57c0638; FUN_0015bf30, vtable 0x16a4d50 */
+struct
+    hknpTriangleShape; /* 0x57c0838; FUN_00078230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
+
+void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_0003e170(hknpDummyShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
+void FUN_00156620(hknpFirstPersonGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_00165a80(hknpPhysicsSystemData *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00154d90(hknpDefaultBroadPhaseConfig *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00159b40(hknpConstraintCollisionFilter *self,
+                  hkFinishLoadedObjectFlag flag);                          /* derived name */
+void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
+void FUN_0015bf30(hknpWorldSnapshot *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00078230(hknpTriangleShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 #endif

@@ -152,3 +152,11 @@ FUN_00039190 src/libs/unknown/func_00039190.cpp
 FUN_000394a0 src/libs/unknown/func_000394a0.cpp
 FUN_000395c0 src/libs/unknown/func_000395c0.cpp
 FUN_00039b10 src/libs/unknown/func_00039b10.cpp
+FUN_00039e30 src/libs/unknown/func_00039e30.cpp
+_ZN18hknpDecoratorShapeD1Ev src/libs/unknown/func_0003b040.cpp
+FUN_0003bb00 src/libs/unknown/func_0003bb00.cpp
+FUN_0003ccf0 src/libs/unknown/func_0003ccf0.cpp
+FUN_0003d070 src/libs/unknown/func_0003d070.cpp
+FUN_0003d1d0 src/libs/unknown/func_0003d1d0.cpp
+FUN_0003d400 src/libs/unknown/func_0003d400.cpp
+FUN_0003de50 src/libs/unknown/func_0003de50.cpp
