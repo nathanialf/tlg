@@ -29,4 +29,23 @@ struct Pair08Owner {
     s32 second;
 };
 
+/* FUN_000ad770 and FUN_000ad780 sit in adjacent slots of one vtable
+ * (0x16a3a78, 0x16a3a80): a getter and a setter of the int at +0x2c. The
+ * slots before them read and write the bytes at +0x29 to +0x2b. */
+struct Value2cOwner {
+    u8 unknown0[0x2c];
+    s32 value;
+};
+
+/* FUN_000ae6a0 and FUN_000ae810 sit in slots 5 and 9 of one vtable
+ * (0x16a3b00): getters of the ints at +0x38 and +0x48. FUN_000ae6a0 also
+ * fills a slot of the vtables at 0x16a6330 and 0x16b1500, so +0x38 belongs
+ * to a class those share. */
+struct Values38Owner {
+    u8 unknown0[0x38];
+    s32 value38;
+    u8 unknown3c[0xc];
+    s32 value48;
+};
+
 #endif

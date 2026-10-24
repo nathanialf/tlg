@@ -18,7 +18,7 @@ executable says about its own build.
 <!-- progress:begin -->
 | Target | Matched |
 | --- | --- |
-| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![functions progress](https://img.shields.io/badge/functions-0.30%20%25-orange.svg) ![text progress](https://img.shields.io/badge/text-0.00%20%25-orange.svg) ![relro progress](https://img.shields.io/badge/relro-0.00%20%25-red.svg) ![data progress](https://img.shields.io/badge/data-0.00%20%25-red.svg) ![bss progress](https://img.shields.io/badge/bss-0.00%20%25-red.svg) |
+| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![functions progress](https://img.shields.io/badge/functions-0.36%20%25-orange.svg) ![text progress](https://img.shields.io/badge/text-0.00%20%25-orange.svg) ![relro progress](https://img.shields.io/badge/relro-0.00%20%25-red.svg) ![data progress](https://img.shields.io/badge/data-0.00%20%25-red.svg) ![bss progress](https://img.shields.io/badge/bss-0.00%20%25-red.svg) |
 <!-- progress:end -->
 
 **[Progress dashboard](https://nathanialf.github.io/tlg/)**: every function
@@ -91,7 +91,9 @@ src/include/                shared headers
 config/                     per target <slug>: sha256sums (the base files),
                             functions (every function: address, size, name),
                             matched (the functions claimed as matched, with
-                            their TU), flags (compiler flags per source prefix)
+                            their TU), flags (compiler flags per source prefix),
+                            homes (functions whose source file the executable
+                            names, tools/source_homes.py)
 tools/                      setup, extraction, survey, build, match and gate
                             scripts, listed in tools/README.md
 docs/                       documentation, indexed by docs/README.md;
