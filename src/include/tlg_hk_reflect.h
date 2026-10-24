@@ -306,4 +306,25 @@ class hknpMaskedShape
     hknpShapeSignals mutationSignals;
     s32 maskSize;
 };
+/* hknp classes registered by the reflection TU at 0x38b10 onward, each with
+ * an out-of-line finish constructor (type info, the vtable it stores): */
+struct hknpDecoratorShape;          /* 0x57bf020; FUN_0003b0f0 runs hknpShape's, vtable 0x16958d0 */
+struct hknpMotionPropertiesLibrary; /* 0x57bf0a0; FUN_00036de0, vtable 0x1693770 */
+struct hknpShape;                   /* 0x57bf210; FUN_0006fa90, vtable 0x169ad20 */
+struct hknpShapeMassProperties;     /* 0x57bf290; FUN_0006fa80, vtable 0x1693ef0 */
+struct hknpPhysicsSceneData;        /* 0x57bf360; FUN_00046790, vtable 0x1697ea0 */
+struct
+    hknpCapsuleShape; /* 0x57bf490; FUN_000730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
+struct hknpMotionProperties;    /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
+struct hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
+
+void FUN_0003b0f0(hknpDecoratorShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00036de0(hknpMotionPropertiesLibrary *self,
+                  hkFinishLoadedObjectFlag flag);                                /* derived name */
+void FUN_0006fa90(hknpShape *self, hkFinishLoadedObjectFlag flag);               /* derived name */
+void FUN_0006fa80(hknpShapeMassProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00046790(hknpPhysicsSceneData *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_000730d0(hknpCapsuleShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
+void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 #endif

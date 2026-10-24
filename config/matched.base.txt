@@ -144,3 +144,11 @@ FUN_00036780 src/libs/unknown/func_00036780.cpp
 FUN_000367b0 src/libs/unknown/func_000367b0.cpp
 _ZN32hknpStaticCompoundShapeInternalsD1Ev src/libs/unknown/func_00033f30.cpp
 FUN_00038120 src/libs/unknown/func_00038120.cpp _ZN15hknpMaskedShape12FUN_00038120Ev
+FUN_00038af0 src/libs/unknown/func_00038af0.cpp
+FUN_00038c10 src/libs/unknown/func_00038c10.cpp
+FUN_00038d30 src/libs/unknown/func_00038d30.cpp
+FUN_00038d60 src/libs/unknown/func_00038d60.cpp
+FUN_00039190 src/libs/unknown/func_00039190.cpp
+FUN_000394a0 src/libs/unknown/func_000394a0.cpp
+FUN_000395c0 src/libs/unknown/func_000395c0.cpp
+FUN_00039b10 src/libs/unknown/func_00039b10.cpp
