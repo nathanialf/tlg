@@ -1,0 +1,10 @@
+# Compiler flags per source prefix, for tools/compile_cpp.sh. The longest
+# prefix that matches the source path wins; flags apply to every file under it
+# (per directory, never per file or per function). The compiler itself is
+# TLG_CXX (default clang-19, the tooling clang; the matching clang is still
+# to be determined: docs/TARGETS.md).
+#
+# What the binary says about its build (docs/SURVEY.md): Orbis SDK 03.508,
+# AVX code (btver2, the PS4's Jaguar, which the x86_64-scei-ps4 triple
+# selects), position-independent executable, unwind tables for every function.
+src/ --target=x86_64-scei-ps4 -O2 -fno-exceptions -fno-rtti -ffreestanding -nostdinc -nostdinc++ -std=c++11 -Isrc/include

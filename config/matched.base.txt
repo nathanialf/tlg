@@ -1,0 +1,7 @@
+# Functions claimed as matched: `<function> <translation unit> [<symbol>]`.
+# <function> is the row's name in config/functions.base.txt; <symbol> is the
+# object's symbol when it differs (a mangled C++ name behind a FUN_ row).
+# tools/check_elf.py --gate compiles each TU and requires every row to compare
+# equal to the base (tools/match_check.py); a row that no longer matches fails
+# the gate. Add a row when a function reaches 1.0; never remove one to pass.
+FUN_000104b0 src/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord

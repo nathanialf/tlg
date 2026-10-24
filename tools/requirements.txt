@@ -1,0 +1,6 @@
+# Python packages the build and its tools use, installed into .venv by
+# tools/setup.sh.
+pyelftools          # tools/check_elf.py, tools/survey_elf.py, tools/unfself.py
+capstone            # tools/survey_elf.py disassembles from Python
+ninja               # .venv/bin/ninja runs build.ninja (the hooks call it there)
+clang-format>=19    # tools/format.sh

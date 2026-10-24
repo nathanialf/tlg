@@ -1,0 +1,12 @@
+# SHA-256 of the target's base files, keyed by basename. Written once by
+# tools/extract_pkg.py from the user's own package; verified by
+# tools/verify_elf.py. NEVER EDIT: a mismatch means a different package
+# or a changed tool, and either is a finding, not a typo.
+a0023b6d84a01959c0f8992a081961ea8e498fc177a13c7fe26b0996e3a90e54  TLG_BASE.pkg
+a25497ce99c4884dac673872a727330097b97487943affb70d4b1b432969f473  eboot.bin
+f457d7b0fe0c99d2391cac5d63d030b50bd4d4feab9659ece9f11f5604c5d89f  eboot.elf
+023925f21befb4e8fdbab22ff5f99d394b8945b9ebfbabf435138f35e10199a8  param.sfo
+eec72d117ac6ef5f2d25057331aaf6dddbacfa39572fb6dbc58c1cf14c3ad90c  libSceFios2.prx
+ff8c06b194e593f727a1315417a2bd174111d1e2f9961636101c438dc6dfb6c3  libSceFios2.elf
+8b74027bcbe0d7b3eb33f8f1954b2e186dc9cb912c9848d5e0ce7a43842757aa  libc.prx
+d88f1cc336985bf02fa128e8f7bbfbc21ac6c7fa1a151ba0c40b300750f2b2dd  libc.elf
