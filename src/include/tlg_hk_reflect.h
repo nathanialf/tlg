@@ -408,4 +408,30 @@ class hknpConvexShape : public hknpShape
     u8 unknown8[0x20];
     hkRelArray<Vec4> vertices;
 };
+/* hknpWorldCinfo (type info 0x57c13e0, no vtable): an empty finish
+ * constructor (the shared body FUN_0003b640) and an out-of-line destructor
+ * FUN_0003b650, which releases the references from +0xb0 down. */
+struct hknpWorldCinfo;
+
+void FUN_0003b640(hknpWorldCinfo *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0003b650(hknpWorldCinfo *self);                                /* derived name */
+
+struct
+    hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs FUN_0007d520, vtable 0x1699a90 */
+struct hknpBodyQualityLibrary;   /* 0x57c1a78; FUN_00071190, vtable 0x169b150 */
+
+void FUN_00067960(hknpMalleableConstraintData *self,
+                  hkFinishLoadedObjectFlag flag);                               /* derived name */
+void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
+void FUN_00071190(hknpBodyQualityLibrary *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpMaterial (type info 0x57c1f40, no vtable, cleanup 0x300) and
+ * hknpMaterialDescriptor (type info 0x57c1fc0, no vtable, cleanup 0x66e80):
+ * each finish constructor (FUN_0006c6f0, FUN_0006c800) runs hkStringPtr's on
+ * the name at +0. */
+struct hknpMaterial;
+struct hknpMaterialDescriptor;
+
+void FUN_0006c6f0(hknpMaterial *self, hkFinishLoadedObjectFlag flag);           /* derived name */
+void FUN_0006c800(hknpMaterialDescriptor *self, hkFinishLoadedObjectFlag flag); /* derived name */
 #endif

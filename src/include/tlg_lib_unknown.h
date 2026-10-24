@@ -153,4 +153,12 @@ struct Object0003ea60 {
     u8 unknown10[0x20];
     Vec4 vector; /* +0x30 */
 };
+/* A reference-counted object (vtable 0x1698f40, constructor FUN_00092280)
+ * holding four arrays (16-, 4- and 8-byte elements at +0x10, +0x20, +0x30)
+ * and an array of counted references at +0x40. Its out-of-line destructor
+ * FUN_00048040 restores the vtable, releases the references and frees the
+ * arrays. */
+struct RefArrays00048040; /* derived name */
+
+void FUN_00048040(RefArrays00048040 *self); /* derived name */
 #endif

@@ -168,3 +168,11 @@ FUN_0003f610 src/libs/unknown/func_0003f610.cpp
 FUN_0003f640 src/libs/unknown/func_0003f640.cpp
 FUN_00042750 src/libs/unknown/func_00042750.cpp
 FUN_00045ac0 src/libs/unknown/func_00045ac0.cpp _ZNK15hknpConvexShape12FUN_00045ac0Ev
+FUN_00046c60 src/libs/unknown/func_00046c60.cpp
+FUN_00046c70 src/libs/unknown/func_00046c70.cpp
+FUN_000481b0 src/libs/unknown/func_000481b0.cpp
+FUN_000615c0 src/libs/unknown/func_000615c0.cpp
+FUN_00061790 src/libs/unknown/func_00061790.cpp
+FUN_00061de0 src/libs/unknown/func_00061de0.cpp
+FUN_00066e40 src/libs/unknown/func_00066e40.cpp
+FUN_00066e70 src/libs/unknown/func_00066e70.cpp
