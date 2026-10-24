@@ -389,14 +389,25 @@ def main(argv=None) -> int:
     if not a.no_write:
         funcs_path = config_path(REPO_ROOT, ver, "functions", "txt")
         funcs_path.parent.mkdir(parents=True, exist_ok=True)
+        # Names already given to rows (docs/MATCH.md step 6 renames a FUN_ row
+        # to its mangled symbol once the name is a fact) are kept: a rewrite
+        # that dropped them would break every matched row that cites them.
+        known: dict[int, str] = {}
+        if funcs_path.exists():
+            for line in funcs_path.read_text().splitlines():
+                s = line.split("#", 1)[0].split()
+                if len(s) >= 3 and not s[2].startswith("FUN_"):
+                    known[int(s[0], 16)] = s[2]
         with funcs_path.open("w") as f:
             f.write("# One row per function of the target executable: address, size, name.\n"
                     "# Boundaries from the compiler's unwind tables (.eh_frame), written by\n"
-                    "# tools/survey_elf.py. Names are FUN_<addr> until known; a name taken\n"
-                    "# from an exported symbol, an assert string or a vtable is marked\n"
-                    "# `derived` in a trailing comment when it was inferred.\n")
+                    "# tools/survey_elf.py, which keeps a row's name once it is no longer\n"
+                    "# FUN_<addr>. A name is a fact of the executable (an exported symbol, a\n"
+                    "# reflection or type-info string with the role the vtable or the ABI\n"
+                    "# fixes); anything inferred stays FUN_<addr> with a derived name in the\n"
+                    "# source (docs/MATCH.md).\n")
             for addr, sz in fdes:
-                name = export_by_addr.get(addr, f"FUN_{addr:08x}")
+                name = known.get(addr) or export_by_addr.get(addr, f"FUN_{addr:08x}")
                 f.write(f"0x{addr:08x} 0x{sz:x} {name}\n")
         bd = build_dir(REPO_ROOT, ver)
         bd.mkdir(parents=True, exist_ok=True)

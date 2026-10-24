@@ -1,8 +1,10 @@
 # One row per function of the target executable: address, size, name.
 # Boundaries from the compiler's unwind tables (.eh_frame), written by
-# tools/survey_elf.py. Names are FUN_<addr> until known; a name taken
-# from an exported symbol, an assert string or a vtable is marked
-# `derived` in a trailing comment when it was inferred.
+# tools/survey_elf.py, which keeps a row's name once it is no longer
+# FUN_<addr>. A name is a fact of the executable (an exported symbol, a
+# reflection or type-info string with the role the vtable or the ABI
+# fixes); anything inferred stays FUN_<addr> with a derived name in the
+# source (docs/MATCH.md).
 0x000000a0 0x51 FUN_000000a0
 0x00000100 0x93 FUN_00000100
 0x000001a0 0xcb FUN_000001a0
