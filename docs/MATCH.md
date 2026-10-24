@@ -2,109 +2,193 @@
 
 The unit of work is one function of the base executable
 (`config/functions.base.txt`: address, size, name). The claim is a row in
-`config/matched.base.txt`; the proof is `tools/check_elf.py --gate`.
+`config/matched.base.txt`; the proof is `tools/check_elf.py --gate`: the
+function's instructions equal to the base with every relocation target
+verified, and every loaded segment rebuilt and byte-identical. This document
+is the method, carried over from the ICO project's matching campaigns and
+adapted to this target. `docs/DECISIONS.md` holds the standard it serves.
+
+## Where a function lives
+
+Check the address first. Below 0x1a3e00 the function is library code of the
+LLVM 3.3 generation and goes under `src/libs/`; from 0x1a3e00 it is the game's,
+built by the 4.0 generation, and goes under `src/game/`. Each prefix has its
+compiler and flags in `config/flags.base.txt` (`docs/TARGETS.md`, "Two
+compiler generations"). A function whose home file is not known goes in that
+prefix's `unknown/`, one function per file, until a string, a vtable or a
+caller places it.
 
 ## The loop
 
-1. **Pick a function.** `config/functions.base.txt` lists every one;
-   `docs/base/progress.json` (and the dashboard) show which are unclaimed.
-   Start with leaves: small functions with no calls. Disassemble it:
+1. **Pick a function.** `docs/base/progress.json` and the dashboard show
+   what is unclaimed; take the smallest unmatched one in the region being
+   worked and stay on it until it matches. Parked functions are in the queue
+   like any other, and the lowest ones usually are the parked ones.
 
-   ```sh
-   llvm-objdump-19 -d --x86-asm-syntax=intel --start-address=0x104b0 --stop-address=0x104c0 baserom/base/eboot.elf
-   ```
+2. **Recover the data model and the purpose before the first diff.** Read
+   the function's disassembly and its callers and callees. Name what each
+   offset means (a pointer at +0x68, a count at +0x70, a 4-float row at
+   +0x23a0), find the same offsets in sibling functions, learn the callees'
+   real signatures from their bodies, and state in one line what the function
+   does. The developer wrote toward that purpose in 2012-2016 C++ with the
+   engine's idioms (a math class with its own copy constructor, a device
+   abstraction behind a vtable, an arena with a header before each block),
+   not toward a diff.
 
-2. **Find or make its translation unit.** If an assert string, a vtable or a
-   caller places the function in a source file the executable names
-   (`docs/SURVEY.md`), it goes in `src/<root>/<path>.cpp` at that path. If
-   not, it goes in `src/unknown/<name>.cpp`, one function per file, until a
-   home is found. Shared types go in `src/include/`.
+3. **Write the C++ as the developer would have.** Typed members, not offset
+   casts; the engine's own types in `src/include/`, grown one verified field
+   at a time (offset and width from the load or store that touches it).
+   Callees are `FUN_<addr>` until named, data `D_<hex>`: both are facts the
+   gate checks. A name taken from a string, an export or a vtable is a fact;
+   a name invented from context carries `/* derived name */`.
 
-3. **Write the C++** as the developer would have. Types and fields from how
-   the code uses them; names from facts in the binary (a string, an export)
-   or derived and marked `/* derived name */`. No construct that exists only
-   to steer the compiler (`CLAUDE.md`, "Rules").
+4. **Diff, then reason.** `tools/quick_diff.sh <tu> <function>` compiles the
+   TU with the prefix's compiler and flags and prints the first differing
+   instruction with five of context on each side, plus any relocation whose
+   target the base contradicts. Work the divergences in the function's own
+   order: the first one first, because everything before it is proven
+   context, and the second does not exist until the first is resolved. For
+   each: state the claim (which compiler decision produced the base's form and
+   what source property drives it), name the source for it (the compiler's
+   code under `tools/cc/src/llvm-<version>.src/`, its IR or machine dumps on
+   your TU, the base's own bytes), then change the one semantic property and
+   predict the output before compiling. Compile once. If the prediction was
+   wrong, fix the model, not the spelling. More than about six compiles on
+   one divergence means spraying; stop and derive.
 
-4. **Diff until equal.**
+5. **Claim it.** When `quick_diff` reports equal with every target verified,
+   add `<function> <tu> [<symbol>]` to `config/matched.base.txt` (the symbol
+   column only when the mangled name's base identifier differs from the
+   row), `tools/build.sh regen` if the TU is new, then `./build.sh`. The gate
+   is the only truth: `quick_diff` compares an isolated object and can pass a
+   function that the layout then refutes (a size shortfall, a relocation the
+   base does not carry). Commit; the pre-commit hook runs the gate and
+   refreshes the progress files.
 
-   ```sh
-   tools/quick_diff.sh src/unknown/leaf_000104b0.cpp FUN_000104b0 _Z12FUN_000104b0P10PairRecord
-   ```
+6. **Rename when known.** A real name replaces the `FUN_` row in
+   `config/functions.base.txt` with the mangled symbol, the `matched` row
+   drops its third column, and the file moves out of `unknown/`.
 
-   compiles the TU with the target's flags (`config/flags.base.txt`,
-   `tools/compile_cpp.sh`) and prints the first differing instruction with
-   five of context on each side. A relocated field (a RIP-relative
-   displacement, a call target, a GOT or PLT slot) is masked on both sides,
-   so a `call` to a function not yet named compares by its encoding, not
-   its target. The third argument is the object's symbol when it differs from
-   the row's name (a mangled C++ name behind a `FUN_` row).
+## What counts as a hypothesis
 
-5. **Claim it.** Add `<function> <tu> [<symbol>]` to
-   `config/matched.base.txt`. `tools/build.sh regen` if the TU is new, then
-   `./build.sh`: ninja compiles the tree and the gate compares every claimed
-   function. Commit; the pre-commit hook runs the gate and refreshes the
-   progress files.
+A change the compiler can see: a type (int or struct or union or pointer),
+aliasing (which pointers may alias, `const`), liveness (what is live across
+which call), factoring (inline helper or out-of-line call, same TU or not),
+the algorithm, the control-flow shape, the signature (parameter count and
+types, `this` or free function, return by value through a hidden pointer).
+Respellings the front end folds to the same IR (`if`/`else` versus a
+ternary, `a == 3` versus `3 == a`, a named temporary versus an inline
+expression) are one hypothesis in several costumes and are not tried. When
+every variant gives the same result, the axis is wrong, not the number of
+tries.
 
-6. **Rename when known.** When a function's real name is found, rename its
-   row in `config/functions.base.txt` to the mangled symbol, drop the third
-   column of its `matched` row, and move the file out of `src/unknown/`.
+Derive before compiling on a large function: from the base's bytes compute
+what the compiler must have been given (which values were in registers at
+which call, which loads were hoisted, which stores merged), solve backward
+to the source conditions on paper, then compile to verify, three compiles a
+round at most, each with its prediction written first.
 
-## Data
+## Structure over count
 
-A global the code references is named `D_<hex>` (its address in the base)
-until its real name is known, and that name alone lets the layout resolve
-the reference. To rebuild the object itself, define it as typed C++ in a TU
-under that name (a struct, an array of records, a string: never a byte
-array, which `tools/check_no_rom.sh` refuses) and add
-`D_<hex> <tu> [<symbol>]` to `config/data.base.txt`. The gate lays the
-object's bytes at the address, resolves its pointer fields (each must sit on
-a slot the base relocates), and requires the segment byte-identical. An
-object in `.bss` has no bytes and counts as owned. Game content (tables,
-strings, assets) is never committed in any form (`docs/LEGAL.md`).
+The score (`match_check.py`'s share of equal instructions) is a byproduct.
+What converges is structure: a register-allocation, scheduling or
+store-merging class snapping into the base's form, often raising the raw
+count while a neighbouring class is disturbed, then collapsing in a group
+when the upstream cause lands. Keep an edit that makes a class match or
+fixes a whole-function property even when the count rises; keep a
+structurally-forward state as the working base even when a lower-count
+state exists; never select a branch on count. The size of the function
+against the base's is a hard signal: an edit that moves it away is a
+regression whatever else improves.
 
-## When it will not match
+## Crutches
 
-- **A flag, not the code.** If a whole family of functions differs the same
-  way (a different `-O` level's scheduling, frame pointers, a vectorizer
-  decision), the compiler or its flags are wrong for that prefix, not the
-  C++. Change `config/flags.base.txt` for the prefix, never for the file, and
-  re-run the gate: every function already matched under the old flags must
-  still match, or the change is wrong.
-- **The compiler itself.** Orbis clang 3.508 is not a public release
-  (`docs/TARGETS.md`). A difference that no source change and no flag removes
-  is recorded in `docs/NOTES.md` (local) with the function, and the function
-  is parked: its row stays out of `matched`, its C++ stays in the tree with a
-  `// NONMATCHING: <why>` comment on the definition. The gate ignores
-  unclaimed functions; the dashboard counts them as unmatched.
-- **Inlined callees.** The original's inlining decisions were the Orbis
-  compiler's. A callee that appears inlined in the base must be written so
-  the public clang inlines it too (`inline` in a header, or the same TU), not
-  pasted in by hand.
+A crutch is anything that emits no bytes of its own and exists to steer the
+compiler rather than to express what the code does. The ban is a test, not
+a list: register pins, empty or register-only inline assembly, dead stores
+after the last read, orphan carrier locals, pragmas or attributes that
+change codegen, `volatile` applied to a value the program never treats as
+volatile, a declaration trick that changes the calling convention, a block
+scope or storage class that exists only to move a live range. Each is
+spelled as ordinary C++ and each is the same crutch renamed. A barrier may
+be used once as a throwaway diagnostic to prove a body is reachable, then
+reproduced in real code before anything is saved. Legitimate: `volatile` on
+data the program's own logic treats as volatile (a value another thread or
+the hardware writes), with its reason in a comment; a store to a real field;
+the engine's own idioms. The question to ask of every line: would the
+engine's developer have written this to express what the function does?
 
-## What the tools compare
+## The compiler is fixed inside the loop
 
-`tools/match_check.py` disassembles the compiled function (from the object's
-symbol, with its `.rela.text` entries) and the base's bytes at the function's
-address (capstone, x86-64), walks the two instruction streams in step, and for
-each instruction that carries a relocation in the object zeroes the field the
-linker would fill on both sides. Instructions equal after that masking count;
-the score is their share over the longer stream, and 1.0 is a match. Sizes
-differing is a difference. Nothing else is masked: an immediate, a stack
-offset or a register choice that differs is a real difference.
+Within the matching loop the compiler and the flags of the prefix are fixed
+and correct, and a residual is a source shape not yet found. "This LLVM
+would never emit that order", "needs a different release", "a flag the
+developer used" are not conclusions a function can reach on its own: the
+compilers were chosen and the flags set from measurements over the whole
+executable (`docs/DECISIONS.md` D6, `tools/fingerprint.py`), and one
+function's diff is a hint about that evidence, never a verdict. No flag is
+ever tried per file or per function; `config/flags.base.txt` is per prefix
+and changes only under the standard in `docs/DECISIONS.md`. When a residual
+is believed to be the compiler's, the finding goes to `docs/NOTES.md` as a
+classified mechanism (which pass, which input, the base's bytes, what was
+compiled) with the function left unclaimed, and the question is decided
+across the region with the probe and the fingerprints, not inside the round.
+A matched sibling of the same shape under the same flags is the usual proof
+that the shape exists.
 
-The masked fields are then checked for real where the base can place the
-symbol (`tools/base_elf.py`): a call to `FUN_x` must encode `FUN_x`'s
-address in the base, a reference to `D_<hex>` that address, a call to an
-import its PLT stub, a GOT load its slot. A wrong target fails the function
-whatever the score, so a callee or a data label is never a guess that
-happens to encode the same way.
+## Talk to the compiler
 
-The gate goes one step further (`tools/layout_link.py`, `docs/DECISIONS.md`
-D7): it rebuilds the whole text segment, every claimed function at its
-address with its relocations resolved, everything else from the base, and
-requires the image byte-identical to the base. A string literal the TU
-defines resolves to the one place the base holds those bytes; a data
-reference needs a `D_<hex>` name (its address in the base); a relocation the
-resolver cannot place fails the function with a message. An `objdiff` view of
-a TU against a carved target object is possible (`tools/ext/objdiff/`) and
-not part of the gate.
+The LLVM the prefix compiles with is staged as source under
+`tools/cc/src/llvm-<version>.src/` (`tools/build_llvm.sh`), and the
+from-source build reproduces the prebuilt byte for byte. Read the pass
+first-party when a divergence resists: state the pass's required input as a
+predicate over its own variables (what `MachineScheduler` orders by, what
+`GreedyRegAlloc` evicts on, when `DAGCombiner` merges two stores, when the
+inliner's threshold admits a callee), mark each condition satisfied or not
+on the current TU from the dumps, and derive backwards from the unsatisfied
+condition to the source construct that establishes it. Dumps: `-S -emit-llvm`
+for the IR the back end sees, `-mllvm -print-after-all` for every machine
+pass, `-mllvm -print-before=<pass>`, `-Rpass=inline` and
+`-Rpass-missed=inline` for inlining decisions, `-fno-discard-value-names`
+to keep names in the IR. A decisive fact is usually one line of compiler
+source that no amount of inference from the output would have surfaced.
+
+## Evidence discipline
+
+- A claim becomes a fact with independent sources: the compiler's code, a
+  dump of your own TU, the base's own bytes. One source is a hypothesis and
+  is labelled as one.
+- Pre-register the falsifier before adopting a reading; a probe that
+  satisfies one instrument and contradicts another is the false positive this
+  method keeps catching.
+- A corrected premise retracts every conclusion built on it; re-open them
+  explicitly and record the re-opening.
+- A fitted regularity is one-directional until the converse is tested on a
+  case where the left side holds and the right does not.
+- Record mechanisms and measurements, never prohibitions. "The hoist happens
+  unconditionally under this source, dumps attached" is durable; "therefore
+  do not look for a shape that stops it" freezes a solvable class. Say what
+  was compiled; a model-derived closure with nothing compiled is labelled so.
+- Re-derive any number you rely on this session; an inherited gate that was
+  never measured has been wrong before.
+
+## When a round ends without a match
+
+There is no stall gate, no skip and no floor. A function that did not match
+in one worker's context is resumed by a fresh one from the saved state: the
+TU at its best structure-forward form, a round entry in `docs/NOTES.md`
+naming what landed, the exact residual as a map (classes, sizes, the
+mechanism measured for each) and the next reasoned lead, never a list of
+failed spellings and never an instruction not to try. The function is never
+claimed until the gate passes; `src/.../unknown/` keeps the work in progress
+with a `// NONMATCHING: <residual>` comment on the definition so the tree
+compiles and the dashboard counts it unmatched.
+
+## Codify what is learned
+
+When a landing used a mechanism the local cookbook (`docs/COOKBOOK.md`,
+gitignored) does not hold, add one entry: the base's shape, the source form
+that produced it, the compiler mechanism with its source location. A
+landing that reused known mechanisms needs nothing. A tooling or layout fact
+goes to `docs/NOTES.md`. The cookbook is what the next worker greps before
+writing C++ for the same shape.
