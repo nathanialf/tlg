@@ -76,3 +76,11 @@ FUN_000002f0 src/libs/unknown/func_000002f0.cpp
 FUN_00000300 src/libs/unknown/func_00000300.cpp
 FUN_00000320 src/libs/unknown/func_00000320.cpp
 FUN_00000350 src/libs/unknown/func_00000350.cpp
+FUN_00001620 src/libs/unknown/func_00001620.cpp _ZN16TwoBaseAllocator12FUN_00001620Ev
+FUN_00001f90 src/libs/unknown/func_00001f90.cpp
+FUN_00003e80 src/libs/unknown/func_00003e80.cpp
+FUN_00003eb0 src/libs/unknown/func_00003eb0.cpp
+FUN_00004250 src/libs/unknown/leaf_00004250.cpp
+FUN_00004ac0 src/libs/unknown/func_00004ac0.cpp
+FUN_00007e00 src/libs/unknown/leaf_00007e00.cpp
+FUN_00007f80 src/libs/unknown/leaf_00007f80.cpp

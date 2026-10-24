@@ -48,4 +48,30 @@ struct Values38Owner {
     s32 value48;
 };
 
+/* An allocator with two polymorphic bases, the primary at +0 (vtable
+ * 0x168c640) and a second interface at +8 (vtable 0x168c708), both stored
+ * by its constructor FUN_00001960. Its complete destructor is FUN_00001fb0,
+ * its deleting destructor (slot 1) FUN_00001f90; slot 12 (FUN_00001620)
+ * returns the object as its second base. */
+class TwoBaseAllocatorBase
+{
+  public:
+    virtual ~TwoBaseAllocatorBase();
+};
+
+class TwoBaseAllocatorInterface
+{
+  public:
+    virtual ~TwoBaseAllocatorInterface();
+};
+
+class TwoBaseAllocator : public TwoBaseAllocatorBase, public TwoBaseAllocatorInterface
+{
+  public:
+    virtual ~TwoBaseAllocator();
+    virtual TwoBaseAllocatorInterface *FUN_00001620();
+};
+
+void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
+
 #endif
