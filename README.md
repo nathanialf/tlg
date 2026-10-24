@@ -18,7 +18,7 @@ executable says about its own build.
 <!-- progress:begin -->
 | Target | Matched |
 | --- | --- |
-| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![text progress](https://img.shields.io/badge/text-0.00%20%25-orange.svg) ![functions progress](https://img.shields.io/badge/functions-0.02%20%25-orange.svg) |
+| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![text progress](https://img.shields.io/badge/text-0.00%20%25-orange.svg) ![functions progress](https://img.shields.io/badge/functions-0.04%20%25-orange.svg) |
 <!-- progress:end -->
 
 **[Progress dashboard](https://nathanialf.github.io/tlg/)**: every function
@@ -103,15 +103,19 @@ pinned by SHA-256; nothing comes from a Sony SDK.
 
 | tool | role | source | licence |
 | --- | --- | --- | --- |
-| clang 19 (host package) | compiles every source, `--target=x86_64-scei-ps4`; also `llvm-objdump`, `llvm-readelf` | Debian `clang-19`, `llvm-19`, `lld-19` | Apache-2.0 with LLVM exception |
+| LLVM 3.6.2, prebuilt | compiles every source, `--target=x86_64-scei-ps4` with generic tuning and the Jaguar's features (`config/flags.base.txt`) | releases.llvm.org `clang+llvm-3.6.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz`, sha256 pinned in `tools/fetch_llvm.sh`; Debian bookworm's `libtinfo5` beside it | Apache-2.0 with LLVM exception |
+| clang 19 (host package) | `llvm-objdump`, `llvm-readelf`, `llvm-nm`; the fallback compiler | Debian `clang-19`, `llvm-19`, `lld-19` | Apache-2.0 with LLVM exception |
 | LibOrbisPkg PkgTool.Core 0.2.231 | extracts the user's package | github.com/maxton/LibOrbisPkg release v0.2, on a user-local .NET 8 runtime (`dotnet-install.sh`) | MIT |
 | `tools/unfself.py` | converts the fake-signed SELFs to ELF | this repository | MIT |
 | objdiff-cli 3.8.3 | an interactive diff viewer for objects, optional | github.com/encounter/objdiff release v3.8.3 | MIT / Apache-2.0 |
 | Ghidra 12.2 | analysis, optional (needs a JDK 25) | github.com/NationalSecurityAgency/ghidra release | Apache-2.0 |
 
-The matching compiler is not yet settled: the executable carries no
-`.comment` section, only its SDK version (`docs/TARGETS.md`). The flags are
-per source prefix in `config/flags.base.txt`, never per function.
+The compiler is the upstream release that reproduces the most of the
+executable's functions in the probe (`tools/compiler_probe.sh`,
+[`docs/TARGETS.md`](docs/TARGETS.md)); the original is Sony's own build of
+that era, and two of its code-generation choices no upstream release makes,
+so a few functions will not match byte for byte. The flags are per source
+prefix in `config/flags.base.txt`, never per function.
 
 ## Legal and licence
 

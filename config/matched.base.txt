@@ -8,3 +8,7 @@ FUN_000104b0 src/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord
 FUN_00004450 src/unknown/leaf_00004450.cpp _Z12FUN_00004450P6Pool40i
 FUN_00011320 src/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
 FUN_00014af0 src/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
+FUN_0000df30 src/unknown/leaf_0000df30.cpp _Z12FUN_0000df30PK12MatrixHolderP4Mat4
+FUN_000137c0 src/unknown/leaf_000137c0.cpp _Z12FUN_000137c0P4Mat4PKS_
+FUN_0000bc30 src/unknown/func_0000bc30.cpp _Z12FUN_0000bc30P5Arenai
+FUN_00017a60 src/unknown/func_00017a60.cpp _Z12FUN_00017a60P10Owner17a60

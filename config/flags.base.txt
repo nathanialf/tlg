@@ -1,15 +1,27 @@
 # Compiler flags per source prefix, for tools/compile_cpp.sh. The longest
 # prefix that matches the source path wins; flags apply to every file under it
-# (per directory, never per file or per function). The compiler itself is
-# TLG_CXX (default clang-19, the tooling clang; the matching clang is still
-# to be determined: docs/TARGETS.md).
+# (per directory, never per file or per function). The compiler is the
+# prebuilt upstream LLVM 3.6.2 under tools/cc/ (tools/setup.sh); TLG_CXX
+# overrides it for experiments (tools/compiler_probe.sh).
 #
-# What the binary says about its build (docs/SURVEY.md): Orbis SDK 03.508,
-# AVX code (btver2, the PS4's Jaguar, which the x86_64-scei-ps4 triple
-# selects), position-independent executable, unwind tables for every function.
-src/ --target=x86_64-scei-ps4 -O2 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=c++11 -Isrc/include
-#
-# Evidence for the flags, from matched functions: every non-leaf function
-# keeps a frame pointer (push rbp; mov rbp, rsp) and leaves omit it, so
-# -fno-omit-frame-pointer -momit-leaf-frame-pointer. -nostdlibinc keeps the
-# compiler's own headers (immintrin.h) and drops the host libc's.
+# Evidence, from the functions matched so far (docs/TARGETS.md has the probe):
+#   -O2                             -O1 and -Os lose the vectorised and
+#                                   scheduled forms the base has
+#   -march=x86-64 + the features    the Jaguar's instruction set (AVX, SSE4a,
+#                                   AES, PCLMUL, BMI, F16C, LZCNT, POPCNT,
+#                                   PRFCHW) with GENERIC tuning: under the
+#                                   btver2 scheduling model the register copies
+#                                   in 0xbc30 come out in the other order
+#   -fwrapv                         the base subtracts in 32 bits and then
+#                                   sign-extends (0x12120); with signed
+#                                   overflow undefined clang widens first
+#   -fno-strict-aliasing            the base reloads a field after a store
+#                                   through another type (0x12120)
+#   -fno-omit-frame-pointer         every non-leaf keeps rbp (push rbp; mov
+#   -momit-leaf-frame-pointer       rbp, rsp), every leaf omits it
+#   -fno-exceptions -fno-rtti       no unwinding landing pads or type info
+#                                   seen yet; revisit when a throwing or
+#                                   dynamic_cast site is matched
+#   -ffreestanding -nostdlibinc     no host libc headers; the compiler's own
+#   -nostdinc++                     intrinsic headers (xmmintrin.h) stay
+src/ --target=x86_64-scei-ps4 -O2 -march=x86-64 -mavx -msse4a -maes -mpclmul -mbmi -mf16c -mlzcnt -mpopcnt -mprfchw -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -ffreestanding -nostdlibinc -nostdinc++ -std=c++11 -Isrc/include

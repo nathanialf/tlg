@@ -35,12 +35,35 @@ The full survey, program header by program header and library by library, is
   AVX (`vmovaps`, `vdpps`) and the AMD Jaguar scheduling clang's
   `x86_64-scei-ps4` target selects (`-march=btver2`), position-independent
   addressing, and unwind tables for every function.
-- **Which public clang.** Undetermined. The plan is to compile matched
-  functions with several LLVM releases of the 2015-2016 era and keep the one
-  whose codegen agrees most often; the gate holds every matched function to
-  the current choice (`config/flags.base.txt`), so a change is measured, not
-  guessed. Until then the tooling clang (Debian's clang 19) is the compiler,
-  and only functions it reproduces exactly are claimed.
+- **Which public clang.** Upstream LLVM 3.6.2, provisionally. The probe
+  (`tools/compiler_probe.sh` over `tools/probe/batch1.cpp`, ten small
+  functions written from their disassembly) scored every prebuilt release
+  from 3.5 to 9.0 and the host's clang 19 under the same flags:
+
+  | LLVM | functions equal (of 10) | what breaks |
+  | --- | ---: | --- |
+  | 3.5.2, 3.6.2 | 7 | 0x7180, 0x12120 (below); 0xdf30 only as a struct copy |
+  | 3.7.1 to 4.0.0 | 6 | also merge the two scalar stores of 0x104b0 into one vector store |
+  | 5.0.2 | 5 | hoists the loads of 0x137c0 |
+  | 6.0.1 | 4 | also reorders 0x14af0 |
+  | 7.0.1 to 9.0.0 | 2 | also 0xbc30 and 0x17a60 |
+  | clang 19 | 4 | 0xbc30, 0x17a60, 0x137c0 differ in register choice or order |
+
+  The flags that held across releases are in `config/flags.base.txt`:
+  generic x86-64 tuning with the Jaguar's instruction set (under the btver2
+  scheduling model the two register copies of 0xbc30 come out swapped),
+  `-fwrapv`, `-fno-strict-aliasing`, frame pointers kept in non-leaves.
+  3.6.2 is chosen over 3.5.2 as the later of the two equal scorers and the
+  closer to SDK 3.5's date; the choice is revisited as the matched set grows
+  (`tools/compiler_probe.sh tools/probe/*.cpp` reruns the comparison).
+
+  Two differences no upstream release reproduces, so they are Sony's own
+  changes to the compiler: the register assignment of 0x7180 (the base moves
+  `this` out of `rdi` first and loads the callee object straight into `rdi`;
+  upstream keeps `this` in `rdi` and copies at the end) and `movsxd rax, eax`
+  for a 32-to-64 sign extension where every upstream release emits `cdqe`
+  (0x12120). A function whose only difference is one of these is recorded as
+  such in `docs/NOTES.md` and left unclaimed.
 - **Source layout.** The assert and `__FILE__` strings name 119 source files
   under four roots (`SURVEY.md`, "Source roots"): `D:/trico/engine/anzu/`
   (the engine, "anzu"; the output path above is under it),

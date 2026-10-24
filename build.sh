@@ -28,7 +28,8 @@ tlg_version_init "$ROOT"
 toolchain_ok() {
     [[ -x .venv/bin/python && -x .venv/bin/ninja ]] &&
     [[ -f tools/ext/pkgtool/PkgTool.Core.dll && -x tools/ext/dotnet/dotnet ]] &&
-    [[ -x tools/ext/objdiff/objdiff-cli ]]
+    [[ -x tools/ext/objdiff/objdiff-cli ]] &&
+    [[ -x tools/cc/llvm-3.6.2/bin/clang ]]
 }
 
 if ! toolchain_ok; then
