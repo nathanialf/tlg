@@ -2,6 +2,13 @@
  * the file its assert names (config/homes.base.txt, FUN_0004d0a0). */
 #include "tlg_hk_reflect.h"
 
+/* derived name: sets the world's gravity, the vector at +0x630 (called at
+ * 0x16eff1 and by the game at 0xe99dd1). */
+void hknpWorld::FUN_0004bcb0(const Vec4 &newGravity) /* derived name */
+{
+    gravity = newGravity;
+}
+
 /* derived name: sets the world's collision filter, held by the object at
  * +0x1b8 (the world's own constructor does the same at 0x4a1a7; the game
  * calls this at 0xea98cc). FUN_0004bcc0 sits between the constructor

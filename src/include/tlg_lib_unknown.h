@@ -458,23 +458,34 @@ struct UnionFind /* derived name */
     int state;                 /* derived name */
 };
 
+/* A 32-byte record of the union-find's owner: a bit field (the callers at
+ * 0x6d79e and 0x16e475 resize it with FUN_00047b30) and eight bytes the
+ * constructor leaves alone. */
+struct Record00065f00 /* derived name */
+{
+    hkBitField bits; /* derived name */
+    u8 unknown18[8];
+};
+
 /* The union-find's owner (constructor FUN_00065b70, destructor
  * FUN_00065de0): the union-find at +0 (freed with 0x18 bytes) and its
- * parents at +8 (0x10 bytes), twelve 32-byte records from +0x10 (an array
- * and an int each; FUN_00065f00 returns one by index), the node count at
- * +0x190 and a second count at +0x194; the constructor sets the flag at
- * +0x198, FUN_00065f20 clears it (called at 0x6dd1f and 0x14e946, after the
- * records are filled). */
+ * parents at +8 (0x10 bytes), twelve 32-byte records from +0x10 (each
+ * starting with an empty hkBitField; FUN_00065f00 returns one by index), the
+ * node count at +0x190 and a second count at +0x194; the constructor sets
+ * the flag at +0x198, FUN_00065f20 clears it (called at 0x6dd1f and
+ * 0x14e946, after the records are filled). */
 struct Object00065f20 /* derived name */
 {
-    UnionFind *unionFind;      /* derived name */
-    UnionFindParents *parents; /* derived name */
-    u8 unknown10[0x188];
+    UnionFind *unionFind;       /* derived name */
+    UnionFindParents *parents;  /* derived name */
+    Record00065f00 records[12]; /* derived name */
+    u8 unknown190[8];
     bool open; /* derived name */
 };
 
-void FUN_00065f10(Object00065f20 *self); /* derived name */
-void FUN_00065f20(Object00065f20 *self); /* derived name */
+void FUN_00065f10(Object00065f20 *self);                       /* derived name */
+void FUN_00065f20(Object00065f20 *self);                       /* derived name */
+Record00065f00 *FUN_00065f00(Object00065f20 *self, int index); /* derived name */
 
 /* An allocator over the system heap (vtable address point 0x168ca00):
  * slot 2 (0x4ad0) adds the size atomically to the bytes in use at +0xc,
@@ -524,12 +535,64 @@ class BufferAllocator : public AllocatorBase /* derived name */
 {
   public:
     bool FUN_00091090(int numBytes) const; /* derived name */
+    void FUN_000910d0();                   /* vtable slot 11; derived name */
 
     char *bufferStart; /* derived name */
     char *bufferEnd;   /* derived name */
     char *currentEnd;  /* derived name */
     u8 unknown20[8];
     hkUlong peakUse; /* derived name */
+};
+
+/* An image loaded from a file (derived name): FUN_00188560 opens the file a
+ * name gives, checks its extension against "tga" and returns what the
+ * loader at 0x1887a0 builds, or null. */
+struct LoadedImage; /* derived name */
+
+LoadedImage *FUN_00188560(const char *fileName); /* derived name */
+
+/* A reference-counted source of an image (derived name; vtable address
+ * point 0x16a6620, constructor FUN_00188e90, slots 5 and 6 pure), and the
+ * one that names a file (derived name; vtable address point 0x16a3ab0,
+ * 0x18 bytes as the copier at 0xad7c0 allocates it, destructors 0xad590 and
+ * 0xad5b0): its file name (hkStringPtr) at +0x10; slot 5 is the empty
+ * 0xa9140, slot 6 (FUN_000ad7b0) loads the file. */
+class ImageSource : public hkReferencedObject /* derived name */
+{
+};
+
+class FileImageSource : public ImageSource /* derived name */
+{
+  public:
+    LoadedImage *FUN_000ad7b0(); /* vtable slot 6; derived name */
+
+    hkStringPtr fileName; /* derived name */
+};
+
+/* A stream reader (derived name), the object a buffered reader reads from:
+ * its slot 9 returns the stream itself when it can seek and tell, else
+ * null, slot 10 seeks and slot 11 tells. */
+class StreamReader; /* derived name */
+
+/* A buffered stream reader (derived names; vtable address point 0x16a35d0,
+ * constructor 0x94170, the reference-counted object's slots 2 to 4): the
+ * stream at +0x10 (its reference count raised), what the stream's slot 9
+ * returned at +0x18, the buffer at +0x20, the read position and the bytes in
+ * the buffer at +0x28 and +0x2c, the buffer size at +0x30. Slot 9
+ * (FUN_000946f0) returns the reader when the stream can seek; slot 10
+ * (0x94700) empties the buffer and seeks the stream, slot 11 (0x94720) tells
+ * the stream's position less what is still buffered. */
+class BufferedStreamReader : public hkReferencedObject /* derived name */
+{
+  public:
+    BufferedStreamReader *FUN_000946f0(); /* vtable slot 9; derived name */
+
+    StreamReader *stream;         /* derived name */
+    StreamReader *seekableStream; /* derived name */
+    char *buffer;                 /* derived name */
+    int position;                 /* derived name */
+    int numBuffered;              /* derived name */
+    int bufferSize;               /* derived name */
 };
 
 #endif

@@ -34,6 +34,21 @@ template <typename T> struct hkArray {
     int capacityAndFlags; /* derived name */
 };
 
+/* hkBitField (type info registered at 0x9e2b, size 0x18): its member
+ * storage at +0 (record 0x168d2f0), a hkBitFieldStorage of hkArray<unsigned
+ * int> (the scoped type names at 0x14b332f onward) whose words are at +0
+ * and numBits at +0x10 (records 0x168d350, 0x168d378). Havok writes it as a
+ * template over the storage; the one instance used here is spelled out.
+ * FUN_00047b30 resizes it, filling the new bits. */
+struct hkBitFieldStorage {
+    hkArray<u32> words;
+    int numBits;
+};
+
+struct hkBitField {
+    hkBitFieldStorage storage;
+};
+
 /* hkBool, the reflection's boolean (its name in the type-name table at
  * 0x14b2fab): a char, read as a test against zero (`cmpb $0; setne`) and
  * written from a bool. A function returning one returns the byte built from
@@ -440,7 +455,11 @@ void FUN_00024db0(hkMultipleVertexBuffer *self);                                
 /* hkMeshShape (hkClass 0x57bd7d0, the parent of hkSkinBinding): a
  * reference-counted object whose slot 8 returns its name (hkxBlobMeshShape,
  * hkSkinnedRefMeshShape, hkMemoryMeshMaterial and hkStorageSkinnedMeshShape
- * return their hkStringPtr there) and slot 9 sets it. */
+ * return their hkStringPtr there) and slot 9 sets it. Slot 7 takes an
+ * hkMeshSection (a reflected class; hkMemoryMeshShape's override 0x2ad50
+ * reads a pointer at +0x28 and an int at +0x38 of it). */
+struct hkMeshSection;
+
 class hkMeshShape : public hkReferencedObject
 {
   public:
@@ -449,8 +468,9 @@ class hkMeshShape : public hkReferencedObject
     virtual void FUN_000069a0();
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
-    virtual const char *getName() const; /* vtable slot 8; derived name */
+    virtual void unknownVirtual7(const hkMeshSection &section);
+    virtual const char *getName() const;       /* vtable slot 8; derived name */
+    virtual void setName(const char *newName); /* vtable slot 9; derived name */
 };
 
 /* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
@@ -782,12 +802,17 @@ struct hknpWorld {
     void *FUN_00051610() const;                               /* derived name */
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
     hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
+    void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
 
     u8 unknown0[0x1b8];
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
-    u8 unknown1d8[0x4f0];
+    u8 unknown1d8[0x458];
+    /* The constructor copies it from hknpWorldCinfo's gravity (record at
+     * 0x1698370, +0x60) at 0x48d84, and 0x4ae7e copies it back. */
+    Vec4 gravity; /* derived name */
+    u8 unknown640[0x88];
     hknpEventDispatcher *eventDispatcher; /* derived name */
 };
 
@@ -1327,8 +1352,13 @@ class hkpConstraintData : public hkReferencedObject
     virtual void FUN_00000270();
     virtual void FUN_000042d0();
     virtual void FUN_000069a0();
+    /* What slot 6 fills (derived name): hkpFixedConstraintData's override
+     * (0x7bf20) hands its 0xc0 bytes of atoms and this argument to
+     * FUN_00082890. */
+    struct ConstraintInfo;
+
     virtual int unknownVirtual5() const = 0;
-    virtual void unknownVirtual6() = 0;
+    virtual void unknownVirtual6(ConstraintInfo &infoOut) const = 0;
     virtual int unknownVirtual7() const = 0;
     virtual void unknownVirtual8();
     virtual void unknownVirtual9();
@@ -1374,11 +1404,14 @@ void FUN_0007d020(hkpConstraintData *data, const void *input, void *output); /* 
  * member, constraintData (a pointer to hkpConstraintData) at +0x18 (record
  * 0x169d1c0). Slot 7 (FUN_00067c60, emitted in hknpMalleableConstraintData's
  * file and kept by it and hknpBreakableConstraintData) forwards to the
- * wrapped data's slot 7. */
+ * wrapped data's slot 7; slot 6 (FUN_0007d5b0, kept by
+ * hknpBreakableConstraintData, address point 0x1695b20) forwards to its
+ * slot 6. */
 class hkpWrappedConstraintData : public hkpConstraintData
 {
   public:
-    int FUN_00067c60() const; /* vtable slot 7; derived name */
+    void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    int FUN_00067c60() const;                         /* vtable slot 7; derived name */
 
     hkpConstraintData *constraintData;
 };
@@ -1903,8 +1936,10 @@ class hkSkinBinding : public hkMeshShape
   public:
     virtual ~hkSkinBinding();
 
-    const hkClass *FUN_000242d0() const; /* vtable slot 3; derived name */
-    const char *FUN_000aa530() const;    /* vtable slot 8; derived name */
+    const hkClass *FUN_000242d0() const;             /* vtable slot 3; derived name */
+    void FUN_000aa520(const hkMeshSection &section); /* vtable slot 7; derived name */
+    const char *FUN_000aa530() const;                /* vtable slot 8; derived name */
+    void FUN_000aa540(const char *newName);          /* vtable slot 9; derived name */
 
     hkMeshShape *skin;
 };
