@@ -12,9 +12,11 @@ int strcmp(const char *a, const char *b);
 int strncmp(const char *a, const char *b, size_t n);
 int memcmp(const void *a, const void *b, size_t n);
 char *strcpy(char *dst, const char *src);
+char *strncpy(char *dst, const char *src, size_t n);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
 time_t time(time_t *t);
+void free(void *p);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
 unsigned long _Stoul(const char *s, char **endptr, int base);

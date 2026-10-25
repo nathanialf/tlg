@@ -66,6 +66,10 @@ struct hkClass {
     const hkClass *parent;
 };
 
+/* derived name: tells whether two classes are the same, by address or by
+ * name (strcmp); false when the other is null. */
+bool FUN_00004210(const hkClass *self, const hkClass *other);
+
 /* hkClassMember, a 40-byte member record (member names from its own
  * reflection strings at 0x14b2cc0: name, class, enum, type, subtype,
  * cArraySize, flags, offset). The records read here: 0x168c1f0 onward
@@ -82,6 +86,19 @@ struct hkClassMember {
     s16 cArraySize;
     u16 flags;
     u16 offset;
+};
+
+/* An accessor of one member of an object (derived name): the member's
+ * address at +0 (built by FUN_00184150 from the object and the record's
+ * offset) and its record at +8. hkResourceHandle.cpp's link resolver
+ * (0x17f770) reads the record through the shared +8 load FUN_00004250 and
+ * stores the resolved object through FUN_001841d0. */
+struct hkClassMemberAccessor /* derived name */
+{
+    void *&FUN_001841d0(int index) const; /* derived name */
+
+    void *address;               /* derived name */
+    const hkClassMember *member; /* derived name */
 };
 
 /* The flag a finish constructor takes, passed by value: the finish callback
@@ -106,6 +123,12 @@ class hkBaseObject
 class hkReferencedObject : public hkBaseObject
 {
   public:
+    /* Slot 4 of the reference-counted classes' vtables (FUN_000069a0, the
+     * body behind it in most of them): the object deletes itself through its
+     * deleting destructor; the reference release at 0x44e86 calls slot 4
+     * when the count reaches zero. derived name. */
+    void FUN_000069a0() const;
+
     u32 memSizeAndRefCount;
 };
 
@@ -129,6 +152,13 @@ void FUN_0000e5d0(hkStringPtr *self);                                /* derived 
 /* The default constructor: a null string (called on each new element by the
  * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
 void FUN_0000e3d0(hkStringPtr *self); /* derived name */
+
+/* derived names: the string set from a C string of a given length (-1: up
+ * to its terminator), copied into owned storage and the old one freed when
+ * owned (FUN_0000e450); the constructor from a string (FUN_0000e540) starts
+ * from a null string and sets it. */
+void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived name */
+void FUN_0000e540(hkStringPtr *self, const char *string, int length); /* derived name */
 
 /* Sets the string from (string, length): drops an owned copy, then stores a
  * new one (copied through the arena of the thread's block) or null; the
@@ -205,17 +235,18 @@ void FUN_0001c1f0(hkRefCountedProperties *self);                                
  * the translation row out, slot 9 (FUN_0000dcb0) returns the name (also
  * slot 20 of hkMemoryMeshBody, whose name sits at the same offset), slots
  * 10 and 11 read and set the parent frame, slot 12 (FUN_0000e160) returns
- * the child count. */
+ * the child count and slot 13 (FUN_0000e170) a child by index. */
 struct hkLocalFrame;
 struct hkLocalFrameGroup;
 
 class hkSimpleLocalFrame : public hkReferencedObject
 {
   public:
-    void FUN_0000df30(Mat4 &out) const;      /* vtable slot 5; derived name */
-    void FUN_0000df90(Vec4 &position) const; /* vtable slot 7; derived name */
-    const char *FUN_0000dcb0() const;        /* vtable slot 9; derived name */
-    int FUN_0000e160() const;                /* vtable slot 12; derived name */
+    void FUN_0000df30(Mat4 &out) const;          /* vtable slot 5; derived name */
+    void FUN_0000df90(Vec4 &position) const;     /* vtable slot 7; derived name */
+    const char *FUN_0000dcb0() const;            /* vtable slot 9; derived name */
+    int FUN_0000e160() const;                    /* vtable slot 12; derived name */
+    hkLocalFrame *FUN_0000e170(int index) const; /* vtable slot 13; derived name */
 
     Mat4 transform;
     hkArray<hkLocalFrame *> children;
@@ -416,6 +447,10 @@ class hkMeshShape : public hkReferencedObject
     virtual const char *getName() const; /* vtable slot 8; derived name */
 };
 
+/* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
+ * hkReferencedObject, 0x10 bytes). */
+class hkMeshVertexBuffer;
+
 /* hkMeshBody, its parent (hkClass 0x57bd408, built at 0x246ae), a
  * hkReferencedObject with no members of its own. */
 class hkMeshBody : public hkReferencedObject
@@ -441,11 +476,12 @@ class hkMemoryMeshBody : public hkMeshBody
     const hkStringPtr *FUN_00023140() const;            /* vtable slot 14; derived name */
     const hkMeshBoneIndexMapping *FUN_00023150() const; /* vtable slot 15; derived name */
     void FUN_00023170(const char *newName);             /* vtable slot 21; derived name */
+    hkMeshVertexBuffer *FUN_000230e0(int index) const;  /* vtable slot 8; derived name */
 
     Mat4 transform;
     hkIndexedTransformSet *transformSet;
     hkMeshShape *shape;
-    hkArray<void *> vertexBuffers; /* pointers to the class 0x57bca60 */
+    hkArray<hkMeshVertexBuffer *> vertexBuffers;
     hkStringPtr name;
 };
 
@@ -1464,24 +1500,27 @@ template <typename ENUM, typename STORAGE> class hkEnum
  * displacementAmount (hkReal) at +0x7c. */
 extern const hkClass D_57bd458; /* hkMemoryMeshMaterial's hkClass, built at 0x24752 */
 
+class hkMeshTexture;
+
 class hkMemoryMeshMaterial
 {
   public:
     virtual ~hkMemoryMeshMaterial();
 
-    const hkClass *FUN_000246c0() const;    /* vtable slot 3; derived name */
-    void FUN_000acf80(const char *newName); /* vtable slot 9; derived name */
-    const char *FUN_000acf90() const;       /* vtable slot 10; derived name */
-    hkUlong FUN_000acae0() const;           /* vtable slot 17; derived name */
-    void FUN_000acaf0(hkUlong newUserData); /* vtable slot 18; derived name */
-    float FUN_000acb00() const;             /* vtable slot 19; derived name */
-    void FUN_000acb10(float factor);        /* vtable slot 20; derived name */
-    float FUN_000acb20() const;             /* vtable slot 21; derived name */
-    void FUN_000acb30(float amount);        /* vtable slot 22; derived name */
+    const hkClass *FUN_000246c0() const;          /* vtable slot 3; derived name */
+    void FUN_000acf80(const char *newName);       /* vtable slot 9; derived name */
+    const char *FUN_000acf90() const;             /* vtable slot 10; derived name */
+    hkMeshTexture *FUN_000acfb0(int index) const; /* vtable slot 12; derived name */
+    hkUlong FUN_000acae0() const;                 /* vtable slot 17; derived name */
+    void FUN_000acaf0(hkUlong newUserData);       /* vtable slot 18; derived name */
+    float FUN_000acb00() const;                   /* vtable slot 19; derived name */
+    void FUN_000acb10(float factor);              /* vtable slot 20; derived name */
+    float FUN_000acb20() const;                   /* vtable slot 21; derived name */
+    void FUN_000acb30(float amount);              /* vtable slot 22; derived name */
 
     u8 unknown8[8];
     hkStringPtr materialName;
-    u8 textures[0x10];
+    hkArray<hkMeshTexture *> textures;
     Vec4 diffuseColor;
     Vec4 ambientColor;
     Vec4 specularColor;

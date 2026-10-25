@@ -476,4 +476,40 @@ struct Object00065f20 /* derived name */
 void FUN_00065f10(Object00065f20 *self); /* derived name */
 void FUN_00065f20(Object00065f20 *self); /* derived name */
 
+/* An allocator over the system heap (vtable address point 0x168ca00):
+ * slot 2 (0x4ad0) adds the size atomically to the bytes in use at +0xc,
+ * raises the peak at +0x10 to it and allocates with the alignment at +8;
+ * slot 3 (FUN_00004af0) subtracts and frees; slot 9 (0x4b00) reports both
+ * counts widened to 64 bits; slot 11 (FUN_00004b10) resets the peak to the
+ * current use (also called directly from six places in the game region). */
+class Allocator00004b10 /* derived name */
+{
+  public:
+    virtual ~Allocator00004b10();
+
+    void FUN_00004af0(void *pointer, int numBytes); /* vtable slot 3; derived name */
+    void FUN_00004b10();                            /* vtable slot 11; derived name */
+
+    int alignment;  /* derived name */
+    u32 bytesInUse; /* derived name: updated atomically by every thread */
+    u32 peakInUse;  /* derived name */
+};
+
+/* A stack tracer (derived name), built on the stack by the error report at
+ * 0xb680 (constructor FUN_0000d8f0 stores the vtable address point
+ * 0x168d850, destructor the empty FUN_0000d940). On this platform it has no
+ * trace: collecting one (the shared FUN_000042d0) finds no frames and
+ * printing one (FUN_0000d890) reports the fact through the caller's print
+ * function. */
+class StackTracer /* derived name */
+{
+  public:
+    typedef void (*PrintFunction)(const char *text, void *context); /* derived name */
+
+    virtual ~StackTracer();
+
+    void FUN_0000d890(const hkUlong *trace, int numTrace, PrintFunction print,
+                      void *context) const; /* derived name */
+};
+
 #endif

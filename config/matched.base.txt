@@ -475,3 +475,14 @@ FUN_0017e980 src/libs/unknown/leaf_0017e980.cpp _ZN21hkBuiltinTypeRegistry12FUN_
 FUN_0017e990 src/libs/unknown/leaf_0017e990.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017e990Ev
 FUN_0017ec90 src/libs/unknown/func_0017ec90.cpp _ZNK26hkDynamicClassNameRegistry12FUN_0017ec90EPKc
 FUN_00184410 src/libs/unknown/func_00184410.cpp _ZNK21hkVtableClassRegistry12FUN_00184410EPKv
+FUN_001841d0 src/libs/unknown/leaf_001841d0.cpp _ZNK21hkClassMemberAccessor12FUN_001841d0Ei
+FUN_00185450 src/libs/unknown/func_00185450.cpp
+FUN_001a3a70 src/libs/unknown/leaf_001a3a70.cpp
+FUN_00004af0 src/libs/unknown/func_00004af0.cpp _ZN17Allocator00004b1012FUN_00004af0EPvi
+FUN_000069a0 src/libs/unknown/func_000069a0.cpp _ZNK18hkReferencedObject12FUN_000069a0Ev
+FUN_0000d890 src/libs/unknown/func_0000d890.cpp _ZNK11StackTracer12FUN_0000d890EPKmiPFvPKcPvES4_
+FUN_0000e170 src/libs/unknown/leaf_0000e170.cpp _ZNK18hkSimpleLocalFrame12FUN_0000e170Ei
+FUN_0000e540 src/libs/unknown/func_0000e540.cpp
+FUN_00017fd0 src/libs/unknown/func_00017fd0.cpp
+FUN_000230e0 src/libs/unknown/leaf_000230e0.cpp _ZNK16hkMemoryMeshBody12FUN_000230e0Ei
+FUN_000acfb0 src/libs/unknown/leaf_000acfb0.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acfb0Ei
