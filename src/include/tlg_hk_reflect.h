@@ -367,7 +367,21 @@ void FUN_00024db0(hkMultipleVertexBuffer *self);                                
  * its record table at 0x1691530, transform (type 0x11) at +0x10,
  * transformSet (pointer) at +0x50, shape (pointer to hkMeshShape) at +0x58,
  * vertexBuffers (array of pointers) at +0x60, name (hkStringPtr) at +0x70. */
-struct hkMeshShape;
+/* hkMeshShape (hkClass 0x57bd7d0, the parent of hkSkinBinding): a
+ * reference-counted object whose slot 8 returns its name (hkxBlobMeshShape,
+ * hkSkinnedRefMeshShape, hkMemoryMeshMaterial and hkStorageSkinnedMeshShape
+ * return their hkStringPtr there) and slot 9 sets it. */
+class hkMeshShape : public hkReferencedObject
+{
+  public:
+    virtual void FUN_00000270();
+    virtual void unknownVirtual3();
+    virtual void FUN_000069a0();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual const char *getName() const; /* vtable slot 8; derived name */
+};
 
 /* hkMeshBody, its parent (hkClass 0x57bd408, built at 0x246ae), a
  * hkReferencedObject with no members of its own. */
@@ -408,8 +422,12 @@ void FUN_00023190(hkMemoryMeshBody *self, hkFinishLoadedObjectFlag flag); /* der
  * line (type info: vtable 0): */
 
 /* hkcdPlanarGeometryPrimitives::Plane (type info 0x57ba4e0, size 0x40): its
- * finish constructor runs only when finishing. */
+ * finish constructor, only when finishing, runs FUN_00095ab0, which unpacks
+ * the plane's packed integer coefficients at +0 and +0x10 (vector shifts)
+ * into its float equation. */
 struct hkcdPlanarGeometryPrimitivesPlane;
+
+void FUN_00095ab0(hkcdPlanarGeometryPrimitivesPlane *self); /* derived name */
 
 void FUN_00095aa0(hkcdPlanarGeometryPrimitivesPlane *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
@@ -1105,9 +1123,40 @@ class hkpLimitedHingeConstraintData
 class hkpConstraintData : public hkReferencedObject
 {
   public:
+    virtual void FUN_00000270();
+    virtual void FUN_000042d0();
+    virtual void FUN_000069a0();
+    virtual int unknownVirtual5() const = 0;
+    virtual void unknownVirtual6() = 0;
+    virtual int unknownVirtual7() const = 0;
+
     float FUN_00082b90() const; /* vtable slot 11; derived name */
     float FUN_00082ba0() const; /* vtable slot 12; derived name */
     float FUN_00082bb0() const; /* vtable slot 13; derived name */
+
+    /* Slot 19's default, kept by most constraint data vtables (the copy at
+     * 0x7b5a0 sits in the file of the class whose slot 5 is 0x7b560, type
+     * code 22): zeroes the vector its fifth argument points to. The three
+     * arguments before it are integers or pointers, not recovered. */
+    void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
+
+    u8 unknownC[0xc];
+};
+
+/* hkpWrappedConstraintData (hkClass 0x57c4308, built at 0x7e39e, 0x20 bytes,
+ * parent hkpConstraintData; finish constructor FUN_0007d520 stores its
+ * vtable 0x169cee0, address point 0x169cef0, slot 5 pure): one reflected
+ * member, constraintData (a pointer to hkpConstraintData) at +0x18 (record
+ * 0x169d1c0). Slot 7 (FUN_00067c60, emitted in hknpMalleableConstraintData's
+ * file and kept by it and hknpBreakableConstraintData) forwards to the
+ * wrapped data's slot 7. */
+class hkpWrappedConstraintData : public hkpConstraintData
+{
+  public:
+    int FUN_00067c60() const; /* vtable slot 7; derived name */
+
+    hkpConstraintData *constraintData;
 };
 
 /* hkpFixedConstraintData, polymorphic, 0xe0 bytes (type info 0x57c3438,
@@ -1576,12 +1625,20 @@ class hkMemoryMeshShape
  * returns it. */
 extern const hkClass D_57bd288; /* hkSkinBinding's hkClass */
 
-class hkSkinBinding
+/* Its members from the record table at 0x1691c90 (0x38 bytes): skin (a
+ * pointer to hkMeshShape) at +0x10, worldFromBoneTransforms (array of
+ * hkTransform) at +0x18, boneNames (array of hkStringPtr) at +0x28. Slots 5
+ * to 9 forward to the skin (slot 5 folded onto 0xabf0, slot 6 onto 0x89f0;
+ * 0xaa520, FUN_000aa530 the name, 0xaa540). */
+class hkSkinBinding : public hkMeshShape
 {
   public:
     virtual ~hkSkinBinding();
 
     const hkClass *FUN_000242d0() const; /* vtable slot 3; derived name */
+    const char *FUN_000aa530() const;    /* vtable slot 8; derived name */
+
+    hkMeshShape *skin;
 };
 
 /* hkStorageSkinnedMeshShape: its hkClass at 0x57bdd18 is built by the
@@ -1811,6 +1868,86 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
 
     void FUN_00176b10(hknpCharacterProxySignalSource *source,
                       hknpCharacterProxySignalData *data); /* derived name */
+};
+
+/* The physics world's query collector (derived name): a polymorphic class
+ * whose +0x10 (16 bytes) each collector copies from the one it forwards to
+ * after adding a hit (the early-out value of the query). Two collectors
+ * built on the stack by the world's queries (0x524d5 to 0x52a24) wrap
+ * another: vtables 0x1698fd0 (the wrapped collector at +0x20) and 0x1699020
+ * (at +0x30, a direction at +0x20). Their slot 4 (0x48420, 0x48570) adds a
+ * hit to the wrapped collector with its normal negated and its position
+ * moved along the normal (by the hit's distance) or along the direction (by
+ * its fraction), so they report the hits of the shape pair flipped
+ * (derived names below from that); slot 3 (FUN_00048410, FUN_00048560) and
+ * slot 6 (0x48510, 0x48660) forward to the wrapped collector's. */
+class hknpCollisionQueryCollector /* derived name */
+{
+  public:
+    virtual ~hknpCollisionQueryCollector();
+
+    virtual void unknownVirtual2();
+    virtual int unknownVirtual3() const;
+
+    u8 unknown8[8];
+    Vec4 earlyOut; /* derived name */
+};
+
+class hknpFlippedGetClosestPointsQueryCollector
+    : public hknpCollisionQueryCollector /* derived name */
+{
+  public:
+    int FUN_00048410() const; /* vtable slot 3; derived name */
+
+    hknpCollisionQueryCollector *childCollector; /* derived name */
+};
+
+/* A collector that wraps another at +0x48 (derived name), built on the
+ * stack at 0xd7324 and 0xd746c (vtable 0x16a3c50) and at 0xf0590 (vtable
+ * 0x16a3d00, the same bodies): its slot 4 (0xcf8d0) scales a hit's position
+ * by +0x20 and its normal by +0x30, transforms them by the transform at
+ * +0x40 (the normal renormalised) and adds the hit to the wrapped
+ * collector; slot 3 (FUN_000cf8c0) and slot 6 (0xcfa10) forward to the
+ * wrapped collector's. */
+class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived name */
+{
+  public:
+    int FUN_000cf8c0() const; /* vtable slot 3; derived name */
+
+    Vec4 positionScale;                          /* derived name */
+    Vec4 normalScale;                            /* derived name */
+    const Mat4 *transform;                       /* derived name */
+    hknpCollisionQueryCollector *childCollector; /* derived name */
+};
+
+class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /* derived name */
+{
+  public:
+    int FUN_00048560() const; /* vtable slot 3; derived name */
+
+    Vec4 castDirection;                          /* derived name */
+    hknpCollisionQueryCollector *childCollector; /* derived name */
+};
+
+/* hkpLinearParametricCurve (hkClass 0x57c3268, 0x50 bytes, parent 0x57c3c68;
+ * type info 0x57c32b8; finish constructor 0x78b00 stores its vtable
+ * 0x169d890, address point 0x169d8a0): members from its record table at
+ * 0x169ba00: smoothingFactor (float) at +0xc, closedLoop (hkBool) at
+ * +0x10, dirNotParallelToTangentAlongWholePath (hkVector4) at +0x20,
+ * points (array of hkVector4) at +0x30, distance (array of float) at +0x40.
+ * Slot 9 (FUN_0007fad0) returns the curve's last parameter, the point count
+ * less one. */
+class hkpLinearParametricCurve : public hkReferencedObject
+{
+  public:
+    float FUN_0007fad0() const; /* vtable slot 9; derived name */
+
+    float smoothingFactor;
+    hkBool closedLoop;
+    u8 unknown11[0xf];
+    Vec4 dirNotParallelToTangentAlongWholePath;
+    hkArray<Vec4> points;
+    hkArray<float> distance;
 };
 
 #endif
