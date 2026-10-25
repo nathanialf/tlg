@@ -147,6 +147,11 @@ int FUN_000034a0(TwoBaseAllocator *self, void *pointer);            /* derived n
 int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b);         /* derived name */
 int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
 
+/* LargeBlockAllocator's primary slots 13 and 19 (interface slots 2 and 10),
+ * reached through the second base by the thunks 0x133d0 and 0x13190. */
+void FUN_000131a0(LargeBlockAllocator *self);                          /* derived name */
+int FUN_00013060(LargeBlockAllocator *self, void *pointer, int value); /* derived name */
+
 /* Primary slot 20 (interface slot 9): stores its int argument into the
  * global at 0x16dc128 under the spinning mutex at +0x10. */
 void FUN_00002330(TwoBaseAllocator *self, int value); /* derived name */
@@ -274,4 +279,43 @@ class Pool00007880 /* derived name */
     u8 unknown32c[4];
     bool flag330; /* derived name */
 };
+
+/* A Mersenne twister (MT19937): 624 words of state in a block of 2496 bytes
+ * the seeding (FUN_000106e0, multiplier 1812433253) allocates on first use
+ * and FUN_00010690 frees, the index at +0. The constructor (FUN_00010680)
+ * only clears the state pointer; 0xdaf0 builds one at +0x10 of a new
+ * reference-counted object and seeds it from the time. */
+struct MersenneTwister /* derived name */
+{
+    u16 index;  /* derived name */
+    u32 *state; /* derived name */
+};
+
+/* A free list of fixed-size elements: the head of the free elements at +0
+ * (each holds the next), the element size at +8, the bump pointer and the
+ * end of the current block at +0x40 and +0x48, the free count at +0x68.
+ * FUN_00019230 adds a block, FUN_00018770 frees them all, FUN_00019440
+ * fills a statistics record. */
+struct FreeList /* derived name */
+{
+    void *freeHead;  /* derived name */
+    u64 elementSize; /* derived name */
+};
+
+struct MemoryStatistics; /* derived name */
+
+void FUN_00019440(const FreeList *self, MemoryStatistics &statistics); /* derived name */
+
+/* An allocator of fixed-size blocks over the free list at +8 (vtable address
+ * point 0x168e5c0, slots 0 and 1 the one destructor 0x14a50): blockAlloc and
+ * bufAlloc are one body (0x14aa0), blockFree and bufFree another (0x14af0);
+ * slot 9 (FUN_00014c40) reports the free list's statistics. */
+class FixedSizeAllocator : public AllocatorBase /* derived name */
+{
+  public:
+    void FUN_00014c40(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
+
+    FreeList freeList; /* derived name */
+};
+
 #endif

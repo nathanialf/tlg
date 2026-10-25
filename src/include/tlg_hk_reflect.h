@@ -81,6 +81,25 @@ struct hkFinishLoadedObjectFlag {
     s32 finishing; /* derived name */
 };
 
+/* hkBaseObject and hkReferencedObject (names from the reflection; the
+ * hkClass of hkReferencedObject is built at 0xe206, its one member record at
+ * 0x168d980): the polymorphic root and the reference-counted object, whose
+ * memSizeAndRefCount (hkUint32) at +8 holds the allocation size in the top
+ * 16 bits (0xffff when unknown, the deleting destructors then free the
+ * class's own size) and the reference count in the low 16 (constructors
+ * store 0xffff0001). */
+class hkBaseObject
+{
+  public:
+    virtual ~hkBaseObject();
+};
+
+class hkReferencedObject : public hkBaseObject
+{
+  public:
+    u32 memSizeAndRefCount;
+};
+
 /* A string pointer whose finish constructor (FUN_0000e5c0, empty) and
  * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
  * it owned) are out of line. */

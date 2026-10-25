@@ -355,3 +355,16 @@ FUN_00003700 src/libs/unknown/func_00003700.cpp
 FUN_00008d80 src/libs/unknown/func_00008d80.cpp _ZN13AllocatorBase12FUN_00008d80EPvi
 FUN_0000d520 src/libs/unknown/func_0000d520.cpp
 FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK12Class168d8f012FUN_0000dcb0Ev
+FUN_00010680 src/libs/unknown/leaf_00010680.cpp
+FUN_00013190 src/libs/unknown/func_00013190.cpp
+FUN_000133d0 src/libs/unknown/func_000133d0.cpp
+FUN_00014c40 src/libs/unknown/func_00014c40.cpp _ZNK18FixedSizeAllocator12FUN_00014c40ER16MemoryStatistics
+FUN_000170c0 src/libs/unknown/func_000170c0.cpp
+FUN_000173e0 src/libs/unknown/func_000173e0.cpp
+FUN_00017530 src/libs/unknown/func_00017530.cpp
+FUN_00017910 src/libs/unknown/func_00017910.cpp
+FUN_00017a50 src/libs/unknown/func_00017a50.cpp
+FUN_00017240 src/libs/unknown/func_00017240.cpp _ZN12Class168e81012FUN_00017240EPvi
+FUN_00017250 src/libs/unknown/func_00017240.cpp _ZThn16_N12Class168e81012FUN_00017240EPvi
+FUN_00017260 src/libs/unknown/func_00017260.cpp _ZN12Class168e81012FUN_00017260EPvi
+FUN_00017270 src/libs/unknown/func_00017260.cpp _ZThn16_N12Class168e81012FUN_00017260EPvi
