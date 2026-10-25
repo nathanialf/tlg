@@ -5,6 +5,7 @@
 #define TLG_LIBC_H
 
 typedef unsigned long size_t;
+typedef long time_t;
 
 extern "C" {
 int strcmp(const char *a, const char *b);
@@ -13,6 +14,7 @@ int memcmp(const void *a, const void *b, size_t n);
 char *strcpy(char *dst, const char *src);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
+time_t time(time_t *t);
 }
 
 #endif

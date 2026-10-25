@@ -68,7 +68,9 @@ struct Values38Owner {
  * 0x168c640) and a second interface at +8 (vtable 0x168c708), both stored
  * by its constructor FUN_00001960. Its complete destructor is FUN_00001fb0,
  * its deleting destructor (slot 1) FUN_00001f90; slot 12 (FUN_00001620)
- * returns the object as its second base. */
+ * returns the object as its second base. Slot 15 (0x34a0, also reached
+ * through the second base by the thunk 0x3570) stores a pointer at +0xb50
+ * under the spinning mutex at +0x10; slot 16 (FUN_00003580) reads it. */
 class TwoBaseAllocatorBase
 {
   public:
@@ -86,6 +88,11 @@ class TwoBaseAllocator : public TwoBaseAllocatorBase, public TwoBaseAllocatorInt
   public:
     virtual ~TwoBaseAllocator();
     virtual TwoBaseAllocatorInterface *FUN_00001620();
+
+    void *FUN_00003580() const; /* vtable slot 16; derived name */
+
+    u8 unknown10[0xb40];
+    void *pointerB50; /* derived name */
 };
 
 void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
@@ -176,4 +183,20 @@ void FUN_000760c0(Elements000760c0 *self); /* derived name */
  * bits); its only caller is FUN_00092200, whose caller (0xdb64) mixes the
  * low half into a random seed with the time and a process value. */
 u64 FUN_00184cf0(); /* derived name */
+
+/* A four-byte structure layout description (FUN_00180ee0, FUN_00180ef0):
+ * the rules {8, 1, 1, 1} and {8, 1, 0, 1} sit in rodata at 0x14cb8f6 and
+ * 0x14cb8fa, just before the assert string of hkStructureLayout.cpp; the
+ * class is likely hkStructureLayout (the file of FUN_001814f0), not
+ * established. */
+struct LayoutRules00180ef0 {
+    u8 bytesInPointer;
+    u8 littleEndian;
+    u8 reusePadding;
+    u8 emptyBaseOptimization;
+};
+
+struct Layout00180ef0 {
+    LayoutRules00180ef0 rules;
+};
 #endif

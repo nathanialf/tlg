@@ -296,3 +296,11 @@ FUN_00017920 src/libs/unknown/func_00017920.cpp
 FUN_00017f50 src/libs/unknown/func_00017f50.cpp
 FUN_00018180 src/libs/unknown/func_00018180.cpp
 FUN_00018280 src/libs/unknown/leaf_00018280.cpp
+FUN_00019b50 src/libs/unknown/leaf_00019b50.cpp _ZNK21PageAllocator00019b5012FUN_00019b50Ev
+FUN_00024bf0 src/libs/unknown/leaf_00024bf0.cpp _ZNK22hkMultipleVertexBuffer12FUN_00024bf0Ev
+FUN_00027290 src/libs/unknown/leaf_00027290.cpp _ZNK24hkMemoryMeshVertexBuffer12FUN_00027290Ev
+FUN_00069400 src/libs/unknown/leaf_00069400.cpp
+FUN_00090db0 src/libs/unknown/func_00090db0.cpp _ZN17Allocator00090db012FUN_00090db0ERi
+FUN_000c0af0 src/libs/unknown/func_000c0af0.cpp
+FUN_00180ee0 src/libs/unknown/leaf_00180ee0.cpp
+FUN_00003580 src/libs/unknown/leaf_00003580.cpp _ZNK16TwoBaseAllocator12FUN_00003580Ev

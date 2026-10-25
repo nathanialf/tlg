@@ -17,6 +17,17 @@
  * pointer. */
 typedef unsigned long hkUlong;
 
+/* hkArray, the reflection's array type (its name in the type-name table at
+ * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
+ * flags (0x80000000 when the array does not own its storage, as the
+ * constructors store it; the capacity is masked with 0x3fffffff before a
+ * grow). Field names derived. */
+template <typename T> struct hkArray {
+    T *data;              /* derived name */
+    int size;             /* derived name */
+    int capacityAndFlags; /* derived name */
+};
+
 /* hkClass, the reflection's class record: name (char*, type 0x1d) at +0
  * and parent (pointer to hkClass, type 0x14) at +8, from its own member
  * table at 0x16a6b60; its constructor FUN_000041a0 stores the twelve
@@ -158,7 +169,7 @@ struct hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
 struct hkSkinBinding;                       /* FUN_000aa4f0, vtable 0x16a3860 */
 class hkMemoryMeshMaterial;                 /* FUN_000accf0, vtable 0x16a3920 */
 struct hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
-struct hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
+class hkMemoryMeshVertexBuffer;             /* FUN_000274e0, vtable 0x16921b0 */
 struct hknpDynamicCompoundShape;            /* FUN_000469a0, vtable 0x1697ef0 */
 struct hknpMaskedShapeMaskWrapper;          /* FUN_00038230, vtable 0x1693bb0 */
 class hknpMaskedShape;                      /* FUN_00037b90, vtable 0x1693a90 */
@@ -187,6 +198,23 @@ void FUN_00038230(hknpMaskedShapeMaskWrapper *self,
                   hkFinishLoadedObjectFlag flag);                        /* derived name */
 void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
+/* hkMemoryMeshVertexBuffer, polymorphic (vtable address point 0x16921b0):
+ * members from its record table at 0x1692590: format (struct) at +0xc,
+ * elementOffsets (hkInt32[32]) at +0x110, memory (array of hkUint8) at
+ * +0x190, vertexStride (hkInt32) at +0x1a0, locked (hkBool) at +0x1a4,
+ * numVertices (hkInt32) at +0x1a8, isBigEndian and isSharable (hkBool) at
+ * +0x1ac and +0x1ad. */
+class hkMemoryMeshVertexBuffer
+{
+  public:
+    virtual ~hkMemoryMeshVertexBuffer();
+
+    int FUN_00027290() const; /* vtable slot 8; derived name */
+
+    u8 unknown8[0x1a0];
+    int numVertices;
+};
+
 /* hknpCompressedMeshShapeData, polymorphic (type info 0x57be1f0, vtable
  * 0x1692b10): slot 0, the complete destructor FUN_00034b20, runs the
  * out-of-line FUN_00034b80, which restores the vtable. */
@@ -206,8 +234,22 @@ void FUN_000234f0(hkIndexedTransformSet *self);                                /
 
 /* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
  * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): slot 0,
- * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0. */
-struct hkMultipleVertexBuffer;
+ * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0.
+ * Members from its record table at 0x1691820: vertexFormat (struct) at +0xc,
+ * lockedElements (array) at +0x110, lockedBuffer (pointer) at +0x120,
+ * elementInfos and vertexBufferInfos (arrays) at +0x128 and +0x138,
+ * numVertices (hkInt32) at +0x148, isLocked (hkBool) at +0x14c, updateCount
+ * (hkUint32) at +0x150. */
+class hkMultipleVertexBuffer
+{
+  public:
+    virtual ~hkMultipleVertexBuffer();
+
+    int FUN_00024bf0() const; /* vtable slot 8; derived name */
+
+    u8 unknown8[0x140];
+    int numVertices;
+};
 
 void FUN_00024fa0(hkMultipleVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00024db0(hkMultipleVertexBuffer *self);                                /* derived name */
