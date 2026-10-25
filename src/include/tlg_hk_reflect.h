@@ -138,12 +138,18 @@ struct hkFinishLoadedObjectFlag {
 class hkBaseObject
 {
   public:
+    /* The finish constructor of a loaded image: nothing to fix up but the
+     * vtable. */
+    hkBaseObject(hkFinishLoadedObjectFlag) {}
+
     virtual ~hkBaseObject();
 };
 
 class hkReferencedObject : public hkBaseObject
 {
   public:
+    hkReferencedObject(hkFinishLoadedObjectFlag flag) : hkBaseObject(flag) {}
+
     /* Slot 4 of the reference-counted classes' vtables (FUN_000069a0, the
      * body behind it in most of them): the object deletes itself through its
      * deleting destructor; the reference release at 0x44e86 calls slot 4
@@ -208,9 +214,11 @@ hkStringPtr *FUN_0000e620(hkStringPtr *self, const char *string); /* derived nam
 
 /* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
  * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot. */
-class hkMonitorStreamColorTable
+class hkMonitorStreamColorTable : public hkReferencedObject
 {
   public:
+    hkMonitorStreamColorTable(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
     virtual ~hkMonitorStreamColorTable();
 };
 
