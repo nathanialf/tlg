@@ -455,3 +455,10 @@ FUN_0007fad0 src/libs/unknown/leaf_0007fad0.cpp _ZNK24hkpLinearParametricCurve12
 FUN_00095aa0 src/libs/unknown/func_00095aa0.cpp
 FUN_000aa530 src/libs/unknown/func_000aa530.cpp _ZNK13hkSkinBinding12FUN_000aa530Ev
 FUN_000cf8c0 src/libs/unknown/func_000cf8c0.cpp _ZNK24hknpScaledQueryCollector12FUN_000cf8c0Ev
+FUN_001659b0 src/libs/unknown/func_001659b0.cpp _ZN19hknpVehicleInstance12FUN_001659b0Ev
+FUN_0016d080 src/libs/unknown/func_0016d080.cpp _ZNK30hknpScaledOffsetQueryCollector12FUN_0016d080Ev
+FUN_00006c40 src/libs/unknown/leaf_00006c40.cpp
+FUN_00006c50 src/libs/unknown/leaf_00006c50.cpp
+FUN_000077a0 src/libs/unknown/leaf_000077a0.cpp _ZNK12Pool0000788012FUN_000077a0Ev
+FUN_00008d70 src/libs/unknown/func_00008d70.cpp _ZN13AllocatorBase12FUN_00008d70ERi
+FUN_00018010 src/libs/unknown/func_00018010.cpp

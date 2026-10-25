@@ -491,7 +491,7 @@ weDug8QD-lE V V func atanf
 xEszJVGpybs V V func ?
 xeYO4u7uyJ0 V V func fopen
 z+P+xCnWLBk V V func _ZdlPv
-zlfEH8FmyUA V V func ?
+zlfEH8FmyUA V V func _Stoul
 zr094EQ39Ww V V func __cxa_pure_virtual
 JoBqSQt1yyA W W func sceSystemServiceLoadExec
 Vo5V8KAwCmk W W func sceSystemServiceHideSplashScreen

@@ -190,6 +190,17 @@ class PageAllocator : public hkReferencedObject /* derived name */
     hkArray<void *> freePages; /* derived name */
 };
 
+/* The memory system (derived name): a polymorphic object whose instance
+ * the global at 0x57b7ba0 holds. The startup at 0x11c3 installs it through
+ * FUN_00006c40 and the shutdown at 0x17ae6 clears it; FUN_00006c50 returns
+ * it to the callers of its slots (13 at 0x7350, 17 at 0xecb6, 4 at 0x8f5c5,
+ * and the game code at 0xe993e5). */
+class hkMemorySystem; /* derived name */
+
+extern hkMemorySystem *D_57b7ba0;
+void FUN_00006c40(hkMemorySystem *system); /* derived name */
+hkMemorySystem *FUN_00006c50();            /* derived name */
+
 /* A global state word (derived name) and its setter FUN_00006640: the
  * allocation paths at 0x2958 and 0x2bde (TwoBaseAllocator's: the byte count
  * of the object at +0x38, less the base at +0x20, against the value at
@@ -342,19 +353,24 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
  * (FUN_000076d0) walks after storing the callback FUN_00007730 and its
  * argument at +0x310. Slot 13 (FUN_000075d0) sets the flag at +0x330, which
  * the worker loop at 0x7337 tests after each callback; the code at 0x70a1
- * clears it with the byte after it. */
+ * clears it with the byte after it. That byte (+0x331) is set by slots 5
+ * and 6 (0x7600, 0x7660, 0x76d0) when they hand the workers a callback,
+ * tested by the waits at 0x7402 and 0x774d, and read by slot 7
+ * (FUN_000077a0) as a test against zero (hkBool). */
 class Pool00007880 /* derived name */
 {
   public:
     virtual ~Pool00007880();
 
-    int FUN_00007880() const; /* vtable slot 9; derived name */
-    void FUN_000075d0();      /* vtable slot 13; derived name */
+    bool FUN_000077a0() const; /* vtable slot 7; derived name */
+    int FUN_00007880() const;  /* vtable slot 9; derived name */
+    void FUN_000075d0();       /* vtable slot 13; derived name */
 
     u8 unknown8[0x320];
     int count; /* derived name */
     u8 unknown32c[4];
-    bool flag330; /* derived name */
+    bool flag330;   /* derived name */
+    hkBool running; /* derived name */
 };
 
 /* A Mersenne twister (MT19937): 624 words of state in a block of 2496 bytes

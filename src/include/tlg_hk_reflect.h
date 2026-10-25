@@ -1831,17 +1831,37 @@ class hkArrayStreamWriter
  * 0x57bfbc0), built by the reflection initializer at 0x47a5d with its member
  * records at 0x1698a70; its finish constructor 0x47990 stores the vtable
  * (address point 0x16a50a0, complete destructor FUN_001625d0). Members read so
- * far: world at +0x20, wheelsInfo (array of hknpVehicleInstance::WheelInfo)
+ * far: world at +0x20, wheelCollide (a pointer to hknpVehicleWheelCollide)
+ * at +0x68, wheelsInfo (array of hknpVehicleInstance::WheelInfo)
  * at +0x80, torque and rpm (hkReal) at +0xf8 and +0xfc, mainSteeringAngle
  * at +0x100. */
+/* hknpVehicleWheelCollide (hkClass 0x57c1510, built at 0x5b2a1, 0x18 bytes,
+ * parent hkReferencedObject); hknpVehicleLinearCastWheelCollide derives
+ * from it. */
+class hknpVehicleWheelCollide : public hkReferencedObject
+{
+  public:
+    virtual void FUN_00000270();
+    virtual void unknownVirtual3();
+    virtual void FUN_000069a0();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+};
+
 class hknpVehicleInstance
 {
   public:
     virtual ~hknpVehicleInstance();
 
+    void FUN_001659b0();        /* vtable slot 9; derived name */
     float FUN_00165880() const; /* vtable slot 13; derived name */
 
-    u8 unknown8[0xf4];
+    u8 unknown8[0x60];
+    hknpVehicleWheelCollide *wheelCollide;
+    u8 unknown70[0x8c];
     float rpm;
 };
 
@@ -1914,6 +1934,24 @@ class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived n
   public:
     int FUN_000cf8c0() const; /* vtable slot 3; derived name */
 
+    Vec4 positionScale;                          /* derived name */
+    Vec4 normalScale;                            /* derived name */
+    const Mat4 *transform;                       /* derived name */
+    hknpCollisionQueryCollector *childCollector; /* derived name */
+};
+
+/* The same with an offset (derived name), built at 0x16b00e: vtable 0x16a55c0,
+ * the wrapped collector at +0x58. Its slot 4 (0x16d090) scales a hit's
+ * position by +0x30 and offsets it by +0x20, scales the normal by +0x40,
+ * transforms both by the transform at +0x50 and adds the hit to the
+ * wrapped collector; slot 3 (FUN_0016d080) and slot 6 (0x16d1d0) forward
+ * to the wrapped collector's. */
+class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* derived name */
+{
+  public:
+    int FUN_0016d080() const; /* vtable slot 3; derived name */
+
+    Vec4 positionOffset;                         /* derived name */
     Vec4 positionScale;                          /* derived name */
     Vec4 normalScale;                            /* derived name */
     const Mat4 *transform;                       /* derived name */

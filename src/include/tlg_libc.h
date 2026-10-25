@@ -15,6 +15,9 @@ char *strcpy(char *dst, const char *src);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
 time_t time(time_t *t);
+/* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
+ * strtoul; its NID verified as "_Stoul"). */
+unsigned long _Stoul(const char *s, char **endptr, int base);
 }
 
 #endif
