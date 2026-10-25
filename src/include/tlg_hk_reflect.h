@@ -13,6 +13,10 @@
 #include "tlg_simd.h"
 #include "tlg_types.h"
 
+/* hkUlong, the reflection's type 0x1e: an unsigned integer as wide as a
+ * pointer. */
+typedef unsigned long hkUlong;
+
 /* hkClass, the reflection's class record: name (char*, type 0x1d) at +0
  * and parent (pointer to hkClass, type 0x14) at +8, from its own member
  * table at 0x16a6b60; its constructor FUN_000041a0 stores the twelve
@@ -393,7 +397,7 @@ struct hknpProjectileGun; /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, 
 struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
 class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 struct hknpPhysicsSystemData;         /* 0x57c0198; FUN_00165a80, vtable 0x16a5130 */
-struct hknpDefaultBroadPhaseConfig;   /* 0x57c02e8; FUN_00154d90, vtable 0x16a45f0 */
+class hknpDefaultBroadPhaseConfig;    /* 0x57c02e8; FUN_00154d90, vtable 0x16a45f0 */
 struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
     hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
@@ -560,6 +564,36 @@ void FUN_000385d0(hknpStaticCompoundShape *self, hkFinishLoadedObjectFlag flag);
 struct hknpExternMeshShape;
 
 void FUN_001660e0(hknpExternMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpBroadPhaseConfig (hkClass 0x57c0248, size 0x10, no members of its own)
+ * and hknpDefaultBroadPhaseConfig (hkClass 0x57c0298, size 0x30, parent
+ * hknpBroadPhaseConfig; type info 0x57c02e8, vtable 0x16a45f0, address point
+ * 0x16a4600), registered by the initializer at 0x3d1f0. The one member,
+ * layers (record table 0x16964a0), is a C array of four
+ * hknpBroadPhaseConfig::Layer (hkClass 0x57c01c8, size 8, records at
+ * 0x1696450: collideWithLayerMask, hkUint32, at +0; isVolatile, hkBool, at
+ * +4) at +0xc, in the tail padding of the base; the constructor at 0x154da0
+ * fills the four layers. */
+class hknpBroadPhaseConfig
+{
+  public:
+    struct Layer {
+        u32 collideWithLayerMask;
+        bool isVolatile;
+    };
+
+    virtual ~hknpBroadPhaseConfig();
+
+    u8 unknown8[4];
+};
+
+class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
+{
+  public:
+    Layer *FUN_00154e00(hkUlong layerIndex); /* vtable slot 6; derived name */
+
+    Layer layers[4];
+};
 
 /* Constraint data atoms (hkp, the constraint solver's reflection TUs from
  * 0x7ac40): each Atoms struct's finish constructor sets the int at +0x94
@@ -779,10 +813,6 @@ template <typename ENUM, typename STORAGE> class hkEnum
 
     STORAGE m_storage;
 };
-
-/* hkUlong, the reflection's type 0x1e: an unsigned integer as wide as a
- * pointer. */
-typedef unsigned long hkUlong;
 
 /* hkMemoryMeshMaterial, 0x80 bytes (type info 0x57bd4a8, vtable 0x16a3920 stored
  * by its finish constructor FUN_000accf0): members from its record table

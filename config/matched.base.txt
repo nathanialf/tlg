@@ -272,3 +272,11 @@ FUN_00083330 src/libs/unknown/leaf_00083330.cpp
 FUN_000836a0 src/libs/unknown/leaf_000836a0.cpp
 FUN_00083aa0 src/libs/unknown/leaf_00083aa0.cpp
 FUN_000acb00 src/libs/unknown/leaf_000acb00.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acb00Ev
+FUN_000acb10 src/libs/unknown/leaf_000acb10.cpp _ZN20hkMemoryMeshMaterial12FUN_000acb10Ef
+FUN_000acb20 src/libs/unknown/leaf_000acb20.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acb20Ev
+FUN_000acb30 src/libs/unknown/leaf_000acb30.cpp _ZN20hkMemoryMeshMaterial12FUN_000acb30Ef
+FUN_0012a8b0 src/libs/unknown/leaf_0012a8b0.cpp
+FUN_00154e00 src/libs/unknown/leaf_00154e00.cpp _ZN27hknpDefaultBroadPhaseConfig12FUN_00154e00Em
+FUN_00156db0 src/libs/unknown/leaf_00156db0.cpp
+FUN_001585f0 src/libs/unknown/leaf_001585f0.cpp
+FUN_00158830 src/libs/unknown/leaf_00158830.cpp
