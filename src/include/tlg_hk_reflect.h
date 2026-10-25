@@ -71,6 +71,10 @@ struct hkStringPtr {
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0000e5d0(hkStringPtr *self);                                /* derived name */
 
+/* The default constructor: a null string (called on each new element by the
+ * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
+void FUN_0000e3d0(hkStringPtr *self); /* derived name */
+
 /* Sets the string from (string, length): drops an owned copy, then stores a
  * new one (copied through the arena of the thread's block) or null; the
  * constructor at 0xe540 clears the pointer and tail-calls it. */
@@ -164,7 +168,7 @@ struct hkcdPlanarSolid;                     /* FUN_00095800, vtable 0x16a3640 */
 struct hkcdSimdTree;                        /* FUN_00021a20, vtable 0x1690d70 */
 struct hkcdStaticAabbTree;                  /* FUN_00022700, vtable 0x1690df0 */
 struct hkcdDynamicAabbTree;                 /* FUN_0009fc10, vtable 0x16a37c0 */
-struct hkSkinnedRefMeshShape;               /* FUN_000aa660, vtable 0x16a38c0 */
+class hkSkinnedRefMeshShape;                /* FUN_000aa660, vtable 0x16a38c0 */
 struct hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
 struct hkSkinBinding;                       /* FUN_000aa4f0, vtable 0x16a3860 */
 class hkMemoryMeshMaterial;                 /* FUN_000accf0, vtable 0x16a3920 */
@@ -958,4 +962,29 @@ class hkOstream
   public:
     const hkClass *FUN_00008a20() const; /* vtable slot 3; derived name */
 };
+
+/* hkBufferedStreamWriter: its hkClass at 0x57b7fe8 is built by the
+ * reflection initializer at 0x93d0 (name "hkBufferedStreamWriter"); slot 3
+ * of its vtable (address point 0x168d220, FUN_00008ea0) returns it. */
+extern const hkClass D_57b7fe8; /* hkBufferedStreamWriter's hkClass */
+
+class hkBufferedStreamWriter
+{
+  public:
+    const hkClass *FUN_00008ea0() const; /* vtable slot 3; derived name */
+};
+
+/* hkSkinnedRefMeshShape: its hkClass at 0x57bcd20 is built by the
+ * reflection initializer at 0x23402; slot 3 of its vtable (0x16a38c0,
+ * FUN_00023370) returns it. */
+extern const hkClass D_57bcd20; /* hkSkinnedRefMeshShape's hkClass */
+
+class hkSkinnedRefMeshShape
+{
+  public:
+    virtual ~hkSkinnedRefMeshShape();
+
+    const hkClass *FUN_00023370() const; /* vtable slot 3; derived name */
+};
+
 #endif

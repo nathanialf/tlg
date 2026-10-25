@@ -5,7 +5,7 @@
  * object as its second base, `this` + 8 with no null check. The same body
  * fills slot 12 of the allocator built by FUN_00012160 (0x168e300) and of
  * two further tables (0x16d36d8, 0x16d3a78). */
-TwoBaseAllocatorInterface *TwoBaseAllocator::FUN_00001620() /* derived name */
+AllocatorInterface *TwoBaseAllocator::FUN_00001620() /* derived name */
 {
     return this;
 }

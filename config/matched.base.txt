@@ -307,3 +307,11 @@ FUN_00003580 src/libs/unknown/leaf_00003580.cpp _ZNK16TwoBaseAllocator12FUN_0000
 FUN_00003590 src/libs/unknown/leaf_00003580.cpp _ZThn8_NK16TwoBaseAllocator12FUN_00003580Ev
 FUN_000075d0 src/libs/unknown/leaf_000075d0.cpp _ZN12Pool0000788012FUN_000075d0Ev
 FUN_00008a20 src/libs/unknown/leaf_00008a20.cpp
+FUN_00008ea0 src/libs/unknown/leaf_00008ea0.cpp
+FUN_0000e3d0 src/libs/unknown/leaf_0000e3d0.cpp
+FUN_0000f080 src/libs/unknown/leaf_0000f080.cpp
+FUN_00012e20 src/libs/unknown/leaf_00012e20.cpp _ZNK19LargeBlockAllocator14allocatedBytesEv
+FUN_00012e30 src/libs/unknown/leaf_00012e20.cpp _ZThn8_NK19LargeBlockAllocator14allocatedBytesEv
+FUN_0001a440 src/libs/unknown/leaf_0001a440.cpp
+FUN_0001a4a0 src/libs/unknown/leaf_0001a4a0.cpp
+FUN_00023370 src/libs/unknown/leaf_00023370.cpp

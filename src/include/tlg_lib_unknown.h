@@ -64,40 +64,67 @@ struct Values38Owner {
     s32 value48;
 };
 
-/* An allocator with two polymorphic bases, the primary at +0 (vtable
- * 0x168c640) and a second interface at +8 (vtable 0x168c708), both stored
- * by its constructor FUN_00001960. Its complete destructor is FUN_00001fb0,
- * its deleting destructor (slot 1) FUN_00001f90; slot 12 (FUN_00001620)
- * returns the object as its second base. Slot 15 (0x34a0, also reached
- * through the second base by the thunk 0x3570) stores a pointer at +0xb50
- * under the spinning mutex at +0x10; slot 16 (FUN_00003580) reads it. The
- * second base's slots 2 to 5 are overridden by primary slots 13 to 16, and
- * the second base's vtable holds their this-adjusting thunks (0x32d0, 0x3490,
- * 0x3570, 0x3590). */
-class TwoBaseAllocatorBase
+/* The two polymorphic bases of the allocators below: the primary, whose slot
+ * 12 (the shared FUN_00001620) returns the object as its second base, and a
+ * second interface of eleven slots at +8. The interface's slots 2 to 10 are
+ * overridden by every allocator met so far, so its vtable in each holds the
+ * this-adjusting thunks of the overriders (or their folded bodies). Slot 8
+ * returns a byte count (TwoBaseAllocator: FUN_000022d0, thunk FUN_00002300;
+ * LargeBlockAllocator: FUN_00012e20, thunk FUN_00012e30). */
+class AllocatorBase /* derived name */
 {
   public:
-    virtual ~TwoBaseAllocatorBase();
+    virtual ~AllocatorBase();
 };
 
-class TwoBaseAllocatorInterface
+class AllocatorInterface /* derived name */
 {
   public:
-    virtual ~TwoBaseAllocatorInterface();
+    virtual ~AllocatorInterface();
 
     virtual void *FUN_00003580() const = 0; /* slot 5; derived name */
+    virtual u64 allocatedBytes() const = 0; /* slot 8; derived name */
 };
 
-class TwoBaseAllocator : public TwoBaseAllocatorBase, public TwoBaseAllocatorInterface
+/* An allocator (vtable address points 0x168c640 and, for the second base,
+ * 0x168c708), both stored by its constructor FUN_00001960. Its complete
+ * destructor is FUN_00001fb0, its deleting destructor (slot 1) FUN_00001f90;
+ * slot 12 (FUN_00001620) returns the object as its second base. Slot 15
+ * (0x34a0, also reached through the second base by the thunk 0x3570) stores
+ * a pointer at +0xb50 under the spinning mutex at +0x10; slot 16
+ * (FUN_00003580) reads it. Primary slots 13 to 21 override the interface's
+ * slots 2 to 10 in order; the second base's vtable holds their
+ * this-adjusting thunks (0x32d0, 0x3490, 0x3570, 0x3590, 0x2280, 0x3130,
+ * 0x2300, 0x2400, 0x3700). */
+class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
 {
   public:
     virtual ~TwoBaseAllocator();
-    virtual TwoBaseAllocatorInterface *FUN_00001620();
+    virtual AllocatorInterface *FUN_00001620();
 
     virtual void *FUN_00003580() const; /* vtable slot 16; derived name */
 
     u8 unknown10[0xb40];
     void *pointerB50; /* derived name */
+};
+
+/* An allocator of blocks with a 0x20-byte header (vtable address points
+ * 0x168e2a0 and, for the second base, 0x168e360), both stored by its
+ * constructor FUN_00012160. The allocation paths add a block's size to the
+ * total at +0x1a0 and its size less the header to the total at +0x1a8, the
+ * free (slot 3, 0x133e0) subtracts both. Primary slots 13 to 18 override the
+ * interface's slots 2 to 7, slot 19 its slot 10, slot 20 (FUN_00012e20) its
+ * slot 8 and slot 21 its slot 9. */
+class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
+{
+  public:
+    virtual ~LargeBlockAllocator();
+
+    virtual u64 allocatedBytes() const; /* vtable slot 20, FUN_00012e20; derived name */
+
+    u8 unknown10[0x190];
+    u64 totalBlockBytes;   /* derived name */
+    u64 totalPayloadBytes; /* derived name */
 };
 
 void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
