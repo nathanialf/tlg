@@ -467,6 +467,38 @@ class hknpConvexPolytopeShape : public hknpConvexShape
     hkRelArray<Vec4> planes;
     hkRelArray<Face> faces;
 };
+
+/* hknpBreakableConstraintData, polymorphic, 0x28 bytes (type info
+ * 0x57c23f8, vtable 0x1695b10): its one reflected member, threshold (float),
+ * sits at +0x20 (record table 0x169a740); its constructor FUN_0003c210 sets
+ * it to 10. FUN_0003c270 and FUN_0003c280 read and write it.
+ * hknpMalleableConstraintData, polymorphic, 0x40 bytes (type info 0x57c18d8,
+ * vtable 0x1699a90): members atom at +0x20, wantsRuntime at +0x38 and
+ * strength (float) at +0x3c (record table 0x16996a0); FUN_00067c40 writes
+ * the strength. Both are built by the game code at 0xea7a00 and 0xea8280. */
+class hknpBreakableConstraintData
+{
+  public:
+    virtual ~hknpBreakableConstraintData();
+
+    float FUN_0003c270() const;            /* derived name */
+    void FUN_0003c280(float newThreshold); /* derived name */
+
+    u8 unknown8[0x18];
+    float threshold;
+};
+
+class hknpMalleableConstraintData
+{
+  public:
+    virtual ~hknpMalleableConstraintData();
+
+    void FUN_00067c40(float newStrength); /* derived name */
+
+    u8 unknown8[0x34];
+    float strength;
+};
+
 /* hknpWorldCinfo (type info 0x57c13e0, no vtable): an empty finish
  * constructor (the shared body FUN_0003b640) and an out-of-line destructor
  * FUN_0003b650, which releases the references from +0xb0 down. */
@@ -475,9 +507,8 @@ struct hknpWorldCinfo;
 void FUN_0003b640(hknpWorldCinfo *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003b650(hknpWorldCinfo *self);                                /* derived name */
 
-struct
-    hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs FUN_0007d520, vtable 0x1699a90 */
-struct hknpBodyQualityLibrary;   /* 0x57c1a78; FUN_00071190, vtable 0x169b150 */
+class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs FUN_0007d520, vtable 0x1699a90 */
+struct hknpBodyQualityLibrary;     /* 0x57c1a78; FUN_00071190, vtable 0x169b150 */
 
 void FUN_00067960(hknpMalleableConstraintData *self,
                   hkFinishLoadedObjectFlag flag);                               /* derived name */
@@ -504,8 +535,7 @@ struct hknpRefMaterial;
 class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
 struct
     hknpCompressedHeightFieldShape; /* 0x57c2378; FUN_00175de0 runs hknpShape's, then vtable 0x16a5980 */
-struct
-    hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs FUN_0007d520, vtable 0x1695b10 */
+class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs FUN_0007d520, vtable 0x1695b10 */
 struct hknpDestructionShapeProperties; /* 0x57c2648; FUN_00175a50, vtable 0x16a5940 */
 struct
     hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
@@ -562,6 +592,56 @@ class hkpRagdollConstraintData
 {
   public:
     struct Atoms;
+};
+
+/* Two constraint atoms with their reflected members: hkpSetupStabilizationAtom
+ * (record table 0x169e600: enabled at +2, padding at +3, maxLinImpulse at
+ * +4, maxAngImpulse at +8, maxAngle at +0xc) and hkpBallSocketConstraintAtom
+ * (records built by the initializer at 0x80a40: enableLinearImpulseLimit at
+ * +5, breachImpulse at +8, inertiaStabilizationFactor at +0xc). The u16 at
+ * +0 is the atom's type, which the constructors store. */
+struct hkpSetupStabilizationAtom {
+    u16 type; /* derived name */
+    bool enabled;
+    u8 padding;
+    float maxLinImpulse;
+    float maxAngImpulse;
+    float maxAngle;
+};
+
+struct hkpBallSocketConstraintAtom {
+    u16 type; /* derived name */
+    u8 unknown2[3];
+    bool enableLinearImpulseLimit;
+    u8 unknown6[2];
+    float breachImpulse;
+    float inertiaStabilizationFactor;
+};
+
+/* hkpBallAndSocketConstraintData, polymorphic, 0x70 bytes (type info
+ * 0x57c3fd8, vtable 0x169c7d0, address point 0x169c7e0; constructor
+ * FUN_0007c1d0, finish constructor FUN_0007cbf0): its member atoms (at
+ * +0x20) is an hkpBallAndSocketConstraintData::Atoms, 0x50 bytes, with
+ * pivots at +0, setupStabilization at +0x30 and ballSocket at +0x40
+ * (record table 0x169cab0). Slots 10, 11 and 13 of its vtable read and
+ * write the breach impulse and the stabilization's linear impulse limit. */
+class hkpBallAndSocketConstraintData
+{
+  public:
+    struct Atoms {
+        u8 pivots[0x30];
+        hkpSetupStabilizationAtom setupStabilization;
+        hkpBallSocketConstraintAtom ballSocket;
+    };
+
+    virtual ~hkpBallAndSocketConstraintData();
+
+    void FUN_0007c2c0(float newBreachImpulse); /* vtable slot 10; derived name */
+    float FUN_0007c300() const;                /* vtable slot 11; derived name */
+    float FUN_0007c2d0() const;                /* vtable slot 13; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
 };
 
 /* hkp6DofConstraintData, polymorphic (type info 0x57c5ac8, size 0x2b0): its

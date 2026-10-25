@@ -240,3 +240,11 @@ FUN_00006c30 src/libs/unknown/leaf_00006c30.cpp
 FUN_00006d00 src/libs/unknown/leaf_00006d00.cpp
 FUN_0002b020 src/libs/unknown/leaf_0002b020.cpp
 FUN_00033d20 src/libs/unknown/leaf_00033d20.cpp
+FUN_00033f90 src/libs/unknown/leaf_00033f90.cpp
+FUN_000365d0 src/libs/unknown/leaf_000365d0.cpp
+FUN_00037b70 src/libs/unknown/leaf_00037b70.cpp
+FUN_00037d60 src/libs/unknown/leaf_00037d60.cpp
+FUN_00038210 src/libs/unknown/leaf_00038210.cpp
+FUN_00038750 src/libs/unknown/leaf_00038750.cpp
+FUN_0003c270 src/libs/unknown/leaf_0003c270.cpp _ZNK27hknpBreakableConstraintData12FUN_0003c270Ev
+FUN_0003c280 src/libs/unknown/leaf_0003c280.cpp _ZN27hknpBreakableConstraintData12FUN_0003c280Ef
