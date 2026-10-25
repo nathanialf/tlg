@@ -169,12 +169,12 @@ struct hkcdSimdTree;                        /* FUN_00021a20, vtable 0x1690d70 */
 struct hkcdStaticAabbTree;                  /* FUN_00022700, vtable 0x1690df0 */
 struct hkcdDynamicAabbTree;                 /* FUN_0009fc10, vtable 0x16a37c0 */
 class hkSkinnedRefMeshShape;                /* FUN_000aa660, vtable 0x16a38c0 */
-struct hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
-struct hkSkinBinding;                       /* FUN_000aa4f0, vtable 0x16a3860 */
+class hkMemoryMeshShape;                    /* FUN_0002a940, vtable 0x1692540 */
+class hkSkinBinding;                        /* FUN_000aa4f0, vtable 0x16a3860 */
 class hkMemoryMeshMaterial;                 /* FUN_000accf0, vtable 0x16a3920 */
-struct hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
+class hkStorageSkinnedMeshShape;            /* FUN_000ae680, vtable 0x16a3b00 */
 class hkMemoryMeshVertexBuffer;             /* FUN_000274e0, vtable 0x16921b0 */
-struct hknpDynamicCompoundShape;            /* FUN_000469a0, vtable 0x1697ef0 */
+class hknpDynamicCompoundShape;             /* FUN_000469a0, vtable 0x1697ef0 */
 struct hknpMaskedShapeMaskWrapper;          /* FUN_00038230, vtable 0x1693bb0 */
 class hknpMaskedShape;                      /* FUN_00037b90, vtable 0x1693a90 */
 
@@ -208,14 +208,23 @@ void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* deri
  * +0x190, vertexStride (hkInt32) at +0x1a0, locked (hkBool) at +0x1a4,
  * numVertices (hkInt32) at +0x1a8, isBigEndian and isSharable (hkBool) at
  * +0x1ac and +0x1ad. */
+extern const hkClass D_57bdd98; /* hkMemoryMeshVertexBuffer's hkClass, built at 0x2ae92 */
+
 class hkMemoryMeshVertexBuffer
 {
   public:
     virtual ~hkMemoryMeshVertexBuffer();
 
-    int FUN_00027290() const; /* vtable slot 8; derived name */
+    /* Not a vtable slot: called with no arguments by the type test at
+     * 0xacf40, which checks an object's class (its slot 3) against it. */
+    static const hkClass *FUN_0002ae00(); /* derived name */
 
-    u8 unknown8[0x1a0];
+    int FUN_00027290() const; /* vtable slot 8; derived name */
+    void FUN_00027b10();      /* vtable slot 15; derived name */
+
+    u8 unknown8[0x19c];
+    bool locked;
+    u8 unknown1a5[3];
     int numVertices;
 };
 
@@ -244,12 +253,15 @@ void FUN_000234f0(hkIndexedTransformSet *self);                                /
  * elementInfos and vertexBufferInfos (arrays) at +0x128 and +0x138,
  * numVertices (hkInt32) at +0x148, isLocked (hkBool) at +0x14c, updateCount
  * (hkUint32) at +0x150. */
+extern const hkClass D_57bcf20; /* hkMultipleVertexBuffer's hkClass, built at 0x23adb */
+
 class hkMultipleVertexBuffer
 {
   public:
     virtual ~hkMultipleVertexBuffer();
 
-    int FUN_00024bf0() const; /* vtable slot 8; derived name */
+    const hkClass *FUN_000238c0() const; /* vtable slot 3; derived name */
+    int FUN_00024bf0() const;            /* vtable slot 8; derived name */
 
     u8 unknown8[0x140];
     int numVertices;
@@ -867,11 +879,14 @@ template <typename ENUM, typename STORAGE> class hkEnum
  * ambientColor, specularColor and emissiveColor (hkVector4) from +0x30,
  * userData (hkUlong) at +0x70, tesselationFactor (hkReal) at +0x78,
  * displacementAmount (hkReal) at +0x7c. */
+extern const hkClass D_57bd458; /* hkMemoryMeshMaterial's hkClass, built at 0x24752 */
+
 class hkMemoryMeshMaterial
 {
   public:
     virtual ~hkMemoryMeshMaterial();
 
+    const hkClass *FUN_000246c0() const;    /* vtable slot 3; derived name */
     hkUlong FUN_000acae0() const;           /* vtable slot 17; derived name */
     void FUN_000acaf0(hkUlong newUserData); /* vtable slot 18; derived name */
     float FUN_000acb00() const;             /* vtable slot 19; derived name */
@@ -928,11 +943,14 @@ class hkMeshTexture
  * at +0x29, filterMode at +0x2a and usageHint at +0x2b (hkEnum in hkInt8),
  * textureCoordChannel (hkInt32) at +0x2c. Slots 8 to 18 of its vtable read
  * and write them. */
+extern const hkClass D_57bd5f8; /* hkMemoryMeshTexture's hkClass, built at 0x248d2 */
+
 class hkMemoryMeshTexture : public hkMeshTexture
 {
   public:
     virtual ~hkMemoryMeshTexture();
 
+    const hkClass *FUN_000247f0() const;              /* vtable slot 3; derived name */
     Format FUN_000ad6e0() const;                      /* vtable slot 8; derived name */
     void FUN_000ad720(bool newHasMipMaps);            /* vtable slot 12; derived name */
     FilterMode FUN_000ad730() const;                  /* vtable slot 13; derived name */
@@ -985,6 +1003,58 @@ class hkSkinnedRefMeshShape
     virtual ~hkSkinnedRefMeshShape();
 
     const hkClass *FUN_00023370() const; /* vtable slot 3; derived name */
+};
+
+/* hkMemoryMeshShape: its hkClass at 0x57bd0a0 is built by the reflection
+ * initializer at 0x241e3; slot 3 of its vtable (0x1692540, FUN_00023de0)
+ * returns it. */
+extern const hkClass D_57bd0a0; /* hkMemoryMeshShape's hkClass */
+
+class hkMemoryMeshShape
+{
+  public:
+    virtual ~hkMemoryMeshShape();
+
+    const hkClass *FUN_00023de0() const; /* vtable slot 3; derived name */
+};
+
+/* hkSkinBinding: its hkClass at 0x57bd288 is built by the reflection
+ * initializer at 0x24362; slot 3 of its vtable (0x16a3860, FUN_000242d0)
+ * returns it. */
+extern const hkClass D_57bd288; /* hkSkinBinding's hkClass */
+
+class hkSkinBinding
+{
+  public:
+    virtual ~hkSkinBinding();
+
+    const hkClass *FUN_000242d0() const; /* vtable slot 3; derived name */
+};
+
+/* hkStorageSkinnedMeshShape: its hkClass at 0x57bdd18 is built by the
+ * reflection initializer at 0x27e79; slot 3 of its vtable (0x16a3b00,
+ * FUN_00027bd0) returns it. */
+extern const hkClass D_57bdd18; /* hkStorageSkinnedMeshShape's hkClass */
+
+class hkStorageSkinnedMeshShape
+{
+  public:
+    virtual ~hkStorageSkinnedMeshShape();
+
+    const hkClass *FUN_00027bd0() const; /* vtable slot 3; derived name */
+};
+
+/* hknpDynamicCompoundShape: its hkClass at 0x57be640 is built by the
+ * reflection initializer at 0x35935; slot 3 of its vtable (0x1697ef0,
+ * FUN_000358a0) returns it. */
+extern const hkClass D_57be640; /* hknpDynamicCompoundShape's hkClass */
+
+class hknpDynamicCompoundShape
+{
+  public:
+    virtual ~hknpDynamicCompoundShape();
+
+    const hkClass *FUN_000358a0() const; /* vtable slot 3; derived name */
 };
 
 #endif

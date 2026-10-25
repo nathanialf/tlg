@@ -315,3 +315,12 @@ FUN_00012e30 src/libs/unknown/leaf_00012e20.cpp _ZThn8_NK19LargeBlockAllocator14
 FUN_0001a440 src/libs/unknown/leaf_0001a440.cpp
 FUN_0001a4a0 src/libs/unknown/leaf_0001a4a0.cpp
 FUN_00023370 src/libs/unknown/leaf_00023370.cpp
+FUN_000238c0 src/libs/unknown/leaf_000238c0.cpp
+FUN_00023de0 src/libs/unknown/leaf_00023de0.cpp
+FUN_000242d0 src/libs/unknown/leaf_000242d0.cpp
+FUN_000246c0 src/libs/unknown/leaf_000246c0.cpp
+FUN_000247f0 src/libs/unknown/leaf_000247f0.cpp
+FUN_00027b10 src/libs/unknown/leaf_00027b10.cpp
+FUN_00027bd0 src/libs/unknown/leaf_00027bd0.cpp
+FUN_0002ae00 src/libs/unknown/leaf_0002ae00.cpp
+FUN_000358a0 src/libs/unknown/leaf_000358a0.cpp
