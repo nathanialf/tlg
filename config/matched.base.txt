@@ -527,3 +527,4 @@ FUN_000aa540 src/libs/unknown/func_000aa540.cpp _ZN13hkSkinBinding12FUN_000aa540
 FUN_000ad7b0 src/libs/unknown/func_000ad7b0.cpp _ZN15FileImageSource12FUN_000ad7b0Ev
 FUN_000ae770 src/libs/unknown/leaf_000ae770.cpp _ZNK25hkStorageSkinnedMeshShape12FUN_000ae770EN18hkSkinnedMeshShape9BoneSetIdERNS0_7BoneSetE
 FUN_00162550 src/libs/unknown/leaf_00162550.cpp _ZN19hknpVehicleInstance12FUN_00162550E10hknpBodyId
+FUN_00184cf0 src/libs/unknown/func_00184cf0.cpp

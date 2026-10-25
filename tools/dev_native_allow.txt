@@ -4,3 +4,5 @@
 # developer's (a volatile the code's logic treats as volatile, an alignment
 # attribute the layout proves); a construct that exists to steer codegen is
 # never allowed here, it is removed.
+src/libs/unknown/func_00184cf0.cpp:__asm__ __volatile__("rdtscp" the base's bytes at 0x184cf0 are rdtscp itself; LLVM 3.3 has no intrinsic or header for it (X86InstrSystem.td:22 empty pattern, no int_x86_rdtscp, no __rdtscp), so inline asm is the developer's only spelling and it emits the function's instruction rather than steering codegen (D9)
+
