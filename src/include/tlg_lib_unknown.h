@@ -56,6 +56,25 @@ void FUN_0002b120(Pair08Owner *self, float scale);                /* derived nam
 void FUN_0002b390(Pair08Owner *self,
                   bool enable); /* derived name: sets or clears bit 2 of the byte at +1 */
 
+/* The object handed to FUN_0002b180 and FUN_0002b3b0 before the record
+ * (FUN_0003d7d0 passes the one embedded at +0x390 of its second argument):
+ * vectors at +0x20, +0x40 and +0x120, a float at +0x130. */
+struct Info0002b180; /* derived name */
+
+/* FUN_0002b3b0's output: an int at +0, a float at +4, a vector at +0x10,
+ * floats from +0x30 and vectors from +0x40, one per entry. */
+struct Output0002b3b0; /* derived name */
+
+void FUN_0002b180(const Info0002b180 *info, Pair08Owner *self, const Vec4 &a,
+                  const Vec4 &b); /* derived name */
+void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion *motionA,
+                  const hknpMotion *motionB, Output0002b3b0 *out); /* derived name */
+
+/* The cell index of the motion of the record's first and second body (the
+ * ints at +8 and +0xc index the world's bodies). */
+u8 FUN_0002afa0(const hknpWorld *world, const Pair08Owner *self); /* derived name */
+u8 FUN_0002afd0(const hknpWorld *world, const Pair08Owner *self); /* derived name */
+
 /* FUN_000ae6a0 and FUN_000ae810 sit in slots 5 and 9 of one vtable
  * (0x16a3b00): getters of the ints at +0x38 and +0x48. FUN_000ae6a0 also
  * fills a slot of the vtables at 0x16a6330 and 0x16b1500, so +0x38 belongs
@@ -498,8 +517,9 @@ class Allocator00004b10 /* derived name */
   public:
     virtual ~Allocator00004b10();
 
-    void FUN_00004af0(void *pointer, int numBytes); /* vtable slot 3; derived name */
-    void FUN_00004b10();                            /* vtable slot 11; derived name */
+    void FUN_00004af0(void *pointer, int numBytes);        /* vtable slot 3; derived name */
+    void FUN_00004b00(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
+    void FUN_00004b10();                                   /* vtable slot 11; derived name */
 
     int alignment;  /* derived name */
     u32 bytesInUse; /* derived name: updated atomically by every thread */

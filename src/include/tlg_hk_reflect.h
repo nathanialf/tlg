@@ -153,6 +153,22 @@ class hkReferencedObject : public hkBaseObject
     u32 memSizeAndRefCount;
 };
 
+/* hkReferencedObjectLock, the singleton registered by that name (record
+ * 0x57b7b58, instance 0x57b7b50, created by 0x6800: vtable address point
+ * 0x168cb00, 0x30 bytes, a critical section at +0x20 with spin count 4000).
+ * The int at +0xc (1 on creation) is the lock mode: FUN_00006950 sets it to 1
+ * when worker threads start (0x70c6) and to 0 when they stop (0x7499); the
+ * getter 0x6970 has no row. */
+class hkReferencedObjectLock : public hkReferencedObject
+{
+  public:
+    virtual ~hkReferencedObjectLock();
+
+    int lockMode; /* derived name */
+};
+
+extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance */
+
 /* A string pointer whose finish constructor (FUN_0000e5c0, empty) and
  * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
  * it owned) are out of line. */
@@ -797,6 +813,22 @@ class hknpWorldObject1d0 /* derived name */
     void *pointer10; /* derived name */
 };
 
+/* hknpBody (reflected, record table at 0x169d350): 0x90 bytes as the
+ * world's body array is indexed; motionId at +0x68. */
+struct hknpBody {
+    u8 unknown0[0x68];
+    int motionId;
+    u8 unknown6c[0x24];
+};
+
+/* hknpMotion (reflected, record table at 0x169c5d0): 0x80 bytes as the
+ * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
+struct hknpMotion {
+    u8 unknown0[0x3e];
+    u8 cellIndex;
+    u8 unknown3f[0x41];
+};
+
 struct hknpWorld {
     void FUN_0004bcc0(hknpCollisionFilter *filter);           /* derived name */
     void *FUN_00051610() const;                               /* derived name */
@@ -804,7 +836,13 @@ struct hknpWorld {
     hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
     void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
 
-    u8 unknown0[0x1b8];
+    u8 unknown0[0x20];
+    /* The body and motion arrays: FUN_0004c170 (in this file's range) stores
+     * a body's motionId and indexes both. */
+    hknpBody *bodies; /* derived name */
+    u8 unknown28[0xf0];
+    hknpMotion *motions; /* derived name */
+    u8 unknown120[0x98];
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
