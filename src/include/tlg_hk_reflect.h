@@ -1950,9 +1950,24 @@ class hkSkinBinding : public hkMeshShape
  * (hkVector4) at +0x20. hkStorageSkinnedMeshShape keeps its parts in an
  * array at +0x40 (count at +0x48); its slot 15 (0xae860) sorts them with the
  * quick sort FUN_000ad970 and the order FUN_000ad900. */
+/* hkSkinnedMeshShape::BoneSet (records 0x1692230): boneBufferOffset and
+ * numBones (hkUint16) at +0 and +2. */
 class hkSkinnedMeshShape
 {
   public:
+    /* A bone set's id: a 16-bit handle passed by value (derived name). The
+     * callee widens it itself (`movzwl %si` before the index in 0xae770):
+     * a two-byte struct travels as an i16 with no zero-extension promise,
+     * unlike a plain hkUint16 parameter. */
+    struct BoneSetId {
+        u16 value; /* derived name */
+    };
+
+    struct BoneSet {
+        u16 boneBufferOffset;
+        u16 numBones;
+    };
+
     struct Part {
         int startVertex;
         int numVertices;
@@ -1977,14 +1992,20 @@ class hkStorageSkinnedMeshShape
   public:
     virtual ~hkStorageSkinnedMeshShape();
 
-    const hkClass *FUN_00027bd0() const;    /* vtable slot 3; derived name */
-    const char *FUN_000aea20() const;       /* vtable slot 12; derived name */
-    void FUN_000aea30(const char *newName); /* vtable slot 13; derived name */
+    const hkClass *FUN_00027bd0() const; /* vtable slot 3; derived name */
+    void
+    FUN_000ae770(hkSkinnedMeshShape::BoneSetId boneSetId,
+                 hkSkinnedMeshShape::BoneSet &boneSetOut) const; /* vtable slot 7; derived name */
+    const char *FUN_000aea20() const;                            /* vtable slot 12; derived name */
+    void FUN_000aea30(const char *newName);                      /* vtable slot 13; derived name */
 
     /* From its record table at 0x1692420: bonesBuffer, boneSets,
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at
      * +0x50. */
-    u8 unknown8[0x48];
+    u8 unknown8[8];
+    u8 bonesBuffer[0x10];
+    hkArray<hkSkinnedMeshShape::BoneSet> boneSets;
+    u8 unknown30[0x20];
     hkStringPtr name;
 };
 
@@ -2177,15 +2198,27 @@ class hknpVehicleWheelCollide : public hkReferencedObject
     virtual void unknownVirtual9();
 };
 
+/* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
+ * when it names no body. */
+struct hknpBodyId {
+    u32 value; /* derived name */
+};
+
+/* Its parent hknpUnaryAction's one member, bodyId at +0x18 (record
+ * 0x1695790): slot 5 (0x162540) hands out its address and a count of 1,
+ * slot 6 (FUN_00162550) forgets it when that body is removed. */
 class hknpVehicleInstance
 {
   public:
     virtual ~hknpVehicleInstance();
 
-    void FUN_001659b0();        /* vtable slot 9; derived name */
-    float FUN_00165880() const; /* vtable slot 13; derived name */
+    void FUN_00162550(hknpBodyId removedId); /* vtable slot 6; derived name */
+    void FUN_001659b0();                     /* vtable slot 9; derived name */
+    float FUN_00165880() const;              /* vtable slot 13; derived name */
 
-    u8 unknown8[0x60];
+    u8 unknown8[0x10];
+    hknpBodyId bodyId;
+    u8 unknown1c[0x4c];
     hknpVehicleWheelCollide *wheelCollide;
     u8 unknown70[0x8c];
     float rpm;
