@@ -440,4 +440,40 @@ class BlockListAllocator : public AllocatorBase /* derived name */
     void *blocks;                /* derived name */
 };
 
+/* A union-find over node indices (derived name; the stage timer of its
+ * caller at 0x6dcf3 is "StUnionFind"), 0x18 bytes, built by FUN_0008f640:
+ * the parents (an object whose +0 points to the int array; -1 marks a root)
+ * at +0, the node count at +8, an int at +0xc set to 1 there and cleared
+ * by FUN_00065f10, -1 at +0x10 and 0 at +0x14. FUN_0008f710 joins two
+ * nodes. */
+struct UnionFindParents /* derived name */
+{
+    int *data; /* derived name */
+};
+
+struct UnionFind /* derived name */
+{
+    UnionFindParents *parents; /* derived name */
+    int numNodes;              /* derived name */
+    int state;                 /* derived name */
+};
+
+/* The union-find's owner (constructor FUN_00065b70, destructor
+ * FUN_00065de0): the union-find at +0 (freed with 0x18 bytes) and its
+ * parents at +8 (0x10 bytes), twelve 32-byte records from +0x10 (an array
+ * and an int each; FUN_00065f00 returns one by index), the node count at
+ * +0x190 and a second count at +0x194; the constructor sets the flag at
+ * +0x198, FUN_00065f20 clears it (called at 0x6dd1f and 0x14e946, after the
+ * records are filled). */
+struct Object00065f20 /* derived name */
+{
+    UnionFind *unionFind;      /* derived name */
+    UnionFindParents *parents; /* derived name */
+    u8 unknown10[0x188];
+    bool open; /* derived name */
+};
+
+void FUN_00065f10(Object00065f20 *self); /* derived name */
+void FUN_00065f20(Object00065f20 *self); /* derived name */
+
 #endif

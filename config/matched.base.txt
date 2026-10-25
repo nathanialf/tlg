@@ -291,7 +291,7 @@ FUN_0017cf20 src/libs/unknown/leaf_0017cf20.cpp
 FUN_00004b10 src/libs/unknown/leaf_00004b10.cpp _ZN17Allocator00004b1012FUN_00004b10Ev
 FUN_00007730 src/libs/unknown/func_00007730.cpp
 FUN_00007880 src/libs/unknown/leaf_00007880.cpp _ZNK12Pool0000788012FUN_00007880Ev
-FUN_00013890 src/libs/unknown/leaf_00013890.cpp _ZNK11Map0001389012FUN_00013890EPNS_11IteratorTagE
+FUN_00013890 src/libs/unknown/leaf_00013890.cpp _ZNK9StringMap12FUN_00013890EPNS_11IteratorTagE
 FUN_00017920 src/libs/unknown/func_00017920.cpp
 FUN_00017f50 src/libs/unknown/func_00017f50.cpp
 FUN_00018180 src/libs/unknown/func_00018180.cpp
@@ -462,3 +462,16 @@ FUN_00006c50 src/libs/unknown/leaf_00006c50.cpp
 FUN_000077a0 src/libs/unknown/leaf_000077a0.cpp _ZNK12Pool0000788012FUN_000077a0Ev
 FUN_00008d70 src/libs/unknown/func_00008d70.cpp _ZN13AllocatorBase12FUN_00008d70ERi
 FUN_00018010 src/libs/unknown/func_00018010.cpp
+FUN_00024bd0 src/libs/unknown/leaf_00024bd0.cpp _ZNK22hkMultipleVertexBuffer12FUN_00024bd0Ev
+FUN_000270a0 src/libs/unknown/func_000270a0.cpp
+FUN_00027280 src/libs/unknown/leaf_00027280.cpp _ZNK24hkMemoryMeshVertexBuffer12FUN_00027280Ev
+FUN_000430e0 src/libs/unknown/leaf_000430e0.cpp _ZNK15hknpConvexShape12FUN_000430e0Ev
+FUN_00065f10 src/libs/unknown/leaf_00065f10.cpp
+FUN_000696d0 src/libs/unknown/leaf_000696d0.cpp _ZNK23hknpClosestHitCollector12FUN_000696d0Ev
+FUN_000b8a80 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp
+FUN_0017d960 src/libs/unknown/func_0017d960.cpp _ZNK18hkTypeInfoRegistry12FUN_0017d960EPKc
+FUN_0017e970 src/libs/unknown/leaf_0017e970.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017e970Ev
+FUN_0017e980 src/libs/unknown/leaf_0017e980.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017e980Ev
+FUN_0017e990 src/libs/unknown/leaf_0017e990.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017e990Ev
+FUN_0017ec90 src/libs/unknown/func_0017ec90.cpp _ZNK26hkDynamicClassNameRegistry12FUN_0017ec90EPKc
+FUN_00184410 src/libs/unknown/func_00184410.cpp _ZNK21hkVtableClassRegistry12FUN_00184410EPKv

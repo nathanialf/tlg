@@ -27,6 +27,8 @@ struct hkgpConvexHullData /* derived name */
     s32 numVertices; /* derived name */
     u8 unknown3c[0xc];
     hkgpConvexHullTriangle *firstTriangle; /* derived name */
+    u8 unknown50[0x190];
+    s32 dimension; /* derived name */
 };
 
 class hkgpConvexHull /* derived name */
@@ -35,6 +37,7 @@ class hkgpConvexHull /* derived name */
     virtual ~hkgpConvexHull();
 
     int FUN_000b6bf0() const;                     /* derived name */
+    int FUN_000b8a80() const;                     /* derived name */
     hkgpConvexHullTriangle *FUN_000b6d10() const; /* derived name */
     hkgpConvexHullVertex *FUN_000b6d20(const hkgpConvexHullTriangle *triangle,
                                        int index) const; /* derived name */
@@ -57,4 +60,11 @@ hkgpConvexHullVertex *hkgpConvexHull::FUN_000b6d20(const hkgpConvexHullTriangle 
                                                    int index) const /* derived name */
 {
     return triangle->vertices[index];
+}
+
+/* derived name: the hull's dimension (called at 0x152512, 0x15253d and
+ * 0x1525bf by hknpConvexPolytopeShape's builder). */
+int hkgpConvexHull::FUN_000b8a80() const /* derived name */
+{
+    return data->dimension;
 }

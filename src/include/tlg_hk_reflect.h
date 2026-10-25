@@ -287,13 +287,15 @@ class hkMemoryMeshVertexBuffer
      * 0xacf40, which checks an object's class (its slot 3) against it. */
     static const hkClass *FUN_0002ae00(); /* derived name */
 
-    int FUN_00027290() const; /* vtable slot 8; derived name */
-    void FUN_00027b10();      /* vtable slot 15; derived name */
+    bool FUN_00027280() const; /* vtable slot 6; derived name */
+    int FUN_00027290() const;  /* vtable slot 8; derived name */
+    void FUN_00027b10();       /* vtable slot 15; derived name */
 
     u8 unknown8[0x19c];
     hkBool locked;
-    u8 unknown1a5[3];
     int numVertices;
+    hkBool isBigEndian;
+    hkBool isSharable;
 };
 
 /* hknpCompressedMeshShapeData, polymorphic (type info 0x57be1f0, vtable
@@ -337,6 +339,30 @@ void FUN_000237b0(const hkIndexedTransformSet *self, int startIndex, Mat4 *matri
 void FUN_000236e0(hkIndexedTransformSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_000234f0(hkIndexedTransformSet *self);                                /* derived name */
 
+/* hkVertexFormat (hkClass 0x57bcb30, size 0x104, records 0x1691160, built
+ * at 0x22f48): elements (32 hkVertexFormat::Element) at +0, numElements
+ * (hkInt32) at +0x100. Element (hkClass 0x57bcab0, 8 bytes, records built
+ * at 0x22c81): dataType (hkEnum of ComponentType in hkUint8) at +0,
+ * numValues (hkUint8) at +1, usage (hkEnum of ComponentUsage in hkUint8) at
+ * +2, subUsage (hkUint8) at +3, flags (hkFlags in hkUint8) at +4, pad (3
+ * hkUint8) at +5. FUN_000270a0, called on the member of each containing
+ * object's constructor, empties it. */
+struct hkVertexFormat {
+    struct Element {
+        u8 dataType;
+        u8 numValues;
+        u8 usage;
+        u8 subUsage;
+        u8 flags;
+        u8 pad[3];
+    };
+
+    Element elements[32];
+    int numElements;
+};
+
+void FUN_000270a0(hkVertexFormat *self); /* derived name */
+
 /* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
  * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): slot 0,
  * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0.
@@ -344,7 +370,8 @@ void FUN_000234f0(hkIndexedTransformSet *self);                                /
  * lockedElements (array) at +0x110, lockedBuffer (pointer) at +0x120,
  * elementInfos and vertexBufferInfos (arrays) at +0x128 and +0x138,
  * numVertices (hkInt32) at +0x148, isLocked (hkBool) at +0x14c, updateCount
- * (hkUint32) at +0x150. */
+ * (hkUint32) at +0x150, writeLock, isSharable and constructionComplete
+ * (hkBool) at +0x154, +0x155 and +0x156. */
 extern const hkClass D_57bcf20; /* hkMultipleVertexBuffer's hkClass, built at 0x23adb */
 
 class hkMultipleVertexBuffer
@@ -353,10 +380,16 @@ class hkMultipleVertexBuffer
     virtual ~hkMultipleVertexBuffer();
 
     const hkClass *FUN_000238c0() const; /* vtable slot 3; derived name */
+    bool FUN_00024bd0() const;           /* vtable slot 6; derived name */
     int FUN_00024bf0() const;            /* vtable slot 8; derived name */
 
     u8 unknown8[0x140];
     int numVertices;
+    hkBool isLocked;
+    u32 updateCount;
+    hkBool writeLock;
+    hkBool isSharable;
+    hkBool constructionComplete;
 };
 
 void FUN_00024fa0(hkMultipleVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -707,6 +740,7 @@ template <typename T> class hkRelArray
 class hknpConvexShape : public hknpShape
 {
   public:
+    int FUN_000430e0() const;         /* vtable slot 6; derived name */
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
 
@@ -1967,6 +2001,21 @@ class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /*
     hknpCollisionQueryCollector *childCollector; /* derived name */
 };
 
+/* A collector that keeps the closest hit (derived name), 0x90 bytes, vtable
+ * address point 0x169a700, built at 0x1569c8, 0x158c45, 0x158cb5 and
+ * 0x179268: slot 3 (0x69640) resets it, slot 4 (0x696e0) keeps a hit whose
+ * distance (+0x20 of the 0x60-byte hit) is below the kept one's (+0x40),
+ * the hit kept at +0x20 and the flag at +0x80 telling one was kept;
+ * slot 6 (FUN_000696d0) reads the flag. */
+class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived name */
+{
+  public:
+    bool FUN_000696d0() const; /* vtable slot 6; derived name */
+
+    u8 hit[0x60];  /* derived name */
+    hkBool hasHit; /* derived name */
+};
+
 /* hkpLinearParametricCurve (hkClass 0x57c3268, 0x50 bytes, parent 0x57c3c68;
  * type info 0x57c32b8; finish constructor 0x78b00 stores its vtable
  * 0x169d890, address point 0x169d8a0): members from its record table at
@@ -1986,6 +2035,117 @@ class hkpLinearParametricCurve : public hkReferencedObject
     Vec4 dirNotParallelToTangentAlongWholePath;
     hkArray<Vec4> points;
     hkArray<float> distance;
+};
+
+/* A map from strings to pointer-sized values (derived name): 24-byte
+ * entries (hash, key, value; a hash of -1 marks a free slot) at +0, the
+ * count at +8 and the hash mask at +0xc. FUN_00091600 returns the first
+ * used slot as an opaque pointer-sized iterator, FUN_00013890 tests that
+ * its slot index is within the hash mask, FUN_00091650 steps to the next;
+ * FUN_00091900 looks a key up (the hash h * 31 + c over the characters,
+ * compared with strcmp) and returns its value or the default. */
+struct StringMap /* derived name */
+{
+    struct IteratorTag;
+    typedef IteratorTag *Iterator;
+
+    void *entries;
+    int numEntries;
+    int hashMod;
+
+    bool FUN_00013890(Iterator it) const;                              /* derived name */
+    hkUlong FUN_00091900(const char *key, hkUlong defaultValue) const; /* derived name */
+};
+
+/* A map from pointers to pointer-sized values (derived name): 16-byte
+ * entries (key, value; a key of -1 marks a free slot) at +0, the count at +8
+ * and the hash mask at +0xc. FUN_00013b30 looks a key up (the hash
+ * (key >> 4) * 0x9e3779b1) and returns its value or the default. */
+struct PointerMap /* derived name */
+{
+    void *entries;
+    int numEntries;
+    int hashMod;
+
+    hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
+};
+
+/* The type registries, each a singleton registered by name on the list at
+ * 0x57b80b8 (a record of name, create function, instance address and
+ * next): hkTypeInfoRegistry (record 0x57c8940, instance 0x57c8938, created
+ * by 0x184e80), hkDefaultClassNameRegistry (record 0x57c8968, instance
+ * 0x57c8960, created by 0x184f40), hkVtableClassRegistry (record 0x57c8918,
+ * instance 0x57c8910, created by 0x1845b0) and hkBuiltinTypeRegistry
+ * (record 0x57c88a0, instance 0x57c8898, created by 0x17ef90). */
+struct hkTypeInfo;
+
+/* hkTypeInfoRegistry, 0x30 bytes, vtable address point 0x16a60c0: the type
+ * infos by type name at +0x10 and two ints at +0x28 (1 and 1 on creation;
+ * the first is the flag slot 6 passes to the type info's finish). Slot 5
+ * (0x17d8b0) registers a type info under its name, slot 6 (0x17d8d0)
+ * finishes a loaded object of a named type, slot 8 (0x17d7a0) merges
+ * another registry's map, slot 9 (FUN_0017d960) looks a type info up. */
+class hkTypeInfoRegistry : public hkReferencedObject
+{
+  public:
+    virtual ~hkTypeInfoRegistry();
+
+    const hkTypeInfo *FUN_0017d960(const char *typeName) const; /* vtable slot 9; derived name */
+
+    StringMap map; /* derived name */
+};
+
+/* hkDefaultClassNameRegistry (vtable address point 0x16a6180) over the
+ * dynamic class name registry (derived name, vtable address point 0x16a6200,
+ * which the constructor 0x184f40 stores first): a name at +0x10 (the string
+ * 0x14b3b02) and the classes by name at +0x18. Slot 6 of both vtables
+ * (FUN_0017ec90) looks a class up. */
+class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual ~hkDynamicClassNameRegistry();
+
+    const hkClass *FUN_0017ec90(const char *className) const; /* vtable slot 6; derived name */
+
+    const char *name; /* derived name */
+    StringMap map;    /* derived name */
+};
+
+class hkDefaultClassNameRegistry : public hkDynamicClassNameRegistry
+{
+  public:
+    virtual ~hkDefaultClassNameRegistry();
+};
+
+/* hkVtableClassRegistry, 0x20 bytes, vtable address point 0x16a6580: the
+ * classes by vtable at +0x10 (an empty map on creation: no entries, count 0,
+ * hash mask -1). Slot 6 (FUN_00184410) looks a vtable's class up. */
+class hkVtableClassRegistry : public hkReferencedObject
+{
+  public:
+    virtual ~hkVtableClassRegistry();
+
+    const hkClass *FUN_00184410(const void *vtable) const; /* vtable slot 6; derived name */
+
+    PointerMap map; /* derived name */
+};
+
+extern hkTypeInfoRegistry *D_57c8938;         /* hkTypeInfoRegistry's instance */
+extern hkDefaultClassNameRegistry *D_57c8960; /* hkDefaultClassNameRegistry's instance */
+extern hkVtableClassRegistry *D_57c8910;      /* hkVtableClassRegistry's instance */
+
+/* hkBuiltinTypeRegistry's instance (vtable address point 0x16a6120, 0x10
+ * bytes, created by 0x17ef90 once the three registries above exist): slots
+ * 5 to 7 (FUN_0017e970 to FUN_0017e990) return the three registries, slot 8
+ * (0x17ef10) adds a type, slot 9 (0x17e9a0) rebuilds the registries. */
+class hkBuiltinTypeRegistry : public hkReferencedObject
+{
+  public:
+    virtual ~hkBuiltinTypeRegistry();
+
+    hkTypeInfoRegistry *FUN_0017e970();         /* vtable slot 5; derived name */
+    hkDefaultClassNameRegistry *FUN_0017e980(); /* vtable slot 6; derived name */
+    hkVtableClassRegistry *FUN_0017e990();      /* vtable slot 7; derived name */
 };
 
 #endif
