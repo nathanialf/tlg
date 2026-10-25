@@ -82,8 +82,8 @@ struct hkFinishLoadedObjectFlag {
 };
 
 /* hkBaseObject and hkReferencedObject (names from the reflection; the
- * hkClass of hkReferencedObject is built at 0xe206, its one member record at
- * 0x168d980): the polymorphic root and the reference-counted object, whose
+ * hkClass of hkReferencedObject, 0x57b8640, is built at 0xe222, its one
+ * member record at 0x168d980): the polymorphic root and the reference-counted object, whose
  * memSizeAndRefCount (hkUint32) at +8 holds the allocation size in the top
  * 16 bits (0xffff when unknown, the deleting destructors then free the
  * class's own size) and the reference count in the low 16 (constructors
@@ -306,7 +306,31 @@ void FUN_00034b80(hknpCompressedMeshShapeData *self); /* derived name */
  * destructor FUN_00023490, runs the out-of-line FUN_000234f0, which restores
  * the vtable and frees the arrays at +0x50 (16-byte elements), +0x40
  * (hkStringPtr) and below. */
-struct hkIndexedTransformSet;
+struct hkMeshBoneIndexMapping; /* derived name: the class 0x57bd388 */
+
+/* Its members from the record table at 0x1691d10 (size 0x68, hkClass
+ * 0x57bd308, its parent hkReferencedObject's 0x57b8640): matrices and
+ * inverseMatrices (arrays of hkMatrix4) at +0x10 and +0x20, matricesOrder
+ * (array of hkInt16) at +0x30, matricesNames (array of hkStringPtr) at
+ * +0x40, indexMappings (array of the class 0x57bd388) at +0x50,
+ * allMatricesAreAffine (hkBool) at +0x60. FUN_00023700 copies matrices in
+ * from a start index, FUN_00023770 copies them out and FUN_000237b0 copies
+ * the inverses out. */
+struct hkIndexedTransformSet : public hkReferencedObject {
+    hkArray<Mat4> matrices;
+    hkArray<Mat4> inverseMatrices;
+    hkArray<s16> matricesOrder;
+    hkArray<hkStringPtr> matricesNames;
+    hkArray<hkMeshBoneIndexMapping> indexMappings;
+    hkBool allMatricesAreAffine;
+};
+
+void FUN_00023700(hkIndexedTransformSet *self, int startIndex, const Mat4 *matrices,
+                  int numMatrices); /* derived name */
+void FUN_00023770(const hkIndexedTransformSet *self, int startIndex, Mat4 *matrices,
+                  int numMatrices); /* derived name */
+void FUN_000237b0(const hkIndexedTransformSet *self, int startIndex, Mat4 *matrices,
+                  int numMatrices); /* derived name */
 
 void FUN_000236e0(hkIndexedTransformSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_000234f0(hkIndexedTransformSet *self);                                /* derived name */
@@ -343,16 +367,37 @@ void FUN_00024db0(hkMultipleVertexBuffer *self);                                
  * vertexBuffers (array of pointers) at +0x60, name (hkStringPtr) at +0x70. */
 struct hkMeshShape;
 
-class hkMemoryMeshBody
+/* hkMeshBody, its parent (hkClass 0x57bd408, built at 0x246ae), a
+ * hkReferencedObject with no members of its own. */
+class hkMeshBody : public hkReferencedObject
+{
+};
+
+/* Slots 10 to 12 hand matrices to and from the transform set, slots 13 to
+ * 15 return its matricesOrder, matricesNames and indexMappings; slot 20
+ * (the shared FUN_0000dcb0) returns the name, slot 21 sets it. */
+class hkMemoryMeshBody : public hkMeshBody
 {
   public:
     virtual ~hkMemoryMeshBody();
 
     hkMeshShape *FUN_000230d0() const; /* vtable slot 5; derived name */
+    void FUN_00023100(int startIndex, const Mat4 *matrices,
+                      int numMatrices); /* vtable slot 10; derived name */
+    void FUN_00023110(int startIndex, Mat4 *matrices,
+                      int numMatrices) const; /* vtable slot 11; derived name */
+    void FUN_00023120(int startIndex, Mat4 *matrices,
+                      int numMatrices) const;           /* vtable slot 12; derived name */
+    const s16 *FUN_00023130() const;                    /* vtable slot 13; derived name */
+    const hkStringPtr *FUN_00023140() const;            /* vtable slot 14; derived name */
+    const hkMeshBoneIndexMapping *FUN_00023150() const; /* vtable slot 15; derived name */
+    void FUN_00023170(const char *newName);             /* vtable slot 21; derived name */
 
-    u8 unknown8[0x48];
+    Mat4 transform;
     hkIndexedTransformSet *transformSet;
     hkMeshShape *shape;
+    hkArray<void *> vertexBuffers; /* pointers to the class 0x57bca60 */
+    hkStringPtr name;
 };
 
 void FUN_00023190(hkMemoryMeshBody *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -1159,7 +1204,15 @@ class hkMemoryMeshShape
   public:
     virtual ~hkMemoryMeshShape();
 
-    const hkClass *FUN_00023de0() const; /* vtable slot 3; derived name */
+    const hkClass *FUN_00023de0() const;    /* vtable slot 3; derived name */
+    const char *FUN_0002a910() const;       /* vtable slot 8; derived name */
+    void FUN_0002a920(const char *newName); /* vtable slot 9; derived name */
+
+    /* From its record table at 0x1691bf0: sections (array) at +0x10,
+     * indices16 and indices32 (arrays) at +0x20 and +0x30, name
+     * (hkStringPtr, finished by FUN_0002a940) at +0x40. */
+    u8 unknown8[0x38];
+    hkStringPtr name;
 };
 
 /* hkSkinBinding: its hkClass at 0x57bd288 is built by the reflection
