@@ -204,3 +204,13 @@ FUN_00089140 src/libs/unknown/func_00089140.cpp
 FUN_00089ec0 src/libs/unknown/func_00089ec0.cpp
 FUN_0008a830 src/libs/unknown/func_0008a830.cpp
 FUN_0008b070 src/libs/unknown/func_0008b070.cpp
+FUN_0008b870 src/libs/unknown/func_0008b870.cpp
+FUN_0008c930 src/libs/unknown/func_0008c930.cpp
+FUN_0008ce40 src/libs/unknown/func_0008ce40.cpp
+FUN_0008da40 src/libs/unknown/func_0008da40.cpp
+FUN_0008dbf0 src/libs/unknown/func_0008dbf0.cpp
+FUN_0008e530 src/libs/unknown/func_0008e530.cpp
+FUN_0008e5c0 src/libs/unknown/func_0008e5c0.cpp
+FUN_0008e820 src/libs/unknown/func_0008e820.cpp
+FUN_0008e870 src/libs/unknown/func_0008e870.cpp
+FUN_00092200 src/libs/unknown/func_00092200.cpp

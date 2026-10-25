@@ -180,4 +180,8 @@ void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
 struct Elements000760c0; /* derived name */
 
 void FUN_000760c0(Elements000760c0 *self); /* derived name */
+/* Reads the processor's time-stamp counter (rdtscp, edx:eax joined into 64
+ * bits); its only caller is FUN_00092200, whose caller (0xdb64) mixes the
+ * low half into a random seed with the time and a process value. */
+u64 FUN_00184cf0(); /* derived name */
 #endif

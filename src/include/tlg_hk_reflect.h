@@ -552,7 +552,28 @@ void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
  * its destructor FUN_00087cf0 frees its arrays from +0x40 down.
  * hkxVertexBuffer, polymorphic (type info 0x57c69f0, size 0x88): its finish
  * constructor FUN_0008a1a0 stores the vtable 0x16a1a30 and runs
- * VertexData's (FUN_0008c0a0) on the member at +0x78.
+ * hkxVertexDescription's (FUN_0008c0a0, an empty body shared with twelve
+ * vtable slots) on the member at +0x78.
+ * hkxVertexDescription (type info 0x57c7f90, size 0x10, no vtable).
+ * hkxVertexAnimation, polymorphic (type info 0x57c7e10, size 0xb8, vtable
+ * 0x16a26d0 stored by its finish constructor 0x8cb10, which runs
+ * hkxVertexBuffer's on the member at +0x10): slot 0, the complete
+ * destructor FUN_0008c930, runs the out-of-line FUN_0008c990.
+ * hkxMeshSection, polymorphic (type info 0x57c8200, size 0x70, vtable
+ * 0x16a29e0 stored by its finish constructor 0x8e000): slot 0, the complete
+ * destructor FUN_0008dbf0, runs the out-of-line FUN_0008dc50.
+ * hkxAttribute (type info 0x57c7900, size 0x10, no vtable, cleanup 0x66e80):
+ * its finish constructor FUN_0017d790 runs hkStringPtr's on +0.
+ * hkxEnvironment (type info 0x57c8180, size 0x20): FUN_0017d6f0 stores the
+ * vtable 0x16a6070.
+ * hkRootLevelContainer::NamedVariant (type info 0x57c8400, size 0x18, no
+ * vtable): FUN_0017dde0 runs hkStringPtr's on +0 and +8.
+ * hkRootLevelContainer (type info 0x57c8480, size 0x10, no vtable): the
+ * empty body FUN_0017de10 (shared with fourteen vtable slots).
+ * hkMemoryResourceContainer (type info 0x57c85a0, size 0x40): FUN_0017fb60
+ * stores the vtable 0x16a6300 and finishes the members from +0x10.
+ * hkMemoryResourceHandle (type info 0x57c86a0, size 0x30): FUN_0017f110
+ * stores the vtable 0x16a6270 and runs hkStringPtr's on +0x18.
  * hkxMesh (type info 0x57c6f90, size 0x30): FUN_0008bea0 stores the vtable
  * 0x16a25a0.
  * hkAlignSceneToNodeOptions (type info 0x57c7288, size 0x20): FUN_0017d520
@@ -573,6 +594,31 @@ struct hkxMesh;
 struct hkAlignSceneToNodeOptions;
 struct hkxMaterialShaderSet;
 struct hkxSkinBinding;
+struct hkxVertexDescription;
+struct hkxVertexAnimation;
+struct hkxMeshSection;
+struct hkxAttribute;
+struct hkxEnvironment;
+
+class hkRootLevelContainer
+{
+  public:
+    struct NamedVariant;
+};
+struct hkMemoryResourceContainer;
+struct hkMemoryResourceHandle;
+
+void FUN_0008c0a0(hkxVertexDescription *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0008c990(hkxVertexAnimation *self);                                  /* derived name */
+void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
+void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
+void FUN_0017d6f0(hkxEnvironment *self, hkFinishLoadedObjectFlag flag);       /* derived name */
+void FUN_0017dde0(hkRootLevelContainer::NamedVariant *self,
+                  hkFinishLoadedObjectFlag flag);                             /* derived name */
+void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0017fb60(hkMemoryResourceContainer *self,
+                  hkFinishLoadedObjectFlag flag);                               /* derived name */
+void FUN_0017f110(hkMemoryResourceHandle *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 void FUN_00087cf0(hkxVertexBuffer::VertexData *self);                    /* derived name */
 void FUN_0008a1a0(hkxVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
