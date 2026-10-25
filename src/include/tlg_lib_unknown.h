@@ -512,4 +512,24 @@ class StackTracer /* derived name */
                       void *context) const; /* derived name */
 };
 
+/* An allocator over one fixed buffer (derived name; vtable address point
+ * 0x16a3470, slots 0 and 1 0x909a0 and 0x90930, slots 2 to 5 0x90b20 to
+ * 0x90dc0): the buffer's start at +8 and end at +0x10, the end of what is in
+ * use at +0x18 and the peak use at +0x28. Slot 9 (0x910a0) reports the
+ * buffer size, the free and used bytes and the peak; slot 11 (0x910d0)
+ * resets the peak to the current use. FUN_00091090, not a slot, tells
+ * whether the whole buffer could hold a block of a size; the memory system's
+ * wrapper at 0xd270 asks it of the allocator at its +0x100. */
+class BufferAllocator : public AllocatorBase /* derived name */
+{
+  public:
+    bool FUN_00091090(int numBytes) const; /* derived name */
+
+    char *bufferStart; /* derived name */
+    char *bufferEnd;   /* derived name */
+    char *currentEnd;  /* derived name */
+    u8 unknown20[8];
+    hkUlong peakUse; /* derived name */
+};
+
 #endif

@@ -17,6 +17,12 @@
  * pointer. */
 typedef unsigned long hkUlong;
 
+/* The result code of the calls that can fail: 0 for success. derived names. */
+enum hkResult {
+    HK_SUCCESS = 0, /* derived name */
+    HK_FAILURE = 1  /* derived name */
+};
+
 /* hkArray, the reflection's array type (its name in the type-name table at
  * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
  * flags (0x80000000 when the array does not own its storage, as the
@@ -1205,10 +1211,11 @@ class hkpBallAndSocketConstraintData
 
     virtual ~hkpBallAndSocketConstraintData();
 
-    void FUN_0007c2c0(float newBreachImpulse); /* vtable slot 10; derived name */
-    float FUN_0007c300() const;                /* vtable slot 11; derived name */
-    float FUN_0007c2d0() const;                /* vtable slot 13; derived name */
-    u8 FUN_0007c320() const;                   /* vtable slot 15; derived name */
+    void FUN_0007c2c0(float newBreachImpulse);     /* vtable slot 10; derived name */
+    float FUN_0007c300() const;                    /* vtable slot 11; derived name */
+    float FUN_0007c2d0() const;                    /* vtable slot 13; derived name */
+    u8 FUN_0007c320() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0007c3d0(float &factorOut) const; /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1248,7 +1255,8 @@ class hkpLimitedHingeConstraintData
  * slots 5 to 7 and 20 are pure). Slots 8 to 10 default to the empty body
  * 0x3b640; slots 11 to 13, kept by twenty-odd constraint data vtables,
  * return the largest float Havok uses (0x7f7fffee) for the linear, angular
- * and breach impulse limits; slot 15 (0x82bc0) returns 255. */
+ * and breach impulse limits; slot 15 (0x82bc0) returns 255; slot 24
+ * defaults to the empty body too. */
 class hkpConstraintData : public hkReferencedObject
 {
   public:
@@ -1258,20 +1266,43 @@ class hkpConstraintData : public hkReferencedObject
     virtual int unknownVirtual5() const = 0;
     virtual void unknownVirtual6() = 0;
     virtual int unknownVirtual7() const = 0;
-
-    float FUN_00082b90() const; /* vtable slot 11; derived name */
-    float FUN_00082ba0() const; /* vtable slot 12; derived name */
-    float FUN_00082bb0() const; /* vtable slot 13; derived name */
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual float FUN_00082b90() const; /* vtable slot 11; derived name */
+    virtual float FUN_00082ba0() const; /* vtable slot 12; derived name */
+    virtual float FUN_00082bb0() const; /* vtable slot 13; derived name */
+    virtual void unknownVirtual14();
+    virtual int unknownVirtual15() const;
+    virtual void unknownVirtual16();
+    virtual void unknownVirtual17();
+    virtual void unknownVirtual18();
 
     /* Slot 19's default, kept by most constraint data vtables (the copy at
      * 0x7b5a0 sits in the file of the class whose slot 5 is 0x7b560, type
      * code 22): zeroes the vector its fifth argument points to. The three
      * arguments before it are integers or pointers, not recovered. */
-    void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
-                      Vec4 &out) const; /* vtable slot 19; derived name */
+    virtual void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
+                              Vec4 &out) const; /* vtable slot 19; derived name */
+
+    virtual void unknownVirtual20() = 0;
+    virtual void unknownVirtual21();
+    virtual void unknownVirtual22();
+    virtual void unknownVirtual23();
+
+    /* Slot 24, the empty body 0x3b640 by default: the call a bridge atom
+     * makes into the data it wraps (FUN_0007d020). derived name. */
+    virtual void buildJacobianCallback(const void *input, void *output);
 
     u8 unknownC[0xc];
 };
+
+/* A bridge atom (derived name): an atom whose +8 holds the function the
+ * solver calls with the data at +0x10. Its initializer FUN_0007d030 stores
+ * the data and FUN_0007d020, which hands the call on to the data's slot 24;
+ * the finish constructors at 0x78610 and 0x7f140 (atoms at +0x20, the data
+ * read from +0x30) and the code at 0x79e62 run it. */
+void FUN_0007d020(hkpConstraintData *data, const void *input, void *output); /* derived name */
 
 /* hkpWrappedConstraintData (hkClass 0x57c4308, built at 0x7e39e, 0x20 bytes,
  * parent hkpConstraintData; finish constructor FUN_0007d520 stores its
@@ -1337,6 +1368,40 @@ class hkpHingeConstraintData
     void FUN_0007efa0(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_0007efb0() const;                /* vtable slot 13; derived name */
     u8 FUN_0007efe0() const;                   /* vtable slot 15; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+/* hkpWheelFrictionConstraintAtom (hkClass 0x57c5570, records from
+ * 0x169f160): isEnabled, forwardAxis and sideAxis (bytes) at +2 to +4,
+ * radius at +8, axle (a pointer to hkpWheelFrictionConstraintAtom::Axle,
+ * hkClass 0x57c54f0) at +0x10, maxFrictionForce and torque at +0x20 and
+ * +0x24. */
+struct hkpWheelFrictionConstraintAtom {
+    struct Axle;
+
+    u8 unknown0[0x10];
+    Axle *axle;
+};
+
+/* hkpWheelFrictionConstraintData (vtable address point 0x16a5f10, stored at
+ * 0x7b122 and 0x7b33f; slot 5 FUN_0017cf20 returns its type code 20): its
+ * atoms at +0x20 are an hkpWheelFrictionConstraintData::Atoms (records
+ * 0x169c230: transforms at +0, friction at +0x90). Slot 6 (0x7c890) hands
+ * the atoms on with their size, 0xd0; slot 7 (FUN_0017cf10) tells whether
+ * the friction atom has an axle. */
+class hkpWheelFrictionConstraintData
+{
+  public:
+    struct Atoms {
+        u8 transforms[0x90];
+        hkpWheelFrictionConstraintAtom friction;
+    };
+
+    virtual ~hkpWheelFrictionConstraintData();
+
+    bool FUN_0017cf10() const; /* vtable slot 7; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1775,6 +1840,29 @@ class hkSkinBinding : public hkMeshShape
 
     hkMeshShape *skin;
 };
+
+/* hkSkinnedMeshShape::Part (records 0x1692280, 0x30 bytes): startVertex,
+ * numVertices, startIndex and numIndices (hkInt32) from +0, boneSetId and
+ * meshSectionIndex (hkUint16) at +0x10 and +0x12, boundingSphere
+ * (hkVector4) at +0x20. hkStorageSkinnedMeshShape keeps its parts in an
+ * array at +0x40 (count at +0x48); its slot 15 (0xae860) sorts them with the
+ * quick sort FUN_000ad970 and the order FUN_000ad900. */
+class hkSkinnedMeshShape
+{
+  public:
+    struct Part {
+        int startVertex;
+        int numVertices;
+        int startIndex;
+        int numIndices;
+        u16 boneSetId;
+        u16 meshSectionIndex;
+        Vec4 boundingSphere;
+    };
+};
+
+bool FUN_000ad900(const hkSkinnedMeshShape::Part &a,
+                  const hkSkinnedMeshShape::Part &b); /* derived name */
 
 /* hkStorageSkinnedMeshShape: its hkClass at 0x57bdd18 is built by the
  * reflection initializer at 0x27e79; slot 3 of its vtable (0x16a3b00,
@@ -2247,6 +2335,29 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
     hkTypeInfoRegistry *FUN_0017e970();         /* vtable slot 5; derived name */
     hkDefaultClassNameRegistry *FUN_0017e980(); /* vtable slot 6; derived name */
     hkVtableClassRegistry *FUN_0017e990();      /* vtable slot 7; derived name */
+};
+
+/* A shape's watcher (derived names): the owner at +0 (whose bool at +0x20
+ * says some watched shape changed), the shape at +8, whose vtable slot 8
+ * returns its two signals (at +0 one passing a byte of change flags, at +8
+ * one passing the shape as it is destroyed); the change flags gathered at
+ * +0x20. FUN_00155b00 is the handler of the first signal, subscribed at
+ * 0x156026 through a member function pointer and unsubscribed at 0x155b3f,
+ * 0x155c52 and 0x155d53; 0x155b10 handles the second. */
+struct ShapeWatcherOwner /* derived name */
+{
+    u8 unknown0[0x20];
+    bool anyShapeChanged; /* derived name */
+};
+
+struct ShapeWatcher /* derived name */
+{
+    void FUN_00155b00(u8 changeFlags); /* derived name */
+
+    ShapeWatcherOwner *owner; /* derived name */
+    const hknpShape *shape;   /* derived name */
+    u8 unknown10[0x10];
+    u8 changeFlags; /* derived name */
 };
 
 #endif

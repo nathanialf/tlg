@@ -495,3 +495,10 @@ FUN_0007bf10 src/libs/unknown/leaf_0007bf10.cpp _ZNK22hkpFixedConstraintData12FU
 FUN_0007dcd0 src/libs/unknown/leaf_0007dcd0.cpp _ZNK24hkpRagdollConstraintData12FUN_0007dcd0Ev
 FUN_0007efe0 src/libs/unknown/leaf_0007efe0.cpp _ZNK22hkpHingeConstraintData12FUN_0007efe0Ev
 FUN_0017b950 src/libs/unknown/leaf_0017b950.cpp _ZNK21hkp6DofConstraintData12FUN_0017b950Ev
+FUN_0007c3d0 src/libs/unknown/leaf_0007c3d0.cpp _ZNK30hkpBallAndSocketConstraintData12FUN_0007c3d0ERf
+FUN_0007d020 src/libs/unknown/func_0007d020.cpp
+FUN_0008f070 src/libs/unknown/leaf_0008f070.cpp
+FUN_00091090 src/libs/unknown/leaf_00091090.cpp _ZNK15BufferAllocator12FUN_00091090Ei
+FUN_000ad900 src/libs/unknown/leaf_000ad900.cpp
+FUN_00155b00 src/libs/unknown/leaf_00155b00.cpp _ZN12ShapeWatcher12FUN_00155b00Eh
+FUN_0017cf10 src/libs/unknown/leaf_0017cf10.cpp _ZNK30hkpWheelFrictionConstraintData12FUN_0017cf10Ev
