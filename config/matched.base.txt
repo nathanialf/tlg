@@ -256,3 +256,11 @@ FUN_00067c40 src/libs/unknown/leaf_00067c40.cpp _ZN27hknpMalleableConstraintData
 FUN_00067c70 src/libs/unknown/leaf_00067c70.cpp
 FUN_00068370 src/libs/unknown/leaf_00068370.cpp
 FUN_00068950 src/libs/unknown/leaf_00068950.cpp
+FUN_00078150 src/libs/unknown/leaf_00078150.cpp
+FUN_000784f0 src/libs/unknown/leaf_000784f0.cpp
+FUN_0007b560 src/libs/unknown/leaf_0007b560.cpp
+FUN_0007bf90 src/libs/unknown/leaf_0007bf90.cpp
+FUN_0007c2c0 src/libs/unknown/leaf_0007c2c0.cpp _ZN30hkpBallAndSocketConstraintData12FUN_0007c2c0Ef
+FUN_0007c2d0 src/libs/unknown/leaf_0007c2d0.cpp _ZNK30hkpBallAndSocketConstraintData12FUN_0007c2d0Ev
+FUN_0007c300 src/libs/unknown/leaf_0007c300.cpp _ZNK30hkpBallAndSocketConstraintData12FUN_0007c300Ev
+FUN_0007c980 src/libs/unknown/leaf_0007c980.cpp

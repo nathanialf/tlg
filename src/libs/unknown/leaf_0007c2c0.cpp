@@ -1,0 +1,9 @@
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_reflect.h"
+
+/* derived name: slot 10 of hkpBallAndSocketConstraintData's vtable (address
+ * point 0x169c7e0) sets the ball-socket atom's breach impulse. */
+void hkpBallAndSocketConstraintData::FUN_0007c2c0(float newBreachImpulse) /* derived name */
+{
+    atoms.ballSocket.breachImpulse = newBreachImpulse;
+}
