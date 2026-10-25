@@ -1141,11 +1141,25 @@ class hkpHingeConstraintData
  * base's), stores the vtable 0x16a5d20 and resets the packed u16 pairs of
  * its atoms. hkp6DofConstraintData::Blueprints (type info 0x57c5a48, size
  * 0x200): its finish constructor FUN_0017b0d0 resets the same pairs from
- * +0xb4. */
+ * +0xb4. Members from the record tables 0x169f910 and 0x169f730: blueprints
+ * at +0x20 (ballSocket at +0x1f0 of it), isDirty (hkBool) at +0x220. Slots
+ * 10 and 13 of its vtable (address point 0x16a5d30) write and read the
+ * ball-socket atom's breach impulse. */
 class hkp6DofConstraintData
 {
   public:
-    struct Blueprints;
+    struct Blueprints {
+        u8 unknown0[0x1f0]; /* linearIsFixed to linearMotor2 */
+        hkpBallSocketConstraintAtom ballSocket;
+    };
+
+    virtual ~hkp6DofConstraintData();
+
+    void FUN_0017b910(float newBreachImpulse); /* vtable slot 10; derived name */
+    float FUN_0017b920() const;                /* vtable slot 13; derived name */
+
+    u8 unknown8[0x18];
+    Blueprints blueprints;
 };
 
 void FUN_00083880(hkpLinearClearanceConstraintData::Atoms *self,
@@ -1205,7 +1219,20 @@ class hkxVertexBuffer
 };
 
 struct hkxMesh;
-struct hkAlignSceneToNodeOptions;
+
+/* hkAlignSceneToNodeOptions: members from its record table at 0x16a18c0:
+ * invert and the transform flags (hkBool) from +0xc, keyframe (hkInt32) at
+ * +0x14, nodeName (hkStringPtr) at +0x18. FUN_0017d550, beside the finish
+ * constructor, sets the node name; hkMemoryResourceHandle's identical name
+ * setter (0x17f2f0, slot 7 of its vtable 0x16a6280) was folded onto it. */
+class hkAlignSceneToNodeOptions : public hkReferencedObject
+{
+  public:
+    void FUN_0017d550(const char *newName); /* derived name */
+
+    u8 unknownC[0xc];
+    hkStringPtr nodeName;
+};
 struct hkxMaterialShaderSet;
 struct hkxSkinBinding;
 struct hkxVertexDescription;
@@ -1653,6 +1680,49 @@ class hkArrayStreamWriter
     virtual ~hkArrayStreamWriter();
 
     const hkClass *FUN_0008ff00() const; /* vtable slot 3; derived name */
+};
+
+/* hknpVehicleInstance: hkClass 0x57c1490 (size 0x120, parent hknpUnaryAction's
+ * 0x57bfbc0), built by the reflection initializer at 0x47a5d with its member
+ * records at 0x1698a70; its finish constructor 0x47990 stores the vtable
+ * (address point 0x16a50a0, complete destructor FUN_001625d0). Members read so
+ * far: world at +0x20, wheelsInfo (array of hknpVehicleInstance::WheelInfo)
+ * at +0x80, torque and rpm (hkReal) at +0xf8 and +0xfc, mainSteeringAngle
+ * at +0x100. */
+class hknpVehicleInstance
+{
+  public:
+    virtual ~hknpVehicleInstance();
+
+    float FUN_00165880() const; /* vtable slot 13; derived name */
+
+    u8 unknown8[0xf4];
+    float rpm;
+};
+
+/* hknpCharacterProxy (derived name: its timers "findSupportingContacts",
+ * "getGround" and "checkSupport", beside hknpCharacterProxyCinfo's type
+ * info), a reference-counted object (vtable address point 0x16a5b80, built
+ * by the constructor 0x176420, complete destructor 0x176b70). The
+ * constructor subscribes FUN_00176b10 to a signal (the member slot of
+ * vtable 0x16a5b50 holding the object, the function and a zero adjustment),
+ * and the function forwards the signal's two arguments to slot 5
+ * (0x176cc0); slot 6 (0x1781b0) opens "checkSupport", slot 7 (0x177660)
+ * "findSupportingContacts". */
+struct hknpCharacterProxySignalSource; /* derived name: the signal's first argument */
+struct hknpCharacterProxySignalData;   /* derived name: the second, a pointer at +0x28 */
+
+class hknpCharacterProxy : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void FUN_00000270();
+    virtual void FUN_000042d0();
+    virtual void FUN_000069a0();
+    virtual void FUN_00176cc0(hknpCharacterProxySignalSource *source,
+                              hknpCharacterProxySignalData *data); /* vtable slot 5; derived name */
+
+    void FUN_00176b10(hknpCharacterProxySignalSource *source,
+                      hknpCharacterProxySignalData *data); /* derived name */
 };
 
 #endif

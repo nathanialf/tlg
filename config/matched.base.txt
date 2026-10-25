@@ -422,3 +422,11 @@ FUN_00155420 src/libs/unknown/func_00155420.cpp
 FUN_00156870 src/libs/unknown/func_00156870.cpp
 FUN_0015bf10 src/libs/unknown/func_0015bf10.cpp
 FUN_0015dcb0 src/libs/unknown/func_0015dcb0.cpp
+FUN_0015fa40 src/libs/unknown/func_0015fa40.cpp
+FUN_00165880 src/libs/unknown/leaf_00165880.cpp _ZNK19hknpVehicleInstance12FUN_00165880Ev
+FUN_0016ec20 src/libs/unknown/func_0016ec20.cpp
+FUN_00176b10 src/libs/unknown/func_00176b10.cpp _ZN18hknpCharacterProxy12FUN_00176b10EP30hknpCharacterProxySignalSourceP28hknpCharacterProxySignalData
+FUN_00179c70 src/libs/unknown/func_00179c70.cpp
+FUN_0017b910 src/libs/unknown/leaf_0017b910.cpp _ZN21hkp6DofConstraintData12FUN_0017b910Ef
+FUN_0017b920 src/libs/unknown/leaf_0017b920.cpp _ZNK21hkp6DofConstraintData12FUN_0017b920Ev
+FUN_0017d550 src/libs/unknown/func_0017d550.cpp _ZN25hkAlignSceneToNodeOptions12FUN_0017d550EPKc

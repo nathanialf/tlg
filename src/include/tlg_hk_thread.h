@@ -141,6 +141,25 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
 {
 };
 
+/* hknpPrepareExistingPairsTask (derived name): vtables 0x16a5c70 and 0x16a5cb8,
+ * constructor 0x179840 (stores the two arguments at +0x18 and +0x20); slot 6
+ * opens the timer "Collide/Prepare Existing Pairs"; its complete destructor
+ * is the shared empty body 0x175a80. */
+class hknpPrepareExistingPairsTask : public hkReferencedObject,
+                                     public hknpTaskInterface /* derived name */
+{
+};
+
+/* The solver's data task (derived name; vtables 0x16a5690 and 0x16a56d8,
+ * constructor 0x16e0e0): slot 5 (0x16ec30) opens the timer "Solve/Data";
+ * its complete destructor FUN_0016eaa0 restores both vtables and frees the
+ * arrays at +0x20 and +0xc0 (48-byte polymorphic elements) and the blocks at
+ * +0x30, +0x38 and +0xb8; the deleting destructor frees 0xe0 bytes by
+ * default. */
+class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+};
+
 void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */
 void FUN_0014e850(hknpAddActiveBodyPairsTask *self);        /* vtable slot 5; derived name */
 void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; derived name */
@@ -151,5 +170,8 @@ void FUN_00154f50(hknpPrepareConstraintsTask *self);        /* vtable slot 5; de
 void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
 void FUN_0015b7a0(hknpPrepareNewPairsTask *self);           /* vtable slot 5; derived name */
 void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
+void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
+void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
+void FUN_001798c0(hknpPrepareExistingPairsTask *self);      /* vtable slot 5; derived name */
 
 #endif
