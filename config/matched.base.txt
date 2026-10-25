@@ -65,8 +65,8 @@ FUN_0002abc0 src/libs/unknown/leaf_0002abc0.cpp
 FUN_00034840 src/libs/unknown/leaf_00034840.cpp
 FUN_0003ea60 src/libs/unknown/leaf_0003ea60.cpp
 FUN_0007f640 src/libs/unknown/leaf_0007f640.cpp
-FUN_000ad770 src/libs/unknown/leaf_000ad770.cpp
-FUN_000ad780 src/libs/unknown/leaf_000ad780.cpp
+FUN_000ad770 src/libs/unknown/leaf_000ad770.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad770Ev
+FUN_000ad780 src/libs/unknown/leaf_000ad780.cpp _ZN19hkMemoryMeshTexture12FUN_000ad780Ei
 FUN_000ae6a0 src/libs/unknown/leaf_000ae6a0.cpp
 FUN_000ae810 src/libs/unknown/leaf_000ae810.cpp
 FUN_000b6d00 src/libs/unknown/leaf_000b6d00.cpp
@@ -214,3 +214,13 @@ FUN_0008e5c0 src/libs/unknown/func_0008e5c0.cpp
 FUN_0008e820 src/libs/unknown/func_0008e820.cpp
 FUN_0008e870 src/libs/unknown/func_0008e870.cpp
 FUN_00092200 src/libs/unknown/func_00092200.cpp
+FUN_000aa370 src/libs/unknown/func_000aa370.cpp
+FUN_000acae0 src/libs/unknown/leaf_000acae0.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acae0Ev
+FUN_000acaf0 src/libs/unknown/leaf_000acaf0.cpp _ZN20hkMemoryMeshMaterial12FUN_000acaf0Em
+FUN_000ad6e0 src/libs/unknown/leaf_000ad6e0.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad6e0Ev
+FUN_000ad720 src/libs/unknown/leaf_000ad720.cpp _ZN19hkMemoryMeshTexture12FUN_000ad720Eb
+FUN_000ad730 src/libs/unknown/leaf_000ad730.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad730Ev
+FUN_000ad740 src/libs/unknown/leaf_000ad740.cpp _ZN19hkMemoryMeshTexture12FUN_000ad740EN13hkMeshTexture10FilterModeE
+FUN_000ad750 src/libs/unknown/leaf_000ad750.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad750Ev
+FUN_000ad760 src/libs/unknown/leaf_000ad760.cpp _ZN19hkMemoryMeshTexture12FUN_000ad760EN13hkMeshTexture16TextureUsageTypeE
+FUN_000ad910 src/libs/unknown/func_000ad910.cpp

@@ -53,14 +53,6 @@ void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived nam
 void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
 void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
 
-/* FUN_000ad770 and FUN_000ad780 sit in adjacent slots of one vtable
- * (0x16a3a78, 0x16a3a80): a getter and a setter of the int at +0x2c. The
- * slots before them read and write the bytes at +0x29 to +0x2b. */
-struct Value2cOwner {
-    u8 unknown0[0x2c];
-    s32 value;
-};
-
 /* FUN_000ae6a0 and FUN_000ae810 sit in slots 5 and 9 of one vtable
  * (0x16a3b00): getters of the ints at +0x38 and +0x48. FUN_000ae6a0 also
  * fills a slot of the vtables at 0x16a6330 and 0x16b1500, so +0x38 belongs

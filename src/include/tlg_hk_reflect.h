@@ -152,7 +152,7 @@ struct hkcdDynamicAabbTree;                 /* FUN_0009fc10, vtable 0x16a37c0 */
 struct hkSkinnedRefMeshShape;               /* FUN_000aa660, vtable 0x16a38c0 */
 struct hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
 struct hkSkinBinding;                       /* FUN_000aa4f0, vtable 0x16a3860 */
-struct hkMemoryMeshMaterial;                /* FUN_000accf0, vtable 0x16a3920 */
+class hkMemoryMeshMaterial;                 /* FUN_000accf0, vtable 0x16a3920 */
 struct hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
 struct hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
 struct hknpDynamicCompoundShape;            /* FUN_000469a0, vtable 0x1697ef0 */
@@ -627,4 +627,119 @@ void FUN_0017d520(hkAlignSceneToNodeOptions *self,
                   hkFinishLoadedObjectFlag flag);                             /* derived name */
 void FUN_0008b370(hkxMaterialShaderSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0008a890(hkxSkinBinding *self);                                      /* derived name */
+/* hkSkinBinding (vtable 0x16a3860): slot 0, the complete destructor
+ * FUN_000aa370, runs the out-of-line FUN_000aa3d0, which restores the
+ * vtable. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
+ * complete destructor FUN_000ad910, runs the out-of-line FUN_000adba0. */
+void FUN_000aa3d0(hkSkinBinding *self);             /* derived name */
+void FUN_000adba0(hkStorageSkinnedMeshShape *self); /* derived name */
+
+/* hkEnum, the reflection's type 0x18: an enum kept in a smaller integer
+ * (the record's subtype, 3 for hkInt8), converted on read and write. */
+template <typename ENUM, typename STORAGE> class hkEnum
+{
+  public:
+    operator ENUM() const
+    {
+        return static_cast<ENUM>(m_storage);
+    }
+
+    hkEnum &operator=(ENUM e)
+    {
+        m_storage = static_cast<STORAGE>(e);
+        return *this;
+    }
+
+    STORAGE m_storage;
+};
+
+/* hkUlong, the reflection's type 0x1e: an unsigned integer as wide as a
+ * pointer. */
+typedef unsigned long hkUlong;
+
+/* hkMemoryMeshMaterial, 0x80 bytes (type info 0x57bd4a8, vtable 0x16a3920 stored
+ * by its finish constructor FUN_000accf0): members from its record table
+ * at 0x1691e80, materialName (hkStringPtr) at +0x10, textures (array of
+ * pointers to hkMeshTexture, hkClass 0x57bc990) at +0x18, diffuseColor,
+ * ambientColor, specularColor and emissiveColor (hkVector4) from +0x30,
+ * userData (hkUlong) at +0x70, tesselationFactor (hkReal) at +0x78. */
+class hkMemoryMeshMaterial
+{
+  public:
+    virtual ~hkMemoryMeshMaterial();
+
+    hkUlong FUN_000acae0() const;           /* vtable slot 17; derived name */
+    void FUN_000acaf0(hkUlong newUserData); /* vtable slot 18; derived name */
+
+    u8 unknown8[8];
+    hkStringPtr materialName;
+    u8 textures[0x10];
+    Vec4 diffuseColor;
+    Vec4 ambientColor;
+    Vec4 specularColor;
+    Vec4 emissiveColor;
+    hkUlong userData;
+    float tesselationFactor;
+};
+
+/* hkMeshTexture (hkClass 0x57bc990), the texture interface, with its three
+ * reflected enums (item tables at 0x1690ea0, 0x1690f00, 0x1690f30). */
+class hkMeshTexture
+{
+  public:
+    enum Format { Unknown, PNG, TGA, BMP, DDS, RAW };
+
+    enum FilterMode { POINT, LINEAR, ANISOTROPIC };
+
+    enum TextureUsageType {
+        UNKNOWN,
+        DIFFUSE,
+        REFLECTION,
+        BUMP,
+        NORMAL,
+        DISPLACEMENT,
+        SPECULAR,
+        SPECULARANDGLOSS,
+        OPACITY,
+        EMISSIVE,
+        REFRACTION,
+        GLOSS,
+        DOMINANTS,
+        NOTEXPORTED
+    };
+
+    virtual ~hkMeshTexture();
+};
+
+/* hkMemoryMeshTexture, 0x30 bytes (type info 0x57bd648, parent
+ * hkMeshTexture, vtable 0x16a39f0 stored by its finish constructor
+ * 0x24800): members from the records its static initializer builds
+ * (0x24850 onward), filename (hkStringPtr) at +0x10, data (array of hkUint8)
+ * at +0x18, format (hkEnum of Format in hkInt8) at +0x28, hasMipMaps (hkBool)
+ * at +0x29, filterMode at +0x2a and usageHint at +0x2b (hkEnum in hkInt8),
+ * textureCoordChannel (hkInt32) at +0x2c. Slots 8 to 18 of its vtable read
+ * and write them. */
+class hkMemoryMeshTexture : public hkMeshTexture
+{
+  public:
+    virtual ~hkMemoryMeshTexture();
+
+    Format FUN_000ad6e0() const;                      /* vtable slot 8; derived name */
+    void FUN_000ad720(bool newHasMipMaps);            /* vtable slot 12; derived name */
+    FilterMode FUN_000ad730() const;                  /* vtable slot 13; derived name */
+    void FUN_000ad740(FilterMode newFilterMode);      /* vtable slot 14; derived name */
+    TextureUsageType FUN_000ad750() const;            /* vtable slot 15; derived name */
+    void FUN_000ad760(TextureUsageType newUsageHint); /* vtable slot 16; derived name */
+    int FUN_000ad770() const;                         /* vtable slot 17; derived name */
+    void FUN_000ad780(int newTextureCoordChannel);    /* vtable slot 18; derived name */
+
+    u8 unknown8[8];
+    hkStringPtr filename;
+    u8 data[0x10];
+    hkEnum<Format, s8> format;
+    bool hasMipMaps;
+    hkEnum<FilterMode, s8> filterMode;
+    hkEnum<TextureUsageType, s8> usageHint;
+    s32 textureCoordChannel;
+};
 #endif
