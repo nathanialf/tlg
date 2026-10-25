@@ -1252,7 +1252,35 @@ class hkRootLevelContainer
     struct NamedVariant;
 };
 struct hkMemoryResourceContainer;
-struct hkMemoryResourceHandle;
+
+/* A reference-counted pointer to an hkReferencedObject whose class is looked
+ * up from the object's vtable (derived name: the reflection types it as a
+ * pointer to hkReferencedObject). FUN_00090250 stores a new object, adding a
+ * reference to it and removing one from the old; FUN_000902f0 returns the
+ * object's hkClass through the registry singleton at 0x57c8910 (slot 7), or
+ * null. */
+struct hkRefVariant /* derived name */ {
+    hkReferencedObject *object; /* derived name */
+};
+
+void FUN_00090250(hkRefVariant *self, hkReferencedObject *object); /* derived name */
+const hkClass *FUN_000902f0(const hkRefVariant *self);             /* derived name */
+
+/* hkMemoryResourceHandle (vtable address point 0x16a6280; slot 0 the complete
+ * destructor 0x17f180): members from its record table at 0x16a30b0: variant
+ * (a pointer to hkReferencedObject) at +0x10, name (hkStringPtr) at +0x18,
+ * references (array) at +0x20. Slot 6 (0x17f2d0) returns the name or "null",
+ * slot 7 sets it (folded onto FUN_0017d550), slot 8 (0x7f80) returns the
+ * object, slot 9 its class and slot 10 sets it. */
+class hkMemoryResourceHandle : public hkReferencedObject
+{
+  public:
+    const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
+    void FUN_0017f320(hkReferencedObject *object); /* vtable slot 10; derived name */
+
+    hkRefVariant variant;
+    hkStringPtr name;
+};
 
 /* hkxVertexDescription::ElementDecl (type info 0x57c7f10, size 0x18, no
  * vtable; its records, built at run time by the initializer from 0x8cf60,
@@ -1424,10 +1452,29 @@ class hkMemoryMeshTexture : public hkMeshTexture
  * 0x168c3b0 and 0x168d110 (FUN_00008a20) returns it. */
 extern const hkClass D_57b7e18; /* hkOstream's hkClass */
 
-class hkOstream
+/* The stream writer interface (derived name; hkPs4StreamWriter,
+ * hkBufferedStreamWriter and hkArrayStreamWriter fill it): slot 5 tells
+ * whether the stream is usable (hkBool), slot 6 writes (buffer, byte count),
+ * slot 7 flushes. Slots 2 to 4 are not recovered. */
+class hkStreamWriter : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual hkBool isOk() const;                     /* vtable slot 5; derived name */
+    virtual int write(const void *buffer, int size); /* vtable slot 6; derived name */
+    virtual void flush();                            /* vtable slot 7; derived name */
+};
+
+/* Its writer (hkStreamWriter) at +0x10: FUN_000089e0 flushes it. */
+class hkOstream : public hkReferencedObject
 {
   public:
     const hkClass *FUN_00008a20() const; /* vtable slot 3; derived name */
+    void FUN_000089e0();                 /* derived name */
+
+    hkStreamWriter *writer; /* derived name */
 };
 
 /* hkBufferedStreamWriter: its hkClass at 0x57b7fe8 is built by the

@@ -4,6 +4,7 @@
 #ifndef TLG_LIB_UNKNOWN_H
 #define TLG_LIB_UNKNOWN_H
 
+#include "tlg_hk_reflect.h"
 #include "tlg_simd.h"
 #include "tlg_types.h"
 
@@ -154,6 +155,20 @@ int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived n
 void FUN_000131a0(LargeBlockAllocator *self);                          /* derived name */
 int FUN_00013060(LargeBlockAllocator *self, void *pointer, int value); /* derived name */
 
+/* A global state word (derived name) and its setter FUN_00006640: the
+ * allocation paths at 0x2958 and 0x2bde (TwoBaseAllocator's: the byte count
+ * of the object at +0x38, less the base at +0x20, against the value at
+ * +0xb50) set it to 1 when the limit is reached. */
+extern int D_57b7b18;
+void FUN_00006640(int state); /* derived name */
+
+/* The base system's initialised flag (derived name): the initialiser at
+ * 0x98d0 returns at once when it is set and sets it at the end, the
+ * shutdown at 0x9ad0 does nothing unless it is set and clears it, and
+ * FUN_00009c10 returns it (tested by 0x9353a before a teardown walk). */
+extern bool D_57b80c0;
+bool FUN_00009c10(); /* derived name */
+
 /* Primary slot 20 (interface slot 9): stores its int argument into the
  * global at 0x16dc128 under the spinning mutex at +0x10. */
 void FUN_00002330(TwoBaseAllocator *self, int value); /* derived name */
@@ -259,6 +274,31 @@ struct LayoutRules00180ef0 {
 
 struct Layout00180ef0 {
     LayoutRules00180ef0 rules;
+};
+
+/* The object copier (derived name, from hkObjectCopier.cpp, the home of
+ * its neighbours 0x1a0890 and 0x1a0b40): a reference-counted object
+ * (vtable address point 0x16a75e0) whose constructor 0x1a0840 copies the
+ * source layout to +0xc and the target layout to +0x10, stores the flags
+ * at +0x14 and sets +0x18 when the two byte orders differ. */
+class hkObjectCopier : public hkReferencedObject /* derived name */
+{
+  public:
+    Layout00180ef0 layoutIn;  /* derived name */
+    Layout00180ef0 layoutOut; /* derived name */
+};
+
+/* The platform object writer (derived name): a reference-counted object
+ * (vtable address point 0x16a6920, constructor 0x19a950) that builds an
+ * object copier from the host layout {8, 1, 1, 1} to the target one and
+ * keeps it at +0x10. FUN_0019ab00 returns the copier's target layout; the
+ * packfile writer at 0x183261 compares its byte order with the host's. */
+class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
+{
+  public:
+    const Layout00180ef0 &FUN_0019ab00() const; /* derived name */
+
+    hkObjectCopier *copier; /* derived name */
 };
 
 /* A polymorphic pool (vtables 0x168cbb0 and 0x16d3390, the second a

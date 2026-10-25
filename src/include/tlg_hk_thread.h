@@ -141,6 +141,22 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
 {
 };
 
+/* A growable character buffer (derived name): FUN_000116c0 assigns a C
+ * string to it (length, grow through the allocator, copy), FUN_00011900
+ * formats into it. */
+struct hkStringBuf; /* derived name */
+
+/* The solver's stage tasks (derived name): 0x30-byte objects built in an
+ * array by 0x18e6e0, vtables 0x16a6760 and 0x16a67a8; slot 6 (0x18f140)
+ * writes the task's name ("Solve/%s %i", the stage code from +0x20) into a
+ * string buffer, and a node description into the second when given. The
+ * second vtable's slots 2 and 3 are the this-adjusting thunks of primary
+ * slots 5 and 6, both too large to inline; the complete destructor is the
+ * shared empty body 0x17de10. */
+class hknpSolverStageTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+};
+
 /* hknpPrepareExistingPairsTask (derived name): vtables 0x16a5c70 and 0x16a5cb8,
  * constructor 0x179840 (stores the two arguments at +0x18 and +0x20); slot 6
  * opens the timer "Collide/Prepare Existing Pairs"; its complete destructor
@@ -173,5 +189,8 @@ void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
 void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
 void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
 void FUN_001798c0(hknpPrepareExistingPairsTask *self);      /* vtable slot 5; derived name */
+void FUN_0018ef40(hknpSolverStageTask *self);               /* vtable slot 5; derived name */
+void FUN_0018f140(hknpSolverStageTask *self, hkStringBuf *name,
+                  hkStringBuf *description); /* vtable slot 6; derived name */
 
 #endif
