@@ -194,3 +194,13 @@ FUN_00076060 src/libs/unknown/func_00076060.cpp
 FUN_0007ac40 src/libs/unknown/func_0007ac40.cpp
 FUN_0007cde0 src/libs/unknown/func_0007cde0.cpp
 FUN_0007fac0 src/libs/unknown/leaf_0007fac0.cpp
+FUN_00081fd0 src/libs/unknown/func_00081fd0.cpp
+FUN_00082660 src/libs/unknown/func_00082660.cpp
+FUN_00082690 src/libs/unknown/func_00082690.cpp
+FUN_00082c40 src/libs/unknown/func_00082c40.cpp
+FUN_00087e20 src/libs/unknown/func_00087e20.cpp
+FUN_00087e40 src/libs/unknown/func_00087e40.cpp
+FUN_00089140 src/libs/unknown/func_00089140.cpp
+FUN_00089ec0 src/libs/unknown/func_00089ec0.cpp
+FUN_0008a830 src/libs/unknown/func_0008a830.cpp
+FUN_0008b070 src/libs/unknown/func_0008b070.cpp

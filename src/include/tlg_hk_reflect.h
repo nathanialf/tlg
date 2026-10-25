@@ -507,8 +507,78 @@ class hkpPrismaticConstraintData
     struct Atoms;
 };
 
+/* hkpLimitedHingeConstraintData::Atoms: type info 0x57c57f8, size 0x110,
+ * FUN_00078df0 (also the u16 at +0xb4). hkpRagdollConstraintData::Atoms:
+ * type info 0x57c5b48, size 0x180, FUN_0007dae0 (the int at +0xa4). */
+class hkpLimitedHingeConstraintData
+{
+  public:
+    struct Atoms;
+};
+
+class hkpRagdollConstraintData
+{
+  public:
+    struct Atoms;
+};
+
+/* hkp6DofConstraintData, polymorphic (type info 0x57c5ac8, size 0x2b0): its
+ * finish constructor FUN_0017b5f0 runs FUN_00082850 (the constraint data
+ * base's), stores the vtable 0x16a5d20 and resets the packed u16 pairs of
+ * its atoms. hkp6DofConstraintData::Blueprints (type info 0x57c5a48, size
+ * 0x200): its finish constructor FUN_0017b0d0 resets the same pairs from
+ * +0xb4. */
+class hkp6DofConstraintData
+{
+  public:
+    struct Blueprints;
+};
+
 void FUN_00083880(hkpLinearClearanceConstraintData::Atoms *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0007e520(hkpPrismaticConstraintData::Atoms *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00078df0(hkpLimitedHingeConstraintData::Atoms *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0007dae0(hkpRagdollConstraintData::Atoms *self,
+                  hkFinishLoadedObjectFlag flag);                              /* derived name */
+void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkx scene classes (the reflection TUs from 0x87e20), each with an
+ * out-of-line finish constructor or destructor:
+ * hkxVertexBuffer::VertexData (type info 0x57c6970, size 0x68, no vtable):
+ * its destructor FUN_00087cf0 frees its arrays from +0x40 down.
+ * hkxVertexBuffer, polymorphic (type info 0x57c69f0, size 0x88): its finish
+ * constructor FUN_0008a1a0 stores the vtable 0x16a1a30 and runs
+ * VertexData's (FUN_0008c0a0) on the member at +0x78.
+ * hkxMesh (type info 0x57c6f90, size 0x30): FUN_0008bea0 stores the vtable
+ * 0x16a25a0.
+ * hkAlignSceneToNodeOptions (type info 0x57c7288, size 0x20): FUN_0017d520
+ * stores the vtable 0x16a6030 and runs hkStringPtr's on +0x18.
+ * hkxMaterialShaderSet (type info 0x57c7680, size 0x20): FUN_0008b370
+ * stores the vtable 0x16a1f30.
+ * hkxSkinBinding, polymorphic (type info 0x57c7500, size 0x80, vtable
+ * 0x16a1cc0 stored by its finish constructor FUN_0008a9b0): slot 0, the
+ * complete destructor FUN_0008a830, runs the out-of-line FUN_0008a890,
+ * which restores the vtable and frees the arrays from +0x30 down. */
+class hkxVertexBuffer
+{
+  public:
+    struct VertexData;
+};
+
+struct hkxMesh;
+struct hkAlignSceneToNodeOptions;
+struct hkxMaterialShaderSet;
+struct hkxSkinBinding;
+
+void FUN_00087cf0(hkxVertexBuffer::VertexData *self);                    /* derived name */
+void FUN_0008a1a0(hkxVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0008bea0(hkxMesh *self, hkFinishLoadedObjectFlag flag);         /* derived name */
+void FUN_0017d520(hkAlignSceneToNodeOptions *self,
+                  hkFinishLoadedObjectFlag flag);                             /* derived name */
+void FUN_0008b370(hkxMaterialShaderSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0008a890(hkxSkinBinding *self);                                      /* derived name */
 #endif
