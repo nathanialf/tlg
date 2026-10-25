@@ -129,6 +129,10 @@ class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* d
 
 void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
 
+/* Primary slot 20 (interface slot 9): stores its int argument into the
+ * global at 0x16dc128 under the spinning mutex at +0x10. */
+void FUN_00002330(TwoBaseAllocator *self, int value); /* derived name */
+
 /* An arena that hands out blocks with a 16-byte header before the payload
  * (owner, size): FUN_0000bc30 allocates through the third virtual method,
  * FUN_0000bc60 reads the size back, FUN_0000bc70 finds the header. */
