@@ -308,6 +308,24 @@ class hknpMaskedShape
     s32 maskSize;
 };
 
+/* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
+ * vtable 0x16a54a0, address point 0x16a54b0), reflected with
+ * hknpScaledConvexShapeBase (0x60 bytes) as its parent and no members of its
+ * own. Its finish constructor FUN_0016ce90 clears the two pointers of the 16
+ * bytes at +0x60, which its destructor (0x16cf30) walks as a signal's slot
+ * list; slot 8 returns their address as hknpMaskedShape's slot 8 returns its
+ * mutation signals. */
+class hknpScaledConvexShape
+{
+  public:
+    virtual ~hknpScaledConvexShape();
+
+    hknpShapeSignals *FUN_0016ced0(); /* vtable slot 8; derived name */
+
+    u8 unknown8[0x58];
+    hknpShapeSignals mutationSignals; /* derived name */
+};
+
 /* hknpShape, polymorphic (type info 0x57bf210, vtable 0x169ad20 stored by
  * its finish constructor FUN_0006fa90): its destructor, slot 0, is out of
  * line (0x6fb50: restores the vtable, releases the properties at +0x20). */
@@ -324,6 +342,30 @@ class hknpDecoratorShape : public hknpShape
 {
   public:
     virtual ~hknpDecoratorShape();
+};
+
+/* hknpFirstPersonGun, hknpBallGun and hknpMountedBallGun, each finish
+ * constructor running its parent's first (FUN_00156620, FUN_00157e00,
+ * FUN_00166900; type infos below). hknpBallGun's destructor is out of line
+ * (0x157ef0: stores its vtable, address point 0x16a48e0, and releases what
+ * it holds); hknpMountedBallGun adds nothing to destroy, its slot 0
+ * (vtable address point 0x16a5290) jumps to it. */
+class hknpFirstPersonGun
+{
+  public:
+    virtual ~hknpFirstPersonGun();
+};
+
+class hknpBallGun : public hknpFirstPersonGun
+{
+  public:
+    virtual ~hknpBallGun();
+};
+
+class hknpMountedBallGun : public hknpBallGun
+{
+  public:
+    virtual ~hknpMountedBallGun();
 };
 
 /* hknp classes registered by the reflection TU at 0x38b10 onward, each with
@@ -347,9 +389,9 @@ void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag);   
 void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 /* More hknp classes with an out-of-line finish constructor (type info, the
  * vtable it stores): */
-struct hknpProjectileGun;  /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
-struct hknpDummyShape;     /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
-struct hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
+struct hknpProjectileGun; /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
+struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
+class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 struct hknpPhysicsSystemData;         /* 0x57c0198; FUN_00165a80, vtable 0x16a5130 */
 struct hknpDefaultBroadPhaseConfig;   /* 0x57c02e8; FUN_00154d90, vtable 0x16a45f0 */
 struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
@@ -370,8 +412,8 @@ void FUN_00159b40(hknpConstraintCollisionFilter *self,
 void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
 void FUN_0015bf30(hknpWorldSnapshot *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00078230(hknpTriangleShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-struct hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
-struct
+class hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
+class
     hknpScaledConvexShape; /* 0x57c0c48; FUN_0016ce90 runs hknpDecoratorShape's, vtable 0x16a54a0 */
 struct
     hknpScaledConvexShapeBase; /* 0x57c0c78; FUN_0016a810 runs hknpDecoratorShape's, vtable 0x16a5390 */
@@ -459,7 +501,7 @@ void FUN_0006c800(hknpMaterialDescriptor *self, hkFinishLoadedObjectFlag flag); 
 /* hknpRefMaterial (type info 0x57c2040): its finish constructor
  * FUN_0006c7e0 stores the vtable 0x169ac60 and runs hkStringPtr's on +0x10. */
 struct hknpRefMaterial;
-struct hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
+class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
 struct
     hknpCompressedHeightFieldShape; /* 0x57c2378; FUN_00175de0 runs hknpShape's, then vtable 0x16a5980 */
 struct
@@ -597,7 +639,12 @@ struct hkxSkinBinding;
 struct hkxVertexDescription;
 struct hkxVertexAnimation;
 struct hkxMeshSection;
-struct hkxAttribute;
+
+/* hkxAttribute's members from its record table at 0x16a23e0: name
+ * (hkStringPtr) at +0, value at +8. */
+struct hkxAttribute {
+    hkStringPtr name;
+};
 struct hkxEnvironment;
 
 class hkRootLevelContainer

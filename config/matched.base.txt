@@ -224,3 +224,11 @@ FUN_000ad740 src/libs/unknown/leaf_000ad740.cpp _ZN19hkMemoryMeshTexture12FUN_00
 FUN_000ad750 src/libs/unknown/leaf_000ad750.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad750Ev
 FUN_000ad760 src/libs/unknown/leaf_000ad760.cpp _ZN19hkMemoryMeshTexture12FUN_000ad760EN13hkMeshTexture16TextureUsageTypeE
 FUN_000ad910 src/libs/unknown/func_000ad910.cpp
+FUN_00128640 src/libs/unknown/leaf_00128640.cpp
+FUN_0012a850 src/libs/unknown/func_0012a850.cpp
+FUN_0014e0a0 src/libs/unknown/func_0014e0a0.cpp
+FUN_0015dc50 src/libs/unknown/func_0015dc50.cpp
+_ZN18hknpMountedBallGunD1Ev src/libs/unknown/func_00166890.cpp
+FUN_0016ced0 src/libs/unknown/func_0016ced0.cpp _ZN21hknpScaledConvexShape12FUN_0016ced0Ev
+FUN_0017d790 src/libs/unknown/func_0017d790.cpp
+FUN_0017ed60 src/libs/unknown/leaf_0017ed60.cpp
