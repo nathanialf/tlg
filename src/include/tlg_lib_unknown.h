@@ -161,4 +161,23 @@ struct Object0003ea60 {
 struct RefArrays00048040; /* derived name */
 
 void FUN_00048040(RefArrays00048040 *self); /* derived name */
+/* A reference-counted object, 0x70 bytes (vtable 0x169ab20, constructor
+ * FUN_0006bc50) holding arrays at +0x38 (16-byte elements, each releasing
+ * the object at +8 of the element), +0x48 and +0x60. Its out-of-line
+ * destructor FUN_0005a230 restores the vtable and frees the arrays; the
+ * destructors of two derived classes (vtable 0x1699260 at 0x5a150, and
+ * 0x5a14b's) end by running it. */
+struct RefArrays0005a230; /* derived name */
+
+void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
+/* An object of 0x160 bytes with its own class allocator (vtable 0x169b460,
+ * constructor FUN_000763a0) holding an array of 0x500-byte elements at
+ * +0x140 (count at +0x148). Its out-of-line destructor FUN_000760c0
+ * restores the vtable and destroys the elements. A derived class
+ * (vtable 0x169b410, constructor FUN_000768c0: a pointer at +0x150) adds
+ * nothing to destroy, so both vtables share the complete destructor
+ * FUN_00076060 and the deleting destructor FUN_00076070. */
+struct Elements000760c0; /* derived name */
+
+void FUN_000760c0(Elements000760c0 *self); /* derived name */
 #endif

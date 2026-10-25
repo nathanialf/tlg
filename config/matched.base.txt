@@ -184,3 +184,13 @@ FUN_00069770 src/libs/unknown/func_00069770.cpp
 FUN_0006b3c0 src/libs/unknown/func_0006b3c0.cpp
 FUN_0006b4f0 src/libs/unknown/func_0006b4f0.cpp
 FUN_0006b6b0 src/libs/unknown/func_0006b6b0.cpp
+FUN_0006b7c0 src/libs/unknown/func_0006b7c0.cpp
+FUN_0006c310 src/libs/unknown/func_0006c310.cpp
+FUN_0006c440 src/libs/unknown/func_0006c440.cpp
+FUN_0006c6f0 src/libs/unknown/func_0006c6f0.cpp
+FUN_0006c800 src/libs/unknown/func_0006c800.cpp
+FUN_00072f70 src/libs/unknown/func_00072f70.cpp _ZNK23hknpConvexPolytopeShape12FUN_00072f70Ev
+FUN_00076060 src/libs/unknown/func_00076060.cpp
+FUN_0007ac40 src/libs/unknown/func_0007ac40.cpp
+FUN_0007cde0 src/libs/unknown/func_0007cde0.cpp
+FUN_0007fac0 src/libs/unknown/leaf_0007fac0.cpp

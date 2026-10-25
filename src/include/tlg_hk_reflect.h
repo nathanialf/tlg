@@ -333,8 +333,8 @@ struct hknpShapeMassProperties;     /* 0x57bf290; FUN_0006fa80, vtable 0x1693ef0
 struct hknpPhysicsSceneData;        /* 0x57bf360; FUN_00046790, vtable 0x1697ea0 */
 struct
     hknpCapsuleShape; /* 0x57bf490; FUN_000730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
-struct hknpMotionProperties;    /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
-struct hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
+struct hknpMotionProperties;   /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
+class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
 
 void FUN_0003b0f0(hknpDecoratorShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00036de0(hknpMotionPropertiesLibrary *self,
@@ -409,6 +409,22 @@ class hknpConvexShape : public hknpShape
     u8 unknown8[0x20];
     hkRelArray<Vec4> vertices;
 };
+
+/* hknpConvexPolytopeShape (type info 0x57bf760, hkClass 0x57bf710 with
+ * hknpConvexShape as parent, size 0x40): members from its record table at
+ * 0x1694f80, planes (hkRelArray of hkVector4) at +0x2c, in hknpConvexShape's
+ * tail padding, faces (hkRelArray of Face, class 0x57bf590) at +0x30,
+ * indices (hkRelArray) at +0x34, connectivity (pointer) at +0x38. */
+class hknpConvexPolytopeShape : public hknpConvexShape
+{
+  public:
+    struct Face;
+
+    int FUN_00072f70() const; /* vtable slot 13; derived name */
+
+    hkRelArray<Vec4> planes;
+    hkRelArray<Face> faces;
+};
 /* hknpWorldCinfo (type info 0x57c13e0, no vtable): an empty finish
  * constructor (the shared body FUN_0003b640) and an out-of-line destructor
  * FUN_0003b650, which releases the references from +0xb0 down. */
@@ -430,8 +446,13 @@ void FUN_00071190(hknpBodyQualityLibrary *self, hkFinishLoadedObjectFlag flag); 
  * hknpMaterialDescriptor (type info 0x57c1fc0, no vtable, cleanup 0x66e80):
  * each finish constructor (FUN_0006c6f0, FUN_0006c800) runs hkStringPtr's on
  * the name at +0. */
-struct hknpMaterial;
-struct hknpMaterialDescriptor;
+struct hknpMaterial {
+    hkStringPtr name; /* derived name */
+};
+
+struct hknpMaterialDescriptor {
+    hkStringPtr name; /* derived name */
+};
 
 void FUN_0006c6f0(hknpMaterial *self, hkFinishLoadedObjectFlag flag);           /* derived name */
 void FUN_0006c800(hknpMaterialDescriptor *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -458,4 +479,36 @@ void FUN_00175a50(hknpDestructionShapeProperties *self,
                   hkFinishLoadedObjectFlag flag);                                /* derived name */
 void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003c540(hknpSphereShape *self, hkFinishLoadedObjectFlag flag);         /* derived name */
+/* hknpStaticCompoundShape's finish constructor (see the class above). */
+void FUN_000385d0(hknpStaticCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpExternMeshShape (type info 0x57c28e8, size 0x70): its finish
+ * constructor FUN_001660e0 runs hknpShape's, stores 0x1697c80, sets bit 2
+ * of the byte at +0x10 when finishing, then stores its own vtable 0x16a5170. */
+struct hknpExternMeshShape;
+
+void FUN_001660e0(hknpExternMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* Constraint data atoms (hkp, the constraint solver's reflection TUs from
+ * 0x7ac40): each Atoms struct's finish constructor sets the int at +0x94
+ * (-1, or a packed pair when finishing), and its finish callback runs it.
+ * hkpLinearClearanceConstraintData::Atoms: type info 0x57c36b8, size 0x120,
+ * FUN_00083880. hkpPrismaticConstraintData::Atoms: type info 0x57c4058,
+ * size 0x100, FUN_0007e520. */
+class hkpLinearClearanceConstraintData
+{
+  public:
+    struct Atoms;
+};
+
+class hkpPrismaticConstraintData
+{
+  public:
+    struct Atoms;
+};
+
+void FUN_00083880(hkpLinearClearanceConstraintData::Atoms *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0007e520(hkpPrismaticConstraintData::Atoms *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
 #endif
