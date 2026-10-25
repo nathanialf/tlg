@@ -280,3 +280,11 @@ FUN_00154e00 src/libs/unknown/leaf_00154e00.cpp _ZN27hknpDefaultBroadPhaseConfig
 FUN_00156db0 src/libs/unknown/leaf_00156db0.cpp
 FUN_001585f0 src/libs/unknown/leaf_001585f0.cpp
 FUN_00158830 src/libs/unknown/leaf_00158830.cpp
+FUN_0015db10 src/libs/unknown/leaf_0015db10.cpp
+FUN_00161cb0 src/libs/unknown/leaf_00161cb0.cpp
+FUN_00161fc0 src/libs/unknown/leaf_00161fc0.cpp
+FUN_0016a690 src/libs/unknown/leaf_0016a690.cpp
+FUN_0016fbd0 src/libs/unknown/leaf_0016fbd0.cpp
+FUN_00175da0 src/libs/unknown/leaf_00175da0.cpp
+FUN_00175e20 src/libs/unknown/leaf_00175e20.cpp
+FUN_0017cf20 src/libs/unknown/leaf_0017cf20.cpp
