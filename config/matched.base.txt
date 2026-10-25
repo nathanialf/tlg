@@ -334,3 +334,11 @@ FUN_00070a40 src/libs/unknown/leaf_00070a40.cpp
 FUN_0007dfc0 src/libs/unknown/leaf_0007dfc0.cpp
 FUN_0007e0a0 src/libs/unknown/leaf_0007e0a0.cpp
 FUN_0007e160 src/libs/unknown/leaf_0007e160.cpp
+FUN_000803f0 src/libs/unknown/func_000803f0.cpp
+FUN_00085d30 src/libs/unknown/leaf_00085d30.cpp
+FUN_000878e0 src/libs/unknown/leaf_000878e0.cpp
+FUN_0008ba30 src/libs/unknown/leaf_0008ba30.cpp
+FUN_0008ff00 src/libs/unknown/leaf_0008ff00.cpp
+FUN_00092030 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
+FUN_000ad710 src/libs/unknown/leaf_000ad710.cpp
+FUN_000b6bf0 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp

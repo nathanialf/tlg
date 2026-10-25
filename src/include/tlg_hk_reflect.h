@@ -28,6 +28,26 @@ template <typename T> struct hkArray {
     int capacityAndFlags; /* derived name */
 };
 
+/* hkBool, the reflection's boolean (its name in the type-name table at
+ * 0x14b2fab): a char, read as a test against zero (`cmpb $0; setne`) and
+ * written from a bool. Field name derived. */
+class hkBool
+{
+  public:
+    operator bool() const
+    {
+        return value != 0;
+    }
+
+    hkBool &operator=(bool b)
+    {
+        value = static_cast<char>(b);
+        return *this;
+    }
+
+    char value; /* derived name */
+};
+
 /* hkClass, the reflection's class record: name (char*, type 0x1d) at +0
  * and parent (pointer to hkClass, type 0x14) at +8, from its own member
  * table at 0x16a6b60; its constructor FUN_000041a0 stores the twelve
@@ -223,7 +243,7 @@ class hkMemoryMeshVertexBuffer
     void FUN_00027b10();      /* vtable slot 15; derived name */
 
     u8 unknown8[0x19c];
-    bool locked;
+    hkBool locked;
     u8 unknown1a5[3];
     int numVertices;
 };
@@ -710,12 +730,41 @@ struct hkpBallSocketConstraintAtom {
     float inertiaStabilizationFactor;
 };
 
+/* Placement new, as the engine declares it for the finish callbacks: no
+ * exception specification, so the storage is not tested for null. */
+inline void *operator new(unsigned long, void *where)
+{
+    return where;
+}
+
+/* hkpLinMotorConstraintAtom (type info 0x57c4f40, record table 0x169ef70):
+ * isEnabled at +2, motorAxis at +3, initializedOffset and
+ * previousTargetPositionOffset (hkInt16) at +4 and +6, motor (pointer to
+ * hkpConstraintMotor) at +8, targetPosition at +0x10. Its finish
+ * constructor resets both offsets. */
+struct hkpConstraintMotor;
+
+struct hkpLinMotorConstraintAtom {
+    hkpLinMotorConstraintAtom(hkFinishLoadedObjectFlag)
+    {
+        initializedOffset = -1;
+        previousTargetPositionOffset = -1;
+    }
+
+    u16 type; /* derived name */
+    bool isEnabled;
+    u8 motorAxis;
+    s16 initializedOffset;
+    s16 previousTargetPositionOffset;
+    hkpConstraintMotor *motor;
+    float targetPosition;
+    u8 padding[4];
+};
+
 /* hkpRagdollMotorConstraintAtom (record table 0x169f090): isEnabled at +2,
  * initializedOffset at +4, previousTargetAnglesOffset at +6, target_bRca at
  * +0x10, motors (three pointers to hkpConstraintMotor, hkClass 0x57c3af0)
  * at +0x40. */
-struct hkpConstraintMotor;
-
 struct hkpRagdollMotorConstraintAtom {
     u16 type; /* derived name */
     bool isEnabled;
@@ -1000,6 +1049,7 @@ class hkMemoryMeshTexture : public hkMeshTexture
 
     const hkClass *FUN_000247f0() const;              /* vtable slot 3; derived name */
     Format FUN_000ad6e0() const;                      /* vtable slot 8; derived name */
+    bool FUN_000ad710() const;                        /* vtable slot 11; derived name */
     void FUN_000ad720(bool newHasMipMaps);            /* vtable slot 12; derived name */
     FilterMode FUN_000ad730() const;                  /* vtable slot 13; derived name */
     void FUN_000ad740(FilterMode newFilterMode);      /* vtable slot 14; derived name */
@@ -1012,7 +1062,7 @@ class hkMemoryMeshTexture : public hkMeshTexture
     hkStringPtr filename;
     u8 data[0x10];
     hkEnum<Format, s8> format;
-    bool hasMipMaps;
+    hkBool hasMipMaps;
     hkEnum<FilterMode, s8> filterMode;
     hkEnum<TextureUsageType, s8> usageHint;
     s32 textureCoordChannel;
@@ -1166,6 +1216,54 @@ class hknpCompositeShape
     virtual ~hknpCompositeShape();
 
     const hkClass *FUN_00042e80() const; /* vtable slot 3; derived name */
+};
+
+/* hkxBlobMeshShape: its hkClass at 0x57c5e78 is built by the reflection initializer at
+ * 0x85de2; slot 3 of its vtable (address point 0x16a07a0, FUN_00085d30) returns it. */
+extern const hkClass D_57c5e78; /* hkxBlobMeshShape's hkClass */
+
+class hkxBlobMeshShape
+{
+  public:
+    virtual ~hkxBlobMeshShape();
+
+    const hkClass *FUN_00085d30() const; /* vtable slot 3; derived name */
+};
+
+/* hkxTextureFile: its hkClass at 0x57c67d0 is built by the reflection initializer at
+ * 0x879b2; slot 3 of its vtable (address point 0x16a0f00, FUN_000878e0) returns it. */
+extern const hkClass D_57c67d0; /* hkxTextureFile's hkClass */
+
+class hkxTextureFile
+{
+  public:
+    virtual ~hkxTextureFile();
+
+    const hkClass *FUN_000878e0() const; /* vtable slot 3; derived name */
+};
+
+/* hkxAnimatedFloat: its hkClass at 0x57c7930 is built by the reflection initializer at
+ * 0x8bac2; slot 3 of its vtable (address point 0x16a24d0, FUN_0008ba30) returns it. */
+extern const hkClass D_57c7930; /* hkxAnimatedFloat's hkClass */
+
+class hkxAnimatedFloat
+{
+  public:
+    virtual ~hkxAnimatedFloat();
+
+    const hkClass *FUN_0008ba30() const; /* vtable slot 3; derived name */
+};
+
+/* hkArrayStreamWriter: its hkClass at 0x57c8750 is built by the reflection initializer at
+ * 0x901fb; slot 3 of its vtable (address point 0x16a3300, FUN_0008ff00) returns it. */
+extern const hkClass D_57c8750; /* hkArrayStreamWriter's hkClass */
+
+class hkArrayStreamWriter
+{
+  public:
+    virtual ~hkArrayStreamWriter();
+
+    const hkClass *FUN_0008ff00() const; /* vtable slot 3; derived name */
 };
 
 #endif
