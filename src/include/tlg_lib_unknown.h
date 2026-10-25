@@ -304,7 +304,18 @@ struct FreeList /* derived name */
     u64 elementSize; /* derived name */
 };
 
-struct MemoryStatistics; /* derived name */
+/* An allocator's statistics, six signed byte counts (the copy in slot 9 of
+ * the allocator at 0x16a3230, FUN_0008f470; its allocation path keeps the
+ * third as the maximum of the second). Field names derived. */
+struct MemoryStatistics /* derived name */
+{
+    s64 allocated;      /* derived name */
+    s64 inUse;          /* derived name */
+    s64 peakInUse;      /* derived name */
+    s64 available;      /* derived name */
+    s64 totalAvailable; /* derived name */
+    s64 largestBlock;   /* derived name */
+};
 
 void FUN_00019440(const FreeList *self, MemoryStatistics &statistics); /* derived name */
 
@@ -318,6 +329,24 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     void FUN_00014c40(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
 
     FreeList freeList; /* derived name */
+};
+
+/* An allocator that draws its blocks from another allocator and keeps them
+ * on a list (vtable 0x16a3220, address point 0x16a3230; constructor
+ * FUN_0008f180, destructor FUN_0008f120 in slots 0 and 1): a critical
+ * section at +8 (spin count 1000), the parent allocator at +0x18, its
+ * statistics at +0x20 and the list head at +0x50, each block with a 16-byte
+ * header (next, rounded size, requested size). Slots 2 and 3 (0x8f220,
+ * 0x8f330) allocate and free under the lock, slot 9 (0x8f470) copies the
+ * statistics, slot 11 resets the peak. */
+class BlockListAllocator : public AllocatorBase /* derived name */
+{
+  public:
+    void FUN_0008f560(); /* vtable slot 11; derived name */
+
+    u8 unknown8[0x18];
+    MemoryStatistics statistics; /* derived name */
+    void *blocks;                /* derived name */
 };
 
 #endif

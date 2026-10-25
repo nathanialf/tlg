@@ -396,3 +396,15 @@ FUN_0007efb0 src/libs/unknown/leaf_0007efb0.cpp
 FUN_00082b90 src/libs/unknown/leaf_00082b90.cpp
 FUN_00082ba0 src/libs/unknown/leaf_00082ba0.cpp
 FUN_00082bb0 src/libs/unknown/leaf_00082bb0.cpp
+FUN_00085c20 src/libs/unknown/leaf_00085c20.cpp
+FUN_00085c30 src/libs/unknown/func_00085c30.cpp
+FUN_0008ce10 src/libs/unknown/func_0008ce10.cpp
+FUN_0008ce20 src/libs/unknown/func_0008ce20.cpp
+FUN_0008f560 src/libs/unknown/leaf_0008f560.cpp
+FUN_00091ff0 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
+FUN_000aa880 src/libs/unknown/leaf_000aa880.cpp
+FUN_000aa890 src/libs/unknown/func_000aa890.cpp
+FUN_000acf80 src/libs/unknown/func_000acf80.cpp
+FUN_000acf90 src/libs/unknown/leaf_000acf90.cpp
+FUN_000aea20 src/libs/unknown/leaf_000aea20.cpp
+FUN_000aea30 src/libs/unknown/func_000aea30.cpp

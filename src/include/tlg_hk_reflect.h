@@ -30,10 +30,19 @@ template <typename T> struct hkArray {
 
 /* hkBool, the reflection's boolean (its name in the type-name table at
  * 0x14b2fab): a char, read as a test against zero (`cmpb $0; setne`) and
- * written from a bool. Field name derived. */
+ * written from a bool. A function returning one returns the byte built from
+ * a bool (the widened compare: `shrl $31; xorb $1` for x >= 0 in
+ * hkPs4StreamWriter's slot 5). Field name derived. */
 class hkBool
 {
   public:
+    hkBool() {}
+
+    hkBool(bool b)
+    {
+        value = static_cast<char>(b);
+    }
+
     operator bool() const
     {
         return value != 0;
@@ -1165,6 +1174,25 @@ class hkRootLevelContainer
 struct hkMemoryResourceContainer;
 struct hkMemoryResourceHandle;
 
+/* hkxVertexDescription::ElementDecl (type info 0x57c7f10, size 0x18, no
+ * vtable; its records, built at run time by the initializer from 0x8cf60,
+ * name byteStride and channelID, the hkStringPtr at +0x10). Its finish
+ * constructor finishes the channel name, its destructor destroys it. */
+struct hkxVertexDescriptionElementDecl {
+    hkxVertexDescriptionElementDecl(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000e5c0(&channelID, flag);
+    }
+
+    ~hkxVertexDescriptionElementDecl()
+    {
+        FUN_0000e5d0(&channelID);
+    }
+
+    u8 unknown0[0x10];
+    hkStringPtr channelID;
+};
+
 void FUN_0008c0a0(hkxVertexDescription *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0008c990(hkxVertexAnimation *self);                                  /* derived name */
 void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
@@ -1225,6 +1253,8 @@ class hkMemoryMeshMaterial
     virtual ~hkMemoryMeshMaterial();
 
     const hkClass *FUN_000246c0() const;    /* vtable slot 3; derived name */
+    void FUN_000acf80(const char *newName); /* vtable slot 9; derived name */
+    const char *FUN_000acf90() const;       /* vtable slot 10; derived name */
     hkUlong FUN_000acae0() const;           /* vtable slot 17; derived name */
     void FUN_000acaf0(hkUlong newUserData); /* vtable slot 18; derived name */
     float FUN_000acb00() const;             /* vtable slot 19; derived name */
@@ -1341,7 +1371,15 @@ class hkSkinnedRefMeshShape
   public:
     virtual ~hkSkinnedRefMeshShape();
 
-    const hkClass *FUN_00023370() const; /* vtable slot 3; derived name */
+    const hkClass *FUN_00023370() const;    /* vtable slot 3; derived name */
+    const char *FUN_000aa880() const;       /* vtable slot 8; derived name */
+    void FUN_000aa890(const char *newName); /* vtable slot 9; derived name */
+
+    /* From its record table at 0x16916c0: skinnedMeshShape (pointer) at
+     * +0x10, bones and localFromRootTransforms (arrays) at +0x18 and +0x28,
+     * name (hkStringPtr) at +0x38. */
+    u8 unknown8[0x30];
+    hkStringPtr name;
 };
 
 /* hkMemoryMeshShape: its hkClass at 0x57bd0a0 is built by the reflection
@@ -1388,7 +1426,15 @@ class hkStorageSkinnedMeshShape
   public:
     virtual ~hkStorageSkinnedMeshShape();
 
-    const hkClass *FUN_00027bd0() const; /* vtable slot 3; derived name */
+    const hkClass *FUN_00027bd0() const;    /* vtable slot 3; derived name */
+    const char *FUN_000aea20() const;       /* vtable slot 12; derived name */
+    void FUN_000aea30(const char *newName); /* vtable slot 13; derived name */
+
+    /* From its record table at 0x1692420: bonesBuffer, boneSets,
+     * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at
+     * +0x50. */
+    u8 unknown8[0x48];
+    hkStringPtr name;
 };
 
 /* hknpDynamicCompoundShape: its hkClass at 0x57be640 is built by the
@@ -1510,7 +1556,14 @@ class hkxBlobMeshShape
   public:
     virtual ~hkxBlobMeshShape();
 
-    const hkClass *FUN_00085d30() const; /* vtable slot 3; derived name */
+    const hkClass *FUN_00085d30() const;    /* vtable slot 3; derived name */
+    const char *FUN_00085c20() const;       /* vtable slot 8; derived name */
+    void FUN_00085c30(const char *newName); /* vtable slot 9; derived name */
+
+    /* From its record table at 0x16a0830 (0x38 bytes): blob (struct
+     * hkxBlob, hkClass 0x57c7a80) at +0x10, name (hkStringPtr) at +0x30. */
+    u8 unknown8[0x28];
+    hkStringPtr name;
 };
 
 /* hkxTextureFile: its hkClass at 0x57c67d0 is built by the reflection initializer at
