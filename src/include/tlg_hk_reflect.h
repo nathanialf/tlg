@@ -1757,12 +1757,16 @@ class hkOArchive : public hkReferencedObject /* derived name */
     hkBool byteSwap;        /* derived name */
 };
 
-/* Its writer (hkStreamWriter) at +0x10: FUN_000089e0 flushes it. */
+/* Its writer (hkStreamWriter) at +0x10: FUN_000089e0 flushes it,
+ * FUN_000089f0 writes to it. The caller at 0x14ec7 passes an hkOArchive
+ * built by 0xa280 (writer also at +0x10), and hkSkinBinding's slot 6 is
+ * this body too: identical bodies folded onto this one. */
 class hkOstream : public hkReferencedObject
 {
   public:
-    const hkClass *FUN_00008a20() const; /* vtable slot 3; derived name */
-    void FUN_000089e0();                 /* derived name */
+    const hkClass *FUN_00008a20() const;            /* vtable slot 3; derived name */
+    void FUN_000089e0();                            /* derived name */
+    int FUN_000089f0(const void *buffer, int size); /* derived name */
 
     hkStreamWriter *writer; /* derived name */
 };
