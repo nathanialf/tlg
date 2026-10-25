@@ -115,8 +115,13 @@ def object_data_symbols(obj: Path) -> dict[str, tuple[bytes, list[mc.Reloc], boo
     return out
 
 
-def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc) -> tuple[int | None, str]:
-    """The address S the base gives the relocation's symbol, or (None, why)."""
+def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
+                           hint: int | None = None) -> tuple[int | None, str]:
+    """The address S the base gives the relocation's symbol, or (None, why).
+    `hint` is the S the base's own field at this site encodes: a literal or
+    constant-pool entry whose bytes occur more than once (a float constant
+    such as pi sits in hundreds of pools) is placed where the base points,
+    provided the bytes there are the entry's."""
     s = base.address_of(r.symbol)
     if s is not None:
         return s, ""
@@ -129,6 +134,8 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc) -> tuple[int |
                 hits = base.find_bytes(blob)
                 if len(hits) == 1:
                     return hits[0] - r.addend, ""
+                if len(hits) > 1 and hint is not None and (hint + r.addend) in hits:
+                    return hint, ""
                 return None, (f"literal {blob[:24]!r} of {r.symbol} occurs {len(hits)} times in the base"
                               if hits else f"literal {blob[:24]!r} of {r.symbol} not found in the base")
             blob = mc.object_bytes_of(obj, r.sym_section, r.sym_value, r.sym_size)
@@ -136,6 +143,8 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc) -> tuple[int |
                 hits = base.find_bytes(blob)
                 if len(hits) == 1:
                     return hits[0], ""
+                if len(hits) > 1 and hint is not None and hint in hits:
+                    return hint, ""
                 return None, f"bytes of {r.symbol} occur {len(hits)} times in the base"
         except Exception as e:  # noqa: BLE001
             return None, f"{r.symbol}: {e}"
@@ -166,7 +175,7 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
             if d is None:
                 errors.append(f"+0x{r.offset:x} {r.symbol}: pointer slot 0x{P:x} has no dynamic relocation in the base")
                 continue
-            S, why = resolve_symbol_address(base, obj, r)
+            S, why = resolve_symbol_address(base, obj, r, d[2] - r.addend if d[0] == 8 else None)
             if S is None and d[0] == R_X86_64_64:
                 struct.pack_into("<Q", out, r.offset, 0)   # an import's address: filled by the loader
                 continue
@@ -189,14 +198,24 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
             if not mc.relaxable_got_load(code, r):
                 errors.append(f"+0x{r.offset:x} {r.symbol}: no GOT slot in the base and not a relaxable load")
                 continue
-            S, why = resolve_symbol_address(base, obj, r)
+            try:
+                hint = struct.unpack("<i", base.read(P, 4))[0] + P - r.addend
+            except ValueError:
+                hint = None
+            S, why = resolve_symbol_address(base, obj, r, hint)
             if S is None:
                 errors.append(f"+0x{r.offset:x} {why}")
                 continue
             out[r.offset - 2] = 0x8D
             struct.pack_into("<i", out, r.offset, S + r.addend - P)
             continue
-        S, why = resolve_symbol_address(base, obj, r)
+        hint = None
+        if r.type in (R_X86_64_PC32, R_X86_64_PLT32) and r.offset + 4 <= len(code):
+            try:  # where the base's own displacement at this site points
+                hint = struct.unpack("<i", base.read(P, 4))[0] + P - r.addend
+            except ValueError:
+                hint = None
+        S, why = resolve_symbol_address(base, obj, r, hint)
         if S is None:
             errors.append(f"+0x{r.offset:x} {why}")
             continue
