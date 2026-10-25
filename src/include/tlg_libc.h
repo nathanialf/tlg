@@ -1,10 +1,13 @@
 /* The C library functions the executable imports, declared here because the
- * build is freestanding (-nostdinc). Each name is the import's verified NID
- * name (tools/nid_names.py), reached through its PLT stub. */
+ * host's libc headers are hidden (-nostdlibinc; docs/FINISHING.md rule 8).
+ * Each name is the import's verified NID name (tools/nid_names.py), reached
+ * through its PLT stub. The build is hosted, so memcpy, memmove and memset
+ * are the compiler's builtins, lowered as the base shows (D11). */
 #ifndef TLG_LIBC_H
 #define TLG_LIBC_H
 
-typedef unsigned long size_t;
+#include "stdlib.h"
+
 typedef long time_t;
 
 extern "C" {
@@ -18,7 +21,6 @@ char *strncpy(char *dst, const char *src, size_t n);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
 time_t time(time_t *t);
-void free(void *p);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
 unsigned long _Stoul(const char *s, char **endptr, int base);

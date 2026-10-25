@@ -503,3 +503,4 @@ FUN_000ad900 src/libs/unknown/leaf_000ad900.cpp
 FUN_00155b00 src/libs/unknown/leaf_00155b00.cpp _ZN12ShapeWatcher12FUN_00155b00Eh
 FUN_0017cf10 src/libs/unknown/leaf_0017cf10.cpp _ZNK30hkpWheelFrictionConstraintData12FUN_0017cf10Ev
 FUN_000089f0 src/libs/unknown/func_000089f0.cpp _ZN9hkOstream12FUN_000089f0EPKvi
+FUN_00017e70 src/libs/unknown/func_00017e70.cpp

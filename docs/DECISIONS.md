@@ -293,3 +293,34 @@ shape in round 8's queue.
 defines anywhere in the base (none found), or a relaxed form other than
 mov-to-lea (a `call *[rip+slot]` to `addr32 call`) that a function needs.
 
+## D11. The build is hosted: `-ffreestanding` dropped from both prefixes (2026-10-25)
+
+**Decision.** `config/flags.base.txt` no longer passes `-ffreestanding` for
+`src/libs/` or `src/game/`. `-nostdlibinc -nostdinc++` still hide the host's
+C and C++ headers; `src/include/stdlib.h` and `tlg_libc.h` declare, as our
+own headers, the C library functions the executable imports (FINISHING
+rule 8), which also satisfies the compiler's `xmmintrin.h` when it includes
+`mm_malloc.h` in a hosted build.
+
+**Why.** `-ffreestanding` turns the compiler's builtins off (clang
+`CompilerInvocation.cpp:1244`, `NoBuiltin = ... || Freestanding`), so
+`memcpy` was an ordinary call and, in tail position, a tail call (`mov edx,
+edx; jmp memcpy`). The base's wrapper at 0x17e70 is `push rbp; mov rbp, rsp;
+mov edx, edx; call memcpy; pop rbp; ret`: the lowering of the `llvm.memcpy`
+intrinsic, which LLVM 3.3 emits with `isTailCall = false`
+(`SelectionDAG.cpp:3929`; memmove :3985, memset :4049). Measured over the
+executable on 2026-10-25 against the imports' PLT stubs: in the library
+region memcpy, memmove and memset are called 10, 2 and 52 times and never
+tail-jumped, while memcmp and strlen, which have no intrinsic, are
+tail-jumped; in the game region they are called 478, 369 and 570 times with
+11, 0 and 7 tail jumps, the form LLVM 4.0 gives the intrinsic in tail
+position. Both regions therefore compiled with builtins on, that is, hosted.
+The flag had been chosen for header reasons only (no host libc headers), not
+from code-generation evidence. With it dropped every one of the 499 matched
+rows still compares equal and every segment is identical; the memcpy wrapper
+matches as plain `memcpy(dst, src, n)`.
+
+**Trigger to revisit.** A matched function that needs a builtin off (a
+`memcpy` the base calls where the builtin would inline or lower it
+otherwise), or a hosted-only behaviour the base contradicts.
+

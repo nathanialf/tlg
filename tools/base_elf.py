@@ -122,25 +122,38 @@ class BaseElf:
                         self._import_names[s[0]] = s[4]
         return self._import_names
 
+    def _import_slots(self, types) -> dict[int, str]:
+        """GOT slot address -> symbol name (import name when known, else
+        nid#lib#mod) for the dynamic relocations of the given types."""
+        syms, rels = self._dynamic()
+        names = self.import_names()
+        out = {}
+        for r_off, r_type, r_sym, _a in rels:
+            if r_type in types and r_sym < len(syms):
+                full = syms[r_sym][0]
+                out[r_off] = names.get(full.split("#")[0], full)
+        return out
+
     def got_slots(self) -> dict[str, int]:
-        """symbol name (import name when known, else nid#lib#mod) -> GOT slot
-        address, for every JUMP_SLOT and GLOB_DAT relocation."""
+        """symbol name -> the GOT slot a data reference to the import reads
+        (`mov r64, [rip+sym@GOTPCREL]`): its GLOB_DAT slot, or its JUMP_SLOT
+        when it has no GLOB_DAT. An import called through the PLT and also
+        taken by address has both; the two must not overwrite each other
+        (memcpy lost its PLT stub that way)."""
         if self._got is None:
-            syms, rels = self._dynamic()
-            names = self.import_names()
             self._got = {}
-            for r_off, r_type, r_sym, _a in rels:
-                if r_type in (R_X86_64_JUMP_SLOT, R_X86_64_GLOB_DAT) and r_sym < len(syms):
-                    full = syms[r_sym][0]
-                    nid = full.split("#")[0]
-                    self._got[names.get(nid, full)] = r_off
+            for slot, name in self._import_slots((R_X86_64_JUMP_SLOT,)).items():
+                self._got[name] = slot
+            for slot, name in self._import_slots((R_X86_64_GLOB_DAT,)).items():
+                self._got[name] = slot
         return self._got
 
     def plt_stubs(self) -> dict[str, int]:
         """symbol name -> address of its PLT stub (`jmp qword ptr [rip+slot]`)
-        in the text segment, found by scanning for the stub form."""
+        in the text segment, found by scanning for the stub form against the
+        JUMP_SLOT relocations."""
         if self._plt is None:
-            slot_to_name = {v: k for k, v in self.got_slots().items()}
+            slot_to_name = self._import_slots((R_X86_64_JUMP_SLOT,))
             self._plt = {}
             t = self.text_bytes()
             base_va = self.text["vaddr"]
