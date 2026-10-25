@@ -795,18 +795,16 @@ class hkpPrismaticConstraintData
 /* hkpLimitedHingeConstraintData::Atoms: type info 0x57c57f8, size 0x110,
  * FUN_00078df0 (also the u16 at +0xb4). hkpRagdollConstraintData::Atoms:
  * type info 0x57c5b48, size 0x180, FUN_0007dae0 (the int at +0xa4). */
-class hkpLimitedHingeConstraintData
-{
-  public:
-    struct Atoms;
-};
+class hkpLimitedHingeConstraintData;
 
 /* Two constraint atoms with their reflected members: hkpSetupStabilizationAtom
  * (record table 0x169e600: enabled at +2, padding at +3, maxLinImpulse at
  * +4, maxAngImpulse at +8, maxAngle at +0xc) and hkpBallSocketConstraintAtom
- * (records built by the initializer at 0x80a40: enableLinearImpulseLimit at
- * +5, breachImpulse at +8, inertiaStabilizationFactor at +0xc). The u16 at
- * +0 is the atom's type, which the constructors store. */
+ * (records built by the initializer at 0x80a40: solvingMethod at +2,
+ * bodiesToNotify at +3, velocityStabilizationFactor at +4,
+ * enableLinearImpulseLimit at +5, breachImpulse at +8,
+ * inertiaStabilizationFactor at +0xc). The u16 at +0 is the atom's type,
+ * which the constructors store. */
 struct hkpSetupStabilizationAtom {
     u16 type; /* derived name */
     bool enabled;
@@ -818,7 +816,9 @@ struct hkpSetupStabilizationAtom {
 
 struct hkpBallSocketConstraintAtom {
     u16 type; /* derived name */
-    u8 unknown2[3];
+    u8 solvingMethod;
+    u8 bodiesToNotify;
+    u8 velocityStabilizationFactor;
     bool enableLinearImpulseLimit;
     u8 unknown6[2];
     float breachImpulse;
@@ -920,7 +920,9 @@ struct hkpRagdollMotorConstraintAtom {
  * callback 0x82c70): its member atoms at +0x20 is an
  * hkpRagdollConstraintData::Atoms, 0x180 bytes (record table from 0x169fbb0:
  * transforms at +0, setupStabilization at +0x90, ragdollMotors at +0xa0,
- * angFriction at +0x100, twistLimit at +0x110, coneLimit at +0x130).
+ * angFriction at +0x100, twistLimit at +0x110, coneLimit at +0x130,
+ * planesLimit at +0x150, ballSocket at +0x170). Slots 10 and 13 of its vtable
+ * write and read the ball-socket atom's breach impulse.
  * FUN_0007dfc0, FUN_0007e160 and FUN_0007e0a0 return the three motors (the
  * copy at 0x79740 takes a reference to each through them), FUN_0007dfe0
  * returns one by index; the setters beside them (0x7dff0, 0x7e0b0, 0x7e170)
@@ -932,10 +934,14 @@ class hkpRagdollConstraintData
         u8 transforms[0x90];
         hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
-        u8 unknown100[0x80];
+        u8 unknown100[0x70]; /* angFriction, twistLimit, coneLimit, planesLimit */
+        hkpBallSocketConstraintAtom ballSocket;
     };
 
     virtual ~hkpRagdollConstraintData();
+
+    void FUN_0007dc90(float newBreachImpulse); /* vtable slot 10; derived name */
+    float FUN_0007dca0() const;                /* vtable slot 13; derived name */
 
     hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
@@ -951,7 +957,9 @@ class hkpRagdollConstraintData
  * +0x20) is an hkpBallAndSocketConstraintData::Atoms, 0x50 bytes, with
  * pivots at +0, setupStabilization at +0x30 and ballSocket at +0x40
  * (record table 0x169cab0). Slots 10, 11 and 13 of its vtable read and
- * write the breach impulse and the stabilization's linear impulse limit. */
+ * write the breach impulse and the stabilization's linear impulse limit;
+ * slot 14 (0x7c310) stores 1 << index into bodiesToNotify and slot 15 reads
+ * the index back. */
 class hkpBallAndSocketConstraintData
 {
   public:
@@ -966,6 +974,101 @@ class hkpBallAndSocketConstraintData
     void FUN_0007c2c0(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_0007c300() const;                /* vtable slot 11; derived name */
     float FUN_0007c2d0() const;                /* vtable slot 13; derived name */
+    u8 FUN_0007c320() const;                   /* vtable slot 15; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+/* hkpLimitedHingeConstraintData, polymorphic, 0x130 bytes (type info
+ * 0x57c5878, vtable 0x169bad0, address point 0x169bae0; finish constructor
+ * FUN_00082000): its member atoms at +0x20 is an
+ * hkpLimitedHingeConstraintData::Atoms, 0x110 bytes (record table 0x169f2f0:
+ * transforms at +0, setupStabilization at +0x90, angMotor at +0xa0,
+ * angFriction at +0xc0, angLimit at +0xd0, 2dAng at +0xf0, ballSocket at
+ * +0x100). Slots 10 and 13 of its vtable write and read the ball-socket
+ * atom's breach impulse, as hkpBallAndSocketConstraintData's do. */
+class hkpLimitedHingeConstraintData
+{
+  public:
+    struct Atoms {
+        u8 transforms[0x90];
+        hkpSetupStabilizationAtom setupStabilization;
+        u8 unknownA0[0x60]; /* angMotor, angFriction, angLimit, 2dAng */
+        hkpBallSocketConstraintAtom ballSocket;
+    };
+
+    virtual ~hkpLimitedHingeConstraintData();
+
+    void FUN_000790b0(float newBreachImpulse); /* vtable slot 10; derived name */
+    float FUN_000790c0() const;                /* vtable slot 13; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+/* hkpConstraintData, the constraint data base (hkClass 0x57c45a8, built at
+ * 0x7f444, 0x18 bytes, parent hkReferencedObject; finish constructor
+ * FUN_00082850 stores its vtable 0x169fac0, address point 0x169fad0, whose
+ * slots 5 to 7 and 20 are pure). Slots 8 to 10 default to the empty body
+ * 0x3b640; slots 11 to 13, kept by twenty-odd constraint data vtables,
+ * return the largest float Havok uses (0x7f7fffee) for the linear, angular
+ * and breach impulse limits; slot 15 (0x82bc0) returns 255. */
+class hkpConstraintData : public hkReferencedObject
+{
+  public:
+    float FUN_00082b90() const; /* vtable slot 11; derived name */
+    float FUN_00082ba0() const; /* vtable slot 12; derived name */
+    float FUN_00082bb0() const; /* vtable slot 13; derived name */
+};
+
+/* hkpFixedConstraintData, polymorphic, 0xe0 bytes (type info 0x57c3438,
+ * vtable 0x169c620, address point 0x169c630): its member atoms at
+ * +0x20 is an hkpFixedConstraintData::Atoms, 0xc0 bytes (record table
+ * 0x169bd30: transforms at +0, setupStabilization at +0x90, ballSocket at
+ * +0xa0, ang at +0xb0). Slot 8 (0x7bea0) sets the stabilization's linear
+ * impulse limit and the ball socket's enableLinearImpulseLimit, slot 9 its
+ * angular limit; slots 11 and 12 read the two limits back. */
+class hkpFixedConstraintData
+{
+  public:
+    struct Atoms {
+        u8 transforms[0x90];
+        hkpSetupStabilizationAtom setupStabilization;
+        hkpBallSocketConstraintAtom ballSocket;
+        u8 ang[0x10];
+    };
+
+    virtual ~hkpFixedConstraintData();
+
+    void FUN_0007bec0(float newMaxAngImpulse); /* vtable slot 9; derived name */
+    float FUN_0007bed0() const;                /* vtable slot 11; derived name */
+    float FUN_0007bee0() const;                /* vtable slot 12; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+/* hkpHingeConstraintData, polymorphic, 0xe0 bytes (type info 0x57c42d8,
+ * vtable 0x169d4f0, address point 0x169d500): its member atoms at +0x20 is an
+ * hkpHingeConstraintData::Atoms, 0xc0 bytes (record table 0x169cdd0:
+ * transforms at +0, setupStabilization at +0x90, 2dAng at +0xa0, ballSocket
+ * at +0xb0). Slots 10 and 13 of its vtable write and read the ball-socket
+ * atom's breach impulse. */
+class hkpHingeConstraintData
+{
+  public:
+    struct Atoms {
+        u8 transforms[0x90];
+        hkpSetupStabilizationAtom setupStabilization;
+        u8 unknownA0[0x10]; /* 2dAng */
+        hkpBallSocketConstraintAtom ballSocket;
+    };
+
+    virtual ~hkpHingeConstraintData();
+
+    void FUN_0007efa0(float newBreachImpulse); /* vtable slot 10; derived name */
+    float FUN_0007efb0() const;                /* vtable slot 13; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1339,12 +1442,46 @@ class hknpDefaultExternMeshShapeGeometry
  * FUN_000418b0) returns it. */
 extern const hkClass D_57c2e78; /* hknpCompoundShape's hkClass */
 
+/* Slots 0 to 30 of the vtable at 0x1697910 hold the bodies named below
+ * (slots 2 to 30 by the function each holds; their signatures are not
+ * recovered except slot 3's). Slots 31 and 32 are pure (__cxa_pure_virtual);
+ * slot 31 of hknpStaticCompoundShape (FUN_000d0450) recomputes the shape's
+ * AABB from its tree, hence its name. */
 class hknpCompoundShape
 {
   public:
     virtual ~hknpCompoundShape();
 
-    const hkClass *FUN_000418b0() const; /* vtable slot 3; derived name */
+    virtual void FUN_00000270();                 /* slot 2 */
+    virtual const hkClass *FUN_000418b0() const; /* slot 3; derived name */
+    virtual void FUN_000069a0();                 /* slot 4 */
+    virtual void FUN_0006e3d0();                 /* slot 5 */
+    virtual void FUN_0006e510();                 /* slot 6 */
+    virtual void FUN_00041870();                 /* slot 7 */
+    virtual void FUN_00041890();                 /* slot 8 */
+    virtual void FUN_0006e5b0();                 /* slot 9 */
+    virtual void FUN_0006e650();                 /* slot 10 */
+    virtual void FUN_0006e6f0();                 /* slot 11 */
+    virtual void FUN_0006e790();                 /* slot 12 */
+    virtual void FUN_0006e830();                 /* slot 13 */
+    virtual void FUN_0006e970();                 /* slot 14 */
+    virtual void FUN_0006e8d0();                 /* slot 15 */
+    virtual void FUN_0006ea10();                 /* slot 16 */
+    virtual void FUN_0006eab0();                 /* slot 17 */
+    virtual void FUN_0006eb50();                 /* slot 18 */
+    virtual void FUN_0006ebf0();                 /* slot 19 */
+    virtual void FUN_0006fbd0();                 /* slot 20 */
+    virtual void FUN_000418c0();                 /* slot 21 */
+    virtual void FUN_00041a80();                 /* slot 22 */
+    virtual void FUN_0006f9c0();                 /* slot 23 */
+    virtual void FUN_0006fa60();                 /* slot 24 */
+    virtual void FUN_0006f880();                 /* slot 25 */
+    virtual void FUN_0006f920();                 /* slot 26 */
+    virtual void FUN_000426b0();                 /* slot 27 */
+    virtual void FUN_00041e40();                 /* slot 28 */
+    virtual void FUN_00042300();                 /* slot 29 */
+    virtual void FUN_0003b640();                 /* slot 30 */
+    virtual void updateAabb() = 0;               /* slot 31; derived name */
 };
 
 /* hknpCompositeShape: its hkClass at 0x57c2cf8 (parent 0x57bf1c0) is built by

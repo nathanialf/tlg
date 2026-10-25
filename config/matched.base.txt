@@ -382,3 +382,17 @@ FUN_00036990 src/libs/unknown/func_00036990.cpp
 FUN_00038250 src/libs/unknown/func_00038250.cpp
 FUN_0003c660 src/libs/unknown/leaf_0003c660.cpp
 FUN_00073940 src/libs/unknown/leaf_00073940.cpp
+FUN_000415f0 src/libs/unknown/func_000415f0.cpp
+FUN_000790b0 src/libs/unknown/leaf_000790b0.cpp
+FUN_000790c0 src/libs/unknown/leaf_000790c0.cpp
+FUN_0007bec0 src/libs/unknown/leaf_0007bec0.cpp
+FUN_0007bed0 src/libs/unknown/leaf_0007bed0.cpp
+FUN_0007bee0 src/libs/unknown/leaf_0007bee0.cpp
+FUN_0007c320 src/libs/unknown/leaf_0007c320.cpp
+FUN_0007dc90 src/libs/unknown/leaf_0007dc90.cpp
+FUN_0007dca0 src/libs/unknown/leaf_0007dca0.cpp
+FUN_0007efa0 src/libs/unknown/leaf_0007efa0.cpp
+FUN_0007efb0 src/libs/unknown/leaf_0007efb0.cpp
+FUN_00082b90 src/libs/unknown/leaf_00082b90.cpp
+FUN_00082ba0 src/libs/unknown/leaf_00082ba0.cpp
+FUN_00082bb0 src/libs/unknown/leaf_00082bb0.cpp
