@@ -813,7 +813,7 @@ class hknpWorldObject1d0 /* derived name */
     void *pointer10; /* derived name */
 };
 
-/* hknpBody (reflected, record table at 0x169d350): 0x90 bytes as the
+/* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
 struct hknpBody {
     u8 unknown0[0x68];
@@ -821,7 +821,7 @@ struct hknpBody {
     u8 unknown6c[0x24];
 };
 
-/* hknpMotion (reflected, record table at 0x169c5d0): 0x80 bytes as the
+/* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
  * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
 struct hknpMotion {
     u8 unknown0[0x3e];
@@ -1152,10 +1152,61 @@ class hkpLinearClearanceConstraintData
     struct Atoms;
 };
 
+/* What slot 20 of the constraint data vtables fills (pure in
+ * hkpConstraintData): the size of the runtime the solver keeps for the
+ * constraint and its number of solver results, two ints stored as one 8-byte
+ * constant by the overrides. The callers (0x679b0, 0x17565d) pass a bool
+ * before it and read the second int. Names derived. */
+struct ConstraintRuntimeInfo /* derived name */
+{
+    int sizeOfExternalRuntime; /* derived name */
+    int numSolverResults;      /* derived name */
+};
+
 class hkpPrismaticConstraintData
 {
   public:
     struct Atoms;
+
+    /* vtable 0x169d1f0, address point 0x169d200 (finish constructor
+     * FUN_0007ce10). */
+    virtual ~hkpPrismaticConstraintData();
+
+    void FUN_0007e890(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+/* Polymorphic constraint data classes with no member read yet (vtable
+ * address points; the class names from the type-info registrations of their
+ * finish constructors). hkpPointToPathConstraintData: 0x169bc50 (finish
+ * constructor FUN_0007f120). hkpCogWheelConstraintData: 0x169c2c0
+ * (FUN_0007c9d0). hkpRagdollLimitsData: 0x169c950 (FUN_000788f0); its slot
+ * 20 (0x7c8b0) is also hkpHingeLimitsData's (0x169fef0, FUN_00082250). */
+class hkpPointToPathConstraintData
+{
+  public:
+    virtual ~hkpPointToPathConstraintData();
+
+    void FUN_0007a050(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+class hkpCogWheelConstraintData
+{
+  public:
+    virtual ~hkpCogWheelConstraintData();
+
+    void FUN_0007b590(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+class hkpRagdollLimitsData
+{
+  public:
+    virtual ~hkpRagdollLimitsData();
+
+    void FUN_0007c8b0(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
 /* hkpLimitedHingeConstraintData::Atoms: type info 0x57c57f8, size 0x110,
@@ -1309,6 +1360,8 @@ class hkpRagdollConstraintData
     void FUN_0007dc90(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_0007dca0() const;                /* vtable slot 13; derived name */
     u8 FUN_0007dcd0() const;                   /* vtable slot 15; derived name */
+    void FUN_0007dd00(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
@@ -1341,6 +1394,7 @@ class hkpBallAndSocketConstraintData
     void FUN_0007c2c0(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0007c300() const;                    /* vtable slot 11; derived name */
     float FUN_0007c2d0() const;                    /* vtable slot 13; derived name */
+    void FUN_0007c310(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0007c320() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0007c3d0(float &factorOut) const; /* vtable slot 18; derived name */
 
@@ -1371,6 +1425,8 @@ class hkpLimitedHingeConstraintData
     void FUN_000790b0(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_000790c0() const;                /* vtable slot 13; derived name */
     u8 FUN_000790f0() const;                   /* vtable slot 15; derived name */
+    void FUN_00079210(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1429,12 +1485,39 @@ class hkpConstraintData : public hkReferencedObject
     u8 unknownC[0xc];
 };
 
-/* A bridge atom (derived name): an atom whose +8 holds the function the
- * solver calls with the data at +0x10. Its initializer FUN_0007d030 stores
- * the data and FUN_0007d020, which hands the call on to the data's slot 24;
- * the finish constructors at 0x78610 and 0x7f140 (atoms at +0x20, the data
- * read from +0x30) and the code at 0x79e62 run it. */
+/* hkpBridgeConstraintAtom (records 0x169b7b0, 0x169b7d8): buildJacobianFunc at +8,
+ * the function the solver calls with constraintData at +0x10. Its
+ * initializer FUN_0007d030 stores the data and FUN_0007d020, which hands the
+ * call on to the data's slot 24; the finish constructor runs it when the
+ * object is being finished (hkpBridgeAtoms' callback FUN_00078610, the
+ * finish constructor at 0x7f140 with the atoms at +0x20), and so does the
+ * code at 0x79e62. */
 void FUN_0007d020(hkpConstraintData *data, const void *input, void *output); /* derived name */
+
+struct hkpBridgeConstraintAtom;
+void FUN_0007d030(hkpBridgeConstraintAtom *self, hkpConstraintData *data); /* derived name */
+
+struct hkpBridgeConstraintAtom {
+    hkpBridgeConstraintAtom(hkFinishLoadedObjectFlag flag)
+    {
+        if (flag.finishing) {
+            FUN_0007d030(this, constraintData);
+        }
+    }
+
+    u16 type; /* derived name */
+    u8 unknown2[6];
+    void (*buildJacobianFunc)(hkpConstraintData *data, const void *input, void *output);
+    hkpConstraintData *constraintData;
+};
+
+/* hkpBridgeAtoms (type info 0x57c3038, 0x20 bytes, record 0x169b780): its
+ * bridgeAtom at +0. */
+struct hkpBridgeAtoms {
+    hkpBridgeAtoms(hkFinishLoadedObjectFlag flag) : bridgeAtom(flag) {}
+
+    hkpBridgeConstraintAtom bridgeAtom;
+};
 
 /* hkpWrappedConstraintData (hkClass 0x57c4308, built at 0x7e39e, 0x20 bytes,
  * parent hkpConstraintData; finish constructor FUN_0007d520 stores its
