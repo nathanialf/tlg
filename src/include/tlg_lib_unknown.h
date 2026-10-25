@@ -75,6 +75,14 @@ class AllocatorBase /* derived name */
 {
   public:
     virtual ~AllocatorBase();
+
+    /* Slots 2 and 3 allocate and free a block of a given size; slots 4 and
+     * 5 (FUN_00008d70, FUN_00008d80) are defaults the allocators keep that
+     * forward to them (the layout of Havok's hkMemoryAllocator). */
+    virtual void *blockAlloc(int numBytes) = 0;              /* slot 2; derived name */
+    virtual void blockFree(void *pointer, int numBytes) = 0; /* slot 3; derived name */
+    virtual void *FUN_00008d70(int &numBytes);               /* slot 4; derived name */
+    virtual void FUN_00008d80(void *pointer, int numBytes);  /* slot 5; derived name */
 };
 
 class AllocatorInterface /* derived name */
@@ -128,6 +136,16 @@ class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* d
 };
 
 void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
+
+/* Primary slots 13, 14, 15, 18 and 21 (interface slots 2, 3, 4, 7 and 10),
+ * each run under the spinning mutex at +0x10; reached through the second
+ * base by the thunks 0x32d0, 0x3490, 0x3570, 0x3130 and 0x3700. Slot 15
+ * stores its pointer at +0xb50 and returns 0. */
+void FUN_00003140(TwoBaseAllocator *self);                          /* derived name */
+void FUN_000032e0(TwoBaseAllocator *self, int value);               /* derived name */
+int FUN_000034a0(TwoBaseAllocator *self, void *pointer);            /* derived name */
+int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b);         /* derived name */
+int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
 
 /* Primary slot 20 (interface slot 9): stores its int argument into the
  * global at 0x16dc128 under the spinning mutex at +0x10. */

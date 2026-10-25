@@ -347,3 +347,11 @@ FUN_0019afc0 src/libs/unknown/leaf_0019afc0.cpp
 FUN_00000330 src/libs/unknown/func_00000330.cpp
 FUN_00001fa0 src/libs/unknown/func_00001fa0.cpp
 FUN_00002400 src/libs/unknown/func_00002400.cpp
+FUN_00003130 src/libs/unknown/func_00003130.cpp
+FUN_000032d0 src/libs/unknown/func_000032d0.cpp
+FUN_00003490 src/libs/unknown/func_00003490.cpp
+FUN_00003570 src/libs/unknown/func_00003570.cpp
+FUN_00003700 src/libs/unknown/func_00003700.cpp
+FUN_00008d80 src/libs/unknown/func_00008d80.cpp _ZN13AllocatorBase12FUN_00008d80EPvi
+FUN_0000d520 src/libs/unknown/func_0000d520.cpp
+FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK12Class168d8f012FUN_0000dcb0Ev

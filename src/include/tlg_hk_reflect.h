@@ -85,6 +85,13 @@ struct hkFinishLoadedObjectFlag {
  * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
  * it owned) are out of line. */
 struct hkStringPtr {
+    /* The string without the ownership bit. derived name. */
+    const char *cString() const
+    {
+        return reinterpret_cast<const char *>(reinterpret_cast<hkUlong>(stringAndFlag) &
+                                              ~static_cast<hkUlong>(1));
+    }
+
     const char *stringAndFlag; /* derived name */
 };
 
@@ -99,6 +106,26 @@ void FUN_0000e3d0(hkStringPtr *self); /* derived name */
  * new one (copied through the arena of the thread's block) or null; the
  * constructor at 0xe540 clears the pointer and tail-calls it. */
 void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived name */
+
+/* Assigns a C string: unless it is the one held, drops an owned copy and
+ * stores an owned copy of the new one (or null); returns the pointer. */
+hkStringPtr *FUN_0000e620(hkStringPtr *self, const char *string); /* derived name */
+
+/* A polymorphic class (vtable address point 0x168d8f0, complete destructor
+ * 0xde20) with its name (hkStringPtr, freed by the destructor) at +0x70 and
+ * two reference-counted objects at +0x50 and +0x68 the destructor releases.
+ * Slot 9 (FUN_0000dcb0) returns the name; the body is also slot 20 of
+ * hkMemoryMeshBody, whose name sits at the same offset. */
+class Class168d8f0 /* derived name */
+{
+  public:
+    virtual ~Class168d8f0();
+
+    const char *FUN_0000dcb0() const; /* vtable slot 9; derived name */
+
+    u8 unknown8[0x68];
+    hkStringPtr name; /* derived name */
+};
 
 /* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
  * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot. */
