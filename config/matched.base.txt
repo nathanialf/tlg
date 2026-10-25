@@ -288,3 +288,11 @@ FUN_0016fbd0 src/libs/unknown/leaf_0016fbd0.cpp
 FUN_00175da0 src/libs/unknown/leaf_00175da0.cpp
 FUN_00175e20 src/libs/unknown/leaf_00175e20.cpp
 FUN_0017cf20 src/libs/unknown/leaf_0017cf20.cpp
+FUN_00004b10 src/libs/unknown/leaf_00004b10.cpp _ZN17Allocator00004b1012FUN_00004b10Ev
+FUN_00007730 src/libs/unknown/func_00007730.cpp
+FUN_00007880 src/libs/unknown/leaf_00007880.cpp _ZNK12Pool0000788012FUN_00007880Ev
+FUN_00013890 src/libs/unknown/leaf_00013890.cpp _ZNK11Map0001389012FUN_00013890EPNS_11IteratorTagE
+FUN_00017920 src/libs/unknown/func_00017920.cpp
+FUN_00017f50 src/libs/unknown/func_00017f50.cpp
+FUN_00018180 src/libs/unknown/func_00018180.cpp
+FUN_00018280 src/libs/unknown/leaf_00018280.cpp
