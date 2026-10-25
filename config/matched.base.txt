@@ -377,3 +377,6 @@ FUN_00023150 src/libs/unknown/leaf_00023150.cpp _ZNK16hkMemoryMeshBody12FUN_0002
 FUN_00023170 src/libs/unknown/func_00023170.cpp _ZN16hkMemoryMeshBody12FUN_00023170EPKc
 FUN_0002a910 src/libs/unknown/leaf_0002a910.cpp _ZNK17hkMemoryMeshShape12FUN_0002a910Ev
 FUN_0002a920 src/libs/unknown/func_0002a920.cpp _ZN17hkMemoryMeshShape12FUN_0002a920EPKc
+FUN_000348d0 src/libs/unknown/func_000348d0.cpp
+FUN_00036990 src/libs/unknown/func_00036990.cpp
+FUN_00038250 src/libs/unknown/func_00038250.cpp

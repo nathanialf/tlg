@@ -730,6 +730,10 @@ void FUN_00175a50(hknpDestructionShapeProperties *self,
                   hkFinishLoadedObjectFlag flag);                                /* derived name */
 void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003c540(hknpSphereShape *self, hkFinishLoadedObjectFlag flag);         /* derived name */
+/* Slot 17 of hknpSphereShape's vtable (address point 0x1695c20) returns pi,
+ * hknpCapsuleShape's (0x169b270) pi / 2. */
+float FUN_0003c660(const hknpSphereShape *self);  /* derived name */
+float FUN_00073940(const hknpCapsuleShape *self); /* derived name */
 /* hknpStaticCompoundShape's finish constructor (see the class above). */
 void FUN_000385d0(hknpStaticCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
@@ -827,6 +831,49 @@ inline void *operator new(unsigned long, void *where)
 {
     return where;
 }
+
+/* hknpConstraintCinfo (type info 0x57beab0, size 0x20; its member records
+ * are built at run time by the initializer at 0x36a40): constraintData
+ * (pointer) at +0, bodyA and bodyB (hkUint32) at +8 and +0xc, flags at
+ * +0x10, name (hkStringPtr) at +0x18. Its finish constructor finishes the
+ * name. */
+struct hknpConstraintData;
+
+struct hknpConstraintCinfo {
+    hknpConstraintCinfo(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    hknpConstraintData *constraintData;
+    u32 bodyA;
+    u32 bodyB;
+    u32 flags;
+    hkStringPtr name;
+};
+
+/* hknpBodyCinfo (type info 0x57bedf8, size 0xa0, record table 0x1693bf0):
+ * shape (pointer) at +0, flags (hkInt32) at +8, collisionFilterInfo
+ * (hkUint32) at +0xc, materialId (hkUint16) at +0x10, qualityId (hkUint8) at
+ * +0x12, userData (hkUint64) at +0x18, name (hkStringPtr) at +0x20, then
+ * motionType, position, orientation, velocities, mass and the rest up to
+ * localFrame at +0x90. Its finish constructor finishes the name. */
+struct hknpBodyCinfo {
+    hknpBodyCinfo(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    const hknpShape *shape;
+    s32 flags;
+    u32 collisionFilterInfo;
+    u16 materialId;
+    u8 qualityId;
+    u8 unknown13[5];
+    u64 userData;
+    hkStringPtr name;
+    u8 unknown28[0x78];
+};
 
 /* hkpLinMotorConstraintAtom (type info 0x57c4f40, record table 0x169ef70):
  * isEnabled at +2, motorAxis at +3, initializedOffset and

@@ -52,6 +52,8 @@ void FUN_0002b0b0(Pair08Owner *self);                             /* derived nam
 void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived name */
 void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
 void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
+void FUN_0002b390(Pair08Owner *self,
+                  bool enable); /* derived name: sets or clears bit 2 of the byte at +1 */
 
 /* FUN_000ae6a0 and FUN_000ae810 sit in slots 5 and 9 of one vtable
  * (0x16a3b00): getters of the ints at +0x38 and +0x48. FUN_000ae6a0 also
