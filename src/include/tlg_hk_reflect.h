@@ -789,7 +789,8 @@ typedef unsigned long hkUlong;
  * at 0x1691e80, materialName (hkStringPtr) at +0x10, textures (array of
  * pointers to hkMeshTexture, hkClass 0x57bc990) at +0x18, diffuseColor,
  * ambientColor, specularColor and emissiveColor (hkVector4) from +0x30,
- * userData (hkUlong) at +0x70, tesselationFactor (hkReal) at +0x78. */
+ * userData (hkUlong) at +0x70, tesselationFactor (hkReal) at +0x78,
+ * displacementAmount (hkReal) at +0x7c. */
 class hkMemoryMeshMaterial
 {
   public:
@@ -797,6 +798,10 @@ class hkMemoryMeshMaterial
 
     hkUlong FUN_000acae0() const;           /* vtable slot 17; derived name */
     void FUN_000acaf0(hkUlong newUserData); /* vtable slot 18; derived name */
+    float FUN_000acb00() const;             /* vtable slot 19; derived name */
+    void FUN_000acb10(float factor);        /* vtable slot 20; derived name */
+    float FUN_000acb20() const;             /* vtable slot 21; derived name */
+    void FUN_000acb30(float amount);        /* vtable slot 22; derived name */
 
     u8 unknown8[8];
     hkStringPtr materialName;
@@ -807,6 +812,7 @@ class hkMemoryMeshMaterial
     Vec4 emissiveColor;
     hkUlong userData;
     float tesselationFactor;
+    float displacementAmount;
 };
 
 /* hkMeshTexture (hkClass 0x57bc990), the texture interface, with its three

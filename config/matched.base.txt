@@ -264,3 +264,11 @@ FUN_0007c2c0 src/libs/unknown/leaf_0007c2c0.cpp _ZN30hkpBallAndSocketConstraintD
 FUN_0007c2d0 src/libs/unknown/leaf_0007c2d0.cpp _ZNK30hkpBallAndSocketConstraintData12FUN_0007c2d0Ev
 FUN_0007c300 src/libs/unknown/leaf_0007c300.cpp _ZNK30hkpBallAndSocketConstraintData12FUN_0007c300Ev
 FUN_0007c980 src/libs/unknown/leaf_0007c980.cpp
+FUN_0007e900 src/libs/unknown/leaf_0007e900.cpp
+FUN_00082bc0 src/libs/unknown/leaf_00082bc0.cpp
+FUN_00083050 src/libs/unknown/leaf_00083050.cpp
+FUN_00083190 src/libs/unknown/leaf_00083190.cpp
+FUN_00083330 src/libs/unknown/leaf_00083330.cpp
+FUN_000836a0 src/libs/unknown/leaf_000836a0.cpp
+FUN_00083aa0 src/libs/unknown/leaf_00083aa0.cpp
+FUN_000acb00 src/libs/unknown/leaf_000acb00.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acb00Ev
