@@ -70,7 +70,10 @@ struct Values38Owner {
  * its deleting destructor (slot 1) FUN_00001f90; slot 12 (FUN_00001620)
  * returns the object as its second base. Slot 15 (0x34a0, also reached
  * through the second base by the thunk 0x3570) stores a pointer at +0xb50
- * under the spinning mutex at +0x10; slot 16 (FUN_00003580) reads it. */
+ * under the spinning mutex at +0x10; slot 16 (FUN_00003580) reads it. The
+ * second base's slots 2 to 5 are overridden by primary slots 13 to 16, and
+ * the second base's vtable holds their this-adjusting thunks (0x32d0, 0x3490,
+ * 0x3570, 0x3590). */
 class TwoBaseAllocatorBase
 {
   public:
@@ -81,6 +84,8 @@ class TwoBaseAllocatorInterface
 {
   public:
     virtual ~TwoBaseAllocatorInterface();
+
+    virtual void *FUN_00003580() const = 0; /* slot 5; derived name */
 };
 
 class TwoBaseAllocator : public TwoBaseAllocatorBase, public TwoBaseAllocatorInterface
@@ -89,7 +94,7 @@ class TwoBaseAllocator : public TwoBaseAllocatorBase, public TwoBaseAllocatorInt
     virtual ~TwoBaseAllocator();
     virtual TwoBaseAllocatorInterface *FUN_00001620();
 
-    void *FUN_00003580() const; /* vtable slot 16; derived name */
+    virtual void *FUN_00003580() const; /* vtable slot 16; derived name */
 
     u8 unknown10[0xb40];
     void *pointerB50; /* derived name */
@@ -198,5 +203,26 @@ struct LayoutRules00180ef0 {
 
 struct Layout00180ef0 {
     LayoutRules00180ef0 rules;
+};
+
+/* A polymorphic pool (vtables 0x168cbb0 and 0x16d3390, the second a
+ * game-region class sharing every slot from 2): slot 9 (FUN_00007880)
+ * returns the count at +0x328, the number of 64-byte records that slot 6
+ * (FUN_000076d0) walks after storing the callback FUN_00007730 and its
+ * argument at +0x310. Slot 13 (FUN_000075d0) sets the flag at +0x330, which
+ * the worker loop at 0x7337 tests after each callback; the code at 0x70a1
+ * clears it with the byte after it. */
+class Pool00007880 /* derived name */
+{
+  public:
+    virtual ~Pool00007880();
+
+    int FUN_00007880() const; /* vtable slot 9; derived name */
+    void FUN_000075d0();      /* vtable slot 13; derived name */
+
+    u8 unknown8[0x320];
+    int count; /* derived name */
+    u8 unknown32c[4];
+    bool flag330; /* derived name */
 };
 #endif

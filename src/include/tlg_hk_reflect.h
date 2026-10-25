@@ -947,4 +947,15 @@ class hkMemoryMeshTexture : public hkMeshTexture
     hkEnum<TextureUsageType, s8> usageHint;
     s32 textureCoordChannel;
 };
+
+/* hkOstream: its hkClass at 0x57b7e18 is built by the reflection
+ * initializer at 0x8a7b (name "hkOstream"); slot 3 of the vtables at
+ * 0x168c3b0 and 0x168d110 (FUN_00008a20) returns it. */
+extern const hkClass D_57b7e18; /* hkOstream's hkClass */
+
+class hkOstream
+{
+  public:
+    const hkClass *FUN_00008a20() const; /* vtable slot 3; derived name */
+};
 #endif
