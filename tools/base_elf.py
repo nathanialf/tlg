@@ -159,15 +159,30 @@ class BaseElf:
     # --- symbol resolution ----------------------------------------------------
     @staticmethod
     def base_identifier(sym: str) -> str:
-        """The identifier inside an Itanium-mangled free function name
-        (`_Z12FUN_00470da0P11Owner46b3f0i` -> `FUN_00470da0`); other names
-        unchanged."""
+        """The row identifier inside an Itanium-mangled name: a free function
+        (`_Z12FUN_00470da0P11Owner46b3f0i` -> `FUN_00470da0`) or a member
+        whose last component is a FUN_ or D_ placeholder
+        (`_ZNK19hkMemoryMeshTexture12FUN_000ad770Ev` -> `FUN_000ad770`); other
+        names unchanged."""
         import re
         m = re.match(r"^_Z(\d+)", sym)
         if m:
             n = int(m.group(1))
             start = m.end()
             return sym[start:start + n]
+        m = re.match(r"^_ZN[KVr]*", sym)
+        if m:
+            pos, last = m.end(), None
+            while True:
+                m2 = re.match(r"\d+", sym[pos:])
+                if not m2:
+                    break
+                n = int(m2.group())
+                start = pos + m2.end()
+                last = sym[start:start + n]
+                pos = start + n
+            if last and (last.startswith("FUN_") or last.startswith("D_")):
+                return last
         return sym
 
     def address_of(self, name: str) -> int | None:
