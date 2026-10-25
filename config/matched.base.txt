@@ -408,3 +408,17 @@ FUN_000acf80 src/libs/unknown/func_000acf80.cpp
 FUN_000acf90 src/libs/unknown/leaf_000acf90.cpp
 FUN_000aea20 src/libs/unknown/leaf_000aea20.cpp
 FUN_000aea30 src/libs/unknown/func_000aea30.cpp
+FUN_000b6d10 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp
+FUN_000b6d20 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp
+FUN_0010bf40 src/libs/unknown/leaf_0010bf40.cpp
+FUN_0014e840 src/libs/unknown/func_0014e840.cpp
+FUN_0014ea10 src/libs/unknown/func_0014ea10.cpp
+FUN_0014eed0 src/libs/unknown/func_0014eed0.cpp
+FUN_0014f180 src/libs/unknown/func_0014f180.cpp
+FUN_0014fa40 src/libs/unknown/func_0014fa40.cpp
+FUN_00150230 src/libs/unknown/func_00150230.cpp
+FUN_001550b0 src/libs/unknown/func_001550b0.cpp
+FUN_00155420 src/libs/unknown/func_00155420.cpp
+FUN_00156870 src/libs/unknown/func_00156870.cpp
+FUN_0015bf10 src/libs/unknown/func_0015bf10.cpp
+FUN_0015dcb0 src/libs/unknown/func_0015dcb0.cpp

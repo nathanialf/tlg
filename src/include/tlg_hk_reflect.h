@@ -434,10 +434,22 @@ struct hkcdStaticMeshTreeBase;
 void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00020700(hkcdStaticMeshTreeBase *self);                                /* derived name */
 
+/* hkAabb (hkClass 0x57b9c20): two hkVector4 bounds. Field names derived. */
+struct hkAabb {
+    Vec4 min; /* derived name */
+    Vec4 max; /* derived name */
+};
+
 /* hknpCompressedMeshShapeTree (type info 0x57be2f0, size 0xa0) and the
  * hkcdStaticMeshTree instance it is built on (type info 0x57be570) register
- * one finish callback; the finish constructor is the shared empty body. */
-struct hknpCompressedMeshShapeTree;
+ * one finish callback; the finish constructor is the shared empty body. Its
+ * static tree's domain (hkAabb) is at +0x10, as in every hkcdStaticTree
+ * record table (0x168fde0 to 0x16900e8). */
+struct hknpCompressedMeshShapeTree {
+    u8 unknown0[0x10];
+    hkAabb domain;
+    u8 unknown30[0x70];
+};
 
 void FUN_000a9140(hknpCompressedMeshShapeTree *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
@@ -538,10 +550,28 @@ class hknpDecoratorShape : public hknpShape
  * (0x157ef0: stores its vtable, address point 0x16a48e0, and releases what
  * it holds); hknpMountedBallGun adds nothing to destroy, its slot 0
  * (vtable address point 0x16a5290) jumps to it. */
+/* hknpFirstPersonGun's vtable (address point 0x16a47f0): slots 2 to 4 the
+ * reference-counted object's (0x270, 0x42d0, 0x69a0); slots 5 to 7 and 10
+ * the shared empty body 0xadd50; slot 8 (FUN_00156870) runs slot 10, which
+ * hknpBallGun overrides (0x1584e0: empties what it holds in the world in
+ * its first argument) and hknpProjectileGun too (0x159750); slot 9 (0xacf90)
+ * returns the name (hkStringPtr) at +0x10. */
+struct hknpWorld;
+
 class hknpFirstPersonGun
 {
   public:
     virtual ~hknpFirstPersonGun();
+
+    virtual void FUN_00000270();
+    virtual void FUN_000042d0();
+    virtual void FUN_000069a0();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void FUN_00156870(hknpWorld *world); /* vtable slot 8; derived name */
+    virtual const char *FUN_000acf90() const;    /* vtable slot 9; derived name */
+    virtual void reset(hknpWorld *world);        /* vtable slot 10; derived name */
 };
 
 class hknpBallGun : public hknpFirstPersonGun
@@ -741,7 +771,30 @@ void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag);
 void FUN_0003c540(hknpSphereShape *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 /* Slot 17 of hknpSphereShape's vtable (address point 0x1695c20) returns pi,
  * hknpCapsuleShape's (0x169b270) pi / 2. */
-float FUN_0003c660(const hknpSphereShape *self);  /* derived name */
+float FUN_0003c660(const hknpSphereShape *self); /* derived name */
+
+/* hknpCompressedMeshShapeData (hkClass 0x57be1a0; record table 0x1692b40):
+ * meshTree (hknpCompressedMeshShapeTree) at +0x10, simdTree at +0xb0,
+ * connectivity at +0xc8. */
+struct hknpCompressedMeshShapeData {
+    u8 unknown0[0x10];
+    hknpCompressedMeshShapeTree meshTree;
+};
+
+/* hknpCompressedMeshShape (its records at 0x169aa40: data, a pointer to
+ * hknpCompressedMeshShapeData, at +0x58; quadIsFlat and triangleIsInterior
+ * at +0x60 and +0x78; numTriangles at +0x90): FUN_0010bf40 returns the mesh
+ * tree's domain, which slot 7 of its vtable (0x158840, address point
+ * 0x16a49a0) transforms into the AABB it reports (0x94060). */
+struct hknpCompressedMeshShape {
+    virtual ~hknpCompressedMeshShape();
+
+    const hkAabb *FUN_0010bf40() const; /* derived name */
+
+    u8 unknown8[0x50];
+    hknpCompressedMeshShapeData *data;
+};
+
 float FUN_00073940(const hknpCapsuleShape *self); /* derived name */
 /* hknpStaticCompoundShape's finish constructor (see the class above). */
 void FUN_000385d0(hknpStaticCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */

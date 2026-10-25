@@ -63,4 +63,93 @@ void FUN_000173f0(Class168e810 *self, void *pointer, int count);   /* derived na
 void FUN_00017540(Class168e810 *self, void *pointer, int count);   /* derived name */
 void FUN_00017970(Class168e810 *self, void *pointer, int count);   /* derived name */
 
+/* The interface of the physics world's tasks (derived name): the second
+ * base, at +0x10, of each task class below (an hkReferencedObject first).
+ * Its vtable holds the destructors, then the overriders of the class's
+ * primary slots 5 (the task's work, taking only the task) and 6 (opens the
+ * task's timer, whose name each one loads). Slot 2 of the second vtable is
+ * the this-adjusting thunk of primary slot 5, which is too large to inline
+ * into it; slot 3 is primary slot 6's thunk with the body inlined, folded
+ * with the body itself where the body does not read the object. */
+class hknpTaskInterface /* derived name */
+{
+  public:
+    virtual ~hknpTaskInterface();
+};
+
+/* The task classes (derived names, from their timer names): primary vtable
+ * address point, second vtable address point, primary slot 5. */
+
+/* hknpSolverFactoryTask: vtables 0x16a4090 and 0x16a40d8; slot 6 opens the timer "Solve/SolverFactory". */
+class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpAddActiveBodyPairsTask: vtables 0x16a4110 and 0x16a4158; slot 6 opens the timer "Deactivation/AddActiveBodyPairs". */
+class hknpAddActiveBodyPairsTask : public hkReferencedObject,
+                                   public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpSolveFinalizeTask: vtables 0x16a4190 and 0x16a41d8; slot 6 opens the timer "Solve/Finalize". */
+class hknpSolveFinalizeTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpCleanInactiveCachesTask: vtables 0x16a4210 and 0x16a4258; slot 6 opens the timer "Deactivation/Clean Inactive Caches". */
+class hknpCleanInactiveCachesTask : public hkReferencedObject,
+                                    public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpProcessSecondRoundResultsTask: vtables 0x16a4290 and 0x16a42d8; slot 6 opens the timer "Collide/Process Second Round Results". */
+class hknpProcessSecondRoundResultsTask : public hkReferencedObject,
+                                          public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpProcessFirstRoundResultsTask: vtables 0x16a4310 and 0x16a4358; slot 6 opens the timer "Collide/Process First Round Results". */
+class hknpProcessFirstRoundResultsTask : public hkReferencedObject,
+                                         public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpPrepareConstraintsTask: vtables 0x16a4650 and 0x16a4698; slot 6 opens the timer "Constraints/Prepare". */
+class hknpPrepareConstraintsTask : public hkReferencedObject,
+                                   public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpBuildConstraintsTask: vtables 0x16a46d0 and 0x16a4718; slot 6 opens the timer "Constraints/Build Active" or "Build Activated Constraints". */
+class hknpBuildConstraintsTask : public hkReferencedObject,
+                                 public hknpTaskInterface /* derived name */
+{
+};
+
+/* hknpPrepareNewPairsTask: vtables 0x16a4ce0 and 0x16a4d28; slot 6 opens the timer "Collide/Prepare New Pairs". */
+class hknpPrepareNewPairsTask : public hkReferencedObject,
+                                public hknpTaskInterface /* derived name */
+{
+};
+
+/* The narrow phase's pairs task (derived name; vtables 0x16a4ee0 and
+ * 0x16a4f28): slot 6 opens "Collide/Existing Pairs" or "Collide/New Pairs";
+ * its complete destructor FUN_0015dc50 jumps to FUN_0015dee0, which
+ * restores both vtables and destroys the 0x710-byte records of the array
+ * at +0x108. */
+class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+};
+
+void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */
+void FUN_0014e850(hknpAddActiveBodyPairsTask *self);        /* vtable slot 5; derived name */
+void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; derived name */
+void FUN_0014eee0(hknpCleanInactiveCachesTask *self);       /* vtable slot 5; derived name */
+void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; derived name */
+void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
+void FUN_00154f50(hknpPrepareConstraintsTask *self);        /* vtable slot 5; derived name */
+void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
+void FUN_0015b7a0(hknpPrepareNewPairsTask *self);           /* vtable slot 5; derived name */
+void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
+
 #endif
