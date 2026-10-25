@@ -454,8 +454,42 @@ class hkMeshShape : public hkReferencedObject
 };
 
 /* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
- * hkReferencedObject, 0x10 bytes). */
-class hkMeshVertexBuffer;
+ * hkReferencedObject, 0x10 bytes). Slots 11 to 14, kept by both
+ * hkMultipleVertexBuffer (0x1692000) and hkMemoryMeshVertexBuffer
+ * (0x16921b0), are its defaults: each hands a locked-vertices record, an
+ * element index and an array of values to a function of
+ * hkMeshVertexBufferUtil.cpp. The record (derived name LockedVertices) holds
+ * 24-byte buffer descriptions from +0 and the vertex count at +0x304, as
+ * FUN_000aaaf0 reads it. */
+class hkMeshVertexBuffer
+{
+  public:
+    struct LockedVertices; /* derived name */
+
+    hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
+                          float *values); /* vtable slot 11; derived name */
+    hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
+                          const float *values); /* vtable slot 12; derived name */
+    hkResult FUN_000260c0(const LockedVertices &lockedVertices, int elementIndex,
+                          int *values); /* vtable slot 13; derived name */
+    hkResult FUN_000260d0(const LockedVertices &lockedVertices, int elementIndex,
+                          const int *values); /* vtable slot 14; derived name */
+};
+
+/* The vertex buffer helpers of hkMeshVertexBufferUtil.cpp (the homes row of
+ * FUN_000ab8d0; class name from the file name, derived). */
+class hkMeshVertexBufferUtil /* derived name */
+{
+  public:
+    static hkResult FUN_000aaaf0(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
+                                 int elementIndex, float *values); /* derived name */
+    static hkResult FUN_000aae70(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
+                                 int elementIndex, const float *values); /* derived name */
+    static hkResult FUN_000ab150(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
+                                 int elementIndex, int *values); /* derived name */
+    static hkResult FUN_000ab4f0(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
+                                 int elementIndex, const int *values); /* derived name */
+};
 
 /* hkMeshBody, its parent (hkClass 0x57bd408, built at 0x246ae), a
  * hkReferencedObject with no members of its own. */
@@ -617,7 +651,17 @@ class hknpScaledConvexShape
  * line (0x6fb50: restores the vtable, releases the properties at +0x20). */
 /* Its vtable's address point is 0x169ad30. Slots 8, 9 and 13 return 0 by
  * default (slot 8 the shared 0x42d0; slots 9 and 13, 0x6e5b0 and 0x6e830,
- * after reporting "Not implemented" from hknpShape.cpp). */
+ * after reporting "Not implemented" from hknpShape.cpp). The other defaults
+ * from slot 7 to 20 report the same; what they return (nothing, 0, or 0.0f
+ * for slot 17) gives the return types, and the arguments are those the
+ * overrides of hknpSphereShape (address point 0x1695c20) read: slot 7 a
+ * transform's rows from %rsi, slot 11 a direction from %rsi, slot 12 bytes
+ * from %rsi, a count in %edx and three vectors stored through %rcx, slot 14
+ * a face index in %esi, a plane stored through %rdx and a byte through
+ * %rcx, slot 15 the same index and plane and four vertices through %rcx
+ * (returning 4). Slot 10 returns the shape's vertex array without reading
+ * its arguments; the decorator's forward (a loaded `jmpq *%rax`, cookbook
+ * 19) shows it has some. Argument names derived. */
 class hknpShape
 {
   public:
@@ -628,32 +672,52 @@ class hknpShape
     virtual void FUN_000069a0();
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
+    virtual void unknownVirtual7(const Mat4 &transform, Vec4 *boundsOut) const;
     virtual int unknownVirtual8() const;
     virtual int unknownVirtual9() const;
-    virtual void unknownVirtual10();
-    virtual void unknownVirtual11();
-    virtual void unknownVirtual12();
+    virtual const Vec4 *unknownVirtual10(Vec4 *buffer, int bufferSize) const;
+    virtual void unknownVirtual11(const Vec4 &direction, Vec4 *vertexOut) const;
+    virtual void unknownVirtual12(const u8 *ids, int numIds, Vec4 *verticesOut) const;
     virtual int unknownVirtual13() const;
+    virtual void unknownVirtual14(int faceIndex, Vec4 *planeOut, u8 *valueOut) const;
+    virtual int unknownVirtual15(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut) const;
+    virtual void unknownVirtual16();
+    virtual float unknownVirtual17() const;
+    virtual void unknownVirtual18();
+    virtual void unknownVirtual19();
+    virtual int unknownVirtual20() const;
 };
 
 /* hknpDecoratorShape (type info 0x57bf020, vtable 0x16958d0 stored by its
  * finish constructor FUN_0003b0f0, which runs hknpShape's first): adds
- * nothing to destroy. It wraps a shape at +0x28, and slots 7 to 29 of its
- * vtable (address point 0x16958e0) forward to the same slot of that shape
- * (0x3b120 to 0x3b270; slot 22 is 0x37e80); FUN_0003b280, FUN_0003b130 and
- * FUN_0003b170 are slots 8, 9 and 13. */
+ * nothing to destroy. It wraps a shape, its member coreShape (record at
+ * 0x1694240: a pointer at +0x28), and slots 7 to 29 of its vtable (address
+ * point 0x16958e0) forward to the same slot of that shape (0x3b120 to
+ * 0x3b270; slot 22 is 0x37e80); hknpMaskedShape (0x1693a90) keeps them. */
 class hknpDecoratorShape : public hknpShape
 {
   public:
     virtual ~hknpDecoratorShape();
 
-    int FUN_0003b280() const; /* vtable slot 8; derived name */
-    int FUN_0003b130() const; /* vtable slot 9; derived name */
-    int FUN_0003b170() const; /* vtable slot 13; derived name */
+    void FUN_0003b120(const Mat4 &transform,
+                      Vec4 *boundsOut) const;                     /* vtable slot 7; derived name */
+    int FUN_0003b280() const;                                     /* vtable slot 8; derived name */
+    int FUN_0003b130() const;                                     /* vtable slot 9; derived name */
+    const Vec4 *FUN_0003b140(Vec4 *buffer, int bufferSize) const; /* vtable slot 10; derived name */
+    void FUN_0003b150(const Vec4 &direction,
+                      Vec4 *vertexOut) const; /* vtable slot 11; derived name */
+    void FUN_0003b160(const u8 *ids, int numIds,
+                      Vec4 *verticesOut) const; /* vtable slot 12; derived name */
+    int FUN_0003b170() const;                   /* vtable slot 13; derived name */
+    void FUN_0003b180(int faceIndex, Vec4 *planeOut,
+                      u8 *valueOut) const; /* vtable slot 14; derived name */
+    int FUN_0003b190(int faceIndex, Vec4 *planeOut,
+                     Vec4 *verticesOut) const; /* vtable slot 15; derived name */
+    float FUN_0003b1c0() const;                /* vtable slot 17; derived name */
+    int FUN_0003b1f0() const;                  /* vtable slot 20; derived name */
 
     u8 unknown8[0x20];
-    hknpShape *childShape; /* derived name */
+    hknpShape *coreShape;
 };
 
 /* hknpFirstPersonGun, hknpBallGun and hknpMountedBallGun, each finish
