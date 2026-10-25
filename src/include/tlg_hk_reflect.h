@@ -662,7 +662,64 @@ class hknpDecoratorShape : public hknpShape
  * hknpBallGun overrides (0x1584e0: empties what it holds in the world in
  * its first argument) and hknpProjectileGun too (0x159750); slot 9 (0xacf90)
  * returns the name (hkStringPtr) at +0x10. */
-struct hknpWorld;
+/* hknpWorld (the name of its source file, hknpWorld.cpp, which the homed
+ * FUN_0004d0a0 asserts in; the class name is derived from it): its
+ * constructor FUN_00048b20 builds the 0x570-byte object at +0x1b8
+ * (constructor FUN_00066230; a derived name below, from what it holds), and
+ * sets the collision filter of the world's description (+0xa8 of it) there
+ * through FUN_000667b0, which keeps a reference to the new filter at +0x568
+ * and releases the old one. FUN_0004bcc0 forwards to it. */
+struct hknpCollisionFilter; /* derived name */
+
+class hknpModifierManager /* derived name */
+{
+  public:
+    void FUN_000667b0(hknpCollisionFilter *filter); /* derived name */
+};
+
+/* The reference-counted object at +0x6c8 (set by the constructor at
+ * 0x49619) hands out the signals of world events (derived names):
+ * FUN_0006bdf0 the signal of an event type for one body (hknpCharacterProxy
+ * subscribes to type 1 of its own body at 0x1766d8 and 0x176bc8),
+ * FUN_0006bf60 the signal of an event type for all (type 2 at 0x1596f5),
+ * each created on first use. FUN_0004fbd0 and FUN_0004fbe0 forward to
+ * them. */
+struct hknpEventSignal; /* derived name */
+
+class hknpEventDispatcher /* derived name */
+{
+  public:
+    hknpEventSignal *FUN_0006bdf0(int eventType, int bodyId); /* derived name */
+    hknpEventSignal *FUN_0006bf60(int eventType);             /* derived name */
+};
+
+/* The polymorphic object at +0x1d0 of the world (derived name), one of two
+ * classes picked by the byte at +0x50 of the world's description: when it
+ * is 1, a 0x1a0-byte one (constructor FUN_00150240, vtable address point
+ * 0x16a4390), otherwise a 0x20-byte one (vtable address point 0x169acb0);
+ * both start with a null pointer at +0x10, which FUN_00051610 returns. */
+class hknpWorldObject1d0 /* derived name */
+{
+  public:
+    virtual ~hknpWorldObject1d0();
+
+    u8 unknown8[8];
+    void *pointer10; /* derived name */
+};
+
+struct hknpWorld {
+    void FUN_0004bcc0(hknpCollisionFilter *filter);           /* derived name */
+    void *FUN_00051610() const;                               /* derived name */
+    hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
+    hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
+
+    u8 unknown0[0x1b8];
+    hknpModifierManager *modifierManager; /* derived name */
+    u8 unknown1c0[0x10];
+    hknpWorldObject1d0 *object1d0; /* derived name */
+    u8 unknown1d8[0x4f0];
+    hknpEventDispatcher *eventDispatcher; /* derived name */
+};
 
 class hknpFirstPersonGun
 {
@@ -1118,6 +1175,7 @@ class hkpRagdollConstraintData
 
     void FUN_0007dc90(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_0007dca0() const;                /* vtable slot 13; derived name */
+    u8 FUN_0007dcd0() const;                   /* vtable slot 15; derived name */
 
     hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
@@ -1178,6 +1236,7 @@ class hkpLimitedHingeConstraintData
 
     void FUN_000790b0(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_000790c0() const;                /* vtable slot 13; derived name */
+    u8 FUN_000790f0() const;                   /* vtable slot 15; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1251,6 +1310,7 @@ class hkpFixedConstraintData
     void FUN_0007bec0(float newMaxAngImpulse); /* vtable slot 9; derived name */
     float FUN_0007bed0() const;                /* vtable slot 11; derived name */
     float FUN_0007bee0() const;                /* vtable slot 12; derived name */
+    u8 FUN_0007bf10() const;                   /* vtable slot 15; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1276,6 +1336,7 @@ class hkpHingeConstraintData
 
     void FUN_0007efa0(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_0007efb0() const;                /* vtable slot 13; derived name */
+    u8 FUN_0007efe0() const;                   /* vtable slot 15; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -1302,6 +1363,7 @@ class hkp6DofConstraintData
 
     void FUN_0017b910(float newBreachImpulse); /* vtable slot 10; derived name */
     float FUN_0017b920() const;                /* vtable slot 13; derived name */
+    u8 FUN_0017b950() const;                   /* vtable slot 15; derived name */
 
     u8 unknown8[0x18];
     Blueprints blueprints;

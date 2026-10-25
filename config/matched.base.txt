@@ -486,3 +486,12 @@ FUN_0000e540 src/libs/unknown/func_0000e540.cpp
 FUN_00017fd0 src/libs/unknown/func_00017fd0.cpp
 FUN_000230e0 src/libs/unknown/leaf_000230e0.cpp _ZNK16hkMemoryMeshBody12FUN_000230e0Ei
 FUN_000acfb0 src/libs/unknown/leaf_000acfb0.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acfb0Ei
+FUN_0004bcc0 src/libs/havok/Physics/Physics/Dynamics/World/hknpWorld.cpp
+FUN_0004fbd0 src/libs/havok/Physics/Physics/Dynamics/World/hknpWorld.cpp
+FUN_0004fbe0 src/libs/havok/Physics/Physics/Dynamics/World/hknpWorld.cpp
+FUN_00051610 src/libs/havok/Physics/Physics/Dynamics/World/hknpWorld.cpp
+FUN_000790f0 src/libs/unknown/leaf_000790f0.cpp _ZNK29hkpLimitedHingeConstraintData12FUN_000790f0Ev
+FUN_0007bf10 src/libs/unknown/leaf_0007bf10.cpp _ZNK22hkpFixedConstraintData12FUN_0007bf10Ev
+FUN_0007dcd0 src/libs/unknown/leaf_0007dcd0.cpp _ZNK24hkpRagdollConstraintData12FUN_0007dcd0Ev
+FUN_0007efe0 src/libs/unknown/leaf_0007efe0.cpp _ZNK22hkpHingeConstraintData12FUN_0007efe0Ev
+FUN_0017b950 src/libs/unknown/leaf_0017b950.cpp _ZNK21hkp6DofConstraintData12FUN_0017b950Ev
