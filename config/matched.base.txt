@@ -306,3 +306,4 @@ FUN_00180ee0 src/libs/unknown/leaf_00180ee0.cpp
 FUN_00003580 src/libs/unknown/leaf_00003580.cpp _ZNK16TwoBaseAllocator12FUN_00003580Ev
 FUN_00003590 src/libs/unknown/leaf_00003580.cpp _ZThn8_NK16TwoBaseAllocator12FUN_00003580Ev
 FUN_000075d0 src/libs/unknown/leaf_000075d0.cpp _ZN12Pool0000788012FUN_000075d0Ev
+FUN_00008a20 src/libs/unknown/leaf_00008a20.cpp

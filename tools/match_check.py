@@ -8,7 +8,9 @@ the linked bytes at the function's address (config/functions.<slug>.txt).
 Both are disassembled (capstone) and compared instruction by instruction;
 where the object's instruction carries a relocation, the field the linker
 fills (a RIP-relative displacement, a call target, a GOT or PLT slot) is
-masked on both sides, and nothing else is. The score is the share of
+masked on both sides, and nothing else is; a GOT load of a symbol the
+executable defines is first relaxed to the `lea` the linker made of it
+(docs/DECISIONS.md D10). The score is the share of
 instructions equal after masking, over the longer of the two streams: 1.0 is
 a match. The masked fields are then checked for real where the base can
 place the symbol: a call to FUN_x must encode, in the base, the address of
@@ -139,13 +141,44 @@ def object_bytes_of(obj: Path, section_index: int, value: int, size: int) -> byt
 
 def resolve_symbol(objfuncs: dict, fn: str, sym: str) -> str | None:
     """The object's symbol for a row: `sym` itself, or, failing that, the one
-    Itanium-mangled symbol whose base identifier is `fn` (so a FUN_<addr> row
-    needs no symbol column while its signature is a guess)."""
+    Itanium-mangled symbol whose base identifier is `fn` (a free function or
+    a member whose last component is the FUN_ placeholder), so a FUN_<addr>
+    row needs no symbol column while its signature is a guess."""
     if sym in objfuncs:
         return sym
-    pat = re.compile(rf"^_Z{len(fn)}{re.escape(fn)}")
-    hits = [s for s in objfuncs if pat.match(s)]
+    from base_elf import BaseElf
+    hits = [s for s in objfuncs if BaseElf.base_identifier(s) == fn]
     return hits[0] if len(hits) == 1 else None
+
+
+GOTPCREL_TYPES = (9, 41, 42)        # R_X86_64_GOTPCREL, GOTPCRELX, REX_GOTPCRELX
+
+
+def relaxable_got_load(code: bytes, r) -> bool:
+    """True when `r` is a GOTPCREL relocation on `mov r64, [rip+disp32]`
+    (REX.W 8B /r with mod=00 rm=101), the form the linker relaxed to
+    `lea r64, [rip+disp32]` for every symbol defined in the executable
+    (docs/DECISIONS.md D10)."""
+    k = r.offset
+    return (r.type in GOTPCREL_TYPES and k >= 3 and code[k - 2] == 0x8B
+            and (code[k - 1] & 0xC7) == 0x05 and (code[k - 3] & 0xF8) == 0x48)
+
+
+def relax_got_loads(code: bytes, relocs, base) -> tuple[bytes, set]:
+    """The linker's mov-to-lea relaxation applied to the object: a GOT load of
+    a symbol that is not an import (the base has GOT slots for imports only)
+    becomes the lea the base holds. Returns the relaxed bytes and the offsets
+    of the relocations that now verify as PC32."""
+    out = bytearray(code)
+    relaxed = set()
+    if base is None:
+        return code, relaxed
+    slots = base.got_slots()
+    for r in relocs:
+        if relaxable_got_load(code, r) and r.symbol not in slots:
+            out[r.offset - 2] = 0x8D
+            relaxed.add(r.offset)
+    return bytes(out), relaxed
 
 
 def disasm(code: bytes, base: int):
@@ -154,7 +187,8 @@ def disasm(code: bytes, base: int):
     return list(md.disasm(code, base))
 
 
-def verify_targets(relocs, base_bytes: bytes, base_addr: int, base) -> tuple[list[str], int]:
+def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
+                   relaxed: set | None = None) -> tuple[list[str], int]:
     """For every relocation whose symbol the base can place (a function of the
     table, a D_<hex> label, an import's PLT stub), compute the target the
     base's own displacement encodes and compare. Returns (mismatches,
@@ -171,9 +205,9 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base) -> tuple[lis
             continue
         P = base_addr + r.offset
         disp = _st.unpack_from("<i", base_bytes, r.offset)[0]
-        if r.type in (2, 4):            # PC32, PLT32
+        if r.type in (2, 4) or (relaxed and r.offset in relaxed):   # PC32, PLT32, relaxed GOT load
             actual = disp + P - r.addend
-        elif r.type in (9, 41, 42):     # GOTPCREL*: the GOT slot, not the symbol
+        elif r.type in GOTPCREL_TYPES:  # GOTPCREL*: the GOT slot, not the symbol
             slot = base.got_slots().get(r.symbol)
             if slot is None:
                 unverified += 1
@@ -191,6 +225,7 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base) -> tuple[lis
 
 
 def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int, base=None) -> dict:
+    obj_bytes, relaxed = relax_got_loads(obj_bytes, relocs, base)
     a = disasm(obj_bytes, 0)
     b = disasm(base_bytes, base_addr)
     n = max(len(a), len(b))
@@ -213,7 +248,7 @@ def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int, base=No
         if not ok and first_diff is None:
             first_diff = i
         rows.append((ok, ia, ib))
-    bad_targets, unverified = verify_targets(relocs, base_bytes, base_addr, base) if relocs else ([], 0)
+    bad_targets, unverified = verify_targets(relocs, base_bytes, base_addr, base, relaxed) if relocs else ([], 0)
     return {"obj_insns": len(a), "base_insns": len(b), "equal": equal,
             "score": (equal / n) if n else 1.0, "first_diff": first_diff, "rows": rows,
             "obj_size": len(obj_bytes), "base_size": len(base_bytes),

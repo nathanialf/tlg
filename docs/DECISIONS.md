@@ -263,3 +263,33 @@ an audit shows a new spelling; the test does not change.
 that the checker refuses (an alignment or packing attribute, a real
 `volatile`); it is allowed by evidence in `tools/dev_native_allow.txt`, or
 the rule is loosened for that construct with its evidence recorded here.
+
+## D10. The linker's GOT-load relaxation is reproduced in the gate (2026-10-25)
+
+**Decision.** A `mov r64, [rip+sym@GOTPCREL]` in a compiled object whose
+symbol is not an import (the base has no GOT slot for it) is compared and
+laid out as the `lea r64, [rip+sym]` the linker made of it:
+`tools/match_check.py` rewrites the opcode (8B to 8D) before disassembling
+and verifies the field as PC32 (S + A - P); `tools/layout_link.py` writes
+the same bytes into the rebuilt segment. A GOT load of an import keeps its
+slot as before; a GOTPCREL relocation on any other instruction form is an
+error, not relaxed.
+
+**Why.** Both compilers emit a GOT-relative load for every default-visibility
+global that is not local to the TU (LLVM 3.3 `X86Subtarget.cpp:85`,
+`ClassifyGlobalReference`, under `-fPIC`); there is no source form that
+makes the compiler emit `lea` for an object another TU defines short of a
+visibility attribute, which is a crutch. The executable, measured whole on
+2026-10-25: 12,871 RIP-relative 64-bit loads land in the GOT range, reading 7
+distinct slots, all imports' (the stack guard accounts for most); the GOT's
+named slots are the 507 imports; 188,454 RIP-relative `lea` reach every
+other global; no symbol the executable defines has a GOT slot. The linker
+therefore relaxed every such load, the mov-to-lea relaxation GNU ld (2.26+)
+and lld perform. The first function to need it: `FUN_00008a20`, hkOstream's
+reflected-class getter (`lea rax, [rip+0x57b7e18]; ret`), one of 18 of its
+shape in round 8's queue.
+
+**Trigger to revisit.** A load through a GOT slot of a symbol the executable
+defines anywhere in the base (none found), or a relaxed form other than
+mov-to-lea (a `call *[rip+slot]` to `addr32 call`) that a function needs.
+
