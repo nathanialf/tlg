@@ -126,10 +126,25 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
  * free (slot 3, 0x133e0) subtracts both. Primary slots 13 to 18 override the
  * interface's slots 2 to 7, slot 19 its slot 10, slot 20 (FUN_00012e20) its
  * slot 8 and slot 21 its slot 9. */
+/* Each block of LargeBlockAllocator sits after a 0x20-byte chunk header
+ * whose second word holds the chunk's size, with flags in its low two bits
+ * (derived names). */
+struct LargeBlockChunk /* derived name */
+{
+    u64 prevFoot;          /* derived name */
+    u64 head;              /* derived name */
+    LargeBlockChunk *next; /* derived name */
+    LargeBlockChunk *prev; /* derived name */
+};
+
 class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
 {
   public:
     virtual ~LargeBlockAllocator();
+
+    /* Slot 10 (Havok's getAllocatedSize): the usable size of a block, its
+     * chunk's size less the header. */
+    int FUN_00013500(const void *pointer, int numBytes) const; /* derived name */
 
     virtual u64 allocatedBytes() const; /* vtable slot 20, FUN_00012e20; derived name */
 
@@ -154,6 +169,26 @@ int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived n
  * reached through the second base by the thunks 0x133d0 and 0x13190. */
 void FUN_000131a0(LargeBlockAllocator *self);                          /* derived name */
 int FUN_00013060(LargeBlockAllocator *self, void *pointer, int value); /* derived name */
+
+/* A reference-counted allocator of 4096-byte pages (vtable address point
+ * 0x168e8f0; constructor FUN_000195c0: a lock at +0x10, an array of every
+ * page at +0x20, an array of free pages at +0x30, the peak of the bytes in
+ * use at +0x40; FUN_00019640 allocates the pages, 128-byte aligned, and adds
+ * each to both arrays). Slot 5 (0x198a0) hands out pages, growing by at
+ * least slot 9's amount, and updates the peak from slot 7; slot 6 (0x199f0)
+ * takes them back; slot 8 (0xb670) returns the peak. */
+class PageAllocator : public hkReferencedObject /* derived name */
+{
+  public:
+    enum { PAGE_SIZE = 4096 }; /* derived name */
+
+    int FUN_00019b30() const; /* vtable slot 7; derived name */
+    int FUN_00019b50() const; /* vtable slot 9; derived name */
+
+    u8 unknownC[0x14];
+    hkArray<void *> pages;     /* derived name */
+    hkArray<void *> freePages; /* derived name */
+};
 
 /* A global state word (derived name) and its setter FUN_00006640: the
  * allocation paths at 0x2958 and 0x2bde (TwoBaseAllocator's: the byte count

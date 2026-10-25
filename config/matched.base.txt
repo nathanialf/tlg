@@ -8,7 +8,7 @@ FUN_000104b0 src/libs/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord
 FUN_00004450 src/libs/unknown/leaf_00004450.cpp _Z12FUN_00004450P6Pool40i
 FUN_00011320 src/libs/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
 FUN_00014af0 src/libs/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
-FUN_0000df30 src/libs/unknown/leaf_0000df30.cpp _Z12FUN_0000df30PK12MatrixHolderP4Mat4
+FUN_0000df30 src/libs/unknown/leaf_0000df30.cpp _ZNK18hkSimpleLocalFrame12FUN_0000df30ER4Mat4
 FUN_000137c0 src/libs/unknown/leaf_000137c0.cpp _Z12FUN_000137c0P4Mat4PKS_
 FUN_0000bc30 src/libs/unknown/func_0000bc30.cpp _Z12FUN_0000bc30P5Arenai
 FUN_00017a60 src/libs/unknown/func_00017a60.cpp _Z12FUN_00017a60P10Owner17a60
@@ -57,7 +57,7 @@ FUN_00004580 src/libs/unknown/leaf_00004580.cpp
 FUN_00004590 src/libs/unknown/leaf_00004590.cpp
 FUN_0000b660 src/libs/unknown/leaf_0000b660.cpp
 FUN_0000b670 src/libs/unknown/leaf_0000b670.cpp
-FUN_0000e160 src/libs/unknown/leaf_0000e160.cpp
+FUN_0000e160 src/libs/unknown/leaf_0000e160.cpp _ZNK18hkSimpleLocalFrame12FUN_0000e160Ev
 FUN_00010650 src/libs/unknown/leaf_00010650.cpp
 FUN_00011e00 src/libs/unknown/leaf_00011e00.cpp
 FUN_00013e90 src/libs/unknown/leaf_00013e90.cpp
@@ -296,7 +296,7 @@ FUN_00017920 src/libs/unknown/func_00017920.cpp
 FUN_00017f50 src/libs/unknown/func_00017f50.cpp
 FUN_00018180 src/libs/unknown/func_00018180.cpp
 FUN_00018280 src/libs/unknown/leaf_00018280.cpp
-FUN_00019b50 src/libs/unknown/leaf_00019b50.cpp _ZNK21PageAllocator00019b5012FUN_00019b50Ev
+FUN_00019b50 src/libs/unknown/leaf_00019b50.cpp _ZNK13PageAllocator12FUN_00019b50Ev
 FUN_00024bf0 src/libs/unknown/leaf_00024bf0.cpp _ZNK22hkMultipleVertexBuffer12FUN_00024bf0Ev
 FUN_00027290 src/libs/unknown/leaf_00027290.cpp _ZNK24hkMemoryMeshVertexBuffer12FUN_00027290Ev
 FUN_00069400 src/libs/unknown/leaf_00069400.cpp
@@ -354,7 +354,7 @@ FUN_00003570 src/libs/unknown/func_00003570.cpp
 FUN_00003700 src/libs/unknown/func_00003700.cpp
 FUN_00008d80 src/libs/unknown/func_00008d80.cpp _ZN13AllocatorBase12FUN_00008d80EPvi
 FUN_0000d520 src/libs/unknown/func_0000d520.cpp
-FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK12Class168d8f012FUN_0000dcb0Ev
+FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK18hkSimpleLocalFrame12FUN_0000dcb0Ev
 FUN_00010680 src/libs/unknown/leaf_00010680.cpp
 FUN_00013190 src/libs/unknown/func_00013190.cpp
 FUN_000133d0 src/libs/unknown/func_000133d0.cpp
@@ -439,3 +439,11 @@ FUN_00006640 src/libs/unknown/leaf_00006640.cpp
 FUN_000076c0 src/libs/unknown/func_000076c0.cpp
 FUN_000089e0 src/libs/unknown/func_000089e0.cpp _ZN9hkOstream12FUN_000089e0Ev
 FUN_00009c10 src/libs/unknown/leaf_00009c10.cpp
+FUN_0000abf0 src/libs/unknown/func_0000abf0.cpp _ZNK10hkOArchive12FUN_0000abf0Ev
+FUN_0000df90 src/libs/unknown/leaf_0000df90.cpp _ZNK18hkSimpleLocalFrame12FUN_0000df90ERDv4_f
+FUN_00013500 src/libs/unknown/func_00013500.cpp _ZNK19LargeBlockAllocator12FUN_00013500EPKvi
+FUN_00019b30 src/libs/unknown/leaf_00019b30.cpp _ZNK13PageAllocator12FUN_00019b30Ev
+FUN_0003b280 src/libs/unknown/func_0003b280.cpp _ZNK18hknpDecoratorShape12FUN_0003b280Ev
+FUN_0003b130 src/libs/unknown/func_0003b130.cpp _ZNK18hknpDecoratorShape12FUN_0003b130Ev
+FUN_0003b170 src/libs/unknown/func_0003b170.cpp _ZNK18hknpDecoratorShape12FUN_0003b170Ev
+FUN_00045ad0 src/libs/unknown/func_00045ad0.cpp _ZNK15hknpConvexShape12FUN_00045ad0Ev

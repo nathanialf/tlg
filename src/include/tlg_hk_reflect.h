@@ -139,22 +139,6 @@ void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived
  * stores an owned copy of the new one (or null); returns the pointer. */
 hkStringPtr *FUN_0000e620(hkStringPtr *self, const char *string); /* derived name */
 
-/* A polymorphic class (vtable address point 0x168d8f0, complete destructor
- * 0xde20) with its name (hkStringPtr, freed by the destructor) at +0x70 and
- * two reference-counted objects at +0x50 and +0x68 the destructor releases.
- * Slot 9 (FUN_0000dcb0) returns the name; the body is also slot 20 of
- * hkMemoryMeshBody, whose name sits at the same offset. */
-class Class168d8f0 /* derived name */
-{
-  public:
-    virtual ~Class168d8f0();
-
-    const char *FUN_0000dcb0() const; /* vtable slot 9; derived name */
-
-    u8 unknown8[0x68];
-    hkStringPtr name; /* derived name */
-};
-
 /* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
  * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot. */
 class hkMonitorStreamColorTable
@@ -211,21 +195,30 @@ struct hkRefCountedProperties;
 void FUN_0001c1e0(hkRefCountedProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0001c1f0(hkRefCountedProperties *self);                                /* derived name */
 
-/* hkSimpleLocalFrame, polymorphic (vtable 0x168d8f0, stored by its finish
- * callback 0x37f0): members from its record table at 0x168c7d0, transform
- * (type 0x12) at +0x10, children (array of pointers) at +0x50, parentFrame
- * (pointer) at +0x60, group (pointer) at +0x68, name (hkStringPtr) at +0x70.
- * FUN_0000df30 copies the transform out, FUN_0000e160 reads the child count
- * at +0x58. */
+/* hkSimpleLocalFrame, polymorphic (vtable 0x168d8e0, address point
+ * 0x168d8f0, stored by its finish callback 0x37f0; complete destructor
+ * 0xde20, which releases the children and the group and frees the name):
+ * members from its record table at 0x168c7d0, transform (type 0x12) at
+ * +0x10, children (array of pointers) at +0x50, parentFrame (pointer) at
+ * +0x60, group (pointer) at +0x68, name (hkStringPtr) at +0x70. Slots 5 to
+ * 7 (FUN_0000df30, 0xdf60, FUN_0000df90) copy the transform out and in and
+ * the translation row out, slot 9 (FUN_0000dcb0) returns the name (also
+ * slot 20 of hkMemoryMeshBody, whose name sits at the same offset), slots
+ * 10 and 11 read and set the parent frame, slot 12 (FUN_0000e160) returns
+ * the child count. */
 struct hkLocalFrame;
 struct hkLocalFrameGroup;
 
-class hkSimpleLocalFrame
+class hkSimpleLocalFrame : public hkReferencedObject
 {
   public:
-    virtual ~hkSimpleLocalFrame();
+    void FUN_0000df30(Mat4 &out) const;      /* vtable slot 5; derived name */
+    void FUN_0000df90(Vec4 &position) const; /* vtable slot 7; derived name */
+    const char *FUN_0000dcb0() const;        /* vtable slot 9; derived name */
+    int FUN_0000e160() const;                /* vtable slot 12; derived name */
 
-    u8 unknown8[0x58];
+    Mat4 transform;
+    hkArray<hkLocalFrame *> children;
     hkLocalFrame *parentFrame;
     hkLocalFrameGroup *group;
     hkStringPtr name;
@@ -529,19 +522,45 @@ class hknpScaledConvexShape
 /* hknpShape, polymorphic (type info 0x57bf210, vtable 0x169ad20 stored by
  * its finish constructor FUN_0006fa90): its destructor, slot 0, is out of
  * line (0x6fb50: restores the vtable, releases the properties at +0x20). */
+/* Its vtable's address point is 0x169ad30. Slots 8, 9 and 13 return 0 by
+ * default (slot 8 the shared 0x42d0; slots 9 and 13, 0x6e5b0 and 0x6e830,
+ * after reporting "Not implemented" from hknpShape.cpp). */
 class hknpShape
 {
   public:
     virtual ~hknpShape();
+
+    virtual void FUN_00000270();
+    virtual void FUN_000042d0();
+    virtual void FUN_000069a0();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual int unknownVirtual8() const;
+    virtual int unknownVirtual9() const;
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    virtual int unknownVirtual13() const;
 };
 
 /* hknpDecoratorShape (type info 0x57bf020, vtable 0x16958d0 stored by its
  * finish constructor FUN_0003b0f0, which runs hknpShape's first): adds
- * nothing to destroy. */
+ * nothing to destroy. It wraps a shape at +0x28, and slots 7 to 29 of its
+ * vtable (address point 0x16958e0) forward to the same slot of that shape
+ * (0x3b120 to 0x3b270; slot 22 is 0x37e80); FUN_0003b280, FUN_0003b130 and
+ * FUN_0003b170 are slots 8, 9 and 13. */
 class hknpDecoratorShape : public hknpShape
 {
   public:
     virtual ~hknpDecoratorShape();
+
+    int FUN_0003b280() const; /* vtable slot 8; derived name */
+    int FUN_0003b130() const; /* vtable slot 9; derived name */
+    int FUN_0003b170() const; /* vtable slot 13; derived name */
+
+    u8 unknown8[0x20];
+    hknpShape *childShape; /* derived name */
 };
 
 /* hknpFirstPersonGun, hknpBallGun and hknpMountedBallGun, each finish
@@ -653,6 +672,12 @@ template <typename T> class hkRelArray
         return size;
     }
 
+    /* The elements, `offset` bytes from the array itself. */
+    const T *begin() const
+    {
+        return reinterpret_cast<const T *>(reinterpret_cast<const char *>(this) + offset);
+    }
+
     u16 size;   /* derived name */
     u16 offset; /* derived name */
 };
@@ -664,7 +689,8 @@ template <typename T> class hkRelArray
 class hknpConvexShape : public hknpShape
 {
   public:
-    int FUN_00045ac0() const; /* vtable slot 9; derived name */
+    int FUN_00045ac0() const;         /* vtable slot 9; derived name */
+    const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
 
     u8 unknown8[0x20];
     hkRelArray<Vec4> vertices;
@@ -1465,6 +1491,21 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
     virtual hkBool isOk() const;                     /* vtable slot 5; derived name */
     virtual int write(const void *buffer, int size); /* vtable slot 6; derived name */
     virtual void flush();                            /* vtable slot 7; derived name */
+};
+
+/* An output archive over a stream writer (derived name): a reference-counted
+ * object (vtable address point 0x168d400, five slots, constructor 0xa280,
+ * complete destructor 0xa3b0 releasing the writer at +0x10) with a
+ * byte-swap flag at +0x18 (set and read by 0xabd0 and 0xabe0); 0xac00
+ * returns the writer, FUN_0000abf0 tells whether it is usable. A caller
+ * (0x1a3854) builds one on the stack, writes, then returns that test. */
+class hkOArchive : public hkReferencedObject /* derived name */
+{
+  public:
+    hkBool FUN_0000abf0() const; /* derived name */
+
+    hkStreamWriter *writer; /* derived name */
+    hkBool byteSwap;        /* derived name */
 };
 
 /* Its writer (hkStreamWriter) at +0x10: FUN_000089e0 flushes it. */
