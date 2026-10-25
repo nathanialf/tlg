@@ -158,7 +158,7 @@ class hkSimpleLocalFrame
 
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
-struct hkGeometry;                          /* FUN_00093c60, vtable 0x1692500 */
+class hkGeometry;                           /* FUN_00093c60, vtable 0x1692500 */
 struct hkcdPlanarGeometryPolygonCollection; /* FUN_00095fb0, vtable 0x16a3680 */
 struct hkcdShape;                           /* FUN_0001cf40, vtable 0x168f300 */
 struct hkcdPlanarGeometry;                  /* FUN_0009a860, vtable 0x16a3700 */
@@ -333,10 +333,16 @@ void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
  * parent hknpCompoundShape): its finish callback FUN_0006c310 runs the
  * finish constructor FUN_000385d0, which stores the vtable 0x1693f40, whose
  * slot 0 is the destructor at 0x386c0. */
+extern const hkClass D_57c27c8; /* hknpStaticCompoundShape's hkClass, built at 0x6c395 */
+
 class hknpStaticCompoundShape
 {
   public:
     virtual ~hknpStaticCompoundShape();
+
+    /* vtable slot 3, also of hknpStaticCompoundShapeInternals (0x1692840),
+     * which does not override it; derived name */
+    const hkClass *FUN_00038740() const;
 };
 
 /* hknpStaticCompoundShapeInternals, 0xc0 bytes (type info 0x57bde70, vtable
@@ -680,12 +686,6 @@ class hkpLimitedHingeConstraintData
     struct Atoms;
 };
 
-class hkpRagdollConstraintData
-{
-  public:
-    struct Atoms;
-};
-
 /* Two constraint atoms with their reflected members: hkpSetupStabilizationAtom
  * (record table 0x169e600: enabled at +2, padding at +3, maxLinImpulse at
  * +4, maxAngImpulse at +8, maxAngle at +0xc) and hkpBallSocketConstraintAtom
@@ -708,6 +708,54 @@ struct hkpBallSocketConstraintAtom {
     u8 unknown6[2];
     float breachImpulse;
     float inertiaStabilizationFactor;
+};
+
+/* hkpRagdollMotorConstraintAtom (record table 0x169f090): isEnabled at +2,
+ * initializedOffset at +4, previousTargetAnglesOffset at +6, target_bRca at
+ * +0x10, motors (three pointers to hkpConstraintMotor, hkClass 0x57c3af0)
+ * at +0x40. */
+struct hkpConstraintMotor;
+
+struct hkpRagdollMotorConstraintAtom {
+    u16 type; /* derived name */
+    bool isEnabled;
+    u8 unknown3;
+    s16 initializedOffset;
+    s16 previousTargetAnglesOffset;
+    u8 unknown8[8];
+    u8 target_bRca[0x30];
+    hkpConstraintMotor *motors[3];
+    u8 unknown58[8];
+};
+
+/* hkpRagdollConstraintData, polymorphic (type info 0x57c5bc8, vtable
+ * 0x169d0d0, address point 0x169d0e0; constructor FUN_0007d810, finish
+ * callback 0x82c70): its member atoms at +0x20 is an
+ * hkpRagdollConstraintData::Atoms, 0x180 bytes (record table from 0x169fbb0:
+ * transforms at +0, setupStabilization at +0x90, ragdollMotors at +0xa0,
+ * angFriction at +0x100, twistLimit at +0x110, coneLimit at +0x130).
+ * FUN_0007dfc0, FUN_0007e160 and FUN_0007e0a0 return the three motors (the
+ * copy at 0x79740 takes a reference to each through them), FUN_0007dfe0
+ * returns one by index; the setters beside them (0x7dff0, 0x7e0b0, 0x7e170)
+ * swap the counted references. */
+class hkpRagdollConstraintData
+{
+  public:
+    struct Atoms {
+        u8 transforms[0x90];
+        hkpSetupStabilizationAtom setupStabilization;
+        hkpRagdollMotorConstraintAtom ragdollMotors;
+        u8 unknown100[0x80];
+    };
+
+    virtual ~hkpRagdollConstraintData();
+
+    hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
+    hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
+    hkpConstraintMotor *FUN_0007e160() const; /* derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
 };
 
 /* hkpBallAndSocketConstraintData, polymorphic, 0x70 bytes (type info
@@ -1055,6 +1103,69 @@ class hknpDynamicCompoundShape
     virtual ~hknpDynamicCompoundShape();
 
     const hkClass *FUN_000358a0() const; /* vtable slot 3; derived name */
+};
+
+/* hkGeometry, polymorphic (vtable 0x1692500): members from its record table
+ * at 0x168ea40, vertices (array of hkVector4) at +0x10 and triangles (array
+ * of hkGeometry::Triangle, 16 bytes each) at +0x20. */
+class hkGeometry
+{
+  public:
+    struct Triangle;
+
+    virtual ~hkGeometry();
+
+    u8 unknown8[8];
+    hkArray<Vec4> vertices;
+    hkArray<Triangle> triangles;
+};
+
+/* hknpDefaultExternMeshShapeGeometry (type info 0x57bfce0, vtable address
+ * point 0x16959f0, reflected member geometry at +0x10): its destructors
+ * (slots 0 and 1, 0x3b870 and 0x3b8e0) release the counted reference to the
+ * hkGeometry at +0x10; slot 5 (FUN_0003b980) returns its triangle count,
+ * slot 6 copies a triangle's three vertices, slot 7 returns a triangle's
+ * 16-bit material at +0xc. */
+class hknpDefaultExternMeshShapeGeometry
+{
+  public:
+    virtual ~hknpDefaultExternMeshShapeGeometry();
+
+    int FUN_0003b980() const; /* vtable slot 5; derived name */
+
+    u8 unknown8[8];
+    hkGeometry *geometry;
+};
+
+/* hknpCompoundShape: its hkClass at 0x57c2e78 is built by the reflection
+ * initializer at 0x77eae and is the parent of hknpDynamicCompoundShape's and
+ * hknpStaticCompoundShape's; slot 3 of its vtable (address point 0x1697910,
+ * FUN_000418b0) returns it. */
+extern const hkClass D_57c2e78; /* hknpCompoundShape's hkClass */
+
+class hknpCompoundShape
+{
+  public:
+    virtual ~hknpCompoundShape();
+
+    const hkClass *FUN_000418b0() const; /* vtable slot 3; derived name */
+};
+
+/* hknpCompositeShape: its hkClass at 0x57c2cf8 (parent 0x57bf1c0) is built by
+ * the reflection initializer at 0x71732, whose type info names the vtable
+ * 0x1697c80 (address point 0x1697c90), the intermediate base whose vtable the
+ * finish constructors of hknpLodShape, hknpCompressedHeightFieldShape and
+ * hknpCompressedMeshShape store before their own. Slot 3 (FUN_00042e80)
+ * returns it, and six derived vtables (0x1699c10, 0x16a3e40, 0x16a49a0,
+ * 0x16a5180, 0x16a5990, 0x16ca050) keep it. */
+extern const hkClass D_57c2cf8; /* hknpCompositeShape's hkClass */
+
+class hknpCompositeShape
+{
+  public:
+    virtual ~hknpCompositeShape();
+
+    const hkClass *FUN_00042e80() const; /* vtable slot 3; derived name */
 };
 
 #endif
