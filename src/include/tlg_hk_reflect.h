@@ -1146,12 +1146,6 @@ class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
  * hkpLinearClearanceConstraintData::Atoms: type info 0x57c36b8, size 0x120,
  * FUN_00083880. hkpPrismaticConstraintData::Atoms: type info 0x57c4058,
  * size 0x100, FUN_0007e520. */
-class hkpLinearClearanceConstraintData
-{
-  public:
-    struct Atoms;
-};
-
 /* What slot 20 of the constraint data vtables fills (pure in
  * hkpConstraintData): the size of the runtime the solver keeps for the
  * constraint and its number of solver results, two ints stored as one 8-byte
@@ -1206,6 +1200,52 @@ class hkpRagdollLimitsData
     virtual ~hkpRagdollLimitsData();
 
     void FUN_0007c8b0(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+/* hkpLinearClearanceConstraintData: address point 0x16a0300 (finish
+ * constructor FUN_0007ac70). hkpRackAndPinionConstraintData: 0x16a0210
+ * (FUN_0007d080). */
+class hkpLinearClearanceConstraintData
+{
+  public:
+    struct Atoms;
+
+    virtual ~hkpLinearClearanceConstraintData();
+
+    void FUN_00083a10(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+class hkpRackAndPinionConstraintData
+{
+  public:
+    virtual ~hkpRackAndPinionConstraintData();
+
+    void FUN_000836c0(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+/* Two constraint data classes with no name found (no type-info registration
+ * holds their vtables; slot 3 is the shared 0x42d0). ConstraintData169ffe0:
+ * address point 0x169ffe0, slot 5 returns 26, 0xc0 bytes, built by the
+ * constructor 0x831a0 when 0x79b63 copies 0xa0 bytes of atoms into one.
+ * ConstraintData16a5d30: address point 0x16a5d30, constructor 0x17b170. */
+class ConstraintData169ffe0 /* derived name */
+{
+  public:
+    virtual ~ConstraintData169ffe0();
+
+    void FUN_000832b0(bool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
+class ConstraintData16a5d30 /* derived name */
+{
+  public:
+    virtual ~ConstraintData16a5d30();
+
+    void FUN_0017b990(bool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1314,6 +1354,31 @@ struct hkpLinMotorConstraintAtom {
     hkpConstraintMotor *motor;
     float targetPosition;
     u8 padding[4];
+};
+
+/* hkpAngMotorConstraintAtom (type info 0x57c4920, size 0x20, record table
+ * 0x169ee30): isEnabled at +2, motorAxis at +3, initializedOffset and
+ * previousTargetAngleOffset (hkInt16) at +4 and +6, motor at +8,
+ * targetAngle at +0x10, correspondingAngLimitSolverResultOffset (hkInt16)
+ * at +0x14, padding at +0x16. Its finish constructor resets the three
+ * offsets. */
+struct hkpAngMotorConstraintAtom {
+    hkpAngMotorConstraintAtom(hkFinishLoadedObjectFlag)
+    {
+        initializedOffset = -1;
+        previousTargetAngleOffset = -1;
+        correspondingAngLimitSolverResultOffset = -1;
+    }
+
+    u16 type; /* derived name */
+    bool isEnabled;
+    u8 motorAxis;
+    s16 initializedOffset;
+    s16 previousTargetAngleOffset;
+    hkpConstraintMotor *motor;
+    float targetAngle;
+    s16 correspondingAngLimitSolverResultOffset;
+    u8 padding[2];
 };
 
 /* hkpRagdollMotorConstraintAtom (record table 0x169f090): isEnabled at +2,
@@ -2326,16 +2391,17 @@ struct hknpBodyId {
 };
 
 /* Its parent hknpUnaryAction's one member, bodyId at +0x18 (record
- * 0x1695790): slot 5 (0x162540) hands out its address and a count of 1,
+ * 0x1695790): slot 5 (FUN_00162540) hands out its address and a count of 1,
  * slot 6 (FUN_00162550) forgets it when that body is removed. */
 class hknpVehicleInstance
 {
   public:
     virtual ~hknpVehicleInstance();
 
-    void FUN_00162550(hknpBodyId removedId); /* vtable slot 6; derived name */
-    void FUN_001659b0();                     /* vtable slot 9; derived name */
-    float FUN_00165880() const;              /* vtable slot 13; derived name */
+    void FUN_00162540(hknpBodyId *&bodiesOut, int &numBodiesOut); /* vtable slot 5; derived name */
+    void FUN_00162550(hknpBodyId removedId);                      /* vtable slot 6; derived name */
+    void FUN_001659b0();                                          /* vtable slot 9; derived name */
+    float FUN_00165880() const;                                   /* vtable slot 13; derived name */
 
     u8 unknown8[0x10];
     hknpBodyId bodyId;
@@ -2572,6 +2638,7 @@ class hkVtableClassRegistry : public hkReferencedObject
     virtual ~hkVtableClassRegistry();
 
     const hkClass *FUN_00184410(const void *vtable) const; /* vtable slot 6; derived name */
+    const hkClass *FUN_00184420(const void *object) const; /* vtable slot 7; derived name */
 
     PointerMap map; /* derived name */
 };
