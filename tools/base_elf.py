@@ -199,7 +199,7 @@ class BaseElf:
         (`_ZNK19hkMemoryMeshTexture12FUN_000ad770Ev` -> `FUN_000ad770`); other
         names unchanged."""
         import re
-        m = re.match(r"^_Z(\d+)", sym)
+        m = re.match(r"^_ZL?(\d+)", sym)   # _ZL: internal linkage (a `static` or namespace-scope const)
         if m:
             n = int(m.group(1))
             start = m.end()
@@ -270,10 +270,17 @@ class BaseElf:
         from vtable_names import Walker, mangle_vtable
         if mangle_vtable(cls) != sym:
             raise ValueError(f"vtables.derived: {sym} is not the vtable symbol of {cls}")
-        if ctor not in self.func_by_name:
-            raise ValueError(f"vtables.derived: {sym}: {ctor} is not a function of the table")
+        if ctor in self.func_by_name:
+            fn = self.func_by_name[ctor][0]
+        else:   # a row cites the constructor by address (FUN_<hex>) and survives its row's renaming
+            try:
+                fn = int(ctor[4:], 16) if ctor.startswith("FUN_") else None
+            except ValueError:
+                fn = None
+            if fn is None or fn not in {a for a, _s in self.func_by_name.values()}:
+                raise ValueError(f"vtables.derived: {sym}: {ctor} is not a function of the table")
         w = Walker(self)
-        stored = w.vptr_stores(self.func_by_name[ctor][0])
+        stored = w.vptr_stores(fn)
         if addr + 0x10 not in stored:
             raise ValueError(f"vtables.derived: {sym}: {ctor} stores "
                              f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")

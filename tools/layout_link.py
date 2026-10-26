@@ -89,18 +89,17 @@ def object_data_symbols(obj: Path) -> dict[str, tuple[bytes, list[mc.Reloc], boo
         elf = ELFFile(f)
         symtab = elf.get_section_by_name(".symtab")
         syms = list(symtab.iter_symbols())
+        locs = mc.named_locals(syms)
         relocs_by_sec: dict[int, list] = {}
         for sec in elf.iter_sections():
             if isinstance(sec, RelocationSection):
                 for r in sec.iter_relocations():
                     sym = syms[r["r_info_sym"]]
-                    name = sym.name
-                    if sym["st_info"]["type"] == "STT_SECTION":
-                        name = elf.get_section(sym["st_shndx"]).name
+                    name, addend, value, size = mc.reloc_symbol(
+                        elf, locs, sym, r["r_addend"] if "r_addend" in r.entry else 0)
                     relocs_by_sec.setdefault(sec["sh_info"], []).append(
                         mc.Reloc(r["r_offset"], mc.RELOC_WIDTH.get(r["r_info_type"], 4), r["r_info_type"],
-                                 name, r["r_addend"] if "r_addend" in r.entry else 0,
-                                 sym["st_shndx"], sym["st_value"], sym["st_size"]))
+                                 name, addend, sym["st_shndx"], value, size))
         for sym in syms:
             if sym["st_info"]["type"] != "STT_OBJECT" or sym["st_shndx"] in ("SHN_UNDEF", "SHN_ABS", "SHN_COMMON"):
                 continue
@@ -151,7 +150,8 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     if r.symbol.startswith("_ZTV"):
         return None, (f"{r.symbol}: the executable does not name this vtable (config/vtables.<slug>.txt, "
                       "tools/vtable_names.py); a class named from other evidence needs a ruling (docs/DECISIONS.md D12)")
-    return None, f"{r.symbol}: no address in the base (name it D_<hex> or FUN_<hex>, or add it to the function table)"
+    return None, (f"{r.symbol}: no address in the base (name it D_<hex> or FUN_<hex>, or add it to the function "
+                  "table; a file-local object is named D_<hex> too, docs/DECISIONS.md D17)")
 
 
 def base_dynamic_relocs(base: BaseElf) -> dict[int, tuple[int, str, int]]:

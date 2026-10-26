@@ -479,6 +479,24 @@ and marked.
 (rename, do not add), or a generated row appearing for a vtable a derived
 row holds (delete the derived row).
 
+**Addendum, 2026-10-26 (round 19 harvest).** A row cites its constructor
+by address: `ctor FUN_<hex>` is looked up by the address when no row of the
+function table carries that name any more, so a derived row survives the
+renaming of its constructor's row to the mangled symbol (hkSlot's base
+destructor 0x47cb0 is `_ZN6hkSlotD1Ev` in both tables; the derived row still
+says `FUN_00047cb0`). Fourth row: hknpSurfaceVelocityModifier (0x16a5600,
+constructor FUN_0016d1f0), one of the twenty modifiers of the set
+FUN_00048b20 allocates at 0x49d0f and fills from 0x49d8b, all unnamed (no
+`hknp*Modifier` string exists in the executable; the only `Modifier` strings
+are the game's own). The vtable has the set's thirteen-slot interface; its
+slot 2 returns the callback mask 8 and the one callback it implements, slot
+7 (0x16d200), averages the manifold's contact positions, asks the object at
++0x30 of each body's material for its linear and angular velocity there
+(the reflected class hknpSurfaceVelocity, slot 5) and applies body B's minus
+body A's to the contact jacobian (0x348e0). The name is the provider class's
+plus `Modifier`, derived; the other nineteen are named the same way when
+their one implemented callback is read.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -535,3 +553,115 @@ unsubscribed), which is what the developer asserted.
 the same version that spells the statement (then it is a fact and replaces
 the derived assert), or a third destructor of this shape whose model yields
 no invariant to assert.
+
+## D17. A file-local object is resolved through the object's own symbol table (2026-10-26)
+
+**Decision.** A relocation in a compiled object against a section symbol
+(`.rodata + offset`, `.bss + offset`, `.text + offset`) is attributed to the
+named local symbol of that section whose extent holds the target offset,
+and is then a relocation against that symbol with the addend reduced by the
+symbol's value: `tools/match_check.py` (`named_locals`, `reloc_symbol`) does
+this when it reads an object, for the functions' relocations and, through
+`tools/layout_link.py`, for the data objects'. The target offset of a
+PC-relative field is its addend plus the distance from the field to the end
+of its instruction, which `field_tails` reads from one disassembly of the
+function (a `lea` has 4, a `cmp dword [rip+x], imm32` has 8); an absolute
+field or a data slot adds nothing. A relocation no named local covers (a
+string literal in `.rodata.str1.1`, a constant-pool entry) keeps its
+section's name and is placed by its bytes as before. The object is spelled
+as the developer spelled it, with internal linkage (`static`, an anonymous
+namespace, or a namespace-scope `const`), and named `D_<hex>` until a fact
+names it; the mangled form `_ZL<n>D_<hex>` is the same identifier to
+`BaseElf.base_identifier`, so the address comes from the name as for any
+`D_<hex>`. A `.bss` object needs no claim for its references to resolve; an
+initialised one is claimed in `config/data.base.txt` so its bytes are
+checked (D8), with its content under D18.
+
+**Why.** Which linkage a data reference has is in the bytes. Under PIC with
+default visibility (the region has GOT loads for its own defined symbols,
+D10), the compiler reaches an external object through the GOT and only an
+object local to the translation unit by a direct RIP-relative operand: the
+linker's relaxation (D10) turns the 8B `mov` form of a GOT load into `lea`
+and nothing else, so a `lea` whose extern compile gives a folded GOT load
+(`add rcx, [rip+D@GOTPCREL]` for the member type table at 0x16dc150, read by
+0x7d40), a store (`movaps [rip+D], xmm0` to the tolerance at 0x57c8990 by
+the initializer 0x188540) or any other direct memory operand on a data
+address is a reference the compiler emitted for an internal-linkage object.
+Before this ruling the resolver searched the base for the object's bytes
+(zeros, or unrelocated pointers), which cannot place it. 888 library
+functions hold a direct RIP-relative data operand that is not a `lea` and
+not the relaxable `mov` (constant pools and file-local objects alike; 883
+unclaimed), and 1,205 more a `lea` to data. The scratch claim of 0x7d40 with
+the table defined `static` in its TU (35 rows of 24 bytes, the object's
+symbol 840 bytes) compared equal with its relocation verified and laid out
+every segment identical to the base.
+
+**Trigger to revisit.** A named local whose extent does not hold the field's
+target (an attribution the gate then fails as a wrong address), or a
+compiler whose section relocations carry a different addend convention.
+
+## D18. A table's content is generated at build time from the user's executable (2026-10-26)
+
+**Decision.** A data object whose bytes carry content from the package, a
+table of records or of pointers, or any object holding a string pointer, is
+committed as its type, its count and its name only. Its row of
+`config/data.base.txt` (`D_<hex> <tu> [<symbol>]`, D8) is joined by a row of
+`config/data_schema.base.txt` (`D_<hex> <record type> <count> <header>`),
+the record type a struct in `src/include/` whose fields are typed from the
+bytes; `tools/gen_data_inc.py` writes the initializer at build time from the
+user's own `baserom/base/eboot.elf` into `build/base/gen/D_<hex>.inc`, and
+the owning translation unit includes that file between the braces of the
+definition (the object stays in the TU that reads it, D17). A pointer slot
+is written as what the base's RELATIVE relocation resolves to: a string
+literal when the target is a NUL-terminated string, the name of a function
+of the table, a `D_<hex>`, a vtable's address point; an integer or a float
+by its field's type, decimal, floats as the shortest text that reads back to
+the same bits. Nothing generated is committed (`build/` is ignored, and
+`tools/check_no_rom.sh` keeps it so); the gate's data-claim path (D8) checks
+the compiled object's bytes and every pointer slot against the base. A
+scalar or a vector of a few literal constants the function itself uses (an
+epsilon, a mask) is written by hand as the literal it is. The tool is
+modelled on the sibling project's `tools/gen_data_c.py` and
+`config/data_schema.*.txt`, which write every data-only member of that
+executable this way.
+
+**Why.** `docs/LEGAL.md` forbids a string or identifier table copied into
+the repository in whole or in bulk and promises that data ranges are
+generated at build time from the user's executable, with only types, counts
+and names committed. The first case is the member type table at 0x16dc150:
+35 rows of 24 bytes (`u8 type; const char *name; s16 size; s16 align`),
+their 35 pointers relocated into the type-name pool from 0x14b2fa6
+("void", "hkBool", "hkChar", ...), read by 0x7d40, which cannot be claimed
+until the table is defined in its TU. The executable has 29,118 RELATIVE
+slots, 4,761 of them pointing at printable NUL-terminated strings and 21,367
+at functions, so string and function tables are the shape most of the data
+segments' content takes. Writing the 35 names by hand would be a table
+copied verbatim; generating them keeps the repository's contribution to the
+developer's type and count, which is what it knows.
+
+**Trigger to revisit.** A table whose record type the generator cannot
+express (bit-fields, unions, a pointer into the middle of an object), which
+is a schema extension, not a hand-written table.
+
+## D19. Havok's kept check stops on `HK_BREAKPOINT`, spelled as the debug trap (2026-10-26)
+
+**Decision.** A check the release library keeps, which traps and goes on,
+is spelled `HK_BREAKPOINT(id)`, defined once in `src/include/tlg_hk_reflect.h`
+as `__builtin_debugtrap()`, which LLVM 3.3 lowers to `int3`
+(`tools/cc/src/llvm-3.3.src/lib/Target/X86/X86InstrSystem.td:37`). It is a
+different thing from the release-null `HK_ASSERT` (D16): that one compiles to
+nothing and stands only where a body must be non-empty; this one is the
+bytes. Inline `asm("int3")` would emit the same byte but spells a builtin
+as assembly, and `__builtin_trap()` emits `ud2`, not the bytes.
+
+**Why.** The library region holds 214 `int3` instructions in 137 functions:
+92 reached through a conditional branch (the kept checks: a range check on
+an enum index in hknpModifierManager's table setters 0x66770 and 0x66790,
+matched with this spelling, cookbook 29), 122 after a call, jump or return
+and never reached (fill inside an unwind range), none in the game region. A
+spelling that varied per function would be a per-function choice of the
+same mechanism; the macro names the mechanism once.
+
+**Trigger to revisit.** A conditional `int3` whose surrounding code the
+builtin's lowering cannot produce (the builtin is a scheduling barrier only
+as far as `ISD::DEBUGTRAP` is), which would be a classified note first.

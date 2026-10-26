@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Format (or check) the repo's C/C++ with clang-format and the tracked .clang-format.
-#   tools/format.sh            # rewrite every tracked source under src/
-#   tools/format.sh --check    # exit 1 if any tracked source is not formatted (pre-commit)
+#   tools/format.sh            # rewrite every tracked or untracked source under src/
+#   tools/format.sh --check    # exit 1 if any source is not formatted (pre-commit)
 #   tools/format.sh FILE...    # format just these files
 # Whitespace and line breaks only. The binary is the `clang-format` wheel in
 # the venv (tools/setup.sh installs it); without it the script fails.
@@ -17,7 +17,7 @@ if [[ "${1:-}" == "--check" ]]; then mode=check; shift; fi
 if [[ $# -gt 0 ]]; then
     files=("$@")
 else
-    mapfile -t files < <(cd "$ROOT" && git ls-files 'src/*.c' 'src/*.cpp' 'src/*.h' 'src/*.hpp' 'src/*.inl')
+    mapfile -t files < <(cd "$ROOT" && git ls-files -co --exclude-standard 'src/*.c' 'src/*.cpp' 'src/*.h' 'src/*.hpp' 'src/*.inl')
 fi
 [[ ${#files[@]} -gt 0 ]] || exit 0
 cd "$ROOT"

@@ -29,9 +29,9 @@ enum hkResult {
 #define HK_ASSERT(id, condition) ((void)0)
 
 /* The break the library's kept checks stop on: an int3 (the debug trap,
- * lowered by tools/cc/src/llvm-3.3.src/lib/Target/X86/X86InstrSystem.td:41),
- * after which execution goes on; 99 conditional int3s in the library
- * region. derived name. */
+ * tools/cc/src/llvm-3.3.src/lib/Target/X86/X86InstrSystem.td:37), after
+ * which execution goes on; 92 of the library region's 214 int3s are reached
+ * through a conditional branch (docs/DECISIONS.md D19). derived name. */
 #define HK_BREAKPOINT(id) __builtin_debugtrap()
 
 /* hkArray, the reflection's array type (its name in the type-name table at

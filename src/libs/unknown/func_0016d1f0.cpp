@@ -1,8 +1,8 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_types.h"
 
-/* derived names: the out-of-line constructor of a modifier (vtable
- * 0x16a5600) built at +0x68 of the object the function at 0x49d8b creates
+/* derived names (config/vtables.derived.base.txt): the out-of-line
+ * constructor of a modifier (vtable 0x16a5600) built at +0x68 of the object the function at 0x49d8b creates
  * (a reference-counted set, vtable 0x16991e0, holding twenty modifiers from
  * +0x10 to +0xd8; the call at 0x49dd8). Its vtable has the thirteen slots of
  * the modifier interface the set's members share: slot 0 the empty body
@@ -15,13 +15,11 @@
  * the difference of the two bodies' and applies it to the contact jacobian
  * (0x348e0): a surface velocity modifier. Slot 4 is the empty 0x158a30, slot
  * 6 the shared 0x69440, the rest the empty 0x3b640. */
-class InterfaceAt68 /* derived name */
+class hknpSurfaceVelocityModifier /* derived name */
 {
   public:
-    InterfaceAt68();
-    virtual ~InterfaceAt68();
+    hknpSurfaceVelocityModifier();
+    virtual ~hknpSurfaceVelocityModifier();
 };
 
-// NONMATCHING: the vtable 0x16a5600 is named by neither config/vtables.base.txt nor
-// config/vtables.derived.base.txt (a ruling).
-InterfaceAt68::InterfaceAt68() {}
+hknpSurfaceVelocityModifier::hknpSurfaceVelocityModifier() {}

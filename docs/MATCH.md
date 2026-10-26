@@ -47,7 +47,10 @@ placed by the reviewer from the bodies, not by the row.
    casts; the engine's own types in `src/include/`, grown one verified field
    at a time (offset and width from the load or store that touches it).
    Callees are `FUN_<addr>` until named, data `D_<hex>`: both are facts the
-   gate checks. A class's vtable is the compiler's; the gate places it from
+   gate checks. An object the function reaches with a direct RIP-relative
+   operand (a store, a folded load, a `lea` whose extern compile gives a GOT
+   load) is file-local: define it in the TU with internal linkage under its
+   `D_<hex>` name (D17); a table's content is generated, never typed (D18). A class's vtable is the compiler's; the gate places it from
    `config/vtables.base.txt` (the vtables the executable's type-info
    registrations name, `tools/vtable_names.py`, D12) or from
    `config/vtables.derived.base.txt` (vtables named by ruling from the

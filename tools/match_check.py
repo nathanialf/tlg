@@ -63,10 +63,19 @@ def load_functions(ver: str) -> dict[str, tuple[int, int]]:
 
 
 def compile_tu(tu: str, ver: str) -> Path:
+    """The TU's object, recompiled when the TU or any header its depfile
+    lists (tools/compile_cpp.sh writes <obj>.d) is newer than it."""
     obj = build_dir(REPO_ROOT, ver) / "obj" / (tu + ".o")
     src = REPO_ROOT / tu
     if obj.exists() and obj.stat().st_mtime >= src.stat().st_mtime:
-        return obj
+        dep = obj.with_name(obj.name + ".d")
+        deps = []
+        if dep.exists():
+            text = dep.read_text().replace("\\\n", " ")
+            deps = [Path(d) for d in text.split(":", 1)[1].split()] if ":" in text else []
+        stale = [d for d in deps if not d.exists() or d.stat().st_mtime > obj.stat().st_mtime]
+        if not stale:
+            return obj
     subprocess.run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), tu, str(obj.relative_to(REPO_ROOT))],
                    cwd=REPO_ROOT, check=True)
     return obj
@@ -87,6 +96,61 @@ class Reloc:
         yield self.type
 
 
+def named_locals(syms) -> dict[int, list[tuple[int, int, str]]]:
+    """The object's named local data and function symbols by section index:
+    a `static` object or function, or a namespace-scope const, which the
+    assembler references as its section plus an offset (docs/DECISIONS.md
+    D17). Assembler temporaries (`.L...`) are not in the symbol table."""
+    out: dict[int, list[tuple[int, int, str]]] = {}
+    for s in syms:
+        info = s["st_info"]
+        if info["bind"] != "STB_LOCAL" or info["type"] not in ("STT_OBJECT", "STT_FUNC") or not s.name:
+            continue
+        out.setdefault(s["st_shndx"], []).append((s["st_value"], s["st_size"], s.name))
+    return out
+
+
+def reloc_symbol(elf, locals_by_sec, sym, addend, tail=0) -> tuple[str, int, int, int]:
+    """(name, addend, value, size) for a relocation's symbol. A section symbol
+    is attributed to the named local whose extent holds the target offset,
+    the reference the assembler rewrote as section + offset; a string literal
+    or a constant-pool entry keeps the section's name, and the resolver finds
+    its bytes in the base. `tail` is the distance from the field to the end
+    of its instruction, which a PC-relative addend subtracts (an absolute
+    field or a data slot has none)."""
+    if sym["st_info"]["type"] != "STT_SECTION":
+        return sym.name, addend, sym["st_value"], sym["st_size"]
+    shndx = sym["st_shndx"]
+    target = addend + tail
+    for value, size, name in locals_by_sec.get(shndx, []):
+        if value <= target < value + max(size, 1):
+            return name, addend - value, value, size
+    return elf.get_section(shndx).name, addend, sym["st_value"], sym["st_size"]
+
+
+PCREL_TYPES = (2, 4, 9, 41, 42)      # PC32, PLT32, GOTPCREL, GOTPCRELX, REX_GOTPCRELX
+
+
+def field_tails(code: bytes, offsets: list[int]) -> dict[int, int]:
+    """offset of a relocated field -> bytes from the field to the end of its
+    instruction, by disassembling the function once (4 where the decoder
+    stops short)."""
+    import capstone
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
+    want = sorted(offsets)
+    out = {o: 4 for o in want}
+    i = 0
+    for ins in md.disasm(code, 0):
+        end = ins.address + ins.size
+        while i < len(want) and want[i] < end:
+            if want[i] >= ins.address:
+                out[want[i]] = end - want[i]
+            i += 1
+        if i >= len(want):
+            break
+    return out
+
+
 def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
     """symbol -> (bytes, [Reloc]) for every STT_FUNC the object defines."""
     from elftools.elf.elffile import ELFFile
@@ -96,20 +160,14 @@ def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
         elf = ELFFile(f)
         symtab = elf.get_section_by_name(".symtab")
         syms = list(symtab.iter_symbols())
-        relocs_by_sec: dict[int, list] = {}
+        locs = named_locals(syms)
+        raw_by_sec: dict[int, list] = {}
         for sec in elf.iter_sections():
             if isinstance(sec, RelocationSection):
                 for r in sec.iter_relocations():
-                    sym = syms[r["r_info_sym"]]
-                    name = sym.name
-                    # a section symbol (a string literal in .rodata.str1.1): name it
-                    # by its section so the resolver can look the bytes up
-                    if sym["st_info"]["type"] == "STT_SECTION":
-                        name = elf.get_section(sym["st_shndx"]).name
-                    relocs_by_sec.setdefault(sec["sh_info"], []).append(
-                        Reloc(r["r_offset"], RELOC_WIDTH.get(r["r_info_type"], 4), r["r_info_type"],
-                              name, r["r_addend"] if "r_addend" in r.entry else 0,
-                              sym["st_shndx"], sym["st_value"], sym["st_size"]))
+                    raw_by_sec.setdefault(sec["sh_info"], []).append(
+                        (r["r_offset"], r["r_info_type"], syms[r["r_info_sym"]],
+                         r["r_addend"] if "r_addend" in r.entry else 0))
         for sym in syms:
             if sym["st_info"]["type"] != "STT_FUNC" or sym["st_shndx"] in ("SHN_UNDEF", "SHN_ABS"):
                 continue
@@ -117,11 +175,12 @@ def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
             sec = elf.get_section(shndx)
             lo, size = sym["st_value"], sym["st_size"]
             data = sec.data()[lo:lo + size]
+            raw = [x for x in raw_by_sec.get(shndx, []) if lo <= x[0] < lo + size]
+            tails = field_tails(data, [off - lo for off, ty, _s, _a in raw if ty in PCREL_TYPES])
             rl = []
-            for r in relocs_by_sec.get(shndx, []):
-                if lo <= r.offset < lo + size:
-                    rl.append(Reloc(r.offset - lo, r.width, r.type, r.symbol, r.addend,
-                                    r.sym_section, r.sym_value, r.sym_size))
+            for off, ty, rsym, addend in raw:
+                name, addend, value, ssize = reloc_symbol(elf, locs, rsym, addend, tails.get(off - lo, 0))
+                rl.append(Reloc(off - lo, RELOC_WIDTH.get(ty, 4), ty, name, addend, rsym["st_shndx"], value, ssize))
             out[sym.name] = (data, sorted(rl, key=lambda r: r.offset))
     return out
 
