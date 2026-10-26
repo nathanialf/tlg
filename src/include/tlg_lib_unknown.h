@@ -74,6 +74,7 @@ struct Pair08Tail; /* derived name */
 Pair08Tail *FUN_0002af30(const Pair08Owner *self); /* derived name */
 const s32 *FUN_0002af50(const Pair08Tail *tail);   /* derived name */
 s32 FUN_00034850(const Pair08Owner *self);         /* derived name */
+s32 FUN_00034870(const Pair08Owner *self);         /* derived name */
 
 /* One vector per entry of the record (derived names): FUN_00031740 writes
  * one vector per entry (its count) from the two motions' vectors at +0x40
@@ -626,6 +627,14 @@ class ThreadMemory : public AllocatorBase /* derived name */
 {
   public:
     virtual void FUN_00014690(); /* vtable slot 13; derived name */
+
+    /* Gives the thread's allocator the allocator it draws from and how many
+     * blocks each free list may keep (FUN_0000c590 passes 8); a null
+     * allocator only clears it. */
+    void FUN_00014610(AllocatorBase *memory, int maxNumElemsOnFreeList); /* derived name */
+
+    AllocatorBase *memory;     /* derived name; slot 13 returns blocks to it */
+    int maxNumElemsOnFreeList; /* derived name */
 };
 
 /* A union-find over node indices (derived name; the stage timer of its
@@ -886,5 +895,15 @@ struct hkMemoryRouter /* derived name */
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
 void FUN_014aff00();                       /* derived name */
+
+/* The library's formatted print into a buffer of `size` bytes (derived name):
+ * FUN_00017e80 starts the argument list and hands it to the imported
+ * vsnprintf with the size widened (`movslq %esi`). */
+int FUN_00017e80(char *buffer, int size, const char *format, ...); /* derived name */
+
+/* Writes the Havok SDK version string, "hk_2014.2.0-r1", into a buffer of
+ * `size` bytes (derived name); FUN_00183350 fills a 16-byte name with it
+ * when the object at +0x10 has none. */
+void FUN_0019d370(char *buffer, int size); /* derived name */
 
 #endif

@@ -5,6 +5,7 @@
  * need no fixing up, so only the vtable is set (called by the finish
  * callback 0x24400 and by the reflection initializer at 0x24525). */
 hkIndexedTransformSet::hkIndexedTransformSet(hkFinishLoadedObjectFlag flag)
-    : hkReferencedObject(flag)
+    : hkReferencedObject(flag), matrices(flag), inverseMatrices(flag), matricesOrder(flag),
+      matricesNames(flag), indexMappings(flag)
 {
 }

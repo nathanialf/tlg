@@ -3,4 +3,7 @@
 
 /* hkGeometry's finish constructor: the arrays are loaded in place, so only
  * the vtable is set. */
-hkGeometry::hkGeometry(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+hkGeometry::hkGeometry(hkFinishLoadedObjectFlag flag)
+    : hkReferencedObject(flag), vertices(flag), triangles(flag)
+{
+}

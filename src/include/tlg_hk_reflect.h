@@ -39,7 +39,21 @@ enum hkResult {
  * flags (0x80000000 when the array does not own its storage, as the
  * constructors store it; the capacity is masked with 0x3fffffff before a
  * grow). Field names derived. */
+/* The flag a finish constructor takes, passed by value: the finish callback
+ * forwards its int argument in it. derived name. */
+struct hkFinishLoadedObjectFlag {
+    s32 finishing; /* derived name */
+};
+
 template <typename T> struct hkArray {
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
+
+    /* An empty array that owns no storage (the constructors' stores). */
+    hkArray() : data(0), size(0), capacityAndFlags(DONT_DEALLOCATE_FLAG) {}
+
+    /* A loaded image's array is left as loaded. */
+    hkArray(hkFinishLoadedObjectFlag) {}
+
     /* Drop the elements, keeping the storage. derived name. */
     void clear()
     {
@@ -228,12 +242,6 @@ struct hkClassMemberAccessor /* derived name */
 
     void *address;               /* derived name */
     const hkClassMember *member; /* derived name */
-};
-
-/* The flag a finish constructor takes, passed by value: the finish callback
- * forwards its int argument in it. derived name. */
-struct hkFinishLoadedObjectFlag {
-    s32 finishing; /* derived name */
 };
 
 /* hkBaseObject and hkReferencedObject (names from the reflection; the
@@ -425,7 +433,21 @@ void FUN_0000dc40(hkUuidObject *self, hkFinishLoadedObjectFlag flag); /* derived
  * by the initializer at 0xd390). Its finish constructor (FUN_0001c1e0,
  * empty) and destructor (FUN_0001c1f0, releases each entry) are out of
  * line. */
-struct hkRefCountedProperties;
+struct hkRefCountedProperties {
+    /* 16 bytes: the referenced object at +0 (FUN_0001c1f0 drops a reference
+     * on each) and the key at +8 that FUN_0001c2c0 searches by. */
+    struct Entry {
+        hkReferencedObject *object; /* derived name */
+        u16 key;                    /* derived name */
+        u8 unknownA[6];
+    };
+
+    /* Out of line at 0x1c1b0: the callers at 0x38551 and 0x44c93
+     * allocate the 16 bytes from the thread's allocator and construct. */
+    hkRefCountedProperties();
+
+    hkArray<Entry> entries;
+};
 
 void FUN_0001c1e0(hkRefCountedProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0001c1f0(hkRefCountedProperties *self);                                /* derived name */
@@ -442,11 +464,32 @@ void FUN_0001c1f0(hkRefCountedProperties *self);                                
  * 10 and 11 read and set the parent frame, slot 12 (FUN_0000e160) returns
  * the child count and slot 13 (FUN_0000e170) a child by index. */
 struct hkLocalFrame;
-struct hkLocalFrameGroup;
+
+/* hkLocalFrameGroup (hkClass 0x57b76f0, built at 0x3914: size 0x18, parent
+ * hkReferencedObject's 0x57b8640, one member record at 0x168c7a0): name
+ * (hkStringPtr) at +0x10. The finish callback 0x37b0 constructs it in
+ * place; the complete destructor 0x3710 destroys the name. */
+class hkLocalFrameGroup : public hkReferencedObject
+{
+  public:
+    hkLocalFrameGroup(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    virtual ~hkLocalFrameGroup();
+
+    hkStringPtr name;
+};
 
 class hkSimpleLocalFrame : public hkReferencedObject
 {
   public:
+    hkSimpleLocalFrame(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), children(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
     void FUN_0000df30(Mat4 &out) const;          /* vtable slot 5; derived name */
     void FUN_0000df90(Vec4 &position) const;     /* vtable slot 7; derived name */
     const char *FUN_0000dcb0() const;            /* vtable slot 9; derived name */
@@ -3635,6 +3678,23 @@ class hkArrayStreamWriter : public hkStreamWriter
     const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ff00 */
 };
 
+/* A stream writer that writes nothing and only keeps the offset (derived
+ * name): vtable 0x16a6af0 (address point 0x16a6b00, no type info),
+ * constructor 0x19f670 (offset and end zeroed), not reflected. Slot 6
+ * (FUN_0019f6a0) advances the offset by the byte count and the end with
+ * it, slot 9 (0x19f6d0) seeks from the start, the offset or the end, slot
+ * 10 (the shared 0x34840) tells the offset; 5 and 8 true, 7 empty. */
+class OffsetStreamWriter : public hkStreamWriter /* derived name */
+{
+  public:
+    virtual ~OffsetStreamWriter();
+
+    int write(const void *buffer, int size); /* vtable slot 6 */
+
+    int offset; /* derived name */
+    int end;    /* derived name */
+};
+
 /* hknpVehicleInstance: hkClass 0x57c1490 (size 0x120, parent hknpUnaryAction's
  * 0x57bfbc0), built by the reflection initializer at 0x47a5d with its member
  * records at 0x1698a70; its finish constructor 0x47990 stores the vtable
@@ -3838,7 +3898,10 @@ class hkpParametricCurve : public hkReferencedObject
 class hkpLinearParametricCurve : public hkpParametricCurve
 {
   public:
-    hkpLinearParametricCurve(hkFinishLoadedObjectFlag flag) : hkpParametricCurve(flag) {}
+    hkpLinearParametricCurve(hkFinishLoadedObjectFlag flag)
+        : hkpParametricCurve(flag), points(flag), distance(flag)
+    {
+    }
 
     float FUN_0007fad0() const; /* vtable slot 9; derived name */
 

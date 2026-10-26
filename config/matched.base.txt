@@ -749,3 +749,12 @@ FUN_000348a0 src/libs/unknown/func_000348a0.cpp
 FUN_0003b9e0 src/libs/unknown/func_0003b9e0.cpp
 FUN_00080660 src/libs/unknown/func_00080660.cpp
 FUN_00094700 src/libs/unknown/func_00094700.cpp
+FUN_00068130 src/libs/unknown/func_00068130.cpp
+FUN_0019d370 src/libs/unknown/func_0019d370.cpp
+FUN_00014610 src/libs/unknown/func_00014610.cpp
+_ZN22hkRefCountedPropertiesC1Ev src/libs/unknown/func_0001c1b0.cpp
+FUN_00034870 src/libs/unknown/func_00034870.cpp
+FUN_0019f6a0 src/libs/unknown/func_0019f6a0.cpp _ZN18OffsetStreamWriter5writeEPKvi
+_ZN17hkLocalFrameGroupD1Ev src/libs/unknown/func_00003710.cpp
+FUN_000037b0 src/libs/unknown/func_000037b0.cpp
+FUN_000037f0 src/libs/unknown/func_000037f0.cpp
