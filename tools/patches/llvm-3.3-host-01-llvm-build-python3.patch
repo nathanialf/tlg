@@ -1,0 +1,486 @@
+llvm-3.3 host patch 01: utils/llvm-build (Python 3)
+
+CMake runs utils/llvm-build/llvm-build at configure time to write
+LLVMBuild.cmake (the component libraries and their link order) and
+LibraryDependencies.inc (llvm-config's table). The 3.3 tool is Python 2
+(print statements, `raise E, msg`, `except E, e`, implicit relative
+imports, ConfigParser/StringIO, `iter(x).next()`, list-returning
+dict.values()); the host has only Python 3 ("ModuleNotFoundError: No module
+named 'main'"). Port it to Python 3, one construct for another with the same
+output: print statements become print() calls with the same arguments,
+`print >>f, x` becomes print(x, file=f); the imports become absolute in the
+llvmbuild package; values() and sys.modules.values() are wrapped in list();
+configutil reads and writes text. Build tooling only: nothing here reaches
+the compiler's sources, so no effect on code generation.
+
+diff -ruN a/utils/llvm-build/llvmbuild/__init__.py b/utils/llvm-build/llvmbuild/__init__.py
+--- a/utils/llvm-build/llvmbuild/__init__.py
++++ b/utils/llvm-build/llvmbuild/__init__.py
+@@ -1 +1 @@
+-from main import main
++from llvmbuild.main import main
+diff -ruN a/utils/llvm-build/llvmbuild/componentinfo.py b/utils/llvm-build/llvmbuild/componentinfo.py
+--- a/utils/llvm-build/llvmbuild/componentinfo.py
++++ b/utils/llvm-build/llvmbuild/componentinfo.py
+@@ -2,11 +2,11 @@
+ Descriptor objects for entities that are part of the LLVM project.
+ """
+ 
+-import ConfigParser
+-import StringIO
++import configparser as ConfigParser
++import io as StringIO
+ import sys
+ 
+-from util import *
++from llvmbuild.util import *
+ 
+ class ParseError(Exception):
+     pass
+@@ -29,7 +29,7 @@
+ 
+     def __init__(self, subpath, name, dependencies, parent):
+         if not subpath.startswith('/'):
+-            raise ValueError,"invalid subpath: %r" % subpath
++            raise ValueError("invalid subpath: %r" % subpath)
+         self.subpath = subpath
+         self.name = name
+         self.dependencies = list(dependencies)
+@@ -101,9 +101,9 @@
+ 
+     def get_llvmbuild_fragment(self):
+         result = StringIO.StringIO()
+-        print >>result, 'type = %s' % self.type_name
+-        print >>result, 'name = %s' % self.name
+-        print >>result, 'parent = %s' % self.parent
++        print('type = %s' % self.type_name, file=result)
++        print('name = %s' % self.name, file=result)
++        print('parent = %s' % self.parent, file=result)
+         return result.getvalue()
+ 
+ class LibraryComponentInfo(ComponentInfo):
+@@ -153,19 +153,19 @@
+ 
+     def get_llvmbuild_fragment(self):
+         result = StringIO.StringIO()
+-        print >>result, 'type = %s' % self.type_name
+-        print >>result, 'name = %s' % self.name
+-        print >>result, 'parent = %s' % self.parent
++        print('type = %s' % self.type_name, file=result)
++        print('name = %s' % self.name, file=result)
++        print('parent = %s' % self.parent, file=result)
+         if self.library_name is not None:
+-            print >>result, 'library_name = %s' % self.library_name
++            print('library_name = %s' % self.library_name, file=result)
+         if self.required_libraries:
+-            print >>result, 'required_libraries = %s' % ' '.join(
+-                self.required_libraries)
++            print('required_libraries = %s' % ' '.join(
++                self.required_libraries), file=result)
+         if self.add_to_library_groups:
+-            print >>result, 'add_to_library_groups = %s' % ' '.join(
+-                self.add_to_library_groups)
++            print('add_to_library_groups = %s' % ' '.join(
++                self.add_to_library_groups), file=result)
+         if not self.installed:
+-            print >>result, 'installed = 0'
++            print('installed = 0', file=result)
+         return result.getvalue()
+ 
+     def get_library_name(self):
+@@ -238,15 +238,15 @@
+ 
+     def get_llvmbuild_fragment(self):
+         result = StringIO.StringIO()
+-        print >>result, 'type = %s' % self.type_name
+-        print >>result, 'name = %s' % self.name
+-        print >>result, 'parent = %s' % self.parent
++        print('type = %s' % self.type_name, file=result)
++        print('name = %s' % self.name, file=result)
++        print('parent = %s' % self.parent, file=result)
+         if self.required_libraries and not self._is_special_group:
+-            print >>result, 'required_libraries = %s' % ' '.join(
+-                self.required_libraries)
++            print('required_libraries = %s' % ' '.join(
++                self.required_libraries), file=result)
+         if self.add_to_library_groups:
+-            print >>result, 'add_to_library_groups = %s' % ' '.join(
+-                self.add_to_library_groups)
++            print('add_to_library_groups = %s' % ' '.join(
++                self.add_to_library_groups), file=result)
+         return result.getvalue()
+ 
+     def get_llvmconfig_component_name(self):
+@@ -310,19 +310,19 @@
+ 
+     def get_llvmbuild_fragment(self):
+         result = StringIO.StringIO()
+-        print >>result, 'type = %s' % self.type_name
+-        print >>result, 'name = %s' % self.name
+-        print >>result, 'parent = %s' % self.parent
++        print('type = %s' % self.type_name, file=result)
++        print('name = %s' % self.name, file=result)
++        print('parent = %s' % self.parent, file=result)
+         if self.required_libraries:
+-            print >>result, 'required_libraries = %s' % ' '.join(
+-                self.required_libraries)
++            print('required_libraries = %s' % ' '.join(
++                self.required_libraries), file=result)
+         if self.add_to_library_groups:
+-            print >>result, 'add_to_library_groups = %s' % ' '.join(
+-                self.add_to_library_groups)
++            print('add_to_library_groups = %s' % ' '.join(
++                self.add_to_library_groups), file=result)
+         for bool_key in ('has_asmparser', 'has_asmprinter', 'has_disassembler',
+                          'has_jit'):
+             if getattr(self, bool_key):
+-                print >>result, '%s = 1' % (bool_key,)
++                print('%s = 1' % (bool_key,), file=result)
+         return result.getvalue()
+ 
+     def get_llvmconfig_component_name(self):
+@@ -353,11 +353,11 @@
+ 
+     def get_llvmbuild_fragment(self):
+         result = StringIO.StringIO()
+-        print >>result, 'type = %s' % self.type_name
+-        print >>result, 'name = %s' % self.name
+-        print >>result, 'parent = %s' % self.parent
+-        print >>result, 'required_libraries = %s' % ' '.join(
+-            self.required_libraries)
++        print('type = %s' % self.type_name, file=result)
++        print('name = %s' % self.name, file=result)
++        print('parent = %s' % self.parent, file=result)
++        print('required_libraries = %s' % ' '.join(
++            self.required_libraries), file=result)
+         return result.getvalue()
+ 
+ class BuildToolComponentInfo(ToolComponentInfo):
+@@ -455,14 +455,14 @@
+             info = type_class.parse(subpath,
+                                     IniFormatParser(parser.items(section)))
+         except TypeError:
+-            print >>sys.stderr, "error: invalid component %r in %r: %s" % (
+-                section, path, "unable to instantiate: %r" % type_name)
++            print("error: invalid component %r in %r: %s" % (
++                section, path, "unable to instantiate: %r" % type_name), file=sys.stderr)
+             import traceback
+             traceback.print_exc()
+-            raise SystemExit, 1
+-        except ParseError,e:
++            raise SystemExit(1)
++        except ParseError as e:
+             fatal("unable to load component %r in %r: %s" % (
+-                    section, path, e.message))
++                    section, path, str(e)))
+ 
+         info._source_path = path
+         yield info
+diff -ruN a/utils/llvm-build/llvmbuild/configutil.py b/utils/llvm-build/llvmbuild/configutil.py
+--- a/utils/llvm-build/llvmbuild/configutil.py
++++ b/utils/llvm-build/llvmbuild/configutil.py
+@@ -24,7 +24,7 @@
+     """
+ 
+     # Read in the input data.
+-    f = open(input_path, "rb")
++    f = open(input_path, "r")
+     try:
+         data = f.read()
+     finally:
+@@ -44,7 +44,7 @@
+     if os.path.exists(output_path):
+         current_data = None
+         try:
+-            f = open(output_path, "rb")
++            f = open(output_path, "r")
+             try:
+                 current_data = f.read()
+             except:
+@@ -57,7 +57,7 @@
+             return False
+ 
+     # Write the output contents.
+-    f = open(output_path, "wb")
++    f = open(output_path, "w")
+     try:
+         f.write(data)
+     finally:
+diff -ruN a/utils/llvm-build/llvmbuild/main.py b/utils/llvm-build/llvmbuild/main.py
+--- a/utils/llvm-build/llvmbuild/main.py
++++ b/utils/llvm-build/llvmbuild/main.py
+@@ -1,11 +1,10 @@
+-import StringIO
+ import os
+ import sys
+ 
+-import componentinfo
+-import configutil
++import llvmbuild.componentinfo as componentinfo
++import llvmbuild.configutil as configutil
+ 
+-from util import *
++from llvmbuild.util import *
+ 
+ ###
+ 
+@@ -186,7 +185,7 @@
+             set(self.component_infos),
+             key = lambda c: c.name)
+         while components_to_visit:
+-            visit_component_info(iter(components_to_visit).next(), [], set())
++            visit_component_info(components_to_visit[0], [], set())
+ 
+         # Canonicalize children lists.
+         for c in self.ordered_component_infos:
+@@ -194,7 +193,7 @@
+ 
+     def print_tree(self):
+         def visit(node, depth = 0):
+-            print '%s%-40s (%s)' % ('  '*depth, node.name, node.type_name)
++            print('%s%-40s (%s)' % ('  '*depth, node.name, node.type_name))
+             for c in node.children:
+                 visit(c, depth + 1)
+         visit(self.component_info_map['$ROOT'])
+@@ -283,7 +282,7 @@
+             header_name = '.' + os.path.join(subpath, 'LLVMBuild.txt')
+             header_pad = '-' * (80 - len(header_fmt % (header_name, '')))
+             header_string = header_fmt % (header_name, header_pad)
+-            print >>f, """\
++            print("""\
+ %s
+ ;
+ ;                     The LLVM Compiler Infrastructure
+@@ -300,17 +299,17 @@
+ ;   http://llvm.org/docs/LLVMBuild.html
+ ;
+ ;===------------------------------------------------------------------------===;
+-""" % header_string
++""" % header_string, file=f)
+ 
+             # Write out each fragment.each component fragment.
+             for name,fragment in fragments:
+                 comment = comments_map.get(name)
+                 if comment is not None:
+                     f.write(comment)
+-                print >>f, "[%s]" % name
++                print("[%s]" % name, file=f)
+                 f.write(fragment)
+                 if fragment is not fragments[-1][1]:
+-                    print >>f
++                    print(file=f)
+ 
+             f.close()
+ 
+@@ -363,7 +362,7 @@
+                                is_installed)
+ 
+         # Convert to a list of entries and sort by name.
+-        entries = entries.values()
++        entries = list(entries.values())
+ 
+         # Create an 'all' pseudo component. We keep the dependency list small by
+         # only listing entries that have no other dependents.
+@@ -382,7 +381,7 @@
+         # Write out the library table.
+         make_install_dir(os.path.dirname(output_path))
+         f = open(output_path, 'w')
+-        print >>f, """\
++        print("""\
+ //===- llvm-build generated file --------------------------------*- C++ -*-===//
+ //
+ // Component Library Depenedency Table
+@@ -390,32 +389,32 @@
+ // Automatically generated file, do not edit!
+ //
+ //===----------------------------------------------------------------------===//
+-"""
+-        print >>f, 'struct AvailableComponent {'
+-        print >>f, '  /// The name of the component.'
+-        print >>f, '  const char *Name;'
+-        print >>f, ''
+-        print >>f, '  /// The name of the library for this component (or NULL).'
+-        print >>f, '  const char *Library;'
+-        print >>f, ''
+-        print >>f, '  /// Whether the component is installed.'
+-        print >>f, '  bool IsInstalled;'
+-        print >>f, ''
+-        print >>f, '\
+-  /// The list of libraries required when linking this component.'
+-        print >>f, '  const char *RequiredLibraries[%d];' % (
+-            max_required_libraries)
+-        print >>f, '} AvailableComponents[%d] = {' % len(entries)
++""", file=f)
++        print('struct AvailableComponent {', file=f)
++        print('  /// The name of the component.', file=f)
++        print('  const char *Name;', file=f)
++        print('', file=f)
++        print('  /// The name of the library for this component (or NULL).', file=f)
++        print('  const char *Library;', file=f)
++        print('', file=f)
++        print('  /// Whether the component is installed.', file=f)
++        print('  bool IsInstalled;', file=f)
++        print('', file=f)
++        print('\
++  /// The list of libraries required when linking this component.', file=f)
++        print('  const char *RequiredLibraries[%d];' % (
++            max_required_libraries), file=f)
++        print('} AvailableComponents[%d] = {' % len(entries), file=f)
+         for name,library_name,required_names,is_installed in entries:
+             if library_name is None:
+                 library_name_as_cstr = '0'
+             else:
+                 library_name_as_cstr = '"lib%s.a"' % library_name
+-            print >>f, '  { "%s", %s, %d, { %s } },' % (
++            print('  { "%s", %s, %d, { %s } },' % (
+                 name, library_name_as_cstr, is_installed,
+                 ', '.join('"%s"' % dep
+-                          for dep in required_names))
+-        print >>f, '};'
++                          for dep in required_names)), file=f)
++        print('};', file=f)
+         f.close()
+ 
+     def get_required_libraries_for_component(self, ci, traverse_groups = False):
+@@ -473,7 +472,7 @@
+ 
+         # Gather the list of necessary sources by just finding all loaded
+         # modules that are inside the LLVM source tree.
+-        for module in sys.modules.values():
++        for module in list(sys.modules.values()):
+             # Find the module path.
+             if not hasattr(module, '__file__'):
+                 continue
+@@ -512,7 +511,7 @@
+         header_name = os.path.basename(output_path)
+         header_pad = '-' * (80 - len(header_fmt % (header_name, '')))
+         header_string = header_fmt % (header_name, header_pad)
+-        print >>f, """\
++        print("""\
+ %s
+ #
+ #                     The LLVM Compiler Infrastructure
+@@ -528,10 +527,10 @@
+ # This file is autogenerated by llvm-build, do not edit!
+ #
+ #===------------------------------------------------------------------------===#
+-""" % header_string
++""" % header_string, file=f)
+ 
+         # Write the dependency information in the best way we can.
+-        print >>f, """
++        print("""
+ # LLVMBuild CMake fragment dependencies.
+ #
+ # CMake has no builtin way to declare that the configuration depends on
+@@ -541,30 +540,30 @@
+ # CMake.
+ #
+ # FIXME: File a CMake RFE to get a properly supported version of this
+-# feature."""
++# feature.""", file=f)
+         for dep in dependencies:
+-            print >>f, """\
++            print("""\
+ configure_file(\"%s\"
+                ${CMAKE_CURRENT_BINARY_DIR}/DummyConfigureOutput)""" % (
+-                cmake_quote_path(dep),)
++                cmake_quote_path(dep),), file=f)
+ 
+         # Write the properties we use to encode the required library dependency
+         # information in a form CMake can easily use directly.
+-        print >>f, """
++        print("""
+ # Explicit library dependency information.
+ #
+ # The following property assignments effectively create a map from component
+-# names to required libraries, in a way that is easily accessed from CMake."""
++# names to required libraries, in a way that is easily accessed from CMake.""", file=f)
+         for ci in self.ordered_component_infos:
+             # We only write the information for libraries currently.
+             if ci.type_name != 'Library':
+                 continue
+ 
+-            print >>f, """\
++            print("""\
+ set_property(GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_%s %s)""" % (
+                 ci.get_prefixed_library_name(), " ".join(sorted(
+                      dep.get_prefixed_library_name()
+-                     for dep in self.get_required_libraries_for_component(ci))))
++                     for dep in self.get_required_libraries_for_component(ci)))), file=f)
+ 
+         f.close()
+ 
+@@ -590,7 +589,7 @@
+         header_name = os.path.basename(output_path)
+         header_pad = '-' * (80 - len(header_fmt % (header_name, '')))
+         header_string = header_fmt % (header_name, header_pad)
+-        print >>f, """\
++        print("""\
+ %s
+ #
+ #                     The LLVM Compiler Infrastructure
+@@ -606,30 +605,30 @@
+ # This file is autogenerated by llvm-build, do not edit!
+ #
+ #===------------------------------------------------------------------------===#
+-""" % header_string
++""" % header_string, file=f)
+ 
+         # Write the dependencies for the fragment.
+         #
+         # FIXME: Technically, we need to properly quote for Make here.
+-        print >>f, """\
++        print("""\
+ # Clients must explicitly enable LLVMBUILD_INCLUDE_DEPENDENCIES to get
+ # these dependencies. This is a compromise to help improve the
+-# performance of recursive Make systems.""" 
+-        print >>f, 'ifeq ($(LLVMBUILD_INCLUDE_DEPENDENCIES),1)'
+-        print >>f, "# The dependencies for this Makefile fragment itself."
+-        print >>f, "%s: \\" % (mk_quote_string_for_target(output_path),)
++# performance of recursive Make systems.""", file=f) 
++        print('ifeq ($(LLVMBUILD_INCLUDE_DEPENDENCIES),1)', file=f)
++        print("# The dependencies for this Makefile fragment itself.", file=f)
++        print("%s: \\" % (mk_quote_string_for_target(output_path),), file=f)
+         for dep in dependencies:
+-            print >>f, "\t%s \\" % (dep,)
+-        print >>f
++            print("\t%s \\" % (dep,), file=f)
++        print(file=f)
+ 
+         # Generate dummy rules for each of the dependencies, so that things
+         # continue to work correctly if any of those files are moved or removed.
+-        print >>f, """\
++        print("""\
+ # The dummy targets to allow proper regeneration even when files are moved or
+-# removed."""
++# removed.""", file=f)
+         for dep in dependencies:
+-            print >>f, "%s:" % (mk_quote_string_for_target(dep),)
+-        print >>f, 'endif'
++            print("%s:" % (mk_quote_string_for_target(dep),), file=f)
++        print('endif', file=f)
+ 
+         f.close()
+ 
+@@ -669,7 +668,7 @@
+ 
+     # Find the list of targets to enable.
+     if opts.enable_targets is None:
+-        enable_targets = available_targets.values()
++        enable_targets = list(available_targets.values())
+     else:
+         # We support both space separated and semi-colon separated lists.
+         if ' ' in opts.enable_targets:
+diff -ruN a/utils/llvm-build/llvmbuild/util.py b/utils/llvm-build/llvmbuild/util.py
+--- a/utils/llvm-build/llvmbuild/util.py
++++ b/utils/llvm-build/llvmbuild/util.py
+@@ -3,7 +3,7 @@
+ 
+ def _write_message(kind, message):
+     program = os.path.basename(sys.argv[0])
+-    print >>sys.stderr, '%s: %s: %s' % (program, kind, message)
++    print('%s: %s: %s' % (program, kind, message), file=sys.stderr)
+ 
+ note = lambda message: _write_message('note', message)
+ warning = lambda message: _write_message('warning', message)

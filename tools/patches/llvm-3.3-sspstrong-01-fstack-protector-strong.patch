@@ -1,0 +1,124 @@
+llvm-3.3 backport patch: clang -fstack-protector-strong (upstream clang 3.5)
+
+This patch CHANGES CODE GENERATION, but only when -fstack-protector-strong
+is passed; without it every compile is unchanged (build_llvm.sh --verify).
+
+LLVM 3.3's backend already implements the `sspstrong` function attribute
+(lib/CodeGen/StackProtector.cpp: RequiresStackProtector with Strong set
+protects any function with an array or an address-taken local), but clang
+3.3 has no way to request it: its driver knows -fstack-protector (ssp,
+cc1 -stack-protector 1) and -fstack-protector-all (sspreq, cc1
+-stack-protector 2). Clang 3.5 added the driver flag and the cc1 level,
+renumbering sspreq to 3. This is that frontend support, as it stands in
+clang 3.6.2 (tools/cc/src/llvm-3.6.2.src/tools/clang):
+
+  include/clang/Driver/Options.td     fstack_protector_strong
+  include/clang/Basic/LangOptions.h   StackProtectorMode gains SSPStrong
+                                      between SSPOn and SSPReq (the 2-bit
+                                      LangOptions.def field holds it)
+  lib/Driver/Tools.cpp                the flag selects SSPStrong; the levels
+                                      are passed as the LangOptions values
+                                      (1 ssp, 2 strong, 3 all)
+  lib/Frontend/CompilerInvocation.cpp -stack-protector 2 = SSPStrong,
+                                      3 = SSPReq
+  lib/CodeGen/CodeGenModule.cpp       SSPStrong adds
+                                      llvm::Attribute::StackProtectStrong
+  lib/Frontend/InitPreprocessor.cpp   __SSP_STRONG__ 2 (and __SSP_ALL__ 3,
+                                      as upstream)
+
+Left out: 3.6.2's std::max with the toolchain's default level under
+-fstack-protector (a later upstream change for the Darwin and OpenBSD
+defaults; FreeBSD's default is 0), and the options' help text.
+docs/DECISIONS.md D20.
+
+diff -ruN a/tools/clang/include/clang/Basic/LangOptions.h b/tools/clang/include/clang/Basic/LangOptions.h
+--- a/tools/clang/include/clang/Basic/LangOptions.h
++++ b/tools/clang/include/clang/Basic/LangOptions.h
+@@ -58,7 +58,7 @@
+   typedef clang::Visibility Visibility;
+   
+   enum GCMode { NonGC, GCOnly, HybridGC };
+-  enum StackProtectorMode { SSPOff, SSPOn, SSPReq };
++  enum StackProtectorMode { SSPOff, SSPOn, SSPStrong, SSPReq };
+   
+   enum SignedOverflowBehaviorTy {
+     SOB_Undefined,  // Default C standard behavior.
+diff -ruN a/tools/clang/include/clang/Driver/Options.td b/tools/clang/include/clang/Driver/Options.td
+--- a/tools/clang/include/clang/Driver/Options.td
++++ b/tools/clang/include/clang/Driver/Options.td
+@@ -684,6 +684,7 @@
+ def fsigned_char : Flag<["-"], "fsigned-char">, Group<f_Group>;
+ def fsplit_stack : Flag<["-"], "fsplit-stack">, Group<f_Group>;
+ def fstack_protector_all : Flag<["-"], "fstack-protector-all">, Group<f_Group>;
++def fstack_protector_strong : Flag<["-"], "fstack-protector-strong">, Group<f_Group>;
+ def fstack_protector : Flag<["-"], "fstack-protector">, Group<f_Group>;
+ def fstrict_aliasing : Flag<["-"], "fstrict-aliasing">, Group<f_Group>;
+ def fstrict_enums : Flag<["-"], "fstrict-enums">, Group<f_Group>, Flags<[CC1Option]>,
+diff -ruN a/tools/clang/lib/CodeGen/CodeGenModule.cpp b/tools/clang/lib/CodeGen/CodeGenModule.cpp
+--- a/tools/clang/lib/CodeGen/CodeGenModule.cpp
++++ b/tools/clang/lib/CodeGen/CodeGenModule.cpp
+@@ -634,6 +634,8 @@
+ 
+   if (LangOpts.getStackProtector() == LangOptions::SSPOn)
+     F->addFnAttr(llvm::Attribute::StackProtect);
++  else if (LangOpts.getStackProtector() == LangOptions::SSPStrong)
++    F->addFnAttr(llvm::Attribute::StackProtectStrong);
+   else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
+     F->addFnAttr(llvm::Attribute::StackProtectReq);
+ 
+diff -ruN a/tools/clang/lib/Driver/Tools.cpp b/tools/clang/lib/Driver/Tools.cpp
+--- a/tools/clang/lib/Driver/Tools.cpp
++++ b/tools/clang/lib/Driver/Tools.cpp
+@@ -12,6 +12,7 @@
+ #include "InputInfo.h"
+ #include "SanitizerArgs.h"
+ #include "ToolChains.h"
++#include "clang/Basic/LangOptions.h"
+ #include "clang/Basic/ObjCRuntime.h"
+ #include "clang/Basic/Version.h"
+ #include "clang/Driver/Action.h"
+@@ -2831,11 +2832,14 @@
+   unsigned StackProtectorLevel = 0;
+   if (Arg *A = Args.getLastArg(options::OPT_fno_stack_protector,
+                                options::OPT_fstack_protector_all,
++                               options::OPT_fstack_protector_strong,
+                                options::OPT_fstack_protector)) {
+     if (A->getOption().matches(options::OPT_fstack_protector))
+-      StackProtectorLevel = 1;
++      StackProtectorLevel = LangOptions::SSPOn;
++    else if (A->getOption().matches(options::OPT_fstack_protector_strong))
++      StackProtectorLevel = LangOptions::SSPStrong;
+     else if (A->getOption().matches(options::OPT_fstack_protector_all))
+-      StackProtectorLevel = 2;
++      StackProtectorLevel = LangOptions::SSPReq;
+   } else {
+     StackProtectorLevel =
+       getToolChain().GetDefaultStackProtectorLevel(KernelOrKext);
+diff -ruN a/tools/clang/lib/Frontend/CompilerInvocation.cpp b/tools/clang/lib/Frontend/CompilerInvocation.cpp
+--- a/tools/clang/lib/Frontend/CompilerInvocation.cpp
++++ b/tools/clang/lib/Frontend/CompilerInvocation.cpp
+@@ -1318,7 +1318,8 @@
+     break;
+   case 0: Opts.setStackProtector(LangOptions::SSPOff); break;
+   case 1: Opts.setStackProtector(LangOptions::SSPOn);  break;
+-  case 2: Opts.setStackProtector(LangOptions::SSPReq); break;
++  case 2: Opts.setStackProtector(LangOptions::SSPStrong); break;
++  case 3: Opts.setStackProtector(LangOptions::SSPReq); break;
+   }
+ 
+   // Parse -fsanitize= arguments.
+diff -ruN a/tools/clang/lib/Frontend/InitPreprocessor.cpp b/tools/clang/lib/Frontend/InitPreprocessor.cpp
+--- a/tools/clang/lib/Frontend/InitPreprocessor.cpp
++++ b/tools/clang/lib/Frontend/InitPreprocessor.cpp
+@@ -621,8 +621,10 @@
+ 
+   if (LangOpts.getStackProtector() == LangOptions::SSPOn)
+     Builder.defineMacro("__SSP__");
++  else if (LangOpts.getStackProtector() == LangOptions::SSPStrong)
++    Builder.defineMacro("__SSP_STRONG__", "2");
+   else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
+-    Builder.defineMacro("__SSP_ALL__", "2");
++    Builder.defineMacro("__SSP_ALL__", "3");
+ 
+   if (FEOpts.ProgramAction == frontend::RewriteObjC)
+     Builder.defineMacro("__weak", "__attribute__((objc_gc(weak)))");

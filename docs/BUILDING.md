@@ -19,7 +19,8 @@ sudo apt-get install -y clang-19 lld-19 llvm-19 openjdk-25-jdk-headless python3-
 
 - `clang-19`, `llvm-19`, `lld-19`: `llvm-objdump-19`, `llvm-readelf-19`,
   `llvm-nm-19`, and the fallback compiler. The compilers are the prebuilt
-  LLVM 3.3 and 4.0.0 `setup.sh` fetches (below). Upstream LLVM knows the
+  LLVM 4.0.0 `setup.sh` fetches and LLVM 3.3 built from source with one
+  backport (`tools/build_llvm.sh 3.3`, below). Upstream LLVM knows the
   PS4 triple from 3.7; no SDK is involved.
 - `openjdk-25-jdk-headless`: for Ghidra 12.2 (optional; the survey does not
   need it).
@@ -32,8 +33,8 @@ Everything else is fetched by `tools/setup.sh` into `tools/ext/` and
 | Python venv (`tools/requirements.txt`: pyelftools, capstone, ninja, clang-format) | `.venv/` | every Python tool; ninja; the formatter |
 | .NET 8 runtime (`dotnet-install.sh`, user-local) | `tools/ext/dotnet/` | runs PkgTool.Core |
 | LibOrbisPkg PkgTool.Core 0.2.231, framework-dependent build | `tools/ext/pkgtool/` | extracts the package (the self-contained Linux build bundles a 2020 .NET Core 3 that needs libssl 1.x and ICU, neither on a current host) |
-| LLVM 3.3 and 4.0.0 prebuilt + Debian's `libtinfo5` (`tools/fetch_llvm.sh`) | `tools/cc/llvm-3.3/`, `tools/cc/llvm-4.0.0/`, `tools/cc/shim/` | the compilers of the two regions (`docs/TARGETS.md`); other releases for `tools/compiler_probe.sh` on demand |
-| LLVM 3.6.2 / 4.0.0 built from source (`tools/build_llvm.sh`, optional, about 20 and 40 minutes) | `tools/cc/llvm-<version>-src/` | verified byte-identical to the prebuilt releases; the base for any future backport patch |
+| LLVM 3.3 and 4.0.0 prebuilt + Debian's `libtinfo5` (`tools/fetch_llvm.sh`) | `tools/cc/llvm-3.3/`, `tools/cc/llvm-4.0.0/`, `tools/cc/shim/` | the game region's compiler, and the 3.3 release the library region's from-source build is verified against (`docs/TARGETS.md`); other releases for `tools/compiler_probe.sh` on demand |
+| LLVM 3.3, 3.6.2 and 4.0.0 built from source (`tools/build_llvm.sh <version>`; 3.3 is required, about 15 minutes on 3 cores; 3.6.2 and 4.0.0 optional, about 20 and 40) | `tools/cc/llvm-<version>-src/` | verified byte-identical to the prebuilt releases (`--verify`); 3.3 then carries the one backport the library prefix compiles with (`cxx=3.3-src`, D20). Pins: llvm-3.3.src.tar.gz `68766b1e70d05a25e2f502e997a3cb3937187a3296595cf6e0977d5cd6727578`, cfe-3.3.src.tar.gz `b1b55de4ab3a57d3e0331a83e0284610191c77d924e3446498d9113d08dfb996` (signed by Bill Wendling, key C135 49BB 82A1 7681 BF71 43C2 B446 8DF4 E95C 63DC); host build `-std=gnu++98 -fno-lifetime-dse` with GCC 14; host patch `llvm-3.3-host-01-llvm-build-python3` (the configure-time tool to Python 3); backport `llvm-3.3-sspstrong-01-fstack-protector-strong` (clang 3.5's `-fstack-protector-strong` frontend, changes code only under that flag) |
 | objdiff-cli 3.8.3 | `tools/ext/objdiff/` | optional interactive object diff viewer |
 | Ghidra 12.2 | `tools/ghidra/ghidra_12.2_PUBLIC/` | optional analysis (`SKIP_GHIDRA=1` skips the 570 MB download) |
 
