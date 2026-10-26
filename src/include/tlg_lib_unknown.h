@@ -117,13 +117,25 @@ class AllocatorBase /* derived name */
     virtual void FUN_00008d80(void *pointer, int numBytes);  /* slot 5; derived name */
 };
 
+/* The interface's slots 2 to 10 in their vtable order, each named after
+ * TwoBaseAllocator's overrider (primary slots 13 to 21) and typed from its
+ * body. The executable holds no vtable of the interface itself (no run of
+ * nine __cxa_pure_virtual slots after two destructors), and every allocator
+ * met so far overrides all nine, so they are pure. */
 class AllocatorInterface /* derived name */
 {
   public:
     virtual ~AllocatorInterface();
 
-    virtual void *FUN_00003580() const = 0; /* slot 5; derived name */
-    virtual u64 allocatedBytes() const = 0; /* slot 8; derived name */
+    virtual void FUN_00003140() = 0;                        /* slot 2; derived name */
+    virtual void FUN_000032e0(int value) = 0;               /* slot 3; derived name */
+    virtual int FUN_000034a0(void *pointer) = 0;            /* slot 4; derived name */
+    virtual void *FUN_00003580() const = 0;                 /* slot 5; derived name */
+    virtual bool FUN_00002230(int numBytes) = 0;            /* slot 6; derived name */
+    virtual int FUN_00002f10(void *a, void *b) = 0;         /* slot 7; derived name */
+    virtual u64 allocatedBytes() const = 0;                 /* slot 8; derived name */
+    virtual void FUN_00002330(int value) = 0;               /* slot 9; derived name */
+    virtual int FUN_000035a0(void *pointer, int value) = 0; /* slot 10; derived name */
 };
 
 /* An allocator (vtable address points 0x168c640 and, for the second base,
