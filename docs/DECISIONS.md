@@ -499,3 +499,39 @@ the same address, would not have resolved.
 
 **Trigger to revisit.** A class with a virtual base (C1 and C2 differ in
 code and address), which none of the matched classes has.
+
+## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
+
+**Decision.** Where the base keeps a destructor's vptr store and emits
+nothing else, the source body holds one statement that compiles to nothing,
+written as the library's own release assert: `HK_ASSERT(0, <condition>)`
+with the macro defined in our headers as Havok's release expansion, a null
+statement (`((void)0)`), the id 0 because the original id is not in the
+executable, and the condition an invariant the recovered data model
+supports, named in a comment and marked `/* derived assert */`. It is
+permitted only where the bytes demand a non-empty body; nowhere else, and
+never to move code.
+
+**Why.** LLVM 3.3 skips a destructor's vptr store only when the
+destructor's body is trivial and every field's destructor body is trivial
+(`CGClass.cpp:1224` `CanSkipVTablePointerInitialization`,
+`HasTrivialDestructorBody`); the worker confirmed on 2026-10-26 that a
+field whose destructor is `{}` still skips, and that any statement, even
+`;`, keeps the store. So where the base stores the vptr and returns, the
+original destructor (or a member's) contained a statement that emitted no
+code. Measured over the library region: of 81 fifteen-byte functions that
+only store a vptr and return, 79 are finish constructors (a constructor
+always stores) and 2 are base destructors in slot 0 of the vtable they
+store (0x47cb0 hkSlot, 0x90450 the command writer whose member at +0x10 is
+a block-stream writer). The statement is unrecoverable; Havok's destructors
+assert their invariants with `HK_ASSERT`, whose release form is a null
+statement, so an assert is the developer-native representative and is
+written as derived. A null statement `;` or an invented empty call would
+be a crutch: it exists only to steer. The assert states something the
+model says is true at destruction (the writer was finalized, the slot was
+unsubscribed), which is what the developer asserted.
+
+**Trigger to revisit.** An executable string or a public Havok header of
+the same version that spells the statement (then it is a fact and replaces
+the derived assert), or a third destructor of this shape whose model yields
+no invariant to assert.
