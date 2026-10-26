@@ -741,3 +741,11 @@ FUN_000eafb0 src/libs/unknown/func_000eafb0.cpp
 FUN_001618f0 src/libs/unknown/func_001618f0.cpp _ZN14Object001618f0C2Ev
 FUN_00178580 src/libs/unknown/func_00178580.cpp
 FUN_0017f2d0 src/libs/unknown/func_0017f2d0.cpp
+FUN_00181ad0 src/libs/unknown/func_00181ad0.cpp
+FUN_0001bbc0 src/libs/unknown/func_0001bbc0.cpp
+FUN_0001bbe0 src/libs/unknown/func_0001bbe0.cpp
+FUN_00034850 src/libs/unknown/func_00034850.cpp
+FUN_000348a0 src/libs/unknown/func_000348a0.cpp
+FUN_0003b9e0 src/libs/unknown/func_0003b9e0.cpp
+FUN_00080660 src/libs/unknown/func_00080660.cpp
+FUN_00094700 src/libs/unknown/func_00094700.cpp

@@ -2703,12 +2703,29 @@ class hkpHingeConstraintData
  * 0x169f160): isEnabled, forwardAxis and sideAxis (bytes) at +2 to +4,
  * radius at +8, axle (a pointer to hkpWheelFrictionConstraintAtom::Axle,
  * hkClass 0x57c54f0) at +0x10, maxFrictionForce and torque at +0x20 and
- * +0x24. */
+ * +0x24, frictionImpulse and slipImpulse (two floats each) at +0x28 and
+ * +0x30, padding (8 bytes, not serialized) at +0x38. */
 struct hkpWheelFrictionConstraintAtom {
     struct Axle;
 
+    /* The finish constructor, inline in the type info's finish callback
+     * FUN_00080660 (size 0x40): a loaded atom starts with no impulses. */
+    hkpWheelFrictionConstraintAtom(hkFinishLoadedObjectFlag flag)
+    {
+        if (flag.finishing) {
+            slipImpulse[0] = 0.0f;
+            slipImpulse[1] = 0.0f;
+            frictionImpulse[0] = 0.0f;
+            frictionImpulse[1] = 0.0f;
+        }
+    }
+
     u8 unknown0[0x10];
     Axle *axle;
+    u8 unknown18[0x10];
+    float frictionImpulse[2]; /* record 0x169f278 */
+    float slipImpulse[2];     /* record 0x169f2a0 */
+    u8 padding[8];
 };
 
 /* hkpWheelFrictionConstraintData (vtable address point 0x16a5f10, stored at

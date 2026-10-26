@@ -64,6 +64,27 @@ void FUN_0002b0b0(Pair08Owner *self);                             /* derived nam
 void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived name */
 void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
 void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
+/* What follows the record's entries (derived names): FUN_0002af30 returns
+ * its address (past the 32-byte entries from +0x40 and a size the table at
+ * 0x14b8690 gives for the byte at +3), FUN_0002af50 the address of an int
+ * in it, 16 bytes further for each of the conditions its byte at +4 tells
+ * (nonzero, bit 1, bit 0). */
+struct Pair08Tail; /* derived name */
+
+Pair08Tail *FUN_0002af30(const Pair08Owner *self); /* derived name */
+const s32 *FUN_0002af50(const Pair08Tail *tail);   /* derived name */
+s32 FUN_00034850(const Pair08Owner *self);         /* derived name */
+
+/* One vector per entry of the record (derived names): FUN_00031740 writes
+ * one vector per entry (its count) from the two motions' vectors at +0x40
+ * and +0x50 and the record's vector at +0x20; FUN_000348a0, called at
+ * 0x15d8e5, forwards to it with the record's count, its fourth argument
+ * unused. */
+void FUN_00031740(const Pair08Owner *self, int count, const hknpMotion *motionA,
+                  const hknpMotion *motionB, Vec4 *out); /* derived name */
+void FUN_000348a0(const Pair08Owner *self, const hknpMotion *motionA, const hknpMotion *motionB,
+                  const void *argument4, Vec4 *out); /* derived name */
+
 void FUN_0002b390(Pair08Owner *self,
                   bool enable); /* derived name: sets or clears bit 2 of the byte at +1 */
 
@@ -726,6 +747,12 @@ class StreamReader : public hkReferencedObject /* derived name */
 {
   public:
     virtual hkBool isOk() const; /* vtable slot 5; derived name */
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual StreamReader *unknownVirtual9();
+    virtual int seek(int offset, int whence); /* vtable slot 10; derived name */
+    virtual int tell() const;                 /* vtable slot 11; derived name */
 };
 
 /* An input stream over a reader (derived name; vtable 0x16a65d0, address
@@ -741,6 +768,47 @@ class InputStream : public hkReferencedObject /* derived name */
     StreamReader *reader; /* derived name */
 };
 
+/* The file system the library installs (derived name; vtable 0x168ea90,
+ * address point 0x168eaa0, built as a bare reference-counted object by
+ * FUN_000098d0 and stored in the slot at 0x57b9b70, the singleton the
+ * string "hkFileSystem" names): slot 7 removes a file and slot 8 creates a
+ * directory through Fios. */
+class FiosFileSystem : public hkReferencedObject /* derived name */
+{
+  public:
+    hkResult FUN_0001bbc0(const char *path); /* vtable slot 7; derived name */
+    hkResult FUN_0001bbe0(const char *path); /* vtable slot 8; derived name */
+};
+
+/* A reader interface whose slot 9 seeks and slot 10 tells (derived names):
+ * the object of the vtable at 0x16a6400 (address point 0x16a6410; no type
+ * info names it), built on the stack by FUN_00183350, implements it over
+ * another at +0x10, offset by the int at +0x18: slots 5 to 8 forward to the
+ * same slots of the inner reader (the folded forwarders 0xabf0, 0x89f0,
+ * 0x89e0 and 0xaa530), slot 9 (FUN_00181ad0) seeks it, moving an absolute
+ * position by the offset, slot 10 (FUN_00181af0) tells its position less
+ * the offset, slot 11 is the shared false 0x1bad0. Slots 5 to 8 are not
+ * recovered. */
+class SeekableReader : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual int seek(int offset, int whence) = 0; /* vtable slot 9; derived name */
+    virtual int tell() const = 0;                 /* vtable slot 10; derived name */
+};
+
+class OffsetSeekableReader : public SeekableReader /* derived name */
+{
+  public:
+    int FUN_00181ad0(int offset, int whence); /* vtable slot 9; derived name */
+
+    SeekableReader *reader; /* derived name */
+    int start;              /* derived name */
+};
+
 /* A buffered stream reader (derived names; vtable address point 0x16a35d0,
  * constructor 0x94170, the reference-counted object's slots 2 to 4): the
  * stream at +0x10 (its reference count raised), what the stream's slot 9
@@ -752,7 +820,8 @@ class InputStream : public hkReferencedObject /* derived name */
 class BufferedStreamReader : public hkReferencedObject /* derived name */
 {
   public:
-    BufferedStreamReader *FUN_000946f0(); /* vtable slot 9; derived name */
+    BufferedStreamReader *FUN_000946f0();     /* vtable slot 9; derived name */
+    int FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
 
     StreamReader *stream;         /* derived name */
     StreamReader *seekableStream; /* derived name */
