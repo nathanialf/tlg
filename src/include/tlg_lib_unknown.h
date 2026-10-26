@@ -197,8 +197,17 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual AllocatorInterface *FUN_00001620();
 
     virtual void *FUN_00003580() const; /* vtable slot 16; derived name */
+    /* Slot 20 (0x22d0, also the second base's slot 8 through the thunk
+     * 0x2300, which has it inlined): the bytes the allocator below has
+     * handed out since the count at +0x20, none without one. */
+    virtual u64 allocatedBytes() const;
 
-    u8 unknown10[0xb40];
+    u8 unknown10[0x10];
+    u64 baseBytes;                   /* derived name */
+    u64 peakBytes;                   /* derived name; the largest count slot 18 (0x2230) has seen */
+    void *unknown30;                 /* derived name; the constructor's first argument */
+    AllocatorInterface *allocator38; /* derived name; the constructor's second argument */
+    u8 unknown40[0xb10];
     void *pointerB50; /* derived name */
 };
 
@@ -1213,5 +1222,27 @@ struct Record00006b90 /* derived name */
 extern void *D_57b7b90; /* derived name */
 
 void FUN_00006b90(Record00006b90 *self); /* derived name */
+
+/* A hash map of word-sized keys and values (derived name): 16-byte pairs
+ * from the pointer at +0, the count at +8 with the don't-deallocate flag in
+ * its top bit, the hash mask at +0xc; an empty slot's key is -1. The memory
+ * system's object holds one at +0x10 (cleared at 0xb60d). */
+struct UlongMap /* derived name */
+{
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
+
+    struct Pair {
+        hkUlong key;   /* derived name */
+        hkUlong value; /* derived name */
+    };
+
+    /* Every slot emptied and the count zeroed, the storage kept (0x13d80).
+     * derived name. */
+    void FUN_00013d80();
+
+    Pair *elems;  /* derived name */
+    int numElems; /* derived name */
+    int hashMod;  /* derived name */
+};
 
 #endif

@@ -218,6 +218,19 @@ class hknpProcessFirstRoundResultsTask : public hkReferencedObject,
 class hknpPrepareConstraintsTask : public hkReferencedObject,
                                    public hknpTaskInterface /* derived name */
 {
+  public:
+    /* 0x154ed0, called by FUN_00150330 with two members of its object
+     * (+0x120 and +0x138). */
+    hknpPrepareConstraintsTask(void *unknown18, void *unknown20, void *unknown28);
+
+    /* slot 5 (0x154f50; the interface's slot 2 through the thunk 0x1550b0) */
+    virtual void process();
+    /* slot 6 (0x154f00, also the interface's slot 3) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    void *unknown18; /* derived name */
+    void *unknown20; /* derived name */
+    void *unknown28; /* derived name */
 };
 
 /* hknpBuildConstraintsTask: vtables 0x16a46d0 and 0x16a4718; slot 6 opens the timer "Constraints/Build Active" or "Build Activated Constraints". */

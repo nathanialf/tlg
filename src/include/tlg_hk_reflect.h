@@ -204,6 +204,9 @@ struct hkMatrix3 {
      * called from 0x2913b, 0x293d2 and 0x2968e). */
     void FUN_0001ac70(const Vec4 &scale);
 
+    /* derived name: m added column by column (0x1af70; called at 0x29ac8). */
+    void FUN_0001af70(const hkMatrix3 &m);
+
     /* derived name: whether the columns are of unit length within a
      * tolerance and orthogonal (0xbe80; the game calls it on its own
      * rotations). */
@@ -226,6 +229,10 @@ struct hkTransform {
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
+
+/* derived name: out = v brought into the transform's space, the
+ * translation taken off and the rotation undone (0x10f90). */
+void FUN_00010f90(Vec4 &out, const hkTransform &t, const Vec4 &v);
 
 /* hkClassMember, a 40-byte member record (member names from its own
  * reflection strings at 0x14b2cc0: name, class, enum, type, subtype,
@@ -758,7 +765,7 @@ class hkcdPlanarGeometryPolygonCollection : public hkcdPlanarGeometryPrimitivesC
  * name "hkcdPlanarSolid::NodeStorage", 0x38 bytes) has a finish
  * constructor inline in its finish callback FUN_0001d620 that stores only
  * the vtable. */
-struct hkcdPlanarGeometryPlanesCollection;
+class hkcdPlanarGeometryPlanesCollection;
 
 class hkcdPlanarSolid : public hkcdPlanarEntity
 {
@@ -790,6 +797,26 @@ class hkcdPlanarCsgOperand : public hkReferencedObject
     hkcdPlanarSolid *solid;
     hkcdPlanarGeometry *danglingGeometry;
     void *regions;
+};
+
+/* hkcdPlanarGeometry (hkClass 0x57ba110, built at 0x1d005: parent
+ * hkcdPlanarEntity's 0x57ba190, member records at 0x168f330; vtable
+ * 0x16a36f0): planes (a pointer to hkcdPlanarGeometryPlanesCollection) at
+ * +0x18, polys (a pointer to hkcdPlanarGeometryPolygonCollection) at +0x20,
+ * vertices (a pointer, not serialized: record flags 0x400) at +0x28. Its
+ * finish constructor 0x9a860 is out of line (the finish callback
+ * FUN_0001cf60 jumps to it, the reflection initializer at 0x1d010 runs it
+ * on a temporary); a finished geometry runs FUN_0009a8a0 with 0. */
+struct hkcdPlanarGeometry : public hkcdPlanarEntity {
+    hkcdPlanarGeometry(hkFinishLoadedObjectFlag flag);
+    virtual ~hkcdPlanarGeometry();
+
+    /* 0x9a8a0, a large member (derived name). */
+    void FUN_0009a8a0(int argument);
+
+    hkcdPlanarGeometryPlanesCollection *planes;
+    hkcdPlanarGeometryPolygonCollection *polys;
+    void *vertices;
 };
 
 class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
@@ -1289,7 +1316,6 @@ class hknpTyremarksWheel : public hkReferencedObject
 
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
-struct hkcdPlanarGeometry;       /* FUN_0009a860, vtable 0x16a3700 */
 struct hkcdSimdTree;             /* FUN_00021a20, vtable 0x1690d70 */
 class hkSkinnedRefMeshShape;     /* 0xaa660, vtable 0x16a38c0 */
 class hkMemoryMeshShape;         /* 0x2a940, vtable 0x1692540 */
@@ -1299,10 +1325,9 @@ class hkMemoryMeshVertexBuffer;  /* 0x274e0, vtable 0x16921b0 */
 class hknpDynamicCompoundShape;  /* 0x469a0, vtable 0x1697ef0 */
 class hknpMaskedShape;           /* FUN_00037b90, vtable 0x1693a90 */
 
-void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);          /* derived name */
-void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);       /* derived name */
-void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);       /* derived name */
+void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
  * parent hkReferencedObject's; vtable 0x1690de0, address point 0x1690df0):
@@ -2824,10 +2849,20 @@ class hknpConvexShape : public hknpShape
 class hknpConvexPolytopeShape : public hknpConvexShape
 {
   public:
-    struct Face;
+    /* hknpConvexPolytopeShape::Face (records from 0x1694e60): firstIndex
+     * (hkUint16) at +0, numIndices and minHalfAngle (hkUint8) at +2 and
+     * +3. */
+    struct Face {
+        u16 firstIndex;
+        u8 numIndices;
+        u8 minHalfAngle;
+    };
     class Connectivity;
 
     int FUN_00072f70() const; /* vtable slot 13; derived name */
+    /* Slot 14 (0x72f80, kept by the capsule and triangle shapes): a face's
+     * plane and its minimum half angle. derived name. */
+    void FUN_00072f80(int faceIndex, Vec4 &planeOut, u8 &minAngleOut) const;
 
     /* The bytes a polytope shape of a class of sizeOfBaseClass bytes
      * needs with its vertices, faces, planes and indices after it, each
@@ -2947,9 +2982,21 @@ void FUN_00067960(hknpMalleableConstraintData *self,
                   hkFinishLoadedObjectFlag flag);                        /* derived name */
 void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
-/* hknpBodyQuality (hkClass 0x57bee30, built at 0x3894a), 16 bytes. */
+/* hknpBodyQuality (hkClass 0x57bee30, built at 0x3894a), 16 bytes: the
+ * member strings supportedFlags, requestedFlags and
+ * contactCachingRelativeMovementThreshold (0x14bd85e onward); the library
+ * cinfo's setup (0x71330) sets the int at +0 to ten times the quality's
+ * index and edits the flags at +4. */
 struct hknpBodyQuality {
-    u8 unknown0[0x10];
+    /* 0x16a380, run by 0x71330 on each of the library's qualities with the
+     * cinfo's unit scale, which it does not read: all cleared, every flag
+     * supported, the threshold 0.1. derived name. */
+    void FUN_0016a380(float unitScale);
+
+    int priority; /* derived name */
+    u32 supportedFlags;
+    u32 requestedFlags;
+    float contactCachingRelativeMovementThreshold;
 };
 
 /* hknpBodyQualityLibrary (type info 0x57c1a78; hkClass 0x57c1a28, built at
@@ -3957,6 +4004,8 @@ class hkpBallAndSocketConstraintData : public hkpConstraintData
     void FUN_0007c3b0(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
     hkResult FUN_0007c3e0(float factor);                        /* vtable slot 17; derived name */
     hkResult FUN_0007c3d0(float &factorOut) const;              /* vtable slot 18; derived name */
+    void FUN_0007c350(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     Atoms atoms;
 };
@@ -4051,6 +4100,10 @@ class hkpWrappedConstraintData : public hkpConstraintData
      * then the vtable; the wrapped pointer is left as loaded. */
     hkpWrappedConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* The constructor, out of line (0x7d550): a new object over the data it
+     * wraps, whose reference it takes. */
+    hkpWrappedConstraintData(hkpConstraintData *constraintData);
+
     void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_00067c60() const;                      /* vtable slot 7; derived name */
     void FUN_0007d600(const void *argument1, const void *argument2, const void *argument3,
@@ -4069,6 +4122,8 @@ class hknpBreakableConstraintData : public hkpWrappedConstraintData
 {
   public:
     hknpBreakableConstraintData(hkFinishLoadedObjectFlag flag); /* 0x3c240 */
+    /* 0x3c210: over the wrapped data, the threshold 10 to start. */
+    hknpBreakableConstraintData(hkpConstraintData *constraintData);
 
     virtual ~hknpBreakableConstraintData();
 

@@ -974,3 +974,11 @@ FUN_0007f090 src/libs/unknown/func_0007f090.cpp
 FUN_00155490 src/libs/unknown/func_00155490.cpp
 FUN_001554c0 src/libs/unknown/func_001554c0.cpp
 FUN_001598c0 src/libs/unknown/func_001598c0.cpp _ZN17hknpProjectileGun7stepGunEfP9hknpWorldPKvRK11hkTransformbb
+FUN_000022d0 src/libs/unknown/func_000022d0.cpp _ZNK16TwoBaseAllocator14allocatedBytesEv
+FUN_00002300 src/libs/unknown/func_000022d0.cpp _ZThn8_NK16TwoBaseAllocator14allocatedBytesEv
+FUN_00010f90 src/libs/unknown/func_00010f90.cpp
+_ZN27hknpBreakableConstraintDataC1EP17hkpConstraintData src/libs/unknown/func_0003c210.cpp _ZN27hknpBreakableConstraintDataC2EP17hkpConstraintData
+_ZN18hkcdPlanarGeometryC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009a860.cpp
+FUN_00072f80 src/libs/unknown/func_00072f80.cpp
+FUN_0016a380 src/libs/unknown/func_0016a380.cpp
+FUN_0001af70 src/libs/unknown/func_0001af70.cpp
