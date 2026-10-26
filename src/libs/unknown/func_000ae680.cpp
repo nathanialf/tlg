@@ -3,7 +3,7 @@
 
 /* The bone and part arrays are left as loaded. */
 hkStorageSkinnedMeshShape::hkStorageSkinnedMeshShape(hkFinishLoadedObjectFlag flag)
-    : hkSkinnedMeshShape(flag), boneSets(flag)
+    : hkSkinnedMeshShape(flag), boneSets(flag), parts(flag)
 {
     FUN_0000e5c0(&name, flag);
 }

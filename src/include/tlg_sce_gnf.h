@@ -20,6 +20,17 @@ struct GnfContents /* derived name */
     GnfTexture textures[1]; /* derived name: as many as the header counts */
 };
 
+/* A size and an alignment, returned together in one register. */
+struct GnfSizeAlign /* derived name */
+{
+    u32 size;  /* derived name */
+    u32 align; /* derived name */
+};
+
 u32 FUN_001a3a70(const GnfContents *contents, u32 index); /* derived name */
+/* The pixels' size (the descriptor's last register) and their alignment
+ * (two to the power in its second register); the loader at 0xbd9689 keeps
+ * the pair. */
+GnfSizeAlign FUN_001a3a80(const GnfContents *contents, u32 index); /* derived name */
 
 #endif

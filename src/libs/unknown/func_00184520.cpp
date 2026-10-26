@@ -6,6 +6,6 @@
 void hkVtableClassRegistry::FUN_00184520(const void *vtable,
                                          const hkClass *klass) /* derived name */
 {
-    map.FUN_000138a0(D_57b8480, reinterpret_cast<hkUlong>(vtable),
+    map.FUN_000138a0(hkContainerHeapAllocator::get(), reinterpret_cast<hkUlong>(vtable),
                      reinterpret_cast<hkUlong>(klass));
 }

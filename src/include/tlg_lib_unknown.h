@@ -883,6 +883,7 @@ class OffsetSeekableReader : public SeekableReader /* derived name */
 {
   public:
     int FUN_00181ad0(int offset, int whence); /* vtable slot 9; derived name */
+    int FUN_00181af0() const;                 /* vtable slot 10; derived name */
 
     SeekableReader *reader; /* derived name */
     int start;              /* derived name */
@@ -1004,5 +1005,19 @@ void FUN_0019d370(char *buffer, int size); /* derived name */
 void FUN_000910e0(void *dst, const void *src, int n); /* derived name */
 void FUN_00091100(void *dst, const void *src, int n); /* derived name */
 void FUN_00091210(void *dst, const void *src, int n); /* derived name */
+
+/* A reference-counted object (derived name; no type info names it) whose
+ * vtable 0x16997f0 (address point 0x1699800) only its constructor
+ * FUN_00061f00 stores; the game builds one at 0xea9d11. Slot 6 (0x61f40),
+ * when the object it is given reads mode 1 (FUN_0000b670), moves a point
+ * along a direction by the float at +0xc (1.5 on construction). */
+class Object00061f00 : public hkReferencedObject /* derived name */
+{
+  public:
+    Object00061f00();
+    virtual ~Object00061f00();
+
+    float valueC; /* derived name */
+};
 
 #endif

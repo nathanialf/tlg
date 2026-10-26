@@ -136,16 +136,29 @@ class hkBool
     char value; /* derived name */
 };
 
+struct hkClassEnum;
+struct hkClassMember;
+
 /* hkClass, the reflection's class record: name (char*, type 0x1d) at +0,
  * parent (pointer to hkClass, type 0x14) at +8, objectSize and
- * numImplementedInterfaces (int) at +0x10 and +0x14, from its own member
- * table at 0x16a6b60; its constructor FUN_000041a0 stores the twelve
- * fields from +0 to +0x4c. */
+ * numImplementedInterfaces (int) at +0x10 and +0x14, declaredEnums and
+ * declaredMembers (simple arrays: a pointer and an int count) at +0x18 and
+ * +0x28, from its own member table at 0x16a6b60; its constructor
+ * FUN_000041a0 stores the twelve fields from +0 to +0x4c. */
 struct hkClass {
+    /* The counts over the class and its parents: implemented interfaces
+     * (0x42b0) and members (0x4350). derived names. */
+    int FUN_000042b0() const; /* derived name */
+    int FUN_00004350() const; /* derived name */
+
     const char *name;
     const hkClass *parent;
     int objectSize;
     int numImplementedInterfaces;
+    const hkClassEnum *declaredEnums;
+    int numDeclaredEnums; /* derived name */
+    const hkClassMember *declaredMembers;
+    int numDeclaredMembers; /* derived name */
 };
 
 /* derived name: tells whether two classes are the same, by address or by
@@ -180,8 +193,6 @@ struct hkTransform {
  * cArraySize, flags, offset). The records read here: 0x168c1f0 onward
  * (colorName: type 0x21, offset 0) and 0x168c920 (hkUuid's data: type 0x08,
  * cArraySize 4). */
-struct hkClassEnum;
-
 struct hkClassMember {
     /* The member types, the reflection's own item names (0x14b6dd9 onward),
      * in their order. */
@@ -2897,6 +2908,13 @@ struct hkpSetLocalTranslationsConstraintAtom {
     Vec4 translationB;
 };
 
+/* hkpConstraintAtom (hkClass 0x57c4650, size 2): the atoms' base. Of its
+ * three enums (records from 0x169ed60) the third is SolvingMethod, items
+ * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
+struct hkpConstraintAtom {
+    enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
+};
+
 struct hkpSetupStabilizationAtom {
     u16 type; /* derived name */
     hkBool enabled;
@@ -3161,14 +3179,15 @@ class hkpBallAndSocketConstraintData
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_0007c380() const;                           /* vtable slot 7; derived name */
 
-    void FUN_0007c2e0(float newMaxImpulse);        /* vtable slot 8; derived name */
-    void FUN_0007c2c0(float newBreachImpulse);     /* vtable slot 10; derived name */
-    float FUN_0007c300() const;                    /* vtable slot 11; derived name */
-    float FUN_0007c2d0() const;                    /* vtable slot 13; derived name */
-    void FUN_0007c310(int bodyIndex);              /* vtable slot 14; derived name */
-    u8 FUN_0007c320() const;                       /* vtable slot 15; derived name */
-    hkResult FUN_0007c3e0(float factor);           /* vtable slot 17; derived name */
-    hkResult FUN_0007c3d0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0007c2e0(float newMaxImpulse);                     /* vtable slot 8; derived name */
+    void FUN_0007c2c0(float newBreachImpulse);                  /* vtable slot 10; derived name */
+    float FUN_0007c300() const;                                 /* vtable slot 11; derived name */
+    float FUN_0007c2d0() const;                                 /* vtable slot 13; derived name */
+    void FUN_0007c310(int bodyIndex);                           /* vtable slot 14; derived name */
+    u8 FUN_0007c320() const;                                    /* vtable slot 15; derived name */
+    void FUN_0007c3b0(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
+    hkResult FUN_0007c3e0(float factor);                        /* vtable slot 17; derived name */
+    hkResult FUN_0007c3d0(float &factorOut) const;              /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -3202,6 +3221,8 @@ class hkpLimitedHingeConstraintData
     u8 FUN_000790f0() const;                               /* vtable slot 15; derived name */
     hkResult FUN_000792e0(float factor);                   /* vtable slot 17; derived name */
     hkResult FUN_000792d0(float &factorOut) const;         /* vtable slot 18; derived name */
+    void FUN_00079300(const void *argument1, const void *argument2, const hkpSolverResults *results,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_00079210(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -3329,6 +3350,8 @@ class hkpHingeConstraintData
     u8 FUN_0007efe0() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0007f0d0(float factor);           /* vtable slot 17; derived name */
     hkResult FUN_0007f0c0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0007f0f0(const void *argument1, const void *argument2, const hkpSolverResults *results,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_0007eff0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -4089,7 +4112,7 @@ class hkSkinBinding : public hkMeshShape
  * numVertices, startIndex and numIndices (hkInt32) from +0, boneSetId and
  * meshSectionIndex (hkUint16) at +0x10 and +0x12, boundingSphere
  * (hkVector4) at +0x20. hkStorageSkinnedMeshShape keeps its parts in an
- * array at +0x40 (count at +0x48); its slot 15 (0xae860) sorts them with the
+ * array at +0x40 (count at +0x48); its slot 16 (0xae860) sorts them with the
  * quick sort FUN_000ad970 and the order FUN_000ad900. */
 /* hkSkinnedMeshShape::BoneSet (records 0x1692230): boneBufferOffset and
  * numBones (hkUint16) at +0 and +2. hkSkinnedMeshShape's hkClass 0x57bdcc8
@@ -4126,6 +4149,12 @@ class hkSkinnedMeshShape : public hkReferencedObject
 bool FUN_000ad900(const hkSkinnedMeshShape::Part &a,
                   const hkSkinnedMeshShape::Part &b); /* derived name */
 
+/* The quick sort of parts between two indices, inclusive, by an order
+ * (0xad970; derived name). */
+void FUN_000ad970(hkSkinnedMeshShape::Part *parts, int low, int high,
+                  bool (*less)(const hkSkinnedMeshShape::Part &a,
+                               const hkSkinnedMeshShape::Part &b)); /* derived name */
+
 /* hkStorageSkinnedMeshShape: its hkClass at 0x57bdd18 is built by the
  * reflection initializer at 0x27e79; slot 3 of its vtable (0x16a3b00,
  * FUN_00027bd0) returns it; its parent is hkSkinnedMeshShape's, 0x57bdcc8
@@ -4146,6 +4175,7 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
                  hkSkinnedMeshShape::BoneSet &boneSetOut) const; /* vtable slot 7; derived name */
     const char *FUN_000aea20() const;                            /* vtable slot 12; derived name */
     void FUN_000aea30(const char *newName);                      /* vtable slot 13; derived name */
+    void FUN_000ae860();                                         /* vtable slot 16; derived name */
 
     /* From its record table at 0x1692420: bonesBuffer, boneSets,
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at
@@ -4153,7 +4183,8 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     u8 unknownC[4];
     u8 bonesBuffer[0x10];
     hkArray<hkSkinnedMeshShape::BoneSet> boneSets;
-    u8 unknown30[0x20];
+    u8 boneSections[0x10];
+    hkArray<hkSkinnedMeshShape::Part> parts;
     hkStringPtr name;
 };
 
@@ -4766,6 +4797,17 @@ class AllocatorBase; /* tlg_lib_unknown.h */
  * pointer, reached by address from 1,621 sites. */
 extern AllocatorBase D_57b8480;
 
+/* hkContainerHeapAllocator, the allocator argument of the bit field's
+ * hkArray in the scoped type names (0x14b7368): its allocator is
+ * D_57b8480 (the bit field's resize 0x47b30 passes it), handed out by
+ * reference, so the calls through it are virtual (0x915e0's `jmpq *%rcx`). */
+struct hkContainerHeapAllocator {
+    static AllocatorBase &get() /* derived name */
+    {
+        return D_57b8480;
+    }
+};
+
 struct PointerMap /* derived name */
 {
     void *entries;
@@ -4791,6 +4833,27 @@ struct Object0019c150 /* derived name */
     u8 unknown0[0x40];
     PointerMap map40; /* derived name */
 };
+
+/* A named test of a loaded object's class (derived names), registered by its
+ * constructor (0x17e940) on the list at 0x57c8868: an id at +0, the name
+ * at +8, the test at +0x10, the next record at +0x18. The static
+ * initializer at 0x17de70 builds the record 0x57c8848 (id 20,
+ * "hasRootLevelContainer", the test 0x17de40, which compares the class's
+ * name with "hkRootLevelContainer"); 0x17db39 walks the list and keeps the
+ * id of every test that passes. */
+struct ClassTest /* derived name */
+{
+    typedef bool (*Function)(const void *object, const hkClass *klass); /* derived name */
+
+    ClassTest(u16 id, const char *name, Function test);
+
+    u16 id;           /* derived name */
+    const char *name; /* derived name */
+    Function test;    /* derived name */
+    ClassTest *next;  /* derived name */
+};
+
+extern ClassTest *D_57c8868; /* the head of the tests' list; derived name */
 
 /* The type registries, each a singleton registered by name on the list at
  * 0x57b80b8 (a record of name, create function, instance address and

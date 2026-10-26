@@ -843,3 +843,12 @@ FUN_0007c000 src/libs/unknown/func_0007c000.cpp
 FUN_000825a0 src/libs/unknown/func_000825a0.cpp
 FUN_00184520 src/libs/unknown/func_00184520.cpp
 FUN_0019cd00 src/libs/unknown/func_0019cd00.cpp
+FUN_000042b0 src/libs/unknown/func_000042b0.cpp
+FUN_00004350 src/libs/unknown/func_00004350.cpp
+FUN_00079300 src/libs/unknown/func_00079300.cpp
+FUN_0007c3b0 src/libs/unknown/func_0007c3b0.cpp
+FUN_0007f0f0 src/libs/unknown/func_0007f0f0.cpp
+FUN_000915e0 src/libs/unknown/func_000915e0.cpp
+FUN_000ae860 src/libs/unknown/func_000ae860.cpp
+FUN_00181af0 src/libs/unknown/func_00181af0.cpp
+FUN_0017e940 src/libs/unknown/func_0017e940.cpp _ZN9ClassTestC2EtPKcPFbPKvPK7hkClassE

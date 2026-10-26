@@ -5,5 +5,6 @@
  * pair to the pointer map at +0x40. */
 void Object0019c150::FUN_0019cd00(const void *key, const void *value) /* derived name */
 {
-    map40.FUN_000138a0(D_57b8480, reinterpret_cast<hkUlong>(key), reinterpret_cast<hkUlong>(value));
+    map40.FUN_000138a0(hkContainerHeapAllocator::get(), reinterpret_cast<hkUlong>(key),
+                       reinterpret_cast<hkUlong>(value));
 }
