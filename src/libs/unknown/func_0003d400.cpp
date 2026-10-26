@@ -8,5 +8,5 @@ void FUN_0003d400(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00159b40(static_cast<hknpConstraintCollisionFilter *>(object), flag);
+    new (object) hknpConstraintCollisionFilter(flag);
 }

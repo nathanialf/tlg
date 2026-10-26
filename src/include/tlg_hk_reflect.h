@@ -2472,15 +2472,21 @@ class hknpPhysicsSystemData : public hkReferencedObject
     hkStringPtr name;
 };
 
-void FUN_00159b40(hknpConstraintCollisionFilter *self,
-                  hkFinishLoadedObjectFlag flag);                          /* derived name */
 void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
 void FUN_00078230(hknpTriangleShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 class hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
 class
     hknpScaledConvexShape; /* 0x57c0c48; FUN_0016ce90 runs hknpDecoratorShape's, vtable 0x16a54a0 */
-struct
-    hknpScaledConvexShapeBase; /* 0x57c0c78; FUN_0016a810 runs hknpDecoratorShape's, vtable 0x16a5390 */
+
+/* hknpScaledConvexShapeBase (type info 0x57c0c78; hkClass 0x57c0bf8, built
+ * at 0x3f7a3: size 0x60, parent hknpDecoratorShape; vtable 0x16a5390). */
+class hknpScaledConvexShapeBase : public hknpDecoratorShape
+{
+  public:
+    /* The finish constructor (0x16a810): the decorator's, then the
+     * vtable. */
+    hknpScaledConvexShapeBase(hkFinishLoadedObjectFlag flag);
+};
 
 /* hknpPairCollisionFilter (type info 0x57c1160; hkClass 0x57c1110, built
  * at 0x42895: size 0x28, parent hknpCollisionFilter; vtable 0x16a52f0):
@@ -2490,6 +2496,9 @@ struct
  * 8 then looks the pair up in the map; hknpConstraintCollisionFilter (its
  * hkClass parent) keeps all five. */
 struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
+    /* An empty map: no storage, no elements, the hash modulus -1. */
+    hknpPairCollisionFilterMapPairFilterKeyOverrideType() : elem(0), numElems(0), hashMod(-1) {}
+
     void *elem;
     int numElems;
     int hashMod;
@@ -2498,6 +2507,10 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
 class hknpPairCollisionFilter : public hknpCollisionFilter
 {
   public:
+    /* The finish constructor (0x1673f0): the map is not serialized and
+     * starts empty; the child filter is left as loaded. */
+    hknpPairCollisionFilter(hkFinishLoadedObjectFlag flag);
+
     int FUN_001679a0(const hknpCollisionFilterContext &context,
                      hknpCollisionFilterBodyIdPair *pairs, int numPairs) const; /* derived name */
     bool FUN_00167ad0(int queryType, bool flag) const;                          /* derived name */
@@ -2529,6 +2542,10 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
 class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
 {
   public:
+    /* The finish constructor (0x159b40): the pair filter's, then the
+     * vtable; the subscribed world is left as loaded. */
+    hknpConstraintCollisionFilter(hkFinishLoadedObjectFlag flag);
+
     void FUN_00159dd0(hknpWorld *world, u32 constraintId); /* derived name */
     void FUN_00159df0(hknpWorld *world, u32 constraintId); /* derived name */
 
@@ -2537,9 +2554,6 @@ class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
 
 void FUN_00166900(hknpMountedBallGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_0016ce90(hknpScaledConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0016a810(hknpScaledConvexShapeBase *self,
-                  hkFinishLoadedObjectFlag flag);                                /* derived name */
-void FUN_001673f0(hknpPairCollisionFilter *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkRelArray, the reflection's type 0x22 (the type-name table at 0x14b30e4):
  * an array stored after its owner, a 16-bit size and a 16-bit offset. */
@@ -3281,6 +3295,60 @@ class hkpDeformableFixedConstraintData : public hkpConstraintData
     Atoms atoms;
 };
 
+/* hkpHingeLimitsData (hkClass 0x57c5928, built at 0x823be, 0xc0 bytes,
+ * parent hkpConstraintData; vtable 0x169fee0, address point 0x169fef0):
+ * atoms at +0x20, an hkpHingeLimitsData::Atoms of 0xa0 bytes (record table
+ * 0x169f4a0: rotations at +0, angLimit at +0x70, 2dAng at +0x90). Its slot
+ * 20 is hkpRagdollLimitsData's (0x7c8b0). */
+class hkpHingeLimitsData : public hkpConstraintData
+{
+  public:
+    struct Atoms {
+        hkpSetLocalRotationsConstraintAtom rotations;
+        u8 angLimit[0x20];
+        u8 unknown90[0x10]; /* 2dAng */
+    };
+
+    /* The finish constructor (0x82250): the atoms are left as loaded. */
+    hkpHingeLimitsData(hkFinishLoadedObjectFlag flag);
+
+    virtual ~hkpHingeLimitsData();
+
+    Atoms atoms;
+};
+
+/* hkpWheelConstraintData (hkClass 0x57c43d8, built at 0x7ec1e, 0x190 bytes,
+ * parent hkpConstraintData; vtable 0x16a5e10, address point 0x16a5e20;
+ * member records 0x169d400): atoms at +0x20, an
+ * hkpWheelConstraintData::Atoms of 0x150 bytes (record table 0x169d2e0:
+ * suspensionBase at +0, lin0Limit at +0x90, lin0Soft at +0xa0, lin1 at
+ * +0xb0, lin2 at +0xc0, steeringBase at +0xd0, 2dAng at +0x140), then
+ * initialAxleInB and initialSteeringAxisInB (hkVector4) at +0x170 and
+ * +0x180. Its slots 6 and 20 are hkpDeformableFixedConstraintData's code
+ * (0x83000, 0x83020), whose atoms have the same size. */
+class hkpWheelConstraintData : public hkpConstraintData
+{
+  public:
+    struct Atoms {
+        hkpSetLocalTransformsConstraintAtom suspensionBase;
+        u8 lin0Limit[0x10];
+        u8 lin0Soft[0x10];
+        u8 lin1[0x10];
+        u8 lin2[0x10];
+        hkpSetLocalRotationsConstraintAtom steeringBase;
+        u8 unknown140[0x10]; /* 2dAng */
+    };
+
+    /* The finish constructor (0x7eab0): the atoms are left as loaded. */
+    hkpWheelConstraintData(hkFinishLoadedObjectFlag flag);
+
+    virtual ~hkpWheelConstraintData();
+
+    Atoms atoms;
+    Vec4 initialAxleInB;
+    Vec4 initialSteeringAxisInB;
+};
+
 /* hkpRotationalConstraintData (hkClass 0x57c3a68, built at 0x7b75b, 0xa0 bytes, parent hkpConstraintData; vtable 0x16a0110): atoms at +0x20 (record table 0x169c3a0: rotations at +0, ang at +0x70). */
 class hkpRotationalConstraintData : public hkpConstraintData /* vtable address point 0x16a0120 */
 {
@@ -3641,6 +3709,8 @@ class hkpRagdollConstraintData
     u8 FUN_0007dcd0() const;                               /* vtable slot 15; derived name */
     hkResult FUN_0007e2f0(float factor);                   /* vtable slot 17; derived name */
     hkResult FUN_0007e2e0(float &factorOut) const;         /* vtable slot 18; derived name */
+    void FUN_0007e310(const void *argument1, const void *argument2, const hkpSolverResults *results,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_0007dd00(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 

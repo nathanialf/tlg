@@ -21,6 +21,15 @@ inline const float &lane(const Vec4 &v, int i)
     return reinterpret_cast<const float *>(&v)[i];
 }
 
+/* hkVector4 (the reflection's name for TYPE_VECTOR4) as a class over its
+ * vector: copying one is an aggregate copy, a 16-byte memcpy that the back
+ * end lowers to an integer-typed load and store, so a copy is reloaded from
+ * memory even right after the source was stored (the vector tolerances of
+ * 0xaa340). */
+struct hkVector4 {
+    Vec4 quad; /* derived name */
+};
+
 struct Mat4 {
     Vec4 r[4];
 };
