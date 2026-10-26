@@ -339,6 +339,81 @@ class hkcdPlanarSolidNodeStorage : public hkReferencedObject
     hkcdPlanarSolidNodeStorage(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* Reference-counted classes whose finish constructors are inline in their
+ * finish callbacks and store only the vtable (vtable, callback): */
+/* hknpStaticCompoundShapeKeyMask: vtable 0x1692790, finish callback FUN_00034000. */
+class hknpStaticCompoundShapeKeyMask : public hkReferencedObject
+{
+  public:
+    hknpStaticCompoundShapeKeyMask(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpCompoundShapeInternalsKeyMask: vtable 0x16927e0, finish callback FUN_000343b0. */
+class hknpCompoundShapeInternalsKeyMask : public hkReferencedObject
+{
+  public:
+    hknpCompoundShapeInternalsKeyMask(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpDynamicCompoundShapeData: vtable 0x1692990, finish callback FUN_000343e0. */
+class hknpDynamicCompoundShapeData : public hkReferencedObject
+{
+  public:
+    hknpDynamicCompoundShapeData(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpStaticCompoundShapeData: vtable 0x1692950, finish callback FUN_00034440. */
+class hknpStaticCompoundShapeData : public hkReferencedObject
+{
+  public:
+    hknpStaticCompoundShapeData(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpCompressedMeshShapeInternalsKeyMask: vtable 0x1692ab0, finish callback FUN_00034e00. */
+class hknpCompressedMeshShapeInternalsKeyMask : public hkReferencedObject
+{
+  public:
+    hknpCompressedMeshShapeInternalsKeyMask(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag)
+    {
+    }
+};
+
+/* hknpVehicleDefaultVelocityDamper: vtable 0x1695890, finish callback FUN_00035c60. */
+class hknpVehicleDefaultVelocityDamper : public hkReferencedObject
+{
+  public:
+    hknpVehicleDefaultVelocityDamper(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpCharacterRigidBodyCinfo: vtable 0x1692f70, finish callback FUN_000361c0. */
+class hknpCharacterRigidBodyCinfo : public hkReferencedObject
+{
+  public:
+    hknpCharacterRigidBodyCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpMaterialPalette: vtable 0x16937b0, finish callback FUN_000377c0. */
+class hknpMaterialPalette : public hkReferencedObject
+{
+  public:
+    hknpMaterialPalette(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleDefaultAnalogDriverInput: vtable 0x16a43c0, finish callback FUN_000378b0. */
+class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
+{
+  public:
+    hknpVehicleDefaultAnalogDriverInput(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleDriverInputAnalogStatus: vtable 0x16a4420, finish callback FUN_000378e0. */
+class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
+{
+  public:
+    hknpVehicleDriverInputAnalogStatus(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
 class hkGeometry;                           /* FUN_00093c60, vtable 0x1692500 */

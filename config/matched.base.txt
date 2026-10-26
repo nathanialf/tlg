@@ -564,3 +564,13 @@ FUN_00024be0 src/libs/unknown/leaf_00024be0.cpp _ZNK22hkMultipleVertexBuffer12FU
 FUN_00024fa0 src/libs/unknown/func_00024fa0.cpp _ZN22hkMultipleVertexBufferC2E24hkFinishLoadedObjectFlag
 FUN_0002b010 src/libs/unknown/leaf_0002b010.cpp
 FUN_0002b030 src/libs/unknown/leaf_0002b030.cpp
+FUN_00034000 src/libs/unknown/func_00034000.cpp
+FUN_000343b0 src/libs/unknown/func_000343b0.cpp
+FUN_000343e0 src/libs/unknown/func_000343e0.cpp
+FUN_00034440 src/libs/unknown/func_00034440.cpp
+FUN_00034e00 src/libs/unknown/func_00034e00.cpp
+FUN_00035c60 src/libs/unknown/func_00035c60.cpp
+FUN_000361c0 src/libs/unknown/func_000361c0.cpp
+FUN_000377c0 src/libs/unknown/func_000377c0.cpp
+FUN_000378b0 src/libs/unknown/func_000378b0.cpp
+FUN_000378e0 src/libs/unknown/func_000378e0.cpp
