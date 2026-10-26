@@ -925,3 +925,12 @@ _ZN29hknpConstraintCollisionFilterC1E24hkFinishLoadedObjectFlag src/libs/unknown
 _ZN23hknpPairCollisionFilterC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_001673f0.cpp
 _ZN25hknpScaledConvexShapeBaseC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0016a810.cpp
 FUN_00004210 src/libs/unknown/func_00004210.cpp
+FUN_0000bc00 src/libs/unknown/func_0000bc00.cpp
+_ZN22hknpCompoundShapeCinfoC1Ev src/libs/unknown/func_00041260.cpp
+FUN_00158840 src/libs/unknown/func_00158840.cpp
+FUN_0000ef00 src/libs/unknown/func_0000ef00.cpp _ZN17Allocator0000ed4010blockAllocEi
+FUN_00010ce0 src/libs/unknown/func_00010ce0.cpp
+FUN_00010f20 src/libs/unknown/func_00010f20.cpp
+FUN_0005df00 src/libs/unknown/func_0005df00.cpp
+FUN_0008d9e0 src/libs/unknown/func_0008d9e0.cpp
+_ZN20hkRootLevelContainer12NamedVariantC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017dde0.cpp

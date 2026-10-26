@@ -8,5 +8,5 @@ void FUN_0008e530(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0017dde0(static_cast<hkRootLevelContainer::NamedVariant *>(object), flag);
+    new (object) hkRootLevelContainer::NamedVariant(flag);
 }

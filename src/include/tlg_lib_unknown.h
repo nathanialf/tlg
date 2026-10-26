@@ -331,13 +331,20 @@ struct Arena {
 struct ArenaBlockHeader {
     Arena *owner;
     s32 size;
-    s32 unknown;
+    /* For an aligned block (FUN_0000bba0): how far the payload lies past the
+     * start of the block the allocator returned. derived name. */
+    s32 alignmentOffset;
 };
 
 /* Frees a block with that header through an allocator's slot 3, the header
  * included: its owner cleared first (0xbc80; called by hkStringPtr's
  * destructor 0xe5d0 with the router's heap). derived name. */
 void FUN_0000bc80(AllocatorBase &allocator, void *payload); /* derived name */
+
+/* Frees an aligned block (FUN_0000bba0's: the header records the block's
+ * size less its own 16 bytes and the payload's offset into the block)
+ * through the allocator's slot 3: 0xbc00. derived name. */
+void FUN_0000bc00(AllocatorBase &allocator, void *payload); /* derived name */
 
 /* The memory system with vtable 0x168d690, whose slot 4 (FUN_0000c590)
  * loads the path of hkFreeListMemorySystem.cpp (config/homes.base.txt). Its
@@ -998,7 +1005,19 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
   public:
     Allocator0000ed40();
 
+    /* Slot 2 (0xef00): a block cut from the current slab, the size rounded
+     * up to 16, while the slab has room; otherwise FUN_0000f090 finds one
+     * (the same fast path is inlined at 0x41390). */
+    virtual void *blockAlloc(int numBytes);
+
+    /* The slow path (0xf090): a request larger than a slab goes to the
+     * allocator at +0x40, the rest to a new slab. derived name. */
+    void *FUN_0000f090(int numBytes);
+
     void *pointer8; /* derived name */
+    int slabSize;   /* derived name */
+    char *cur;      /* derived name */
+    char *end;      /* derived name */
 };
 
 /* The thread's memory router (derived name): FUN_0000bb40 makes the router

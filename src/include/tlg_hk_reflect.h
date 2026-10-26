@@ -199,11 +199,26 @@ struct hkMatrix3 {
     /* derived name: this set to a * b (0x1a9f0: each column of b
      * transformed by a). */
     void FUN_0001a9f0(const hkMatrix3 &a, const hkMatrix3 &b);
+
+    /* derived name: whether the columns are of unit length within a
+     * tolerance and orthogonal (0xbe80; the game calls it on its own
+     * rotations). */
+    bool FUN_0000be80() const;
 };
+
+/* derived name: out = the transpose of m times v, each lane the dot product
+ * of v's x, y and z with one column (0x10f20; FUN_0003bc10 calls it at
+ * 0x3bd70). */
+void FUN_00010f20(Vec4 &out, const hkMatrix3 &m, const Vec4 &v);
 
 /* hkTransform (the reflection's TYPE_TRANSFORM, 64 bytes): a rotation and
  * a translation. */
 struct hkTransform {
+    /* derived name: a usable transform, its translation's x, y and z
+     * numbers (not NaN) and its rotation orthonormal (0x10ce0; the game
+     * checks a body's transform with it, 0xeae90b). */
+    bool FUN_00010ce0() const;
+
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
@@ -333,6 +348,10 @@ class hkBaseObject
  * memory router at %fs-relative 0x16d80b8, its heap at +0x58, slot 3). */
 void FUN_0000bcf0(void *block, int numBytes);
 
+/* derived name: a block of numBytes bytes from the thread's heap (the same
+ * router's heap, slot 2). */
+void *FUN_0000bcc0(int numBytes);
+
 /* Its vtable 0x168cb60 (address point 0x168cb70): slot 0 the empty
  * FUN_00006660, slot 1 the deleting destructor FUN_000066e0, slot 2
  * hkBaseObject's, slot 3 the class getter's default FUN_000042d0 (no
@@ -349,8 +368,19 @@ class hkReferencedObject : public hkBaseObject
 
     virtual ~hkReferencedObject() {}
 
-    /* The class allocator: a deleted object goes back to the heap at the
-     * class's size. */
+    /* The class allocator: a new object comes from the thread's heap
+     * (0x9c29), and placement stays available beside it; a deleted object
+     * goes back to the heap at the class's size. */
+    static void *operator new(unsigned long numBytes)
+    {
+        return FUN_0000bcc0(numBytes);
+    }
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     static void operator delete(void *object)
     {
         if (object) {
@@ -391,6 +421,21 @@ class hkReferencedObjectLock : public hkReferencedObject
 };
 
 extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance */
+
+/* hkDummySingleton, the singleton registered by that name (record 0x57b80d0
+ * filled by 0x9c50 on the list at 0x57b80b8, instance pointer 0x57b80c8):
+ * 0x10 bytes, vtable 0x168d2b0 (no type info; slots 0 and 5 the empty
+ * 0x8d60, slot 1 hkReferencedObject's deleting destructor). */
+class hkDummySingleton : public hkReferencedObject
+{
+  public:
+    hkDummySingleton() {}
+
+    virtual ~hkDummySingleton();
+};
+
+/* Its create function, the record's (0x9c20). derived name. */
+hkReferencedObject *FUN_00009c20(); /* derived name */
 
 /* hkError, the singleton registered by that name (record 0x57af770 built by
  * 0x1010, instance pointer 0x57af768; hkError.cpp's FUN_00000ee0 reports
@@ -467,15 +512,24 @@ void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
 void FUN_0000e3d0(hkStringPtr *self); /* derived name */
 
 /* hkxEnvironment::Variable (type info "hkxEnvironmentVariable" 0x57c8100,
- * hkClass 0x57c80b0, both built by 0x8da60: size 0x10, no vtable, no
- * finish callback; member records at 0x16a2950): name and value, string
- * pointers at +0 and +8. Its cleanup callback is FUN_0008da10. */
+ * hkClass 0x57c80b0, both built by 0x8da60: size 0x10, no vtable; member
+ * records at 0x16a2950): name and value, string
+ * pointers at +0 and +8. Its finish callback is FUN_0008d9e0, its cleanup
+ * callback FUN_0008da10 (hkMemoryResourceHandle::ExternalLink's type info,
+ * 0x57c8620, cites the same two). */
 struct hkxEnvironmentVariable {
+    hkxEnvironmentVariable(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000e5c0(&name, flag);
+        FUN_0000e5c0(&value, flag);
+    }
+
     hkStringPtr name;
     hkStringPtr value;
 };
 
-void FUN_0008da10(void *object); /* derived name */
+void FUN_0008d9e0(void *object, int finishing); /* derived name */
+void FUN_0008da10(void *object);                /* derived name */
 
 /* derived names: the string set from a C string of a given length (-1: up
  * to its terminator), copied into owned storage and the old one freed when
@@ -2091,7 +2145,12 @@ struct hknpBody {
 struct hknpMotion {
     u8 unknown0[0x3e];
     u8 cellIndex;
-    u8 unknown3f[0x41];
+    u8 unknown3f;
+    /* The vector FUN_0005df00 hands out for a body: its linear velocity,
+     * by the next getter (0x5df30), which rotates the vector at +0x50 by
+     * the quaternion at +0x10, the angular one. derived name. */
+    Vec4 linearVelocity;
+    u8 unknown50[0x30];
 };
 
 /* The object at +0x4f8 of the world (derived names): the world at +0, the
@@ -2293,6 +2352,9 @@ struct hknpWorld {
     /* Hands a body to the object at +0x4f8 when it is in the broad phase
      * (22 callers, 0x5b711 to 0x178399). derived name. */
     void FUN_0004e0c0(int bodyId); /* derived name */
+    /* A body's motion's linear velocity, by reference (0x5df00). derived
+     * name. */
+    const Vec4 &FUN_0005df00(int bodyId) const; /* derived name */
 
     u8 unknown0[0x20];
     /* The body and motion arrays: FUN_0004c170 (in this file's range) stores
@@ -2897,6 +2959,8 @@ struct hknpCompressedMeshShape {
     virtual ~hknpCompressedMeshShape();
 
     const hkAabb *FUN_0010bf40() const; /* derived name */
+    void FUN_00158840(const Mat4 &transform,
+                      hkAabb &aabbOut) const; /* vtable slot 7; derived name */
 
     u8 unknown8[0x50];
     hknpCompressedMeshShapeData *data;
@@ -4266,6 +4330,20 @@ class hkRootLevelContainer
   public:
     struct NamedVariant;
 };
+
+/* hkRootLevelContainer::NamedVariant (hkClass 0x57c83b0, built at 0x8e71d:
+ * size 0x18, member records at 0x16a2f60): name and className
+ * (hkStringPtr) at +0 and +8, variant (a pointer to hkReferencedObject) at
+ * +0x10. Its finish constructor is out of line (0x17dde0, reached from the
+ * finish callback 0x8e530): the two strings finish, the variant is left as
+ * loaded. */
+struct hkRootLevelContainer::NamedVariant {
+    NamedVariant(hkFinishLoadedObjectFlag flag);
+
+    hkStringPtr name;
+    hkStringPtr className;
+    hkReferencedObject *variant;
+};
 struct hkMemoryResourceContainer;
 
 /* A reference-counted pointer to an hkReferencedObject whose class is looked
@@ -4341,11 +4419,9 @@ struct hkxVertexDescriptionElementDecl {
     hkStringPtr channelID;
 };
 
-void FUN_0008c990(hkxVertexAnimation *self);                          /* derived name */
-void FUN_0008dc50(hkxMeshSection *self);                              /* derived name */
-void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0017dde0(hkRootLevelContainer::NamedVariant *self,
-                  hkFinishLoadedObjectFlag flag);                             /* derived name */
+void FUN_0008c990(hkxVertexAnimation *self);                                  /* derived name */
+void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
+void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0017fb60(hkMemoryResourceContainer *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
@@ -4921,6 +4997,25 @@ class hknpExternMeshShape : public hknpCompositeShape
     u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
     void *geometry;
     hknpExternMeshShapeData *boundingVolumeData;
+};
+
+/* What hknpCompoundShape's constructor from a description (0x412a0, the
+ * static compound shape's at 0x38466 runs it) is built from: 0x28 bytes,
+ * not reflected, one built on the game's stack at 0xea5b13 and filled at
+ * +0 and +8 before 0x38440 builds the shape. The constructor reads the ints
+ * at +8 and +0xc (the larger one sizes the shape's array) and the buffer
+ * at +0x20; the static compound shape's, the pointer at +0x18. Its
+ * constructor is out of line (0x41260). derived names. */
+struct hknpCompoundShapeCinfo /* derived name */
+{
+    hknpCompoundShapeCinfo();
+
+    const void *unknown0;
+    int unknown8;
+    int unknownC;
+    bool unknown10;
+    const void *unknown18;
+    void *unknown20;
 };
 
 /* hknpCompoundShape: its hkClass at 0x57c2e78 is built by the reflection
