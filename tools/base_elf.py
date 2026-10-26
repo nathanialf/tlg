@@ -22,6 +22,8 @@ from survey_elf import (DT_SCE_JMPREL, DT_SCE_PLTRELSZ, DT_SCE_RELA, DT_SCE_RELA
 R_X86_64_64, R_X86_64_PC32, R_X86_64_PLT32, R_X86_64_GLOB_DAT, R_X86_64_JUMP_SLOT = 1, 2, 4, 6, 7
 R_X86_64_RELATIVE, R_X86_64_GOTPCREL, R_X86_64_32, R_X86_64_32S = 8, 9, 10, 11
 R_X86_64_GOTPCRELX, R_X86_64_REX_GOTPCRELX = 41, 42
+R_X86_64_TLSGD, R_X86_64_GOTTPOFF = 19, 22
+PT_TLS = 7
 
 
 class BaseElf:
@@ -64,6 +66,7 @@ class BaseElf:
         self._dyn = None
         self._plt = None
         self._got = None
+        self._tls_got = None
         self._import_names = None
 
     # --- bytes -------------------------------------------------------------
@@ -168,6 +171,36 @@ class BaseElf:
             for slot, name in self._import_slots((R_X86_64_GLOB_DAT,)).items():
                 self._got[name] = slot
         return self._got
+
+    def tls_got_slot(self, name: str) -> int | None:
+        """The GOT slot holding the thread-pointer offset of the thread-local
+        `name` (a `D_<hex>` label inside PT_TLS): the field the linker's
+        GD-to-IE relaxation reads (docs/DECISIONS.md D23). The slot has no
+        dynamic relocation; it holds the variable's offset in the TLS
+        template minus the template's aligned size (x86-64 TLS variant II,
+        the block sits below the thread pointer). Found by its value among
+        the unrelocated slots of the GOT; None when no slot or more than one
+        holds the value."""
+        va = self.address_of(name)
+        tls = next((p for p in self.phdrs if p["type"] == PT_TLS), None)
+        if va is None or tls is None or not (tls["vaddr"] <= va < tls["vaddr"] + tls["memsz"]):
+            return None
+        align = tls["align"] or 1
+        tpoff = (va - tls["vaddr"]) - ((tls["memsz"] + align - 1) // align * align)
+        if self._tls_got is None:
+            imports = self.got_slots().values()
+            lo, hi = min(imports) - 0x100, max(imports)
+            relocated = {r_off for r_off, _t, _s, _a in self._dynamic()[1]}
+            found: dict[int, list[int]] = {}
+            for slot in range(lo, hi + 8, 8):
+                if slot in relocated or self.off(slot) is None:
+                    continue
+                v = struct.unpack("<q", self.read(slot, 8))[0]
+                if -0x10000 < v < 0:
+                    found.setdefault(v, []).append(slot)
+            self._tls_got = found
+        slots = self._tls_got.get(tpoff, [])
+        return slots[0] if len(slots) == 1 else None
 
     def plt_stubs(self) -> dict[str, int]:
         """symbol name -> address of its PLT stub (`jmp qword ptr [rip+slot]`)

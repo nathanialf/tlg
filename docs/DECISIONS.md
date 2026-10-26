@@ -513,6 +513,23 @@ the relocations were read from the executable by the supervisor
 (`tools/layout_link.py` `base_dynamic_relocs`), the constructor stores
 from the disassembly.
 
+**Addendum, 2026-10-26 (round 24 harvest).** Six more rows, each slot read
+from the base's RELATIVE relocations and each vptr store found by its
+address-point `lea` over the whole executable: hkTypeInfoRegistry 0x16a60b0
+(the name is the string at 0x14cc1f0 its creator FUN_00184e80 references at
+0x184ef0, the singleton record: a fact, not a derived name; stored at
+0x17d830, 0x17d85a, 0x184eb2 and 0x17ea81), hkDynamicClassNameRegistry
+0x16a61f0 (derived: the base whose thirteen slots hkDefaultClassNameRegistry's
+0x16a6170 shares; stored at 0x17ec10, 0x17ec3a, 0x184f72 and 0x17e9db, the
+last two overwritten by 0x16a6170 at 0x184f94 and 0x17e9fd), the XML reader's
+nodes XmlEndElement 0x16a6a20 and XmlCharacters 0x16a6a60 (derived; stored by
+their destructors and by the reader FUN_0019da90 at 0x19e1eb, 0x19e5de,
+0x19e08c, 0x19e28b), hknpWorldObject6c0 0x16a4940 (derived; stored only at
+0x1585db, built at 0x49a67 for hknpWorld's +0x6c0) and BufferOstream
+0x168c3a0 (derived; stored at 0xdba, 0xe4a, 0xeb0, 0xf0f and 0xfc1, the
+last two inside FUN_00000ee0, which the round's report did not list).
+`tools/vtable_names.py --check`: 13 derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -889,3 +906,49 @@ D6's two-region statement is read with this exception.
 **Trigger to revisit.** The probe naming the stretch's release (then this
 entry records it and the prefix), a function in a stretch matching under the
 other generation's compiler, or a new mark that splits the votes.
+
+## D23. The linker's TLS relaxation (general dynamic to initial exec) is reproduced in the gate (2026-10-26)
+
+**Decision.** The 16-byte general-dynamic sequence both compilers emit for a
+thread-local under `-fPIC` (`data16 lea rdi, [rip+x@tlsgd]; data16 data16
+rex.W call __tls_get_addr`, relocations R_X86_64_TLSGD and R_X86_64_PLT32)
+is compared and laid out as the initial-exec form the linker made of it in
+the same 16 bytes: `mov rax, fs:[0]; add rax, [rip+x@gottpoff]`, the GD to
+IE code transition of the x86-64 psABI (the "Thread-Local Storage" chapter,
+"GD to IE"; lld's `X86_64::relaxTlsGdToIe` in lld/ELF/Arch/X86_64.cpp
+writes these bytes).
+`tools/match_check.py` `relax_tls_gd` rewrites the bytes before
+disassembling and replaces the two relocations by one GOTTPOFF relocation
+on the add's displacement; `verify_targets` and `tools/layout_link.py`
+resolve it to the base's GOT slot that holds the variable's thread-pointer
+offset (`BaseElf.tls_got_slot`: the variable's offset in the PT_TLS
+template minus the template's aligned size, found by value among the
+unrelocated slots of the GOT, exactly one slot or an error). A wrong
+variable fails the target check (tested: D_16dc068 against the base's
+0xbb40 reports the slot mismatch). A TLSGD relocation on any other
+instruction form is left as it is and does not match.
+
+**Why.** There is no source form that makes the compiler emit the
+initial-exec access short of `-ftls-model=initial-exec` or a per-variable
+`tls_model` attribute, and the attribute is a crutch; the flag is not in
+the region's line and would be a guess at a build setting the relaxation
+makes invisible. The executable, measured whole on 2026-10-26 over the
+disassembly of every loaded segment: no `__tls_get_addr` import, PLT stub
+or call; no `data16 lea` left anywhere; 21,974 `mov rax, fs:[0]; add rax,
+[rip+X]` pairs (984 below 0x1a3e00, 20,990 above, all through `rax`, the
+register the transition fixes), every one of whose targets is one of the 15
+GOT slots without a dynamic relocation that hold a small negative value
+(0x16d80b8 to 0x16d8170); PT_TLS is 0x70 bytes at 0x16dc060 (4 initialised),
+align 8, so those values are the thread-pointer offsets of 15 thread-locals
+(-0x70 to -8; the slot for 0x16dc070 holds -0x60, as the first claim
+needs). The linker therefore relaxed every general-dynamic access, which
+GNU ld and lld do for an executable (the variable's offset is known at link
+time). The first function to need it: FUN_0000bb40, the memory system's
+"this thread's router" store (`D_16dc070 = router;`, 25 bytes, everything
+outside the 16 bytes already equal).
+
+**Trigger to revisit.** A TLS access in the base in another form (a
+local-exec `mov rax, fs:[0]; lea rax, [rax-N]`, or an access through a
+register other than `rax`), which none of the 21,974 is; or a GOT slot
+value shared by two thread-locals, which `tls_got_slot` reports as an
+error rather than guessing.

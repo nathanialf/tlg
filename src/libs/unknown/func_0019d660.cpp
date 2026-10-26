@@ -3,7 +3,6 @@
 
 /* Slot 0 of its vtable (0x16a6a60), the complete destructor: the text's
  * destructor is out of line. */
-// NONMATCHING: instructions equal; the vtable 0x16a6a60 (_ZTV13XmlCharacters) waits for a D14 ruling
 XmlCharacters::~XmlCharacters()
 {
     FUN_0000e5d0(&text);

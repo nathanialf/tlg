@@ -823,3 +823,10 @@ FUN_0007bfe0 src/libs/unknown/func_0007bfe0.cpp
 FUN_0007e2f0 src/libs/unknown/func_0007e2f0.cpp
 FUN_0007eff0 src/libs/unknown/func_0007eff0.cpp
 FUN_0007f0d0 src/libs/unknown/func_0007f0d0.cpp
+FUN_0017d830 src/libs/unknown/func_0017d830.cpp _ZN18hkTypeInfoRegistryD1Ev
+FUN_0017ec10 src/libs/unknown/func_0017ec10.cpp _ZN26hkDynamicClassNameRegistryD1Ev
+FUN_0019d5e0 src/libs/unknown/func_0019d5e0.cpp _ZN13XmlEndElementD1Ev
+FUN_0019d660 src/libs/unknown/func_0019d660.cpp _ZN13XmlCharactersD1Ev
+FUN_001585d0 src/libs/unknown/func_001585d0.cpp _ZN18hknpWorldObject6c0C2Ev
+FUN_00000eb0 src/libs/unknown/func_00000eb0.cpp _ZN13BufferOstreamD1Ev
+FUN_0000bb40 src/libs/unknown/func_0000bb40.cpp

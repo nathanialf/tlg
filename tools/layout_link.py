@@ -164,11 +164,21 @@ def base_dynamic_relocs(base: BaseElf) -> dict[int, tuple[int, str, int]]:
 
 def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], addr: int,
                  in_data: bool = False) -> tuple[bytearray, list[str]]:
+    if not in_data:
+        # the linker's GD-to-IE relaxation of every thread-local access (D23)
+        code, relocs = mc.relax_tls_gd(code, relocs)
     out = bytearray(code)
     errors = []
     dyn = base_dynamic_relocs(base) if in_data else {}
     for r in relocs:
         P = addr + r.offset
+        if r.type == mc.R_X86_64_GOTTPOFF:
+            slot = base.tls_got_slot(r.symbol)
+            if slot is None:
+                errors.append(f"+0x{r.offset:x} {r.symbol}: no single GOT slot of the base holds its thread-pointer offset")
+                continue
+            struct.pack_into("<i", out, r.offset, slot + r.addend - P)
+            continue
         if in_data and r.type == R_X86_64_64:
             # a pointer field: the file holds the target address and the loader
             # adds the load base (RELATIVE), or holds 0 for an import's address

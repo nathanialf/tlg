@@ -257,6 +257,40 @@ def relax_got_loads(code: bytes, relocs, base) -> tuple[bytes, set]:
     return bytes(out), relaxed
 
 
+R_X86_64_TLSGD, R_X86_64_GOTTPOFF = 19, 22
+TLS_GD_LEA = bytes.fromhex("66488d3d")                     # data16 lea rdi, [rip+x@tlsgd]
+TLS_GD_CALL = bytes.fromhex("666648e8")                    # data16 data16 rex.W call __tls_get_addr
+TLS_IE_FORM = bytes.fromhex("64488b042500000000480305")    # mov rax, fs:[0]; add rax, [rip+x@gottpoff]
+
+
+def relax_tls_gd(code: bytes, relocs: list) -> tuple[bytes, list]:
+    """The linker's GD-to-IE relaxation applied to the object (docs/DECISIONS.md
+    D23): the 16-byte general-dynamic sequence the compiler emits for a
+    thread-local (`data16 lea rdi, [rip+x@tlsgd]; data16 data16 rex.W call
+    __tls_get_addr`) becomes the initial-exec form the base holds in the same
+    16 bytes (`mov rax, fs:[0]; add rax, [rip+x@gottpoff]`), the x86-64 psABI's
+    GD to IE code transition. The TLSGD and PLT32 relocations are replaced by
+    one GOTTPOFF relocation on the add's displacement, against the variable;
+    verify_targets and layout_link resolve it to the base's GOT slot holding
+    the thread-pointer offset. A TLSGD relocation on another form is left
+    alone (it will not match the base, which holds no such form)."""
+    by_off = {r.offset: r for r in relocs}
+    out = bytearray(code)
+    drop, added = set(), []
+    for r in relocs:
+        k = r.offset
+        c = by_off.get(k + 8)
+        if (r.type == R_X86_64_TLSGD and k >= 4 and code[k - 4:k] == TLS_GD_LEA
+                and code[k + 4:k + 8] == TLS_GD_CALL and c is not None and c.type == 4
+                and c.symbol == "__tls_get_addr"):
+            out[k - 4:k + 12] = TLS_IE_FORM + b"\0\0\0\0"
+            drop.update((k, k + 8))
+            added.append(Reloc(k + 8, 4, R_X86_64_GOTTPOFF, r.symbol, -4, r.sym_section, r.sym_value, r.sym_size))
+    if not drop:
+        return code, relocs
+    return bytes(out), sorted([r for r in relocs if r.offset not in drop] + added, key=lambda r: r.offset)
+
+
 def disasm(code: bytes, base: int):
     from capstone import Cs, CS_ARCH_X86, CS_MODE_64
     md = Cs(CS_ARCH_X86, CS_MODE_64)
@@ -291,6 +325,13 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
             expected, actual = slot, disp + P - r.addend
         elif r.type in (10, 11):        # 32, 32S: absolute
             actual = disp - r.addend
+        elif r.type == R_X86_64_GOTTPOFF:   # the relaxed TLS access: the GOT slot holding the offset (D23)
+            slot = base.tls_got_slot(r.symbol)
+            if slot is None:
+                bad.append(f"{r.symbol}: no single GOT slot of the base holds its thread-pointer offset "
+                           f"(reloc at +0x{r.offset:x})")
+                continue
+            expected, actual = slot, disp + P - r.addend
         else:
             unverified += 1
             continue
@@ -301,6 +342,7 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
 
 
 def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int, base=None) -> dict:
+    obj_bytes, relocs = relax_tls_gd(obj_bytes, relocs)
     obj_bytes, relaxed = relax_got_loads(obj_bytes, relocs, base)
     a = disasm(obj_bytes, 0)
     b = disasm(base_bytes, base_addr)

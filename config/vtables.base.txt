@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1227 vtables stored by a constructor that no type info names (below, with
+# 1221 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -22,10 +22,9 @@
 #
 # Vtables no type info names: `<vtable address> stored by <functions> [hkClass <name>
 # (slot 3 <getter>)] [home <files>]`:
-#   0x168c3a0 stored by FUN_00000da0 FUN_00000e40 FUN_00000eb0
 #   0x168caf0 stored by FUN_000066f0 FUN_00006740
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
-#   0x168d100 stored by FUN_000080c0 FUN_00008140 FUN_00008270 FUN_00008310
+#   0x168d100 stored by FUN_000080c0 FUN_00008140 FUN_00008270 _ZN9hkOstreamD1Ev
 #   0x168d210 stored by FUN_00008eb0 FUN_00008f50 FUN_00008ff0 | hkClass hkBufferedStreamWriter (slot 3 0x8ea0)
 #   0x168d3f0 stored by FUN_0000a280 FUN_0000a310 FUN_0000a3b0
 #   0x168d5b0 stored by FUN_0000b1a0 FUN_0000b250 FUN_0000b330
@@ -69,11 +68,8 @@
 #   0x16a3f50 stored by FUN_00140a60 FUN_00140e70
 #   0x16a4000 stored by FUN_0014dd30 FUN_0014ddd0 FUN_0014deb0 FUN_0014df10
 #   0x16a4380 stored by FUN_0014e100 FUN_00150240
-#   0x16a4940 stored by FUN_001585d0
 #   0x16a5aa0 stored by FUN_00175e30 FUN_00175e90 FUN_00175f70
 #   0x16a5b70 stored by FUN_00176420 FUN_00176b70
-#   0x16a60b0 stored by FUN_0017d830 FUN_0017d850
-#   0x16a61f0 stored by FUN_0017ec10 FUN_0017ec30
 #   0x16a63b0 stored by FUN_00181820
 #   0x16a6470 stored by FUN_00181b10
 #   0x16a64f0 stored by FUN_00183810
@@ -86,8 +82,6 @@
 #   0x16a6910 stored by FUN_0019a950 FUN_0019ab10 FUN_0019abf0
 #   0x16a6960 stored by FUN_0019be50 FUN_0019c150
 #   0x16a69e0 stored by FUN_0019d450 FUN_0019d500
-#   0x16a6a20 stored by FUN_0019d5e0 FUN_0019d600
-#   0x16a6a60 stored by FUN_0019d660 FUN_0019d680
 #   0x16a6aa0 stored by FUN_0019d8e0 FUN_0019d920 FUN_0019da00
 #   0x16a6af0 stored by FUN_0019f670
 #   0x16a7580 stored by FUN_001a0310 FUN_001a03a0 FUN_001a04d0
