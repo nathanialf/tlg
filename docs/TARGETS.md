@@ -140,7 +140,12 @@ The full survey, program header by program header and library by library, is
   reads the Havok type-info registrations (type name, scoped name, finish,
   cleanup, vtable address point, size) and writes `config/vtables.base.txt`:
   170 classes whose vtable the executable names, which the gate resolves
-  `_ZTV<class>` relocations against (`DECISIONS.md` D12).
+  `_ZTV<class>` relocations against (`DECISIONS.md` D12); vtables named by
+  ruling from the constructor that stores them are in
+  `config/vtables.derived.base.txt` (D14). `tools/text_residue.py` classes
+  the text between the table's functions: 171,532 bytes of padding, two
+  static initializers without unwind entries (now rows), and 29,162 bytes of
+  linker residue no source produces (D13).
 - **Libraries.** The needed modules and import libraries are Sony's system
   libraries (`libSceGnmDriver`, `libSceNgs2`, `libSceFios2`, `libScePad`,
   `libkernel`, `libc`, and the rest in `SURVEY.md`); the `PT_SCE_LIBVERSION`

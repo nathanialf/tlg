@@ -330,13 +330,19 @@ class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
     }
 };
 
-/* hkcdPlanarSolidNodeStorage (type info 0x57ba3b0, 0x38 bytes; scoped name
- * "hkcdPlanarSolid::NodeStorage"): its finish constructor is inline in its
- * finish callback FUN_0001d620 and stores only the vtable. */
-class hkcdPlanarSolidNodeStorage : public hkReferencedObject
+/* hkcdPlanarSolid (vtable 0x16a3640, finish constructor FUN_00095800;
+ * its own members not yet read) and its nested NodeStorage (type info
+ * 0x57ba3b0, scoped name "hkcdPlanarSolid::NodeStorage", 0x38 bytes),
+ * whose finish constructor is inline in its finish callback FUN_0001d620
+ * and stores only the vtable. */
+struct hkcdPlanarSolid {
+    class NodeStorage;
+};
+
+class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
 {
   public:
-    hkcdPlanarSolidNodeStorage(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    NodeStorage(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* Reference-counted classes whose finish constructors are inline in their
@@ -369,14 +375,17 @@ class hknpStaticCompoundShapeData : public hkReferencedObject
     hknpStaticCompoundShapeData(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
-/* hknpCompressedMeshShapeInternalsKeyMask: vtable 0x1692ab0, finish callback FUN_00034e00. */
-class hknpCompressedMeshShapeInternalsKeyMask : public hkReferencedObject
+/* hknpCompressedMeshShapeInternals (its own members not yet read) and its
+ * nested KeyMask (scoped name "hknpCompressedMeshShapeInternals::KeyMask",
+ * vtable 0x1692ab0, finish callback FUN_00034e00). */
+struct hknpCompressedMeshShapeInternals {
+    class KeyMask;
+};
+
+class hknpCompressedMeshShapeInternals::KeyMask : public hkReferencedObject
 {
   public:
-    hknpCompressedMeshShapeInternalsKeyMask(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag)
-    {
-    }
+    KeyMask(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* hknpVehicleDefaultVelocityDamper: vtable 0x1695890, finish callback FUN_00035c60. */
@@ -419,13 +428,6 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
 {
   public:
     hknpVehicleDefaultTransmission(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-};
-
-/* hknpConvexPolytopeShapeConnectivity: vtable 0x1694e20, finish callback FUN_00039ae0. */
-class hknpConvexPolytopeShapeConnectivity : public hkReferencedObject
-{
-  public:
-    hknpConvexPolytopeShapeConnectivity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback FUN_0003a0d0. */
@@ -510,15 +512,6 @@ class hknpTyremarksWheel : public hkReferencedObject
     hknpTyremarksWheel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
-/* hknpMaskedShapeMaskWrapper (vtable 0x1693ba0): its finish constructor
- * FUN_00038230 is out of line, called by the finish callback 0x36780 and by
- * the reflection initializer at 0x36863; it stores only the vtable. */
-class hknpMaskedShapeMaskWrapper : public hkReferencedObject
-{
-  public:
-    hknpMaskedShapeMaskWrapper(hkFinishLoadedObjectFlag flag);
-};
-
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
 class hkGeometry;                           /* FUN_00093c60, vtable 0x1692500 */
@@ -559,9 +552,7 @@ void FUN_000ae680(hkStorageSkinnedMeshShape *self,
                   hkFinishLoadedObjectFlag flag);                                 /* derived name */
 void FUN_000274e0(hkMemoryMeshVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_000469a0(hknpDynamicCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00038230(hknpMaskedShapeMaskWrapper *self,
-                  hkFinishLoadedObjectFlag flag);                        /* derived name */
-void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag);          /* derived name */
 
 /* hkMemoryMeshVertexBuffer, polymorphic (vtable address point 0x16921b0):
  * members from its record table at 0x1692590: format (struct) at +0xc,
@@ -890,6 +881,8 @@ struct hknpShapeSignals {
 class hknpMaskedShape
 {
   public:
+    class MaskWrapper;
+
     virtual ~hknpMaskedShape();
 
     hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
@@ -898,6 +891,19 @@ class hknpMaskedShape
     hknpShapeSignals mutationSignals;
     s32 maskSize;
 };
+
+/* hknpMaskedShape::MaskWrapper (type info 0x57be9a8, vtable 0x1693ba0):
+ * its finish constructor FUN_00038230 is out of line, called by the finish
+ * callback 0x36780 and by the reflection initializer at 0x36863; it stores
+ * only the vtable. */
+class hknpMaskedShape::MaskWrapper : public hkReferencedObject
+{
+  public:
+    MaskWrapper(hkFinishLoadedObjectFlag flag);
+};
+
+void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
  * vtable 0x16a54a0, address point 0x16a54b0), reflected with
@@ -1218,11 +1224,21 @@ class hknpConvexPolytopeShape : public hknpConvexShape
 {
   public:
     struct Face;
+    class Connectivity;
 
     int FUN_00072f70() const; /* vtable slot 13; derived name */
 
     hkRelArray<Vec4> planes;
     hkRelArray<Face> faces;
+};
+
+/* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
+ * vtable 0x1694e20, finish callback FUN_00039ae0): the shape's
+ * connectivity pointer at +0x38 refers to one. */
+class hknpConvexPolytopeShape::Connectivity : public hkReferencedObject
+{
+  public:
+    Connectivity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* hknpBreakableConstraintData, polymorphic, 0x28 bytes (type info

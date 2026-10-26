@@ -49,9 +49,12 @@ placed by the reviewer from the bodies, not by the row.
    Callees are `FUN_<addr>` until named, data `D_<hex>`: both are facts the
    gate checks. A class's vtable is the compiler's; the gate places it from
    `config/vtables.base.txt` (the vtables the executable's type-info
-   registrations name, `tools/vtable_names.py`, D12), so a constructor is
-   written as a constructor, and a class the file does not name waits for a
-   ruling, not a hand-written vptr store. A name taken from a string, an export or a vtable is a fact;
+   registrations name, `tools/vtable_names.py`, D12) or from
+   `config/vtables.derived.base.txt` (vtables named by ruling from the
+   constructor that stores them, D14), so a constructor is written as a
+   constructor, and a class neither file names waits for a ruling (report
+   the vtable address, the storing constructor and every string or
+   registration near it), not a hand-written vptr store. A name taken from a string, an export or a vtable is a fact;
    a name invented from context carries `/* derived name */`.
 
 4. **Diff, then reason.** `tools/quick_diff.sh <tu> <function>` compiles the

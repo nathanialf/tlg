@@ -40,8 +40,9 @@ from __future__ import annotations
 
 import argparse
 import re
+import struct
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from capstone import CS_ARCH_X86, CS_MODE_64, Cs
@@ -108,15 +109,25 @@ class Walker:
         """The vtable address point a finish constructor leaves in its object:
         the last store of a read-only-data address into `[this]` along the
         fall-through path (the derived class's vptr follows its bases')."""
-        if ctor in self._vptr:
-            return self._vptr[ctor]
-        self._vptr[ctor] = None
+        if ctor not in self._vptr:
+            seq = self._walk(ctor)
+            self._vptr[ctor] = seq[-1] if seq else None
+        return self._vptr[ctor]
+
+    def vptr_stores(self, fn: int) -> set[int]:
+        """Every vtable address point the function stores into its `this`
+        object along the fall-through path (a constructor: its bases' then
+        its own)."""
+        return set(self._walk(fn))
+
+    def _walk(self, ctor: int) -> list[int]:
         if ctor not in self.funcs:
-            return None
+            return []
         ins_by = self.insns(ctor)
         this = {"rdi"}
         regs: dict[str, int] = {}
-        last, pc, steps = None, ctor, 0
+        seq: list[int] = []
+        pc, steps = ctor, 0
         while pc in ins_by and steps < 2000:
             steps += 1
             ins = ins_by[pc]
@@ -162,14 +173,57 @@ class Walker:
                 dst = ops[0]
                 base = ins.reg_name(dst.mem.base) if dst.mem.base else None
                 v = regs.get(ins.reg_name(ops[1].reg))
-                if base in this and dst.mem.disp == 0 and not dst.mem.index and v is not None and self.in_relro(v):
-                    last = v
+                if base in this and dst.mem.disp == 0 and not dst.mem.index and v is not None \
+                        and self.in_relro(v) and self.is_address_point(v):
+                    seq.append(v)
             elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
                 d = ins.reg_name(ops[0].reg)
                 regs.pop(d, None)
                 this.discard(d)
-        self._vptr[ctor] = last
-        return last
+        return seq
+
+    def is_address_point(self, v: int) -> bool:
+        """Two zero quadwords (offset-to-top, no RTTI) precede an address
+        point, and its first slot is a text address or null (a pure virtual
+        slot the linker left empty)."""
+        if v % 8 or v - 0x10 < self.relro[0] or v + 8 > self.relro[1]:
+            return False
+        if self.elf.read(v - 0x10, 0x10) != bytes(0x10):
+            return False
+        s0 = struct.unpack("<Q", self.elf.read(v, 8))[0]
+        return s0 == 0 or self.text_va <= s0 < self.text_va + len(self.text)
+
+    def hkclass_records(self) -> dict[int, str]:
+        """hkClass record address -> class name, from every call of the
+        hkClass constructor FUN_000041a0 (`rdi` the record, `rsi` the name)."""
+        ctor = self.elf.func_by_name.get("FUN_000041a0", (None,))[0]
+        out: dict[int, str] = {}
+        if ctor is None:
+            return out
+        for addr, (size, _n) in self.funcs.items():
+            regs: dict[str, int] = {}
+            for ins in self.md.disasm(self.text[addr - self.text_va:addr - self.text_va + size], addr):
+                ops = ins.operands
+                if ins.mnemonic == "call":
+                    if ops and ops[0].type == X86_OP_IMM and ops[0].imm == ctor \
+                            and isinstance(regs.get("rdi"), int) and isinstance(regs.get("rsi"), int):
+                        name = c_string(self.elf, regs["rsi"])
+                        if name:
+                            out[regs["rdi"]] = name
+                    for r in CALLER_SAVED:
+                        regs.pop(r, None)
+                elif len(ops) == 2 and ops[0].type == X86_OP_REG:
+                    d = ins.reg_name(ops[0].reg)
+                    src = ops[1]
+                    if ins.mnemonic == "lea" and src.type == X86_OP_MEM and src.mem.base == X86_REG_RIP:
+                        regs[d] = ins.address + ins.size + src.mem.disp
+                    elif ins.mnemonic == "mov" and src.type == X86_OP_REG and ins.reg_name(src.reg) in regs:
+                        regs[d] = regs[ins.reg_name(src.reg)]
+                    else:
+                        regs.pop(d, None)
+                elif ops and ops[0].type == X86_OP_REG and ins.mnemonic not in ("cmp", "test", "push"):
+                    regs.pop(ins.reg_name(ops[0].reg), None)
+        return out
 
     def registrations(self, addr: int, size: int):
         """-> [(site, record, type name, address point or None, ctor or None)]
@@ -177,6 +231,7 @@ class Walker:
         regs: dict[str, int] = {}
         slots: dict[int, int] = {}            # rbp/rsp displacement -> the finish constructor run on it
         names: dict[int, str] = {}            # record address -> type name stored at +0
+        scoped: dict[int, str] = {}           # record address -> scoped name stored at +8
         pending: dict[str, int] = {}          # register -> ctor whose object's vptr it holds
         out = []
         lo = addr - self.text_va
@@ -252,13 +307,18 @@ class Walker:
                     s = c_string(self.elf, regs[sreg])
                     if s:
                         names[rec] = s
+                elif disp == 8 and rec in names and isinstance(regs.get(sreg), int):
+                    s = c_string(self.elf, regs[sreg])
+                    if s:
+                        scoped[rec] = s
                 elif rec + disp - 0x20 in names or (disp == 0x20 and rec in names):
                     rec0 = rec + disp - 0x20
                     v = regs.get(sreg)
+                    nm = (names[rec0], scoped.get(rec0, names[rec0]))
                     if isinstance(v, int) and self.in_relro(v):
-                        out.append((ins.address, rec0, names[rec0], v, None))
+                        out.append((ins.address, rec0, nm, v, None))
                     elif sreg in pending:
-                        out.append((ins.address, rec0, names[rec0], self.vptr_of(pending[sreg]), pending[sreg]))
+                        out.append((ins.address, rec0, nm, self.vptr_of(pending[sreg]), pending[sreg]))
             elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
                 d = ins.reg_name(ops[0].reg)
                 regs.pop(d, None)
@@ -276,48 +336,137 @@ def collect(elf: BaseElf):
     return hits
 
 
+def mangled_name(flat: str, scoped: str) -> tuple[str | None, str]:
+    """The class as the developer spelled it: the scoped name when it is a
+    plain or namespace-qualified identifier (`hkcdPlanarSolid::NodeStorage`),
+    else the flat type name; a scoped name ending in `_typename` is Havok's
+    typedef of a template instance, whose template spelling the executable
+    does not give, so the flat name stands. -> (symbol, class)."""
+    scoped = scoped.lstrip("!")                 # Havok writes the scoped name with a leading '!'
+    cands = [flat] if scoped.endswith("_typename") else [scoped, flat]
+    for cand in cands:                          # `_typename` is the typedef of a template instance
+        sym = mangle_vtable(cand)
+        if sym:
+            return sym, cand
+    return None, flat
+
+
+def unnamed_vtables(elf: BaseElf, w: Walker, named: set[int]):
+    """Every vtable address point some function stores into its object that
+    no type info names, with the evidence at hand: the storing functions,
+    the hkClass its slot 3 returns when that getter is this vtable's alone,
+    and the storing functions' home files."""
+    stores: dict[int, set[str]] = defaultdict(set)
+    for addr, (sz, name) in w.funcs.items():
+        for v in w.vptr_stores(addr):
+            stores[v].add(name)
+    hkclass = w.hkclass_records()
+    homes: dict[str, str] = {}
+    hp = config_path(REPO_ROOT, elf.version, "homes", "txt")
+    if hp.exists():
+        for line in hp.read_text().splitlines():
+            s = line.split()
+            if s and not line.startswith("#"):
+                homes[s[0]] = s[1].rsplit("/", 1)[-1]
+    getter: dict[int, tuple[int, str]] = {}
+    for v in stores:
+        s3 = struct.unpack("<Q", elf.read(v + 24, 8))[0]
+        if s3 in w.funcs:
+            ins = list(w.md.disasm(w.text[s3 - w.text_va:s3 - w.text_va + w.funcs[s3][0]], s3))
+            if len(ins) == 2 and ins[0].mnemonic == "lea" and ins[1].mnemonic == "ret" \
+                    and ins[0].operands[1].mem.base == X86_REG_RIP:
+                rec = ins[0].address + ins[0].size + ins[0].operands[1].mem.disp
+                if rec in hkclass:
+                    getter[v] = (s3, hkclass[rec])
+    shared = Counter(g[0] for g in getter.values())
+    out = []
+    for v in sorted(stores):
+        if v in named:
+            continue
+        ev = []
+        if v in getter and shared[getter[v][0]] == 1:
+            ev.append(f"hkClass {getter[v][1]} (slot 3 0x{getter[v][0]:x})")
+        hs = sorted({homes[f] for f in stores[v] if f in homes})
+        if hs:
+            ev.append("home " + " ".join(hs))
+        out.append((v - 0x10, sorted(stores[v]), ev))
+    return out
+
+
+def check_derived(elf: BaseElf) -> list[str]:
+    """Every row of config/vtables.derived.<slug>.txt against its evidence."""
+    errors = []
+    for sym in list(elf._derived):
+        try:
+            elf._verify_derived(sym)
+        except ValueError as e:
+            errors.append(str(e))
+    return errors
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--md", action="store_true", help="print a Markdown summary")
     ap.add_argument("--no-write", action="store_true", help="do not write config/vtables.<slug>.txt")
+    ap.add_argument("--check", action="store_true", help="verify config/vtables.derived.<slug>.txt only")
     a = ap.parse_args(argv)
     elf = BaseElf(REPO_ROOT)
-    hits = collect(elf)
-    by_name: dict[str, dict[int, list[str]]] = defaultdict(lambda: defaultdict(list))
+    if a.check:
+        errs = check_derived(elf)
+        for e in errs:
+            print(e, file=sys.stderr)
+        print(f"vtable_names: {len(elf._derived)} derived rows, {len(errs)} failing")
+        return 1 if errs else 0
+    w = Walker(elf)
+    hits = []
+    for addr, (size, _name) in w.funcs.items():
+        if addr - w.text_va >= 0 and addr - w.text_va + size <= len(w.text):
+            hits += w.registrations(addr, size)
+    by_name: dict[tuple, dict[int, list[str]]] = defaultdict(lambda: defaultdict(list))
     untraced = []
-    for site, _rec, name, point, ctor in hits:
+    for site, _rec, nm, point, ctor in hits:
         if point is None:
-            untraced.append((name, site, ctor))
+            untraced.append((nm[0], site, ctor))
             continue
         # an address point is preceded by the offset-to-top and the (absent) RTTI pointer, both zero
-        if point % 8 or elf.read(point - 0x10, 0x10) != bytes(0x10):
-            raise SystemExit(f"vtable_names: 0x{point:x} stored for {name} at 0x{site:x} is not a vtable address point")
-        by_name[name][point - 0x10].append(f"typeinfo 0x{site:x}" + (f" ctor FUN_{ctor:08x}" if ctor else ""))
+        if not w.is_address_point(point):
+            raise SystemExit(f"vtable_names: 0x{point:x} stored for {nm[0]} at 0x{site:x} is not a vtable address point")
+        by_name[nm][point - 0x10].append(f"typeinfo 0x{site:x}" + (f" ctor FUN_{ctor:08x}" if ctor else ""))
     rows, unmangled, conflicts = [], [], []
-    for name, vts in sorted(by_name.items(), key=lambda kv: min(kv[1])):
+    for nm, vts in sorted(by_name.items(), key=lambda kv: min(kv[1])):
+        flat, scoped = nm
         if len(vts) > 1:
-            conflicts.append((name, {hex(v): ss for v, ss in vts.items()}))
+            conflicts.append((flat, {hex(v): ss for v, ss in vts.items()}))
             continue
         (vt, sites), = vts.items()
-        sym = mangle_vtable(name)
+        sym, cls = mangled_name(flat, scoped)
         if sym is None:
-            unmangled.append((name, vt, sites[0]))
+            unmangled.append((flat, vt, sites[0]))
             continue
-        rows.append((sym, vt, name, sites[0]))
+        note = f' scoped "{scoped.lstrip("!")}"' if cls != scoped.lstrip("!") else ""
+        rows.append((sym, vt, cls, sites[0] + note))
     shared = defaultdict(list)
     for sym, vt, name, _ in rows:
         shared[vt].append(name)
+    named_points = {vt + 0x10 for _, vt, _, _ in rows} | {v + 0x10 for v, _, _ in elf._derived.values()}
+    unnamed = unnamed_vtables(elf, w, named_points)
+    derived_errors = check_derived(elf)
     out = config_path(REPO_ROOT, elf.version, "vtables", "txt")
     lines = [
         "# Vtables the executable names: `<vtable symbol> <vtable address> <class name> typeinfo",
-        "# <store site>`. Written by tools/vtable_names.py from each reflected class's type-info",
-        "# registration (its docstring has the rule); regenerate, never edit. The address is",
-        "# the start of the `_ZTV` object; a constructed object's vptr holds it + 0x10.",
+        "# <store site> [ctor <function>] [scoped \"<name>\"]`. Written by tools/vtable_names.py",
+        "# from each reflected class's type-info registration (its docstring has the rule);",
+        "# regenerate, never edit. The address is the start of the `_ZTV` object; a constructed",
+        "# object's vptr holds it + 0x10. The class is the type info's scoped name when that is",
+        "# an identifier (a nested class is written nested), else its flat type name, with the",
+        "# scoped name noted. Vtables named by ruling are in vtables.derived.<slug>.txt (D14).",
         f"# {len(rows)} classes; {len(unmangled)} names the tool cannot mangle (below, `?`);",
         f"# {len(conflicts)} names registered with two vtables (below, not written);",
         f"# {len(untraced)} registrations whose constructor's vptr store the walk cannot find (below);",
-        f"# {sum(1 for v in shared.values() if len(v) > 1)} vtables registered by more than one class.",
+        f"# {sum(1 for v in shared.values() if len(v) > 1)} vtables registered by more than one class;",
+        f"# {len(unnamed)} vtables stored by a constructor that no type info names (below, with",
+        "# the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).",
         "#",
         "# Vtables registered by more than one class (the derived class keeps the base's):",
     ]
@@ -328,20 +477,26 @@ def main(argv=None) -> int:
     lines += [f"#   {name} {d}" for name, d in conflicts]
     lines += ["#", "# Registrations whose finish constructor's vptr store the walk cannot find:"]
     lines += [f"#   {name} typeinfo 0x{site:x} ctor FUN_{ctor:08x}" for name, site, ctor in untraced]
+    lines += ["#", "# Vtables no type info names: `<vtable address> stored by <functions> [hkClass <name>",
+              "# (slot 3 <getter>)] [home <files>]`:"]
+    lines += [f"#   0x{vt:x} stored by {' '.join(fs)}" + (f" | {'; '.join(ev)}" if ev else "") for vt, fs, ev in unnamed]
     lines += [f"{sym} 0x{vt:x} {name} {ev}" for sym, vt, name, ev in rows]
     if not a.no_write:
         out.write_text("\n".join(lines) + "\n")
+    for e in derived_errors:
+        print(e, file=sys.stderr)
     if a.md:
         print(f"| type-info vtable stores | {len(hits)} |")
         print(f"| classes with a named vtable | {len(rows)} |")
         print(f"| names not mangled (templates) | {len(unmangled)} |")
         print(f"| names with two vtables | {len(conflicts)} |")
         print(f"| constructor vptr not traced | {len(untraced)} |")
+        print(f"| vtables named by ruling | {len(elf._derived)} |")
+        print(f"| vtables stored by a constructor, unnamed | {len(unnamed)} |")
     else:
         print(f"vtable_names: {len(rows)} rows, {len(unmangled)} unmangled, {len(conflicts)} conflicts, "
-              f"{len(untraced)} untraced "
-              f"-> {out.relative_to(REPO_ROOT)}")
-    return 0
+              f"{len(untraced)} untraced, {len(elf._derived)} derived, {len(unnamed)} unnamed -> {out.relative_to(REPO_ROOT)}")
+    return 1 if derived_errors else 0
 
 
 if __name__ == "__main__":

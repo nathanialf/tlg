@@ -1,0 +1,9 @@
+# Vtables named by ruling (docs/DECISIONS.md D14): `<vtable symbol> <vtable address>
+# <class name> derived ctor <function> [evidence...]`. The address is a fact: the
+# constructor named stores the vtable's address point (address + 0x10) into its
+# object, which tools/vtable_names.py --check and the gate verify on every use. The
+# class name is derived (the executable has no string for it) and its definition
+# carries `/* derived name */`; a later fact renames it everywhere. Rows are added
+# by the supervisor, one ruling each, never by a worker; a vtable the generated
+# file names (config/vtables.<slug>.txt) must not appear here.
+_ZTV11StackTracer 0x168d840 StackTracer derived ctor FUN_0000d8f0 # static instance 0x57b7b80 built at 0x6bf0 and registered with __cxa_atexit; FUN_0000d890 prints "No stack trace available"; slots: 0xd940 destructor, 0xd900 deleting destructor

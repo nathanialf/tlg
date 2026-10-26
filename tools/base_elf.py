@@ -40,13 +40,27 @@ class BaseElf:
                 a, sz, n = int(s[0], 16), int(s[1], 16), s[2]
                 self.functions.append((a, sz, n))
                 self.func_by_name[n] = (a, sz)
+        # vtables the executable names (config/vtables.<slug>.txt, generated,
+        # D12) and vtables named by ruling (config/vtables.derived.<slug>.txt,
+        # D14): symbol -> address of the _ZTV object. A derived row is
+        # verified against the constructor it cites the first time the gate
+        # resolves it (`_verify_derived`).
         self.vtables: dict[str, int] = {}
+        self._derived: dict[str, tuple[int, str, str]] = {}
         p = config_path(repo_root, self.version, "vtables", "txt")
         if p.exists():
             for line in p.read_text().splitlines():
                 s = line.split("#", 1)[0].split()
                 if len(s) >= 2 and s[0].startswith("_ZTV"):
                     self.vtables[s[0]] = int(s[1], 16)
+        p = config_path(repo_root, self.version, "vtables.derived", "txt")
+        if p.exists():
+            for line in p.read_text().splitlines():
+                s = line.split("#", 1)[0].split()
+                if len(s) >= 6 and s[0].startswith("_ZTV") and s[3] == "derived" and s[4] == "ctor":
+                    if s[0] in self.vtables or int(s[1], 16) in self.vtables.values():
+                        raise ValueError(f"{p.name}: {s[0]} 0x{int(s[1], 16):x} duplicates a generated row")
+                    self._derived[s[0]] = (int(s[1], 16), s[2], s[5])
         self._dyn = None
         self._plt = None
         self._got = None
@@ -213,7 +227,11 @@ class BaseElf:
         if name in self.func_by_name:
             return self.func_by_name[name][0]
         if name.startswith("_ZTV"):
-            return self.vtables.get(name)
+            if name in self.vtables:
+                return self.vtables[name]
+            if name in self._derived:
+                return self._verify_derived(name)
+            return None
         ident = self.base_identifier(name)
         if ident in self.func_by_name:
             return self.func_by_name[ident][0]
@@ -224,6 +242,24 @@ class BaseElf:
             except ValueError:
                 return None
         return self.plt_stubs().get(name)
+
+    def _verify_derived(self, sym: str) -> int:
+        """A derived vtable row holds when its symbol is the mangling of its
+        class name and the constructor it cites stores the vtable's address
+        point into its object (tools/vtable_names.py, D14)."""
+        addr, cls, ctor = self._derived[sym]
+        from vtable_names import Walker, mangle_vtable
+        if mangle_vtable(cls) != sym:
+            raise ValueError(f"vtables.derived: {sym} is not the vtable symbol of {cls}")
+        if ctor not in self.func_by_name:
+            raise ValueError(f"vtables.derived: {sym}: {ctor} is not a function of the table")
+        w = Walker(self)
+        stored = w.vptr_stores(self.func_by_name[ctor][0])
+        if addr + 0x10 not in stored:
+            raise ValueError(f"vtables.derived: {sym}: {ctor} stores "
+                             f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")
+        self.vtables[sym] = addr
+        return addr
 
     def find_bytes(self, blob: bytes) -> list[int]:
         """Every address at which `blob` occurs in a loaded segment (for a

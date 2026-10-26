@@ -8,5 +8,5 @@ void FUN_00036780(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00038230(static_cast<hknpMaskedShapeMaskWrapper *>(object), flag);
+    FUN_00038230(static_cast<hknpMaskedShape::MaskWrapper *>(object), flag);
 }

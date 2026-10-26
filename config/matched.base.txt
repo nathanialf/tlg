@@ -575,7 +575,7 @@ FUN_000377c0 src/libs/unknown/func_000377c0.cpp
 FUN_000378b0 src/libs/unknown/func_000378b0.cpp
 FUN_000378e0 src/libs/unknown/func_000378e0.cpp
 FUN_00037a90 src/libs/unknown/func_00037a90.cpp
-FUN_00038230 src/libs/unknown/func_00038230.cpp _ZN26hknpMaskedShapeMaskWrapperC2E24hkFinishLoadedObjectFlag
+FUN_00038230 src/libs/unknown/func_00038230.cpp _ZN15hknpMaskedShape11MaskWrapperC2E24hkFinishLoadedObjectFlag
 FUN_00039ae0 src/libs/unknown/func_00039ae0.cpp
 FUN_0003a0d0 src/libs/unknown/func_0003a0d0.cpp
 FUN_0003a3b0 src/libs/unknown/func_0003a3b0.cpp
@@ -592,3 +592,4 @@ FUN_00040510 src/libs/unknown/func_00040510.cpp
 FUN_00040be0 src/libs/unknown/func_00040be0.cpp _ZNK17hknpReservedEvent12FUN_00040be0EP9hknpWorldR9hkOstream
 FUN_00042a20 src/libs/unknown/func_00042a20.cpp
 FUN_00042a50 src/libs/unknown/func_00042a50.cpp
+FUN_0000d8f0 src/libs/unknown/func_0000d8f0.cpp _ZN11StackTracerC2Ev

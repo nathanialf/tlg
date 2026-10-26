@@ -1,5 +1,7 @@
 # One row per function of the target executable: address, size, name.
-# Boundaries from the compiler's unwind tables (.eh_frame), written by
+# Boundaries from the compiler's unwind tables (.eh_frame), plus the
+# functions without one that a live reference reaches (commented rows,
+# config/residue.<slug>.txt, docs/DECISIONS.md D13), written by
 # tools/survey_elf.py, which keeps a row's name once it is no longer
 # FUN_<addr>. A name is a fact of the executable (an exported symbol, a
 # reflection or type-info string with the role the vtable or the ABI
@@ -335,6 +337,7 @@
 0x0000e170 0xc FUN_0000e170
 0x0000e190 0xf FUN_0000e190
 0x0000e1b0 0xc0 FUN_0000e1b0
+0x0000e270 0x74 FUN_0000e270  # no unwind entry; pointed to 1x (relocated pointer at 0x57ae068)
 0x0000e310 0xb1 FUN_0000e310
 0x0000e3d0 0x8 FUN_0000e3d0
 0x0000e3e0 0x64 FUN_0000e3e0
@@ -3369,6 +3372,7 @@
 0x0019f670 0x1e FUN_0019f670
 0x0019f6a0 0x16 FUN_0019f6a0
 0x0019f6d0 0x38 FUN_0019f6d0
+0x0019f710 0xb57 FUN_0019f710  # no unwind entry; pointed to 1x (relocated pointer at 0x57ae808)
 0x001a0310 0x88 FUN_001a0310
 0x001a03a0 0xc1 FUN_001a03a0
 0x001a0470 0x1e FUN_001a0470

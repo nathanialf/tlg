@@ -95,7 +95,9 @@ config/                     per target <slug>: sha256sums (the base files),
                             homes (functions whose source file the executable
                             names, tools/source_homes.py), vtables (the classes
                             whose vtable the executable names,
-                            tools/vtable_names.py)
+                            tools/vtable_names.py), vtables.derived (vtables
+                            named by ruling, D14), residue (the text between
+                            functions, tools/text_residue.py, D13)
 tools/                      setup, extraction, survey, build, match and gate
                             scripts, listed in tools/README.md
 docs/                       documentation, indexed by docs/README.md;

@@ -365,3 +365,102 @@ go in a second, evidenced file, not the generated one.
 **Trigger to revisit.** A registration the walk misreads (the tool aborts
 on an address point that is not a vtable's and lists the untraced ones),
 or a class whose constructor the gate needs and the type infos do not name.
+
+## D13. The text between the functions: linker residue, padding, and two functions without unwind entries (2026-10-26)
+
+**Decision.** `config/functions.base.txt` gains the functions the unwind
+tables omit when a live reference reaches them, and everything else between
+the table's functions is the linker's: padding, or residue that no source
+produces and no claim may cover. `tools/text_residue.py` writes the
+classification to `config/residue.base.txt` (`<lo> <hi> <class> <note>`)
+and `tools/survey_elf.py` adds its `function` rows to the table with a
+comment naming the reference. Measured on 2026-10-26 over the code span of
+the text segment:
+
+| class | pieces | bytes |
+|---|---|---|
+| padding (nop, int3) | 21,173 | 171,532 |
+| function (no unwind entry, reached) | 2 | 3,019 |
+| residue | 2,612 | 29,162 |
+
+**What a reference is.** A direct call or jump (rel8 or rel32, conditional
+too) or a RIP-relative operand from inside a function of the table, or a
+pointer slot the loader relocates (`R_X86_64_RELATIVE` with the target in
+its addend). A text address sitting in a data slot with no relocation is
+stale: the loader never fixes it, so it points at nothing at run time. The
+writable segments hold 621 such slots; six of them point at one-byte `ret`s
+and three at zeroed `lea rax, [rip+0]; ret` stubs, none of which is a
+function. A call from residue to residue (a zeroed `call +0`) is not a
+reference either.
+
+**The two functions.** 0xe270 (116 bytes) and 0x19f710 (2,903 bytes) are
+static initializers: each is the target of a relocated pointer in the
+initializer table that runs from 0x57ad000 to 0x57af268 (873 relocated text
+pointers, every other one a function of the table), and 0xe270 constructs an
+hkClass through 0x41a0. They have no FDE; nothing else distinguishes them.
+Both are now rows (`FUN_0000e270 0x74`, `FUN_0019f710 0xb57`, the size from
+the decoded body to its `ret`) and are matched like any other.
+
+**The residue.** Three shapes, all with the same signature: code the linker
+discarded whose bytes were left in the image. (1) Whole small bodies with
+their relocations resolved to zero: `lea rax, [rip+0]; ret` (0x1060, 0x280),
+`jmp +0` (0x290), `add rdi, -8; jmp +0` (0x2210, a this-adjusting thunk);
+751 pieces carry a zeroed PC-relative field. (2) Tails cut mid-instruction
+where a live function was laid over the head: 0x1240 begins `c4 08`, the
+last two bytes of `add rsp, 8`, then the six pops and `jmp rax` of an
+epilogue; 112 pieces begin undecodably. (3) Unreferenced fragments no live
+function contains in full (`leave; mov eax, ecx; ret` at 0x2410; 1,739
+unreferenced pieces, 188 of them byte-identical, zeros masked, to a whole
+function of the table such as the empty destructor 0x2d0). No function of
+the table reaches any residue byte by call, jump or RIP-relative operand,
+and no relocated pointer targets one. The layout gate therefore keeps the
+base's bytes there, as it does for padding, and the progress figures count
+them as linker-made, not as unmatched code.
+
+**Why not a row per fragment.** A fragment has no entry, no unwind entry
+and no reference; writing source for it would be writing bytes, which is
+the one thing the method forbids. The mechanism that left them (an
+identical-code fold or a section discard whose bytes were not scrubbed)
+belongs to Sony's linker and cannot be reproduced from source.
+
+**Trigger to revisit.** A residue piece that a matched function's source
+would need to reference, or a reference from a newly matched function into
+residue (the tool reports both as a class change on the next run).
+
+## D14. A vtable the executable does not name may be named by ruling, from the constructor that stores it (2026-10-26)
+
+**Decision.** `config/vtables.derived.base.txt` holds rows
+`<vtable symbol> <vtable address> <class name> derived ctor <function>
+[evidence]`, written by the supervisor one ruling at a time, never by a
+worker and never regenerated. The address is a fact: the named constructor
+stores the vtable's address point (address + 0x10) into its object, and
+`tools/base_elf.py` verifies that by walking the constructor the first time
+the gate resolves the symbol (`tools/vtable_names.py --check` verifies every
+row), refusing a row whose symbol is not the mangling of its class name,
+whose constructor is not in the table, or whose constructor stores another
+vtable. The class name is derived: the executable has no string for it, the
+definition carries `/* derived name */`, and a later fact (a type info, an
+assert string, a registry entry) renames the class in every file. A vtable
+the generated file names (D12) must not appear here; the loader refuses the
+duplicate.
+
+**Why.** The gate needs the vtable's address, not the truth of its name:
+the compiler emits `_ZTV<class>` for whatever the class is called, and the
+base's operand must agree. D4 already lets a derived name stand where it is
+marked; a vtable is the same case. Without this, every constructor of a
+class outside Havok's reflection (the engine's, the sound library's, Havok's
+own unreflected classes: 80 such vtables in the library region and 1,263 in
+the game region on 2026-10-26, against 170 the type infos name) stays
+unclaimable. `tools/vtable_names.py` lists every unnamed vtable with the
+evidence at hand (the storing functions, the hkClass its slot 3 returns when
+that getter is this vtable's alone, the storing functions' home files) so a
+ruling starts from the executable's facts. The first row is StackTracer
+(0x168d840, constructor FUN_0000d8f0): a static instance at 0x57b7b80 built
+at 0x6bf0 and registered with `__cxa_atexit`, the error report that builds
+one on its stack at 0xb752, and the message "No stack trace available"
+printed by 0xd890; no string names the class, so the name is the worker's
+and marked.
+
+**Trigger to revisit.** A fact that names a derived class differently
+(rename, do not add), or a generated row appearing for a vtable a derived
+row holds (delete the derived row).

@@ -400,15 +400,29 @@ def main(argv=None) -> int:
                     known[int(s[0], 16)] = s[2]
         with funcs_path.open("w") as f:
             f.write("# One row per function of the target executable: address, size, name.\n"
-                    "# Boundaries from the compiler's unwind tables (.eh_frame), written by\n"
+                    "# Boundaries from the compiler's unwind tables (.eh_frame), plus the\n"
+                    "# functions without one that a live reference reaches (commented rows,\n"
+                    "# config/residue.<slug>.txt, docs/DECISIONS.md D13), written by\n"
                     "# tools/survey_elf.py, which keeps a row's name once it is no longer\n"
                     "# FUN_<addr>. A name is a fact of the executable (an exported symbol, a\n"
                     "# reflection or type-info string with the role the vtable or the ABI\n"
                     "# fixes); anything inferred stays FUN_<addr> with a derived name in the\n"
                     "# source (docs/MATCH.md).\n")
-            for addr, sz in fdes:
+            # functions with no unwind entry that a live reference reaches
+            # (tools/text_residue.py, docs/DECISIONS.md D13): rows with a
+            # comment naming the reference
+            extra: dict[int, tuple[int, str]] = {}
+            residue_path = config_path(REPO_ROOT, ver, "residue", "txt")
+            if residue_path.exists():
+                for line in residue_path.read_text().splitlines():
+                    s = line.split()
+                    if len(s) >= 3 and s[2] == "function":
+                        extra[int(s[0], 16)] = (int(s[1], 16) - int(s[0], 16), " ".join(s[3:]))
+            rows = [(addr, sz, "") for addr, sz in fdes] + \
+                   [(addr, sz, f"  # no unwind entry; {note}") for addr, (sz, note) in extra.items()]
+            for addr, sz, note in sorted(rows):
                 name = known.get(addr) or export_by_addr.get(addr, f"FUN_{addr:08x}")
-                f.write(f"0x{addr:08x} 0x{sz:x} {name}\n")
+                f.write(f"0x{addr:08x} 0x{sz:x} {name}{note}\n")
         bd = build_dir(REPO_ROOT, ver)
         bd.mkdir(parents=True, exist_ok=True)
         (bd / "survey.json").write_text(json.dumps(summary, indent=1))
