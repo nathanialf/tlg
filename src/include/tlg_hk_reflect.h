@@ -491,6 +491,60 @@ class hknpBodyReference : public hkReferencedObject
     hknpBodyReference(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hknpVehicleEngine, hknpVehicleBrake and hknpVehicleSteering: the
+ * abstract vehicle components (hkClass 0x57bff60, 0x57c26f8 and 0x57c1988,
+ * each 0x10 bytes with hkReferencedObject as its parent and no type info of
+ * its own). */
+class hknpVehicleEngine : public hkReferencedObject
+{
+  public:
+    hknpVehicleEngine(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hknpVehicleBrake : public hkReferencedObject
+{
+  public:
+    hknpVehicleBrake(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hknpVehicleSteering : public hkReferencedObject
+{
+  public:
+    hknpVehicleSteering(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleDefaultEngine (hkClass 0x57c1310, 0x38 bytes, parent
+ * hknpVehicleEngine): vtable 0x16a4d90, finish callback FUN_00046b70. */
+class hknpVehicleDefaultEngine : public hknpVehicleEngine
+{
+  public:
+    hknpVehicleDefaultEngine(hkFinishLoadedObjectFlag flag) : hknpVehicleEngine(flag) {}
+};
+
+/* hknpVehicleDefaultBrake (parent hknpVehicleBrake): vtable 0x16a5350,
+ * finish callback FUN_0005b300. */
+class hknpVehicleDefaultBrake : public hknpVehicleBrake
+{
+  public:
+    hknpVehicleDefaultBrake(hkFinishLoadedObjectFlag flag) : hknpVehicleBrake(flag) {}
+};
+
+/* hknpRefMassDistribution (parent hkReferencedObject): vtable 0x169a820,
+ * finish callback FUN_00069a80. */
+class hknpRefMassDistribution : public hkReferencedObject
+{
+  public:
+    hknpRefMassDistribution(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleDefaultSteering (parent hknpVehicleSteering): vtable 0x16a5750,
+ * finish callback FUN_00077d60. */
+class hknpVehicleDefaultSteering : public hknpVehicleSteering
+{
+  public:
+    hknpVehicleDefaultSteering(hkFinishLoadedObjectFlag flag) : hknpVehicleSteering(flag) {}
+};
+
 /* hknpCharacterProxyCinfo: vtable 0x1696e90, finish callback FUN_00040510. */
 class hknpCharacterProxyCinfo : public hkReferencedObject
 {
@@ -923,8 +977,11 @@ class hknpScaledConvexShape
     hknpShapeSignals mutationSignals; /* derived name */
 };
 
-/* hknpShape, polymorphic (type info 0x57bf210, vtable 0x169ad20 stored by
- * its finish constructor FUN_0006fa90): its destructor, slot 0, is out of
+/* hknpShape, polymorphic, 0x28 bytes (type info 0x57bf210, hkClass with
+ * hkReferencedObject as its parent, built at 0x38fcb; vtable 0x169ad20 stored
+ * by its out-of-line finish constructor 0x6fa90, which the finish callback
+ * FUN_00038d30, the reflection initializer at 0x38fe4 and the finish
+ * constructors of the derived shapes call): its destructor, slot 0, is out of
  * line (0x6fb50: restores the vtable, releases the properties at +0x20). */
 /* Its vtable's address point is 0x169ad30. Slots 8, 9 and 13 return 0 by
  * default (slot 8 the shared 0x42d0; slots 9 and 13, 0x6e5b0 and 0x6e830,
@@ -939,9 +996,10 @@ class hknpScaledConvexShape
  * (returning 4). Slot 10 returns the shape's vertex array without reading
  * its arguments; the decorator's forward (a loaded `jmpq *%rax`, cookbook
  * 19) shows it has some. Argument names derived. */
-class hknpShape
+class hknpShape : public hkReferencedObject
 {
   public:
+    hknpShape(hkFinishLoadedObjectFlag flag);
     virtual ~hknpShape();
 
     virtual void FUN_00000270();
@@ -963,6 +1021,9 @@ class hknpShape
     virtual void unknownVirtual18();
     virtual void unknownVirtual19();
     virtual int unknownVirtual20() const;
+
+    u8 unknownC[0x14];
+    void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
 };
 
 /* hknpDecoratorShape (type info 0x57bf020, vtable 0x16958d0 stored by its
@@ -993,7 +1054,6 @@ class hknpDecoratorShape : public hknpShape
     float FUN_0003b1c0() const;                /* vtable slot 17; derived name */
     int FUN_0003b1f0() const;                  /* vtable slot 20; derived name */
 
-    u8 unknown8[0x20];
     hknpShape *coreShape;
 };
 
@@ -1126,8 +1186,6 @@ class hknpMountedBallGun : public hknpBallGun
 /* hknp classes registered by the reflection TU at 0x38b10 onward, each with
  * an out-of-line finish constructor (type info, the vtable it stores): */
 struct hknpMotionPropertiesLibrary; /* 0x57bf0a0; FUN_00036de0, vtable 0x1693770 */
-struct hknpShapeMassProperties;     /* 0x57bf290; FUN_0006fa80, vtable 0x1693ef0 */
-struct hknpPhysicsSceneData;        /* 0x57bf360; FUN_00046790, vtable 0x1697ea0 */
 struct
     hknpCapsuleShape; /* 0x57bf490; FUN_000730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
 struct hknpMotionProperties;   /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
@@ -1135,10 +1193,30 @@ class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
 
 void FUN_0003b0f0(hknpDecoratorShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00036de0(hknpMotionPropertiesLibrary *self,
-                  hkFinishLoadedObjectFlag flag);                                /* derived name */
-void FUN_0006fa90(hknpShape *self, hkFinishLoadedObjectFlag flag);               /* derived name */
-void FUN_0006fa80(hknpShapeMassProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00046790(hknpPhysicsSceneData *self, hkFinishLoadedObjectFlag flag);    /* derived name */
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpShapeMassProperties (hkClass 0x57bf240, 0x30 bytes, parent
+ * hkReferencedObject; type info 0x57bf290, vtable 0x1693ef0): its finish
+ * constructor 0x6fa80 is out of line, jumped to by the finish callback
+ * FUN_00038d60 and called by the reflection initializer at 0x39094; it
+ * stores only the vtable. */
+class hknpShapeMassProperties : public hkReferencedObject
+{
+  public:
+    hknpShapeMassProperties(hkFinishLoadedObjectFlag flag);
+};
+
+/* hknpPhysicsSceneData (hkClass 0x57bf310, 0x28 bytes, parent
+ * hkReferencedObject, two members in its record table at 0x1694550; type
+ * info 0x57bf360, vtable 0x1697ea0): its finish constructor 0x46790 is out of
+ * line, jumped to by the finish callback FUN_00039190 and called by the
+ * reflection initializer at 0x39288; it stores only the vtable. */
+class hknpPhysicsSceneData : public hkReferencedObject
+{
+  public:
+    hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag);
+};
+
 void FUN_000730d0(hknpCapsuleShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
 void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -1211,7 +1289,6 @@ class hknpConvexShape : public hknpShape
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
 
-    u8 unknown8[0x20];
     hkRelArray<Vec4> vertices;
 };
 
@@ -1588,7 +1665,50 @@ struct hknpBodyCinfo {
  * previousTargetPositionOffset (hkInt16) at +4 and +6, motor (pointer to
  * hkpConstraintMotor) at +8, targetPosition at +0x10. Its finish
  * constructor resets both offsets. */
-struct hkpConstraintMotor;
+
+/* hkpConstraintMotor (hkClass 0x57c3af0, parent hkReferencedObject) and
+ * hkpLimitedForceConstraintMotor (hkClass 0x57c59a8, parent
+ * hkpConstraintMotor): the abstract bases of the constraint motors. */
+class hkpConstraintMotor : public hkReferencedObject
+{
+  public:
+    hkpConstraintMotor(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkpLimitedForceConstraintMotor : public hkpConstraintMotor
+{
+  public:
+    hkpLimitedForceConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpConstraintMotor(flag) {}
+};
+
+/* hkpPositionConstraintMotor (hkClass 0x57c30e8), hkpVelocityConstraintMotor
+ * (hkClass 0x57c32e8) and hkpCallbackConstraintMotor (hkClass 0x57c3cc0),
+ * each with hkpLimitedForceConstraintMotor as its parent: vtables 0x169f5b0,
+ * 0x169c790 and 0x16a5ff0, finish callbacks FUN_000787d0, FUN_00079330 and
+ * FUN_0007c410. */
+class hkpPositionConstraintMotor : public hkpLimitedForceConstraintMotor
+{
+  public:
+    hkpPositionConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpLimitedForceConstraintMotor(flag)
+    {
+    }
+};
+
+class hkpVelocityConstraintMotor : public hkpLimitedForceConstraintMotor
+{
+  public:
+    hkpVelocityConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpLimitedForceConstraintMotor(flag)
+    {
+    }
+};
+
+class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
+{
+  public:
+    hkpCallbackConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpLimitedForceConstraintMotor(flag)
+    {
+    }
+};
 
 struct hkpLinMotorConstraintAtom {
     hkpLinMotorConstraintAtom(hkFinishLoadedObjectFlag)
@@ -2808,7 +2928,16 @@ class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived na
     hkBool hasHit; /* derived name */
 };
 
-/* hkpLinearParametricCurve (hkClass 0x57c3268, 0x50 bytes, parent 0x57c3c68;
+/* hkpParametricCurve (hkClass 0x57c3c68, 0x10 bytes, parent
+ * hkReferencedObject, no members of its own). */
+class hkpParametricCurve : public hkReferencedObject
+{
+  public:
+    hkpParametricCurve(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hkpLinearParametricCurve (hkClass 0x57c3268, 0x50 bytes, parent
+ * hkpParametricCurve; finish callback FUN_00078b00;
  * type info 0x57c32b8; finish constructor 0x78b00 stores its vtable
  * 0x169d890, address point 0x169d8a0): members from its record table at
  * 0x169ba00: smoothingFactor (float) at +0xc, closedLoop (hkBool) at
@@ -2816,9 +2945,11 @@ class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived na
  * points (array of hkVector4) at +0x30, distance (array of float) at +0x40.
  * Slot 9 (FUN_0007fad0) returns the curve's last parameter, the point count
  * less one. */
-class hkpLinearParametricCurve : public hkReferencedObject
+class hkpLinearParametricCurve : public hkpParametricCurve
 {
   public:
+    hkpLinearParametricCurve(hkFinishLoadedObjectFlag flag) : hkpParametricCurve(flag) {}
+
     float FUN_0007fad0() const; /* vtable slot 9; derived name */
 
     float smoothingFactor;

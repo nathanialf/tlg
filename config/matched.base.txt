@@ -593,3 +593,14 @@ FUN_00040be0 src/libs/unknown/func_00040be0.cpp _ZNK17hknpReservedEvent12FUN_000
 FUN_00042a20 src/libs/unknown/func_00042a20.cpp
 FUN_00042a50 src/libs/unknown/func_00042a50.cpp
 FUN_0000d8f0 src/libs/unknown/func_0000d8f0.cpp _ZN11StackTracerC2Ev
+_ZN20hknpPhysicsSceneDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00046790.cpp
+FUN_00046b70 src/libs/unknown/func_00046b70.cpp
+FUN_0005b300 src/libs/unknown/func_0005b300.cpp
+FUN_00069a80 src/libs/unknown/func_00069a80.cpp
+_ZN23hknpShapeMassPropertiesC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0006fa80.cpp
+_ZN9hknpShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0006fa90.cpp
+FUN_00077d60 src/libs/unknown/func_00077d60.cpp
+FUN_000787d0 src/libs/unknown/func_000787d0.cpp
+FUN_00078b00 src/libs/unknown/func_00078b00.cpp
+FUN_00079330 src/libs/unknown/func_00079330.cpp
+FUN_0007c410 src/libs/unknown/func_0007c410.cpp
