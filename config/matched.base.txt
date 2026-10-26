@@ -808,3 +808,11 @@ _ZN26hkpPrismaticConstraintData5AtomsC1E24hkFinishLoadedObjectFlag src/libs/unkn
 _ZN32hkpLinearClearanceConstraintData5AtomsC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00083880.cpp
 FUN_00090d90 src/libs/unknown/func_00090d90.cpp _ZN15BufferAllocator9blockFreeEPvi
 FUN_00177640 src/libs/unknown/func_00177640.cpp
+FUN_00041890 src/libs/unknown/func_00041890.cpp
+FUN_0007bea0 src/libs/unknown/func_0007bea0.cpp
+FUN_0007d710 src/libs/unknown/func_0007d710.cpp
+FUN_00159dd0 src/libs/unknown/func_00159dd0.cpp
+FUN_00167ad0 src/libs/unknown/func_00167ad0.cpp
+FUN_00167c00 src/libs/unknown/func_00167c00.cpp
+FUN_000188a0 src/libs/unknown/func_000188a0.cpp
+_ZN11hkSemaphoreC1Eiii src/libs/unknown/func_0001a420.cpp

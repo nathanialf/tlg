@@ -6,13 +6,17 @@
 #include "tlg_sce_kernel.h"
 
 /* hkSemaphore: one kernel semaphore handle at +0, created under the name
- * "hkSemaphore" (0x14b4978) by FUN_0001a420 (initial and maximum counts in
- * its second and third arguments, attribute 1). FUN_0001a440 deletes it (its
- * callers then free the object), FUN_0001a490 waits for one count and
- * FUN_0001a4a0 signals the given count. */
+ * "hkSemaphore" (0x14b4978) by its constructor 0x1a420 (initial and maximum
+ * counts in its second and third arguments, attribute 1; the pool's
+ * constructor at 0x6dcb passes a fourth, 0, which the kernel version does
+ * not use). FUN_0001a440 deletes it (its callers then free the object),
+ * FUN_0001a490 waits for one count and FUN_0001a4a0 signals the given
+ * count. */
 class hkSemaphore
 {
   public:
+    hkSemaphore(int initialCount, int maxCount, int numSpinIterations); /* derived names */
+
     void FUN_0001a440();          /* derived name: the destructor's body */
     void FUN_0001a490();          /* derived name: acquire */
     void FUN_0001a4a0(int count); /* derived name: release */

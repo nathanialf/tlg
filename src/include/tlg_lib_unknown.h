@@ -595,6 +595,17 @@ class Pool00007880 : public hkReferencedObject /* derived name */
  * loop for the record's index. */
 void *FUN_00007180(void *argument); /* derived name */
 
+/* A singly linked node (derived name): the next node at +0. FUN_000188a0
+ * counts a list's nodes; 0x1630 sums the counts of the two lists at +0x18
+ * and +0x20 of each of its objects before it allocates eight bytes per
+ * node. */
+struct ListNode000188a0 /* derived name */
+{
+    ListNode000188a0 *next; /* derived name */
+};
+
+int FUN_000188a0(const ListNode000188a0 *node); /* derived name */
+
 /* A Mersenne twister (MT19937): 624 words of state in a block of 2496 bytes
  * the seeding (FUN_000106e0, multiplier 1812433253) allocates on first use
  * and FUN_00010690 frees, the index at +0. The constructor (FUN_00010680)

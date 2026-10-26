@@ -1431,9 +1431,14 @@ void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpShapeSignals, a reflected struct (hkClass at 0x57c2478); at most 16
- * bytes, the member after it in hknpMaskedShape sitting at +0x60. */
+ * bytes, the member after it in hknpMaskedShape sitting at +0x60: two
+ * signals, each a pointer to its slot list (hknpScaledConvexShape's finish
+ * constructor clears both; the shape watcher subscribes to the first, which
+ * passes a byte of change flags, and the second, which passes the shape as
+ * it is destroyed). Field names derived. */
 struct hknpShapeSignals {
-    u8 unknown0[0x10];
+    void *shapeMutated;   /* derived name */
+    void *shapeDestroyed; /* derived name */
 };
 
 /* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
@@ -1802,6 +1807,40 @@ struct hknpMotion {
  * (bit 2 first) and sets or clears a byte at +0xb of the body's record. */
 struct hknpWorld;
 
+/* hknpConstraint (hkClass 0x57c2b78, built at 0x706c5: size 0x40; its
+ * member records are built at run time): the two bodies' ids at +4 and
+ * +0xc, which the constraint filter reads. Field names derived. */
+struct hknpConstraint {
+    u8 unknown0[4];
+    u32 bodyIdA; /* derived name */
+    u8 unknown8[4];
+    u32 bodyIdB; /* derived name */
+    u8 unknown10[0x30];
+};
+
+/* The reference-counted object at +0x6c0 of the world (derived names: no
+ * type info names it), 0x10 bytes, built by the world's constructor at
+ * 0x49a67 and released by 0x4b5bd. Its constructor 0x1585d0 clears the
+ * byte at +0xc before it stores the vtable 0x16a4940 (slots 5 and 6 the
+ * shared empty bodies 0x3b640 and 0xadd50): clang runs the base
+ * initializers, then the vtable pointers, then the members
+ * (tools/cc/src/llvm-3.3.src/tools/clang/lib/CodeGen/CGClass.cpp:1139,
+ * EmitCtorPrologue), so the byte is a base class's, whose own vptr store
+ * the derived one overwrites. */
+class hknpWorldObject6c0Base : public hkReferencedObject /* derived name */
+{
+  public:
+    hknpWorldObject6c0Base() : flagC(false) {}
+
+    bool flagC; /* derived name */
+};
+
+class hknpWorldObject6c0 : public hknpWorldObject6c0Base /* derived name */
+{
+  public:
+    hknpWorldObject6c0();
+};
+
 struct hknpWorldObject4f8 /* derived name */
 {
     void FUN_00062b20(int bodyId, bool flag); /* derived name */
@@ -1826,7 +1865,11 @@ struct hknpWorld {
     hknpBody *bodies; /* derived name */
     u8 unknown28[0xf0];
     hknpMotion *motions; /* derived name */
-    u8 unknown120[0x98];
+    u8 unknown120[0x30];
+    /* The constraint array, indexed by constraint id (the constraint
+     * filter's signal handlers 0x159dd0 and 0x159df0). */
+    hknpConstraint *constraints; /* derived name */
+    u8 unknown158[0x60];
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
@@ -1839,7 +1882,8 @@ struct hknpWorld {
     /* The constructor copies it from hknpWorldCinfo's gravity (record at
      * 0x1698370, +0x60) at 0x48d84, and 0x4ae7e copies it back. */
     Vec4 gravity; /* derived name */
-    u8 unknown640[0x88];
+    u8 unknown640[0x80];
+    hknpWorldObject6c0 *object6c0;        /* derived name */
     hknpEventDispatcher *eventDispatcher; /* derived name */
 };
 
@@ -1912,7 +1956,7 @@ void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag);
 struct hknpProjectileGun; /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
 struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
 class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
-struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
+class hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
     hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
 struct
@@ -1984,8 +2028,28 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
     bool FUN_00167c00(int queryType, bool targetIsB, const hknpCollisionFilterShapeInput &a,
                       const hknpCollisionFilterShapeInput &b) const; /* derived name */
 
+    /* Disables the collisions between two bodies of a world (the pair is
+     * ordered by id first, 0x167420). derived name. */
+    void FUN_00167420(hknpWorld *world, u32 bodyIdA, u32 bodyIdB); /* derived name */
+
     hknpPairCollisionFilterMapPairFilterKeyOverrideType disabledPairs;
     hknpCollisionFilter *childFilter;
+};
+
+/* hknpConstraintCollisionFilter (type info 0x57c0368; hkClass 0x57c0318,
+ * built at 0x3d4a5: size 0x30, parent hknpPairCollisionFilter; vtable
+ * 0x16a4c20): subscribedWorld (a pointer, not serialized: flags 0x400) at
+ * +0x28. FUN_00159ca0 moves its subscription to a world: the handlers
+ * 0x159dd0 and 0x159df0 join the world's signals at +0x5d8 and +0x5e0,
+ * which pass the world and a constraint id; the first disables the
+ * collisions between the constraint's two bodies (FUN_00167420), the
+ * second hands the pair to FUN_00167660 with 1. */
+class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
+{
+  public:
+    void FUN_00159dd0(hknpWorld *world, u32 constraintId); /* derived name */
+
+    hknpWorld *subscribedWorld;
 };
 
 void FUN_00166900(hknpMountedBallGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
@@ -2558,17 +2622,36 @@ class hkpCogWheelConstraintData
 /* Constraint data classes known by their slot 6 alone (vtable address points
  * from their type-info registrations; the atoms at +0x20 and their size are
  * what slot 6 hands to FUN_00082890). */
+/* hkpStiffSpringConstraintAtom (hkClass 0x57c53f0, size 0x20, record
+ * table 0x169e6d0): length, maxLength, springConstant and springDamping
+ * (floats) from +0x10, after the atom's type and padding. */
+struct hkpStiffSpringConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    float length;
+    float maxLength;
+    float springConstant;
+    float springDamping;
+};
+
+/* hkpStiffSpringConstraintData::Atoms (hkClass 0x57c3568, size 0x60, record
+ * table 0x169beb0): pivots at +0, setupStabilization at +0x30, spring at
+ * +0x40. Slot 7 (0x7d710) tells whether the spring's length is positive and
+ * within its maximum. */
 class hkpStiffSpringConstraintData /* vtable address point 0x169cff0 */
 {
   public:
     struct Atoms {
-        u8 unknown0[0x60];
+        u8 pivots[0x30];
+        u8 setupStabilization[0x10];
+        hkpStiffSpringConstraintAtom spring;
     };
 
     virtual ~hkpStiffSpringConstraintData();
 
     void FUN_0007d6e0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    hkBool FUN_0007d710() const;                           /* vtable slot 7; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -3140,6 +3223,7 @@ class hkpFixedConstraintData
     void FUN_0007bf20(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_0007bf70() const;                           /* vtable slot 7; derived name */
+    void FUN_0007bea0(float newMaxImpulse);                /* vtable slot 8; derived name */
     void FUN_0007bec0(float newMaxAngImpulse);             /* vtable slot 9; derived name */
     float FUN_0007bed0() const;                            /* vtable slot 11; derived name */
     float FUN_0007bee0() const;                            /* vtable slot 12; derived name */
@@ -3778,6 +3862,10 @@ class hkOArchive : public hkReferencedObject /* derived name */
 class hkOstream : public hkReferencedObject
 {
   public:
+    /* Slot 0 of its vtable (0x168d100, stored by its constructor 0x80c0):
+     * stores the vtable and releases the writer (0x8310). */
+    virtual ~hkOstream();
+
     const hkClass *getClassType() const;            /* vtable slot 3, FUN_00008a20 */
     void FUN_000089e0();                            /* derived name */
     int FUN_000089f0(const void *buffer, int size); /* derived name */
@@ -3788,6 +3876,18 @@ class hkOstream : public hkReferencedObject
     hkOstream &FUN_00008440(const char *string);
 
     hkStreamWriter *writer; /* derived name */
+};
+
+/* A stream over a caller's buffer (derived name; vtable 0x168c3a0, no type
+ * info; its slot 3 is hkOstream's class getter): the constructor 0xda0
+ * runs hkOstream's (0x80c0) and builds its writer in place in the last 0x30
+ * bytes of the buffer (FUN_00008f50), so the destructor drops the writer
+ * before hkOstream's destructor would release it. "Not implemented" reports
+ * (0x6f7d0 and its siblings) build one on the stack over 0x200 bytes. */
+class BufferOstream : public hkOstream /* derived name */
+{
+  public:
+    virtual ~BufferOstream();
 };
 
 /* The world's events print their names: the dispatcher at 0x6c110 switches
@@ -4099,9 +4199,16 @@ class hknpCompoundShape : public hknpCompositeShape
     virtual void updateAabb() = 0;                                      /* slot 31; derived name */
     virtual void unknownVirtual32() = 0;
 
+    hknpShapeSignals *FUN_00041890(); /* vtable slot 8; derived name */
+
     u8 unknown28[0x58];
     /* The AABB slot 7 transforms (updateAabb recomputes it). */
-    hkAabb aabb; /* derived name */
+    hkAabb aabb;
+    /* Members from the record table 0x169b520 (hkClass 0x57c2e78, size
+     * 0xc0): instances at +0x60, aabb at +0x80, isMutable (hkBool) at
+     * +0xa0, mutationSignals (not serialized, flags 0x400) at +0xa8. */
+    hkBool isMutable;
+    hknpShapeSignals mutationSignals;
 };
 
 /* hknpStaticCompoundShape, polymorphic, 0xc0 bytes (type info 0x57c2818,
