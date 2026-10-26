@@ -1,0 +1,13 @@
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_reflect.h"
+
+/* The defaults of the body quality library's setup: unit scale, welding for
+ * critical objects only, no contact caching (the two adjacent byte stores
+ * merge into one 16-bit store, cookbook 13). */
+hknpBodyQualityLibraryCinfo::hknpBodyQualityLibraryCinfo()
+{
+    unitScale = 1.0f;
+    enableWeldingForDefaultObjects = false;
+    enableWeldingForCriticalObjects = true;
+    enableContactCaching = false;
+}

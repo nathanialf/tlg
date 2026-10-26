@@ -28,6 +28,12 @@ enum hkResult {
  * where the original id is not in the executable. */
 #define HK_ASSERT(id, condition) ((void)0)
 
+/* The break the library's kept checks stop on: an int3 (the debug trap,
+ * lowered by tools/cc/src/llvm-3.3.src/lib/Target/X86/X86InstrSystem.td:41),
+ * after which execution goes on; 99 conditional int3s in the library
+ * region. derived name. */
+#define HK_BREAKPOINT(id) __builtin_debugtrap()
+
 /* hkArray, the reflection's array type (its name in the type-name table at
  * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
  * flags (0x80000000 when the array does not own its storage, as the
@@ -228,7 +234,14 @@ extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance *
 /* A string pointer whose finish constructor (FUN_0000e5c0, empty) and
  * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
  * it owned) are out of line. */
+/* The string library's length (derived name; a wrapper over strlen). */
+int FUN_00017fe0(const char *s); /* derived name */
+
 struct hkStringPtr {
+    /* The string's length, 0 for a null string (callers 0x8965, 0x7778a).
+     * derived name. */
+    int FUN_0000e770() const;
+
     /* The string without the ownership bit. derived name. */
     const char *cString() const
     {
@@ -1210,6 +1223,15 @@ class hknpScaledConvexShape
  * (returning 4). Slot 10 returns the shape's vertex array without reading
  * its arguments; the decorator's forward (a loaded `jmpq *%rax`, cookbook
  * 19) shows it has some. Argument names derived. */
+class hknpShape;
+
+/* derived name: what slot 24 of hknpShape does by default (0x169e50, 0x51d
+ * bytes): bounds the shape by slot 7 under the fourth argument's transform
+ * and tests the first argument's point (+0x20) and distance (+0x30) against
+ * the bounds before the query proper. */
+void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape *shape,
+                  const void *argument3, const void *argument4, void *argument5); /* derived name */
+
 class hknpShape : public hkReferencedObject
 {
   public:
@@ -1244,7 +1266,12 @@ class hknpShape : public hkReferencedObject
     virtual void unknownVirtual23(const void *argument1, const void *argument2,
                                   const void *argument3, const void *argument4,
                                   void *argument5) const;
-    virtual void unknownVirtual24(const void *argument1, void *argument2) const;
+    /* Slot 24: five arguments, which the default (FUN_0006fa60) hands on
+     * with the shape third to FUN_00169e50; its fourth holds at +0x20 the
+     * transform slot 7 takes. */
+    virtual void unknownVirtual24(const void *argument1, const void *argument2,
+                                  const void *argument3, const void *argument4,
+                                  void *argument5) const;
     virtual void unknownVirtual25(const void *argument1, const void *argument2,
                                   const void *argument3, const void *argument4,
                                   void *argument5) const;
@@ -1300,8 +1327,9 @@ class hknpDecoratorShape : public hknpShape
     void FUN_0003b220(const void *argument1, const void *argument2, const void *argument3,
                       const void *argument4,
                       void *argument5) const; /* vtable slot 23; derived name */
-    void FUN_0003b230(const void *argument1,
-                      void *argument2) const; /* vtable slot 24; derived name */
+    void FUN_0003b230(const void *argument1, const void *argument2, const void *argument3,
+                      const void *argument4,
+                      void *argument5) const; /* vtable slot 24; derived name */
     void FUN_0003b240(const void *argument1, const void *argument2, const void *argument3,
                       const void *argument4,
                       void *argument5) const; /* vtable slot 25; derived name */
@@ -1339,10 +1367,32 @@ class hknpDecoratorShape : public hknpShape
  * and releases the old one. FUN_0004bcc0 forwards to it. */
 struct hknpCollisionFilter; /* derived name */
 
+/* The world's constructor (0x4a1bb to 0x4a258) fills two tables of the
+ * manager by type: the collision detectors of the default modifier set
+ * (its members at +0x78 to +0xd8) by collision cache type 1 to 7, and two
+ * objects of the world (+0x380, +0x388) at 0 and 1 of the other. */
+struct hknpCollisionDetector; /* derived name */
+
 class hknpModifierManager /* derived name */
 {
   public:
-    void FUN_000667b0(hknpCollisionFilter *filter); /* derived name */
+    enum Type4e0 /* derived name */
+    {
+        NUM_TYPES_4E0 = 8 /* derived name */
+    };
+
+    enum CollisionCacheType /* derived name */
+    {
+        NUM_COLLISION_CACHE_TYPES = 9 /* derived name */
+    };
+
+    void FUN_00066770(Type4e0 type, void *object);                               /* derived name */
+    void FUN_00066790(CollisionCacheType type, hknpCollisionDetector *detector); /* derived name */
+    void FUN_000667b0(hknpCollisionFilter *filter);                              /* derived name */
+
+    u8 unknown0[0x4e0];
+    void *objects4e0[NUM_TYPES_4E0];                                      /* derived name */
+    hknpCollisionDetector *collisionDetectors[NUM_COLLISION_CACHE_TYPES]; /* derived name */
 };
 
 /* The reference-counted object at +0x6c8 (set by the constructor at
@@ -1621,6 +1671,21 @@ void FUN_00067960(hknpMalleableConstraintData *self,
                   hkFinishLoadedObjectFlag flag);                               /* derived name */
 void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
 void FUN_00071190(hknpBodyQualityLibrary *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* What the world's constructor sets its body quality library up with (the
+ * library, 0x220 bytes, built by 0x70ff0 at 0x49362, takes it at 0x49410
+ * through 0x71330): built on the stack by its constructor, then each member
+ * copied from the hknpWorldCinfo member of the same name (records 0x1698668,
+ * 0x16984d8, 0x1698500, 0x1698398). Member names from those records. */
+struct hknpBodyQualityLibraryCinfo /* derived name */
+{
+    hknpBodyQualityLibraryCinfo();
+
+    float unitScale;
+    hkBool enableWeldingForDefaultObjects;
+    hkBool enableWeldingForCriticalObjects;
+    hkBool enableContactCaching;
+};
 
 /* hknpMaterial (type info 0x57c1f40, no vtable, cleanup 0x300) and
  * hknpMaterialDescriptor (type info 0x57c1fc0, no vtable, cleanup 0x66e80):
@@ -2170,6 +2235,7 @@ class hkpLimitedHingeConstraintData
 
     void FUN_000790b0(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_000790c0() const;                    /* vtable slot 13; derived name */
+    void FUN_000790d0(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_000790f0() const;                       /* vtable slot 15; derived name */
     hkResult FUN_000792d0(float &factorOut) const; /* vtable slot 18; derived name */
     void FUN_00079210(hkBool wantRuntime,
@@ -2187,6 +2253,9 @@ class hkpLimitedHingeConstraintData
  * return the largest float Havok uses (0x7f7fffee) for the linear, angular
  * and breach impulse limits; slot 15 (0x82bc0) returns 255; slot 24
  * defaults to the empty body too. */
+/* The string library's memory fill (derived name; a wrapper over memset). */
+void FUN_00018160(void *dst, int value, unsigned int n); /* derived name */
+
 class hkpConstraintData : public hkReferencedObject
 {
   public:
@@ -2226,7 +2295,10 @@ class hkpConstraintData : public hkReferencedObject
     /* Slot 21: by default (the shared FUN_00013e90) the solver results are
      * the runtime itself. */
     virtual void *unknownVirtual21(void *runtime) const;
-    virtual void unknownVirtual22();
+    /* Slot 22's default, kept by every constraint data vtable read so far:
+     * a new instance's runtime, when it has one, starts zeroed. */
+    virtual void FUN_00082860(void *runtime,
+                              int sizeOfRuntime) const; /* vtable slot 22; derived name */
     virtual void unknownVirtual23();
 
     /* Slot 24, the empty body 0x3b640 by default: the call a bridge atom
@@ -2659,16 +2731,18 @@ class hkMemoryMeshMaterial
   public:
     virtual ~hkMemoryMeshMaterial();
 
-    const hkClass *FUN_000246c0() const;          /* vtable slot 3; derived name */
-    void FUN_000acf80(const char *newName);       /* vtable slot 9; derived name */
-    const char *FUN_000acf90() const;             /* vtable slot 10; derived name */
-    hkMeshTexture *FUN_000acfb0(int index) const; /* vtable slot 12; derived name */
-    hkUlong FUN_000acae0() const;                 /* vtable slot 17; derived name */
-    void FUN_000acaf0(hkUlong newUserData);       /* vtable slot 18; derived name */
-    float FUN_000acb00() const;                   /* vtable slot 19; derived name */
-    void FUN_000acb10(float factor);              /* vtable slot 20; derived name */
-    float FUN_000acb20() const;                   /* vtable slot 21; derived name */
-    void FUN_000acb30(float amount);              /* vtable slot 22; derived name */
+    const hkClass *FUN_000246c0() const; /* vtable slot 3; derived name */
+    hkResult FUN_000acf00(const hkVertexFormat &format,
+                          hkVertexFormat &formatOut); /* vtable slot 5; derived name */
+    void FUN_000acf80(const char *newName);           /* vtable slot 9; derived name */
+    const char *FUN_000acf90() const;                 /* vtable slot 10; derived name */
+    hkMeshTexture *FUN_000acfb0(int index) const;     /* vtable slot 12; derived name */
+    hkUlong FUN_000acae0() const;                     /* vtable slot 17; derived name */
+    void FUN_000acaf0(hkUlong newUserData);           /* vtable slot 18; derived name */
+    float FUN_000acb00() const;                       /* vtable slot 19; derived name */
+    void FUN_000acb10(float factor);                  /* vtable slot 20; derived name */
+    float FUN_000acb20() const;                       /* vtable slot 21; derived name */
+    void FUN_000acb30(float amount);                  /* vtable slot 22; derived name */
 
     u8 unknown8[8];
     hkStringPtr materialName;
@@ -3234,7 +3308,8 @@ class hknpFlippedGetClosestPointsQueryCollector
 class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    int FUN_000cf8c0() const; /* vtable slot 3; derived name */
+    int FUN_000cf8c0() const;  /* vtable slot 3; derived name */
+    bool FUN_000cfa10() const; /* vtable slot 6; derived name */
 
     Vec4 positionScale;                          /* derived name */
     Vec4 normalScale;                            /* derived name */
@@ -3251,7 +3326,8 @@ class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived n
 class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    int FUN_0016d080() const; /* vtable slot 3; derived name */
+    int FUN_0016d080() const;  /* vtable slot 3; derived name */
+    bool FUN_0016d1d0() const; /* vtable slot 6; derived name */
 
     Vec4 positionOffset;                         /* derived name */
     Vec4 positionScale;                          /* derived name */
@@ -3329,11 +3405,19 @@ struct StringMap /* derived name */
     struct IteratorTag;
     typedef IteratorTag *Iterator;
 
-    void *entries;
+    struct Entry {
+        hkUlong hash;    /* derived name */
+        const char *key; /* derived name */
+        hkUlong value;   /* derived name */
+    };
+
+    Entry *entries;
     int numEntries;
     int hashMod;
 
     bool FUN_00013890(Iterator it) const;                              /* derived name */
+    const char *FUN_00091630(Iterator it) const;                       /* derived name */
+    hkUlong FUN_00091640(Iterator it) const;                           /* derived name */
     hkUlong FUN_00091900(const char *key, hkUlong defaultValue) const; /* derived name */
 };
 

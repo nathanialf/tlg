@@ -656,7 +656,7 @@ FUN_0003b1e0 src/libs/unknown/func_0003b1e0.cpp _ZNK18hknpDecoratorShape12FUN_00
 FUN_0003b200 src/libs/unknown/func_0003b200.cpp _ZNK18hknpDecoratorShape12FUN_0003b200EPviiPKv
 FUN_00037e80 src/libs/unknown/func_00037e80.cpp _ZNK18hknpDecoratorShape12FUN_00037e80EPKvS1_Pv
 FUN_0003b220 src/libs/unknown/func_0003b220.cpp _ZNK18hknpDecoratorShape12FUN_0003b220EPKvS1_S1_S1_Pv
-FUN_0003b230 src/libs/unknown/func_0003b230.cpp _ZNK18hknpDecoratorShape12FUN_0003b230EPKvPv
+FUN_0003b230 src/libs/unknown/func_0003b230.cpp _ZNK18hknpDecoratorShape12FUN_0003b230EPKvS1_S1_S1_Pv
 FUN_0003b240 src/libs/unknown/func_0003b240.cpp _ZNK18hknpDecoratorShape12FUN_0003b240EPKvS1_S1_S1_Pv
 FUN_0003b250 src/libs/unknown/func_0003b250.cpp _ZNK18hknpDecoratorShape12FUN_0003b250EPKvS1_S1_S1_Pv
 FUN_0003b210 src/libs/unknown/func_0003b210.cpp _ZNK18hknpDecoratorShape12FUN_0003b210EPKvS1_i
@@ -672,3 +672,16 @@ FUN_0007dad0 src/libs/unknown/leaf_0007dad0.cpp _ZN24hkpRagdollConstraintData12F
 FUN_0007d030 src/libs/unknown/func_0007d030.cpp
 FUN_00047cb0 src/libs/unknown/func_00047cb0.cpp _ZN6hkSlotD1Ev
 _ZN26hkBlockStreamCommandWriterD1Ev src/libs/unknown/func_00090450.cpp
+FUN_00018160 src/libs/unknown/func_00018160.cpp
+FUN_00082860 src/libs/unknown/func_00082860.cpp
+FUN_00091630 src/libs/unknown/leaf_00091630.cpp
+FUN_00091640 src/libs/unknown/leaf_00091640.cpp
+FUN_000acf00 src/libs/unknown/func_000acf00.cpp
+FUN_000cfa10 src/libs/unknown/func_000cfa10.cpp
+FUN_0016d1d0 src/libs/unknown/func_0016d1d0.cpp
+FUN_0000e770 src/libs/unknown/func_0000e770.cpp
+FUN_00066770 src/libs/unknown/leaf_00066770.cpp
+FUN_00066790 src/libs/unknown/leaf_00066790.cpp
+FUN_0006fa60 src/libs/unknown/func_0006fa60.cpp _ZNK9hknpShape16unknownVirtual24EPKvS1_S1_S1_Pv
+FUN_00070fd0 src/libs/unknown/leaf_00070fd0.cpp _ZN27hknpBodyQualityLibraryCinfoC1Ev
+FUN_000790d0 src/libs/unknown/leaf_000790d0.cpp
