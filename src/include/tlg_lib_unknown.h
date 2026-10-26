@@ -283,6 +283,16 @@ class MemoryExtendedInterface /* derived name */
   public:
     virtual ~MemoryExtendedInterface();
     virtual void garbageCollect() = 0; /* derived name */
+    virtual void unknownVirtual3() = 0;
+    virtual void unknownVirtual4() = 0;
+    virtual void unknownVirtual5() = 0;
+    virtual void unknownVirtual6() = 0;
+    virtual void unknownVirtual7() = 0;
+    virtual void unknownVirtual8() = 0;
+    /* Slot 9: takes an int; the allocator at 0x57af9c0, whose second base
+     * this is, does it under its spinning mutex (0x2330, through the thunk
+     * FUN_00002400). */
+    virtual void unknownVirtual9(int value) = 0;
 };
 
 /* An allocator over one fixed buffer (derived name; vtable address point
@@ -322,6 +332,10 @@ void FUN_0000d0a0(MemorySystem *self); /* derived name */
 /* Slot 8 of the memory system's vtable: whether its buffer allocator could
  * hold a block of a size. derived name. */
 bool FUN_0000d270(MemorySystem *self, int numBytes); /* derived name */
+
+/* Slot 20: hands an int to slot 9 of the allocator interface at +0x20, when
+ * there is one. derived name. */
+void FUN_0000d2c0(MemorySystem *self, int value); /* derived name */
 
 void FUN_0000c360(MemorySystem *self); /* derived name */
 
@@ -623,9 +637,28 @@ class FileImageSource : public ImageSource /* derived name */
 };
 
 /* A stream reader (derived name), the object a buffered reader reads from:
- * its slot 9 returns the stream itself when it can seek and tell, else
- * null, slot 10 seeks and slot 11 tells. */
-class StreamReader; /* derived name */
+ * slot 5 tells whether it can be read (the buffered reader's 0x94580: data
+ * still buffered, or its stream's answer); its slot 9 returns the stream
+ * itself when it can seek and tell, else null, slot 10 seeks and slot 11
+ * tells. */
+class StreamReader : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual hkBool isOk() const; /* vtable slot 5; derived name */
+};
+
+/* An input stream over a reader (derived name; vtable 0x16a65d0, address
+ * point 0x16a65e0, with only the reference-counted object's slots; the
+ * constructor 0x185060 opens the reader of a file name through the file
+ * system at 0x57b9b70): the reader at +0x10. The image loader builds one on
+ * the stack (0x18858c) and tests it with FUN_00185230 before reading. */
+class InputStream : public hkReferencedObject /* derived name */
+{
+  public:
+    hkBool FUN_00185230() const; /* derived name */
+
+    StreamReader *reader; /* derived name */
+};
 
 /* A buffered stream reader (derived names; vtable address point 0x16a35d0,
  * constructor 0x94170, the reference-counted object's slots 2 to 4): the

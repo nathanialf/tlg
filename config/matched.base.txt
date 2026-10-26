@@ -701,3 +701,9 @@ FUN_00009280 src/libs/unknown/func_00009280.cpp
 FUN_0000d270 src/libs/unknown/func_0000d270.cpp
 FUN_00041870 src/libs/unknown/func_00041870.cpp _ZNK17hknpCompoundShape15unknownVirtual7ERK4Mat4R6hkAabb
 FUN_00068350 src/libs/unknown/func_00068350.cpp _ZNK12hknpLodShape15unknownVirtual7ERK4Mat4R6hkAabb
+FUN_0017d8b0 src/libs/unknown/func_0017d8b0.cpp
+FUN_00185230 src/libs/unknown/func_00185230.cpp
+FUN_0018ce10 src/libs/unknown/func_0018ce10.cpp
+FUN_0000d2c0 src/libs/unknown/func_0000d2c0.cpp
+FUN_00007f90 src/libs/unknown/func_00007f90.cpp
+FUN_00017930 src/libs/unknown/func_00017930.cpp

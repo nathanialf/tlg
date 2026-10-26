@@ -64,6 +64,19 @@ void FUN_000173f0(Class168e810 *self, void *pointer, int count);   /* derived na
 void FUN_00017540(Class168e810 *self, void *pointer, int count);   /* derived name */
 void FUN_00017970(Class168e810 *self, void *pointer, int count);   /* derived name */
 
+/* What FUN_00016350 runs on the object with a mode: the work of one handle,
+ * or of none (derived names). A handle whose first int is -1 names
+ * nothing: slot 10 (FUN_00017930) then does nothing, FUN_00017920 passes no
+ * handle, and the callback FUN_00007730 runs FUN_00017920 with mode 0. */
+struct Handle00016350 /* derived name */
+{
+    s32 value; /* derived name */
+};
+
+void FUN_00016350(Class168e810 *self, int mode, const Handle00016350 *handle); /* derived name */
+void FUN_00017920(Class168e810 *self, int mode);                               /* derived name */
+void FUN_00017930(Class168e810 *self, const Handle00016350 *handle);           /* derived name */
+
 /* The interface of the physics world's tasks (derived name): the second
  * base, at +0x10, of each task class below (an hkReferencedObject first).
  * Its vtable holds the destructors, then the overriders of the class's
@@ -146,6 +159,21 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
  * string to it (length, grow through the allocator, copy), FUN_00011900
  * formats into it. */
 struct hkStringBuf; /* derived name */
+
+void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
+
+/* A 16-byte task of the broad phase (derived name from its timer name;
+ * vtable 0x16a6690, stored at 0x18d673 into +0x20 of the object at +8): the
+ * task interface implemented directly, its owner at +8. Slot 3
+ * (FUN_0018ce10) names it "BroadPhase/Update dirty bodies". */
+class hknpBroadPhaseUpdateDirtyBodiesTask : public hknpTaskInterface /* derived name */
+{
+  public:
+    void FUN_0018ce10(hkStringBuf *name,
+                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+
+    void *owner; /* derived name */
+};
 
 /* The solver's stage tasks (derived name): 0x30-byte objects built in an
  * array by 0x18e6e0, vtables 0x16a6760 and 0x16a67a8; slot 6 (0x18f140)

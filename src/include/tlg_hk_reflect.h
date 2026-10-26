@@ -169,6 +169,10 @@ struct hkClassMember {
 
     static const TypeProperties &FUN_00007d40(Type type); /* derived name */
 
+    /* The integer the member holds at an address, read by its type and
+     * subtype (FUN_00091270). derived name. */
+    s64 FUN_00007f90(const void *address) const;
+
     const char *name;
     const hkClass *structClass;   /* reflected as "class"; derived name */
     const hkClassEnum *enumClass; /* reflected as "enum"; derived name */
@@ -180,6 +184,11 @@ struct hkClassMember {
 };
 
 extern const hkClassMember::TypeProperties D_16dc150[]; /* the member type table */
+
+/* derived name: reads an integer of a member type from an address, widened
+ * to 64 bits (0x91270: a switch on the type, an enum's or flags' storage by
+ * the subtype); 0 for a type that is not an integer. */
+s64 FUN_00091270(hkClassMember::Type type, hkClassMember::Type subtype, const void *address);
 
 /* An accessor of one member of an object (derived name): the member's
  * address at +0 (built by FUN_00184150 from the object and the record's
@@ -3578,9 +3587,11 @@ struct StringMap /* derived name */
     int numEntries;
     int hashMod;
 
-    bool FUN_00013890(Iterator it) const;                              /* derived name */
-    const char *FUN_00091630(Iterator it) const;                       /* derived name */
-    hkUlong FUN_00091640(Iterator it) const;                           /* derived name */
+    bool FUN_00013890(Iterator it) const;        /* derived name */
+    const char *FUN_00091630(Iterator it) const; /* derived name */
+    hkUlong FUN_00091640(Iterator it) const;     /* derived name */
+    /* Sets the value of a key, adding the entry when it is new (0x91690). */
+    void FUN_00091690(const char *key, hkUlong value);                 /* derived name */
     hkUlong FUN_00091900(const char *key, hkUlong defaultValue) const; /* derived name */
 };
 
@@ -3634,6 +3645,7 @@ class hkTypeInfoRegistry : public hkReferencedObject
   public:
     virtual ~hkTypeInfoRegistry();
 
+    void FUN_0017d8b0(const hkTypeInfo *info);                  /* vtable slot 5; derived name */
     const hkTypeInfo *FUN_0017d960(const char *typeName) const; /* vtable slot 9; derived name */
 
     StringMap map; /* derived name */
