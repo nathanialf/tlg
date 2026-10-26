@@ -132,14 +132,12 @@ static inline Vec4 FUN_farthestPlane(Vec4 point, const Vec4 *planes, int numPlan
  * direction and the distance to it (negative inside the first plane when
  * one round sufficed) and the rounds taken; true unless the point is
  * farther from the region than the tolerance. */
-// NONMATCHING: the base loads the stack canary (0x18777c) and checks it before
-// the return (0x187a0e, __stack_chk_fail at 0x188536) in a frame of 0x1c8;
-// under the prefix's -fstack-protector LLVM 3.3 protects only a function with
-// a char array of 8 bytes or more (StackProtector.cpp,
-// ContainsProtectableArray), which this one has none of, so it compiles
-// without a canary (frame 0x198, 2274 bytes against 3564; the base also
-// unswitches the second search on numPlanes >= 4). A classified note,
-// docs/NOTES.md Round 20.
+// NONMATCHING: the base unswitches the main loop on numPlanes >= 4 (two
+// copies, 0x187aa9 and 0x18806e, the second without the block search). LLVM
+// 3.3 at -O2 builds LoopUnswitch for trivial conditions only
+// (PassManagerBuilder.cpp:189, OptimizeForSize when OptLevel < 3), and the
+// guard of the block search is not trivial; a classified note, docs/NOTES.md
+// Round 21. The stack canary of the strong level is reproduced.
 bool FUN_00187750(const Vec4 &point, const Vec4 *planes, int numPlanes,
                   const Vec4 &toleranceSquared, int maxIterations, Vec4 &closestOut,
                   Vec4 &normalOut, Vec4 &distanceOut, int *numIterationsOut)

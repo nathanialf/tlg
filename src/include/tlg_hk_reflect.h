@@ -95,13 +95,16 @@ class hkBool
     char value; /* derived name */
 };
 
-/* hkClass, the reflection's class record: name (char*, type 0x1d) at +0
- * and parent (pointer to hkClass, type 0x14) at +8, from its own member
+/* hkClass, the reflection's class record: name (char*, type 0x1d) at +0,
+ * parent (pointer to hkClass, type 0x14) at +8, objectSize and
+ * numImplementedInterfaces (int) at +0x10 and +0x14, from its own member
  * table at 0x16a6b60; its constructor FUN_000041a0 stores the twelve
  * fields from +0 to +0x4c. */
 struct hkClass {
     const char *name;
     const hkClass *parent;
+    int objectSize;
+    int numImplementedInterfaces;
 };
 
 /* derived name: tells whether two classes are the same, by address or by
@@ -118,6 +121,17 @@ struct hkMatrix3 {
      * of its columns over the determinant; zero and HK_FAILURE when the
      * determinant is within a tolerance of zero (0x1ae40). */
     hkResult FUN_0001ae40(const hkMatrix3 &m);
+
+    /* derived name: this set to a * b (0x1a9f0: each column of b
+     * transformed by a). */
+    void FUN_0001a9f0(const hkMatrix3 &a, const hkMatrix3 &b);
+};
+
+/* hkTransform (the reflection's TYPE_TRANSFORM, 64 bytes): a rotation and
+ * a translation. */
+struct hkTransform {
+    hkMatrix3 rotation; /* derived name */
+    Vec4 translation;   /* derived name */
 };
 
 /* hkClassMember, a 40-byte member record (member names from its own
@@ -573,11 +587,29 @@ class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
     hknpVehicleDriverInputAnalogStatus(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* What a transmission's slot 5 (0x67f40) fills (derived names): two floats
+ * from slots 6 and 7 at +4 and +0, the per-wheel torques at +8 (a pointer),
+ * the answer of slot 8 at +0x11 and the gear (s8) slot 8 and slot 10 read at
+ * +0x12; the vehicle instance keeps its own isReversing and currentGear
+ * (+0x118, +0x119). */
+struct hknpVehicleTransmissionOutput /* derived name */
+{
+    u8 unknown0[0x11];
+    hkBool isReversing; /* derived name */
+    s8 currentGear;     /* derived name */
+};
+
+class hknpVehicleInstance;
+
 /* hknpVehicleDefaultTransmission: vtable 0x1699b90, finish callback FUN_00037a90. */
 class hknpVehicleDefaultTransmission : public hkReferencedObject
 {
   public:
     hknpVehicleDefaultTransmission(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    bool FUN_00068130(
+        const hknpVehicleInstance *vehicle,
+        const hknpVehicleTransmissionOutput &output) const; /* vtable slot 8; derived name */
 };
 
 /* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback FUN_0003a0d0. */
@@ -1215,37 +1247,6 @@ struct hknpShapeSignals {
     u8 unknown0[0x10];
 };
 
-/* hknpMaskedShape, polymorphic, 0x70 bytes (type info 0x57bea28, vtable
- * 0x1693a90): members from its record table at 0x16936b0, mask (pointer)
- * at +0x38, maskWrapper (struct) at +0x40, mutationSignals (struct
- * hknpShapeSignals) at +0x50, maskSize (int) at +0x60. */
-class hknpMaskedShape
-{
-  public:
-    class MaskWrapper;
-
-    virtual ~hknpMaskedShape();
-
-    hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
-
-    u8 unknown8[0x48];
-    hknpShapeSignals mutationSignals;
-    s32 maskSize;
-};
-
-/* hknpMaskedShape::MaskWrapper (type info 0x57be9a8, vtable 0x1693ba0):
- * its finish constructor FUN_00038230 is out of line, called by the finish
- * callback 0x36780 and by the reflection initializer at 0x36863; it stores
- * only the vtable. */
-class hknpMaskedShape::MaskWrapper : public hkReferencedObject
-{
-  public:
-    MaskWrapper(hkFinishLoadedObjectFlag flag);
-};
-
-void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
-
 /* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
  * vtable 0x16a54a0, address point 0x16a54b0), reflected with
  * hknpScaledConvexShapeBase (0x60 bytes) as its parent and no members of its
@@ -1310,7 +1311,12 @@ class hknpShape : public hkReferencedObject
     virtual int unknownVirtual13() const;
     virtual void unknownVirtual14(int faceIndex, Vec4 *planeOut, u8 *valueOut) const;
     virtual int unknownVirtual15(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut) const;
-    virtual void unknownVirtual16();
+    /* Slot 16: the default (0x6ea10) reports "Not implemented" and
+     * returns 0; hknpConvexShape's (0x45bb0) reads a vector through the
+     * first argument and compares the fifth with -1; the decorator's
+     * forward (FUN_0003b1a0) widens the fourth, a bool. */
+    virtual int unknownVirtual16(const void *argument1, const void *argument2, void *argument3,
+                                 bool argument4, int argument5) const;
     virtual float unknownVirtual17() const;
     /* Slots 18 to 29: the arguments as their implementations read them
      * (hknpShape's 0x6eb50 and 0x6ebf0, hknpConvexShape's from 0x45a80,
@@ -1375,7 +1381,9 @@ class hknpDecoratorShape : public hknpShape
                       u8 *valueOut) const; /* vtable slot 14; derived name */
     int FUN_0003b190(int faceIndex, Vec4 *planeOut,
                      Vec4 *verticesOut) const; /* vtable slot 15; derived name */
-    float FUN_0003b1c0() const;                /* vtable slot 17; derived name */
+    int FUN_0003b1a0(const void *argument1, const void *argument2, void *argument3, bool argument4,
+                     int argument5) const; /* vtable slot 16; derived name */
+    float FUN_0003b1c0() const;            /* vtable slot 17; derived name */
     void FUN_0003b1d0(const void *argument1,
                       void *argument2) const; /* vtable slot 18; derived name */
     void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
@@ -1406,6 +1414,74 @@ class hknpDecoratorShape : public hknpShape
 
     hknpShape *coreShape;
 };
+
+/* hknpShapeKeyMask, reflected (hkClass 0x57c1aa8, parent hkBaseObject): the
+ * interface of a shape's key mask, slots 3 to 6 after hkBaseObject's. The
+ * executable has no vtable of its own for it; the slots are named after
+ * hknpMaskedShape::MaskWrapper's overriders and typed from their bodies
+ * (slot 3 forwards a key and a bool, slots 4 and 5 return bool, slot 6 the
+ * object's size: 16 for the wrapper, 32 for
+ * hknpCompressedMeshShapeInternals::KeyMask's 0x2b020). */
+class hknpShapeKeyMask : public hkBaseObject
+{
+  public:
+    hknpShapeKeyMask(hkFinishLoadedObjectFlag flag) : hkBaseObject(flag) {}
+
+    virtual void FUN_000381b0(u32 key, bool enabled) = 0; /* derived name */
+    virtual bool FUN_000381d0() = 0;                      /* derived name */
+    virtual bool FUN_000381f0(u32 key) const = 0;         /* derived name */
+    virtual int FUN_00038210() const = 0;                 /* derived name */
+};
+
+/* hknpMaskedShape, polymorphic, 0x70 bytes (type info 0x57bea28, vtable
+ * 0x1693a80, address point 0x1693a90), reflected with hknpDecoratorShape as
+ * its parent (hkClass 0x57be9d8): members from its record table at
+ * 0x16936b0, mask (pointer) at +0x38, maskWrapper (struct) at +0x40,
+ * mutationSignals (struct hknpShapeSignals) at +0x50, maskSize (int) at
+ * +0x60. Its vtable adds slots 31 and 32: slot 31 (0x37d80) releases the
+ * mask, has the core shape's slot 20 make a new one and tail-calls slot 32;
+ * slot 32 (0x37dd0) runs the mask's slot 4, fires the mutation signals and
+ * returns the mask's answer. */
+class hknpMaskedShape : public hknpDecoratorShape
+{
+  public:
+    /* hknpMaskedShape::MaskWrapper (type info 0x57be9a8, vtable 0x1693ba0,
+     * reflected with hknpShapeKeyMask as its parent, hkClass 0x57be958): the
+     * mask the shape hands out, 16 bytes, forwarding to its masked shape at
+     * +8 (slots 3 and 5 to the shape's mask, slot 4 to the shape's slot 32).
+     * Its finish constructor FUN_00038230 is out of line, called by the
+     * finish callback 0x36780 and by the reflection initializer at 0x36863;
+     * it stores only the vtable. */
+    class MaskWrapper : public hknpShapeKeyMask
+    {
+      public:
+        MaskWrapper(hkFinishLoadedObjectFlag flag);
+
+        void FUN_000381b0(u32 key, bool enabled); /* vtable slot 3; derived name */
+        bool FUN_000381d0();                      /* vtable slot 4; derived name */
+        bool FUN_000381f0(u32 key) const;         /* vtable slot 5; derived name */
+        /* slot 6 is the shared body FUN_00038210 (returns 16). */
+        int FUN_00038210() const; /* vtable slot 6; derived name */
+
+        hknpMaskedShape *maskedShape; /* derived name */
+    };
+
+    virtual ~hknpMaskedShape();
+
+    virtual void FUN_00037d80(); /* vtable slot 31; derived name */
+    virtual bool FUN_00037dd0(); /* vtable slot 32; derived name */
+
+    hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
+
+    u8 unknown30[0x8];
+    hknpShapeKeyMask *mask;
+    MaskWrapper maskWrapper;
+    hknpShapeSignals mutationSignals;
+    s32 maskSize;
+};
+
+void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpFirstPersonGun, hknpBallGun and hknpMountedBallGun, each finish
  * constructor running its parent's first (FUN_00156620, FUN_00157e00,
@@ -1656,6 +1732,8 @@ class hknpConvexShape : public hknpShape
     int FUN_000430e0() const;         /* vtable slot 6; derived name */
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
+    int FUN_00045a80(u32 *argument1, int argument2, int argument3,
+                     const u32 *argument4) const; /* vtable slot 21; derived name */
 
     hkRelArray<Vec4> vertices;
 };
@@ -1819,7 +1897,7 @@ void FUN_000385d0(hknpStaticCompoundShape *self, hkFinishLoadedObjectFlag flag);
 /* hknpExternMeshShape (type info 0x57c28e8, size 0x70): its finish
  * constructor FUN_001660e0 runs hknpShape's, stores 0x1697c80, sets bit 2
  * of the byte at +0x10 when finishing, then stores its own vtable 0x16a5170. */
-struct hknpExternMeshShape;
+class hknpExternMeshShape;
 
 void FUN_001660e0(hknpExternMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
@@ -1875,17 +1953,94 @@ struct ConstraintRuntimeInfo /* derived name */
     int numSolverResults;      /* derived name */
 };
 
+/* hkpConstraintData, the constraint data base (hkClass 0x57c45a8, built at
+ * 0x7f444, 0x18 bytes, parent hkReferencedObject; finish constructor
+ * FUN_00082850 stores its vtable 0x169fac0, address point 0x169fad0, whose
+ * slots 5 to 7 and 20 are pure). Slots 8 to 10 default to the empty body
+ * 0x3b640; slots 11 to 13, kept by twenty-odd constraint data vtables,
+ * return the largest float Havok uses (0x7f7fffee) for the linear, angular
+ * and breach impulse limits; slot 15 (0x82bc0) returns 255; slot 24
+ * defaults to the empty body too. */
+/* The string library's memory fill (derived name; a wrapper over memset). */
+void FUN_00018160(void *dst, int value, unsigned int n); /* derived name */
+
+class hkpConstraintData : public hkReferencedObject
+{
+  public:
+    hkpConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* What slot 6 fills (derived name): hkpFixedConstraintData's override
+     * (0x7bf20) hands its 0xc0 bytes of atoms and this argument to
+     * FUN_00082890. */
+    struct ConstraintInfo;
+
+    /* derived name: what the slot 6 overrides call with their atoms, the
+     * atoms' size and the argument (0x82890). */
+    static void FUN_00082890(const void *atoms, int sizeOfAtoms, ConstraintInfo &infoOut);
+
+    virtual int unknownVirtual5() const = 0;
+    virtual void unknownVirtual6(ConstraintInfo &infoOut) const = 0;
+    /* Slot 7 (pure): whether the data is usable; an hkBool, which the
+     * wrapped data's forwarder (FUN_00067c60) passes on with a jmp (a bool
+     * would keep the call, cookbook 25). */
+    virtual hkBool unknownVirtual7() const = 0;
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual float FUN_00082b90() const; /* vtable slot 11; derived name */
+    virtual float FUN_00082ba0() const; /* vtable slot 12; derived name */
+    virtual float FUN_00082bb0() const; /* vtable slot 13; derived name */
+    virtual void unknownVirtual14();
+    virtual int unknownVirtual15() const;
+    virtual void unknownVirtual16();
+    virtual void unknownVirtual17();
+    virtual void unknownVirtual18();
+
+    /* Slot 19's default, kept by most constraint data vtables (the copy at
+     * 0x7b5a0 sits in the file of the class whose slot 5 is 0x7b560, type
+     * code 22): zeroes the vector its fifth argument points to. The three
+     * arguments before it are integers or pointers, not recovered. */
+    virtual void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
+                              Vec4 &out) const; /* vtable slot 19; derived name */
+
+    /* Slot 20 (pure): the runtime size and solver result count. The flag is
+     * an hkBool, not a bool: the wrapped data's forwarder (FUN_00067b30)
+     * passes it on without widening it (cookbook 17). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const = 0;
+    /* Slot 21: by default (the shared FUN_00013e90) the solver results are
+     * the runtime itself. */
+    virtual void *unknownVirtual21(void *runtime) const;
+    /* Slot 22's default, kept by every constraint data vtable read so far:
+     * a new instance's runtime, when it has one, starts zeroed. */
+    virtual void FUN_00082860(void *runtime,
+                              int sizeOfRuntime) const; /* vtable slot 22; derived name */
+    virtual void unknownVirtual23();
+
+    /* Slot 24, the empty body 0x3b640 by default: the call a bridge atom
+     * makes into the data it wraps (FUN_0007d020). derived name. */
+    virtual void buildJacobianCallback(const void *input, void *output);
+
+    u8 unknownC[0xc];
+};
+
 class hkpPrismaticConstraintData
 {
   public:
-    struct Atoms;
+    struct Atoms {
+        u8 unknown0[0x100];
+    };
 
     /* vtable 0x169d1f0, address point 0x169d200 (finish constructor
      * FUN_0007ce10). */
     virtual ~hkpPrismaticConstraintData();
 
+    void FUN_0007e870(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     void FUN_0007e890(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
 };
 
 /* Polymorphic constraint data classes with no member read yet (vtable
@@ -1899,10 +2054,88 @@ class hkpPointToPathConstraintData; /* defined after hkEnum */
 class hkpCogWheelConstraintData
 {
   public:
+    /* 0xa0 bytes at +0x20 (what slot 6 hands on). */
+    struct Atoms {
+        u8 unknown0[0xa0];
+    };
+
     virtual ~hkpCogWheelConstraintData();
 
+    void FUN_0007b570(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     void FUN_0007b590(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+/* Constraint data classes known by their slot 6 alone (vtable address points
+ * from their type-info registrations; the atoms at +0x20 and their size are
+ * what slot 6 hands to FUN_00082890). */
+class hkpStiffSpringConstraintData /* vtable address point 0x169cff0 */
+{
+  public:
+    struct Atoms {
+        u8 unknown0[0x60];
+    };
+
+    virtual ~hkpStiffSpringConstraintData();
+
+    void FUN_0007d6e0(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+class hkpPulleyConstraintData /* vtable address point 0x169f600 */
+{
+  public:
+    struct Atoms {
+        u8 unknown0[0x70];
+    };
+
+    virtual ~hkpPulleyConstraintData();
+
+    void FUN_00082570(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+/* Slot 6 (0x83000) is also hkpWheelConstraintData's (0x16a5e20). */
+class hkpDeformableFixedConstraintData /* vtable address point 0x169fe00 */
+{
+  public:
+    struct Atoms {
+        u8 unknown0[0x150];
+    };
+
+    virtual ~hkpDeformableFixedConstraintData();
+
+    void FUN_00083000(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
+};
+
+class hkpRotationalConstraintData /* vtable address point 0x16a0120 */
+{
+  public:
+    struct Atoms {
+        u8 unknown0[0x80];
+    };
+
+    virtual ~hkpRotationalConstraintData();
+
+    void FUN_000834e0(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
 };
 
 /* hkpConeLimitConstraintAtom (records built by the initializer at 0x80da0:
@@ -1936,7 +2169,9 @@ class hkpRagdollLimitsData
 
     virtual ~hkpRagdollLimitsData();
 
-    void FUN_0007c860(hkBool enable); /* derived name */
+    void FUN_0007c890(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_0007c860(hkBool enable);                      /* derived name */
 
     void FUN_0007c8b0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
@@ -1951,12 +2186,19 @@ class hkpRagdollLimitsData
 class hkpLinearClearanceConstraintData
 {
   public:
-    struct Atoms;
+    struct Atoms {
+        u8 unknown0[0x120];
+    };
 
     virtual ~hkpLinearClearanceConstraintData();
 
+    void FUN_000839f0(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     void FUN_00083a10(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
 };
 
 class hkpRackAndPinionConstraintData
@@ -2004,6 +2246,26 @@ class hkpLimitedHingeConstraintData;
  * enableLinearImpulseLimit at +5, breachImpulse at +8,
  * inertiaStabilizationFactor at +0xc). The u16 at +0 is the atom's type,
  * which the constructors store. */
+/* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
+ * transformB (hkTransform) at +0x10 and +0x50 (member records 0x169e560 and
+ * 0x169e588), after the atom's type and padding. */
+struct hkpSetLocalTransformsConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    hkTransform transformA;
+    hkTransform transformB;
+};
+
+/* hkpSetLocalTranslationsConstraintAtom (reflected): translationA and
+ * translationB (hkVector4) at +0x10 and +0x20 (member records 0x169e5b0 and
+ * 0x169e5d8), after the atom's type and padding. */
+struct hkpSetLocalTranslationsConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    Vec4 translationA;
+    Vec4 translationB;
+};
+
 struct hkpSetupStabilizationAtom {
     u16 type; /* derived name */
     hkBool enabled;
@@ -2189,7 +2451,7 @@ struct hkpRagdollMotorConstraintAtom {
     s16 initializedOffset;
     s16 previousTargetAnglesOffset;
     u8 unknown8[8];
-    u8 target_bRca[0x30];
+    hkMatrix3 target_bRca;
     hkpConstraintMotor *motors[3];
     u8 unknown58[8];
 };
@@ -2210,7 +2472,7 @@ class hkpRagdollConstraintData
 {
   public:
     struct Atoms {
-        u8 transforms[0x90];
+        hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
         u8 unknown100[0x30]; /* angFriction, twistLimit */
@@ -2221,11 +2483,13 @@ class hkpRagdollConstraintData
 
     virtual ~hkpRagdollConstraintData();
 
-    void FUN_0007dc90(float newBreachImpulse);     /* vtable slot 10; derived name */
-    float FUN_0007dca0() const;                    /* vtable slot 13; derived name */
-    void FUN_0007dcb0(int bodyIndex);              /* vtable slot 14; derived name */
-    u8 FUN_0007dcd0() const;                       /* vtable slot 15; derived name */
-    hkResult FUN_0007e2e0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0007dce0(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_0007dc90(float newBreachImpulse);             /* vtable slot 10; derived name */
+    float FUN_0007dca0() const;                            /* vtable slot 13; derived name */
+    void FUN_0007dcb0(int bodyIndex);                      /* vtable slot 14; derived name */
+    u8 FUN_0007dcd0() const;                               /* vtable slot 15; derived name */
+    hkResult FUN_0007e2e0(float &factorOut) const;         /* vtable slot 18; derived name */
     void FUN_0007dd00(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -2234,6 +2498,9 @@ class hkpRagdollConstraintData
     hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e160() const; /* derived name */
+
+    /* derived name: target_bRca = target * transformA's rotation. */
+    void FUN_0007df80(const hkMatrix3 &target);
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2252,15 +2519,22 @@ class hkpBallAndSocketConstraintData
 {
   public:
     struct Atoms {
-        u8 pivots[0x30];
+        hkpSetLocalTranslationsConstraintAtom pivots;
         hkpSetupStabilizationAtom setupStabilization;
         hkpBallSocketConstraintAtom ballSocket;
     };
 
     virtual ~hkpBallAndSocketConstraintData();
 
-    hkBool FUN_0007c380() const; /* vtable slot 7; derived name */
+    /* derived name: sets the pivots in each body's space (called by the game
+     * after the constructor FUN_0007c1d0, 0xea746a). */
+    void FUN_0007c2a0(const Vec4 &pivotA, const Vec4 &pivotB);
 
+    void FUN_0007c330(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    hkBool FUN_0007c380() const;                           /* vtable slot 7; derived name */
+
+    void FUN_0007c2e0(float newMaxImpulse);        /* vtable slot 8; derived name */
     void FUN_0007c2c0(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0007c300() const;                    /* vtable slot 11; derived name */
     float FUN_0007c2d0() const;                    /* vtable slot 13; derived name */
@@ -2292,82 +2566,18 @@ class hkpLimitedHingeConstraintData
 
     virtual ~hkpLimitedHingeConstraintData();
 
-    void FUN_000790b0(float newBreachImpulse);     /* vtable slot 10; derived name */
-    float FUN_000790c0() const;                    /* vtable slot 13; derived name */
-    void FUN_000790d0(int bodyIndex);              /* vtable slot 14; derived name */
-    u8 FUN_000790f0() const;                       /* vtable slot 15; derived name */
-    hkResult FUN_000792d0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_000791f0(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_000790b0(float newBreachImpulse);             /* vtable slot 10; derived name */
+    float FUN_000790c0() const;                            /* vtable slot 13; derived name */
+    void FUN_000790d0(int bodyIndex);                      /* vtable slot 14; derived name */
+    u8 FUN_000790f0() const;                               /* vtable slot 15; derived name */
+    hkResult FUN_000792d0(float &factorOut) const;         /* vtable slot 18; derived name */
     void FUN_00079210(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
-};
-
-/* hkpConstraintData, the constraint data base (hkClass 0x57c45a8, built at
- * 0x7f444, 0x18 bytes, parent hkReferencedObject; finish constructor
- * FUN_00082850 stores its vtable 0x169fac0, address point 0x169fad0, whose
- * slots 5 to 7 and 20 are pure). Slots 8 to 10 default to the empty body
- * 0x3b640; slots 11 to 13, kept by twenty-odd constraint data vtables,
- * return the largest float Havok uses (0x7f7fffee) for the linear, angular
- * and breach impulse limits; slot 15 (0x82bc0) returns 255; slot 24
- * defaults to the empty body too. */
-/* The string library's memory fill (derived name; a wrapper over memset). */
-void FUN_00018160(void *dst, int value, unsigned int n); /* derived name */
-
-class hkpConstraintData : public hkReferencedObject
-{
-  public:
-    hkpConstraintData(hkFinishLoadedObjectFlag flag);
-
-    /* What slot 6 fills (derived name): hkpFixedConstraintData's override
-     * (0x7bf20) hands its 0xc0 bytes of atoms and this argument to
-     * FUN_00082890. */
-    struct ConstraintInfo;
-
-    virtual int unknownVirtual5() const = 0;
-    virtual void unknownVirtual6(ConstraintInfo &infoOut) const = 0;
-    /* Slot 7 (pure): whether the data is usable; an hkBool, which the
-     * wrapped data's forwarder (FUN_00067c60) passes on with a jmp (a bool
-     * would keep the call, cookbook 25). */
-    virtual hkBool unknownVirtual7() const = 0;
-    virtual void unknownVirtual8();
-    virtual void unknownVirtual9();
-    virtual void unknownVirtual10();
-    virtual float FUN_00082b90() const; /* vtable slot 11; derived name */
-    virtual float FUN_00082ba0() const; /* vtable slot 12; derived name */
-    virtual float FUN_00082bb0() const; /* vtable slot 13; derived name */
-    virtual void unknownVirtual14();
-    virtual int unknownVirtual15() const;
-    virtual void unknownVirtual16();
-    virtual void unknownVirtual17();
-    virtual void unknownVirtual18();
-
-    /* Slot 19's default, kept by most constraint data vtables (the copy at
-     * 0x7b5a0 sits in the file of the class whose slot 5 is 0x7b560, type
-     * code 22): zeroes the vector its fifth argument points to. The three
-     * arguments before it are integers or pointers, not recovered. */
-    virtual void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
-                              Vec4 &out) const; /* vtable slot 19; derived name */
-
-    /* Slot 20 (pure): the runtime size and solver result count. The flag is
-     * an hkBool, not a bool: the wrapped data's forwarder (FUN_00067b30)
-     * passes it on without widening it (cookbook 17). */
-    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const = 0;
-    /* Slot 21: by default (the shared FUN_00013e90) the solver results are
-     * the runtime itself. */
-    virtual void *unknownVirtual21(void *runtime) const;
-    /* Slot 22's default, kept by every constraint data vtable read so far:
-     * a new instance's runtime, when it has one, starts zeroed. */
-    virtual void FUN_00082860(void *runtime,
-                              int sizeOfRuntime) const; /* vtable slot 22; derived name */
-    virtual void unknownVirtual23();
-
-    /* Slot 24, the empty body 0x3b640 by default: the call a bridge atom
-     * makes into the data it wraps (FUN_0007d020). derived name. */
-    virtual void buildJacobianCallback(const void *input, void *output);
-
-    u8 unknownC[0xc];
 };
 
 /* hkpBridgeConstraintAtom (records 0x169b7b0, 0x169b7d8): buildJacobianFunc at +8,
@@ -2448,12 +2658,14 @@ class hkpFixedConstraintData
 
     virtual ~hkpFixedConstraintData();
 
-    void FUN_0007bec0(float newMaxAngImpulse);     /* vtable slot 9; derived name */
-    float FUN_0007bed0() const;                    /* vtable slot 11; derived name */
-    float FUN_0007bee0() const;                    /* vtable slot 12; derived name */
-    void FUN_0007bef0(int bodyIndex);              /* vtable slot 14; derived name */
-    u8 FUN_0007bf10() const;                       /* vtable slot 15; derived name */
-    hkResult FUN_0007bfd0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0007bf20(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_0007bec0(float newMaxAngImpulse);             /* vtable slot 9; derived name */
+    float FUN_0007bed0() const;                            /* vtable slot 11; derived name */
+    float FUN_0007bee0() const;                            /* vtable slot 12; derived name */
+    void FUN_0007bef0(int bodyIndex);                      /* vtable slot 14; derived name */
+    u8 FUN_0007bf10() const;                               /* vtable slot 15; derived name */
+    hkResult FUN_0007bfd0(float &factorOut) const;         /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2516,6 +2728,8 @@ class hkpWheelFrictionConstraintData
     virtual ~hkpWheelFrictionConstraintData();
 
     hkBool FUN_0017cf10() const; /* vtable slot 7; derived name */
+    void FUN_0017cf30(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2713,6 +2927,7 @@ const hkClass *FUN_000902f0(const hkRefVariant *self);             /* derived na
 class hkMemoryResourceHandle : public hkReferencedObject
 {
   public:
+    const char *FUN_0017f2d0() const;              /* vtable slot 6; derived name */
     const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
     void FUN_0017f320(hkReferencedObject *object); /* vtable slot 10; derived name */
 
@@ -2907,7 +3122,9 @@ class hkMemoryMeshTexture : public hkMeshTexture
   public:
     virtual ~hkMemoryMeshTexture();
 
-    const hkClass *getClassType() const;              /* vtable slot 3, FUN_000247f0 */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_000247f0 */
+    void FUN_000ad620(u8 *&dataOut, int &sizeOut,
+                      Format &formatOut);             /* vtable slot 5; derived name */
     Format FUN_000ad6e0() const;                      /* vtable slot 8; derived name */
     bool FUN_000ad710() const;                        /* vtable slot 11; derived name */
     void FUN_000ad720(bool newHasMipMaps);            /* vtable slot 12; derived name */
@@ -2919,7 +3136,7 @@ class hkMemoryMeshTexture : public hkMeshTexture
     void FUN_000ad780(int newTextureCoordChannel);    /* vtable slot 18; derived name */
 
     hkStringPtr filename;
-    u8 data[0x10];
+    hkArray<u8> data;
     hkEnum<Format, s8> format;
     hkBool hasMipMaps;
     hkEnum<FilterMode, s8> filterMode;
@@ -3176,6 +3393,15 @@ class hkGeometry : public hkReferencedObject
     hkArray<Triangle> triangles;
 };
 
+/* hkGeometry::Triangle: the vertex indices a, b and c and the material, four
+ * hkInt32 (member records 0x168e950 to 0x168e9c8). */
+struct hkGeometry::Triangle {
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 material;
+};
+
 /* hknpDefaultExternMeshShapeGeometry (type info 0x57bfce0, vtable address
  * point 0x16959f0, reflected member geometry at +0x10): its destructors
  * (slots 0 and 1, 0x3b870 and 0x3b8e0) release the counted reference to the
@@ -3191,7 +3417,8 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
 
     virtual ~hknpDefaultExternMeshShapeGeometry();
 
-    int FUN_0003b980() const; /* vtable slot 5; derived name */
+    int FUN_0003b980() const;                  /* vtable slot 5; derived name */
+    u16 FUN_0003b9e0(int triangleIndex) const; /* vtable slot 7; derived name */
 
     hkGeometry *geometry;
 };
@@ -3211,6 +3438,40 @@ class hknpCompositeShape : public hknpShape
     virtual ~hknpCompositeShape();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
+};
+
+/* What hknpExternMeshShapeData's buildContext points to (derived name; the
+ * member is not serialized, flags 0x400): signals at +0x48, which slot 8 of
+ * hknpExternMeshShape hands out. */
+struct hknpExternMeshShapeBuildContext /* derived name */
+{
+    u8 unknown0[0x48];
+    hknpShapeSignals mutationSignals; /* derived name */
+};
+
+/* hknpExternMeshShapeData (hkClass 0x57be420 built at 0x35585, parent
+ * hkReferencedObject, 0x60 bytes): aabbTree (struct) at +0x10, simdTree
+ * (struct) at +0x40 and buildContext (pointer) at +0x58, member records from
+ * 0x1692c80. */
+class hknpExternMeshShapeData : public hkReferencedObject
+{
+  public:
+    u8 aabbTree[0x30];
+    u8 simdTree[0x18];
+    hknpExternMeshShapeBuildContext *buildContext;
+};
+
+/* hknpExternMeshShape (hkClass 0x57c2898, parent hknpCompositeShape, 0x70
+ * bytes): geometry (pointer) at +0x60 and boundingVolumeData (pointer to
+ * hknpExternMeshShapeData) at +0x68 (records 0x169abc0, 0x169abe8). */
+class hknpExternMeshShape : public hknpCompositeShape
+{
+  public:
+    hknpShapeSignals *FUN_000eafb0(); /* vtable slot 8; derived name */
+
+    u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
+    void *geometry;
+    hknpExternMeshShapeData *boundingVolumeData;
 };
 
 /* hknpCompoundShape: its hkClass at 0x57c2e78 is built by the reflection
@@ -3413,7 +3674,9 @@ class hknpVehicleInstance
     hknpBodyId bodyId;
     u8 unknown1c[0x4c];
     hknpVehicleWheelCollide *wheelCollide;
-    u8 unknown70[0x8c];
+    u8 unknown70[0x84];
+    hkBool tryingToReverse; /* record 0x1698d18 */
+    u8 unknownF5[7];
     float rpm;
 };
 

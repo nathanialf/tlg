@@ -710,3 +710,11 @@ FUN_00017930 src/libs/unknown/func_00017930.cpp
 FUN_0016d1f0 src/libs/unknown/func_0016d1f0.cpp _ZN27hknpSurfaceVelocityModifierC2Ev
 FUN_00007d40 src/libs/unknown/leaf_00007d40.cpp
 FUN_00188540 src/libs/unknown/func_00188540.cpp _GLOBAL__I_a
+FUN_000381d0 src/libs/unknown/func_000381d0.cpp
+FUN_00045a80 src/libs/unknown/func_00045a80.cpp
+FUN_0007c2a0 src/libs/unknown/func_0007c2a0.cpp
+FUN_0007df80 src/libs/unknown/func_0007df80.cpp
+FUN_000ad620 src/libs/unknown/func_000ad620.cpp
+FUN_0017cf30 src/libs/unknown/func_0017cf30.cpp
+FUN_0019f1f0 src/libs/unknown/func_0019f1f0.cpp
+FUN_000045a0 src/libs/unknown/func_000045a0.cpp

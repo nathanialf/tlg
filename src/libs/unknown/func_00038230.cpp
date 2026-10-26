@@ -3,6 +3,4 @@
 
 /* hknpMaskedShape::MaskWrapper's finish constructor: nothing loaded needs
  * fixing up, so only the vtable is set. */
-hknpMaskedShape::MaskWrapper::MaskWrapper(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
-{
-}
+hknpMaskedShape::MaskWrapper::MaskWrapper(hkFinishLoadedObjectFlag flag) : hknpShapeKeyMask(flag) {}

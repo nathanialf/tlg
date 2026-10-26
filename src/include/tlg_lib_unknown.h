@@ -35,7 +35,8 @@ struct Mode40Owner {
 struct Pair08Target; /* a u16 at +0x20 and a 16-byte sum at +0x40 */
 
 struct Pair08Owner {
-    u8 unknown0[2];
+    u8 unknown0;
+    u8 flags; /* bit 2 set and cleared by FUN_0002b390; derived name */
     u8 count;
     u8 unknown3[2];
     u8 state;
@@ -103,6 +104,8 @@ struct Values38Owner {
  * this-adjusting thunks of the overriders (or their folded bodies). Slot 8
  * returns a byte count (TwoBaseAllocator: FUN_000022d0, thunk FUN_00002300;
  * LargeBlockAllocator: FUN_00012e20, thunk FUN_00012e30). */
+class AllocatorInterface;
+
 class AllocatorBase /* derived name */
 {
   public:
@@ -115,6 +118,18 @@ class AllocatorBase /* derived name */
     virtual void blockFree(void *pointer, int numBytes) = 0; /* slot 3; derived name */
     virtual void *FUN_00008d70(int &numBytes);               /* slot 4; derived name */
     virtual void FUN_00008d80(void *pointer, int numBytes);  /* slot 5; derived name */
+    /* Slots 6 to 11, signatures not recovered (6 to 8 the defaults 0x8d90,
+     * 0x8e00 and 0x8e50, 9 the statistics, 11 the peak reset). */
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    /* Slot 12: the allocator's second interface, null by default (the
+     * shared 0x42d0); named after TwoBaseAllocator's overrider, which
+     * returns its second base. */
+    virtual AllocatorInterface *FUN_00001620();
 };
 
 /* The interface's slots 2 to 10 in their vtable order, each named after
@@ -337,7 +352,17 @@ struct MemorySystem {
     u8 unknown28[0xd8];
     /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
     BufferAllocator bufferAllocator; /* derived name */
+    u8 unknown130[0x6e30];
+    /* Set by the constructor from its fifth argument; bit 2 gives each
+     * thread its own allocator (FUN_0000c590). */
+    s32 flags; /* derived name */
 };
+
+struct hkMemoryRouter;
+
+/* Slot 13 of the memory system's vtable: with a thread allocator per
+ * thread (flags bit 2), runs slot 13 of the router's one. derived name. */
+void FUN_0000d080(MemorySystem *self, hkMemoryRouter &router); /* derived name */
 
 void FUN_0000d0a0(MemorySystem *self); /* derived name */
 
@@ -366,6 +391,39 @@ class PlainPolymorphic
  * int argument at +0x18 and +0x1c, clears the int at +0xc and the vector at
  * +0x30). The game code at 0xeaa625 sets +0xc to 1 through FUN_0003ea60;
  * FUN_0003ea80 returns the address of the vector. */
+/* A 12-byte record (derived name) kept in an array at +0xd0 (count at
+ * +0xd8) of the objects FUN_0004d650 and FUN_0005b680 grow, each new one
+ * built by the out-of-line constructor FUN_001618f0: the ids at +0 and +8
+ * start invalid (0x7fffffff), the u16 at +4 at zero; the caller then stores
+ * the first id. */
+struct Object001618f0 /* derived name */
+{
+    Object001618f0();
+
+    u32 first;  /* derived name */
+    u16 second; /* derived name */
+    u32 third;  /* derived name */
+};
+
+/* An object with an array of 0x90-byte entries at +0x20 (derived name):
+ * FUN_0005d6b0 works on the entry of an index with a pointer and an int. */
+struct Object0005d6b0; /* derived name */
+
+void FUN_0005d6b0(Object0005d6b0 *self, int index, const void *argument3,
+                  int argument4); /* derived name */
+
+/* The object whose FUN_00178580 the game calls (0xeb055f, 0xeb0e90): an
+ * index at +0xc into the entries of the object at +0x18 (derived names). */
+struct Object00178580 /* derived name */
+{
+    u8 unknown0[0xc];
+    s32 index; /* derived name */
+    u8 unknown10[8];
+    Object0005d6b0 *owner; /* derived name */
+};
+
+void FUN_00178580(Object00178580 *self, const void *argument); /* derived name */
+
 struct Object0003ea60 {
     u8 unknown0[0xc];
     s32 value;
@@ -536,6 +594,17 @@ class BlockListAllocator : public AllocatorBase /* derived name */
     u8 unknown8[0x18];
     MemoryStatistics statistics; /* derived name */
     void *blocks;                /* derived name */
+};
+
+/* A thread's allocator (derived name; vtable 0x168e460, address point
+ * 0x168e470, constructor FUN_000143a0): the memory system keeps one per
+ * thread, 0x1a8 bytes apart from its +0x550, and when its flags have bit 2
+ * hands the thread's one to the router as its temporary allocator (+0x58,
+ * FUN_0000c590). It adds slot 13 (0x14690) to the allocator's slots. */
+class ThreadMemory : public AllocatorBase /* derived name */
+{
+  public:
+    virtual void FUN_00014690(); /* vtable slot 13; derived name */
 };
 
 /* A union-find over node indices (derived name; the stage timer of its
@@ -738,7 +807,13 @@ int FUN_000056a0(hkJobQueue &queue, void *data, const hkJobQueueJob &jobIn,
  * the thread's (the %fs-relative slot at 0x16d80b8 the allocators read);
  * FUN_014aff00, in the game region, then gives the thread a 0x28-byte block
  * from the router's heap at +0x60, kept in the slot at 0x16d80d0. */
-struct hkMemoryRouter; /* derived name */
+struct hkMemoryRouter /* derived name */
+{
+    u8 unknown0[0x58];
+    /* The temporary allocator (FUN_0000c590 sets it), also the heap
+     * FUN_0000bcf0 frees through. */
+    AllocatorBase *temp58; /* derived name */
+};
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
 void FUN_014aff00();                       /* derived name */
