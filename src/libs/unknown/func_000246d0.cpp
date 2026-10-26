@@ -8,5 +8,5 @@ void FUN_000246d0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_000accf0(static_cast<hkMemoryMeshMaterial *>(object), flag);
+    new (object) hkMemoryMeshMaterial(flag);
 }

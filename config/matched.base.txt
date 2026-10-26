@@ -780,3 +780,10 @@ FUN_00089c70 src/libs/unknown/func_00089c70.cpp
 _ZN15hkxVertexBufferC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008a1a0.cpp
 FUN_0008af30 src/libs/unknown/func_0008af30.cpp
 FUN_0008cb10 src/libs/unknown/func_0008cb10.cpp
+_ZN15hkcdPlanarSolidC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00095800.cpp
+_ZN20hkcdPlanarCsgOperandC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009c0a0.cpp
+FUN_000a9f80 src/libs/unknown/func_000a9f80.cpp _GLOBAL__I_a
+_ZN21hkSkinnedRefMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000aa660.cpp
+_ZN20hkMemoryMeshMaterialC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000accf0.cpp
+_ZN25hkStorageSkinnedMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000ae680.cpp
+_ZN17hknpWorldSnapshotC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0015bf30.cpp

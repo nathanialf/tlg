@@ -739,11 +739,15 @@ LoadedImage *FUN_00188560(const char *fileName); /* derived name */
  * 0xa9140, slot 6 (FUN_000ad7b0) loads the file. */
 class ImageSource : public hkReferencedObject /* derived name */
 {
+  public:
+    ImageSource();
 };
 
 class FileImageSource : public ImageSource /* derived name */
 {
   public:
+    virtual ~FileImageSource();
+
     LoadedImage *FUN_000ad7b0(); /* vtable slot 6; derived name */
 
     hkStringPtr fileName; /* derived name */
@@ -882,6 +886,19 @@ int FUN_00005680(hkJobQueue &queue, void *data, hkJobQueueJob &jobIn,
                  hkJobQueueJob &jobOut); /* derived name */
 int FUN_000056a0(hkJobQueue &queue, void *data, const hkJobQueueJob &jobIn,
                  void *newJobOut); /* derived name */
+
+/* An allocator (derived name; vtable 0x168da00, address point 0x168da10,
+ * no type info) built by FUN_0000ed40 at +0 of the object FUN_0000bb60
+ * constructs, which then clears that object's +0x50 to +0x78: slots 0 and
+ * 1 the shared 0x4ac0, 2 to 6 its own (0xef00, 0xef70, 0xef40, 0xef70,
+ * 0xefd0), 7 to 12 the defaults. The pointer at +8 starts null. */
+class Allocator0000ed40 : public AllocatorBase /* derived name */
+{
+  public:
+    Allocator0000ed40();
+
+    void *pointer8; /* derived name */
+};
 
 /* The thread's memory router (derived name): FUN_0000bb40 makes the router
  * the thread's (the %fs-relative slot at 0x16d80b8 the allocators read);

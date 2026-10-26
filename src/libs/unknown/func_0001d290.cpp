@@ -8,5 +8,5 @@ void FUN_0001d290(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0009c0a0(static_cast<hkcdPlanarCsgOperand *>(object), flag);
+    new (object) hkcdPlanarCsgOperand(flag);
 }
