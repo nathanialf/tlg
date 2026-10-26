@@ -8,7 +8,7 @@
 void hkpFixedConstraintData::FUN_0007bea0(float newMaxImpulse) /* derived name */
 {
     atoms.setupStabilization.maxLinImpulse = newMaxImpulse;
-    if (newMaxImpulse >= 3.40282e+38f) {
+    if (newMaxImpulse >= HK_REAL_MAX) {
         atoms.ballSocket.enableLinearImpulseLimit = false;
     } else {
         atoms.ballSocket.enableLinearImpulseLimit = true;

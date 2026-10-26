@@ -36,7 +36,8 @@ struct Mode40Owner {
 struct Pair08Target; /* a u16 at +0x20 and a 16-byte sum at +0x40 */
 
 struct Pair08Owner {
-    u8 unknown0;
+    /* Bit 3 cleared and bit 5 set by FUN_0002b0c0. derived name. */
+    u8 flags0;
     u8 flags; /* bit 2 set and cleared by FUN_0002b390; derived name */
     u8 count;
     u8 type; /* indexes the tail sizes at 0x14b8690 (FUN_0002af30); derived name */
@@ -45,7 +46,15 @@ struct Pair08Owner {
     u8 unknown6[2];
     s32 first;
     s32 second;
-    u8 unknown10[0x28];
+    /* FUN_0002b0c0 sets the mode at +0x1d, 0xff at +0x1c and a float at
+     * +0x18, and bit 5 of flags0 for modes 2 and 3 when both ints at +0x10
+     * and +0x14 are nonzero. derived names. */
+    s32 value10;
+    s32 value14;
+    float value18;
+    u8 value1c;
+    u8 mode;
+    u8 unknown1e[0x1a];
     Pair08Target *target;
 };
 
@@ -687,6 +696,9 @@ struct FreeList /* derived name */
     void FUN_000186a0(u64 elementSize, u64 alignment, u64 blockSize, AllocatorBase *blockAllocator,
                       AllocatorBase *elementAllocator); /* derived name */
 
+    /* Every block given back (0x18770). */
+    ~FreeList();
+
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
 };
@@ -713,6 +725,10 @@ void FUN_00019440(const FreeList *self, MemoryStatistics &statistics); /* derive
 class FixedSizeAllocator : public AllocatorBase /* derived name */
 {
   public:
+    /* Slots 0 and 1 (0x14a50): the free list's blocks given back, then
+     * AllocatorBase's destructor (the empty 0x8d60). */
+    virtual ~FixedSizeAllocator();
+
     /* Sets the free list up with an alignment of at least 32 and no element
      * allocator (the caller at 0x1b92 passes 32, 8 and the block size). */
     void FUN_00014a80(u64 elementSize, u64 alignment, u64 blockSize,
@@ -1000,6 +1016,7 @@ class BufferedStreamReader : public hkReferencedObject /* derived name */
     hkBool isOk() const;                           /* vtable slot 5; derived name */
     BufferedStreamReader *FUN_000946f0();          /* vtable slot 9; derived name */
     hkResult FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
+    int FUN_00094720() const;                      /* vtable slot 11; derived name */
 
     StreamReader *stream;         /* derived name */
     StreamReader *seekableStream; /* derived name */
@@ -1269,5 +1286,92 @@ struct NodeEdgeLists /* derived name */
     hkArray<int> firstEdge;      /* derived name */
     hkArray<EdgeLinks> nextEdge; /* derived name */
 };
+
+/* The world's two tables of shape functions (derived names), filled by its
+ * constructor: from +0x58 (0x4a5b0 onward) and from +0x420 (0x4a850
+ * onward). Some entries are adaptors in the world's file that pass the
+ * table's arguments on to a function of another signature, keeping every
+ * register argument and re-widening the bool on the stack (cookbook 17):
+ * the +0x420 table's adaptors (0x52380 to 0x52d80) take ten arguments and
+ * drop the seventh, the +0x58 table's (0x56360 to 0x57050) take nine and
+ * pass all of them. The argument types are not recovered. */
+void FUN_000da720(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, bool argument7, void *argument8,
+                  void *argument9); /* derived name */
+void FUN_000ee260(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, bool argument7, void *argument8,
+                  void *argument9); /* derived name */
+void FUN_000f1ca0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, bool argument7, void *argument8,
+                  void *argument9); /* derived name */
+void FUN_00117280(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, bool argument7, void *argument8,
+                  void *argument9); /* derived name */
+void FUN_0012e7f0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, bool argument7, void *argument8,
+                  void *argument9); /* derived name */
+void FUN_000dcae0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_000f2d80(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_0011c290(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_001219f0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00123760(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_0012eda0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00136000(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_0014cd80(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00052380(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9, void *argument10); /* derived name */
+void FUN_00052600(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9, void *argument10); /* derived name */
+void FUN_00052880(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9, void *argument10); /* derived name */
+void FUN_00052b00(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9, void *argument10); /* derived name */
+void FUN_00052d80(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9, void *argument10); /* derived name */
+void FUN_00056360(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00056580(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_000567a0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_000569c0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00056be0(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00056e00(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00056e30(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
+void FUN_00057050(void *argument1, void *argument2, void *argument3, void *argument4,
+                  void *argument5, void *argument6, void *argument7, bool argument8,
+                  void *argument9); /* derived name */
 
 #endif

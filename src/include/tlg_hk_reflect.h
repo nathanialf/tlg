@@ -34,6 +34,11 @@ enum hkResult {
  * through a conditional branch (docs/DECISIONS.md D19). derived name. */
 #define HK_BREAKPOINT(id) __builtin_debugtrap()
 
+/* The largest float Havok uses (its HK_REAL_MAX, 3.40282e+38f: the bits
+ * 0x7f7fffee the constraint datas' slots 11 to 13 return and their breach
+ * tests compare with). */
+#define HK_REAL_MAX 3.40282e+38f
+
 /* The scalar helpers (derived names): the larger and the smaller of two
  * values by one comparison each, and a value clamped to a range through
  * both (0x7c3e0: vmaxss against zero, then vminss against one). */
@@ -216,6 +221,11 @@ struct hkMatrix3 {
      * rotations). */
     bool FUN_0000be80() const;
 };
+
+/* derived name: out = m times v, v's x, y and z broadcast and each scaling
+ * its column (0x10ef0; called by FUN_0003bc10 at 0x3bed4 and by the four
+ * shapes' functions from 0x524d0). */
+void FUN_00010ef0(Vec4 &out, const hkMatrix3 &m, const Vec4 &v);
 
 /* derived name: out = the transpose of m times v, each lane the dot product
  * of v's x, y and z with one column (0x10f20; FUN_0003bc10 calls it at
@@ -969,11 +979,26 @@ struct hknpVehicleTransmissionOutput /* derived name */
 class hknpVehicleDefaultTransmission : public hkReferencedObject
 {
   public:
-    hknpVehicleDefaultTransmission(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpVehicleDefaultTransmission(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), gearsRatio(flag), wheelsTorqueRatio(flag)
+    {
+    }
 
     bool FUN_00068130(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 8; derived name */
+    float FUN_00067ef0(
+        const hknpVehicleInstance *vehicle,
+        const hknpVehicleTransmissionOutput &output) const; /* vtable slot 10; derived name */
+
+    /* Members from the records at 0x1693960. */
+    float downshiftRPM;
+    float upshiftRPM;
+    float primaryTransmissionRatio;
+    float clutchDelayTime;
+    float reverseGearRatio;
+    hkArray<float> gearsRatio;
+    hkArray<float> wheelsTorqueRatio;
 };
 
 /* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback
@@ -2487,7 +2512,10 @@ class hknpWorldMaterialSlot : public hkSlot /* derived name */
   public:
     typedef void (hknpWorld::*Method)(hknpMaterialId id); /* derived name */
 
-    void FUN_00047d90(hknpMaterialId id); /* vtable slot 3; derived name */
+    /* Slot 2 (0x47d60, the body the slot vtables share): whether a
+     * member-function pointer of size bytes is the one held. */
+    int FUN_00047d60(const void *otherMethod, int size) const; /* vtable slot 2; derived name */
+    void FUN_00047d90(hknpMaterialId id);                      /* vtable slot 3; derived name */
 
     Method method; /* derived name */
 };
@@ -4276,6 +4304,8 @@ class hkpFixedConstraintData : public hkpConstraintData
     hkResult FUN_0007bfd0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007c000(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
+    void FUN_0007bf40(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     Atoms atoms;
 };

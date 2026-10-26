@@ -7,7 +7,7 @@
 void hkpBallAndSocketConstraintData::FUN_0007c350(hkBool wantRuntime,
                                                   ConstraintRuntimeInfo &infoOut) const
 {
-    if (wantRuntime || atoms.ballSocket.breachImpulse != 3.40282e+38f) {
+    if (wantRuntime || atoms.ballSocket.breachImpulse != HK_REAL_MAX) {
         infoOut.sizeOfExternalRuntime = 24;
         infoOut.numSolverResults = 3;
     } else {

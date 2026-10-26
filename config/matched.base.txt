@@ -999,3 +999,22 @@ FUN_00067b00 src/libs/unknown/func_00067b00.cpp
 FUN_000910a0 src/libs/unknown/func_000910a0.cpp _ZNK15BufferAllocator19getMemoryStatisticsER16MemoryStatistics
 FUN_00151de0 src/libs/unknown/func_00151de0.cpp
 FUN_0017a1f0 src/libs/unknown/func_0017a1f0.cpp _ZN13NodeEdgeListsC2Ev
+FUN_00047d60 src/libs/unknown/func_00047d60.cpp
+FUN_00067ef0 src/libs/unknown/func_00067ef0.cpp
+FUN_0007bf40 src/libs/unknown/func_0007bf40.cpp
+FUN_00094720 src/libs/unknown/func_00094720.cpp
+FUN_00010ef0 src/libs/unknown/func_00010ef0.cpp
+FUN_0002b0c0 src/libs/unknown/func_0002b0c0.cpp
+FUN_00052380 src/libs/unknown/func_00052380.cpp
+FUN_00052600 src/libs/unknown/func_00052600.cpp
+FUN_00052880 src/libs/unknown/func_00052880.cpp
+FUN_00052b00 src/libs/unknown/func_00052b00.cpp
+FUN_00052d80 src/libs/unknown/func_00052d80.cpp
+FUN_00056360 src/libs/unknown/func_00056360.cpp
+FUN_00056580 src/libs/unknown/func_00056580.cpp
+FUN_000567a0 src/libs/unknown/func_000567a0.cpp
+FUN_000569c0 src/libs/unknown/func_000569c0.cpp
+FUN_00056be0 src/libs/unknown/func_00056be0.cpp
+FUN_00056e00 src/libs/unknown/func_00056e00.cpp
+FUN_00056e30 src/libs/unknown/func_00056e30.cpp
+FUN_00057050 src/libs/unknown/func_00057050.cpp

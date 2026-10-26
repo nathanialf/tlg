@@ -5,5 +5,5 @@
  * 0x169fad0): no angular impulse limit, the largest float. */
 float hkpConstraintData::FUN_00082ba0() const /* derived name */
 {
-    return 3.40282e+38f;
+    return HK_REAL_MAX;
 }
