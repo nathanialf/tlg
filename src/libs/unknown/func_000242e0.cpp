@@ -8,5 +8,5 @@ void FUN_000242e0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_000aa4f0(static_cast<hkSkinBinding *>(object), flag);
+    new (object) hkSkinBinding(flag);
 }

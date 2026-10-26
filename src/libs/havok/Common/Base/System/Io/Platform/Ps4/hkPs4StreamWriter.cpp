@@ -16,12 +16,22 @@ class hkPs4StreamWriter /* derived name */
   public:
     virtual ~hkPs4StreamWriter();
 
+    void FUN_00091fe0();         /* vtable slot 7; derived name */
     hkBool FUN_00091ff0() const; /* vtable slot 5; derived name */
     int FUN_00092030() const;    /* vtable slot 10; derived name */
 
     u8 unknown8[4];
     SceFiosFH handle; /* derived name */
 };
+
+/* Flush: wait until what was written reaches the file, when the handle is
+ * valid. */
+void hkPs4StreamWriter::FUN_00091fe0() /* derived name */
+{
+    if (handle >= 0) {
+        sceFiosFHSyncSync(0, handle);
+    }
+}
 
 hkBool hkPs4StreamWriter::FUN_00091ff0() const /* derived name */
 {

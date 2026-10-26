@@ -29,6 +29,12 @@ enum hkResult {
  * constructors store it; the capacity is masked with 0x3fffffff before a
  * grow). Field names derived. */
 template <typename T> struct hkArray {
+    /* Drop the elements, keeping the storage. derived name. */
+    void clear()
+    {
+        size = 0;
+    }
+
     T *data;              /* derived name */
     int size;             /* derived name */
     int capacityAndFlags; /* derived name */
@@ -330,6 +336,17 @@ class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
     }
 };
 
+/* hkcdPlanarGeometryPolygonCollection (hkClass 0x57b9d70, built at 0x1c84f
+ * with parent hkcdPlanarGeometryPrimitivesCollection28's 0x57b9df0;
+ * vtable 0x16a3670): its finish constructor 0x95fb0 is out of
+ * line, jumped to by the finish callback FUN_0001c7d0 and called by the
+ * reflection initializer at 0x1c880. */
+class hkcdPlanarGeometryPolygonCollection : public hkcdPlanarGeometryPrimitivesCollection28
+{
+  public:
+    hkcdPlanarGeometryPolygonCollection(hkFinishLoadedObjectFlag flag);
+};
+
 /* hkcdPlanarSolid (vtable 0x16a3640, finish constructor FUN_00095800;
  * its own members not yet read) and its nested NodeStorage (type info
  * 0x57ba3b0, scoped name "hkcdPlanarSolid::NodeStorage", 0x38 bytes),
@@ -594,6 +611,15 @@ class hkxVertexVectorDataChannel : public hkReferencedObject
     hkxVertexVectorDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hkxSparselyAnimatedBool (type info 0x57c8280, size 0x30, hkClass parent
+ * hkReferencedObject, built at 0x8e2fd): the finish callback FUN_0008e280
+ * runs the inline finish constructor, nothing to fix up but the vtable. */
+class hkxSparselyAnimatedBool : public hkReferencedObject
+{
+  public:
+    hkxSparselyAnimatedBool(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
 class hkxSparselyAnimatedString : public hkReferencedObject
 {
   public:
@@ -701,27 +727,21 @@ class hknpTyremarksWheel : public hkReferencedObject
 
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
-class hkGeometry;                           /* FUN_00093c60, vtable 0x1692500 */
-struct hkcdPlanarGeometryPolygonCollection; /* FUN_00095fb0, vtable 0x16a3680 */
-struct hkcdPlanarGeometry;                  /* FUN_0009a860, vtable 0x16a3700 */
-struct hkcdPlanarCsgOperand;                /* FUN_0009c0a0, vtable 0x16a3740 */
-struct hkcdPlanarGeometryPlanesCollection;  /* FUN_0009c400, vtable 0x16a3780 */
-struct hkcdPlanarSolid;                     /* FUN_00095800, vtable 0x16a3640 */
-struct hkcdSimdTree;                        /* FUN_00021a20, vtable 0x1690d70 */
-struct hkcdStaticAabbTree;                  /* FUN_00022700, vtable 0x1690df0 */
-struct hkcdDynamicAabbTree;                 /* FUN_0009fc10, vtable 0x16a37c0 */
-class hkSkinnedRefMeshShape;                /* FUN_000aa660, vtable 0x16a38c0 */
-class hkMemoryMeshShape;                    /* FUN_0002a940, vtable 0x1692540 */
-class hkSkinBinding;                        /* FUN_000aa4f0, vtable 0x16a3860 */
-class hkMemoryMeshMaterial;                 /* FUN_000accf0, vtable 0x16a3920 */
-class hkStorageSkinnedMeshShape;            /* FUN_000ae680, vtable 0x16a3b00 */
-class hkMemoryMeshVertexBuffer;             /* FUN_000274e0, vtable 0x16921b0 */
-class hknpDynamicCompoundShape;             /* FUN_000469a0, vtable 0x1697ef0 */
-class hknpMaskedShape;                      /* FUN_00037b90, vtable 0x1693a90 */
+struct hkcdPlanarGeometry;                 /* FUN_0009a860, vtable 0x16a3700 */
+struct hkcdPlanarCsgOperand;               /* FUN_0009c0a0, vtable 0x16a3740 */
+struct hkcdPlanarGeometryPlanesCollection; /* FUN_0009c400, vtable 0x16a3780 */
+struct hkcdPlanarSolid;                    /* FUN_00095800, vtable 0x16a3640 */
+struct hkcdSimdTree;                       /* FUN_00021a20, vtable 0x1690d70 */
+struct hkcdStaticAabbTree;                 /* FUN_00022700, vtable 0x1690df0 */
+struct hkcdDynamicAabbTree;                /* FUN_0009fc10, vtable 0x16a37c0 */
+class hkSkinnedRefMeshShape;               /* FUN_000aa660, vtable 0x16a38c0 */
+class hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
+class hkMemoryMeshMaterial;                /* FUN_000accf0, vtable 0x16a3920 */
+class hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
+class hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
+class hknpDynamicCompoundShape;            /* FUN_000469a0, vtable 0x1697ef0 */
+class hknpMaskedShape;                     /* FUN_00037b90, vtable 0x1693a90 */
 
-void FUN_00093c60(hkGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00095fb0(hkcdPlanarGeometryPolygonCollection *self,
-                  hkFinishLoadedObjectFlag flag);                             /* derived name */
 void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);            /* derived name */
 void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag);   /* derived name */
 void FUN_0009c0a0(hkcdPlanarCsgOperand *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -733,7 +753,6 @@ void FUN_00022700(hkcdStaticAabbTree *self, hkFinishLoadedObjectFlag flag);    /
 void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag);   /* derived name */
 void FUN_000aa660(hkSkinnedRefMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0002a940(hkMemoryMeshShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
-void FUN_000aa4f0(hkSkinBinding *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_000accf0(hkMemoryMeshMaterial *self, hkFinishLoadedObjectFlag flag);  /* derived name */
 void FUN_000ae680(hkStorageSkinnedMeshShape *self,
                   hkFinishLoadedObjectFlag flag);                                 /* derived name */
@@ -892,6 +911,8 @@ struct hkMeshSection;
 class hkMeshShape : public hkReferencedObject
 {
   public:
+    hkMeshShape(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
     virtual void FUN_00000270();
     virtual void unknownVirtual3();
     virtual void FUN_000069a0();
@@ -2295,7 +2316,15 @@ class hkxVertexBuffer
     struct VertexData;
 };
 
-struct hkxMesh;
+/* hkxMesh (hkClass parent hkReferencedObject, built at 0x8924a): its
+ * finish constructor 0x8bea0 is out of line, jumped to by the finish
+ * callback FUN_00089140 and called by the reflection initializer at
+ * 0x892bd. */
+class hkxMesh : public hkReferencedObject
+{
+  public:
+    hkxMesh(hkFinishLoadedObjectFlag flag);
+};
 
 /* hkAlignSceneToNodeOptions: members from its record table at 0x16a18c0:
  * invert and the transform flags (hkBool) from +0xc, keyframe (hkInt32) at
@@ -2320,6 +2349,15 @@ class hkxMaterialShaderSet : public hkReferencedObject
     hkxMaterialShaderSet(hkFinishLoadedObjectFlag flag);
 };
 
+/* hkxLight (hkClass parent hkReferencedObject, built at 0x8c560): its
+ * finish callback FUN_0008c380 runs the inline finish constructor, which
+ * has nothing to fix up but the vtable. */
+class hkxLight : public hkReferencedObject
+{
+  public:
+    hkxLight(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
 /* hkxSkinBinding (hkClass parent hkReferencedObject): its finish
  * constructor, run by the finish callback FUN_0008a9b0, has nothing to fix
  * up but the vtable. */
@@ -2330,7 +2368,15 @@ class hkxSkinBinding : public hkReferencedObject
 };
 struct hkxVertexDescription;
 struct hkxVertexAnimation;
-struct hkxMeshSection;
+
+/* hkxMeshSection (hkClass parent hkReferencedObject, built at 0x8e07d):
+ * its finish callback FUN_0008e000 runs the inline finish constructor,
+ * which has nothing to fix up but the vtable. */
+class hkxMeshSection : public hkReferencedObject
+{
+  public:
+    hkxMeshSection(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
 
 /* hkxAttribute's members from its record table at 0x16a23e0: name
  * (hkStringPtr) at +0, value at +8. */
@@ -2408,7 +2454,6 @@ void FUN_0017f110(hkMemoryResourceHandle *self, hkFinishLoadedObjectFlag flag); 
 
 void FUN_00087cf0(hkxVertexBuffer::VertexData *self);                    /* derived name */
 void FUN_0008a1a0(hkxVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0008bea0(hkxMesh *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017d520(hkAlignSceneToNodeOptions *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0008a890(hkxSkinBinding *self);          /* derived name */
@@ -2416,6 +2461,7 @@ void FUN_0008a890(hkxSkinBinding *self);          /* derived name */
  * FUN_000aa370, runs the out-of-line FUN_000aa3d0, which restores the
  * vtable. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
  * complete destructor FUN_000ad910, runs the out-of-line FUN_000adba0. */
+class hkSkinBinding;
 void FUN_000aa3d0(hkSkinBinding *self);             /* derived name */
 void FUN_000adba0(hkStorageSkinnedMeshShape *self); /* derived name */
 
@@ -2679,10 +2725,13 @@ extern const hkClass D_57bd288; /* hkSkinBinding's hkClass */
  * pointer to hkMeshShape) at +0x10, worldFromBoneTransforms (array of
  * hkTransform) at +0x18, boneNames (array of hkStringPtr) at +0x28. Slots 5
  * to 9 forward to the skin (slot 5 folded onto 0xabf0, slot 6 onto 0x89f0;
- * 0xaa520, FUN_000aa530 the name, 0xaa540). */
+ * 0xaa520, FUN_000aa530 the name, 0xaa540). Its finish constructor 0xaa4f0
+ * is out of line, jumped to by the finish callback FUN_000242e0 and called
+ * by the reflection initializer at 0x24390. */
 class hkSkinBinding : public hkMeshShape
 {
   public:
+    hkSkinBinding(hkFinishLoadedObjectFlag flag);
     virtual ~hkSkinBinding();
 
     const hkClass *FUN_000242d0() const;             /* vtable slot 3; derived name */
@@ -2771,17 +2820,23 @@ class hknpDynamicCompoundShape
     const hkClass *FUN_000358a0() const; /* vtable slot 3; derived name */
 };
 
-/* hkGeometry, polymorphic (vtable 0x1692500): members from its record table
- * at 0x168ea40, vertices (array of hkVector4) at +0x10 and triangles (array
- * of hkGeometry::Triangle, 16 bytes each) at +0x20. */
-class hkGeometry
+/* hkGeometry, polymorphic (vtable 0x1692500; hkClass parent
+ * hkReferencedObject, built at 0x1a5b5): members from its record table at
+ * 0x168ea40, vertices (array of hkVector4) at +0x10 and triangles (array of
+ * hkGeometry::Triangle, 16 bytes each) at +0x20. Its finish constructor
+ * 0x93c60 is out of line, jumped to by the finish callback FUN_0001a4e0 and
+ * called by the reflection initializer at 0x1a633; FUN_00093c70 empties both
+ * arrays (called at 0x42340, 0x104028 and 0x10415b). */
+class hkGeometry : public hkReferencedObject
 {
   public:
     struct Triangle;
 
+    hkGeometry(hkFinishLoadedObjectFlag flag);
     virtual ~hkGeometry();
 
-    u8 unknown8[8];
+    void FUN_00093c70(); /* derived name */
+
     hkArray<Vec4> vertices;
     hkArray<Triangle> triangles;
 };
@@ -3171,7 +3226,23 @@ struct PointerMap /* derived name */
  * 0x57c8960, created by 0x184f40), hkVtableClassRegistry (record 0x57c8918,
  * instance 0x57c8910, created by 0x1845b0) and hkBuiltinTypeRegistry
  * (record 0x57c88a0, instance 0x57c8898, created by 0x17ef90). */
-struct hkTypeInfo;
+/* A type info, the record each reflected class's static initializer fills
+ * (docs/DECISIONS.md D12): the type name, the scoped name, the finish and
+ * cleanup callbacks a loaded object is run through, the vtable address point
+ * and the object size. derived names. */
+struct hkTypeInfo {
+    typedef void (*FinishLoadedObjectFunction)(void *object, int finishing); /* derived name */
+    typedef void (*CleanupLoadedObjectFunction)(void *object);               /* derived name */
+
+    void FUN_00092fc0(void *object) const; /* derived name */
+
+    const char *typeName;                        /* derived name */
+    const char *scopedName;                      /* derived name */
+    FinishLoadedObjectFunction finishFunction;   /* derived name */
+    CleanupLoadedObjectFunction cleanupFunction; /* derived name */
+    const void *vtable;                          /* derived name */
+    hkUlong size;                                /* derived name */
+};
 
 /* hkTypeInfoRegistry, 0x30 bytes, vtable address point 0x16a60c0: the type
  * infos by type name at +0x10 and two ints at +0x28 (1 and 1 on creation;

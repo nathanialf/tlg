@@ -8,5 +8,5 @@ void FUN_0001c7d0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00095fb0(static_cast<hkcdPlanarGeometryPolygonCollection *>(object), flag);
+    new (object) hkcdPlanarGeometryPolygonCollection(flag);
 }

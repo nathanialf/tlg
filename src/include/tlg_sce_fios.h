@@ -7,9 +7,11 @@
 
 typedef int SceFiosFH;      /* derived name: a 32-bit file handle */
 typedef long SceFiosOffset; /* derived name: a 64-bit file offset */
+struct SceFiosOpAttr;       /* derived name: the operation's attributes, null for the defaults */
 
 extern "C" {
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
+int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);
 }
 
 #endif
