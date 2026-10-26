@@ -530,6 +530,17 @@ their destructors and by the reader FUN_0019da90 at 0x19e1eb, 0x19e5de,
 last two inside FUN_00000ee0, which the round's report did not list).
 `tools/vtable_names.py --check`: 13 derived rows, 0 failing.
 
+**Addendum, 2026-10-26 (round 25 harvest).** Two rows: Object00061f00
+0x16997f0 (derived; stored only at 0x61f07 by its constructor, which the
+game calls at 0xea9d11; slots 0x3b640, 0x4060, 0x270, 0x42d0, 0x69a0,
+0x58a0, 0x61f40, 0x3b640, 0x1c1e0, 0x1c1e0) and OffsetOnlyStreamWriter
+0x16a6af0 (derived; stored only at 0x19f677 by its constructor, called at
+0x19ad01 and 0x19c76d on stack objects; twelve slots, 0x17de10, 0x1ba30,
+0x270, 0x42d0, 0x69a0, 0x40b0, 0x19f6a0, 0x270, 0x40b0, 0x19f6d0, 0x34840,
+0x1bad0; the round's report stopped at slot 9, and the relocated pointer
+after slot 11 points at the string "name", the next object). `--check`: 15
+derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -906,6 +917,29 @@ D6's two-region statement is read with this exception.
 **Trigger to revisit.** The probe naming the stretch's release (then this
 entry records it and the prefix), a function in a stretch matching under the
 other generation's compiler, or a new mark that splits the votes.
+
+
+**Addendum, 2026-10-26 (round 25 harvest): a third stretch, [0x1a3a70,
+0x1a3e00).** FUN_001a3a80 (29 bytes, the texture container's
+size-and-alignment helper the game's loader calls at 0xbd9689 and 0xbda877)
+compiles to the same nine instructions under every release, in the base's
+order only under a compiler with the btver2 machine model and the default
+pre-RA scheduler: measured by the supervisor over the releases on disk,
+under the library line, 3.3 (prebuilt and from source), 3.4, 3.4.2 and
+3.5.2 differ (4/9 and 3/9 instructions in place), 3.6.2, 3.7.1, 3.8.1,
+3.9.1 and 4.0.0 are byte-equal; 3.6.2 with `-march=btver1`, `x86-64`,
+`bdver1` or `core2` differs; 4.0.0 is byte-equal with the PS4 target and
+differs the moment the game line's `-mllvm -pre-RA-sched=list-ilp` is
+added, under either target. The census has no mark in [0x1a3510+0xae,
+0x1a3e00); the functions from 0x1a3ac0 to 0x1a3c50 carry Sony's GNM error
+code 0x80d30000 (at 0x1a3ac0, 0x1a3b60, 0x1a3bb0, 0x1a3c00, 0x1a3c71,
+0x1a3cc6, 0x1a3d9d) and 0x1a3c50 calls 0x1a6f10 to 0x1a7120 in the game
+region. Reading: Sony's texture-container helpers, built by a 3.6-or-later
+compiler with its default scheduler (neither the library line nor the game
+line). The stretch joins the two above: not claimable under `src/libs/`,
+left out of the queue until a ruling names its compiler and prefix.
+FUN_001a3a70 (11 bytes, matched, alike under every release) stays as the
+six tiny rows do. FUN_001a3a80 keeps its NONMATCHING note.
 
 ## D23. The linker's TLS relaxation (general dynamic to initial exec) is reproduced in the gate (2026-10-26)
 

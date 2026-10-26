@@ -867,3 +867,5 @@ FUN_000aaaf0 src/libs/unknown/func_000aaaf0.cpp
 FUN_0017bb20 src/libs/unknown/func_0017bb20.cpp
 FUN_001a0470 src/libs/unknown/func_001a0470.cpp _ZN8RawImageC2Ev
 FUN_0002d770 src/libs/unknown/func_0002d770.cpp
+FUN_00061f00 src/libs/unknown/func_00061f00.cpp _ZN14Object00061f00C2Ev
+FUN_0019f670 src/libs/unknown/func_0019f670.cpp _ZN22OffsetOnlyStreamWriterC2Ev
