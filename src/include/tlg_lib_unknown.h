@@ -285,13 +285,43 @@ class MemoryExtendedInterface /* derived name */
     virtual void garbageCollect() = 0; /* derived name */
 };
 
+/* An allocator over one fixed buffer (derived name; vtable address point
+ * 0x16a3470, slots 0 and 1 0x909a0 and 0x90930, slots 2 to 5 0x90b20 to
+ * 0x90dc0): the buffer's start at +8 and end at +0x10, the end of what is in
+ * use at +0x18 and the peak use at +0x28. Slot 9 (0x910a0) reports the
+ * buffer size, the free and used bytes and the peak; slot 11 (0x910d0)
+ * resets the peak to the current use. FUN_00091090, not a slot, tells
+ * whether the whole buffer could hold a block of a size; the memory system's
+ * wrapper at 0xd270 asks it of the allocator at its +0x100. */
+class BufferAllocator : public AllocatorBase /* derived name */
+{
+  public:
+    void *blockAlloc(int numBytes);              /* slot 2 (0x90b20); derived name */
+    void blockFree(void *pointer, int numBytes); /* slot 3 (0x90d90); derived name */
+    bool FUN_00091090(int numBytes) const;       /* derived name */
+    void FUN_000910d0();                         /* vtable slot 11; derived name */
+
+    char *bufferStart; /* derived name */
+    char *bufferEnd;   /* derived name */
+    char *currentEnd;  /* derived name */
+    u8 unknown20[8];
+    hkUlong peakUse; /* derived name */
+};
+
 struct MemorySystem {
     u8 unknown0[0x18];
     MemorySystemAllocator *allocator18;
     MemoryExtendedInterface *extended20; /* derived name */
+    u8 unknown28[0xd8];
+    /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
+    BufferAllocator bufferAllocator; /* derived name */
 };
 
 void FUN_0000d0a0(MemorySystem *self); /* derived name */
+
+/* Slot 8 of the memory system's vtable: whether its buffer allocator could
+ * hold a block of a size. derived name. */
+bool FUN_0000d270(MemorySystem *self, int numBytes); /* derived name */
 
 void FUN_0000c360(MemorySystem *self); /* derived name */
 
@@ -567,27 +597,6 @@ class StackTracer /* derived name */
                       void *context) const; /* derived name */
 };
 
-/* An allocator over one fixed buffer (derived name; vtable address point
- * 0x16a3470, slots 0 and 1 0x909a0 and 0x90930, slots 2 to 5 0x90b20 to
- * 0x90dc0): the buffer's start at +8 and end at +0x10, the end of what is in
- * use at +0x18 and the peak use at +0x28. Slot 9 (0x910a0) reports the
- * buffer size, the free and used bytes and the peak; slot 11 (0x910d0)
- * resets the peak to the current use. FUN_00091090, not a slot, tells
- * whether the whole buffer could hold a block of a size; the memory system's
- * wrapper at 0xd270 asks it of the allocator at its +0x100. */
-class BufferAllocator : public AllocatorBase /* derived name */
-{
-  public:
-    bool FUN_00091090(int numBytes) const; /* derived name */
-    void FUN_000910d0();                   /* vtable slot 11; derived name */
-
-    char *bufferStart; /* derived name */
-    char *bufferEnd;   /* derived name */
-    char *currentEnd;  /* derived name */
-    u8 unknown20[8];
-    hkUlong peakUse; /* derived name */
-};
-
 /* An image loaded from a file (derived name): FUN_00188560 opens the file a
  * name gives, checks its extension against "tga" and returns what the
  * loader at 0x1887a0 builds, or null. */
@@ -638,5 +647,55 @@ class BufferedStreamReader : public hkReferencedObject /* derived name */
     int numBuffered;              /* derived name */
     int bufferSize;               /* derived name */
 };
+
+/* A job queue (derived names): its constructor 0x56c0 sets the pop and
+ * finish functions at +0x18 and +0x20 to the dispatchers FUN_00005680 and
+ * FUN_000056a0, and gives each job type in use (the count at +0x28) an
+ * entry of 32 bytes from +0x130 whose pop and finish functions default to
+ * 0x42d0 (returns 0) and 0x58a0 (returns 1). The queue calls the pop
+ * function with a job and an output job (0x5155, the result compared with
+ * 1) and the finish function with the data at +0x10, a job and an output
+ * (0x62a0). A job's type is its byte at +1. */
+struct hkJobQueueJob /* derived name */
+{
+    u8 jobSubType; /* derived name */
+    u8 jobType;    /* derived name */
+};
+
+struct hkJobQueue /* derived name */
+{
+    typedef int (*JobPopFunc)(hkJobQueue &queue, void *data, hkJobQueueJob &jobIn,
+                              hkJobQueueJob &jobOut); /* derived name */
+    typedef int (*FinishJobFunc)(hkJobQueue &queue, void *data, const hkJobQueueJob &jobIn,
+                                 void *newJobOut); /* derived name */
+
+    struct CustomJobType /* derived name */
+    {
+        u64 unknown0;
+        u32 unknown8;
+        JobPopFunc popJobFunc;       /* derived name */
+        FinishJobFunc finishJobFunc; /* derived name */
+    };
+
+    u8 unknown0[0x18];
+    JobPopFunc popJobFunc;       /* derived name */
+    FinishJobFunc finishJobFunc; /* derived name */
+    u8 unknown28[0x108];
+    CustomJobType customJobs[15]; /* derived name */
+};
+
+int FUN_00005680(hkJobQueue &queue, void *data, hkJobQueueJob &jobIn,
+                 hkJobQueueJob &jobOut); /* derived name */
+int FUN_000056a0(hkJobQueue &queue, void *data, const hkJobQueueJob &jobIn,
+                 void *newJobOut); /* derived name */
+
+/* The thread's memory router (derived name): FUN_0000bb40 makes the router
+ * the thread's (the %fs-relative slot at 0x16d80b8 the allocators read);
+ * FUN_014aff00, in the game region, then gives the thread a 0x28-byte block
+ * from the router's heap at +0x60, kept in the slot at 0x16d80d0. */
+struct hkMemoryRouter; /* derived name */
+
+void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
+void FUN_014aff00();                       /* derived name */
 
 #endif

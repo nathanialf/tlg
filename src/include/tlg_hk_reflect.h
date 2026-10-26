@@ -116,6 +116,59 @@ bool FUN_00004210(const hkClass *self, const hkClass *other);
 struct hkClassEnum;
 
 struct hkClassMember {
+    /* The member types, the reflection's own item names (0x14b6dd9 onward),
+     * in their order. */
+    enum Type {
+        TYPE_VOID,
+        TYPE_BOOL,
+        TYPE_CHAR,
+        TYPE_INT8,
+        TYPE_UINT8,
+        TYPE_INT16,
+        TYPE_UINT16,
+        TYPE_INT32,
+        TYPE_UINT32,
+        TYPE_INT64,
+        TYPE_UINT64,
+        TYPE_REAL,
+        TYPE_VECTOR4,
+        TYPE_QUATERNION,
+        TYPE_MATRIX3,
+        TYPE_ROTATION,
+        TYPE_QSTRANSFORM,
+        TYPE_MATRIX4,
+        TYPE_TRANSFORM,
+        TYPE_ZERO,
+        TYPE_POINTER,
+        TYPE_FUNCTIONPOINTER,
+        TYPE_ARRAY,
+        TYPE_INPLACEARRAY,
+        TYPE_ENUM,
+        TYPE_STRUCT,
+        TYPE_SIMPLEARRAY,
+        TYPE_HOMOGENEOUSARRAY,
+        TYPE_VARIANT,
+        TYPE_CSTRING,
+        TYPE_ULONG,
+        TYPE_FLAGS,
+        TYPE_HALF,
+        TYPE_STRINGPTR,
+        TYPE_RELARRAY,
+        TYPE_MAX,
+    };
+
+    /* A type's name, size and alignment (derived names): 24-byte rows of the
+     * table at 0x16dc150, from TYPE_VOID ("void", -1, -1) on; the name of
+     * TYPE_STRINGPTR is the "hkStringPtr" at 0x14b30e4. */
+    struct TypeProperties {
+        u8 type;          /* derived name */
+        const char *name; /* derived name */
+        s16 size;         /* derived name */
+        s16 align;        /* derived name */
+    };
+
+    static const TypeProperties &FUN_00007d40(Type type); /* derived name */
+
     const char *name;
     const hkClass *structClass;   /* reflected as "class"; derived name */
     const hkClassEnum *enumClass; /* reflected as "enum"; derived name */
@@ -125,6 +178,8 @@ struct hkClassMember {
     u16 flags;
     u16 offset;
 };
+
+extern const hkClassMember::TypeProperties D_16dc150[]; /* the member type table */
 
 /* An accessor of one member of an object (derived name): the member's
  * address at +0 (built by FUN_00184150 from the object and the record's
@@ -1103,6 +1158,11 @@ struct hkAabb {
     Vec4 max; /* derived name */
 };
 
+/* derived name: the bounds of an AABB under a transform (0x94060: the
+ * centre transformed, the half extents through the rotation's absolute
+ * values); the compound and LOD shapes' slot 7 calls it on their own. */
+void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut); /* derived name */
+
 /* hknpCompressedMeshShapeTree (type info 0x57be2f0, size 0xa0) and the
  * hkcdStaticMeshTree instance it is built on (type info 0x57be570) register
  * one finish callback; the finish constructor is the shared empty body. Its
@@ -1240,7 +1300,8 @@ class hknpShape : public hkReferencedObject
 
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
-    virtual void unknownVirtual7(const Mat4 &transform, Vec4 *boundsOut) const;
+    /* Slot 7: the shape's bounds under a transform. */
+    virtual void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const;
     virtual int unknownVirtual8() const;
     virtual int unknownVirtual9() const;
     virtual const Vec4 *unknownVirtual10(Vec4 *buffer, int bufferSize) const;
@@ -1301,7 +1362,7 @@ class hknpDecoratorShape : public hknpShape
     virtual ~hknpDecoratorShape();
 
     void FUN_0003b120(const Mat4 &transform,
-                      Vec4 *boundsOut) const;                     /* vtable slot 7; derived name */
+                      hkAabb &aabbOut) const;                     /* vtable slot 7; derived name */
     int FUN_0003b280() const;                                     /* vtable slot 8; derived name */
     int FUN_0003b130() const;                                     /* vtable slot 9; derived name */
     const Vec4 *FUN_0003b140(Vec4 *buffer, int bufferSize) const; /* vtable slot 10; derived name */
@@ -2873,6 +2934,9 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
     virtual hkBool isOk() const;                     /* vtable slot 5; derived name */
     virtual int write(const void *buffer, int size); /* vtable slot 6; derived name */
     virtual void flush();                            /* vtable slot 7; derived name */
+    /* Slot 8: the buffered writer asks the stream it buffers (FUN_00009280)
+     * and answers true without one. */
+    virtual hkBool unknownVirtual8() const;
 };
 
 /* An output archive over a stream writer (derived name): a reference-counted
@@ -2935,10 +2999,16 @@ struct hknpReservedEvent /* derived name */
  * of its vtable (address point 0x168d220, FUN_00008ea0) returns it. */
 extern const hkClass D_57b7fe8; /* hkBufferedStreamWriter's hkClass */
 
-class hkBufferedStreamWriter
+/* Its slots 5 to 7 (0x9260, 0x90f0, 0x91f0) are the stream writer's; its
+ * hkClass has no parent (0x9429), the stream writer not being reflected. The
+ * stream it buffers is at +0x10. */
+class hkBufferedStreamWriter : public hkStreamWriter
 {
   public:
-    const hkClass *FUN_00008ea0() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_00008ea0 */
+    hkBool FUN_00009280() const;         /* vtable slot 8; derived name */
+
+    hkStreamWriter *stream; /* derived name */
 };
 
 /* hkSkinnedRefMeshShape: its hkClass at 0x57bcd20 is built by the
@@ -3165,8 +3235,23 @@ class hknpCompoundShape : public hknpCompositeShape
     virtual ~hknpCompoundShape();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000418b0 */
-    virtual void updateAabb() = 0;       /* slot 31; derived name */
+    void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00041870 */
+    virtual void updateAabb() = 0;                                      /* slot 31; derived name */
     virtual void unknownVirtual32() = 0;
+
+    u8 unknown28[0x58];
+    /* The AABB slot 7 transforms (updateAabb recomputes it). */
+    hkAabb aabb; /* derived name */
+};
+
+/* hknpLodShape (type info 0x57c05b8, parent hknpCompositeShape: its finish
+ * constructor FUN_00068160 stores hknpCompositeShape's vtable before its own
+ * 0x1699c00): slot 7 (FUN_00068350) transforms the AABB at +0x110. */
+struct hknpLodShape : public hknpCompositeShape {
+    void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
+
+    u8 unknown28[0xe8];
+    hkAabb aabb; /* derived name */
 };
 
 /* hkxBlobMeshShape: its hkClass at 0x57c5e78 is built by the reflection initializer at

@@ -4,7 +4,7 @@
 /* derived name: slot 7 of hknpDecoratorShape's vtable (address point
  * 0x16958e0) forwards to the same slot of the wrapped shape at +0x28. */
 void hknpDecoratorShape::FUN_0003b120(const Mat4 &transform,
-                                      Vec4 *boundsOut) const /* derived name */
+                                      hkAabb &aabbOut) const /* derived name */
 {
-    coreShape->unknownVirtual7(transform, boundsOut);
+    coreShape->unknownVirtual7(transform, aabbOut);
 }

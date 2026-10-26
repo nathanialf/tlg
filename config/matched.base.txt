@@ -307,7 +307,7 @@ FUN_00003580 src/libs/unknown/leaf_00003580.cpp _ZNK16TwoBaseAllocator12FUN_0000
 FUN_00003590 src/libs/unknown/leaf_00003580.cpp _ZThn8_NK16TwoBaseAllocator12FUN_00003580Ev
 FUN_000075d0 src/libs/unknown/leaf_000075d0.cpp _ZN12Pool0000788012FUN_000075d0Ev
 FUN_00008a20 src/libs/unknown/leaf_00008a20.cpp _ZNK9hkOstream12getClassTypeEv
-FUN_00008ea0 src/libs/unknown/leaf_00008ea0.cpp
+FUN_00008ea0 src/libs/unknown/leaf_00008ea0.cpp _ZNK22hkBufferedStreamWriter12getClassTypeEv
 FUN_0000e3d0 src/libs/unknown/leaf_0000e3d0.cpp
 FUN_0000f080 src/libs/unknown/leaf_0000f080.cpp
 FUN_00012e20 src/libs/unknown/leaf_00012e20.cpp _ZNK19LargeBlockAllocator14allocatedBytesEv
@@ -509,7 +509,7 @@ FUN_000260a0 src/libs/unknown/func_000260a0.cpp _ZN18hkMeshVertexBuffer12FUN_000
 FUN_000260b0 src/libs/unknown/func_000260b0.cpp _ZN18hkMeshVertexBuffer12FUN_000260b0ERKNS_14LockedVerticesEiPKf
 FUN_000260c0 src/libs/unknown/func_000260c0.cpp _ZN18hkMeshVertexBuffer12FUN_000260c0ERKNS_14LockedVerticesEiPi
 FUN_000260d0 src/libs/unknown/func_000260d0.cpp _ZN18hkMeshVertexBuffer12FUN_000260d0ERKNS_14LockedVerticesEiPKi
-FUN_0003b120 src/libs/unknown/func_0003b120.cpp _ZNK18hknpDecoratorShape12FUN_0003b120ERK4Mat4PDv4_f
+FUN_0003b120 src/libs/unknown/func_0003b120.cpp _ZNK18hknpDecoratorShape12FUN_0003b120ERK4Mat4R6hkAabb
 FUN_0003b140 src/libs/unknown/func_0003b140.cpp _ZNK18hknpDecoratorShape12FUN_0003b140EPDv4_fi
 FUN_0003b150 src/libs/unknown/func_0003b150.cpp _ZNK18hknpDecoratorShape12FUN_0003b150ERKDv4_fPS0_
 FUN_0003b160 src/libs/unknown/func_0003b160.cpp _ZNK18hknpDecoratorShape12FUN_0003b160EPKhiPDv4_f
@@ -694,3 +694,10 @@ FUN_0007a590 src/libs/unknown/leaf_0007a590.cpp
 FUN_00090830 src/libs/unknown/func_00090830.cpp
 FUN_00092f90 src/libs/unknown/func_00092f90.cpp
 FUN_00165990 src/libs/unknown/func_00165990.cpp
+FUN_00005680 src/libs/unknown/func_00005680.cpp
+FUN_000056a0 src/libs/unknown/func_000056a0.cpp
+FUN_00009a60 src/libs/unknown/func_00009a60.cpp
+FUN_00009280 src/libs/unknown/func_00009280.cpp
+FUN_0000d270 src/libs/unknown/func_0000d270.cpp
+FUN_00041870 src/libs/unknown/func_00041870.cpp _ZNK17hknpCompoundShape15unknownVirtual7ERK4Mat4R6hkAabb
+FUN_00068350 src/libs/unknown/func_00068350.cpp _ZNK12hknpLodShape15unknownVirtual7ERK4Mat4R6hkAabb
