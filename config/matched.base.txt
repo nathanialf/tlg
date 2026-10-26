@@ -550,7 +550,7 @@ FUN_000836c0 src/libs/unknown/leaf_000836c0.cpp _ZNK30hkpRackAndPinionConstraint
 FUN_00083a10 src/libs/unknown/leaf_00083a10.cpp _ZNK32hkpLinearClearanceConstraintData12FUN_00083a10E6hkBoolR21ConstraintRuntimeInfo
 FUN_000910e0 src/libs/unknown/func_000910e0.cpp
 FUN_00162540 src/libs/unknown/leaf_00162540.cpp _ZN19hknpVehicleInstance12FUN_00162540ERP10hknpBodyIdRi
-FUN_0017b990 src/libs/unknown/leaf_0017b990.cpp _ZNK21ConstraintData16a5d3012FUN_0017b990E6hkBoolR21ConstraintRuntimeInfo
+FUN_0017b990 src/libs/unknown/leaf_0017b990.cpp
 FUN_00184420 src/libs/unknown/leaf_00184420.cpp _ZNK21hkVtableClassRegistry12FUN_00184420EPKv
 FUN_000002c0 src/libs/unknown/func_000002c0.cpp
 FUN_0000dc40 src/libs/unknown/func_0000dc40.cpp _ZN12hkUuidObjectC2E24hkFinishLoadedObjectFlag
@@ -863,3 +863,7 @@ _ZN26hkBlockStreamCommandWriterC1Ev src/libs/unknown/func_000904c0.cpp
 FUN_000938a0 src/libs/unknown/func_000938a0.cpp
 FUN_00094df0 src/libs/unknown/func_00094df0.cpp
 _ZN19hkcdDynamicAabbTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009fc10.cpp
+FUN_000aaaf0 src/libs/unknown/func_000aaaf0.cpp
+FUN_0017bb20 src/libs/unknown/func_0017bb20.cpp
+FUN_001a0470 src/libs/unknown/func_001a0470.cpp _ZN8RawImageC2Ev
+FUN_0002d770 src/libs/unknown/func_0002d770.cpp

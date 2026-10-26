@@ -1364,9 +1364,31 @@ class hkMeshShape : public hkReferencedObject
 
 /* The vertex buffer helpers of hkMeshVertexBufferUtil.cpp (the homes row of
  * FUN_000ab8d0; class name from the file name, derived). */
+/* The record (derived names): 32 buffer descriptions of 24 bytes from +0
+ * (the element's start, its stride, then the element itself at +0xc, its
+ * data type and value count first, as 0xaab10 reads them), the buffer count
+ * at +0x300 and the vertex count at +0x304. */
+struct hkMeshVertexBuffer::LockedVertices /* derived name */
+{
+    struct Buffer /* derived name */
+    {
+        void *start;                     /* derived name */
+        int stride;                      /* derived name */
+        hkVertexFormat::Element element; /* derived name */
+    };
+
+    Buffer buffers[32]; /* derived name */
+    int numBuffers;     /* derived name */
+    int numVertices;    /* derived name */
+};
+
 class hkMeshVertexBufferUtil /* derived name */
 {
   public:
+    /* An element's values as floats, from one buffer description, for a
+     * number of vertices (0xaab10). derived name. */
+    static hkResult FUN_000aab10(const hkMeshVertexBuffer::LockedVertices::Buffer &buffer,
+                                 float *values, int numVertices);
     static hkResult FUN_000aaaf0(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
                                  int elementIndex, float *values); /* derived name */
     static hkResult FUN_000aae70(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
@@ -1920,6 +1942,20 @@ class hknpWorldObject6c0 : public hknpWorldObject6c0Base /* derived name */
 {
   public:
     hknpWorldObject6c0();
+};
+
+/* The reference-counted object at +0x380 of the world (derived names: no
+ * type info names its vtable 0x16926d0, address point 0x16926e0), 0x10
+ * bytes, built by the world's constructor at 0x49c39. Its slot 15
+ * (FUN_0002d770) sets the two floats at 0x16dc5e0 and 0x16dc5e4 (1 and -0.05
+ * in the image), the second negated; slot 14 (0x31320) reads both. */
+extern float D_16dc5e0; /* derived name */
+extern float D_16dc5e4; /* derived name */
+
+class hknpWorldObject380 : public hkReferencedObject /* derived name */
+{
+  public:
+    void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
 };
 
 struct hknpWorldObject4f8 /* derived name */
@@ -2994,26 +3030,18 @@ class hkpRackAndPinionConstraintData
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
-/* Two constraint data classes with no name found (no type-info registration
- * holds their vtables; slot 3 is the shared 0x42d0). ConstraintData169ffe0:
+/* A constraint data class with no name found (no type-info registration
+ * holds its vtable; slot 3 is the shared 0x42d0). ConstraintData169ffe0:
  * address point 0x169ffe0, slot 5 returns 26, 0xc0 bytes, built by the
  * constructor 0x831a0 when 0x79b63 copies 0xa0 bytes of atoms into one.
- * ConstraintData16a5d30: address point 0x16a5d30, constructor 0x17b170. */
+ * (The class of address point 0x16a5d30, constructor 0x17b170, is
+ * hkp6DofConstraintData, its type info's vtable.) */
 class ConstraintData169ffe0 /* derived name */
 {
   public:
     virtual ~ConstraintData169ffe0();
 
     void FUN_000832b0(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
-};
-
-class ConstraintData16a5d30 /* derived name */
-{
-  public:
-    virtual ~ConstraintData16a5d30();
-
-    void FUN_0017b990(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -3561,18 +3589,30 @@ class hkpWheelFrictionConstraintData
 class hkp6DofConstraintData
 {
   public:
+    /* MotorIndex, the class's first enum (records from 0x169fa70): its
+     * items MOTOR_TWIST, MOTOR_SWING0, MOTOR_SWING1 and MOTOR_ALL. */
+    enum MotorIndex { MOTOR_TWIST = 0, MOTOR_SWING0 = 1, MOTOR_SWING1 = 2, MOTOR_ALL = 3 };
+
     struct Blueprints {
-        u8 unknown0[0x1f0]; /* linearIsFixed to linearMotor2 */
+        u8 unknown0[0xb0]; /* linearIsFixed to setupStabilization */
+        hkpRagdollMotorConstraintAtom ragdollMotors;
+        u8 unknown110[0xe0]; /* angFriction to linearMotor2 */
         hkpBallSocketConstraintAtom ballSocket;
     };
 
     virtual ~hkp6DofConstraintData();
+
+    /* An angular motor by index; MOTOR_ALL gives the twist motor (0x17bb20;
+     * the constraint's builder at 0x79bd5 asks for each). derived name. */
+    hkpConstraintMotor *FUN_0017bb20(MotorIndex index) const;
 
     void FUN_0017b910(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0017b920() const;                    /* vtable slot 13; derived name */
     void FUN_0017b930(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0017b950() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0017bb70(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0017b990(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Blueprints blueprints;
@@ -4071,6 +4111,22 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
     /* Slot 8: the buffered writer asks the stream it buffers (FUN_00009280)
      * and answers true without one. */
     virtual hkBool unknownVirtual8() const;
+};
+
+/* A stream writer that only counts (derived name; vtable 0x16a6af0, address
+ * point 0x16a6b00, no type info; constructor FUN_0019f670, built on the stack
+ * at 0x19ad01 and 0x19c76d): the write position at +0xc and the end of what
+ * was written at +0x10. Slot 6 (0x19f6a0) advances the position by the byte
+ * count and keeps the end at least there, returning the count; slot 9
+ * (0x19f6d0) seeks from the start, the position or the end. */
+class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
+{
+  public:
+    OffsetOnlyStreamWriter();
+    virtual ~OffsetOnlyStreamWriter();
+
+    int offset; /* derived name */
+    int end;    /* derived name */
 };
 
 /* An output archive over a stream writer (derived name): a reference-counted

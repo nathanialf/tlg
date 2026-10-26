@@ -810,6 +810,19 @@ class StackTracer /* derived name */
  * loader at 0x1887a0 builds, or null. */
 struct LoadedImage; /* derived name */
 
+/* The pixels the loader reads into (derived names): built on its stack
+ * (0x18882d) by FUN_001a0470, the width and height at +0 and +4 (from the
+ * TGA header's 16-bit fields at 0x188832) and the bytes from +8; the
+ * reference-counted image 0x1a04d0 builds copies the three. */
+struct RawImage /* derived name */
+{
+    RawImage();
+
+    int width;          /* derived name */
+    int height;         /* derived name */
+    hkArray<u8> pixels; /* derived name */
+};
+
 LoadedImage *FUN_00188560(const char *fileName); /* derived name */
 
 /* A reference-counted source of an image (derived name; vtable address
