@@ -64,15 +64,23 @@ def disassemble(path: Path, extra: list[str]) -> list[tuple[int, str, str]]:
 
 
 def object_canary_sites(obj: Path) -> set[int]:
-    """Offsets of the relocations against __stack_chk_guard and
-    __stack_chk_fail in an object (`objdump -dr`)."""
+    """Addresses of the instructions carrying a relocation against
+    __stack_chk_guard or __stack_chk_fail in an object (`objdump -dr` prints
+    the relocation under its instruction; the relocation's own offset is the
+    field inside the instruction, which `measure` would never see)."""
     out = subprocess.run([OBJDUMP, "-dr", "--no-show-raw-insn", str(obj)], capture_output=True, text=True,
                          check=True).stdout
     sites = set()
+    at = None
     for line in out.split("\n"):
         m = RELOC_RE.match(line)
-        if m and m.group(2).split("-")[0].split("+")[0] in ("__stack_chk_guard", "__stack_chk_fail"):
-            sites.add(int(m.group(1), 16))
+        if m:
+            if at is not None and m.group(2).split("-")[0].split("+")[0] in ("__stack_chk_guard", "__stack_chk_fail"):
+                sites.add(at)
+            continue
+        m = INS_RE.match(line)
+        if m:
+            at = int(m.group(1), 16)
     return sites
 
 

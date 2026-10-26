@@ -716,11 +716,97 @@ without such a `lea` (arrays indexed without one). The game region: 5,688
 address-taking functions, 51 without the canary. That is the strong
 heuristic's footprint, not ssp's; a game region built with the protector
 off would show none. FUN_00187750 (0xdec bytes, round 20) is the first
-canary-bearing library function worked: its locals are a Vec4 array and two
-matrices passed by address, protected under strong and not under ssp; its
-frame is 0x1c8 against the 0x198 our compile makes.
+canary-bearing library function worked: round 20's model of its source has
+it taking the address of a Vec4 array and two matrices, locals strong
+protects and ssp does not (a reading of the function, not a measurement);
+its frame, measured, is 0x1c8 against the 0x198 our compile makes.
 
 **Trigger to revisit.** The from-source 3.3 build failing to verify
 byte-identical to the prebuilt, or the patched build regressing the gate on
 a claimed library function, either of which reopens the level or the
 backport.
+
+**Addendum (2026-10-26, round 21): the build verified and the prefix
+switched.** `tools/build_llvm.sh 3.3` fetches llvm-3.3.src.tar.gz (SHA-256
+68766b1e70d05a25e2f502e997a3cb3937187a3296595cf6e0977d5cd6727578) and
+cfe-3.3.src.tar.gz
+(b1b55de4ab3a57d3e0331a83e0284610191c77d924e3446498d9113d08dfb996), both
+release signatures good (Bill Wendling, key C135 49BB 82A1 7681 BF71 43C2
+B446 8DF4 E95C 63DC, checked again by the supervisor), builds them with GCC
+14 under `-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-checks`
+(the last keeps the `this == 0` tests of `Value::print` and `Type::print`,
+`lib/IR/AsmWriter.cpp:2182` and `:2198`, which `-print-after-all` relies on)
+and one host patch (`utils/llvm-build` to Python 3), and installs the driver
+as a file, as the release does. `--verify` compiles every probe TU and every
+`src/libs/` TU with the prebuilt 3.3 and the built one under the library
+flags and finds every object identical in disassembly, relocations and
+bytes: 735 TUs on 2026-10-26, run by the worker three times (pristine, with
+the backport, after the third host flag) and once more by the supervisor
+(`tools/build_llvm.sh 3.3 --verify`, exit 0). The backport
+(`tools/patches/llvm-3.3-sspstrong-01-fstack-protector-strong.patch`)
+touches six clang files (`Options.td`, `LangOptions.h`, `Driver/Tools.cpp`,
+`CompilerInvocation.cpp`, `CodeGenModule.cpp`, `InitPreprocessor.cpp`),
+numbers the levels as clang 3.5 does (1 ssp, 2 strong, 3 all) and changes no
+object without the flag (the same verification, run with the patch applied
+and `-fstack-protector` in place of the strong flag). The library prefix
+reads `cxx=3.3-src ... -fstack-protector-strong`; the gate did not move (706
+rows at the switch, 745 at the end of the round). Of the 720 library objects
+then built, one references `__stack_chk_guard` and `__stack_chk_fail`
+(`func_00188540.cpp.o`, FUN_00187750), and its canary sequence equals the
+base's: on the claimed set the strong level puts a canary exactly where the
+base has one. `tools/fingerprint.py --obj` counted that object's canary as 0
+until the supervisor's fix (it compared a relocation's offset, the field at
++3, with instruction addresses); it reports 1 now. `tools/setup.sh` builds
+the from-source 3.3 after fetching the prebuilt, and `build.sh` requires it.
+
+## D21. The library region stays at -O2; FUN_00187750's loop unswitch is an open level question (2026-10-26)
+
+**Question.** FUN_00187750 (0xdec bytes, `src/libs/unknown/func_00188540.cpp`)
+holds two copies of its main loop, at 0x187aa9 with the inner block search
+and at 0x18806e without it: the shape of LLVM's non-trivial loop unswitch on
+the search's guard, which is defined before the loop. LLVM 3.3 builds the
+pass with OptimizeForSize below -O3
+(`lib/Transforms/IPO/PassManagerBuilder.cpp:189`,
+`createLoopUnswitchPass(SizeLevel || OptLevel < 3)`), and
+`UnswitchIfProfitable` (`lib/Transforms/Scalar/LoopUnswitch.cpp:651`) then
+refuses every non-trivial condition. So the base's shape is -O3's, the
+developer's own two loops, or a compiler that unswitches at -O2.
+
+**Measurements (2026-10-26, supervisor).**
+
+- The claimed set does not tell the levels apart. With the library line at
+  -O3 (3.3-src, nothing else changed) every one of the 745 claimed rows still
+  matches and the gate passes; the three probe TUs compile to byte-identical
+  objects at -O2 and -O3. FUN_00187750 at -O3 is 3,535 bytes against the
+  base's 3,564 (2,311 at -O2) with 27 of 714 instructions aligned (46 at
+  -O2): the duplication is reproduced, the function is not.
+- -O3 in 3.3 also adds ArgumentPromotion (`PassManagerBuilder.cpp:167`), the
+  loop vectorizer (`:195`; clang 3.3's driver passes `-vectorize-loops` by
+  default, `lib/Driver/Tools.cpp:3314`) and the inliner threshold 275 in
+  place of 225 (`clang/lib/CodeGen/BackendUtil.cpp:281`). The vectorizer
+  leaves a fingerprint the region lacks: under `-march=btver2` it works in
+  256-bit ymm registers, and the library region's 1,068 ymm instructions are
+  all moves and zeroing (vmovaps 604, vxorps 334, vinsertf128 69, vmovapd
+  37, vxorpd 24: memcpy and memset lowering and aggregate copies), not one
+  ymm arithmetic instruction in 3,391 functions. The game region, whose
+  4.0.0 runs the vectorizer at -O2, holds 1,471 `vmulps ymm` and 388
+  `vaddps ymm`.
+- The inliner threshold and ArgumentPromotion leave nothing measurable in
+  the claimed functions (too small to cross either).
+
+**Ruling.** The library line stays `-O2`. A plain -O3 would have to find
+no vectorizable loop in 3,391 Havok functions, which the census argues
+against; `-O3 -fno-vectorize` is not excluded by anything measured, and one
+function's shape does not change a region's flags (D2, D6). FUN_00187750 is
+not claimable and is not worked by a round's worker until the question is
+settled; the supervisor runs every level experiment. What settles it:
+(a) a second library function whose base shape -O2 cannot produce and -O3
+(with or without `-fno-vectorize`) does, with the whole gate and both
+functions matching at that level, which switches the line and records the
+fingerprint here; or (b) a source for FUN_00187750 that matches at -O2 (the
+two loops as the developer wrote them), which closes the question in
+-O2's favour.
+
+**Trigger to revisit.** (a) or (b) above, or a vectorized loop found in the
+library region (ymm arithmetic, or the vectorizer's runtime checks), which
+would reopen the vectorizer half of the census.

@@ -6,7 +6,9 @@
 #
 #   1. Create a Python venv at .venv and install tools/requirements.txt.
 #   2. Fetch the pinned external tools into tools/ext/ and tools/ghidra/:
-#        LLVM 3.3, 4.0.0 the compilers (tools/fetch_llvm.sh; docs/TARGETS.md)
+#        LLVM 3.3, 4.0.0 the compilers (tools/fetch_llvm.sh; docs/TARGETS.md),
+#                       and LLVM 3.3 built from source for the library
+#                       prefix (tools/build_llvm.sh 3.3; docs/DECISIONS.md D20)
 #        .NET 8         runtime, user-local via dotnet-install.sh, to run:
 #        PkgTool.Core   LibOrbisPkg 0.2.231 (MIT): extracts the user's own
 #                       PKG (tools/extract_pkg.py)
@@ -125,6 +127,11 @@ if [[ "${SKIP_TOOLCHAIN:-0}" == "1" ]]; then
     echo "==> SKIP_TOOLCHAIN=1; not fetching the project compiler"
 else
     bash tools/fetch_llvm.sh 3.3 4.0.0
+    # The library prefix compiles with LLVM 3.3 built from source (cxx=3.3-src,
+    # docs/DECISIONS.md D20): the release plus the one backport the prefix's
+    # flags need, verified against the prebuilt it was just fetched next to.
+    # About 15 minutes on 3 cores; skipped when the install is current.
+    bash tools/build_llvm.sh 3.3
 fi
 
 # --- 2b. Host packages: LLVM 19 (disassembly, the tooling clang) and JDK 25 ---
