@@ -27,6 +27,28 @@ struct Object00015700; /* derived name */
 void FUN_00015700(Object00015700 *self, void *pointer, int count); /* derived name */
 void FUN_000158f0(Object00015700 *self, void *pointer, int count); /* derived name */
 
+struct Handle00016350;
+
+/* What runs a work item (derived name): polymorphic, slot 2 the call
+ * FUN_00016350 makes on the item's runner. Class168e810 keeps a default one
+ * at +0x350 (vtable 0x168e7d0, address point 0x168e7e0, stored by the
+ * constructor 0x16d40; slot 2 the empty 0xe5c0). */
+class Runner00016350 /* derived name */
+{
+  public:
+    virtual ~Runner00016350();
+};
+
+/* A work item (derived names): a 16-bit value at +4 and its runner at
+ * +0x38, both set by slot 6 of Class168e810 (FUN_00017280). */
+struct WorkItem00017280 /* derived name */
+{
+    u8 unknown0[4];
+    u16 value4; /* derived name */
+    u8 unknown6[0x32];
+    Runner00016350 *runner; /* derived name */
+};
+
 /* An interface of ten slots, the second base (at +0x10, vtable address point
  * 0x168e888) of Class168e810, which overrides slots 2 to 9 in its primary
  * slots 5 to 12. */
@@ -36,6 +58,15 @@ class Interface168e888 /* derived name */
     virtual ~Interface168e888();
 
     virtual void FUN_00017240(void *pointer, int count) = 0; /* slot 2; derived name */
+    virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
+                              u16 value) = 0; /* slot 3; derived name */
+    /* Slots 4 to 6 and 8: their thunks FUN_000173e0, FUN_00017530, the
+     * thunk of FUN_00017540 and FUN_00017a50 (signatures there). */
+    virtual void unknownVirtual4() = 0;
+    virtual void unknownVirtual5() = 0;
+    virtual void unknownVirtual6() = 0;
+    virtual void FUN_00017930(const Handle00016350 *handle) = 0; /* slot 7; derived name */
+    virtual void unknownVirtual8() = 0;
     virtual void FUN_00017260(void *pointer, int count) = 0; /* slot 9; derived name */
 };
 
@@ -53,9 +84,14 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     virtual ~Class168e810();
 
     virtual void FUN_00017240(void *pointer, int count); /* vtable slot 5; derived name */
-    virtual void FUN_00017260(void *pointer, int count); /* vtable slot 12; derived name */
+    virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
+                              u16 value);                    /* vtable slot 6; derived name */
+    virtual void FUN_00017930(const Handle00016350 *handle); /* vtable slot 10; derived name */
+    virtual void FUN_00017260(void *pointer, int count);     /* vtable slot 12; derived name */
 
     Object00015700 *object18; /* derived name */
+    u8 unknown20[0x330];
+    Runner00016350 defaultRunner; /* derived name */
 };
 
 void FUN_00016f90(Class168e810 *self);                             /* derived name */
@@ -75,7 +111,6 @@ struct Handle00016350 /* derived name */
 
 void FUN_00016350(Class168e810 *self, int mode, const Handle00016350 *handle); /* derived name */
 void FUN_00017920(Class168e810 *self, int mode);                               /* derived name */
-void FUN_00017930(Class168e810 *self, const Handle00016350 *handle);           /* derived name */
 
 /* The interface of the physics world's tasks (derived name): the second
  * base, at +0x10, of each task class below (an hkReferencedObject first).

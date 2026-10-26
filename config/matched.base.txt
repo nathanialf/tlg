@@ -758,3 +758,15 @@ FUN_0019f6a0 src/libs/unknown/func_0019f6a0.cpp _ZN18OffsetStreamWriter5writeEPK
 _ZN17hkLocalFrameGroupD1Ev src/libs/unknown/func_00003710.cpp
 FUN_000037b0 src/libs/unknown/func_000037b0.cpp
 FUN_000037f0 src/libs/unknown/func_000037f0.cpp
+FUN_0000d290 src/libs/unknown/func_0000d290.cpp
+_ZN14hkStringObjectD1Ev src/libs/unknown/func_00010850.cpp
+FUN_000108e0 src/libs/unknown/func_000108e0.cpp
+FUN_00017280 src/libs/unknown/func_00017280.cpp
+FUN_000172a0 src/libs/unknown/func_00017280.cpp _ZThn16_N12Class168e81012FUN_00017280EP16WorkItem00017280P14Runner00016350t
+FUN_00017950 src/libs/unknown/func_00017930.cpp _ZThn16_N12Class168e81012FUN_00017930EPK14Handle00016350
+FUN_0001d190 src/libs/unknown/func_0001d190.cpp
+_ZN16hkMemoryMeshBodyC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00023190.cpp
+FUN_00024800 src/libs/unknown/func_00024800.cpp
+_ZN17hkMemoryMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0002a940.cpp
+_ZN17hknpRefWorldCinfoD1Ev src/libs/unknown/func_00039100.cpp
+FUN_000391c0 src/libs/unknown/func_000391c0.cpp

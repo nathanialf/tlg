@@ -335,7 +335,8 @@ class MemoryExtendedInterface /* derived name */
     virtual void unknownVirtual3() = 0;
     virtual void unknownVirtual4() = 0;
     virtual void unknownVirtual5() = 0;
-    virtual void unknownVirtual6() = 0;
+    /* Slot 6: a bool the memory system's slot 9 (FUN_0000d290) hands back. */
+    virtual bool unknownVirtual6() = 0;
     virtual void unknownVirtual7() = 0;
     virtual void unknownVirtual8() = 0;
     /* Slot 9: takes an int; the allocator at 0x57af9c0, whose second base
@@ -387,6 +388,7 @@ struct hkMemoryRouter;
 void FUN_0000d080(MemorySystem *self, hkMemoryRouter &router); /* derived name */
 
 void FUN_0000d0a0(MemorySystem *self); /* derived name */
+bool FUN_0000d290(MemorySystem *self); /* derived name */
 
 /* Slot 8 of the memory system's vtable: whether its buffer allocator could
  * hold a block of a size. derived name. */

@@ -463,6 +463,23 @@ void FUN_0001c1f0(hkRefCountedProperties *self);                                
  * slot 20 of hkMemoryMeshBody, whose name sits at the same offset), slots
  * 10 and 11 read and set the parent frame, slot 12 (FUN_0000e160) returns
  * the child count and slot 13 (FUN_0000e170) a child by index. */
+/* hkStringObject (hkClass 0x57b91b8, built at 0x10992: size 0x18, parent
+ * hkReferencedObject's 0x57b8640, one member record at 0x168e120): string
+ * (hkStringPtr) at +0x10. The finish callback 0x108e0 constructs it in
+ * place; the complete destructor 0x10850 destroys the string. */
+class hkStringObject : public hkReferencedObject
+{
+  public:
+    hkStringObject(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    {
+        FUN_0000e5c0(&string, flag);
+    }
+
+    virtual ~hkStringObject();
+
+    hkStringPtr string;
+};
+
 struct hkLocalFrame;
 
 /* hkLocalFrameGroup (hkClass 0x57b76f0, built at 0x3914: size 0x18, parent
@@ -501,6 +518,19 @@ class hkSimpleLocalFrame : public hkReferencedObject
     hkLocalFrame *parentFrame;
     hkLocalFrameGroup *group;
     hkStringPtr name;
+};
+
+/* hkcdPlanarEntity (hkClass 0x57ba190, built at 0x1d232: size 0x18,
+ * parent hkReferencedObject's 0x57b8640, one member record at 0x168f3f0;
+ * vtable 0x168f3b0): debugger (a pointer, not serialized: record flags
+ * 0x400) at +0x10, which its finish constructor clears. The finish
+ * callback 0x1d190 constructs it in place. */
+class hkcdPlanarEntity : public hkReferencedObject
+{
+  public:
+    hkcdPlanarEntity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), debugger(0) {}
+
+    void *debugger;
 };
 
 /* hkcdShape (type info 0x57b9ed0, vtable 0x168f2f0): its finish
@@ -943,7 +973,7 @@ struct hkcdSimdTree;                       /* FUN_00021a20, vtable 0x1690d70 */
 struct hkcdStaticAabbTree;                 /* FUN_00022700, vtable 0x1690df0 */
 struct hkcdDynamicAabbTree;                /* FUN_0009fc10, vtable 0x16a37c0 */
 class hkSkinnedRefMeshShape;               /* FUN_000aa660, vtable 0x16a38c0 */
-class hkMemoryMeshShape;                   /* FUN_0002a940, vtable 0x1692540 */
+class hkMemoryMeshShape;                   /* 0x2a940, vtable 0x1692540 */
 class hkMemoryMeshMaterial;                /* FUN_000accf0, vtable 0x16a3920 */
 class hkStorageSkinnedMeshShape;           /* FUN_000ae680, vtable 0x16a3b00 */
 class hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
@@ -960,7 +990,6 @@ void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);          /
 void FUN_00022700(hkcdStaticAabbTree *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag);   /* derived name */
 void FUN_000aa660(hkSkinnedRefMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0002a940(hkMemoryMeshShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
 void FUN_000accf0(hkMemoryMeshMaterial *self, hkFinishLoadedObjectFlag flag);  /* derived name */
 void FUN_000ae680(hkStorageSkinnedMeshShape *self,
                   hkFinishLoadedObjectFlag flag);                                 /* derived name */
@@ -1148,7 +1177,7 @@ void FUN_00024fa0(hkMultipleVertexBuffer *self, hkFinishLoadedObjectFlag flag); 
 void FUN_00024db0(hkMultipleVertexBuffer *self);                                /* derived name */
 
 /* hkMemoryMeshBody, polymorphic, 0x80 bytes (type info 0x57bccf0, vtable
- * 0x1691610 stored by its finish constructor FUN_00023190): members from
+ * 0x1691610 stored by its finish constructor 0x23190): members from
  * its record table at 0x1691530, transform (type 0x11) at +0x10,
  * transformSet (pointer) at +0x50, shape (pointer to hkMeshShape) at +0x58,
  * vertexBuffers (array of pointers) at +0x60, name (hkStringPtr) at +0x70. */
@@ -1191,6 +1220,8 @@ class hkMeshVertexBufferUtil /* derived name */
  * hkReferencedObject with no members of its own. */
 class hkMeshBody : public hkReferencedObject
 {
+  public:
+    hkMeshBody(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* Slots 10 to 12 hand matrices to and from the transform set, slots 13 to
@@ -1199,6 +1230,7 @@ class hkMeshBody : public hkReferencedObject
 class hkMemoryMeshBody : public hkMeshBody
 {
   public:
+    hkMemoryMeshBody(hkFinishLoadedObjectFlag flag);
     virtual ~hkMemoryMeshBody();
 
     hkMeshShape *FUN_000230d0() const; /* vtable slot 5; derived name */
@@ -1222,8 +1254,6 @@ class hkMemoryMeshBody : public hkMeshBody
     hkArray<hkMeshVertexBuffer *> vertexBuffers;
     hkStringPtr name;
 };
-
-void FUN_00023190(hkMemoryMeshBody *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* Classes without a vtable whose finish constructor or destructor is out of
  * line (type info: vtable 0): */
@@ -1838,13 +1868,39 @@ class hknpMalleableConstraintData
     float strength;
 };
 
-/* hknpWorldCinfo (type info 0x57c13e0, no vtable): an empty finish
+/* hknpWorldCinfo (type info 0x57c13e0, hkClass 0x57c1390, no vtable; 0xf0
+ * bytes, as hknpRefWorldCinfo's size gives it): an empty finish
  * constructor (the shared body FUN_0003b640) and an out-of-line destructor
  * FUN_0003b650, which releases the references from +0xb0 down. */
-struct hknpWorldCinfo;
+struct hknpWorldCinfo {
+    u8 unknown0[0xa8];
+    /* Two of the references the destructor releases (it goes on below
+     * +0xa8). */
+    hkReferencedObject *referenceA8; /* derived name */
+    hkReferencedObject *referenceB0; /* derived name */
+    u8 unknownB8[0x38];
+};
 
 void FUN_0003b640(hknpWorldCinfo *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003b650(hknpWorldCinfo *self);                                /* derived name */
+
+/* hknpRefWorldCinfo (hkClass 0x57bf2c0, built at 0x39330: size 0x100,
+ * parent hkReferencedObject's 0x57b8640, one member record at 0x16945a0;
+ * vtable 0x1694510): info (a struct of class hknpWorldCinfo) at +0x10. The
+ * finish callback 0x391c0 constructs it in place; the complete destructor
+ * 0x39100 destroys the info. */
+class hknpRefWorldCinfo : public hkReferencedObject
+{
+  public:
+    hknpRefWorldCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    {
+        FUN_0003b640(&info, flag);
+    }
+
+    virtual ~hknpRefWorldCinfo();
+
+    hknpWorldCinfo info;
+};
 
 class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs FUN_0007d520, vtable 0x1699a90 */
 struct hknpBodyQualityLibrary;     /* 0x57c1a78; FUN_00071190, vtable 0x169b150 */
@@ -3164,6 +3220,8 @@ class hkMeshTexture : public hkReferencedObject
         NOTEXPORTED
     };
 
+    hkMeshTexture(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
     virtual ~hkMeshTexture();
 };
 
@@ -3180,6 +3238,11 @@ extern const hkClass D_57bd5f8; /* hkMemoryMeshTexture's hkClass, built at 0x248
 class hkMemoryMeshTexture : public hkMeshTexture
 {
   public:
+    hkMemoryMeshTexture(hkFinishLoadedObjectFlag flag) : hkMeshTexture(flag), data(flag)
+    {
+        FUN_0000e5c0(&filename, flag);
+    }
+
     virtual ~hkMemoryMeshTexture();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000247f0 */
@@ -3326,6 +3389,7 @@ extern const hkClass D_57bd0a0; /* hkMemoryMeshShape's hkClass */
 class hkMemoryMeshShape : public hkMeshShape
 {
   public:
+    hkMemoryMeshShape(hkFinishLoadedObjectFlag flag);
     virtual ~hkMemoryMeshShape();
 
     const hkClass *getClassType() const;    /* vtable slot 3, FUN_00023de0 */
@@ -3334,7 +3398,7 @@ class hkMemoryMeshShape : public hkMeshShape
 
     /* From its record table at 0x1691bf0: sections (array) at +0x10,
      * indices16 and indices32 (arrays) at +0x20 and +0x30, name
-     * (hkStringPtr, finished by FUN_0002a940) at +0x40. */
+     * (hkStringPtr, finished by its finish constructor 0x2a940) at +0x40. */
     u8 unknownC[0x34];
     hkStringPtr name;
 };
