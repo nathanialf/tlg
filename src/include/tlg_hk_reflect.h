@@ -1244,10 +1244,14 @@ class hkxVertexSelectionChannel : public hkReferencedObject
     hkxVertexSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hkxBlob (hkClass 0x57c7a80, built at 0x8be52: size 0x20, one member
+ * record at 0x16a2570): data, an array of bytes, at +0x10. */
 class hkxBlob : public hkReferencedObject
 {
   public:
-    hkxBlob(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxBlob(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), data(flag) {}
+
+    hkArray<u8> data;
 };
 
 class hkxSparselyAnimatedEnum : public hkxSparselyAnimatedInt
@@ -2229,9 +2233,21 @@ class hknpWorldObject6c0 : public hknpWorldObject6c0Base /* derived name */
 extern float D_16dc5e0; /* derived name */
 extern float D_16dc5e4; /* derived name */
 
+/* The 0x120-byte records it hands out (derived names): slot 8 (0x310f0)
+ * allocates count of them in one block from the allocator at 0x57b8480 and
+ * stores their addresses in an array, slot 9 (0x31170) frees them, slot 10
+ * (0x311b0) sets each one's first pointer from a second array. */
+struct hknpWorldObject380Record /* derived name */
+{
+    void *pointer0; /* derived name */
+    u8 unknown8[0x118];
+};
+
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
   public:
+    void FUN_000311b0(hknpWorldObject380Record **records, void *const *pointers,
+                      int count);                  /* vtable slot 10; derived name */
     void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
 };
 
@@ -4550,12 +4566,16 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
     void FUN_000acf80(const char *newName);           /* vtable slot 9; derived name */
     const char *FUN_000acf90() const;                 /* vtable slot 10; derived name */
     hkMeshTexture *FUN_000acfb0(int index) const;     /* vtable slot 12; derived name */
-    hkUlong FUN_000acae0() const;                     /* vtable slot 17; derived name */
-    void FUN_000acaf0(hkUlong newUserData);           /* vtable slot 18; derived name */
-    float FUN_000acb00() const;                       /* vtable slot 19; derived name */
-    void FUN_000acb10(float factor);                  /* vtable slot 20; derived name */
-    float FUN_000acb20() const;                       /* vtable slot 21; derived name */
-    void FUN_000acb30(float amount);                  /* vtable slot 22; derived name */
+    void FUN_000ad2a0(Vec4 &diffuse, Vec4 &ambient, Vec4 &specular,
+                      Vec4 &emissive) const; /* vtable slot 15; derived name */
+    void FUN_000ad2d0(const Vec4 &diffuse, const Vec4 &ambient, const Vec4 &specular,
+                      const Vec4 &emissive); /* vtable slot 16; derived name */
+    hkUlong FUN_000acae0() const;            /* vtable slot 17; derived name */
+    void FUN_000acaf0(hkUlong newUserData);  /* vtable slot 18; derived name */
+    float FUN_000acb00() const;              /* vtable slot 19; derived name */
+    void FUN_000acb10(float factor);         /* vtable slot 20; derived name */
+    float FUN_000acb20() const;              /* vtable slot 21; derived name */
+    void FUN_000acb30(float amount);         /* vtable slot 22; derived name */
 
     hkStringPtr materialName;
     hkArray<hkMeshTexture *> textures;
@@ -5164,6 +5184,10 @@ extern const hkClass D_57c5e78; /* hkxBlobMeshShape's hkClass */
 class hkxBlobMeshShape : public hkMeshShape
 {
   public:
+    /* The finish constructor (0x85d40, the type info's finish function
+     * itself): the vtable, the blob's, then the name finished. */
+    hkxBlobMeshShape(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkxBlobMeshShape();
 
     const hkClass *getClassType() const;    /* vtable slot 3, FUN_00085d30 */
@@ -5172,7 +5196,7 @@ class hkxBlobMeshShape : public hkMeshShape
 
     /* From its record table at 0x16a0830 (0x38 bytes): blob (struct
      * hkxBlob, hkClass 0x57c7a80) at +0x10, name (hkStringPtr) at +0x30. */
-    u8 unknownC[0x24];
+    hkxBlob blob;
     hkStringPtr name;
 };
 

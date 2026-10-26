@@ -943,3 +943,7 @@ FUN_0000adf0 src/libs/unknown/func_0000adf0.cpp _ZN17RouterAllocator6010blockAll
 FUN_0000af80 src/libs/unknown/func_0000af80.cpp _ZN17RouterAllocator5810blockAllocEi
 FUN_0002afa0 src/libs/unknown/func_0002afa0.cpp
 FUN_0002afd0 src/libs/unknown/func_0002afd0.cpp
+FUN_000311b0 src/libs/unknown/func_000311b0.cpp
+_ZN16hkxBlobMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00085d40.cpp
+FUN_000ad2a0 src/libs/unknown/func_000ad2a0.cpp
+FUN_000ad2d0 src/libs/unknown/func_000ad2d0.cpp
