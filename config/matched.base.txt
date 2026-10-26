@@ -799,3 +799,12 @@ _ZN22hkMemoryResourceHandleC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0
 FUN_0000d230 src/libs/unknown/func_0000d230.cpp
 FUN_0007c3e0 src/libs/unknown/func_0007c3e0.cpp
 FUN_00007180 src/libs/unknown/func_00007180.cpp
+FUN_0000d250 src/libs/unknown/func_0000d250.cpp
+FUN_00045aa0 src/libs/unknown/func_00045aa0.cpp
+FUN_0005b560 src/libs/unknown/func_0005b560.cpp
+FUN_00073170 src/libs/unknown/func_00073170.cpp
+_ZN24hkpRagdollConstraintData5AtomsC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007dae0.cpp
+_ZN26hkpPrismaticConstraintData5AtomsC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007e520.cpp
+_ZN32hkpLinearClearanceConstraintData5AtomsC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00083880.cpp
+FUN_00090d90 src/libs/unknown/func_00090d90.cpp _ZN15BufferAllocator9blockFreeEPvi
+FUN_00177640 src/libs/unknown/func_00177640.cpp

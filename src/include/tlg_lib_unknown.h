@@ -954,6 +954,13 @@ struct hkMemoryRouter /* derived name */
     AllocatorBase *temp58; /* derived name */
 };
 
+/* The thread's router, a thread-local pointer: the TLS segment's template
+ * is at 0x16dc060 (0x70 bytes, 4 of them initialised, alignment 8), and the
+ * GOT slot 0x16d80b8 holds this object's offset from the thread pointer,
+ * -0x60, which places it at +0x10 of the template. Every reader adds that
+ * slot to %fs:0. */
+extern __thread hkMemoryRouter *D_16dc070;
+
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
 void FUN_014aff00();                       /* derived name */
 

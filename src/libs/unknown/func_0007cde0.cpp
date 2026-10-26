@@ -8,5 +8,5 @@ void FUN_0007cde0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0007e520(static_cast<hkpPrismaticConstraintData::Atoms *>(object), flag);
+    new (object) hkpPrismaticConstraintData::Atoms(flag);
 }

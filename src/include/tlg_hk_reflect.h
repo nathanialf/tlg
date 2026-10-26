@@ -1796,7 +1796,24 @@ struct hknpMotion {
     u8 unknown3f[0x41];
 };
 
+/* The object at +0x4f8 of the world (derived names): the world at +0, the
+ * object at +8 whose 16-byte records it indexes by a body's int at +0x68;
+ * FUN_00062b20 takes a body id and a bool, reads the body's flags at +0x40
+ * (bit 2 first) and sets or clears a byte at +0xb of the body's record. */
+struct hknpWorld;
+
+struct hknpWorldObject4f8 /* derived name */
+{
+    void FUN_00062b20(int bodyId, bool flag); /* derived name */
+
+    hknpWorld *world; /* derived name */
+};
+
 struct hknpWorld {
+    /* Hands a body id and a bool to the object at +0x4f8 when the flag at
+     * +0x4f0 is set (the command dispatcher at 0x16ef96 calls it). derived
+     * name. */
+    void FUN_0005b560(int bodyId, bool flag);                 /* derived name */
     void FUN_0004bcc0(hknpCollisionFilter *filter);           /* derived name */
     void *FUN_00051610() const;                               /* derived name */
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
@@ -1813,7 +1830,12 @@ struct hknpWorld {
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
-    u8 unknown1d8[0x458];
+    u8 unknown1d8[0x318];
+    /* A flag and the object it enables (FUN_0005b560 forwards to the object
+     * only when the flag is set). */
+    bool enabled4f0;               /* derived name */
+    hknpWorldObject4f8 *object4f8; /* derived name */
+    u8 unknown500[0x130];
     /* The constructor copies it from hknpWorldCinfo's gravity (record at
      * 0x1698370, +0x60) at 0x48d84, and 0x4ae7e copies it back. */
     Vec4 gravity; /* derived name */
@@ -1851,7 +1873,7 @@ class hknpMountedBallGun : public hknpBallGun
 /* hknp classes registered by the reflection TU at 0x38b10 onward, each with
  * an out-of-line finish constructor (type info, the vtable it stores): */
 struct hknpMotionPropertiesLibrary; /* 0x57bf0a0; FUN_00036de0, vtable 0x1693770 */
-struct
+class
     hknpCapsuleShape; /* 0x57bf490; FUN_000730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
 struct hknpMotionProperties;   /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
 class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
@@ -1996,6 +2018,20 @@ template <typename T> class hkRelArray
  * hknpShape as parent, vtable 0x1697d90 stored by its finish constructor
  * FUN_00042e90): one reflected member, vertices (hkRelArray of hkVector4,
  * subtype 12) at +0x28 (record 0x1699720). */
+/* What slot 22 of a shape's vtable fills (derived names): hknpConvexShape's
+ * (0x45aa0, kept by the sphere, capsule, triangle and polytope shapes)
+ * stores the shape at +0x170, clears bit 3 of the flags at +0x150 and sets
+ * the int at +0x154 to 1; hknpShape's default (0x6f7d0) reports that it is
+ * not implemented, the decorator's (0x37e80) forwards to its child. */
+struct hknpShapeSlot22Output /* derived name */
+{
+    u8 unknown0[0x150];
+    u8 flags;  /* derived name */
+    int value; /* derived name */
+    u8 unknown158[0x18];
+    const hknpShape *shape; /* derived name */
+};
+
 class hknpConvexShape : public hknpShape
 {
   public:
@@ -2004,6 +2040,8 @@ class hknpConvexShape : public hknpShape
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
     int FUN_00045a80(u32 *argument1, int argument2, int argument3,
                      const u32 *argument4) const; /* vtable slot 21; derived name */
+    void FUN_00045aa0(const void *argument1, const void *argument2,
+                      hknpShapeSlot22Output *output) const; /* vtable slot 22; derived name */
 
     hkRelArray<Vec4> vertices;
 };
@@ -2021,8 +2059,30 @@ class hknpConvexPolytopeShape : public hknpConvexShape
 
     int FUN_00072f70() const; /* vtable slot 13; derived name */
 
+    /* The bytes a polytope shape of a class of sizeOfBaseClass bytes
+     * needs with its vertices, faces, planes and indices after it, each
+     * block rounded up to 16 (0x1542f0). derived names. */
+    static int FUN_001542f0(int numVertices, int numFaces, int numIndices,
+                            int sizeOfBaseClass); /* derived name */
+
     hkRelArray<Vec4> planes;
     hkRelArray<Face> faces;
+    hkRelArray<u8> indices;
+    Connectivity *connectivity;
+};
+
+/* hknpCapsuleShape (type info 0x57bf490; hkClass 0x57bf440, built at
+ * 0x39545: size 0x60, parent hknpConvexPolytopeShape, member records at
+ * 0x1694850; vtable 0x169b260): the segment's ends a and b at +0x40 and
+ * +0x50. Slot 6 (0x73170) is its size with the polytope it carries, eight
+ * vertices, six faces and 24 indices. */
+class hknpCapsuleShape : public hknpConvexPolytopeShape
+{
+  public:
+    int FUN_00073170() const; /* vtable slot 6; derived name */
+
+    Vec4 a;
+    Vec4 b;
 };
 
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
@@ -2328,8 +2388,8 @@ class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
  * 0x7ac40): each Atoms struct's finish constructor sets the int at +0x94
  * (-1, or a packed pair when finishing), and its finish callback runs it.
  * hkpLinearClearanceConstraintData::Atoms: type info 0x57c36b8, size 0x120,
- * FUN_00083880. hkpPrismaticConstraintData::Atoms: type info 0x57c4058,
- * size 0x100, FUN_0007e520. */
+ * 0x83880. hkpPrismaticConstraintData::Atoms: type info 0x57c4058,
+ * size 0x100, 0x7e520. */
 /* What slot 20 of the constraint data vtables fills (pure in
  * hkpConstraintData): the size of the runtime the solver keeps for the
  * constraint and its number of solver results, two ints stored as one 8-byte
@@ -2411,11 +2471,48 @@ class hkpConstraintData : public hkReferencedObject
     u8 unknownC[0xc];
 };
 
+/* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
+ * transformB (hkTransform) at +0x10 and +0x50 (member records 0x169e560 and
+ * 0x169e588), after the atom's type and padding. */
+struct hkpSetLocalTransformsConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    hkTransform transformA;
+    hkTransform transformB;
+};
+
+class hkpConstraintMotor;
+
+struct hkpLinMotorConstraintAtom {
+    hkpLinMotorConstraintAtom(hkFinishLoadedObjectFlag)
+    {
+        initializedOffset = -1;
+        previousTargetPositionOffset = -1;
+    }
+
+    u16 type; /* derived name */
+    bool isEnabled;
+    u8 motorAxis;
+    s16 initializedOffset;
+    s16 previousTargetPositionOffset;
+    hkpConstraintMotor *motor;
+    float targetPosition;
+    u8 padding[4];
+};
+
 class hkpPrismaticConstraintData
 {
   public:
+    /* Members from the record table 0x169cb60: transforms at +0, motor
+     * (hkpLinMotorConstraintAtom) at +0x90, friction, ang, lin0, lin1 and
+     * linLimit from +0xb0. Its finish constructor (0x7e520) is out of line:
+     * when finishing, the motor's offsets into the runtime are set. */
     struct Atoms {
-        u8 unknown0[0x100];
+        Atoms(hkFinishLoadedObjectFlag flag);
+
+        hkpSetLocalTransformsConstraintAtom transforms;
+        hkpLinMotorConstraintAtom motor;
+        u8 unknownA8[0x58];
     };
 
     /* vtable 0x169d1f0, address point 0x169d200 (finish constructor
@@ -2574,8 +2671,16 @@ class hkpRagdollLimitsData
 class hkpLinearClearanceConstraintData
 {
   public:
+    /* Members from the record table 0x169bf60: transforms at +0, motor
+     * (hkpLinMotorConstraintAtom) at +0x90, three frictions, ang and three
+     * linear limits from +0xb0. Its finish constructor (0x83880) is out of
+     * line: when finishing, the motor's offsets into the runtime are set. */
     struct Atoms {
-        u8 unknown0[0x120];
+        Atoms(hkFinishLoadedObjectFlag flag);
+
+        hkpSetLocalTransformsConstraintAtom transforms;
+        hkpLinMotorConstraintAtom motor;
+        u8 unknownA8[0x78];
     };
 
     virtual ~hkpLinearClearanceConstraintData();
@@ -2623,7 +2728,7 @@ class ConstraintData16a5d30 /* derived name */
 
 /* hkpLimitedHingeConstraintData::Atoms: type info 0x57c57f8, size 0x110,
  * FUN_00078df0 (also the u16 at +0xb4). hkpRagdollConstraintData::Atoms:
- * type info 0x57c5b48, size 0x180, FUN_0007dae0 (the int at +0xa4). */
+ * type info 0x57c5b48, size 0x180, 0x7dae0 (the int at +0xa4). */
 class hkpLimitedHingeConstraintData;
 
 /* Two constraint atoms with their reflected members: hkpSetupStabilizationAtom
@@ -2634,16 +2739,6 @@ class hkpLimitedHingeConstraintData;
  * enableLinearImpulseLimit at +5, breachImpulse at +8,
  * inertiaStabilizationFactor at +0xc). The u16 at +0 is the atom's type,
  * which the constructors store. */
-/* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
- * transformB (hkTransform) at +0x10 and +0x50 (member records 0x169e560 and
- * 0x169e588), after the atom's type and padding. */
-struct hkpSetLocalTransformsConstraintAtom {
-    u16 type; /* derived name */
-    u8 padding[0xe];
-    hkTransform transformA;
-    hkTransform transformB;
-};
-
 /* hkpSetLocalTranslationsConstraintAtom (reflected): translationA and
  * translationB (hkVector4) at +0x10 and +0x20 (member records 0x169e5b0 and
  * 0x169e5d8), after the atom's type and padding. */
@@ -2786,23 +2881,6 @@ class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
     }
 };
 
-struct hkpLinMotorConstraintAtom {
-    hkpLinMotorConstraintAtom(hkFinishLoadedObjectFlag)
-    {
-        initializedOffset = -1;
-        previousTargetPositionOffset = -1;
-    }
-
-    u16 type; /* derived name */
-    bool isEnabled;
-    u8 motorAxis;
-    s16 initializedOffset;
-    s16 previousTargetPositionOffset;
-    hkpConstraintMotor *motor;
-    float targetPosition;
-    u8 padding[4];
-};
-
 /* hkpAngMotorConstraintAtom (type info 0x57c4920, size 0x20, record table
  * 0x169ee30): isEnabled at +2, motorAxis at +3, initializedOffset and
  * previousTargetAngleOffset (hkInt16) at +4 and +6, motor at +8,
@@ -2833,6 +2911,14 @@ struct hkpAngMotorConstraintAtom {
  * +0x10, motors (three pointers to hkpConstraintMotor, hkClass 0x57c3af0)
  * at +0x40. */
 struct hkpRagdollMotorConstraintAtom {
+    /* The finish callback's body is hkpLinMotorConstraintAtom's (0x803f0):
+     * the two runtime offsets reset. */
+    hkpRagdollMotorConstraintAtom(hkFinishLoadedObjectFlag)
+    {
+        initializedOffset = -1;
+        previousTargetAnglesOffset = -1;
+    }
+
     u16 type; /* derived name */
     bool isEnabled;
     u8 unknown3;
@@ -2860,6 +2946,10 @@ class hkpRagdollConstraintData
 {
   public:
     struct Atoms {
+        /* Out of line (0x7dae0): when finishing, the motors' offsets into
+         * the runtime are set. */
+        Atoms(hkFinishLoadedObjectFlag flag);
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
@@ -3171,13 +3261,7 @@ class hkp6DofConstraintData
     Blueprints blueprints;
 };
 
-void FUN_00083880(hkpLinearClearanceConstraintData::Atoms *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0007e520(hkpPrismaticConstraintData::Atoms *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00078df0(hkpLimitedHingeConstraintData::Atoms *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0007dae0(hkpRagdollConstraintData::Atoms *self,
                   hkFinishLoadedObjectFlag flag);                              /* derived name */
 void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
@@ -3213,7 +3297,7 @@ void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
  * stores the vtable 0x16a6270 and runs hkStringPtr's on +0x18.
  * hkxMesh (type info 0x57c6f90, size 0x30): FUN_0008bea0 stores the vtable
  * 0x16a25a0.
- * hkAlignSceneToNodeOptions (type info 0x57c7288, size 0x20): FUN_0017d520
+ * hkAlignSceneToNodeOptions (type info 0x57c7288, size 0x20): 0x17d520
  * stores the vtable 0x16a6030 and runs hkStringPtr's on +0x18.
  * hkxMaterialShaderSet (type info 0x57c7680, size 0x20): FUN_0008b370
  * stores the vtable 0x16a1f30.
@@ -4252,6 +4336,19 @@ class hknpVehicleInstance : public hknpUnaryAction
 struct hknpCharacterProxySignalSource; /* derived name: the signal's first argument */
 struct hknpCharacterProxySignalData;   /* derived name: the second, a pointer at +0x28 */
 
+/* The reference-counted object at +0x20 of the proxy (derived name): set
+ * with a reference by 0x177130, released by the destructor 0x176b70, and
+ * told through its slot 7 of each of the world's post-solve signals. */
+class hknpCharacterProxy;
+
+class hknpCharacterProxyListener : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7(hknpCharacterProxy *proxy);
+};
+
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
 {
   public:
@@ -4260,6 +4357,15 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
 
     void FUN_00176b10(hknpCharacterProxySignalSource *source,
                       hknpCharacterProxySignalData *data); /* derived name */
+
+    /* The handler of the world's post-solve signal (the list at +0x608 of
+     * the world, fired with the world at 0x512d8, "TtPostSolveSignal"),
+     * which the constructor subscribes at 0x176858. derived name. */
+    void FUN_00177640(hknpWorld *world);
+
+    u8 unknownC[0xc];
+    hknpWorld *world;                     /* copied from the cinfo's +0x18; derived name */
+    hknpCharacterProxyListener *listener; /* derived name */
 };
 
 /* The physics world's query collector (derived name): a polymorphic class
