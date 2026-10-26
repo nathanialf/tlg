@@ -3038,6 +3038,61 @@ struct hkpSetLocalTransformsConstraintAtom {
     hkTransform transformB;
 };
 
+/* hkpSetLocalRotationsConstraintAtom (hkClass 0x57c51f0, size 0x70, record
+ * table 0x169e510): rotationA and rotationB (TYPE_ROTATION, three columns)
+ * at +0x10 and +0x40, after the atom's type and padding. */
+struct hkpSetLocalRotationsConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    hkMatrix3 rotationA;
+    hkMatrix3 rotationB;
+};
+
+/* Two constraint atoms with their reflected members: hkpSetupStabilizationAtom
+ * (record table 0x169e600: enabled at +2, padding at +3, maxLinImpulse at
+ * +4, maxAngImpulse at +8, maxAngle at +0xc) and hkpBallSocketConstraintAtom
+ * (records built by the initializer at 0x80a40: solvingMethod at +2,
+ * bodiesToNotify at +3, velocityStabilizationFactor at +4,
+ * enableLinearImpulseLimit at +5, breachImpulse at +8,
+ * inertiaStabilizationFactor at +0xc). The u16 at +0 is the atom's type,
+ * which the constructors store. */
+/* hkpSetLocalTranslationsConstraintAtom (reflected): translationA and
+ * translationB (hkVector4) at +0x10 and +0x20 (member records 0x169e5b0 and
+ * 0x169e5d8), after the atom's type and padding. */
+struct hkpSetLocalTranslationsConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    Vec4 translationA;
+    Vec4 translationB;
+};
+
+/* hkpConstraintAtom (hkClass 0x57c4650, size 2): the atoms' base. Of its
+ * three enums (records from 0x169ed60) the third is SolvingMethod, items
+ * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
+struct hkpConstraintAtom {
+    enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
+};
+
+struct hkpSetupStabilizationAtom {
+    u16 type; /* derived name */
+    hkBool enabled;
+    u8 padding;
+    float maxLinImpulse;
+    float maxAngImpulse;
+    float maxAngle;
+};
+
+struct hkpBallSocketConstraintAtom {
+    u16 type; /* derived name */
+    u8 solvingMethod;
+    u8 bodiesToNotify;
+    u8 velocityStabilizationFactor;
+    bool enableLinearImpulseLimit;
+    u8 unknown6[2];
+    float breachImpulse;
+    float inertiaStabilizationFactor;
+};
+
 class hkpConstraintMotor;
 
 struct hkpLinMotorConstraintAtom {
@@ -3093,13 +3148,18 @@ class hkpPrismaticConstraintData
  * 20 (0x7c8b0) is also hkpHingeLimitsData's (0x169fef0, FUN_00082250). */
 class hkpPointToPathConstraintData; /* defined after hkEnum */
 
-class hkpCogWheelConstraintData
+/* hkpCogWheelConstraintData (hkClass 0x57c3e88, built at 0x7cb3b, 0xc0 bytes, parent hkpConstraintData; vtable 0x169c2b0): atoms at +0x20 (record table 0x169ca30: transforms at +0, cogWheels at +0x90). */
+class hkpCogWheelConstraintData : public hkpConstraintData
 {
   public:
     /* 0xa0 bytes at +0x20 (what slot 6 hands on). */
     struct Atoms {
-        u8 unknown0[0xa0];
+        hkpSetLocalTransformsConstraintAtom transforms;
+        u8 cogWheels[0x10];
     };
+
+    /* The finish constructor (0x7c9d0): the atoms are left as loaded. */
+    hkpCogWheelConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpCogWheelConstraintData();
 
@@ -3108,7 +3168,6 @@ class hkpCogWheelConstraintData
     void FUN_0007b590(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3131,14 +3190,19 @@ struct hkpStiffSpringConstraintAtom {
  * table 0x169beb0): pivots at +0, setupStabilization at +0x30, spring at
  * +0x40. Slot 7 (0x7d710) tells whether the spring's length is positive and
  * within its maximum. */
-class hkpStiffSpringConstraintData /* vtable address point 0x169cff0 */
+/* hkpStiffSpringConstraintData (hkClass 0x57c35e8, built at 0x7abbb, 0x80
+ * bytes, parent hkpConstraintData; vtable 0x169cfe0). */
+class hkpStiffSpringConstraintData : public hkpConstraintData /* vtable address point 0x169cff0 */
 {
   public:
     struct Atoms {
-        u8 pivots[0x30];
-        u8 setupStabilization[0x10];
+        hkpSetLocalTranslationsConstraintAtom pivots;
+        hkpSetupStabilizationAtom setupStabilization;
         hkpStiffSpringConstraintAtom spring;
     };
+
+    /* The finish constructor (0x7aa50): the atoms are left as loaded. */
+    hkpStiffSpringConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpStiffSpringConstraintData();
 
@@ -3146,7 +3210,6 @@ class hkpStiffSpringConstraintData /* vtable address point 0x169cff0 */
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_0007d710() const;                           /* vtable slot 7; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3167,13 +3230,17 @@ struct hkpPulleyConstraintAtom {
  * table 0x169c1b0): translations (an hkpSetLocalTranslationsConstraintAtom)
  * at +0, pulley at +0x30. Slot 7 (0x825a0) tells whether the rope's length
  * and the leverage are positive. */
-class hkpPulleyConstraintData /* vtable address point 0x169f600 */
+/* hkpPulleyConstraintData (hkClass 0x57c37e8, built at 0x7b02b, 0x90 bytes, parent hkpConstraintData; vtable 0x169f5f0). */
+class hkpPulleyConstraintData : public hkpConstraintData /* vtable address point 0x169f600 */
 {
   public:
     struct Atoms {
-        u8 translations[0x30];
+        hkpSetLocalTranslationsConstraintAtom translations;
         hkpPulleyConstraintAtom pulley;
     };
+
+    /* The finish constructor (0x7aec0): the atoms are left as loaded. */
+    hkpPulleyConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpPulleyConstraintData();
 
@@ -3181,7 +3248,6 @@ class hkpPulleyConstraintData /* vtable address point 0x169f600 */
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_000825a0() const;                           /* vtable slot 7; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3215,12 +3281,17 @@ class hkpDeformableFixedConstraintData : public hkpConstraintData
     Atoms atoms;
 };
 
-class hkpRotationalConstraintData /* vtable address point 0x16a0120 */
+/* hkpRotationalConstraintData (hkClass 0x57c3a68, built at 0x7b75b, 0xa0 bytes, parent hkpConstraintData; vtable 0x16a0110): atoms at +0x20 (record table 0x169c3a0: rotations at +0, ang at +0x70). */
+class hkpRotationalConstraintData : public hkpConstraintData /* vtable address point 0x16a0120 */
 {
   public:
     struct Atoms {
-        u8 unknown0[0x80];
+        hkpSetLocalRotationsConstraintAtom rotations;
+        u8 ang[0x10];
     };
+
+    /* The finish constructor (0x7b5f0): the atoms are left as loaded. */
+    hkpRotationalConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpRotationalConstraintData();
 
@@ -3229,7 +3300,6 @@ class hkpRotationalConstraintData /* vtable address point 0x16a0120 */
     void FUN_00083500(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3281,13 +3351,23 @@ class hkpRagdollLimitsData
  * lin at +0x90, record table 0x169c4b0). Its slot 20 (0x7bb90), kept by
  * hkpStiffSpringConstraintData and hkpPulleyConstraintData, wants 8 bytes
  * of runtime and one solver result, or none. */
-class hkpPointToPlaneConstraintData
+class hkpPointToPlaneConstraintData : public hkpConstraintData
 {
   public:
+    struct Atoms {
+        hkpSetLocalTransformsConstraintAtom transforms;
+        u8 lin[0x10];
+    };
+
+    /* The finish constructor (0x7b900): the atoms are left as loaded. */
+    hkpPointToPlaneConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkpPointToPlaneConstraintData();
 
     void FUN_0007bb90(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    Atoms atoms;
 };
 
 /* hkpLinearClearanceConstraintData: address point 0x16a0300 (finish
@@ -3319,13 +3399,26 @@ class hkpLinearClearanceConstraintData
     Atoms atoms;
 };
 
-class hkpRackAndPinionConstraintData
+/* hkpRackAndPinionConstraintData (hkClass 0x57c4188, built at 0x7d1ee, 0xc0
+ * bytes, parent hkpConstraintData; vtable 0x16a0200): atoms at +0x20 (record
+ * table 0x169cd00: transforms at +0, rackAndPinion at +0x90). */
+class hkpRackAndPinionConstraintData : public hkpConstraintData
 {
   public:
+    struct Atoms {
+        hkpSetLocalTransformsConstraintAtom transforms;
+        u8 rackAndPinion[0x10];
+    };
+
+    /* The finish constructor (0x7d080): the atoms are left as loaded. */
+    hkpRackAndPinionConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkpRackAndPinionConstraintData();
 
     void FUN_000836c0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    Atoms atoms;
 };
 
 /* A constraint data class with no name found (no type-info registration
@@ -3347,51 +3440,6 @@ class ConstraintData169ffe0 /* derived name */
  * FUN_00078df0 (also the u16 at +0xb4). hkpRagdollConstraintData::Atoms:
  * type info 0x57c5b48, size 0x180, 0x7dae0 (the int at +0xa4). */
 class hkpLimitedHingeConstraintData;
-
-/* Two constraint atoms with their reflected members: hkpSetupStabilizationAtom
- * (record table 0x169e600: enabled at +2, padding at +3, maxLinImpulse at
- * +4, maxAngImpulse at +8, maxAngle at +0xc) and hkpBallSocketConstraintAtom
- * (records built by the initializer at 0x80a40: solvingMethod at +2,
- * bodiesToNotify at +3, velocityStabilizationFactor at +4,
- * enableLinearImpulseLimit at +5, breachImpulse at +8,
- * inertiaStabilizationFactor at +0xc). The u16 at +0 is the atom's type,
- * which the constructors store. */
-/* hkpSetLocalTranslationsConstraintAtom (reflected): translationA and
- * translationB (hkVector4) at +0x10 and +0x20 (member records 0x169e5b0 and
- * 0x169e5d8), after the atom's type and padding. */
-struct hkpSetLocalTranslationsConstraintAtom {
-    u16 type; /* derived name */
-    u8 padding[0xe];
-    Vec4 translationA;
-    Vec4 translationB;
-};
-
-/* hkpConstraintAtom (hkClass 0x57c4650, size 2): the atoms' base. Of its
- * three enums (records from 0x169ed60) the third is SolvingMethod, items
- * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
-struct hkpConstraintAtom {
-    enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
-};
-
-struct hkpSetupStabilizationAtom {
-    u16 type; /* derived name */
-    hkBool enabled;
-    u8 padding;
-    float maxLinImpulse;
-    float maxAngImpulse;
-    float maxAngle;
-};
-
-struct hkpBallSocketConstraintAtom {
-    u16 type; /* derived name */
-    u8 solvingMethod;
-    u8 bodiesToNotify;
-    u8 velocityStabilizationFactor;
-    bool enableLinearImpulseLimit;
-    u8 unknown6[2];
-    float breachImpulse;
-    float inertiaStabilizationFactor;
-};
 
 /* Placement new, as the engine declares it for the finish callbacks: no
  * exception specification, so the storage is not tested for null. */
@@ -3618,7 +3666,8 @@ class hkpRagdollConstraintData
  * write the breach impulse and the stabilization's linear impulse limit;
  * slot 14 (0x7c310) stores 1 << index into bodiesToNotify and slot 15 reads
  * the index back. */
-class hkpBallAndSocketConstraintData
+/* hkClass 0x57c3f88 (built at 0x7cd5b), parent hkpConstraintData. */
+class hkpBallAndSocketConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
@@ -3626,6 +3675,9 @@ class hkpBallAndSocketConstraintData
         hkpSetupStabilizationAtom setupStabilization;
         hkpBallSocketConstraintAtom ballSocket;
     };
+
+    /* The finish constructor (0x7cbf0): the atoms are left as loaded. */
+    hkpBallAndSocketConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpBallAndSocketConstraintData();
 
@@ -3647,7 +3699,6 @@ class hkpBallAndSocketConstraintData
     hkResult FUN_0007c3e0(float factor);                        /* vtable slot 17; derived name */
     hkResult FUN_0007c3d0(float &factorOut) const;              /* vtable slot 18; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3813,15 +3864,19 @@ class hkpFixedConstraintData : public hkpConstraintData
  * transforms at +0, setupStabilization at +0x90, 2dAng at +0xa0, ballSocket
  * at +0xb0). Slots 10 and 13 of its vtable write and read the ball-socket
  * atom's breach impulse. */
-class hkpHingeConstraintData
+/* hkClass 0x57c4288 (built at 0x7d40e), parent hkpConstraintData. */
+class hkpHingeConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
-        u8 transforms[0x90];
+        hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         u8 unknownA0[0x10]; /* 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
     };
+
+    /* The finish constructor (0x7d2a0): the atoms are left as loaded. */
+    hkpHingeConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpHingeConstraintData();
 
@@ -3836,7 +3891,6 @@ class hkpHingeConstraintData
     void FUN_0007eff0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
