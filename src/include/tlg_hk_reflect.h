@@ -372,6 +372,36 @@ class hkReferencedObjectLock : public hkReferencedObject
 
 extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance */
 
+/* hkError, the singleton registered by that name (record 0x57af770 built by
+ * 0x1010, instance pointer 0x57af768; hkError.cpp's FUN_00000ee0 reports
+ * through it): slot 5 takes a message's kind, its id, the description, the
+ * file and the line, and returns nonzero when the caller should stop
+ * (0xfbc tests it before an int3). The free functions 0x14c50, 0x14c70 and
+ * 0x14cb0 pass kinds 0, 1 and 3. */
+class hkError : public hkReferencedObject
+{
+  public:
+    enum Message /* derived name */
+    {
+        MESSAGE_REPORT,  /* derived name */
+        MESSAGE_WARNING, /* derived name */
+        MESSAGE_ASSERT,  /* derived name */
+        MESSAGE_ERROR,   /* derived name */
+    };
+
+    virtual int message(Message kind, int id, const char *description, const char *file,
+                        int line); /* vtable slot 5; derived name */
+
+    static int FUN_00014c50(int id, const char *description, const char *file,
+                            int line); /* derived name */
+    static int FUN_00014c70(int id, const char *description, const char *file,
+                            int line); /* derived name */
+    static int FUN_00014cb0(int id, const char *description, const char *file,
+                            int line); /* derived name */
+};
+
+extern hkError *D_57af768; /* hkError's instance */
+
 /* A string pointer whose finish constructor (FUN_0000e5c0, empty) and
  * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
  * it owned) are out of line. */
@@ -1994,6 +2024,42 @@ struct hknpMaterialId {
     u16 value; /* derived name */
 };
 
+/* A signal (derived name): its slots in a list from the pointer at +0 (the
+ * low two bits are flags), each slot's slot 1 destroying it; its
+ * destructor FUN_00093530 is out of line. */
+struct Signal00093530 /* derived name */
+{
+    void *slots; /* derived name */
+};
+
+void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
+
+struct hknpMaterial; /* the free-list array's element; fields not typed yet */
+struct hknpMaterialFreeListArrayOperations;
+
+/* hkFreeListArray, the free-list array of the scoped type names
+ * (hkFreeListArray<hknpMaterial, hknpMaterialId, 8,
+ * hknpMaterialFreeListArrayOperations>, 0x14bf3cf onward): elements (an
+ * hkArray) at +0 and firstFree (int) at +0x10, records 0x1696a10 and
+ * 0x1696a38. */
+template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
+    hkArray<T> elements;
+    int firstFree;
+};
+
+/* hknpMaterialLibrary (vtable 0x1699540, type info registered at 0x6156d):
+ * materialAddedSignal, materialModifiedSignal and materialRemovedSignal at
+ * +0x10, +0x18 and +0x20 (not serialized, record flags 0x400) and entries,
+ * the materials' free-list array, at +0x28 (records from 0x1699580). */
+struct hknpMaterialLibrary : public hkReferencedObject {
+    virtual ~hknpMaterialLibrary();
+
+    Signal00093530 materialAddedSignal;
+    Signal00093530 materialModifiedSignal;
+    Signal00093530 materialRemovedSignal;
+    hkFreeListArray<hknpMaterial, hknpMaterialId, 8, hknpMaterialFreeListArrayOperations> entries;
+};
+
 struct hknpWorld;
 
 /* A slot calling a member function of the world with a material id (derived
@@ -2025,6 +2091,7 @@ struct hknpWorld {
     hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
     void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
     void FUN_0004bc90(u8 id);                                 /* derived name */
+    void FUN_0004bc40(hknpMaterialId id);                     /* derived name */
 
     u8 unknown0[0x20];
     /* The body and motion arrays: FUN_0004c170 (in this file's range) stores
@@ -2049,7 +2116,14 @@ struct hknpWorld {
     /* The constructor copies it from hknpWorldCinfo's gravity (record at
      * 0x1698370, +0x60) at 0x48d84, and 0x4ae7e copies it back. */
     Vec4 gravity; /* derived name */
-    u8 unknown640[0x38];
+    u8 unknown640[8];
+    /* The material library: the constructor subscribes 0x4bc60 to its
+     * materialAddedSignal and 0x4bc40 to its materialModifiedSignal. */
+    hknpMaterialLibrary *materialLibrary; /* derived name */
+    u8 unknown650[0x10];
+    /* A bit per material id: FUN_0004bc40, the handler of the library's
+     * materialModifiedSignal, sets the id's bit. */
+    hkBitField bits660; /* derived name */
     /* A bit per 8-bit id (the constructor empties it at 0x48cb5, the
      * destructor frees its words at 0x4b8c0): FUN_0004bc90, the handler the
      * world subscribes to the signal at +0x10 of its object at +0x658
@@ -2068,11 +2142,41 @@ class hknpFirstPersonGun : public hkReferencedObject
     virtual ~hknpFirstPersonGun();
 
     virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    virtual void fireGun(hknpWorld *world,
+                         const hkTransform &viewTransform); /* vtable slot 6; derived name */
     virtual void unknownVirtual7();
     virtual void FUN_00156870(hknpWorld *world); /* vtable slot 8; derived name */
     virtual const char *FUN_000acf90() const;    /* vtable slot 9; derived name */
     virtual void reset(hknpWorld *world);        /* vtable slot 10; derived name */
+
+    /* From +0xc, in the reference-counted object's tail: the name
+     * (hkStringPtr) at +0x10 that slot 9 returns; the rest untyped.
+     * hknpProjectileGun's first member sits at +0x34, in this class's
+     * tail. */
+    u8 unknown0c[0x28];
+};
+
+/* hknpProjectileGun (type info 0x57bf7e0, vtable 0x16a4b30, address point
+ * 0x16a4b40; finish constructor FUN_001595c0): maxProjectiles at +0x34,
+ * reloadTime and reload (floats) at +0x38 and +0x3c, projectiles (an array
+ * of pointers) at +0x40 and npWorld at +0x50, the last three not
+ * serialized (records from 0x1695020). Slot 6 fires when reloaded and
+ * starts the reload; slot 7 (0x1598c0) counts the reload down by the time
+ * step and runs slot 12. */
+class hknpProjectileGun : public hknpFirstPersonGun
+{
+  public:
+    virtual void fireGun(hknpWorld *world,
+                         const hkTransform &viewTransform); /* vtable slot 6; derived name */
+    virtual void onGunFired(
+        hknpWorld *world,
+        const hkTransform &viewTransform); /* vtable slot 11, the empty 0x158a30; derived name */
+
+    int maxProjectiles;
+    float reloadTime;
+    float reload;
+    hkArray<void *> projectiles;
+    hknpWorld *npWorld;
 };
 
 class hknpBallGun : public hknpFirstPersonGun
@@ -2126,7 +2230,7 @@ void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag);   
 void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 /* More hknp classes with an out-of-line finish constructor (type info, the
  * vtable it stores): */
-struct hknpProjectileGun; /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
+class hknpProjectileGun;  /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
 struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
 class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 class hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
@@ -2447,16 +2551,6 @@ class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs FUN_0007d520,
 void FUN_00067960(hknpMalleableConstraintData *self,
                   hkFinishLoadedObjectFlag flag);                        /* derived name */
 void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-
-/* A signal (derived name): its slots in a list from the pointer at +0 (the
- * low two bits are flags), each slot's slot 1 destroying it; its
- * destructor FUN_00093530 is out of line. */
-struct Signal00093530 /* derived name */
-{
-    void *slots; /* derived name */
-};
-
-void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
 
 /* hknpBodyQuality (hkClass 0x57bee30, built at 0x3894a), 16 bytes. */
 struct hknpBodyQuality {
@@ -4759,6 +4853,11 @@ class hknpCharacterProxyListener : public hkReferencedObject /* derived name */
     virtual void unknownVirtual7(hknpCharacterProxy *proxy);
 };
 
+struct hknpCharacterProxyContact /* derived name */
+{
+    u8 unknown0[0x30];
+};
+
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
 {
   public:
@@ -4773,9 +4872,21 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
      * which the constructor subscribes at 0x176858. derived name. */
     void FUN_00177640(hknpWorld *world);
 
-    u8 unknownC[0xc];
+    /* The handler of the world's signal at +0x5f0, which the constructor
+     * subscribes at 0x17677b: drops the contacts when the proxy's body has
+     * flag 8 set. derived name. */
+    void FUN_001782f0(hknpWorld *world);
+
+    /* The proxy's body (the constructor stores the id the world's body
+     * creation 0x4e270 returns, 0x176675). */
+    int bodyId; /* derived name */
+    u8 unknown10[8];
     hknpWorld *world;                     /* copied from the cinfo's +0x18; derived name */
     hknpCharacterProxyListener *listener; /* derived name */
+    u8 unknown28[0x40];
+    /* 48-byte records the signal handler 0x176cc0 appends (growing through
+     * 0xb40 with the size 0x30). */
+    hkArray<hknpCharacterProxyContact> contacts; /* derived name */
 };
 
 /* The physics world's query collector (derived name): a polymorphic class
@@ -5080,6 +5191,12 @@ struct PointerMap /* derived name */
      * when the map is more than half full (0x138a0); nonzero when the key
      * was new. */
     int FUN_000138a0(AllocatorBase &allocator, hkUlong key, hkUlong value); /* derived name */
+    /* Rebuilds the entries at a new capacity (at least 8) from the
+     * allocator given, reinserting every used one (0x13940). */
+    void FUN_00013940(AllocatorBase &allocator, int newCapacity); /* derived name */
+    /* Makes room for a number of entries without a rebuild: the capacity
+     * doubled from 8 until it is twice the number (0x13e30). */
+    void FUN_00013e30(AllocatorBase &allocator, int numElements); /* derived name */
 };
 
 /* The reference-counted base (derived name; vtable address point 0x16a6970,

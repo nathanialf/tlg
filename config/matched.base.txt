@@ -869,3 +869,13 @@ FUN_001a0470 src/libs/unknown/func_001a0470.cpp _ZN8RawImageC2Ev
 FUN_0002d770 src/libs/unknown/func_0002d770.cpp
 FUN_00061f00 src/libs/unknown/func_00061f00.cpp _ZN14Object00061f00C2Ev
 FUN_0019f670 src/libs/unknown/func_0019f670.cpp _ZN22OffsetOnlyStreamWriterC2Ev
+FUN_0004bc40 src/libs/unknown/func_0004bc40.cpp
+FUN_00094580 src/libs/unknown/func_00094580.cpp _ZNK20BufferedStreamReader4isOkEv
+FUN_001598a0 src/libs/unknown/func_001598a0.cpp _ZN17hknpProjectileGun7fireGunEP9hknpWorldRK11hkTransform
+FUN_001782f0 src/libs/unknown/func_001782f0.cpp
+FUN_001a0b20 src/libs/unknown/func_001a0b20.cpp
+FUN_00004ad0 src/libs/unknown/func_00004ad0.cpp
+FUN_00013e30 src/libs/unknown/func_00013e30.cpp
+FUN_00014c50 src/libs/unknown/func_00014c50.cpp
+FUN_00014c70 src/libs/unknown/func_00014c70.cpp
+FUN_00014cb0 src/libs/unknown/func_00014cb0.cpp

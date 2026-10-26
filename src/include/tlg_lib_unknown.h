@@ -492,6 +492,58 @@ struct Object0003ea60 {
 struct RefArrays00048040; /* derived name */
 
 void FUN_00048040(RefArrays00048040 *self); /* derived name */
+
+/* The same class as an object (derived name): 0x50 bytes, the four arrays
+ * after the reference-counted object's header. Its destructor is
+ * FUN_00048040's body (the row keeps the FUN_ name until the class's vtable
+ * 0x1698f40 has a ruling, D14, and the row is renamed, D15). */
+class RefArrays /* derived name */ : public hkReferencedObject
+{
+  public:
+    ~RefArrays();
+
+    hkArray<Vec4> array10;                    /* derived name */
+    hkArray<int> array20;                     /* derived name */
+    hkArray<void *> array30;                  /* derived name */
+    hkArray<hkReferencedObject *> references; /* derived name */
+};
+
+/* The interface at +0x10 of Object0014e4b0 (derived name): four slots, the
+ * destructors, 0x14e840 (forwards to the owner's slot 5) and 0x14e760. */
+class Interface0014e7b0 /* derived name */
+{
+  public:
+    virtual ~Interface0014e7b0() {}
+
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+};
+
+/* An object of 0x90 bytes (derived name; vtable 0x16a4080, address point
+ * 0x16a4090, no type info; the second base's vtable at 0x16a40c8, address
+ * point 0x16a40d8), built inline by FUN_00151250 at 0x1515a1: the
+ * reference-counted object, the interface at +0x10, pointers at +0x18,
+ * +0x20 and +0x28 and +0x30 from the builder, the arrays object at +0x38.
+ * Destructors 0x14e4b0 (and its thunk 0x14e7b0), deleting 0x14e4d0
+ * (0x14e7d0). */
+class Object0014e4b0 /* derived name */ : public hkReferencedObject, public Interface0014e7b0
+{
+  public:
+    virtual ~Object0014e4b0();
+
+    /* slot 5 (0x14e540), also the interface's slot 2 through the thunk
+     * 0x14e840 */
+    virtual void unknownVirtual2();
+    /* slot 6: 0x14e760, the same body as the interface's slot 3 */
+    virtual void unknownVirtual6();
+
+    void *unknown18;  /* derived name */
+    void *unknown20;  /* derived name */
+    void *unknown28;  /* derived name */
+    void *unknown30;  /* derived name */
+    RefArrays arrays; /* derived name */
+    u8 unknown88[8];
+};
 /* A reference-counted object, 0x70 bytes (vtable 0x169ab20, constructor
  * FUN_0006bc50) holding arrays at +0x38 (16-byte elements, each releasing
  * the object at +8 of the element), +0x48 and +0x60. Its out-of-line
@@ -536,10 +588,15 @@ struct Layout00180ef0 {
  * its neighbours 0x1a0890 and 0x1a0b40): a reference-counted object
  * (vtable address point 0x16a75e0) whose constructor 0x1a0840 copies the
  * source layout to +0xc and the target layout to +0x10, stores the flags
- * at +0x14 and sets +0x18 when the two byte orders differ. */
+ * at +0x14 and sets +0x18 when the two byte orders differ. Slot 6
+ * (0x1a0b20) tells whether a member of one layout can be copied to one of
+ * the other. */
 class hkObjectCopier : public hkReferencedObject /* derived name */
 {
   public:
+    int FUN_001a0b20(const hkClassMember &src,
+                     const hkClassMember &dst); /* vtable slot 6; derived name */
+
     Layout00180ef0 layoutIn;  /* derived name */
     Layout00180ef0 layoutOut; /* derived name */
 };
@@ -778,6 +835,7 @@ class Allocator00004b10 /* derived name */
   public:
     virtual ~Allocator00004b10();
 
+    void *FUN_00004ad0(int numBytes);                      /* vtable slot 2; derived name */
     void FUN_00004af0(void *pointer, int numBytes);        /* vtable slot 3; derived name */
     void FUN_00004b00(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
     void FUN_00004b10();                                   /* vtable slot 11; derived name */
@@ -926,10 +984,12 @@ class OffsetSeekableReader : public SeekableReader /* derived name */
  * the buffer at +0x28 and +0x2c, the buffer size at +0x30. Slot 9
  * (FUN_000946f0) returns the reader when the stream can seek; slot 10
  * (0x94700) empties the buffer and seeks the stream, slot 11 (0x94720) tells
- * the stream's position less what is still buffered. */
+ * the stream's position less what is still buffered; slot 5 (0x94580) is
+ * readable while bytes are buffered, else asks the stream. */
 class BufferedStreamReader : public hkReferencedObject /* derived name */
 {
   public:
+    hkBool isOk() const;                      /* vtable slot 5; derived name */
     BufferedStreamReader *FUN_000946f0();     /* vtable slot 9; derived name */
     int FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
 
