@@ -3,7 +3,7 @@
 
 /* derived name: slot 20 of ConstraintData169ffe0's vtable (address point 0x169ffe0): 68 bytes of runtime and
  * 6 solver results. */
-void ConstraintData169ffe0::FUN_000832b0(bool wantRuntime,
+void ConstraintData169ffe0::FUN_000832b0(hkBool wantRuntime,
                                          ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 68;

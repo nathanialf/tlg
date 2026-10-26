@@ -4,7 +4,7 @@
 /* derived name: slot 20 of hkpCogWheelConstraintData's vtable (address point 0x169c2c0): 32 bytes of runtime and
  * 1 solver result. */
 void hkpCogWheelConstraintData::FUN_0007b590(
-    bool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
+    hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 32;
     infoOut.numSolverResults = 1;

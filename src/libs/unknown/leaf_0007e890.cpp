@@ -4,7 +4,7 @@
 /* derived name: slot 20 of hkpPrismaticConstraintData's vtable (address point 0x169d200): 88 bytes of runtime and
  * 10 solver results. */
 void hkpPrismaticConstraintData::FUN_0007e890(
-    bool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
+    hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 88;
     infoOut.numSolverResults = 10;

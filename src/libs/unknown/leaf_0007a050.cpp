@@ -4,7 +4,7 @@
 /* derived name: slot 20 of hkpPointToPathConstraintData's vtable (address point 0x169bc50): 68 bytes of runtime and
  * 8 solver results. */
 void hkpPointToPathConstraintData::FUN_0007a050(
-    bool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
+    hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 68;
     infoOut.numSolverResults = 8;

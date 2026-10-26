@@ -1751,7 +1751,7 @@ class hkpPrismaticConstraintData
      * FUN_0007ce10). */
     virtual ~hkpPrismaticConstraintData();
 
-    void FUN_0007e890(bool wantRuntime,
+    void FUN_0007e890(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1766,7 +1766,7 @@ class hkpPointToPathConstraintData
   public:
     virtual ~hkpPointToPathConstraintData();
 
-    void FUN_0007a050(bool wantRuntime,
+    void FUN_0007a050(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1775,7 +1775,7 @@ class hkpCogWheelConstraintData
   public:
     virtual ~hkpCogWheelConstraintData();
 
-    void FUN_0007b590(bool wantRuntime,
+    void FUN_0007b590(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1812,7 +1812,7 @@ class hkpRagdollLimitsData
 
     void FUN_0007c860(hkBool enable); /* derived name */
 
-    void FUN_0007c8b0(bool wantRuntime,
+    void FUN_0007c8b0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
@@ -1829,7 +1829,7 @@ class hkpLinearClearanceConstraintData
 
     virtual ~hkpLinearClearanceConstraintData();
 
-    void FUN_00083a10(bool wantRuntime,
+    void FUN_00083a10(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1838,7 +1838,7 @@ class hkpRackAndPinionConstraintData
   public:
     virtual ~hkpRackAndPinionConstraintData();
 
-    void FUN_000836c0(bool wantRuntime,
+    void FUN_000836c0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1852,7 +1852,7 @@ class ConstraintData169ffe0 /* derived name */
   public:
     virtual ~ConstraintData169ffe0();
 
-    void FUN_000832b0(bool wantRuntime,
+    void FUN_000832b0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -1861,7 +1861,7 @@ class ConstraintData16a5d30 /* derived name */
   public:
     virtual ~ConstraintData16a5d30();
 
-    void FUN_0017b990(bool wantRuntime,
+    void FUN_0017b990(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
@@ -2099,7 +2099,7 @@ class hkpRagdollConstraintData
     float FUN_0007dca0() const;                    /* vtable slot 13; derived name */
     u8 FUN_0007dcd0() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0007e2e0(float &factorOut) const; /* vtable slot 18; derived name */
-    void FUN_0007dd00(bool wantRuntime,
+    void FUN_0007dd00(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     void FUN_0007dad0(hkBool enable); /* derived name */
@@ -2167,7 +2167,7 @@ class hkpLimitedHingeConstraintData
     float FUN_000790c0() const;                    /* vtable slot 13; derived name */
     u8 FUN_000790f0() const;                       /* vtable slot 15; derived name */
     hkResult FUN_000792d0(float &factorOut) const; /* vtable slot 18; derived name */
-    void FUN_00079210(bool wantRuntime,
+    void FUN_00079210(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];

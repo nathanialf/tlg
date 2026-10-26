@@ -3,7 +3,7 @@
 
 /* derived name: slot 20 of hkpRagdollConstraintData's vtable (address point 0x169d0e0): 176 bytes of runtime and
  * 18 solver results. */
-void hkpRagdollConstraintData::FUN_0007dd00(bool wantRuntime,
+void hkpRagdollConstraintData::FUN_0007dd00(hkBool wantRuntime,
                                             ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 176;

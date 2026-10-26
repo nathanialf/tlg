@@ -4,7 +4,7 @@
 /* derived name: slot 20 of hkpLimitedHingeConstraintData's vtable (address point 0x169bae0): 96 bytes of runtime and
  * 10 solver results. */
 void hkpLimitedHingeConstraintData::FUN_00079210(
-    bool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
+    hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 96;
     infoOut.numSolverResults = 10;
