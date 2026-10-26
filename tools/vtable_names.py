@@ -166,6 +166,14 @@ class Walker:
                 elif m == "lea" and src.type == X86_OP_MEM and src.mem.base == X86_REG_RIP:
                     regs[d] = ins.address + ins.size + src.mem.disp
                     this.discard(d)
+                elif m == "lea" and src.type == X86_OP_MEM and not src.mem.index \
+                        and src.mem.base and ins.reg_name(src.mem.base) in regs:
+                    # the address point formed from the vtable's start in
+                    # another register (`lea rax, [rip+V]; lea rcx, [rax+0x10]`,
+                    # a class with a second vtable, whose other address point
+                    # is `add rax, 0x58`)
+                    regs[d] = regs[ins.reg_name(src.mem.base)] + src.mem.disp
+                    this.discard(d)
                 elif m == "add" and src.type == X86_OP_IMM and d in regs:
                     regs[d] += src.imm
                 else:

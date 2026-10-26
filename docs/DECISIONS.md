@@ -541,6 +541,20 @@ game calls at 0xea9d11; slots 0x3b640, 0x4060, 0x270, 0x42d0, 0x69a0,
 after slot 11 points at the string "name", the next object). `--check`: 15
 derived rows, 0 failing.
 
+**Addendum, 2026-10-26 (round 26 harvest).** Two rows: hknpSolverFactoryTask
+0x16a4080 (derived from the timer string "Solve/SolverFactory" at 0x14c9a92
+its slot 6 copies; a class with two vtables, the second for the task
+interface at +0x10 with offset-to-top -16 at 0x16a40c8; both address points
+formed from the vtable's start, `lea rax, [rip+V]; lea rcx, [rax+0x10]`
+and `add rax, 0x58`, at 0x14e4b0, 0x14e4da, 0x14e7b0, 0x14e7da and 0x1515ed,
+the last inside FUN_00151250, which builds the object inline at 0x1515a1)
+and RefArrays 0x1698f40 (derived; the arrays object at +0x38 of that task;
+stored at 0x92287 by its constructor and 0x4804e by its destructor). The
+walker of `tools/vtable_names.py` did not follow `lea r2, [r1+imm]`, so
+`_verify_derived` could not see the first row's store; it follows it now
+(the regeneration under the fixed walker is recorded in docs/NOTES.md).
+`--check`: 17 derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
