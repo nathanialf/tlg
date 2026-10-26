@@ -8,5 +8,5 @@ void FUN_0008e870(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0017f110(static_cast<hkMemoryResourceHandle *>(object), flag);
+    new (object) hkMemoryResourceHandle(flag);
 }

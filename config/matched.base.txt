@@ -790,3 +790,12 @@ _ZN17hknpWorldSnapshotC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0015bf
 FUN_00188e90 src/libs/unknown/func_00188e90.cpp _ZN11ImageSourceC2Ev
 FUN_000ad590 src/libs/unknown/func_000ad590.cpp _ZN15FileImageSourceD1Ev
 FUN_0000ed40 src/libs/unknown/func_0000ed40.cpp _ZN17Allocator0000ed40C2Ev
+_ZN21hknpPhysicsSystemDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00165a80.cpp
+FUN_00167be0 src/libs/unknown/func_00167be0.cpp
+_ZN30hknpDestructionShapePropertiesC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00175a50.cpp
+_ZN25hkAlignSceneToNodeOptionsD1Ev src/libs/unknown/func_0017d490.cpp
+_ZN25hkAlignSceneToNodeOptionsC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017d520.cpp
+_ZN22hkMemoryResourceHandleC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017f110.cpp
+FUN_0000d230 src/libs/unknown/func_0000d230.cpp
+FUN_0007c3e0 src/libs/unknown/func_0007c3e0.cpp
+FUN_00007180 src/libs/unknown/func_00007180.cpp

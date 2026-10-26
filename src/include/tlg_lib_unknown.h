@@ -333,8 +333,16 @@ class MemoryExtendedInterface /* derived name */
     virtual ~MemoryExtendedInterface();
     virtual void garbageCollect() = 0; /* derived name */
     virtual void unknownVirtual3() = 0;
-    virtual void unknownVirtual4() = 0;
-    virtual void unknownVirtual5() = 0;
+    /* Slot 4: takes a 64-bit value (the memory system's slot 6, FUN_0000d230,
+     * widens its int with movslq) and returns an int. */
+    virtual int unknownVirtual4(s64 value) = 0;
+    /* Slot 5: returns a 64-bit value, which the memory system's slot 7
+     * (FUN_0000d250) truncates to an int, keeping the call: the return is
+     * duplicated into a tail call only when the phi's incoming value is the
+     * call itself (tools/cc/src/llvm-3.3.src/lib/Transforms/Scalar/
+     * CodeGenPrepare.cpp:761, DupRetToEnableTailCallOpts), and here it is the
+     * trunc. */
+    virtual s64 unknownVirtual5() = 0;
     /* Slot 6: a bool the memory system's slot 9 (FUN_0000d290) hands back. */
     virtual bool unknownVirtual6() = 0;
     virtual void unknownVirtual7() = 0;
@@ -388,7 +396,12 @@ struct hkMemoryRouter;
 void FUN_0000d080(MemorySystem *self, hkMemoryRouter &router); /* derived name */
 
 void FUN_0000d0a0(MemorySystem *self); /* derived name */
-bool FUN_0000d290(MemorySystem *self); /* derived name */
+/* Slots 6 and 7 of the memory system's vtable: hand an int to slot 4 of
+ * the allocator interface at +0x20, and read slot 5 back as an int; 0
+ * without one. derived names. */
+int FUN_0000d230(MemorySystem *self, int value); /* derived name */
+int FUN_0000d250(MemorySystem *self);            /* derived name */
+bool FUN_0000d290(MemorySystem *self);           /* derived name */
 
 /* Slot 8 of the memory system's vtable: whether its buffer allocator could
  * hold a block of a size. derived name. */
@@ -537,21 +550,50 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
  * and 6 (0x7600, 0x7660, 0x76d0) when they hand the workers a callback,
  * tested by the waits at 0x7402 and 0x774d, and read by slot 7
  * (FUN_000077a0) as a test against zero (hkBool). */
-class Pool00007880 /* derived name */
+/* It is reference-counted: its constructor 0x6d70 stores 0xffff0001 at +8
+ * and slots 2 to 4 are hkReferencedObject's (0x270, 0x42d0, 0x69a0). From
+ * +0x10, up to eleven 64-byte worker records (0x7890 starts at most 11
+ * threads): the pool at +0, the thread at +8 (constructed by 0x104b0 and
+ * started by 0x10580 on FUN_00007180 with the record as its argument), the
+ * worker's index plus one at +0x18. Slot 14 (0x71a0) is a worker's loop,
+ * taking its index (it reads the record's +0x18 at index * 64). */
+class Pool00007880 : public hkReferencedObject /* derived name */
 {
   public:
+    struct WorkerRecord /* derived name */
+    {
+        Pool00007880 *pool; /* derived name */
+        u8 unknown8[0x10];
+        int threadId; /* derived name */
+        u8 unknown1c[0x24];
+    };
+
     virtual ~Pool00007880();
 
-    bool FUN_000077a0() const; /* vtable slot 7; derived name */
-    int FUN_00007880() const;  /* vtable slot 9; derived name */
-    void FUN_000075d0();       /* vtable slot 13; derived name */
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual bool FUN_000077a0() const; /* vtable slot 7; derived name */
+    virtual void unknownVirtual8();
+    virtual int FUN_00007880() const; /* vtable slot 9; derived name */
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    virtual void FUN_000075d0();                /* vtable slot 13; derived name */
+    virtual void FUN_000071a0(int workerIndex); /* vtable slot 14; derived name */
 
-    u8 unknown8[0x320];
+    u8 unknownC[4];
+    WorkerRecord workers[11]; /* derived name */
+    u8 unknown2d0[0x58];
     int count; /* derived name */
     u8 unknown32c[4];
     bool flag330;   /* derived name */
     hkBool running; /* derived name */
 };
+
+/* derived name: the start function of a pool's worker thread (0x7890
+ * passes it to 0x10580 with the worker's record): runs the pool's worker
+ * loop for the record's index. */
+void *FUN_00007180(void *argument); /* derived name */
 
 /* A Mersenne twister (MT19937): 624 words of state in a block of 2496 bytes
  * the seeding (FUN_000106e0, multiplier 1812433253) allocates on first use

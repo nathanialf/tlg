@@ -34,6 +34,27 @@ enum hkResult {
  * through a conditional branch (docs/DECISIONS.md D19). derived name. */
 #define HK_BREAKPOINT(id) __builtin_debugtrap()
 
+/* The scalar helpers (derived names): the larger and the smaller of two
+ * values by one comparison each, and a value clamped to a range through
+ * both (0x7c3e0: vmaxss against zero, then vminss against one). */
+namespace hkMath /* derived name */
+{
+template <typename T> inline T max2(T a, T b) /* derived name */
+{
+    return a > b ? a : b;
+}
+
+template <typename T> inline T min2(T a, T b) /* derived name */
+{
+    return a < b ? a : b;
+}
+
+template <typename T> inline T clamp(T value, T low, T high) /* derived name */
+{
+    return min2(max2(value, low), high);
+}
+} // namespace hkMath
+
 /* hkArray, the reflection's array type (its name in the type-name table at
  * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
  * flags (0x80000000 when the array does not own its storage, as the
@@ -1670,7 +1691,36 @@ void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
  * sets the collision filter of the world's description (+0xa8 of it) there
  * through FUN_000667b0, which keeps a reference to the new filter at +0x568
  * and releases the old one. FUN_0004bcc0 forwards to it. */
-struct hknpCollisionFilter; /* derived name */
+/* hknpCollisionFilter (hkClass 0x57c0cb0, built at 0x4049f: size 0x10,
+ * parent hkReferencedObject's; its one member record and enum are built at
+ * run time). Slots 5 to 9 of the filters' vtables are its interface, named
+ * by hknpPairCollisionFilter's bodies (derived names): slot 5 (0x1679a0)
+ * filters an array of 8-byte pairs of body ids and returns how many are
+ * left; slots 6 to 9 answer whether a collision is enabled, from a query
+ * type and, by slot: a flag (6), two inputs whose filter info sits at +4 of
+ * the first and +0x44 of the second (7, as hknpGroupCollisionFilter's
+ * 0x3a290 reads them), two body ids (8), a flag and two inputs with their
+ * filter info at +4 (9, 0x3a2f0). */
+struct hknpCollisionFilterContext;     /* derived name */
+struct hknpCollisionFilterBodyIdPair;  /* derived name */
+struct hknpCollisionFilterQueryInput;  /* derived name */
+struct hknpCollisionFilterTargetInput; /* derived name */
+struct hknpCollisionFilterShapeInput;  /* derived name */
+
+class hknpCollisionFilter : public hkReferencedObject
+{
+  public:
+    virtual int FUN_001679a0(const hknpCollisionFilterContext &context,
+                             hknpCollisionFilterBodyIdPair *pairs,
+                             int numPairs) const = 0;              /* derived name */
+    virtual bool FUN_00167ad0(int queryType, bool flag) const = 0; /* derived name */
+    virtual bool
+    FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
+                 const hknpCollisionFilterTargetInput &target) const = 0;         /* derived name */
+    virtual bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const = 0; /* derived name */
+    virtual bool FUN_00167c00(int queryType, bool targetIsB, const hknpCollisionFilterShapeInput &a,
+                              const hknpCollisionFilterShapeInput &b) const = 0; /* derived name */
+};
 
 /* The world's constructor (0x4a1bb to 0x4a258) fills two tables of the
  * manager by type: the collision detectors of the default modifier set
@@ -1840,17 +1890,43 @@ void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag);
 struct hknpProjectileGun; /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
 struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
 class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
-struct hknpPhysicsSystemData;         /* 0x57c0198; FUN_00165a80, vtable 0x16a5130 */
 struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
     hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
 struct
     hknpTriangleShape; /* 0x57c0838; FUN_00078230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
 
-void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);     /* derived name */
-void FUN_0003e170(hknpDummyShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
-void FUN_00156620(hknpFirstPersonGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
-void FUN_00165a80(hknpPhysicsSystemData *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);  /* derived name */
+void FUN_0003e170(hknpDummyShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_00156620(hknpFirstPersonGun *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpPhysicsSystemData (type info 0x57c0198; hkClass 0x57c0148, built at
+ * 0x3d115: size 0x78, parent hkReferencedObject's, member records at
+ * 0x1696330; vtable 0x16a5130): arrays of materials (hknpMaterial),
+ * motionProperties, motionCinfos, bodyCinfos and constraintCinfos from
+ * +0x10, referencedObjects (pointers to hkReferencedObject) at +0x60, name
+ * (hkStringPtr) at +0x70. Its finish constructor 0x165a80 is out of line:
+ * the finish callback 0x3d070 jumps to it, the reflection initializer at
+ * 0x3d123 runs it on a temporary. */
+struct hknpMaterial;
+struct hknpMotionCinfo;
+struct hknpBodyCinfo;
+struct hknpConstraintCinfo;
+
+class hknpPhysicsSystemData : public hkReferencedObject
+{
+  public:
+    hknpPhysicsSystemData(hkFinishLoadedObjectFlag flag);
+
+    hkArray<hknpMaterial> materials;
+    hkArray<hknpMotionProperties> motionProperties;
+    hkArray<hknpMotionCinfo> motionCinfos;
+    hkArray<hknpBodyCinfo> bodyCinfos;
+    hkArray<hknpConstraintCinfo> constraintCinfos;
+    hkArray<hkReferencedObject *> referencedObjects;
+    hkStringPtr name;
+};
+
 void FUN_00159b40(hknpConstraintCollisionFilter *self,
                   hkFinishLoadedObjectFlag flag);                          /* derived name */
 void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
@@ -1860,7 +1936,35 @@ class
     hknpScaledConvexShape; /* 0x57c0c48; FUN_0016ce90 runs hknpDecoratorShape's, vtable 0x16a54a0 */
 struct
     hknpScaledConvexShapeBase; /* 0x57c0c78; FUN_0016a810 runs hknpDecoratorShape's, vtable 0x16a5390 */
-struct hknpPairCollisionFilter; /* 0x57c1160; FUN_001673f0, vtable 0x16a52f0 */
+
+/* hknpPairCollisionFilter (type info 0x57c1160; hkClass 0x57c1110, built
+ * at 0x42895: size 0x28, parent hknpCollisionFilter; vtable 0x16a52f0):
+ * disabledPairs (a hash map of pairs, not serialized: record flags 0x400)
+ * at +0x10, childFilter (a pointer to hknpCollisionFilter) at +0x20. Each
+ * of slots 5 to 9 asks the child filter first, when there is one, and slot
+ * 8 then looks the pair up in the map; hknpConstraintCollisionFilter (its
+ * hkClass parent) keeps all five. */
+struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
+    void *elem;
+    int numElems;
+    int hashMod;
+};
+
+class hknpPairCollisionFilter : public hknpCollisionFilter
+{
+  public:
+    int FUN_001679a0(const hknpCollisionFilterContext &context,
+                     hknpCollisionFilterBodyIdPair *pairs, int numPairs) const; /* derived name */
+    bool FUN_00167ad0(int queryType, bool flag) const;                          /* derived name */
+    bool FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
+                      const hknpCollisionFilterTargetInput &target) const; /* derived name */
+    bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const;      /* derived name */
+    bool FUN_00167c00(int queryType, bool targetIsB, const hknpCollisionFilterShapeInput &a,
+                      const hknpCollisionFilterShapeInput &b) const; /* derived name */
+
+    hknpPairCollisionFilterMapPairFilterKeyOverrideType disabledPairs;
+    hknpCollisionFilter *childFilter;
+};
 
 void FUN_00166900(hknpMountedBallGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_0016ce90(hknpScaledConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -2116,7 +2220,6 @@ class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 
 struct
     hknpCompressedHeightFieldShape; /* 0x57c2378; FUN_00175de0 runs hknpShape's, then vtable 0x16a5980 */
 class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs FUN_0007d520, vtable 0x1695b10 */
-struct hknpDestructionShapeProperties; /* 0x57c2648; FUN_00175a50, vtable 0x16a5940 */
 struct
     hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
 struct hknpSphereShape;      /* 0x57c2798; FUN_0003c540 runs hknpConvexShape's, vtable 0x1695c10 */
@@ -2126,8 +2229,25 @@ void FUN_00175de0(hknpCompressedHeightFieldShape *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003c240(hknpBreakableConstraintData *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00175a50(hknpDestructionShapeProperties *self,
-                  hkFinishLoadedObjectFlag flag);                                /* derived name */
+
+/* hknpDestructionShapeProperties (type info 0x57c2648; hkClass 0x57c25f8,
+ * built at 0x6b465: size 0x70, parent hkReferencedObject's, member records
+ * at 0x169a9a0; vtable 0x16a5940): worldFromShape (a transform) at +0x10,
+ * sceneNodeUuid (hkUuid) at +0x50, isHierarchicalCompound and
+ * hasDestructionShapes (hkBool) at +0x60 and +0x61. Its finish constructor
+ * 0x175a50 is out of line: the finish callback 0x6b3c0 jumps to it, the
+ * reflection initializer at 0x6b473 runs it on a temporary. */
+class hknpDestructionShapeProperties : public hkReferencedObject
+{
+  public:
+    hknpDestructionShapeProperties(hkFinishLoadedObjectFlag flag);
+
+    hkTransform worldFromShape;
+    hkUuid sceneNodeUuid;
+    hkBool isHierarchicalCompound;
+    hkBool hasDestructionShapes;
+};
+
 void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003c540(hknpSphereShape *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 /* Slot 17 of hknpSphereShape's vtable (address point 0x1695c20) returns pi,
@@ -2808,6 +2928,7 @@ class hkpBallAndSocketConstraintData
     float FUN_0007c2d0() const;                    /* vtable slot 13; derived name */
     void FUN_0007c310(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0007c320() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0007c3e0(float factor);           /* vtable slot 17; derived name */
     hkResult FUN_0007c3d0(float &factorOut) const; /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
@@ -3088,7 +3209,7 @@ void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
  * empty body FUN_0017de10 (shared with fourteen vtable slots).
  * hkMemoryResourceContainer (type info 0x57c85a0, size 0x40): FUN_0017fb60
  * stores the vtable 0x16a6300 and finishes the members from +0x10.
- * hkMemoryResourceHandle (type info 0x57c86a0, size 0x30): FUN_0017f110
+ * hkMemoryResourceHandle (type info 0x57c86a0, size 0x30): 0x17f110
  * stores the vtable 0x16a6270 and runs hkStringPtr's on +0x18.
  * hkxMesh (type info 0x57c6f90, size 0x30): FUN_0008bea0 stores the vtable
  * 0x16a25a0.
@@ -3186,9 +3307,19 @@ class hkxMesh : public hkReferencedObject
 class hkAlignSceneToNodeOptions : public hkReferencedObject
 {
   public:
+    hkAlignSceneToNodeOptions(hkFinishLoadedObjectFlag flag);
+    virtual ~hkAlignSceneToNodeOptions();
+
     void FUN_0017d550(const char *newName); /* derived name */
 
-    u8 unknownC[0xc];
+    hkBool invert;
+    hkBool transformPositionX;
+    hkBool transformPositionY;
+    hkBool transformPositionZ;
+    hkBool transformRotation;
+    hkBool transformScale;
+    hkBool transformSkew;
+    int keyframe;
     hkStringPtr nodeName;
 };
 
@@ -3264,21 +3395,45 @@ struct hkRefVariant /* derived name */ {
 void FUN_00090250(hkRefVariant *self, hkReferencedObject *object); /* derived name */
 const hkClass *FUN_000902f0(const hkRefVariant *self);             /* derived name */
 
+/* hkResourceBase (hkClass 0x57c86d0, built at 0x8eb5c: size 0x10, parent
+ * hkReferencedObject's, one enum and no members) and hkResourceHandle
+ * (hkClass 0x57c8650, built at 0x8ec1c: size 0x10, parent hkResourceBase,
+ * no members): the abstract parents, with nothing of their own to finish. */
+class hkResourceBase : public hkReferencedObject
+{
+  public:
+    hkResourceBase(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkResourceHandle : public hkResourceBase
+{
+  public:
+    hkResourceHandle(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
+};
+
+/* hkMemoryResourceHandle::ExternalLink (hkClass 0x57c85d0, built at
+ * 0x8e9fc: size 0x10, member records at 0x16a3130): memberName and
+ * externalId (hkStringPtr) at +0 and +8. */
+struct hkMemoryResourceHandleExternalLink;
+
 /* hkMemoryResourceHandle (vtable address point 0x16a6280; slot 0 the complete
  * destructor 0x17f180): members from its record table at 0x16a30b0: variant
  * (a pointer to hkReferencedObject) at +0x10, name (hkStringPtr) at +0x18,
  * references (array) at +0x20. Slot 6 (0x17f2d0) returns the name or "null",
  * slot 7 sets it (folded onto FUN_0017d550), slot 8 (0x7f80) returns the
  * object, slot 9 its class and slot 10 sets it. */
-class hkMemoryResourceHandle : public hkReferencedObject
+class hkMemoryResourceHandle : public hkResourceHandle
 {
   public:
+    hkMemoryResourceHandle(hkFinishLoadedObjectFlag flag);
+
     const char *FUN_0017f2d0() const;              /* vtable slot 6; derived name */
     const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
     void FUN_0017f320(hkReferencedObject *object); /* vtable slot 10; derived name */
 
     hkRefVariant variant;
     hkStringPtr name;
+    hkArray<hkMemoryResourceHandleExternalLink> references;
 };
 
 /* hkxVertexDescription::ElementDecl (type info 0x57c7f10, size 0x18, no
@@ -3307,13 +3462,10 @@ void FUN_0017dde0(hkRootLevelContainer::NamedVariant *self,
                   hkFinishLoadedObjectFlag flag);                             /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0017fb60(hkMemoryResourceContainer *self,
-                  hkFinishLoadedObjectFlag flag);                               /* derived name */
-void FUN_0017f110(hkMemoryResourceHandle *self, hkFinishLoadedObjectFlag flag); /* derived name */
+                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 void FUN_00087cf0(hkxVertexBuffer::VertexData *self); /* derived name */
-void FUN_0017d520(hkAlignSceneToNodeOptions *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0008a890(hkxSkinBinding *self);          /* derived name */
+void FUN_0008a890(hkxSkinBinding *self);              /* derived name */
 /* hkSkinBinding (vtable 0x16a3860): slot 0, the complete destructor
  * FUN_000aa370, runs the out-of-line FUN_000aa3d0, which restores the
  * vtable. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
@@ -4303,6 +4455,10 @@ struct StringMap /* derived name */
     hkUlong FUN_00091900(const char *key, hkUlong defaultValue) const; /* derived name */
 };
 
+/* The map's destructor, out of line (0x915e0): the entries go back to the
+ * allocator at 0x57b8480 at (hashMod + 1) * 24 bytes. derived name. */
+void FUN_000915e0(StringMap *self); /* derived name */
+
 /* A map from pointers to pointer-sized values (derived name): 16-byte
  * entries (key, value; a key of -1 marks a free slot) at +0, the count at +8
  * and the hash mask at +0xc. FUN_00013b30 looks a key up (the hash
@@ -4434,6 +4590,36 @@ struct ShapeWatcher /* derived name */
     const hknpShape *shape;   /* derived name */
     u8 unknown10[0x10];
     u8 changeFlags; /* derived name */
+};
+
+/* The nodes the XML reader at 0x19da90 returns (derived names: no string
+ * names the reader or its nodes): reference-counted objects with the node
+ * type at +0xc. The reader allocates an end element (vtable 0x16a6a20, type
+ * 2, 0x18 bytes, its name at +0x10, built at 0x19e1eb from the text after
+ * "</") and character data (vtable 0x16a6a60, type 3, 0x18 bytes, its text
+ * at +0x10, built at 0x19e08c and 0x19e28b); a start element (vtable
+ * 0x16a69e0, its name at +0x10 and an array of name and value pairs at
+ * +0x18) is the third kind. */
+class XmlNode : public hkReferencedObject /* derived name */
+{
+  public:
+    int type; /* derived name */
+};
+
+class XmlEndElement : public XmlNode /* derived name */
+{
+  public:
+    virtual ~XmlEndElement();
+
+    hkStringPtr name; /* derived name */
+};
+
+class XmlCharacters : public XmlNode /* derived name */
+{
+  public:
+    virtual ~XmlCharacters();
+
+    hkStringPtr text; /* derived name */
 };
 
 #endif

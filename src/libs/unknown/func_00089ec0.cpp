@@ -8,5 +8,5 @@ void FUN_00089ec0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0017d520(static_cast<hkAlignSceneToNodeOptions *>(object), flag);
+    new (object) hkAlignSceneToNodeOptions(flag);
 }
