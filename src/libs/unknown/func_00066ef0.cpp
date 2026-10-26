@@ -8,5 +8,5 @@ void FUN_00066ef0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0006c7e0(static_cast<hknpRefMaterial *>(object), flag);
+    new (object) hknpRefMaterial(flag);
 }

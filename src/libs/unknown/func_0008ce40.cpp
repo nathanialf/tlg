@@ -8,5 +8,5 @@ void FUN_0008ce40(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0008c0a0(static_cast<hkxVertexDescription *>(object), flag);
+    new (object) hkxVertexDescription(flag);
 }

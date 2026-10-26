@@ -36,7 +36,7 @@ FUN_0001c1e0 src/libs/unknown/leaf_0001c1e0.cpp
 FUN_000396a0 src/libs/unknown/leaf_000396a0.cpp
 FUN_0003b640 src/libs/unknown/leaf_0003b640.cpp
 FUN_00083250 src/libs/unknown/leaf_00083250.cpp
-FUN_0008c0a0 src/libs/unknown/leaf_0008c0a0.cpp
+_ZN20hkxVertexDescriptionC1E24hkFinishLoadedObjectFlag src/libs/unknown/leaf_0008c0a0.cpp
 FUN_000a9140 src/libs/unknown/leaf_000a9140.cpp
 FUN_000add50 src/libs/unknown/leaf_000add50.cpp
 FUN_000add70 src/libs/unknown/leaf_000add70.cpp
@@ -770,3 +770,13 @@ FUN_00024800 src/libs/unknown/func_00024800.cpp
 _ZN17hkMemoryMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0002a940.cpp
 _ZN17hknpRefWorldCinfoD1Ev src/libs/unknown/func_00039100.cpp
 FUN_000391c0 src/libs/unknown/func_000391c0.cpp
+FUN_00047990 src/libs/unknown/func_00047990.cpp
+_ZN15hknpRefMaterialD1Ev src/libs/unknown/func_0006c5d0.cpp
+_ZN15hknpRefMaterialC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0006c7e0.cpp
+_ZN22hknpBodyQualityLibraryD1Ev src/libs/unknown/func_00070f50.cpp
+FUN_0007bf70 src/libs/unknown/func_0007bf70.cpp
+FUN_00086350 src/libs/unknown/func_00086350.cpp
+FUN_00089c70 src/libs/unknown/func_00089c70.cpp
+_ZN15hkxVertexBufferC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008a1a0.cpp
+FUN_0008af30 src/libs/unknown/func_0008af30.cpp
+FUN_0008cb10 src/libs/unknown/func_0008cb10.cpp

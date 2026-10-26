@@ -918,10 +918,72 @@ class hkxCamera : public hkReferencedObject
     hkxCamera(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hkxAttributeHolder (hkClass 0x57c76b0, built at 0x8b422: size 0x20,
+ * parent hkReferencedObject's 0x57b8640, one member record at 0x16a1f70):
+ * attributeGroups (an array of hkxAttributeGroup, class 0x57c6ce8) at
+ * +0x10. */
+struct hkxAttributeGroup;
+
 class hkxAttributeHolder : public hkReferencedObject
 {
   public:
-    hkxAttributeHolder(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxAttributeHolder(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), attributeGroups(flag)
+    {
+    }
+
+    hkArray<hkxAttributeGroup> attributeGroups;
+};
+
+/* hkxMaterial (hkClass 0x57c61d0, built at 0x86bf1: size 0xe0, parent
+ * hkxAttributeHolder's; its member records are written at run time from
+ * 0x57c6220, name (hkStringPtr) first, then stages, the four colours,
+ * subMaterials, extraData and the rest): the finish callback 0x86350 finishes
+ * only the name at +0x20. */
+class hkxMaterial : public hkxAttributeHolder
+{
+  public:
+    hkxMaterial(hkFinishLoadedObjectFlag flag) : hkxAttributeHolder(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    hkStringPtr name;
+};
+
+/* hkxMaterialEffect (hkClass 0x57c7140, built at 0x89e36: size 0x30,
+ * parent hkReferencedObject's; member records written at run time from
+ * 0x57c71c0: name, type, data): the finish callback 0x89c70 finishes the
+ * name at +0x10. */
+class hkxMaterialEffect : public hkReferencedObject
+{
+  public:
+    hkxMaterialEffect(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    hkStringPtr name;
+    u8 unknown18[0x18];
+};
+
+/* hkxNodeSelectionSet (hkClass 0x57c75b0, built at 0x8afe5: size 0x38,
+ * parent hkxAttributeHolder's, member records at 0x16a1eb0): selectedNodes
+ * (an array of pointers to hkxNode, class 0x57c77b0) at +0x20, name
+ * (hkStringPtr) at +0x30. The finish callback 0x8af30 finishes the name. */
+struct hkxNode;
+
+class hkxNodeSelectionSet : public hkxAttributeHolder
+{
+  public:
+    hkxNodeSelectionSet(hkFinishLoadedObjectFlag flag)
+        : hkxAttributeHolder(flag), selectedNodes(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    hkArray<hkxNode *> selectedNodes;
+    hkStringPtr name;
 };
 
 class hkxVertexSelectionChannel : public hkReferencedObject
@@ -1903,11 +1965,39 @@ class hknpRefWorldCinfo : public hkReferencedObject
 };
 
 class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs FUN_0007d520, vtable 0x1699a90 */
-struct hknpBodyQualityLibrary;     /* 0x57c1a78; FUN_00071190, vtable 0x169b150 */
 
 void FUN_00067960(hknpMalleableConstraintData *self,
-                  hkFinishLoadedObjectFlag flag);                               /* derived name */
-void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
+                  hkFinishLoadedObjectFlag flag);                        /* derived name */
+void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* A signal (derived name): its slots in a list from the pointer at +0 (the
+ * low two bits are flags), each slot's slot 1 destroying it; its
+ * destructor FUN_00093530 is out of line. */
+struct Signal00093530 /* derived name */
+{
+    void *slots; /* derived name */
+};
+
+void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
+
+/* hknpBodyQuality (hkClass 0x57bee30, built at 0x3894a), 16 bytes. */
+struct hknpBodyQuality {
+    u8 unknown0[0x10];
+};
+
+/* hknpBodyQualityLibrary (type info 0x57c1a78; hkClass 0x57c1a28, built at
+ * 0x61e85: size 0x220, parent hkReferencedObject's 0x57b8640, member
+ * records at 0x16997a0; vtable 0x169b150): qualityModifiedSignal (not
+ * serialized: record flags 0x400) at +0x10, qualities (hknpBodyQuality) from
+ * +0x20. Finish constructor FUN_00071190, complete destructor 0x70f50. */
+struct hknpBodyQualityLibrary : public hkReferencedObject {
+    virtual ~hknpBodyQualityLibrary();
+
+    Signal00093530 qualityModifiedSignal;
+    u8 unknown18[8];
+    hknpBodyQuality qualities[32];
+};
+
 void FUN_00071190(hknpBodyQualityLibrary *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* What the world's constructor sets its body quality library up with (the
@@ -1930,7 +2020,20 @@ struct hknpBodyQualityLibraryCinfo /* derived name */
  * each finish constructor (FUN_0006c6f0, FUN_0006c800) runs hkStringPtr's on
  * the name at +0. */
 struct hknpMaterial {
+    /* Inline where hknpRefMaterial's finish constructor and destructor run
+     * them (0x6c7e0, 0x6c5d0 finish and destroy the name directly). */
+    hknpMaterial(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000e5c0(&name, flag);
+    }
+
+    ~hknpMaterial()
+    {
+        FUN_0000e5d0(&name);
+    }
+
     hkStringPtr name; /* derived name */
+    u8 unknown8[0x48];
 };
 
 struct hknpMaterialDescriptor {
@@ -1939,9 +2042,22 @@ struct hknpMaterialDescriptor {
 
 void FUN_0006c6f0(hknpMaterial *self, hkFinishLoadedObjectFlag flag);           /* derived name */
 void FUN_0006c800(hknpMaterialDescriptor *self, hkFinishLoadedObjectFlag flag); /* derived name */
-/* hknpRefMaterial (type info 0x57c2040): its finish constructor
- * FUN_0006c7e0 stores the vtable 0x169ac60 and runs hkStringPtr's on +0x10. */
-struct hknpRefMaterial;
+
+/* hknpRefMaterial (type info 0x57c2040; hkClass 0x57c1ff0, built at
+ * 0x67838: size 0x60, parent hkReferencedObject's 0x57b8640, one member
+ * record at 0x1699940; vtable 0x169ac60): material (a struct of class
+ * hknpMaterial, 0x50 bytes) at +0x10. Its finish constructor 0x6c7e0 is out
+ * of line (the finish callback 0x66ef0 jumps to it, the reflection
+ * initializer at 0x67847 runs it on a temporary); complete destructor
+ * 0x6c5d0. */
+class hknpRefMaterial : public hkReferencedObject
+{
+  public:
+    hknpRefMaterial(hkFinishLoadedObjectFlag flag);
+    virtual ~hknpRefMaterial();
+
+    hknpMaterial material;
+};
 class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
 struct
     hknpCompressedHeightFieldShape; /* 0x57c2378; FUN_00175de0 runs hknpShape's, then vtable 0x16a5980 */
@@ -1951,8 +2067,7 @@ struct
     hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
 struct hknpSphereShape;      /* 0x57c2798; FUN_0003c540 runs hknpConvexShape's, vtable 0x1695c10 */
 
-void FUN_0006c7e0(hknpRefMaterial *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00157e00(hknpBallGun *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_00157e00(hknpBallGun *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00175de0(hknpCompressedHeightFieldShape *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003c240(hknpBreakableConstraintData *self,
@@ -2759,6 +2874,7 @@ class hkpFixedConstraintData
 
     void FUN_0007bf20(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    hkBool FUN_0007bf70() const;                           /* vtable slot 7; derived name */
     void FUN_0007bec0(float newMaxAngImpulse);             /* vtable slot 9; derived name */
     float FUN_0007bed0() const;                            /* vtable slot 11; derived name */
     float FUN_0007bee0() const;                            /* vtable slot 12; derived name */
@@ -2897,8 +3013,8 @@ void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
  * hkxVertexBuffer::VertexData (type info 0x57c6970, size 0x68, no vtable):
  * its destructor FUN_00087cf0 frees its arrays from +0x40 down.
  * hkxVertexBuffer, polymorphic (type info 0x57c69f0, size 0x88): its finish
- * constructor FUN_0008a1a0 stores the vtable 0x16a1a30 and runs
- * hkxVertexDescription's (FUN_0008c0a0, an empty body shared with twelve
+ * constructor 0x8a1a0 stores the vtable 0x16a1a30 and runs
+ * hkxVertexDescription's (0x8c0a0, an empty body shared with twelve
  * vtable slots) on the member at +0x78.
  * hkxVertexDescription (type info 0x57c7f90, size 0x10, no vtable).
  * hkxVertexAnimation, polymorphic (type info 0x57c7e10, size 0xb8, vtable
@@ -2930,10 +3046,72 @@ void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
  * 0x16a1cc0 stored by its finish constructor FUN_0008a9b0): slot 0, the
  * complete destructor FUN_0008a830, runs the out-of-line FUN_0008a890,
  * which restores the vtable and frees the arrays from +0x30 down. */
-class hkxVertexBuffer
+/* hkxVertexDescription (hkClass 0x57c7f40, built at 0x8d20a: size 0x10,
+ * one member record at 0x16a27a0): decls (an array of its ElementDecl, class
+ * 0x57c7ec0) at +0. Its finish constructor is out of line, the empty body at
+ * 0x8c0a0 that twelve vtable slots share. */
+struct hkxVertexDescriptionElementDecl;
+
+struct hkxVertexDescription {
+    hkxVertexDescription(hkFinishLoadedObjectFlag flag);
+
+    hkArray<hkxVertexDescriptionElementDecl> decls;
+};
+
+/* hkxVertexBuffer (hkClass 0x57c69a0, built at 0x87f8b: size 0x88, parent
+ * hkReferencedObject's, member records at 0x16a1210): data (its VertexData,
+ * class 0x57c6920) at +0x10, desc (hkxVertexDescription) at +0x78. Its
+ * finish constructor 0x8a1a0 is out of line (the finish callback 0x87e40
+ * jumps to it; hkxVertexAnimation's runs it on its vertData). */
+class hkxVertexBuffer : public hkReferencedObject
 {
   public:
-    struct VertexData;
+    /* hkxVertexBufferVertexData (hkClass 0x57c6920, built at 0x87ee2, size
+     * 0x68, member records at 0x16a1050). */
+    struct VertexData {
+        VertexData(hkFinishLoadedObjectFlag flag)
+            : vectorData(flag), floatData(flag), uint32Data(flag), uint16Data(flag), uint8Data(flag)
+        {
+        }
+
+        hkArray<u32> vectorData;
+        hkArray<u32> floatData;
+        hkArray<u32> uint32Data;
+        hkArray<u16> uint16Data;
+        hkArray<u8> uint8Data;
+        u32 numVerts;
+        u32 vectorStride;
+        u32 floatStride;
+        u32 uint32Stride;
+        u32 uint16Stride;
+        u32 uint8Stride;
+    };
+
+    hkxVertexBuffer(hkFinishLoadedObjectFlag flag);
+
+    VertexData data;
+    hkxVertexDescription desc;
+};
+
+/* hkxVertexAnimation (hkClass 0x57c7dc0, built at 0x8cd70: size 0xb8,
+ * parent hkReferencedObject's, member records at 0x16a2700): time (float)
+ * at +0xc, vertData (hkxVertexBuffer) at +0x10, vertexIndexMap (an array of
+ * hkInt32) at +0x98, componentMap (an array of class 0x57c7d40) at +0xa8.
+ * The finish callback 0x8cb10 constructs it in place. */
+struct hkxVertexAnimationUsageMap;
+
+class hkxVertexAnimation : public hkReferencedObject
+{
+  public:
+    hkxVertexAnimation(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), vertData(flag), vertexIndexMap(flag), componentMap(flag)
+    {
+    }
+
+    float time;
+    hkxVertexBuffer vertData;
+    hkArray<s32> vertexIndexMap;
+    hkArray<hkxVertexAnimationUsageMap> componentMap;
 };
 
 /* hkxMesh (hkClass parent hkReferencedObject, built at 0x8924a): its
@@ -2986,8 +3164,6 @@ class hkxSkinBinding : public hkReferencedObject
   public:
     hkxSkinBinding(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
-struct hkxVertexDescription;
-struct hkxVertexAnimation;
 
 /* hkxMeshSection (hkClass parent hkReferencedObject, built at 0x8e07d):
  * its finish callback FUN_0008e000 runs the inline finish constructor,
@@ -3070,10 +3246,9 @@ struct hkxVertexDescriptionElementDecl {
     hkStringPtr channelID;
 };
 
-void FUN_0008c0a0(hkxVertexDescription *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0008c990(hkxVertexAnimation *self);                                  /* derived name */
-void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
-void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
+void FUN_0008c990(hkxVertexAnimation *self);                          /* derived name */
+void FUN_0008dc50(hkxMeshSection *self);                              /* derived name */
+void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0017dde0(hkRootLevelContainer::NamedVariant *self,
                   hkFinishLoadedObjectFlag flag);                             /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -3081,8 +3256,7 @@ void FUN_0017fb60(hkMemoryResourceContainer *self,
                   hkFinishLoadedObjectFlag flag);                               /* derived name */
 void FUN_0017f110(hkMemoryResourceHandle *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
-void FUN_00087cf0(hkxVertexBuffer::VertexData *self);                    /* derived name */
-void FUN_0008a1a0(hkxVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00087cf0(hkxVertexBuffer::VertexData *self); /* derived name */
 void FUN_0017d520(hkAlignSceneToNodeOptions *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0008a890(hkxSkinBinding *self);          /* derived name */
@@ -3761,7 +3935,7 @@ class OffsetStreamWriter : public hkStreamWriter /* derived name */
 
 /* hknpVehicleInstance: hkClass 0x57c1490 (size 0x120, parent hknpUnaryAction's
  * 0x57bfbc0), built by the reflection initializer at 0x47a5d with its member
- * records at 0x1698a70; its finish constructor 0x47990 stores the vtable
+ * records at 0x1698a70; its finish callback 0x47990 stores the vtable
  * (address point 0x16a50a0, complete destructor FUN_001625d0). Members read so
  * far: world at +0x20, wheelCollide (a pointer to hknpVehicleWheelCollide)
  * at +0x68, wheelsInfo (array of hknpVehicleInstance::WheelInfo)
@@ -3796,12 +3970,39 @@ struct hknpVehicleInstanceSlot8Argument /* derived name */
     void *unknown10;
 };
 
-/* Its parent hknpUnaryAction's one member, bodyId at +0x18 (record
- * 0x1695790): slot 5 (FUN_00162540) hands out its address and a count of 1,
- * slot 6 (FUN_00162550) forgets it when that body is removed. */
-class hknpVehicleInstance
+/* hknpAction (hkClass 0x57bfad0, built at 0x3adf5: size 0x18, parent
+ * hkReferencedObject's 0x57b8640, one member record at 0x16956e0): userData
+ * (hkUlong) at +0x10. */
+class hknpAction : public hkReferencedObject
 {
   public:
+    hknpAction(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    hkUlong userData;
+};
+
+/* hknpUnaryAction (hkClass 0x57bfbc0, built at 0x3af2a: size 0x20, parent
+ * hknpAction's), one member, bodyId at +0x18 (record 0x1695790): the
+ * vehicle's slot 5 (FUN_00162540) hands out its address and a count of 1,
+ * slot 6 (FUN_00162550) forgets it when that body is removed. */
+class hknpUnaryAction : public hknpAction
+{
+  public:
+    hknpUnaryAction(hkFinishLoadedObjectFlag flag) : hknpAction(flag) {}
+
+    hknpBodyId bodyId;
+};
+
+/* Its own members from +0x20 (records from 0x1698a70): world (a pointer, not
+ * serialized: record flags 0x400), which the finish constructor clears (the
+ * finish callback 0x47990), then data, driverInput, steering, engine,
+ * transmission, brake, suspension, aerodynamics, wheelCollide, tyreMarks
+ * and velocityDamper (pointers) from +0x28 to +0x78. */
+class hknpVehicleInstance : public hknpUnaryAction
+{
+  public:
+    hknpVehicleInstance(hkFinishLoadedObjectFlag flag) : hknpUnaryAction(flag), world(0) {}
+
     virtual ~hknpVehicleInstance();
 
     void FUN_00162540(hknpBodyId *&bodiesOut, int &numBodiesOut); /* vtable slot 5; derived name */
@@ -3811,9 +4012,8 @@ class hknpVehicleInstance
     void FUN_001659b0();                                   /* vtable slot 9; derived name */
     float FUN_00165880() const;                            /* vtable slot 13; derived name */
 
-    u8 unknown8[0x10];
-    hknpBodyId bodyId;
-    u8 unknown1c[0x4c];
+    void *world;
+    u8 unknown28[0x40];
     hknpVehicleWheelCollide *wheelCollide;
     u8 unknown70[0x84];
     hkBool tryingToReverse; /* record 0x1698d18 */
