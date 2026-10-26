@@ -93,7 +93,9 @@ config/                     per target <slug>: sha256sums (the base files),
                             matched (the functions claimed as matched, with
                             their TU), flags (compiler flags per source prefix),
                             homes (functions whose source file the executable
-                            names, tools/source_homes.py)
+                            names, tools/source_homes.py), vtables (the classes
+                            whose vtable the executable names,
+                            tools/vtable_names.py)
 tools/                      setup, extraction, survey, build, match and gate
                             scripts, listed in tools/README.md
 docs/                       documentation, indexed by docs/README.md;

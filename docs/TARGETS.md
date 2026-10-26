@@ -136,7 +136,11 @@ The full survey, program header by program header and library by library, is
   functions that load it and writes `config/homes.base.txt`: 519 functions
   name a path, 360 of them one source file (291 under `anzu/`, 48 under
   `havok/`, 21 under `sndx/`), 22 several (a unity build or an inlined
-  function of another file), 130 only headers.
+  function of another file), 130 only headers. `tools/vtable_names.py`
+  reads the Havok type-info registrations (type name, scoped name, finish,
+  cleanup, vtable address point, size) and writes `config/vtables.base.txt`:
+  170 classes whose vtable the executable names, which the gate resolves
+  `_ZTV<class>` relocations against (`DECISIONS.md` D12).
 - **Libraries.** The needed modules and import libraries are Sony's system
   libraries (`libSceGnmDriver`, `libSceNgs2`, `libSceFios2`, `libScePad`,
   `libkernel`, `libc`, and the rest in `SURVEY.md`); the `PT_SCE_LIBVERSION`

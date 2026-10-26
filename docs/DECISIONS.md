@@ -324,3 +324,44 @@ matches as plain `memcpy(dst, src, n)`.
 `memcpy` the base calls where the builtin would inline or lower it
 otherwise), or a hosted-only behaviour the base contradicts.
 
+
+## D12. Vtables are named by the executable's type-info registrations (2026-10-26)
+
+**Decision.** A relocation against a vtable symbol (`_ZTV<class>`, what the
+compiler emits for every constructor's or finish constructor's vptr store)
+resolves in the gate to the address `config/vtables.base.txt` gives that
+symbol, and the base's operand must agree, exactly as a `D_<hex>` label
+(`tools/base_elf.py` `address_of`; `tools/match_check.py` verifies the
+target, `tools/layout_link.py` relocates to it). The file is written by
+`tools/vtable_names.py` and never edited: each row is a class whose
+reflection initializer stored, into the +0x20 slot of its `hkTypeInfo`
+record beside the type name at +0, either a `lea` of the vtable's address
+point or the vptr of a temporary it built through the class's out-of-line
+finish constructor (the tool follows the constructor to the last vtable it
+stores in its object, the derived class's after its bases', and an inlined
+derived constructor's store over the base call's into the same stack
+slot). Every address point is checked to sit 16 bytes after two zero
+quadwords (offset-to-top and the absent RTTI pointer). 170 classes on
+2026-10-26; no name registers two vtables and no two classes one.
+
+**Why.** The executable is stripped and has no RTTI, so a vtable carries no
+name; but a Havok type info does (`Common/Base/Reflection/hkTypeInfo.h`:
+type name, scoped name, finish, cleanup, vtable, size), and the base stores
+the vtable there by address. The source cannot name a vtable `D_<hex>`: the
+vptr store is the compiler's, from the class the developer wrote, and
+writing it by hand would be a crutch. Without the table every constructor
+and finish callback of a polymorphic class was unclaimable
+(`FUN_000002c0` was the first, docs/NOTES.md round 15). The gate bites: the
+address shifted by 8 fails `FUN_000002c0` with "base refers to 0x168c1b0,
+source to 0x168c1b8".
+
+**Scope.** Classes without a type-info registration (the engine's, the
+sound library's, Havok classes registered with a null vtable, the two
+constraint data classes of NOTES round 15) stay unnamed; a vtable
+established by other evidence (a constructor's store beside a name string,
+a registry entry) needs its own ruling here before it is written, and would
+go in a second, evidenced file, not the generated one.
+
+**Trigger to revisit.** A registration the walk misreads (the tool aborts
+on an address point that is not a vtable's and lists the untraced ones),
+or a class whose constructor the gate needs and the type infos do not name.

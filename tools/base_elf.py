@@ -40,6 +40,13 @@ class BaseElf:
                 a, sz, n = int(s[0], 16), int(s[1], 16), s[2]
                 self.functions.append((a, sz, n))
                 self.func_by_name[n] = (a, sz)
+        self.vtables: dict[str, int] = {}
+        p = config_path(repo_root, self.version, "vtables", "txt")
+        if p.exists():
+            for line in p.read_text().splitlines():
+                s = line.split("#", 1)[0].split()
+                if len(s) >= 2 and s[0].startswith("_ZTV"):
+                    self.vtables[s[0]] = int(s[1], 16)
         self._dyn = None
         self._plt = None
         self._got = None
@@ -200,10 +207,13 @@ class BaseElf:
 
     def address_of(self, name: str) -> int | None:
         """Where the base put `name`: a function of the table (by its mangled
-        name or its bare identifier), a `D_<hex>` data label, or an import
-        (its PLT stub)."""
+        name or its bare identifier), a `D_<hex>` data label, a vtable the
+        executable names (config/vtables.<slug>.txt, tools/vtable_names.py),
+        or an import (its PLT stub)."""
         if name in self.func_by_name:
             return self.func_by_name[name][0]
+        if name.startswith("_ZTV"):
+            return self.vtables.get(name)
         ident = self.base_identifier(name)
         if ident in self.func_by_name:
             return self.func_by_name[ident][0]

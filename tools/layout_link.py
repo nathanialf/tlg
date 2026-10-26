@@ -148,6 +148,9 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                 return None, f"bytes of {r.symbol} occur {len(hits)} times in the base"
         except Exception as e:  # noqa: BLE001
             return None, f"{r.symbol}: {e}"
+    if r.symbol.startswith("_ZTV"):
+        return None, (f"{r.symbol}: the executable does not name this vtable (config/vtables.<slug>.txt, "
+                      "tools/vtable_names.py); a class named from other evidence needs a ruling (docs/DECISIONS.md D12)")
     return None, f"{r.symbol}: no address in the base (name it D_<hex> or FUN_<hex>, or add it to the function table)"
 
 

@@ -552,3 +552,4 @@ FUN_000910e0 src/libs/unknown/func_000910e0.cpp
 FUN_00162540 src/libs/unknown/leaf_00162540.cpp _ZN19hknpVehicleInstance12FUN_00162540ERP10hknpBodyIdRi
 FUN_0017b990 src/libs/unknown/leaf_0017b990.cpp _ZNK21ConstraintData16a5d3012FUN_0017b990EbR21ConstraintRuntimeInfo
 FUN_00184420 src/libs/unknown/leaf_00184420.cpp _ZNK21hkVtableClassRegistry12FUN_00184420EPKv
+FUN_000002c0 src/libs/unknown/func_000002c0.cpp
