@@ -275,10 +275,23 @@ struct ArenaBlockHeader {
  * FUN_0000c360, deleting destructor FUN_0000c350. */
 struct MemorySystemAllocator;
 
+/* The allocator interface at +0x20 of the memory system (derived names):
+ * slots 0 and 1 its destructors, slot 2 collects its garbage (called by
+ * FUN_0000d0a0). */
+class MemoryExtendedInterface /* derived name */
+{
+  public:
+    virtual ~MemoryExtendedInterface();
+    virtual void garbageCollect() = 0; /* derived name */
+};
+
 struct MemorySystem {
     u8 unknown0[0x18];
     MemorySystemAllocator *allocator18;
+    MemoryExtendedInterface *extended20; /* derived name */
 };
+
+void FUN_0000d0a0(MemorySystem *self); /* derived name */
 
 void FUN_0000c360(MemorySystem *self); /* derived name */
 

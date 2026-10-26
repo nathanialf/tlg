@@ -122,6 +122,7 @@ struct hkClassMember {
  * stores the resolved object through FUN_001841d0. */
 struct hkClassMemberAccessor /* derived name */
 {
+    hkClassMemberAccessor(void *object, const hkClassMember *member);
     void *&FUN_001841d0(int index) const; /* derived name */
 
     void *address;               /* derived name */
@@ -148,13 +149,31 @@ class hkBaseObject
      * vtable. */
     hkBaseObject(hkFinishLoadedObjectFlag) {}
 
-    virtual ~hkBaseObject();
+    /* Empty and inline: slots 0 and 1 of hkBaseObject's vtable are the empty
+     * body FUN_00006660, and hkReferencedObject's deleting destructor
+     * (FUN_000066e0) runs no base destructor. */
+    virtual ~hkBaseObject() {}
 };
+
+/* derived name: free a block of numBytes bytes on the thread's heap (the
+ * memory router at %fs-relative 0x16d80b8, its heap at +0x58, slot 3). */
+void FUN_0000bcf0(void *block, int numBytes);
 
 class hkReferencedObject : public hkBaseObject
 {
   public:
     hkReferencedObject(hkFinishLoadedObjectFlag flag) : hkBaseObject(flag) {}
+
+    virtual ~hkReferencedObject();
+
+    /* The class allocator: a deleted object goes back to the heap at the
+     * class's size. */
+    static void operator delete(void *object)
+    {
+        if (object) {
+            FUN_0000bcf0(object, sizeof(hkReferencedObject));
+        }
+    }
 
     /* Slot 4 of the reference-counted classes' vtables (FUN_000069a0, the
      * body behind it in most of them): the object deletes itself through its
@@ -873,6 +892,22 @@ extern const hkClass D_57bcf20; /* hkMultipleVertexBuffer's hkClass, built at 0x
 class hkMultipleVertexBuffer
 {
   public:
+    /* hkMultipleVertexBuffer::LockedElement (records from 0x16919e0, 7 bytes):
+     * the hkUint8 members from +0 and the hkInt8 emulatedIndex at +6. */
+    struct LockedElement {
+        u8 vertexBufferIndex;
+        u8 elementIndex;
+        u8 lockedBufferIndex;
+        u8 vertexFormatIndex;
+        u8 lockFlags;
+        u8 outputBufferIndex;
+        s8 emulatedIndex;
+    };
+
+    /* derived name: orders locked elements by vertex buffer, then element;
+     * the sort at 0x257f2 takes it. */
+    static bool FUN_00024b60(const LockedElement &a, const LockedElement &b);
+
     hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
     virtual ~hkMultipleVertexBuffer();
 
@@ -883,7 +918,8 @@ class hkMultipleVertexBuffer
 
     u8 unknown8[4];
     hkVertexFormat vertexFormat;
-    u8 unknown110[0x38];
+    hkArray<LockedElement> lockedElements;
+    u8 unknown120[0x28];
     int numVertices;
     hkBool isLocked;
     u32 updateCount;
@@ -976,6 +1012,8 @@ class hkMemoryMeshBody : public hkMeshBody
     virtual ~hkMemoryMeshBody();
 
     hkMeshShape *FUN_000230d0() const; /* vtable slot 5; derived name */
+    int FUN_000230f0() const;          /* vtable slot 9; derived name */
+    int FUN_00023160() const;          /* vtable slot 16; derived name */
     void FUN_00023100(int startIndex, const Mat4 *matrices,
                       int numMatrices); /* vtable slot 10; derived name */
     void FUN_00023110(int startIndex, Mat4 *matrices,
@@ -1172,9 +1210,31 @@ class hknpShape : public hkReferencedObject
     virtual int unknownVirtual15(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut) const;
     virtual void unknownVirtual16();
     virtual float unknownVirtual17() const;
-    virtual void unknownVirtual18();
-    virtual void unknownVirtual19();
+    /* Slots 18 to 29: the arguments as their implementations read them
+     * (hknpShape's 0x6eb50 and 0x6ebf0, hknpConvexShape's from 0x45a80,
+     * hknpStaticCompoundShape's from 0x418c0, hknpConvexPolytopeShape's
+     * 0x152170); their types and names are not recovered. */
+    virtual void unknownVirtual18(const void *argument1, void *argument2) const;
+    virtual void unknownVirtual19(const void *argument1, const void *argument2, int argument3,
+                                  float argument4, void *argument5, void *argument6) const;
     virtual int unknownVirtual20() const;
+    virtual int unknownVirtual21(void *argument1, int argument2, int argument3,
+                                 const void *argument4) const;
+    virtual void unknownVirtual22(const void *argument1, const void *argument2,
+                                  void *argument3) const;
+    virtual void unknownVirtual23(const void *argument1, const void *argument2,
+                                  const void *argument3, const void *argument4,
+                                  void *argument5) const;
+    virtual void unknownVirtual24(const void *argument1, void *argument2) const;
+    virtual void unknownVirtual25(const void *argument1, const void *argument2,
+                                  const void *argument3, const void *argument4,
+                                  void *argument5) const;
+    virtual void unknownVirtual26(const void *argument1, const void *argument2,
+                                  const void *argument3, const void *argument4,
+                                  void *argument5) const;
+    virtual int unknownVirtual27(const void *argument1, const void *argument2, int argument3) const;
+    virtual void unknownVirtual28(const void *argument1, void *argument2) const;
+    virtual void unknownVirtual29(const void *argument1, void *argument2) const;
 
     u8 unknownC[0x14];
     void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
@@ -1206,7 +1266,32 @@ class hknpDecoratorShape : public hknpShape
     int FUN_0003b190(int faceIndex, Vec4 *planeOut,
                      Vec4 *verticesOut) const; /* vtable slot 15; derived name */
     float FUN_0003b1c0() const;                /* vtable slot 17; derived name */
-    int FUN_0003b1f0() const;                  /* vtable slot 20; derived name */
+    void FUN_0003b1d0(const void *argument1,
+                      void *argument2) const; /* vtable slot 18; derived name */
+    void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
+                      void *argument5, void *argument6) const; /* vtable slot 19; derived name */
+    int FUN_0003b1f0() const;                                  /* vtable slot 20; derived name */
+    int FUN_0003b200(void *argument1, int argument2, int argument3,
+                     const void *argument4) const; /* vtable slot 21; derived name */
+    void FUN_00037e80(const void *argument1, const void *argument2,
+                      void *argument3) const; /* vtable slot 22; derived name */
+    void FUN_0003b220(const void *argument1, const void *argument2, const void *argument3,
+                      const void *argument4,
+                      void *argument5) const; /* vtable slot 23; derived name */
+    void FUN_0003b230(const void *argument1,
+                      void *argument2) const; /* vtable slot 24; derived name */
+    void FUN_0003b240(const void *argument1, const void *argument2, const void *argument3,
+                      const void *argument4,
+                      void *argument5) const; /* vtable slot 25; derived name */
+    void FUN_0003b250(const void *argument1, const void *argument2, const void *argument3,
+                      const void *argument4,
+                      void *argument5) const; /* vtable slot 26; derived name */
+    int FUN_0003b210(const void *argument1, const void *argument2,
+                     int argument3) const; /* vtable slot 27; derived name */
+    void FUN_0003b260(const void *argument1,
+                      void *argument2) const; /* vtable slot 28; derived name */
+    void FUN_0003b270(const void *argument1,
+                      void *argument2) const; /* vtable slot 29; derived name */
 
     hknpShape *coreShape;
 };
@@ -1380,7 +1465,6 @@ struct hknpProjectileGun; /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, 
 struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
 class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 struct hknpPhysicsSystemData;         /* 0x57c0198; FUN_00165a80, vtable 0x16a5130 */
-class hknpDefaultBroadPhaseConfig;    /* 0x57c02e8; FUN_00154d90, vtable 0x16a45f0 */
 struct hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
     hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
@@ -1392,8 +1476,6 @@ void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);     /
 void FUN_0003e170(hknpDummyShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
 void FUN_00156620(hknpFirstPersonGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_00165a80(hknpPhysicsSystemData *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00154d90(hknpDefaultBroadPhaseConfig *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00159b40(hknpConstraintCollisionFilter *self,
                   hkFinishLoadedObjectFlag flag);                          /* derived name */
 void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
@@ -1600,8 +1682,11 @@ void FUN_001660e0(hknpExternMeshShape *self, hkFinishLoadedObjectFlag flag); /* 
  * hknpBroadPhaseConfig::Layer (hkClass 0x57c01c8, size 8, records at
  * 0x1696450: collideWithLayerMask, hkUint32, at +0; isVolatile, hkBool, at
  * +4) at +0xc, in the tail padding of the base; the constructor at 0x154da0
- * fills the four layers. */
-class hknpBroadPhaseConfig
+ * fills the four layers. hknpBroadPhaseConfig's hkClass parent is
+ * hkReferencedObject (built at 0x3d297). hknpDefaultBroadPhaseConfig's finish
+ * constructor 0x154d90 is out of line, jumped to by the finish callback
+ * FUN_0003d1d0 and called by the reflection initializer at 0x3d387. */
+class hknpBroadPhaseConfig : public hkReferencedObject
 {
   public:
     struct Layer {
@@ -1609,14 +1694,16 @@ class hknpBroadPhaseConfig
         bool isVolatile;
     };
 
-    virtual ~hknpBroadPhaseConfig();
+    hknpBroadPhaseConfig(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    u8 unknown8[4];
+    virtual ~hknpBroadPhaseConfig();
 };
 
 class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
 {
   public:
+    hknpDefaultBroadPhaseConfig(hkFinishLoadedObjectFlag flag);
+
     Layer *FUN_00154e00(hkUlong layerIndex); /* vtable slot 6; derived name */
 
     Layer layers[4];
@@ -2252,9 +2339,10 @@ class hkp6DofConstraintData
 
     virtual ~hkp6DofConstraintData();
 
-    void FUN_0017b910(float newBreachImpulse); /* vtable slot 10; derived name */
-    float FUN_0017b920() const;                /* vtable slot 13; derived name */
-    u8 FUN_0017b950() const;                   /* vtable slot 15; derived name */
+    void FUN_0017b910(float newBreachImpulse);     /* vtable slot 10; derived name */
+    float FUN_0017b920() const;                    /* vtable slot 13; derived name */
+    u8 FUN_0017b950() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0017bb70(float &factorOut) const; /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
     Blueprints blueprints;
@@ -2383,7 +2471,16 @@ class hkxMeshSection : public hkReferencedObject
 struct hkxAttribute {
     hkStringPtr name;
 };
-struct hkxEnvironment;
+
+/* hkxEnvironment (hkClass 0x57c8130, parent hkReferencedObject, built at
+ * 0x8db07): its finish constructor 0x17d6f0 is out of line, jumped to by the
+ * finish callback FUN_0008da40 and called by the reflection initializer at
+ * 0x8db93. */
+class hkxEnvironment : public hkReferencedObject
+{
+  public:
+    hkxEnvironment(hkFinishLoadedObjectFlag flag);
+};
 
 class hkRootLevelContainer
 {
@@ -2444,7 +2541,6 @@ void FUN_0008c0a0(hkxVertexDescription *self, hkFinishLoadedObjectFlag flag); /*
 void FUN_0008c990(hkxVertexAnimation *self);                                  /* derived name */
 void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
 void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
-void FUN_0017d6f0(hkxEnvironment *self, hkFinishLoadedObjectFlag flag);       /* derived name */
 void FUN_0017dde0(hkRootLevelContainer::NamedVariant *self,
                   hkFinishLoadedObjectFlag flag);                             /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */

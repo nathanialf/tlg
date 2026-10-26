@@ -8,5 +8,5 @@ void FUN_0003d1d0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00154d90(static_cast<hknpDefaultBroadPhaseConfig *>(object), flag);
+    new (object) hknpDefaultBroadPhaseConfig(flag);
 }

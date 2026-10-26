@@ -8,5 +8,5 @@ void FUN_0008da40(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0017d6f0(static_cast<hkxEnvironment *>(object), flag);
+    new (object) hkxEnvironment(flag);
 }
