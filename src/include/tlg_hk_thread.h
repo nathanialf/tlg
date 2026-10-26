@@ -194,13 +194,6 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
 {
 };
 
-/* A growable character buffer (derived name): FUN_000116c0 assigns a C
- * string to it (length, grow through the allocator, copy), FUN_00011900
- * formats into it. */
-struct hkStringBuf; /* derived name */
-
-void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
-
 /* A 16-byte task of the broad phase (derived name from its timer name;
  * vtable 0x16a6690, stored at 0x18d673 into +0x20 of the object at +8): the
  * task interface implemented directly, its owner at +8. Slot 3

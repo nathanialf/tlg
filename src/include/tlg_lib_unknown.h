@@ -38,7 +38,8 @@ struct Pair08Owner {
     u8 unknown0;
     u8 flags; /* bit 2 set and cleared by FUN_0002b390; derived name */
     u8 count;
-    u8 unknown3[2];
+    u8 type; /* indexes the tail sizes at 0x14b8690 (FUN_0002af30); derived name */
+    u8 unknown4;
     u8 state;
     u8 unknown6[2];
     s32 first;
@@ -332,6 +333,11 @@ struct ArenaBlockHeader {
     s32 size;
     s32 unknown;
 };
+
+/* Frees a block with that header through an allocator's slot 3, the header
+ * included: its owner cleared first (0xbc80; called by hkStringPtr's
+ * destructor 0xe5d0 with the router's heap). derived name. */
+void FUN_0000bc80(AllocatorBase &allocator, void *payload); /* derived name */
 
 /* The memory system with vtable 0x168d690, whose slot 4 (FUN_0000c590)
  * loads the path of hkFreeListMemorySystem.cpp (config/homes.base.txt). Its
@@ -1108,6 +1114,47 @@ class Object00061f00 : public hkReferencedObject /* derived name */
     virtual ~Object00061f00();
 
     float valueC; /* derived name */
+};
+
+/* The character controller's state machine (derived names throughout: no
+ * string names these classes; the shapes follow Havok's character states).
+ * The context holds the state manager at +0x10 and the current state at
+ * +0x18; FUN_0003e9c0 changes the state: the old state's handler (from the
+ * manager, FUN_00035c40) is told through its slot 9, the new state stored,
+ * then the new handler told. */
+struct hknpCharacterInput /* derived name */
+{
+    u8 unknown0[0x30];
+    hkBool atLadder; /* derived name */
+    u8 unknown31[0xf];
+    /* The surface the character stands on, from +0x40: whether it moves,
+     * then how well it supports the character (2: supported). */
+    hkBool isSurfaceDynamic; /* derived name */
+    u8 supportedState;       /* derived name */
+};
+
+struct hknpCharacterOutput; /* derived name */
+
+struct hknpCharacterContext /* derived name */
+{
+    void FUN_0003e9c0(int state, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output); /* derived name */
+};
+
+/* The in-air state (derived name; vtable 0x1693610, address point
+ * 0x1693620, constructor 0x365a0: gain 0.05, air speed 10 and maximum
+ * acceleration 50 from +0xc). Slot 7 (FUN_000365e0) leaves the state for
+ * the ground (state 0) once supported, for climbing (state 3) at a
+ * ladder. */
+class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
+{
+  public:
+    void FUN_000365e0(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output); /* vtable slot 7; derived name */
+
+    float gain;                  /* derived name */
+    float airSpeed;              /* derived name */
+    float maxLinearAcceleration; /* derived name */
 };
 
 #endif

@@ -75,6 +75,12 @@ template <typename T> struct hkArray {
     /* A loaded image's array is left as loaded. */
     hkArray(hkFinishLoadedObjectFlag) {}
 
+    /* An array over storage it does not own (hkInplaceArray's). */
+    hkArray(T *buffer, int initialSize, int capacity)
+        : data(buffer), size(initialSize), capacityAndFlags(capacity | DONT_DEALLOCATE_FLAG)
+    {
+    }
+
     /* Drop the elements, keeping the storage. derived name. */
     void clear()
     {
@@ -84,6 +90,14 @@ template <typename T> struct hkArray {
     T *data;              /* derived name */
     int size;             /* derived name */
     int capacityAndFlags; /* derived name */
+};
+
+/* hkInplaceArray (the reflection's TYPE_INPLACEARRAY, its name a string of
+ * the executable): an array whose first N elements live in the object. */
+template <typename T, int N> struct hkInplaceArray : public hkArray<T> {
+    hkInplaceArray() : hkArray<T>(storage, 0, N) {}
+
+    T storage[N];
 };
 
 /* hkBitField (type info registered at 0x9e2b, size 0x18): its member
@@ -426,9 +440,33 @@ struct hkStringPtr {
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0000e5d0(hkStringPtr *self);                                /* derived name */
 
+/* A growable character buffer (derived name): 128 characters in place
+ * (0x90 bytes; the constructor 0x11690 points the array at +0x10).
+ * FUN_000116c0 assigns a C string to it (length, grow through the
+ * allocator, copy), FUN_00011900 formats into it. */
+struct hkStringBuf /* derived name */
+{
+    hkStringBuf(const hkStringPtr &source);
+
+    hkInplaceArray<char, 128> string; /* derived name */
+};
+
+void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
+
 /* The default constructor: a null string (called on each new element by the
  * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
 void FUN_0000e3d0(hkStringPtr *self); /* derived name */
+
+/* hkxEnvironment::Variable (type info "hkxEnvironmentVariable" 0x57c8100,
+ * hkClass 0x57c80b0, both built by 0x8da60: size 0x10, no vtable, no
+ * finish callback; member records at 0x16a2950): name and value, string
+ * pointers at +0 and +8. Its cleanup callback is FUN_0008da10. */
+struct hkxEnvironmentVariable {
+    hkStringPtr name;
+    hkStringPtr value;
+};
+
+void FUN_0008da10(void *object); /* derived name */
 
 /* derived names: the string set from a C string of a given length (-1: up
  * to its terminator), copied into owned storage and the old one freed when
@@ -789,11 +827,22 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 8; derived name */
 };
 
-/* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback FUN_0003a0d0. */
+/* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback
+ * FUN_0003a0d0. Members from its records (0x1695170 onward): airDensity,
+ * frontalArea, dragCoefficient and liftCoefficient (floats) from +0xc,
+ * extraGravityws (a vector) at +0x20. Slot 6 (0x3bf20) is the drag at a
+ * speed, slot 7 (FUN_0003bf60) the lift. */
 class hknpVehicleDefaultAerodynamics : public hkReferencedObject
 {
   public:
     hknpVehicleDefaultAerodynamics(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    float FUN_0003bf60(float speed) const; /* vtable slot 7; derived name */
+
+    float airDensity;
+    float frontalArea;
+    float dragCoefficient;
+    float liftCoefficient;
 };
 
 /* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback FUN_0003a3b0. */
@@ -827,13 +876,6 @@ class hknpLinearSurfaceVelocity : public hkReferencedObject
 {
   public:
     hknpLinearSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-};
-
-/* hknpDisableCollisionFilter: vtable 0x16978a0, finish callback FUN_0003e340. */
-class hknpDisableCollisionFilter : public hkReferencedObject
-{
-  public:
-    hknpDisableCollisionFilter(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* hknpVehicleDefaultSuspension: vtable 0x16a4040, finish callback FUN_0003e590. */
@@ -928,6 +970,49 @@ class hkpVehicleFrictionDescription : public hkReferencedObject
   public:
     hkpVehicleFrictionDescription(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
+
+/* hknpVehicleData (type info 0x57c22f8 built by 0x69290: size 0x1b0,
+ * vtable 0x169ace0, finish callback FUN_00069250; members from its record
+ * table at 0x169a2a0): gravity at +0x10, numWheels (hkInt8) at +0x20,
+ * chassisOrientation (a rotation) at +0x30, eleven floats from
+ * torqueRollFactor at +0x60 to maxFrictionSolverMassRatio at +0x88,
+ * wheelParams and numWheelsPerAxle (arrays) at +0x90 and +0xa0,
+ * frictionDescription (an hkpVehicleFrictionDescription) at +0xb0; then
+ * chassisFrictionInertiaInvDiag at +0x190 and alreadyInitialised at +0x1a0,
+ * not typed here. */
+struct hknpVehicleDataWheelComponentParams;
+
+class hknpVehicleData : public hkReferencedObject
+{
+  public:
+    hknpVehicleData(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), wheelParams(flag), numWheelsPerAxle(flag),
+          frictionDescription(flag)
+    {
+    }
+
+    virtual ~hknpVehicleData();
+
+    Vec4 gravity;
+    s8 numWheels;
+    hkMatrix3 chassisOrientation;
+    float torqueRollFactor;
+    float torquePitchFactor;
+    float torqueYawFactor;
+    float extraTorqueFactor;
+    float maxVelocityForPositionalFriction;
+    float chassisUnitInertiaYaw;
+    float chassisUnitInertiaRoll;
+    float chassisUnitInertiaPitch;
+    float frictionEqualizer;
+    float normalClippingAngleCos;
+    float maxFrictionSolverMassRatio;
+    hkArray<hknpVehicleDataWheelComponentParams> wheelParams;
+    hkArray<s8> numWheelsPerAxle;
+    hkpVehicleFrictionDescription frictionDescription;
+};
+
+void FUN_00069250(void *object, int finishing); /* derived name */
 
 class hkxSpline : public hkReferencedObject
 {
@@ -1138,7 +1223,7 @@ class hkSkinnedRefMeshShape;               /* 0xaa660, vtable 0x16a38c0 */
 class hkMemoryMeshShape;                   /* 0x2a940, vtable 0x1692540 */
 class hkMemoryMeshMaterial;                /* 0xaccf0, vtable 0x16a3920 */
 class hkStorageSkinnedMeshShape;           /* 0xae680, vtable 0x16a3b00 */
-class hkMemoryMeshVertexBuffer;            /* FUN_000274e0, vtable 0x16921b0 */
+class hkMemoryMeshVertexBuffer;            /* 0x274e0, vtable 0x16921b0 */
 class hknpDynamicCompoundShape;            /* FUN_000469a0, vtable 0x1697ef0 */
 class hknpMaskedShape;                     /* FUN_00037b90, vtable 0x1693a90 */
 
@@ -1147,7 +1232,6 @@ void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag); /* d
 void FUN_0009c400(hkcdPlanarGeometryPlanesCollection *self,
                   hkFinishLoadedObjectFlag flag);                                 /* derived name */
 void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);             /* derived name */
-void FUN_000274e0(hkMemoryMeshVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_000469a0(hknpDynamicCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag);          /* derived name */
 
@@ -1195,7 +1279,15 @@ extern const hkClass D_57bdd98; /* hkMemoryMeshVertexBuffer's hkClass, built at 
 class hkMemoryMeshVertexBuffer
 {
   public:
+    /* The finish constructor (0x274e0): a big-endian image is swapped to
+     * the host's order once loaded. */
+    hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkMemoryMeshVertexBuffer();
+
+    /* Swaps every element of every vertex to the other byte order (0x27520).
+     * derived name. */
+    void FUN_00027520();
 
     /* Not a vtable slot: called with no arguments by the type test at
      * 0xacf40, which checks an object's class (its slot 3) against it. */
@@ -1532,6 +1624,16 @@ struct hkSkinnedMeshShapeBoneSection;
 void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
+/* A signal (derived name): its slots in a list from the pointer at +0 (the
+ * low two bits are flags), each slot's slot 1 destroying it; its
+ * destructor FUN_00093530 is out of line. */
+struct Signal00093530 /* derived name */
+{
+    void *slots; /* derived name */
+};
+
+void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
+
 /* hknpShapeSignals, a reflected struct (hkClass at 0x57c2478); at most 16
  * bytes, the member after it in hknpMaskedShape sitting at +0x60: two
  * signals, each a pointer to its slot list (hknpScaledConvexShape's finish
@@ -1539,9 +1641,14 @@ void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
  * passes a byte of change flags, and the second, which passes the shape as
  * it is destroyed). Field names derived. */
 struct hknpShapeSignals {
-    void *shapeMutated;   /* derived name */
-    void *shapeDestroyed; /* derived name */
+    Signal00093530 shapeMutated;   /* derived name */
+    Signal00093530 shapeDestroyed; /* derived name */
 };
+
+/* hknpShapeSignals's type info (0x57c24c8, built with its hkClass by
+ * 0x69980): no finish callback, the cleanup callback FUN_00069960, size
+ * 0x10. */
+void FUN_00069960(void *object); /* derived name */
 
 /* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
  * vtable 0x16a54a0, address point 0x16a54b0), reflected with
@@ -1839,6 +1946,10 @@ struct hknpCollisionFilterShapeInput;  /* derived name */
 class hknpCollisionFilter : public hkReferencedObject
 {
   public:
+    hknpCollisionFilter(u8 filterType) : type(filterType) {}
+
+    hknpCollisionFilter(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
     virtual int FUN_001679a0(const hknpCollisionFilterContext &context,
                              hknpCollisionFilterBodyIdPair *pairs,
                              int numPairs) const = 0;              /* derived name */
@@ -1849,6 +1960,33 @@ class hknpCollisionFilter : public hkReferencedObject
     virtual bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const = 0; /* derived name */
     virtual bool FUN_00167c00(int queryType, bool targetIsB, const hknpCollisionFilterShapeInput &a,
                               const hknpCollisionFilterShapeInput &b) const = 0; /* derived name */
+
+    /* The one member, a byte at +0xc (its record is built at run time):
+     * hknpDisableCollisionFilter's constructor stores 0 there before its
+     * vtable (0x41077). derived name. */
+    u8 type;
+};
+
+/* hknpDisableCollisionFilter (hkClass parent hknpCollisionFilter's
+ * 0x57c0cb0, built at 0x3e3cf; vtable 0x16978a0, finish callback
+ * FUN_0003e340): filter type 0. One instance is a global of its own file
+ * (0x57c1080, built by that file's initializer 0x41070, read by nothing in
+ * the executable). Its slots are not recovered. */
+class hknpDisableCollisionFilter : public hknpCollisionFilter
+{
+  public:
+    hknpDisableCollisionFilter() : hknpCollisionFilter(0) {}
+
+    hknpDisableCollisionFilter(hkFinishLoadedObjectFlag flag) : hknpCollisionFilter(flag) {}
+
+    int FUN_001679a0(const hknpCollisionFilterContext &context,
+                     hknpCollisionFilterBodyIdPair *pairs, int numPairs) const;
+    bool FUN_00167ad0(int queryType, bool flag) const;
+    bool FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
+                      const hknpCollisionFilterTargetInput &target) const;
+    bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const;
+    bool FUN_00167c00(int queryType, bool targetIsB, const hknpCollisionFilterShapeInput &a,
+                      const hknpCollisionFilterShapeInput &b) const;
 };
 
 /* The world's constructor (0x4a1bb to 0x4a258) fills two tables of the
@@ -2023,16 +2161,6 @@ class hkSlot /* derived name */
 struct hknpMaterialId {
     u16 value; /* derived name */
 };
-
-/* A signal (derived name): its slots in a list from the pointer at +0 (the
- * low two bits are flags), each slot's slot 1 destroying it; its
- * destructor FUN_00093530 is out of line. */
-struct Signal00093530 /* derived name */
-{
-    void *slots; /* derived name */
-};
-
-void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
 
 struct hknpMaterial; /* the free-list array's element; fields not typed yet */
 struct hknpMaterialFreeListArrayOperations;
@@ -2308,6 +2436,9 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
     /* Disables the collisions between two bodies of a world (the pair is
      * ordered by id first, 0x167420). derived name. */
     void FUN_00167420(hknpWorld *world, u32 bodyIdA, u32 bodyIdB); /* derived name */
+    /* The reverse for a pair (0x167660, ordered the same way): the int is
+     * handed to the world's FUN_0005c120 with the pair. derived name. */
+    int FUN_00167660(hknpWorld *world, u32 bodyIdA, u32 bodyIdB, int mode); /* derived name */
 
     hknpPairCollisionFilterMapPairFilterKeyOverrideType disabledPairs;
     hknpCollisionFilter *childFilter;
@@ -2325,6 +2456,7 @@ class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
 {
   public:
     void FUN_00159dd0(hknpWorld *world, u32 constraintId); /* derived name */
+    void FUN_00159df0(hknpWorld *world, u32 constraintId); /* derived name */
 
     hknpWorld *subscribedWorld;
 };

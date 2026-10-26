@@ -879,3 +879,14 @@ FUN_00013e30 src/libs/unknown/func_00013e30.cpp
 FUN_00014c50 src/libs/unknown/func_00014c50.cpp
 FUN_00014c70 src/libs/unknown/func_00014c70.cpp
 FUN_00014cb0 src/libs/unknown/func_00014cb0.cpp
+FUN_0002af30 src/libs/unknown/func_0002af30.cpp
+FUN_0003bf60 src/libs/unknown/func_0003bf60.cpp
+FUN_00069960 src/libs/unknown/func_00069960.cpp
+FUN_0008da10 src/libs/unknown/func_0008da10.cpp
+FUN_00159df0 src/libs/unknown/func_00159df0.cpp
+FUN_0000bc80 src/libs/unknown/func_0000bc80.cpp
+FUN_00011690 src/libs/unknown/func_00011690.cpp _ZN11hkStringBufC2ERK11hkStringPtr
+_ZN24hkMemoryMeshVertexBufferC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000274e0.cpp
+FUN_000365e0 src/libs/unknown/func_000365e0.cpp
+FUN_00041070 src/libs/unknown/func_00041070.cpp _GLOBAL__I_a
+FUN_00069250 src/libs/unknown/func_00069250.cpp
