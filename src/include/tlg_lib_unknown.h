@@ -215,6 +215,23 @@ struct LargeBlockChunk /* derived name */
     LargeBlockChunk *prev; /* derived name */
 };
 
+/* The allocator over one block at +0x138 of LargeBlockAllocator (derived
+ * name; vtable 0x168e210, address point 0x168e220, stored in place by the
+ * constructor FUN_00012160 at 0x12194, which clears +8 to +0x20; slots 0
+ * and 1 the shared 0x4ac0): the block's start at +8 and the end of what is
+ * handed out at +0x20. Slot 4 (0x120d0) hands out the whole block when
+ * nothing is out, slot 5 (FUN_00012100) takes it back, slot 9 (0x12120)
+ * reports its use. */
+class SingleBlockAllocator : public AllocatorBase /* derived name */
+{
+  public:
+    void FUN_00012100(void *pointer, int numBytes); /* vtable slot 5; derived name */
+
+    char *start; /* derived name */
+    u8 unknown10[0x10];
+    char *top; /* derived name */
+};
+
 class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
 {
   public:

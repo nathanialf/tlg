@@ -693,15 +693,10 @@ class hknpStaticCompoundShapeData : public hkReferencedObject
 
 /* hknpCompressedMeshShapeInternals (its own members not yet read) and its
  * nested KeyMask (scoped name "hknpCompressedMeshShapeInternals::KeyMask",
- * vtable 0x1692ab0, finish callback FUN_00034e00). */
+ * vtable 0x1692ab0, finish callback FUN_00034e00; defined after
+ * hknpShapeKeyMask, its parent). */
 struct hknpCompressedMeshShapeInternals {
     class KeyMask;
-};
-
-class hknpCompressedMeshShapeInternals::KeyMask : public hkReferencedObject
-{
-  public:
-    KeyMask(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* hknpVehicleDefaultVelocityDamper: vtable 0x1695890, finish callback FUN_00035c60. */
@@ -1109,8 +1104,6 @@ class hknpTyremarksWheel : public hkReferencedObject
 struct hkcdPlanarGeometry;                 /* FUN_0009a860, vtable 0x16a3700 */
 struct hkcdPlanarGeometryPlanesCollection; /* FUN_0009c400, vtable 0x16a3780 */
 struct hkcdSimdTree;                       /* FUN_00021a20, vtable 0x1690d70 */
-struct hkcdStaticAabbTree;                 /* FUN_00022700, vtable 0x1690df0 */
-struct hkcdDynamicAabbTree;                /* FUN_0009fc10, vtable 0x16a37c0 */
 class hkSkinnedRefMeshShape;               /* 0xaa660, vtable 0x16a38c0 */
 class hkMemoryMeshShape;                   /* 0x2a940, vtable 0x1692540 */
 class hkMemoryMeshMaterial;                /* 0xaccf0, vtable 0x16a3920 */
@@ -1124,11 +1117,42 @@ void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag); /* d
 void FUN_0009c400(hkcdPlanarGeometryPlanesCollection *self,
                   hkFinishLoadedObjectFlag flag);                                 /* derived name */
 void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);             /* derived name */
-void FUN_00022700(hkcdStaticAabbTree *self, hkFinishLoadedObjectFlag flag);       /* derived name */
-void FUN_0009fc10(hkcdDynamicAabbTree *self, hkFinishLoadedObjectFlag flag);      /* derived name */
 void FUN_000274e0(hkMemoryMeshVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_000469a0(hknpDynamicCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag);          /* derived name */
+
+/* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
+ * parent hkReferencedObject's; vtable 0x1690de0, address point 0x1690df0):
+ * shouldDeleteTree (hkBool) at +0xc and treePtr at +0x10, from its record
+ * table at 0x16903e0. Its finish constructor (0x22700) is out of line: the
+ * finish callback FUN_0001ff50 jumps to it, the reflection initializer at
+ * 0x1fffd calls it. A finished object owns its tree when it was allocated
+ * (a memory size in the high half of +8), not loaded in place. */
+class hkcdStaticAabbTree : public hkReferencedObject
+{
+  public:
+    hkcdStaticAabbTree(hkFinishLoadedObjectFlag flag);
+    virtual ~hkcdStaticAabbTree();
+
+    hkBool shouldDeleteTree;
+    void *treePtr;
+};
+
+/* hkcdDynamicAabbTree (hkClass 0x57bc890, built at 0x22592: size 0x18,
+ * parent hkReferencedObject's; vtable 0x16a37b0, address point 0x16a37c0):
+ * shouldDeleteTree (hkBool) at +0xc and treePtr at +0x10, from its record
+ * table at 0x1690d90. Its finish constructor (0x9fc10) is out of line, as
+ * the static tree's: the finish callback FUN_000224f0 jumps to it, the
+ * reflection initializer at 0x2259d calls it. */
+class hkcdDynamicAabbTree : public hkReferencedObject
+{
+  public:
+    hkcdDynamicAabbTree(hkFinishLoadedObjectFlag flag);
+    virtual ~hkcdDynamicAabbTree();
+
+    hkBool shouldDeleteTree;
+    void *treePtr;
+};
 
 /* hkMemoryMeshVertexBuffer, polymorphic (vtable address point 0x16921b0):
  * members from its record table at 0x1692590: format (struct) at +0xc,
@@ -1436,6 +1460,11 @@ void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut); /
  * static tree's domain (hkAabb) is at +0x10, as in every hkcdStaticTree
  * record table (0x168fde0 to 0x16900e8). */
 struct hknpCompressedMeshShapeTree {
+    /* Clears the bits of the filter's keys the tree does not hold and
+     * reports the change (0xa92c0); true when the filter changed anything.
+     * derived name. */
+    bool FUN_000a92c0(hkArray<u32> &filter) const;
+
     u8 unknown0[0x10];
     hkAabb domain;
     u8 unknown30[0x70];
@@ -1648,6 +1677,28 @@ class hknpShapeKeyMask : public hkBaseObject
     virtual int FUN_00038210() const = 0;                 /* derived name */
 };
 
+/* hknpCompressedMeshShapeInternals::KeyMask (hkClass 0x57be220, size 0x20,
+ * parent hknpShapeKeyMask's 0x57c1aa8; vtable 0x1692ab0, address point
+ * 0x1692ac0): shape (a pointer to hknpCompressedMeshShape) at +8 and filter
+ * (an array of hkUint32, a bit per key) at +0x10, from its record table at
+ * 0x1692bc0. Slot 4 (0x34ac0) has the shape's mesh tree apply the filter;
+ * slot 6 (0x2b020) returns the size, 32. */
+struct hknpCompressedMeshShape;
+
+class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
+{
+  public:
+    KeyMask(hkFinishLoadedObjectFlag flag) : hknpShapeKeyMask(flag), filter(flag) {}
+
+    void FUN_000381b0(u32 key, bool enabled); /* vtable slot 3 (0x34a80); derived name */
+    bool FUN_000381d0();                      /* vtable slot 4 (0x34ac0); derived name */
+    bool FUN_000381f0(u32 key) const;         /* vtable slot 5 (0x34ae0); derived name */
+    int FUN_00038210() const;                 /* vtable slot 6 (0x2b020); derived name */
+
+    hknpCompressedMeshShape *shape;
+    hkArray<u32> filter;
+};
+
 /* hknpMaskedShape, polymorphic, 0x70 bytes (type info 0x57bea28, vtable
  * 0x1693a80, address point 0x1693a90), reflected with hknpDecoratorShape as
  * its parent (hkClass 0x57be9d8): members from its record table at
@@ -1808,8 +1859,17 @@ class hknpWorldObject1d0 /* derived name */
 
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
+/* hknpBody (hkClass 0x57bfa50, 0x90 bytes, record table 0x1695350):
+ * transform at +0, flags at +0x40, motionId at +0x68. The w lanes of the
+ * transform's rotation columns hold the center of mass in the body's space
+ * (FUN_0003a670 stores it there; the caller at 0x5f45b passes a world point
+ * rotated into the body). */
 struct hknpBody {
-    u8 unknown0[0x68];
+    void FUN_0003a670(const Vec4 &centerOfMassLocal); /* derived name */
+
+    hkTransform transform;
+    int flags;
+    u8 unknown44[0x24];
     int motionId;
     u8 unknown6c[0x24];
 };
@@ -1867,6 +1927,55 @@ struct hknpWorldObject4f8 /* derived name */
     void FUN_00062b20(int bodyId, bool flag); /* derived name */
 
     hknpWorld *world; /* derived name */
+};
+
+/* A slot of a member-function signal (vtable 0x1698ee0, ruled hkSlot, D14):
+ * 0x18 bytes, its deleting destructor 0x47cc0 frees 0x18. The constructor,
+ * inlined at 0x49442 and 0x156010, links the slot at the head of its
+ * signal's list: next takes the signal's head without its two flag bits,
+ * the head becomes this slot with the flags kept, object is the instance the
+ * slot calls (the subscriber's this: %r12 at 0x4946e, %rbx at 0x15603b).
+ * The derived vtables 0x1698eb0 and 0x1698f10 keep this destructor in slot
+ * 0 (their implicit destructors are aliases of it), test a 16-byte
+ * member-function pointer against the one they hold at +0x18 (slot 2,
+ * 0x47d60) and call it on object (slot 3, 0x47c80 and 0x47d90). The signal
+ * deletes its slots still linked (0x93530 walks next and calls slot 1 of
+ * each), and nothing clears object after the constructor. */
+class hkSlot /* derived name */
+{
+  public:
+    virtual ~hkSlot();
+
+    hkSlot *next; /* derived name */
+    void *object; /* derived name */
+};
+
+/* hknpMaterialId, the material library's 16-bit handle (the template
+ * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
+ * passed by value as a two-byte struct, so a callee widens it itself or
+ * masks it. Field name derived. */
+struct hknpMaterialId {
+    u16 value; /* derived name */
+};
+
+struct hknpWorld;
+
+/* A slot calling a member function of the world with a material id (derived
+ * name; vtable 0x1698f10, address point 0x1698f20): the world's constructor
+ * builds two in place, for 0x4bc60 on the material library's
+ * materialAddedSignal (+0x10, 0x490e9) and for 0x4bc40 on its
+ * materialModifiedSignal (+0x18, 0x4914a), the member-function pointer at
+ * +0x18. Slot 2 (0x47d60) compares a member-function pointer with it, slot 3
+ * (FUN_00047d90, the body several slot vtables share) calls it on the
+ * object. */
+class hknpWorldMaterialSlot : public hkSlot /* derived name */
+{
+  public:
+    typedef void (hknpWorld::*Method)(hknpMaterialId id); /* derived name */
+
+    void FUN_00047d90(hknpMaterialId id); /* vtable slot 3; derived name */
+
+    Method method; /* derived name */
 };
 
 struct hknpWorld {
@@ -2124,6 +2233,25 @@ struct hknpShapeSlot22Output /* derived name */
     const hknpShape *shape; /* derived name */
 };
 
+/* What slot 29 of the convex shapes reads (derived names): an int at +0
+ * and two vectors at +0x20 and +0x40, which FUN_00169330 applies to the
+ * shape's vertices as v * scale + offset. */
+struct hknpShapeSlot29Input /* derived name */
+{
+    int mode; /* derived name */
+    u8 unknown4[0x1c];
+    Vec4 scale; /* derived name */
+    u8 unknown30[0x10];
+    Vec4 offset; /* derived name */
+};
+
+class hknpConvexShape;
+
+/* Fills the output from the shape's vertices (its slot 13 gives their
+ * count), at most maxCount of them (0x169330). derived names. */
+void FUN_00169330(const hknpConvexShape *shape, int mode, const Vec4 &scale, const Vec4 &offset,
+                  void *output, int maxCount);
+
 class hknpConvexShape : public hknpShape
 {
   public:
@@ -2134,6 +2262,10 @@ class hknpConvexShape : public hknpShape
                      const u32 *argument4) const; /* vtable slot 21; derived name */
     void FUN_00045aa0(const void *argument1, const void *argument2,
                       hknpShapeSlot22Output *output) const; /* vtable slot 22; derived name */
+    /* Slot 29, kept by the convex, triangle, convex polytope and scaled
+     * convex shapes' vtables. */
+    void FUN_000430f0(const hknpShapeSlot29Input &input,
+                      void *output) const; /* vtable slot 29; derived name */
 
     hkRelArray<Vec4> vertices;
 };
@@ -4724,6 +4856,81 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     hkArray<float> distance;
 };
 
+/* A block stream's writer (derived name), 0x28 bytes: the stream it writes
+ * (null until bound; 0x938a0 binds it and loads the stream's first block as
+ * the current one), the current block, the byte offset in it, the number of
+ * elements written to it, and the allocator the blocks come from. Its
+ * finalize 0x93a10 writes the current block's header (or frees an empty
+ * one) and clears the current block; every stack writer in the region is
+ * finalized before it goes out of scope (0x3fa03, 0x64777, 0x6d20b), and
+ * the command writers held at +0x390 of their owner are finalized through
+ * their member at +0x10 (0x170078, 0x170507). */
+struct hkBlockStream; /* derived name */
+
+struct hkBlockStreamWriter /* derived name */
+{
+    /* An unbound writer. */
+    hkBlockStreamWriter() : blockStream(0) {}
+
+    /* Binds the writer to a stream at its first block (0x938a0). derived
+     * name. */
+    void FUN_000938a0(void *blockAllocator, hkBlockStream *stream);
+
+    hkBlockStream *blockStream; /* derived name */
+    void *currentBlock;         /* derived name */
+    int currentByteOffset;      /* derived name */
+    int currentNumElements;     /* derived name */
+    void *allocator;            /* derived name */
+};
+
+/* A command stream writer (vtable 0x16a3370, ruled hkBlockStreamCommandWriter,
+ * D14), 0x38 bytes: constructor 0x904c0 (called at 0x167f1b on a 0x38-byte
+ * block, stores 0xffff0001 at +8 and clears the writer's stream), deleting
+ * destructor 0x90460 (frees the size kept in the high half of +8). Slot 5
+ * (0x904f0) appends a record whose padded byte size is the u16 at its start
+ * to the writer (0x939c0 opens a new 0xfe0-byte block); 0x938a0 binds the
+ * writer at 0x167f35. */
+class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
+{
+  public:
+    hkBlockStreamCommandWriter();
+    virtual ~hkBlockStreamCommandWriter();
+
+    hkBlockStreamWriter writer; /* derived name */
+};
+
+/* A thread's cache of free blocks (derived names): the allocator it
+ * returns them to at +0, up to eight blocks from +8, their count at +0x48.
+ * FUN_0008ef10 takes a block back, handing six to the allocator's slot 6
+ * when the cache fills. */
+class AllocatorBase; /* tlg_lib_unknown.h */
+
+struct BlockCache /* derived name */
+{
+    void FUN_0008ef10(void *block); /* derived name */
+
+    AllocatorBase *allocator; /* derived name */
+    void *blocks[8];          /* derived name */
+    int numBlocks;            /* derived name */
+};
+
+/* A block stream (derived names): the count of every element written at +8
+ * (a writer's block is added to it when the block is closed, 0x939f0), a
+ * flag at +0x18 that some of its blocks were freed while it was read, and
+ * the blocks from +0x20 (0x947f0 appends one). A reader done with a block
+ * (0x93ba3, 0x93be6) has FUN_00094df0 free it. */
+struct hkBlockStream /* derived name */
+{
+    void FUN_00094df0(BlockCache *cache, void *block, int index); /* derived name */
+
+    u8 unknown0[8];
+    int numTotalElements; /* derived name */
+    u8 unknownC[0xc];
+    hkBool partiallyFreed; /* derived name */
+    u8 unknown19[7];
+    hkArray<void *> blocks; /* derived name */
+};
+
 /* A command of a command stream (derived names): its padded byte size at +0
  * (hkBlockStreamCommandWriter's slot 5 copies that many bytes), its primary
  * type at +3, the index of the dispatcher that executes it. */
@@ -4791,8 +4998,6 @@ void FUN_000915e0(StringMap *self); /* derived name */
  * entries (key, value; a key of -1 marks a free slot) at +0, the count at +8
  * and the hash mask at +0xc. FUN_00013b30 looks a key up (the hash
  * (key >> 4) * 0x9e3779b1) and returns its value or the default. */
-class AllocatorBase; /* tlg_lib_unknown.h */
-
 /* The allocator the containers use (derived name): an object, not a
  * pointer, reached by address from 1,621 sites. */
 extern AllocatorBase D_57b8480;
@@ -4928,9 +5133,12 @@ class hkVtableClassRegistry : public hkReferencedObject
   public:
     virtual ~hkVtableClassRegistry();
 
-    void FUN_00184520(const void *vtable, const hkClass *klass); /* vtable slot 5; derived name */
-    const hkClass *FUN_00184410(const void *vtable) const;       /* vtable slot 6; derived name */
-    const hkClass *FUN_00184420(const void *object) const;       /* vtable slot 7; derived name */
+    virtual void FUN_00184520(const void *vtable,
+                              const hkClass *klass);               /* vtable slot 5; derived name */
+    virtual const hkClass *FUN_00184410(const void *vtable) const; /* vtable slot 6; derived name */
+    /* Slot 7: the singleton's callers reach it through the vtable
+     * (0x902f0's `jmpq *%rax` after the slot load at +0x38). */
+    virtual const hkClass *FUN_00184420(const void *object) const; /* vtable slot 7; derived name */
 
     PointerMap map; /* derived name */
 };

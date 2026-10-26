@@ -8,5 +8,5 @@ void FUN_0001ff50(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00022700(static_cast<hkcdStaticAabbTree *>(object), flag);
+    new (object) hkcdStaticAabbTree(flag);
 }

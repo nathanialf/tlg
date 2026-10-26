@@ -852,3 +852,14 @@ FUN_000915e0 src/libs/unknown/func_000915e0.cpp
 FUN_000ae860 src/libs/unknown/func_000ae860.cpp
 FUN_00181af0 src/libs/unknown/func_00181af0.cpp
 FUN_0017e940 src/libs/unknown/func_0017e940.cpp _ZN9ClassTestC2EtPKcPFbPKvPK7hkClassE
+FUN_00012100 src/libs/unknown/func_00012100.cpp
+_ZN18hkcdStaticAabbTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00022700.cpp
+FUN_00034ac0 src/libs/unknown/func_00034ac0.cpp _ZN32hknpCompressedMeshShapeInternals7KeyMask12FUN_000381d0Ev
+FUN_0003a670 src/libs/unknown/func_0003a670.cpp
+FUN_000430f0 src/libs/unknown/func_000430f0.cpp
+FUN_00047d90 src/libs/unknown/func_00047d90.cpp
+FUN_000902f0 src/libs/unknown/func_000902f0.cpp
+_ZN26hkBlockStreamCommandWriterC1Ev src/libs/unknown/func_000904c0.cpp
+FUN_000938a0 src/libs/unknown/func_000938a0.cpp
+FUN_00094df0 src/libs/unknown/func_00094df0.cpp
+_ZN19hkcdDynamicAabbTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009fc10.cpp
