@@ -949,3 +949,18 @@ FUN_000ad2a0 src/libs/unknown/func_000ad2a0.cpp
 FUN_000ad2d0 src/libs/unknown/func_000ad2d0.cpp
 _ZN24hkpWrappedConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007d520.cpp _ZN24hkpWrappedConstraintDataC2E24hkFinishLoadedObjectFlag
 FUN_00009c20 src/libs/unknown/func_00009c20.cpp
+FUN_0000bcc0 src/libs/unknown/func_0000bcc0.cpp
+FUN_0001bb50 src/libs/unknown/func_0001bb50.cpp
+FUN_0002b0f0 src/libs/unknown/func_0002b0f0.cpp
+_ZN27hknpMotionPropertiesLibraryC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00036de0.cpp
+FUN_00061480 src/libs/unknown/func_00061480.cpp
+FUN_000933a0 src/libs/unknown/func_000933a0.cpp
+FUN_000ad1c0 src/libs/unknown/func_000ad1c0.cpp
+FUN_0000acd0 src/libs/unknown/func_0000acd0.cpp _ZN17RouterAllocator5012FUN_00008d70ERi
+FUN_0000ad80 src/libs/unknown/func_0000ad80.cpp _ZNK17RouterAllocator5019getMemoryStatisticsER16MemoryStatistics
+FUN_0000ae60 src/libs/unknown/func_0000ae60.cpp _ZN17RouterAllocator6012FUN_00008d70ERi
+FUN_0000af10 src/libs/unknown/func_0000af10.cpp _ZNK17RouterAllocator6019getMemoryStatisticsER16MemoryStatistics
+FUN_0000aff0 src/libs/unknown/func_0000aff0.cpp _ZN17RouterAllocator5812FUN_00008d70ERi
+FUN_0000b0a0 src/libs/unknown/func_0000b0a0.cpp _ZNK17RouterAllocator5819getMemoryStatisticsER16MemoryStatistics
+FUN_0000df60 src/libs/unknown/func_0000df60.cpp
+FUN_000120d0 src/libs/unknown/func_000120d0.cpp

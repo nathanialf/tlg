@@ -8,5 +8,5 @@ void FUN_00038c10(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00036de0(static_cast<hknpMotionPropertiesLibrary *>(object), flag);
+    new (object) hknpMotionPropertiesLibrary(flag);
 }

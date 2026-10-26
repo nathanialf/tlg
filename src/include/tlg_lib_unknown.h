@@ -5,6 +5,7 @@
 #define TLG_LIB_UNKNOWN_H
 
 #include "tlg_hk_reflect.h"
+#include "tlg_sce_fios.h"
 #include "tlg_simd.h"
 #include "tlg_types.h"
 
@@ -128,6 +129,7 @@ struct Values38Owner {
  * returns a byte count (TwoBaseAllocator: FUN_000022d0, thunk FUN_00002300;
  * LargeBlockAllocator: FUN_00012e20, thunk FUN_00012e30). */
 class AllocatorInterface;
+struct MemoryStatistics;
 
 class AllocatorBase /* derived name */
 {
@@ -146,7 +148,9 @@ class AllocatorBase /* derived name */
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
     virtual void unknownVirtual8();
-    virtual void unknownVirtual9();
+    /* Slot 9: the allocator's statistics into the caller's record
+     * (MemoryStatistics, below). derived name. */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
     virtual void unknownVirtual10();
     virtual void unknownVirtual11();
     /* Slot 12: the allocator's second interface, null by default (the
@@ -226,10 +230,12 @@ struct LargeBlockChunk /* derived name */
 class SingleBlockAllocator : public AllocatorBase /* derived name */
 {
   public:
+    void *FUN_000120d0(int &numBytes);              /* vtable slot 4; derived name */
     void FUN_00012100(void *pointer, int numBytes); /* vtable slot 5; derived name */
 
     char *start; /* derived name */
-    u8 unknown10[0x10];
+    u8 unknown10[8];
+    char *end; /* derived name */
     char *top; /* derived name */
 };
 
@@ -884,8 +890,8 @@ class StreamReader : public hkReferencedObject /* derived name */
     virtual void unknownVirtual7();
     virtual void unknownVirtual8();
     virtual StreamReader *unknownVirtual9();
-    virtual int seek(int offset, int whence); /* vtable slot 10; derived name */
-    virtual int tell() const;                 /* vtable slot 11; derived name */
+    virtual hkResult seek(int offset, int whence); /* vtable slot 10; derived name */
+    virtual int tell() const;                      /* vtable slot 11; derived name */
 };
 
 /* An input stream over a reader (derived name; vtable 0x16a65d0, address
@@ -901,14 +907,40 @@ class InputStream : public hkReferencedObject /* derived name */
     StreamReader *reader; /* derived name */
 };
 
+/* The native file reader (derived name; vtable 0x16a3550, address point
+ * 0x16a3560, no type info names it), built by FUN_00093180 over the Fios
+ * handle it opens: the handle at +0xc, whether the last operation worked at
+ * +0x10. Slot 10 (0x933a0) seeks the handle; slot 11 is the stream
+ * writer's tell, 0x92030, the same body. */
+class FiosStreamReader : public StreamReader /* derived name */
+{
+  public:
+    hkResult FUN_000933a0(int offset, int whence); /* vtable slot 10; derived name */
+
+    SceFiosFH handle; /* derived name */
+    hkBool ok;        /* derived name */
+};
+
 /* The file system the library installs (derived name; vtable 0x168ea90,
  * address point 0x168eaa0, built as a bare reference-counted object by
  * FUN_000098d0 and stored in the slot at 0x57b9b70, the singleton the
  * string "hkFileSystem" names): slot 7 removes a file and slot 8 creates a
  * directory through Fios. */
+/* The native file reader of a file name (0x93180): the file opened, a
+ * reference-counted reader over it (vtable 0x16a3550, the descriptor at
+ * +0xc, whether it opened at +0x10), or null when the open fails. derived
+ * name. */
+StreamReader *FUN_00093180(const char *name);
+
 class FiosFileSystem : public hkReferencedObject /* derived name */
 {
   public:
+    /* Slot 5: a reader of the named file, through the flags. derived name. */
+    StreamReader *FUN_0001bb50(const char *name, int flags);
+    /* The reader handed back as the flags ask (0x1a7b0): with bit 0 the
+     * reader is wrapped in a 0x38-byte buffered reader of 0x4000 bytes
+     * (0x94170) and given up; a null reader stays null. derived name. */
+    StreamReader *FUN_0001a7b0(StreamReader *reader, int flags);
     hkResult FUN_0001bbc0(const char *path); /* vtable slot 7; derived name */
     hkResult FUN_0001bbe0(const char *path); /* vtable slot 8; derived name */
 };
@@ -955,9 +987,9 @@ class OffsetSeekableReader : public SeekableReader /* derived name */
 class BufferedStreamReader : public hkReferencedObject /* derived name */
 {
   public:
-    hkBool isOk() const;                      /* vtable slot 5; derived name */
-    BufferedStreamReader *FUN_000946f0();     /* vtable slot 9; derived name */
-    int FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
+    hkBool isOk() const;                           /* vtable slot 5; derived name */
+    BufferedStreamReader *FUN_000946f0();          /* vtable slot 9; derived name */
+    hkResult FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
 
     StreamReader *stream;         /* derived name */
     StreamReader *seekableStream; /* derived name */
@@ -1068,19 +1100,25 @@ extern __thread hkMemoryRouter *D_16dc070;
 class RouterAllocator50 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes); /* 0xac60 */
+    virtual void *blockAlloc(int numBytes);                               /* 0xac60 */
+    virtual void *FUN_00008d70(int &numBytes);                            /* slot 4, 0xacd0 */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9, 0xad80 */
 };
 
 class RouterAllocator60 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes); /* 0xadf0 */
+    virtual void *blockAlloc(int numBytes);                               /* 0xadf0 */
+    virtual void *FUN_00008d70(int &numBytes);                            /* slot 4, 0xae60 */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9, 0xaf10 */
 };
 
 class RouterAllocator58 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes); /* 0xaf80 */
+    virtual void *blockAlloc(int numBytes);                               /* 0xaf80 */
+    virtual void *FUN_00008d70(int &numBytes);                            /* slot 4, 0xaff0 */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9, 0xb0a0 */
 };
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */

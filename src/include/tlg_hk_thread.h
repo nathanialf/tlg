@@ -272,6 +272,17 @@ class hknpSolverStageTask : public hkReferencedObject, public hknpTaskInterface 
 class hknpPrepareExistingPairsTask : public hkReferencedObject,
                                      public hknpTaskInterface /* derived name */
 {
+  public:
+    hknpPrepareExistingPairsTask(void *unknown18, void *unknown20);
+
+    /* slot 5 (0x1798c0; the interface's slot 2 through the thunk 0x179c70) */
+    virtual void process();
+    /* slot 6 (0x179870, also the interface's slot 3) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    void *
+        unknown18; /* derived name; passed to FUN_0016ff90 by slot 5 and by the builder FUN_00150330 */
+    void *unknown20; /* derived name; the builder's own object */
 };
 
 /* The solver's data task (derived name; vtables 0x16a5690 and 0x16a56d8,

@@ -349,8 +349,9 @@ class hkBaseObject
 void FUN_0000bcf0(void *block, int numBytes);
 
 /* derived name: a block of numBytes bytes from the thread's heap (the same
- * router's heap, slot 2). */
-void *FUN_0000bcc0(int numBytes);
+ * router's heap, slot 2; the size an operator new's, narrowed to the int the
+ * allocator takes). */
+void *FUN_0000bcc0(unsigned long numBytes);
 
 /* Its vtable 0x168cb60 (address point 0x168cb70): slot 0 the empty
  * FUN_00006660, slot 1 the deleting destructor FUN_000066e0, slot 2
@@ -682,6 +683,7 @@ class hkSimpleLocalFrame : public hkReferencedObject
     }
 
     void FUN_0000df30(Mat4 &out) const;          /* vtable slot 5; derived name */
+    void FUN_0000df60(const Mat4 &newTransform); /* vtable slot 6; derived name */
     void FUN_0000df90(Vec4 &position) const;     /* vtable slot 7; derived name */
     const char *FUN_0000dcb0() const;            /* vtable slot 9; derived name */
     int FUN_0000e160() const;                    /* vtable slot 12; derived name */
@@ -1706,6 +1708,10 @@ void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
  * destructor FUN_00093530 is out of line. */
 struct Signal00093530 /* derived name */
 {
+    /* No slots (the finish constructors of the libraries clear their
+     * unserialized signals). */
+    Signal00093530() : slots(0) {}
+
     void *slots; /* derived name */
 };
 
@@ -2328,6 +2334,9 @@ struct hknpMaterialFreeListArrayOperations;
  * hkArray) at +0 and firstFree (int) at +0x10, records 0x1696a10 and
  * 0x1696a38. */
 template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
+    /* A loaded image's array is left as loaded. */
+    hkFreeListArray(hkFinishLoadedObjectFlag flag) : elements(flag) {}
+
     hkArray<T> elements;
     int firstFree;
 };
@@ -2337,6 +2346,10 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
  * +0x10, +0x18 and +0x20 (not serialized, record flags 0x400) and entries,
  * the materials' free-list array, at +0x28 (records from 0x1699580). */
 struct hknpMaterialLibrary : public hkReferencedObject {
+    /* Inline: the type info's finish callback 0x61480 holds it. The
+     * signals start empty, the entries are left as loaded. */
+    hknpMaterialLibrary(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), entries(flag) {}
+
     virtual ~hknpMaterialLibrary();
 
     Signal00093530 materialAddedSignal;
@@ -2500,16 +2513,38 @@ class hknpMountedBallGun : public hknpBallGun
     virtual ~hknpMountedBallGun();
 };
 
+struct hknpMotionProperties; /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
+
+/* hknpMotionPropertiesId, the motion properties library's handle (the
+ * template argument of its free-list array in the scoped type names,
+ * 0x14bf45a); fields not typed yet. */
+struct hknpMotionPropertiesId;
+struct hknpMotionPropertiesFreeListArrayOperations;
+
+/* hknpMotionPropertiesLibrary (type info 0x57bf0a0, vtable 0x1693770):
+ * entryAddedSignal, entryModifiedSignal and entryRemovedSignal at +0x10,
+ * +0x18 and +0x20 (not serialized, record flags 0x400, records from
+ * 0x1694290) and entries, the motion properties' free-list array, at
+ * +0x28. Its finish constructor 0x36de0 is out of line, jumped to by the
+ * type info's finish callback 0x38c10 and called by the reflection
+ * initializer at 0x38cc0; the signals start empty. */
+struct hknpMotionPropertiesLibrary : public hkReferencedObject {
+    hknpMotionPropertiesLibrary(hkFinishLoadedObjectFlag flag);
+    virtual ~hknpMotionPropertiesLibrary();
+
+    Signal00093530 entryAddedSignal;
+    Signal00093530 entryModifiedSignal;
+    Signal00093530 entryRemovedSignal;
+    hkFreeListArray<hknpMotionProperties, hknpMotionPropertiesId, 8,
+                    hknpMotionPropertiesFreeListArrayOperations>
+        entries;
+};
+
 /* hknp classes registered by the reflection TU at 0x38b10 onward, each with
  * an out-of-line finish constructor (type info, the vtable it stores): */
-struct hknpMotionPropertiesLibrary; /* 0x57bf0a0; FUN_00036de0, vtable 0x1693770 */
 class
     hknpCapsuleShape; /* 0x57bf490; FUN_000730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
-struct hknpMotionProperties;   /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
 class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
-
-void FUN_00036de0(hknpMotionPropertiesLibrary *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpShapeMassProperties (hkClass 0x57bf240, 0x30 bytes, parent
  * hkReferencedObject; type info 0x57bf290, vtable 0x1693ef0): its finish
@@ -4550,6 +4585,21 @@ class hkMeshMaterial : public hkReferencedObject
 {
   public:
     hkMeshMaterial(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* The material interface's slots up to 14, typed from
+     * hkMemoryMeshMaterial's overriders (vtable 0x16a3910); the later slots
+     * are not declared yet. derived names. */
+    virtual hkResult unknownVirtual5(const hkVertexFormat &format, hkVertexFormat &formatOut);
+    virtual hkMeshVertexBuffer *unknownVirtual6(hkMeshVertexBuffer *buffer);
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9(const char *newName);
+    virtual const char *unknownVirtual10() const;
+    virtual int unknownVirtual11() const;
+    virtual hkMeshTexture *unknownVirtual12(int index) const;
+    /* Slot 13 adds a texture, slot 14 puts one at an index. */
+    virtual void unknownVirtual13(hkMeshTexture *texture);
+    virtual void unknownVirtual14(int index, hkMeshTexture *texture);
 };
 
 class hkMemoryMeshMaterial : public hkMeshMaterial
@@ -4566,6 +4616,11 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
     void FUN_000acf80(const char *newName);           /* vtable slot 9; derived name */
     const char *FUN_000acf90() const;                 /* vtable slot 10; derived name */
     hkMeshTexture *FUN_000acfb0(int index) const;     /* vtable slot 12; derived name */
+    /* The index a new texture goes at (0xacfc0): after the textures whose
+     * slot 15 value is not above its own, the later ones moved up and a
+     * null slot left for it. derived name. */
+    int FUN_000acfc0(hkMeshTexture *texture);
+    void FUN_000ad1c0(hkMeshTexture *texture); /* vtable slot 13; derived name */
     void FUN_000ad2a0(Vec4 &diffuse, Vec4 &ambient, Vec4 &specular,
                       Vec4 &emissive) const; /* vtable slot 15; derived name */
     void FUN_000ad2d0(const Vec4 &diffuse, const Vec4 &ambient, const Vec4 &specular,
