@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hkxBlobMeshShape's vtable returns its reflected class. */
-const hkClass *hkxBlobMeshShape::FUN_00085d30() const /* derived name */
+const hkClass *hkxBlobMeshShape::getClassType() const /* derived name */
 {
     return &D_57c5e78;
 }

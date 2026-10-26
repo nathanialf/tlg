@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hkMultipleVertexBuffer's vtable returns its reflected class. */
-const hkClass *hkMultipleVertexBuffer::FUN_000238c0() const /* derived name */
+const hkClass *hkMultipleVertexBuffer::getClassType() const /* derived name */
 {
     return &D_57bcf20;
 }

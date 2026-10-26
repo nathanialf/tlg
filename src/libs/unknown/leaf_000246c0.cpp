@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hkMemoryMeshMaterial's vtable returns its reflected class. */
-const hkClass *hkMemoryMeshMaterial::FUN_000246c0() const /* derived name */
+const hkClass *hkMemoryMeshMaterial::getClassType() const /* derived name */
 {
     return &D_57bd458;
 }

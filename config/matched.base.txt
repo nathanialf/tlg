@@ -314,18 +314,18 @@ FUN_00012e20 src/libs/unknown/leaf_00012e20.cpp _ZNK19LargeBlockAllocator14alloc
 FUN_00012e30 src/libs/unknown/leaf_00012e20.cpp _ZThn8_NK19LargeBlockAllocator14allocatedBytesEv
 FUN_0001a440 src/libs/unknown/leaf_0001a440.cpp
 FUN_0001a4a0 src/libs/unknown/leaf_0001a4a0.cpp
-FUN_00023370 src/libs/unknown/leaf_00023370.cpp
-FUN_000238c0 src/libs/unknown/leaf_000238c0.cpp
-FUN_00023de0 src/libs/unknown/leaf_00023de0.cpp
+FUN_00023370 src/libs/unknown/leaf_00023370.cpp _ZNK21hkSkinnedRefMeshShape12getClassTypeEv
+FUN_000238c0 src/libs/unknown/leaf_000238c0.cpp _ZNK22hkMultipleVertexBuffer12getClassTypeEv
+FUN_00023de0 src/libs/unknown/leaf_00023de0.cpp _ZNK17hkMemoryMeshShape12getClassTypeEv
 FUN_000242d0 src/libs/unknown/leaf_000242d0.cpp _ZNK13hkSkinBinding12getClassTypeEv
-FUN_000246c0 src/libs/unknown/leaf_000246c0.cpp
-FUN_000247f0 src/libs/unknown/leaf_000247f0.cpp
+FUN_000246c0 src/libs/unknown/leaf_000246c0.cpp _ZNK20hkMemoryMeshMaterial12getClassTypeEv
+FUN_000247f0 src/libs/unknown/leaf_000247f0.cpp _ZNK19hkMemoryMeshTexture12getClassTypeEv
 FUN_00027b10 src/libs/unknown/leaf_00027b10.cpp
-FUN_00027bd0 src/libs/unknown/leaf_00027bd0.cpp
+FUN_00027bd0 src/libs/unknown/leaf_00027bd0.cpp _ZNK25hkStorageSkinnedMeshShape12getClassTypeEv
 FUN_0002ae00 src/libs/unknown/leaf_0002ae00.cpp
-FUN_000358a0 src/libs/unknown/leaf_000358a0.cpp
+FUN_000358a0 src/libs/unknown/leaf_000358a0.cpp _ZNK24hknpDynamicCompoundShape12getClassTypeEv
 FUN_00035c40 src/libs/unknown/leaf_00035c40.cpp
-FUN_00038740 src/libs/unknown/leaf_00038740.cpp
+FUN_00038740 src/libs/unknown/leaf_00038740.cpp _ZNK23hknpStaticCompoundShape12getClassTypeEv
 FUN_0003b980 src/libs/unknown/leaf_0003b980.cpp
 FUN_000418b0 src/libs/unknown/leaf_000418b0.cpp _ZNK17hknpCompoundShape12getClassTypeEv
 FUN_00042e80 src/libs/unknown/leaf_00042e80.cpp _ZNK18hknpCompositeShape12getClassTypeEv
@@ -335,10 +335,10 @@ FUN_0007dfc0 src/libs/unknown/leaf_0007dfc0.cpp
 FUN_0007e0a0 src/libs/unknown/leaf_0007e0a0.cpp
 FUN_0007e160 src/libs/unknown/leaf_0007e160.cpp
 FUN_000803f0 src/libs/unknown/func_000803f0.cpp
-FUN_00085d30 src/libs/unknown/leaf_00085d30.cpp
-FUN_000878e0 src/libs/unknown/leaf_000878e0.cpp
+FUN_00085d30 src/libs/unknown/leaf_00085d30.cpp _ZNK16hkxBlobMeshShape12getClassTypeEv
+FUN_000878e0 src/libs/unknown/leaf_000878e0.cpp _ZNK14hkxTextureFile12getClassTypeEv
 FUN_0008ba30 src/libs/unknown/leaf_0008ba30.cpp _ZNK16hkxAnimatedFloat12getClassTypeEv
-FUN_0008ff00 src/libs/unknown/leaf_0008ff00.cpp
+FUN_0008ff00 src/libs/unknown/leaf_0008ff00.cpp _ZNK19hkArrayStreamWriter12getClassTypeEv
 FUN_00092030 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
 FUN_000ad710 src/libs/unknown/leaf_000ad710.cpp
 FUN_000b6bf0 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp

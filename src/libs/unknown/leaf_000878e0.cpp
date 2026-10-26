@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hkxTextureFile's vtable returns its reflected class. */
-const hkClass *hkxTextureFile::FUN_000878e0() const /* derived name */
+const hkClass *hkxTextureFile::getClassType() const /* derived name */
 {
     return &D_57c67d0;
 }

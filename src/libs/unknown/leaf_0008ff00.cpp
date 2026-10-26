@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hkArrayStreamWriter's vtable returns its reflected class. */
-const hkClass *hkArrayStreamWriter::FUN_0008ff00() const /* derived name */
+const hkClass *hkArrayStreamWriter::getClassType() const /* derived name */
 {
     return &D_57c8750;
 }

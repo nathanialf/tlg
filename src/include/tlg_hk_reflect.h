@@ -992,6 +992,31 @@ void FUN_000270a0(hkVertexFormat *self); /* derived name */
  * and then that many elements. */
 void FUN_000270b0(hkVertexFormat *self, const hkVertexFormat *other); /* derived name */
 
+/* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
+ * hkReferencedObject, 0x10 bytes). Slots 11 to 14, kept by both
+ * hkMultipleVertexBuffer (0x1692000) and hkMemoryMeshVertexBuffer
+ * (0x16921b0), are its defaults: each hands a locked-vertices record, an
+ * element index and an array of values to a function of
+ * hkMeshVertexBufferUtil.cpp. The record (derived name LockedVertices) holds
+ * 24-byte buffer descriptions from +0 and the vertex count at +0x304, as
+ * FUN_000aaaf0 reads it. */
+class hkMeshVertexBuffer : public hkReferencedObject
+{
+  public:
+    hkMeshVertexBuffer(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    struct LockedVertices; /* derived name */
+
+    hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
+                          float *values); /* vtable slot 11; derived name */
+    hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
+                          const float *values); /* vtable slot 12; derived name */
+    hkResult FUN_000260c0(const LockedVertices &lockedVertices, int elementIndex,
+                          int *values); /* vtable slot 13; derived name */
+    hkResult FUN_000260d0(const LockedVertices &lockedVertices, int elementIndex,
+                          const int *values); /* vtable slot 14; derived name */
+};
+
 /* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
  * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): slot 0,
  * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0.
@@ -1003,7 +1028,10 @@ void FUN_000270b0(hkVertexFormat *self, const hkVertexFormat *other); /* derived
  * (hkBool) at +0x154, +0x155 and +0x156. */
 extern const hkClass D_57bcf20; /* hkMultipleVertexBuffer's hkClass, built at 0x23adb */
 
-class hkMultipleVertexBuffer
+/* Its hkClass's parent is hkMeshVertexBuffer's, 0x57bca60 (the constructor's
+ * third argument at 0x23ae9); vertexFormat at +0xc sits in the tail padding
+ * of hkReferencedObject. */
+class hkMultipleVertexBuffer : public hkMeshVertexBuffer
 {
   public:
     /* hkMultipleVertexBuffer::LockedElement (records from 0x16919e0, 7 bytes):
@@ -1025,12 +1053,11 @@ class hkMultipleVertexBuffer
     hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
     virtual ~hkMultipleVertexBuffer();
 
-    const hkClass *FUN_000238c0() const;                /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;                /* vtable slot 3, FUN_000238c0 */
     bool FUN_00024bd0() const;                          /* vtable slot 6; derived name */
     void FUN_00024be0(hkVertexFormat &formatOut) const; /* vtable slot 7; derived name */
     int FUN_00024bf0() const;                           /* vtable slot 8; derived name */
 
-    u8 unknown8[4];
     hkVertexFormat vertexFormat;
     hkArray<LockedElement> lockedElements;
     u8 unknown120[0x28];
@@ -1068,29 +1095,6 @@ class hkMeshShape : public hkReferencedObject
     virtual void unknownVirtual7(const hkMeshSection &section);
     virtual const char *getName() const;       /* vtable slot 8; derived name */
     virtual void setName(const char *newName); /* vtable slot 9; derived name */
-};
-
-/* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
- * hkReferencedObject, 0x10 bytes). Slots 11 to 14, kept by both
- * hkMultipleVertexBuffer (0x1692000) and hkMemoryMeshVertexBuffer
- * (0x16921b0), are its defaults: each hands a locked-vertices record, an
- * element index and an array of values to a function of
- * hkMeshVertexBufferUtil.cpp. The record (derived name LockedVertices) holds
- * 24-byte buffer descriptions from +0 and the vertex count at +0x304, as
- * FUN_000aaaf0 reads it. */
-class hkMeshVertexBuffer
-{
-  public:
-    struct LockedVertices; /* derived name */
-
-    hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
-                          float *values); /* vtable slot 11; derived name */
-    hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
-                          const float *values); /* vtable slot 12; derived name */
-    hkResult FUN_000260c0(const LockedVertices &lockedVertices, int elementIndex,
-                          int *values); /* vtable slot 13; derived name */
-    hkResult FUN_000260d0(const LockedVertices &lockedVertices, int elementIndex,
-                          const int *values); /* vtable slot 14; derived name */
 };
 
 /* The vertex buffer helpers of hkMeshVertexBufferUtil.cpp (the homes row of
@@ -1204,31 +1208,6 @@ struct hkSkinnedMeshShapeBoneSection;
 
 void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
-
-/* hknpStaticCompoundShape, polymorphic, 0xc0 bytes (type info 0x57c2818,
- * parent hknpCompoundShape): its finish callback FUN_0006c310 runs the
- * finish constructor FUN_000385d0, which stores the vtable 0x1693f40, whose
- * slot 0 is the destructor at 0x386c0. */
-extern const hkClass D_57c27c8; /* hknpStaticCompoundShape's hkClass, built at 0x6c395 */
-
-class hknpStaticCompoundShape
-{
-  public:
-    virtual ~hknpStaticCompoundShape();
-
-    /* vtable slot 3, also of hknpStaticCompoundShapeInternals (0x1692840),
-     * which does not override it; derived name */
-    const hkClass *FUN_00038740() const;
-};
-
-/* hknpStaticCompoundShapeInternals, 0xc0 bytes (type info 0x57bde70, vtable
- * 0x1692840), reflected with hknpStaticCompoundShape as its parent and no
- * members of its own. */
-class hknpStaticCompoundShapeInternals : public hknpStaticCompoundShape
-{
-  public:
-    virtual ~hknpStaticCompoundShapeInternals();
-};
 
 /* hknpShapeSignals, a reflected struct (hkClass at 0x57c2478); at most 16
  * bytes, the member after it in hknpMaskedShape sitting at +0x60. */
@@ -1832,7 +1811,9 @@ struct hknpCompressedMeshShape {
 };
 
 float FUN_00073940(const hknpCapsuleShape *self); /* derived name */
-/* hknpStaticCompoundShape's finish constructor (see the class above). */
+/* hknpStaticCompoundShape's finish constructor (see the class, declared
+ * after hknpCompoundShape). */
+class hknpStaticCompoundShape;
 void FUN_000385d0(hknpStaticCompoundShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpExternMeshShape (type info 0x57c28e8, size 0x70): its finish
@@ -2845,12 +2826,19 @@ extern const hkClass D_57bd458; /* hkMemoryMeshMaterial's hkClass, built at 0x24
 
 class hkMeshTexture;
 
-class hkMemoryMeshMaterial
+/* hkMeshMaterial (hkClass 0x57bd680, built at 0x26654, parent
+ * hkReferencedObject's 0x57b8640), the parent of hkMemoryMeshMaterial's
+ * hkClass (at 0x24760). */
+class hkMeshMaterial : public hkReferencedObject
+{
+};
+
+class hkMemoryMeshMaterial : public hkMeshMaterial
 {
   public:
     virtual ~hkMemoryMeshMaterial();
 
-    const hkClass *FUN_000246c0() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_000246c0 */
     hkResult FUN_000acf00(const hkVertexFormat &format,
                           hkVertexFormat &formatOut); /* vtable slot 5; derived name */
     void FUN_000acf80(const char *newName);           /* vtable slot 9; derived name */
@@ -2863,7 +2851,6 @@ class hkMemoryMeshMaterial
     float FUN_000acb20() const;                       /* vtable slot 21; derived name */
     void FUN_000acb30(float amount);                  /* vtable slot 22; derived name */
 
-    u8 unknown8[8];
     hkStringPtr materialName;
     hkArray<hkMeshTexture *> textures;
     Vec4 diffuseColor;
@@ -2875,9 +2862,10 @@ class hkMemoryMeshMaterial
     float displacementAmount;
 };
 
-/* hkMeshTexture (hkClass 0x57bc990), the texture interface, with its three
+/* hkMeshTexture (hkClass 0x57bc990, built at 0x229f0, parent
+ * hkReferencedObject's 0x57b8640), the texture interface, with its three
  * reflected enums (item tables at 0x1690ea0, 0x1690f00, 0x1690f30). */
-class hkMeshTexture
+class hkMeshTexture : public hkReferencedObject
 {
   public:
     enum Format { Unknown, PNG, TGA, BMP, DDS, RAW };
@@ -2919,7 +2907,7 @@ class hkMemoryMeshTexture : public hkMeshTexture
   public:
     virtual ~hkMemoryMeshTexture();
 
-    const hkClass *FUN_000247f0() const;              /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;              /* vtable slot 3, FUN_000247f0 */
     Format FUN_000ad6e0() const;                      /* vtable slot 8; derived name */
     bool FUN_000ad710() const;                        /* vtable slot 11; derived name */
     void FUN_000ad720(bool newHasMipMaps);            /* vtable slot 12; derived name */
@@ -2930,7 +2918,6 @@ class hkMemoryMeshTexture : public hkMeshTexture
     int FUN_000ad770() const;                         /* vtable slot 17; derived name */
     void FUN_000ad780(int newTextureCoordChannel);    /* vtable slot 18; derived name */
 
-    u8 unknown8[8];
     hkStringPtr filename;
     u8 data[0x10];
     hkEnum<Format, s8> format;
@@ -3034,43 +3021,44 @@ class hkBufferedStreamWriter : public hkStreamWriter
 
 /* hkSkinnedRefMeshShape: its hkClass at 0x57bcd20 is built by the
  * reflection initializer at 0x23402; slot 3 of its vtable (0x16a38c0,
- * FUN_00023370) returns it. */
+ * FUN_00023370) returns it; its parent is hkMeshShape's, 0x57bd7d0 (at
+ * 0x23410). */
 extern const hkClass D_57bcd20; /* hkSkinnedRefMeshShape's hkClass */
 
-class hkSkinnedRefMeshShape
+class hkSkinnedRefMeshShape : public hkMeshShape
 {
   public:
     virtual ~hkSkinnedRefMeshShape();
 
-    const hkClass *FUN_00023370() const;    /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;    /* vtable slot 3, FUN_00023370 */
     const char *FUN_000aa880() const;       /* vtable slot 8; derived name */
     void FUN_000aa890(const char *newName); /* vtable slot 9; derived name */
 
     /* From its record table at 0x16916c0: skinnedMeshShape (pointer) at
      * +0x10, bones and localFromRootTransforms (arrays) at +0x18 and +0x28,
      * name (hkStringPtr) at +0x38. */
-    u8 unknown8[0x30];
+    u8 unknownC[0x2c];
     hkStringPtr name;
 };
 
 /* hkMemoryMeshShape: its hkClass at 0x57bd0a0 is built by the reflection
  * initializer at 0x241e3; slot 3 of its vtable (0x1692540, FUN_00023de0)
- * returns it. */
+ * returns it; its parent is hkMeshShape's, 0x57bd7d0 (at 0x241f1). */
 extern const hkClass D_57bd0a0; /* hkMemoryMeshShape's hkClass */
 
-class hkMemoryMeshShape
+class hkMemoryMeshShape : public hkMeshShape
 {
   public:
     virtual ~hkMemoryMeshShape();
 
-    const hkClass *FUN_00023de0() const;    /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;    /* vtable slot 3, FUN_00023de0 */
     const char *FUN_0002a910() const;       /* vtable slot 8; derived name */
     void FUN_0002a920(const char *newName); /* vtable slot 9; derived name */
 
     /* From its record table at 0x1691bf0: sections (array) at +0x10,
      * indices16 and indices32 (arrays) at +0x20 and +0x30, name
      * (hkStringPtr, finished by FUN_0002a940) at +0x40. */
-    u8 unknown8[0x38];
+    u8 unknownC[0x34];
     hkStringPtr name;
 };
 
@@ -3107,8 +3095,9 @@ class hkSkinBinding : public hkMeshShape
  * array at +0x40 (count at +0x48); its slot 15 (0xae860) sorts them with the
  * quick sort FUN_000ad970 and the order FUN_000ad900. */
 /* hkSkinnedMeshShape::BoneSet (records 0x1692230): boneBufferOffset and
- * numBones (hkUint16) at +0 and +2. */
-class hkSkinnedMeshShape
+ * numBones (hkUint16) at +0 and +2. hkSkinnedMeshShape's hkClass 0x57bdcc8
+ * (built at 0x27de4) has hkReferencedObject's 0x57b8640 as parent. */
+class hkSkinnedMeshShape : public hkReferencedObject
 {
   public:
     /* A bone set's id: a 16-bit handle passed by value (derived name). The
@@ -3140,15 +3129,16 @@ bool FUN_000ad900(const hkSkinnedMeshShape::Part &a,
 
 /* hkStorageSkinnedMeshShape: its hkClass at 0x57bdd18 is built by the
  * reflection initializer at 0x27e79; slot 3 of its vtable (0x16a3b00,
- * FUN_00027bd0) returns it. */
+ * FUN_00027bd0) returns it; its parent is hkSkinnedMeshShape's, 0x57bdcc8
+ * (at 0x27ec9). */
 extern const hkClass D_57bdd18; /* hkStorageSkinnedMeshShape's hkClass */
 
-class hkStorageSkinnedMeshShape
+class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
 {
   public:
     virtual ~hkStorageSkinnedMeshShape();
 
-    const hkClass *FUN_00027bd0() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_00027bd0 */
     void
     FUN_000ae770(hkSkinnedMeshShape::BoneSetId boneSetId,
                  hkSkinnedMeshShape::BoneSet &boneSetOut) const; /* vtable slot 7; derived name */
@@ -3158,24 +3148,11 @@ class hkStorageSkinnedMeshShape
     /* From its record table at 0x1692420: bonesBuffer, boneSets,
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at
      * +0x50. */
-    u8 unknown8[8];
+    u8 unknownC[4];
     u8 bonesBuffer[0x10];
     hkArray<hkSkinnedMeshShape::BoneSet> boneSets;
     u8 unknown30[0x20];
     hkStringPtr name;
-};
-
-/* hknpDynamicCompoundShape: its hkClass at 0x57be640 is built by the
- * reflection initializer at 0x35935; slot 3 of its vtable (0x1697ef0,
- * FUN_000358a0) returns it. */
-extern const hkClass D_57be640; /* hknpDynamicCompoundShape's hkClass */
-
-class hknpDynamicCompoundShape
-{
-  public:
-    virtual ~hknpDynamicCompoundShape();
-
-    const hkClass *FUN_000358a0() const; /* vtable slot 3; derived name */
 };
 
 /* hkGeometry, polymorphic (vtable 0x1692500; hkClass parent
@@ -3265,6 +3242,46 @@ class hknpCompoundShape : public hknpCompositeShape
     hkAabb aabb; /* derived name */
 };
 
+/* hknpStaticCompoundShape, polymorphic, 0xc0 bytes (type info 0x57c2818,
+ * parent hknpCompoundShape): its finish callback FUN_0006c310 runs the
+ * finish constructor FUN_000385d0, which stores the vtable 0x1693f40, whose
+ * slot 0 is the destructor at 0x386c0. Its hkClass's parent is
+ * hknpCompoundShape's, 0x57c2e78 (at 0x6c3a3). */
+extern const hkClass D_57c27c8; /* hknpStaticCompoundShape's hkClass, built at 0x6c395 */
+
+class hknpStaticCompoundShape : public hknpCompoundShape
+{
+  public:
+    virtual ~hknpStaticCompoundShape();
+
+    /* vtable slot 3, FUN_00038740, also of hknpStaticCompoundShapeInternals
+     * (0x1692840), which does not override it */
+    const hkClass *getClassType() const;
+};
+
+/* hknpStaticCompoundShapeInternals, 0xc0 bytes (type info 0x57bde70, vtable
+ * 0x1692840), reflected with hknpStaticCompoundShape as its parent and no
+ * members of its own. */
+class hknpStaticCompoundShapeInternals : public hknpStaticCompoundShape
+{
+  public:
+    virtual ~hknpStaticCompoundShapeInternals();
+};
+
+/* hknpDynamicCompoundShape: its hkClass at 0x57be640 is built by the
+ * reflection initializer at 0x35935; slot 3 of its vtable (0x1697ef0,
+ * FUN_000358a0) returns it; its parent is hknpCompoundShape's, 0x57c2e78
+ * (at 0x35943). */
+extern const hkClass D_57be640; /* hknpDynamicCompoundShape's hkClass */
+
+class hknpDynamicCompoundShape : public hknpCompoundShape
+{
+  public:
+    virtual ~hknpDynamicCompoundShape();
+
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_000358a0 */
+};
+
 /* hknpLodShape (type info 0x57c05b8, parent hknpCompositeShape: its finish
  * constructor FUN_00068160 stores hknpCompositeShape's vtable before its own
  * 0x1699c00): slot 7 (FUN_00068350) transforms the AABB at +0x110. */
@@ -3276,34 +3293,36 @@ struct hknpLodShape : public hknpCompositeShape {
 };
 
 /* hkxBlobMeshShape: its hkClass at 0x57c5e78 is built by the reflection initializer at
- * 0x85de2; slot 3 of its vtable (address point 0x16a07a0, FUN_00085d30) returns it. */
+ * 0x85de2; slot 3 of its vtable (address point 0x16a07a0, FUN_00085d30) returns it; its parent is hkMeshShape's,
+ * 0x57bd7d0 (at 0x85df0). */
 extern const hkClass D_57c5e78; /* hkxBlobMeshShape's hkClass */
 
-class hkxBlobMeshShape
+class hkxBlobMeshShape : public hkMeshShape
 {
   public:
     virtual ~hkxBlobMeshShape();
 
-    const hkClass *FUN_00085d30() const;    /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;    /* vtable slot 3, FUN_00085d30 */
     const char *FUN_00085c20() const;       /* vtable slot 8; derived name */
     void FUN_00085c30(const char *newName); /* vtable slot 9; derived name */
 
     /* From its record table at 0x16a0830 (0x38 bytes): blob (struct
      * hkxBlob, hkClass 0x57c7a80) at +0x10, name (hkStringPtr) at +0x30. */
-    u8 unknown8[0x28];
+    u8 unknownC[0x24];
     hkStringPtr name;
 };
 
 /* hkxTextureFile: its hkClass at 0x57c67d0 is built by the reflection initializer at
- * 0x879b2; slot 3 of its vtable (address point 0x16a0f00, FUN_000878e0) returns it. */
+ * 0x879b2; slot 3 of its vtable (address point 0x16a0f00, FUN_000878e0) returns it; its parent is hkReferencedObject's,
+ * 0x57b8640 (at 0x879c0). */
 extern const hkClass D_57c67d0; /* hkxTextureFile's hkClass */
 
-class hkxTextureFile
+class hkxTextureFile : public hkReferencedObject
 {
   public:
     virtual ~hkxTextureFile();
 
-    const hkClass *FUN_000878e0() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_000878e0 */
 };
 
 /* hkxAnimatedFloat: its hkClass at 0x57c7930 is built by the reflection initializer at
@@ -3324,15 +3343,18 @@ class hkxAnimatedFloat : public hkReferencedObject
 };
 
 /* hkArrayStreamWriter: its hkClass at 0x57c8750 is built by the reflection initializer at
- * 0x901fb; slot 3 of its vtable (address point 0x16a3300, FUN_0008ff00) returns it. */
+ * 0x901fb; slot 3 of its vtable (address point 0x16a3300, FUN_0008ff00) returns it. Its hkClass has no parent (null third
+ * argument at 0x90209): hkStreamWriter is not reflected. Its vtable keeps
+ * the stream writer's slots: 5 true (0x40b0), 6 the write (0x90000), 7 an
+ * empty flush (0x270), 8 true (0x40b0). */
 extern const hkClass D_57c8750; /* hkArrayStreamWriter's hkClass */
 
-class hkArrayStreamWriter
+class hkArrayStreamWriter : public hkStreamWriter
 {
   public:
     virtual ~hkArrayStreamWriter();
 
-    const hkClass *FUN_0008ff00() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ff00 */
 };
 
 /* hknpVehicleInstance: hkClass 0x57c1490 (size 0x120, parent hknpUnaryAction's
