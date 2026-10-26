@@ -989,3 +989,13 @@ FUN_00070750 src/libs/unknown/func_00070750.cpp
 FUN_00075f60 src/libs/unknown/func_00075f60.cpp
 FUN_0007c350 src/libs/unknown/func_0007c350.cpp
 FUN_00013d80 src/libs/unknown/func_00013d80.cpp
+FUN_0001afa0 src/libs/unknown/func_0001afa0.cpp
+_ZN29hkpLimitedHingeConstraintData5AtomsC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00078df0.cpp
+FUN_0008ef60 src/libs/unknown/func_0008ef60.cpp
+FUN_00091600 src/libs/unknown/func_00091600.cpp
+FUN_0019a490 src/libs/unknown/func_0019a490.cpp
+FUN_0000ef40 src/libs/unknown/func_0000ef40.cpp _ZN17Allocator0000ed4012FUN_00008d70ERi
+FUN_00067b00 src/libs/unknown/func_00067b00.cpp
+FUN_000910a0 src/libs/unknown/func_000910a0.cpp _ZNK15BufferAllocator19getMemoryStatisticsER16MemoryStatistics
+FUN_00151de0 src/libs/unknown/func_00151de0.cpp
+FUN_0017a1f0 src/libs/unknown/func_0017a1f0.cpp _ZN13NodeEdgeListsC2Ev

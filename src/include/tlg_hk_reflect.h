@@ -207,6 +207,10 @@ struct hkMatrix3 {
     /* derived name: m added column by column (0x1af70; called at 0x29ac8). */
     void FUN_0001af70(const hkMatrix3 &m);
 
+    /* derived name: m subtracted column by column (0x1afa0; called at
+     * 0xb1cc8 and 0x1578f8). */
+    void FUN_0001afa0(const hkMatrix3 &m);
+
     /* derived name: whether the columns are of unit length within a
      * tolerance and orthogonal (0xbe80; the game calls it on its own
      * rotations). */
@@ -559,6 +563,35 @@ void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived
  * stores an owned copy of the new one (or null); returns the pointer. */
 hkStringPtr *FUN_0000e620(hkStringPtr *self, const char *string); /* derived name */
 
+/* What a load or save reports when it fails (derived names): an error id at
+ * +0 (0: none yet) and a message at +8. The deprecated serializer's stubs set
+ * id 7 and their message when nothing was reported before. */
+struct SerializeErrorDetails /* derived name */
+{
+    int id;                     /* derived name */
+    hkStringPtr defaultMessage; /* derived name */
+};
+
+/* hkSerializeDeprecated, the singleton registered by that name (record
+ * 0x57c8a40 filled by 0x19a680; its create function 0x19a5f0 builds a static
+ * instance at 0x57c8a08 with the vtable 0x16a6860, address point 0x16a6870,
+ * and returns it with a reference added). This build links the stub, whose
+ * slots fail with "Packfile versioning support is not linked..." (0x14cca20):
+ * slot 6 (0x19a450) takes six arguments, the error details last, and returns
+ * 1; slots 8 and 9 share 0x19a490, three arguments, the error details last,
+ * returning null; slot 10 (0x19a4d0) reads an XML header. */
+/* The stub's message (0x14cca20, "Packfile versioning support is not
+ * linked...", 631 characters with its advice), referenced by its address: the
+ * text is the executable's. */
+extern const char D_14cca20[];
+
+class hkSerializeDeprecated : public hkReferencedObject
+{
+  public:
+    void *FUN_0019a490(void *reader, const void *details,
+                       SerializeErrorDetails *errorOut); /* vtable slots 8 and 9; derived name */
+};
+
 /* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
  * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot. */
 class hkMonitorStreamColorTable : public hkReferencedObject
@@ -884,18 +917,40 @@ class hknpMaterialPalette : public hkReferencedObject
     hknpMaterialPalette(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
-/* hknpVehicleDefaultAnalogDriverInput: vtable 0x16a43c0, finish callback FUN_000378b0. */
-class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
-{
-  public:
-    hknpVehicleDefaultAnalogDriverInput(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-};
-
-/* hknpVehicleDriverInputAnalogStatus: vtable 0x16a4420, finish callback FUN_000378e0. */
+/* hknpVehicleDriverInputAnalogStatus: vtable 0x16a4420, finish callback
+ * FUN_000378e0; members (records from 0x16938c0) positionX and positionY
+ * (floats) at +0xc and +0x10, handbrakeButtonPressed and
+ * reverseButtonPressed (hkBool) at +0x14 and +0x15. */
 class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
 {
   public:
     hknpVehicleDriverInputAnalogStatus(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    float positionX;
+    float positionY;
+    hkBool handbrakeButtonPressed;
+    hkBool reverseButtonPressed;
+};
+
+class hknpVehicleInstance;
+
+/* hknpVehicleDefaultAnalogDriverInput: vtable 0x16a43c0, finish callback
+ * FUN_000378b0; members (records from 0x1693820) slopeChangePointX,
+ * initialSlope and deadZone (floats) at +0xc to +0x14, autoReverse (hkBool)
+ * at +0x18. Slot 7 (FUN_00151de0) is the brake input. */
+class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
+{
+  public:
+    hknpVehicleDefaultAnalogDriverInput(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    float FUN_00151de0(
+        const hknpVehicleInstance *vehicle,
+        const hknpVehicleDriverInputAnalogStatus *status) const; /* vtable slot 7; derived name */
+
+    float slopeChangePointX;
+    float initialSlope;
+    float deadZone;
+    hkBool autoReverse;
 };
 
 /* What a transmission's slot 5 (0x67f40) fills (derived names): two floats
@@ -909,8 +964,6 @@ struct hknpVehicleTransmissionOutput /* derived name */
     hkBool isReversing; /* derived name */
     s8 currentGear;     /* derived name */
 };
-
-class hknpVehicleInstance;
 
 /* hknpVehicleDefaultTransmission: vtable 0x1699b90, finish callback FUN_00037a90. */
 class hknpVehicleDefaultTransmission : public hkReferencedObject
@@ -2903,21 +2956,9 @@ class hknpConvexPolytopeShape::Connectivity : public hkReferencedObject
  * 0x57c23f8, vtable 0x1695b10): its one reflected member, threshold (float),
  * sits at +0x20 (record table 0x169a740); its constructor FUN_0003c210 sets
  * it to 10. FUN_0003c270 and FUN_0003c280 read and write it (the class is
- * defined after hkpWrappedConstraintData, its parent).
- * hknpMalleableConstraintData, polymorphic, 0x40 bytes (type info 0x57c18d8,
- * vtable 0x1699a90): members atom at +0x20, wantsRuntime at +0x38 and
- * strength (float) at +0x3c (record table 0x16996a0); FUN_00067c40 writes
- * the strength. Both are built by the game code at 0xea7a00 and 0xea8280. */
-class hknpMalleableConstraintData
-{
-  public:
-    virtual ~hknpMalleableConstraintData();
-
-    void FUN_00067c40(float newStrength); /* derived name */
-
-    u8 unknown8[0x34];
-    float strength;
-};
+ * defined after hkpWrappedConstraintData, its parent, as is
+ * hknpMalleableConstraintData). Both are built by the game code at 0xea7a00
+ * and 0xea8280. */
 
 /* hknpWorldCinfo (type info 0x57c13e0, hkClass 0x57c1390, no vtable; 0xf0
  * bytes, as hknpRefWorldCinfo's size gives it): an empty finish
@@ -3223,10 +3264,42 @@ class hkpConstraintData : public hkReferencedObject
   public:
     hkpConstraintData(hkFinishLoadedObjectFlag flag);
 
-    /* What slot 6 fills (derived name): hkpFixedConstraintData's override
+    /* What slot 6 fills (derived names): hkpFixedConstraintData's override
      * (0x7bf20) hands its 0xc0 bytes of atoms and this argument to
-     * FUN_00082890. */
-    struct ConstraintInfo;
+     * FUN_00082890, which stores the atoms and their size at +0x10 and
+     * +0x18, zeroes the four counts from +0 and adds the jacobian header's
+     * 32 bytes to the schemas' size at +4, then each atom's schema size,
+     * solver results (+8) and temporaries (+0xc); some atoms add to +0x1c.
+     * hkpPointToPathConstraintData's override (0x7a020) adds its own. */
+    struct ConstraintInfo {
+        void clear()
+        {
+            maxSizeOfSchema = 0;
+            sizeOfSchemas = 0;
+            numSolverResults = 0;
+            numSolverElemTemps = 0;
+        }
+
+        void addHeader()
+        {
+            sizeOfSchemas += 32;
+        }
+
+        void add(int schemaSize, int solverResults, int solverElemTemps)
+        {
+            sizeOfSchemas += schemaSize;
+            numSolverResults += solverResults;
+            numSolverElemTemps += solverElemTemps;
+        }
+
+        int maxSizeOfSchema;    /* derived name */
+        int sizeOfSchemas;      /* derived name */
+        int numSolverResults;   /* derived name */
+        int numSolverElemTemps; /* derived name */
+        const void *atoms;      /* derived name */
+        int sizeOfAllAtoms;     /* derived name */
+        int unknown1c;
+    };
 
     /* derived name: what the slot 6 overrides call with their atoms, the
      * atoms' size and the argument (0x82890). */
@@ -3878,7 +3951,7 @@ struct hkpAngMotorConstraintAtom {
     hkpConstraintMotor *motor;
     float targetAngle;
     s16 correspondingAngLimitSolverResultOffset;
-    u8 padding[2];
+    u8 padding[10];
 };
 
 /* hkpRagdollMotorConstraintAtom (record table 0x169f090): isEnabled at +2,
@@ -4022,9 +4095,14 @@ class hkpLimitedHingeConstraintData
 {
   public:
     struct Atoms {
+        /* Out of line (0x78df0): when finishing, the motor's offsets into
+         * the runtime are set. */
+        Atoms(hkFinishLoadedObjectFlag flag);
+
         u8 transforms[0x90];
         hkpSetupStabilizationAtom setupStabilization;
-        u8 unknownA0[0x60]; /* angMotor, angFriction, angLimit, 2dAng */
+        hkpAngMotorConstraintAtom angMotor;
+        u8 unknownC0[0x40]; /* angFriction, angLimit, 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
     };
 
@@ -4113,6 +4191,34 @@ class hkpWrappedConstraintData : public hkpConstraintData
     void *FUN_0007d5d0(void *runtime) const;                 /* vtable slot 21; derived name */
 
     hkpConstraintData *constraintData;
+};
+
+/* hknpBridgeConstraintAtom (hkClass 0x57c1808, built at 0x61667, 0x18
+ * bytes, parent hkpConstraintAtom's 0x57c4650). */
+struct hknpBridgeConstraintAtom {
+    u16 type; /* derived name */
+    u8 unknown2[0x16];
+};
+
+/* hknpMalleableConstraintData, polymorphic, 0x40 bytes (type info 0x57c18d8,
+ * vtable 0x1699a90; its finish constructor FUN_00067960 runs
+ * hkpWrappedConstraintData's 0x7d520): members atom (an
+ * hknpBridgeConstraintAtom) at +0x20, wantsRuntime at +0x38 and strength
+ * (float) at +0x3c (record table 0x16996a0); FUN_00067c40 writes the
+ * strength. Slot 6 (FUN_00067b00) takes the wrapped data's info and puts its
+ * own atom in place of the atoms. */
+class hknpMalleableConstraintData : public hkpWrappedConstraintData
+{
+  public:
+    virtual ~hknpMalleableConstraintData();
+
+    void FUN_00067b00(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_00067c40(float newStrength);             /* derived name */
+
+    hknpBridgeConstraintAtom atom;
+    hkBool wantsRuntime;
+    u8 unknown39[3];
+    float strength;
 };
 
 /* hknpBreakableConstraintData (type info 0x57c23f8, vtable 0x1695b10,
@@ -4310,8 +4416,6 @@ class hkp6DofConstraintData
     Blueprints blueprints;
 };
 
-void FUN_00078df0(hkpLimitedHingeConstraintData::Atoms *self,
-                  hkFinishLoadedObjectFlag flag);                              /* derived name */
 void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
@@ -4660,7 +4764,9 @@ class hkpPointToPathConstraintData
 
     virtual ~hkpPointToPathConstraintData();
 
-    hkBool FUN_0007a590() const; /* vtable slot 7; derived name */
+    void FUN_0007a020(
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    hkBool FUN_0007a590() const;                           /* vtable slot 7; derived name */
     void FUN_0007a050(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -5588,6 +5694,9 @@ class hknpVehicleInstance : public hknpUnaryAction
     hkBool tryingToReverse; /* record 0x1698d18 */
     u8 unknownF5[7];
     float rpm;
+    u8 unknown100
+        [0x18]; /* mainSteeringAngle, mainSteeringAngleAssumingNoReduction, wheelsSteeringAngle */
+    hkBool isReversing; /* record 0x1698e08 */
 };
 
 /* hknpCharacterProxy (derived name: its timers "findSupportingContacts",
@@ -5850,19 +5959,34 @@ class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
     hkBlockStreamWriter writer; /* derived name */
 };
 
+/* The allocator of the block streams' blocks (derived names): reference
+ * counted (the world takes a reference to its cinfo's
+ * persistentStreamAllocator, +0x30, and keeps it at +0x1c0, 0x48dce), slot 5
+ * hands out a batch of blocks and slot 6 takes a batch back (the cache
+ * below). */
+class BlockStreamAllocator : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void blockAllocBatch(void **blocksOut, int numBlocks) = 0; /* slot 5; derived name */
+    virtual void blockFreeBatch(void **blocks, int numBlocks) = 0;     /* slot 6; derived name */
+};
+
 /* A thread's cache of free blocks (derived names): the allocator it
  * returns them to at +0, up to eight blocks from +8, their count at +0x48.
- * FUN_0008ef10 takes a block back, handing six to the allocator's slot 6
- * when the cache fills. */
+ * FUN_0008eec0 takes one, refilling six when empty; FUN_0008ef10 takes a
+ * block back, handing six to the allocator when the cache fills;
+ * FUN_0008ef60 hands every cached block back (the world's step does, at
+ * 0x49cb9, after each stream it builds with a cache on its stack). */
 class AllocatorBase; /* tlg_lib_unknown.h */
 
 struct BlockCache /* derived name */
 {
     void FUN_0008ef10(void *block); /* derived name */
+    void FUN_0008ef60();            /* derived name */
 
-    AllocatorBase *allocator; /* derived name */
-    void *blocks[8];          /* derived name */
-    int numBlocks;            /* derived name */
+    BlockStreamAllocator *allocator; /* derived name */
+    void *blocks[8];                 /* derived name */
+    int numBlocks;                   /* derived name */
 };
 
 /* A block stream (derived names): the count of every element written at +8
@@ -5933,6 +6057,7 @@ struct StringMap /* derived name */
     int numEntries;
     int hashMod;
 
+    Iterator FUN_00091600() const;               /* derived name */
     bool FUN_00013890(Iterator it) const;        /* derived name */
     const char *FUN_00091630(Iterator it) const; /* derived name */
     hkUlong FUN_00091640(Iterator it) const;     /* derived name */

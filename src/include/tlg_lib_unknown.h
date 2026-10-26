@@ -412,7 +412,8 @@ class BufferAllocator : public AllocatorBase /* derived name */
     void *blockAlloc(int numBytes);              /* slot 2 (0x90b20); derived name */
     void blockFree(void *pointer, int numBytes); /* slot 3 (0x90d90); derived name */
     bool FUN_00091090(int numBytes) const;       /* derived name */
-    void FUN_000910d0();                         /* vtable slot 11; derived name */
+    void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9 (0x910a0) */
+    void FUN_000910d0();                                          /* vtable slot 11; derived name */
 
     char *bufferStart; /* derived name */
     char *bufferEnd;   /* derived name */
@@ -1064,6 +1065,10 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
      * (the same fast path is inlined at 0x41390). */
     virtual void *blockAlloc(int numBytes);
 
+    /* Slot 4 (0xef40): the requested size rounded up to 16 in place, then
+     * the same fast path. */
+    virtual void *FUN_00008d70(int &numBytes);
+
     /* The slow path (0xf090): a request larger than a slab goes to the
      * allocator at +0x40, the rest to a new slab. derived name. */
     void *FUN_0000f090(int numBytes);
@@ -1199,6 +1204,9 @@ struct hknpCharacterContext /* derived name */
 class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
 {
   public:
+    hknpCharacterStateInAir();
+    virtual ~hknpCharacterStateInAir();
+
     void FUN_000365e0(hknpCharacterContext &context, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* vtable slot 7; derived name */
 
@@ -1243,6 +1251,23 @@ struct UlongMap /* derived name */
     Pair *elems;  /* derived name */
     int numElems; /* derived name */
     int hashMod;  /* derived name */
+};
+
+/* Per-node lists of edges (derived names): the first edge of each node at
+ * +0 and, per edge, the next edge at each of its two ends at +0x10. Built
+ * empty at +0x50 of the object FUN_0016d360 constructs (0x16d3ca); 0x17a220
+ * frees both arrays; 0x17a290 puts an edge of a 64-byte record (its second
+ * node at +4, its link index at +0x18) at the head of a node's list. */
+struct NodeEdgeLists /* derived name */
+{
+    struct EdgeLinks {
+        int next[2]; /* derived name */
+    };
+
+    NodeEdgeLists();
+
+    hkArray<int> firstEdge;      /* derived name */
+    hkArray<EdgeLinks> nextEdge; /* derived name */
 };
 
 #endif

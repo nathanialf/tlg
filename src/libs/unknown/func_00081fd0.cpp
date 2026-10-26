@@ -8,5 +8,5 @@ void FUN_00081fd0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00078df0(static_cast<hkpLimitedHingeConstraintData::Atoms *>(object), flag);
+    new (object) hkpLimitedHingeConstraintData::Atoms(flag);
 }
