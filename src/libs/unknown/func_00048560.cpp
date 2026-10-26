@@ -3,7 +3,7 @@
 
 /* derived name: slot 3 of hknpFlippedShapeCastQueryCollector's vtable (0x1699020) forwards to the same slot of
  * the collector it wraps (at +0x30). */
-int hknpFlippedShapeCastQueryCollector::FUN_00048560() const /* derived name */
+void hknpFlippedShapeCastQueryCollector::FUN_00048560() /* derived name */
 {
-    return childCollector->unknownVirtual3();
+    childCollector->reset();
 }

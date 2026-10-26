@@ -1157,4 +1157,20 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
     float maxLinearAcceleration; /* derived name */
 };
 
+/* A small record inside hkReferencedObjectLock (derived names): at +0x14
+ * of the lock its creator 0x6800 stores -15 and the half word 0x8000 at
+ * +8, then FUN_00006b90 resets it (-15 and 0) unless the half word is
+ * non-negative and the pointer at 0x57b7b90 is set. Nothing in the
+ * executable writes that pointer. */
+struct Record00006b90 /* derived name */
+{
+    int value; /* derived name */
+    u8 unknown4[4];
+    s16 count; /* derived name */
+};
+
+extern void *D_57b7b90; /* derived name */
+
+void FUN_00006b90(Record00006b90 *self); /* derived name */
+
 #endif

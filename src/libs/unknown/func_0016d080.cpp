@@ -4,7 +4,7 @@
 /* derived name: slot 3 of hknpScaledOffsetQueryCollector's vtable (address
  * point 0x16a55c0) forwards to the same slot of the collector it wraps (at
  * +0x58). */
-int hknpScaledOffsetQueryCollector::FUN_0016d080() const /* derived name */
+void hknpScaledOffsetQueryCollector::FUN_0016d080() /* derived name */
 {
-    return childCollector->unknownVirtual3();
+    childCollector->reset();
 }
