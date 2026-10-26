@@ -108,6 +108,18 @@ struct hkClass {
  * name (strcmp); false when the other is null. */
 bool FUN_00004210(const hkClass *self, const hkClass *other);
 
+/* hkMatrix3 (the reflection's type name): three columns of four floats. */
+struct hkMatrix3 {
+    Vec4 col0; /* derived name */
+    Vec4 col1; /* derived name */
+    Vec4 col2; /* derived name */
+
+    /* derived name: this set to the inverse of m, from the cross products
+     * of its columns over the determinant; zero and HK_FAILURE when the
+     * determinant is within a tolerance of zero (0x1ae40). */
+    hkResult FUN_0001ae40(const hkMatrix3 &m);
+};
+
 /* hkClassMember, a 40-byte member record (member names from its own
  * reflection strings at 0x14b2cc0: name, class, enum, type, subtype,
  * cArraySize, flags, offset). The records read here: 0x168c1f0 onward
