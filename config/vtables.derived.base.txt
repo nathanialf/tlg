@@ -7,3 +7,4 @@
 # by the supervisor, one ruling each, never by a worker; a vtable the generated
 # file names (config/vtables.<slug>.txt) must not appear here.
 _ZTV11StackTracer 0x168d840 StackTracer derived ctor FUN_0000d8f0 # static instance 0x57b7b80 built at 0x6bf0 and registered with __cxa_atexit; FUN_0000d890 prints "No stack trace available"; slots: 0xd940 destructor, 0xd900 deleting destructor
+_ZTV6hkSlot 0x1698ee0 hkSlot derived ctor FUN_00047cb0 # base destructor of a 0x18-byte slot of a member-function signal: derived vtables 0x1698eb0 (0x28 bytes, freed by 0x47d10) and 0x1698f10 keep it in slot 0; their slot 2 (0x47d60) compares a 16-byte member-function pointer, slot 3 (0x47c80, 0x47d90) calls it on the object at +0x10; the game region's 0x13cc8a0 frees a 0x20-byte one; no string names the class

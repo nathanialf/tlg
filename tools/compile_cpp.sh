@@ -38,5 +38,8 @@ if [[ "$best" == cxx=* ]]; then
     case "$CXX" in */tools/cc/*|tools/cc/*) export LD_LIBRARY_PATH="$ROOT/tools/cc/shim${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;; esac
 fi
 mkdir -p "$(dirname "$obj")"
+# -MD -MF: the headers the TU includes, for ninja's depfile, so an edited
+# header rebuilds every object that includes it (a stale object once passed
+# the gate on a header change that had broken four rows).
 # shellcheck disable=SC2086
-exec "$CXX" $best -c "$src" -o "$obj"
+exec "$CXX" $best -MD -MF "$obj.d" -c "$src" -o "$obj"

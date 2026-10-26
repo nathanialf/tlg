@@ -362,6 +362,19 @@ established by other evidence (a constructor's store beside a name string,
 a registry entry) needs its own ruling here before it is written, and would
 go in a second, evidenced file, not the generated one.
 
+**Addendum (2026-10-26, parents).** A class with no type info of its own
+(an abstract base such as hkpConstraintData, whose initializer at 0x7f444
+builds only its hkClass) is named through its children: a derived class's
+inlined finish constructor calls the base's out-of-line finish constructor
+F on the temporary and then stores its own vptr over the slot (0x7cf9c
+calls 0x82850, 0x7cfb3 stores hkpPrismaticConstraintData's vtable); F
+stores a vtable V that is not the derived class's; V belongs to an
+ancestor on the derived class's hkClass parent chain (the hkClass
+constructor's third argument, recorded per class). When every derived
+class that calls F agrees on exactly one ancestor whose vtable is still
+unknown, V is that ancestor's vtable; the row carries `parent <derived
+classes> ctor F`. The tool writes these rows with the others.
+
 **Trigger to revisit.** A registration the walk misreads (the tool aborts
 on an address point that is not a vtable's and lists the untraced ones),
 or a class whose constructor the gate needs and the type infos do not name.
@@ -433,7 +446,8 @@ residue (the tool reports both as a class change on the next run).
 `<vtable symbol> <vtable address> <class name> derived ctor <function>
 [evidence]`, written by the supervisor one ruling at a time, never by a
 worker and never regenerated. The address is a fact: the named constructor
-stores the vtable's address point (address + 0x10) into its object, and
+(or base destructor, which stores the vptr the same way) stores the
+vtable's address point (address + 0x10) into its object, and
 `tools/base_elf.py` verifies that by walking the constructor the first time
 the gate resolves the symbol (`tools/vtable_names.py --check` verifies every
 row), refusing a row whose symbol is not the mangling of its class name,
@@ -464,3 +478,24 @@ and marked.
 **Trigger to revisit.** A fact that names a derived class differently
 (rename, do not add), or a generated row appearing for a vtable a derived
 row holds (delete the derived row).
+
+## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
+
+**Decision.** `config/functions.base.txt` holds one name per address. A
+constructor or destructor row named with one of the two spellings the
+compiler emits at the same address (C1, the complete-object constructor,
+and C2, the base-object constructor; D1 and D2 likewise) resolves a
+reference to the other: `tools/base_elf.py` `ctor_alias`. D0, the deleting
+destructor, is a separate function and has no alias.
+
+**Why.** Without virtual bases the Itanium ABI makes C1 and C2 the same
+code, and LLVM 3.3 emits C1 as an alias of C2 (`CodeGenModule.cpp`,
+`EmitCXXConstructor`, `TryEmitDefinitionAsAlias`), so the executable has
+one address for both. Source written natively references both: a caller
+constructs the complete object (C1), a derived class's constructor calls
+its base's C2. Round 17 named the rows C1 (what every matched caller used)
+and the derived shapes' finish constructors, which call hknpShape's C2 at
+the same address, would not have resolved.
+
+**Trigger to revisit.** A class with a virtual base (C1 and C2 differ in
+code and address), which none of the matched classes has.

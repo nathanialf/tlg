@@ -219,6 +219,22 @@ class BaseElf:
                 return last
         return sym
 
+    @staticmethod
+    def ctor_alias(sym: str) -> str | None:
+        """The other spelling of a constructor or destructor the compiler
+        emits at the same address: without virtual bases the complete object
+        constructor C1 is an alias of the base object constructor C2, and D1
+        of D2 (Itanium ABI 5.1.4.3; LLVM 3.3 `CodeGenModule::EmitCXXConstructor`
+        emits C1 as an alias). The table holds one name per address, so a
+        row named C1 answers for C2 and the reverse. D0 (deleting) is a
+        separate function and has no alias."""
+        import re
+        m = re.search(r"(C|D)([12])(E|I)", sym)
+        if not m or not sym.startswith("_ZN"):
+            return None
+        other = "2" if m.group(2) == "1" else "1"
+        return sym[:m.start(2)] + other + sym[m.end(2):]
+
     def address_of(self, name: str) -> int | None:
         """Where the base put `name`: a function of the table (by its mangled
         name or its bare identifier), a `D_<hex>` data label, a vtable the
@@ -226,6 +242,9 @@ class BaseElf:
         or an import (its PLT stub)."""
         if name in self.func_by_name:
             return self.func_by_name[name][0]
+        alias = self.ctor_alias(name)
+        if alias in self.func_by_name:
+            return self.func_by_name[alias][0]
         if name.startswith("_ZTV"):
             if name in self.vtables:
                 return self.vtables[name]

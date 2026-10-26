@@ -50,6 +50,8 @@ def main() -> int:
              "rule cxx",
              f"  command = VERSION={ver} tools/compile_cpp.sh $in $out",
              "  description = CXX $in",
+             "  depfile = $out.d",
+             "  deps = gcc",
              "",
              "rule gate",
              f"  command = VERSION={ver} .venv/bin/python -I tools/check_elf.py --gate",

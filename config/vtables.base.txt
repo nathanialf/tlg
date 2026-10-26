@@ -5,11 +5,11 @@
 # object's vptr holds it + 0x10. The class is the type info's scoped name when that is
 # an identifier (a nested class is written nested), else its flat type name, with the
 # scoped name noted. Vtables named by ruling are in vtables.derived.<slug>.txt (D14).
-# 170 classes; 0 names the tool cannot mangle (below, `?`);
+# 171 classes; 0 names the tool cannot mangle (below, `?`);
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1234 vtables stored by a constructor that no type info names (below, with
+# 1232 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -40,7 +40,6 @@
 #   0x1693610 stored by FUN_000365a0
 #   0x16969d0 stored by FUN_0003e840 FUN_0003e8c0 FUN_0003e960
 #   0x1697900 stored by FUN_000412a0 FUN_00041590 FUN_00041650 | hkClass hknpCompoundShape (slot 3 0x418b0)
-#   0x1698ee0 stored by FUN_00047cb0 FUN_00047cc0 FUN_00047d10 FUN_013cc8a0
 #   0x1698f40 stored by FUN_00048040 FUN_00092280
 #   0x1699220 stored by FUN_00048b20 FUN_0004b040
 #   0x1699260 stored by FUN_0005a0b0 FUN_0005a150 FUN_0005a340
@@ -55,7 +54,6 @@
 #   0x169b400 stored by FUN_000768c0
 #   0x169b450 stored by FUN_000760c0 FUN_000763a0
 #   0x169cee0 stored by FUN_0003c100 FUN_0003c170 FUN_000679f0 FUN_00067a90 FUN_0007d480 FUN_0007d520 FUN_0007d550
-#   0x169fac0 stored by FUN_00082850
 #   0x169ffd0 stored by FUN_000831a0
 #   0x16a3220 stored by FUN_0008f120 FUN_0008f180
 #   0x16a32a0 stored by FUN_0008fb30 | home hkHardwareInfo.cpp
@@ -1426,3 +1424,4 @@ _ZTV25hkAlignSceneToNodeOptions 0x16a6030 hkAlignSceneToNodeOptions typeinfo 0x8
 _ZTV14hkxEnvironment 0x16a6070 hkxEnvironment typeinfo 0x8dbc7 ctor FUN_0017d6f0
 _ZTV22hkMemoryResourceHandle 0x16a6270 hkMemoryResourceHandle typeinfo 0x8eb03 ctor FUN_0017f110
 _ZTV25hkMemoryResourceContainer 0x16a6300 hkMemoryResourceContainer typeinfo 0x8e9a1 ctor FUN_0017fb60
+_ZTV17hkpConstraintData 0x169fac0 hkpConstraintData parent hkpLimitedHingeConstraintData hkpLinearClearanceConstraintData hkpPrismaticConstraintData hkpRagdollConstraintData ctor FUN_00082850

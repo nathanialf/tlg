@@ -96,6 +96,8 @@ class Walker:
         self.bss = (max(p["vaddr"] + p["filesz"] for p in rw), max(p["vaddr"] + p["memsz"] for p in rw))
         self.funcs = {a: (sz, n) for a, sz, n in elf.functions}
         self._vptr: dict[int, int | None] = {}
+        self._hkclass: dict[int, str] | None = None
+        self.parents: dict[int, int] = {}
 
     def in_relro(self, v: int) -> bool:
         return self.relro[0] <= v < self.relro[1]
@@ -195,9 +197,14 @@ class Walker:
 
     def hkclass_records(self) -> dict[int, str]:
         """hkClass record address -> class name, from every call of the
-        hkClass constructor FUN_000041a0 (`rdi` the record, `rsi` the name)."""
+        hkClass constructor FUN_000041a0 (`rdi` the record, `rsi` the name,
+        `rdx` the parent's record, kept in `self.parents`)."""
+        if self._hkclass is not None:
+            return self._hkclass
         ctor = self.elf.func_by_name.get("FUN_000041a0", (None,))[0]
         out: dict[int, str] = {}
+        self._hkclass = out
+        self.parents = {}
         if ctor is None:
             return out
         for addr, (size, _n) in self.funcs.items():
@@ -210,6 +217,8 @@ class Walker:
                         name = c_string(self.elf, regs["rsi"])
                         if name:
                             out[regs["rdi"]] = name
+                            if isinstance(regs.get("rdx"), int):
+                                self.parents[regs["rdi"]] = regs["rdx"]
                     for r in CALLER_SAVED:
                         regs.pop(r, None)
                 elif len(ops) == 2 and ops[0].type == X86_OP_REG:
@@ -226,13 +235,18 @@ class Walker:
         return out
 
     def registrations(self, addr: int, size: int):
-        """-> [(site, record, type name, address point or None, ctor or None)]
-        for the type-info records this function fills."""
+        """-> [(site, record, (type name, scoped name), address point or None,
+        ctor or None, base ctor or None)] for the type-info records this
+        function fills; `base ctor` is the out-of-line constructor an inlined
+        derived constructor called on the temporary before storing its own
+        vptr over the slot (0x7cf9c calls hkpConstraintData's 0x82850, then
+        0x7cfb3 stores hkpPrismaticConstraintData's vtable)."""
         regs: dict[str, int] = {}
         slots: dict[int, int] = {}            # rbp/rsp displacement -> the finish constructor run on it
         names: dict[int, str] = {}            # record address -> type name stored at +0
         scoped: dict[int, str] = {}           # record address -> scoped name stored at +8
         pending: dict[str, int] = {}          # register -> ctor whose object's vptr it holds
+        overwrote: dict[int, int] = {}        # vptr stored over a slot -> the base constructor called on it before
         out = []
         lo = addr - self.text_va
         for ins in self.md.disasm(self.text[lo:lo + size], addr):
@@ -293,6 +307,8 @@ class Walker:
                         # constructor writes over the one its base's call stored
                         key = (bname, dst.mem.disp)
                         if isinstance(regs.get(sreg), int):
+                            if isinstance(slots.get(key), tuple):
+                                overwrote[regs[sreg]] = slots[key][1]      # a base's constructor ran on this slot first
                             slots[key] = regs[sreg]
                         elif sreg in pending:
                             slots[key] = ("ctor", pending[sreg])
@@ -316,9 +332,9 @@ class Walker:
                     v = regs.get(sreg)
                     nm = (names[rec0], scoped.get(rec0, names[rec0]))
                     if isinstance(v, int) and self.in_relro(v):
-                        out.append((ins.address, rec0, nm, v, None))
+                        out.append((ins.address, rec0, nm, v, None, overwrote.get(v)))
                     elif sreg in pending:
-                        out.append((ins.address, rec0, nm, self.vptr_of(pending[sreg]), pending[sreg]))
+                        out.append((ins.address, rec0, nm, self.vptr_of(pending[sreg]), pending[sreg], None))
             elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
                 d = ins.reg_name(ops[0].reg)
                 regs.pop(d, None)
@@ -393,6 +409,39 @@ def unnamed_vtables(elf: BaseElf, w: Walker, named: set[int]):
     return out
 
 
+def parent_rows(w: Walker, base_calls: dict[int, set[str]], known: set[int], known_names: set[str]):
+    """Vtables of classes with no type info of their own (abstract bases),
+    named through their children: a derived class's inlined finish
+    constructor calls the base's out-of-line finish constructor F on the
+    temporary, F stores vtable V, and V is not the derived class's. V belongs
+    to an ancestor of the derived class on its hkClass parent chain (the
+    hkClass constructor's `rdx`); when every derived class that calls F
+    agrees on exactly one ancestor whose vtable is still unknown, that
+    ancestor's name is V's. Rows carry `parent <derived> ctor <F>`."""
+    hk = w.hkclass_records()
+    by_name = {n: r for r, n in hk.items()}
+    out = []
+    for f, derived in sorted(base_calls.items()):
+        v = w.vptr_of(f)
+        if v is None or v - 0x10 in known:
+            continue
+        cands = None
+        for d in derived:
+            rec = by_name.get(d)
+            chain, seen = [], set()
+            while rec in w.parents and rec not in seen:
+                seen.add(rec)
+                rec = w.parents[rec]
+                if rec in hk:
+                    chain.append(hk[rec])
+            cands = set(chain) if cands is None else cands & set(chain)
+        cands = {c for c in (cands or set()) if mangle_vtable(c) and c not in known_names}
+        if len(cands) == 1:
+            name = cands.pop()
+            out.append((mangle_vtable(name), v - 0x10, name, f"parent {' '.join(sorted(derived))} ctor FUN_{f:08x}"))
+    return out
+
+
 def check_derived(elf: BaseElf) -> list[str]:
     """Every row of config/vtables.derived.<slug>.txt against its evidence."""
     errors = []
@@ -425,7 +474,10 @@ def main(argv=None) -> int:
             hits += w.registrations(addr, size)
     by_name: dict[tuple, dict[int, list[str]]] = defaultdict(lambda: defaultdict(list))
     untraced = []
-    for site, _rec, nm, point, ctor in hits:
+    base_calls: dict[int, set[str]] = defaultdict(set)   # base ctor -> {derived type names that called it}
+    for site, _rec, nm, point, ctor, base_ctor in hits:
+        if base_ctor is not None:
+            base_calls[base_ctor].add(nm[0])
         if point is None:
             untraced.append((nm[0], site, ctor))
             continue
@@ -446,6 +498,7 @@ def main(argv=None) -> int:
             continue
         note = f' scoped "{scoped.lstrip("!")}"' if cls != scoped.lstrip("!") else ""
         rows.append((sym, vt, cls, sites[0] + note))
+    rows += parent_rows(w, base_calls, {vt for _, vt, _, _ in rows}, {name for _, _, name, _ in rows})
     shared = defaultdict(list)
     for sym, vt, name, _ in rows:
         shared[vt].append(name)
