@@ -8,5 +8,5 @@ void FUN_00039b10(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_001520b0(static_cast<hknpConvexPolytopeShape *>(object), flag);
+    new (object) hknpConvexPolytopeShape(flag);
 }

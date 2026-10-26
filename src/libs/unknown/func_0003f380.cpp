@@ -8,5 +8,5 @@ void FUN_0003f380(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00166900(static_cast<hknpMountedBallGun *>(object), flag);
+    new (object) hknpMountedBallGun(flag);
 }

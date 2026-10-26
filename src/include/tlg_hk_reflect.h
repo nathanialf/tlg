@@ -10,6 +10,8 @@
 #ifndef TLG_HK_REFLECT_H
 #define TLG_HK_REFLECT_H
 
+#include <smmintrin.h>
+
 #include "tlg_simd.h"
 #include "tlg_types.h"
 
@@ -57,6 +59,18 @@ template <typename T> inline T min2(T a, T b) /* derived name */
 template <typename T> inline T clamp(T value, T low, T high) /* derived name */
 {
     return min2(max2(value, low), high);
+}
+
+/* The integer forms work in a vector register (pminsd, pmaxsd: hknpLodShape's
+ * slot 29 at 0x6896e, the constraint info's maximum at 0x82974). */
+inline int min2(int a, int b)
+{
+    return _mm_cvtsi128_si32(_mm_min_epi32(_mm_cvtsi32_si128(a), _mm_cvtsi32_si128(b)));
+}
+
+inline int max2(int a, int b)
+{
+    return _mm_cvtsi128_si32(_mm_max_epi32(_mm_cvtsi32_si128(a), _mm_cvtsi32_si128(b)));
 }
 } // namespace hkMath
 
@@ -157,6 +171,25 @@ class hkBool
     }
 
     char value; /* derived name */
+};
+
+/* hkEnum, the reflection's type 0x18: an enum kept in a smaller integer
+ * (the record's subtype, 3 for hkInt8), converted on read and write. */
+template <typename ENUM, typename STORAGE> class hkEnum
+{
+  public:
+    operator ENUM() const
+    {
+        return static_cast<ENUM>(m_storage);
+    }
+
+    hkEnum &operator=(ENUM e)
+    {
+        m_storage = static_cast<STORAGE>(e);
+        return *this;
+    }
+
+    STORAGE m_storage;
 };
 
 struct hkClassEnum;
@@ -1811,6 +1844,11 @@ struct hkAabb {
     Vec4 max; /* derived name */
 };
 
+/* derived name: how far inner lies inside outer, the smallest of the six
+ * margins in every lane (negative when it sticks out); 0x14a2b0, called at
+ * 0x75526 and 0x173aca. */
+Vec4 FUN_0014a2b0(const hkAabb &inner, const hkAabb &outer);
+
 /* derived name: the bounds of an AABB under a transform (0x94060: the
  * centre transformed, the half extents through the rotation's absolute
  * values); the compound and LOD shapes' slot 7 calls it on their own. */
@@ -1977,7 +2015,11 @@ class hknpShape : public hkReferencedObject
      * read so far. */
     virtual void unknownVirtual30();
 
-    u8 unknownC[0x14];
+    u8 unknownC[4];
+    /* Shape flags; a composite shape's finish constructor sets 4 (0x71690,
+     * inlined in hknpLodShape's 0x68160). derived name. */
+    u16 flags;
+    u8 unknown12[0xe];
     void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
 };
 
@@ -2616,11 +2658,29 @@ class hknpFirstPersonGun : public hkReferencedObject
     virtual const char *FUN_000acf90() const;    /* vtable slot 9; derived name */
     virtual void reset(hknpWorld *world);        /* vtable slot 10; derived name */
 
-    /* From +0xc, in the reference-counted object's tail: the name
-     * (hkStringPtr) at +0x10 that slot 9 returns; the rest untyped.
+    /* The weapon types (the reflection's item names from 0x14bacb3 onward);
+     * each gun's finish constructor sets its own (0, 1 for the ball gun at
+     * 0x157e2d, 4 for the mounted one at 0x166925). Enum name derived. */
+    enum Type {
+        WEAPON_TYPE_INVALID,
+        WEAPON_TYPE_BALLGUN,
+        WEAPON_TYPE_GRENADEGUN,
+        WEAPON_TYPE_GRAVITYGUN,
+        WEAPON_TYPE_MOUNTEDBALLGUN,
+        WEAPON_TYPE_TWEAKERGUN,
+        WEAPON_TYPE_MISSILEGUN,
+        WEAPON_TYPE_RAYCASTGUN,
+        WEAPON_TYPE_SPHEREGUN,
+        WEAPON_TYPE_STICKYGUN,
+        WEAPON_TYPE_NUM_TYPES
+    };
+
+    /* From +0xc, in the reference-counted object's tail: the type, then the
+     * name (hkStringPtr) at +0x10 that slot 9 returns; the rest untyped.
      * hknpProjectileGun's first member sits at +0x34, in this class's
      * tail. */
-    u8 unknown0c[0x28];
+    hkEnum<Type, u8> type; /* derived name */
+    u8 unknown0d[0x27];
 };
 
 /* hknpProjectileGun (type info 0x57bf7e0, vtable 0x16a4b30, address point
@@ -2655,12 +2715,18 @@ class hknpProjectileGun : public hknpFirstPersonGun
 class hknpBallGun : public hknpFirstPersonGun
 {
   public:
+    /* The finish constructor, out of line (0x157e00). */
+    hknpBallGun(hkFinishLoadedObjectFlag flag);
+
     virtual ~hknpBallGun();
 };
 
 class hknpMountedBallGun : public hknpBallGun
 {
   public:
+    /* The finish constructor, out of line (0x166900). */
+    hknpMountedBallGun(hkFinishLoadedObjectFlag flag);
+
     virtual ~hknpMountedBallGun();
 };
 
@@ -2719,9 +2785,8 @@ class hknpPhysicsSceneData : public hkReferencedObject
     hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag);
 };
 
-void FUN_000730d0(hknpCapsuleShape *self, hkFinishLoadedObjectFlag flag);        /* derived name */
-void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag);    /* derived name */
-void FUN_001520b0(hknpConvexPolytopeShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_000730d0(hknpCapsuleShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
+void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
 /* More hknp classes with an out-of-line finish constructor (type info, the
  * vtable it stores): */
 class hknpProjectileGun;  /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
@@ -2844,7 +2909,6 @@ class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
     hknpWorld *subscribedWorld;
 };
 
-void FUN_00166900(hknpMountedBallGun *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_0016ce90(hknpScaledConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkRelArray, the reflection's type 0x22 (the type-name table at 0x14b30e4):
@@ -2907,6 +2971,9 @@ void FUN_00169330(const hknpConvexShape *shape, int mode, const Vec4 &scale, con
 class hknpConvexShape : public hknpShape
 {
   public:
+    /* The finish constructor, out of line (0x42e90). */
+    hknpConvexShape(hkFinishLoadedObjectFlag flag);
+
     int FUN_000430e0() const;         /* vtable slot 6; derived name */
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
@@ -2930,6 +2997,11 @@ class hknpConvexShape : public hknpShape
 class hknpConvexPolytopeShape : public hknpConvexShape
 {
   public:
+    /* The finish constructor, out of line (0x1520b0; the capsule's 0x730d0
+     * and the triangle's 0x78230 run it): hknpConvexShape's, the vtable, and
+     * flags 3 when finishing. */
+    hknpConvexPolytopeShape(hkFinishLoadedObjectFlag flag);
+
     /* hknpConvexPolytopeShape::Face (records from 0x1694e60): firstIndex
      * (hkUint16) at +0, numIndices and minHalfAngle (hkUint8) at +2 and
      * +3. */
@@ -3048,8 +3120,7 @@ class hknpWorldSnapshot : public hkReferencedObject
 class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs 0x7d520, vtable 0x1699a90 */
 
 void FUN_00067960(hknpMalleableConstraintData *self,
-                  hkFinishLoadedObjectFlag flag);                        /* derived name */
-void FUN_00042e90(hknpConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpBodyQuality (hkClass 0x57bee30, built at 0x3894a), 16 bytes: the
  * member strings supportedFlags, requestedFlags and
@@ -3149,7 +3220,6 @@ struct
     hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
 struct hknpSphereShape;      /* 0x57c2798; FUN_0003c540 runs hknpConvexShape's, vtable 0x1695c10 */
 
-void FUN_00157e00(hknpBallGun *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00175de0(hknpCompressedHeightFieldShape *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 /* hknpBreakableConstraintData's finish constructor (0x3c240, the class's
@@ -4753,25 +4823,6 @@ class hkSkinBinding;
 void FUN_000aa3d0(hkSkinBinding *self);             /* derived name */
 void FUN_000adba0(hkStorageSkinnedMeshShape *self); /* derived name */
 
-/* hkEnum, the reflection's type 0x18: an enum kept in a smaller integer
- * (the record's subtype, 3 for hkInt8), converted on read and write. */
-template <typename ENUM, typename STORAGE> class hkEnum
-{
-  public:
-    operator ENUM() const
-    {
-        return static_cast<ENUM>(m_storage);
-    }
-
-    hkEnum &operator=(ENUM e)
-    {
-        m_storage = static_cast<STORAGE>(e);
-        return *this;
-    }
-
-    STORAGE m_storage;
-};
-
 /* hkpPointToPathConstraintData's members, from the records its reflection
  * initializer builds (0x7f1b2 to 0x7f30c, the names in order at 0x14c4707
  * onward): atoms (hkpBridgeAtoms) at +0x20, path (a pointer to
@@ -5325,6 +5376,16 @@ extern const hkClass D_57c2cf8; /* hknpCompositeShape's hkClass */
 class hknpCompositeShape : public hknpShape
 {
   public:
+    /* Inline: the type info's finish callback FUN_00071690 runs it, and
+     * hknpLodShape's finish constructor (0x68160) inlines it before storing
+     * its own vtable. */
+    hknpCompositeShape(hkFinishLoadedObjectFlag flag) : hknpShape(flag)
+    {
+        if (flag.finishing) {
+            flags |= 4;
+        }
+    }
+
     virtual ~hknpCompositeShape();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
@@ -5487,10 +5548,23 @@ class hknpDynamicCompoundShape : public hknpCompoundShape
  * constructor FUN_00068160 stores hknpCompositeShape's vtable before its own
  * 0x1699c00): slot 7 (FUN_00068350) transforms the AABB at +0x110. */
 struct hknpLodShape : public hknpCompositeShape {
-    void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
+    /* What slot 29's first argument holds at +0x10 (derived names). */
+    struct Slot29Argument {
+        u8 unknown0[0x10];
+        int levelOfDetail; /* derived name */
+    };
 
-    u8 unknown28[0xe8];
-    hkAabb aabb; /* derived name */
+    void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
+    void FUN_00068960(const Slot29Argument *argument1,
+                      void *argument2) const; /* vtable slot 29; derived name */
+
+    /* Members from the records at 0x16965c0. */
+    u8 unknown28[0x2c];
+    int numLevelsOfDetail;
+    u8 infos[0x40];
+    const hknpShape *shapes[8];
+    u8 unknownD8[0x38]; /* shapesMemorySizes, indexCurrentShapeOnSpu, currentShapePpuAddress */
+    hkAabb aabb;        /* maximumAabb */
 };
 
 /* hkxBlobMeshShape: its hkClass at 0x57c5e78 is built by the reflection initializer at
@@ -6087,6 +6161,7 @@ struct StringMap /* derived name */
     int numEntries;
     int hashMod;
 
+    void FUN_00091ac0();                         /* derived name */
     Iterator FUN_00091600() const;               /* derived name */
     bool FUN_00013890(Iterator it) const;        /* derived name */
     const char *FUN_00091630(Iterator it) const; /* derived name */

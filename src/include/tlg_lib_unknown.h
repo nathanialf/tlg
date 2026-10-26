@@ -1374,4 +1374,24 @@ void FUN_00057050(void *argument1, void *argument2, void *argument3, void *argum
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9); /* derived name */
 
+/* A 16-byte record of the array at +0xb8 of the object FUN_000657b0 sorts
+ * (derived names): a pointer to an object with an int at +4, a 16-bit key
+ * at +8 and a count at +0xc. FUN_00062100 is the order the sort
+ * (FUN_00062130) is given: records with a count first, then by the int
+ * the pointer reaches, then by the key. */
+struct SortRecord00062100 /* derived name */
+{
+    struct Target {
+        u8 unknown0[4];
+        int order; /* derived name */
+    };
+
+    const Target *target; /* derived name */
+    u16 key;              /* derived name */
+    u8 unknownA[2];
+    int count; /* derived name */
+};
+
+bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b); /* derived name */
+
 #endif

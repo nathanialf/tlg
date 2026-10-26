@@ -1018,3 +1018,11 @@ FUN_00056be0 src/libs/unknown/func_00056be0.cpp
 FUN_00056e00 src/libs/unknown/func_00056e00.cpp
 FUN_00056e30 src/libs/unknown/func_00056e30.cpp
 FUN_00057050 src/libs/unknown/func_00057050.cpp
+FUN_00062100 src/libs/unknown/func_00062100.cpp
+FUN_00068960 src/libs/unknown/func_00068960.cpp
+FUN_00071690 src/libs/unknown/func_00071690.cpp
+FUN_00091ac0 src/libs/unknown/func_00091ac0.cpp
+FUN_00091b30 src/libs/unknown/func_00091b30.cpp
+FUN_0014a2b0 src/libs/unknown/func_0014a2b0.cpp
+_ZN23hknpConvexPolytopeShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_001520b0.cpp
+_ZN18hknpMountedBallGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00166900.cpp
