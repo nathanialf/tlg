@@ -787,3 +787,6 @@ _ZN21hkSkinnedRefMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00
 _ZN20hkMemoryMeshMaterialC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000accf0.cpp
 _ZN25hkStorageSkinnedMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000ae680.cpp
 _ZN17hknpWorldSnapshotC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0015bf30.cpp
+FUN_00188e90 src/libs/unknown/func_00188e90.cpp _ZN11ImageSourceC2Ev
+FUN_000ad590 src/libs/unknown/func_000ad590.cpp _ZN15FileImageSourceD1Ev
+FUN_0000ed40 src/libs/unknown/func_0000ed40.cpp _ZN17Allocator0000ed40C2Ev

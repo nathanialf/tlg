@@ -497,6 +497,22 @@ body A's to the contact jacobian (0x348e0). The name is the provider class's
 plus `Modifier`, derived; the other nineteen are named the same way when
 their one implemented callback is read.
 
+**Addendum, 2026-10-26 (round 23 harvest).** Three rows: `ImageSource`
+0x16a6610 (constructor FUN_00188e90; slots 5 and 6 are pure, relocated to
+the pure-virtual import; built by hkMemoryMeshTexture's slot 7 at 0xad7f2
+in a 0x18-byte object), `FileImageSource` 0x16a3aa0 (constructor, in the
+row's sense, the destructor FUN_000ad590 that stores it; the derived
+source over a file name, slot 6 loading a "tga" file; stored at 0xad80a
+after the base constructor), and `Allocator0000ed40` 0x168da00 (the
+thirteen-slot allocator interface, built at 0xbb69 at +0 of the object
+FUN_0000bb60 constructs). The first two names follow the object's role
+(an image source, a file-backed one) and the third the constructor's
+address: a derived name is a placeholder a fact replaces, and
+`docs/FINISHING.md` lists address-named classes as debt. The slots and
+the relocations were read from the executable by the supervisor
+(`tools/layout_link.py` `base_dynamic_relocs`), the constructor stores
+from the disassembly.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -517,6 +533,16 @@ the same address, would not have resolved.
 
 **Trigger to revisit.** A class with a virtual base (C1 and C2 differ in
 code and address), which none of the matched classes has.
+
+**Addendum, 2026-10-26 (round 23 harvest).** 0x8c0a0 is one empty body
+that the compiler folded for hkxVertexDescription's finish constructor
+and for twelve empty vtable slots of other classes. The row is named
+`_ZN20hkxVertexDescriptionC1E24hkFinishLoadedObjectFlag`, the constructor
+hkxVertexBuffer's constructor must call on its desc member; a vtable row
+that cites the address resolves by address, so the slots keep matching
+under the constructor's name. The same rule as for the C1/C2 pair: one
+name per address, the name a caller needs by symbol wins, every other
+reference resolves by address.
 
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 
