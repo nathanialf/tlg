@@ -1026,3 +1026,4 @@ FUN_00091b30 src/libs/unknown/func_00091b30.cpp
 FUN_0014a2b0 src/libs/unknown/func_0014a2b0.cpp
 _ZN23hknpConvexPolytopeShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_001520b0.cpp
 _ZN18hknpMountedBallGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00166900.cpp
+FUN_000365a0 src/libs/unknown/func_000365a0.cpp _ZN23hknpCharacterStateInAirC2Ev

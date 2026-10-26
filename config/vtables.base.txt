@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1574 vtables stored by a constructor that no type info names (below, with
+# 1572 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -33,14 +33,12 @@
 #   0x168d8a0 stored by FUN_0000d9e0 FUN_0000da50 FUN_0000daf0
 #   0x168e290 stored by FUN_00012160 FUN_00012270 FUN_00012370
 #   0x168e460 stored by FUN_00013ea0 FUN_000143a0
-#   0x168e5b0 stored by FUN_00014a50
 #   0x168e800 stored by FUN_00016d40 FUN_00016f90
 #   0x168e8e0 stored by FUN_000195c0 FUN_00019780
 #   0x168ea90 stored by FUN_000098d0
 #   0x168eb00 stored by FUN_0001bc80 FUN_0001bdd0 FUN_0001c010
 #   0x16926d0 stored by FUN_00048b20
 #   0x1692eb0 stored by FUN_000359d0 FUN_00035a40 FUN_00035b10
-#   0x1693610 stored by FUN_000365a0
 #   0x16969d0 stored by FUN_0003e840 FUN_0003e8c0 FUN_0003e960
 #   0x1697900 stored by FUN_000412a0 FUN_00041650 _ZN17hknpCompoundShapeC1E24hkFinishLoadedObjectFlag | hkClass hknpCompoundShape (slot 3 0x418b0)
 #   0x1698eb0 stored by FUN_00048b20

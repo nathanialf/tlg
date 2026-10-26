@@ -233,6 +233,13 @@ build time from a committed schema, as ico does (a later decision).
 **Trigger to revisit.** The first data object claimed from source (to
 exercise the pointer-slot rule on real data); a public linker.
 
+**Addendum, 2026-10-26 (round 29 harvest).** A read-only string the base
+holds (a debug message in `.rodata`) is referenced from source as the data
+it is, `extern const char D_<hex>[]`, resolved by address like any `D_<hex>`
+reference (the compiler's GOT load becomes the base's `lea` under D10). Its
+text is never copied into the tree: docs/LEGAL.md's rule on debug strings.
+The first use is FUN_0019a490's 631-character message at 0x14cca20.
+
 ## D9. Developer-native code is enforced mechanically (2026-10-24)
 
 **Decision.** `tools/check_dev_native.py` runs in the pre-commit hook on every
@@ -588,6 +595,19 @@ class list 0x16c9060 with version -1 and the name "hk_2014.2.0-r1" at
 0x57c1510 at 0x5b2a1; slots 5 to 10 pure; stored by the inline finish
 constructors FUN_00070750 and FUN_00075f60 before their derived vtables).
 `--check`: 23 derived rows, 0 failing.
+
+**Addendum, 2026-10-26 (round 29 harvest).** Two rows: hknpCharacterStateInAir
+0x1693610 (derived; the game builds the object at 0xea9c91 and registers it
+as state 2; stored only at 0x365a7 by its constructor) and FixedSizeAllocator
+0x168e5b0 (derived; thirteen slots; stored at 0x14a59 by its destructor and
+inline by the constructions in FUN_00001960 and FUN_00001fb0 at 0x19a9 and
+0x2192). `--check`: 25 derived rows, 0 failing. Collected, not yet a row:
+hkSerializeDeprecated 0x16a6860, whose name is a fact (the singleton
+record's string at 0x14cca08, loaded at 0x19a680) and whose only store,
+0x19a618 to 0x19a623, is into the static instance 0x57c8a08 inside the
+create function 0x19a5f0: a form the walker does not count (neither `this`
+nor a returned pointer); nothing claimed needs the row, and the walker
+grows that form when one does.
 
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
