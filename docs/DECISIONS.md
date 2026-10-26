@@ -592,8 +592,8 @@ Before this ruling the resolver searched the base for the object's bytes
 functions hold a direct RIP-relative data operand that is not a `lea` and
 not the relaxable `mov` (constant pools and file-local objects alike; 883
 unclaimed), and 1,205 more a `lea` to data. The scratch claim of 0x7d40 with
-the table defined `static` in its TU (35 rows of 24 bytes, the object's
-symbol 840 bytes) compared equal with its relocation verified and laid out
+the table defined `static` in its TU (a zero table of the record's size
+for the test; the real one has 36 rows of 24 bytes, 864 bytes) compared equal with its relocation verified and laid out
 every segment identical to the base.
 
 **Trigger to revisit.** A named local whose extent does not hold the field's
@@ -629,8 +629,9 @@ executable this way.
 the repository in whole or in bulk and promises that data ranges are
 generated at build time from the user's executable, with only types, counts
 and names committed. The first case is the member type table at 0x16dc150:
-35 rows of 24 bytes (`u8 type; const char *name; s16 size; s16 align`),
-their 35 pointers relocated into the type-name pool from 0x14b2fa6
+36 rows of 24 bytes (`u8 type; const char *name; s16 size; s16 align`,
+the last row TYPE_MAX), their 36 pointers relocated into the type-name pool
+from 0x14b2fa6
 ("void", "hkBool", "hkChar", ...), read by 0x7d40, which cannot be claimed
 until the table is defined in its TU. The executable has 29,118 RELATIVE
 slots, 4,761 of them pointing at printable NUL-terminated strings and 21,367
@@ -642,6 +643,15 @@ developer's type and count, which is what it knows.
 **Trigger to revisit.** A table whose record type the generator cannot
 express (bit-fields, unions, a pointer into the middle of an object), which
 is a schema extension, not a hand-written table.
+
+**Addendum, 2026-10-26 (round 20).** Landed as `tools/gen_data_inc.py`,
+`config/data_schema.base.txt`, a `gen_data` ninja edge per schema row and
+`-I build/base` for the compile (match_check regenerates a TU's tables
+before compiling it outside ninja). The first claim is D_16dc150 with
+FUN_00007d40 (36 rows: the bytes hold a TYPE_MAX row this ruling's first
+text did not count). A slot holding a vtable's address point stops the
+generator rather than being spelled: such an object is an instance of a
+class with a constructor, written as that object in C++, not a table row.
 
 ## D19. Havok's kept check stops on `HK_BREAKPOINT`, spelled as the debug trap (2026-10-26)
 
@@ -665,3 +675,52 @@ same mechanism; the macro names the mechanism once.
 **Trigger to revisit.** A conditional `int3` whose surrounding code the
 builtin's lowering cannot produce (the builtin is a scheduling barrier only
 as far as `ISD::DEBUGTRAP` is), which would be a classified note first.
+
+## D20. Both regions were built with the strong stack protector (2026-10-26)
+
+**Decision.** The stack protector level of both regions is strong:
+`-fstack-protector-strong`, the Orbis driver default Sony's 2013 toolchain
+talk lists (docs/TARGETS.md). The game prefix passes it now (4.0.0 has the
+flag; the gate does not move: the twelve game rows have no address-taken
+local). The library prefix cannot yet: the prebuilt 3.3 frontend knows
+`-fstack-protector` (ssp) and `-fstack-protector-all` (sspreq) and nothing
+between, while its backend already implements `sspstrong`
+(`tools/cc/src/llvm-3.3.src/lib/CodeGen/StackProtector.cpp:193`). Under D2's
+rule for compiler changes, the library compiler becomes a from-source 3.3
+build (`tools/build_llvm.sh 3.3`, verified byte-identical to the prebuilt on
+the probe and on `src/libs/`) carrying one backport patch, the
+`-fstack-protector-strong` frontend support that reached upstream in clang
+3.5 (the code as it stands in `tools/cc/src/llvm-3.6.2.src/tools/clang`:
+`Options.td` `fstack_protector_strong`, `Driver/Tools.cpp`,
+`Frontend/CompilerInvocation.cpp` level 2, `Basic/LangOptions`,
+`CodeGen/CodeGenModule.cpp` `StackProtectStrong`,
+`Frontend/InitPreprocessor.cpp` `__SSP_STRONG__`), and the library prefix
+then passes `-fstack-protector-strong` under `cxx=3.3-src`. Until that build
+verifies, the library prefix keeps `-fstack-protector`, and a
+canary-bearing library function is not claimable.
+
+**Why.** The old count (394 library and 80 game functions loading the
+canary, `config/flags.base.txt`, docs/TARGETS.md) came from an instruction
+shape in `tools/fingerprint.py` (guard load, deref, store to `[rbp-N]`,
+adjacent) that the scheduler and the frame layout break; counting the
+symbols instead (a load of `__stack_chk_guard`'s GOT slot 0x16d80c0 or a
+call of `__stack_chk_fail`'s stub 0x14b1dc8, both give the same functions)
+finds 745 of 3,391 library functions and 5,980 of 16,344 game functions.
+The level follows from which functions those are. Under ssp LLVM 3.3
+protects only a function holding a char array of 8 bytes or more
+(`StackProtector.cpp` `ContainsProtectableArray`); under strong, any array
+and any local whose address is taken. In the library region 724 functions
+take a local's address (`lea r, [rsp+n]` or `[rbp-n]`) and call something;
+722 of those carry the canary, 2 do not (0x18c90, 0x8f330), and 29 carry it
+without such a `lea` (arrays indexed without one). The game region: 5,688
+address-taking functions, 51 without the canary. That is the strong
+heuristic's footprint, not ssp's; a game region built with the protector
+off would show none. FUN_00187750 (0xdec bytes, round 20) is the first
+canary-bearing library function worked: its locals are a Vec4 array and two
+matrices passed by address, protected under strong and not under ssp; its
+frame is 0x1c8 against the 0x198 our compile makes.
+
+**Trigger to revisit.** The from-source 3.3 build failing to verify
+byte-identical to the prebuilt, or the patched build regressing the gate on
+a claimed library function, either of which reopens the level or the
+backport.

@@ -44,7 +44,7 @@ The full survey, program header by program header and library by library, is
   | adjacent constant 8-byte stores left unmerged / merged into one vector store | 258 / 2 | 15 / 3,229 |
   | `ud2` after a call (trap after noreturn) | 1 | 512 |
   | `int 0x41` (PS4 debug trap) | 0 | 492 |
-  | functions loading a stack canary | 394 | 80 |
+  | functions loading a stack canary (`__stack_chk_guard` or `__stack_chk_fail` referenced; D20) | 745 | 5,980 |
   | leaves keeping a frame pointer | 0 of 1,326 | 104 of 3,978 |
 
   The lower region is library code linked first and built years earlier

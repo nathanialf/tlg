@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -62,11 +63,27 @@ def load_functions(ver: str) -> dict[str, tuple[int, int]]:
     return out
 
 
+def generate_tables_of(tu: str, ver: str) -> None:
+    """Write build/<slug>/gen/D_<hex>.inc for every table the TU claims
+    (config/data_schema.<slug>.txt, tools/gen_data_inc.py, D18), so a compile
+    outside ninja sees the current rows."""
+    try:
+        from gen_data_inc import schema_rows
+        rows = schema_rows(ver)
+    except Exception:  # noqa: BLE001  (no schema file, or an error ninja will report)
+        return
+    for ident, row in rows.items():
+        if row.get("tu") == tu:
+            subprocess.run([sys.executable, "-I", str(REPO_ROOT / "tools" / "gen_data_inc.py"), ident],
+                           cwd=REPO_ROOT, check=True, env={**os.environ, "VERSION": ver})
+
+
 def compile_tu(tu: str, ver: str) -> Path:
     """The TU's object, recompiled when the TU or any header its depfile
     lists (tools/compile_cpp.sh writes <obj>.d) is newer than it."""
     obj = build_dir(REPO_ROOT, ver) / "obj" / (tu + ".o")
     src = REPO_ROOT / tu
+    generate_tables_of(tu, ver)
     if obj.exists() and obj.stat().st_mtime >= src.stat().st_mtime:
         dep = obj.with_name(obj.name + ".d")
         deps = []
