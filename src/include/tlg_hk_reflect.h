@@ -414,6 +414,111 @@ class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
     hknpVehicleDriverInputAnalogStatus(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hknpVehicleDefaultTransmission: vtable 0x1699b90, finish callback FUN_00037a90. */
+class hknpVehicleDefaultTransmission : public hkReferencedObject
+{
+  public:
+    hknpVehicleDefaultTransmission(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpConvexPolytopeShapeConnectivity: vtable 0x1694e20, finish callback FUN_00039ae0. */
+class hknpConvexPolytopeShapeConnectivity : public hkReferencedObject
+{
+  public:
+    hknpConvexPolytopeShapeConnectivity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback FUN_0003a0d0. */
+class hknpVehicleDefaultAerodynamics : public hkReferencedObject
+{
+  public:
+    hknpVehicleDefaultAerodynamics(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback FUN_0003a3b0. */
+class hknpGroupCollisionFilter : public hkReferencedObject
+{
+  public:
+    hknpGroupCollisionFilter(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback FUN_0003a3d0. */
+class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
+    : public hkReferencedObject
+{
+  public:
+    hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516(
+        hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag)
+    {
+    }
+};
+
+/* hknpCircularSurfaceVelocity: vtable 0x16a4f50, finish callback FUN_0003af50. */
+class hknpCircularSurfaceVelocity : public hkReferencedObject
+{
+  public:
+    hknpCircularSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpLinearSurfaceVelocity: vtable 0x16a4bb0, finish callback FUN_0003d520. */
+class hknpLinearSurfaceVelocity : public hkReferencedObject
+{
+  public:
+    hknpLinearSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpDisableCollisionFilter: vtable 0x16978a0, finish callback FUN_0003e340. */
+class hknpDisableCollisionFilter : public hkReferencedObject
+{
+  public:
+    hknpDisableCollisionFilter(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleDefaultSuspension: vtable 0x16a4040, finish callback FUN_0003e590. */
+class hknpVehicleDefaultSuspension : public hkReferencedObject
+{
+  public:
+    hknpVehicleDefaultSuspension(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpBodyReference: vtable 0x1696d20, finish callback FUN_0003f520. */
+class hknpBodyReference : public hkReferencedObject
+{
+  public:
+    hknpBodyReference(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpCharacterProxyCinfo: vtable 0x1696e90, finish callback FUN_00040510. */
+class hknpCharacterProxyCinfo : public hkReferencedObject
+{
+  public:
+    hknpCharacterProxyCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpTyremarksInfo: vtable 0x169a080, finish callback FUN_00042a20. */
+class hknpTyremarksInfo : public hkReferencedObject
+{
+  public:
+    hknpTyremarksInfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpTyremarksWheel: vtable 0x1697af0, finish callback FUN_00042a50. */
+class hknpTyremarksWheel : public hkReferencedObject
+{
+  public:
+    hknpTyremarksWheel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpMaskedShapeMaskWrapper (vtable 0x1693ba0): its finish constructor
+ * FUN_00038230 is out of line, called by the finish callback 0x36780 and by
+ * the reflection initializer at 0x36863; it stores only the vtable. */
+class hknpMaskedShapeMaskWrapper : public hkReferencedObject
+{
+  public:
+    hknpMaskedShapeMaskWrapper(hkFinishLoadedObjectFlag flag);
+};
+
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
 class hkGeometry;                           /* FUN_00093c60, vtable 0x1692500 */
@@ -432,7 +537,6 @@ class hkMemoryMeshMaterial;                 /* FUN_000accf0, vtable 0x16a3920 */
 class hkStorageSkinnedMeshShape;            /* FUN_000ae680, vtable 0x16a3b00 */
 class hkMemoryMeshVertexBuffer;             /* FUN_000274e0, vtable 0x16921b0 */
 class hknpDynamicCompoundShape;             /* FUN_000469a0, vtable 0x1697ef0 */
-struct hknpMaskedShapeMaskWrapper;          /* FUN_00038230, vtable 0x1693bb0 */
 class hknpMaskedShape;                      /* FUN_00037b90, vtable 0x1693a90 */
 
 void FUN_00093c60(hkGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -2182,7 +2286,33 @@ class hkOstream : public hkReferencedObject
     void FUN_000089e0();                            /* derived name */
     int FUN_000089f0(const void *buffer, int size); /* derived name */
 
+    /* derived name: the operator<< of a C string (0x8440): writes its
+     * strlen bytes, or "(null)" for a null pointer, and returns the
+     * stream. */
+    hkOstream &FUN_00008440(const char *string);
+
     hkStreamWriter *writer; /* derived name */
+};
+
+/* The world's events print their names: the dispatcher at 0x6c110 switches
+ * on an event's 16-bit type at +4 (26 types) and calls the type's printer
+ * with the world and the stream it was given. Derived names, from the
+ * printed names: */
+struct hknpConstraintForceEvent /* derived name */
+{
+    void FUN_0003ddb0(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+struct hknpConstraintForceExceededEvent /* derived name */
+{
+    void FUN_0003ddc0(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+/* The printer of the four reserved types (the dispatcher's last four
+ * cases). */
+struct hknpReservedEvent /* derived name */
+{
+    void FUN_00040be0(hknpWorld *world, hkOstream &out) const; /* derived name */
 };
 
 /* hkBufferedStreamWriter: its hkClass at 0x57b7fe8 is built by the
@@ -2360,14 +2490,17 @@ class hkGeometry
  * hkGeometry at +0x10; slot 5 (FUN_0003b980) returns its triangle count,
  * slot 6 copies a triangle's three vertices, slot 7 returns a triangle's
  * 16-bit material at +0xc. */
-class hknpDefaultExternMeshShapeGeometry
+class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
 {
   public:
+    /* The finish constructor, inline in the finish callback FUN_0003ba10:
+     * only the vtable is set. */
+    hknpDefaultExternMeshShapeGeometry(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
     virtual ~hknpDefaultExternMeshShapeGeometry();
 
     int FUN_0003b980() const; /* vtable slot 5; derived name */
 
-    u8 unknown8[8];
     hkGeometry *geometry;
 };
 
