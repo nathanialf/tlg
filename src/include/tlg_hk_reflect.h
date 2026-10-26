@@ -1763,13 +1763,44 @@ class hkpCogWheelConstraintData
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 };
 
+/* hkpConeLimitConstraintAtom (records built by the initializer at 0x80da0:
+ * isEnabled, twistAxisInA, refAxisInB, angleMeasurementMode and
+ * memOffsetToAngleOffset, bytes from +2; then minAngle, maxAngle and
+ * angularLimitsTauFactor), 0x20 bytes in the atoms that hold it. A nonzero
+ * memOffsetToAngleOffset is where the constraint's runtime keeps the cone's
+ * angle offset (its stabilization). */
+struct hkpConeLimitConstraintAtom {
+    u16 type; /* derived name */
+    u8 isEnabled;
+    u8 twistAxisInA;
+    u8 refAxisInB;
+    u8 angleMeasurementMode; /* hkEnum of hkUint8 */
+    u8 memOffsetToAngleOffset;
+    u8 unknown7[0x19];
+};
+
+/* hkpRagdollLimitsData: atoms at +0x20 (records 0x169b8f8, 0x169b920 and
+ * 0x169b948: twistLimit at +0x70, coneLimit at +0x90, planesLimit at +0xb0). Its finish constructor
+ * (0x788d0) re-enables the cone's stabilization through FUN_0007c860 when the
+ * loaded offset is nonzero. */
 class hkpRagdollLimitsData
 {
   public:
+    struct Atoms {
+        u8 unknown0[0x90]; /* up to and with twistLimit (+0x70) */
+        hkpConeLimitConstraintAtom coneLimit;
+        u8 unknownB0[0x20]; /* planesLimit */
+    };
+
     virtual ~hkpRagdollLimitsData();
+
+    void FUN_0007c860(hkBool enable); /* derived name */
 
     void FUN_0007c8b0(bool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    u8 unknown8[0x18];
+    Atoms atoms;
 };
 
 /* hkpLinearClearanceConstraintData: address point 0x16a0300 (finish
@@ -2040,7 +2071,9 @@ class hkpRagdollConstraintData
         u8 transforms[0x90];
         hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
-        u8 unknown100[0x70]; /* angFriction, twistLimit, coneLimit, planesLimit */
+        u8 unknown100[0x30]; /* angFriction, twistLimit */
+        hkpConeLimitConstraintAtom coneLimit;
+        u8 unknown150[0x20]; /* planesLimit */
         hkpBallSocketConstraintAtom ballSocket;
     };
 
@@ -2052,6 +2085,8 @@ class hkpRagdollConstraintData
     hkResult FUN_0007e2e0(float &factorOut) const; /* vtable slot 18; derived name */
     void FUN_0007dd00(bool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    void FUN_0007dad0(hkBool enable); /* derived name */
 
     hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
@@ -2166,8 +2201,13 @@ class hkpConstraintData : public hkReferencedObject
     virtual void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
                               Vec4 &out) const; /* vtable slot 19; derived name */
 
-    virtual void unknownVirtual20() = 0;
-    virtual void unknownVirtual21();
+    /* Slot 20 (pure): the runtime size and solver result count. The flag is
+     * an hkBool, not a bool: the wrapped data's forwarder (FUN_00067b30)
+     * passes it on without widening it (cookbook 17). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const = 0;
+    /* Slot 21: by default (the shared FUN_00013e90) the solver results are
+     * the runtime itself. */
+    virtual void *unknownVirtual21(void *runtime) const;
     virtual void unknownVirtual22();
     virtual void unknownVirtual23();
 
@@ -2226,6 +2266,11 @@ class hkpWrappedConstraintData : public hkpConstraintData
   public:
     void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     int FUN_00067c60() const;                         /* vtable slot 7; derived name */
+    void FUN_0007d600(const void *argument1, const void *argument2, const void *argument3,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
+    void FUN_00067b30(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    void *FUN_0007d5d0(void *runtime) const;                 /* vtable slot 21; derived name */
 
     hkpConstraintData *constraintData;
 };
@@ -3176,6 +3221,9 @@ class hknpCollisionQueryCollector /* derived name */
 
     virtual void unknownVirtual2();
     virtual int unknownVirtual3() const;
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5();
+    virtual bool unknownVirtual6() const;
 
     u8 unknown8[8];
     Vec4 earlyOut; /* derived name */
@@ -3185,7 +3233,8 @@ class hknpFlippedGetClosestPointsQueryCollector
     : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    int FUN_00048410() const; /* vtable slot 3; derived name */
+    int FUN_00048410() const;  /* vtable slot 3; derived name */
+    bool FUN_00048510() const; /* vtable slot 6; derived name */
 
     hknpCollisionQueryCollector *childCollector; /* derived name */
 };
@@ -3229,7 +3278,8 @@ class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* der
 class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    int FUN_00048560() const; /* vtable slot 3; derived name */
+    int FUN_00048560() const;  /* vtable slot 3; derived name */
+    bool FUN_00048660() const; /* vtable slot 6; derived name */
 
     Vec4 castDirection;                          /* derived name */
     hknpCollisionQueryCollector *childCollector; /* derived name */
