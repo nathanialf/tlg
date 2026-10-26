@@ -46,6 +46,16 @@ struct Pair08Owner {
     Pair08Target *target;
 };
 
+/* One of the 32-byte entries after the owner's 0x40 bytes: FUN_0002b0f0
+ * scales valueA of each, FUN_0002b120 valueB where it is positive;
+ * FUN_0002b010 and FUN_0002b030 return their addresses by index. */
+struct Pair08Entry {
+    u8 unknown0[0xc];
+    float valueA; /* derived name */
+    u8 unknown10[0xc];
+    float valueB; /* derived name */
+};
+
 float *FUN_0002b010(Pair08Owner *self, int index);                /* derived name */
 float *FUN_0002b030(Pair08Owner *self, int index);                /* derived name */
 void FUN_0002b040(Pair08Owner *self, float scaleA, float scaleB); /* derived name */
@@ -537,6 +547,7 @@ class StackTracer /* derived name */
   public:
     typedef void (*PrintFunction)(const char *text, void *context); /* derived name */
 
+    StackTracer();
     virtual ~StackTracer();
 
     void FUN_0000d890(const hkUlong *trace, int numTrace, PrintFunction print,

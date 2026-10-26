@@ -255,8 +255,15 @@ void FUN_0000dbc0(hkUuid *self, hkFinishLoadedObjectFlag flag); /* derived name 
 
 /* hkUuidObject, 32 bytes and polymorphic: uuid (an hkUuid) at +0xc. Its
  * finish constructor is out of line (FUN_0000dc40: stores the vtable
- * 0x168d870). */
-struct hkUuidObject;
+ * 0x168d870 and leaves the uuid as loaded); the finish callback 0x3eb0
+ * calls it by its address. */
+class hkUuidObject : public hkReferencedObject
+{
+  public:
+    hkUuidObject(hkFinishLoadedObjectFlag flag);
+
+    hkUuid uuid;
+};
 
 void FUN_0000dc40(hkUuidObject *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
@@ -300,11 +307,42 @@ class hkSimpleLocalFrame : public hkReferencedObject
     hkStringPtr name;
 };
 
+/* hkcdShape (type info 0x57b9ed0, vtable 0x168f2f0): its finish
+ * constructor FUN_0001cf40 is out of line, called by the finish callback
+ * 0x1ca80 and by the reflection initializer at 0x1ccfe on a temporary; it
+ * stores only the vtable. */
+class hkcdShape : public hkReferencedObject
+{
+  public:
+    hkcdShape(hkFinishLoadedObjectFlag flag);
+};
+
+/* hkcdPlanarGeometryPrimitivesCollection28 (type info 0x57b9e40, 0xd90
+ * bytes; scoped name "hkcdPlanarGeometryPrimitivesCollection28_typename",
+ * a template instance): its finish constructor is inline in its finish
+ * callback FUN_0001c990 and stores only the vtable. */
+class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
+{
+  public:
+    hkcdPlanarGeometryPrimitivesCollection28(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag)
+    {
+    }
+};
+
+/* hkcdPlanarSolidNodeStorage (type info 0x57ba3b0, 0x38 bytes; scoped name
+ * "hkcdPlanarSolid::NodeStorage"): its finish constructor is inline in its
+ * finish callback FUN_0001d620 and stores only the vtable. */
+class hkcdPlanarSolidNodeStorage : public hkReferencedObject
+{
+  public:
+    hkcdPlanarSolidNodeStorage(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
 class hkGeometry;                           /* FUN_00093c60, vtable 0x1692500 */
 struct hkcdPlanarGeometryPolygonCollection; /* FUN_00095fb0, vtable 0x16a3680 */
-struct hkcdShape;                           /* FUN_0001cf40, vtable 0x168f300 */
 struct hkcdPlanarGeometry;                  /* FUN_0009a860, vtable 0x16a3700 */
 struct hkcdPlanarCsgOperand;                /* FUN_0009c0a0, vtable 0x16a3740 */
 struct hkcdPlanarGeometryPlanesCollection;  /* FUN_0009c400, vtable 0x16a3780 */
@@ -397,6 +435,8 @@ struct hkMeshBoneIndexMapping; /* derived name: the class 0x57bd388 */
  * from a start index, FUN_00023770 copies them out and FUN_000237b0 copies
  * the inverses out. */
 struct hkIndexedTransformSet : public hkReferencedObject {
+    hkIndexedTransformSet(hkFinishLoadedObjectFlag flag);
+
     hkArray<Mat4> matrices;
     hkArray<Mat4> inverseMatrices;
     hkArray<s16> matricesOrder;
@@ -439,6 +479,10 @@ struct hkVertexFormat {
 
 void FUN_000270a0(hkVertexFormat *self); /* derived name */
 
+/* derived name: makes one format a copy of another, the element count first
+ * and then that many elements. */
+void FUN_000270b0(hkVertexFormat *self, const hkVertexFormat *other); /* derived name */
+
 /* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
  * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): slot 0,
  * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0.
@@ -453,13 +497,17 @@ extern const hkClass D_57bcf20; /* hkMultipleVertexBuffer's hkClass, built at 0x
 class hkMultipleVertexBuffer
 {
   public:
+    hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
     virtual ~hkMultipleVertexBuffer();
 
-    const hkClass *FUN_000238c0() const; /* vtable slot 3; derived name */
-    bool FUN_00024bd0() const;           /* vtable slot 6; derived name */
-    int FUN_00024bf0() const;            /* vtable slot 8; derived name */
+    const hkClass *FUN_000238c0() const;                /* vtable slot 3; derived name */
+    bool FUN_00024bd0() const;                          /* vtable slot 6; derived name */
+    void FUN_00024be0(hkVertexFormat &formatOut) const; /* vtable slot 7; derived name */
+    int FUN_00024bf0() const;                           /* vtable slot 8; derived name */
 
-    u8 unknown8[0x140];
+    u8 unknown8[4];
+    hkVertexFormat vertexFormat;
+    u8 unknown110[0x38];
     int numVertices;
     hkBool isLocked;
     u32 updateCount;

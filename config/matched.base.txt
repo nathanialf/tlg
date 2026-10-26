@@ -553,3 +553,14 @@ FUN_00162540 src/libs/unknown/leaf_00162540.cpp _ZN19hknpVehicleInstance12FUN_00
 FUN_0017b990 src/libs/unknown/leaf_0017b990.cpp _ZNK21ConstraintData16a5d3012FUN_0017b990EbR21ConstraintRuntimeInfo
 FUN_00184420 src/libs/unknown/leaf_00184420.cpp _ZNK21hkVtableClassRegistry12FUN_00184420EPKv
 FUN_000002c0 src/libs/unknown/func_000002c0.cpp
+FUN_0000dc40 src/libs/unknown/func_0000dc40.cpp _ZN12hkUuidObjectC2E24hkFinishLoadedObjectFlag
+FUN_0000e190 src/libs/unknown/func_0000e190.cpp
+FUN_0001a490 src/libs/unknown/leaf_0001a490.cpp _ZN11hkSemaphore12FUN_0001a490Ev
+FUN_0001c990 src/libs/unknown/func_0001c990.cpp
+FUN_0001cf40 src/libs/unknown/func_0001cf40.cpp _ZN9hkcdShapeC2E24hkFinishLoadedObjectFlag
+FUN_0001d620 src/libs/unknown/func_0001d620.cpp
+FUN_000236e0 src/libs/unknown/func_000236e0.cpp _ZN21hkIndexedTransformSetC2E24hkFinishLoadedObjectFlag
+FUN_00024be0 src/libs/unknown/leaf_00024be0.cpp _ZNK22hkMultipleVertexBuffer12FUN_00024be0ER14hkVertexFormat
+FUN_00024fa0 src/libs/unknown/func_00024fa0.cpp _ZN22hkMultipleVertexBufferC2E24hkFinishLoadedObjectFlag
+FUN_0002b010 src/libs/unknown/leaf_0002b010.cpp
+FUN_0002b030 src/libs/unknown/leaf_0002b030.cpp

@@ -14,6 +14,7 @@ class hkSemaphore
 {
   public:
     void FUN_0001a440();          /* derived name: the destructor's body */
+    void FUN_0001a490();          /* derived name: acquire */
     void FUN_0001a4a0(int count); /* derived name: release */
 
     SceKernelSema semaphore; /* derived name */
