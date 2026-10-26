@@ -127,15 +127,62 @@ void FUN_00017920(Class168e810 *self, int mode);                               /
 class hknpTaskInterface /* derived name */
 {
   public:
-    virtual ~hknpTaskInterface();
+    /* Empty and inline: no task destructor calls one or stores this
+     * interface's vtable (0x14e4b0 stores only its own two). */
+    virtual ~hknpTaskInterface() {}
+
+    /* Slot 2: the task's work (derived name). */
+    virtual void process() = 0;
+    /* Slot 3: the task's timer name, and a description when one is asked
+     * for (0x14e760 copies "Solve/SolverFactory"; derived name). */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const = 0;
 };
 
 /* The task classes (derived names, from their timer names): primary vtable
  * address point, second vtable address point, primary slot 5. */
 
-/* hknpSolverFactoryTask: vtables 0x16a4090 and 0x16a40d8; slot 6 opens the timer "Solve/SolverFactory". */
+/* The arrays the solver factory task fills (derived name): a reference-
+ * counted object of 0x50 bytes (vtable 0x1698f40, no type info; slots 0
+ * 0x481b0, 1 0x481c0, then the common 0x270, 0x42d0, 0x69a0), constructed
+ * by FUN_00092280 (the four arrays empty), destroyed by 0x48040, which
+ * restores the vtable, releases the references from the last and frees
+ * the four arrays. The complete destructor 0x481b0 is a lone jump to that
+ * base destructor, the shape of a destructor the compiler could not alias
+ * (cookbook 9): the destructor is the class's implicit, inline one. Here it
+ * is declared, as the tasks reach it through a call. */
+class RefArrays /* derived name */ : public hkReferencedObject
+{
+  public:
+    ~RefArrays();
+
+    hkArray<Vec4> array10;                    /* derived name */
+    hkArray<int> array20;                     /* derived name */
+    hkArray<void *> array30;                  /* derived name */
+    hkArray<hkReferencedObject *> references; /* derived name */
+};
+
+/* hknpSolverFactoryTask: vtables 0x16a4090 and 0x16a40d8; slot 6 opens the
+ * timer "Solve/SolverFactory". 0x90 bytes, built by FUN_00151250 at
+ * 0x1515a1 (value-initialized, then the four pointers stored); slot 5
+ * (0x14e540) builds the solve data task (0x16e0e0) in the object at +0x20
+ * and fills the arrays from the solver's data. Destructors 0x14e4b0 (and
+ * its thunk 0x14e7b0), deleting 0x14e4d0 (0x14e7d0). */
 class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
+  public:
+    virtual ~hknpSolverFactoryTask();
+
+    /* slot 5 (0x14e540; the interface's slot 2 through the thunk 0x14e840) */
+    virtual void process();
+    /* slot 6 (0x14e760, also the interface's slot 3) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    void *unknown18;  /* derived name; its slots 2 and 3 called by the builder, 4 and 6 by slot 5 */
+    void *unknown20;  /* derived name; the object whose +0x190 holds the solve data task */
+    void *unknown28;  /* derived name */
+    void *unknown30;  /* derived name; written by unknown18's slot 2 */
+    RefArrays arrays; /* derived name */
+    u8 unknown88[8];
 };
 
 /* hknpAddActiveBodyPairsTask: vtables 0x16a4110 and 0x16a4158; slot 6 opens the timer "Deactivation/AddActiveBodyPairs". */

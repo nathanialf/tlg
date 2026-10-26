@@ -631,7 +631,7 @@ FUN_0008b390 src/libs/unknown/func_0008b390.cpp
 FUN_0008ba40 src/libs/unknown/func_0008ba40.cpp
 FUN_0008bcd0 src/libs/unknown/func_0008bcd0.cpp
 FUN_0008bdc0 src/libs/unknown/func_0008bdc0.cpp
-FUN_00082850 src/libs/unknown/func_00082850.cpp _ZN17hkpConstraintDataC2E24hkFinishLoadedObjectFlag
+_ZN17hkpConstraintDataC2E24hkFinishLoadedObjectFlag src/libs/unknown/func_00082850.cpp
 _ZN7hkxMeshC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008bea0.cpp
 FUN_0008c380 src/libs/unknown/func_0008c380.cpp
 FUN_0008e000 src/libs/unknown/func_0008e000.cpp
@@ -905,3 +905,5 @@ _ZN24hknpDynamicCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func
 FUN_0004bc60 src/libs/unknown/func_0004bc60.cpp
 FUN_0004e0c0 src/libs/unknown/func_0004e0c0.cpp
 FUN_00070a10 src/libs/unknown/func_00070a10.cpp _ZN20hknpAllHitsCollector5resetEv
+_ZN22hkpFixedConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007a610.cpp _ZN22hkpFixedConstraintDataC2E24hkFinishLoadedObjectFlag
+_ZN32hkpDeformableFixedConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007a830.cpp _ZN32hkpDeformableFixedConstraintDataC2E24hkFinishLoadedObjectFlag

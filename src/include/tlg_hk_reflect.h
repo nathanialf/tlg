@@ -2960,7 +2960,7 @@ struct hkpSolverResults /* derived name */
 
 /* hkpConstraintData, the constraint data base (hkClass 0x57c45a8, built at
  * 0x7f444, 0x18 bytes, parent hkReferencedObject; finish constructor
- * FUN_00082850 stores its vtable 0x169fac0, address point 0x169fad0, whose
+ * 0x82850 stores its vtable 0x169fac0, address point 0x169fad0, whose
  * slots 5 to 7 and 20 are pure). Slots 8 to 10 default to the empty body
  * 0x3b640; slots 11 to 13, kept by twenty-odd constraint data vtables,
  * return the largest float Havok uses (0x7f7fffee) for the linear, angular
@@ -3187,12 +3187,23 @@ class hkpPulleyConstraintData /* vtable address point 0x169f600 */
 
 /* Slots 6 (0x83000) and 20 (0x83020) are also hkpWheelConstraintData's
  * (0x16a5e20). */
-class hkpDeformableFixedConstraintData /* vtable address point 0x169fe00 */
+/* hkpDeformableFixedConstraintData (hkClass 0x57c34e8, parent
+ * hkpConstraintData, 0x170 bytes; vtable 0x169fdf0, address point
+ * 0x169fe00): its one member atoms at +0x20 (record 0x169be80) is an
+ * hkpDeformableFixedConstraintData::Atoms, 0x150 bytes (record table
+ * 0x169be00: transforms at +0, lin, an hkpDeformableLinConstraintAtom, at
+ * +0x90, ang, an hkpDeformableAngConstraintAtom, at +0xf0). */
+class hkpDeformableFixedConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
-        u8 unknown0[0x150];
+        hkpSetLocalTransformsConstraintAtom transforms;
+        u8 lin[0x60];
+        u8 ang[0x60];
     };
+
+    /* The finish constructor (0x7a830): the atoms are left as loaded. */
+    hkpDeformableFixedConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpDeformableFixedConstraintData();
 
@@ -3201,7 +3212,6 @@ class hkpDeformableFixedConstraintData /* vtable address point 0x169fe00 */
     void FUN_00083020(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3758,21 +3768,25 @@ class hknpBreakableConstraintData : public hkpWrappedConstraintData
 };
 
 /* hkpFixedConstraintData, polymorphic, 0xe0 bytes (type info 0x57c3438,
- * vtable 0x169c620, address point 0x169c630): its member atoms at
+ * hkClass 0x57c33e8, parent hkpConstraintData; vtable 0x169c620, address
+ * point 0x169c630): its member atoms at
  * +0x20 is an hkpFixedConstraintData::Atoms, 0xc0 bytes (record table
  * 0x169bd30: transforms at +0, setupStabilization at +0x90, ballSocket at
  * +0xa0, ang at +0xb0). Slot 8 (0x7bea0) sets the stabilization's linear
  * impulse limit and the ball socket's enableLinearImpulseLimit, slot 9 its
  * angular limit; slots 11 and 12 read the two limits back. */
-class hkpFixedConstraintData
+class hkpFixedConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
-        u8 transforms[0x90];
+        hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpBallSocketConstraintAtom ballSocket;
         u8 ang[0x10];
     };
+
+    /* The finish constructor (0x7a610): the atoms are left as loaded. */
+    hkpFixedConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpFixedConstraintData();
 
@@ -3790,7 +3804,6 @@ class hkpFixedConstraintData
     void FUN_0007c000(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3886,7 +3899,7 @@ class hkpWheelFrictionConstraintData
 };
 
 /* hkp6DofConstraintData, polymorphic (type info 0x57c5ac8, size 0x2b0): its
- * finish constructor FUN_0017b5f0 runs FUN_00082850 (the constraint data
+ * finish constructor FUN_0017b5f0 runs 0x82850 (the constraint data
  * base's), stores the vtable 0x16a5d20 and resets the packed u16 pairs of
  * its atoms. hkp6DofConstraintData::Blueprints (type info 0x57c5a48, size
  * 0x200): its finish constructor FUN_0017b0d0 resets the same pairs from
