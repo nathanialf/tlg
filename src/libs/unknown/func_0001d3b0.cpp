@@ -8,5 +8,5 @@ void FUN_0001d3b0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0009c400(static_cast<hkcdPlanarGeometryPlanesCollection *>(object), flag);
+    new (object) hkcdPlanarGeometryPlanesCollection(flag);
 }

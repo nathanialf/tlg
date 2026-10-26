@@ -964,3 +964,13 @@ FUN_0000aff0 src/libs/unknown/func_0000aff0.cpp _ZN17RouterAllocator5812FUN_0000
 FUN_0000b0a0 src/libs/unknown/func_0000b0a0.cpp _ZNK17RouterAllocator5819getMemoryStatisticsER16MemoryStatistics
 FUN_0000df60 src/libs/unknown/func_0000df60.cpp
 FUN_000120d0 src/libs/unknown/func_000120d0.cpp
+FUN_00027ae0 src/libs/unknown/func_00027ae0.cpp
+_ZN34hkcdPlanarGeometryPlanesCollectionC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009c400.cpp
+FUN_0001ac70 src/libs/unknown/func_0001ac70.cpp
+FUN_000792a0 src/libs/unknown/func_000792a0.cpp
+FUN_0007bfa0 src/libs/unknown/func_0007bfa0.cpp
+FUN_0007e2b0 src/libs/unknown/func_0007e2b0.cpp
+FUN_0007f090 src/libs/unknown/func_0007f090.cpp
+FUN_00155490 src/libs/unknown/func_00155490.cpp
+FUN_001554c0 src/libs/unknown/func_001554c0.cpp
+FUN_001598c0 src/libs/unknown/func_001598c0.cpp _ZN17hknpProjectileGun7stepGunEfP9hknpWorldPKvRK11hkTransformbb

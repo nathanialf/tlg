@@ -200,6 +200,10 @@ struct hkMatrix3 {
      * transformed by a). */
     void FUN_0001a9f0(const hkMatrix3 &a, const hkMatrix3 &b);
 
+    /* derived name: each column scaled, lane by lane, by a vector (0x1ac70;
+     * called from 0x2913b, 0x293d2 and 0x2968e). */
+    void FUN_0001ac70(const Vec4 &scale);
+
     /* derived name: whether the columns are of unit length within a
      * tolerance and orthogonal (0xbe80; the game calls it on its own
      * rotations). */
@@ -1285,23 +1289,20 @@ class hknpTyremarksWheel : public hkReferencedObject
 
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
-struct hkcdPlanarGeometry;                 /* FUN_0009a860, vtable 0x16a3700 */
-struct hkcdPlanarGeometryPlanesCollection; /* FUN_0009c400, vtable 0x16a3780 */
-struct hkcdSimdTree;                       /* FUN_00021a20, vtable 0x1690d70 */
-class hkSkinnedRefMeshShape;               /* 0xaa660, vtable 0x16a38c0 */
-class hkMemoryMeshShape;                   /* 0x2a940, vtable 0x1692540 */
-class hkMemoryMeshMaterial;                /* 0xaccf0, vtable 0x16a3920 */
-class hkStorageSkinnedMeshShape;           /* 0xae680, vtable 0x16a3b00 */
-class hkMemoryMeshVertexBuffer;            /* 0x274e0, vtable 0x16921b0 */
-class hknpDynamicCompoundShape;            /* 0x469a0, vtable 0x1697ef0 */
-class hknpMaskedShape;                     /* FUN_00037b90, vtable 0x1693a90 */
+struct hkcdPlanarGeometry;       /* FUN_0009a860, vtable 0x16a3700 */
+struct hkcdSimdTree;             /* FUN_00021a20, vtable 0x1690d70 */
+class hkSkinnedRefMeshShape;     /* 0xaa660, vtable 0x16a38c0 */
+class hkMemoryMeshShape;         /* 0x2a940, vtable 0x1692540 */
+class hkMemoryMeshMaterial;      /* 0xaccf0, vtable 0x16a3920 */
+class hkStorageSkinnedMeshShape; /* 0xae680, vtable 0x16a3b00 */
+class hkMemoryMeshVertexBuffer;  /* 0x274e0, vtable 0x16921b0 */
+class hknpDynamicCompoundShape;  /* 0x469a0, vtable 0x1697ef0 */
+class hknpMaskedShape;           /* FUN_00037b90, vtable 0x1693a90 */
 
 void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);          /* derived name */
 void FUN_0009a860(hkcdPlanarGeometry *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0009c400(hkcdPlanarGeometryPlanesCollection *self,
-                  hkFinishLoadedObjectFlag flag);                        /* derived name */
-void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);    /* derived name */
-void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);       /* derived name */
+void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 
 /* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
  * parent hkReferencedObject's; vtable 0x1690de0, address point 0x1690df0):
@@ -1334,42 +1335,6 @@ class hkcdDynamicAabbTree : public hkReferencedObject
 
     hkBool shouldDeleteTree;
     void *treePtr;
-};
-
-/* hkMemoryMeshVertexBuffer, polymorphic (vtable address point 0x16921b0):
- * members from its record table at 0x1692590: format (struct) at +0xc,
- * elementOffsets (hkInt32[32]) at +0x110, memory (array of hkUint8) at
- * +0x190, vertexStride (hkInt32) at +0x1a0, locked (hkBool) at +0x1a4,
- * numVertices (hkInt32) at +0x1a8, isBigEndian and isSharable (hkBool) at
- * +0x1ac and +0x1ad. */
-extern const hkClass D_57bdd98; /* hkMemoryMeshVertexBuffer's hkClass, built at 0x2ae92 */
-
-class hkMemoryMeshVertexBuffer
-{
-  public:
-    /* The finish constructor (0x274e0): a big-endian image is swapped to
-     * the host's order once loaded. */
-    hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag);
-
-    virtual ~hkMemoryMeshVertexBuffer();
-
-    /* Swaps every element of every vertex to the other byte order (0x27520).
-     * derived name. */
-    void FUN_00027520();
-
-    /* Not a vtable slot: called with no arguments by the type test at
-     * 0xacf40, which checks an object's class (its slot 3) against it. */
-    static const hkClass *FUN_0002ae00(); /* derived name */
-
-    bool FUN_00027280() const; /* vtable slot 6; derived name */
-    int FUN_00027290() const;  /* vtable slot 8; derived name */
-    void FUN_00027b10();       /* vtable slot 15; derived name */
-
-    u8 unknown8[0x19c];
-    hkBool locked;
-    int numVertices;
-    hkBool isBigEndian;
-    hkBool isSharable;
 };
 
 /* hknpCompressedMeshShapeData, polymorphic (type info 0x57be1f0, vtable
@@ -1572,6 +1537,52 @@ struct hkMeshVertexBuffer::LockedVertices /* derived name */
     int numVertices;    /* derived name */
 };
 
+/* hkMemoryMeshVertexBuffer, polymorphic (vtable address point 0x16921b0):
+ * members from its record table at 0x1692590: format (struct) at +0xc,
+ * elementOffsets (hkInt32[32]) at +0x110, memory (array of hkUint8) at
+ * +0x190, vertexStride (hkInt32) at +0x1a0, locked (hkBool) at +0x1a4,
+ * numVertices (hkInt32) at +0x1a8, isBigEndian and isSharable (hkBool) at
+ * +0x1ac and +0x1ad. */
+extern const hkClass D_57bdd98; /* hkMemoryMeshVertexBuffer's hkClass, built at 0x2ae92 */
+
+class hkMemoryMeshVertexBuffer
+{
+  public:
+    /* The finish constructor (0x274e0): a big-endian image is swapped to
+     * the host's order once loaded. */
+    hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag);
+
+    virtual ~hkMemoryMeshVertexBuffer();
+
+    /* Swaps every element of every vertex to the other byte order (0x27520).
+     * derived name. */
+    void FUN_00027520();
+
+    /* Not a vtable slot: called with no arguments by the type test at
+     * 0xacf40, which checks an object's class (its slot 3) against it. */
+    static const hkClass *FUN_0002ae00(); /* derived name */
+
+    /* The description of one element's buffer in the vertex memory
+     * (0x27ae0, called by hkMultipleVertexBuffer for its locked buffer):
+     * where the element starts, the vertex stride, the element. derived
+     * name. */
+    void FUN_00027ae0(int elementIndex, hkMeshVertexBuffer::LockedVertices::Buffer &buffer);
+
+    bool FUN_00027280() const; /* vtable slot 6; derived name */
+    int FUN_00027290() const;  /* vtable slot 8; derived name */
+    void FUN_00027b10();       /* vtable slot 15; derived name */
+
+    u8 unknown8[4];
+    hkVertexFormat format;
+    int elementOffsets[32];
+    hkArray<u8> memory;
+    int vertexStride;
+    hkBool locked;
+    int numVertices;
+    hkBool isBigEndian;
+    hkBool isSharable;
+};
+
 class hkMeshVertexBufferUtil /* derived name */
 {
   public:
@@ -1641,6 +1652,31 @@ void FUN_00095ab0(hkcdPlanarGeometryPrimitivesPlane *self); /* derived name */
 
 void FUN_00095aa0(hkcdPlanarGeometryPrimitivesPlane *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkcdPlanarGeometryPlanesCollection (hkClass 0x57ba290, built at 0x1d458:
+ * size 0x40, parent hkReferencedObject's 0x57b8640, member records at
+ * 0x168f4a0; vtable 0x16a3770): offsetAndScale (hkVector4) at +0x10, planes
+ * (array of hkcdPlanarGeometryPrimitives::Plane, hkClass 0x57ba490) at
+ * +0x20, cache and criticalAccess (pointers, not serialized: record flags
+ * 0x400) at +0x30 and +0x38. Its finish constructor 0x9c400 is out of line
+ * (the finish callback FUN_0001d3b0 jumps to it, the reflection initializer
+ * at 0x1d463 runs it on a temporary); a finished object gets its critical
+ * section from FUN_0009c430. */
+class hkcdPlanarGeometryPlanesCollection : public hkReferencedObject
+{
+  public:
+    hkcdPlanarGeometryPlanesCollection(hkFinishLoadedObjectFlag flag);
+    virtual ~hkcdPlanarGeometryPlanesCollection();
+
+    /* Allocates the 0x10-byte critical section (0x1830 constructs it) and
+     * keeps it at +0x38 (0x9c430). derived name. */
+    void FUN_0009c430();
+
+    Vec4 offsetAndScale;
+    hkArray<hkcdPlanarGeometryPrimitivesPlane> planes;
+    void *cache;
+    void *criticalAccess;
+};
 
 /* hkcdStaticPvs (type info 0x57ba5e0, size 0x70): its destructor frees the
  * arrays at +0x58 and +0x48 through the thread's heap allocator. */
@@ -2466,7 +2502,10 @@ class hknpFirstPersonGun : public hkReferencedObject
     virtual void unknownVirtual5();
     virtual void fireGun(hknpWorld *world,
                          const hkTransform &viewTransform); /* vtable slot 6; derived name */
-    virtual void unknownVirtual7();
+    /* Slot 7: the gun's step (the empty 0xadd50 here); its last two
+     * arguments are bools, widened again when forwarded. derived name. */
+    virtual void stepGun(float timeStep, hknpWorld *world, const void *characterBody,
+                         const hkTransform &viewTransform, bool fire, bool fireRmb);
     virtual void FUN_00156870(hknpWorld *world); /* vtable slot 8; derived name */
     virtual const char *FUN_000acf90() const;    /* vtable slot 9; derived name */
     virtual void reset(hknpWorld *world);        /* vtable slot 10; derived name */
@@ -2493,6 +2532,12 @@ class hknpProjectileGun : public hknpFirstPersonGun
     virtual void onGunFired(
         hknpWorld *world,
         const hkTransform &viewTransform); /* vtable slot 11, the empty 0x158a30; derived name */
+    /* Slot 7 (0x1598c0): the reload counts down, then slot 12 runs. */
+    virtual void stepGun(float timeStep, hknpWorld *world, const void *characterBody,
+                         const hkTransform &viewTransform, bool fire, bool fireRmb);
+    /* Slot 12 (0x1598f0): steps the projectiles. derived name. */
+    virtual void updateProjectiles(float timeStep, hknpWorld *world, const void *characterBody,
+                                   const hkTransform &viewTransform, bool fire, bool fireRmb);
 
     int maxProjectiles;
     float reloadTime;
@@ -3845,13 +3890,14 @@ class hkpRagdollConstraintData
     virtual ~hkpRagdollConstraintData();
 
     void FUN_0007dce0(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    void FUN_0007dc90(float newBreachImpulse);             /* vtable slot 10; derived name */
-    float FUN_0007dca0() const;                            /* vtable slot 13; derived name */
-    void FUN_0007dcb0(int bodyIndex);                      /* vtable slot 14; derived name */
-    u8 FUN_0007dcd0() const;                               /* vtable slot 15; derived name */
-    hkResult FUN_0007e2f0(float factor);                   /* vtable slot 17; derived name */
-    hkResult FUN_0007e2e0(float &factorOut) const;         /* vtable slot 18; derived name */
+        hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
+    void FUN_0007dc90(float newBreachImpulse);                  /* vtable slot 10; derived name */
+    float FUN_0007dca0() const;                                 /* vtable slot 13; derived name */
+    void FUN_0007dcb0(int bodyIndex);                           /* vtable slot 14; derived name */
+    u8 FUN_0007dcd0() const;                                    /* vtable slot 15; derived name */
+    void FUN_0007e2b0(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
+    hkResult FUN_0007e2f0(float factor);                        /* vtable slot 17; derived name */
+    hkResult FUN_0007e2e0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007e310(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_0007dd00(hkBool wantRuntime,
@@ -3936,13 +3982,14 @@ class hkpLimitedHingeConstraintData
     virtual ~hkpLimitedHingeConstraintData();
 
     void FUN_000791f0(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    void FUN_000790b0(float newBreachImpulse);             /* vtable slot 10; derived name */
-    float FUN_000790c0() const;                            /* vtable slot 13; derived name */
-    void FUN_000790d0(int bodyIndex);                      /* vtable slot 14; derived name */
-    u8 FUN_000790f0() const;                               /* vtable slot 15; derived name */
-    hkResult FUN_000792e0(float factor);                   /* vtable slot 17; derived name */
-    hkResult FUN_000792d0(float &factorOut) const;         /* vtable slot 18; derived name */
+        hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
+    void FUN_000790b0(float newBreachImpulse);                  /* vtable slot 10; derived name */
+    float FUN_000790c0() const;                                 /* vtable slot 13; derived name */
+    void FUN_000790d0(int bodyIndex);                           /* vtable slot 14; derived name */
+    u8 FUN_000790f0() const;                                    /* vtable slot 15; derived name */
+    void FUN_000792a0(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
+    hkResult FUN_000792e0(float factor);                        /* vtable slot 17; derived name */
+    hkResult FUN_000792d0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_00079300(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_00079210(hkBool wantRuntime,
@@ -4055,16 +4102,17 @@ class hkpFixedConstraintData : public hkpConstraintData
     virtual ~hkpFixedConstraintData();
 
     void FUN_0007bf20(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    hkBool FUN_0007bf70() const;                           /* vtable slot 7; derived name */
-    void FUN_0007bea0(float newMaxImpulse);                /* vtable slot 8; derived name */
-    void FUN_0007bec0(float newMaxAngImpulse);             /* vtable slot 9; derived name */
-    float FUN_0007bed0() const;                            /* vtable slot 11; derived name */
-    float FUN_0007bee0() const;                            /* vtable slot 12; derived name */
-    void FUN_0007bef0(int bodyIndex);                      /* vtable slot 14; derived name */
-    u8 FUN_0007bf10() const;                               /* vtable slot 15; derived name */
-    hkResult FUN_0007bfe0(float factor);                   /* vtable slot 17; derived name */
-    hkResult FUN_0007bfd0(float &factorOut) const;         /* vtable slot 18; derived name */
+        hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
+    hkBool FUN_0007bf70() const;                                /* vtable slot 7; derived name */
+    void FUN_0007bea0(float newMaxImpulse);                     /* vtable slot 8; derived name */
+    void FUN_0007bec0(float newMaxAngImpulse);                  /* vtable slot 9; derived name */
+    float FUN_0007bed0() const;                                 /* vtable slot 11; derived name */
+    float FUN_0007bee0() const;                                 /* vtable slot 12; derived name */
+    void FUN_0007bef0(int bodyIndex);                           /* vtable slot 14; derived name */
+    u8 FUN_0007bf10() const;                                    /* vtable slot 15; derived name */
+    void FUN_0007bfa0(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
+    hkResult FUN_0007bfe0(float factor);                        /* vtable slot 17; derived name */
+    hkResult FUN_0007bfd0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007c000(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
 
@@ -4093,12 +4141,13 @@ class hkpHingeConstraintData : public hkpConstraintData
 
     virtual ~hkpHingeConstraintData();
 
-    void FUN_0007efa0(float newBreachImpulse);     /* vtable slot 10; derived name */
-    float FUN_0007efb0() const;                    /* vtable slot 13; derived name */
-    void FUN_0007efc0(int bodyIndex);              /* vtable slot 14; derived name */
-    u8 FUN_0007efe0() const;                       /* vtable slot 15; derived name */
-    hkResult FUN_0007f0d0(float factor);           /* vtable slot 17; derived name */
-    hkResult FUN_0007f0c0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0007efa0(float newBreachImpulse);                  /* vtable slot 10; derived name */
+    float FUN_0007efb0() const;                                 /* vtable slot 13; derived name */
+    void FUN_0007efc0(int bodyIndex);                           /* vtable slot 14; derived name */
+    u8 FUN_0007efe0() const;                                    /* vtable slot 15; derived name */
+    void FUN_0007f090(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
+    hkResult FUN_0007f0d0(float factor);                        /* vtable slot 17; derived name */
+    hkResult FUN_0007f0c0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007f0f0(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_0007eff0(hkBool wantRuntime,
@@ -4788,6 +4837,11 @@ class hkOstream : public hkReferencedObject
      * stream. */
     hkOstream &FUN_00008440(const char *string);
 
+    /* derived name: the operator<< of an unsigned int (0x8550): formatted
+     * with "%u" into a buffer on the stack, written, and the stream
+     * returned. */
+    hkOstream &FUN_00008550(unsigned int value);
+
     hkStreamWriter *writer; /* derived name */
 };
 
@@ -4815,6 +4869,23 @@ struct hknpConstraintForceEvent /* derived name */
 struct hknpConstraintForceExceededEvent /* derived name */
 {
     void FUN_0003ddc0(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+/* Two body events print the body's id, at +0xc. */
+struct hknpBodyExitedBroadPhaseEvent /* derived name */
+{
+    void FUN_00155490(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyId; /* derived name */
+};
+
+struct hknpBodyBreachedExpandedAabbEvent /* derived name */
+{
+    void FUN_001554c0(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyId; /* derived name */
 };
 
 /* The printer of the four reserved types (the dispatcher's last four
@@ -5326,11 +5397,37 @@ class OffsetStreamWriter : public hkStreamWriter /* derived name */
  * at +0x80, torque and rpm (hkReal) at +0xf8 and +0xfc, mainSteeringAngle
  * at +0x100. */
 /* hknpVehicleWheelCollide (hkClass 0x57c1510, built at 0x5b2a1, 0x18 bytes,
- * parent hkReferencedObject); hknpVehicleLinearCastWheelCollide derives
- * from it. */
+ * parent hkReferencedObject, member records at 0x16992b0; vtable 0x169af50,
+ * no type info, slots 5 to 9 pure): alreadyUsed (hkBool) at +0xc, type (the
+ * enum WheelCollideType in a hkUint8, record 0x16993b0) at +0xd and
+ * wheelCollisionFilterInfo (hkUint32) at +0x10, the last two not serialized
+ * (record flags 0x400). hknpVehicleRayCastWheelCollide and
+ * hknpVehicleLinearCastWheelCollide derive from it; their finish callbacks
+ * (0x75f60 and 0x70750) hold its finish constructor and theirs, which set
+ * the type when finishing. */
 class hknpVehicleWheelCollide : public hkReferencedObject
 {
   public:
+    enum WheelCollideType {
+        INVALID_WHEEL_COLLIDE = 0,
+        RAY_CAST_WHEEL_COLLIDE = 1,
+        LINEAR_CAST_WHEEL_COLLIDE = 2,
+        USER_WHEEL_COLLIDE1 = 3,
+        USER_WHEEL_COLLIDE2 = 4,
+        USER_WHEEL_COLLIDE3 = 5,
+        USER_WHEEL_COLLIDE4 = 6,
+        USER_WHEEL_COLLIDE5 = 7
+    };
+
+    /* The type is not serialized: a finished object has none until the
+     * derived class's finish constructor names its own. */
+    hknpVehicleWheelCollide(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    {
+        if (flag.finishing) {
+            type = INVALID_WHEEL_COLLIDE;
+        }
+    }
+
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
@@ -5338,6 +5435,39 @@ class hknpVehicleWheelCollide : public hkReferencedObject
      * slot 8 hands it the pointer at +0x10 of its own argument. */
     virtual void unknownVirtual8(void *argument);
     virtual void unknownVirtual9();
+
+    hkBool alreadyUsed;
+    hkEnum<WheelCollideType, u8> type;
+    u32 wheelCollisionFilterInfo;
+};
+
+/* hknpVehicleRayCastWheelCollide (type info at 0x7604a, vtable 0x16a4aa0)
+ * and hknpVehicleLinearCastWheelCollide (0x38 bytes, type info at 0x708de,
+ * vtable 0x16a5bd0): their members are not typed yet. */
+class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
+{
+  public:
+    hknpVehicleRayCastWheelCollide(hkFinishLoadedObjectFlag flag) : hknpVehicleWheelCollide(flag)
+    {
+        if (flag.finishing) {
+            type = RAY_CAST_WHEEL_COLLIDE;
+        }
+    }
+
+    virtual ~hknpVehicleRayCastWheelCollide();
+};
+
+class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
+{
+  public:
+    hknpVehicleLinearCastWheelCollide(hkFinishLoadedObjectFlag flag) : hknpVehicleWheelCollide(flag)
+    {
+        if (flag.finishing) {
+            type = LINEAR_CAST_WHEEL_COLLIDE;
+        }
+    }
+
+    virtual ~hknpVehicleLinearCastWheelCollide();
 };
 
 /* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
@@ -5898,6 +6028,25 @@ class hkDefaultClassNameRegistry : public hkDynamicClassNameRegistry
 {
   public:
     virtual ~hkDefaultClassNameRegistry();
+};
+
+/* A class name registry over a static list of classes (derived name;
+ * vtable 0x16a63b0, address point 0x16a63c0, no type info), 0x28 bytes: a
+ * name at +0x10, the null-terminated list at +0x18, its class version at
+ * +0x20 and a flag at +0x24 that slots 6 (0x181940) and 7 (0x181860) test
+ * for zero before they finish the list's classes through 0x19aff0, setting
+ * it after. The static instance 0x57c8870 is built at 0x17f09e over the
+ * list 0x16c9060, version -1, name "hk_2014.2.0-r1", before its singleton
+ * record "hkBuiltinTypeRegistry" is linked. */
+class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
+{
+  public:
+    hkStaticClassNameRegistry(const hkClass *const *classes, int classVersion, const char *name);
+
+    const char *name;              /* derived name */
+    const hkClass *const *classes; /* derived name */
+    int classVersion;              /* derived name */
+    int ready;                     /* derived name */
 };
 
 /* hkVtableClassRegistry, 0x20 bytes, vtable address point 0x16a6580: the
