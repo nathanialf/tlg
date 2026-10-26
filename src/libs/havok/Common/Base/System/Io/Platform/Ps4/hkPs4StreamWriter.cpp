@@ -16,9 +16,10 @@ class hkPs4StreamWriter /* derived name */
   public:
     virtual ~hkPs4StreamWriter();
 
-    void FUN_00091fe0();         /* vtable slot 7; derived name */
-    hkBool FUN_00091ff0() const; /* vtable slot 5; derived name */
-    int FUN_00092030() const;    /* vtable slot 10; derived name */
+    void FUN_00091fe0();                           /* vtable slot 7; derived name */
+    hkBool FUN_00091ff0() const;                   /* vtable slot 5; derived name */
+    hkResult FUN_00092010(int offset, int whence); /* vtable slot 9; derived name */
+    int FUN_00092030() const;                      /* vtable slot 10; derived name */
 
     u8 unknown8[4];
     SceFiosFH handle; /* derived name */
@@ -36,6 +37,12 @@ void hkPs4StreamWriter::FUN_00091fe0() /* derived name */
 hkBool hkPs4StreamWriter::FUN_00091ff0() const /* derived name */
 {
     return handle >= 0;
+}
+
+/* Seek: the handle's new offset is -1 when the seek failed. */
+hkResult hkPs4StreamWriter::FUN_00092010(int offset, int whence) /* derived name */
+{
+    return sceFiosFHSeek(handle, offset, whence) == -1 ? HK_FAILURE : HK_SUCCESS;
 }
 
 int hkPs4StreamWriter::FUN_00092030() const /* derived name */

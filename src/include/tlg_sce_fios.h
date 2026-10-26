@@ -11,6 +11,7 @@ struct SceFiosOpAttr;       /* derived name: the operation's attributes, null fo
 
 extern "C" {
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
+SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
 int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);
 int sceFiosFileDeleteSync(const SceFiosOpAttr *attr, const char *path);
 int sceFiosDirectoryCreate(const SceFiosOpAttr *attr, const char *path);

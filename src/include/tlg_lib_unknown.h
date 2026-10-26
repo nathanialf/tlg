@@ -624,6 +624,13 @@ struct MersenneTwister /* derived name */
  * fills a statistics record. */
 struct FreeList /* derived name */
 {
+    /* Sets the free list up (0x186a0): frees what it held, then keeps the
+     * element size rounded up to the alignment, the block size and the two
+     * allocators, a null block allocator taking the thread's router's
+     * temporary allocator. */
+    void FUN_000186a0(u64 elementSize, u64 alignment, u64 blockSize, AllocatorBase *blockAllocator,
+                      AllocatorBase *elementAllocator); /* derived name */
+
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
 };
@@ -650,6 +657,10 @@ void FUN_00019440(const FreeList *self, MemoryStatistics &statistics); /* derive
 class FixedSizeAllocator : public AllocatorBase /* derived name */
 {
   public:
+    /* Sets the free list up with an alignment of at least 32 and no element
+     * allocator (the caller at 0x1b92 passes 32, 8 and the block size). */
+    void FUN_00014a80(u64 elementSize, u64 alignment, u64 blockSize,
+                      AllocatorBase *blockAllocator);      /* derived name */
     void FUN_00014c40(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
 
     FreeList freeList; /* derived name */
@@ -984,5 +995,14 @@ int FUN_00017e80(char *buffer, int size, const char *format, ...); /* derived na
  * `size` bytes (derived name); FUN_00183350 fills a 16-byte name with it
  * when the object at +0x10 has none. */
 void FUN_0019d370(char *buffer, int size); /* derived name */
+
+/* The memory copies at 0x910e0 to 0x91210 (derived names), each with a
+ * signed int count: FUN_000910e0 forwards to memcpy, FUN_00091100 copies
+ * backwards in the widest unit the count and both pointers' alignment allow,
+ * and FUN_00091210 moves overlapping memory, backwards when the destination
+ * is above the source. */
+void FUN_000910e0(void *dst, const void *src, int n); /* derived name */
+void FUN_00091100(void *dst, const void *src, int n); /* derived name */
+void FUN_00091210(void *dst, const void *src, int n); /* derived name */
 
 #endif

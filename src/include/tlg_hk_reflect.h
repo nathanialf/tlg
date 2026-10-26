@@ -98,6 +98,12 @@ struct hkBitFieldStorage {
 };
 
 struct hkBitField {
+    /* Sets one bit (derived name). */
+    void set(int index)
+    {
+        storage.words.data[index >> 5] |= 1 << (index & 31);
+    }
+
     hkBitFieldStorage storage;
 };
 
@@ -1212,6 +1218,10 @@ void FUN_000270a0(hkVertexFormat *self); /* derived name */
  * and then that many elements. */
 void FUN_000270b0(hkVertexFormat *self, const hkVertexFormat *other); /* derived name */
 
+/* derived name: the order of a format's canonical form (the sort 0x26f20
+ * that 0x27180 runs takes it by address): by usage, then by sub-usage. */
+bool FUN_000271d0(const hkVertexFormat::Element &a, const hkVertexFormat::Element &b);
+
 /* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
  * hkReferencedObject, 0x10 bytes). Slots 11 to 14, kept by both
  * hkMultipleVertexBuffer (0x1692000) and hkMemoryMeshVertexBuffer
@@ -1858,6 +1868,7 @@ struct hknpWorld {
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
     hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
     void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
+    void FUN_0004bc90(u8 id);                                 /* derived name */
 
     u8 unknown0[0x20];
     /* The body and motion arrays: FUN_0004c170 (in this file's range) stores
@@ -1882,7 +1893,13 @@ struct hknpWorld {
     /* The constructor copies it from hknpWorldCinfo's gravity (record at
      * 0x1698370, +0x60) at 0x48d84, and 0x4ae7e copies it back. */
     Vec4 gravity; /* derived name */
-    u8 unknown640[0x80];
+    u8 unknown640[0x38];
+    /* A bit per 8-bit id (the constructor empties it at 0x48cb5, the
+     * destructor frees its words at 0x4b8c0): FUN_0004bc90, the handler the
+     * world subscribes to the signal at +0x10 of its object at +0x658
+     * (0x4b0d2), sets the id's bit. */
+    hkBitField bits678; /* derived name */
+    u8 unknown690[0x30];
     hknpWorldObject6c0 *object6c0;        /* derived name */
     hknpEventDispatcher *eventDispatcher; /* derived name */
 };
@@ -2465,6 +2482,15 @@ struct ConstraintRuntimeInfo /* derived name */
     int numSolverResults;      /* derived name */
 };
 
+/* One solver result of a constraint (derived names): 8 bytes, the impulse
+ * the solver applied first. Slot 19 of the fixed, ball-and-socket and
+ * deformable fixed data (0x7c000) reads the first three results' impulses. */
+struct hkpSolverResults /* derived name */
+{
+    float impulseApplied;     /* derived name */
+    float internalSolverData; /* derived name */
+};
+
 /* hkpConstraintData, the constraint data base (hkClass 0x57c45a8, built at
  * 0x7f444, 0x18 bytes, parent hkReferencedObject; finish constructor
  * FUN_00082850 stores its vtable 0x169fac0, address point 0x169fad0, whose
@@ -2657,23 +2683,43 @@ class hkpStiffSpringConstraintData /* vtable address point 0x169cff0 */
     Atoms atoms;
 };
 
+/* hkpPulleyConstraintAtom (hkClass 0x57c5070, size 0x40, record table
+ * 0x169e380): fixedPivotAinWorld and fixedPivotBinWorld (hkVector4) at
+ * +0x10 and +0x20, ropeLength and leverageOnBodyB (floats) at +0x30, after
+ * the atom's type and padding. */
+struct hkpPulleyConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    Vec4 fixedPivotAinWorld;
+    Vec4 fixedPivotBinWorld;
+    float ropeLength;
+    float leverageOnBodyB;
+};
+
+/* hkpPulleyConstraintData::Atoms (hkClass 0x57c3768, size 0x70, record
+ * table 0x169c1b0): translations (an hkpSetLocalTranslationsConstraintAtom)
+ * at +0, pulley at +0x30. Slot 7 (0x825a0) tells whether the rope's length
+ * and the leverage are positive. */
 class hkpPulleyConstraintData /* vtable address point 0x169f600 */
 {
   public:
     struct Atoms {
-        u8 unknown0[0x70];
+        u8 translations[0x30];
+        hkpPulleyConstraintAtom pulley;
     };
 
     virtual ~hkpPulleyConstraintData();
 
     void FUN_00082570(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    hkBool FUN_000825a0() const;                           /* vtable slot 7; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
 };
 
-/* Slot 6 (0x83000) is also hkpWheelConstraintData's (0x16a5e20). */
+/* Slots 6 (0x83000) and 20 (0x83020) are also hkpWheelConstraintData's
+ * (0x16a5e20). */
 class hkpDeformableFixedConstraintData /* vtable address point 0x169fe00 */
 {
   public:
@@ -2685,6 +2731,8 @@ class hkpDeformableFixedConstraintData /* vtable address point 0x169fe00 */
 
     void FUN_00083000(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_00083020(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2701,6 +2749,8 @@ class hkpRotationalConstraintData /* vtable address point 0x16a0120 */
 
     void FUN_000834e0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    void FUN_00083500(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -3248,6 +3298,8 @@ class hkpFixedConstraintData
     u8 FUN_0007bf10() const;                               /* vtable slot 15; derived name */
     hkResult FUN_0007bfe0(float factor);                   /* vtable slot 17; derived name */
     hkResult FUN_0007bfd0(float &factorOut) const;         /* vtable slot 18; derived name */
+    void FUN_0007c000(const void *argument1, const void *argument2, const hkpSolverResults *results,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -3949,9 +4001,15 @@ class hkBufferedStreamWriter : public hkStreamWriter
 {
   public:
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00008ea0 */
+    hkBool FUN_00009260() const;         /* vtable slot 5; derived name */
     hkBool FUN_00009280() const;         /* vtable slot 8; derived name */
 
     hkStreamWriter *stream; /* derived name */
+    /* The buffer, the bytes in it and its capacity, as the constructor
+     * 0x8f50 stores them and the write slot 0x90f0 reads them. */
+    char *buffer;       /* derived name */
+    int bufferSize;     /* derived name */
+    int bufferCapacity; /* derived name */
 };
 
 /* hkSkinnedRefMeshShape: its hkClass at 0x57bcd20 is built by the
@@ -4702,6 +4760,12 @@ void FUN_000915e0(StringMap *self); /* derived name */
  * entries (key, value; a key of -1 marks a free slot) at +0, the count at +8
  * and the hash mask at +0xc. FUN_00013b30 looks a key up (the hash
  * (key >> 4) * 0x9e3779b1) and returns its value or the default. */
+class AllocatorBase; /* tlg_lib_unknown.h */
+
+/* The allocator the containers use (derived name): an object, not a
+ * pointer, reached by address from 1,621 sites. */
+extern AllocatorBase D_57b8480;
+
 struct PointerMap /* derived name */
 {
     void *entries;
@@ -4709,6 +4773,23 @@ struct PointerMap /* derived name */
     int hashMod;
 
     hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
+    /* Sets the value of a key, growing the entries from the allocator given
+     * when the map is more than half full (0x138a0); nonzero when the key
+     * was new. */
+    int FUN_000138a0(AllocatorBase &allocator, hkUlong key, hkUlong value); /* derived name */
+};
+
+/* The reference-counted base (derived name; vtable address point 0x16a6970,
+ * constructor FUN_0019be50, destructor body FUN_0019c150; slot 9 pure) of the
+ * class whose constructor is FUN_00181b10 (vtable address point 0x16a6480):
+ * an array at +0x10 and pointer maps at +0x20, +0x30 and +0x40, a string
+ * map from +0x50. Slot 8 (FUN_0019cd00) adds a pair to the map at +0x40. */
+struct Object0019c150 /* derived name */
+{
+    void FUN_0019cd00(const void *key, const void *value); /* vtable slot 8; derived name */
+
+    u8 unknown0[0x40];
+    PointerMap map40; /* derived name */
 };
 
 /* The type registries, each a singleton registered by name on the list at
@@ -4784,8 +4865,9 @@ class hkVtableClassRegistry : public hkReferencedObject
   public:
     virtual ~hkVtableClassRegistry();
 
-    const hkClass *FUN_00184410(const void *vtable) const; /* vtable slot 6; derived name */
-    const hkClass *FUN_00184420(const void *object) const; /* vtable slot 7; derived name */
+    void FUN_00184520(const void *vtable, const hkClass *klass); /* vtable slot 5; derived name */
+    const hkClass *FUN_00184410(const void *vtable) const;       /* vtable slot 6; derived name */
+    const hkClass *FUN_00184420(const void *object) const;       /* vtable slot 7; derived name */
 
     PointerMap map; /* derived name */
 };

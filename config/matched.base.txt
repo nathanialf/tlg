@@ -830,3 +830,16 @@ FUN_0019d660 src/libs/unknown/func_0019d660.cpp _ZN13XmlCharactersD1Ev
 FUN_001585d0 src/libs/unknown/func_001585d0.cpp _ZN18hknpWorldObject6c0C2Ev
 FUN_00000eb0 src/libs/unknown/func_00000eb0.cpp _ZN13BufferOstreamD1Ev
 FUN_0000bb40 src/libs/unknown/func_0000bb40.cpp
+FUN_00083020 src/libs/unknown/func_00083020.cpp
+FUN_00083500 src/libs/unknown/func_00083500.cpp
+FUN_00091210 src/libs/unknown/func_00091210.cpp
+FUN_00091c60 src/libs/unknown/func_00091c60.cpp
+FUN_00092010 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
+FUN_00009260 src/libs/unknown/func_00009260.cpp
+FUN_00014a80 src/libs/unknown/func_00014a80.cpp
+FUN_000271d0 src/libs/unknown/func_000271d0.cpp
+FUN_0004bc90 src/libs/unknown/func_0004bc90.cpp
+FUN_0007c000 src/libs/unknown/func_0007c000.cpp
+FUN_000825a0 src/libs/unknown/func_000825a0.cpp
+FUN_00184520 src/libs/unknown/func_00184520.cpp
+FUN_0019cd00 src/libs/unknown/func_0019cd00.cpp
