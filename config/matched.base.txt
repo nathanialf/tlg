@@ -947,3 +947,5 @@ FUN_000311b0 src/libs/unknown/func_000311b0.cpp
 _ZN16hkxBlobMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00085d40.cpp
 FUN_000ad2a0 src/libs/unknown/func_000ad2a0.cpp
 FUN_000ad2d0 src/libs/unknown/func_000ad2d0.cpp
+_ZN24hkpWrappedConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007d520.cpp _ZN24hkpWrappedConstraintDataC2E24hkFinishLoadedObjectFlag
+FUN_00009c20 src/libs/unknown/func_00009c20.cpp

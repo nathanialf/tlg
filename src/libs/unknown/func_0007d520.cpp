@@ -3,7 +3,6 @@
 
 /* hkpWrappedConstraintData's finish constructor: the constraint data finishes itself, the
  * wrapped pointer is left as loaded, and the vtable is set. */
-// NONMATCHING: equal; its vtable 0x169cee0 (no type info, slot 5 pure) has no row yet
 hkpWrappedConstraintData::hkpWrappedConstraintData(hkFinishLoadedObjectFlag flag)
     : hkpConstraintData(flag)
 {

@@ -120,9 +120,16 @@ class Walker:
         """Every vtable address point the function stores into its `this`
         object along the fall-through path (a constructor: its bases' then
         its own)."""
-        return set(self._walk(fn))
+        return set(self._walk(fn, fresh=True))
 
-    def _walk(self, ctor: int) -> list[int]:
+    def _walk(self, ctor: int, fresh: bool = False) -> list[int]:
+        """The vtable address points stored into `this` along the fall-through
+        path. With `fresh`, the pointer a call returns (`rax`) is an object
+        too: a create function news its object and constructs it inline
+        (`call operator new; mov [rax], vptr`), the form D14 rows cite when
+        a class has no constructor of its own. vptr_of keeps `this` alone, so
+        a constructor that news a member after its own vptr store still
+        reports its own vtable last."""
         if ctor not in self.funcs:
             return []
         ins_by = self.insns(ctor)
@@ -149,6 +156,8 @@ class Walker:
                 for r in CALLER_SAVED:
                     regs.pop(r, None)
                     this.discard(r)
+                if fresh:
+                    this.add("rax")
                 continue
             if len(ops) == 2 and ops[0].type == X86_OP_REG:
                 d = ins.reg_name(ops[0].reg)

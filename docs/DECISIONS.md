@@ -555,6 +555,20 @@ walker of `tools/vtable_names.py` did not follow `lea r2, [r1+imm]`, so
 (the regeneration under the fixed walker is recorded in docs/NOTES.md).
 `--check`: 17 derived rows, 0 failing.
 
+**Addendum, 2026-10-26 (round 27 harvest).** Two rows whose names are facts
+though their vtables carry no type info: hkpWrappedConstraintData 0x169cee0
+(the hkClass string at 0x14c05e8, loaded at 0x7e3a5 for the record 0x57c4308
+whose parent argument is hkpConstraintData's record; thirty slots, 5 and 29
+pure; stored at 0x7d55f, 0x7d52e, 0x7d48a, 0x67a9a, 0x3c10a, 0x3c17a,
+0x679fa) and hkDummySingleton 0x168d2b0 (the singleton record's string at
+0x14b3307, loaded at 0x9c50; six slots; stored only at 0x9c35 inside the
+create function FUN_00009c20, which news the object and constructs it
+inline). The second form needed the walker to count a store into the
+pointer a call returns (`vptr_stores`, the `fresh` walk); `vptr_of`, which
+names vtables through finish constructors (D12), keeps `this` alone, so the
+regeneration is unchanged by it (recorded in docs/NOTES.md). `--check`: 19
+derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A

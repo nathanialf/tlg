@@ -3,7 +3,6 @@
 
 /* derived name: the create function of hkDummySingleton's singleton record:
  * a new instance. */
-// NONMATCHING: equal; its vtable 0x168d2b0 (no type info) has no row yet
 hkReferencedObject *FUN_00009c20() /* derived name */
 {
     return new hkDummySingleton();
