@@ -5,10 +5,11 @@
  * point 0x1699ba0), whose answer slot 5 stores as the output's isReversing:
  * reversing when the driver tries to and no forward gear is in. */
 // NONMATCHING: the base returns from two blocks (`cmpb; je 1f; cmpb; setle
-// %al; ret; 1: xorb %al,%al; ret`); clang 3.3 gives every form of this test
-// one return block, and the zero is then set before the first compare
-// (`xorb %al,%al; cmpb; je 1f; cmpb; setle %al; 1: ret`). llc 3.3 gives the
-// base's bytes only from IR with two `ret`s; docs/NOTES.md Round 21.
+// %al; ret; 1: xorb %al,%al; ret`). That shape is MachineSink splitting the
+// entry-to-join edge for the zero, which LLVM 3.3 does only when the
+// function reads EFLAGS once (MachineSink.cpp:292); here `je` and `setle`
+// both read it, so the zero stays before the first compare (`xorb %al,%al;
+// cmpb; je 1f; cmpb; setle %al; 1: ret`). docs/NOTES.md, Round 22.
 bool hknpVehicleDefaultTransmission::FUN_00068130(const hknpVehicleInstance *vehicle,
                                                   const hknpVehicleTransmissionOutput &output) const
 {
