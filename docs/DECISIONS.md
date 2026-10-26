@@ -810,3 +810,56 @@ two loops as the developer wrote them), which closes the question in
 **Trigger to revisit.** (a) or (b) above, or a vectorized loop found in the
 library region (ymm arithmetic, or the vectorizer's runtime checks), which
 would reopen the vectorizer half of the census.
+
+## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
+
+**Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
+later, measured on `tools/probe/batch*.cpp` under every prebuilt release
+(3.3: `movsxd rax, eax` 6, `cdqe` 0, 8-bit zeros as `xor r8, r8`; 3.4,
+3.5.2, 3.6.2, 3.7.1, 3.8.1, 3.9.1, 4.0.0: `cdqe` 6, `movsxd rax, eax` 0, no
+8-bit zero idiom: `lib/Target/X86/X86InstrCompiler.td` selects `MOV8r0` for
+an 8-bit zero in 3.3 and `(EXTRACT_SUBREG (MOV32r0), sub_8bit)` from 3.4).
+`tools/generation_census.py` gives every library function a vote by those
+marks (421 old, 20 new, 2,950 with no mark) and finds the votes in
+stretches: old from 0x1770, new from 0xafaa0 to 0xc68d0 (73 functions,
+every voter new), old to 0x18adc0, new for FUN_0018adc0 (0x11bc bytes,
+two `cdqe`), old from 0x18ce30 to the region's end. No function votes both
+ways. `tools/fingerprint.py --range 0xafaa0:0xc68d0` agrees: 77 `cdqe`, no
+`movsxd rax, eax`, against 1 and 46 in the 0x90000 to 0xb0000 stretch
+before it. The first stretch is Havok's geometry processing: its functions
+cite `hkgpConvexHull::buildIndices` and
+`Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHullInternals.h`
+from FUN_000af620 on (the two unvoted functions 0xaeb20 and 0xaed70 before
+it cite neither), and one cites a header under
+`C:\Work\P4\depot\Release\2014_2\2014_2_0_Release\Source\`, where the
+old stretches cite `Y:\NightlyJobs\20141121-01\Source\` (Havok's nightly of
+2014-11-21) and relative paths. Two Havok builds, two compilers. The new
+stretch also shows the strong protector (41 of 73 functions load the
+canary) and none of the 3.7 and later marks the game region has (no merged
+constant stores, no `ud2` after a noreturn call, no `int 0x41`), so its
+compiler is of the 3.4 to 3.6 generation; which release is a probe question
+(D2's method, a batch written from the stretch under every prebuilt
+release with the library flags), not settled here.
+
+**Why it matters.** FUN_000bc7d0 (0xbc7d0, in the stretch) zeroes a bool
+with `xor eax, eax` after two EFLAGS readers, which 3.3 never does and 3.4
+does (the prebuilt 3.4 compiles the same source to that shape); round 22
+read it as a second instance of a 3.3 residual. Six matched rows lie in the
+stretch (FUN_000b6bf0, FUN_000b6d00, FUN_000b6d10, FUN_000b6d20,
+FUN_000b8a80, FUN_000c0af0, 4 to 11 bytes each): bodies every release
+compiles alike, so the gate holds, but they sit under the wrong compiler.
+
+**Ruling.** The stretches [0xaf620, 0xc68d0) and [0x18adc0, 0x18bf80)
+(the second's end is open to 0x18ce10: FUN_0018bf80 and FUN_0018c930 carry
+no mark) are the library region's second generation. A function in them is
+not claimable under `src/libs/` and is left out of the queue until a
+ruling names the stretch's compiler and prefix (a third flags line,
+`cxx=<release>`, over a directory of its own); the six matched rows then
+move to that prefix and must still match. The boundary functions without a
+mark (0xaeb20, 0xaed70, 0x18bf80, 0x18c930) are decided when first
+matched: whichever prefix compiles them to the base's bytes, recorded here.
+D6's two-region statement is read with this exception.
+
+**Trigger to revisit.** The probe naming the stretch's release (then this
+entry records it and the prefix), a function in a stretch matching under the
+other generation's compiler, or a new mark that splits the votes.

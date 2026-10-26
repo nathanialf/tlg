@@ -60,6 +60,13 @@ The full survey, program header by program header and library by library, is
   the unshrunk `movsxd`) were LLVM 3.3 behaviours: every probe function of
   the lower region matches under upstream 3.3.
 
+  The library region is not uniform: two stretches of it, [0xaf620, 0xc68d0)
+  (Havok's geometry processing, built from the `2014_2_0_Release` tree) and
+  FUN_0018adc0's, carry the 3.4-and-later marks (`cdqe`, 32-bit zero idioms,
+  no `movsxd rax, eax`) where the rest of the region carries 3.3's;
+  `tools/generation_census.py` prints the map and `docs/DECISIONS.md` D22
+  rules on it (not claimable under `src/libs/` until their release is probed).
+
 - **Which public clang.** Two, one per region, both prebuilt upstream
   releases (`tools/fetch_llvm.sh`), selected per source prefix in
   `config/flags.base.txt` (`cxx=`):
