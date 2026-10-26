@@ -563,6 +563,10 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
 {
   public:
     const Layout00180ef0 &FUN_0019ab00() const; /* derived name */
+    /* Slot 6 (0x19ae90): raw bytes to a stream, failing unless all of them
+     * were written. derived name. */
+    hkResult FUN_0019ae90(hkStreamWriter *writer, const void *data,
+                          int size); /* vtable slot 6; derived name */
 
     hkObjectCopier *copier; /* derived name */
 };
@@ -592,7 +596,15 @@ class Pool00007880 : public hkReferencedObject /* derived name */
         Pool00007880 *pool; /* derived name */
         u8 unknown8[0x10];
         int threadId; /* derived name */
-        u8 unknown1c[0x24];
+        u8 unknown1c[5];
+        /* Set by slot 12 when it clears the worker's timers. derived name. */
+        bool timersCleared;
+        u8 unknown22[0xe];
+        /* The worker's monitor stream: the loop (0x721c, 0x7228) copies the
+         * thread's start and current pointers here; slot 12 rewinds the
+         * second to the first. derived names. */
+        char *monitorStreamBegin;
+        char *monitorStreamEnd;
     };
 
     virtual ~Pool00007880();
@@ -604,7 +616,8 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     virtual int FUN_00007880() const; /* vtable slot 9; derived name */
     virtual void unknownVirtual10();
     virtual void unknownVirtual11();
-    virtual void unknownVirtual12();
+    /* Slot 12: every worker's monitor stream rewound to its start. */
+    virtual void FUN_00007850();                /* vtable slot 12; derived name */
     virtual void FUN_000075d0();                /* vtable slot 13; derived name */
     virtual void FUN_000071a0(int workerIndex); /* vtable slot 14; derived name */
 
@@ -1026,10 +1039,17 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
  * from the router's heap at +0x60, kept in the slot at 0x16d80d0. */
 struct hkMemoryRouter /* derived name */
 {
-    u8 unknown0[0x58];
+    u8 unknown0[0x50];
+    /* The allocator the adaptor of vtable 0x168d430 forwards to (0xac60).
+     * derived name. */
+    AllocatorBase *allocator50;
     /* The temporary allocator (FUN_0000c590 sets it), also the heap
-     * FUN_0000bcf0 frees through. */
+     * FUN_0000bcf0 frees through and the adaptor of vtable 0x168d530
+     * forwards to (0xaf80). */
     AllocatorBase *temp58; /* derived name */
+    /* The allocator the adaptor of vtable 0x168d4b0 forwards to (0xadf0).
+     * derived name. */
+    AllocatorBase *allocator60;
 };
 
 /* The thread's router, a thread-local pointer: the TLS segment's template
@@ -1038,6 +1058,30 @@ struct hkMemoryRouter /* derived name */
  * -0x60, which places it at +0x10 of the template. Every reader adds that
  * slot to %fs:0. */
 extern __thread hkMemoryRouter *D_16dc070;
+
+/* Three allocators that hold nothing of their own and hand every request to
+ * one of the calling thread's router allocators (vtables 0x168d430,
+ * 0x168d4b0 and 0x168d530, address points 0x10 further; slots 0 and 1 the
+ * shared 0x4ac0 and 0xac10, 2 to 6 and 9 and 10 each class's own, 7 and 8
+ * the defaults 0x8e00 and 0x8e50). Slot 2 is the allocation. derived
+ * names. */
+class RouterAllocator50 : public AllocatorBase /* derived name */
+{
+  public:
+    virtual void *blockAlloc(int numBytes); /* 0xac60 */
+};
+
+class RouterAllocator60 : public AllocatorBase /* derived name */
+{
+  public:
+    virtual void *blockAlloc(int numBytes); /* 0xadf0 */
+};
+
+class RouterAllocator58 : public AllocatorBase /* derived name */
+{
+  public:
+    virtual void *blockAlloc(int numBytes); /* 0xaf80 */
+};
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
 void FUN_014aff00();                       /* derived name */

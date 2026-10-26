@@ -2064,6 +2064,34 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
                       const hknpCollisionFilterShapeInput &b) const;
 };
 
+/* A collision cache that keeps properties beside its contact data
+ * (derived names): FUN_0017a0a0 reserves a property under a key (a bit of
+ * the byte at +0x17 marks each key in use) of a size and an alignment, and
+ * returns it, or null when the key is taken or the cache is full. */
+struct hknpManifoldCollisionCache; /* derived name */
+void *FUN_0017a0a0(hknpManifoldCollisionCache *cache, u8 propertyKey, u8 size,
+                   int alignment); /* derived name */
+
+/* What slot 3 of the modifier interface receives last: the new manifold's
+ * collision cache first (derived names). */
+struct ManifoldCreatedInput /* derived name */
+{
+    hknpManifoldCollisionCache *collisionCache; /* derived name */
+};
+
+/* The modifier of vtable 0x16a4dd0 (address point 0x16a4de0; derived name),
+ * one of the twenty FUN_00048b20 builds for the world (0x49d35): slot 2
+ * (0x12a8b0) returns its mask 9; slot 3 (0x15d7c0), called when a manifold
+ * is created, gives the cache a zeroed vector under property key 1, which
+ * slot 7 (0x15d7f0) reads back. */
+class Modifier16a4de0 /* derived name */
+{
+  public:
+    void FUN_0015d7c0(const void *threadContext, const void *sharedData, const void *bodyA,
+                      const void *bodyB,
+                      ManifoldCreatedInput *input); /* vtable slot 3; derived name */
+};
+
 /* The world's constructor (0x4a1bb to 0x4a258) fills two tables of the
  * manager by type: the collision detectors of the default modifier set
  * (its members at +0x78 to +0xd8) by collision cache type 1 to 7, and two

@@ -851,7 +851,7 @@ FUN_0007f0f0 src/libs/unknown/func_0007f0f0.cpp
 FUN_000915e0 src/libs/unknown/func_000915e0.cpp
 FUN_000ae860 src/libs/unknown/func_000ae860.cpp
 FUN_00181af0 src/libs/unknown/func_00181af0.cpp
-FUN_0017e940 src/libs/unknown/func_0017e940.cpp _ZN9ClassTestC2EtPKcPFbPKvPK7hkClassE
+_ZN9ClassTestC1EtPKcPFbPKvPK7hkClassE src/libs/unknown/func_0017e940.cpp _ZN9ClassTestC2EtPKcPFbPKvPK7hkClassE
 FUN_00012100 src/libs/unknown/func_00012100.cpp
 _ZN18hkcdStaticAabbTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00022700.cpp
 FUN_00034ac0 src/libs/unknown/func_00034ac0.cpp _ZN32hknpCompressedMeshShapeInternals7KeyMask12FUN_000381d0Ev
@@ -934,3 +934,12 @@ FUN_00010f20 src/libs/unknown/func_00010f20.cpp
 FUN_0005df00 src/libs/unknown/func_0005df00.cpp
 FUN_0008d9e0 src/libs/unknown/func_0008d9e0.cpp
 _ZN20hkRootLevelContainer12NamedVariantC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017dde0.cpp
+FUN_0017de70 src/libs/unknown/func_0017de40.cpp _GLOBAL__I_a
+FUN_0015d7c0 src/libs/unknown/func_0015d7c0.cpp
+FUN_0019ae90 src/libs/unknown/func_0019ae90.cpp
+FUN_00007850 src/libs/unknown/func_00007850.cpp
+FUN_0000ac60 src/libs/unknown/func_0000ac60.cpp _ZN17RouterAllocator5010blockAllocEi
+FUN_0000adf0 src/libs/unknown/func_0000adf0.cpp _ZN17RouterAllocator6010blockAllocEi
+FUN_0000af80 src/libs/unknown/func_0000af80.cpp _ZN17RouterAllocator5810blockAllocEi
+FUN_0002afa0 src/libs/unknown/func_0002afa0.cpp
+FUN_0002afd0 src/libs/unknown/func_0002afd0.cpp
