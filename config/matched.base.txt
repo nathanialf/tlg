@@ -816,3 +816,10 @@ FUN_00167ad0 src/libs/unknown/func_00167ad0.cpp
 FUN_00167c00 src/libs/unknown/func_00167c00.cpp
 FUN_000188a0 src/libs/unknown/func_000188a0.cpp
 _ZN11hkSemaphoreC1Eiii src/libs/unknown/func_0001a420.cpp
+FUN_000792e0 src/libs/unknown/func_000792e0.cpp
+FUN_0007b0d0 src/libs/unknown/func_0007b0d0.cpp
+FUN_0007bb90 src/libs/unknown/func_0007bb90.cpp
+FUN_0007bfe0 src/libs/unknown/func_0007bfe0.cpp
+FUN_0007e2f0 src/libs/unknown/func_0007e2f0.cpp
+FUN_0007eff0 src/libs/unknown/func_0007eff0.cpp
+FUN_0007f0d0 src/libs/unknown/func_0007f0d0.cpp

@@ -2748,6 +2748,21 @@ class hkpRagdollLimitsData
     Atoms atoms;
 };
 
+/* hkpPointToPlaneConstraintData (type info registered at 0x7bab4; hkClass
+ * 0x57c3be8, built at 0x7ba6b: size 0xc0, parent hkpConstraintData; vtable
+ * 0x169c530, address point 0x169c540): atoms at +0x20 (transforms at +0,
+ * lin at +0x90, record table 0x169c4b0). Its slot 20 (0x7bb90), kept by
+ * hkpStiffSpringConstraintData and hkpPulleyConstraintData, wants 8 bytes
+ * of runtime and one solver result, or none. */
+class hkpPointToPlaneConstraintData
+{
+  public:
+    virtual ~hkpPointToPlaneConstraintData();
+
+    void FUN_0007bb90(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+};
+
 /* hkpLinearClearanceConstraintData: address point 0x16a0300 (finish
  * constructor FUN_0007ac70). hkpRackAndPinionConstraintData: 0x16a0210
  * (FUN_0007d080). */
@@ -3050,6 +3065,7 @@ class hkpRagdollConstraintData
     float FUN_0007dca0() const;                            /* vtable slot 13; derived name */
     void FUN_0007dcb0(int bodyIndex);                      /* vtable slot 14; derived name */
     u8 FUN_0007dcd0() const;                               /* vtable slot 15; derived name */
+    hkResult FUN_0007e2f0(float factor);                   /* vtable slot 17; derived name */
     hkResult FUN_0007e2e0(float &factorOut) const;         /* vtable slot 18; derived name */
     void FUN_0007dd00(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
@@ -3134,6 +3150,7 @@ class hkpLimitedHingeConstraintData
     float FUN_000790c0() const;                            /* vtable slot 13; derived name */
     void FUN_000790d0(int bodyIndex);                      /* vtable slot 14; derived name */
     u8 FUN_000790f0() const;                               /* vtable slot 15; derived name */
+    hkResult FUN_000792e0(float factor);                   /* vtable slot 17; derived name */
     hkResult FUN_000792d0(float &factorOut) const;         /* vtable slot 18; derived name */
     void FUN_00079210(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
@@ -3229,6 +3246,7 @@ class hkpFixedConstraintData
     float FUN_0007bee0() const;                            /* vtable slot 12; derived name */
     void FUN_0007bef0(int bodyIndex);                      /* vtable slot 14; derived name */
     u8 FUN_0007bf10() const;                               /* vtable slot 15; derived name */
+    hkResult FUN_0007bfe0(float factor);                   /* vtable slot 17; derived name */
     hkResult FUN_0007bfd0(float &factorOut) const;         /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
@@ -3257,7 +3275,10 @@ class hkpHingeConstraintData
     float FUN_0007efb0() const;                    /* vtable slot 13; derived name */
     void FUN_0007efc0(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0007efe0() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0007f0d0(float factor);           /* vtable slot 17; derived name */
     hkResult FUN_0007f0c0(float &factorOut) const; /* vtable slot 18; derived name */
+    void FUN_0007eff0(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -3301,7 +3322,12 @@ struct hkpWheelFrictionConstraintAtom {
 class hkpWheelFrictionConstraintData
 {
   public:
+    /* Its finish constructor is inline in the type info's finish callback
+     * FUN_0007b0d0 (registered at 0x7b2c7, size 0xd0): the friction atom's
+     * impulses are reset. */
     struct Atoms {
+        Atoms(hkFinishLoadedObjectFlag flag) : friction(flag) {}
+
         u8 transforms[0x90];
         hkpWheelFrictionConstraintAtom friction;
     };
