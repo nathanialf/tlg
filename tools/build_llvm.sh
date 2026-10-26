@@ -58,8 +58,11 @@ CFE_SHA[4.0.0]=cea5f88ebddb30e296ca89130c83b9d46c2d833685e2912303c828054c4dc98a
 # The host C++ dialect and options an old tree needs (its CMake sets none):
 # 3.3 is C++98 code (GCC 14 defaults to gnu++17); GCC 6 and later remove
 # stores before a placement new that LLVM before 3.9 relies on
-# (-fno-lifetime-dse, which upstream's own CMake adds from 3.9 on).
-HOST_CXXFLAGS[3.3]='-std=gnu++98 -fno-lifetime-dse'
+# (-fno-lifetime-dse, which upstream's own CMake adds from 3.9 on), and
+# delete `this == 0` tests, which 3.3's Value::print and Type::print make
+# (lib/IR/AsmWriter.cpp:2182, 2198: -print-after-all crashed printing the
+# call graph's external node without -fno-delete-null-pointer-checks).
+HOST_CXXFLAGS[3.3]='-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-checks'
 # --verify: "<from>|<to>" applied to every flags line for this version
 VERIFY_SUBST[4.0.0]='-mllvm -disable-post-ra|-mllvm -pre-RA-sched=list-ilp'
 VERIFY_SUBST[3.3]='-fstack-protector-strong|-fstack-protector'
