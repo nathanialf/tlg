@@ -114,6 +114,12 @@ executable (open).
 **Trigger to revisit.** Any matched function that a flag's removal would
 still match, or that its presence breaks.
 
+**Addendum, 2026-10-26 (round 28 harvest).** The trigger fired: 0x12120 is
+not a matched function, 0x13d80 matches only without `-fwrapv`, and every
+claimed row (989) matches with the flag or without it in both lines, so
+`-fwrapv` leaves both lines (D24). `-fno-strict-aliasing` keeps its
+evidence (0x79a5d0's reload) and stays.
+
 ## D4. Names (2026-10-24)
 
 **Decision.** A name is a fact or it is marked. Facts: an export, an assert or
@@ -569,6 +575,20 @@ names vtables through finish constructors (D12), keeps `this` alone, so the
 regeneration is unchanged by it (recorded in docs/NOTES.md). `--check`: 19
 derived rows, 0 failing.
 
+**Addendum, 2026-10-26 (round 28 harvest).** Four rows: hknpPrepareExistingPairsTask
+0x16a5c60 and hknpPrepareConstraintsTask 0x16a4640 (derived names after the
+timer strings their slot 6 opens, "Collide/Prepare Existing Pairs" at
+0x14cb100 and "Constraints/Prepare" at 0x14c9e70; both two-vtable task
+classes stored only by their constructors at 0x179847 and 0x154ed7, which
+FUN_00150330 calls at 0x150392 and 0x1504d5), hkStaticClassNameRegistry
+0x16a63b0 (derived; the static object 0x57c8870 built at 0x17f09e over the
+class list 0x16c9060 with version -1 and the name "hk_2014.2.0-r1" at
+0x14b3b02; stored only at 0x181827) and hknpVehicleWheelCollide 0x169af50
+(the name a fact: the hkClass string at 0x14bdd53 built into the record
+0x57c1510 at 0x5b2a1; slots 5 to 10 pure; stored by the inline finish
+constructors FUN_00070750 and FUN_00075f60 before their derived vtables).
+`--check`: 23 derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -1014,3 +1034,53 @@ local-exec `mov rax, fs:[0]; lea rax, [rax-N]`, or an access through a
 register other than `rax`), which none of the 21,974 is; or a GOT slot
 value shared by two thread-locals, which `tls_got_slot` reports as an
 error rather than guessing.
+
+## D24. The library line honours no NaNs and no longer wraps signed overflow (2026-10-26)
+
+**Decision.** `src/libs/` compiles with `-fno-honor-nans` and without
+`-fwrapv`; `src/game/` loses `-fwrapv` too. Both lines keep every other
+flag. `-fno-honor-nans` is the narrowest flag that explains the evidence;
+`-ffinite-math-only` and `-ffast-math` are not ruled out by the gate and
+wait for a function that needs what they add (infinities folded,
+reassociation, reciprocals).
+
+**Why.** Two residuals of round 28 are flag shapes, and each was measured
+over the whole executable and through the whole gate before the line
+changed.
+
+*NaNs.* 0x7c350 (hkpBallAndSocketConstraintData's runtime info, 42 bytes)
+tests `breachImpulse != HK_REAL_MAX` with one `je` after `vucomiss`, the
+lowering of an ordered compare; `!=` compiles to the unordered one, `jne;
+jnp`. The disassembly of the library region's 3.3 part holds 121 float
+equality tests (`ucomiss`/`comiss` followed by `je`, `jne`, `sete`, `setne`,
+`cmove` or `cmovne`) and not one parity branch (`jp`, `jnp`, `setp`, `setnp`:
+19 hits, every one inside data, none in a function); the D22 stretches 14
+and 0; the game region 3,047 and 91. Under the standard lowering every
+float equality carries a parity branch, so the library region was built
+with NaN semantics off. Compiled with my own run under the library line
+plus `-fno-honor-nans`, `-ffinite-math-only` or `-ffast-math`, 0x7c350 is
+byte-equal; without, 1 of 11 instructions in place. The gate with each of
+the three added: 989 rows, every one equal, every segment identical.
+
+*Signed overflow.* 0x13d80 (a word map's clear, 43 bytes) guards its loop
+on the mask's sign (`test; js`), the fold of `hashMod + 1 > 0` into
+`hashMod >= 0` that needs the add's `nsw` (InstCombineCompares.cpp:1318 in
+3.3); `-fwrapv` strips it and the guard stays `inc; test; jle`. Compiled
+without `-fwrapv`: byte-equal. The gate without the flag in the library
+line, in the game line, and without it beside `-fno-honor-nans`: 989 rows,
+every one equal. D3 took the flag from 0x12120's subtract-then-extend, an
+unmatched function whose shape the fingerprint shows is common either way
+(74 `sub eax; movsxd rax, eax` and 1,255 `movsxd reg, [mem]` in the library
+region). A flag no row needs and one row refuses has no evidence; D3's own
+trigger.
+
+*The game region.* Its line changes only by losing `-fwrapv` (12 rows,
+indifferent). Its 3,047 equality tests without a parity branch against 91
+with one say its NaN setting is not uniform or not the default either; that
+is the game region's question, to be ruled when a game function needs it.
+
+**Trigger to revisit.** A claimed row that stops matching under the new
+line (none did: the gate ran before and after); a library function that
+needs infinities folded or reassociation (then `-ffinite-math-only` or
+`-ffast-math`, measured the same way); a function that needs `-fwrapv`
+back, which would split the region by flags as D22 splits it by compiler.

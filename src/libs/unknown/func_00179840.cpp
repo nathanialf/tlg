@@ -3,7 +3,6 @@
 
 /* The prepare-existing-pairs task's constructor (derived names), called by
  * FUN_00150330 on the 0x30 bytes it takes from the thread's heap. */
-// NONMATCHING: equal, but the vtable 0x16a5c60 has no row (no type info; a D14 ruling)
 hknpPrepareExistingPairsTask::hknpPrepareExistingPairsTask(void *unknown18, void *unknown20)
     : unknown18(unknown18), unknown20(unknown20)
 {

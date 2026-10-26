@@ -4,8 +4,6 @@
 /* derived name: the finish callback of hknpVehicleLinearCastWheelCollide's type info (registered at
  * 0x708de): construct the object in place from a loaded image through its
  * inline finish constructor. */
-// NONMATCHING: equal, but hknpVehicleWheelCollide's vtable 0x169af50 has no row (no type info;
-// the name is its hkClass string, a D14 ruling)
 void FUN_00070750(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;

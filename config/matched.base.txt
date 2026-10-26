@@ -982,3 +982,10 @@ _ZN18hkcdPlanarGeometryC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009a
 FUN_00072f80 src/libs/unknown/func_00072f80.cpp
 FUN_0016a380 src/libs/unknown/func_0016a380.cpp
 FUN_0001af70 src/libs/unknown/func_0001af70.cpp
+FUN_00179840 src/libs/unknown/func_00179840.cpp _ZN28hknpPrepareExistingPairsTaskC2EPvS0_
+FUN_00154ed0 src/libs/unknown/func_00154ed0.cpp _ZN26hknpPrepareConstraintsTaskC2EPvS0_S0_
+FUN_00181820 src/libs/unknown/func_00181820.cpp _ZN25hkStaticClassNameRegistryC2EPKPK7hkClassiPKc
+FUN_00070750 src/libs/unknown/func_00070750.cpp
+FUN_00075f60 src/libs/unknown/func_00075f60.cpp
+FUN_0007c350 src/libs/unknown/func_0007c350.cpp
+FUN_00013d80 src/libs/unknown/func_00013d80.cpp

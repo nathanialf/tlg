@@ -3,7 +3,6 @@
 
 /* The prepare-constraints task's constructor (derived names): its three
  * arguments kept. */
-// NONMATCHING: equal, but the vtable 0x16a4640 has no row (no type info; a D14 ruling)
 hknpPrepareConstraintsTask::hknpPrepareConstraintsTask(void *unknown18, void *unknown20,
                                                        void *unknown28)
     : unknown18(unknown18), unknown20(unknown20), unknown28(unknown28)

@@ -53,9 +53,18 @@
 #                                   in both regions
 #   -fno-exceptions -fno-rtti       Orbis driver defaults (same slides)
 #   -fno-math-errno                 the upstream PS4 toolchain's default
-#   -fwrapv                         the base subtracts in 32 bits and then
-#                                   sign-extends (0x12120); with signed
-#                                   overflow undefined clang widens first
+#   -fno-honor-nans (libs)          the library region's float equality
+#                                   tests carry no parity branch (121 sites
+#                                   with none, 0 with one; the game region
+#                                   3,047 and 91): D24. The narrowest flag
+#                                   for that evidence; -ffinite-math-only
+#                                   and -ffast-math pass the gate too and
+#                                   wait for a function that needs them
+#   (no -fwrapv)                    D3 took it from 0x12120's shape, which
+#                                   is unmatched; 0x13d80 matches only
+#                                   without it and every claimed row matches
+#                                   either way (D24); the game line loses
+#                                   it on the same absence of evidence
 #   -fno-strict-aliasing            the base reloads a field after a store
 #                                   through another type (0x12120, 0x79a5d0)
 #   -fno-omit-frame-pointer         14,410 of 14,414 non-leaf functions keep
@@ -70,5 +79,5 @@
 #                                   the base lowers memcpy, memmove and memset
 #                                   as builtins (D11: libs 64 calls, 0 tail
 #                                   jumps; game 1,417 calls, 18 tail jumps)
-src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -fPIC -fstack-protector-strong -fno-math-errno -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
-src/game/ cxx=4.0.0 --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -fPIC -fstack-protector-strong -fno-math-errno -fwrapv -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -fPIC -fstack-protector-strong -fno-math-errno -fno-honor-nans -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/ cxx=4.0.0 --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -fPIC -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
