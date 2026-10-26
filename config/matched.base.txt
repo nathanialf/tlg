@@ -670,3 +670,5 @@ FUN_0007d5d0 src/libs/unknown/func_0007d5d0.cpp _ZNK24hkpWrappedConstraintData12
 FUN_0007c860 src/libs/unknown/leaf_0007c860.cpp _ZN20hkpRagdollLimitsData12FUN_0007c860E6hkBool
 FUN_0007dad0 src/libs/unknown/leaf_0007dad0.cpp _ZN24hkpRagdollConstraintData12FUN_0007dad0E6hkBool
 FUN_0007d030 src/libs/unknown/func_0007d030.cpp
+FUN_00047cb0 src/libs/unknown/func_00047cb0.cpp _ZN6hkSlotD1Ev
+_ZN26hkBlockStreamCommandWriterD1Ev src/libs/unknown/func_00090450.cpp

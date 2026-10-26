@@ -23,6 +23,11 @@ enum hkResult {
     HK_FAILURE = 1  /* derived name */
 };
 
+/* Havok's assert in its release form (docs/DECISIONS.md D16): the build
+ * compiles no checks, and the statement is a null statement. The id is 0
+ * where the original id is not in the executable. */
+#define HK_ASSERT(id, condition) ((void)0)
+
 /* hkArray, the reflection's array type (its name in the type-name table at
  * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
  * flags (0x80000000 when the array does not own its storage, as the
