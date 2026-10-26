@@ -685,3 +685,12 @@ FUN_00066790 src/libs/unknown/leaf_00066790.cpp
 FUN_0006fa60 src/libs/unknown/func_0006fa60.cpp _ZNK9hknpShape16unknownVirtual24EPKvS1_S1_S1_Pv
 FUN_00070fd0 src/libs/unknown/leaf_00070fd0.cpp _ZN27hknpBodyQualityLibraryCinfoC1Ev
 FUN_000790d0 src/libs/unknown/leaf_000790d0.cpp
+FUN_0007dcb0 src/libs/unknown/leaf_0007dcb0.cpp
+FUN_0007bef0 src/libs/unknown/leaf_0007bef0.cpp
+FUN_0007efc0 src/libs/unknown/leaf_0007efc0.cpp
+FUN_0017b930 src/libs/unknown/leaf_0017b930.cpp
+FUN_0007c380 src/libs/unknown/leaf_0007c380.cpp
+FUN_0007a590 src/libs/unknown/leaf_0007a590.cpp
+FUN_00090830 src/libs/unknown/func_00090830.cpp
+FUN_00092f90 src/libs/unknown/func_00092f90.cpp
+FUN_00165990 src/libs/unknown/func_00165990.cpp

@@ -1831,14 +1831,7 @@ class hkpPrismaticConstraintData
  * constructor FUN_0007f120). hkpCogWheelConstraintData: 0x169c2c0
  * (FUN_0007c9d0). hkpRagdollLimitsData: 0x169c950 (FUN_000788f0); its slot
  * 20 (0x7c8b0) is also hkpHingeLimitsData's (0x169fef0, FUN_00082250). */
-class hkpPointToPathConstraintData
-{
-  public:
-    virtual ~hkpPointToPathConstraintData();
-
-    void FUN_0007a050(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
-};
+class hkpPointToPathConstraintData; /* defined after hkEnum */
 
 class hkpCogWheelConstraintData
 {
@@ -1950,7 +1943,7 @@ class hkpLimitedHingeConstraintData;
  * which the constructors store. */
 struct hkpSetupStabilizationAtom {
     u16 type; /* derived name */
-    bool enabled;
+    hkBool enabled;
     u8 padding;
     float maxLinImpulse;
     float maxAngImpulse;
@@ -2167,6 +2160,7 @@ class hkpRagdollConstraintData
 
     void FUN_0007dc90(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0007dca0() const;                    /* vtable slot 13; derived name */
+    void FUN_0007dcb0(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0007dcd0() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0007e2e0(float &factorOut) const; /* vtable slot 18; derived name */
     void FUN_0007dd00(hkBool wantRuntime,
@@ -2201,6 +2195,8 @@ class hkpBallAndSocketConstraintData
     };
 
     virtual ~hkpBallAndSocketConstraintData();
+
+    hkBool FUN_0007c380() const; /* vtable slot 7; derived name */
 
     void FUN_0007c2c0(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0007c300() const;                    /* vtable slot 11; derived name */
@@ -2268,7 +2264,10 @@ class hkpConstraintData : public hkReferencedObject
 
     virtual int unknownVirtual5() const = 0;
     virtual void unknownVirtual6(ConstraintInfo &infoOut) const = 0;
-    virtual int unknownVirtual7() const = 0;
+    /* Slot 7 (pure): whether the data is usable; an hkBool, which the
+     * wrapped data's forwarder (FUN_00067c60) passes on with a jmp (a bool
+     * would keep the call, cookbook 25). */
+    virtual hkBool unknownVirtual7() const = 0;
     virtual void unknownVirtual8();
     virtual void unknownVirtual9();
     virtual void unknownVirtual10();
@@ -2335,8 +2334,10 @@ struct hkpBridgeConstraintAtom {
 };
 
 /* hkpBridgeAtoms (type info 0x57c3038, 0x20 bytes, record 0x169b780): its
- * bridgeAtom at +0. */
-struct hkpBridgeAtoms {
+ * bridgeAtom at +0, 0x18 bytes; the 0x20 is the 16-byte alignment of the
+ * constraint atoms (hkpPointToPathConstraintData's path follows them at
+ * +0x40). */
+struct alignas(16) hkpBridgeAtoms {
     hkpBridgeAtoms(hkFinishLoadedObjectFlag flag) : bridgeAtom(flag) {}
 
     hkpBridgeConstraintAtom bridgeAtom;
@@ -2355,7 +2356,7 @@ class hkpWrappedConstraintData : public hkpConstraintData
 {
   public:
     void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    int FUN_00067c60() const;                         /* vtable slot 7; derived name */
+    hkBool FUN_00067c60() const;                      /* vtable slot 7; derived name */
     void FUN_0007d600(const void *argument1, const void *argument2, const void *argument3,
                       Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_00067b30(hkBool wantRuntime,
@@ -2387,6 +2388,7 @@ class hkpFixedConstraintData
     void FUN_0007bec0(float newMaxAngImpulse);     /* vtable slot 9; derived name */
     float FUN_0007bed0() const;                    /* vtable slot 11; derived name */
     float FUN_0007bee0() const;                    /* vtable slot 12; derived name */
+    void FUN_0007bef0(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0007bf10() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0007bfd0(float &factorOut) const; /* vtable slot 18; derived name */
 
@@ -2414,6 +2416,7 @@ class hkpHingeConstraintData
 
     void FUN_0007efa0(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0007efb0() const;                    /* vtable slot 13; derived name */
+    void FUN_0007efc0(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0007efe0() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0007f0c0(float &factorOut) const; /* vtable slot 18; derived name */
 
@@ -2449,7 +2452,7 @@ class hkpWheelFrictionConstraintData
 
     virtual ~hkpWheelFrictionConstraintData();
 
-    bool FUN_0017cf10() const; /* vtable slot 7; derived name */
+    hkBool FUN_0017cf10() const; /* vtable slot 7; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2476,6 +2479,7 @@ class hkp6DofConstraintData
 
     void FUN_0017b910(float newBreachImpulse);     /* vtable slot 10; derived name */
     float FUN_0017b920() const;                    /* vtable slot 13; derived name */
+    void FUN_0017b930(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0017b950() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0017bb70(float &factorOut) const; /* vtable slot 18; derived name */
 
@@ -2713,6 +2717,39 @@ template <typename ENUM, typename STORAGE> class hkEnum
     }
 
     STORAGE m_storage;
+};
+
+/* hkpPointToPathConstraintData's members, from the records its reflection
+ * initializer builds (0x7f1b2 to 0x7f30c, the names in order at 0x14c4707
+ * onward): atoms (hkpBridgeAtoms) at +0x20, path (a pointer to
+ * hkpParametricCurve) at +0x40, maxFrictionForce (hkReal) at +0x48,
+ * angularConstrainedDOF (hkEnum of OrientationConstraintType in hkInt8) at
+ * +0x4c, transform_OS_KS (two hkTransform) at +0x50. The enum's item names
+ * are the reflection's (0x14c4794 onward). */
+class hkpParametricCurve;
+
+class hkpPointToPathConstraintData
+{
+  public:
+    enum OrientationConstraintType {
+        CONSTRAIN_ORIENTATION_INVALID,
+        CONSTRAIN_ORIENTATION_NONE,
+        CONSTRAIN_ORIENTATION_ALLOW_SPIN,
+        CONSTRAIN_ORIENTATION_TO_PATH,
+        CONSTRAIN_ORIENTATION_MAX_ID
+    };
+
+    virtual ~hkpPointToPathConstraintData();
+
+    hkBool FUN_0007a590() const; /* vtable slot 7; derived name */
+    void FUN_0007a050(hkBool wantRuntime,
+                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    u8 unknown8[0x18];
+    hkpBridgeAtoms atoms;
+    hkpParametricCurve *path;
+    float maxFrictionForce;
+    hkEnum<OrientationConstraintType, s8> angularConstrainedDOF;
 };
 
 /* hkMemoryMeshMaterial, 0x80 bytes (type info 0x57bd4a8, vtable 0x16a3920 stored
@@ -3209,7 +3246,9 @@ class hknpVehicleWheelCollide : public hkReferencedObject
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
-    virtual void unknownVirtual8();
+    /* Slot 8: empty in both wheel collides (0x175a80, 0xadd50); the vehicle's
+     * slot 8 hands it the pointer at +0x10 of its own argument. */
+    virtual void unknownVirtual8(void *argument);
     virtual void unknownVirtual9();
 };
 
@@ -3217,6 +3256,14 @@ class hknpVehicleWheelCollide : public hkReferencedObject
  * when it names no body. */
 struct hknpBodyId {
     u32 value; /* derived name */
+};
+
+/* The argument of hknpVehicleInstance's slot 8 (derived name): a pointer at
+ * +0x10, which the vehicle hands to its wheel collide's slot 8. */
+struct hknpVehicleInstanceSlot8Argument /* derived name */
+{
+    u8 unknown0[0x10];
+    void *unknown10;
 };
 
 /* Its parent hknpUnaryAction's one member, bodyId at +0x18 (record
@@ -3229,8 +3276,10 @@ class hknpVehicleInstance
 
     void FUN_00162540(hknpBodyId *&bodiesOut, int &numBodiesOut); /* vtable slot 5; derived name */
     void FUN_00162550(hknpBodyId removedId);                      /* vtable slot 6; derived name */
-    void FUN_001659b0();                                          /* vtable slot 9; derived name */
-    float FUN_00165880() const;                                   /* vtable slot 13; derived name */
+    void FUN_00165990(
+        const hknpVehicleInstanceSlot8Argument *argument); /* vtable slot 8; derived name */
+    void FUN_001659b0();                                   /* vtable slot 9; derived name */
+    float FUN_00165880() const;                            /* vtable slot 13; derived name */
 
     u8 unknown8[0x10];
     hknpBodyId bodyId;
@@ -3393,6 +3442,35 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     hkArray<float> distance;
 };
 
+/* A command of a command stream (derived names): its padded byte size at +0
+ * (hkBlockStreamCommandWriter's slot 5 copies that many bytes), its primary
+ * type at +3, the index of the dispatcher that executes it. */
+struct hkCommand /* derived name */
+{
+    u16 sizePaddedTo16; /* derived name */
+    u8 unknown2;
+    u8 primaryType; /* derived name */
+};
+
+/* A reference-counted executor of one primary type of command (derived
+ * name): slot 5 executes a command. */
+class hkSecondaryCommandDispatcher : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void exec(const hkCommand &command) = 0; /* vtable slot 5; derived name */
+};
+
+/* The executors by primary type (derived name), eight references (the
+ * constructor 0x90570 clears them; the simulation builds one on the stack
+ * at 0x17008b and runs each command of a stream through it, 0x170396). */
+class hkPrimaryCommandDispatcher /* derived name */
+{
+  public:
+    void FUN_00090830(const hkCommand &command); /* derived name */
+
+    hkSecondaryCommandDispatcher *dispatchers[8]; /* derived name */
+};
+
 /* A map from strings to pointer-sized values (derived name): 24-byte
  * entries (hash, key, value; a hash of -1 marks a free slot) at +0, the
  * count at +8 and the hash mask at +0xc. FUN_00091600 returns the first
@@ -3449,7 +3527,8 @@ struct hkTypeInfo {
     typedef void (*FinishLoadedObjectFunction)(void *object, int finishing); /* derived name */
     typedef void (*CleanupLoadedObjectFunction)(void *object);               /* derived name */
 
-    void FUN_00092fc0(void *object) const; /* derived name */
+    void FUN_00092f90(void *object, int finishing) const; /* derived name */
+    void FUN_00092fc0(void *object) const;                /* derived name */
 
     const char *typeName;                        /* derived name */
     const char *scopedName;                      /* derived name */
