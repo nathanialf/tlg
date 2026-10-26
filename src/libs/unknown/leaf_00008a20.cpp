@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hkOstream's vtable returns its reflected class. */
-const hkClass *hkOstream::FUN_00008a20() const /* derived name */
+const hkClass *hkOstream::getClassType() const /* derived name */
 {
     return &D_57b7e18;
 }

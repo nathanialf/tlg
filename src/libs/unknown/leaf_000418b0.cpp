@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: slot 3 of hknpCompoundShape's vtable returns its reflected class. */
-const hkClass *hknpCompoundShape::FUN_000418b0() const /* derived name */
+const hkClass *hknpCompoundShape::getClassType() const /* derived name */
 {
     return &D_57c2e78;
 }

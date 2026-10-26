@@ -153,18 +153,29 @@ class hkBaseObject
      * body FUN_00006660, and hkReferencedObject's deleting destructor
      * (FUN_000066e0) runs no base destructor. */
     virtual ~hkBaseObject() {}
+
+    /* Slot 2 of hkBaseObject's vtable (0x168cb30), the last: the shared
+     * empty body FUN_00000270, kept by every library-region vtable whose
+     * slot 4 is FUN_000069a0. derived name. */
+    virtual void FUN_00000270() {}
 };
 
 /* derived name: free a block of numBytes bytes on the thread's heap (the
  * memory router at %fs-relative 0x16d80b8, its heap at +0x58, slot 3). */
 void FUN_0000bcf0(void *block, int numBytes);
 
+/* Its vtable 0x168cb60 (address point 0x168cb70): slot 0 the empty
+ * FUN_00006660, slot 1 the deleting destructor FUN_000066e0, slot 2
+ * hkBaseObject's, slot 3 the class getter's default FUN_000042d0 (no
+ * class), slot 4 FUN_000069a0. The destructor is inline (a derived class's
+ * base destructor calls nothing, 0x90450), so the vtable and the deleting
+ * destructor are emitted with the key function, slot 4. */
 class hkReferencedObject : public hkBaseObject
 {
   public:
     hkReferencedObject(hkFinishLoadedObjectFlag flag) : hkBaseObject(flag) {}
 
-    virtual ~hkReferencedObject();
+    virtual ~hkReferencedObject() {}
 
     /* The class allocator: a deleted object goes back to the heap at the
      * class's size. */
@@ -175,11 +186,20 @@ class hkReferencedObject : public hkBaseObject
         }
     }
 
+    /* Slot 3: the object's reflected class. The default (the shared
+     * FUN_000042d0) has none; a reflected class returns its hkClass (slot 3
+     * of hknpCompoundShape's vtable, FUN_000418b0, returns 0x57c2e78).
+     * derived name. */
+    virtual const hkClass *getClassType() const
+    {
+        return 0;
+    }
+
     /* Slot 4 of the reference-counted classes' vtables (FUN_000069a0, the
-     * body behind it in most of them): the object deletes itself through its
-     * deleting destructor; the reference release at 0x44e86 calls slot 4
-     * when the count reaches zero. derived name. */
-    void FUN_000069a0() const;
+     * body behind it in most of them), the class's key function: the object
+     * deletes itself through its deleting destructor; the reference release
+     * at 0x44e86 calls slot 4 when the count reaches zero. derived name. */
+    virtual void FUN_000069a0() const;
 
     u32 memSizeAndRefCount;
 };
@@ -949,9 +969,6 @@ class hkMeshShape : public hkReferencedObject
   public:
     hkMeshShape(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    virtual void FUN_00000270();
-    virtual void unknownVirtual3();
-    virtual void FUN_000069a0();
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7(const hkMeshSection &section);
@@ -1194,9 +1211,6 @@ class hknpShape : public hkReferencedObject
     hknpShape(hkFinishLoadedObjectFlag flag);
     virtual ~hknpShape();
 
-    virtual void FUN_00000270();
-    virtual void FUN_000042d0();
-    virtual void FUN_000069a0();
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7(const Mat4 &transform, Vec4 *boundsOut) const;
@@ -1235,6 +1249,9 @@ class hknpShape : public hkReferencedObject
     virtual int unknownVirtual27(const void *argument1, const void *argument2, int argument3) const;
     virtual void unknownVirtual28(const void *argument1, void *argument2) const;
     virtual void unknownVirtual29(const void *argument1, void *argument2) const;
+    /* Slot 30: the shared empty body 0x3b640, kept by every shape vtable
+     * read so far. */
+    virtual void unknownVirtual30();
 
     u8 unknownC[0x14];
     void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
@@ -1394,14 +1411,13 @@ struct hknpWorld {
     hknpEventDispatcher *eventDispatcher; /* derived name */
 };
 
-class hknpFirstPersonGun
+/* Its hkClass (built at 0x3cfea) has hkReferencedObject's, 0x57b8640, as
+ * its parent. */
+class hknpFirstPersonGun : public hkReferencedObject
 {
   public:
     virtual ~hknpFirstPersonGun();
 
-    virtual void FUN_00000270();
-    virtual void FUN_000042d0();
-    virtual void FUN_000069a0();
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
@@ -2171,9 +2187,6 @@ class hkpConstraintData : public hkReferencedObject
   public:
     hkpConstraintData(hkFinishLoadedObjectFlag flag);
 
-    virtual void FUN_00000270();
-    virtual void FUN_000042d0();
-    virtual void FUN_000069a0();
     /* What slot 6 fills (derived name): hkpFixedConstraintData's override
      * (0x7bf20) hands its 0xc0 bytes of atoms and this argument to
      * FUN_00082890. */
@@ -2741,9 +2754,6 @@ extern const hkClass D_57b7e18; /* hkOstream's hkClass */
 class hkStreamWriter : public hkReferencedObject /* derived name */
 {
   public:
-    virtual void unknownVirtual2();
-    virtual void unknownVirtual3();
-    virtual void unknownVirtual4();
     virtual hkBool isOk() const;                     /* vtable slot 5; derived name */
     virtual int write(const void *buffer, int size); /* vtable slot 6; derived name */
     virtual void flush();                            /* vtable slot 7; derived name */
@@ -2771,7 +2781,7 @@ class hkOArchive : public hkReferencedObject /* derived name */
 class hkOstream : public hkReferencedObject
 {
   public:
-    const hkClass *FUN_00008a20() const;            /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;            /* vtable slot 3, FUN_00008a20 */
     void FUN_000089e0();                            /* derived name */
     int FUN_000089f0(const void *buffer, int size); /* derived name */
 
@@ -2875,7 +2885,7 @@ class hkSkinBinding : public hkMeshShape
     hkSkinBinding(hkFinishLoadedObjectFlag flag);
     virtual ~hkSkinBinding();
 
-    const hkClass *FUN_000242d0() const;             /* vtable slot 3; derived name */
+    const hkClass *getClassType() const;             /* vtable slot 3, FUN_000242d0 */
     void FUN_000aa520(const hkMeshSection &section); /* vtable slot 7; derived name */
     const char *FUN_000aa530() const;                /* vtable slot 8; derived name */
     void FUN_000aa540(const char *newName);          /* vtable slot 9; derived name */
@@ -3002,54 +3012,6 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
     hkGeometry *geometry;
 };
 
-/* hknpCompoundShape: its hkClass at 0x57c2e78 is built by the reflection
- * initializer at 0x77eae and is the parent of hknpDynamicCompoundShape's and
- * hknpStaticCompoundShape's; slot 3 of its vtable (address point 0x1697910,
- * FUN_000418b0) returns it. */
-extern const hkClass D_57c2e78; /* hknpCompoundShape's hkClass */
-
-/* Slots 0 to 30 of the vtable at 0x1697910 hold the bodies named below
- * (slots 2 to 30 by the function each holds; their signatures are not
- * recovered except slot 3's). Slots 31 and 32 are pure (__cxa_pure_virtual);
- * slot 31 of hknpStaticCompoundShape (FUN_000d0450) recomputes the shape's
- * AABB from its tree, hence its name. */
-class hknpCompoundShape
-{
-  public:
-    virtual ~hknpCompoundShape();
-
-    virtual void FUN_00000270();                 /* slot 2 */
-    virtual const hkClass *FUN_000418b0() const; /* slot 3; derived name */
-    virtual void FUN_000069a0();                 /* slot 4 */
-    virtual void FUN_0006e3d0();                 /* slot 5 */
-    virtual void FUN_0006e510();                 /* slot 6 */
-    virtual void FUN_00041870();                 /* slot 7 */
-    virtual void FUN_00041890();                 /* slot 8 */
-    virtual void FUN_0006e5b0();                 /* slot 9 */
-    virtual void FUN_0006e650();                 /* slot 10 */
-    virtual void FUN_0006e6f0();                 /* slot 11 */
-    virtual void FUN_0006e790();                 /* slot 12 */
-    virtual void FUN_0006e830();                 /* slot 13 */
-    virtual void FUN_0006e970();                 /* slot 14 */
-    virtual void FUN_0006e8d0();                 /* slot 15 */
-    virtual void FUN_0006ea10();                 /* slot 16 */
-    virtual void FUN_0006eab0();                 /* slot 17 */
-    virtual void FUN_0006eb50();                 /* slot 18 */
-    virtual void FUN_0006ebf0();                 /* slot 19 */
-    virtual void FUN_0006fbd0();                 /* slot 20 */
-    virtual void FUN_000418c0();                 /* slot 21 */
-    virtual void FUN_00041a80();                 /* slot 22 */
-    virtual void FUN_0006f9c0();                 /* slot 23 */
-    virtual void FUN_0006fa60();                 /* slot 24 */
-    virtual void FUN_0006f880();                 /* slot 25 */
-    virtual void FUN_0006f920();                 /* slot 26 */
-    virtual void FUN_000426b0();                 /* slot 27 */
-    virtual void FUN_00041e40();                 /* slot 28 */
-    virtual void FUN_00042300();                 /* slot 29 */
-    virtual void FUN_0003b640();                 /* slot 30 */
-    virtual void updateAabb() = 0;               /* slot 31; derived name */
-};
-
 /* hknpCompositeShape: its hkClass at 0x57c2cf8 (parent 0x57bf1c0) is built by
  * the reflection initializer at 0x71732, whose type info names the vtable
  * 0x1697c80 (address point 0x1697c90), the intermediate base whose vtable the
@@ -3059,12 +3021,36 @@ class hknpCompoundShape
  * 0x16a5180, 0x16a5990, 0x16ca050) keep it. */
 extern const hkClass D_57c2cf8; /* hknpCompositeShape's hkClass */
 
-class hknpCompositeShape
+class hknpCompositeShape : public hknpShape
 {
   public:
     virtual ~hknpCompositeShape();
 
-    const hkClass *FUN_00042e80() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
+};
+
+/* hknpCompoundShape: its hkClass at 0x57c2e78 is built by the reflection
+ * initializer at 0x77eae and is the parent of hknpDynamicCompoundShape's and
+ * hknpStaticCompoundShape's; slot 3 of its vtable (address point 0x1697910,
+ * FUN_000418b0) returns it. */
+extern const hkClass D_57c2e78; /* hknpCompoundShape's hkClass */
+
+/* Its parent is hknpCompositeShape (the hkClass constructor's third
+ * argument at 0x77ebc is 0x57c2cf8). Slots 0 to 30 of the vtable at
+ * 0x1697910 keep hknpShape's bodies except slots 0, 1 and 3 and its own
+ * 7 (FUN_00041870), 8 (FUN_00041890), 21 (FUN_000418c0), 22
+ * (FUN_00041a80), 27 (FUN_000426b0), 28 (FUN_00041e40) and 29
+ * (FUN_00042300). Slots 31 and 32 are pure (__cxa_pure_virtual); slot 31
+ * of hknpStaticCompoundShape (FUN_000d0450) recomputes the shape's AABB
+ * from its tree, hence its name. */
+class hknpCompoundShape : public hknpCompositeShape
+{
+  public:
+    virtual ~hknpCompoundShape();
+
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_000418b0 */
+    virtual void updateAabb() = 0;       /* slot 31; derived name */
+    virtual void unknownVirtual32() = 0;
 };
 
 /* hkxBlobMeshShape: its hkClass at 0x57c5e78 is built by the reflection initializer at
@@ -3112,7 +3098,7 @@ class hkxAnimatedFloat : public hkReferencedObject
 
     virtual ~hkxAnimatedFloat();
 
-    const hkClass *FUN_0008ba30() const; /* vtable slot 3; derived name */
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ba30 */
 };
 
 /* hkArrayStreamWriter: its hkClass at 0x57c8750 is built by the reflection initializer at
@@ -3141,9 +3127,6 @@ class hkArrayStreamWriter
 class hknpVehicleWheelCollide : public hkReferencedObject
 {
   public:
-    virtual void FUN_00000270();
-    virtual void unknownVirtual3();
-    virtual void FUN_000069a0();
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
@@ -3193,9 +3176,6 @@ struct hknpCharacterProxySignalData;   /* derived name: the second, a pointer at
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
 {
   public:
-    virtual void FUN_00000270();
-    virtual void FUN_000042d0();
-    virtual void FUN_000069a0();
     virtual void FUN_00176cc0(hknpCharacterProxySignalSource *source,
                               hknpCharacterProxySignalData *data); /* vtable slot 5; derived name */
 

@@ -306,7 +306,7 @@ FUN_00180ee0 src/libs/unknown/leaf_00180ee0.cpp
 FUN_00003580 src/libs/unknown/leaf_00003580.cpp _ZNK16TwoBaseAllocator12FUN_00003580Ev
 FUN_00003590 src/libs/unknown/leaf_00003580.cpp _ZThn8_NK16TwoBaseAllocator12FUN_00003580Ev
 FUN_000075d0 src/libs/unknown/leaf_000075d0.cpp _ZN12Pool0000788012FUN_000075d0Ev
-FUN_00008a20 src/libs/unknown/leaf_00008a20.cpp
+FUN_00008a20 src/libs/unknown/leaf_00008a20.cpp _ZNK9hkOstream12getClassTypeEv
 FUN_00008ea0 src/libs/unknown/leaf_00008ea0.cpp
 FUN_0000e3d0 src/libs/unknown/leaf_0000e3d0.cpp
 FUN_0000f080 src/libs/unknown/leaf_0000f080.cpp
@@ -317,7 +317,7 @@ FUN_0001a4a0 src/libs/unknown/leaf_0001a4a0.cpp
 FUN_00023370 src/libs/unknown/leaf_00023370.cpp
 FUN_000238c0 src/libs/unknown/leaf_000238c0.cpp
 FUN_00023de0 src/libs/unknown/leaf_00023de0.cpp
-FUN_000242d0 src/libs/unknown/leaf_000242d0.cpp
+FUN_000242d0 src/libs/unknown/leaf_000242d0.cpp _ZNK13hkSkinBinding12getClassTypeEv
 FUN_000246c0 src/libs/unknown/leaf_000246c0.cpp
 FUN_000247f0 src/libs/unknown/leaf_000247f0.cpp
 FUN_00027b10 src/libs/unknown/leaf_00027b10.cpp
@@ -327,8 +327,8 @@ FUN_000358a0 src/libs/unknown/leaf_000358a0.cpp
 FUN_00035c40 src/libs/unknown/leaf_00035c40.cpp
 FUN_00038740 src/libs/unknown/leaf_00038740.cpp
 FUN_0003b980 src/libs/unknown/leaf_0003b980.cpp
-FUN_000418b0 src/libs/unknown/leaf_000418b0.cpp
-FUN_00042e80 src/libs/unknown/leaf_00042e80.cpp
+FUN_000418b0 src/libs/unknown/leaf_000418b0.cpp _ZNK17hknpCompoundShape12getClassTypeEv
+FUN_00042e80 src/libs/unknown/leaf_00042e80.cpp _ZNK18hknpCompositeShape12getClassTypeEv
 FUN_00065f20 src/libs/unknown/leaf_00065f20.cpp
 FUN_00070a40 src/libs/unknown/leaf_00070a40.cpp
 FUN_0007dfc0 src/libs/unknown/leaf_0007dfc0.cpp
@@ -337,7 +337,7 @@ FUN_0007e160 src/libs/unknown/leaf_0007e160.cpp
 FUN_000803f0 src/libs/unknown/func_000803f0.cpp
 FUN_00085d30 src/libs/unknown/leaf_00085d30.cpp
 FUN_000878e0 src/libs/unknown/leaf_000878e0.cpp
-FUN_0008ba30 src/libs/unknown/leaf_0008ba30.cpp
+FUN_0008ba30 src/libs/unknown/leaf_0008ba30.cpp _ZNK16hkxAnimatedFloat12getClassTypeEv
 FUN_0008ff00 src/libs/unknown/leaf_0008ff00.cpp
 FUN_00092030 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
 FUN_000ad710 src/libs/unknown/leaf_000ad710.cpp
@@ -646,7 +646,7 @@ _ZN27hknpDefaultBroadPhaseConfigC1E24hkFinishLoadedObjectFlag src/libs/unknown/f
 FUN_0017bb70 src/libs/unknown/leaf_0017bb70.cpp _ZNK21hkp6DofConstraintData12FUN_0017bb70ERf
 _ZN14hkxEnvironmentC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017d6f0.cpp
 FUN_00184150 src/libs/unknown/leaf_00184150.cpp _ZN21hkClassMemberAccessorC2EPvPK13hkClassMember
-FUN_000066e0 src/libs/unknown/func_000066e0.cpp _ZN18hkReferencedObjectD0Ev
+_ZN18hkReferencedObjectD0Ev src/libs/unknown/func_000069a0.cpp
 FUN_0000d0a0 src/libs/unknown/func_0000d0a0.cpp
 FUN_000230f0 src/libs/unknown/leaf_000230f0.cpp _ZNK16hkMemoryMeshBody12FUN_000230f0Ev
 FUN_00023160 src/libs/unknown/leaf_00023160.cpp _ZNK16hkMemoryMeshBody12FUN_00023160Ev
