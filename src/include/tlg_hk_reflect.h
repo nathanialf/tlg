@@ -545,6 +545,139 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
     hknpVehicleDefaultSteering(hkFinishLoadedObjectFlag flag) : hknpVehicleSteering(flag) {}
 };
 
+/* Classes reflected with hkReferencedObject as their parent whose finish
+ * constructors have nothing to fix up but the vtable (hkClass, vtable,
+ * finish callback): hkpVehicleFrictionDescription (0x57c5cf8, 0x169a0d0,
+ * FUN_00085110), hkxSpline (0x57c5f80, 0x16a0880, FUN_00085fa0),
+ * hkxAnimatedVector (0x57c6580, 0x16a0d00, FUN_00086d70),
+ * hkxTriangleSelectionChannel (0x57c6650, 0x16a0d40, FUN_00087000),
+ * hkxVertexVectorDataChannel (0x57c66d0, 0x16a0df0, FUN_00087490) and
+ * hkxSparselyAnimatedString (0x57c6750, 0x16a0e60, FUN_00087750),
+ * hkxVertexFloatDataChannel (0x57c6850, 0x16a0fb0, FUN_00087b50),
+ * hkxVertexIntDataChannel (0x16a1260, FUN_000880f0), hkxIndexBuffer
+ * (0x57c6aa0, 0x16a12d0, FUN_00088330), hkxAnimatedQuaternion (0x16a1390,
+ * FUN_000886d0), hkxSparselyAnimatedInt (0x57c6c68, 0x16a1400,
+ * FUN_00088900), hkxEdgeSelectionChannel (0x16a14e0, FUN_00088cb0),
+ * hkxAnimatedMatrix (0x57c6df0, 0x16a1550, FUN_00088e80), hkxEnum
+ * (0x16a16f0, FUN_000898f0), hkxCamera (0x16a1a70, FUN_0008a270),
+ * hkxAttributeHolder (0x16a1670, FUN_0008b390), hkxVertexSelectionChannel
+ * (0x16a2500, FUN_0008bcd0) and hkxBlob (0x16a07f0, FUN_0008bdc0);
+ * hkxSparselyAnimatedEnum (0x16a16b0, FUN_00089920) has
+ * hkxSparselyAnimatedInt as its parent. */
+class hkpVehicleFrictionDescription : public hkReferencedObject
+{
+  public:
+    hkpVehicleFrictionDescription(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxSpline : public hkReferencedObject
+{
+  public:
+    hkxSpline(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxAnimatedVector : public hkReferencedObject
+{
+  public:
+    hkxAnimatedVector(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxTriangleSelectionChannel : public hkReferencedObject
+{
+  public:
+    hkxTriangleSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxVertexVectorDataChannel : public hkReferencedObject
+{
+  public:
+    hkxVertexVectorDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxSparselyAnimatedString : public hkReferencedObject
+{
+  public:
+    hkxSparselyAnimatedString(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxVertexFloatDataChannel : public hkReferencedObject
+{
+  public:
+    hkxVertexFloatDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxVertexIntDataChannel : public hkReferencedObject
+{
+  public:
+    hkxVertexIntDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxIndexBuffer : public hkReferencedObject
+{
+  public:
+    hkxIndexBuffer(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxAnimatedQuaternion : public hkReferencedObject
+{
+  public:
+    hkxAnimatedQuaternion(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxSparselyAnimatedInt : public hkReferencedObject
+{
+  public:
+    hkxSparselyAnimatedInt(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxEdgeSelectionChannel : public hkReferencedObject
+{
+  public:
+    hkxEdgeSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxAnimatedMatrix : public hkReferencedObject
+{
+  public:
+    hkxAnimatedMatrix(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxEnum : public hkReferencedObject
+{
+  public:
+    hkxEnum(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxCamera : public hkReferencedObject
+{
+  public:
+    hkxCamera(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxAttributeHolder : public hkReferencedObject
+{
+  public:
+    hkxAttributeHolder(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxVertexSelectionChannel : public hkReferencedObject
+{
+  public:
+    hkxVertexSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxBlob : public hkReferencedObject
+{
+  public:
+    hkxBlob(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+class hkxSparselyAnimatedEnum : public hkxSparselyAnimatedInt
+{
+  public:
+    hkxSparselyAnimatedEnum(hkFinishLoadedObjectFlag flag) : hkxSparselyAnimatedInt(flag) {}
+};
+
 /* hknpCharacterProxyCinfo: vtable 0x1696e90, finish callback FUN_00040510. */
 class hknpCharacterProxyCinfo : public hkReferencedObject
 {
@@ -1710,6 +1843,18 @@ class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
     }
 };
 
+/* hkpSpringDamperConstraintMotor (hkClass 0x57c5bf8, parent
+ * hkpLimitedForceConstraintMotor): vtable 0x16a5ce0, finish callback
+ * FUN_00083360. */
+class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
+{
+  public:
+    hkpSpringDamperConstraintMotor(hkFinishLoadedObjectFlag flag)
+        : hkpLimitedForceConstraintMotor(flag)
+    {
+    }
+};
+
 struct hkpLinMotorConstraintAtom {
     hkpLinMotorConstraintAtom(hkFinishLoadedObjectFlag)
     {
@@ -1793,9 +1938,10 @@ class hkpRagdollConstraintData
 
     virtual ~hkpRagdollConstraintData();
 
-    void FUN_0007dc90(float newBreachImpulse); /* vtable slot 10; derived name */
-    float FUN_0007dca0() const;                /* vtable slot 13; derived name */
-    u8 FUN_0007dcd0() const;                   /* vtable slot 15; derived name */
+    void FUN_0007dc90(float newBreachImpulse);     /* vtable slot 10; derived name */
+    float FUN_0007dca0() const;                    /* vtable slot 13; derived name */
+    u8 FUN_0007dcd0() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0007e2e0(float &factorOut) const; /* vtable slot 18; derived name */
     void FUN_0007dd00(bool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -1858,9 +2004,10 @@ class hkpLimitedHingeConstraintData
 
     virtual ~hkpLimitedHingeConstraintData();
 
-    void FUN_000790b0(float newBreachImpulse); /* vtable slot 10; derived name */
-    float FUN_000790c0() const;                /* vtable slot 13; derived name */
-    u8 FUN_000790f0() const;                   /* vtable slot 15; derived name */
+    void FUN_000790b0(float newBreachImpulse);     /* vtable slot 10; derived name */
+    float FUN_000790c0() const;                    /* vtable slot 13; derived name */
+    u8 FUN_000790f0() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_000792d0(float &factorOut) const; /* vtable slot 18; derived name */
     void FUN_00079210(bool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -1879,6 +2026,8 @@ class hkpLimitedHingeConstraintData
 class hkpConstraintData : public hkReferencedObject
 {
   public:
+    hkpConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual void FUN_00000270();
     virtual void FUN_000042d0();
     virtual void FUN_000069a0();
@@ -1992,10 +2141,11 @@ class hkpFixedConstraintData
 
     virtual ~hkpFixedConstraintData();
 
-    void FUN_0007bec0(float newMaxAngImpulse); /* vtable slot 9; derived name */
-    float FUN_0007bed0() const;                /* vtable slot 11; derived name */
-    float FUN_0007bee0() const;                /* vtable slot 12; derived name */
-    u8 FUN_0007bf10() const;                   /* vtable slot 15; derived name */
+    void FUN_0007bec0(float newMaxAngImpulse);     /* vtable slot 9; derived name */
+    float FUN_0007bed0() const;                    /* vtable slot 11; derived name */
+    float FUN_0007bee0() const;                    /* vtable slot 12; derived name */
+    u8 FUN_0007bf10() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0007bfd0(float &factorOut) const; /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2019,9 +2169,10 @@ class hkpHingeConstraintData
 
     virtual ~hkpHingeConstraintData();
 
-    void FUN_0007efa0(float newBreachImpulse); /* vtable slot 10; derived name */
-    float FUN_0007efb0() const;                /* vtable slot 13; derived name */
-    u8 FUN_0007efe0() const;                   /* vtable slot 15; derived name */
+    void FUN_0007efa0(float newBreachImpulse);     /* vtable slot 10; derived name */
+    float FUN_0007efb0() const;                    /* vtable slot 13; derived name */
+    u8 FUN_0007efe0() const;                       /* vtable slot 15; derived name */
+    hkResult FUN_0007f0c0(float &factorOut) const; /* vtable slot 18; derived name */
 
     u8 unknown8[0x18];
     Atoms atoms;
@@ -2159,8 +2310,24 @@ class hkAlignSceneToNodeOptions : public hkReferencedObject
     u8 unknownC[0xc];
     hkStringPtr nodeName;
 };
-struct hkxMaterialShaderSet;
-struct hkxSkinBinding;
+
+/* hkxMaterialShaderSet (hkClass parent hkReferencedObject): its finish
+ * constructor 0x8b370 is out of line, jumped to by the finish callback
+ * FUN_0008b070 and called by the reflection initializer at 0x8b11d. */
+class hkxMaterialShaderSet : public hkReferencedObject
+{
+  public:
+    hkxMaterialShaderSet(hkFinishLoadedObjectFlag flag);
+};
+
+/* hkxSkinBinding (hkClass parent hkReferencedObject): its finish
+ * constructor, run by the finish callback FUN_0008a9b0, has nothing to fix
+ * up but the vtable. */
+class hkxSkinBinding : public hkReferencedObject
+{
+  public:
+    hkxSkinBinding(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
 struct hkxVertexDescription;
 struct hkxVertexAnimation;
 struct hkxMeshSection;
@@ -2243,9 +2410,8 @@ void FUN_00087cf0(hkxVertexBuffer::VertexData *self);                    /* deri
 void FUN_0008a1a0(hkxVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0008bea0(hkxMesh *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017d520(hkAlignSceneToNodeOptions *self,
-                  hkFinishLoadedObjectFlag flag);                             /* derived name */
-void FUN_0008b370(hkxMaterialShaderSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0008a890(hkxSkinBinding *self);                                      /* derived name */
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0008a890(hkxSkinBinding *self);          /* derived name */
 /* hkSkinBinding (vtable 0x16a3860): slot 0, the complete destructor
  * FUN_000aa370, runs the out-of-line FUN_000aa3d0, which restores the
  * vtable. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
@@ -2740,9 +2906,14 @@ class hkxTextureFile
  * 0x8bac2; slot 3 of its vtable (address point 0x16a24d0, FUN_0008ba30) returns it. */
 extern const hkClass D_57c7930; /* hkxAnimatedFloat's hkClass */
 
-class hkxAnimatedFloat
+class hkxAnimatedFloat : public hkReferencedObject
 {
   public:
+    /* Its finish constructor, run by the finish callback FUN_0008ba40, has
+     * nothing to fix up but the vtable (0x16a24c0); hkReferencedObject is
+     * the hkClass's parent. */
+    hkxAnimatedFloat(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
     virtual ~hkxAnimatedFloat();
 
     const hkClass *FUN_0008ba30() const; /* vtable slot 3; derived name */

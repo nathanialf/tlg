@@ -8,5 +8,5 @@ void FUN_0008b070(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0008b370(static_cast<hkxMaterialShaderSet *>(object), flag);
+    new (object) hkxMaterialShaderSet(flag);
 }

@@ -604,3 +604,30 @@ FUN_000787d0 src/libs/unknown/func_000787d0.cpp
 FUN_00078b00 src/libs/unknown/func_00078b00.cpp
 FUN_00079330 src/libs/unknown/func_00079330.cpp
 FUN_0007c410 src/libs/unknown/func_0007c410.cpp
+FUN_000792d0 src/libs/unknown/leaf_000792d0.cpp _ZNK29hkpLimitedHingeConstraintData12FUN_000792d0ERf
+FUN_0007bfd0 src/libs/unknown/leaf_0007bfd0.cpp _ZNK22hkpFixedConstraintData12FUN_0007bfd0ERf
+FUN_0007e2e0 src/libs/unknown/leaf_0007e2e0.cpp _ZNK24hkpRagdollConstraintData12FUN_0007e2e0ERf
+FUN_0007f0c0 src/libs/unknown/leaf_0007f0c0.cpp _ZNK22hkpHingeConstraintData12FUN_0007f0c0ERf
+FUN_00083360 src/libs/unknown/func_00083360.cpp
+FUN_00085110 src/libs/unknown/func_00085110.cpp
+FUN_00085fa0 src/libs/unknown/func_00085fa0.cpp
+FUN_00086d70 src/libs/unknown/func_00086d70.cpp
+FUN_00087000 src/libs/unknown/func_00087000.cpp
+FUN_00087490 src/libs/unknown/func_00087490.cpp
+FUN_00087750 src/libs/unknown/func_00087750.cpp
+FUN_00087b50 src/libs/unknown/func_00087b50.cpp
+FUN_000880f0 src/libs/unknown/func_000880f0.cpp
+FUN_00088330 src/libs/unknown/func_00088330.cpp
+FUN_000886d0 src/libs/unknown/func_000886d0.cpp
+FUN_00088900 src/libs/unknown/func_00088900.cpp
+FUN_00088cb0 src/libs/unknown/func_00088cb0.cpp
+FUN_00088e80 src/libs/unknown/func_00088e80.cpp
+FUN_000898f0 src/libs/unknown/func_000898f0.cpp
+FUN_00089920 src/libs/unknown/func_00089920.cpp
+FUN_0008a270 src/libs/unknown/func_0008a270.cpp
+FUN_0008a9b0 src/libs/unknown/func_0008a9b0.cpp
+_ZN20hkxMaterialShaderSetC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008b370.cpp
+FUN_0008b390 src/libs/unknown/func_0008b390.cpp
+FUN_0008ba40 src/libs/unknown/func_0008ba40.cpp
+FUN_0008bcd0 src/libs/unknown/func_0008bcd0.cpp
+FUN_0008bdc0 src/libs/unknown/func_0008bdc0.cpp
