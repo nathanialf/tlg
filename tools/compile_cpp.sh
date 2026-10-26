@@ -41,5 +41,8 @@ mkdir -p "$(dirname "$obj")"
 # -MD -MF: the headers the TU includes, for ninja's depfile, so an edited
 # header rebuilds every object that includes it (a stale object once passed
 # the gate on a header change that had broken four rows).
+# -I build/<slug>: a table's rows generated from the user's executable
+# (tools/gen_data_inc.py, docs/DECISIONS.md D18), included by the TU that
+# defines the table as "gen/D_<hex>.inc". It emits nothing of its own.
 # shellcheck disable=SC2086
-exec "$CXX" $best -MD -MF "$obj.d" -c "$src" -o "$obj"
+exec "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -c "$src" -o "$obj"

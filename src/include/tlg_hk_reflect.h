@@ -158,8 +158,10 @@ struct hkClassMember {
     };
 
     /* A type's name, size and alignment (derived names): 24-byte rows of the
-     * table at 0x16dc150, from TYPE_VOID ("void", -1, -1) on; the name of
-     * TYPE_STRINGPTR is the "hkStringPtr" at 0x14b30e4. */
+     * table at 0x16dc150 (defined in the TU that reads it, D17), one per type
+     * from TYPE_VOID to TYPE_MAX, its name in the type-name pool from
+     * 0x14b2fa6; the type byte is followed by seven bytes of padding, the
+     * align field by four. */
     struct TypeProperties {
         u8 type;          /* derived name */
         const char *name; /* derived name */
@@ -182,8 +184,6 @@ struct hkClassMember {
     u16 flags;
     u16 offset;
 };
-
-extern const hkClassMember::TypeProperties D_16dc150[]; /* the member type table */
 
 /* derived name: reads an integer of a member type from an address, widened
  * to 64 bits (0x91270: a switch on the type, an enum's or flags' storage by

@@ -100,6 +100,18 @@ matching prefix) to `build/base/obj/<path>.o`, and the `gate` target.
 `tools/build.sh regen` rewrites it after adding a source; `verify` checks the
 hashes alone; `clean` and `distclean` remove the build output.
 
+A claimed table whose bytes carry the package's content (records, string
+pointers) is committed as its type, count and name only (`docs/DECISIONS.md`
+D18): its row of `config/data.base.txt` names the TU that defines it, and its
+row of `config/data_schema.base.txt` (`D_<hex> <record type> <count>
+<header>`) the record struct in `src/include/`. For each schema row
+`build.ninja` has a `gen_data` edge, `tools/gen_data_inc.py`, which reads the
+rows from the user's own `baserom/base/eboot.elf` and writes
+`build/base/gen/D_<hex>.inc` (rewritten only when its text changes); that file
+is an implicit input of the TU's compile, which includes it between the
+braces of the definition as `"gen/D_<hex>.inc"` (`tools/compile_cpp.sh` puts
+`build/base/` on the include path). Nothing under `build/` is committed.
+
 ## 4. `ninja` and the gate
 
 `ninja` compiles every object, then runs `tools/check_elf.py --gate`: for

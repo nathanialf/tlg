@@ -1,0 +1,9 @@
+# The record type and count of each claimed table: `D_<hex> <record type> <count> <header>`.
+# D_<hex> is a row of config/data.base.txt (the TU that defines the object);
+# the record type is a struct of the named header under src/include/, spelled
+# as the source spells it (Outer::Inner), its fields typed from the bytes.
+# tools/gen_data_inc.py writes the initializer's rows from the user's own
+# baserom/base/eboot.elf into build/base/gen/D_<hex>.inc at build time, and
+# the TU includes that file between the braces of the definition. Only the
+# type, the count and the name are committed (docs/DECISIONS.md D18).
+D_16dc150 hkClassMember::TypeProperties 36 src/include/tlg_hk_reflect.h

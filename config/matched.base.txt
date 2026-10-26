@@ -708,3 +708,4 @@ FUN_0000d2c0 src/libs/unknown/func_0000d2c0.cpp
 FUN_00007f90 src/libs/unknown/func_00007f90.cpp
 FUN_00017930 src/libs/unknown/func_00017930.cpp
 FUN_0016d1f0 src/libs/unknown/func_0016d1f0.cpp _ZN27hknpSurfaceVelocityModifierC2Ev
+FUN_00007d40 src/libs/unknown/leaf_00007d40.cpp
