@@ -627,6 +627,18 @@ grows that form when one does.
 (derived; stored only at 0x1a0847 by its constructor, called at 0x19a9dc and
 0x19b49e; eight slots). `--check`: 26 derived rows, 0 failing.
 
+**Addendum, 2026-10-27 (round 37 harvest).** A static instance built in
+place by its initializer stores the vptr RIP-relative
+(`mov [rip+instance], vptr`, the system allocator's at 0x4b3b, hkSerializeDeprecated's
+at 0x19a618); `tools/vtable_names.py`'s walker now counts that store as
+the initializer's, so `--check` verifies such a row and the generated file
+lists the vtable. Rows added: hkArrayStreamWriter 0x16a32f0 (a fact: the
+hkClass record 0x57c8750, its string at 0x14c3faf, which slot 3 returns),
+hkMallocAllocator 0x168c9f0 (derived from the shape, the static instance
+0x57b7b00), hkSerializeDeprecated 0x16a6860 (a fact: the singleton string
+at 0x14cca08) and Class16969d0 0x16969d0 (derived; a 0x50-byte
+reference-counted object only the game builds, 0xeaa611).
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A

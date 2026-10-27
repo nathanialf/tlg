@@ -192,8 +192,12 @@ class Walker:
                 dst = ops[0]
                 base = ins.reg_name(dst.mem.base) if dst.mem.base else None
                 v = regs.get(ins.reg_name(ops[1].reg))
-                if base in this and dst.mem.disp == 0 and not dst.mem.index and v is not None \
-                        and self.in_relro(v) and self.is_address_point(v):
+                # `mov [this], vptr`, or `mov [rip+instance], vptr`: a static
+                # instance built in place by its initializer (the system
+                # allocator at 0x4b3b, hkSerializeDeprecated at 0x19a618)
+                static = dst.mem.base == X86_REG_RIP
+                if (base in this and dst.mem.disp == 0 or static) and not dst.mem.index \
+                        and v is not None and self.in_relro(v) and self.is_address_point(v):
                     seq.append(v)
             elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
                 d = ins.reg_name(ops[0].reg)

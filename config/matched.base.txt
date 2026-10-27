@@ -1311,3 +1311,5 @@ FUN_00041600 src/libs/unknown/func_00041600.cpp
 FUN_00037d80 src/libs/unknown/func_00037d80.cpp _ZN15hknpMaskedShape12FUN_00037d80Ev
 FUN_000271f0 src/libs/unknown/func_00027130.cpp _ZN14hkVertexFormat12FUN_000271f0ERKNS_7ElementE
 FUN_00045190 src/libs/unknown/func_00045190.cpp
+_ZN19hkArrayStreamWriterD1Ev src/libs/unknown/func_0008fe10.cpp
+_ZN19hkArrayStreamWriterD0Ev src/libs/unknown/func_0008fe10.cpp
