@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1581 vtables stored by a constructor that no type info names (below, with
+# 1577 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -23,10 +23,8 @@
 # Vtables no type info names: `<vtable address> stored by <functions> [hkClass <name>
 # (slot 3 <getter>)] [home <files>]`:
 #   0x168c630 stored by FUN_00001fb0 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo
-#   0x168caf0 stored by FUN_000066f0 FUN_00006740 FUN_00006800
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
 #   0x168d100 stored by FUN_000080c0 FUN_00008140 FUN_00008270 _ZN9hkOstreamD1Ev
-#   0x168d210 stored by FUN_00008eb0 FUN_00008f50 FUN_00008ff0 | hkClass hkBufferedStreamWriter (slot 3 0x8ea0)
 #   0x168d3f0 stored by FUN_0000a280 FUN_0000a310 FUN_0000a3b0
 #   0x168d5b0 stored by FUN_0000b1a0 FUN_0000b250 FUN_0000b330
 #   0x168d680 stored by FUN_0000c360 _ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei
@@ -51,7 +49,6 @@
 #   0x1699510 stored by FUN_00060c70
 #   0x169ab10 stored by FUN_0005a230 FUN_0006bc50
 #   0x169b100 stored by FUN_00070900 FUN_00070970
-#   0x169b400 stored by FUN_000768c0
 #   0x169b450 stored by FUN_000760c0 FUN_000763a0
 #   0x169c710 stored by FUN_0007c100 FUN_00082480 FUN_0017b030 FUN_0017d0f0
 #   0x169c750 stored by FUN_0007c100 FUN_00082480 FUN_0017b030 FUN_0017d0f0
@@ -98,7 +95,6 @@
 #   0x16a66c0 stored by FUN_0018d640
 #   0x16a66f0 stored by FUN_0018ce80 FUN_0018ced0 FUN_0018d640
 #   0x16a6720 stored by FUN_0018d640
-#   0x16a67e0 stored by FUN_00199ec0
 #   0x16a6820 stored by FUN_00199f80 FUN_0019a230
 #   0x16a68d0 stored by FUN_0019a7c0
 #   0x16a6910 stored by FUN_0019a950 FUN_0019ab10 FUN_0019abf0

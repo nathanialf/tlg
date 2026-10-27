@@ -647,6 +647,11 @@ hknpWorld 0x1699220 (derived after the home file hknpWorld.cpp at
 0x14bda42 and the reflected hknpWorldCinfo and hknpWorldSnapshot; stored
 by the constructor FUN_00048b20 at 0x48b51 and the destructor
 FUN_0004b040 at 0x4b062).
+Round 39's harvest added hkBufferedStreamWriter 0x168d210 (a fact: the
+hkClass 0x57b7fe8 its slot 3 returns, the string at 0x14b32c7),
+Elements000768c0 0x169b400, Object00006800 0x168caf0 and Object00199ec0
+0x16a67e0 (derived, named after their constructor, create function and
+initializer; the last a static instance stored RIP-relative at 0x199ed1).
 
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
