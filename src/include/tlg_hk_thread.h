@@ -256,6 +256,16 @@ class hknpPrepareConstraintsTask : public hkReferencedObject,
      * (+0x120 and +0x138). */
     hknpPrepareConstraintsTask(void *unknown18, void *unknown20, void *unknown28);
 
+    /* Empty (the shared 0xadd50); the deleting destructor is 0x383f0, the
+     * body every vtable of a 0x30-byte reference-counted class with an empty
+     * destructor cites (D15; none of the fifteen has other members beside
+     * it, so it is named for the first vtable among those our headers size
+     * to 0x30 and whose bases' destructors are inline and empty,
+     * docs/NOTES.md Round 35). */
+    virtual ~hknpPrepareConstraintsTask();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* slot 5 (0x154f50; the interface's slot 2 through the thunk 0x1550b0) */
     virtual void process();
     /* slot 6 (0x154f00, also the interface's slot 3) */

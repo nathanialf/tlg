@@ -2,6 +2,6 @@
 #include "tlg_lib_unknown.h"
 
 /* Nothing to destroy; the deleting destructor (0x1ba30, slot 1 of the vtable
- * 0x16a6af0 and of ten other 0x18-byte classes') is the one emitted with
+ * 0x1693610 and of ten other 0x18-byte classes') is the one emitted with
  * it. */
-OffsetOnlyStreamWriter::~OffsetOnlyStreamWriter() {}
+hknpCharacterStateInAir::~hknpCharacterStateInAir() {}

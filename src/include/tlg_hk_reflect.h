@@ -1242,11 +1242,21 @@ class hknpVehicleDefaultVelocityDamper : public hkReferencedObject
     hknpVehicleDefaultVelocityDamper(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
-/* hknpCharacterRigidBodyCinfo: vtable 0x1692f70, finish callback FUN_000361c0. */
+/* hknpCharacterRigidBodyCinfo: vtable 0x1692f70, finish callback FUN_000361c0;
+ * 0x90 bytes (its deleting destructor's size). */
 class hknpCharacterRigidBodyCinfo : public hkReferencedObject
 {
   public:
     hknpCharacterRigidBodyCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Empty (the shared 0x1c1e0); the deleting destructor 0x36160, beside
+     * the finish callback, is the body the vtables of the 0x90-byte
+     * reference-counted classes with empty destructors cite (D15). */
+    virtual ~hknpCharacterRigidBodyCinfo();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknownC[0x84];
 };
 
 /* hknpMaterialPalette: vtable 0x16937b0, finish callback FUN_000377c0. */
@@ -1361,11 +1371,22 @@ class hknpVehicleDefaultAerodynamics : public hkReferencedObject
     float liftCoefficient;
 };
 
-/* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback FUN_0003a3b0. */
+/* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback FUN_0003a3b0;
+ * 0xa0 bytes (its deleting destructor's size). */
 class hknpGroupCollisionFilter : public hkReferencedObject
 {
   public:
     hknpGroupCollisionFilter(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Empty (the shared 0x396a0); the deleting destructor 0x3a350, after
+     * the class's slots 5 to 8 (0x3a1b0 to 0x3a2f0), is the body the
+     * vtables of the 0xa0-byte reference-counted classes with empty
+     * destructors cite (D15). */
+    virtual ~hknpGroupCollisionFilter();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknownC[0x94];
 };
 
 /* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback FUN_0003a3d0. */
@@ -1466,6 +1487,15 @@ class hknpVehicleDefaultEngine : public hknpVehicleEngine
 {
   public:
     hknpVehicleDefaultEngine(hkFinishLoadedObjectFlag flag) : hknpVehicleEngine(flag) {}
+
+    /* Empty (the shared 0x158a30); the deleting destructor 0x15c430,
+     * beside the class's slots, is the body only this vtable cites
+     * (D15). */
+    virtual ~hknpVehicleDefaultEngine();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknownC[0x2c];
 };
 
 /* hknpVehicleDefaultBrake (parent hknpVehicleBrake): vtable 0x16a5350,
@@ -1515,6 +1545,18 @@ class hkpVehicleFrictionDescription : public hkReferencedObject
 {
   public:
     hkpVehicleFrictionDescription(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Empty (the shared 0x3b640); the deleting destructor 0x691d0, beside
+     * the finish callback of hknpVehicleData (which holds a friction
+     * description at +0xb0), is the body the vtables of the 0xe0-byte
+     * reference-counted classes with empty destructors cite (D15). */
+    virtual ~hkpVehicleFrictionDescription();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* To the class's 0xe0 bytes (its deleting destructor's size, and the
+     * room hknpVehicleData gives it, +0xb0 to +0x190). */
+    u8 unknownC[0xd4];
 };
 
 /* hknpVehicleData (type info 0x57c22f8 built by 0x69290: size 0x1b0,
@@ -1651,10 +1693,20 @@ class hkxEnum : public hkReferencedObject
     hkxEnum(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hkxCamera: 0x50 bytes (its deleting destructor's size). */
 class hkxCamera : public hkReferencedObject
 {
   public:
     hkxCamera(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Empty (the shared 0x83250); the deleting destructor 0x8a210, before
+     * the finish callback 0x8a270, is the body the vtables of the 0x50-byte
+     * reference-counted classes with empty destructors cite (D15). */
+    virtual ~hkxCamera();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknownC[0x44];
 };
 
 /* hkxAttributeHolder (hkClass 0x57c76b0, built at 0x8b422: size 0x20,
@@ -1784,11 +1836,21 @@ class hkxSparselyAnimatedEnum : public hkxSparselyAnimatedInt
     hkxSparselyAnimatedEnum(hkFinishLoadedObjectFlag flag) : hkxSparselyAnimatedInt(flag) {}
 };
 
-/* hknpCharacterProxyCinfo: vtable 0x1696e90, finish callback FUN_00040510. */
+/* hknpCharacterProxyCinfo: vtable 0x1696e90, finish callback FUN_00040510;
+ * 0xb0 bytes (its deleting destructor's size). */
 class hknpCharacterProxyCinfo : public hkReferencedObject
 {
   public:
     hknpCharacterProxyCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Empty (the shared 0x3b640); the deleting destructor 0x404b0, before
+     * the finish callback, is the body the vtable of the one 0xb0-byte
+     * class that cites it holds (D15). */
+    virtual ~hknpCharacterProxyCinfo();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknownC[0xa4];
 };
 
 /* hknpTyremarksInfo: vtable 0x169a080, finish callback FUN_00042a20. */
@@ -1958,6 +2020,9 @@ struct hkVertexFormat {
      * -1 (0x27130, called at 0x25c1b and 0xae11b). */
     int FUN_00027130(ComponentUsage usage, int subUsage) const;
 
+    /* derived name: the elements put in canonical order (0x27180). */
+    void FUN_00027180();
+
     struct Element {
         u8 dataType;
         u8 numValues;
@@ -1980,6 +2045,11 @@ void FUN_000270b0(hkVertexFormat *self, const hkVertexFormat *other); /* derived
 /* derived name: the order of a format's canonical form (the sort 0x26f20
  * that 0x27180 runs takes it by address): by usage, then by sub-usage. */
 bool FUN_000271d0(const hkVertexFormat::Element &a, const hkVertexFormat::Element &b);
+
+/* derived name: the sort of a range of elements under an order (0x26f20,
+ * recursive: a quick sort from the middle element). */
+void FUN_00026f20(hkVertexFormat::Element *elements, int low, int high,
+                  bool (*less)(const hkVertexFormat::Element &a, const hkVertexFormat::Element &b));
 
 /* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
  * hkReferencedObject, 0x10 bytes). Slots 11 to 14, kept by both
@@ -4346,6 +4416,11 @@ class hkpConstraintData : public hkReferencedObject
   public:
     hkpConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* The class allocator's delete, which the constraint data classes
+     * share (tlg_lib_unknown.h's reference-counted form): their deleting
+     * destructors free through it (0x7b3b0 for the 0xc0-byte ones). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* What slot 6 fills (derived names): hkpFixedConstraintData's override
      * (0x7bf20) hands its 0xc0 bytes of atoms and this argument to
      * FUN_00082890, which stores the atoms and their size at +0x10 and
@@ -4591,6 +4666,10 @@ class hkpCogWheelConstraintData : public hkpConstraintData
     /* The finish constructor (0x7c9d0): the atoms are left as loaded. */
     hkpCogWheelConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Empty (the shared 0x3b640); the deleting destructor 0x7b3b0, beside
+     * the class's slots 6 and 20 (0x7b570, 0x7b590), is the body the
+     * vtables of the 0xc0-byte reference-counted classes with empty
+     * destructors cite (D15). */
     virtual ~hkpCogWheelConstraintData();
 
     void FUN_0007b570(
@@ -4634,6 +4713,9 @@ class hkpStiffSpringConstraintData : public hkpConstraintData /* vtable address 
     /* The finish constructor (0x7aa50): the atoms are left as loaded. */
     hkpStiffSpringConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Empty (the shared 0x3b640); the deleting destructor 0x7d610
+     * (beside the class's slots) is the body the vtables of the reference-counted classes of
+     * its size with empty destructors cite (D15). */
     virtual ~hkpStiffSpringConstraintData();
 
     void FUN_0007d6e0(
@@ -4701,6 +4783,9 @@ class hkpDeformableFixedConstraintData : public hkpConstraintData
     /* The finish constructor (0x7a830): the atoms are left as loaded. */
     hkpDeformableFixedConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Empty (the shared 0x3b640); the deleting destructor 0x82e90
+     * (beside the class's slots) is the body the vtables of the reference-counted classes of
+     * its size with empty destructors cite (D15). */
     virtual ~hkpDeformableFixedConstraintData();
 
     void FUN_00083000(
@@ -4761,6 +4846,9 @@ class hkpWheelConstraintData : public hkpConstraintData
     /* The finish constructor (0x7eab0): the atoms are left as loaded. */
     hkpWheelConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Empty (the shared 0x3b640); the deleting destructor 0x17cae0
+     * (beside the class's slots) is the body the vtables of the reference-counted classes of
+     * its size with empty destructors cite (D15). */
     virtual ~hkpWheelConstraintData();
 
     Atoms atoms;
@@ -4809,29 +4897,43 @@ struct hkpConeLimitConstraintAtom {
     u8 unknown7[0x19];
 };
 
-/* hkpRagdollLimitsData: atoms at +0x20 (records 0x169b8f8, 0x169b920 and
- * 0x169b948: twistLimit at +0x70, coneLimit at +0x90, planesLimit at +0xb0). Its finish constructor
- * (0x788d0) re-enables the cone's stabilization through FUN_0007c860 when the
- * loaded offset is nonzero. */
-class hkpRagdollLimitsData
+/* hkpRagdollLimitsData (parent hkpConstraintData, 0xf0 bytes): atoms at
+ * +0x20 (records 0x169b8f8, 0x169b920 and 0x169b948: twistLimit at +0x70,
+ * coneLimit at +0x90, planesLimit at +0xb0). Its finish constructor, inline
+ * in the finish callback 0x788f0, re-enables the cone's stabilization
+ * through FUN_0007c860 when the loaded offset is nonzero. */
+class hkpRagdollLimitsData : public hkpConstraintData
 {
   public:
     struct Atoms {
-        u8 unknown0[0x90]; /* up to and with twistLimit (+0x70) */
+        hkpSetLocalRotationsConstraintAtom rotations;
+        u8 twistLimit[0x20];
         hkpConeLimitConstraintAtom coneLimit;
-        u8 unknownB0[0x20]; /* planesLimit */
+        u8 planesLimit[0x20];
     };
 
+    hkpRagdollLimitsData(hkFinishLoadedObjectFlag flag) : hkpConstraintData(flag)
+    {
+        if (flag.finishing) {
+            if (atoms.coneLimit.memOffsetToAngleOffset) {
+                FUN_0007c860(true);
+            }
+        }
+    }
+
+    /* Empty (the shared 0x3b640); the deleting destructor 0x7c6c0
+     * (beside the class's slots 5, 6, 7 and 20) is the body the vtables of the reference-counted classes of
+     * its size with empty destructors cite (D15). */
     virtual ~hkpRagdollLimitsData();
 
-    void FUN_0007c890(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    void FUN_0007c860(hkBool enable);                      /* derived name */
+    int unknownVirtual5() const;                                            /* slot 5 (0x7c980) */
+    void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const; /* slot 6 (0x7c890) */
+    hkBool unknownVirtual7() const;                                         /* slot 7 (0x7c8c0) */
+    void unknownVirtual20(hkBool wantRuntime,
+                          ConstraintRuntimeInfo &infoOut) const; /* slot 20 (0x7c8b0) */
 
-    void FUN_0007c8b0(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    void FUN_0007c860(hkBool enable); /* derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -5025,6 +5127,10 @@ class hkpConstraintMotor : public hkReferencedObject
 
     hkpConstraintMotor(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
+    /* The class allocator's delete, which the motors share
+     * (tlg_lib_unknown.h's reference-counted form). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkEnum<MotorType, s8> type; /* derived name */
 };
 
@@ -5069,6 +5175,14 @@ class hkpVelocityConstraintMotor : public hkpLimitedForceConstraintMotor
     hkpVelocityConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpLimitedForceConstraintMotor(flag)
     {
     }
+
+    /* Empty (the shared 0x3b640); the deleting destructor 0x7c0b0, beside
+     * the class's other slots, is the body the vtables of the 0x28-byte
+     * reference-counted classes with empty destructors cite (D15). */
+    virtual ~hkpVelocityConstraintMotor();
+
+    /* To the class's 0x28 bytes (its deleting destructor's size). */
+    u8 unknown18[0x10];
 };
 
 class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
@@ -5262,6 +5376,9 @@ class hkpBallAndSocketConstraintData : public hkpConstraintData
     /* The finish constructor (0x7cbf0): the atoms are left as loaded. */
     hkpBallAndSocketConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Empty (the shared 0x3b640); the deleting destructor 0x7c180
+     * (beside the class's slots) is the body the vtables of the reference-counted classes of
+     * its size with empty destructors cite (D15). */
     virtual ~hkpBallAndSocketConstraintData();
 
     /* derived name: sets the pivots in each body's space (called by the game
@@ -6265,13 +6382,7 @@ class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
 {
   public:
     OffsetOnlyStreamWriter();
-    /* Empty (the shared 0x17de10); the deleting destructor is 0x1ba30, the
-     * body every vtable of a 0x18-byte reference-counted class with an empty
-     * destructor cites (D15; no class of the eleven has other members beside
-     * it, so it is named for this one, docs/NOTES.md Round 35). */
     virtual ~OffsetOnlyStreamWriter();
-
-    static void operator delete(void *object, unsigned long numBytes);
 
     int write(const void *buffer, int size); /* vtable slot 6 */
     hkResult seek(int offset, int whence);   /* vtable slot 9 */
@@ -6401,6 +6512,17 @@ struct hknpBodyBreachedExpandedAabbEvent /* derived name */
 
     u8 unknown0[0xc];
     u32 bodyId; /* derived name */
+};
+
+/* A body's integration clipped: its id at +0xc and the stolen velocity at
+ * +0x10. */
+struct hknpLinearIntegrationClippedCommand /* derived name */
+{
+    void FUN_0003ddd0(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyId;          /* derived name */
+    Vec4 stolenVelocity; /* derived name */
 };
 
 /* The printer of the four reserved types (the dispatcher's last four

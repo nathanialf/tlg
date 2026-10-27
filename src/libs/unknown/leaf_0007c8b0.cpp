@@ -3,8 +3,8 @@
 
 /* derived name: slot 20 of hkpRagdollLimitsData's vtable (address point 0x169c950; also hkpHingeLimitsData's, 0x169fef0): 28 bytes of runtime and
  * 3 solver results. */
-void hkpRagdollLimitsData::FUN_0007c8b0(hkBool wantRuntime,
-                                        ConstraintRuntimeInfo &infoOut) const /* derived name */
+void hkpRagdollLimitsData::unknownVirtual20(hkBool wantRuntime,
+                                            ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 28;
     infoOut.numSolverResults = 3;

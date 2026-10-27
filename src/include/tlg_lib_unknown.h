@@ -1631,7 +1631,42 @@ inline void Crc32StreamWriter::operator delete(void *object, unsigned long numBy
     freeReferencedObject(object, numBytes);
 }
 
-inline void OffsetOnlyStreamWriter::operator delete(void *object, unsigned long numBytes)
+inline void hknpCharacterRigidBodyCinfo::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpGroupCollisionFilter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpVehicleFrictionDescription::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpConstraintMotor::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxCamera::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpVehicleDefaultEngine::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpCharacterProxyCinfo::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -1782,7 +1817,14 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
 {
   public:
     hknpCharacterStateInAir();
+    /* Empty (the shared 0x1c1e0); the deleting destructor is 0x1ba30, the
+     * body every vtable of a 0x18-byte reference-counted class with an empty
+     * destructor cites (D15; none of the eleven classes has other members
+     * beside it, so it is named for the first vtable among them,
+     * docs/NOTES.md Round 35). */
     virtual ~hknpCharacterStateInAir();
+
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_000365e0(hknpCharacterContext &context, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* vtable slot 7; derived name */
@@ -1791,6 +1833,34 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
     float airSpeed;              /* derived name */
     float maxLinearAcceleration; /* derived name */
 };
+
+inline void hknpCharacterStateInAir::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+/* The world's set of default modifiers (derived name; vtable 0x16991e0,
+ * address point 0x16991f0, no type info; built inline by 0x48b20 at
+ * 0x49d8b, 0xe8 bytes): twenty modifier objects from +0x10 to +0xd8, each
+ * with the thirteen-slot interface (docs/NOTES.md, the round of
+ * FUN_0016d1f0). */
+class DefaultModifierSet : public hkReferencedObject /* derived name */
+{
+  public:
+    /* Empty (the shared 0x3b640; the members' destructors are empty too);
+     * the deleting destructor 0x48ad0 frees the set through the class
+     * allocator, the body only this vtable cites. */
+    virtual ~DefaultModifierSet();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknownC[0xdc];
+};
+
+inline void DefaultModifierSet::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
 
 /* The on-ground state (derived name; vtable 0x169ae30, address point
  * 0x169ae40, no row yet; constructor 0x6fcf0: gain 0.95, walk speed 10
