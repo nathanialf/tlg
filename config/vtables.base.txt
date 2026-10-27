@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1568 vtables stored by a constructor that no type info names (below, with
+# 1565 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -64,8 +64,6 @@
 #   0x16a32a0 stored by FUN_0008fb30 | home hkHardwareInfo.cpp
 #   0x16a32f0 stored by FUN_00008140 FUN_0008fe10 FUN_0008fe60 | hkClass hkArrayStreamWriter (slot 3 0x8ff00)
 #   0x16a3460 stored by FUN_000908d0 FUN_00090930 FUN_000909a0
-#   0x16a34e0 stored by FUN_00091d50 FUN_00091e30 FUN_00091eb0
-#   0x16a3550 stored by FUN_00093180 FUN_00093250 FUN_000932c0
 #   0x16a35c0 stored by FUN_00094170 FUN_00094230 FUN_000942e0
 #   0x16a36b0 stored by FUN_0009a8a0
 #   0x16a3b90 stored by FUN_000b31c0 FUN_000b32e0
@@ -98,7 +96,6 @@
 #   0x16a6470 stored by FUN_00181b10
 #   0x16a64f0 stored by FUN_00183810 FUN_00183c40
 #   0x16a6530 stored by FUN_00183db0 FUN_00183f00
-#   0x16a6570 stored by FUN_0017e9a0 FUN_00184360 FUN_001843a0 FUN_001845b0
 #   0x16a65d0 stored by FUN_00185000 FUN_00185060 FUN_00185120 FUN_001851c0
 #   0x16a6660 stored by FUN_0018d640
 #   0x16a6690 stored by FUN_0018d640

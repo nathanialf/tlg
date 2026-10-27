@@ -1132,3 +1132,7 @@ FUN_000f6a90 src/libs/unknown/func_000f6a90.cpp _ZN18hknpWorldObject38812FUN_000
 FUN_0001a700 src/libs/unknown/func_0001a700.cpp _ZN15FileSystemEntry12FUN_0001a700EP18hkReferencedObjectPKcill
 _ZN14hkxTextureFileD1Ev src/libs/unknown/func_00087830.cpp
 _ZN14hkMemoryRouterC1Ev src/libs/unknown/func_0000bb60.cpp
+_ZN16FiosStreamReaderD1Ev src/libs/unknown/func_000932c0.cpp
+_ZN21hkVtableClassRegistryD1Ev src/libs/unknown/func_00184360.cpp
+_ZN17hkPs4StreamWriterD1Ev src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
+FUN_000029b0 src/libs/unknown/func_000029b0.cpp _ZN16TwoBaseAllocator10blockAllocEi

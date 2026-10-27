@@ -1,0 +1,26 @@
+llvm-3.3 backport patch: one nop after every call to __stack_chk_fail (PS4)
+
+This patch CHANGES CODE GENERATION for every function that carries a stack
+canary: the call to __stack_chk_fail in the protector's failure block is
+followed by a one-byte nop, as the PS4 compiler emits it in both of its
+generations (the library region's 751 calls, the game region's 5,981: every
+one is followed by 0x90, no other callee is; the function's unwind range
+includes the byte). Upstream LLVM 4.0 reaches the same end on PS4 through
+TrapUnreachable (a ud2 after the unreachable), which the executable does
+not show after this call. docs/DECISIONS.md D26 holds the measurement.
+
+--- a/lib/Target/X86/X86MCInstLower.cpp
++++ b/lib/Target/X86/X86MCInstLower.cpp
+@@ -791,4 +791,12 @@
+   MCInst TmpInst;
+   MCInstLowering.Lower(MI, TmpInst);
+   OutStreamer.EmitInstruction(TmpInst);
++
++  // The PS4 compiler follows every call to __stack_chk_fail with one nop,
++  // in both of its generations, so that the return address of the failure
++  // call stays inside the calling function (docs/DECISIONS.md D26: 751 of
++  // 751 such calls in the library region, 5,981 of 5,981 in the game).
++  if (MI->getOpcode() == X86::CALL64pcrel32 && MI->getOperand(0).isGlobal() &&
++      MI->getOperand(0).getGlobal()->getName() == "__stack_chk_fail")
++    OutStreamer.EmitInstruction(MCInstBuilder(X86::NOOP));
+ }

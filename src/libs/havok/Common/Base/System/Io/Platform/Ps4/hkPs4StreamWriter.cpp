@@ -28,8 +28,6 @@ class hkPs4StreamWriter /* derived name */
     bool ownsHandle;
 };
 
-// NONMATCHING: equal but for its vtable, 0x16a34e0, which no row names yet
-// (docs/NOTES.md, Round 32).
 hkPs4StreamWriter::~hkPs4StreamWriter()
 {
     if (handle >= 0 && ownsHandle) {

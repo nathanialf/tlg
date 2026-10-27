@@ -914,6 +914,11 @@ until the supervisor's fix (it compared a relocation's offset, the field at
 +3, with instruction addresses); it reports 1 now. `tools/setup.sh` builds
 the from-source 3.3 after fetching the prebuilt, and `build.sh` requires it.
 
+**Addendum, 2026-10-27 (round 32 harvest).** The from-source build now
+carries a second backport, D26's nop after the stack check's failure
+call; `tools/build_llvm.sh 3.3` applies both and its stamp records the
+set.
+
 ## D21. The library region stays at -O2; FUN_00187750's loop unswitch is an open level question (2026-10-26)
 
 **Question.** FUN_00187750 (0xdec bytes, `src/libs/unknown/func_00188540.cpp`)
@@ -1161,3 +1166,58 @@ destructor (49 bytes, equal once the symbol resolves).
 **Trigger to revisit.** A second value among the registrations (none), or
 a base whose registrations pass the handle only through another register
 (then the finder follows the move).
+
+## D26. The PS4 compiler follows the stack check's failure call with one nop (2026-10-27)
+
+**Decision.** The library prefix's compiler (`cxx=3.3-src`) carries a
+second backport patch, `tools/patches/llvm-3.3-sspnop-01-stack-chk-fail-nop.patch`:
+after the X86 printer emits a `call __stack_chk_fail`, it emits one
+`nop` (0x90). Nothing else changes. The game prefix (the prebuilt 4.0.0)
+is not patched yet; the game region shows the same byte and will take
+the same patch on a from-source 4.0.0 once that build is verified
+byte-identical to the prebuilt (D20's procedure), a separate decision.
+
+**Why.** Round 32's worker left FUN_000029b0 equal except for its last
+byte: the base's function ends `call 0x14b1dc8; nop` and the compiler
+ends it at the call. 0x14b1dc8 is the import stub of `__stack_chk_fail`
+(`config/imports.base.txt`, NID Ou3iL1abvng). The whole executable was
+measured (the supervisor entry after Round 32 in docs/NOTES.md holds the
+script's output):
+
+- Every call to the stub is followed by `nop`: 751 of 751 in the library
+  region (below 0x1a3e00), 5,981 of 5,981 in the game region. 711 of the
+  library's and 5,899 of the game's end their function with it; the
+  others sit mid-function, the nop before the next block's code.
+- The nop is inside the function: `config/functions.base.txt` takes its
+  sizes from the `.eh_frame` FDE ranges (`tools/survey_elf.py`), and the
+  range covers the byte (FUN_000029b0 is 0x3a bytes, its call ends at
+  0x39). It is therefore the compiler's, not the linker's alignment.
+- No other callee gets one. Of the four other `call; nop` pairs in the
+  executable (0xf6dc9, 0x8b77aa, 0x94f1f9, 0x94f409) each nop pads the
+  next instruction to a 16-byte boundary: loop alignment.
+- The game region's other `noreturn` callees are followed by `ud2`
+  (328 after the stub at 0x14b0378, 139 after 0x14b04e8): that is
+  `TrapUnreachable`, which upstream LLVM 4.0 turns on for PS4 so that "the
+  return address of a noreturn call must still be within the calling
+  function" (`lib/Target/X86/X86TargetMachine.cpp:168-175`). The failure
+  block is the one place where the executable has a nop instead, in
+  both compiler generations; the library region has one `ud2` in all and
+  no trap after any call. The upstream stack protector builds the block
+  as `call @__stack_chk_fail; unreachable` (`lib/CodeGen/StackProtector.cpp`,
+  `CreateFailBB`, 3.3 and 4.0.0 alike), which gives nothing (3.3) or
+  `ud2` (4.0.0 on PS4) after the call, never a nop.
+- No matched function carries a canary that ends on its failure call:
+  the shape was unclaimable, and it blocks 711 library functions.
+
+The patch reproduces the observed rule at the one place that cannot
+change any other byte, instruction emission: the nop is added after the
+call's MCInst, so register allocation, scheduling, block placement and
+the function's own size (the end label moves past the nop, as the FDE
+shows) are untouched. The PS4 compiler's own form of the rule is not
+known; its effect is measured exactly. A source-level spelling (a nop
+asm after the call) would be a crutch and would not survive the
+protector's own block anyway.
+
+**Trigger to revisit.** A call to `__stack_chk_fail` in the base with no
+nop after it, or a canary function that matches under the patch only by
+an unrelated change; either reopens the mechanism.
