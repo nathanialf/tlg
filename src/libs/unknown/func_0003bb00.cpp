@@ -2,11 +2,11 @@
 #include "tlg_hk_reflect.h"
 
 /* derived names: the finish callback of hknpDummyShape's type info (0x57bfd60):
- * construct the object in place from a loaded image through its out-of-line
- * finish constructor. */
+ * construct the object in place from a loaded image (the finish
+ * constructor is out of line). */
 void FUN_0003bb00(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0003e170(static_cast<hknpDummyShape *>(object), flag);
+    new (object) hknpDummyShape(flag);
 }

@@ -83,6 +83,24 @@ void FUN_0002b120(Pair08Owner *self, float scale);                /* derived nam
  * (nonzero, bit 1, bit 0). */
 struct Pair08Tail /* derived name */
 {
+    /* The tests are inline accessors: each and is done on the byte (the
+     * base's `andb $2` at 0x2af62), as InstCombine narrows it inside the
+     * accessor before the reads merge (cookbook 71). */
+    bool hasFlags() const
+    {
+        return flags != 0;
+    } /* derived name */
+
+    bool hasFlag1() const
+    {
+        return (flags & 2) != 0;
+    } /* derived name */
+
+    bool hasFlag0() const
+    {
+        return (flags & 1) != 0;
+    } /* derived name */
+
     u8 unknown0[4];
     u8 flags; /* derived name */
 };
@@ -341,7 +359,21 @@ class PageAllocator : public hkReferencedObject /* derived name */
  * FUN_00006c40 and the shutdown at 0x17ae6 clears it; FUN_00006c50 returns
  * it to the callers of its slots (13 at 0x7350, 17 at 0xecb6, 4 at 0x8f5c5,
  * and the game code at 0xe993e5). */
-class hkMemorySystem; /* derived name */
+struct hkMemoryRouter;
+
+/* Slots 4 and 5 (the memory system's 0xc590 and 0xc810, vtable address
+ * point 0x168d690): a thread's router set up under a name and the flags,
+ * and taken down; the worker thread context (0x8f5c5, 0x8f621) passes 3.
+ * derived names. */
+class hkMemorySystem /* derived name */
+{
+  public:
+    virtual ~hkMemorySystem();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void threadInit(hkMemoryRouter &router, const char *name, int flags); /* derived name */
+    virtual void threadQuit(hkMemoryRouter &router, int flags);                   /* derived name */
+};
 
 extern hkMemorySystem *D_57b7ba0;
 void FUN_00006c40(hkMemorySystem *system); /* derived name */
@@ -1134,6 +1166,9 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
 
     /* Slot 4 (0xef40): the requested size rounded up to 16 in place, then
      * the same fast path. */
+    /* Slot 3 (0xef70; slot 5 holds the same body). */
+    virtual void blockFree(void *pointer, int numBytes);
+
     virtual void *FUN_00008d70(int &numBytes);
 
     /* The slow path (0xf090): a request larger than a slab goes to the
@@ -1152,7 +1187,10 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
  * from the router's heap at +0x60, kept in the slot at 0x16d80d0. */
 struct hkMemoryRouter /* derived name */
 {
-    u8 unknown0[0x50];
+    /* Built first by the router's constructor (0xbb69); its destructor,
+     * AllocatorBase's, is the router's (the tail jump at 0x8f62d). */
+    Allocator0000ed40 stack; /* derived name */
+    u8 unknown28[0x28];
     /* The allocator the adaptor of vtable 0x168d430 forwards to (0xac60).
      * derived name. */
     AllocatorBase *allocator50;
@@ -1212,7 +1250,26 @@ class RouterAllocator58 : public AllocatorBase /* derived name */
 };
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
-void FUN_014aff00();                       /* derived name */
+
+/* The thread's teardown (derived name; 0x9a80): the thread's block and the
+ * thread's router given up, always a success. */
+hkResult FUN_00009a80(); /* derived name */
+
+/* What a worker thread holds while it runs (FUN_000071a0 keeps one on its
+ * stack, 0x80 bytes): the constructor FUN_0008f570 builds the router,
+ * turns on flush-to-zero, hands the router to the memory system under the
+ * name "hkWorkerThreadContext" (the string at 0x14c3ef0, which names the
+ * class) and makes it the thread's (FUN_00009a60); the destructor undoes
+ * it in reverse. */
+class hkWorkerThreadContext
+{
+  public:
+    ~hkWorkerThreadContext();
+
+    hkMemoryRouter memoryRouter; /* derived name */
+};
+
+void FUN_014aff00(); /* derived name */
 
 /* The library's formatted print into a buffer of `size` bytes (derived name):
  * FUN_00017e80 starts the argument list and hands it to the imported

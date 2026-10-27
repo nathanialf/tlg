@@ -1987,6 +1987,35 @@ struct hknpShapeSignals {
  * 0x10. */
 void FUN_00069960(void *object); /* derived name */
 
+/* A pool of worker threads (derived name): slot 9 gives the number of its
+ * threads (the step input's thread count at 0x69924 is one more). */
+class ThreadPool00069910 /* derived name */
+{
+  public:
+    virtual ~ThreadPool00069910();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual int getNumThreads() const; /* slot 9; derived name */
+};
+
+/* What the game hands a physics step (derived name): the game fills one on
+ * its stack at 0xe99d79 (a time step of 1/30 at +0, a pointer at +8) and
+ * has FUN_00069910 count the threads from its thread pool: the calling
+ * thread and the pool's, or the calling thread alone. */
+struct StepInput00069910 /* derived name */
+{
+    void FUN_00069910(const ThreadPool00069910 *threadPool); /* derived name */
+
+    u8 unknown0[0x10];
+    int numCpuThreads; /* derived name */
+    int numSpuThreads; /* derived name */
+};
+
 /* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
  * vtable 0x16a54a0, address point 0x16a54b0), reflected with
  * hknpScaledConvexShapeBase (0x60 bytes) as its parent and no members of its
@@ -2901,7 +2930,6 @@ void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag); /*
 /* More hknp classes with an out-of-line finish constructor (type info, the
  * vtable it stores): */
 class hknpProjectileGun;  /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
-struct hknpDummyShape;    /* 0x57bfd60; FUN_0003e170 runs hknpShape's, vtable 0x16967b0 */
 class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 class hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
@@ -2909,8 +2937,23 @@ struct
 class hknpTriangleShape; /* 0x57c0838; 0x78230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
 
 void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);  /* derived name */
-void FUN_0003e170(hknpDummyShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
 void FUN_00156620(hknpFirstPersonGun *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hknpDummyShape (type info 0x57bfd60; hkClass 0x57bfd10 built at 0x3bba5:
+ * size 0x60, parent hknpShape's 0x57bf1c0, member records at 0x1695a70):
+ * aabb (struct hkAabb) at +0x30, signals (struct hknpShapeSignals, flags
+ * 0x400, not serialized) at +0x50. Its finish constructor 0x3e170 is out of
+ * line, jumped to by the finish callback FUN_0003bb00 and called by the
+ * reflection initializer at 0x3bbb0; the signals start empty. */
+class hknpDummyShape : public hknpShape
+{
+  public:
+    hknpDummyShape(hkFinishLoadedObjectFlag flag);
+    virtual ~hknpDummyShape();
+
+    hkAabb aabb;
+    hknpShapeSignals signals;
+};
 
 /* hknpPhysicsSystemData (type info 0x57c0198; hkClass 0x57c0148, built at
  * 0x3d115: size 0x78, parent hkReferencedObject's, member records at
@@ -3660,7 +3703,7 @@ struct hkpLinMotorConstraintAtom {
     u8 padding[4];
 };
 
-class hkpPrismaticConstraintData
+class hkpPrismaticConstraintData : public hkpConstraintData
 {
   public:
     /* Members from the record table 0x169cb60: transforms at +0, motor
@@ -3675,8 +3718,11 @@ class hkpPrismaticConstraintData
         u8 unknownA8[0x58];
     };
 
-    /* vtable 0x169d1f0, address point 0x169d200 (finish constructor
-     * FUN_0007ce10). */
+    /* The finish constructor (0x7ce10; hkClass 0x57c4088 built at 0x7cf8e,
+     * 0x120 bytes, parent hkpConstraintData's 0x57c45a8): the atoms finish
+     * themselves. vtable 0x169d1f0, address point 0x169d200. */
+    hkpPrismaticConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkpPrismaticConstraintData();
 
     void FUN_0007e870(
@@ -3684,7 +3730,6 @@ class hkpPrismaticConstraintData
     void FUN_0007e890(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -3975,7 +4020,7 @@ class hkpPointToPlaneConstraintData : public hkpConstraintData
 /* hkpLinearClearanceConstraintData: address point 0x16a0300 (finish
  * constructor FUN_0007ac70). hkpRackAndPinionConstraintData: 0x16a0210
  * (FUN_0007d080). */
-class hkpLinearClearanceConstraintData
+class hkpLinearClearanceConstraintData : public hkpConstraintData
 {
   public:
     /* Members from the record table 0x169bf60: transforms at +0, motor
@@ -3990,6 +4035,10 @@ class hkpLinearClearanceConstraintData
         u8 unknownA8[0x78];
     };
 
+    /* The finish constructor (0x7ac70; hkClass built at 0x7ad45, parent
+     * hkpConstraintData's 0x57c45a8): the atoms finish themselves. */
+    hkpLinearClearanceConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkpLinearClearanceConstraintData();
 
     void FUN_000839f0(
@@ -3997,7 +4046,6 @@ class hkpLinearClearanceConstraintData
     void FUN_00083a10(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -4358,7 +4406,7 @@ class hkpBallAndSocketConstraintData : public hkpConstraintData
  * angFriction at +0xc0, angLimit at +0xd0, 2dAng at +0xf0, ballSocket at
  * +0x100). Slots 10 and 13 of its vtable write and read the ball-socket
  * atom's breach impulse, as hkpBallAndSocketConstraintData's do. */
-class hkpLimitedHingeConstraintData
+class hkpLimitedHingeConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
@@ -4366,12 +4414,15 @@ class hkpLimitedHingeConstraintData
          * the runtime are set. */
         Atoms(hkFinishLoadedObjectFlag flag);
 
-        u8 transforms[0x90];
+        hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpAngMotorConstraintAtom angMotor;
         u8 unknownC0[0x40]; /* angFriction, angLimit, 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
     };
+
+    /* The finish constructor (0x82000): the atoms finish themselves. */
+    hkpLimitedHingeConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpLimitedHingeConstraintData();
 
@@ -4389,7 +4440,6 @@ class hkpLimitedHingeConstraintData
     void FUN_00079210(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 
@@ -6351,6 +6401,18 @@ struct hkBlockStreamConsumedBlock /* derived name */
     int numElementsConsumed;   /* derived name */
 };
 
+/* A stretch of a block stream (derived names): the block it starts in, the
+ * byte offset of its first element in that block's data and how many of its
+ * elements are in that block, and its element count. The reader starts at
+ * one with FUN_000937f0 (seventeen callers). */
+struct hkBlockStreamRange /* derived name */
+{
+    const hkBlockStreamBlock *startBlock; /* derived name */
+    u16 startByteOffset;                  /* derived name */
+    u16 startBlockNumElements;            /* derived name */
+    int numElements;                      /* derived name */
+};
+
 /* A block stream's reader (derived names), 0x18 bytes: the current block,
  * the next element's address in it (null when the block is empty), the
  * elements left in the other blocks and in this one. */
@@ -6359,6 +6421,8 @@ struct hkBlockStreamReader /* derived name */
     /* At the stream's first block, every later element still to read
      * (0x937c0). derived name. */
     void FUN_000937c0(const hkBlockStream *stream);
+    /* At the start of a range (0x937f0). derived name. */
+    void FUN_000937f0(const hkBlockStreamRange *range);
 
     const hkBlockStreamBlock *currentBlock; /* derived name */
     const u8 *currentByteLocation;          /* derived name */
