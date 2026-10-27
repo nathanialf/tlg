@@ -3,8 +3,9 @@
 
 /* derived name: slot 27 of hknpDecoratorShape's vtable (address point
  * 0x16958e0) forwards to the same slot of the wrapped shape at +0x28. */
-int hknpDecoratorShape::FUN_0003b210(const void *argument1, const void *argument2,
-                                     int argument3) const /* derived name */
+int hknpDecoratorShape::FUN_0003b210(const LodContext000426b0 &context,
+                                     const LodQuery000426b0 &query,
+                                     int currentLod) const /* derived name */
 {
-    return coreShape->unknownVirtual27(argument1, argument2, argument3);
+    return coreShape->unknownVirtual27(context, query, currentLod);
 }

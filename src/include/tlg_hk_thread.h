@@ -179,6 +179,26 @@ class RefArrays /* derived name */ : public hkReferencedObject
     hkArray<hkReferencedObject *> references; /* derived name */
 };
 
+/* The deleting destructor of RefArrays (0x481c0, slot 1 of its vtable): the
+ * base destructor, then its 0x50 bytes back to the thread's heap unless
+ * null. Written as calls while the inline destructor's body is not written
+ * (cookbook 15). derived name. */
+void FUN_000481c0(RefArrays *self); /* derived name */
+
+/* A RefArrays with two 64-bit values after it, both -1 when built (vtable
+ * 0x1698f80, no type info; built on the stack at 0x508eb and 0x51506 over
+ * RefArrays's constructor FUN_00092280; slot 0 the shared 0x481b0, slot 1
+ * its deleting destructor 0x48210, which frees 0x60 bytes). derived
+ * names. */
+class RefArrays1698f80 : public RefArrays /* derived name */
+{
+  public:
+    s64 value50; /* derived name */
+    s64 value58; /* derived name */
+};
+
+void FUN_00048210(RefArrays1698f80 *self); /* derived name */
+
 /* hknpSolverFactoryTask: vtables 0x16a4090 and 0x16a40d8; slot 6 opens the
  * timer "Solve/SolverFactory". 0x90 bytes, built by FUN_00151250 at
  * 0x1515a1 (value-initialized, then the four pointers stored); slot 5

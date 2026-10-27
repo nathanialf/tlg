@@ -236,14 +236,15 @@ class AllocatorBase /* derived name */
 
     /* Slot 6 (the default 0x8d90): a buffer resized, from its old size to
      * the size asked for, which the allocator may round up in place (the
-     * slab allocator's 0xefd0). derived name. Slots 8 to 11, signatures not
-     * recovered (8 the default 0x8e50, 9 the statistics, 11 the peak
-     * reset). */
+     * slab allocator's 0xefd0). derived name. Slot 11's signature is not
+     * recovered (the peak reset). */
     virtual void *FUN_00008d90(void *pointer, int oldNumBytes, int &numBytesInOut);
     /* Slot 7 (the default 0x8e00): numBlocks blocks of blockSize bytes,
      * each from slot 2, into blocksOut. derived name. */
     virtual void blockAllocBatch(void **blocksOut, int numBlocks, int blockSize);
-    virtual void unknownVirtual8();
+    /* Slot 8 (the default 0x8e50): the non-null of numBlocks blocks of
+     * blockSize bytes, each to slot 3. derived name. */
+    virtual void blockFreeBatch(void **blocks, int numBlocks, int blockSize);
     /* Slot 9: the allocator's statistics into the caller's record
      * (MemoryStatistics, below). derived name. */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
@@ -267,6 +268,35 @@ template <typename T> inline void hkArray<T>::clearAndDeallocate()
     data = 0;
     capacityAndFlags = DONT_DEALLOCATE_FLAG;
 }
+
+/* The array's grow by one more element at least, through an allocator, for
+ * elements of a size (0xb40, 470 call sites; the capacity doubled, or one
+ * when empty, by the allocator's slot 6). derived name. */
+void FUN_00000b40(AllocatorBase &allocator, void *array, int elementSize); /* derived name */
+
+template <typename T> inline void hkArray<T>::pushBack(const T &element)
+{
+    if (size == getCapacity()) {
+        FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
+    }
+    data[size] = element;
+    size++;
+}
+
+/* An array of 32-byte elements and the indices of the free ones (derived
+ * names): FUN_00198a70 grows the elements, FUN_00198a20 hands an index
+ * back; FUN_0013e090 builds one and walks it. */
+struct ElementPool00198a20 /* derived name */
+{
+    struct Element {
+        u8 unknown0[0x20];
+    };
+
+    void FUN_00198a20(int index); /* derived name */
+
+    hkArray<Element> elements; /* derived name */
+    hkArray<int> freeIndices;  /* derived name */
+};
 
 /* The interface's slots 2 to 10 in their vtable order, each named after
  * TwoBaseAllocator's overrider (primary slots 13 to 21) and typed from its
@@ -509,6 +539,21 @@ extern hknpGlobals *D_57c8818; /* hknpGlobals's singleton instance */
 
 /* Its create function, the singleton record's (0x175f30). derived name. */
 hkReferencedObject *FUN_00175f30(); /* derived name */
+
+/* The other singletons' create functions (each record's second field) and
+ * the instance pointers not declared with their classes: */
+hkReferencedObject *FUN_00183c40(); /* hkDebugDisplay's; derived name */
+class hkProcessFactory;
+extern hkProcessFactory *D_57c88e8; /* hkProcessFactory's instance */
+hkReferencedObject *FUN_00183f00(); /* hkProcessFactory's; derived name */
+hkReferencedObject *FUN_001845b0(); /* hkVtableClassRegistry's; derived name */
+hkReferencedObject *FUN_00184e80(); /* hkTypeInfoRegistry's; derived name */
+hkReferencedObject *FUN_00184f40(); /* hkDefaultClassNameRegistry's; derived name */
+class hkVersionPatchManager;
+extern hkVersionPatchManager *D_57c89b8; /* hkVersionPatchManager's instance */
+hkReferencedObject *FUN_00199f80();      /* hkVersionPatchManager's; derived name */
+extern hkSerializeDeprecated *D_57c89e0; /* hkSerializeDeprecated's instance */
+hkReferencedObject *FUN_0019a5f0();      /* hkSerializeDeprecated's; derived name */
 
 /* A job queue's construction info (derived names: no string names the
  * struct), built by its constructor (0x5640) on the game's stack at 0xe997c8
@@ -813,6 +858,22 @@ void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
 struct Elements000760c0; /* derived name */
 
 void FUN_000760c0(Elements000760c0 *self); /* derived name */
+/* An object of 0xa0 bytes (vtable 0x16a3f50, no type info; constructor
+ * FUN_00140a60, out-of-line destructor FUN_00140e70, which restores the
+ * vtable and releases the pointers from +0x10 up to the count at +0x60);
+ * its deleting destructor 0x140e20 runs the destructor and frees the 0xa0
+ * bytes unless null (written as calls while the class is opaque, cookbook
+ * 15). derived names. */
+struct Object00140a60; /* derived name */
+
+void FUN_00140e70(Object00140a60 *self); /* derived name */
+void FUN_00140e20(Object00140a60 *self); /* derived name */
+
+/* Its deleting destructor (0x76070, beside 0x760c0; both vtables' slot
+ * 1): the destructor, then the 0x160 bytes back to the thread's heap
+ * unless null. Written as calls while the class is opaque (cookbook 15).
+ * derived name. */
+void FUN_00076070(Elements000760c0 *self); /* derived name */
 /* Reads the processor's time-stamp counter (rdtscp, edx:eax joined into 64
  * bits); its only caller is FUN_00092200, whose caller (0xdb64) mixes the
  * low half into a random seed with the time and a process value. */
@@ -831,8 +892,19 @@ struct LayoutRules00180ef0 {
 };
 
 struct Layout00180ef0 {
+    /* A class's member offsets computed under the rules unless the map
+     * already holds the class (0x180f00, called at 0x19a91e and 0x19b05b
+     * with recurse 1). derived name. */
+    void FUN_00180f00(hkClass &klass, PointerMap &classesDone, int recurse) const;
+
     LayoutRules00180ef0 rules;
 };
+
+/* The member offsets of a class and, when recurse is set, of its members'
+ * classes, computed in place under the rules; each class done is added to
+ * the map (0x180f50). derived name. */
+void FUN_00180f50(hkClass &klass, const LayoutRules00180ef0 &rules, PointerMap &classesDone,
+                  int recurse); /* derived name */
 
 /* The object copier (derived name, from hkObjectCopier.cpp, the home of
  * its neighbours 0x1a0890 and 0x1a0b40): a reference-counted object
@@ -1312,6 +1384,10 @@ class FiosStreamReader : public StreamReader /* derived name */
      * an open handle; a read that brings nothing marks the reader failed.
      * derived name. */
     int FUN_00093300(void *buffer, int numBytes);
+    /* Slot 8 (0x93340): the bytes read as slot 6 reads them and the handle
+     * moved back over them, a peek; a read that brings nothing or a seek
+     * that fails marks the reader failed. derived name. */
+    int FUN_00093340(void *buffer, int numBytes);
     hkResult FUN_000933a0(int offset, int whence); /* vtable slot 10; derived name */
 
     SceFiosFH handle; /* derived name */
@@ -1692,6 +1768,14 @@ inline void hknpCharacterProxyCinfo::operator delete(void *object, unsigned long
 class RouterAllocator50 : public AllocatorBase /* derived name */
 {
   public:
+    /* Empty; the deleting destructor 0xac10, beside this class's slots, is
+     * the body all three vtables cite (D15). */
+    virtual ~RouterAllocator50();
+
+    /* The class allocator's delete: back to the thread's heap at the
+     * class's size, nothing for null (inline in 0xac10). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     virtual void *blockAlloc(int numBytes);                 /* 0xac60 */
     virtual void blockFree(void *pointer, int numBytes);    /* slot 3, 0xac90 */
     virtual void *FUN_00008d70(int &numBytes);              /* slot 4, 0xacd0 */

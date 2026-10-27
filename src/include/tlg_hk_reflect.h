@@ -114,6 +114,21 @@ inline float fabs(float r)
 }
 } // namespace hkMath
 
+/* hkHalf (the reflection's TYPE_HALF, its name in the type-name table at
+ * 0x14b30dd): a float's top 16 bits. Set from a vector's first lane by
+ * truncation, `vpsrad $16; vpackssdw; vmovd` (0x15db42). Field name
+ * derived. */
+struct hkHalf {
+    void setReal(__m128 r)
+    {
+        __m128i bits = _mm_srai_epi32(_mm_castps_si128(r), 16);
+        bits = _mm_packs_epi32(bits, bits);
+        value = static_cast<s16>(_mm_cvtsi128_si32(bits));
+    }
+
+    s16 value;
+};
+
 /* hkArray, the reflection's array type (its name in the type-name table at
  * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
  * flags (0x80000000 when the array does not own its storage, as the
@@ -186,6 +201,10 @@ template <typename T> struct hkArray {
      * allocator unless the array does not own it (defined in
      * tlg_lib_unknown.h, after AllocatorBase). derived name. */
     void clearAndDeallocate();
+
+    /* An element appended, the storage grown through FUN_00000b40 when it
+     * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
+    void pushBack(const T &element);
 
     T &operator[](int index)
     {
@@ -781,7 +800,20 @@ hkBool FUN_000181c0(const char *string, const char *suffix); /* derived name */
  * follows the pattern's first character. derived name. */
 bool FUN_0001a770(const char *name, const char *pattern); /* derived name */
 
+struct hkStringPtr;
+void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
 struct hkStringPtr {
+    hkStringPtr() = default;
+
+    /* The finish constructor, as a member initializer runs it (the out-of-line
+     * body is FUN_0000e5c0; hknpFirstPersonGun's finish constructor runs it
+     * before its next member's). */
+    hkStringPtr(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000e5c0(this, flag);
+    }
+
     /* The string's length, 0 for a null string (callers 0x8965, 0x7778a).
      * derived name. */
     int FUN_0000e770() const;
@@ -850,6 +882,10 @@ class hkXmlParser : public hkReferencedObject /* derived name */
     hkXmlParser();
     virtual ~hkXmlParser();
 
+    /* Slot 6 (0x19e6b0): a node handed back, to be returned again by the
+     * next read. derived name. */
+    void FUN_0019e6b0(void *node);
+
     hkArray<void *> pendingNodes; /* derived name */
     hkStringPtr lastError;        /* derived name */
 };
@@ -900,7 +936,7 @@ struct SerializeErrorDetails /* derived name */
 };
 
 /* hkSerializeDeprecated, the singleton registered by that name (record
- * 0x57c8a40 filled by 0x19a680; its create function 0x19a5f0 builds a static
+ * 0x57c89e8 filled by 0x19a680, instance pointer 0x57c89e0; its create function 0x19a5f0 builds a static
  * instance at 0x57c8a08 with the vtable 0x16a6860, address point 0x16a6870,
  * and returns it with a reference added). This build links the stub, whose
  * slots fail with "Packfile versioning support is not linked..." (0x14cca20):
@@ -1307,12 +1343,16 @@ class hknpVehicleInstance;
 /* hknpVehicleDefaultAnalogDriverInput: vtable 0x16a43c0, finish callback
  * FUN_000378b0; members (records from 0x1693820) slopeChangePointX,
  * initialSlope and deadZone (floats) at +0xc to +0x14, autoReverse (hkBool)
- * at +0x18. Slot 7 (FUN_00151de0) is the brake input. */
+ * at +0x18. Slot 6 (FUN_00151d90) is the accelerator input, slot 7
+ * (FUN_00151de0) the brake input. */
 class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
 {
   public:
     hknpVehicleDefaultAnalogDriverInput(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
+    float FUN_00151d90(
+        const hknpVehicleInstance *vehicle,
+        const hknpVehicleDriverInputAnalogStatus *status) const; /* vtable slot 6; derived name */
     float FUN_00151de0(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleDriverInputAnalogStatus *status) const; /* vtable slot 7; derived name */
@@ -2437,6 +2477,10 @@ class hknpRefMassDistribution : public hkReferencedObject
 struct hkAabb {
     void FUN_0014a1f0(); /* derived name */
     void FUN_0014a220(); /* derived name */
+    /* Whether the box is valid: min at most max in x, y and z, and both
+     * corners ordered numbers there (0x184660; the geometry processing's
+     * 0xb86e0 asks it). derived name. */
+    bool FUN_00184660() const;
 
     Vec4 min; /* derived name */
     Vec4 max; /* derived name */
@@ -2697,6 +2741,27 @@ void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape 
 
 class hknpShapeKeyMask;
 
+/* The arguments of the shapes' slot 27, a level of detail chosen for a
+ * shape (derived names): a context whose vector at +0x70 scales the size,
+ * and a query whose first pointer leads to a 16-bit size at +0x76
+ * (hknpCompoundShape's 0x426b0, hknpLodShape's 0x68500). */
+struct LodContext000426b0 /* derived name */
+{
+    u8 unknown0[0x70];
+    Vec4 scale; /* derived name */
+};
+
+struct LodSource000426b0 /* derived name */
+{
+    u8 unknown0[0x76];
+    u16 size; /* derived name */
+};
+
+struct LodQuery000426b0 /* derived name */
+{
+    const LodSource000426b0 *source; /* derived name */
+};
+
 class hknpShape : public hkReferencedObject
 {
   public:
@@ -2785,7 +2850,8 @@ class hknpShape : public hkReferencedObject
     virtual void unknownVirtual26(const void *argument1, const void *argument2,
                                   const void *argument3, const void *argument4,
                                   void *argument5) const;
-    virtual int unknownVirtual27(const void *argument1, const void *argument2, int argument3) const;
+    virtual int unknownVirtual27(const LodContext000426b0 &context, const LodQuery000426b0 &query,
+                                 int currentLod) const;
     virtual void unknownVirtual28(const void *argument1, void *argument2) const;
     virtual void unknownVirtual29(const void *argument1, void *argument2) const;
     /* Slot 30: the shared empty body 0x3b640, kept by every shape vtable
@@ -2863,8 +2929,8 @@ class hknpDecoratorShape : public hknpShape
     void FUN_0003b250(const void *argument1, const void *argument2, const void *argument3,
                       const void *argument4,
                       void *argument5) const; /* vtable slot 26; derived name */
-    int FUN_0003b210(const void *argument1, const void *argument2,
-                     int argument3) const; /* vtable slot 27; derived name */
+    int FUN_0003b210(const LodContext000426b0 &context, const LodQuery000426b0 &query,
+                     int currentLod) const; /* vtable slot 27; derived name */
     void FUN_0003b260(const void *argument1,
                       void *argument2) const; /* vtable slot 28; derived name */
     void FUN_0003b270(const void *argument1,
@@ -3132,7 +3198,17 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
  * (derived names): FUN_0017a0a0 reserves a property under a key (a bit of
  * the byte at +0x17 marks each key in use) of a size and an alignment, and
  * returns it, or null when the key is taken or the cache is full. */
-struct hknpManifoldCollisionCache; /* derived name */
+struct hknpManifoldCollisionCache /* derived name */
+{
+    u8 unknown0[0x38];
+    /* Set when the manifold is created from the bodies' materials (the
+     * modifier slot 0x15db20): the smaller maxContactImpulse as a half and
+     * the smaller fractionOfClippedImpulseToApply in 255ths. derived
+     * names. */
+    hkHalf maxImpulse;
+    u8 fractionOfClippedImpulseToApply;
+};
+
 void *FUN_0017a0a0(hknpManifoldCollisionCache *cache, u8 propertyKey, u8 size,
                    int alignment); /* derived name */
 
@@ -3153,6 +3229,29 @@ class Modifier16a4de0 /* derived name */
   public:
     void FUN_0015d7c0(const void *threadContext, const void *sharedData, const void *bodyA,
                       const void *bodyB,
+                      ManifoldCreatedInput *input); /* vtable slot 3; derived name */
+};
+
+/* A body as the modifiers receive it (derived names): its material at
+ * +0x20 (0x15db20 reads both bodies' there). */
+struct hknpMaterial;
+
+struct hknpCdBody /* derived name */
+{
+    u8 unknown0[0x20];
+    const hknpMaterial *material; /* derived name */
+};
+
+/* The modifier of vtable 0x16a4e50 (address point 0x16a4e60, no type info,
+ * 8 bytes: slot 1 is the shared 0xd900; derived name), built by FUN_00048b20
+ * at 0x49d51 among the world's twenty: slot 2 (0x15db10) returns its mask
+ * 0x81; slot 3 (0x15db20), called when a manifold is created, fills the
+ * cache's impulse limit from the bodies' materials; slot 11 (0x15db70). */
+class Modifier16a4e60 /* derived name */
+{
+  public:
+    void FUN_0015db20(const void *threadContext, const void *sharedData, const hknpCdBody *bodyA,
+                      const hknpCdBody *bodyB,
                       ManifoldCreatedInput *input); /* vtable slot 3; derived name */
 };
 
@@ -3230,6 +3329,15 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
 
     u8 unknown18[8];
 };
+
+/* The 0x1a0-byte one (derived name; vtable 0x16a4380, constructor
+ * FUN_00150240): its destructor 0x14e100 is out of line, and its deleting
+ * destructor 0x14e0b0 runs it and frees the 0x1a0 bytes unless null
+ * (written as calls while the class is opaque, cookbook 15). */
+class hknpWorldObject1d0Large; /* derived name */
+
+void FUN_0014e100(hknpWorldObject1d0Large *self); /* derived name */
+void FUN_0014e0b0(hknpWorldObject1d0Large *self); /* derived name */
 
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
@@ -3761,12 +3869,18 @@ class hknpFirstPersonGun : public hkReferencedObject
         WEAPON_TYPE_NUM_TYPES
     };
 
-    /* From +0xc, in the reference-counted object's tail: the type, then the
-     * name (hkStringPtr) at +0x10 that slot 9 returns; the rest untyped.
+    /* Its members from the records 0x3cd10 builds at 0x57c0080 (size
+     * 0x38): type (enum of hkUint8, not serialized) at +0xc, name
+     * (hkStringPtr) at +0x10, which slot 9 returns, keyboardKey (enum of
+     * hkUint8) at +0x18, listeners (array of pointers, not serialized) at
+     * +0x20 and collisionFilterInfo (hkUint32, not serialized) at +0x30.
      * hknpProjectileGun's first member sits at +0x34, in this class's
      * tail. */
-    hkEnum<Type, u8> type; /* derived name */
-    u8 unknown0d[0x27];
+    hkEnum<Type, u8> type;
+    hkStringPtr name;
+    u8 keyboardKey; /* an enum of hkUint8; its items not read */
+    hkArray<void *> listeners;
+    u32 collisionFilterInfo;
 };
 
 /* hknpProjectileGun (type info 0x57bf7e0, vtable 0x16a4b30, address point
@@ -4357,7 +4471,12 @@ struct hknpMaterial {
     hknpMaterial(const hknpMaterial &other);
 
     hkStringPtr name; /* derived name */
-    u8 unknown8[0x48];
+    u8 unknown8[0x14];
+    /* From the member records 0x66f10 builds: maxContactImpulse and
+     * fractionOfClippedImpulseToApply (hkReal) at +0x1c and +0x20. */
+    float maxContactImpulse;
+    float fractionOfClippedImpulseToApply;
+    u8 unknown24[0x2c];
 };
 
 struct hknpMaterialDescriptor {
@@ -7071,6 +7190,11 @@ class hknpCompoundShape : public hknpCompositeShape
     virtual void unknownVirtual32(hknpShapeInstanceId instanceId, hkAabb &aabbOut) const = 0;
 
     hknpShapeSignals *FUN_00041890(); /* vtable slot 8; derived name */
+    /* Slot 27 (0x426b0, kept by the static and dynamic compound shapes):
+     * 1 when the scaled size passes 0.3, or 0.15 while the current level
+     * is 1. derived name. */
+    int FUN_000426b0(const LodContext000426b0 &context, const LodQuery000426b0 &query,
+                     int currentLod) const;
 
     u8 unknown28[0x38];
     hkFreeListArray<hknpShapeInstance, hknpShapeInstanceId, 8, hknpShapeInstance> instances;
@@ -7991,6 +8115,18 @@ struct PointerMap /* derived name */
     void *entries;
     int numEntries;
     int hashMod;
+
+    struct IteratorTag;
+    typedef IteratorTag *Iterator;
+
+    /* The slot of a key, or one past the hash mask when it is absent
+     * (0x13ad0). derived name. */
+    Iterator FUN_00013ad0(hkUlong key) const; /* derived name */
+
+    bool isValid(Iterator it) const
+    {
+        return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
+    }
 
     hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
     /* Sets the value of a key, growing the entries from the allocator given
