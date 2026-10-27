@@ -1314,9 +1314,9 @@ FUN_00045190 src/libs/unknown/func_00045190.cpp
 _ZN19hkArrayStreamWriterD1Ev src/libs/unknown/func_0008fe10.cpp
 _ZN19hkArrayStreamWriterD0Ev src/libs/unknown/func_0008fe10.cpp
 FUN_00004b30 src/libs/unknown/func_00004b30.cpp _GLOBAL__I_a
-_ZN12Class16969d0D1Ev src/libs/unknown/func_0003e960.cpp
-_ZN12Class16969d0D0Ev src/libs/unknown/func_0003e960.cpp
-_ZN12Class16969d0C1EPK25hknpCharacterStateManageri src/libs/unknown/func_0003e840.cpp
+_ZN20hknpCharacterContextD1Ev src/libs/unknown/func_0003e960.cpp
+_ZN20hknpCharacterContextD0Ev src/libs/unknown/func_0003e960.cpp
+_ZN20hknpCharacterContextC1EPK25hknpCharacterStateManageri src/libs/unknown/func_0003e840.cpp
 FUN_000467a0 src/libs/unknown/func_000467a0.cpp
 FUN_0004aff0 src/libs/unknown/func_0004aff0.cpp
 FUN_0008f6a0 src/libs/unknown/func_0008f6a0.cpp _ZN9UnionFind14findRootOfNodeEi

@@ -4,7 +4,7 @@
 /* The character context's destructor (slot 0 of its vtable, 0x16969d0; the
  * deleting destructor 0x3e8c0 in slot 1): the reference to the state
  * manager is given back. */
-Class16969d0::~Class16969d0()
+hknpCharacterContext::~hknpCharacterContext()
 {
     stateManager->removeReference();
 }

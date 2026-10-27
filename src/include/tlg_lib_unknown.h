@@ -1995,19 +1995,19 @@ class hknpCharacterStateManager : public hkReferencedObject /* derived name */
 };
 
 /* The character context (vtable 0x16969d0, address point 0x16969e0, D14's
- * row Class16969d0; no string names it, the shape is Havok's character
+ * row hknpCharacterContext; no string names it, the shape is Havok's character
  * context): 0x50 bytes, built only by the game (0xeaa611, from the thread's
  * heap, initial state 2). Slot 0 is the complete destructor 0x3e960, slot 1
  * the deleting one 0x3e8c0, slots 2 to 4 hkReferencedObject's. */
-class Class16969d0 : public hkReferencedObject /* derived name */
+class hknpCharacterContext : public hkReferencedObject /* derived name */
 {
   public:
     /* 0x3e840: the manager referenced, the initial state current and
      * previous, filtering on, a zero surface velocity. */
-    Class16969d0(const hknpCharacterStateManager *stateManager, int initialState);
+    hknpCharacterContext(const hknpCharacterStateManager *stateManager, int initialState);
 
     /* 0x3e960: the manager's reference released. */
-    virtual ~Class16969d0();
+    virtual ~hknpCharacterContext();
 
     /* The class allocator's delete (the deleting destructor 0x3e8c0 frees
      * at the recorded size, 0x50 by default). */
@@ -2049,7 +2049,7 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
 
     static void operator delete(void *object, unsigned long numBytes);
 
-    void FUN_000365e0(Class16969d0 &context, const hknpCharacterInput &input,
+    void FUN_000365e0(hknpCharacterContext &context, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* vtable slot 7; derived name */
 
     float gain;                  /* derived name */

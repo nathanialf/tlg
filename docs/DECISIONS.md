@@ -637,7 +637,16 @@ hkClass record 0x57c8750, its string at 0x14c3faf, which slot 3 returns),
 hkMallocAllocator 0x168c9f0 (derived from the shape, the static instance
 0x57b7b00), hkSerializeDeprecated 0x16a6860 (a fact: the singleton string
 at 0x14cca08) and Class16969d0 0x16969d0 (derived; a 0x50-byte
-reference-counted object only the game builds, 0xeaa611).
+reference-counted object only the game builds, 0xeaa611). Round 38's
+harvest renamed that row hknpCharacterContext: its constructor's stores
+are the character context's fields in Havok's order (the character type,
+the state manager, current and previous state, filterEnable,
+maxLinearAcceleration 625, maxLinearSpeed 20, gain 1, the previous surface
+velocity, the update count), the name the header already used; and added
+hknpWorld 0x1699220 (derived after the home file hknpWorld.cpp at
+0x14bda42 and the reflected hknpWorldCinfo and hknpWorldSnapshot; stored
+by the constructor FUN_00048b20 at 0x48b51 and the destructor
+FUN_0004b040 at 0x4b062).
 
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 

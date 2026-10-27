@@ -3,7 +3,8 @@
 
 /* derived name: the in-air state's transition: a supported character is on
  * the ground again, one at a ladder starts climbing. */
-void hknpCharacterStateInAir::FUN_000365e0(Class16969d0 &context, const hknpCharacterInput &input,
+void hknpCharacterStateInAir::FUN_000365e0(hknpCharacterContext &context,
+                                           const hknpCharacterInput &input,
                                            hknpCharacterOutput &output)
 {
     if (input.supportedState == 2) {
