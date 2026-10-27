@@ -8,7 +8,7 @@
 // NONMATCHING: the counts' stores: the base merges +0 and +4 into one 8-byte
 // store and keeps +8 and +0xc apart; this merges both pairs. Seven library
 // functions end on such an unmerged pair (docs/NOTES.md, Rounds 29 to 32).
-void hkpPointToPathConstraintData::FUN_0007a020(hkpConstraintData::ConstraintInfo &infoOut) const
+void hkpPointToPathConstraintData::unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const
 {
     infoOut.atoms = &atoms;
     infoOut.sizeOfAllAtoms = sizeof(hkpBridgeAtoms);

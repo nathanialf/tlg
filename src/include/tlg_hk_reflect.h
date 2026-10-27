@@ -4245,6 +4245,8 @@ class hkpPrismaticConstraintData : public hkpConstraintData
  * 20 (0x7c8b0) is also hkpHingeLimitsData's (0x169fef0, FUN_00082250). */
 class hkpPointToPathConstraintData; /* defined after hkEnum */
 
+void FUN_0007f120(void *object, int finishing); /* derived name */
+
 /* hkpCogWheelConstraintData (hkClass 0x57c3e88, built at 0x7cb3b, 0xc0 bytes, parent hkpConstraintData; vtable 0x169c2b0): atoms at +0x20 (record table 0x169ca30: transforms at +0, cogWheels at +0x90). */
 class hkpCogWheelConstraintData : public hkpConstraintData
 {
@@ -5683,9 +5685,17 @@ void FUN_000adba0(hkStorageSkinnedMeshShape *self); /* derived name */
  * are the reflection's (0x14c4794 onward). */
 class hkpParametricCurve;
 
-class hkpPointToPathConstraintData
+class hkpPointToPathConstraintData : public hkpConstraintData
 {
   public:
+    /* Inline: the type info's finish callback FUN_0007f120 holds it, as
+     * the reflection initializer (0x7f377) does: hkpConstraintData's, the
+     * vtable, then the bridge atom's finish. */
+    hkpPointToPathConstraintData(hkFinishLoadedObjectFlag flag)
+        : hkpConstraintData(flag), atoms(flag)
+    {
+    }
+
     enum OrientationConstraintType {
         CONSTRAIN_ORIENTATION_INVALID,
         CONSTRAIN_ORIENTATION_NONE,
@@ -5696,13 +5706,12 @@ class hkpPointToPathConstraintData
 
     virtual ~hkpPointToPathConstraintData();
 
-    void FUN_0007a020(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    hkBool FUN_0007a590() const;                           /* vtable slot 7; derived name */
-    void FUN_0007a050(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    int unknownVirtual5() const;                                            /* slot 5 (0x3e420) */
+    void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const; /* slot 6 (0x7a020) */
+    hkBool unknownVirtual7() const;                                         /* slot 7 (0x7a590) */
+    void unknownVirtual20(hkBool wantRuntime,
+                          ConstraintRuntimeInfo &infoOut) const; /* slot 20 (0x7a050) */
 
-    u8 unknown8[0x18];
     hkpBridgeAtoms atoms;
     hkpParametricCurve *path;
     float maxFrictionForce;
@@ -5942,6 +5951,11 @@ class hkOstream : public hkReferencedObject
      * strlen bytes, or "(null)" for a null pointer, and returns the
      * stream. */
     hkOstream &FUN_00008440(const char *string);
+
+    /* derived name: the operator<< of a string buffer (0x89a0, called six
+     * times by 0xadd80): its characters without the terminator, or
+     * "(null)" for a buffer with none, and the stream returned. */
+    hkOstream &FUN_000089a0(const hkStringBuf &string);
 
     /* derived name: the operator<< of an unsigned int (0x8550): formatted
      * with "%u" into a buffer on the stack, written, and the stream
@@ -7156,6 +7170,20 @@ struct hkBlockStreamReader /* derived name */
     int numElementsToReadInThisBlock;       /* derived name */
 };
 
+/* A reader that frees what it has read (derived names): the stream at
+ * +0x18, the elements of the current block still to free at +0x20, the
+ * cache freed blocks go to at +0x28. Starting at a stream (0x93a70, called
+ * twice at 0x6cf21 and 0x6cf3e) marks the stream partly freed, then reads
+ * from its start (the reader's FUN_000937c0, inline in its file). */
+struct hkBlockStreamConsumer : public hkBlockStreamReader /* derived name */
+{
+    void FUN_00093a70(BlockCache *cache, hkBlockStream *stream); /* derived name */
+
+    hkBlockStream *stream;            /* derived name */
+    int numElementsToFreeInThisBlock; /* derived name */
+    BlockCache *cache;                /* derived name */
+};
+
 /* A command of a command stream (derived names): its padded byte size at +0
  * (hkBlockStreamCommandWriter's slot 5 copies that many bytes), its primary
  * type at +3, the index of the dispatcher that executes it. */
@@ -7247,6 +7275,7 @@ struct StringMap /* derived name */
 
     void FUN_00091ac0();                         /* derived name */
     Iterator FUN_00091600() const;               /* derived name */
+    Iterator FUN_00091650(Iterator it) const;    /* derived name */
     bool FUN_00013890(Iterator it) const;        /* derived name */
     const char *FUN_00091630(Iterator it) const; /* derived name */
     hkUlong FUN_00091640(Iterator it) const;     /* derived name */

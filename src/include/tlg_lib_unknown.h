@@ -180,6 +180,17 @@ class AllocatorBase /* derived name */
      * (hkDummySingleton's slots 0 and 5), which cite it by address. */
     virtual ~AllocatorBase();
 
+    /* The class's own placement form (the memory setup FUN_00001140 builds
+     * its allocators in static storage with it). A member, not the reserved
+     * global form clang folds to its argument while it builds the IR, so
+     * the pointers the setup records are calls' results when GlobalOpt runs,
+     * before the inliner: the quit function FUN_00001200 then reaches each
+     * vtable through the loaded pointer, not through the storage. */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     /* Slots 2 and 3 allocate and free a block of a given size; slots 4 and
      * 5 (FUN_00008d70, FUN_00008d80) are defaults the allocators keep that
      * forward to them (the layout of Havok's hkMemoryAllocator). */
@@ -242,14 +253,31 @@ class AllocatorInterface /* derived name */
  * 0x2300, 0x2400, 0x3700). */
 struct FreeList;
 
+struct TwoBaseAllocatorCinfo; /* derived name: what FUN_00001ae0 takes */
+
 class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
 {
   public:
+    /* Out of line (0x1960): the allocator below and its interface at +0x30
+     * and +0x38; the third argument goes on to FUN_00001ae0. */
+    TwoBaseAllocator(AllocatorBase *large, AllocatorInterface *largeInterface,
+                     const TwoBaseAllocatorCinfo *cinfo);
     virtual ~TwoBaseAllocator();
     /* Slot 2 (0x29b0): a block through slot 4, the size passed by
      * reference. */
     virtual void *blockAlloc(int numBytes);
     virtual AllocatorInterface *FUN_00001620();
+
+    /* The rest of the overriders, declared so the class is complete (slot
+     * 3 0x2c40; primary slots 13 to 15, 17, 18, 20 and 21). */
+    virtual void blockFree(void *pointer, int numBytes);
+    virtual void FUN_00003140();
+    virtual void FUN_000032e0(int value);
+    virtual int FUN_000034a0(void *pointer);
+    virtual bool FUN_00002230(int numBytes);
+    virtual int FUN_00002f10(void *a, void *b);
+    virtual void FUN_00002330(int value);
+    virtual int FUN_000035a0(void *pointer, int value);
 
     virtual void *FUN_00003580() const; /* vtable slot 16; derived name */
     /* Slot 20 (0x22d0, also the second base's slot 8 through the thunk
@@ -317,7 +345,22 @@ class SingleBlockAllocator : public AllocatorBase /* derived name */
 class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
 {
   public:
+    /* Out of line (0x12160): the allocator its chunks come from at
+     * +0x160. */
+    LargeBlockAllocator(AllocatorBase *server);
     virtual ~LargeBlockAllocator();
+
+    /* The overriders not read yet, declared so the class is complete (slots
+     * 2 and 3, 0x12910 and 0x133e0; primary slots 13 to 16, 18, 19 and 21). */
+    virtual void *blockAlloc(int numBytes);
+    virtual void blockFree(void *pointer, int numBytes);
+    virtual void FUN_00003140();
+    virtual void FUN_000032e0(int value);
+    virtual int FUN_000034a0(void *pointer);
+    virtual void *FUN_00003580() const;
+    virtual int FUN_00002f10(void *a, void *b);
+    virtual void FUN_00002330(int value);
+    virtual int FUN_000035a0(void *pointer, int value);
 
     /* Slot 10 (Havok's getAllocatedSize): the usable size of a block, its
      * chunk's size less the header. */
@@ -399,6 +442,24 @@ extern hkHardwareInfo *D_57c8728; /* hkHardwareInfo's singleton instance */
 /* Its create function, the singleton record's (0x8faf0). derived name. */
 hkReferencedObject *FUN_0008faf0(); /* derived name */
 
+/* hknpGlobals (the name its singleton record's string at 0x14caf6c gives,
+ * the record built at 0x1760c0, instance pointer 0x57c8818): 0x100 bytes
+ * from the thread's heap, created by 0x175f30 and built by 0x175f70, which
+ * stores the vtable 0x16a5aa0 (no type info). */
+class hknpGlobals : public hkReferencedObject
+{
+  public:
+    hknpGlobals(); /* out of line, 0x175f70 */
+
+    /* The class allocator inline, as hkHardwareInfo's (0x175f36). */
+    static void *operator new(unsigned long numBytes);
+
+    u8 unknown10[0xf0];
+};
+
+/* Its create function, the singleton record's (0x175f30). derived name. */
+hkReferencedObject *FUN_00175f30(); /* derived name */
+
 /* A job queue's construction info (derived names: no string names the
  * struct), built by its constructor (0x5640) on the game's stack at 0xe997c8
  * and handed to the queue's constructor 0x56c0 after the game sets the
@@ -438,11 +499,27 @@ struct hkMemoryRouter;
  * and taken down; the worker thread context (0x8f5c5, 0x8f621) passes 3.
  * Slots 6 to 12 are the memory system's (0xd230 to 0xd2b0), not read
  * here. derived names. */
+/* A pair of ints (derived names): the memory system's constructor
+ * FUN_0000c270 builds one at its +0x10 from (0, 32768) with FUN_00006c30;
+ * the game (0xe9963f) builds one on its stack from (1048576, 32768) and
+ * hands it to the memory setup FUN_00001140, which passes it to the memory
+ * system's slot 2. */
+struct SizePair00006c30 {
+    s32 first;
+    s32 second;
+};
+
 class hkMemorySystem /* derived name */
 {
   public:
+    /* Out of line (0xc270): its second, third and fourth arguments at +8,
+     * +0x18 and +0x20, the fifth its flags. */
+    hkMemorySystem(AllocatorBase *base, AllocatorBase *allocator,
+                   AllocatorInterface *allocatorInterface, int flags);
     virtual ~hkMemorySystem();
-    virtual void unknownVirtual2();
+    /* Slot 2 (0xc490): set up with the sizes, under the flags (the setup
+     * passes 3). derived name. */
+    virtual hkResult FUN_0000c490(const SizePair00006c30 &sizes, int flags);
     virtual void unknownVirtual3();
     virtual void threadInit(hkMemoryRouter &router, const char *name, int flags); /* derived name */
     virtual void threadQuit(hkMemoryRouter &router, int flags);                   /* derived name */
@@ -1368,6 +1445,11 @@ struct hkMemoryRouter /* derived name */
 extern __thread hkMemoryRouter *D_16dc070;
 
 inline void *hkHardwareInfo::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *hknpGlobals::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }

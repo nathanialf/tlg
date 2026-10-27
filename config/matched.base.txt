@@ -538,7 +538,7 @@ FUN_00034990 src/libs/unknown/func_00034990.cpp _Z12FUN_00034990PK9hknpWorldPK11
 FUN_000349a0 src/libs/unknown/func_000349a0.cpp _Z12FUN_000349a0PK9hknpWorldPK11Pair08Owner
 FUN_00078610 src/libs/unknown/func_00078610.cpp
 FUN_00079210 src/libs/unknown/leaf_00079210.cpp _ZNK29hkpLimitedHingeConstraintData12FUN_00079210E6hkBoolR21ConstraintRuntimeInfo
-FUN_0007a050 src/libs/unknown/leaf_0007a050.cpp _ZNK28hkpPointToPathConstraintData12FUN_0007a050E6hkBoolR21ConstraintRuntimeInfo
+FUN_0007a050 src/libs/unknown/leaf_0007a050.cpp _ZNK28hkpPointToPathConstraintData16unknownVirtual20E6hkBoolR21ConstraintRuntimeInfo
 FUN_0007b590 src/libs/unknown/leaf_0007b590.cpp _ZNK25hkpCogWheelConstraintData12FUN_0007b590E6hkBoolR21ConstraintRuntimeInfo
 FUN_0007c310 src/libs/unknown/leaf_0007c310.cpp _ZN30hkpBallAndSocketConstraintData12FUN_0007c310Ei
 FUN_0007c8b0 src/libs/unknown/leaf_0007c8b0.cpp _ZNK20hkpRagdollLimitsData12FUN_0007c8b0E6hkBoolR21ConstraintRuntimeInfo
@@ -690,7 +690,7 @@ FUN_0007bef0 src/libs/unknown/leaf_0007bef0.cpp
 FUN_0007efc0 src/libs/unknown/leaf_0007efc0.cpp
 FUN_0017b930 src/libs/unknown/leaf_0017b930.cpp
 FUN_0007c380 src/libs/unknown/leaf_0007c380.cpp
-FUN_0007a590 src/libs/unknown/leaf_0007a590.cpp
+FUN_0007a590 src/libs/unknown/leaf_0007a590.cpp _ZNK28hkpPointToPathConstraintData15unknownVirtual7Ev
 FUN_00090830 src/libs/unknown/func_00090830.cpp
 FUN_00092f90 src/libs/unknown/func_00092f90.cpp
 FUN_00165990 src/libs/unknown/func_00165990.cpp
@@ -1152,3 +1152,10 @@ FUN_00083520 src/libs/unknown/func_00083520.cpp _ZNK27hkpRotationalConstraintDat
 FUN_0008faf0 src/libs/unknown/func_0008faf0.cpp
 FUN_000ae820 src/libs/unknown/func_000ae820.cpp _ZNK25hkStorageSkinnedMeshShape12FUN_000ae820EiRN18hkSkinnedMeshShape4PartE
 FUN_00167c90 src/libs/unknown/func_00167c90.cpp _ZN18ModifierSharedData12FUN_00167c90EPK9hknpWorld
+FUN_00175f30 src/libs/unknown/func_00175f30.cpp
+FUN_00001200 src/libs/unknown/func_00001200.cpp
+FUN_00001140 src/libs/unknown/func_00001200.cpp
+FUN_000089a0 src/libs/unknown/func_000089a0.cpp _ZN9hkOstream12FUN_000089a0ERK11hkStringBuf
+FUN_0007f120 src/libs/unknown/func_0007f120.cpp
+FUN_00091650 src/libs/unknown/func_00091650.cpp _ZNK9StringMap12FUN_00091650EPNS_11IteratorTagE
+FUN_00093a70 src/libs/unknown/func_000937c0.cpp _ZN21hkBlockStreamConsumer12FUN_00093a70EP10BlockCacheP13hkBlockStream

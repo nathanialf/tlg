@@ -16,3 +16,14 @@ void hkBlockStreamReader::FUN_000937c0(const hkBlockStream *stream)
         currentByteLocation = 0;
     }
 }
+
+/* derived name: the consumer starts at the stream's first block, the
+ * stream marked partly freed, every element of the block to free. */
+void hkBlockStreamConsumer::FUN_00093a70(BlockCache *cache, hkBlockStream *stream)
+{
+    stream->partiallyFreed = true;
+    FUN_000937c0(stream);
+    this->stream = stream;
+    this->cache = cache;
+    numElementsToFreeInThisBlock = numElementsToReadInThisBlock;
+}

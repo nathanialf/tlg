@@ -4,7 +4,7 @@
 /* derived name: slot 7 of hkpPointToPathConstraintData's vtable (address
  * point 0x169bc50): the data is usable once it has a path and a valid
  * orientation constraint. */
-hkBool hkpPointToPathConstraintData::FUN_0007a590() const /* derived name */
+hkBool hkpPointToPathConstraintData::unknownVirtual7() const
 {
     return path != 0 && angularConstrainedDOF != CONSTRAIN_ORIENTATION_INVALID;
 }
