@@ -21,6 +21,17 @@ inline const float &lane(const Vec4 &v, int i)
     return reinterpret_cast<const float *>(&v)[i];
 }
 
+/* One lane of a vector taken from the whole vector, as Havok's
+ * hkVector4::getComponent<I>() gives it: the vector is read and the lane
+ * extracted, which the back end narrows to a scalar load at the lane's
+ * offset, but only after the loop strength reduction has based a loop's
+ * address on the vector (0x2b620's `add rdi, 0x50` with the lane at
+ * `[rdi+0xc]`, where lane() gives `add rdi, 0x5c`). derived name. */
+template <int I> inline float component(const Vec4 &v)
+{
+    return v[I];
+}
+
 /* hkVector4 (the reflection's name for TYPE_VECTOR4) as a class over its
  * vector: copying one is an aggregate copy, a 16-byte memcpy that the back
  * end lowers to an integer-typed load and store, so a copy is reloaded from

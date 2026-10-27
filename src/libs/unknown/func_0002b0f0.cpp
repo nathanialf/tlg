@@ -7,6 +7,6 @@ void FUN_0002b0f0(Pair08Owner *self, float scale) /* derived name */
 {
     Pair08Entry *entry = reinterpret_cast<Pair08Entry *>(self + 1);
     for (int i = 0; i < self->count; i++, entry++) {
-        entry->valueA *= scale;
+        lane(entry->vectorA, 3) *= scale;
     }
 }

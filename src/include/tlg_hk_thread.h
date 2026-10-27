@@ -511,6 +511,7 @@ void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; de
 void FUN_00154f50(hknpPrepareConstraintsTask *self);        /* vtable slot 5; derived name */
 void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
 void FUN_0015b7a0(hknpPrepareNewPairsTask *self);           /* vtable slot 5; derived name */
+void FUN_0015dc60(hknpCollidePairsTask *self);              /* vtable slot 1; derived name */
 void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
 void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
 void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */

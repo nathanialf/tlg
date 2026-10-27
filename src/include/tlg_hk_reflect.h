@@ -8075,6 +8075,11 @@ struct StringMap /* derived name */
     Entry *entries;
     int numEntries;
     int hashMod;
+    /* Eight bytes the constructor leaves alone: both registries holding a
+     * map place what follows it 0x18 bytes on (hkTypeInfoRegistry's flag at
+     * +0x28 after its map at +0x10; hkDefaultClassNameRegistry's 0x30 bytes
+     * end 0x18 after its map at +0x18). derived name. */
+    u8 unknown10[8];
 
     void FUN_00091ac0();                         /* derived name */
     Iterator FUN_00091600() const;               /* derived name */
@@ -8224,12 +8229,17 @@ class hkTypeInfoRegistry : public hkReferencedObject
     virtual ~hkTypeInfoRegistry();
 
     void FUN_0017d8b0(const hkTypeInfo *info); /* vtable slot 5; derived name */
+    /* Slot 6: finishes a loaded object of a named type with the flag at
+     * +0x28 and returns the type info, or null when no type of that name
+     * is registered. */
+    const hkTypeInfo *FUN_0017d8d0(void *object, const char *typeName) const; /* derived name */
     /* Slot 7: cleans up a loaded object of a named type and returns the
      * type info, or null when no type of that name is registered. */
     const hkTypeInfo *FUN_0017d920(void *object, const char *typeName) const; /* derived name */
     const hkTypeInfo *FUN_0017d960(const char *typeName) const; /* vtable slot 9; derived name */
 
-    StringMap map; /* derived name */
+    StringMap map;  /* derived name */
+    int finishFlag; /* derived name; 1 on creation (0x184ed3) */
 };
 
 /* hkDefaultClassNameRegistry (vtable address point 0x16a6180) over the

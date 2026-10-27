@@ -7,7 +7,7 @@
  * object. Written as a call because the overrider's body is not written
  * yet; the object is never null here, so the conversion goes through a
  * reference. */
-int FUN_00003570(AllocatorInterface *self, void *pointer) /* derived name */
+int FUN_00003570(AllocatorInterface *self, u64 limit) /* derived name */
 {
-    return FUN_000034a0(&static_cast<TwoBaseAllocator &>(*self), pointer);
+    return FUN_000034a0(&static_cast<TwoBaseAllocator &>(*self), limit);
 }

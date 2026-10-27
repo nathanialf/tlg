@@ -7,5 +7,5 @@ float *FUN_0002b010(Pair08Owner *self, int index) /* derived name */
 {
     int offset = sizeof(Pair08Owner) + index * sizeof(Pair08Entry);
     Pair08Entry *entry = reinterpret_cast<Pair08Entry *>(reinterpret_cast<char *>(self) + offset);
-    return &entry->valueA;
+    return &lane(entry->vectorA, 3);
 }

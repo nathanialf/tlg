@@ -58,14 +58,15 @@ struct Pair08Owner {
     Pair08Target *target;
 };
 
-/* One of the 32-byte entries after the owner's 0x40 bytes: FUN_0002b0f0
- * scales valueA of each, FUN_0002b120 valueB where it is positive;
- * FUN_0002b010 and FUN_0002b030 return their addresses by index. */
+/* One of the 32-byte entries after the owner's 0x40 bytes: two vectors,
+ * each with a value in its w (valueA and valueB below). FUN_0002b0f0 scales
+ * valueA of each, FUN_0002b120 valueB where it is positive; FUN_0002b010
+ * and FUN_0002b030 return their addresses by index. FUN_0002b620 takes
+ * valueB from the whole second vector (its loop's address is the vector's,
+ * +0x50, with the lane at +0xc). */
 struct Pair08Entry {
-    u8 unknown0[0xc];
-    float valueA; /* derived name */
-    u8 unknown10[0xc];
-    float valueB; /* derived name */
+    Vec4 vectorA; /* derived name; valueA in its w */
+    Vec4 vectorB; /* derived name; valueB in its w */
 };
 
 float *FUN_0002b010(Pair08Owner *self, int index);                /* derived name */
@@ -161,7 +162,24 @@ void FUN_0002b390(Pair08Owner *self,
 /* The object handed to FUN_0002b180 and FUN_0002b3b0 before the record
  * (FUN_0003d7d0 passes the one embedded at +0x390 of its second argument):
  * vectors at +0x20, +0x40 and +0x120, a float at +0x130. */
-struct Info0002b180; /* derived name */
+struct Info0002b180 /* derived name */
+{
+    u8 unknown0[0x40];
+    Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
+    u8 unknown50[0xc0];
+    float value110; /* derived name; read by 0x2b670 */
+    u8 unknown114[0x1c];
+    float value130; /* derived name; read by 0x2b620 */
+};
+
+/* The values B of the record's first four entries, scaled by the product of
+ * the info's +0x130 and the first lane of its +0x40 and negated, into a
+ * caller's array (FUN_0002b620), and an array of four, scaled by the info's
+ * +0x110 and negated, back into them (FUN_0002b670); the modifier slot
+ * 0x156f40 calls one before its vector loop and the other after it. */
+void FUN_0002b620(const Pair08Owner *self, const Info0002b180 *info, float *out); /* derived name */
+void FUN_0002b670(const Info0002b180 *info, const float *values,
+                  Pair08Owner *self); /* derived name */
 
 /* FUN_0002b3b0's output: an int at +0, a float at +4, a vector at +0x10,
  * floats from +0x30 and vectors from +0x40, one per entry. */
@@ -310,8 +328,8 @@ class AllocatorInterface /* derived name */
 
     virtual void FUN_00003140() = 0;                        /* slot 2; derived name */
     virtual void FUN_000032e0(int value) = 0;               /* slot 3; derived name */
-    virtual int FUN_000034a0(void *pointer) = 0;            /* slot 4; derived name */
-    virtual void *FUN_00003580() const = 0;                 /* slot 5; derived name */
+    virtual int FUN_000034a0(u64 limit) = 0;                /* slot 4; derived name */
+    virtual u64 FUN_00003580() const = 0;                   /* slot 5; derived name */
     virtual bool FUN_00002230(int numBytes) = 0;            /* slot 6; derived name */
     virtual int FUN_00002f10(void *a, void *b) = 0;         /* slot 7; derived name */
     virtual u64 allocatedBytes() const = 0;                 /* slot 8; derived name */
@@ -324,7 +342,7 @@ class AllocatorInterface /* derived name */
  * destructor is FUN_00001fb0, its deleting destructor (slot 1) FUN_00001f90;
  * slot 12 (FUN_00001620) returns the object as its second base. Slot 15
  * (0x34a0, also reached through the second base by the thunk 0x3570) stores
- * a pointer at +0xb50 under the spinning mutex at +0x10; slot 16
+ * a byte limit at +0xb50 under the spinning mutex at +0x10; slot 16
  * (FUN_00003580) reads it. Primary slots 13 to 21 override the interface's
  * slots 2 to 10 in order; the second base's vtable holds their
  * this-adjusting thunks (0x32d0, 0x3490, 0x3570, 0x3590, 0x2280, 0x3130,
@@ -351,13 +369,13 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual void blockFree(void *pointer, int numBytes);
     virtual void FUN_00003140();
     virtual void FUN_000032e0(int value);
-    virtual int FUN_000034a0(void *pointer);
+    virtual int FUN_000034a0(u64 limit);
     virtual bool FUN_00002230(int numBytes);
     virtual int FUN_00002f10(void *a, void *b);
     virtual void FUN_00002330(int value);
     virtual int FUN_000035a0(void *pointer, int value);
 
-    virtual void *FUN_00003580() const; /* vtable slot 16; derived name */
+    virtual u64 FUN_00003580() const; /* vtable slot 16; derived name */
     /* Slot 20 (0x22d0, also the second base's slot 8 through the thunk
      * 0x2300, which has it inlined): the bytes the allocator below has
      * handed out since the count at +0x20, none without one. */
@@ -377,7 +395,9 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * indexed by (size + 31) / 32 (0x27ee). derived name. */
     FreeList *sizeToFreeList[21];
     u8 unknown160[0x9f0];
-    void *pointerB50; /* derived name */
+    /* The byte limit slot 15 stores and slot 16 reads; slot 18 (0x2230)
+     * tests a request against it. derived name. */
+    u64 limitB50;
 };
 
 /* An allocator of blocks with a 0x20-byte header (vtable address points
@@ -434,8 +454,8 @@ class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* d
     virtual void blockFree(void *pointer, int numBytes);
     virtual void FUN_00003140();
     virtual void FUN_000032e0(int value);
-    virtual int FUN_000034a0(void *pointer);
-    virtual void *FUN_00003580() const;
+    virtual int FUN_000034a0(u64 limit);
+    virtual u64 FUN_00003580() const;
     virtual int FUN_00002f10(void *a, void *b);
     virtual void FUN_00002330(int value);
     virtual int FUN_000035a0(void *pointer, int value);
@@ -459,10 +479,10 @@ void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
 /* Primary slots 13, 14, 15, 18 and 21 (interface slots 2, 3, 4, 7 and 10),
  * each run under the spinning mutex at +0x10; reached through the second
  * base by the thunks 0x32d0, 0x3490, 0x3570, 0x3130 and 0x3700. Slot 15
- * stores its pointer at +0xb50 and returns 0. */
+ * stores its limit at +0xb50 and returns 0. */
 void FUN_00003140(TwoBaseAllocator *self);                          /* derived name */
 void FUN_000032e0(TwoBaseAllocator *self, int value);               /* derived name */
-int FUN_000034a0(TwoBaseAllocator *self, void *pointer);            /* derived name */
+int FUN_000034a0(TwoBaseAllocator *self, u64 limit);                /* derived name */
 int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b);         /* derived name */
 int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
 
@@ -1165,8 +1185,31 @@ class ThreadMemory : public AllocatorBase /* derived name */
      * allocator only clears it. */
     void FUN_00014610(AllocatorBase *memory, int maxNumElemsOnFreeList); /* derived name */
 
+    /* Slot 10 (0x14920): a request of a row's size occupies the row's
+     * block size in the allocator it draws from; a larger one is that
+     * allocator's to size. */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const;
+
+    /* The largest request a row serves, and the largest the small table
+     * indexes in 32-byte steps (larger ones in 1024-byte steps). derived
+     * names. */
+    enum { MAX_ROW_SIZE = 8192, MAX_SMALL_ROW_SIZE = 640 };
+
+    /* The row a request of a row's size is served from. derived name. */
+    int getRow(int numBytes) const
+    {
+        if (numBytes <= MAX_SMALL_ROW_SIZE) {
+            return smallSizeToRow[(numBytes + 31) >> 5];
+        }
+        return largeSizeToRow[(numBytes - 1) >> 10];
+    }
+
     AllocatorBase *memory;     /* derived name; slot 13 returns blocks to it */
     int maxNumElemsOnFreeList; /* derived name */
+    u8 unknown14[0x104];
+    int rowToSize[16];     /* derived name; a row's block size */
+    s8 smallSizeToRow[21]; /* derived name; by (size + 31) >> 5 */
+    int largeSizeToRow[8]; /* derived name; by (size - 1) >> 10 */
 };
 
 /* A union-find over node indices (derived name; the stage timer of its

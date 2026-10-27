@@ -2,10 +2,10 @@
 #include "tlg_lib_unknown.h"
 
 /* derived name: slot 16 of TwoBaseAllocator's vtable (0x168c640) returns the
- * pointer at +0xb50 that slot 15 stores under the object's lock. It overrides
+ * byte limit at +0xb50 that slot 15 stores under the object's lock. It overrides
  * slot 5 of the second base, so its this-adjusting thunk (0x3590, the getter
  * inlined: +0xb48 from the second base) is emitted with it. */
-void *TwoBaseAllocator::FUN_00003580() const /* derived name */
+u64 TwoBaseAllocator::FUN_00003580() const /* derived name */
 {
-    return pointerB50;
+    return limitB50;
 }
