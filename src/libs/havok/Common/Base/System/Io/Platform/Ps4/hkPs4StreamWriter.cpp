@@ -23,7 +23,20 @@ class hkPs4StreamWriter /* derived name */
 
     u8 unknown8[4];
     SceFiosFH handle; /* derived name */
+    /* Whether the writer closes the handle (the destructor 0x91eb0 tests
+     * it). derived name. */
+    bool ownsHandle;
 };
+
+// NONMATCHING: equal but for its vtable, 0x16a34e0, which no row names yet
+// (docs/NOTES.md, Round 32).
+hkPs4StreamWriter::~hkPs4StreamWriter()
+{
+    if (handle >= 0 && ownsHandle) {
+        sceFiosFHCloseSync(0, handle);
+        handle = -1;
+    }
+}
 
 /* Flush: wait until what was written reaches the file, when the handle is
  * valid. */

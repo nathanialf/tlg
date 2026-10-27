@@ -754,7 +754,7 @@ FUN_0019d370 src/libs/unknown/func_0019d370.cpp
 FUN_00014610 src/libs/unknown/func_00014610.cpp
 _ZN22hkRefCountedPropertiesC1Ev src/libs/unknown/func_0001c1b0.cpp
 FUN_00034870 src/libs/unknown/func_00034870.cpp
-FUN_0019f6a0 src/libs/unknown/func_0019f6a0.cpp _ZN18OffsetStreamWriter5writeEPKvi
+FUN_0019f6a0 src/libs/unknown/func_0019f6a0.cpp _ZN22OffsetOnlyStreamWriter5writeEPKvi
 _ZN17hkLocalFrameGroupD1Ev src/libs/unknown/func_00003710.cpp
 FUN_000037b0 src/libs/unknown/func_000037b0.cpp
 FUN_000037f0 src/libs/unknown/func_000037f0.cpp
@@ -789,7 +789,7 @@ _ZN25hkStorageSkinnedMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/fun
 _ZN17hknpWorldSnapshotC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0015bf30.cpp
 FUN_00188e90 src/libs/unknown/func_00188e90.cpp _ZN11ImageSourceC2Ev
 FUN_000ad590 src/libs/unknown/func_000ad590.cpp _ZN15FileImageSourceD1Ev
-FUN_0000ed40 src/libs/unknown/func_0000ed40.cpp _ZN17Allocator0000ed40C2Ev
+_ZN17Allocator0000ed40C1Ev src/libs/unknown/func_0000ed40.cpp
 _ZN21hknpPhysicsSystemDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00165a80.cpp
 FUN_00167be0 src/libs/unknown/func_00167be0.cpp
 _ZN30hknpDestructionShapePropertiesC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00175a50.cpp
@@ -1117,3 +1117,18 @@ FUN_000890e0 src/libs/unknown/func_000890e0.cpp
 FUN_0008abb0 src/libs/unknown/func_0008abb0.cpp
 FUN_0008b6f0 src/libs/unknown/func_0008b6f0.cpp
 _ZN13JobQueueCinfoC1Ev src/libs/unknown/func_00005640.cpp
+FUN_0000ad40 src/libs/unknown/func_0000ad40.cpp _ZN17RouterAllocator5012FUN_00008d90EPviRi
+FUN_0000aed0 src/libs/unknown/func_0000aed0.cpp _ZN17RouterAllocator6012FUN_00008d90EPviRi
+FUN_0000b060 src/libs/unknown/func_0000b060.cpp _ZN17RouterAllocator5812FUN_00008d90EPviRi
+FUN_00014aa0 src/libs/unknown/func_00014aa0.cpp _ZN18FixedSizeAllocator12FUN_00014aa0Ev
+FUN_0019f6d0 src/libs/unknown/func_0019f6d0.cpp _ZN22OffsetOnlyStreamWriter4seekEii
+FUN_0001a770 src/libs/unknown/func_0001a770.cpp
+FUN_0003ea90 src/libs/unknown/func_0003ea90.cpp _ZNK17hknpShapeInstance12FUN_0003ea90ER11hkTransform
+_ZN12hknpMaterialC1ERKS_ src/libs/unknown/func_0006c700.cpp
+_ZN17hknpProjectileGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_001595c0.cpp
+FUN_00012ea0 src/libs/unknown/func_00012e60.cpp _ZThn8_N19LargeBlockAllocator12FUN_00002230Ei
+FUN_00034da0 src/libs/unknown/func_00034da0.cpp
+FUN_000f6a90 src/libs/unknown/func_000f6a90.cpp _ZN18hknpWorldObject38812FUN_000f6a90EPK25hknpWorldStepContextf6a90PvS3_S3_
+FUN_0001a700 src/libs/unknown/func_0001a700.cpp _ZN15FileSystemEntry12FUN_0001a700EP18hkReferencedObjectPKcill
+_ZN14hkxTextureFileD1Ev src/libs/unknown/func_00087830.cpp
+_ZN14hkMemoryRouterC1Ev src/libs/unknown/func_0000bb60.cpp

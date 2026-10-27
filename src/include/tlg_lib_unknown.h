@@ -187,9 +187,12 @@ class AllocatorBase /* derived name */
     virtual void blockFree(void *pointer, int numBytes) = 0; /* slot 3; derived name */
     virtual void *FUN_00008d70(int &numBytes);               /* slot 4; derived name */
     virtual void FUN_00008d80(void *pointer, int numBytes);  /* slot 5; derived name */
-    /* Slots 6 to 11, signatures not recovered (6 to 8 the defaults 0x8d90,
-     * 0x8e00 and 0x8e50, 9 the statistics, 11 the peak reset). */
-    virtual void unknownVirtual6();
+    /* Slot 6 (the default 0x8d90): a buffer resized, from its old size to
+     * the size asked for, which the allocator may round up in place (the
+     * slab allocator's 0xefd0). derived name. Slots 7 to 11, signatures not
+     * recovered (7 and 8 the defaults 0x8e00 and 0x8e50, 9 the statistics,
+     * 11 the peak reset). */
+    virtual void *FUN_00008d90(void *pointer, int oldNumBytes, int &numBytesInOut);
     virtual void unknownVirtual7();
     virtual void unknownVirtual8();
     /* Slot 9: the allocator's statistics into the caller's record
@@ -243,6 +246,9 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
 {
   public:
     virtual ~TwoBaseAllocator();
+    /* Slot 2 (0x29b0): a block through slot 4, the size passed by
+     * reference. */
+    virtual void *blockAlloc(int numBytes);
     virtual AllocatorInterface *FUN_00001620();
 
     virtual void *FUN_00003580() const; /* vtable slot 16; derived name */
@@ -842,8 +848,36 @@ struct FreeList /* derived name */
         FUN_00018770();
     }
 
+    /* A new block's first element when the current block is used up
+     * (0x19230): a block of the list's own or a new one. derived name. */
+    void *FUN_00019230();
+
+    /* An element: a freed one first, else the next of the current block,
+     * else the slow path (inline in the allocator's 0x14aa0). derived
+     * name. */
+    void *alloc()
+    {
+        if (void **element = static_cast<void **>(freeHead)) {
+            numFreeElements--;
+            freeHead = *element;
+            return element;
+        }
+        if (top < blockEnd) {
+            numFreeElements--;
+            char *element = top;
+            top = element + elementSize;
+            return element;
+        }
+        return FUN_00019230();
+    }
+
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
+    u8 unknown10[0x30];
+    char *top;      /* derived name */
+    char *blockEnd; /* derived name */
+    u8 unknown50[0x18];
+    s64 numFreeElements; /* derived name */
 };
 
 /* An allocator's statistics, six signed byte counts (the copy in slot 9 of
@@ -877,6 +911,9 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     void FUN_00014a80(u64 elementSize, u64 alignment, u64 blockSize,
                       AllocatorBase *blockAllocator);      /* derived name */
     void FUN_00014c40(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
+
+    /* Slots 2 and 4 (0x14aa0): an element of the free list. */
+    void *FUN_00014aa0(); /* derived name */
 
     FreeList freeList; /* derived name */
 };
@@ -1120,6 +1157,22 @@ StreamReader *FUN_00093180(const char *name);
  * reference-counted writer over the handle, or null. derived name. */
 hkStreamWriter *FUN_00091d50(const char *name, int flags, u16 openFlags);
 
+/* A directory listing's entry (derived names): the file system at +0, the
+ * path (hkStringPtr) at +8, two 64-bit values from the entry's status at
+ * +0x10 and +0x18, the kind at +0x20 (the listing at 0x1bc42 passes 1 or
+ * 2 from bit 0 of the status). FUN_0001a700 sets them all. */
+struct FileSystemEntry /* derived name */
+{
+    void FUN_0001a700(hkReferencedObject *fileSystem, const char *path, int flags, s64 value10,
+                      s64 value18); /* derived name */
+
+    hkReferencedObject *fileSystem;
+    hkStringPtr path;
+    s64 value10;
+    s64 value18;
+    int flags;
+};
+
 class FiosFileSystem : public hkReferencedObject /* derived name */
 {
   public:
@@ -1235,8 +1288,8 @@ int FUN_000056a0(hkJobQueue &queue, void *data, const hkJobQueueJob &jobIn,
                  void *newJobOut); /* derived name */
 
 /* An allocator (derived name; vtable 0x168da00, address point 0x168da10,
- * no type info) built by FUN_0000ed40 at +0 of the object FUN_0000bb60
- * constructs, which then clears that object's +0x50 to +0x78: slots 0 and
+ * no type info) built by its constructor 0xed40 at +0 of the router, whose
+ * constructor 0xbb60 then clears +0x50 to +0x78: slots 0 and
  * 1 the shared 0x4ac0, 2 to 6 its own (0xef00, 0xef70, 0xef40, 0xef70,
  * 0xefd0), 7 to 12 the defaults. The pointer at +8 starts null. */
 class Allocator0000ed40 : public AllocatorBase /* derived name */
@@ -1272,6 +1325,12 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
  * from the router's heap at +0x60, kept in the slot at 0x16d80d0. */
 struct hkMemoryRouter /* derived name */
 {
+    /* The constructor (0xbb60; the memory system's 0xc2d0, the worker
+     * context's 0x8f591 and the game at 0xe993ca build one): the stack
+     * allocator built, the four allocators and the fields after them
+     * cleared. */
+    hkMemoryRouter();
+
     /* Built first by the router's constructor (0xbb69); its destructor,
      * AllocatorBase's, is the router's (the tail jump at 0x8f62d). */
     Allocator0000ed40 stack; /* derived name */
@@ -1286,6 +1345,9 @@ struct hkMemoryRouter /* derived name */
     /* The allocator the adaptor of vtable 0x168d4b0 forwards to (0xadf0).
      * derived name. */
     AllocatorBase *allocator60;
+    void *pointer68; /* derived name */
+    u8 unknown70[8];
+    int int78; /* derived name */
 };
 
 /* The thread's router, a thread-local pointer: the TLS segment's template
@@ -1332,10 +1394,12 @@ inline void QueryProcessor0010b090::operator delete(void *object, unsigned long 
 class RouterAllocator50 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes);                                /* 0xac60 */
-    virtual void blockFree(void *pointer, int numBytes);                   /* slot 3, 0xac90 */
-    virtual void *FUN_00008d70(int &numBytes);                             /* slot 4, 0xacd0 */
-    virtual void FUN_00008d80(void *pointer, int numBytes);                /* slot 5, 0xad00 */
+    virtual void *blockAlloc(int numBytes);                 /* 0xac60 */
+    virtual void blockFree(void *pointer, int numBytes);    /* slot 3, 0xac90 */
+    virtual void *FUN_00008d70(int &numBytes);              /* slot 4, 0xacd0 */
+    virtual void FUN_00008d80(void *pointer, int numBytes); /* slot 5, 0xad00 */
+    virtual void *FUN_00008d90(void *pointer, int oldNumBytes,
+                               int &numBytesInOut);                        /* slot 6, 0xad40 */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xad80 */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xadb0 */
 };
@@ -1343,10 +1407,12 @@ class RouterAllocator50 : public AllocatorBase /* derived name */
 class RouterAllocator60 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes);                                /* 0xadf0 */
-    virtual void blockFree(void *pointer, int numBytes);                   /* slot 3, 0xae20 */
-    virtual void *FUN_00008d70(int &numBytes);                             /* slot 4, 0xae60 */
-    virtual void FUN_00008d80(void *pointer, int numBytes);                /* slot 5, 0xae90 */
+    virtual void *blockAlloc(int numBytes);                 /* 0xadf0 */
+    virtual void blockFree(void *pointer, int numBytes);    /* slot 3, 0xae20 */
+    virtual void *FUN_00008d70(int &numBytes);              /* slot 4, 0xae60 */
+    virtual void FUN_00008d80(void *pointer, int numBytes); /* slot 5, 0xae90 */
+    virtual void *FUN_00008d90(void *pointer, int oldNumBytes,
+                               int &numBytesInOut);                        /* slot 6, 0xaed0 */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xaf10 */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xaf40 */
 };
@@ -1354,10 +1420,12 @@ class RouterAllocator60 : public AllocatorBase /* derived name */
 class RouterAllocator58 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes);                                /* 0xaf80 */
-    virtual void blockFree(void *pointer, int numBytes);                   /* slot 3, 0xafb0 */
-    virtual void *FUN_00008d70(int &numBytes);                             /* slot 4, 0xaff0 */
-    virtual void FUN_00008d80(void *pointer, int numBytes);                /* slot 5, 0xb020 */
+    virtual void *blockAlloc(int numBytes);                 /* 0xaf80 */
+    virtual void blockFree(void *pointer, int numBytes);    /* slot 3, 0xafb0 */
+    virtual void *FUN_00008d70(int &numBytes);              /* slot 4, 0xaff0 */
+    virtual void FUN_00008d80(void *pointer, int numBytes); /* slot 5, 0xb020 */
+    virtual void *FUN_00008d90(void *pointer, int oldNumBytes,
+                               int &numBytesInOut);                        /* slot 6, 0xb060 */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xb0a0 */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xb0d0 */
 };

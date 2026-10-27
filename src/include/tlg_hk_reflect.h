@@ -664,6 +664,14 @@ int FUN_00017fe0(const char *s); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
  * 0x17f40). */
 int FUN_00017f40(const char *a, const char *b); /* derived name */
+/* Whether a string ends with a suffix (0x181c0; derived name): both
+ * lengths taken with strlen, then the tail compared. */
+hkBool FUN_000181c0(const char *string, const char *suffix); /* derived name */
+/* Whether a directory entry's name passes a listing's pattern (0x1a770,
+ * called at 0x1bf00 after each sceFiosDHReadSync): never an empty name, "."
+ * or "..", every name without a pattern, else the names ending with what
+ * follows the pattern's first character. derived name. */
+bool FUN_0001a770(const char *name, const char *pattern); /* derived name */
 
 struct hkStringPtr {
     /* The string's length, 0 for a null string (callers 0x8965, 0x7778a).
@@ -710,6 +718,13 @@ void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
 /* The default constructor: a null string (called on each new element by the
  * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
 void FUN_0000e3d0(hkStringPtr *self); /* derived name */
+
+/* The assignment: the other's string, copied when the other owns it
+ * (0xe6c0). derived name. */
+void FUN_0000e6c0(hkStringPtr *self, const hkStringPtr *other); /* derived name */
+
+/* The string library's byte copy, a wrapper over memcpy (0x17e70). */
+void FUN_00017e70(void *dst, const void *src, unsigned int n); /* derived name */
 
 /* An XML reader (derived name; vtable 0x16a6aa0, address point 0x16a6ab0,
  * no type info), 0x28 bytes: hkSerializeDeprecated's slot 10 (0x19a4d0)
@@ -2102,7 +2117,18 @@ void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut); /
  * one finish callback; the finish constructor is the shared empty body. Its
  * static tree's domain (hkAabb) is at +0x10, as in every hkcdStaticTree
  * record table (0x168fde0 to 0x16900e8). */
+struct hknpCompressedMeshShapeTree;
+
+void FUN_000a9140(hknpCompressedMeshShapeTree *self,
+                  hkFinishLoadedObjectFlag flag); /* derived name */
+
 struct hknpCompressedMeshShapeTree {
+    /* The finish constructor is out of line (0xa9140). */
+    hknpCompressedMeshShapeTree(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_000a9140(this, flag);
+    }
+
     /* Clears the bits of the filter's keys the tree does not hold and
      * reports the change (0xa92c0); true when the filter changed anything.
      * derived name. */
@@ -2118,9 +2144,6 @@ struct hknpCompressedMeshShapeTree {
     hkAabb domain;
     u8 unknown30[0x70];
 };
-
-void FUN_000a9140(hknpCompressedMeshShapeTree *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkSkinnedMeshShape::BoneSection (type info 0x57bdc18, size 0x10): an
  * empty finish constructor (one shared body). */
@@ -2208,6 +2231,24 @@ struct StepInput00069910 /* derived name */
  * its arguments; the decorator's forward (a loaded `jmpq *%rax`, cookbook
  * 19) shows it has some. Argument names derived. */
 class hknpShape;
+
+/* hknpShapeInstance (hkClass 0x57bfe90, built at 0x3cb70: size 0x80, no
+ * parent; member records at 0x1695f50): transform at +0, scale at +0x40,
+ * shape at +0x50, shapeTag and destructionTag (hkUint16) at +0x58 and +0x5a,
+ * 30 bytes of padding. The compound shapes keep arrays of them (the caller
+ * at 0x42494 walks one). */
+struct hknpShapeInstance {
+    /* The transform with the scale applied to its rotation, column by
+     * column (0x3ea90). derived name. */
+    void FUN_0003ea90(hkTransform &transformOut) const;
+
+    hkTransform transform;
+    Vec4 scale;
+    hknpShape *shape;
+    u16 shapeTag;
+    u16 destructionTag;
+    u8 padding[30];
+};
 
 /* derived name: what slot 24 of hknpShape does by default (0x169e50, 0x51d
  * bytes): bounds the shape by slot 7 under the fourth argument's transform
@@ -2459,7 +2500,7 @@ void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpFirstPersonGun, hknpBallGun and hknpMountedBallGun, each finish
- * constructor running its parent's first (FUN_00156620, FUN_00157e00,
+ * constructor running its parent's first (0x156620, 0x157e00,
  * FUN_00166900; type infos below). hknpBallGun's destructor is out of line
  * (0x157ef0: stores its vtable, address point 0x16a48e0, and releases what
  * it holds); hknpMountedBallGun adds nothing to destroy, its slot 0
@@ -2832,11 +2873,19 @@ struct hknpWorldObject388Node : public hknpWorldObject388Link /* derived name */
  * bytes, built by the world's constructor at 0x49c0a. Slot 6 (0xfc820)
  * processes a run of nodes and returns the node after it; slot 5
  * (FUN_0006c2d0) only skips the run. */
+struct hknpWorldStepContextf6a90; /* derived name */
+
 class hknpWorldObject388 : public hkReferencedObject /* derived name */
 {
   public:
     hknpWorldObject388Node *
     FUN_0006c2d0(hknpWorldObject388Node *first); /* vtable slot 5; derived name */
+
+    /* The constraint solve (0xc4cd0, in the second compiler generation's
+     * stretch) over a step's world, its solver settings and its
+     * constraints (0xf6a90, called by the step at 0x6d96e). derived name. */
+    void FUN_000f6a90(const hknpWorldStepContextf6a90 *context, void *argument1, void *argument2,
+                      void *argument3);
 };
 
 struct hknpWorldObject4f8 /* derived name */
@@ -2949,6 +2998,22 @@ class hknpWorldQualitySlot : public hkSlot /* derived name */
     Method method; /* derived name */
 };
 
+/* The world's solver settings (derived name; at +0x390 of the world). */
+struct hknpSolverInfo /* derived name */
+{
+    u8 unknown0[0x160];
+};
+
+void FUN_000c4cd0(hknpWorld *world, hknpSolverInfo *solverInfo, hknpConstraint *constraints,
+                  int numConstraints, void *argument1, void *argument2,
+                  void *argument3); /* derived name */
+
+struct hknpWorldStepContextf6a90 /* derived name */
+{
+    u8 unknown0[8];
+    hknpWorld *world; /* derived name */
+};
+
 struct hknpWorld {
     /* Hands a body id and a bool to the object at +0x4f8 when the flag at
      * +0x4f0 is set (the command dispatcher at 0x16ef96 calls it). derived
@@ -2979,11 +3044,19 @@ struct hknpWorld {
     /* The constraint array, indexed by constraint id (the constraint
      * filter's signal handlers 0x159dd0 and 0x159df0). */
     hknpConstraint *constraints; /* derived name */
-    u8 unknown158[0x60];
+    u8 unknown158[0x3c];
+    /* The highest constraint id in use (0xf6a90 passes one more as the
+     * count). derived name. */
+    int peakConstraintId;
+    u8 unknown198[0x20];
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
-    u8 unknown1d8[0x318];
+    u8 unknown1d8[0x1b0];
+    hknpWorldObject388 *object388; /* derived name */
+    /* The solver's settings the constraint solve (0xc4cd0) reads, floats
+     * from +0 to +0x120. derived name. */
+    hknpSolverInfo solverInfo;
     /* A flag and the object it enables (FUN_0005b560 forwards to the object
      * only when the flag is set). */
     bool enabled4f0;               /* derived name */
@@ -3017,6 +3090,9 @@ struct hknpWorld {
 class hknpFirstPersonGun : public hkReferencedObject
 {
   public:
+    /* The finish constructor, out of line (0x156620; its type info's
+     * finish callback 0x3ccf0 jumps to it). */
+    hknpFirstPersonGun(hkFinishLoadedObjectFlag flag);
     virtual ~hknpFirstPersonGun();
 
     virtual void unknownVirtual5();
@@ -3056,7 +3132,7 @@ class hknpFirstPersonGun : public hkReferencedObject
 };
 
 /* hknpProjectileGun (type info 0x57bf7e0, vtable 0x16a4b30, address point
- * 0x16a4b40; finish constructor FUN_001595c0): maxProjectiles at +0x34,
+ * 0x16a4b40; finish constructor 0x1595c0): maxProjectiles at +0x34,
  * reloadTime and reload (floats) at +0x38 and +0x3c, projectiles (an array
  * of pointers) at +0x40 and npWorld at +0x50, the last three not
  * serialized (records from 0x1695020). Slot 6 fires when reloaded and
@@ -3065,6 +3141,10 @@ class hknpFirstPersonGun : public hkReferencedObject
 class hknpProjectileGun : public hknpFirstPersonGun
 {
   public:
+    /* The finish constructor, out of line (0x1595c0; the finish callback
+     * 0x39e30 jumps to it, the reflection initializer calls it at 0x39fc6):
+     * the projectiles, not serialized, start as an empty array. */
+    hknpProjectileGun(hkFinishLoadedObjectFlag flag);
     virtual void fireGun(hknpWorld *world,
                          const hkTransform &viewTransform); /* vtable slot 6; derived name */
     virtual void onGunFired(
@@ -3159,15 +3239,12 @@ class hknpPhysicsSceneData : public hkReferencedObject
 void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
 /* More hknp classes with an out-of-line finish constructor (type info, the
  * vtable it stores): */
-class hknpProjectileGun;  /* 0x57bf7e0; FUN_001595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
-class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
+class hknpProjectileGun;  /* 0x57bf7e0; 0x1595c0 runs hknpFirstPersonGun's, vtable 0x16a4b30 */
+class hknpFirstPersonGun; /* 0x57c0000; 0x156620, vtable 0x16a47e0 */
 class hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
     hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
 class hknpTriangleShape; /* 0x57c0838; 0x78230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
-
-void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);  /* derived name */
-void FUN_00156620(hknpFirstPersonGun *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpDummyShape (type info 0x57bfd60; hkClass 0x57bfd10 built at 0x3bba5:
  * size 0x60, parent hknpShape's 0x57bf1c0, member records at 0x1695a70):
@@ -3608,6 +3685,10 @@ struct hknpMaterial {
         FUN_0000e5d0(&name);
     }
 
+    /* Out of line (0x6c700; the material library's copies at 0x776d0,
+     * 0x77976 and 0x77a8f): the name copied as a string, the rest as bytes. */
+    hknpMaterial(const hknpMaterial &other);
+
     hkStringPtr name; /* derived name */
     u8 unknown8[0x48];
 };
@@ -3675,9 +3756,16 @@ float FUN_0003c660(const hknpSphereShape *self); /* derived name */
 /* hknpCompressedMeshShapeData (hkClass 0x57be1a0; record table 0x1692b40):
  * meshTree (hknpCompressedMeshShapeTree) at +0x10, simdTree at +0xb0,
  * connectivity at +0xc8. */
-struct hknpCompressedMeshShapeData {
-    u8 unknown0[0x10];
+struct hknpCompressedMeshShapeData : public hkReferencedObject {
+    /* Inline where its type info's finish callback (0x34da0) runs it: the
+     * mesh tree's finish (0xa9140), then the SIMD tree's. */
+    hknpCompressedMeshShapeData(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), meshTree(flag), simdTree(flag)
+    {
+    }
+
     hknpCompressedMeshShapeTree meshTree;
+    hkcdSimdTree simdTree;
 };
 
 /* hknpCompressedMeshShape (its records at 0x169aa40: data, a pointer to
@@ -5634,8 +5722,10 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
     /* Slot 8: the buffered writer asks the stream it buffers (FUN_00009280)
      * and answers true without one. */
     virtual hkBool unknownVirtual8() const;
-    /* Slot 9: not recovered (the buffered writer's is 0x92a0). */
-    virtual void unknownVirtual9();
+    /* Slot 9: a seek from the start (0), the position (1) or the end (2)
+     * (the counting writer's 0x19f6d0; the buffered writer's is 0x92a0).
+     * derived name. */
+    virtual hkResult seek(int offset, int whence);
     /* Slot 10: the position in the stream, negative when it has none (the
      * buffered writer's 0x9380 asks the stream it buffers). derived name. */
     virtual int tell() const;
@@ -5646,12 +5736,16 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
  * at 0x19ad01 and 0x19c76d): the write position at +0xc and the end of what
  * was written at +0x10. Slot 6 (0x19f6a0) advances the position by the byte
  * count and keeps the end at least there, returning the count; slot 9
- * (0x19f6d0) seeks from the start, the position or the end. */
+ * (0x19f6d0) seeks from the start, the position or the end; slot 10 (the
+ * shared 0x34840) tells the position; 5 and 8 answer true, 7 is empty. */
 class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
 {
   public:
     OffsetOnlyStreamWriter();
     virtual ~OffsetOnlyStreamWriter();
+
+    int write(const void *buffer, int size); /* vtable slot 6 */
+    hkResult seek(int offset, int whence);   /* vtable slot 9 */
 
     int offset; /* derived name */
     int end;    /* derived name */
@@ -6225,16 +6319,23 @@ class hkxBlobMeshShape : public hkMeshShape
 };
 
 /* hkxTextureFile: its hkClass at 0x57c67d0 is built by the reflection initializer at
- * 0x879b2; slot 3 of its vtable (address point 0x16a0f00, FUN_000878e0) returns it; its parent is hkReferencedObject's,
- * 0x57b8640 (at 0x879c0). */
+ * 0x879b2 (size 0x28, member records at 0x16a0f30: filename, name and
+ * originalFilename, hkStringPtr, from +0x10); slot 3 of its vtable (address
+ * point 0x16a0f00, FUN_000878e0) returns it; its parent is
+ * hkReferencedObject's, 0x57b8640 (at 0x879c0). */
 extern const hkClass D_57c67d0; /* hkxTextureFile's hkClass */
 
 class hkxTextureFile : public hkReferencedObject
 {
   public:
+    /* Slot 0 (0x87830): the three strings destroyed, the last first. */
     virtual ~hkxTextureFile();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000878e0 */
+
+    hkStringPtr filename;
+    hkStringPtr name;
+    hkStringPtr originalFilename;
 };
 
 /* hkxAnimatedFloat: its hkClass at 0x57c7930 is built by the reflection initializer at
@@ -6267,23 +6368,6 @@ class hkArrayStreamWriter : public hkStreamWriter
     virtual ~hkArrayStreamWriter();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ff00 */
-};
-
-/* A stream writer that writes nothing and only keeps the offset (derived
- * name): vtable 0x16a6af0 (address point 0x16a6b00, no type info),
- * constructor 0x19f670 (offset and end zeroed), not reflected. Slot 6
- * (FUN_0019f6a0) advances the offset by the byte count and the end with
- * it, slot 9 (0x19f6d0) seeks from the start, the offset or the end, slot
- * 10 (the shared 0x34840) tells the offset; 5 and 8 true, 7 empty. */
-class OffsetStreamWriter : public hkStreamWriter /* derived name */
-{
-  public:
-    virtual ~OffsetStreamWriter();
-
-    int write(const void *buffer, int size); /* vtable slot 6 */
-
-    int offset; /* derived name */
-    int end;    /* derived name */
 };
 
 /* hknpVehicleInstance: hkClass 0x57c1490 (size 0x120, parent hknpUnaryAction's
@@ -6999,7 +7083,15 @@ struct PointerMap /* derived name */
     /* Makes room for a number of entries without a rebuild: the capacity
      * doubled from 8 until it is twice the number (0x13e30). */
     void FUN_00013e30(AllocatorBase &allocator, int numElements); /* derived name */
+    /* Every entry marked empty and the entries given back to the allocator
+     * given unless the map does not own them (0x13db0). derived name. */
+    void FUN_00013db0(AllocatorBase &allocator); /* derived name */
 };
+
+/* The map's own destructor, out of line and empty: the linker folded it
+ * onto the shared empty body 0xe5c0 (the vtable class registry's destructor
+ * tail-jumps to it, 0x184393). */
+void FUN_0000e5c0(PointerMap *self); /* derived name */
 
 /* The reference-counted base (derived name; vtable address point 0x16a6970,
  * constructor FUN_0019be50, destructor body FUN_0019c150; slot 9 pure) of the
@@ -7134,6 +7226,8 @@ class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
 class hkVtableClassRegistry : public hkReferencedObject
 {
   public:
+    /* Slot 0 (0x184360): the map's entries given back to the container
+     * allocator, then the map's destructor. */
     virtual ~hkVtableClassRegistry();
 
     virtual void FUN_00184520(const void *vtable,
