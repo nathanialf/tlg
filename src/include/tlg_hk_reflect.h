@@ -2264,6 +2264,10 @@ struct Signal00093530 /* derived name */
 };
 
 void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
+/* Every slot deleted (its slot 1) and the list emptied (0x93570; the
+ * destructor runs it once the memory system is up, FUN_00009c10). derived
+ * name. */
+void FUN_00093570(Signal00093530 *self); /* derived name */
 
 /* hknpShapeSignals, a reflected struct (hkClass at 0x57c2478); at most 16
  * bytes, the member after it in hknpMaskedShape sitting at +0x60: two
@@ -5317,7 +5321,7 @@ struct hkpWheelFrictionConstraintAtom {
  * 0x169c230: transforms at +0, friction at +0x90). Slot 6 (0x7c890) hands
  * the atoms on with their size, 0xd0; slot 7 (FUN_0017cf10) tells whether
  * the friction atom has an axle. */
-class hkpWheelFrictionConstraintData
+class hkpWheelFrictionConstraintData : public hkpConstraintData
 {
   public:
     /* Its finish constructor is inline in the type info's finish callback
@@ -5326,19 +5330,30 @@ class hkpWheelFrictionConstraintData
     struct Atoms {
         Atoms(hkFinishLoadedObjectFlag flag) : friction(flag) {}
 
-        u8 transforms[0x90];
+        hkpSetLocalTransformsConstraintAtom transforms;
         hkpWheelFrictionConstraintAtom friction;
     };
 
+    /* Inline: the type info's finish callback FUN_0007b110 holds it, as
+     * the reflection initializer (0x7b33a) does: hkpConstraintData's, the
+     * vtable, then the atoms'. */
+    hkpWheelFrictionConstraintData(hkFinishLoadedObjectFlag flag)
+        : hkpConstraintData(flag), atoms(flag)
+    {
+    }
+
     virtual ~hkpWheelFrictionConstraintData();
 
-    hkBool FUN_0017cf10() const; /* vtable slot 7; derived name */
-    void FUN_0017cf30(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    int unknownVirtual5() const; /* slot 5 (FUN_0017cf20) */
+    void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const; /* slot 6 (0x7c890) */
+    hkBool unknownVirtual7() const;                                         /* slot 7 (0x17cf10) */
+    void unknownVirtual20(hkBool wantRuntime,
+                          ConstraintRuntimeInfo &infoOut) const; /* slot 20 (0x17cf30) */
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
+
+void FUN_0007b110(void *object, int finishing); /* derived name */
 
 /* hkp6DofConstraintData, polymorphic (type info 0x57c5ac8, size 0x2b0): its
  * finish constructor FUN_0017b5f0 runs 0x82850 (the constraint data

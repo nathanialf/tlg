@@ -152,6 +152,10 @@ class hknpTaskInterface /* derived name */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const = 0;
 };
 
+/* derived name: the Graphviz fill colour of a node in one of three states
+ * (0x91b30), the attributes the tasks' names come with. */
+const char *FUN_00091b30(int state); /* derived name */
+
 /* The task classes (derived names, from their timer names): primary vtable
  * address point, second vtable address point, primary slot 5. */
 

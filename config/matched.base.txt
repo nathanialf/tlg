@@ -501,7 +501,7 @@ FUN_0008f070 src/libs/unknown/leaf_0008f070.cpp
 FUN_00091090 src/libs/unknown/leaf_00091090.cpp _ZNK15BufferAllocator12FUN_00091090Ei
 FUN_000ad900 src/libs/unknown/leaf_000ad900.cpp
 FUN_00155b00 src/libs/unknown/leaf_00155b00.cpp _ZN12ShapeWatcher12FUN_00155b00Eh
-FUN_0017cf10 src/libs/unknown/leaf_0017cf10.cpp _ZNK30hkpWheelFrictionConstraintData12FUN_0017cf10Ev
+FUN_0017cf10 src/libs/unknown/leaf_0017cf10.cpp _ZNK30hkpWheelFrictionConstraintData15unknownVirtual7Ev
 FUN_000089f0 src/libs/unknown/func_000089f0.cpp _ZN9hkOstream12FUN_000089f0EPKvi
 FUN_00017e70 src/libs/unknown/func_00017e70.cpp
 FUN_00018150 src/libs/unknown/func_00018150.cpp
@@ -715,7 +715,7 @@ FUN_00045a80 src/libs/unknown/func_00045a80.cpp
 FUN_0007c2a0 src/libs/unknown/func_0007c2a0.cpp
 FUN_0007df80 src/libs/unknown/func_0007df80.cpp
 FUN_000ad620 src/libs/unknown/func_000ad620.cpp
-FUN_0017cf30 src/libs/unknown/func_0017cf30.cpp
+FUN_0017cf30 src/libs/unknown/func_0017cf30.cpp _ZNK30hkpWheelFrictionConstraintData16unknownVirtual20E6hkBoolR21ConstraintRuntimeInfo
 FUN_0019f1f0 src/libs/unknown/func_0019f1f0.cpp
 FUN_000045a0 src/libs/unknown/func_000045a0.cpp
 FUN_0000d080 src/libs/unknown/func_0000d080.cpp
@@ -1167,3 +1167,7 @@ FUN_0001e170 src/libs/unknown/func_0001e170.cpp _ZN14hkcdStaticTree20DefaultTree
 FUN_0001f650 src/libs/unknown/func_0001f650.cpp _ZN15hkcdDynamicTree21DefaultDynamicStorageINS_13CodecRawUlongEE12FUN_0001f650EPv
 FUN_00031170 src/libs/unknown/func_00031170.cpp _ZN18hknpWorldObject38012FUN_00031170EPP24hknpWorldObject380Recordi
 FUN_00064070 src/libs/unknown/func_00064070.cpp _ZN18hknpWorldObject4f812FUN_00064070ERK7hkArrayIiE
+FUN_00093530 src/libs/unknown/func_00093530.cpp
+FUN_00154f00 src/libs/unknown/func_00154f00.cpp _ZNK26hknpPrepareConstraintsTask7getNameEP11hkStringBufS1_
+FUN_00179870 src/libs/unknown/func_00179870.cpp _ZNK28hknpPrepareExistingPairsTask7getNameEP11hkStringBufS1_
+FUN_0007b110 src/libs/unknown/func_0007b110.cpp

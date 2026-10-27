@@ -3,7 +3,7 @@
 
 /* derived name: slot 7 of hkpWheelFrictionConstraintData's vtable (address
  * point 0x16a5f10): the data is usable once its friction atom has an axle. */
-hkBool hkpWheelFrictionConstraintData::FUN_0017cf10() const /* derived name */
+hkBool hkpWheelFrictionConstraintData::unknownVirtual7() const
 {
     return atoms.friction.axle != 0;
 }
