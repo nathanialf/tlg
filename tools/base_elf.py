@@ -67,6 +67,7 @@ class BaseElf:
         self._plt = None
         self._got = None
         self._tls_got = None
+        self._dso = None
         self._import_names = None
 
     # --- bytes -------------------------------------------------------------
@@ -293,7 +294,39 @@ class BaseElf:
                 return int(name[2:], 16)
             except ValueError:
                 return None
+        if name == "__dso_handle":
+            return self.dso_handle()
         return self.plt_stubs().get(name)
+
+    def dso_handle(self) -> int | None:
+        """The address of `__dso_handle`, the CRT's hidden object every
+        `__cxa_atexit` registration passes as its third argument (a static
+        object's destructor registered by its constructor). Read from the
+        base itself: the `lea rdx, [rip+X]` within 24 bytes before each
+        call or tail jump to `__cxa_atexit`'s PLT stub; the one value they
+        all agree on (10,632 of 13,043 sites name it directly on 2026-10-27,
+        the rest pass it through another register; no second value)."""
+        if self._dso is not None:
+            return self._dso or None
+        plt = self.plt_stubs().get("__cxa_atexit")
+        text = self.text_bytes()
+        text_va = self.text["vaddr"]
+        found: dict[int, int] = {}
+        if plt is not None:
+            for op in (0xE8, 0xE9):                      # call rel32, jmp rel32
+                i = text.find(bytes([op]))
+                while i != -1:
+                    va = text_va + i
+                    if va + 5 <= text_va + len(text) and \
+                            va + 5 + struct.unpack_from("<i", text, i + 1)[0] == plt:
+                        lo = max(0, i - 24)
+                        j = text.rfind(b"\x48\x8d\x15", lo, i)   # lea rdx, [rip+rel32]
+                        if j != -1 and j + 7 <= i:
+                            tgt = text_va + j + 7 + struct.unpack_from("<i", text, j + 3)[0]
+                            found[tgt] = found.get(tgt, 0) + 1
+                    i = text.find(bytes([op]), i + 1)
+        self._dso = max(found, key=found.get) if len(found) == 1 else 0
+        return self._dso or None
 
     def _verify_derived(self, sym: str) -> int:
         """A derived vtable row holds when its symbol is the mangling of its

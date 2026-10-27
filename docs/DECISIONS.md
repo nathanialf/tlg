@@ -609,6 +609,10 @@ create function 0x19a5f0: a form the walker does not count (neither `this`
 nor a returned pointer); nothing claimed needs the row, and the walker
 grows that form when one does.
 
+**Addendum, 2026-10-27 (round 30 harvest).** One row: hkObjectCopier 0x16a75d0
+(derived; stored only at 0x1a0847 by its constructor, called at 0x19a9dc and
+0x19b49e; eight slots). `--check`: 26 derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -1104,3 +1108,27 @@ line (none did: the gate ran before and after); a library function that
 needs infinities folded or reassociation (then `-ffinite-math-only` or
 `-ffast-math`, measured the same way); a function that needs `-fwrapv`
 back, which would split the region by flags as D22 splits it by compiler.
+
+## D25. The CRT's `__dso_handle` resolves from the base's own exit registrations (2026-10-27)
+
+**Decision.** A reference to `__dso_handle` (the hidden object the C++
+runtime's `crtbegin` defines, which every `__cxa_atexit` registration of a
+static object's destructor passes as its third argument) resolves to the
+address the base itself passes: `BaseElf.dso_handle` reads the `lea rdx,
+[rip+X]` before each call or tail jump to `__cxa_atexit`'s PLT stub and
+takes the one value they agree on; two values would be an error, not a
+guess. The compiler's GOT load of the symbol becomes the base's `lea`
+under D10 as for any symbol the executable defines.
+
+**Why.** The symbol is not in the base's dynamic symbol table (hidden
+visibility), so neither the import tables nor the function table name it,
+and there is no source form for a static object with a destructor that
+avoids it. Measured 2026-10-27 over the whole text: 13,043 call or jump
+sites of `__cxa_atexit`, 10,632 with the `lea` in reach, all naming
+0x16dc0d8, no other value. The first function to need it: FUN_00006bf0, the
+static initializer that builds the stack tracer and registers its
+destructor (49 bytes, equal once the symbol resolves).
+
+**Trigger to revisit.** A second value among the registrations (none), or
+a base whose registrations pass the handle only through another register
+(then the finder follows the move).

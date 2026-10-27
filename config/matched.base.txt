@@ -1061,3 +1061,5 @@ FUN_00010f50 src/libs/unknown/func_00010f50.cpp
 FUN_00011db0 src/libs/unknown/func_00011db0.cpp _ZN11hkStringBuf12FUN_00011db0Ev
 FUN_00012120 src/libs/unknown/func_00012120.cpp _ZNK20SingleBlockAllocator19getMemoryStatisticsER16MemoryStatistics
 FUN_0001bb80 src/libs/unknown/func_0001bb80.cpp _ZN14FiosFileSystem12FUN_0001bb80EPKci
+FUN_00006bf0 src/libs/unknown/func_00006bf0.cpp _GLOBAL__I_a
+FUN_001a0840 src/libs/unknown/func_001a0840.cpp _ZN14hkObjectCopierC2ERK14Layout00180ef0S2_i
