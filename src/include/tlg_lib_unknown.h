@@ -262,7 +262,7 @@ template <typename T> inline void hkArray<T>::clearAndDeallocate()
 {
     size = 0;
     if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
-        hkContainerHeapAllocator::get().freeElements<T>(data, capacityAndFlags);
+        hkContainerHeapAllocator::get().freeElements<T>(data, getCapacity());
     }
     data = 0;
     capacityAndFlags = DONT_DEALLOCATE_FLAG;
@@ -1606,6 +1606,34 @@ inline void QueryProcessor0010b090::operator delete(void *object, unsigned long 
     if (object) {
         D_16dc070->temp58->blockFree(object, int(numBytes));
     }
+}
+
+/* The class allocator's delete of the reference-counted classes (derived
+ * name): the object goes back to the thread's heap at the size its
+ * allocation recorded in the top 16 bits of memSizeAndRefCount, or at the
+ * class's own size when none was recorded (0xffff). It has no null test:
+ * the deleting destructors that inline it free unconditionally (one body per
+ * class size, folded by the linker: 0x4060 for 16 bytes, 0xd990 for 32,
+ * cited by every vtable of an empty destructor of that size). */
+inline void freeReferencedObject(void *object, unsigned long numBytes) /* derived name */
+{
+    const u32 memSize = static_cast<hkReferencedObject *>(object)->memSizeAndRefCount >> 16;
+    D_16dc070->temp58->blockFree(object, memSize == 0xffff ? int(numBytes) : int(memSize));
+}
+
+inline void hkUuidObject::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void Crc32StreamWriter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void OffsetOnlyStreamWriter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
 }
 
 /* Three allocators that hold nothing of their own and hand every request to

@@ -310,6 +310,14 @@ class hknpBuildConstraintsTask : public hkReferencedObject,
      * address inside the owner (+0x138); the count at +0x38 starts at 0. */
     hknpBuildConstraintsTask(int unknown18, void *unknown28, void *unknown20, void *unknown30);
 
+    /* Empty (the shared 0xadd50); the deleting destructor is 0x1ba80, the
+     * body every vtable of a 0x40-byte reference-counted class with an empty
+     * destructor cites (D15; none of the four has other members beside it,
+     * so it is named for this one, docs/NOTES.md Round 35). */
+    virtual ~hknpBuildConstraintsTask();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* slot 5 (0x1551a0) */
     virtual void process();
     /* slot 6 */

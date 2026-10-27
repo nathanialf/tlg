@@ -126,7 +126,10 @@ struct hkFinishLoadedObjectFlag {
 };
 
 template <typename T> struct hkArray {
-    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
+    enum {
+        CAPACITY_MASK = 0x3fffffff,            /* derived name */
+        DONT_DEALLOCATE_FLAG = int(0x80000000) /* derived name */
+    };
 
     /* An empty array that owns no storage (the constructors' stores). */
     hkArray() : data(0), size(0), capacityAndFlags(DONT_DEALLOCATE_FLAG) {}
@@ -144,6 +147,14 @@ template <typename T> struct hkArray {
     ~hkArray()
     {
         clearAndDeallocate();
+    }
+
+    /* The capacity without its flags (the cleanup callbacks of 0x1e200,
+     * 0x1e270 and 0x1f5f0 mask it before scaling by an element size that
+     * is not a power of two). derived name. */
+    int getCapacity() const
+    {
+        return capacityAndFlags & CAPACITY_MASK;
     }
 
     /* Drop the elements, keeping the storage. derived name. */
@@ -676,6 +687,8 @@ class hkDummySingleton : public hkReferencedObject
 /* Its create function, the record's (0x9c20). derived name. */
 hkReferencedObject *FUN_00009c20(); /* derived name */
 
+extern hkDummySingleton *D_57b80c8; /* hkDummySingleton's instance */
+
 /* A singleton's registration record (derived names): its name, its create
  * function (null for a singleton made by hand), the list's next record and
  * the address of the instance pointer; each record links itself at the
@@ -943,6 +956,12 @@ class hkUuidObject : public hkReferencedObject
 {
   public:
     hkUuidObject(hkFinishLoadedObjectFlag flag);
+
+    /* Empty (the shared 0xd940); the deleting destructor 0xd990 frees the
+     * object through the class allocator (tlg_lib_unknown.h). */
+    virtual ~hkUuidObject();
+
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkUuid uuid;
 };
@@ -1859,7 +1878,14 @@ void FUN_00034b80(hknpCompressedMeshShapeData *self); /* derived name */
  * destructor FUN_00023490, runs the out-of-line FUN_000234f0, which restores
  * the vtable and frees the arrays at +0x50 (16-byte elements), +0x40
  * (hkStringPtr) and below. */
-struct hkMeshBoneIndexMapping; /* derived name: the class 0x57bd388 */
+/* hkMeshBoneIndexMapping (type info "!hkMeshBoneIndexMapping", hkClass
+ * 0x57bd388 built by 0x24490): an array of 16-bit indices at +0. The
+ * cleanup callback of its type info (0x24440) frees it. */
+struct hkMeshBoneIndexMapping {
+    static void FUN_00024440(void *object); /* derived name */
+
+    hkArray<s16> mapping; /* derived name */
+};
 
 /* Its members from the record table at 0x1691d10 (size 0x68, hkClass
  * 0x57bd308, its parent hkReferencedObject's 0x57b8640): matrices and
@@ -2305,6 +2331,34 @@ struct hkcdStaticTree {
         hkArray<Node> nodes; /* derived name */
         hkAabb domain;       /* derived name */
     };
+
+    /* The 5-byte and 6-byte node codecs (type info "!hkcdStaticTree::
+     * Codec3Axis5" and "...Codec3Axis6"; the sizes are the cleanup
+     * callbacks' element sizes). */
+    struct Codec3Axis5 {
+        u8 unknown0[5];
+    };
+
+    struct Codec3Axis6 {
+        u8 unknown0[6];
+    };
+
+    /* hkcdStaticTree::DefaultTreeStorage5 and DefaultTreeStorage6 (type
+     * infos registered by 0x1e340): their nodes at +0 (derived name). The
+     * cleanup callbacks of their type infos, 0x1e200 and 0x1e270, are also
+     * the callbacks of the static trees over the dynamic storages 5 and 6.
+     * derived names. */
+    struct DefaultTreeStorage5 {
+        static void FUN_0001e200(void *object);
+
+        hkArray<Codec3Axis5> nodes; /* derived name */
+    };
+
+    struct DefaultTreeStorage6 {
+        static void FUN_0001e270(void *object);
+
+        hkArray<Codec3Axis6> nodes; /* derived name */
+    };
 };
 
 /* hkcdDynamicTree's default storage over its raw-ulong codec (type info
@@ -2316,11 +2370,21 @@ struct hkcdDynamicTree {
         u8 unknown0[0x40];
     };
 
+    /* The 48-byte codec (type info "!hkcdDynamicTree::CodecRawUint"; the
+     * size the cleanup callback 0x1f5f0's element size). */
+    struct CodecRawUint {
+        u8 unknown0[0x30];
+    };
+
     template <typename CODEC> struct DefaultDynamicStorage {
         /* The cleanup callback of its type info (0x1f650 for the raw-ulong
          * codec; the other storages with 64-byte nodes cite the same body).
          * derived name. */
         static void FUN_0001f650(void *object);
+        /* The cleanup callback for the raw-uint codec (0x1f5f0; also the
+         * callback of the dynamic storages over 48-byte nodes the same
+         * registrations, 0x1f750 and 0x201a0, cite). derived name. */
+        static void FUN_0001f5f0(void *object);
 
         hkArray<CODEC> nodes; /* derived name */
         u8 unknown10[8];
@@ -6201,13 +6265,39 @@ class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
 {
   public:
     OffsetOnlyStreamWriter();
+    /* Empty (the shared 0x17de10); the deleting destructor is 0x1ba30, the
+     * body every vtable of a 0x18-byte reference-counted class with an empty
+     * destructor cites (D15; no class of the eleven has other members beside
+     * it, so it is named for this one, docs/NOTES.md Round 35). */
     virtual ~OffsetOnlyStreamWriter();
+
+    static void operator delete(void *object, unsigned long numBytes);
 
     int write(const void *buffer, int size); /* vtable slot 6 */
     hkResult seek(int offset, int whence);   /* vtable slot 9 */
 
     int offset; /* derived name */
     int end;    /* derived name */
+};
+
+/* A stream writer that only computes the CRC-32 of what it is given
+ * (derived name; vtable 0x168c980, address point 0x168c990, no type info,
+ * built on the stack by 0x45c0, which returns the complement of the CRC):
+ * the running CRC at +0xc, starting at all ones; slot 5 (0x40b0) answers
+ * true, slot 6 (0x40c0) folds each byte in with the reflected polynomial
+ * 0xedb88320. */
+class Crc32StreamWriter : public hkStreamWriter /* derived name */
+{
+  public:
+    /* Empty (the shared 0x270); the deleting destructor 0x4060 frees the
+     * object through the class allocator (tlg_lib_unknown.h), the body every
+     * vtable of a 16-byte reference-counted class with an empty destructor
+     * cites (D15). */
+    virtual ~Crc32StreamWriter();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u32 crc; /* derived name */
 };
 
 /* An output archive over a stream writer (derived name): a reference-counted
@@ -6220,6 +6310,8 @@ class hkOArchive : public hkReferencedObject /* derived name */
 {
   public:
     hkBool FUN_0000abf0() const; /* derived name */
+    /* derived name: one byte written to the stream (0xa420). */
+    void FUN_0000a420(char c);
 
     hkStreamWriter *writer; /* derived name */
     hkBool byteSwap;        /* derived name */
@@ -7950,5 +8042,20 @@ struct hknpGridSpaceSplitter /* derived name */
     int numCellsPerRow; /* derived name */
     int cellMask;       /* derived name */
 };
+
+/* hkAabb16 (the reflection's class name, the string at 0x14b826d): a
+ * box in 16-bit coordinates, the three minimum coordinates and a key in the
+ * low eight bytes, the three maximum coordinates and a second key in the
+ * high eight, read and written as one aligned vector (FUN_00185460). The
+ * field names are derived. */
+struct alignas(16) hkAabb16 {
+    u16 min[3]; /* derived name */
+    u16 key;    /* derived name */
+    u16 max[3]; /* derived name */
+    u16 key1;   /* derived name */
+};
+
+/* derived name: the union of count boxes (FUN_00185460). */
+void FUN_00185460(hkAabb16 *aabbOut, const hkAabb16 *aabbs, int count);
 
 #endif
