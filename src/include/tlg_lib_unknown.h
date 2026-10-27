@@ -75,12 +75,17 @@ void FUN_0002b0b0(Pair08Owner *self);                             /* derived nam
 void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived name */
 void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
 void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
+
 /* What follows the record's entries (derived names): FUN_0002af30 returns
  * its address (past the 32-byte entries from +0x40 and a size the table at
  * 0x14b8690 gives for the byte at +3), FUN_0002af50 the address of an int
  * in it, 16 bytes further for each of the conditions its byte at +4 tells
  * (nonzero, bit 1, bit 0). */
-struct Pair08Tail; /* derived name */
+struct Pair08Tail /* derived name */
+{
+    u8 unknown0[4];
+    u8 flags; /* derived name */
+};
 
 Pair08Tail *FUN_0002af30(const Pair08Owner *self); /* derived name */
 const s32 *FUN_0002af50(const Pair08Tail *tail);   /* derived name */
@@ -143,6 +148,10 @@ struct MemoryStatistics;
 class AllocatorBase /* derived name */
 {
   public:
+    /* Empty and out of line (0x8d60): every allocator's destructor ends in
+     * a call or jump to it (0x4ac0, 0x14a79, 0x8f17b and a dozen more). The
+     * same one-instruction body stands in the slots of other vtables
+     * (hkDummySingleton's slots 0 and 5), which cite it by address. */
     virtual ~AllocatorBase();
 
     /* Slots 2 and 3 allocate and free a block of a given size; slots 4 and
@@ -572,11 +581,17 @@ struct Layout00180ef0 {
 class hkObjectCopier : public hkReferencedObject /* derived name */
 {
   public:
+    /* 0x1a0840 (the platform object writer builds one at 0x19a9dc, the
+     * packfile writer at 0x19b49e). */
+    hkObjectCopier(const Layout00180ef0 &layoutIn, const Layout00180ef0 &layoutOut, int flags);
+
     int FUN_001a0b20(const hkClassMember &src,
                      const hkClassMember &dst); /* vtable slot 6; derived name */
 
     Layout00180ef0 layoutIn;  /* derived name */
     Layout00180ef0 layoutOut; /* derived name */
+    int flags;                /* derived name */
+    hkBool byteSwap;          /* derived name */
 };
 
 /* The platform object writer (derived name): a reference-counted object
@@ -696,8 +711,16 @@ struct FreeList /* derived name */
     void FUN_000186a0(u64 elementSize, u64 alignment, u64 blockSize, AllocatorBase *blockAllocator,
                       AllocatorBase *elementAllocator); /* derived name */
 
-    /* Every block given back (0x18770). */
-    ~FreeList();
+    /* Every block given back to its allocator and the list emptied
+     * (0x18770): the setup (0x186c1) calls it before it starts over and the
+     * owner at 0x1c81 calls it on a list it keeps using, so it is a member
+     * of its own, which the destructor runs. */
+    void FUN_00018770(); /* derived name */
+
+    ~FreeList()
+    {
+        FUN_00018770();
+    }
 
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
@@ -726,7 +749,7 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
 {
   public:
     /* Slots 0 and 1 (0x14a50): the free list's blocks given back, then
-     * AllocatorBase's destructor (the empty 0x8d60). */
+     * AllocatorBase's destructor (the empty 0x8d60, out of line). */
     virtual ~FixedSizeAllocator();
 
     /* Sets the free list up with an alignment of at least 32 and no element

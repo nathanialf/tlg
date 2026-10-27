@@ -27,7 +27,7 @@ FUN_0059d3b0 src/game/unknown/func_0059d3b0.cpp _Z12FUN_0059d3b0P11Owner583950Pv
 FUN_00000270 src/libs/unknown/leaf_00000270.cpp
 FUN_00006660 src/libs/unknown/leaf_00006660.cpp
 FUN_00006c80 src/libs/unknown/leaf_00006c80.cpp
-FUN_00008d60 src/libs/unknown/leaf_00008d60.cpp
+_ZN13AllocatorBaseD2Ev src/libs/unknown/leaf_00008d60.cpp
 FUN_0000d500 src/libs/unknown/leaf_0000d500.cpp
 FUN_0000d940 src/libs/unknown/leaf_0000d940.cpp
 FUN_0000dbc0 src/libs/unknown/leaf_0000dbc0.cpp
@@ -81,7 +81,7 @@ FUN_00001f90 src/libs/unknown/func_00001f90.cpp
 FUN_00003e80 src/libs/unknown/func_00003e80.cpp
 FUN_00003eb0 src/libs/unknown/func_00003eb0.cpp
 FUN_00004250 src/libs/unknown/leaf_00004250.cpp
-FUN_00004ac0 src/libs/unknown/func_00004ac0.cpp
+FUN_00004ac0 src/libs/unknown/func_00004ac0.cpp _ZN17Allocator00004ac0D2Ev
 FUN_00007e00 src/libs/unknown/leaf_00007e00.cpp
 FUN_00007f80 src/libs/unknown/leaf_00007f80.cpp
 FUN_0000bc60 src/libs/unknown/leaf_0000bc60.cpp
@@ -1027,3 +1027,15 @@ FUN_0014a2b0 src/libs/unknown/func_0014a2b0.cpp
 _ZN23hknpConvexPolytopeShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_001520b0.cpp
 _ZN18hknpMountedBallGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00166900.cpp
 FUN_000365a0 src/libs/unknown/func_000365a0.cpp _ZN23hknpCharacterStateInAirC2Ev
+FUN_00014a50 src/libs/unknown/func_00014a50.cpp _ZN18FixedSizeAllocatorD2Ev
+FUN_00018250 src/libs/unknown/func_00018250.cpp
+FUN_000354c0 src/libs/unknown/func_000354c0.cpp
+FUN_000acf10 src/libs/unknown/func_000acf10.cpp _ZN20hkMemoryMeshMaterial12FUN_000acf10EP18hkMeshVertexBuffer
+_ZN26hkpCallbackConstraintMotorC1ENS_12CallbackTypeEPFvvE src/libs/unknown/func_0017d0c0.cpp
+FUN_0019a450 src/libs/unknown/func_0019a450.cpp _ZN21hkSerializeDeprecated12FUN_0019a450EPKvS1_PvS1_S2_P21SerializeErrorDetails
+_ZN15hknpSphereShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0003c540.cpp
+_ZN16hknpCapsuleShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000730d0.cpp
+_ZN17hknpTriangleShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00078230.cpp
+FUN_000938c0 src/libs/unknown/func_000938c0.cpp _ZN19hkBlockStreamWriter12FUN_000938c0EPvP13hkBlockStream
+FUN_000937c0 src/libs/unknown/func_000937c0.cpp _ZN19hkBlockStreamReader12FUN_000937c0EPK13hkBlockStream
+FUN_00093bc0 src/libs/unknown/func_00093bc0.cpp _ZN26hkBlockStreamConsumedBlock12FUN_00093bc0Ev

@@ -8,5 +8,5 @@ void FUN_0001f360(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00021a20(static_cast<hkcdSimdTree *>(object), flag);
+    new (object) hkcdSimdTree(flag);
 }

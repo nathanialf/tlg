@@ -7,6 +7,6 @@ hknpConvexPolytopeShape::hknpConvexPolytopeShape(hkFinishLoadedObjectFlag flag)
     : hknpConvexShape(flag)
 {
     if (flag.finishing) {
-        flags |= 3;
+        flags |= IS_CONVEX_SHAPE | IS_CONVEX_POLYTOPE_SHAPE;
     }
 }

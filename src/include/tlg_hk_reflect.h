@@ -427,6 +427,24 @@ class hkReferencedObject : public hkBaseObject
 
     virtual ~hkReferencedObject() {}
 
+    /* One more reference, counted only on an object with a known size (a
+     * loaded object's size is zero and it is never freed): the low 16 bits
+     * incremented by compare-and-swap, the size kept (0xacf10). derived
+     * name. */
+    void addReference() const
+    {
+        if ((memSizeAndRefCount & 0xffff0000) != 0) {
+            /* volatile: other threads change the count between the reads,
+             * so each attempt reads it again (0xacf20 reloads it). */
+            volatile u32 *count = &memSizeAndRefCount;
+            u32 oldValue, newValue;
+            do {
+                oldValue = *count;
+                newValue = (oldValue & 0xffff0000) | u16(oldValue + 1);
+            } while (__sync_val_compare_and_swap(count, oldValue, newValue) != oldValue);
+        }
+    }
+
     /* The class allocator: a new object comes from the thread's heap
      * (0x9c29), and placement stays available beside it; a deleted object
      * goes back to the heap at the class's size. */
@@ -462,7 +480,8 @@ class hkReferencedObject : public hkBaseObject
      * at 0x44e86 calls slot 4 when the count reaches zero. derived name. */
     virtual void FUN_000069a0() const;
 
-    u32 memSizeAndRefCount;
+    /* mutable: a const object still takes references. */
+    mutable u32 memSizeAndRefCount;
 };
 
 /* hkReferencedObjectLock, the singleton registered by that name (record
@@ -628,9 +647,18 @@ struct SerializeErrorDetails /* derived name */
  * text is the executable's. */
 extern const char D_14cca20[];
 
+/* The XML save's message (0x14cc986, "XML packfile support is not
+ * linked...", 118 characters), referenced by its address likewise. */
+extern const char D_14cc986[];
+
 class hkSerializeDeprecated : public hkReferencedObject
 {
   public:
+    /* Slot 6: the stub's XML save (five arguments before the error
+     * record, the last on the stack; their types not recovered). */
+    hkResult FUN_0019a450(const void *object, const void *klass, void *writer, const void *options,
+                          void *listener,
+                          SerializeErrorDetails *errorOut); /* vtable slot 6; derived name */
     void *FUN_0019a490(void *reader, const void *details,
                        SerializeErrorDetails *errorOut); /* vtable slots 8 and 9; derived name */
 };
@@ -1425,9 +1453,23 @@ class hknpTyremarksWheel : public hkReferencedObject
     hknpTyremarksWheel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* hkcdSimdTree (type info 0x57bb3e0, vtable 0x1690d60): 0x18 bytes, its
+ * nodes an hkArray at +8. Its finish constructor (0x21a20) is out of line:
+ * the type info's finish callback FUN_0001f360 jumps to it, and
+ * hknpExternMeshShapeData's finish constructor calls it on its member. */
+class hkcdSimdTree
+{
+  public:
+    hkcdSimdTree(hkFinishLoadedObjectFlag flag);
+    virtual ~hkcdSimdTree();
+
+    /* The nodes, an hkArray (size at +0x10, capacity and flags at +0x14);
+     * the element type is not recovered. */
+    u8 nodes[0x10]; /* derived name */
+};
+
 /* Polymorphic classes whose finish constructors are out of line, each
  * storing the class's vtable (and clearing a few members): */
-struct hkcdSimdTree;             /* FUN_00021a20, vtable 0x1690d70 */
 class hkSkinnedRefMeshShape;     /* 0xaa660, vtable 0x16a38c0 */
 class hkMemoryMeshShape;         /* 0x2a940, vtable 0x1692540 */
 class hkMemoryMeshMaterial;      /* 0xaccf0, vtable 0x16a3920 */
@@ -1437,7 +1479,6 @@ class hknpDynamicCompoundShape;  /* 0x469a0, vtable 0x1697ef0 */
 class hknpMaskedShape;           /* FUN_00037b90, vtable 0x1693a90 */
 
 void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);       /* derived name */
-void FUN_00021a20(hkcdSimdTree *self, hkFinishLoadedObjectFlag flag);    /* derived name */
 void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
@@ -1959,6 +2000,27 @@ void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape 
 class hknpShape : public hkReferencedObject
 {
   public:
+    /* The shape flags: the item names are the executable's strings (from
+     * 0x14bdcf4, in this order), the values their bits in that order, which
+     * the finish constructors' sets agree with (the capsule's 0x1c3, the
+     * triangle's 0x9c3, the sphere's 0x2111). */
+    enum FlagsEnum {
+        IS_CONVEX_SHAPE = 1 << 0,
+        IS_CONVEX_POLYTOPE_SHAPE = 1 << 1,
+        IS_COMPOSITE_SHAPE = 1 << 2,
+        IS_HEIGHT_FIELD_SHAPE = 1 << 3,
+        USE_SINGLE_POINT_MANIFOLD = 1 << 4,
+        IS_INTERIOR_TRIANGLE = 1 << 5,
+        SUPPORTS_COLLISIONS_WITH_INTERIOR_TRIANGLES = 1 << 6,
+        USE_NORMAL_TO_FIND_SUPPORT_PLANE = 1 << 7,
+        USE_SMALL_FACE_INDICES = 1 << 8,
+        NO_GET_SHAPE_KEYS_ON_SPU = 1 << 9,
+        SHAPE_NOT_SUPPORTED_ON_SPU = 1 << 10,
+        IS_TRIANGLE_OR_QUAD_SHAPE = 1 << 11,
+        IS_QUAD_SHAPE = 1 << 12,
+        IS_SPHERE_SHAPE = 1 << 13
+    };
+
     hknpShape(hkFinishLoadedObjectFlag flag);
     virtual ~hknpShape();
 
@@ -2759,8 +2821,7 @@ struct hknpMotionPropertiesLibrary : public hkReferencedObject {
 
 /* hknp classes registered by the reflection TU at 0x38b10 onward, each with
  * an out-of-line finish constructor (type info, the vtable it stores): */
-class
-    hknpCapsuleShape; /* 0x57bf490; FUN_000730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
+class hknpCapsuleShape; /* 0x57bf490; 0x730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
 class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
 
 /* hknpShapeMassProperties (hkClass 0x57bf240, 0x30 bytes, parent
@@ -2785,7 +2846,6 @@ class hknpPhysicsSceneData : public hkReferencedObject
     hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag);
 };
 
-void FUN_000730d0(hknpCapsuleShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
 void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
 /* More hknp classes with an out-of-line finish constructor (type info, the
  * vtable it stores): */
@@ -2795,8 +2855,7 @@ class hknpFirstPersonGun; /* 0x57c0000; FUN_00156620, vtable 0x16a47e0 */
 class hknpConstraintCollisionFilter; /* 0x57c0368; FUN_00159b40, vtable 0x16a4c20 */
 struct
     hknpLodShape; /* 0x57c05b8; FUN_00068160 runs hknpShape's, stores 0x1697c80, then its own 0x1699c00 */
-struct
-    hknpTriangleShape; /* 0x57c0838; FUN_00078230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
+class hknpTriangleShape; /* 0x57c0838; 0x78230 runs hknpConvexPolytopeShape's, vtable 0x169b670 */
 
 void FUN_001595c0(hknpProjectileGun *self, hkFinishLoadedObjectFlag flag);  /* derived name */
 void FUN_0003e170(hknpDummyShape *self, hkFinishLoadedObjectFlag flag);     /* derived name */
@@ -2829,8 +2888,7 @@ class hknpPhysicsSystemData : public hkReferencedObject
     hkStringPtr name;
 };
 
-void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag);      /* derived name */
-void FUN_00078230(hknpTriangleShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 class hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
 class
     hknpScaledConvexShape; /* 0x57c0c48; FUN_0016ce90 runs hknpDecoratorShape's, vtable 0x16a54a0 */
@@ -3037,10 +3095,31 @@ class hknpConvexPolytopeShape : public hknpConvexShape
 class hknpCapsuleShape : public hknpConvexPolytopeShape
 {
   public:
+    /* The finish constructor, out of line (0x730d0, jumped to by the finish
+     * callback FUN_000394a0). */
+    hknpCapsuleShape(hkFinishLoadedObjectFlag flag);
+
     int FUN_00073170() const; /* vtable slot 6; derived name */
 
     Vec4 a;
     Vec4 b;
+};
+
+/* hknpSphereShape (type info 0x57c2798, vtable 0x1695c10) over
+ * hknpConvexShape, and hknpTriangleShape (type info 0x57c0838, vtable
+ * 0x169b670) over hknpConvexPolytopeShape: finish constructors out of line
+ * (0x3c540, 0x78230), jumped to by the finish callbacks FUN_0006b6b0 and
+ * FUN_0003e730. */
+class hknpSphereShape : public hknpConvexShape
+{
+  public:
+    hknpSphereShape(hkFinishLoadedObjectFlag flag);
+};
+
+class hknpTriangleShape : public hknpConvexPolytopeShape
+{
+  public:
+    hknpTriangleShape(hkFinishLoadedObjectFlag flag);
 };
 
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
@@ -3218,7 +3297,6 @@ struct
 class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs 0x7d520, vtable 0x1695b10 */
 struct
     hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
-struct hknpSphereShape;      /* 0x57c2798; FUN_0003c540 runs hknpConvexShape's, vtable 0x1695c10 */
 
 void FUN_00175de0(hknpCompressedHeightFieldShape *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
@@ -3247,7 +3325,6 @@ class hknpDestructionShapeProperties : public hkReferencedObject
 };
 
 void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0003c540(hknpSphereShape *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 /* Slot 17 of hknpSphereShape's vtable (address point 0x1695c20) returns pi,
  * hknpCapsuleShape's (0x169b270) pi / 2. */
 float FUN_0003c660(const hknpSphereShape *self); /* derived name */
@@ -3977,13 +4054,32 @@ struct hknpBodyCinfo {
 class hkpConstraintMotor : public hkReferencedObject
 {
   public:
+    /* The motor types (item names from the executable's strings at
+     * 0x14c40cb to 0x14c4107; values derived from their order). */
+    enum MotorType {
+        TYPE_INVALID,
+        TYPE_POSITION,
+        TYPE_VELOCITY,
+        TYPE_SPRING_DAMPER,
+        TYPE_CALLBACK
+    };
+
+    hkpConstraintMotor() {}
+
     hkpConstraintMotor(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    hkEnum<MotorType, s8> type; /* derived name */
 };
 
 class hkpLimitedForceConstraintMotor : public hkpConstraintMotor
 {
   public:
+    hkpLimitedForceConstraintMotor() {}
+
     hkpLimitedForceConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpConstraintMotor(flag) {}
+
+    float minForce; /* name from the executable's strings; offset derived */
+    float maxForce; /* name from the executable's strings; offset derived */
 };
 
 /* hkpPositionConstraintMotor (hkClass 0x57c30e8), hkpVelocityConstraintMotor
@@ -4010,9 +4106,31 @@ class hkpVelocityConstraintMotor : public hkpLimitedForceConstraintMotor
 class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
 {
   public:
+    /* The callback's kind (the enum CallbackType, items
+     * CALLBACK_MOTOR_TYPE_HAVOK_DEMO_SPRING_DAMPER and
+     * CALLBACK_MOTOR_TYPE_USER_0 to 3 from the strings at 0x14c423b on). */
+    enum CallbackType {
+        CALLBACK_MOTOR_TYPE_HAVOK_DEMO_SPRING_DAMPER,
+        CALLBACK_MOTOR_TYPE_USER_0,
+        CALLBACK_MOTOR_TYPE_USER_1,
+        CALLBACK_MOTOR_TYPE_USER_2,
+        CALLBACK_MOTOR_TYPE_USER_3
+    };
+
+    /* The function that fills the motor's solver data (signature not
+     * recovered). derived name. */
+    typedef void (*CalcMotorDataCallbackFunc)();
+
+    /* 0x17d0c0 (the game builds one at 0xeb1204): a limited-force motor of
+     * the callback type with a force range of a million each way. */
+    hkpCallbackConstraintMotor(CallbackType callbackType, CalcMotorDataCallbackFunc callbackFunc);
+
     hkpCallbackConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpLimitedForceConstraintMotor(flag)
     {
     }
+
+    CalcMotorDataCallbackFunc callbackFunc; /* name from the strings; offset derived */
+    hkEnum<CallbackType, u32> callbackType; /* name from the strings; offset derived */
 };
 
 /* hkpSpringDamperConstraintMotor (hkClass 0x57c5bf8, parent
@@ -4903,10 +5021,11 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000246c0 */
     hkResult FUN_000acf00(const hkVertexFormat &format,
-                          hkVertexFormat &formatOut); /* vtable slot 5; derived name */
-    void FUN_000acf80(const char *newName);           /* vtable slot 9; derived name */
-    const char *FUN_000acf90() const;                 /* vtable slot 10; derived name */
-    hkMeshTexture *FUN_000acfb0(int index) const;     /* vtable slot 12; derived name */
+                          hkVertexFormat &formatOut);             /* vtable slot 5; derived name */
+    hkMeshVertexBuffer *FUN_000acf10(hkMeshVertexBuffer *buffer); /* vtable slot 6; derived name */
+    void FUN_000acf80(const char *newName);                       /* vtable slot 9; derived name */
+    const char *FUN_000acf90() const;                             /* vtable slot 10; derived name */
+    hkMeshTexture *FUN_000acfb0(int index) const;                 /* vtable slot 12; derived name */
     /* The index a new texture goes at (0xacfc0): after the textures whose
      * slot 15 value is not above its own, the later ones moved up and a
      * null slot left for it. derived name. */
@@ -5407,8 +5526,17 @@ struct hknpExternMeshShapeBuildContext /* derived name */
 class hknpExternMeshShapeData : public hkReferencedObject
 {
   public:
+    /* The finish constructor, inline: the type info's finish callback
+     * (FUN_000354c0) and the reflection initializer (0x3558a) each hold a
+     * copy. The build context is not serialized and starts null. */
+    hknpExternMeshShapeData(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), simdTree(flag)
+    {
+        buildContext = 0;
+    }
+
     u8 aabbTree[0x30];
-    u8 simdTree[0x18];
+    hkcdSimdTree simdTree;
     hknpExternMeshShapeBuildContext *buildContext;
 };
 
@@ -6040,6 +6168,12 @@ struct hkBlockStreamWriter /* derived name */
      * name. */
     void FUN_000938a0(void *blockAllocator, hkBlockStream *stream);
 
+    /* Binds the writer to a stream to append to its last block (0x938c0):
+     * the block's used bytes and elements become the writer's, and its
+     * elements leave the stream's count until the writer closes the block
+     * again. derived name. */
+    void FUN_000938c0(void *blockAllocator, hkBlockStream *stream);
+
     hkBlockStream *blockStream; /* derived name */
     void *currentBlock;         /* derived name */
     int currentByteOffset;      /* derived name */
@@ -6098,6 +6232,30 @@ struct BlockCache /* derived name */
  * flag at +0x18 that some of its blocks were freed while it was read, and
  * the blocks from +0x20 (0x947f0 appends one). A reader done with a block
  * (0x93ba3, 0x93be6) has FUN_00094df0 free it. */
+/* A block of a block stream (derived names): the 32-bit word at +0 holds
+ * its element count in the low half and its used bytes in the high half
+ * (the writer's finalize 0x93a10 writes both at once, the append 0x938c0
+ * reads each half, consumers subtract from it atomically), its index in the
+ * stream at +4, the data from +0x20. */
+struct hkBlockStreamBlock /* derived name */
+{
+    /* The block's first eight bytes, which a consumer done with the block
+     * reads at once (0x93bd3 and 0x93b8a load them in one 64-bit read). */
+    struct Header {
+        u32 numElementsAndBytesUsed; /* derived name */
+        int blockIndexInStream;      /* derived name */
+    };
+
+    Header getHeader() const
+    {
+        return header;
+    }
+
+    Header header; /* derived name */
+    u8 unknown8[0x18];
+    u8 data[0xfe0]; /* derived name */
+};
+
 struct hkBlockStream /* derived name */
 {
     void FUN_00094df0(BlockCache *cache, void *block, int index); /* derived name */
@@ -6107,7 +6265,38 @@ struct hkBlockStream /* derived name */
     u8 unknownC[0xc];
     hkBool partiallyFreed; /* derived name */
     u8 unknown19[7];
-    hkArray<void *> blocks; /* derived name */
+    hkArray<hkBlockStreamBlock *> blocks; /* derived name */
+};
+
+/* What a consumer keeps of the block it reads (derived names): the stream,
+ * the cache freed blocks go to, the block and the number of its elements
+ * consumed. FUN_00093bc0 gives the block back to the stream's cache when
+ * every element was consumed, and otherwise takes the consumed ones off its
+ * count (atomically: other consumers may share the block). */
+struct hkBlockStreamConsumedBlock /* derived name */
+{
+    void FUN_00093bc0(); /* derived name */
+
+    hkBlockStream *stream; /* derived name */
+    u8 unknown8[8];
+    BlockCache *cache;         /* derived name */
+    hkBlockStreamBlock *block; /* derived name */
+    int numElementsConsumed;   /* derived name */
+};
+
+/* A block stream's reader (derived names), 0x18 bytes: the current block,
+ * the next element's address in it (null when the block is empty), the
+ * elements left in the other blocks and in this one. */
+struct hkBlockStreamReader /* derived name */
+{
+    /* At the stream's first block, every later element still to read
+     * (0x937c0). derived name. */
+    void FUN_000937c0(const hkBlockStream *stream);
+
+    const hkBlockStreamBlock *currentBlock; /* derived name */
+    const u8 *currentByteLocation;          /* derived name */
+    int numElementsToReadInOtherBlocks;     /* derived name */
+    int numElementsToReadInThisBlock;       /* derived name */
 };
 
 /* A command of a command stream (derived names): its padded byte size at +0
