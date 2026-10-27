@@ -235,6 +235,12 @@ template <typename ENUM, typename STORAGE> class hkEnum
         return *this;
     }
 
+    /* Compared in the storage type (0x27150's `cmp byte, sil`). */
+    bool operator==(ENUM e) const
+    {
+        return m_storage == static_cast<STORAGE>(e);
+    }
+
     STORAGE m_storage;
 };
 
@@ -1091,20 +1097,6 @@ class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
 
 /* Reference-counted classes whose finish constructors are inline in their
  * finish callbacks and store only the vtable (vtable, callback): */
-/* hknpStaticCompoundShapeKeyMask: vtable 0x1692790, finish callback FUN_00034000. */
-class hknpStaticCompoundShapeKeyMask : public hkReferencedObject
-{
-  public:
-    hknpStaticCompoundShapeKeyMask(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-};
-
-/* hknpCompoundShapeInternalsKeyMask: vtable 0x16927e0, finish callback FUN_000343b0. */
-class hknpCompoundShapeInternalsKeyMask : public hkReferencedObject
-{
-  public:
-    hknpCompoundShapeInternalsKeyMask(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-};
-
 /* hknpDynamicCompoundShapeData: vtable 0x1692990, finish callback FUN_000343e0. */
 class hknpDynamicCompoundShapeData : public hkReferencedObject
 {
@@ -1779,14 +1771,36 @@ struct hkVertexFormat {
 
     enum SharingType { SHARING_ALL_SHARED, SHARING_ALL_NOT_SHARED, SHARING_MIXTURE };
 
+    /* The element usages (hkClassEnum items from the strings at 0x14b7750
+     * to 0x14b781a, values from their records at 0x1691280 to 0x1691340). */
+    enum ComponentUsage {
+        USAGE_NONE,
+        USAGE_POSITION,
+        USAGE_NORMAL,
+        USAGE_COLOR,
+        USAGE_TANGENT,
+        USAGE_BINORMAL,
+        USAGE_BLEND_MATRIX_INDEX,
+        USAGE_BLEND_WEIGHTS,
+        USAGE_BLEND_WEIGHTS_LAST_IMPLIED,
+        USAGE_TEX_COORD,
+        USAGE_POINT_SIZE,
+        USAGE_USER,
+        USAGE_LAST
+    };
+
     /* derived name: whether none, all or some of the elements are marked
      * not shared (0x27240, called at 0x274a4). */
     SharingType FUN_00027240() const;
 
+    /* derived name: the index of the element of a usage and sub-usage, or
+     * -1 (0x27130, called at 0x25c1b and 0xae11b). */
+    int FUN_00027130(ComponentUsage usage, int subUsage) const;
+
     struct Element {
         u8 dataType;
         u8 numValues;
-        u8 usage;
+        hkEnum<ComponentUsage, u8> usage;
         u8 subUsage;
         u8 flags;
         u8 pad[3];
@@ -2242,6 +2256,16 @@ struct hknpShapeInstance {
      * column (0x3ea90). derived name. */
     void FUN_0003ea90(hkTransform &transformOut) const;
 
+    /* The translation's w holds an integer: six flag bits from bit 24 and
+     * the instance's index in the rest, which the compound key masks' filter
+     * is indexed by (0x33d4a's `and esi, 0xc0ffffff`). derived names. */
+    enum { FLAGS_SHIFT = 24, FLAGS_MASK = 0x3f << FLAGS_SHIFT };
+
+    int getIndex() const /* derived name */
+    {
+        return reinterpret_cast<const int *>(&transform.translation)[3] & ~FLAGS_MASK;
+    }
+
     hkTransform transform;
     Vec4 scale;
     hknpShape *shape;
@@ -2426,6 +2450,74 @@ class hknpShapeKeyMask : public hkBaseObject
     virtual bool FUN_000381d0() = 0;                      /* derived name */
     virtual bool FUN_000381f0(u32 key) const = 0;         /* derived name */
     virtual int FUN_00038210() const = 0;                 /* derived name */
+};
+
+/* hkHandle, a typed index: the scoped type name of the compound shapes'
+ * instance array at 0x14bb530 spells hkFreeListArray<hknpShapeInstance,
+ * hkHandle<short, 32767, hknpShapeInstanceIdDiscriminant>, 8,
+ * hknpShapeInstance>, the second argument the instance id. Passed by value as a small struct, which the callee widens
+ * itself (0x33d3c's `movsx rdx, si`). */
+template <typename TYPE, TYPE INVALID_VALUE, typename DISCRIMINANT> struct hkHandle {
+    TYPE value; /* derived name */
+};
+
+struct hknpShapeInstanceIdDiscriminant;
+typedef hkHandle<short, 32767, hknpShapeInstanceIdDiscriminant> hknpShapeInstanceId;
+
+/* hknpCompoundShapeKeyMask (hkClass 0x57c2ec8, built at 0x77f36: size 8,
+ * parent hknpShapeKeyMask's 0x57c1aa8, no members): the interface adds slot
+ * 7, whether an instance's keys pass the mask. */
+class hknpCompoundShape;
+
+class hknpCompoundShapeKeyMask : public hknpShapeKeyMask
+{
+  public:
+    hknpCompoundShapeKeyMask(hkFinishLoadedObjectFlag flag) : hknpShapeKeyMask(flag) {}
+
+    virtual int FUN_00033d30(hknpShapeInstanceId instanceId) const = 0; /* derived name */
+};
+
+/* hknpCompoundShapeInternalsKeyMask (hkClass 0x57bdf20, built at 0x34508:
+ * size 0x30, parent hknpCompoundShapeKeyMask's 0x57c2ec8; member records at
+ * 0x16929d0): shape (a pointer to hknpCompoundShape, not serialized) at +8,
+ * instanceMasks (an array of pointers to hknpShapeKeyMask) at +0x10 and
+ * filter (an array of hkUint32, a bit per instance) at +0x20. Vtable
+ * 0x16927e0, finish callback FUN_000343b0. */
+class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
+{
+  public:
+    hknpCompoundShapeInternalsKeyMask(hkFinishLoadedObjectFlag flag)
+        : hknpCompoundShapeKeyMask(flag), instanceMasks(flag), filter(flag)
+    {
+    }
+
+    virtual ~hknpCompoundShapeInternalsKeyMask(); /* vtable slots 0 and 1, 0x338d0 and 0x33990 */
+
+    void FUN_000381b0(u32 key, bool enabled); /* vtable slot 3 (0x33a90); derived name */
+    bool FUN_000381d0();                      /* vtable slot 4 (0x1bad0); derived name */
+    bool FUN_000381f0(u32 key) const;         /* vtable slot 5 (0x33ca0); derived name */
+    int FUN_00038210() const;                 /* vtable slot 6 (0x33d20); derived name */
+
+    /* vtable slot 7 (0x33d30): the instance's bit in the filter. derived name. */
+    int FUN_00033d30(hknpShapeInstanceId instanceId) const;
+
+    const hknpCompoundShape *shape;
+    hkArray<hknpShapeKeyMask *> instanceMasks;
+    hkArray<u32> filter;
+};
+
+/* hknpStaticCompoundShapeKeyMask (hkClass 0x57bdea0, built at 0x34162: size
+ * 0x30, parent hknpCompoundShapeInternalsKeyMask's 0x57bdf20, no members):
+ * vtable 0x1692790, finish callback FUN_00034000. */
+class hknpStaticCompoundShapeKeyMask : public hknpCompoundShapeInternalsKeyMask
+{
+  public:
+    hknpStaticCompoundShapeKeyMask(hkFinishLoadedObjectFlag flag)
+        : hknpCompoundShapeInternalsKeyMask(flag)
+    {
+    }
+
+    bool FUN_000381d0(); /* vtable slot 4 (0x33b30); derived name */
 };
 
 /* hknpCompressedMeshShapeInternals::KeyMask (hkClass 0x57be220, size 0x20,
@@ -2730,10 +2822,19 @@ struct hknpMotion {
 };
 
 /* The world's motion manager at +0x110 (derived names: nothing names it):
- * the motions from +8, the highest motion index in use at +0x24. A motion
- * is in use while its byte at +0x3f is set. */
+ * the motions from +8, the highest motion index in use at +0x24, an array
+ * of 16-byte arrays of 4-byte elements at +0x28 (the initializer 0x46dc0
+ * resizes it and frees each element's storage). A motion is in use while
+ * its byte at +0x3f is set. 0x38 bytes: the world's next member is at
+ * +0x148. */
 struct hknpMotionManager /* derived name */
 {
+    /* Out of line (0x46d80, called at 0x48b88 for the world's +0x110): the
+     * arrays empty, +0x1c an invalid index, +0x20 and the peak index 0
+     * (initialized in member order: the zeros from +0x20 to +0x33 are one
+     * memset, cookbook 82). */
+    hknpMotionManager();
+
     /* Walks the motions in use from index 1; 0x7fffffff once past the end
      * (the loop at 0x373c7 stops on it). */
     struct MotionIterator {
@@ -2757,8 +2858,11 @@ struct hknpMotionManager /* derived name */
 
     u8 unknown0[8];
     hkArray<hknpMotion> motions;
-    u8 unknown18[0xc];
+    u32 unknown18;
+    u32 unknown1c;
+    u32 unknown20;
     u32 peakMotionIndex;
+    hkArray<hkArray<u32>> unknown28;
 };
 
 /* The object at +0x4f8 of the world (derived names): the world at +0, the
@@ -3289,7 +3393,6 @@ class hknpPhysicsSystemData : public hkReferencedObject
     hkStringPtr name;
 };
 
-void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 class hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
 
 /* hknpScaledConvexShapeBase (type info 0x57c0c78; hkClass 0x57c0bf8, built
@@ -3716,14 +3819,10 @@ class hknpRefMaterial : public hkReferencedObject
     hknpMaterial material;
 };
 class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
-struct
-    hknpCompressedHeightFieldShape; /* 0x57c2378; FUN_00175de0 runs hknpShape's, then vtable 0x16a5980 */
 class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs 0x7d520, vtable 0x1695b10 */
 struct
     hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
 
-void FUN_00175de0(hknpCompressedHeightFieldShape *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 /* hknpBreakableConstraintData's finish constructor (0x3c240, the class's
  * constructor below), called by name from its finish callback while the
  * class has pure slots this header does not override. derived name. */
@@ -3789,11 +3888,9 @@ class hknpCompressedMeshShape : public hknpShape
 float FUN_00073940(const hknpCapsuleShape *self); /* derived name */
 
 /* hknpExternMeshShape (type info 0x57c28e8, size 0x70): its finish
- * constructor FUN_001660e0 runs hknpShape's, stores 0x1697c80, sets bit 2
- * of the byte at +0x10 when finishing, then stores its own vtable 0x16a5170. */
+ * constructor runs hknpShape's, stores 0x1697c80, sets bit 2 of the byte at
+ * +0x10 when finishing, then stores its own vtable 0x16a5170. */
 class hknpExternMeshShape;
-
-void FUN_001660e0(hknpExternMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpBroadPhaseConfig (hkClass 0x57c0248, size 0x10, no members of its own)
  * and hknpDefaultBroadPhaseConfig (hkClass 0x57c0298, size 0x30, parent
@@ -6142,9 +6239,36 @@ class hknpExternMeshShapeData : public hkReferencedObject
 /* hknpExternMeshShape (hkClass 0x57c2898, parent hknpCompositeShape, 0x70
  * bytes): geometry (pointer) at +0x60 and boundingVolumeData (pointer to
  * hknpExternMeshShapeData) at +0x68 (records 0x169abc0, 0x169abe8). */
+/* hknpHeightFieldShape (hkClass 0x57bf540, built at 0x3993e: size 0xf0,
+ * parent hknpCompositeShape's 0x57c2cf8): no type info and no vtable of its
+ * own in the executable; its inline finish constructor's vptr store dies
+ * under the derived one (the same block, DSE). */
+class hknpHeightFieldShape : public hknpCompositeShape
+{
+  public:
+    hknpHeightFieldShape(hkFinishLoadedObjectFlag flag) : hknpCompositeShape(flag) {}
+};
+
+/* hknpCompressedHeightFieldShape (type info 0x57c2378; hkClass 0x57c2328,
+ * built at 0x6958a: size 0x120, parent hknpHeightFieldShape's 0x57bf540;
+ * vtable 0x16a5980). */
+class hknpCompressedHeightFieldShape : public hknpHeightFieldShape
+{
+  public:
+    /* The finish constructor, out of line (0x175de0): the finish callback
+     * FUN_000694e0 jumps to it, the reflection initializer calls it at
+     * 0x69593. */
+    hknpCompressedHeightFieldShape(hkFinishLoadedObjectFlag flag);
+};
+
 class hknpExternMeshShape : public hknpCompositeShape
 {
   public:
+    /* The finish constructor, out of line (0x1660e0): the finish callback
+     * FUN_0006c440 jumps to it, the reflection initializer calls it at
+     * 0x6c506. */
+    hknpExternMeshShape(hkFinishLoadedObjectFlag flag);
+
     hknpShapeSignals *FUN_000eafb0(); /* vtable slot 8; derived name */
 
     u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
@@ -6203,7 +6327,8 @@ class hknpCompoundShape : public hknpCompositeShape
 
     hknpShapeSignals *FUN_00041890(); /* vtable slot 8; derived name */
 
-    u8 unknown28[0x58];
+    u8 unknown28[0x38];
+    hkFreeListArray<hknpShapeInstance, hknpShapeInstanceId, 8, hknpShapeInstance> instances;
     /* The AABB slot 7 transforms (updateAabb recomputes it). */
     hkAabb aabb;
     /* Members from the record table 0x169b520 (hkClass 0x57c2e78, size
@@ -6275,6 +6400,11 @@ class hknpDynamicCompoundShape : public hknpCompoundShape
  * constructor FUN_00068160 stores hknpCompositeShape's vtable before its own
  * 0x1699c00): slot 7 (FUN_00068350) transforms the AABB at +0x110. */
 struct hknpLodShape : public hknpCompositeShape {
+    /* The finish constructor, out of line (0x68160): the finish callback
+     * FUN_0003de50 jumps to it, the reflection initializer calls it at
+     * 0x3dfa6. */
+    hknpLodShape(hkFinishLoadedObjectFlag flag);
+
     /* What slot 29's first argument holds at +0x10 (derived names). */
     struct Slot29Argument {
         u8 unknown0[0x10];
@@ -7186,10 +7316,17 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
   public:
     virtual ~hkDynamicClassNameRegistry();
 
-    const hkClass *FUN_0017ec90(const char *className) const; /* vtable slot 6; derived name */
+    virtual void unknownVirtual5(); /* the folded 0x7f80: the name at +0x10 */
+    virtual const hkClass *
+    FUN_0017ec90(const char *className) const; /* vtable slot 6; derived name */
+    virtual void unknownVirtual7();            /* 0x17eca0 */
+    virtual void unknownVirtual8();            /* FUN_0017ed60: sets the name */
     /* Slot 9 (0x17ed70): registers a class under a name, the class's own
      * when none is given. derived name. */
-    void FUN_0017ed70(const hkClass *klass, const char *className);
+    virtual void FUN_0017ed70(const hkClass *klass, const char *className);
+    /* Slot 10 (0x17edb0): registers each class of a null-terminated list
+     * under its own name, through slot 9. derived name. */
+    virtual void FUN_0017edb0(const hkClass *const *classes);
 
     const char *name; /* derived name */
     StringMap map;    /* derived name */

@@ -45,6 +45,13 @@ class Runner00016350 /* derived name */
      * vtables of 16-byte classes with empty destructors cite by address. */
     virtual ~Runner00016350();
 
+    virtual void unknownVirtual2(); /* the empty 0xe5c0 */
+
+    /* Slot 3 (0x91af0): a name and attributes for the task graph's dumps
+     * (FUN_00091b30's fill colours are such attributes): "Unnamed", and no
+     * attributes when asked for them. derived name. */
+    virtual void FUN_00091af0(hkStringBuf &name, hkStringBuf *attributes) const;
+
     static void operator delete(void *object, unsigned long numBytes);
 
     u8 unknown8[8];
