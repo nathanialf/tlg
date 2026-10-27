@@ -7,3 +7,12 @@ hknpScaledConvexShapeBase::hknpScaledConvexShapeBase(hkFinishLoadedObjectFlag fl
     : hknpDecoratorShape(flag)
 {
 }
+
+/* hknpScaledConvexShape's finish constructor (0x16ce90) shares this file:
+ * it runs the base's inline (the decorator's call, then only its own
+ * vtable), which it can only do with the base's body in the same file. The
+ * signals, not serialized, start empty. */
+hknpScaledConvexShape::hknpScaledConvexShape(hkFinishLoadedObjectFlag flag)
+    : hknpScaledConvexShapeBase(flag)
+{
+}

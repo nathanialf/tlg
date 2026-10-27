@@ -40,7 +40,14 @@ struct Handle00016350;
 class Runner00016350 /* derived name */
 {
   public:
+    /* Empty (the shared 0xe5c0); the deleting destructor 0x13e50 frees
+     * the object's 16 bytes on the thread's heap, the body ten other
+     * vtables of 16-byte classes with empty destructors cite by address. */
     virtual ~Runner00016350();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown8[8];
 };
 
 /* A work item (derived names): a 16-bit value at +4 and its runner at

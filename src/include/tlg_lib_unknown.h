@@ -364,7 +364,8 @@ struct hkMemoryRouter;
 /* Slots 4 and 5 (the memory system's 0xc590 and 0xc810, vtable address
  * point 0x168d690): a thread's router set up under a name and the flags,
  * and taken down; the worker thread context (0x8f5c5, 0x8f621) passes 3.
- * derived names. */
+ * Slots 6 to 12 are the memory system's (0xd230 to 0xd2b0), not read
+ * here. derived names. */
 class hkMemorySystem /* derived name */
 {
   public:
@@ -373,6 +374,20 @@ class hkMemorySystem /* derived name */
     virtual void unknownVirtual3();
     virtual void threadInit(hkMemoryRouter &router, const char *name, int flags); /* derived name */
     virtual void threadQuit(hkMemoryRouter &router, int flags);                   /* derived name */
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    /* Slots 13 and 14 (the memory system's 0xd080 and 0xd0a0): the
+     * collection of a thread's router and of what the threads share; slot
+     * 15 (0x6cb0, the base's own) runs the calling thread's, then the
+     * shared one. derived names. */
+    virtual void garbageCollectThread(hkMemoryRouter &router);
+    virtual void garbageCollectShared();
+    virtual void garbageCollect();
 };
 
 extern hkMemorySystem *D_57b7ba0;
@@ -930,6 +945,12 @@ class StackTracer /* derived name */
     StackTracer();
     virtual ~StackTracer();
 
+    /* The class allocator's delete, inline: the object goes back to the
+     * calling thread's heap at its size (the deleting destructor 0xd900,
+     * slot 1, which fifteen other classes' vtables of an empty destructor
+     * cite by address). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     void FUN_0000d890(const hkUlong *trace, int numTrace, PrintFunction print,
                       void *context) const; /* derived name */
 };
@@ -1210,6 +1231,20 @@ struct hkMemoryRouter /* derived name */
  * slot to %fs:0. */
 extern __thread hkMemoryRouter *D_16dc070;
 
+inline void StackTracer::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
+inline void hknpCollisionQueryCollector::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
 /* Three allocators that hold nothing of their own and hand every request to
  * one of the calling thread's router allocators (vtables 0x168d430,
  * 0x168d4b0 and 0x168d530, address points 0x10 further; slots 0 and 1 the
@@ -1250,6 +1285,18 @@ class RouterAllocator58 : public AllocatorBase /* derived name */
 };
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
+
+/* A block that holds its own size (derived name): FUN_00199600 takes one
+ * from the thread's temporary allocator, a 0x28-byte header (its byte size
+ * at +0, an element size at +4, a bit field's words at +8 in the block,
+ * the element storage pointer at +0x20) before the bits and the elements;
+ * FUN_00199770 gives it back at that size. */
+struct SizedBlock00199600 /* derived name */
+{
+    int numBytes; /* derived name */
+};
+
+void FUN_00199770(SizedBlock00199600 *block); /* derived name */
 
 /* The thread's teardown (derived name; 0x9a80): the thread's block and the
  * thread's router given up, always a success. */

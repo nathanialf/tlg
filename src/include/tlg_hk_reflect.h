@@ -771,6 +771,11 @@ struct hkRefCountedProperties {
      * allocate the 16 bytes from the thread's allocator and construct. */
     hkRefCountedProperties();
 
+    /* The object under a key, the last entry first (0x1c550; the shapes ask
+     * for key 0xf100 at 0x384be and 0x157118); null when none has it.
+     * derived name. */
+    hkReferencedObject *FUN_0001c550(u16 key) const;
+
     hkArray<Entry> entries;
 };
 
@@ -2016,24 +2021,6 @@ struct StepInput00069910 /* derived name */
     int numSpuThreads; /* derived name */
 };
 
-/* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
- * vtable 0x16a54a0, address point 0x16a54b0), reflected with
- * hknpScaledConvexShapeBase (0x60 bytes) as its parent and no members of its
- * own. Its finish constructor FUN_0016ce90 clears the two pointers of the 16
- * bytes at +0x60, which its destructor (0x16cf30) walks as a signal's slot
- * list; slot 8 returns their address as hknpMaskedShape's slot 8 returns its
- * mutation signals. */
-class hknpScaledConvexShape
-{
-  public:
-    virtual ~hknpScaledConvexShape();
-
-    hknpShapeSignals *FUN_0016ced0(); /* vtable slot 8; derived name */
-
-    u8 unknown8[0x58];
-    hknpShapeSignals mutationSignals; /* derived name */
-};
-
 /* hknpShape, polymorphic, 0x28 bytes (type info 0x57bf210, hkClass with
  * hkReferencedObject as its parent, built at 0x38fcb; vtable 0x169ad20 stored
  * by its out-of-line finish constructor 0x6fa90, which the finish callback
@@ -2209,6 +2196,7 @@ class hknpDecoratorShape : public hknpShape
                       void *argument2) const; /* vtable slot 29; derived name */
 
     hknpShape *coreShape;
+    int coreShapeSize; /* the record's second member (TYPE_INT32, +0x30) */
 };
 
 /* hknpShapeKeyMask, reflected (hkClass 0x57c1aa8, parent hkBaseObject): the
@@ -2291,7 +2279,6 @@ class hknpMaskedShape : public hknpDecoratorShape
 
     hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
 
-    u8 unknown30[0x8];
     hknpShapeKeyMask *mask;
     MaskWrapper maskWrapper;
     hknpShapeSignals mutationSignals;
@@ -2984,8 +2971,6 @@ class hknpPhysicsSystemData : public hkReferencedObject
 
 void FUN_00068160(hknpLodShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 class hknpMountedBallGun; /* 0x57c0ab8; FUN_00166900 runs FUN_00157e00, vtable 0x16a5280 */
-class
-    hknpScaledConvexShape; /* 0x57c0c48; FUN_0016ce90 runs hknpDecoratorShape's, vtable 0x16a54a0 */
 
 /* hknpScaledConvexShapeBase (type info 0x57c0c78; hkClass 0x57c0bf8, built
  * at 0x3f7a3: size 0x60, parent hknpDecoratorShape; vtable 0x16a5390). */
@@ -2995,6 +2980,29 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
     /* The finish constructor (0x16a810): the decorator's, then the
      * vtable. */
     hknpScaledConvexShapeBase(hkFinishLoadedObjectFlag flag);
+
+    /* The record's members (0x1696dc0): two vectors. */
+    Vec4 scale;
+    Vec4 translation;
+};
+
+/* hknpScaledConvexShape, polymorphic, 0x70 bytes (type info 0x57c0c48,
+ * vtable 0x16a54a0, address point 0x16a54b0; hkClass 0x57c0ba8 built at
+ * 0x3f6ed, parent hknpScaledConvexShapeBase's), one member of its own:
+ * mutationSignals (struct hknpShapeSignals, flags 0x400, record 0x1696d90)
+ * at +0x60, which its destructor (0x16cf30) walks as a signal's slot list
+ * and slot 8 returns, as hknpMaskedShape's slot 8 returns its own. Its
+ * finish constructor FUN_0016ce90 runs the base's (0x16a810) inline: the
+ * two are in one file. */
+class hknpScaledConvexShape : public hknpScaledConvexShapeBase
+{
+  public:
+    hknpScaledConvexShape(hkFinishLoadedObjectFlag flag);
+    virtual ~hknpScaledConvexShape();
+
+    hknpShapeSignals *FUN_0016ced0(); /* vtable slot 8; derived name */
+
+    hknpShapeSignals mutationSignals;
 };
 
 /* hknpPairCollisionFilter (type info 0x57c1160; hkClass 0x57c1110, built
@@ -3060,8 +3068,6 @@ class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
 
     hknpWorld *subscribedWorld;
 };
-
-void FUN_0016ce90(hknpScaledConvexShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkRelArray, the reflection's type 0x22 (the type-name table at 0x14b30e4):
  * an array stored after its owner, a 16-bit size and a 16-bit offset. */
@@ -6123,7 +6129,15 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
 class hknpCollisionQueryCollector /* derived name */
 {
   public:
-    virtual ~hknpCollisionQueryCollector();
+    /* Inline and empty: the collectors' deleting destructors call no base
+     * destructor. */
+    virtual ~hknpCollisionQueryCollector() {}
+
+    /* The class allocator's delete, inline (defined in tlg_lib_unknown.h
+     * beside the router it frees through): the collectors' deleting
+     * destructors (0x483d0, 0x48520, 0x70970) give the object back to the
+     * calling thread's heap at its size. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     virtual void unknownVirtual2();
     /* Slot 3 empties the collector (the all-hits collector's 0x70a10: no
@@ -6161,6 +6175,9 @@ class hknpFlippedGetClosestPointsQueryCollector
     : public hknpCollisionQueryCollector /* derived name */
 {
   public:
+    /* Empty (the shared 0x3b640); the deleting destructor is 0x483d0. */
+    virtual ~hknpFlippedGetClosestPointsQueryCollector();
+
     void FUN_00048410();       /* vtable slot 3; derived name */
     bool FUN_00048510() const; /* vtable slot 6; derived name */
 
@@ -6208,6 +6225,9 @@ class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* der
 class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
+    /* Empty (the shared 0x3b640); the deleting destructor is 0x48520. */
+    virtual ~hknpFlippedShapeCastQueryCollector();
+
     void FUN_00048560();       /* vtable slot 3; derived name */
     bool FUN_00048660() const; /* vtable slot 6; derived name */
 
@@ -6607,7 +6627,10 @@ class hkTypeInfoRegistry : public hkReferencedObject
   public:
     virtual ~hkTypeInfoRegistry();
 
-    void FUN_0017d8b0(const hkTypeInfo *info);                  /* vtable slot 5; derived name */
+    void FUN_0017d8b0(const hkTypeInfo *info); /* vtable slot 5; derived name */
+    /* Slot 7: cleans up a loaded object of a named type and returns the
+     * type info, or null when no type of that name is registered. */
+    const hkTypeInfo *FUN_0017d920(void *object, const char *typeName) const; /* derived name */
     const hkTypeInfo *FUN_0017d960(const char *typeName) const; /* vtable slot 9; derived name */
 
     StringMap map; /* derived name */
@@ -6624,6 +6647,9 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
     virtual ~hkDynamicClassNameRegistry();
 
     const hkClass *FUN_0017ec90(const char *className) const; /* vtable slot 6; derived name */
+    /* Slot 9 (0x17ed70): registers a class under a name, the class's own
+     * when none is given. derived name. */
+    void FUN_0017ed70(const hkClass *klass, const char *className);
 
     const char *name; /* derived name */
     StringMap map;    /* derived name */
