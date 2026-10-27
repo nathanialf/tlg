@@ -86,13 +86,15 @@ def compile_tu(tu: str, ver: str) -> Path:
     generate_tables_of(tu, ver)
     if obj.exists() and obj.stat().st_mtime >= src.stat().st_mtime:
         dep = obj.with_name(obj.name + ".d")
-        deps = []
+        # ninja (deps = gcc) consumes the depfile it was given, so an object
+        # ninja built has no .d beside it and its headers cannot be checked:
+        # it is recompiled (round 31's note: a header change was not seen).
         if dep.exists():
             text = dep.read_text().replace("\\\n", " ")
             deps = [Path(d) for d in text.split(":", 1)[1].split()] if ":" in text else []
-        stale = [d for d in deps if not d.exists() or d.stat().st_mtime > obj.stat().st_mtime]
-        if not stale:
-            return obj
+            stale = [d for d in deps if not d.exists() or d.stat().st_mtime > obj.stat().st_mtime]
+            if not stale:
+                return obj
     subprocess.run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), tu, str(obj.relative_to(REPO_ROOT))],
                    cwd=REPO_ROOT, check=True)
     return obj

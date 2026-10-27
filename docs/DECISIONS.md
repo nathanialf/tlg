@@ -277,6 +277,20 @@ that the checker refuses (an alignment or packing attribute, a real
 `volatile`); it is allowed by evidence in `tools/dev_native_allow.txt`, or
 the rule is loosened for that construct with its evidence recorded here.
 
+**Addendum, 2026-10-27 (round 31 harvest): `__restrict`.** Round 31's
+hknpCircularSurfaceVelocity::calcVelocities (0x15fa60, slot 5) copies a
+vector into an output and uses the value again without reloading it after
+the store through the output pointer, and GVN merges the two loads only
+when the output cannot alias the input: the bytes are correct only under a
+no-alias promise, so the developer declared one, `HK_RESTRICT` on both
+output parameters (`__restrict`, declared in `src/include/tlg_hk_reflect.h`
+under Havok's HK_ prefix; docs/COOKBOOK.md 77). `__restrict` is language,
+a promise about the program's pointers, not steering, and passes the
+checker, under the test of this decision: it is written where the bytes
+prove the promise (a reload omitted across a store through another
+pointer) and refused where it only moves bytes around. The cookbook entry
+carries the proof for each use.
+
 ## D10. The linker's GOT-load relaxation is reproduced in the gate (2026-10-25)
 
 **Decision.** A `mov r64, [rip+sym@GOTPCREL]` in a compiled object whose
@@ -643,6 +657,21 @@ that cites the address resolves by address, so the slots keep matching
 under the constructor's name. The same rule as for the C1/C2 pair: one
 name per address, the name a caller needs by symbol wins, every other
 reference resolves by address.
+
+**Addendum, 2026-10-27 (round 31 harvest).** The same rule names a shared
+deleting destructor. A class whose destructor is empty and whose storage
+is a fixed-size block on the thread's heap gets a deleting destructor of
+one shape, `if (this) free(this, size)` through the thread-local memory
+router (0xd900 for 8-byte classes, 0x13e50 for 16, 0x6c810 for 32), and
+the executable holds one body per size: 16 vtables with six different
+slot-0 destructors cite 0xd900 at slot 1, 11 cite 0x13e50, two cite
+0x6c810, 0xcf880 and 0x10b050 (the data region scanned for every pointer
+to each body). Identical bodies of different classes are one address only
+through the linker's folding, so the body is one function and gets one
+name: the class whose other members sit beside it (0xd900 between
+StackTracer's constructor 0xd8f0 and destructor 0xd940, 0x13e50 in the
+runner's file), `_ZN11StackTracerD0Ev`, `_ZN14Runner00016350D0Ev`; every
+other vtable's slot 1 resolves by address.
 
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 

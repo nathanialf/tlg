@@ -1097,3 +1097,7 @@ FUN_00023700 src/libs/unknown/func_00023700.cpp
 FUN_00023770 src/libs/unknown/func_00023770.cpp
 FUN_0008ec50 src/libs/unknown/func_0008ec50.cpp _ZN23hkDebugCommandProcessor4execERK9hkCommand
 FUN_00093300 src/libs/unknown/func_00093300.cpp
+FUN_00004270 src/libs/unknown/func_00004270.cpp _ZNK7hkClass12FUN_00004270EPK16NameList00004270
+_ZN24hknpBuildConstraintsTaskC1EiPvS0_S0_ src/libs/unknown/func_001550c0.cpp
+_ZN11hkXmlParserC1Ev src/libs/unknown/func_0019d8e0.cpp
+_ZN26hknpCharacterStateOnGroundC1Ev src/libs/unknown/func_0006fcf0.cpp

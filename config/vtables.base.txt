@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1571 vtables stored by a constructor that no type info names (below, with
+# 1568 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -53,7 +53,6 @@
 #   0x16994e0 stored by FUN_00060b90
 #   0x1699510 stored by FUN_00060c70
 #   0x169ab10 stored by FUN_0005a230 FUN_0006bc50
-#   0x169ae30 stored by FUN_0006fcf0
 #   0x169b100 stored by FUN_00070900 FUN_00070970
 #   0x169b400 stored by FUN_000768c0
 #   0x169b450 stored by FUN_000760c0 FUN_000763a0
@@ -83,7 +82,6 @@
 #   0x16a4280 stored by FUN_00150330
 #   0x16a4300 stored by FUN_00150330
 #   0x16a4380 stored by FUN_0014e100 FUN_00150240
-#   0x16a46c0 stored by FUN_001550c0
 #   0x16a4bf0 stored by FUN_00159ca0
 #   0x16a4cd0 stored by FUN_0015b410 FUN_0015b470 FUN_0015b6c0
 #   0x16a4ed0 stored by FUN_00150330 FUN_0015dee0
@@ -112,7 +110,6 @@
 #   0x16a6910 stored by FUN_0019a950 FUN_0019ab10 FUN_0019abf0
 #   0x16a6960 stored by FUN_0019be50 FUN_0019c150
 #   0x16a69e0 stored by FUN_0019d450 FUN_0019d500
-#   0x16a6aa0 stored by FUN_0019d8e0 FUN_0019d920 FUN_0019da00
 #   0x16a7580 stored by FUN_001a0310 FUN_001a03a0 FUN_001a04d0
 #   0x16a7620 stored by FUN_001b0a40 FUN_00202800 FUN_00230b40 FUN_00333580 FUN_003ef750 FUN_003fd0a0 FUN_00402fe0 FUN_00416db0 FUN_004215c0 FUN_00441670 FUN_004477a0 FUN_00459230 FUN_0045b4e0 FUN_0045b650 FUN_0045b7d0 FUN_004a6bf0 FUN_004af420 FUN_0052bd30 FUN_0083e370 FUN_0088b2b0 FUN_008bcc60 FUN_00948040 FUN_00a190f0 FUN_00a1cd10 FUN_00a4a4e0 FUN_00a94780 FUN_00b4b3d0 FUN_00b5cf90 FUN_00b5d170 FUN_00b5d6e0 FUN_00cb5f90 FUN_00cfebd0 FUN_00d886b0 FUN_00fe1b70 FUN_01388680 FUN_01388780 FUN_013b2640 FUN_013cc010 FUN_013ccbf0 FUN_013cd140 FUN_013cd1f0
 #   0x16a7650 stored by FUN_001bbc30 FUN_00203010
