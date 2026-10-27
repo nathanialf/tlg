@@ -3,4 +3,7 @@
 
 /* hkxMesh's finish constructor: nothing loaded needs fixing up, so only the
  * vtable is set. */
-hkxMesh::hkxMesh(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+hkxMesh::hkxMesh(hkFinishLoadedObjectFlag flag)
+    : hkReferencedObject(flag), sections(flag), userChannelInfos(flag)
+{
+}

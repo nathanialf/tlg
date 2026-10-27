@@ -6,7 +6,7 @@
  * allocates a block: the size joins the bytes in use (an atomic addition,
  * since any thread may allocate), the peak follows, then the C library
  * allocates at the allocator's alignment. */
-void *Allocator00004b10::FUN_00004ad0(int numBytes) /* derived name */
+void *hkMallocAllocator::blockAlloc(int numBytes)
 {
     if (__sync_add_and_fetch(&bytesInUse, numBytes) > peakInUse) {
         peakInUse = bytesInUse;

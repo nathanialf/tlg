@@ -504,6 +504,8 @@ class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /*
   public:
     /* slot 5 (0x16ec30), declared before the work */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    u8 unknown18[0xc8]; /* to the 0xe0 bytes */
 };
 
 void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */
@@ -519,8 +521,9 @@ void FUN_0015dc60(hknpCollidePairsTask *self);              /* vtable slot 1; de
 void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
 void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
 void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
-void FUN_001798c0(hknpPrepareExistingPairsTask *self);      /* vtable slot 5; derived name */
-void FUN_0018ef40(hknpSolverStageTask *self);               /* vtable slot 5; derived name */
+void FUN_0016e9f0(hknpSolveDataTask *self);            /* vtable slot 1 (0x16a5680); derived name */
+void FUN_001798c0(hknpPrepareExistingPairsTask *self); /* vtable slot 5; derived name */
+void FUN_0018ef40(hknpSolverStageTask *self);          /* vtable slot 5; derived name */
 void FUN_0018f140(hknpSolverStageTask *self, hkStringBuf *name,
                   hkStringBuf *description); /* vtable slot 6; derived name */
 

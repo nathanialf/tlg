@@ -5,7 +5,7 @@
 /* derived name: slot 3 of the system heap allocator's vtable (0x168ca00)
  * frees a block: the size leaves the bytes in use (an atomic subtraction,
  * since any thread may free), then the C library frees the memory. */
-void Allocator00004b10::FUN_00004af0(void *pointer, int numBytes) /* derived name */
+void hkMallocAllocator::blockFree(void *pointer, int numBytes)
 {
     __sync_fetch_and_sub(&bytesInUse, numBytes);
     free(pointer);

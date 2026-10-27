@@ -4,6 +4,7 @@
 /* hknpPhysicsSceneData's finish constructor: nothing loaded needs fixing up
  * (its arrays and reference pointers keep their loaded values), so only the
  * vtable is set. */
-hknpPhysicsSceneData::hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+hknpPhysicsSceneData::hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag)
+    : hkReferencedObject(flag), systemDatas(flag)
 {
 }

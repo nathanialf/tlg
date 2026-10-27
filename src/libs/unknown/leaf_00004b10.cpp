@@ -3,7 +3,7 @@
 
 /* derived name: resets the system heap allocator's peak to the current use
  * (tlg_lib_unknown.h). */
-void Allocator00004b10::FUN_00004b10() /* derived name */
+void hkMallocAllocator::FUN_00004b10() /* derived name */
 {
     peakInUse = bytesInUse;
 }

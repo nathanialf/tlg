@@ -1,16 +1,10 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-/* derived names: the complete destructor (slot 0) of six allocators with
- * nothing of their own to destroy (vtables 0x168ca00, 0x168d440, 0x168d4c0,
- * 0x168d540, 0x168da10, 0x168e220; also slot 1 of the first, fifth and
- * sixth; each has the thirteen-slot allocator interface, 0x168ca00 and
- * 0x168da10 with AllocatorBase's defaults 0x8d70 and 0x8d80 in slots 4 and
- * 5). It runs AllocatorBase's out-of-line destructor. */
-class Allocator00004ac0 : public AllocatorBase /* derived name */
-{
-  public:
-    virtual ~Allocator00004ac0();
-};
-
-Allocator00004ac0::~Allocator00004ac0() {}
+/* The system heap allocator's destructor (slots 0 and 1 of its vtable
+ * 0x168c9f0): nothing of its own to destroy, so it runs AllocatorBase's
+ * out-of-line destructor. The linker folded the same body for five other
+ * allocators' slot 0 (vtables 0x168d440, 0x168d4c0, 0x168d540, 0x168da10,
+ * 0x168e220; also slot 1 of the last two), which cite it by address; it is
+ * named for the class whose members sit beside it (D15). */
+hkMallocAllocator::~hkMallocAllocator() {}

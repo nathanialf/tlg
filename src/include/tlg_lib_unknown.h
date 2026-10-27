@@ -864,15 +864,29 @@ struct Object0003ea60 {
     u8 unknown10[0x20];
     Vec4 vector; /* +0x30 */
 };
+
 /* A reference-counted object, 0x70 bytes (vtable 0x169ab20, constructor
  * FUN_0006bc50) holding arrays at +0x38 (16-byte elements, each releasing
  * the object at +8 of the element), +0x48 and +0x60. Its out-of-line
  * destructor FUN_0005a230 restores the vtable and frees the arrays; the
  * destructors of two derived classes (vtable 0x1699260 at 0x5a150, and
  * 0x5a14b's) end by running it. */
-struct RefArrays0005a230; /* derived name */
+struct RefArrays0005a230 /* derived name */
+{
+    u8 unknown0[0x70]; /* the size its deleting destructor 0x6b7d0 frees */
+};
 
 void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
+
+/* A reference-counted object of 0xf0 bytes (vtable 0x16a3e30, address
+ * point 0x16a3e40): its out-of-line destructor body FUN_0012a8c0 stores the
+ * vtable and frees the array of 24-byte elements at +0xb0. */
+struct Object0012a8c0 /* derived name */
+{
+    u8 unknown0[0xf0]; /* the size its deleting destructor 0x12a860 frees */
+};
+
+void FUN_0012a8c0(Object0012a8c0 *self); /* derived name */
 /* An object of 0x160 bytes with its own class allocator (vtable 0x169b460,
  * constructor FUN_000763a0) holding an array of 0x500-byte elements at
  * +0x140 (count at +0x148). Its out-of-line destructor FUN_000760c0
@@ -1242,6 +1256,11 @@ struct UnionFind /* derived name */
     /* 0x8f640: every node its own root. */
     UnionFind(UnionFindParents *parents, int numNodes);
 
+    /* 0x8f6a0 (called at 0x62ce4): a node's root, every node on the way
+     * made a child of the root. A negative parent marks a root. derived
+     * name. */
+    int findRootOfNode(int node);
+
     UnionFindParents *parents; /* derived name */
     int numNodes;              /* derived name */
     int state;                 /* derived name */
@@ -1278,19 +1297,27 @@ void FUN_00065f10(Object00065f20 *self);                       /* derived name *
 void FUN_00065f20(Object00065f20 *self);                       /* derived name */
 Record00065f00 *FUN_00065f00(Object00065f20 *self, int index); /* derived name */
 
-/* An allocator over the system heap (vtable address point 0x168ca00):
- * slot 2 (0x4ad0) adds the size atomically to the bytes in use at +0xc,
- * raises the peak at +0x10 to it and allocates with the alignment at +8;
- * slot 3 (FUN_00004af0) subtracts and frees; slot 9 (0x4b00) reports both
- * counts widened to 64 bits; slot 11 (FUN_00004b10) resets the peak to the
- * current use (also called directly from six places in the game region). */
-class Allocator00004b10 /* derived name */
+/* The allocator over the system heap (derived name, from the shape: the
+ * vtable 0x168c9f0, address point 0x168ca00, D14): one static instance at
+ * 0x57b7b00, built in place with an alignment of 32 by its initializer
+ * FUN_00004b30 and destroyed at exit. Slots 0 and 1 are the one empty
+ * destructor 0x4ac0 (the class's delete is a no-op, so the deleting
+ * destructor folded with it); slot 2 (blockAlloc, 0x4ad0) adds the size atomically to
+ * the bytes in use at +0xc, raises the peak at +0x10 to it and allocates
+ * with the alignment at +8; slot 3 (blockFree, 0x4af0) subtracts and frees;
+ * slots 4 to 8 are AllocatorBase's defaults; slot 9 (0x4b00) reports both
+ * counts widened to 64 bits; slot 10 is the shared 0x4b20 that returns the
+ * request; slot 11 (FUN_00004b10) resets the peak to the current use (also
+ * called directly from six places in the game region). */
+class hkMallocAllocator : public AllocatorBase /* derived name */
 {
   public:
-    virtual ~Allocator00004b10();
+    hkMallocAllocator(int alignment) : alignment(alignment), bytesInUse(0), peakInUse(0) {}
 
-    void *FUN_00004ad0(int numBytes);                      /* vtable slot 2; derived name */
-    void FUN_00004af0(void *pointer, int numBytes);        /* vtable slot 3; derived name */
+    virtual ~hkMallocAllocator();
+
+    virtual void *blockAlloc(int numBytes);                /* slot 2, 0x4ad0 */
+    virtual void blockFree(void *pointer, int numBytes);   /* slot 3, 0x4af0 */
     void FUN_00004b00(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
     void FUN_00004b10();                                   /* vtable slot 11; derived name */
 
@@ -1960,10 +1987,48 @@ struct hknpCharacterInput /* derived name */
 
 struct hknpCharacterOutput; /* derived name */
 
-struct hknpCharacterContext /* derived name */
+/* The state manager (derived name): a reference-counted object the
+ * context holds a reference to; FUN_00035c40 returns its handler for a
+ * state. */
+class hknpCharacterStateManager : public hkReferencedObject /* derived name */
 {
+};
+
+/* The character context (vtable 0x16969d0, address point 0x16969e0, D14's
+ * row Class16969d0; no string names it, the shape is Havok's character
+ * context): 0x50 bytes, built only by the game (0xeaa611, from the thread's
+ * heap, initial state 2). Slot 0 is the complete destructor 0x3e960, slot 1
+ * the deleting one 0x3e8c0, slots 2 to 4 hkReferencedObject's. */
+class Class16969d0 : public hkReferencedObject /* derived name */
+{
+  public:
+    /* 0x3e840: the manager referenced, the initial state current and
+     * previous, filtering on, a zero surface velocity. */
+    Class16969d0(const hknpCharacterStateManager *stateManager, int initialState);
+
+    /* 0x3e960: the manager's reference released. */
+    virtual ~Class16969d0();
+
+    /* The class allocator's delete (the deleting destructor 0x3e8c0 frees
+     * at the recorded size, 0x50 by default). */
+    static void operator delete(void *object, unsigned long numBytes)
+    {
+        freeReferencedObject(object, numBytes);
+    }
+
     void FUN_0003e9c0(int state, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* derived name */
+
+    int characterType;                             /* derived name: 0x3ea60 sets it */
+    const hknpCharacterStateManager *stateManager; /* derived name */
+    int currentState;                              /* derived name: 0x3e9b0 returns it */
+    int previousState;                             /* derived name */
+    hkBool filterEnable;                           /* derived name: 0x3ea50 sets it */
+    float maxLinearAcceleration;                   /* derived name */
+    float maxLinearSpeed;                          /* derived name */
+    float gain;                                    /* derived name */
+    Vec4 previousSurfaceVelocity;                  /* derived name: 0x3ea80 returns its address */
+    int numUpdatesInCurrentState;                  /* derived name: 0x3ea70 returns it */
 };
 
 /* The in-air state (derived name; vtable 0x1693610, address point
@@ -1984,7 +2049,7 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
 
     static void operator delete(void *object, unsigned long numBytes);
 
-    void FUN_000365e0(hknpCharacterContext &context, const hknpCharacterInput &input,
+    void FUN_000365e0(Class16969d0 &context, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* vtable slot 7; derived name */
 
     float gain;                  /* derived name */
@@ -1993,6 +2058,11 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
 };
 
 inline void hknpCharacterStateInAir::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpFirstPersonGun::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -2259,6 +2329,28 @@ void FUN_00023200(hkMemoryMeshBody *self);
 void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0003e200(hknpDummyShape *self);
+void FUN_000467f0(hknpPhysicsSceneData *self);
+void FUN_0004b040(hknpWorld *self);
+void FUN_0007de50(hkpRagdollConstraintData *self);
+void FUN_00087130(hkxMaterial *self);
+void FUN_0008bf00(hkxMesh *self);
+void FUN_0008c110(hkxNode *self);
+void FUN_0008d2c0(hkxScene *self);
+void FUN_00095870(hkcdPlanarSolid *self);
+void FUN_0009b1c0(hkcdPlanarGeometry *self);
+void FUN_0009c120(hkcdPlanarCsgOperand *self);
+void FUN_0009c960(hkcdPlanarGeometryPlanesCollection *self);
+void FUN_000aa6d0(hkSkinnedRefMeshShape *self);
+void FUN_001586d0(hknpCompressedMeshShape *self);
+void FUN_00159650(hknpProjectileGun *self);
+void FUN_00159bc0(hknpConstraintCollisionFilter *self);
+void FUN_0015bfa0(hknpWorldSnapshot *self);
+void FUN_001625d0(hknpVehicleInstance *self);
+void FUN_00165af0(hknpPhysicsSystemData *self);
+void FUN_00166180(hknpExternMeshShape *self);
+void FUN_0016cf30(hknpScaledConvexShape *self);
+void FUN_00176b70(hknpCharacterProxy *self);
+void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_00041650(hknpCompoundShape *self);
 
 void FUN_0000ddd0(hkSimpleLocalFrame *self);               /* slot 1 of 0x168d8e0 */
@@ -2274,8 +2366,40 @@ void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d
 /* Also slot 1 of hknpConvexShape's vtable 0x1697d90 (one body for the
  * classes of 0x30 bytes, named for the sphere's constructor beside it,
  * 0x3c540; D15). */
-void FUN_0003c370(hknpSphereShape *self);   /* slot 1 of 0x1695c10 */
-void FUN_0003e1b0(hknpDummyShape *self);    /* slot 1 of 0x16967b0 */
-void FUN_00041600(hknpCompoundShape *self); /* slot 1 of 0x1697900 */
+void FUN_0003c370(hknpSphereShape *self);                    /* slot 1 of 0x1695c10 */
+void FUN_0003e1b0(hknpDummyShape *self);                     /* slot 1 of 0x16967b0 */
+void FUN_00041600(hknpCompoundShape *self);                  /* slot 1 of 0x1697900 */
+void FUN_000467a0(hknpPhysicsSceneData *self);               /* slot 1 of 0x1697ea0 */
+void FUN_0004aff0(hknpWorld *self);                          /* slot 1 of 0x1699220 */
+void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169ab10 */
+void FUN_0007de00(hkpRagdollConstraintData *self);           /* slot 1 of 0x169d0d0 */
+void FUN_000870e0(hkxMaterial *self);                        /* slot 1 of 0x16a0db0 */
+void FUN_00089330(hkxAttributeHolder *self);                 /* slot 1 of 0x16a1670 */
+void FUN_0008a840(hkxSkinBinding *self);                     /* slot 1 of 0x16a1cb0 */
+void FUN_0008beb0(hkxMesh *self);                            /* slot 1 of 0x16a25a0 */
+void FUN_0008c0c0(hkxNode *self);                            /* slot 1 of 0x16a25e0 */
+void FUN_0008c940(hkxVertexAnimation *self);                 /* slot 1 of 0x16a26c0 */
+void FUN_0008d270(hkxScene *self);                           /* slot 1 of 0x16a2910 */
+void FUN_0008dc00(hkxMeshSection *self);                     /* slot 1 of 0x16a29d0 */
+void FUN_00095820(hkcdPlanarSolid *self);                    /* slot 1 of 0x16a3630 */
+void FUN_0009b170(hkcdPlanarGeometry *self);                 /* slot 1 of 0x16a36f0 */
+void FUN_0009c0d0(hkcdPlanarCsgOperand *self);               /* slot 1 of 0x16a3730 */
+void FUN_0009c910(hkcdPlanarGeometryPlanesCollection *self); /* slot 1 of 0x16a3770 */
+void FUN_000aa380(hkSkinBinding *self);                      /* slot 1 of 0x16a3850 */
+void FUN_000aa680(hkSkinnedRefMeshShape *self);              /* slot 1 of 0x16a38b0 */
+void FUN_000ad920(hkStorageSkinnedMeshShape *self);          /* slot 1 of 0x16a3af0 */
+void FUN_0012a860(Object0012a8c0 *self);                     /* slot 1 of 0x16a3e30 */
+void FUN_00157ea0(hknpBallGun *self);                        /* slot 1 of 0x16a48d0 */
+void FUN_00158680(hknpCompressedMeshShape *self);            /* slot 1 of 0x16a4990 */
+void FUN_00159600(hknpProjectileGun *self);                  /* slot 1 of 0x16a4b30 */
+void FUN_00159b70(hknpConstraintCollisionFilter *self);      /* slot 1 of 0x16a4c20 */
+void FUN_0015bf50(hknpWorldSnapshot *self);                  /* slot 1 of 0x16a4d50 */
+void FUN_00162580(hknpVehicleInstance *self);                /* slot 1 of 0x16a5090 */
+void FUN_00165aa0(hknpPhysicsSystemData *self);              /* slot 1 of 0x16a5130 */
+void FUN_00166130(hknpExternMeshShape *self);                /* slot 1 of 0x16a5170 */
+void FUN_0016a640(hknpScaledConvexShapeBase *self);          /* slot 1 of 0x16a5390 */
+void FUN_0016cee0(hknpScaledConvexShape *self);              /* slot 1 of 0x16a54a0 */
+void FUN_00176b20(hknpCharacterProxy *self);                 /* slot 1 of 0x16a5b70 */
+void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5d20 */
 
 #endif

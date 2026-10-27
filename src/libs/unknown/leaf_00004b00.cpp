@@ -4,7 +4,7 @@
 /* derived name: slot 9 of the system heap allocator's vtable (0x168ca00)
  * reports the bytes in use and the peak, widened to the statistics' 64-bit
  * counts; the other counts are left as the caller set them. */
-void Allocator00004b10::FUN_00004b00(MemoryStatistics &statistics) const /* derived name */
+void hkMallocAllocator::FUN_00004b00(MemoryStatistics &statistics) const /* derived name */
 {
     statistics.allocated = bytesInUse;
     statistics.peakInUse = peakInUse;

@@ -673,6 +673,25 @@ class hkReferencedObject : public hkBaseObject
         }
     }
 
+    /* One reference fewer, the same way; the last one deletes the object
+     * through slot 4 (the character context's destructor, 0x3e96e).
+     * derived name. */
+    void removeReference() const
+    {
+        if ((memSizeAndRefCount & 0xffff0000) != 0) {
+            /* volatile: as in addReference. */
+            volatile u32 *count = &memSizeAndRefCount;
+            u32 oldValue, newValue;
+            do {
+                oldValue = *count;
+                newValue = (oldValue & 0xffff0000) | u16(oldValue - 1);
+            } while (__sync_val_compare_and_swap(count, oldValue, newValue) != oldValue);
+            if (u16(newValue) == 0) {
+                FUN_000069a0();
+            }
+        }
+    }
+
     /* The class allocator: a new object comes from the thread's heap
      * (0x9c29), and placement stays available beside it; a deleted object
      * goes back to the heap at the class's size. */
@@ -1852,6 +1871,9 @@ class hkxMaterial : public hkxAttributeHolder
     }
 
     hkStringPtr name;
+    /* To the record's 0xe0 bytes (its member records are built at run
+     * time; the deleting destructor 0x870e0 frees 0xe0). */
+    u8 unknown28[0xb8];
 };
 
 /* hkxMaterialEffect (hkClass 0x57c7140, built at 0x89e36: size 0x30,
@@ -3879,6 +3901,8 @@ struct hknpWorld {
     u8 unknown690[0x30];
     hknpWorldObject6c0 *object6c0;        /* derived name */
     hknpEventDispatcher *eventDispatcher; /* derived name */
+    /* To the 0x720 bytes its deleting destructor (0x4aff0) frees. */
+    u8 unknown6d0[0x50];
 };
 
 /* Its hkClass (built at 0x3cfea) has hkReferencedObject's, 0x57b8640, as
@@ -3890,6 +3914,12 @@ class hknpFirstPersonGun : public hkReferencedObject
      * finish callback 0x3ccf0 jumps to it). */
     hknpFirstPersonGun(hkFinishLoadedObjectFlag flag);
     virtual ~hknpFirstPersonGun();
+
+    /* The class allocator's delete, for the guns derived from it too:
+     * their deleting destructors free at the recorded size (0x156680 for
+     * this class, 0x157ea0, 0x159600 and 0x1668a0 for the ball gun, the
+     * projectile gun and the mounted ball gun). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     virtual void unknownVirtual5();
     virtual void fireGun(hknpWorld *world,
@@ -3973,6 +4003,20 @@ class hknpBallGun : public hknpFirstPersonGun
     hknpBallGun(hkFinishLoadedObjectFlag flag);
 
     virtual ~hknpBallGun();
+
+    /* The record's members (0x1699d10), the first in hknpFirstPersonGun's
+     * tail; the last five are not serialized (flags 0x400). */
+    float bulletRadius;
+    float bulletVelocity;
+    float bulletMass;
+    float damageMultiplier;
+    int maxBulletsInWorld;
+    Vec4 bulletOffsetFromCenter;
+    void *addedBodyIds;
+    u16 materialId;
+    u16 motionPropertiesId;
+    void *bulletShape;
+    u32 raiseContactEvents;
 };
 
 class hknpMountedBallGun : public hknpBallGun
@@ -3982,6 +4026,9 @@ class hknpMountedBallGun : public hknpBallGun
     hknpMountedBallGun(hkFinishLoadedObjectFlag flag);
 
     virtual ~hknpMountedBallGun();
+
+    /* The record's member (0x1696c90). */
+    Vec4 position;
 };
 
 struct hknpMotionProperties; /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
@@ -4058,10 +4105,21 @@ class hknpShapeMassProperties : public hkReferencedObject
  * info 0x57bf360, vtable 0x1697ea0): its finish constructor 0x46790 is out of
  * line, jumped to by the finish callback FUN_00039190 and called by the
  * reflection initializer at 0x39288; it stores only the vtable. */
+class hknpPhysicsSystemData;
+class hknpRefWorldCinfo;
+
 class hknpPhysicsSceneData : public hkReferencedObject
 {
   public:
     hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag);
+    virtual ~hknpPhysicsSceneData();
+
+    /* The record's two members: an array of reference pointers to the
+     * systems at +0x10, a reference pointer to the world's construction
+     * info at +0x20; the destructor 0x467f0 (slot 0) releases each, the
+     * array's last element first. */
+    hkArray<hknpPhysicsSystemData *> systemDatas;
+    hknpRefWorldCinfo *worldCinfo;
 };
 
 void FUN_000396a0(hknpMotionProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -4629,6 +4687,13 @@ class hknpCompressedMeshShape : public hknpShape
 
     u8 unknown28[0x30];
     hknpCompressedMeshShapeData *data;
+    /* The rest of the record's members (0x169aa40); the counts are not
+     * serialized (flags 0x400). */
+    hkBitField quadIsFlat;
+    hkBitField triangleIsInterior;
+    int numTriangles;
+    int numConvexShapes;
+    u8 unknown98[8]; /* to the record's 0xa0 bytes */
 };
 
 float FUN_00073940(const hknpCapsuleShape *self); /* derived name */
@@ -6203,12 +6268,21 @@ class hkxVertexAnimation : public hkReferencedObject
  * finish constructor 0x8bea0 is out of line, jumped to by the finish
  * callback FUN_00089140 and called by the reflection initializer at
  * 0x892bd. */
+class hkxMeshSection;
+
 class hkxMesh : public hkReferencedObject
 {
   public:
     class UserChannelInfo;
 
     hkxMesh(hkFinishLoadedObjectFlag flag);
+    /* 0x8bf00 (slot 0; the deleting destructor 0x8beb0 frees 0x30). */
+    virtual ~hkxMesh();
+
+    /* The record's members (0x16a1620): arrays of pointers to its sections
+     * and its user channels' descriptions. */
+    hkArray<hkxMeshSection *> sections;
+    hkArray<UserChannelInfo *> userChannelInfos;
 };
 
 /* hkxMesh::UserChannelInfo (hkClass 0x57c6ec0, "hkxMeshUserChannelInfo",
@@ -6323,7 +6397,20 @@ class hkxLight : public hkReferencedObject
 class hkxSkinBinding : public hkReferencedObject
 {
   public:
-    hkxSkinBinding(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxSkinBinding(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), nodeNames(flag), bindPose(flag)
+    {
+    }
+
+    /* Slot 0 (FUN_0008a830) runs the out-of-line FUN_0008a890; the
+     * deleting destructor 0x8a840 frees 0x80. */
+    virtual ~hkxSkinBinding();
+
+    /* The record's members (0x16a1cf0). */
+    hkxMesh *mesh;
+    hkArray<hkStringPtr> nodeNames;
+    hkArray<hkMatrix4> bindPose;
+    hkMatrix4 initSkinTransform;
 };
 
 /* hkxMeshSection (hkClass parent hkReferencedObject, built at 0x8e07d):
@@ -6332,7 +6419,24 @@ class hkxSkinBinding : public hkReferencedObject
 class hkxMeshSection : public hkReferencedObject
 {
   public:
-    hkxMeshSection(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxMeshSection(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), indexBuffers(flag), userChannels(flag), vertexAnimations(flag),
+          linearKeyFrameHints(flag), boneMatrixMap(flag)
+    {
+    }
+
+    /* Slot 0 (FUN_0008dbf0) runs the out-of-line FUN_0008dc50; the
+     * deleting destructor 0x8dc00 frees 0x70. */
+    virtual ~hkxMeshSection();
+
+    /* The record's members (0x16a2a10). */
+    hkxVertexBuffer *vertexBuffer;
+    hkArray<hkxIndexBuffer *> indexBuffers;
+    hkxMaterial *material;
+    hkArray<hkReferencedObject *> userChannels;
+    hkArray<hkxVertexAnimation *> vertexAnimations;
+    hkArray<float> linearKeyFrameHints;
+    hkArray<hkMeshBoneIndexMapping> boneMatrixMap;
 };
 
 /* hkxAttribute's members from its record table at 0x16a23e0: name
@@ -6958,7 +7062,10 @@ class hkSkinBinding : public hkMeshShape
     const char *FUN_000aa530() const;                /* vtable slot 8; derived name */
     void FUN_000aa540(const char *newName);          /* vtable slot 9; derived name */
 
+    /* The record's members (0x1691c90). */
     hkMeshShape *skin;
+    hkArray<hkMatrix4> worldFromBoneTransforms;
+    hkArray<hkStringPtr> boneNames;
 };
 
 /* hkSkinnedMeshShape::Part (records 0x1692280, 0x30 bytes): startVertex,
@@ -7688,6 +7795,7 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
     /* 48-byte records the signal handler 0x176cc0 appends (growing through
      * 0xb40 with the size 0x30). */
     hkArray<hknpCharacterProxyContact> contacts; /* derived name */
+    u8 unknown78[8]; /* to the 0x80 bytes its deleting destructor 0x176b20 frees */
 };
 
 /* The physics world's query collector (derived name): a polymorphic class

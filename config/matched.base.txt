@@ -81,7 +81,7 @@ FUN_00001f90 src/libs/unknown/func_00001f90.cpp
 FUN_00003e80 src/libs/unknown/func_00003e80.cpp
 FUN_00003eb0 src/libs/unknown/func_00003eb0.cpp
 FUN_00004250 src/libs/unknown/leaf_00004250.cpp
-FUN_00004ac0 src/libs/unknown/func_00004ac0.cpp _ZN17Allocator00004ac0D2Ev
+_ZN17hkMallocAllocatorD1Ev src/libs/unknown/func_00004ac0.cpp
 FUN_00007e00 src/libs/unknown/leaf_00007e00.cpp
 FUN_00007f80 src/libs/unknown/leaf_00007f80.cpp
 FUN_0000bc60 src/libs/unknown/leaf_0000bc60.cpp
@@ -288,7 +288,7 @@ FUN_0016fbd0 src/libs/unknown/leaf_0016fbd0.cpp
 FUN_00175da0 src/libs/unknown/leaf_00175da0.cpp
 FUN_00175e20 src/libs/unknown/leaf_00175e20.cpp
 FUN_0017cf20 src/libs/unknown/leaf_0017cf20.cpp
-FUN_00004b10 src/libs/unknown/leaf_00004b10.cpp _ZN17Allocator00004b1012FUN_00004b10Ev
+FUN_00004b10 src/libs/unknown/leaf_00004b10.cpp _ZN17hkMallocAllocator12FUN_00004b10Ev
 FUN_00007730 src/libs/unknown/func_00007730.cpp
 FUN_00007880 src/libs/unknown/leaf_00007880.cpp _ZNK12Pool0000788012FUN_00007880Ev
 FUN_00013890 src/libs/unknown/leaf_00013890.cpp _ZNK9StringMap12FUN_00013890EPNS_11IteratorTagE
@@ -478,7 +478,7 @@ FUN_00184410 src/libs/unknown/func_00184410.cpp _ZNK21hkVtableClassRegistry12FUN
 FUN_001841d0 src/libs/unknown/leaf_001841d0.cpp _ZNK21hkClassMemberAccessor12FUN_001841d0Ei
 FUN_00185450 src/libs/unknown/func_00185450.cpp
 FUN_001a3a70 src/libs/unknown/leaf_001a3a70.cpp
-FUN_00004af0 src/libs/unknown/func_00004af0.cpp _ZN17Allocator00004b1012FUN_00004af0EPvi
+FUN_00004af0 src/libs/unknown/func_00004af0.cpp _ZN17hkMallocAllocator9blockFreeEPvi
 FUN_000069a0 src/libs/unknown/func_000069a0.cpp _ZNK18hkReferencedObject12FUN_000069a0Ev
 FUN_0000d890 src/libs/unknown/func_0000d890.cpp _ZNK11StackTracer12FUN_0000d890EPKmiPFvPKcPvES4_
 FUN_0000e170 src/libs/unknown/leaf_0000e170.cpp _ZNK18hkSimpleLocalFrame12FUN_0000e170Ei
@@ -528,7 +528,7 @@ FUN_000ad7b0 src/libs/unknown/func_000ad7b0.cpp _ZN15FileImageSource12FUN_000ad7
 FUN_000ae770 src/libs/unknown/leaf_000ae770.cpp _ZNK25hkStorageSkinnedMeshShape12FUN_000ae770EN18hkSkinnedMeshShape9BoneSetIdERNS0_7BoneSetE
 FUN_00162550 src/libs/unknown/leaf_00162550.cpp _ZN19hknpVehicleInstance12FUN_00162550E10hknpBodyId
 FUN_00184cf0 src/libs/unknown/func_00184cf0.cpp
-FUN_00004b00 src/libs/unknown/leaf_00004b00.cpp _ZNK17Allocator00004b1012FUN_00004b00ER16MemoryStatistics
+FUN_00004b00 src/libs/unknown/leaf_00004b00.cpp _ZNK17hkMallocAllocator12FUN_00004b00ER16MemoryStatistics
 FUN_00006950 src/libs/unknown/leaf_00006950.cpp
 FUN_00013790 src/libs/unknown/func_00013790.cpp _Z12FUN_00013790P4Mat4RKS_RKDv4_f
 FUN_00018090 src/libs/unknown/func_00018090.cpp _Z12FUN_00018090PcR13AllocatorBase
@@ -874,7 +874,7 @@ FUN_00094580 src/libs/unknown/func_00094580.cpp _ZNK20BufferedStreamReader4isOkE
 FUN_001598a0 src/libs/unknown/func_001598a0.cpp _ZN17hknpProjectileGun7fireGunEP9hknpWorldRK11hkTransform
 FUN_001782f0 src/libs/unknown/func_001782f0.cpp
 FUN_001a0b20 src/libs/unknown/func_001a0b20.cpp
-FUN_00004ad0 src/libs/unknown/func_00004ad0.cpp
+FUN_00004ad0 src/libs/unknown/func_00004ad0.cpp _ZN17hkMallocAllocator10blockAllocEi
 FUN_00013e30 src/libs/unknown/func_00013e30.cpp
 FUN_00014c50 src/libs/unknown/func_00014c50.cpp
 FUN_00014c70 src/libs/unknown/func_00014c70.cpp
@@ -1313,3 +1313,42 @@ FUN_000271f0 src/libs/unknown/func_00027130.cpp _ZN14hkVertexFormat12FUN_000271f
 FUN_00045190 src/libs/unknown/func_00045190.cpp
 _ZN19hkArrayStreamWriterD1Ev src/libs/unknown/func_0008fe10.cpp
 _ZN19hkArrayStreamWriterD0Ev src/libs/unknown/func_0008fe10.cpp
+FUN_00004b30 src/libs/unknown/func_00004b30.cpp _GLOBAL__I_a
+_ZN12Class16969d0D1Ev src/libs/unknown/func_0003e960.cpp
+_ZN12Class16969d0D0Ev src/libs/unknown/func_0003e960.cpp
+_ZN12Class16969d0C1EPK25hknpCharacterStateManageri src/libs/unknown/func_0003e840.cpp
+FUN_000467a0 src/libs/unknown/func_000467a0.cpp
+FUN_0004aff0 src/libs/unknown/func_0004aff0.cpp
+FUN_0008f6a0 src/libs/unknown/func_0008f6a0.cpp _ZN9UnionFind14findRootOfNodeEi
+_ZN18hknpMountedBallGunD0Ev src/libs/unknown/func_00166890.cpp
+FUN_0006b7d0 src/libs/unknown/func_0006b7d0.cpp
+FUN_0007de00 src/libs/unknown/func_0007de00.cpp
+FUN_000870e0 src/libs/unknown/func_000870e0.cpp
+FUN_00089330 src/libs/unknown/func_00089330.cpp
+FUN_0008a840 src/libs/unknown/func_0008a840.cpp
+FUN_0008beb0 src/libs/unknown/func_0008beb0.cpp
+FUN_0008c0c0 src/libs/unknown/func_0008c0c0.cpp
+FUN_0008c940 src/libs/unknown/func_0008c940.cpp
+FUN_0008d270 src/libs/unknown/func_0008d270.cpp
+FUN_0008dc00 src/libs/unknown/func_0008dc00.cpp
+FUN_00095820 src/libs/unknown/func_00095820.cpp
+FUN_0009b170 src/libs/unknown/func_0009b170.cpp
+FUN_0009c0d0 src/libs/unknown/func_0009c0d0.cpp
+FUN_0009c910 src/libs/unknown/func_0009c910.cpp
+FUN_000aa380 src/libs/unknown/func_000aa380.cpp
+FUN_000aa680 src/libs/unknown/func_000aa680.cpp
+FUN_000ad920 src/libs/unknown/func_000ad920.cpp
+FUN_0012a860 src/libs/unknown/func_0012a860.cpp
+FUN_00157ea0 src/libs/unknown/func_00157ea0.cpp
+FUN_00158680 src/libs/unknown/func_00158680.cpp
+FUN_00159600 src/libs/unknown/func_00159600.cpp
+FUN_00159b70 src/libs/unknown/func_00159b70.cpp
+FUN_0015bf50 src/libs/unknown/func_0015bf50.cpp
+FUN_00162580 src/libs/unknown/func_00162580.cpp
+FUN_00165aa0 src/libs/unknown/func_00165aa0.cpp
+FUN_00166130 src/libs/unknown/func_00166130.cpp
+FUN_0016a640 src/libs/unknown/func_0016a640.cpp
+FUN_0016cee0 src/libs/unknown/func_0016cee0.cpp
+FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
+FUN_00176b20 src/libs/unknown/func_00176b20.cpp
+FUN_0017b700 src/libs/unknown/func_0017b700.cpp
