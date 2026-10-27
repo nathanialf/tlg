@@ -1,0 +1,10 @@
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_lib_unknown.h"
+
+void AllocatorBase::blockAllocBatch(void **blocksOut, int numBlocks,
+                                    int blockSize) /* derived name */
+{
+    for (int i = 0; i < numBlocks; ++i) {
+        blocksOut[i] = blockAlloc(blockSize);
+    }
+}

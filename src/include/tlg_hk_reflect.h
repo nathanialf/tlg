@@ -64,6 +64,10 @@ inline void memCpy16(void *dst, const void *src, int numQuads) /* derived name *
         d++;
     }
 }
+
+/* 0x17f60 (the name table's lookup FUN_00014e00 calls it): the strings
+ * compared without case, -1, 0 or 1. derived name. */
+int strCasecmp(const char *s1, const char *s2); /* derived name */
 } // namespace hkString
 
 /* The scalar helpers (derived names): the larger and the smaller of two
@@ -134,6 +138,12 @@ template <typename T> struct hkArray {
     hkArray(T *buffer, int initialSize, int capacity)
         : data(buffer), size(initialSize), capacityAndFlags(capacity | DONT_DEALLOCATE_FLAG)
     {
+    }
+
+    /* The storage given back (the vertex storage's destructor 0x9a760). */
+    ~hkArray()
+    {
+        clearAndDeallocate();
     }
 
     /* Drop the elements, keeping the storage. derived name. */
@@ -1111,6 +1121,25 @@ class hkcdPlanarCsgOperand : public hkReferencedObject
  * finish constructor 0x9a860 is out of line (the finish callback
  * FUN_0001cf60 jumps to it, the reflection initializer at 0x1d010 runs it
  * on a temporary); a finished geometry runs FUN_0009a8a0 with 0. */
+/* What hkcdPlanarGeometry's vertices point to (derived names): a
+ * reference-counted array of 32-byte vertices, built in FUN_0009a8a0
+ * (0x20 bytes from the heap at 0x9a90b, value-initialized, its vtable
+ * 0x16a36b0 stored at 0x9a95b; no type info names the class, and the
+ * vtable has the five slots of hkReferencedObject's). The array is its
+ * second base: the destructors (0x9a760, and 0x9a7b0 deleting) store no
+ * vptr, which a member array would make them do. */
+struct hkcdPlanarGeometryVertex { /* derived name */
+    u8 unknown0[0x20];
+};
+
+class hkcdPlanarGeometryVertexStorage /* derived name */
+    : public hkReferencedObject,
+      public hkArray<hkcdPlanarGeometryVertex>
+{
+  public:
+    virtual ~hkcdPlanarGeometryVertexStorage();
+};
+
 struct hkcdPlanarGeometry : public hkcdPlanarEntity {
     hkcdPlanarGeometry(hkFinishLoadedObjectFlag flag);
     virtual ~hkcdPlanarGeometry();
@@ -1444,7 +1473,11 @@ class hkpVehicleFrictionDescription : public hkReferencedObject
  * frictionDescription (an hkpVehicleFrictionDescription) at +0xb0; then
  * chassisFrictionInertiaInvDiag at +0x190 and alreadyInitialised at +0x1a0,
  * not typed here. */
-struct hknpVehicleDataWheelComponentParams;
+/* hknpVehicleData::WheelComponentParams (the string at 0x14be995; its
+ * hkClass built at 0x692fd, size 0x28): members not typed yet. */
+struct hknpVehicleDataWheelComponentParams {
+    u8 unknown0[0x28];
+};
 
 class hknpVehicleData : public hkReferencedObject
 {
@@ -1575,7 +1608,11 @@ class hkxCamera : public hkReferencedObject
  * parent hkReferencedObject's 0x57b8640, one member record at 0x16a1f70):
  * attributeGroups (an array of hkxAttributeGroup, class 0x57c6ce8) at
  * +0x10. */
-struct hkxAttributeGroup;
+/* hkxAttributeGroup (its hkClass built at 0x88b6d, size 0x18): members not
+ * typed yet. */
+struct hkxAttributeGroup {
+    u8 unknown0[0x18];
+};
 
 class hkxAttributeHolder : public hkReferencedObject
 {
@@ -1945,7 +1982,22 @@ void FUN_00024db0(hkMultipleVertexBuffer *self);                                
  * return their hkStringPtr there) and slot 9 sets it. Slot 7 takes an
  * hkMeshSection (a reflected class; hkMemoryMeshShape's override 0x2ad50
  * reads a pointer at +0x28 and an int at +0x38 of it). */
-struct hkMeshSection;
+struct hkMeshSection {
+    /* The enum PrimitiveType (its hkClassEnum 0x1692178 beside
+     * MeshSectionIndexType's, after the class name's string at 0x14b7f7f):
+     * names and values from its items at 0x1692100. Fields not typed yet. */
+    enum PrimitiveType {
+        PRIMITIVE_TYPE_UNKNOWN,
+        PRIMITIVE_TYPE_POINT_LIST,
+        PRIMITIVE_TYPE_LINE_LIST,
+        PRIMITIVE_TYPE_TRIANGLE_LIST,
+        PRIMITIVE_TYPE_TRIANGLE_STRIP
+    };
+};
+
+/* 0xaa570 (called by FUN_0002abd0): the number of indices numPrimitives
+ * primitives of the type take, 0 for an unknown type. derived name. */
+int FUN_000aa570(hkMeshSection::PrimitiveType primitiveType, int numPrimitives); /* derived name */
 
 class hkMeshShape : public hkReferencedObject
 {
@@ -2395,6 +2447,19 @@ class hknpShape : public hkReferencedObject
     };
 
     hknpShape(hkFinishLoadedObjectFlag flag);
+
+    /* A new shape of a dispatch type: no properties, key bits, user data,
+     * radius or flags, stored in this order (inlined in hknpDecoratorShape's
+     * 0x3b0a0, 0x3b0aa to 0x3b0d3). */
+    hknpShape(u8 dispatchType_) : properties(0)
+    {
+        dispatchType = dispatchType_;
+        numShapeKeyBits = 0;
+        userData = 0;
+        convexRadius = 0.0f;
+        flags = 0;
+    }
+
     virtual ~hknpShape();
 
     virtual void unknownVirtual5();
@@ -2475,6 +2540,10 @@ class hknpShape : public hkReferencedObject
 class hknpDecoratorShape : public hknpShape
 {
   public:
+    /* 0x3b0a0 (called at 0x16a6bb): a decorator of the shape's dispatch
+     * type; coreShapeSize is left unset. */
+    hknpDecoratorShape(const hknpShape *coreShape_);
+
     hknpDecoratorShape(hkFinishLoadedObjectFlag flag); /* 0x3b0f0 */
 
     virtual ~hknpDecoratorShape();
@@ -2524,7 +2593,7 @@ class hknpDecoratorShape : public hknpShape
     void FUN_0003b270(const void *argument1,
                       void *argument2) const; /* vtable slot 29; derived name */
 
-    hknpShape *coreShape;
+    const hknpShape *coreShape;
     int coreShapeSize; /* the record's second member (TYPE_INT32, +0x30) */
 };
 
@@ -3121,6 +3190,11 @@ class hkSlot /* derived name */
   public:
     virtual ~hkSlot();
 
+    /* The class allocator's delete: the thread's heap takes the block back
+     * with its size (0x47cc0 frees 0x18, 0x47d10 0x28; defined in
+     * tlg_lib_unknown.h beside the router). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkSlot *next; /* derived name */
     void *object; /* derived name */
 };
@@ -3180,6 +3254,10 @@ class hknpWorldMaterialSlot : public hkSlot /* derived name */
 {
   public:
     typedef void (hknpWorld::*Method)(hknpMaterialId id); /* derived name */
+
+    /* Empty: its deleting destructor (0x47d10, which vtable 0x1698eb0's
+     * 0x28-byte slot shares) runs hkSlot's inline and frees 0x28. */
+    virtual ~hknpWorldMaterialSlot();
 
     /* Slot 2 (0x47d60, the body the slot vtables share): whether a
      * member-function pointer of size bytes is the one held. */
@@ -4808,9 +4886,20 @@ class hkpLimitedForceConstraintMotor : public hkpConstraintMotor
 class hkpPositionConstraintMotor : public hkpLimitedForceConstraintMotor
 {
   public:
+    /* 0x82430: a limited-force motor of the position type with a force
+     * range of a million each way, tau 0.8, damping 1, a proportional
+     * recovery velocity of 2 and a constant one of 1. */
+    hkpPositionConstraintMotor();
+
     hkpPositionConstraintMotor(hkFinishLoadedObjectFlag flag) : hkpLimitedForceConstraintMotor(flag)
     {
     }
+
+    /* Names and offsets from the member records 0x169b830 to 0x169b8a8. */
+    float tau;
+    float damping;
+    float proportionalRecoveryVelocity;
+    float constantRecoveryVelocity;
 };
 
 class hkpVelocityConstraintMotor : public hkpLimitedForceConstraintMotor
@@ -5500,7 +5589,11 @@ class hkxVertexBuffer : public hkReferencedObject
  * at +0xc, vertData (hkxVertexBuffer) at +0x10, vertexIndexMap (an array of
  * hkInt32) at +0x98, componentMap (an array of class 0x57c7d40) at +0xa8.
  * The finish callback 0x8cb10 constructs it in place. */
-struct hkxVertexAnimationUsageMap;
+/* hkxVertexAnimation::UsageMap (the string at 0x14c3679; its hkClass
+ * built at 0x8ccca, size 4, three member records): members not typed yet. */
+struct hkxVertexAnimationUsageMap {
+    u8 unknown0[4];
+};
 
 class hkxVertexAnimation : public hkReferencedObject
 {
@@ -7668,6 +7761,48 @@ class XmlCharacters : public XmlNode /* derived name */
     virtual ~XmlCharacters();
 
     hkStringPtr text; /* derived name */
+};
+
+/* hkPackfileSectionHeader, a reflected struct (member records 0x16a2dd0 to
+ * 0x16a2f38): 0x40 bytes in this file version, the pad at +0x30 the last
+ * member; the versions before 11 lay their section headers out without it,
+ * 0x30 bytes apart. */
+struct hkPackfileSectionHeader {
+    char sectionTag[19];
+    char nullByte;
+    s32 absoluteDataStart;
+    s32 localFixupsOffset;
+    s32 globalFixupsOffset;
+    s32 virtualFixupsOffset;
+    s32 exportsOffset;
+    s32 importsOffset;
+    s32 endOffset;
+    s32 pad[4];
+};
+
+/* hkPackfileHeader, a reflected struct (member records 0x16a2bc0 to
+ * 0x16a2da0), 0x40 bytes; the section headers follow it, after the
+ * predicate array in file versions 10 and 11. */
+struct hkPackfileHeader {
+    /* 0x180ea0 (called at 0x17e488 and 0x17e889 with the header as both
+     * arguments): the header of section i of the packfile whose header
+     * packfileData points to, null when it has no sections. derived name. */
+    const hkPackfileSectionHeader *getSectionHeader(const void *packfileData,
+                                                    int i) const; /* derived name */
+
+    s32 magic[2];
+    s32 userTag;
+    s32 fileVersion;
+    u8 layoutRules[4];
+    s32 numSections;
+    s32 contentsSectionIndex;
+    s32 contentsSectionOffset;
+    s32 contentsClassNameSectionIndex;
+    s32 contentsClassNameSectionOffset;
+    char contentsVersion[16];
+    s32 flags;
+    u16 maxpredicate;
+    u16 predicateArraySizePlusPadding;
 };
 
 #endif

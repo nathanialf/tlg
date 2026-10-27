@@ -13,7 +13,10 @@ static hkSlot *untagSlot(const void *link) /* derived name */
 // NONMATCHING: the loop's two loads: the base reads the next link before the
 // slot's vptr (0x93590, `mov rbx, [rdi+8]; mov rax, [rdi]`), this reads the
 // vptr first, as the same loop inlined into FUN_00093530 does in the base
-// (0x93550); the loop IR's order does not decide it (docs/NOTES.md, Round 33).
+// (0x93550). The scheduler glues two loads of one base and chain in offset
+// order (ClusterNeighboringLoads); the base's loads come from two copies of
+// the slot (LoopRotate's twin phis), which the last SimplifyCFG of the -O2
+// pipeline merges in every form compiled (docs/NOTES.md, Round 34).
 void FUN_00093570(Signal00093530 *self) /* derived name */
 {
     hkSlot *slot = untagSlot(self->slots);

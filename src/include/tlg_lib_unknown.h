@@ -209,11 +209,13 @@ class AllocatorBase /* derived name */
 
     /* Slot 6 (the default 0x8d90): a buffer resized, from its old size to
      * the size asked for, which the allocator may round up in place (the
-     * slab allocator's 0xefd0). derived name. Slots 7 to 11, signatures not
-     * recovered (7 and 8 the defaults 0x8e00 and 0x8e50, 9 the statistics,
-     * 11 the peak reset). */
+     * slab allocator's 0xefd0). derived name. Slots 8 to 11, signatures not
+     * recovered (8 the default 0x8e50, 9 the statistics, 11 the peak
+     * reset). */
     virtual void *FUN_00008d90(void *pointer, int oldNumBytes, int &numBytesInOut);
-    virtual void unknownVirtual7();
+    /* Slot 7 (the default 0x8e00): numBlocks blocks of blockSize bytes,
+     * each from slot 2, into blocksOut. derived name. */
+    virtual void blockAllocBatch(void **blocksOut, int numBlocks, int blockSize);
     virtual void unknownVirtual8();
     /* Slot 9: the allocator's statistics into the caller's record
      * (MemoryStatistics, below). derived name. */
@@ -1482,6 +1484,16 @@ struct hkMemoryRouter /* derived name */
  * slot to %fs:0. */
 extern __thread hkMemoryRouter *D_16dc070;
 
+/* The thread's 0x28-byte block (derived name): FUN_014aff00 allocates it
+ * from the router's heap at +0x60 and clears it; the GOT slot 0x16d80d0
+ * holds its thread-local pointer's offset, -0x58, +0x18 of the TLS
+ * template. FUN_0000ead0 gives back the buffer it records (+0 to +0x10,
+ * owned when the byte at +0x20 is set), reading the pointer itself; its
+ * argument is the block. */
+struct ThreadBuffer; /* derived name */
+extern __thread ThreadBuffer *D_16dc078;
+void FUN_0000ead0(ThreadBuffer *buffer); /* derived name */
+
 inline void *hkHardwareInfo::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -1490,6 +1502,13 @@ inline void *hkHardwareInfo::operator new(unsigned long numBytes)
 inline void *hknpGlobals::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void hkSlot::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
 }
 
 inline void StackTracer::operator delete(void *object, unsigned long numBytes)
