@@ -1987,10 +1987,9 @@ class hkMemoryMeshMaterial;      /* 0xaccf0, vtable 0x16a3920 */
 class hkStorageSkinnedMeshShape; /* 0xae680, vtable 0x16a3b00 */
 class hkMemoryMeshVertexBuffer;  /* 0x274e0, vtable 0x16921b0 */
 class hknpDynamicCompoundShape;  /* 0x469a0, vtable 0x1697ef0 */
-class hknpMaskedShape;           /* FUN_00037b90, vtable 0x1693a90 */
+class hknpMaskedShape;           /* 0x37b90, vtable 0x1693a90 */
 
-void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag);       /* derived name */
-void FUN_00037b90(hknpMaskedShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
+void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
  * parent hkReferencedObject's; vtable 0x1690de0, address point 0x1690df0):
@@ -3144,6 +3143,8 @@ class hknpMaskedShape : public hknpDecoratorShape
         hknpMaskedShape *maskedShape; /* derived name */
     };
 
+    /* Out of line (0x37b90): the finish callback 0x367b0 jumps to it. */
+    hknpMaskedShape(hkFinishLoadedObjectFlag flag);
     virtual ~hknpMaskedShape();
 
     virtual void FUN_00037d80(); /* vtable slot 31; derived name */
@@ -6530,6 +6531,28 @@ class hkMemoryResourceHandle : public hkResourceHandle
     hkArray<hkMemoryResourceHandleExternalLink> references;
 };
 
+/* hkResourceContainer (hkClass 0x57c8550, built at 0x8ebbc: size 0x10,
+ * parent hkResourceBase, no members): the abstract container. */
+class hkResourceContainer : public hkResourceBase
+{
+  public:
+    hkResourceContainer(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
+};
+
+/* hkMemoryResourceContainer (hkClass 0x57c84b0, built at 0x8e94d: size
+ * 0x40, parent hkResourceContainer; vtable 0x16a6300, slot 0 the complete
+ * destructor 0x17fc20): members from its record table at 0x16a3010: name
+ * (hkStringPtr) at +0x10, parent (not serialized) at +0x18, resourceHandles
+ * and children (arrays of pointers) at +0x20 and +0x30. */
+class hkMemoryResourceContainer : public hkResourceContainer
+{
+  public:
+    hkStringPtr name;
+    hkMemoryResourceContainer *parent;
+    hkArray<hkMemoryResourceHandle *> resourceHandles;
+    hkArray<hkMemoryResourceContainer *> children;
+};
+
 /* hkxVertexDescription::ElementDecl (type info 0x57c7f10, size 0x18, no
  * vtable; its records, built at run time by the initializer from 0x8cf60,
  * name byteStride and channelID, the hkStringPtr at +0x10). Its finish
@@ -6874,6 +6897,14 @@ class hkOstream : public hkReferencedObject
      * returned. */
     hkOstream &FUN_00008550(unsigned int value);
 
+    /* derived name: the operator<< of a bool (0x83a0): "true" or "false",
+     * its strlen bytes, and the stream returned. */
+    hkOstream &FUN_000083a0(hkBool b);
+
+    /* derived name: the operator<< of a char (0x83f0): the one byte
+     * written, and the stream returned. */
+    hkOstream &FUN_000083f0(char c);
+
     /* derived name: formatted output (0x86f0, variadic). */
     void FUN_000086f0(const char *format, ...);
 
@@ -6971,9 +7002,14 @@ class hkBufferedStreamWriter : public hkStreamWriter
 {
   public:
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00008ea0 */
-    hkBool FUN_00009260() const;         /* vtable slot 5; derived name */
-    hkBool FUN_00009280() const;         /* vtable slot 8; derived name */
-    int FUN_00009380() const;            /* vtable slot 10; derived name */
+    /* derived names: the writer over a caller's memory (0x8f50): no stream
+     * to flush to, nothing written, and when the memory is to hold a string
+     * one byte kept back for its terminator and the memory zeroed. */
+    hkBufferedStreamWriter(void *memory, int memorySize, hkBool memoryIsString);
+
+    hkBool FUN_00009260() const; /* vtable slot 5; derived name */
+    hkBool FUN_00009280() const; /* vtable slot 8; derived name */
+    int FUN_00009380() const;    /* vtable slot 10; derived name */
 
     hkStreamWriter *stream; /* derived name */
     /* The buffer, the bytes in it and its capacity, as the constructor
@@ -6981,9 +7017,12 @@ class hkBufferedStreamWriter : public hkStreamWriter
     char *buffer;       /* derived name */
     int bufferSize;     /* derived name */
     int bufferCapacity; /* derived name */
+    /* Whether the writer allocated the buffer (the constructor 0x8f50
+     * clears it for a caller's memory). derived name. */
+    hkBool ownsBuffer;
     /* To the 0x30 bytes the deleting destructor (0x8fa0) frees by
      * default. */
-    u8 unknown28[8];
+    u8 unknown29[7];
 };
 
 /* Its destructor (0x8ff0, which stores the vtable 0x168d210) and its
@@ -8378,7 +8417,20 @@ struct Object0019c150 /* derived name */
     void FUN_0019cd00(const void *key, const void *value); /* vtable slot 8; derived name */
 
     u8 unknown0[0x40];
-    PointerMap map40; /* derived name */
+    PointerMap map40;   /* derived name */
+    u8 unknown50[0xe8]; /* to the size its deleting destructor 0x19c100 frees */
+};
+
+/* Its out-of-line destructor body: restores the vtable, frees the arrays and
+ * maps from +0x78 on. derived name. */
+void FUN_0019c150(Object0019c150 *self); /* derived name */
+
+/* The class built over it by FUN_00181b10 (vtable 0x16a6470): it adds
+ * nothing to destroy (its complete destructor FUN_00181bf0 runs the base's)
+ * and its deleting destructor 0x181ba0 frees 0x140 bytes. */
+struct Object00181b10 : Object0019c150 /* derived name */
+{
+    u8 unknown138[0x8];
 };
 
 /* A named test of a loaded object's class (derived names), registered by its

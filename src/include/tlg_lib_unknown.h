@@ -887,6 +887,47 @@ struct Object0012a8c0 /* derived name */
 };
 
 void FUN_0012a8c0(Object0012a8c0 *self); /* derived name */
+
+/* Two reference-counted objects of 0x28 bytes guarded by a critical section
+ * (a 16-byte block at +0x20 the destructor destroys and frees): the
+ * out-of-line destructor FUN_00183810 (vtable 0x16a64f0) frees an array of
+ * 8-byte elements at +0x10, FUN_00183db0 (vtable 0x16a6530) an array of
+ * 24-byte elements at +0x10, each releasing its hkStringPtr at +0. */
+struct Object00183810 /* derived name */
+{
+    u8 unknown0[0x28]; /* the size its deleting destructor 0x1837c0 frees */
+};
+
+struct Object00183db0 /* derived name */
+{
+    u8 unknown0[0x28]; /* the size its deleting destructor 0x183d60 frees */
+};
+
+void FUN_00183810(Object00183810 *self); /* derived name */
+void FUN_00183db0(Object00183db0 *self); /* derived name */
+
+/* A reference-counted object of 0x48 bytes (vtable 0x16a6820, stored by
+ * FUN_00199f80 and the out-of-line destructor FUN_0019a230): the destructor
+ * destroys the 0x40-byte object at +0x10 (FUN_0019a0b0) and frees it, then
+ * the critical section at +0x38, the pointer map at +0x28 and the array of
+ * 8-byte elements at +0x18. */
+struct Object0019a230 /* derived name */
+{
+    u8 unknown0[0x48]; /* the size its deleting destructor 0x19a1e0 frees */
+};
+
+void FUN_0019a230(Object0019a230 *self); /* derived name */
+
+/* A reference-counted object of 0x40 bytes (vtable 0x16a68d0): its
+ * out-of-line destructor FUN_0019a7c0 runs FUN_0019bb80 on every element of
+ * the pointer array at +0x30 and frees it, then the pointer maps at +0x20
+ * and +0x10. */
+struct Object0019a7c0 /* derived name */
+{
+    u8 unknown0[0x40]; /* the size its deleting destructor 0x19a770 frees */
+};
+
+void FUN_0019a7c0(Object0019a7c0 *self); /* derived name */
 /* An object of 0x160 bytes with its own class allocator (vtable 0x169b460,
  * constructor FUN_000763a0) holding an array of 0x500-byte elements at
  * +0x140 (count at +0x148). Its out-of-line destructor FUN_000760c0
@@ -2351,6 +2392,8 @@ void FUN_00166180(hknpExternMeshShape *self);
 void FUN_0016cf30(hknpScaledConvexShape *self);
 void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
+void FUN_0017f180(hkMemoryResourceHandle *self);
+void FUN_0017fc20(hkMemoryResourceContainer *self);
 void FUN_00041650(hknpCompoundShape *self);
 
 void FUN_0000ddd0(hkSimpleLocalFrame *self);               /* slot 1 of 0x168d8e0 */
@@ -2401,5 +2444,13 @@ void FUN_0016a640(hknpScaledConvexShapeBase *self);          /* slot 1 of 0x16a5
 void FUN_0016cee0(hknpScaledConvexShape *self);              /* slot 1 of 0x16a54a0 */
 void FUN_00176b20(hknpCharacterProxy *self);                 /* slot 1 of 0x16a5b70 */
 void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5d20 */
+void FUN_0017f130(hkMemoryResourceHandle *self);             /* slot 1 of 0x16a6270 */
+void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
+void FUN_00181ba0(Object00181b10 *self);                     /* slot 1 of 0x16a6470 */
+void FUN_001837c0(Object00183810 *self);                     /* slot 1 of 0x16a64f0 */
+void FUN_00183d60(Object00183db0 *self);                     /* slot 1 of 0x16a6530 */
+void FUN_0019a1e0(Object0019a230 *self);                     /* slot 1 of 0x16a6820 */
+void FUN_0019a770(Object0019a7c0 *self);                     /* slot 1 of 0x16a68d0 */
+void FUN_0019c100(Object0019c150 *self);                     /* slot 1 of 0x16a6960 */
 
 #endif

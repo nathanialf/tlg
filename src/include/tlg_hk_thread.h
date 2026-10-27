@@ -384,7 +384,7 @@ class hknpBuildConstraintsTask : public hkReferencedObject,
 
     /* slot 5 (0x1551a0) */
     virtual void process();
-    /* slot 6 */
+    /* slot 6 (0x155100; the interface's thunk 0x155150) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
     int unknown18;   /* derived name */

@@ -575,7 +575,7 @@ FUN_000377c0 src/libs/unknown/func_000377c0.cpp
 FUN_000378b0 src/libs/unknown/func_000378b0.cpp
 FUN_000378e0 src/libs/unknown/func_000378e0.cpp
 FUN_00037a90 src/libs/unknown/func_00037a90.cpp
-FUN_00038230 src/libs/unknown/func_00038230.cpp _ZN15hknpMaskedShape11MaskWrapperC2E24hkFinishLoadedObjectFlag
+FUN_00038230 src/libs/unknown/func_00037b90.cpp _ZN15hknpMaskedShape11MaskWrapperC2E24hkFinishLoadedObjectFlag
 FUN_00039ae0 src/libs/unknown/func_00039ae0.cpp
 FUN_0003a0d0 src/libs/unknown/func_0003a0d0.cpp
 FUN_0003a3b0 src/libs/unknown/func_0003a3b0.cpp
@@ -1352,3 +1352,16 @@ FUN_0016cee0 src/libs/unknown/func_0016cee0.cpp
 FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
 FUN_00176b20 src/libs/unknown/func_00176b20.cpp
 FUN_0017b700 src/libs/unknown/func_0017b700.cpp
+FUN_0017f130 src/libs/unknown/func_0017f130.cpp
+FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
+FUN_00181ba0 src/libs/unknown/func_00181ba0.cpp
+FUN_001837c0 src/libs/unknown/func_001837c0.cpp
+FUN_00183d60 src/libs/unknown/func_00183d60.cpp
+FUN_0019a1e0 src/libs/unknown/func_0019a1e0.cpp
+FUN_0019a770 src/libs/unknown/func_0019a770.cpp
+FUN_0019c100 src/libs/unknown/func_0019c100.cpp
+FUN_000083a0 src/libs/unknown/func_000083a0.cpp _ZN9hkOstream12FUN_000083a0E6hkBool
+_ZN15hknpMaskedShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00037b90.cpp _ZN15hknpMaskedShapeC2E24hkFinishLoadedObjectFlag
+FUN_000083f0 src/libs/unknown/func_000083f0.cpp _ZN9hkOstream12FUN_000083f0Ec
+FUN_00155100 src/libs/unknown/func_00155100.cpp _ZNK24hknpBuildConstraintsTask7getNameEP11hkStringBufS1_
+FUN_00155150 src/libs/unknown/func_00155100.cpp _ZThn16_NK24hknpBuildConstraintsTask7getNameEP11hkStringBufS1_
