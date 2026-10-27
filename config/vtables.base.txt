@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1565 vtables stored by a constructor that no type info names (below, with
+# 1564 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -22,16 +22,15 @@
 #
 # Vtables no type info names: `<vtable address> stored by <functions> [hkClass <name>
 # (slot 3 <getter>)] [home <files>]`:
-#   0x168c630 stored by FUN_00001960 FUN_00001fb0
+#   0x168c630 stored by FUN_00001fb0 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo
 #   0x168caf0 stored by FUN_000066f0 FUN_00006740 FUN_00006800
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
 #   0x168d100 stored by FUN_000080c0 FUN_00008140 FUN_00008270 _ZN9hkOstreamD1Ev
 #   0x168d210 stored by FUN_00008eb0 FUN_00008f50 FUN_00008ff0 | hkClass hkBufferedStreamWriter (slot 3 0x8ea0)
 #   0x168d3f0 stored by FUN_0000a280 FUN_0000a310 FUN_0000a3b0
 #   0x168d5b0 stored by FUN_0000b1a0 FUN_0000b250 FUN_0000b330
-#   0x168d680 stored by FUN_0000c270 FUN_0000c360
-#   0x168d8a0 stored by FUN_0000d9e0 FUN_0000da50 FUN_0000daf0
-#   0x168e290 stored by FUN_00012160 FUN_00012270 FUN_00012370
+#   0x168d680 stored by FUN_0000c360 _ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei
+#   0x168e290 stored by FUN_00012270 FUN_00012370 _ZN19LargeBlockAllocatorC1EP13AllocatorBase
 #   0x168e460 stored by FUN_00013ea0 FUN_000143a0
 #   0x168e800 stored by FUN_00016d40 FUN_00016f90
 #   0x168e8e0 stored by FUN_000195c0 FUN_00019780
@@ -61,7 +60,7 @@
 #   0x169ffd0 stored by FUN_000831a0
 #   0x16a31d0 stored by FUN_00048b20
 #   0x16a3220 stored by FUN_0008f120 FUN_0008f180
-#   0x16a32a0 stored by FUN_0008fb30 | home hkHardwareInfo.cpp
+#   0x16a32a0 stored by _ZN14hkHardwareInfoC1Ev | home hkHardwareInfo.cpp
 #   0x16a32f0 stored by FUN_00008140 FUN_0008fe10 FUN_0008fe60 | hkClass hkArrayStreamWriter (slot 3 0x8ff00)
 #   0x16a3460 stored by FUN_000908d0 FUN_00090930 FUN_000909a0
 #   0x16a35c0 stored by FUN_00094170 FUN_00094230 FUN_000942e0
@@ -86,7 +85,7 @@
 #   0x16a5680 stored by FUN_0016e0e0 FUN_0016eaa0
 #   0x16a5700 stored by FUN_00048b20
 #   0x16a5820 stored by FUN_00048b20
-#   0x16a5aa0 stored by FUN_00175e30 FUN_00175e90 FUN_00175f70
+#   0x16a5aa0 stored by FUN_00175e30 FUN_00175e90 _ZN11hknpGlobalsC1Ev
 #   0x16a5ae0 stored by FUN_00176420
 #   0x16a5b10 stored by FUN_00176420
 #   0x16a5b40 stored by FUN_00176420
@@ -107,7 +106,7 @@
 #   0x16a6910 stored by FUN_0019a950 FUN_0019ab10 FUN_0019abf0
 #   0x16a6960 stored by FUN_0019be50 FUN_0019c150
 #   0x16a69e0 stored by FUN_0019d450 FUN_0019d500
-#   0x16a7580 stored by FUN_001a0310 FUN_001a03a0 FUN_001a04d0
+#   0x16a7580 stored by FUN_001a0310 FUN_001a03a0 _ZN11LoadedImageC1ERK8RawImage
 #   0x16a7620 stored by FUN_001b0a40 FUN_00202800 FUN_00230b40 FUN_00333580 FUN_003ef750 FUN_003fd0a0 FUN_00402fe0 FUN_00416db0 FUN_004215c0 FUN_00441670 FUN_004477a0 FUN_00459230 FUN_0045b4e0 FUN_0045b650 FUN_0045b7d0 FUN_004a6bf0 FUN_004af420 FUN_0052bd30 FUN_0083e370 FUN_0088b2b0 FUN_008bcc60 FUN_00948040 FUN_00a190f0 FUN_00a1cd10 FUN_00a4a4e0 FUN_00a94780 FUN_00b4b3d0 FUN_00b5cf90 FUN_00b5d170 FUN_00b5d6e0 FUN_00cb5f90 FUN_00cfebd0 FUN_00d886b0 FUN_00fe1b70 FUN_01388680 FUN_01388780 FUN_013b2640 FUN_013cc010 FUN_013ccbf0 FUN_013cd140 FUN_013cd1f0
 #   0x16a7650 stored by FUN_001bbc30 FUN_00203010
 #   0x16a76f8 stored by FUN_00204080 FUN_00204320 FUN_007609e0

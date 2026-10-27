@@ -673,6 +673,22 @@ StackTracer's constructor 0xd8f0 and destructor 0xd940, 0x13e50 in the
 runner's file), `_ZN11StackTracerD0Ev`, `_ZN14Runner00016350D0Ev`; every
 other vtable's slot 1 resolves by address.
 
+**Addendum, 2026-10-27 (round 35 harvest).** When no citing class has
+other members beside the body, the body is named after the citing vtable
+of lowest address. Measured over the shared deleting destructors named
+so far (the supervisor entry after Round 35 in docs/NOTES.md): in every
+case where a class sits beside the body and the lowest-address citing
+vtable is a named one, the two rules agree (StackTracer, hkUuidObject,
+hknpCharacterRigidBodyCinfo, hknpGroupCollisionFilter,
+hkpVehicleFrictionDescription, hkpCogWheelConstraintData,
+hkpVelocityConstraintMotor, hkpBallAndSocketConstraintData,
+hkpRagdollLimitsData, hkxCamera, hknpCharacterStateInAir: 11 of 11), as
+the linker keeps the first copy of a folded body in link order and lays
+the vtables out in the same order. Round 35 named 0x1ba80 and 0x383f0 by
+a rule of the worker's (the first citing class the headers already size);
+their lowest-address citers are hknpRefMassDistribution (0x169a820) and
+hknpShapeMassProperties (0x1693ef0), and round 36 renames them.
+
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 
 **Decision.** Where the base keeps a destructor's vptr store and emits
