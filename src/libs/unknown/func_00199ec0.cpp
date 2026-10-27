@@ -23,7 +23,4 @@ class Object00199ec0 : public hkReferencedObject
 
 /* The static instance (0x57c89a0), built by this file's initializer
  * (0x199ec0); its empty destructor is not registered for exit. */
-// NONMATCHING: equal, but the vtable is the file's own (the address point
-// stored by a direct `lea`): _ZTVN12_GLOBAL__N_114Object00199ec0E, where the
-// derived row names _ZTV14Object00199ec0 (a ruling for the supervisor).
 static Object00199ec0 D_57c89a0;

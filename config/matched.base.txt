@@ -1416,3 +1416,8 @@ FUN_00073110 src/libs/unknown/func_00073110.cpp _ZNK16hknpCapsuleShape12FUN_0007
 FUN_0007e8a0 src/libs/unknown/func_0007e8a0.cpp _ZNK26hkpPrismaticConstraintData15unknownVirtual7Ev
 FUN_001845b0 src/libs/unknown/func_001845b0.cpp
 FUN_0019cc20 src/libs/unknown/func_0019cc20.cpp _ZN14Object0019c15012FUN_0019cc20EPKvRK7hkClassPv
+_ZN22hkReferencedObjectLockD1Ev src/libs/unknown/func_000066f0.cpp
+_ZN22hkReferencedObjectLockD0Ev src/libs/unknown/func_000066f0.cpp
+FUN_000080c0 src/libs/unknown/func_000080c0.cpp _ZN9hkOstreamC1EP14hkStreamWriter
+_ZN17hknpCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00041590.cpp _ZN17hknpCompoundShapeC2E24hkFinishLoadedObjectFlag
+FUN_00199ec0 src/libs/unknown/func_00199ec0.cpp _GLOBAL__I_a

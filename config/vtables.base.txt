@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1577 vtables stored by a constructor that no type info names (below, with
+# 1571 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -24,7 +24,6 @@
 # (slot 3 <getter>)] [home <files>]`:
 #   0x168c630 stored by FUN_00001fb0 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
-#   0x168d100 stored by FUN_000080c0 FUN_00008140 FUN_00008270 _ZN9hkOstreamD1Ev
 #   0x168d3f0 stored by FUN_0000a280 FUN_0000a310 FUN_0000a3b0
 #   0x168d5b0 stored by FUN_0000b1a0 FUN_0000b250 FUN_0000b330
 #   0x168d680 stored by FUN_0000c360 _ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei
@@ -36,7 +35,6 @@
 #   0x168eb00 stored by FUN_0001bc80 FUN_0001bdd0 FUN_0001c010
 #   0x16926d0 stored by FUN_00048b20
 #   0x1692eb0 stored by FUN_000359d0 FUN_00035a40 FUN_00035b10
-#   0x1697900 stored by FUN_000412a0 FUN_00041650 _ZN17hknpCompoundShapeC1E24hkFinishLoadedObjectFlag | hkClass hknpCompoundShape (slot 3 0x418b0)
 #   0x1698eb0 stored by FUN_00048b20
 #   0x1698f10 stored by FUN_00048b20
 #   0x1699060 stored by FUN_00048b20
@@ -49,7 +47,7 @@
 #   0x1699510 stored by FUN_00060c70
 #   0x169ab10 stored by FUN_0005a230 FUN_0006bc50
 #   0x169b100 stored by FUN_00070900 FUN_00070970
-#   0x169b450 stored by FUN_000760c0 FUN_000763a0
+#   0x169b450 stored by FUN_000760c0 _ZN16Elements000760c0C1EPvS0_S0_iii
 #   0x169c710 stored by FUN_0007c100 FUN_00082480 FUN_0017b030 FUN_0017d0f0
 #   0x169c750 stored by FUN_0007c100 FUN_00082480 FUN_0017b030 FUN_0017d0f0
 #   0x169ffd0 stored by FUN_000831a0
@@ -61,8 +59,6 @@
 #   0x16a36b0 stored by FUN_0009a8a0
 #   0x16a3b90 stored by FUN_000b31c0 FUN_000b32e0
 #   0x16a3bd0 stored by FUN_000b3490 FUN_000b35d0 FUN_000b3670 FUN_000b3700
-#   0x16a3c90 stored by FUN_000ea380 FUN_000ea440 FUN_000ea610
-#   0x16a3cc0 stored by FUN_000ea380 FUN_000ea440 FUN_000ea540 FUN_000ea590
 #   0x16a3d40 stored by FUN_00048b20
 #   0x16a3e30 stored by FUN_0012a8c0
 #   0x16a3f50 stored by FUN_00140a60 FUN_00140e70
@@ -89,11 +85,9 @@
 #   0x16a6470 stored by FUN_00181b10
 #   0x16a64f0 stored by FUN_00183810 FUN_00183c40
 #   0x16a6530 stored by FUN_00183db0 FUN_00183f00
-#   0x16a65d0 stored by FUN_00185000 FUN_00185060 FUN_00185120 FUN_001851c0
 #   0x16a6660 stored by FUN_0018d640
 #   0x16a6690 stored by FUN_0018d640
 #   0x16a66c0 stored by FUN_0018d640
-#   0x16a66f0 stored by FUN_0018ce80 FUN_0018ced0 FUN_0018d640
 #   0x16a6720 stored by FUN_0018d640
 #   0x16a6820 stored by FUN_00199f80 FUN_0019a230
 #   0x16a68d0 stored by FUN_0019a7c0

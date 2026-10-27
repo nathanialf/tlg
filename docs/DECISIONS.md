@@ -652,6 +652,18 @@ hkClass 0x57b7fe8 its slot 3 returns, the string at 0x14b32c7),
 Elements000768c0 0x169b400, Object00006800 0x168caf0 and Object00199ec0
 0x16a67e0 (derived, named after their constructor, create function and
 initializer; the last a static instance stored RIP-relative at 0x199ed1).
+Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
+singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
+string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its
+hkClass, the string at 0x14bf746), both facts, and the derived rows
+Object000ea540 0x16a3cc0, Object000ea380 0x16a3c90 (stored only by their
+destructors), BroadPhaseCollideTask 0x16a66f0 (after its slot 3's format
+string) and Object00185000 0x16a65d0. Object00199ec0's row is keyed by
+`_ZTVN12_GLOBAL__N_114Object00199ec0E`: the base stores its address
+point with one direct lea, the fold of a vtable with internal linkage,
+so the class is in an anonymous namespace, and `BaseElf._verify_derived`
+accepts that mangling of the row's class name; its initializer matches
+under the file's own init symbol `_GLOBAL__I_a` (the row's symbol column).
 
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 

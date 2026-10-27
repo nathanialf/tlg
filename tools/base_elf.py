@@ -334,7 +334,11 @@ class BaseElf:
         point into its object (tools/vtable_names.py, D14)."""
         addr, cls, ctor = self._derived[sym]
         from vtable_names import Walker, mangle_vtable
-        if mangle_vtable(cls) != sym:
+        expected = mangle_vtable(cls)
+        # a class of an anonymous namespace: its vtable is the file's own
+        # (the base stores the address point with one direct lea)
+        anonymous = "_ZTVN12_GLOBAL__N_1" + expected[len("_ZTV"):] + "E"
+        if sym not in (expected, anonymous):
             raise ValueError(f"vtables.derived: {sym} is not the vtable symbol of {cls}")
         if ctor in self.func_by_name:
             fn = self.func_by_name[ctor][0]

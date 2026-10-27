@@ -222,7 +222,9 @@ class Walker:
         `rdx` the parent's record, kept in `self.parents`)."""
         if self._hkclass is not None:
             return self._hkclass
-        ctor = self.elf.func_by_name.get("FUN_000041a0", (None,))[0]
+        # hkClass's constructor, by address: its row is named by its symbol
+        # (_ZN7hkClassC1E..., matched in round 40), not FUN_000041a0
+        ctor = 0x41a0 if 0x41a0 in self.funcs else None
         out: dict[int, str] = {}
         self._hkclass = out
         self.parents = {}
