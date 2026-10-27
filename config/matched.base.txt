@@ -10,7 +10,7 @@ FUN_00011320 src/libs/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
 FUN_00014af0 src/libs/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
 FUN_0000df30 src/libs/unknown/leaf_0000df30.cpp _ZNK18hkSimpleLocalFrame12FUN_0000df30ER4Mat4
 FUN_000137c0 src/libs/unknown/leaf_000137c0.cpp _Z12FUN_000137c0P4Mat4PKS_
-FUN_0000bc30 src/libs/unknown/func_0000bc30.cpp _Z12FUN_0000bc30P5Arenai
+FUN_0000bc30 src/libs/unknown/func_0000bc30.cpp
 FUN_00017a60 src/libs/unknown/func_00017a60.cpp _Z12FUN_00017a60P10Owner17a60
 FUN_004ba5f0 src/game/unknown/leaf_004ba5f0.cpp _Z12FUN_004ba5f0PK11Owner4ba5f0PDv4_fS3_
 FUN_004ba630 src/game/unknown/leaf_004ba630.cpp _Z12FUN_004ba630PK11Owner4ba630
@@ -1403,3 +1403,16 @@ FUN_00008940 src/libs/unknown/func_00008940.cpp _ZN9hkOstream12FUN_00008940ERK11
 _ZN24hkpWrappedConstraintDataC1EP17hkpConstraintData src/libs/unknown/func_0007d550.cpp _ZN24hkpWrappedConstraintDataC2EP17hkpConstraintData
 FUN_000181c0 src/libs/unknown/func_000181c0.cpp
 FUN_00016f30 src/libs/unknown/func_00016f30.cpp
+_ZN7hkxBlobD1Ev src/libs/unknown/func_00085c40.cpp
+_ZN7hkxBlobD0Ev src/libs/unknown/func_00085c40.cpp
+_ZN26hknpVehicleDefaultSteeringD1Ev src/libs/unknown/func_0016f980.cpp
+_ZN26hknpVehicleDefaultSteeringD0Ev src/libs/unknown/func_0016f980.cpp
+_ZN26hkBlockStreamCommandWriterD0Ev src/libs/unknown/func_00090450.cpp
+FUN_0016ea40 src/libs/unknown/func_0016ea40.cpp
+_ZN7hkClassC1EPKcPKS_iPS3_iPK11hkClassEnumiPK13hkClassMemberiPKvPK18hkCustomAttributesjj src/libs/unknown/func_000041a0.cpp _ZN7hkClassC2EPKcPKS_iPS3_iPK11hkClassEnumiPK13hkClassMemberiPKvPK18hkCustomAttributesjj
+FUN_000180c0 src/libs/unknown/func_000180c0.cpp
+FUN_0001aca0 src/libs/unknown/func_0001aca0.cpp _ZN9hkMatrix312FUN_0001aca0ERKDv4_f
+FUN_00073110 src/libs/unknown/func_00073110.cpp _ZNK16hknpCapsuleShape12FUN_00073110EPKvPv
+FUN_0007e8a0 src/libs/unknown/func_0007e8a0.cpp _ZNK26hkpPrismaticConstraintData15unknownVirtual7Ev
+FUN_001845b0 src/libs/unknown/func_001845b0.cpp
+FUN_0019cc20 src/libs/unknown/func_0019cc20.cpp _ZN14Object0019c15012FUN_0019cc20EPKvRK7hkClassPv

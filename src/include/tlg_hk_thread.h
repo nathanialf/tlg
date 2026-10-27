@@ -530,7 +530,10 @@ void FUN_0015dc60(hknpCollidePairsTask *self);              /* vtable slot 1; de
 void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
 void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
 void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
-void FUN_0016e9f0(hknpSolveDataTask *self);            /* vtable slot 1 (0x16a5680); derived name */
+void FUN_0016e9f0(hknpSolveDataTask *self); /* vtable slot 1 (0x16a5680); derived name */
+/* The interface's thunk of it (slot 1 of the second vtable, 0x16ea40), on
+ * the object 16 bytes before the interface. derived name. */
+void FUN_0016ea40(hknpTaskInterface *self);
 void FUN_001798c0(hknpPrepareExistingPairsTask *self); /* vtable slot 5; derived name */
 void FUN_0018ef40(hknpSolverStageTask *self);          /* vtable slot 5; derived name */
 void FUN_0018f140(hknpSolverStageTask *self, hkStringBuf *name,

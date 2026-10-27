@@ -32,6 +32,26 @@ template <int I> inline float component(const Vec4 &v)
     return v[I];
 }
 
+/* A scalar held in every lane, as Havok's hkSimdReal is on this platform:
+ * a lane broadcast, its negation the difference from zero (`vsubps` from a
+ * zeroed register, not a sign flip), and a vector set from four of them
+ * through two unpacks and a `movlhps` (hkMatrix3's cross-product matrix,
+ * 0x1aca0). derived names. */
+template <int I> inline Vec4 broadcast(const Vec4 &v)
+{
+    return _mm_shuffle_ps(v, v, _MM_SHUFFLE(I, I, I, I));
+}
+
+inline Vec4 negateScalar(const Vec4 &s)
+{
+    return _mm_sub_ps(_mm_setzero_ps(), s);
+}
+
+inline Vec4 setFromScalars(const Vec4 &a, const Vec4 &b, const Vec4 &c, const Vec4 &d)
+{
+    return _mm_movelh_ps(_mm_unpacklo_ps(a, b), _mm_unpacklo_ps(c, d));
+}
+
 /* hkVector4 (the reflection's name for TYPE_VECTOR4) as a class over its
  * vector: copying one is an aggregate copy, a 16-byte memcpy that the back
  * end lowers to an integer-typed load and store, so a copy is reloaded from

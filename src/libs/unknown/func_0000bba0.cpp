@@ -12,7 +12,7 @@ void *FUN_0000bba0(AllocatorBase &allocator, int numBytes, int alignment) /* der
     char *aligned = reinterpret_cast<char *>(
         (reinterpret_cast<hkUlong>(unaligned + 16) + (alignment - 1)) & ~(alignment - 1));
     ArenaBlockHeader *header = reinterpret_cast<ArenaBlockHeader *>(aligned) - 1;
-    header->owner = reinterpret_cast<Arena *>(&allocator);
+    header->owner = &allocator;
     header->size = alignment + numBytes;
     header->alignmentOffset = int(aligned - unaligned);
     return aligned;

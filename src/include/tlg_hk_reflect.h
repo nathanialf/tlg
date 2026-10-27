@@ -357,7 +357,18 @@ struct NameList00004270 /* derived name */
  * declaredMembers (simple arrays: a pointer and an int count) at +0x18 and
  * +0x28, from its own member table at 0x16a6b60; its constructor
  * FUN_000041a0 stores the twelve fields from +0 to +0x4c. */
+struct hkCustomAttributes;
+
 struct hkClass {
+    /* Out of line (0x41a0, called by every reflection initializer): the
+     * fields in order; the implemented interfaces' list is not kept, only
+     * their count. */
+    hkClass(const char *className, const hkClass *parentClass, int objectSizeInBytes,
+            const hkClass **implementedInterfaces, int numImplementedInterfaces,
+            const hkClassEnum *declaredEnums, int numDeclaredEnums,
+            const hkClassMember *declaredMembers, int numDeclaredMembers, const void *defaults,
+            const hkCustomAttributes *attributes, u32 flags, u32 describedVersion);
+
     /* Whether the class's name is on a list of names (0x4270; FUN_00017f40
      * compares them). derived name. */
     bool FUN_00004270(const NameList00004270 *list) const;
@@ -380,6 +391,11 @@ struct hkClass {
     int numDeclaredEnums; /* derived name */
     const hkClassMember *declaredMembers;
     int numDeclaredMembers; /* derived name */
+    u8 unknown34[4];
+    const void *defaults;                 /* derived name */
+    const hkCustomAttributes *attributes; /* derived name */
+    u32 flags;                            /* derived name */
+    u32 describedVersion;                 /* derived name */
 };
 
 /* hkClassEnum (the reflection's enum record; its type and its item's are
@@ -421,6 +437,10 @@ struct hkMatrix3 {
      * the cross product of the first two, within epsilon (0xbde0; the
      * constraint datas' slot 7 asks it of their frames with 1e-5). */
     bool FUN_0000bde0(float epsilon = 1e-5f) const;
+
+    /* derived name: the cross-product matrix of r, so that this times v is
+     * r cross v (0x1aca0; called at 0xb1c72, 0xb1c89 and 0x1576eb). */
+    void FUN_0001aca0(const Vec4 &r);
 
     /* derived name: this set to the inverse of m, from the cross products
      * of its columns over the determinant; zero and HK_FAILURE when the
@@ -1723,11 +1743,29 @@ class hknpVehicleDefaultBrake : public hknpVehicleBrake
 class hknpRefMassDistribution;
 
 /* hknpVehicleDefaultSteering (parent hknpVehicleSteering): vtable 0x16a5750,
- * finish callback FUN_00077d60. */
+ * finish callback FUN_00077d60. Members from the record table 0x169b4a0:
+ * maxSteeringAngle at +0xc (in hkReferencedObject's tail),
+ * maxSpeedFullSteeringAngle at +0x10, doesWheelSteer (an array of hkBool)
+ * at +0x18. */
 class hknpVehicleDefaultSteering : public hknpVehicleSteering
 {
   public:
-    hknpVehicleDefaultSteering(hkFinishLoadedObjectFlag flag) : hknpVehicleSteering(flag) {}
+    hknpVehicleDefaultSteering(hkFinishLoadedObjectFlag flag)
+        : hknpVehicleSteering(flag), doesWheelSteer(flag)
+    {
+    }
+
+    /* Out of line (0x16f980, slot 0): the array given back; the deleting
+     * destructor (0x16f9e0, slot 1) runs it and frees through the class's
+     * delete. */
+    virtual ~hknpVehicleDefaultSteering();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    float maxSteeringAngle;
+    float maxSpeedFullSteeringAngle;
+    hkArray<hkBool> doesWheelSteer;
 };
 
 /* Classes reflected with hkReferencedObject as their parent whose finish
@@ -2125,6 +2163,14 @@ class hkxBlob : public hkReferencedObject
 {
   public:
     hkxBlob(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), data(flag) {}
+
+    /* Out of line (0x85c40, slot 0): the bytes given back; the deleting
+     * destructor (0x85ca0, slot 1) runs it and frees through the class's
+     * delete. */
+    virtual ~hkxBlob();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<u8> data;
 };
@@ -4732,9 +4778,18 @@ class hknpCapsuleShape : public hknpConvexPolytopeShape
 
     int FUN_00073170() const; /* vtable slot 6; derived name */
 
+    /* Slot 28 (0x73110): the capsule's own answer from its segment and
+     * convex radius; the shape's default when that fails. derived name. */
+    void FUN_00073110(const void *argument1, void *argument2) const;
+
     Vec4 a;
     Vec4 b;
 };
+
+/* The capsule's counterpart of FUN_00168340 (0x1683d0): 1 when it cannot
+ * answer and nothing is written. derived names. */
+int FUN_001683d0(const void *argument1, const Vec4 &a, const Vec4 &b, float radius,
+                 void *argument2); /* derived name */
 
 /* hknpSphereShape (type info 0x57c2798, vtable 0x1695c10) over
  * hknpConvexShape, and hknpTriangleShape (type info 0x57c0838, vtable
@@ -5305,6 +5360,17 @@ struct hkpLinMotorConstraintAtom {
     u8 padding[12]; /* not serialized: the atom is 0x20 bytes */
 };
 
+/* hkpLinLimitConstraintAtom (records 0x169e1f0): axisIndex (hkUint8) at
+ * +2, min and max (hkReal) at +4 and +8, padding at +0xc. */
+struct hkpLinLimitConstraintAtom {
+    u16 type; /* derived name */
+    u8 axisIndex;
+    u8 unknown3;
+    float min;
+    float max;
+    u8 padding[4];
+};
+
 class hkpPrismaticConstraintData : public hkpConstraintData
 {
   public:
@@ -5318,7 +5384,8 @@ class hkpPrismaticConstraintData : public hkpConstraintData
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpLinMotorConstraintAtom motor;
         hkpLinFrictionConstraintAtom friction;
-        u8 unknownC0[0x40]; /* ang, lin0, lin1, linLimit */
+        u8 unknownC0[0x30]; /* ang, lin0, lin1 */
+        hkpLinLimitConstraintAtom linLimit;
     };
 
     /* What the solver keeps for the constraint (derived names): its first
@@ -5333,6 +5400,10 @@ class hkpPrismaticConstraintData : public hkpConstraintData
     hkpPrismaticConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpPrismaticConstraintData();
+
+    /* Slot 7 (0x7e8a0): valid when both frames are orthonormal and the
+     * limit's minimum is not above its maximum. */
+    hkBool unknownVirtual7() const;
 
     void FUN_0007e870(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
@@ -8462,7 +8533,12 @@ class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
     hkBlockStreamCommandWriter();
     virtual ~hkBlockStreamCommandWriter();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor (0x90460) frees at the recorded size, 0x38 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkBlockStreamWriter writer; /* derived name */
+    u8 unknown30[8];            /* to the 0x38 bytes the deleting destructor frees */
 };
 
 /* The allocator of the block streams' blocks (derived names): reference
@@ -8749,6 +8825,10 @@ struct PointerMap /* derived name */
         hkUlong value;
     };
 
+    /* An empty map: no entries, none in use, the hash mask -1
+     * (hkVtableClassRegistry's creation, 0x1845f5). */
+    PointerMap() : entries(0), numEntries(0), hashMod(-1) {}
+
     Pair *entries;
     int numEntries;
     int hashMod;
@@ -8791,11 +8871,22 @@ void FUN_0000e5c0(PointerMap *self); /* derived name */
  * class whose constructor is FUN_00181b10 (vtable address point 0x16a6480):
  * an array at +0x10 and pointer maps at +0x20, +0x30 and +0x40, a string
  * map from +0x50. Slot 8 (FUN_0019cd00) adds a pair to the map at +0x40. */
-struct Object0019c150 /* derived name */
+class hkVtableClassRegistry;
+
+struct Object0019c150 : public hkReferencedObject /* derived name */
 {
+    /* Slot 5 (0x19c3c0): the contents, their class, a vtable class
+     * registry (the built-in one's when null) and a fourth argument handed
+     * on to FUN_0019c480. derived names. */
+    virtual void FUN_0019c3c0(const void *object, const hkClass &klass,
+                              const hkVtableClassRegistry *registry, void *argument4);
+    /* Slot 6 (0x19cc20): slot 5 with the built-in type registry's vtable
+     * class registry. derived name. */
+    virtual void FUN_0019cc20(const void *object, const hkClass &klass, void *argument3);
+
     void FUN_0019cd00(const void *key, const void *value); /* vtable slot 8; derived name */
 
-    u8 unknown0[0x40];
+    u8 unknown10[0x30];
     PointerMap map40;   /* derived name */
     u8 unknown50[0xe8]; /* to the size its deleting destructor 0x19c100 frees */
 };
@@ -8944,6 +9035,11 @@ class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
 class hkVtableClassRegistry : public hkReferencedObject
 {
   public:
+    hkVtableClassRegistry() {}
+
+    /* The class allocator, inline: the thread's heap (0x1845c7). */
+    static void *operator new(unsigned long numBytes);
+
     /* Slot 0 (0x184360): the map's entries given back to the container
      * allocator, then the map's destructor. */
     virtual ~hkVtableClassRegistry();
@@ -8961,6 +9057,9 @@ class hkVtableClassRegistry : public hkReferencedObject
 extern hkTypeInfoRegistry *D_57c8938;         /* hkTypeInfoRegistry's instance */
 extern hkDefaultClassNameRegistry *D_57c8960; /* hkDefaultClassNameRegistry's instance */
 extern hkVtableClassRegistry *D_57c8910;      /* hkVtableClassRegistry's instance */
+/* The create function of hkVtableClassRegistry's singleton record
+ * (0x1845b0): a new, empty registry. derived name. */
+hkReferencedObject *FUN_001845b0(); /* derived name */
 
 /* hkBuiltinTypeRegistry's instance (vtable address point 0x16a6120, 0x10
  * bytes, created by 0x17ef90 once the three registries above exist): slots
@@ -8971,10 +9070,12 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
   public:
     virtual ~hkBuiltinTypeRegistry();
 
-    hkTypeInfoRegistry *FUN_0017e970();         /* vtable slot 5; derived name */
-    hkDefaultClassNameRegistry *FUN_0017e980(); /* vtable slot 6; derived name */
-    hkVtableClassRegistry *FUN_0017e990();      /* vtable slot 7; derived name */
+    virtual hkTypeInfoRegistry *FUN_0017e970();         /* vtable slot 5; derived name */
+    virtual hkDefaultClassNameRegistry *FUN_0017e980(); /* vtable slot 6; derived name */
+    virtual hkVtableClassRegistry *FUN_0017e990();      /* vtable slot 7; derived name */
 };
+
+extern hkBuiltinTypeRegistry *D_57c8898; /* hkBuiltinTypeRegistry's instance */
 
 /* A shape's watcher (derived names): the owner at +0 (whose bool at +0x20
  * says some watched shape changed), the shape at +8, whose vtable slot 8

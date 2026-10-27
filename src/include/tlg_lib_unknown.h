@@ -704,26 +704,29 @@ bool FUN_00009c10(); /* derived name */
  * global at 0x16dc128 under the spinning mutex at +0x10. */
 void FUN_00002330(TwoBaseAllocator *self, int value); /* derived name */
 
-/* An arena that hands out blocks with a 16-byte header before the payload
- * (owner, size): FUN_0000bc30 allocates through the third virtual method,
+/* Blocks with a 16-byte header before the payload (owner, size):
+ * FUN_0000bc30 allocates through the allocator's slot 2 (blockAlloc),
  * FUN_0000bc60 reads the size back, FUN_0000bc70 finds the header. */
-struct ArenaVtable {
-    void *slot0;
-    void *slot1;
-    void *(*allocate)(void *self, int size);
-};
-
-struct Arena {
-    ArenaVtable *vtable;
-};
-
 struct ArenaBlockHeader {
-    Arena *owner;
+    AllocatorBase *owner;
     s32 size;
     /* For an aligned block (FUN_0000bba0): how far the payload lies past the
      * start of the block the allocator returned. derived name. */
     s32 alignmentOffset;
 };
+
+/* A block of size bytes with that header, owned by the allocator
+ * (0xbc30; the string duplicate 0x180c0 and the error report call it).
+ * derived name. */
+void *FUN_0000bc30(AllocatorBase &allocator, int size); /* derived name */
+
+/* The size the header of such a block records (0xbc60; the allocator
+ * argument is not read). derived name. */
+u64 FUN_0000bc60(const AllocatorBase *allocator, const void *payload); /* derived name */
+
+/* A copy of a string in such a block of the thread's heap (0x180c0).
+ * derived name. */
+char *FUN_000180c0(const char *string); /* derived name */
 
 /* Frees a block with that header through an allocator's slot 3, the header
  * included: its owner cleared first (0xbc80; called by hkStringPtr's
@@ -1847,6 +1850,11 @@ inline void *hknpGlobals::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkVtableClassRegistry::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *LoadedImage::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -1911,6 +1919,21 @@ inline void hkUuidObject::operator delete(void *object, unsigned long numBytes)
 }
 
 inline void hkReferencedObjectLock::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpVehicleDefaultSteering::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkBlockStreamCommandWriter::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
