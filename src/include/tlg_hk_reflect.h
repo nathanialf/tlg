@@ -142,6 +142,16 @@ template <typename T> struct hkArray {
         size = 0;
     }
 
+    T &operator[](int index)
+    {
+        return data[index];
+    }
+
+    const T &operator[](int index) const
+    {
+        return data[index];
+    }
+
     T *data;              /* derived name */
     int size;             /* derived name */
     int capacityAndFlags; /* derived name */
@@ -295,6 +305,11 @@ struct hkClassEnum {
  * name (strcmp); false when the other is null. */
 bool FUN_00004210(const hkClass *self, const hkClass *other);
 
+/* derived name: the same test again (0x185450), a bool from a bool (its
+ * callers use the byte unwidened); the mesh code tests an object's class
+ * against a known one with it. */
+bool FUN_00185450(const hkClass *self, const hkClass *other);
+
 /* hkMatrix3 (the reflection's type name): three columns of four floats. */
 struct hkMatrix3 {
     Vec4 col0; /* derived name */
@@ -321,10 +336,22 @@ struct hkMatrix3 {
      * 0xb1cc8 and 0x1578f8). */
     void FUN_0001afa0(const hkMatrix3 &m);
 
+    /* derived name: m's columns, each scaled lane by lane by a vector the
+     * caller holds in memory, added to this (0x1ad10; called at 0xb1ce3). */
+    void FUN_0001ad10(const Vec4 &scale, const hkMatrix3 &m);
+
     /* derived name: whether the columns are of unit length within a
      * tolerance and orthogonal (0xbe80; the game calls it on its own
      * rotations). */
     bool FUN_0000be80() const;
+
+    /* derived name: whether x, y and z of every column are ordered numbers
+     * (0x1a940, called at 0xbf2a). */
+    bool FUN_0001a940() const;
+
+    /* derived name: the matrix transposed in place (0x1a980; the geometry
+     * code calls it at 0xb1cbd, 0xb1e0c, 0xb1e86 and 0xb47d3). */
+    void FUN_0001a980();
 };
 
 /* derived name: out = m times v, v's x, y and z broadcast and each scaling
@@ -485,8 +512,10 @@ class hkBaseObject
 };
 
 /* derived name: free a block of numBytes bytes on the thread's heap (the
- * memory router at %fs-relative 0x16d80b8, its heap at +0x58, slot 3). */
-void FUN_0000bcf0(void *block, int numBytes);
+ * memory router at %fs-relative 0x16d80b8, its heap at +0x58, slot 3). The
+ * size comes as operator delete's, kept whole in a 64-bit register to the
+ * call (0xbcf4) and narrowed to the int the allocator takes. */
+void FUN_0000bcf0(void *block, unsigned long numBytes);
 
 /* derived name: a block of numBytes bytes from the thread's heap (the same
  * router's heap, slot 2; the size an operator new's, narrowed to the int the
@@ -1515,6 +1544,9 @@ class hkxAttributeHolder : public hkReferencedObject
     {
     }
 
+    /* Out of line (0x89380): the groups destroyed and freed. */
+    virtual ~hkxAttributeHolder();
+
     hkArray<hkxAttributeGroup> attributeGroups;
 };
 
@@ -1725,6 +1757,17 @@ void FUN_000234f0(hkIndexedTransformSet *self);                                /
  * hkUint8) at +5. FUN_000270a0, called on the member of each containing
  * object's constructor, empties it. */
 struct hkVertexFormat {
+    /* The element hints and the sharing kinds (hkClassEnum items from the
+     * executable's strings at 0x14b76e4 to 0x14b7740, values from their
+     * records at 0x1691350 to 0x16913b8). */
+    enum HintFlags { FLAG_READ = 1, FLAG_WRITE = 2, FLAG_DYNAMIC = 4, FLAG_NOT_SHARED = 8 };
+
+    enum SharingType { SHARING_ALL_SHARED, SHARING_ALL_NOT_SHARED, SHARING_MIXTURE };
+
+    /* derived name: whether none, all or some of the elements are marked
+     * not shared (0x27240, called at 0x274a4). */
+    SharingType FUN_00027240() const;
+
     struct Element {
         u8 dataType;
         u8 numValues;
@@ -2065,6 +2108,12 @@ struct hknpCompressedMeshShapeTree {
      * derived name. */
     bool FUN_000a92c0(hkArray<u32> &filter) const;
 
+    /* A key's bit in the filter set or cleared (0xa9410), and read
+     * (0xa9550); the key is the part below the shape's own bits. derived
+     * names. */
+    void FUN_000a9410(hkArray<u32> &filter, u32 key, bool enabled) const;
+    bool FUN_000a9550(const hkArray<u32> &filter, u32 key) const;
+
     u8 unknown0[0x10];
     hkAabb domain;
     u8 unknown30[0x70];
@@ -2251,7 +2300,10 @@ class hknpShape : public hkReferencedObject
     /* Shape flags; a composite shape's finish constructor sets 4 (0x71690,
      * inlined in hknpLodShape's 0x68160). derived name. */
     u16 flags;
-    u8 unknown12[0xe];
+    /* The bits of a key that select within this shape (the compressed
+     * mesh's key mask shifts its keys by them, 0x34a80). */
+    u8 numShapeKeyBits; /* name from the strings; offset derived */
+    u8 unknown13[0xd];
     void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
 };
 
@@ -2341,7 +2393,7 @@ class hknpShapeKeyMask : public hkBaseObject
  * (an array of hkUint32, a bit per key) at +0x10, from its record table at
  * 0x1692bc0. Slot 4 (0x34ac0) has the shape's mesh tree apply the filter;
  * slot 6 (0x2b020) returns the size, 32. */
-struct hknpCompressedMeshShape;
+class hknpCompressedMeshShape;
 
 class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
 {
@@ -2636,6 +2688,38 @@ struct hknpMotion {
     u8 unknown50[0x30];
 };
 
+/* The world's motion manager at +0x110 (derived names: nothing names it):
+ * the motions from +8, the highest motion index in use at +0x24. A motion
+ * is in use while its byte at +0x3f is set. */
+struct hknpMotionManager /* derived name */
+{
+    /* Walks the motions in use from index 1; 0x7fffffff once past the end
+     * (the loop at 0x373c7 stops on it). */
+    struct MotionIterator {
+        /* Out of line (0x46d40, called at 0x373c2): starts before the first
+         * and steps to it. */
+        MotionIterator(const hknpMotionManager &motionManager);
+
+        void next()
+        {
+            for (++index; index <= manager->peakMotionIndex; ++index) {
+                if (manager->motions[index].unknown3f != 0) {
+                    return;
+                }
+            }
+            index = 0x7fffffff;
+        }
+
+        const hknpMotionManager *manager;
+        u32 index;
+    };
+
+    u8 unknown0[8];
+    hkArray<hknpMotion> motions;
+    u8 unknown18[0xc];
+    u32 peakMotionIndex;
+};
+
 /* The object at +0x4f8 of the world (derived names): the world at +0, the
  * object at +8 whose 16-byte records it indexes by a body's int at +0x68;
  * FUN_00062b20 takes a body id and a bool, reads the body's flags at +0x40
@@ -2674,6 +2758,30 @@ class hknpWorldObject6c0 : public hknpWorldObject6c0Base /* derived name */
 {
   public:
     hknpWorldObject6c0();
+};
+
+/* The pool at +0x6f0 of the world (derived names: nothing names it), 0x1f60
+ * bytes from the thread's heap, built at 0x50325: eight contexts of 0x3c0
+ * bytes from +0x10 (each constructed by 0x167cd0, which sets its index to
+ * -1), handed out and taken back through a lock-free list. The head at
+ * +0x1e10 holds the first free index in its low four bits and a tag above
+ * them, which every take advances (0x16ff90); next[] holds each free
+ * context's successor, 0xf ending the list (the world's setup at 0x5038c
+ * links 0 to 7). */
+struct hknpWorldContextPool /* derived name */
+{
+    struct Context {
+        int index;
+        u8 unknown4[0x3bc];
+    };
+
+    /* A context back on the list, at its own index (0x16ffe0). */
+    void FUN_0016ffe0(const Context *context);
+
+    u8 unknown0[0x10];
+    Context contexts[8];
+    u32 freeHead;
+    int next[8];
 };
 
 /* The reference-counted object at +0x380 of the world (derived names: no
@@ -3577,14 +3685,16 @@ struct hknpCompressedMeshShapeData {
  * at +0x60 and +0x78; numTriangles at +0x90): FUN_0010bf40 returns the mesh
  * tree's domain, which slot 7 of its vtable (0x158840, address point
  * 0x16a49a0) transforms into the AABB it reports (0x94060). */
-struct hknpCompressedMeshShape {
+class hknpCompressedMeshShape : public hknpShape
+{
+  public:
     virtual ~hknpCompressedMeshShape();
 
     const hkAabb *FUN_0010bf40() const; /* derived name */
     void FUN_00158840(const Mat4 &transform,
                       hkAabb &aabbOut) const; /* vtable slot 7; derived name */
 
-    u8 unknown8[0x50];
+    u8 unknown28[0x30];
     hknpCompressedMeshShapeData *data;
 };
 
@@ -4408,10 +4518,18 @@ class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
 class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
 {
   public:
+    /* 0x17afe0 (the game builds one at 0xeb1270): a limited-force motor of
+     * the spring-damper type with a force range of a million each way and
+     * no spring. */
+    hkpSpringDamperConstraintMotor();
+
     hkpSpringDamperConstraintMotor(hkFinishLoadedObjectFlag flag)
         : hkpLimitedForceConstraintMotor(flag)
     {
     }
+
+    float springConstant; /* name from the strings; offset derived */
+    float springDamping;  /* name from the strings; offset derived */
 };
 
 /* hkpAngFrictionConstraintAtom (0x10 bytes, record table 0x169da20):
@@ -5055,7 +5173,73 @@ class hkxVertexAnimation : public hkReferencedObject
 class hkxMesh : public hkReferencedObject
 {
   public:
+    class UserChannelInfo;
+
     hkxMesh(hkFinishLoadedObjectFlag flag);
+};
+
+/* hkxMesh::UserChannelInfo (hkClass 0x57c6ec0, "hkxMeshUserChannelInfo",
+ * built at 0x891e4: size 0x30, parent hkxAttributeHolder's; vtable
+ * 0x16a1590, member records at 0x16a15d0): name and className
+ * (hkStringPtr) at +0x20 and +0x28. Its destructor (0x89020) destroys both
+ * and runs hkxAttributeHolder's. */
+class hkxMesh::UserChannelInfo : public hkxAttributeHolder
+{
+  public:
+    /* Inline where its type info's finish callback (0x890e0) runs it. */
+    UserChannelInfo(hkFinishLoadedObjectFlag flag) : hkxAttributeHolder(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+        FUN_0000e5c0(&className, flag);
+    }
+
+    virtual ~UserChannelInfo();
+
+    hkStringPtr name;
+    hkStringPtr className;
+};
+
+/* hkxTextureInplace (hkClass 0x57c7530, built at 0x8ac85: size 0x30, parent
+ * hkReferencedObject's; vtable 0x16a1d90, member records at 0x16a1dd0):
+ * fileType (four chars) at +0xc, data (an array of bytes) at +0x10, name
+ * and originalFilename (hkStringPtr) at +0x20 and +0x28. Its finish
+ * constructor is inline where the type info's finish callback (0x8abb0)
+ * runs it. */
+class hkxTextureInplace : public hkReferencedObject
+{
+  public:
+    hkxTextureInplace(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), data(flag)
+    {
+        FUN_0000e5c0(&name, flag);
+        FUN_0000e5c0(&originalFilename, flag);
+    }
+
+    char fileType[4];
+    hkArray<u8> data;
+    hkStringPtr name;
+    hkStringPtr originalFilename;
+};
+
+/* hkxScene (hkClass 0x57c7830, built at 0x8b7c8: size 0xf0, parent
+ * hkReferencedObject's; vtable 0x16a2910, fifteen member records at
+ * 0x16a2180): modeller and asset (hkStringPtr) at +0x10 and +0x18, then
+ * sceneLength, numFrames, rootNode, the arrays of selection sets, cameras,
+ * lights, meshes, materials, textures, skin bindings and splines from
+ * +0x30, appliedTransform (hkMatrix3) at +0xc0. Its finish constructor is
+ * inline where the type info's finish callback (0x8b6f0) runs it; only the
+ * two strings have anything to finish. */
+class hkxScene : public hkReferencedObject
+{
+  public:
+    hkxScene(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    {
+        FUN_0000e5c0(&modeller, flag);
+        FUN_0000e5c0(&asset, flag);
+    }
+
+    hkStringPtr modeller;
+    hkStringPtr asset;
+    u8 unknown20[0xd0];
 };
 
 /* hkAlignSceneToNodeOptions: members from its record table at 0x16a18c0:
@@ -5304,7 +5488,7 @@ class hkMeshMaterial : public hkReferencedObject
      * are not declared yet. derived names. */
     virtual hkResult unknownVirtual5(const hkVertexFormat &format, hkVertexFormat &formatOut);
     virtual hkMeshVertexBuffer *unknownVirtual6(hkMeshVertexBuffer *buffer);
-    virtual void unknownVirtual7();
+    virtual hkBool unknownVirtual7(hkMeshVertexBuffer *buffer);
     virtual void unknownVirtual8();
     virtual void unknownVirtual9(const char *newName);
     virtual const char *unknownVirtual10() const;
@@ -5327,6 +5511,7 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
     hkResult FUN_000acf00(const hkVertexFormat &format,
                           hkVertexFormat &formatOut);             /* vtable slot 5; derived name */
     hkMeshVertexBuffer *FUN_000acf10(hkMeshVertexBuffer *buffer); /* vtable slot 6; derived name */
+    hkBool FUN_000acf40(hkMeshVertexBuffer *buffer);              /* vtable slot 7; derived name */
     void FUN_000acf80(const char *newName);                       /* vtable slot 9; derived name */
     const char *FUN_000acf90() const;                             /* vtable slot 10; derived name */
     hkMeshTexture *FUN_000acfb0(int index) const;                 /* vtable slot 12; derived name */
@@ -5511,6 +5696,16 @@ class hkOstream : public hkReferencedObject
      * with "%u" into a buffer on the stack, written, and the stream
      * returned. */
     hkOstream &FUN_00008550(unsigned int value);
+
+    /* derived name: formatted output (0x86f0, variadic). */
+    void FUN_000086f0(const char *format, ...);
+
+    /* derived names: the operator<< of a vector, its four lanes as "%g"
+     * (0x86b0, called at 0x3db61, 0x3db7c and 0x3db97), and of a vector whose
+     * last lane is set apart, as "%f" (0x8810, called at 0x16f35b and
+     * 0x16f59b). Each returns the stream. */
+    hkOstream &FUN_000086b0(const Vec4 &v);
+    hkOstream &FUN_00008810(const Vec4 &v);
 
     hkStreamWriter *writer; /* derived name */
 };

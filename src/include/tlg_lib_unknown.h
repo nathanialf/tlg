@@ -369,6 +369,52 @@ class PageAllocator : public hkReferencedObject /* derived name */
  * FUN_00006c40 and the shutdown at 0x17ae6 clears it; FUN_00006c50 returns
  * it to the callers of its slots (13 at 0x7350, 17 at 0xecb6, 4 at 0x8f5c5,
  * and the game code at 0xe993e5). */
+/* hkHardwareInfo (the name its singleton record's string at 0x14c3f06
+ * gives, the record built at 0x8fdc0): 0x18 bytes from the thread's heap,
+ * created by 0x8faf0 and filled by 0x8fb30; the slot at 0x57c8728 holds the
+ * instance. The count at +0xc is what a job queue's construction info takes
+ * as its thread count. */
+class hkHardwareInfo : public hkReferencedObject
+{
+  public:
+    int numThreads; /* derived name */
+    u8 unknown10[8];
+};
+
+extern hkHardwareInfo *D_57c8728; /* hkHardwareInfo's singleton instance */
+
+/* A job queue's construction info (derived names: no string names the
+ * struct), built by its constructor (0x5640) on the game's stack at 0xe997c8
+ * and handed to the queue's constructor 0x56c0 after the game sets the
+ * count at +0x20 (15). The thread ids at +0x10 are an empty array. */
+struct JobQueueCinfo /* derived name */
+{
+    JobQueueCinfo();
+
+    int unknown0;
+    hkBool unknown4;
+    int unknown8;
+    int numCpuThreads;      /* derived name */
+    hkArray<int> threadIds; /* derived name */
+    int maxNumJobTypes;     /* derived name */
+};
+
+/* A worker thread pool's construction info (derived names: no string names
+ * the struct). Its constructor (0x6d20) gives one thread, no hardware
+ * thread ids, a 128 KiB stack and the name "HavokWorkerThread" (0x14b2cb5);
+ * the game builds one on its stack at 0xe996eb and sets four threads and
+ * the field at +0x1c (0 again) before it creates the pool. */
+struct WorkerThreadPoolCinfo /* derived name */
+{
+    WorkerThreadPoolCinfo();
+
+    int numThreads;                 /* derived name */
+    hkArray<int> hardwareThreadIds; /* derived name */
+    int stackSize;                  /* derived name */
+    int unknown1c;
+    const char *threadName; /* derived name */
+};
+
 struct hkMemoryRouter;
 
 /* Slots 4 and 5 (the memory system's 0xc590 and 0xc810, vtable address
@@ -1045,6 +1091,10 @@ class InputStream : public hkReferencedObject /* derived name */
 class FiosStreamReader : public StreamReader /* derived name */
 {
   public:
+    /* Slot 0 (0x932c0): an open handle closed and the reader marked
+     * failed. */
+    virtual ~FiosStreamReader();
+
     /* Slot 6 (0x93300): up to the count of bytes read into the buffer from
      * an open handle; a read that brings nothing marks the reader failed.
      * derived name. */

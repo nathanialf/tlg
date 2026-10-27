@@ -1101,3 +1101,19 @@ FUN_00004270 src/libs/unknown/func_00004270.cpp _ZNK7hkClass12FUN_00004270EPK16N
 _ZN24hknpBuildConstraintsTaskC1EiPvS0_S0_ src/libs/unknown/func_001550c0.cpp
 _ZN11hkXmlParserC1Ev src/libs/unknown/func_0019d8e0.cpp
 _ZN26hknpCharacterStateOnGroundC1Ev src/libs/unknown/func_0006fcf0.cpp
+FUN_000acf40 src/libs/unknown/func_000acf40.cpp _ZN20hkMemoryMeshMaterial12FUN_000acf40EP18hkMeshVertexBuffer
+FUN_0016ffe0 src/libs/unknown/func_0016ffe0.cpp _ZN20hknpWorldContextPool12FUN_0016ffe0EPKNS_7ContextE
+_ZN21WorkerThreadPoolCinfoC1Ev src/libs/unknown/func_00006d20.cpp
+_ZN17hknpMotionManager14MotionIteratorC1ERKS_ src/libs/unknown/func_00046d40.cpp
+FUN_0000bcf0 src/libs/unknown/func_0000bcf0.cpp
+FUN_0001a940 src/libs/unknown/func_0001a940.cpp _ZNK9hkMatrix312FUN_0001a940Ev
+FUN_0001a980 src/libs/unknown/func_0001a980.cpp _ZN9hkMatrix312FUN_0001a980Ev
+FUN_0001ad10 src/libs/unknown/func_0001ad10.cpp _ZN9hkMatrix312FUN_0001ad10ERKDv4_fRKS_
+FUN_00027240 src/libs/unknown/func_00027240.cpp _ZNK14hkVertexFormat12FUN_00027240Ev
+_ZN7hkxMesh15UserChannelInfoD1Ev src/libs/unknown/func_00089020.cpp
+FUN_00034a80 src/libs/unknown/func_00034a80.cpp _ZN32hknpCompressedMeshShapeInternals7KeyMask12FUN_000381b0Ejb
+FUN_00034ae0 src/libs/unknown/func_00034ae0.cpp _ZNK32hknpCompressedMeshShapeInternals7KeyMask12FUN_000381f0Ej
+FUN_000890e0 src/libs/unknown/func_000890e0.cpp
+FUN_0008abb0 src/libs/unknown/func_0008abb0.cpp
+FUN_0008b6f0 src/libs/unknown/func_0008b6f0.cpp
+_ZN13JobQueueCinfoC1Ev src/libs/unknown/func_00005640.cpp

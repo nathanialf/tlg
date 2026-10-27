@@ -14,6 +14,7 @@ extern "C" {
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
 int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);
+int sceFiosFHCloseSync(const SceFiosOpAttr *attr, SceFiosFH fh);
 SceFiosSize sceFiosFHReadSync(const SceFiosOpAttr *attr, SceFiosFH fh, void *buffer,
                               SceFiosSize length);
 int sceFiosFileDeleteSync(const SceFiosOpAttr *attr, const char *path);
