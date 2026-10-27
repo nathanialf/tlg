@@ -383,11 +383,21 @@ class PageAllocator : public hkReferencedObject /* derived name */
 class hkHardwareInfo : public hkReferencedObject
 {
   public:
+    hkHardwareInfo(); /* out of line, 0x8fb30 */
+
+    /* The class allocator inline, the thread heap's slot 2 called in
+     * place (0x8faf6), where hkReferencedObject's goes through
+     * FUN_0000bcc0. */
+    static void *operator new(unsigned long numBytes);
+
     int numThreads; /* derived name */
     u8 unknown10[8];
 };
 
 extern hkHardwareInfo *D_57c8728; /* hkHardwareInfo's singleton instance */
+
+/* Its create function, the singleton record's (0x8faf0). derived name. */
+hkReferencedObject *FUN_0008faf0(); /* derived name */
 
 /* A job queue's construction info (derived names: no string names the
  * struct), built by its constructor (0x5640) on the game's stack at 0xe997c8
@@ -1356,6 +1366,11 @@ struct hkMemoryRouter /* derived name */
  * -0x60, which places it at +0x10 of the template. Every reader adds that
  * slot to %fs:0. */
 extern __thread hkMemoryRouter *D_16dc070;
+
+inline void *hkHardwareInfo::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
 
 inline void StackTracer::operator delete(void *object, unsigned long numBytes)
 {

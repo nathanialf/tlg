@@ -322,6 +322,11 @@ struct hkMatrix3 {
     Vec4 col1; /* derived name */
     Vec4 col2; /* derived name */
 
+    /* derived name: whether the columns are of unit length and the third
+     * the cross product of the first two, within epsilon (0xbde0; the
+     * constraint datas' slot 7 asks it of their frames with 1e-5). */
+    bool FUN_0000bde0(float epsilon = 1e-5f) const;
+
     /* derived name: this set to the inverse of m, from the cross products
      * of its columns over the determinant; zero and HK_FAILURE when the
      * determinant is within a tolerance of zero (0x1ae40). */
@@ -2368,7 +2373,12 @@ class hknpShape : public hkReferencedObject
     /* The bits of a key that select within this shape (the compressed
      * mesh's key mask shifts its keys by them, 0x34a80). */
     u8 numShapeKeyBits; /* name from the strings; offset derived */
-    u8 unknown13[0xd];
+    /* The rest from the member records the initializer 0x38d80 builds:
+     * dispatchType (hkEnum of hkUint8) at +0x13, convexRadius (hkReal) at
+     * +0x14, userData (hkUint64) at +0x18. */
+    u8 dispatchType;
+    float convexRadius;
+    u64 userData;
     void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
 };
 
@@ -3112,6 +3122,24 @@ void FUN_000c4cd0(hknpWorld *world, hknpSolverInfo *solverInfo, hknpConstraint *
                   int numConstraints, void *argument1, void *argument2,
                   void *argument3); /* derived name */
 
+/* What the world hands its modifiers (derived names: the callers at
+ * 0x6455d, 0x6d4b2, 0x14efc9 and 0x176310 fill one on their stack with
+ * FUN_00167c90 and pass it to the modifier manager's calls, 0x657b0 among
+ * them). +0x10 is not set there. */
+struct ModifierSharedData /* derived name */
+{
+    /* From the world: its object at +0x280 when the flag at +0x278 is set,
+     * the pointer at +0x1d8, the solver settings and the vector at +0x250
+     * (0x167c90). */
+    void FUN_00167c90(const hknpWorld *world);
+
+    const void *object0;
+    void *pointer8;
+    u8 unknown10[8];
+    const hknpSolverInfo *solverInfo;
+    Vec4 vector20;
+};
+
 struct hknpWorldStepContextf6a90 /* derived name */
 {
     u8 unknown0[8];
@@ -3156,7 +3184,14 @@ struct hknpWorld {
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
-    u8 unknown1d8[0x1b0];
+    /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
+    void *pointer1d8;
+    u8 unknown1e0[0x70];
+    Vec4 vector250;
+    u8 unknown260[0x18];
+    bool enabled278;
+    u8 unknown279[7];
+    u8 unknown280[0x108];
     hknpWorldObject388 *object388; /* derived name */
     /* The solver's settings the constraint solve (0xc4cd0) reads, floats
      * from +0 to +0x120. derived name. */
@@ -3361,6 +3396,10 @@ class hknpDummyShape : public hknpShape
   public:
     hknpDummyShape(hkFinishLoadedObjectFlag flag);
     virtual ~hknpDummyShape();
+
+    /* Slot 7 (0x3e2f0): the AABB under the transform, grown by the convex
+     * radius. */
+    void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const;
 
     hkAabb aabb;
     hknpShapeSignals signals;
@@ -4358,6 +4397,9 @@ class hkpHingeLimitsData : public hkpConstraintData
 
     virtual ~hkpHingeLimitsData();
 
+    /* Slot 7 (0x83150): both rotations orthonormal. */
+    hkBool unknownVirtual7() const;
+
     Atoms atoms;
 };
 
@@ -4406,6 +4448,9 @@ class hkpRotationalConstraintData : public hkpConstraintData /* vtable address p
     hkpRotationalConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpRotationalConstraintData();
+
+    /* Slot 7 (0x83520): both rotations orthonormal. */
+    hkBool unknownVirtual7() const;
 
     void FUN_000834e0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
@@ -4476,6 +4521,9 @@ class hkpPointToPlaneConstraintData : public hkpConstraintData
 
     virtual ~hkpPointToPlaneConstraintData();
 
+    /* Slot 7 (0x7bbb0): both frames' rotations orthonormal. */
+    hkBool unknownVirtual7() const;
+
     void FUN_0007bb90(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -4542,13 +4590,25 @@ class hkpRackAndPinionConstraintData : public hkpConstraintData
  * constructor 0x831a0 when 0x79b63 copies 0xa0 bytes of atoms into one.
  * (The class of address point 0x16a5d30, constructor 0x17b170, is
  * hkp6DofConstraintData, its type info's vtable.) */
-class ConstraintData169ffe0 /* derived name */
+class ConstraintData169ffe0 : public hkpConstraintData /* derived name */
 {
   public:
+    /* The constructor's stores: local transforms (type 2) at +0, both
+     * identity, and an atom of type 0x11 at +0x90. */
+    struct Atoms {
+        hkpSetLocalTransformsConstraintAtom transforms;
+        u8 unknown90[0x10];
+    };
+
     virtual ~ConstraintData169ffe0();
+
+    /* Slot 7 (0x832d0): both frames' rotations orthonormal. */
+    hkBool unknownVirtual7() const;
 
     void FUN_000832b0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    Atoms atoms;
 };
 
 /* hkpLimitedHingeConstraintData::Atoms: type info 0x57c57f8, size 0x110,
@@ -6067,6 +6127,26 @@ class hkSkinnedMeshShape : public hkReferencedObject
      * a two-byte struct travels as an i16 with no zero-extension promise,
      * unlike a plain hkUint16 parameter. */
     struct BoneSetId {
+        /* Its own assignment: a part's copy (0xae83f, the quick sort's at
+         * 0xad9da) copies the id by itself, outside the memcpy of the four
+         * counts before it, which a plain field would have joined. */
+        void operator=(const BoneSetId &other)
+        {
+            value = other.value;
+        }
+
+        u16 value; /* derived name */
+    };
+
+    /* A part's mesh section, a handle as the bone set's is: copied by its
+     * own assignment too (0xae848), where a plain field would have joined
+     * the vector's copy after it. derived name. */
+    struct MeshSectionIndex {
+        void operator=(const MeshSectionIndex &other)
+        {
+            value = other.value;
+        }
+
         u16 value; /* derived name */
     };
 
@@ -6080,9 +6160,9 @@ class hkSkinnedMeshShape : public hkReferencedObject
         int numVertices;
         int startIndex;
         int numIndices;
-        u16 boneSetId;
-        u16 meshSectionIndex;
-        Vec4 boundingSphere;
+        BoneSetId boneSetId;
+        MeshSectionIndex meshSectionIndex;
+        hkVector4 boundingSphere;
     };
 };
 
@@ -6116,6 +6196,8 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     const char *FUN_000aea20() const;                            /* vtable slot 12; derived name */
     void FUN_000aea30(const char *newName);                      /* vtable slot 13; derived name */
     void FUN_000ae860();                                         /* vtable slot 16; derived name */
+    /* Slot 10 (0xae820): a copy of a part. derived name. */
+    void FUN_000ae820(int partIndex, hkSkinnedMeshShape::Part &partOut) const;
 
     /* From its record table at 0x1692420: bonesBuffer, boneSets,
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at

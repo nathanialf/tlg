@@ -6,5 +6,5 @@
 bool FUN_000ad900(const hkSkinnedMeshShape::Part &a,
                   const hkSkinnedMeshShape::Part &b) /* derived name */
 {
-    return a.boneSetId < b.boneSetId;
+    return a.boneSetId.value < b.boneSetId.value;
 }
