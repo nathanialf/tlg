@@ -353,6 +353,27 @@ class hknpBroadPhaseUpdateDirtyBodiesTask : public hknpTaskInterface /* derived 
     void *owner; /* derived name */
 };
 
+/* Two more 16-byte tasks of the broad phase (derived names from their
+ * names; the task interface implemented directly, the shared empty body
+ * 0x17de10 and the 16-byte deleting destructor 0x13e50 in slots 0 and 1):
+ * vtable address point 0x16a6670 (slot 2 the empty 0x17de10, slot 3
+ * 0x18d000, "BroadPhase/UpdateFinished") and 0x16a6730 (slot 2 0x18d440,
+ * slot 3 0x18cfb0, "BroadPhase/Export new pairs"); both describe
+ * themselves in the second state's colour. */
+class hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived name */
+{
+  public:
+    void FUN_0018d000(hkStringBuf *name,
+                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+};
+
+class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived name */
+{
+  public:
+    void FUN_0018cfb0(hkStringBuf *name,
+                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+};
+
 /* The solver's stage tasks (derived name): 0x30-byte objects built in an
  * array by 0x18e6e0, vtables 0x16a6760 and 0x16a67a8; slot 6 (0x18f140)
  * writes the task's name ("Solve/%s %i", the stage code from +0x20) into a

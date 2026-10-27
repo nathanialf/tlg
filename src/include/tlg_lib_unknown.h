@@ -76,6 +76,33 @@ void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived nam
 void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
 void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
 
+/* A new manifold's points (derived names): their count at +0 and their
+ * positions from +0x40 (hknpSurfaceVelocityModifier's slot 7, 0x16d22a,
+ * averages them). */
+struct hknpManifold /* derived name */
+{
+    int numPoints; /* derived name */
+    u8 unknown4[0x3c];
+    Vec4 positions[4]; /* derived name */
+};
+
+/* The modifier of vtable 0x16a5010 (address point 0x16a5020; derived name),
+ * one of the twenty FUN_00048b20 builds for the world: slots 2 to 5
+ * 0x161fc0, 0x161fd0, 0x1620c0 and 0x1622a0, slot 7 (0x162350) sets valueA
+ * of each of the manifold's points in the jacobian to 1, slot 10 0x1623a0.
+ * Slot 7's arguments follow hknpSurfaceVelocityModifier's (0x16d200): the
+ * manifold seventh, the jacobian eighth, both on the stack. */
+class Modifier16a5020 /* derived name */
+{
+  public:
+    void FUN_00162350(const void *threadContext, const void *sharedData, const void *bodyA,
+                      const void *bodyB, hknpManifoldCollisionCache *cache,
+                      const hknpManifold *manifold, Pair08Owner *jacobian,
+                      int jacobianIndex); /* vtable slot 7; derived name */
+};
+
+float *FUN_00034810(Pair08Owner *self, int index); /* derived name */
+
 /* What follows the record's entries (derived names): FUN_0002af30 returns
  * its address (past the 32-byte entries from +0x40 and a size the table at
  * 0x14b8690 gives for the byte at +3), FUN_0002af50 the address of an int
@@ -1165,14 +1192,43 @@ struct LoadedImage; /* derived name */
  * (0x18882d) by FUN_001a0470, the width and height at +0 and +4 (from the
  * TGA header's 16-bit fields at 0x188832) and the bytes from +8; the
  * reference-counted image 0x1a04d0 builds copies the three. */
+struct RawImagePart /* derived name */
+{
+    u8 unknown0[0xc];
+};
+
 struct RawImage /* derived name */
 {
     RawImage();
 
-    int width;          /* derived name */
-    int height;         /* derived name */
-    hkArray<u8> pixels; /* derived name */
+    int width;  /* derived name */
+    int height; /* derived name */
+    /* 12-byte records (the loader fills one at 0x1889df: an int 3, an
+     * int, two 16-bit values), which the image copies as such (0x1a0570).
+     * derived name. */
+    hkArray<RawImagePart> pixels;
 };
+
+/* The image (derived name): 0x38 bytes from the thread's heap, built by
+ * FUN_001a0720 over the loader's raw image; its constructor 0x1a04d0 (out
+ * of line) stores the vtable 0x16a7580 and copies the raw image's width,
+ * height and array. */
+struct LoadedImage : public hkReferencedObject /* derived name */
+{
+    LoadedImage(const RawImage &raw);
+
+    /* The class allocator: a block of the thread's heap (0x1a073d;
+     * defined beside the router). */
+    static void *operator new(unsigned long numBytes);
+
+    hkArray<u8> unknown10;       /* empty from the constructor; elements not read */
+    int width;                   /* derived name */
+    int height;                  /* derived name */
+    hkArray<RawImagePart> parts; /* derived name */
+};
+
+/* The loader's image made (0x1a0720, called at 0x1889fe). derived name. */
+LoadedImage *FUN_001a0720(const RawImage &raw); /* derived name */
 
 LoadedImage *FUN_00188560(const char *fileName); /* derived name */
 
@@ -1255,6 +1311,9 @@ class FiosStreamReader : public StreamReader /* derived name */
  * FUN_000098d0 and stored in the slot at 0x57b9b70, the singleton the
  * string "hkFileSystem" names): slot 7 removes a file and slot 8 creates a
  * directory through Fios. */
+class hkFileSystem;
+extern hkFileSystem *D_57b9b70; /* hkFileSystem's instance */
+
 /* The native file reader of a file name (0x93180): the file opened, a
  * reference-counted reader over it (vtable 0x16a3550, the descriptor at
  * +0xc, whether it opened at +0x10), or null when the open fails. derived
@@ -1500,6 +1559,11 @@ inline void *hkHardwareInfo::operator new(unsigned long numBytes)
 }
 
 inline void *hknpGlobals::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *LoadedImage::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }

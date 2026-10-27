@@ -676,6 +676,32 @@ class hkDummySingleton : public hkReferencedObject
 /* Its create function, the record's (0x9c20). derived name. */
 hkReferencedObject *FUN_00009c20(); /* derived name */
 
+/* A singleton's registration record (derived names): its name, its create
+ * function (null for a singleton made by hand), the list's next record and
+ * the address of the instance pointer; each record links itself at the
+ * head of the list at 0x57b80b8 as it is built (0x1010 for hkError's,
+ * 0x9c50 for hkDummySingleton's: name, create function, instance address,
+ * then the link). */
+struct SingletonRecord;            /* derived name */
+extern SingletonRecord *D_57b80b8; /* the list's head; derived name */
+
+struct SingletonRecord /* derived name */
+{
+    typedef hkReferencedObject *(*CreateFunction)(); /* derived name */
+
+    SingletonRecord(const char *name_, CreateFunction create_, void **instance_)
+        : name(name_), create(create_), instance(instance_)
+    {
+        next = D_57b80b8;
+        D_57b80b8 = this;
+    }
+
+    const char *name;      /* derived name */
+    CreateFunction create; /* derived name */
+    SingletonRecord *next; /* derived name */
+    void **instance;       /* derived name */
+};
+
 /* hkError, the singleton registered by that name (record 0x57af770 built by
  * 0x1010, instance pointer 0x57af768; hkError.cpp's FUN_00000ee0 reports
  * through it): slot 5 takes a message's kind, its id, the description, the
@@ -1634,6 +1660,36 @@ class hkxAttributeHolder : public hkReferencedObject
     virtual ~hkxAttributeHolder();
 
     hkArray<hkxAttributeGroup> attributeGroups;
+};
+
+/* hkxNode (vtable 0x16a25e0, member records 0x16a1ff0 to 0x16a2158; parent
+ * hkxAttributeHolder): name at +0x20, uuid at +0x28, object (a pointer) at
+ * +0x38, the arrays keyFrames (hkMatrix4), children (pointers to hkxNode),
+ * annotations (AnnotationData: time and description, records 0x16a1fa0 and
+ * 0x16a1fc8) and linearKeyFrameHints (hkReal) from +0x40, userProperties
+ * at +0x80, selected and bone (hkBool) at +0x88 and +0x89. */
+class hkxNode : public hkxAttributeHolder
+{
+  public:
+    struct AnnotationData {
+        float time;
+        hkStringPtr description;
+    };
+
+    /* The finish constructor, out of line (0x8b4b0): the two strings and
+     * the uuid finished, the arrays left as loaded. */
+    hkxNode(hkFinishLoadedObjectFlag flag);
+
+    hkStringPtr name;
+    hkUuid uuid;
+    void *object;
+    hkArray<Mat4> keyFrames;
+    hkArray<hkxNode *> children;
+    hkArray<AnnotationData> annotations;
+    hkArray<float> linearKeyFrameHints;
+    hkStringPtr userProperties;
+    hkBool selected;
+    hkBool bone;
 };
 
 /* hkxMaterial (hkClass 0x57c61d0, built at 0x86bf1: size 0xe0, parent
@@ -4156,6 +4212,8 @@ class hknpBroadPhaseConfig : public hkReferencedObject
         bool isVolatile;
     };
 
+    hknpBroadPhaseConfig() {}
+
     hknpBroadPhaseConfig(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
     virtual ~hknpBroadPhaseConfig();
@@ -4164,6 +4222,10 @@ class hknpBroadPhaseConfig : public hkReferencedObject
 class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
 {
   public:
+    /* 0x154da0 (the world's constructor builds one at 0x499bf when its
+     * description gives none): the four layers filled. */
+    hknpDefaultBroadPhaseConfig();
+
     hknpDefaultBroadPhaseConfig(hkFinishLoadedObjectFlag flag);
 
     Layer *FUN_00154e00(hkUlong layerIndex); /* vtable slot 6; derived name */
@@ -6797,6 +6859,10 @@ extern const hkClass D_57c67d0; /* hkxTextureFile's hkClass */
 class hkxTextureFile : public hkReferencedObject
 {
   public:
+    /* The finish constructor, out of line (0x878f0): the three strings
+     * finished in order. */
+    hkxTextureFile(hkFinishLoadedObjectFlag flag);
+
     /* Slot 0 (0x87830): the three strings destroyed, the last first. */
     virtual ~hkxTextureFile();
 
