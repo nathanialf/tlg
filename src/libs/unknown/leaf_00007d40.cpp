@@ -16,3 +16,17 @@ const hkClassMember::TypeProperties &hkClassMember::FUN_00007d40(Type type) /* d
 {
     return D_16dc150[type];
 }
+
+/* derived name: an array member's element size, read from its subtype. */
+int hkClassMember::FUN_00007f20() const
+{
+    switch (subtype) {
+    default:
+        return D_16dc150[subtype].size;
+    case TYPE_STRUCT:
+        return structClass->FUN_00004580();
+    case TYPE_ENUM:
+    case TYPE_FLAGS:
+        return -1;
+    }
+}

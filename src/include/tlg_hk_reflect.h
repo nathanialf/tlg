@@ -72,6 +72,17 @@ inline int max2(int a, int b)
 {
     return _mm_cvtsi128_si32(_mm_max_epi32(_mm_cvtsi32_si128(a), _mm_cvtsi32_si128(b)));
 }
+
+/* The magnitude of a float in a vector register: the bits doubled, which
+ * shifts the sign out, then shifted back down with a zero in its place
+ * (`vpaddd; vpsrld $1`, the aerodynamics' drag at 0x3bf3f; every such pair
+ * in the library region doubles with vpaddd, none shifts with vpslld).
+ * derived name. */
+inline float fabs(float r)
+{
+    __m128i bits = _mm_castps_si128(_mm_set_ss(r));
+    return _mm_cvtss_f32(_mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1)));
+}
 } // namespace hkMath
 
 /* hkArray, the reflection's array type (its name in the type-name table at
@@ -208,6 +219,9 @@ struct hkClass {
     int FUN_00004350() const; /* derived name */
     /* The class's name, out of line (0x4200). derived name. */
     const char *FUN_00004200() const;
+    /* The object's size, out of line (0x4580, one body with the other
+     * classes' int getters at +0x10). derived name. */
+    int FUN_00004580() const;
 
     const char *name;
     const hkClass *parent;
@@ -341,6 +355,11 @@ struct hkClassMember {
     };
 
     static const TypeProperties &FUN_00007d40(Type type); /* derived name */
+
+    /* The size of one element of an array member, by its subtype: a
+     * struct's object size, -1 for an enum or flags element, else the
+     * type's size (0x7f20). derived name. */
+    int FUN_00007f20() const;
 
     /* The integer the member holds at an address, read by its type and
      * subtype (FUN_00091270). derived name. */
@@ -1072,6 +1091,7 @@ class hknpVehicleDefaultAerodynamics : public hkReferencedObject
   public:
     hknpVehicleDefaultAerodynamics(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
+    float FUN_0003bf20(float speed) const; /* vtable slot 6; derived name */
     float FUN_0003bf60(float speed) const; /* vtable slot 7; derived name */
 
     float airDensity;
@@ -2419,6 +2439,21 @@ struct hknpBody {
     int motionId;
     u32 broadPhaseId; /* -1 while the body is not in the broad phase */
     u8 unknown70[0x20];
+};
+
+/* What the world holds at +0x10 (derived name after hknpBodyManager.cpp, the
+ * file 0x1607c0 cites; the callers at 0x6c953 and 0x18d0c0 pass the
+ * world's +0x10): the bodies' array from +0x10, the ids of the active
+ * bodies from +0xa0. FUN_001612a0 fetches every active body ahead of the
+ * solver. */
+struct hknpBodyManager /* derived name */
+{
+    void FUN_001612a0() const; /* derived name */
+
+    u8 unknown0[0x10];
+    hkArray<hknpBody> bodies; /* derived name */
+    u8 unknown20[0x80];
+    hkArray<u32> activeBodyIds; /* derived name */
 };
 
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
@@ -4629,9 +4664,19 @@ class hkp6DofConstraintData
     hkResult FUN_0017bb70(float &factorOut) const; /* vtable slot 18; derived name */
     void FUN_0017b990(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 6 (0x17b960): the compiled atoms' schemas and solver data, then
+     * 256 bytes of schemas and four temporaries more. derived name. */
+    void FUN_0017b960(hkpConstraintData::ConstraintInfo &infoOut) const;
 
     u8 unknown8[0x18];
     Blueprints blueprints;
+    hkBool isDirty;
+    int numRuntimeElements;
+    int atomToCompiledAtomOffset[11];
+    int resultToRuntime[19];
+    /* Not serialized (record flags 0x400); the element type is not in the
+     * record. */
+    hkArray<u8> compiledAtoms;
 };
 
 void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -5145,6 +5190,11 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
     /* Slot 8: the buffered writer asks the stream it buffers (FUN_00009280)
      * and answers true without one. */
     virtual hkBool unknownVirtual8() const;
+    /* Slot 9: not recovered (the buffered writer's is 0x92a0). */
+    virtual void unknownVirtual9();
+    /* Slot 10: the position in the stream, negative when it has none (the
+     * buffered writer's 0x9380 asks the stream it buffers). derived name. */
+    virtual int tell() const;
 };
 
 /* A stream writer that only counts (derived name; vtable 0x16a6af0, address
@@ -5270,6 +5320,7 @@ class hkBufferedStreamWriter : public hkStreamWriter
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00008ea0 */
     hkBool FUN_00009260() const;         /* vtable slot 5; derived name */
     hkBool FUN_00009280() const;         /* vtable slot 8; derived name */
+    int FUN_00009380() const;            /* vtable slot 10; derived name */
 
     hkStreamWriter *stream; /* derived name */
     /* The buffer, the bytes in it and its capacity, as the constructor
@@ -6566,10 +6617,18 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
  * +0x20. FUN_00155b00 is the handler of the first signal, subscribed at
  * 0x156026 through a member function pointer and unsubscribed at 0x155b3f,
  * 0x155c52 and 0x155d53; 0x155b10 handles the second. */
+struct ShapeWatcher;
+
 struct ShapeWatcherOwner /* derived name */
 {
-    u8 unknown0[0x20];
-    bool anyShapeChanged; /* derived name */
+    /* 0x155bc0 (the world builds one at 0x48ce1): no watchers, nothing
+     * changed. */
+    ShapeWatcherOwner();
+
+    /* Two lists of watchers, each unsubscribed and freed by 0x155bf0. */
+    hkArray<ShapeWatcher *> watchers;      /* derived name */
+    hkArray<ShapeWatcher *> otherWatchers; /* derived name */
+    bool anyShapeChanged;                  /* derived name */
 };
 
 struct ShapeWatcher /* derived name */

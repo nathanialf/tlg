@@ -101,6 +101,14 @@ void FUN_00031740(const Pair08Owner *self, int count, const hknpMotion *motionA,
                   const hknpMotion *motionB, Vec4 *out); /* derived name */
 void FUN_000348a0(const Pair08Owner *self, const hknpMotion *motionA, const hknpMotion *motionB,
                   const void *argument4, Vec4 *out); /* derived name */
+/* The record's whole size (derived names): FUN_00031a30 takes the record's
+ * count, type and the byte at +4 (the flags whose blocks FUN_0002af50
+ * skips) besides four arguments not recovered; FUN_000319f0, called at
+ * 0x77011, hands them on from the record. */
+void FUN_00031a30(const Pair08Owner *self, void *argument2, u8 count, u8 type, u8 flags,
+                  void *argument6, void *argument7, void *argument8); /* derived name */
+void FUN_000319f0(const Pair08Owner *self, void *argument2, void *argument3, void *argument4,
+                  void *argument5); /* derived name */
 
 void FUN_0002b390(Pair08Owner *self,
                   bool enable); /* derived name: sets or clears bit 2 of the byte at +1 */
@@ -276,6 +284,9 @@ class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* d
     int FUN_00013500(const void *pointer, int numBytes) const; /* derived name */
 
     virtual u64 allocatedBytes() const; /* vtable slot 20, FUN_00012e20; derived name */
+    /* Slot 17 (0x12e60; the interface's slot 6): whether a block of the
+     * size can be had, tried by allocating one and freeing it again. */
+    virtual bool FUN_00002230(int numBytes);
 
     u8 unknown10[0x190];
     u64 totalBlockBytes;   /* derived name */
@@ -867,8 +878,9 @@ class Allocator00004b10 /* derived name */
 };
 
 /* A stack tracer (derived name), built on the stack by the error report at
- * 0xb680 (constructor FUN_0000d8f0 stores the vtable address point
- * 0x168d850, destructor the empty FUN_0000d940). On this platform it has no
+ * 0xb680 and as the static instance at 0x57b7b80 (constructor 0xd8f0 stores
+ * the vtable address point 0x168d850, destructor the empty 0xd940). On this
+ * platform it has no
  * trace: collecting one (the shared FUN_000042d0) finds no frames and
  * printing one (FUN_0000d890) reports the fact through the caller's print
  * function. */
@@ -1298,6 +1310,20 @@ struct UlongMap /* derived name */
  * empty at +0x50 of the object FUN_0016d360 constructs (0x16d3ca); 0x17a220
  * frees both arrays; 0x17a290 puts an edge of a 64-byte record (its second
  * node at +4, its link index at +0x18) at the head of a node's list. */
+/* The 64-byte edge record those lists index (derived names): its two nodes
+ * at +4 and +0xc (the caller at 0x16dd98 links the edge at each), its link
+ * index at +0x18. */
+struct EdgeRecord0017a290 /* derived name */
+{
+    u8 unknown0[4];
+    int nodeA; /* derived name */
+    u8 unknown8[4];
+    int nodeB; /* derived name */
+    u8 unknown10[8];
+    int linkIndex; /* derived name */
+    u8 unknown1c[0x24];
+};
+
 struct NodeEdgeLists /* derived name */
 {
     struct EdgeLinks {
@@ -1305,6 +1331,10 @@ struct NodeEdgeLists /* derived name */
     };
 
     NodeEdgeLists();
+
+    /* Puts an edge at the head of one of its nodes' lists (0x17a290). */
+    void FUN_0017a290(unsigned int edgeIndex, const EdgeRecord0017a290 *edges,
+                      int node); /* derived name */
 
     hkArray<int> firstEdge;      /* derived name */
     hkArray<EdgeLinks> nextEdge; /* derived name */
@@ -1416,5 +1446,34 @@ struct SortRecord00062100 /* derived name */
 };
 
 bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b); /* derived name */
+
+/* A polymorphic base (derived names; vtable 0x16994b0, address point
+ * 0x16994c0, stored by its constructor FUN_000605b0, which also fills a
+ * static 17 by 17 table of pair indices at 0x57b1660): an array of 16-bit
+ * values at +8 and an int at +0x18 from the constructor's argument. Its
+ * slot 2 is hkBaseObject's. */
+class Points000605b0 : public hkBaseObject /* derived name */
+{
+  public:
+    hkArray<u16> indices; /* derived name */
+    int kind;             /* derived name */
+};
+
+/* Up to 18 points over that base (derived names; vtable 0x1699510, address
+ * point 0x1699520, stored by its constructor FUN_00060c70, no row): the
+ * count at +0x1c, the number of pairs n(n+1)/2 at +0x20, a flag per point
+ * from +0x28 (the constructor clears them) and the points from +0x70. Slot
+ * 3 (0x61280) moves every flagged point by an offset. */
+class FlaggedPoints00060c70 : public Points000605b0 /* derived name */
+{
+  public:
+    virtual void FUN_00061280(const Vec4 &offset); /* vtable slot 3; derived name */
+
+    int numPoints; /* derived name */
+    int numPairs;  /* derived name */
+    int unknown24;
+    int flags[18];   /* derived name */
+    Vec4 points[18]; /* derived name */
+};
 
 #endif
