@@ -6,6 +6,8 @@
 #ifndef TLG_LIBC_H
 #define TLG_LIBC_H
 
+#include <stdarg.h>
+
 #include "stdlib.h"
 
 typedef long time_t;
@@ -22,6 +24,9 @@ char *strncpy(char *dst, const char *src, size_t n);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
 time_t time(time_t *t);
+int printf(const char *format, ...);
+int vsnprintf(char *s, size_t n, const char *format, va_list args);
+void perror(const char *message);
 void *memalign(size_t alignment, size_t size);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */

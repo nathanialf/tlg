@@ -8,7 +8,14 @@
 struct SceKernelSemaObject;                 /* derived name */
 typedef SceKernelSemaObject *SceKernelSema; /* derived name: an 8-byte handle */
 
+/* The POSIX mutex of the kernel library: a handle, as FreeBSD's
+ * pthread_mutex_t is a pointer to the library's own record (the critical
+ * section's 16 bytes hold it and an int). */
+struct pthread_mutex;
+typedef pthread_mutex *pthread_mutex_t;
+
 extern "C" {
+int pthread_mutex_destroy(pthread_mutex_t *mutex);
 int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr, int initCount,
                         int maxCount, const void *option);
 int sceKernelDeleteSema(SceKernelSema sema);

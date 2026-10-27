@@ -730,6 +730,10 @@ struct ArenaBlockHeader {
  * destructor 0xe5d0 with the router's heap). derived name. */
 void FUN_0000bc80(AllocatorBase &allocator, void *payload); /* derived name */
 
+/* An aligned block from an allocator's slot 2, the header before the
+ * payload (0xbba0; six callers, 0x8f2a to 0x16d5fe). derived name. */
+void *FUN_0000bba0(AllocatorBase &allocator, int numBytes, int alignment); /* derived name */
+
 /* Frees an aligned block (FUN_0000bba0's: the header records the block's
  * size less its own 16 bytes and the payload's offset into the block)
  * through the allocator's slot 3: 0xbc00. derived name. */
@@ -955,6 +959,7 @@ struct Object0019a7c0 /* derived name */
 };
 
 void FUN_0019a7c0(Object0019a7c0 *self); /* derived name */
+
 /* An object of 0x160 bytes with its own class allocator (vtable 0x169b460,
  * constructor FUN_000763a0) holding an array of 0x500-byte elements at
  * +0x140 (count at +0x148). Its out-of-line destructor FUN_000760c0
@@ -962,7 +967,33 @@ void FUN_0019a7c0(Object0019a7c0 *self); /* derived name */
  * (vtable 0x169b410, constructor FUN_000768c0: a pointer at +0x150) adds
  * nothing to destroy, so both vtables share the complete destructor
  * FUN_00076060 and the deleting destructor FUN_00076070. */
-struct Elements000760c0; /* derived name */
+class Elements000760c0 : public hkBaseObject /* derived name */
+{
+  public:
+    /* FUN_000763a0: the arrays' storage reserved, the 0x500-byte elements
+     * built (their streams reset over the two allocators the thread
+     * context holds at +0x260 and +0x250) and the counts set. The context
+     * comes first and the body does not read it. derived names. */
+    Elements000760c0(void *context, void *allocator260, void *allocator250, int numElements,
+                     int capacity20, int capacity10);
+    virtual ~Elements000760c0();
+
+    u8 unknown8[0x148];
+};
+
+/* The derived class (vtable 0x169b400, the same seven slots): built once,
+ * by FUN_0006c850 at 0x6cc19, over the simulation context it is given
+ * (kept at +0x150), one element and room for one entry in each array; the
+ * thread context it is also given is not read. derived names. */
+class Elements000768c0 : public Elements000760c0 /* derived name */
+{
+  public:
+    Elements000768c0(void *simulationContext, void *threadContext, void *allocator260,
+                     void *allocator250);
+    virtual ~Elements000768c0();
+
+    void *simulationContext; /* derived name */
+};
 
 void FUN_000760c0(Elements000760c0 *self); /* derived name */
 /* An object of 0xa0 bytes (vtable 0x16a3f50, no type info; constructor
@@ -1300,12 +1331,25 @@ class ThreadMemory : public AllocatorBase /* derived name */
         return largeSizeToRow[(numBytes - 1) >> 10];
     }
 
+    /* Slot 9 (0x14640): only what the free lists hold is known, the blocks
+     * kept on them times their rows' sizes; every other figure is -1. */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
+
+    /* A row's free list: the blocks kept for reuse, linked through their
+     * first word, and how many (slot 13 gives them back four at a time).
+     * derived names. */
+    struct FreeList {
+        void *head;
+        int numElem;
+    };
+
     AllocatorBase *memory;     /* derived name; slot 13 returns blocks to it */
     int maxNumElemsOnFreeList; /* derived name */
-    u8 unknown14[0x104];
-    int rowToSize[16];     /* derived name; a row's block size */
-    s8 smallSizeToRow[21]; /* derived name; by (size + 31) >> 5 */
-    int largeSizeToRow[8]; /* derived name; by (size - 1) >> 10 */
+    u8 unknown14[4];
+    FreeList freeLists[16]; /* derived name; one per row */
+    int rowToSize[16];      /* derived name; a row's block size */
+    s8 smallSizeToRow[21];  /* derived name; by (size + 31) >> 5 */
+    int largeSizeToRow[8];  /* derived name; by (size - 1) >> 10 */
 };
 
 /* A union-find over node indices (derived name; the stage timer of its
@@ -1866,6 +1910,11 @@ inline void hkUuidObject::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkReferencedObjectLock::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void Crc32StreamWriter::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -2177,22 +2226,6 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
     hkBool limitVerticalVelocity;       /* derived name */
     hkBool disableHorizontalProjection; /* derived name */
 };
-
-/* A small record inside hkReferencedObjectLock (derived names): at +0x14
- * of the lock its creator 0x6800 stores -15 and the half word 0x8000 at
- * +8, then FUN_00006b90 resets it (-15 and 0) unless the half word is
- * non-negative and the pointer at 0x57b7b90 is set. Nothing in the
- * executable writes that pointer. */
-struct Record00006b90 /* derived name */
-{
-    int value; /* derived name */
-    u8 unknown4[4];
-    s16 count; /* derived name */
-};
-
-extern void *D_57b7b90; /* derived name */
-
-void FUN_00006b90(Record00006b90 *self); /* derived name */
 
 /* A hash map of word-sized keys and values (derived name): 16-byte pairs
  * from the pointer at +0, the count at +8 with the don't-deallocate flag in

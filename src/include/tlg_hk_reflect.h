@@ -12,6 +12,8 @@
 
 #include <smmintrin.h>
 
+#include "tlg_libc.h"
+#include "tlg_sce_kernel.h"
 #include "tlg_simd.h"
 #include "tlg_types.h"
 
@@ -47,6 +49,11 @@ enum hkResult {
  * 0x7f7fffee the constraint datas' slots 11 to 13 return and their breach
  * tests compare with). */
 #define HK_REAL_MAX 3.40282e+38f
+
+/* Havok's large value short of the maximum (its HK_REAL_HIGH,
+ * 1.8446726e+19f: the bits 0x5f7ffff0, row 34 of the vector constant
+ * table; the motion construction info's limits start at it, 0x1590c9). */
+#define HK_REAL_HIGH 1.8446726e+19f
 
 /* A copy of 16-byte quads (derived names): the source and destination
  * stepped together, the source first, until the count runs out
@@ -673,6 +680,21 @@ class hkReferencedObject : public hkBaseObject
         }
     }
 
+    /* The allocation size recorded in the top 16 bits by compare-and-swap,
+     * the reference count kept (`movzx; or SIZE << 16; lock cmpxchg` after
+     * the stores of the constructor that calls it: 0x199ef0, 0x3c640,
+     * 0x78360). derived name. */
+    void setMemSize(u16 numBytes)
+    {
+        /* volatile: as in addReference. */
+        volatile u32 *sizeAndCount = &memSizeAndRefCount;
+        u32 oldValue, newValue;
+        do {
+            oldValue = *sizeAndCount;
+            newValue = (u32(numBytes) << 16) | u16(oldValue);
+        } while (__sync_val_compare_and_swap(sizeAndCount, oldValue, newValue) != oldValue);
+    }
+
     /* One reference fewer, the same way; the last one deletes the object
      * through slot 4 (the character context's destructor, 0x3e96e).
      * derived name. */
@@ -731,6 +753,57 @@ class hkReferencedObject : public hkBaseObject
     mutable u32 memSizeAndRefCount;
 };
 
+/* A small record inside hkReferencedObjectLock (derived names): at +0x14
+ * of the lock its creator 0x6800 stores -15 and the half word 0x8000 at
+ * +8, then FUN_00006b90 resets it (-15 and 0) unless the half word is
+ * non-negative and the pointer at 0x57b7b90 is set. Nothing in the
+ * executable writes that pointer. */
+struct Record00006b90 /* derived name */
+{
+    int value; /* derived name */
+    u8 unknown4[4];
+    s16 count; /* derived name */
+};
+
+extern void *D_57b7b90; /* derived name */
+
+void FUN_00006b90(Record00006b90 *self); /* derived name */
+
+/* Havok's check of a POSIX call that must succeed, as the critical
+ * section's calls show it (0x1853 to 0x1942, 0x6706): on a non-zero result
+ * the place is printed ("%s:%d:%s\n": the file, the line and the function's
+ * name), then the call's own text through perror, then the trap. The file
+ * and the line are the library build's __FILE__ and __LINE__, which this
+ * tree's paths cannot give, so they are passed as the executable has them. */
+#define HK_POSIX_CHECK(file, line, call)                                                           \
+    do {                                                                                           \
+        if ((call) != 0) {                                                                         \
+            printf("%s:%d:%s\n", file, line, __FUNCTION__);                                        \
+            perror(#call);                                                                         \
+            HK_BREAKPOINT(0);                                                                      \
+        }                                                                                          \
+    } while (0)
+
+/* The file the critical section's checks name (the string at 0x14b2812). */
+#define HK_POSIX_CRITICAL_SECTION_INL                                                              \
+    "..\\..\\Common/Base/Thread/CriticalSection/Posix/hkPosixCriticalSection.inl"
+
+/* hkCriticalSection (the name from its checks' function strings), the
+ * POSIX build: a recursive mutex and the spin count its constructor
+ * (FUN_00001830) keeps at +8. The destructor is inline (line 28 of the
+ * file): the mutex destroyed and checked. */
+class hkCriticalSection
+{
+  public:
+    ~hkCriticalSection()
+    {
+        HK_POSIX_CHECK(HK_POSIX_CRITICAL_SECTION_INL, 28, pthread_mutex_destroy(&m_mutex));
+    }
+
+    pthread_mutex_t m_mutex; /* the name the check's text gives */
+    int spinCount;           /* derived name */
+};
+
 /* hkReferencedObjectLock, the singleton registered by that name (record
  * 0x57b7b58, instance 0x57b7b50, created by 0x6800: vtable address point
  * 0x168cb00, 0x30 bytes, a critical section at +0x20 with spin count 4000).
@@ -742,7 +815,14 @@ class hkReferencedObjectLock : public hkReferencedObject
   public:
     virtual ~hkReferencedObjectLock();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x6740 frees at the recorded size, 0x30 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     int lockMode; /* derived name */
+    int unknown10;
+    Record00006b90 record14;           /* derived name */
+    hkCriticalSection criticalSection; /* derived name */
 };
 
 extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance */
@@ -823,6 +903,10 @@ extern hkError *D_57af768; /* hkError's instance */
 /* A string pointer whose finish constructor (FUN_0000e5c0, empty) and
  * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
  * it owned) are out of line. */
+/* The string library's formatted print into a buffer of size bytes, a
+ * wrapper over vsnprintf on a copy of the caller's argument list (0x17e20;
+ * the error reports at 0x87bd and 0x119d6 pass their own). */
+int FUN_00017e20(char *buffer, int size, const char *format, va_list args); /* derived name */
 /* The string library's length (derived name; a wrapper over strlen). */
 int FUN_00017fe0(const char *s); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
@@ -3726,13 +3810,21 @@ struct hknpWorldContextPool /* derived name */
         u8 unknown4[0x3bc];
     };
 
+    /* A free context taken from the head of the list (0x16ff90): the head
+     * moves to its successor with the tag advanced, and the taken one's
+     * link is marked 0xf. */
+    Context *FUN_0016ff90();
+
     /* A context back on the list, at its own index (0x16ffe0). */
     void FUN_0016ffe0(const Context *context);
 
     u8 unknown0[0x10];
     Context contexts[8];
     u32 freeHead;
-    int next[8];
+    /* volatile: the links change under other threads' takes and gives
+     * back, so a take reads its successor afresh on every attempt (0x16ffad,
+     * a load of its own, not folded into the `or`). */
+    volatile int next[8];
 };
 
 /* The reference-counted object at +0x380 of the world (derived names: no
@@ -4306,7 +4398,28 @@ class hknpDummyShape : public hknpShape
  * the finish callback 0x3d070 jumps to it, the reflection initializer at
  * 0x3d123 runs it on a temporary. */
 struct hknpMaterial;
-struct hknpMotionCinfo;
+
+/* hknpMotionCinfo (records from 0x1696b00, type uint16 for the id): the
+ * construction info of a body's motion, 0x60 bytes. */
+struct hknpMotionCinfo {
+    /* Out of line (0x1590a0, called by the world at 0x4e3af, 0x4f14e and
+     * 0x5c618, and by the game): no motion properties, deactivation on, a
+     * unit mass and inertia, no limit to speak of, at rest at the origin
+     * with no rotation (rows 3 and 32 of the vector constant table). */
+    hknpMotionCinfo();
+
+    u16 motionPropertiesId;
+    hkBool enableDeactivation;
+    float inverseMass;
+    float maxLinearAccelerationDistancePerStep;
+    float maxRotationPerStep;
+    Vec4 inverseInertiaLocal;
+    Vec4 centerOfMassWorld;
+    hkQuaternion orientation;
+    Vec4 linearVelocity;
+    Vec4 angularVelocity;
+};
+
 struct hknpBodyCinfo;
 struct hknpConstraintCinfo;
 
@@ -5851,7 +5964,7 @@ struct hkpRagdollMotorConstraintAtom {
  * copy at 0x79740 takes a reference to each through them), FUN_0007dfe0
  * returns one by index; the setters beside them (0x7dff0, 0x7e0b0, 0x7e170)
  * swap the counted references. */
-class hkpRagdollConstraintData
+class hkpRagdollConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
@@ -5867,6 +5980,11 @@ class hkpRagdollConstraintData
         u8 unknown150[0x20]; /* planesLimit */
         hkpBallSocketConstraintAtom ballSocket;
     };
+
+    /* The finish constructor (0x82c70, the type info's finish function):
+     * the atoms finish themselves, and a cone loaded with its stabilization
+     * on gets it again. */
+    hkpRagdollConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpRagdollConstraintData();
 
@@ -5893,7 +6011,6 @@ class hkpRagdollConstraintData
     /* derived name: target_bRca = target * transformA's rotation. */
     void FUN_0007df80(const hkMatrix3 &target);
 
-    u8 unknown8[0x18];
     Atoms atoms;
 };
 

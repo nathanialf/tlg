@@ -379,7 +379,7 @@ CpWcnrEZbLA V V func ?
 DDHG1a6+3q0 V V func roundf
 DfivPArhucg V V func memcmp
 EH-x713A99c V V func atan2f
-EMutwaQ34Jo V V func ?
+EMutwaQ34Jo V V func perror
 Fm-dmyywH9Q V V func ?
 GAUuLKGhsCw V V func ceilf
 GMpvxPFW924 V V func vprintf

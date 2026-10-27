@@ -70,6 +70,7 @@ fprintf
 vfprintf
 sscanf
 vsscanf
+perror
 puts
 putchar
 fputs
