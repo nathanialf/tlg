@@ -1,0 +1,41 @@
+llvm-3.3 backport patch: one store merge per visit of a store (PS4)
+
+This patch CHANGES CODE GENERATION for a function whose chained constant
+stores hold more than one mergeable run: DAGCombiner::visitSTORE calls
+MergeConsecutiveStores once, as LLVM 3.2 does (its visitSTORE reads
+`if (!LegalTypes && MergeConsecutiveStores(ST))`), instead of repeating it
+until the visited store is merged (upstream commit 1157e1410c83 of
+2012-12-02, "Allow merging multiple store sequences on the same chain",
+which the 3.3 release carries). The library region of the executable keeps
+only the lowest run of each walk merged: hkpConstraintInfo's four counts
+at 0x7a020 (+0 and +4 one 8-byte store, +8 and +0xc apart), the spring
+forces at 0x17afe0 and hkpPositionConstraintMotor's constructor at 0x82430
+(the forces merged, tau, damping and the two recovery velocities apart, in
+source order). docs/DECISIONS.md D27 holds the measurement.
+
+--- a/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
++++ b/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+@@ -8524,21 +8524,8 @@
+ 
+   // Only perform this optimization before the types are legal, because we
+   // don't want to perform this optimization on every DAGCombine invocation.
+-  if (!LegalTypes) {
+-    bool EverChanged = false;
+-
+-    do {
+-      // There can be multiple store sequences on the same chain.
+-      // Keep trying to merge store sequences until we are unable to do so
+-      // or until we merge the last store on the chain.
+-      bool Changed = MergeConsecutiveStores(ST);
+-      EverChanged |= Changed;
+-      if (!Changed) break;
+-    } while (ST->getOpcode() != ISD::DELETED_NODE);
+-
+-    if (EverChanged)
+-      return SDValue(N, 0);
+-  }
++  if (!LegalTypes && MergeConsecutiveStores(ST))
++    return SDValue(N, 0);
+ 
+   return ReduceLoadOpStoreWidth(N);
+ }

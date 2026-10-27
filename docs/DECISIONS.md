@@ -917,7 +917,8 @@ the from-source 3.3 after fetching the prebuilt, and `build.sh` requires it.
 **Addendum, 2026-10-27 (round 32 harvest).** The from-source build now
 carries a second backport, D26's nop after the stack check's failure
 call; `tools/build_llvm.sh 3.3` applies both and its stamp records the
-set.
+set. Round 33's harvest added the third, D27's single store merge per
+visit.
 
 ## D21. The library region stays at -O2; FUN_00187750's loop unswitch is an open level question (2026-10-26)
 
@@ -1221,3 +1222,62 @@ protector's own block anyway.
 **Trigger to revisit.** A call to `__stack_chk_fail` in the base with no
 nop after it, or a canary function that matches under the patch only by
 an unrelated change; either reopens the mechanism.
+
+## D27. The library compiler merges one run of consecutive stores per visit (2026-10-27)
+
+**Decision.** The library prefix's compiler (`cxx=3.3-src`) carries a
+third backport patch,
+`tools/patches/llvm-3.3-storemerge-01-single-merge-per-visit.patch`:
+`DAGCombiner::visitSTORE` calls `MergeConsecutiveStores` once per visit
+of a store, as the 3.2 release does
+(`if (!LegalTypes && MergeConsecutiveStores(ST))`), instead of the 3.3
+release's loop that repeats the merge until the visited store is itself
+merged. Nothing else changes. The game prefix is not concerned: the game
+region merges every pair (3,065 merged constant stores, `config/flags.base.txt`;
+28 merged trailing pairs against 1 unmerged in D26's census), as 4.0.0 does.
+
+**Why.** Rounds 29 to 33 left FUN_0007a020 and FUN_0017afe0 equal except
+for one pair of constant stores: the base merges the lowest pair of each
+function's run into one 8-byte store and keeps the next pair apart, the
+compiler merged both. Round 32 ruled it source structure after a census
+(46 library functions end on a merged pair, 9 on an unmerged one) and
+sent a structural lead; round 33's worker derived the lead and showed it
+does not give the bytes, then found the probe that separates the two
+readings: FUN_00082430, hkpPositionConstraintMotor's constructor, stores
+seven constants in one block with no control flow, and the base keeps
+only its lowest pair (the forces at +0x10) merged; tau, damping and the
+two recovery velocities at +0x18, +0x1c, +0x24 and +0x20 stay four
+4-byte stores in source order. The supervisor measured it:
+
+- The 3.3 release's `visitSTORE` repeats `MergeConsecutiveStores(ST)` in
+  a do-while until the store is deleted
+  (`lib/CodeGen/SelectionDAG/DAGCombiner.cpp:8526-8541`). Each call
+  merges the lowest run of the walk (two i32 stores into an i64, the
+  largest legal integer type), so the loop merges every pair. The 3.2
+  release calls it once (`DAGCombiner.cpp:8119` of llvmorg-3.2.0). The
+  loop is upstream commit 1157e1410c83 of 2012-12-02 (Nadav Rotem,
+  "Allow merging multiple store sequences on the same chain"); the
+  `sspstrong` attribute the region uses (D20) is 2013-01-23
+  (d154e283f285), so the PS4 compiler's generation is not simply older
+  than the loop; it behaves as if the loop were absent. Its own form of
+  the rule is not known; its effect is measured exactly.
+- A scratch constructor of 0x82430's layout, compiled under the library
+  line: the unpatched build emits three `movabs` pairs (+0x10, +0x18,
+  +0x20); the patched build emits the base's instructions exactly (12
+  instructions, 68 bytes, the probe's own vtable the one unverified
+  relocation). FUN_0007a020 (43 bytes) and FUN_0017afe0 (54 bytes) are
+  equal under the patch as written, with no change to their source, and
+  are claimed.
+- `tools/build.sh gate-all` holds on every row under the patch: the
+  twelve matched functions that end on a merged pair (one run each) and
+  every matched constructor are unchanged, since a single run merges in
+  one call.
+- The remaining unmerged tails of D26's census (0x7b400, 0x7c710,
+  0x7d660, 0x82510, 0x83060) are hkpConstraintData slot-6
+  implementations and constructors of the same shape; they come up in
+  the queues under the patch.
+
+**Trigger to revisit.** A library function whose base merges two runs
+on one chain (two 8-byte constant stores built from four 4-byte
+constants in one block), or a matched row that fails under the patch;
+either reopens the mechanism.

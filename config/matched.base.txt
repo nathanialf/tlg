@@ -1171,3 +1171,5 @@ FUN_00093530 src/libs/unknown/func_00093530.cpp
 FUN_00154f00 src/libs/unknown/func_00154f00.cpp _ZNK26hknpPrepareConstraintsTask7getNameEP11hkStringBufS1_
 FUN_00179870 src/libs/unknown/func_00179870.cpp _ZNK28hknpPrepareExistingPairsTask7getNameEP11hkStringBufS1_
 FUN_0007b110 src/libs/unknown/func_0007b110.cpp
+FUN_0007a020 src/libs/unknown/func_0007a020.cpp _ZNK28hkpPointToPathConstraintData15unknownVirtual6ERN17hkpConstraintData14ConstraintInfoE
+_ZN30hkpSpringDamperConstraintMotorC1Ev src/libs/unknown/func_0017afe0.cpp

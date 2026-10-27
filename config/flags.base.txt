@@ -17,10 +17,12 @@
 #               take a local's address (D20: the strong level). The compiler
 #               is upstream 3.3 built from source (cxx=3.3-src,
 #               tools/build_llvm.sh 3.3), verified byte-identical to the
-#               prebuilt release on the probe and on every TU, carrying one
-#               backport: clang 3.5's -fstack-protector-strong frontend
+#               prebuilt release on the probe and on every TU, carrying three
+#               backports: clang 3.5's -fstack-protector-strong frontend
 #               (tools/patches/llvm-3.3-sspstrong-01-*.patch; 3.3's backend
-#               already implements sspstrong), passed here.
+#               already implements sspstrong), passed here; one nop after
+#               the stack check's failure call (sspnop, D26); one store
+#               merge per visit of a store (storemerge, D27).
 #   src/game/   code from 0x1a3e00 up, the game and engine, built with the
 #               SDK 3.5 compiler: cdqe, merged constant stores (3,065), ud2
 #               after noreturn calls (503), int 0x41 debug traps, no

@@ -5,10 +5,6 @@
  * point 0x169bc50): the bridge atoms and the schema the path's solver
  * needs (400 bytes with the 32-byte header, eight solver results and
  * eight temporaries). */
-// NONMATCHING: the counts' stores: the base merges +0 and +4 into one 8-byte
-// store and keeps +8 and +0xc apart; this merges both pairs. Seven library
-// functions end on such an unmerged pair (docs/NOTES.md, Rounds 29 to 33:
-// one merge per chain end fits the base, 3.3's merge loop merges again).
 void hkpPointToPathConstraintData::unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const
 {
     infoOut.atoms = &atoms;

@@ -186,7 +186,7 @@ FUN_0006f880 libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp Y:/NightlyJo
 FUN_0006f920 libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp Y:/NightlyJobs/20141121-01/Source/Physics/Physics/Collide/Shape/hknpShape.cpp
 FUN_0006f9c0 libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp Y:/NightlyJobs/20141121-01/Source/Physics/Physics/Collide/Shape/hknpShape.cpp
 FUN_0006fbd0 libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp Y:/NightlyJobs/20141121-01/Source/Physics/Physics/Collide/Shape/hknpShape.cpp
-FUN_0008fb30 libs/havok/Common/Base/System/Hardware/hkHardwareInfo.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/System/Hardware/hkHardwareInfo.cpp
+_ZN14hkHardwareInfoC1Ev libs/havok/Common/Base/System/Hardware/hkHardwareInfo.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/System/Hardware/hkHardwareInfo.cpp
 FUN_00091ef0 libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp
 FUN_000ab8d0 libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp Y:/NightlyJobs/20141121-01/Source/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp
 FUN_000add80 libs/havok/Common/GeometryUtilities/Mesh/Skin/hkSkinnedMeshShape.cpp Y:/NightlyJobs/20141121-01/Source/Common/GeometryUtilities/Mesh/Skin/hkSkinnedMeshShape.cpp
