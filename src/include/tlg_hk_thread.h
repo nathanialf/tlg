@@ -385,6 +385,21 @@ class hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived nam
                       hkStringBuf *description) const; /* vtable slot 3; derived name */
 };
 
+/* The broad phase's per-layer update task (derived name from its name;
+ * vtable address point 0x16a66d0, 0x20 bytes, four built by FUN_0018d640
+ * for the layers 0 to 3, each with its owner at +8 and its layer at +0x10):
+ * slot 2 (0x18d130) the work, slot 3 (0x18ce30) "BroadPhase/Update layer
+ * %i" with the layer, described in the first state's colour. */
+class hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name */
+{
+  public:
+    void FUN_0018ce30(hkStringBuf *name,
+                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+
+    void *owner; /* derived name */
+    int layer;   /* derived name */
+};
+
 class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived name */
 {
   public:

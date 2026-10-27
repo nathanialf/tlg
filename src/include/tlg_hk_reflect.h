@@ -803,6 +803,8 @@ struct hkStringBuf /* derived name */
 };
 
 void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
+/* Formatted into the buffer, printf style (0x11900). derived name. */
+void FUN_00011900(hkStringBuf *self, const char *format, ...); /* derived name */
 
 /* The default constructor: a null string (called on each new element by the
  * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
@@ -3188,12 +3190,27 @@ struct hknpBody {
  * solver. */
 struct hknpBodyManager /* derived name */
 {
+    /* A body change scheduled for the next step (derived name): the body's
+     * id at +0, 12 bytes. */
+    struct ScheduledBodyChange {
+        int bodyId; /* derived name */
+        u8 unknown4[8];
+    };
+
     void FUN_001612a0() const; /* derived name */
+
+    /* derived name: every scheduled change dropped, each body's index into
+     * them reset to the invalid 0x7fffffff (0x161740; the world's step
+     * runs it in its "clearAllScheduledBodyChanges" timer, 0x5107f). */
+    void FUN_00161740();
 
     u8 unknown0[0x10];
     hkArray<hknpBody> bodies; /* derived name */
     u8 unknown20[0x80];
     hkArray<u32> activeBodyIds; /* derived name */
+    u8 unknownB0[0x10];
+    hkArray<ScheduledBodyChange> scheduledBodyChanges; /* derived name */
+    hkArray<int> scheduledBodyChangeIndices;           /* derived name */
 };
 
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
@@ -3441,6 +3458,10 @@ struct hknpMaterialFreeListArrayOperations;
  * hkArray) at +0 and firstFree (int) at +0x10, records 0x1696a10 and
  * 0x1696a38. */
 template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
+    /* Empty, with no free element (hknpMotionPropertiesLibrary's
+     * constructor, 0x36d90). */
+    hkFreeListArray() : firstFree(-1) {}
+
     /* A loaded image's array is left as loaded. */
     hkFreeListArray(hkFinishLoadedObjectFlag flag) : elements(flag) {}
 
@@ -3732,6 +3753,9 @@ struct hknpMotionPropertiesFreeListArrayOperations;
  * type info's finish callback 0x38c10 and called by the reflection
  * initializer at 0x38cc0; the signals start empty. */
 struct hknpMotionPropertiesLibrary : public hkReferencedObject {
+    /* 0x36d90: no entries, the signals empty. */
+    hknpMotionPropertiesLibrary();
+
     hknpMotionPropertiesLibrary(hkFinishLoadedObjectFlag flag);
     virtual ~hknpMotionPropertiesLibrary();
 

@@ -958,6 +958,11 @@ struct MersenneTwister /* derived name */
     u32 *state; /* derived name */
 };
 
+/* derived name: the state given back to the thread's heap and forgotten
+ * (0x10690; the destructor and the deleting destructor of the object
+ * 0xdaf0 builds run it on their +0x10). */
+void FUN_00010690(MersenneTwister *self);
+
 /* A free list of fixed-size elements: the head of the free elements at +0
  * (each holds the next), the element size at +8, the bump pointer and the
  * end of the current block at +0x40 and +0x48, the free count at +0x68.
@@ -1103,9 +1108,14 @@ struct UnionFindParents /* derived name */
 
 struct UnionFind /* derived name */
 {
+    /* 0x8f640: every node its own root. */
+    UnionFind(UnionFindParents *parents, int numNodes);
+
     UnionFindParents *parents; /* derived name */
     int numNodes;              /* derived name */
     int state;                 /* derived name */
+    int unknown10;             /* derived name */
+    int unknown14;             /* derived name */
 };
 
 /* A 32-byte record of the union-find's owner: a bit field (the callers at
