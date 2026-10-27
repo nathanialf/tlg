@@ -1091,3 +1091,9 @@ _ZN24hknpScaledQueryCollectorD0Ev src/libs/unknown/func_000cf880.cpp
 _ZN22QueryProcessor0010b090D0Ev src/libs/unknown/func_0010b050.cpp
 FUN_0015fa60 src/libs/unknown/func_0015fa60.cpp _ZNK27hknpCircularSurfaceVelocity14calcVelocitiesERK9hkVector4PKvS4_PS0_S5_
 _ZN30hknpScaledOffsetQueryCollectorD0Ev src/libs/unknown/func_0016d040.cpp
+FUN_000027e0 src/libs/unknown/func_000027e0.cpp _ZNK16TwoBaseAllocator16getAllocatedSizeEPKvi
+FUN_00014dc0 src/libs/unknown/func_00014dc0.cpp
+FUN_00023700 src/libs/unknown/func_00023700.cpp
+FUN_00023770 src/libs/unknown/func_00023770.cpp
+FUN_0008ec50 src/libs/unknown/func_0008ec50.cpp _ZN23hkDebugCommandProcessor4execERK9hkCommand
+FUN_00093300 src/libs/unknown/func_00093300.cpp

@@ -48,6 +48,24 @@ enum hkResult {
  * tests compare with). */
 #define HK_REAL_MAX 3.40282e+38f
 
+/* A copy of 16-byte quads (derived names): the source and destination
+ * stepped together, the source first, until the count runs out
+ * (hkIndexedTransformSet's matrix copies 0x23700 and 0x23770 pass four
+ * quads a matrix, a count the copy tests again). */
+namespace hkString /* derived name */
+{
+inline void memCpy16(void *dst, const void *src, int numQuads) /* derived name */
+{
+    Vec4 *d = static_cast<Vec4 *>(dst);
+    const Vec4 *s = static_cast<const Vec4 *>(src);
+    while (numQuads--) {
+        *d = *s;
+        s++;
+        d++;
+    }
+}
+} // namespace hkString
+
 /* The scalar helpers (derived names): the larger and the smaller of two
  * values by one comparison each, and a value clamped to a range through
  * both (0x7c3e0: vmaxss against zero, then vminss against one). */
@@ -213,6 +231,15 @@ template <typename ENUM, typename STORAGE> class hkEnum
 struct hkClassEnum;
 struct hkClassMember;
 
+/* A list of names (derived names): the name at +0, the next entry at +8.
+ * The type registry's walk (0x17f8d5) asks hkClass::FUN_00004270 whether a
+ * class's name is on one. */
+struct NameList00004270 /* derived name */
+{
+    const char *name;             /* derived name */
+    const NameList00004270 *next; /* derived name */
+};
+
 /* hkClass, the reflection's class record: name (char*, type 0x1d) at +0,
  * parent (pointer to hkClass, type 0x14) at +8, objectSize and
  * numImplementedInterfaces (int) at +0x10 and +0x14, declaredEnums and
@@ -220,6 +247,10 @@ struct hkClassMember;
  * +0x28, from its own member table at 0x16a6b60; its constructor
  * FUN_000041a0 stores the twelve fields from +0 to +0x4c. */
 struct hkClass {
+    /* Whether the class's name is on a list of names (0x4270; FUN_00017f40
+     * compares them). derived name. */
+    bool FUN_00004270(const NameList00004270 *list) const;
+
     /* The counts over the class and its parents: implemented interfaces
      * (0x42b0) and members (0x4350). derived names. */
     int FUN_000042b0() const; /* derived name */
@@ -238,6 +269,26 @@ struct hkClass {
     int numDeclaredEnums; /* derived name */
     const hkClassMember *declaredMembers;
     int numDeclaredMembers; /* derived name */
+};
+
+/* hkClassEnum (the reflection's enum record; its type and its item's are
+ * named "hkClassEnum" and "hkClassEnumItem"): the name at +0, the items at
+ * +8 and their count at +0x10, each item a value and its name (16 bytes).
+ * FUN_00014dc0 finds the name of a value, FUN_00014e00 the value of a
+ * name; each fails (HK_FAILURE) when the enum has no such item. derived
+ * names. */
+struct hkClassEnum {
+    struct Item {
+        int value;
+        const char *name;
+    };
+
+    hkResult FUN_00014dc0(int value, const char **nameOut) const;     /* derived name */
+    hkResult FUN_00014e00(const char *itemName, int *valueOut) const; /* derived name */
+
+    const char *name;
+    const Item *items;
+    int numItems;
 };
 
 /* derived name: tells whether two classes are the same, by address or by
@@ -6621,7 +6672,8 @@ struct hkCommand /* derived name */
 {
     u16 sizePaddedTo16; /* derived name */
     u8 unknown2;
-    u8 primaryType; /* derived name */
+    u8 primaryType;    /* derived name */
+    u16 secondaryType; /* the kind within the primary type (0x8ec53); derived name */
 };
 
 /* A reference-counted executor of one primary type of command (derived
@@ -6641,6 +6693,43 @@ class hkPrimaryCommandDispatcher /* derived name */
     void FUN_00090830(const hkCommand &command); /* derived name */
 
     hkSecondaryCommandDispatcher *dispatchers[8]; /* derived name */
+};
+
+/* hkDebugDisplay, the singleton registered by that name (record filled by
+ * 0x183cd0, its instance pointer at 0x57c88c0, created by 0x183c40).
+ * FUN_001839d0 draws a line: start, end, colour, an id and a tag. derived
+ * names but the class's. */
+class hkDebugDisplay : public hkReferencedObject
+{
+  public:
+    void FUN_001839d0(const hkVector4 &start, const hkVector4 &end, int color, int id,
+                      int tag); /* derived name */
+};
+
+extern hkDebugDisplay *D_57c88c0;
+
+/* The tag the debug commands draw under (derived name): an int nothing in
+ * the library writes, read at 0x8ec5b. */
+extern int D_57c8720;
+
+/* hkDebugLineCommand (the name its printer writes, "hkDebugLineCommand
+ * Start=", 0x14c3cc5): a command of secondary type 0, its colour at +8, the
+ * line's ends at +0x10 and +0x20. */
+struct hkDebugLineCommand : public hkCommand {
+    u8 unknown6[2];
+    int color; /* derived name */
+    u8 unknownC[4];
+    hkVector4 start; /* derived name */
+    hkVector4 end;   /* derived name */
+};
+
+/* The executor of the debug commands (derived name; vtable 0x16a31d0,
+ * address point 0x16a31e0, no type info): slot 5 (0x8ec50) draws a line
+ * command through hkDebugDisplay, slot 6 (0x8ec90) prints it. */
+class hkDebugCommandProcessor : public hkSecondaryCommandDispatcher /* derived name */
+{
+  public:
+    virtual void exec(const hkCommand &command);
 };
 
 /* A map from strings to pointer-sized values (derived name): 24-byte

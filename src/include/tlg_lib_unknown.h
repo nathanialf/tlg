@@ -237,6 +237,8 @@ class AllocatorInterface /* derived name */
  * slots 2 to 10 in order; the second base's vtable holds their
  * this-adjusting thunks (0x32d0, 0x3490, 0x3570, 0x3590, 0x2280, 0x3130,
  * 0x2300, 0x2400, 0x3700). */
+struct FreeList;
+
 class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
 {
   public:
@@ -248,13 +250,21 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * 0x2300, which has it inlined): the bytes the allocator below has
      * handed out since the count at +0x20, none without one. */
     virtual u64 allocatedBytes() const;
+    /* Slot 10 (0x27e0): a small block's size is its free list's element
+     * size, none for no bytes; a larger one, or one of a size no free list
+     * holds, the allocator below knows. */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const;
 
     u8 unknown10[0x10];
     u64 baseBytes;                   /* derived name */
     u64 peakBytes;                   /* derived name; the largest count slot 18 (0x2230) has seen */
-    void *unknown30;                 /* derived name; the constructor's first argument */
+    AllocatorBase *largeAllocator;   /* derived name; the constructor's first argument */
     AllocatorInterface *allocator38; /* derived name; the constructor's second argument */
-    u8 unknown40[0xb10];
+    u8 unknown40[0x78];
+    /* The free list of each block size up to 640 bytes by 32-byte steps,
+     * indexed by (size + 31) / 32 (0x27ee). derived name. */
+    FreeList *sizeToFreeList[21];
+    u8 unknown160[0x9f0];
     void *pointerB50; /* derived name */
 };
 
@@ -1035,6 +1045,10 @@ class InputStream : public hkReferencedObject /* derived name */
 class FiosStreamReader : public StreamReader /* derived name */
 {
   public:
+    /* Slot 6 (0x93300): up to the count of bytes read into the buffer from
+     * an open handle; a read that brings nothing marks the reader failed.
+     * derived name. */
+    int FUN_00093300(void *buffer, int numBytes);
     hkResult FUN_000933a0(int offset, int whence); /* vtable slot 10; derived name */
 
     SceFiosFH handle; /* derived name */
@@ -1407,6 +1421,26 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
     float gain;                  /* derived name */
     float airSpeed;              /* derived name */
     float maxLinearAcceleration; /* derived name */
+};
+
+/* The on-ground state (derived name; vtable 0x169ae30, address point
+ * 0x169ae40, no row yet; constructor 0x6fcf0: gain 0.95, walk speed 10
+ * and maximum acceleration 200 from +0xc, then three flags from +0x18, the
+ * first set). The game builds the 0x20-byte object at 0xea9c17 and
+ * registers it as state 0 through 0x35ba0. Slots 6 and 7 are 0x6fdb0 and
+ * 0x6fd40. */
+class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
+{
+  public:
+    hknpCharacterStateOnGround();
+    virtual ~hknpCharacterStateOnGround();
+
+    float gain;                         /* derived name */
+    float walkSpeed;                    /* derived name */
+    float maxLinearAcceleration;        /* derived name */
+    hkBool killVelocityOnLaunch;        /* derived name */
+    hkBool limitVerticalVelocity;       /* derived name */
+    hkBool disableHorizontalProjection; /* derived name */
 };
 
 /* A small record inside hkReferencedObjectLock (derived names): at +0x14

@@ -7,12 +7,15 @@
 
 typedef int SceFiosFH;      /* derived name: a 32-bit file handle */
 typedef long SceFiosOffset; /* derived name: a 64-bit file offset */
+typedef long SceFiosSize;   /* derived name: a 64-bit byte count */
 struct SceFiosOpAttr;       /* derived name: the operation's attributes, null for the defaults */
 
 extern "C" {
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
 int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);
+SceFiosSize sceFiosFHReadSync(const SceFiosOpAttr *attr, SceFiosFH fh, void *buffer,
+                              SceFiosSize length);
 int sceFiosFileDeleteSync(const SceFiosOpAttr *attr, const char *path);
 int sceFiosDirectoryCreate(const SceFiosOpAttr *attr, const char *path);
 }
