@@ -918,7 +918,7 @@ the from-source 3.3 after fetching the prebuilt, and `build.sh` requires it.
 carries a second backport, D26's nop after the stack check's failure
 call; `tools/build_llvm.sh 3.3` applies both and its stamp records the
 set. Round 33's harvest added the third, D27's single store merge per
-visit.
+visit; round 34's the fourth, D28's jump tables inside the function.
 
 ## D21. The library region stays at -O2; FUN_00187750's loop unswitch is an open level question (2026-10-26)
 
@@ -1280,4 +1280,57 @@ two recovery velocities at +0x18, +0x1c, +0x24 and +0x20 stay four
 **Trigger to revisit.** A library function whose base merges two runs
 on one chain (two 8-byte constant stores built from four 4-byte
 constants in one block), or a matched row that fails under the patch;
+either reopens the mechanism.
+
+## D28. The library compiler prints a function's jump tables inside the function (2026-10-27)
+
+**Decision.** The library prefix's compiler (`cxx=3.3-src`) carries a
+fourth backport patch,
+`tools/patches/llvm-3.3-jumptable-01-table-before-function-end.patch`:
+`AsmPrinter::EmitFunctionBody` prints the function's jump tables after the
+body and before the function's end label, so that the symbol's size and
+the unwind range (the `.eh_frame` FDE, the source of
+`config/functions.base.txt`'s sizes) cover a table printed into the
+function's own section. A table printed into another section leaves the
+current section as it was. Nothing else changes. The game prefix is not
+concerned: 4.0.0 prints the tables into `.rodata`, as the game region
+shows.
+
+**Why.** Round 34's worker left FUN_000aa570 with an object whose `.text`
+is the base's 64 bytes exactly (the code, one alignment nop, the
+four-entry table) and a symbol and FDE that end at the last `ret`
+(0x2f); the base's row is 0x40 and covers the table, so the function was
+unclaimable, and so was every function with a switch table. The
+supervisor measured the executable (`jtcensus.py` in the session's
+scratchpad: an indirect `jmpq *%r` reached through a `movslq (%r,%r,4)`
+and a `leaq` of the table; the table's address against the row of the
+jump):
+
+- The library region below the D22 stretches: 54 tables in 44 functions,
+  every one inside its function's row. The D22 third stretch
+  [0x1a3a70, 0x1a3e00) holds 3 tables, all in `.rodata` (0x14d2b40 on),
+  as its later generation prints them.
+- The game region: 497 tables in 354 functions, none in `.text`.
+- The 3.3 release prints the tables after `.size` and after the
+  exception handler's end (`.cfi_endproc`):
+  `lib/CodeGen/AsmPrinter/AsmPrinter.cpp:758-788`. 3.6.2 (`:865-891`)
+  and 4.0.0 (`:982-1015`) print them after the end label too; the
+  worker measured the FDE end at 0x2f under 3.3 to 3.7.1 and at 0x2d
+  under 3.8.1 to 4.0.0 for the same object. Under `-fPIC` on x86-64 the
+  table's entries are 32-bit label differences, which 3.3 prints into
+  the function's section (`EmitJumpTableInfo`, `EK_LabelDifference32`),
+  and the alignment before the table is code alignment, a nop, as the
+  base's byte at 0xaa59f is.
+- Under the patch FUN_000aa570 is equal with every target verified, and
+  `tools/build.sh gate-all` holds on every row: no matched function holds
+  a table, so the change touches no claimed byte, and the symbol sizes of
+  the others are unchanged.
+
+The PS4 compiler's own form of the rule is not known (an end label after
+the tables, or an FDE that spans the section's data); its effect on the
+symbol and the unwind range is measured exactly, and the patch reproduces
+it at the one place that cannot change any other byte of the function.
+
+**Trigger to revisit.** A library function whose base holds a table
+outside its FDE range, or a matched row that fails under the patch;
 either reopens the mechanism.

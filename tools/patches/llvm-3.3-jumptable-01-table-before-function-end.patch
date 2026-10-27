@@ -1,0 +1,49 @@
+llvm-3.3 backport patch: a function's jump tables before its end label (PS4)
+
+This patch CHANGES CODE GENERATION for a function that holds a jump table
+in its own section (every switch table under -fPIC on x86-64, which 3.3
+prints as 32-bit label differences into the function's section): the
+table is printed after the body and before the function's end label, so
+that the function's symbol size and its unwind range (the .eh_frame FDE,
+the source of config/functions.base.txt's sizes) cover the table, as the
+PS4 compiler's library generation has it: the 54 in-text jump tables of
+the library region (44 functions) all lie inside their function's FDE
+range, and the first of them in a queue, FUN_000aa570, is the base's 64
+bytes exactly (the code, one alignment nop, the table) with a symbol and
+FDE that end at its last ret under the release 3.3. The 3.3 release prints
+the tables after .size and .cfi_endproc (AsmPrinter::EmitFunctionBody),
+as 3.6.2 and 4.0.0 do; 4.0.0 puts the tables in .rodata, which is what the
+game region shows (497 tables, none in .text). docs/DECISIONS.md D28 holds
+the measurement.
+
+--- a/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
++++ b/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+@@ -757,6 +757,18 @@
+   // Emit target-specific gunk after the function body.
+   EmitFunctionBodyEnd();
+ 
++  // The PS4 compiler prints a function's jump tables before the function's
++  // end label, so that the function's size and its unwind range cover the
++  // tables it holds in its own section (docs/DECISIONS.md D28: 54 of 54
++  // in-text jump tables of the library region lie inside their function's
++  // FDE range). A table printed in another section leaves the current
++  // section as it was.
++  {
++    MCSectionSubPair FnSection = OutStreamer.getCurrentSection();
++    EmitJumpTableInfo();
++    OutStreamer.SwitchSection(FnSection.first, FnSection.second);
++  }
++
+   // If the target wants a .size directive for the size of the function, emit
+   // it.
+   if (MAI->hasDotTypeDotSizeDirective()) {
+@@ -784,9 +796,6 @@
+   }
+   MMI->EndFunction();
+ 
+-  // Print out jump tables referenced by the function.
+-  EmitJumpTableInfo();
+-
+   OutStreamer.AddBlankLine();
+ }
+ 

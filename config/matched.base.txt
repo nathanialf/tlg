@@ -1207,3 +1207,4 @@ FUN_0001a8f0 src/libs/unknown/func_0001a8f0.cpp _GLOBAL__I_a
 FUN_0002b120 src/libs/unknown/func_0002b120.cpp
 _ZN14hkxTextureFileC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000878f0.cpp
 _ZN7hkxNodeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008b4b0.cpp
+FUN_000aa570 src/libs/unknown/func_000aa570.cpp _Z12FUN_000aa570N13hkMeshSection13PrimitiveTypeEi
