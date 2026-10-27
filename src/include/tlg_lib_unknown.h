@@ -1504,6 +1504,11 @@ inline void *hknpGlobals::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hknpShapeKeyMask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void hkSlot::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {

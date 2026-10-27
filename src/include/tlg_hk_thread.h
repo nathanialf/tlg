@@ -207,29 +207,44 @@ class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterfac
 class hknpAddActiveBodyPairsTask : public hkReferencedObject,
                                    public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x14e9c0) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* hknpSolveFinalizeTask: vtables 0x16a4190 and 0x16a41d8; slot 6 opens the timer "Solve/Finalize". */
 class hknpSolveFinalizeTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x14ee80) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* hknpCleanInactiveCachesTask: vtables 0x16a4210 and 0x16a4258; slot 6 opens the timer "Deactivation/Clean Inactive Caches". */
 class hknpCleanInactiveCachesTask : public hkReferencedObject,
                                     public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x14f0e0) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* hknpProcessSecondRoundResultsTask: vtables 0x16a4290 and 0x16a42d8; slot 6 opens the timer "Collide/Process Second Round Results". */
 class hknpProcessSecondRoundResultsTask : public hkReferencedObject,
                                           public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x14f9f0) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* hknpProcessFirstRoundResultsTask: vtables 0x16a4310 and 0x16a4358; slot 6 opens the timer "Collide/Process First Round Results". */
 class hknpProcessFirstRoundResultsTask : public hkReferencedObject,
                                          public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x1501e0) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* hknpPrepareConstraintsTask: vtables 0x16a4650 and 0x16a4698; slot 6 opens the timer "Constraints/Prepare". */
@@ -249,6 +264,40 @@ class hknpPrepareConstraintsTask : public hkReferencedObject,
     void *unknown18; /* derived name */
     void *unknown20; /* derived name */
     void *unknown28; /* derived name */
+};
+
+/* Three tasks the world's set-up FUN_00048b20 builds (vtables 0x1699060,
+ * 0x16990e0 and 0x1699160, no type info; slots 0 to 4 those of the
+ * constraint tasks, 0x3b640, 0x383f0, 0x270, 0x42d0, 0x69a0), named after
+ * the names their slot 6 gives: "Post Solve" (0x14bdd14), "Pre Solve"
+ * (0x14bdd32) and "Post Collide" (0x14bdd3c), described in the third
+ * state's colour. Slot 5 (0x48670, 0x487c0, 0x48960) runs under the
+ * timer "Physics". */
+class hknpPostSolveTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+  public:
+    /* slot 5 (0x48670) */
+    virtual void process();
+    /* slot 6 (0x486f0) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+};
+
+class hknpPreSolveTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+  public:
+    /* slot 5 (0x487c0) */
+    virtual void process();
+    /* slot 6 (0x48840) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+};
+
+class hknpPostCollideTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+  public:
+    /* slot 5 (0x48960) */
+    virtual void process();
+    /* slot 6 (0x489f0) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* hknpBuildConstraintsTask: vtables 0x16a46d0 and 0x16a4718; slot 6 opens the timer "Constraints/Build Active" or "Build Activated Constraints". */
@@ -277,6 +326,9 @@ class hknpBuildConstraintsTask : public hkReferencedObject,
 class hknpPrepareNewPairsTask : public hkReferencedObject,
                                 public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x15b740) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 /* The narrow phase's pairs task (derived name; vtables 0x16a4ee0 and
@@ -333,13 +385,17 @@ class hknpPrepareExistingPairsTask : public hkReferencedObject,
 };
 
 /* The solver's data task (derived name; vtables 0x16a5690 and 0x16a56d8,
- * constructor 0x16e0e0): slot 5 (0x16ec30) opens the timer "Solve/Data";
+ * constructor 0x16e0e0): slot 5 (0x16ec30, before the work at slot 6,
+ * 0x16a370) gives the name "Solve/Data";
  * its complete destructor FUN_0016eaa0 restores both vtables and frees the
  * arrays at +0x20 and +0xc0 (48-byte polymorphic elements) and the blocks at
  * +0x30, +0x38 and +0xb8; the deleting destructor frees 0xe0 bytes by
  * default. */
 class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 5 (0x16ec30), declared before the work */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
 void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */

@@ -1164,7 +1164,15 @@ class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
 class hknpDynamicCompoundShapeData : public hkReferencedObject
 {
   public:
-    hknpDynamicCompoundShapeData(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpDynamicCompoundShapeData(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), nodes(flag)
+    {
+    }
+
+    /* The tree's nodes from +0x10, each an AABB whose max's w the tree
+     * keeps its own data in (the shape's slot 32, 0xf04a0, reads a leaf's
+     * and clears that w). derived name. */
+    hkArray<struct hkAabb> nodes;
 };
 
 /* hknpStaticCompoundShapeData: vtable 0x1692950, finish callback FUN_00034440. */
@@ -2407,6 +2415,13 @@ struct hknpShapeInstance {
         return reinterpret_cast<const int *>(&transform.translation)[3] & ~FLAGS_MASK;
     }
 
+    /* The instance's leaf in the dynamic compound's tree: the low half of
+     * the same word (0xf04b3). derived name. */
+    int getLeafIndex() const
+    {
+        return u16(reinterpret_cast<const int *>(&transform.translation)[3]);
+    }
+
     hkTransform transform;
     Vec4 scale;
     hknpShape *shape;
@@ -2421,6 +2436,8 @@ struct hknpShapeInstance {
  * the bounds before the query proper. */
 void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape *shape,
                   const void *argument3, const void *argument4, void *argument5); /* derived name */
+
+class hknpShapeKeyMask;
 
 class hknpShape : public hkReferencedObject
 {
@@ -2488,7 +2505,9 @@ class hknpShape : public hkReferencedObject
     virtual void unknownVirtual18(const void *argument1, void *argument2) const;
     virtual void unknownVirtual19(const void *argument1, const void *argument2, int argument3,
                                   float argument4, void *argument5, void *argument6) const;
-    virtual int unknownVirtual20() const;
+    /* Slot 20: a new key mask for the shape (hknpStaticCompoundShape's
+     * 0xdea30 builds one; the decorator's forwards). */
+    virtual hknpShapeKeyMask *unknownVirtual20() const;
     virtual int unknownVirtual21(void *argument1, int argument2, int argument3,
                                  const void *argument4) const;
     virtual void unknownVirtual22(const void *argument1, const void *argument2,
@@ -2569,7 +2588,7 @@ class hknpDecoratorShape : public hknpShape
                       void *argument2) const; /* vtable slot 18; derived name */
     void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
                       void *argument5, void *argument6) const; /* vtable slot 19; derived name */
-    int FUN_0003b1f0() const;                                  /* vtable slot 20; derived name */
+    hknpShapeKeyMask *FUN_0003b1f0() const;                    /* vtable slot 20; derived name */
     int FUN_0003b200(void *argument1, int argument2, int argument3,
                      const void *argument4) const; /* vtable slot 21; derived name */
     void FUN_00037e80(const void *argument1, const void *argument2,
@@ -2608,6 +2627,16 @@ class hknpShapeKeyMask : public hkBaseObject
 {
   public:
     hknpShapeKeyMask(hkFinishLoadedObjectFlag flag) : hkBaseObject(flag) {}
+
+    /* The class allocator: a block of the thread's heap (0xdea4d; defined
+     * in tlg_lib_unknown.h beside the router), and its placement form, which
+     * the finish callbacks construct in place with. */
+    static void *operator new(unsigned long numBytes);
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
 
     virtual void FUN_000381b0(u32 key, bool enabled) = 0; /* derived name */
     virtual bool FUN_000381d0() = 0;                      /* derived name */
@@ -2672,9 +2701,15 @@ class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
 /* hknpStaticCompoundShapeKeyMask (hkClass 0x57bdea0, built at 0x34162: size
  * 0x30, parent hknpCompoundShapeInternalsKeyMask's 0x57bdf20, no members):
  * vtable 0x1692790, finish callback FUN_00034000. */
+class hknpStaticCompoundShape;
+
 class hknpStaticCompoundShapeKeyMask : public hknpCompoundShapeInternalsKeyMask
 {
   public:
+    /* 0xcfa20: the mask of a shape, its arrays empty, sized for the
+     * shape's instances. */
+    hknpStaticCompoundShapeKeyMask(const hknpStaticCompoundShape *shape_);
+
     hknpStaticCompoundShapeKeyMask(hkFinishLoadedObjectFlag flag)
         : hknpCompoundShapeInternalsKeyMask(flag)
     {
@@ -6615,7 +6650,8 @@ class hknpCompoundShape : public hknpCompositeShape
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000418b0 */
     void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00041870 */
     virtual void updateAabb() = 0;                                      /* slot 31; derived name */
-    virtual void unknownVirtual32() = 0;
+    /* Slot 32: an instance's AABB (hknpDynamicCompoundShape's 0xf04a0). */
+    virtual void unknownVirtual32(hknpShapeInstanceId instanceId, hkAabb &aabbOut) const = 0;
 
     hknpShapeSignals *FUN_00041890(); /* vtable slot 8; derived name */
 
@@ -6644,8 +6680,13 @@ class hknpStaticCompoundShape : public hknpCompoundShape
 
     virtual ~hknpStaticCompoundShape();
 
-    void updateAabb();       /* vtable slot 31, FUN_000d0450 */
-    void unknownVirtual32(); /* vtable slot 32 */
+    void updateAabb(); /* vtable slot 31, FUN_000d0450 */
+    void unknownVirtual32(hknpShapeInstanceId instanceId,
+                          hkAabb &aabbOut) const; /* vtable slot 32 */
+
+    /* vtable slot 20 (0xdea30, also hknpStaticCompoundShapeInternals'): a
+     * new key mask over the shape. derived name. */
+    hknpShapeKeyMask *FUN_000dea30() const;
 
     /* vtable slot 3, FUN_00038740, also of hknpStaticCompoundShapeInternals
      * (0x1692840), which does not override it */
@@ -6682,10 +6723,16 @@ class hknpDynamicCompoundShape : public hknpCompoundShape
 
     virtual ~hknpDynamicCompoundShape();
 
-    void updateAabb();       /* vtable slot 31, 0xefff0 */
-    void unknownVirtual32(); /* vtable slot 32, 0xf04a0 */
+    void updateAabb(); /* vtable slot 31, 0xefff0 */
+    /* vtable slot 32 (0xf04a0): the instance's leaf of the tree, its max
+     * without the tree's w. */
+    void unknownVirtual32(hknpShapeInstanceId instanceId, hkAabb &aabbOut) const;
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000358a0 */
+
+    /* From hknpDynamicCompoundShape's records (0x1692e50, 0x169ab60): in
+     * the compound's tail padding, at +0xb8. */
+    hknpDynamicCompoundShapeData *boundingVolumeData;
 };
 
 /* hknpLodShape (type info 0x57c05b8, parent hknpCompositeShape: its finish
@@ -7305,13 +7352,22 @@ struct hkBlockStreamBlock /* derived name */
     }
 
     Header header; /* derived name */
-    u8 unknown8[0x18];
+    /* The block after it, cleared when a writer closes the block (0x93a3b)
+     * and when the block becomes the stream's last (0x9505f). derived
+     * name. */
+    hkBlockStreamBlock *next;
+    u8 unknown10[0x10];
     u8 data[0xfe0]; /* derived name */
 };
 
 struct hkBlockStream /* derived name */
 {
     void FUN_00094df0(BlockCache *cache, void *block, int index); /* derived name */
+    /* The last block given back to the cache and dropped, the block before
+     * it returned as the new last (0x95030; the writer's finalize 0x93a10
+     * drops an empty last block of a stream of two or more). derived
+     * name. */
+    hkBlockStreamBlock *FUN_00095030(BlockCache *cache);
 
     u8 unknown0[8];
     int numTotalElements; /* derived name */
@@ -7803,6 +7859,30 @@ struct hkPackfileHeader {
     s32 flags;
     u16 maxpredicate;
     u16 predicateArraySizePlusPadding;
+};
+
+/* The world's space splitter (derived names after the timer
+ * "TtUpdateSpaceSplitter", 0x14c9b0a; the pointer at +0x1d8 of the world):
+ * its kind at +0x18 picks the cell lookup (0xcd4f6: 0 one cell, 1
+ * FUN_00061060, 2 the grid's FUN_00060c10). The grid's fields from that
+ * lookup: two axes at +0x60 and +0x70 with their offsets at +0x40 and
+ * +0x50, the cells in a row at +0x80 and the index mask at +0x84. */
+struct hknpGridSpaceSplitter /* derived name */
+{
+    /* The cell of a position: its offset coordinate on each axis truncated
+     * and masked, rows of numCellsPerRow (0x60c10; called at 0xcd518,
+     * 0x148d40 and 0x1572ed). derived name. */
+    void FUN_00060c10(const Vec4 &position, int *cellOut) const;
+
+    u8 unknown0[0x18];
+    int type; /* derived name */
+    u8 unknown1c[0x24];
+    Vec4 offsetX;       /* derived name */
+    Vec4 offsetY;       /* derived name */
+    Vec4 axisX;         /* derived name */
+    Vec4 axisY;         /* derived name */
+    int numCellsPerRow; /* derived name */
+    int cellMask;       /* derived name */
 };
 
 #endif
