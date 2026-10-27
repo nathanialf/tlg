@@ -3,7 +3,8 @@
 
 // NONMATCHING: the springs' stores: the base merges the forces at +0x10 and
 // +0x14 into one 8-byte store and keeps the zeros at +0x18 and +0x1c apart;
-// this merges both pairs (docs/NOTES.md, Round 32).
+// this merges both pairs (docs/NOTES.md, Rounds 32 and 33: one merge per
+// chain end fits the base, 3.3's merge loop merges again).
 hkpSpringDamperConstraintMotor::hkpSpringDamperConstraintMotor()
 {
     type = TYPE_SPRING_DAMPER;

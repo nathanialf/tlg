@@ -3,7 +3,8 @@
 
 // NONMATCHING: each lane's conversion to double: the base folds the load,
 // `vcvtss2sd (mem)` after one `vxorps`; this loads with `vmovss` first
-// (docs/NOTES.md, Round 32).
+// (docs/NOTES.md, Rounds 32 and 33: no 3.3 path gives a vxorps feeding the
+// memory form).
 hkOstream &hkOstream::FUN_00008810(const Vec4 &v)
 {
     FUN_000086f0("[%f,%f,%f,(%f)]", lane(v, 0), lane(v, 1), lane(v, 2), lane(v, 3));
