@@ -117,6 +117,9 @@ void FUN_00016f90(Class168e810 *self); /* derived name */
 /* Its deleting destructor (slot 1, 0x16ee0), written as calls while the
  * destructor is not (cookbook 15, 97). derived name. */
 void FUN_00016ee0(Class168e810 *self);
+/* The interface's thunk of it (slot 1 of the second vtable, 0x16f30), on
+ * the object 16 bytes before the interface. derived name. */
+void FUN_00016f30(Interface168e888 *self);
 void FUN_000172c0(Class168e810 *self, void *pointer, void *other); /* derived name */
 void FUN_000173f0(Class168e810 *self, void *pointer, int count);   /* derived name */
 void FUN_00017540(Class168e810 *self, void *pointer, int count);   /* derived name */
@@ -410,6 +413,12 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
  * at +0x108. */
 class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
+  public:
+    /* slot 6 (0x15e7f0; the interface's thunk 0x15e850) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    u8 unknown18[0xb8];
+    int pairsKind; /* derived name: 1 for the existing pairs */
 };
 
 /* A 16-byte task of the broad phase (derived name from its timer name;

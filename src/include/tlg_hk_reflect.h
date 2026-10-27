@@ -487,6 +487,21 @@ struct hkTransform {
     Vec4 translation;   /* derived name */
 };
 
+/* derived name: the point v under t, its x, y and z broadcast and scaling
+ * the rotation's columns, summed y-first, the translation added (inline in
+ * the curve's slot 14, 0x7feb4; FUN_00010f50 is the same body out of
+ * line). */
+inline Vec4 transformPosition(const hkTransform &t, const Vec4 &v)
+{
+    const Vec4 x = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+    const Vec4 y = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
+    const Vec4 z = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
+    const Vec4 rotated =
+        _mm_add_ps(_mm_mul_ps(z, t.rotation.col2),
+                   _mm_add_ps(_mm_mul_ps(x, t.rotation.col0), _mm_mul_ps(y, t.rotation.col1)));
+    return _mm_add_ps(rotated, t.translation);
+}
+
 /* hkMatrix4 (the reflection's type name): four columns of four floats. */
 struct hkMatrix4 {
     /* derived name: the matrix of a transform, the rotation's columns with
@@ -3106,6 +3121,10 @@ class hknpShape : public hkReferencedObject
     virtual int unknownVirtual27(const LodContext000426b0 &context, const LodQuery000426b0 &query,
                                  int currentLod) const;
     virtual void unknownVirtual28(const void *argument1, void *argument2) const;
+    /* Slot 28's default (0x6fc70, kept by nine shape vtables): the shape's
+     * slot 7 bounds under a fixed transform, handed with both arguments to
+     * FUN_00168230; the sphere's slot 28 falls back to it. derived name. */
+    void FUN_0006fc70(const void *argument1, void *argument2) const;
     virtual void unknownVirtual29(const void *argument1, void *argument2) const;
     /* Slot 30: the shared empty body 0x3b640, kept by every shape vtable
      * read so far. */
@@ -3701,7 +3720,11 @@ struct hknpBodyManager /* derived name */
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
  * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
 struct hknpMotion {
-    u8 unknown0[0x3e];
+    u8 unknown0[0x2c];
+    /* The motion's place in its cell's list of active motions, 0x7fffffff
+     * when it is in none (0x47790). */
+    u32 solverId;
+    u8 unknown30[0xe];
     u8 cellIndex;
     u8 unknown3f;
     /* The vector FUN_0005df00 hands out for a body: its linear velocity,
@@ -3752,7 +3775,14 @@ struct hknpMotionManager /* derived name */
     u32 unknown1c;
     u32 unknown20;
     u32 peakMotionIndex;
-    hkArray<hkArray<u32>> unknown28;
+    /* Per cell, the ids of its active motions; a motion's solverId is its
+     * place in its cell's list. derived name. */
+    hkArray<hkArray<u32>> activeMotionsPerCell;
+
+    /* A motion out of its cell's list (0x47790; six callers): the cell's
+     * last id moves into its place, unless it was the last. derived
+     * name. */
+    void FUN_00047790(hknpMotion &motion);
 };
 
 /* The object at +0x4f8 of the world (derived names): the world at +0, the
@@ -4711,10 +4741,22 @@ class hknpCapsuleShape : public hknpConvexPolytopeShape
  * 0x169b670) over hknpConvexPolytopeShape: finish constructors out of line
  * (0x3c540, 0x78230), jumped to by the finish callbacks FUN_0006b6b0 and
  * FUN_0003e730. */
+/* Fills the second argument from the first for a sphere of a centre and a
+ * radius (0x168340; the sphere's slot 28 is its one caller): 1 when the
+ * radius is not positive and nothing is written, 0 otherwise. derived
+ * names. */
+int FUN_00168340(const void *argument1, const Vec4 &center, float radius,
+                 void *argument2); /* derived name */
+
 class hknpSphereShape : public hknpConvexShape
 {
   public:
     hknpSphereShape(hkFinishLoadedObjectFlag flag);
+
+    /* Slot 28 (0x3c670): the sphere's own answer from its centre, the first
+     * vertex, and its convex radius; the shape's default when that fails.
+     * derived name. */
+    void FUN_0003c670(const void *argument1, void *argument2) const;
 };
 
 class hknpTriangleShape : public hknpConvexPolytopeShape
@@ -5072,6 +5114,10 @@ class hkpConstraintData : public hkReferencedObject
   public:
     hkpConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* A new constraint data: no user data (inline in hkpWrappedConstraintData's
+     * constructor, 0x7d557). */
+    hkpConstraintData() : userData(0) {}
+
     /* The class allocator's delete, which the constraint data classes
      * share (tlg_lib_unknown.h's reference-counted form): their deleting
      * destructors free through it (0x7b3b0 for the 0xc0-byte ones). */
@@ -5160,7 +5206,8 @@ class hkpConstraintData : public hkReferencedObject
      * makes into the data it wraps (FUN_0007d020). derived name. */
     virtual void buildJacobianCallback(const void *input, void *output);
 
-    u8 unknownC[0xc];
+    u8 unknownC[4];
+    hkUlong userData; /* the record's member (0x169d660) */
 };
 
 /* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
@@ -6298,6 +6345,10 @@ class hkpHingeConstraintData : public hkpConstraintData
 
     virtual ~hkpHingeConstraintData();
 
+    /* Slot 7 (0x7f020): valid when a stabilized ball and socket has its
+     * stabilization set up and both frames are orthonormal. */
+    hkBool unknownVirtual7() const;
+
     void FUN_0007efa0(float newBreachImpulse);                  /* vtable slot 10; derived name */
     float FUN_0007efb0() const;                                 /* vtable slot 13; derived name */
     void FUN_0007efc0(int bodyIndex);                           /* vtable slot 14; derived name */
@@ -7181,6 +7232,10 @@ class hkOstream : public hkReferencedObject
   public:
     /* Slot 0 of its vtable (0x168d100, stored by its constructor 0x80c0):
      * stores the vtable and releases the writer (0x8310). */
+    /* The constructor (0x80c0, called at 0xdb5 and 0xf0a): a new stream
+     * over the writer, whose reference it takes. */
+    hkOstream(hkStreamWriter *writer);
+
     virtual ~hkOstream();
 
     const hkClass *getClassType() const;            /* vtable slot 3, FUN_00008a20 */
@@ -7196,6 +7251,11 @@ class hkOstream : public hkReferencedObject
      * times by 0xadd80): its characters without the terminator, or
      * "(null)" for a buffer with none, and the stream returned. */
     hkOstream &FUN_000089a0(const hkStringBuf &string);
+
+    /* derived name: the operator<< of a string pointer (0x8940, called at
+     * 0x180abf and 0x180add): its characters, or "(null)" for a null
+     * string, and the stream returned. */
+    hkOstream &FUN_00008940(const hkStringPtr &string);
 
     /* derived name: the operator<< of an unsigned int (0x8550): formatted
      * with "%u" into a buffer on the stack, written, and the stream
@@ -8335,6 +8395,9 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     }
 
     float FUN_0007fad0() const; /* vtable slot 9; derived name */
+    /* Slot 14 (0x7fea0): every point moved under the transform. derived
+     * name. */
+    void FUN_0007fea0(const hkTransform &transform);
 
     float smoothingFactor;
     hkBool closedLoop;
@@ -8680,7 +8743,13 @@ struct hkContainerHeapAllocator {
 
 struct PointerMap /* derived name */
 {
-    void *entries;
+    /* An entry: an empty one's key is -1. derived names. */
+    struct Pair {
+        hkUlong key;
+        hkUlong value;
+    };
+
+    Pair *entries;
     int numEntries;
     int hashMod;
 
