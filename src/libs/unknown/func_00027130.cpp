@@ -11,3 +11,17 @@ int hkVertexFormat::FUN_00027130(ComponentUsage usage, int subUsage) const
     }
     return -1;
 }
+
+/* derived name: an element added at the end when there is room and the
+ * format has none of its usage and sub-usage yet (the search above,
+ * inlined). */
+void hkVertexFormat::FUN_000271f0(const Element &element)
+{
+    if (numElements >= 32) {
+        return;
+    }
+    if (FUN_00027130(element.usage, element.subUsage) >= 0) {
+        return;
+    }
+    elements[numElements++] = element;
+}

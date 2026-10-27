@@ -110,9 +110,13 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     Object00015700 *object18; /* derived name */
     u8 unknown20[0x330];
     Runner00016350 defaultRunner; /* derived name */
+    u8 unknown360[0x10];
 };
 
-void FUN_00016f90(Class168e810 *self);                             /* derived name */
+void FUN_00016f90(Class168e810 *self); /* derived name */
+/* Its deleting destructor (slot 1, 0x16ee0), written as calls while the
+ * destructor is not (cookbook 15, 97). derived name. */
+void FUN_00016ee0(Class168e810 *self);
 void FUN_000172c0(Class168e810 *self, void *pointer, void *other); /* derived name */
 void FUN_000173f0(Class168e810 *self, void *pointer, int count);   /* derived name */
 void FUN_00017540(Class168e810 *self, void *pointer, int count);   /* derived name */

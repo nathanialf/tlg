@@ -1294,3 +1294,20 @@ FUN_00010a70 src/libs/unknown/func_00010a70.cpp _ZN9hkMatrix412FUN_00010a70ERK11
 FUN_0003b990 src/libs/unknown/func_0003b990.cpp
 FUN_00007390 src/libs/unknown/func_00007390.cpp _Z12FUN_00007390P12Pool00007880
 FUN_00008fa0 src/libs/unknown/func_00008fa0.cpp _Z12FUN_00008fa0P22hkBufferedStreamWriter
+FUN_0000ddd0 src/libs/unknown/func_0000ddd0.cpp
+FUN_00016ee0 src/libs/unknown/func_00016ee0.cpp
+FUN_00019730 src/libs/unknown/func_00019730.cpp
+FUN_000231b0 src/libs/unknown/func_000231b0.cpp
+FUN_000234a0 src/libs/unknown/func_000234a0.cpp
+FUN_00024b80 src/libs/unknown/func_00024b80.cpp
+FUN_0002a960 src/libs/unknown/func_0002a960.cpp
+FUN_00033f40 src/libs/unknown/func_00033f40.cpp
+FUN_00034b30 src/libs/unknown/func_00034b30.cpp
+FUN_00037bf0 src/libs/unknown/func_00037bf0.cpp
+FUN_0003b050 src/libs/unknown/func_0003b050.cpp
+FUN_0003c370 src/libs/unknown/func_0003c370.cpp
+FUN_0003e1b0 src/libs/unknown/func_0003e1b0.cpp
+FUN_00041600 src/libs/unknown/func_00041600.cpp
+FUN_00037d80 src/libs/unknown/func_00037d80.cpp _ZN15hknpMaskedShape12FUN_00037d80Ev
+FUN_000271f0 src/libs/unknown/func_00027130.cpp _ZN14hkVertexFormat12FUN_000271f0ERKNS_7ElementE
+FUN_00045190 src/libs/unknown/func_00045190.cpp

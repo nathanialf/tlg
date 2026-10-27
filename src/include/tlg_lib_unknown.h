@@ -509,6 +509,7 @@ class PageAllocator : public hkReferencedObject /* derived name */
     u8 unknownC[0x14];
     hkArray<void *> pages;     /* derived name */
     hkArray<void *> freePages; /* derived name */
+    u64 peakBytesInUse;        /* derived name; the deleting destructor frees 0x48 */
 };
 
 /* The memory system (derived name): a polymorphic object whose instance
@@ -2247,5 +2248,34 @@ class FlaggedPoints00060c70 : public Points000605b0 /* derived name */
     int flags[18];   /* derived name */
     Vec4 points[18]; /* derived name */
 };
+
+/* Deleting destructors written as calls while their classes' destructors
+ * are not (cookbook 15, 97): the base destructor, then the object back to
+ * the thread's heap at its recorded size, the class's own by default. The
+ * base destructors not declared elsewhere come first. derived names. */
+void FUN_0000de20(hkSimpleLocalFrame *self);
+void FUN_00019780(PageAllocator *self);
+void FUN_00023200(hkMemoryMeshBody *self);
+void FUN_0002a9b0(hkMemoryMeshShape *self);
+void FUN_00037c40(hknpMaskedShape *self);
+void FUN_0003e200(hknpDummyShape *self);
+void FUN_00041650(hknpCompoundShape *self);
+
+void FUN_0000ddd0(hkSimpleLocalFrame *self);               /* slot 1 of 0x168d8e0 */
+void FUN_00019730(PageAllocator *self);                    /* slot 1 of 0x168e8e0 */
+void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
+void FUN_000234a0(hkIndexedTransformSet *self);            /* slot 1 of 0x1691760 */
+void FUN_00024b80(hkMultipleVertexBuffer *self);           /* slot 1 of 0x1691ff0 */
+void FUN_0002a960(hkMemoryMeshShape *self);                /* slot 1 of 0x1692530 */
+void FUN_00033f40(hknpStaticCompoundShapeInternals *self); /* slot 1 of 0x1692830 */
+void FUN_00034b30(hknpCompressedMeshShapeData *self);      /* slot 1 of 0x1692b00 */
+void FUN_00037bf0(hknpMaskedShape *self);                  /* slot 1 of 0x1693a80 */
+void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d0 */
+/* Also slot 1 of hknpConvexShape's vtable 0x1697d90 (one body for the
+ * classes of 0x30 bytes, named for the sphere's constructor beside it,
+ * 0x3c540; D15). */
+void FUN_0003c370(hknpSphereShape *self);   /* slot 1 of 0x1695c10 */
+void FUN_0003e1b0(hknpDummyShape *self);    /* slot 1 of 0x16967b0 */
+void FUN_00041600(hknpCompoundShape *self); /* slot 1 of 0x1697900 */
 
 #endif

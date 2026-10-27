@@ -2120,6 +2120,13 @@ struct hkVertexFormat {
     /* derived name: the elements put in canonical order (0x27180). */
     void FUN_00027180();
 
+    struct Element;
+
+    /* derived name: an element added at the end, unless the format is full
+     * (32) or already has one of its usage and sub-usage (0x271f0, which
+     * inlines 0x27130; called at 0x25a82). */
+    void FUN_000271f0(const Element &element);
+
     struct Element {
         u8 dataType;
         u8 numValues;
@@ -3126,6 +3133,9 @@ class hknpMaskedShape : public hknpDecoratorShape
     MaskWrapper maskWrapper;
     hknpShapeSignals mutationSignals;
     s32 maskSize;
+    /* To the record's 0x70 bytes (the deleting destructor 0x37bf0 frees
+     * them). */
+    u8 unknown64[0xc];
 };
 
 void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
@@ -4287,6 +4297,19 @@ class hknpConvexShape : public hknpShape
 
     hkRelArray<Vec4> vertices;
 };
+
+/* The settings a convex box is built under (derived name; 0x451e0 tests the
+ * byte at +4). */
+struct ConvexBuildConfig000451e0;
+
+/* derived names: a convex shape of the box between an AABB's corners with a
+ * convex radius (0x451e0), and of the box of half extents about the origin,
+ * through it (0x45190, called by the game at 0xea6a21, 0xea6f1f and
+ * 0xeaabb8). */
+hknpConvexShape *FUN_000451e0(const hkAabb &aabb, float convexRadius,
+                              const ConvexBuildConfig000451e0 &config);
+hknpConvexShape *FUN_00045190(const Vec4 &halfExtents, float convexRadius,
+                              const ConvexBuildConfig000451e0 &config);
 
 /* hknpConvexPolytopeShape (type info 0x57bf760, hkClass 0x57bf710 with
  * hknpConvexShape as parent, size 0x40): members from its record table at
