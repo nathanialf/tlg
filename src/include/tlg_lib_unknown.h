@@ -177,7 +177,10 @@ class AllocatorBase /* derived name */
     /* Slot 9: the allocator's statistics into the caller's record
      * (MemoryStatistics, below). derived name. */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
-    virtual void unknownVirtual10();
+    /* Slot 10: the size a block of the given request occupies (the large
+     * block allocator's 0x13500; the router adaptors forward it). derived
+     * name. */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const;
     virtual void unknownVirtual11();
     /* Slot 12: the allocator's second interface, null by default (the
      * shared 0x42d0); named after TwoBaseAllocator's overrider, which
@@ -267,11 +270,14 @@ class SingleBlockAllocator : public AllocatorBase /* derived name */
   public:
     void *FUN_000120d0(int &numBytes);              /* vtable slot 4; derived name */
     void FUN_00012100(void *pointer, int numBytes); /* vtable slot 5; derived name */
+    /* Slot 9 (0x12120): what is handed out is allocated, in use and the
+     * peak; the rest of the block is available and the block the largest. */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
 
     char *start; /* derived name */
-    u8 unknown10[8];
-    char *end; /* derived name */
-    char *top; /* derived name */
+    char *limit; /* the block's end; derived name */
+    char *end;   /* derived name */
+    char *top;   /* derived name */
 };
 
 class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
@@ -992,6 +998,10 @@ class FiosStreamReader : public StreamReader /* derived name */
  * +0xc, whether it opened at +0x10), or null when the open fails. derived
  * name. */
 StreamReader *FUN_00093180(const char *name);
+/* The native file writer of a file name (0x91d50): opened through Fios
+ * with the open flags in the third argument (the second is not read), a
+ * reference-counted writer over the handle, or null. derived name. */
+hkStreamWriter *FUN_00091d50(const char *name, int flags, u16 openFlags);
 
 class FiosFileSystem : public hkReferencedObject /* derived name */
 {
@@ -1002,6 +1012,11 @@ class FiosFileSystem : public hkReferencedObject /* derived name */
      * reader is wrapped in a 0x38-byte buffered reader of 0x4000 bytes
      * (0x94170) and given up; a null reader stays null. derived name. */
     StreamReader *FUN_0001a7b0(StreamReader *reader, int flags);
+    /* Slot 6 (0x1bb80): a writer of the named file, truncated when bit 1 of
+     * the flags asks, handed back as the flags ask (0x1a850). derived
+     * names. */
+    hkStreamWriter *FUN_0001bb80(const char *name, int flags);
+    hkStreamWriter *FUN_0001a850(hkStreamWriter *writer, int flags);
     hkResult FUN_0001bbc0(const char *path); /* vtable slot 7; derived name */
     hkResult FUN_0001bbe0(const char *path); /* vtable slot 8; derived name */
 };
@@ -1166,25 +1181,34 @@ extern __thread hkMemoryRouter *D_16dc070;
 class RouterAllocator50 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes);                               /* 0xac60 */
-    virtual void *FUN_00008d70(int &numBytes);                            /* slot 4, 0xacd0 */
-    virtual void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9, 0xad80 */
+    virtual void *blockAlloc(int numBytes);                                /* 0xac60 */
+    virtual void blockFree(void *pointer, int numBytes);                   /* slot 3, 0xac90 */
+    virtual void *FUN_00008d70(int &numBytes);                             /* slot 4, 0xacd0 */
+    virtual void FUN_00008d80(void *pointer, int numBytes);                /* slot 5, 0xad00 */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xad80 */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xadb0 */
 };
 
 class RouterAllocator60 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes);                               /* 0xadf0 */
-    virtual void *FUN_00008d70(int &numBytes);                            /* slot 4, 0xae60 */
-    virtual void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9, 0xaf10 */
+    virtual void *blockAlloc(int numBytes);                                /* 0xadf0 */
+    virtual void blockFree(void *pointer, int numBytes);                   /* slot 3, 0xae20 */
+    virtual void *FUN_00008d70(int &numBytes);                             /* slot 4, 0xae60 */
+    virtual void FUN_00008d80(void *pointer, int numBytes);                /* slot 5, 0xae90 */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xaf10 */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xaf40 */
 };
 
 class RouterAllocator58 : public AllocatorBase /* derived name */
 {
   public:
-    virtual void *blockAlloc(int numBytes);                               /* 0xaf80 */
-    virtual void *FUN_00008d70(int &numBytes);                            /* slot 4, 0xaff0 */
-    virtual void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9, 0xb0a0 */
+    virtual void *blockAlloc(int numBytes);                                /* 0xaf80 */
+    virtual void blockFree(void *pointer, int numBytes);                   /* slot 3, 0xafb0 */
+    virtual void *FUN_00008d70(int &numBytes);                             /* slot 4, 0xaff0 */
+    virtual void FUN_00008d80(void *pointer, int numBytes);                /* slot 5, 0xb020 */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xb0a0 */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xb0d0 */
 };
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */

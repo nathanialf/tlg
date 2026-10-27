@@ -291,6 +291,11 @@ struct hkTransform {
     Vec4 translation;   /* derived name */
 };
 
+/* derived name: out = the point v under the transform, its rotation's
+ * columns scaled by v's x, y and z and summed, the translation added
+ * (0x10f50). */
+void FUN_00010f50(Vec4 &out, const hkTransform &t, const Vec4 &v);
+
 /* derived name: out = v brought into the transform's space, the
  * translation taken off and the rotation undone (0x10f90). */
 void FUN_00010f90(Vec4 &out, const hkTransform &t, const Vec4 &v);
@@ -598,6 +603,17 @@ void FUN_0000e5d0(hkStringPtr *self);                                /* derived 
 struct hkStringBuf /* derived name */
 {
     hkStringBuf(const hkStringPtr &source);
+
+    /* The characters' length, without the terminator the array holds. */
+    int getLength() const
+    {
+        return string.size - 1;
+    }
+
+    /* Every letter A to Z made lower case, in place (0x11db0; the image
+     * loader lowers a file's extension with it at 0x1885b5). derived
+     * name. */
+    void FUN_00011db0();
 
     hkInplaceArray<char, 128> string; /* derived name */
 };
