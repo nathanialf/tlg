@@ -1245,6 +1245,20 @@ inline void hknpCollisionQueryCollector::operator delete(void *object, unsigned 
     }
 }
 
+inline void hknpWorldObject1d0Small::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
+inline void QueryProcessor0010b090::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
 /* Three allocators that hold nothing of their own and hand every request to
  * one of the calling thread's router allocators (vtables 0x168d430,
  * 0x168d4b0 and 0x168d530, address points 0x10 further; slots 0 and 1 the

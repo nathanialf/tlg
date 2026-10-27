@@ -36,6 +36,13 @@ enum hkResult {
  * through a conditional branch (docs/DECISIONS.md D19). derived name. */
 #define HK_BREAKPOINT(id) __builtin_debugtrap()
 
+/* Havok's restrict qualifier for its output parameters (an aliasing
+ * promise, part of the signature's meaning): an output that does not
+ * overlap the inputs, so a value read before an output is written is
+ * reused after it (hknpCircularSurfaceVelocity's slot 5, 0x15fa60, reads
+ * its angular velocity once). */
+#define HK_RESTRICT __restrict
+
 /* The largest float Havok uses (its HK_REAL_MAX, 3.40282e+38f: the bits
  * 0x7f7fffee the constraint datas' slots 11 to 13 return and their breach
  * tests compare with). */
@@ -624,6 +631,24 @@ void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
  * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
 void FUN_0000e3d0(hkStringPtr *self); /* derived name */
 
+/* An XML reader (derived name; vtable 0x16a6aa0, address point 0x16a6ab0,
+ * no type info), 0x28 bytes: hkSerializeDeprecated's slot 10 (0x19a4d0)
+ * builds one on its stack (0x19a501, the constructor 0x19d8e0) and
+ * destroys it (0x19da00, slot 0; slot 1 the deleting destructor 0x19d920).
+ * Slot 5 (0x19da90) reads the next node of a stream into a pointer: a
+ * reference-counted node whose kind at +0xc is 1 for an element and whose
+ * name at +0x10 the caller compares with "hkpackfile". An array at +0x10
+ * and a string at +0x20, both empty to begin with. */
+class hkXmlParser : public hkReferencedObject /* derived name */
+{
+  public:
+    hkXmlParser();
+    virtual ~hkXmlParser();
+
+    hkArray<void *> pendingNodes; /* derived name */
+    hkStringPtr lastError;        /* derived name */
+};
+
 /* hkxEnvironment::Variable (type info "hkxEnvironmentVariable" 0x57c8100,
  * hkClass 0x57c80b0, both built by 0x8da60: size 0x10, no vtable; member
  * records at 0x16a2950): name and value, string
@@ -1074,6 +1099,9 @@ struct hknpVehicleTransmissionOutput /* derived name */
     u8 unknown0[0x11];
     hkBool isReversing; /* derived name */
     s8 currentGear;     /* derived name */
+    /* Set while the gear changes: slot 6 (0x67ffc) passes no torque then.
+     * derived name. */
+    hkBool isInGearChange;
 };
 
 /* hknpVehicleDefaultTransmission: vtable 0x1699b90, finish callback FUN_00037a90. */
@@ -1085,10 +1113,19 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
     {
     }
 
-    bool FUN_00068130(
+    /* Slots 5 to 10 (0x67f40, 0x67ff0, 0x68030, 0x68130, 0x680b0,
+     * 0x67ef0); slot 6 asks slot 10 for the ratio through the vtable. */
+    virtual void unknownVirtual5();
+    /* Slot 6: the torque passed on, none while the gear changes. derived
+     * name. */
+    virtual float FUN_00067ff0(const hknpVehicleInstance *vehicle,
+                               const hknpVehicleTransmissionOutput &output) const;
+    virtual void unknownVirtual7();
+    virtual bool FUN_00068130(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 8; derived name */
-    float FUN_00067ef0(
+    virtual void unknownVirtual9();
+    virtual float FUN_00067ef0(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 10; derived name */
 
@@ -1140,11 +1177,41 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
     }
 };
 
-/* hknpCircularSurfaceVelocity: vtable 0x16a4f50, finish callback FUN_0003af50. */
-class hknpCircularSurfaceVelocity : public hkReferencedObject
+/* hknpSurfaceVelocity (hkClass 0x57c19d8, 0x10 bytes, parent
+ * hkReferencedObject): slot 5 gives the velocities of the surface at a
+ * point, the linear one and the angular one through the last two
+ * arguments (the surface velocity modifier asks for them at 0x16d200; the
+ * two arguments between are not read by the circular one). derived names. */
+class hknpSurfaceVelocity : public hkReferencedObject
 {
   public:
-    hknpCircularSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    virtual void calcVelocities(const hkVector4 &position, const void *argument2,
+                                const void *argument3, hkVector4 *HK_RESTRICT linearVelocityOut,
+                                hkVector4 *HK_RESTRICT angularVelocityOut) const = 0;
+};
+
+/* hknpCircularSurfaceVelocity: vtable 0x16a4f50, finish callback
+ * FUN_0003af50; hkClass built at 0x3afe2 (0x30 bytes, parent
+ * hknpSurfaceVelocity), records from 0x1695810: velocityIsLocalSpace
+ * (hkBool) at +0xc, pivot and angularVelocity (vectors) at +0x10 and
+ * +0x20. */
+class hknpCircularSurfaceVelocity : public hknpSurfaceVelocity
+{
+  public:
+    hknpCircularSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hknpSurfaceVelocity(flag) {}
+
+    /* Slot 5 (0x15fa60): the angular velocity everywhere, the linear one
+     * that velocity's cross product with the point's offset from the
+     * pivot. */
+    void calcVelocities(const hkVector4 &position, const void *argument2, const void *argument3,
+                        hkVector4 *HK_RESTRICT linearVelocityOut,
+                        hkVector4 *HK_RESTRICT angularVelocityOut) const;
+
+    hkBool velocityIsLocalSpace;
+    hkVector4 pivot;
+    hkVector4 angularVelocity;
 };
 
 /* hknpLinearSurfaceVelocity: vtable 0x16a4bb0, finish callback FUN_0003d520. */
@@ -2449,10 +2516,27 @@ class hknpEventDispatcher /* derived name */
 class hknpWorldObject1d0 /* derived name */
 {
   public:
-    virtual ~hknpWorldObject1d0();
+    /* Inline and empty: the smaller class's deleting destructor (0x6c810)
+     * calls no base destructor. */
+    virtual ~hknpWorldObject1d0() {}
 
     u8 unknown8[8];
     void *pointer10; /* derived name */
+};
+
+/* The 0x20-byte one (derived name; vtable 0x169aca0): its destructor is the
+ * shared empty 0x3b640, its deleting destructor 0x6c810, which a second
+ * 0x20-byte class's vtable (0x16a66c0, stored by FUN_0018d640) cites by
+ * address. */
+class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
+{
+  public:
+    virtual ~hknpWorldObject1d0Small();
+
+    /* The class allocator's delete (defined in tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown18[8];
 };
 
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
@@ -3519,6 +3603,13 @@ struct ConstraintRuntimeInfo /* derived name */
  * deformable fixed data (0x7c000) reads the first three results' impulses. */
 struct hkpSolverResults /* derived name */
 {
+    /* Nothing applied yet (0x79114 clears four). derived name. */
+    void init()
+    {
+        impulseApplied = 0.0f;
+        internalSolverData = 0.0f;
+    }
+
     float impulseApplied;     /* derived name */
     float internalSolverData; /* derived name */
 };
@@ -3690,6 +3781,17 @@ struct hkpBallSocketConstraintAtom {
     float inertiaStabilizationFactor;
 };
 
+/* hkpLinFrictionConstraintAtom (0x10 bytes, records built at 0x815b4):
+ * isEnabled and frictionAxis (hkUint8) at +2 and +3, maxFrictionForce at
+ * +4, padding (8 bytes, not serialized) at +8. */
+struct hkpLinFrictionConstraintAtom {
+    u16 type; /* derived name */
+    u8 isEnabled;
+    u8 frictionAxis;
+    float maxFrictionForce;
+    u8 padding[8];
+};
+
 class hkpConstraintMotor;
 
 struct hkpLinMotorConstraintAtom {
@@ -3699,14 +3801,14 @@ struct hkpLinMotorConstraintAtom {
         previousTargetPositionOffset = -1;
     }
 
-    u16 type; /* derived name */
-    bool isEnabled;
+    u16 type;         /* derived name */
+    hkBool isEnabled; /* TYPE_BOOL in the record */
     u8 motorAxis;
     s16 initializedOffset;
     s16 previousTargetPositionOffset;
     hkpConstraintMotor *motor;
     float targetPosition;
-    u8 padding[4];
+    u8 padding[12]; /* not serialized: the atom is 0x20 bytes */
 };
 
 class hkpPrismaticConstraintData : public hkpConstraintData
@@ -3721,7 +3823,14 @@ class hkpPrismaticConstraintData : public hkpConstraintData
 
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpLinMotorConstraintAtom motor;
-        u8 unknownA8[0x58];
+        hkpLinFrictionConstraintAtom friction;
+        u8 unknownC0[0x40]; /* ang, lin0, lin1, linLimit */
+    };
+
+    /* What the solver keeps for the constraint (derived names): its first
+     * four solver results are the motor's and the friction's. */
+    struct Runtime {
+        hkpSolverResults solverResults[4];
     };
 
     /* The finish constructor (0x7ce10; hkClass 0x57c4088 built at 0x7cf8e,
@@ -3733,6 +3842,10 @@ class hkpPrismaticConstraintData : public hkpConstraintData
 
     void FUN_0007e870(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* The motor on or off, the friction the other way, and the runtime's
+     * motor and friction results cleared when there is one (0x7e910,
+     * called by the game at 0xeb1966). derived name. */
+    void FUN_0007e910(void *runtime, hkBool isEnabled);
     void FUN_0007e890(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -4038,7 +4151,7 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
 
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpLinMotorConstraintAtom motor;
-        u8 unknownA8[0x78];
+        u8 unknownB0[0x70]; /* three frictions, ang and three linear limits */
     };
 
     /* The finish constructor (0x7ac70; hkClass built at 0x7ad45, parent
@@ -4250,6 +4363,18 @@ class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
     }
 };
 
+/* hkpAngFrictionConstraintAtom (0x10 bytes, record table 0x169da20):
+ * isEnabled, firstFrictionAxis and numFrictionAxes (hkUint8) at +2 to +4,
+ * maxFrictionTorque at +8, padding (4 bytes, not serialized) at +0xc. */
+struct hkpAngFrictionConstraintAtom {
+    u16 type; /* derived name */
+    u8 isEnabled;
+    u8 firstFrictionAxis;
+    u8 numFrictionAxes;
+    float maxFrictionTorque;
+    u8 padding[4];
+};
+
 /* hkpAngMotorConstraintAtom (type info 0x57c4920, size 0x20, record table
  * 0x169ee30): isEnabled at +2, motorAxis at +3, initializedOffset and
  * previousTargetAngleOffset (hkInt16) at +4 and +6, motor at +8,
@@ -4264,8 +4389,8 @@ struct hkpAngMotorConstraintAtom {
         correspondingAngLimitSolverResultOffset = -1;
     }
 
-    u16 type; /* derived name */
-    bool isEnabled;
+    u16 type;         /* derived name */
+    hkBool isEnabled; /* TYPE_BOOL in the record */
     u8 motorAxis;
     s16 initializedOffset;
     s16 previousTargetAngleOffset;
@@ -4423,8 +4548,15 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpAngMotorConstraintAtom angMotor;
-        u8 unknownC0[0x40]; /* angFriction, angLimit, 2dAng */
+        hkpAngFrictionConstraintAtom angFriction;
+        u8 unknownD0[0x30]; /* angLimit, 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
+    };
+
+    /* What the solver keeps for the constraint (derived names): its first
+     * four solver results are the motor's and the friction's. */
+    struct Runtime {
+        hkpSolverResults solverResults[4];
     };
 
     /* The finish constructor (0x82000): the atoms finish themselves. */
@@ -4433,7 +4565,11 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     virtual ~hkpLimitedHingeConstraintData();
 
     void FUN_000791f0(
-        hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
+        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* The motor on or off, the friction the other way, and the runtime's
+     * motor and friction results cleared when there is one (0x79100,
+     * called by the game at 0xeb19d9). derived name. */
+    void FUN_00079100(void *runtime, hkBool isEnabled);
     void FUN_000790b0(float newBreachImpulse);                  /* vtable slot 10; derived name */
     float FUN_000790c0() const;                                 /* vtable slot 13; derived name */
     void FUN_000790d0(int bodyIndex);                           /* vtable slot 14; derived name */
@@ -6047,7 +6183,8 @@ class hknpVehicleInstance : public hknpUnaryAction
     hknpVehicleWheelCollide *wheelCollide;
     u8 unknown70[0x84];
     hkBool tryingToReverse; /* record 0x1698d18 */
-    u8 unknownF5[7];
+    u8 unknownF5[3];
+    float torque; /* record at 0x1698a70's nineteenth */
     float rpm;
     u8 unknown100
         [0x18]; /* mainSteeringAngle, mainSteeringAngleAssumingNoReduction, wheelsSteeringAngle */
@@ -6194,6 +6331,9 @@ class hknpFlippedGetClosestPointsQueryCollector
 class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
+    /* Empty; the deleting destructor is 0xcf880 (in both vtables). */
+    virtual ~hknpScaledQueryCollector();
+
     void FUN_000cf8c0();       /* vtable slot 3; derived name */
     bool FUN_000cfa10() const; /* vtable slot 6; derived name */
 
@@ -6212,6 +6352,9 @@ class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived n
 class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
+    /* Empty; the deleting destructor is 0x16d040. */
+    virtual ~hknpScaledOffsetQueryCollector();
+
     void FUN_0016d080();       /* vtable slot 3; derived name */
     bool FUN_0016d1d0() const; /* vtable slot 6; derived name */
 
@@ -6235,6 +6378,24 @@ class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /*
     hknpCollisionQueryCollector *childCollector; /* derived name */
 };
 
+/* A processor of a query's items (derived name; vtable 0x16a3d90, address
+ * point 0x16a3da0), 0xf0 bytes, built on the stack by FUN_0010dbc0
+ * (0x10dc18): slot 2 (0x10b090) takes a pointer to the items and their
+ * count. Its destructor is the shared empty 0xadd50 and its deleting
+ * destructor 0x10b050, which the processor of vtable 0x16a3dc0 (built by
+ * FUN_0010bf50, slot 2 0x10b810) cites by address. */
+class QueryProcessor0010b090 /* derived name */
+{
+  public:
+    virtual ~QueryProcessor0010b090();
+
+    /* The class allocator's delete (defined in tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown8[8];
+    Vec4 unknown10[14];
+};
+
 /* A collector that keeps the closest hit (derived name), 0x90 bytes, vtable
  * address point 0x169a700, built at 0x1569c8, 0x158c45, 0x158cb5 and
  * 0x179268: slot 3 (0x69640) resets it, slot 4 (0x696e0) keeps a hit whose
@@ -6244,6 +6405,9 @@ class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /*
 class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
+    /* Empty; the deleting destructor is 0x69600. */
+    virtual ~hknpClosestHitCollector();
+
     bool FUN_000696d0() const; /* vtable slot 6; derived name */
 
     u8 hit[0x60];  /* derived name */

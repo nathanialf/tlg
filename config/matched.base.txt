@@ -1082,3 +1082,12 @@ _ZN14Runner00016350D0Ev src/libs/unknown/func_00013e50.cpp
 FUN_0001c550 src/libs/unknown/func_0001c550.cpp
 _ZN41hknpFlippedGetClosestPointsQueryCollectorD0Ev src/libs/unknown/func_000483d0.cpp
 _ZN34hknpFlippedShapeCastQueryCollectorD0Ev src/libs/unknown/func_00048520.cpp
+FUN_00067ff0 src/libs/unknown/func_00067ff0.cpp
+_ZN23hknpClosestHitCollectorD0Ev src/libs/unknown/func_00069600.cpp
+_ZN23hknpWorldObject1d0SmallD0Ev src/libs/unknown/func_0006c810.cpp
+FUN_00079100 src/libs/unknown/func_00079100.cpp
+FUN_0007e910 src/libs/unknown/func_0007e910.cpp
+_ZN24hknpScaledQueryCollectorD0Ev src/libs/unknown/func_000cf880.cpp
+_ZN22QueryProcessor0010b090D0Ev src/libs/unknown/func_0010b050.cpp
+FUN_0015fa60 src/libs/unknown/func_0015fa60.cpp _ZNK27hknpCircularSurfaceVelocity14calcVelocitiesERK9hkVector4PKvS4_PS0_S5_
+_ZN30hknpScaledOffsetQueryCollectorD0Ev src/libs/unknown/func_0016d040.cpp

@@ -244,6 +244,22 @@ class hknpPrepareConstraintsTask : public hkReferencedObject,
 class hknpBuildConstraintsTask : public hkReferencedObject,
                                  public hknpTaskInterface /* derived name */
 {
+  public:
+    /* 0x1550c0, called by FUN_00150330 (0x150c33, 0x150daa) on 0x40 bytes
+     * from the thread's heap: an int (0 at 0x150c2b), two pointers and an
+     * address inside the owner (+0x138); the count at +0x38 starts at 0. */
+    hknpBuildConstraintsTask(int unknown18, void *unknown28, void *unknown20, void *unknown30);
+
+    /* slot 5 (0x1551a0) */
+    virtual void process();
+    /* slot 6 */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    int unknown18;   /* derived name */
+    void *unknown20; /* derived name */
+    void *unknown28; /* derived name */
+    void *unknown30; /* derived name */
+    int unknown38;   /* derived name */
 };
 
 /* hknpPrepareNewPairsTask: vtables 0x16a4ce0 and 0x16a4d28; slot 6 opens the timer "Collide/Prepare New Pairs". */
