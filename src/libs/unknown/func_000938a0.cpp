@@ -5,13 +5,13 @@
 
 /* derived name: the writer is bound to the stream and starts empty at its
  * first block, which is fetched ahead of the writes to it. */
-void hkBlockStreamWriter::FUN_000938a0(void *blockAllocator, hkBlockStream *stream)
+void hkBlockStreamWriter::FUN_000938a0(BlockCache *blockCache, hkBlockStream *stream)
 {
-    void *block = stream->blocks.data[0];
-    allocator = blockAllocator;
+    hkBlockStreamBlock *block = stream->blocks.data[0];
+    cache = blockCache;
     blockStream = stream;
     currentByteOffset = 0;
     currentNumElements = 0;
-    _mm_prefetch(static_cast<const char *>(block), _MM_HINT_NTA);
+    _mm_prefetch(reinterpret_cast<const char *>(block), _MM_HINT_NTA);
     currentBlock = block;
 }

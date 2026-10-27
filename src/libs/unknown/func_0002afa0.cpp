@@ -4,5 +4,5 @@
 /* derived name: the cell index of the motion of the record's first body. */
 u8 FUN_0002afa0(const hknpWorld *world, const Pair08Owner *self) /* derived name */
 {
-    return world->motions[world->bodies[self->first].motionId].cellIndex;
+    return world->motions[world->bodyManager.bodies[self->first].motionId].cellIndex;
 }

@@ -755,7 +755,11 @@ class MemoryExtendedInterface /* derived name */
 class BufferAllocator : public AllocatorBase /* derived name */
 {
   public:
-    void *blockAlloc(int numBytes);              /* slot 2 (0x90b20); derived name */
+    void *blockAlloc(int numBytes); /* slot 2 (0x90b20); derived name */
+    /* The allocation under the lock at +0x440 (0x90b70): slot 2 asks for
+     * the rounded size exactly, slot 4 (0x90db0) lets the size it gets back
+     * differ. derived names. */
+    void *FUN_00090b70(int &numBytesInOut, bool exactSize);
     void blockFree(void *pointer, int numBytes); /* slot 3 (0x90d90); derived name */
     bool FUN_00091090(int numBytes) const;       /* derived name */
     void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9 (0x910a0) */
@@ -1023,7 +1027,16 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     u8 unknown32c[4];
     bool flag330;   /* derived name */
     hkBool running; /* derived name */
+    /* To the 0x348 bytes the deleting destructor (0x7390) frees by
+     * default. */
+    u8 unknown332[0x16];
 };
+
+/* The pool's destructor (0x73e0, which stores the vtable 0x168cba0) and
+ * its deleting destructor (slot 1, 0x7390), written as calls while the
+ * destructor is not (cookbook 15, 97). derived names. */
+void FUN_000073e0(Pool00007880 *self); /* derived name */
+void FUN_00007390(Pool00007880 *self); /* derived name */
 
 /* derived name: the start function of a pool's worker thread (0x7890
  * passes it to 0x10580 with the worker's record): runs the pool's worker
@@ -1758,6 +1771,11 @@ inline void hkUuidObject::operator delete(void *object, unsigned long numBytes)
 }
 
 inline void Crc32StreamWriter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkArrayStreamWriter::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

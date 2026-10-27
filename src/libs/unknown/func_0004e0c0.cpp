@@ -5,7 +5,7 @@
  * at +0x4f8; one outside it is left alone. */
 void hknpWorld::FUN_0004e0c0(int bodyId)
 {
-    if (bodies[bodyId].broadPhaseId != static_cast<u32>(-1)) {
+    if (bodyManager.bodies[bodyId].broadPhaseId != static_cast<u32>(-1)) {
         object4f8->FUN_000639b0(bodyId);
     }
 }

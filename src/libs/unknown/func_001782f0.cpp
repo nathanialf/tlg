@@ -5,7 +5,7 @@
  * when its body carries flag 8, the contacts are dropped. */
 void hknpCharacterProxy::FUN_001782f0(hknpWorld *world)
 {
-    if (world->bodies[bodyId].flags & 8) {
+    if (world->bodyManager.bodies[bodyId].flags & 8) {
         contacts.clear();
     }
 }

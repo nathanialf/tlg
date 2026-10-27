@@ -471,8 +471,26 @@ struct hkTransform {
      * checks a body's transform with it, 0xeae90b). */
     bool FUN_00010ce0() const;
 
+    /* derived name: the transform as a matrix, as hkMatrix4's FUN_00010a70
+     * builds it (0x10a10; called at 0x115b9 and from the game at
+     * 0xeabd43). */
+    void FUN_00010a10(struct hkMatrix4 &out) const;
+
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
+};
+
+/* hkMatrix4 (the reflection's type name): four columns of four floats. */
+struct hkMatrix4 {
+    /* derived name: the matrix of a transform, the rotation's columns with
+     * w zero and the translation with w one (row 3 of the constant table)
+     * (0x10a70; the game calls it at 0xea114d). */
+    void FUN_00010a70(const hkTransform &transform);
+
+    Vec4 col0; /* derived name */
+    Vec4 col1; /* derived name */
+    Vec4 col2; /* derived name */
+    Vec4 col3; /* derived name */
 };
 
 /* derived name: out = the point v under the transform, its rotation's
@@ -3351,10 +3369,18 @@ struct hknpBody {
 
     hkTransform transform;
     int flags;
-    u8 unknown44[0x24];
+    u8 unknown44[0x1c];
+    u32 id;
+    /* The next body of an attached group, the body itself when alone
+     * (0x4c720 compares the two). */
+    u32 nextAttachedBodyId;
     int motionId;
     u32 broadPhaseId; /* -1 while the body is not in the broad phase */
-    u8 unknown70[0x20];
+    u8 unknown70[8];
+    /* The body's index into the body manager's active list, 0x7fffffff when
+     * it has none (0x1615a0 and 0x4c720 store that). */
+    u32 indexIntoActiveListOrDeactivatedIslandId;
+    u8 unknown7c[0x14];
 };
 
 /* What the world holds at +0x10 (derived name after hknpBodyManager.cpp, the
@@ -3389,6 +3415,13 @@ struct hknpBodyManager /* derived name */
      * off them (0x161910; the world's step calls it at 0x4fee6 and
      * 0x50001). */
     void FUN_00161910();
+
+    /* derived names: a body taken off the active list (0x1615a0: the last
+     * active body moved into its slot, its flags marked, its index reset),
+     * and every body of the attached group a body starts taken off in turn
+     * (0x161630, which walks nextAttachedBodyId back to the first). */
+    void FUN_001615a0(int bodyId);
+    void FUN_00161630(int bodyId);
 
     u8 unknown0[0x10];
     hkArray<hknpBody> bodies; /* derived name */
@@ -3773,11 +3806,18 @@ struct hknpWorld {
      * name. */
     const Vec4 &FUN_0005df00(int bodyId) const; /* derived name */
 
-    u8 unknown0[0x20];
-    /* The body and motion arrays: FUN_0004c170 (in this file's range) stores
-     * a body's motionId and indexes both. */
-    hknpBody *bodies; /* derived name */
-    u8 unknown28[0xf0];
+    /* Takes a body off the active list when it is active (flags bit 3), its
+     * whole attached group when it heads one alone (0x4c720, called at
+     * 0x5b725 and 0x5baf4). derived name. */
+    void FUN_0004c720(const hknpBody *body);
+
+    u8 unknown0[0x10];
+    /* The bodies and their active list (0x4c720 passes +0x10 to the body
+     * manager's functions and indexes the bodies at +0x20); FUN_0004c170 (in
+     * this file's range) stores a body's motionId and indexes the bodies and
+     * the motions. */
+    hknpBodyManager bodyManager; /* derived name */
+    u8 unknown110[8];
     hknpMotion *motions; /* derived name */
     u8 unknown120[0x30];
     /* The constraint array, indexed by constraint id (the constraint
@@ -6814,7 +6854,16 @@ class hkBufferedStreamWriter : public hkStreamWriter
     char *buffer;       /* derived name */
     int bufferSize;     /* derived name */
     int bufferCapacity; /* derived name */
+    /* To the 0x30 bytes the deleting destructor (0x8fa0) frees by
+     * default. */
+    u8 unknown28[8];
 };
+
+/* Its destructor (0x8ff0, which stores the vtable 0x168d210) and its
+ * deleting destructor (slot 1, 0x8fa0), written as calls while the
+ * destructor is not (cookbook 15, 97). derived names. */
+void FUN_00008ff0(hkBufferedStreamWriter *self); /* derived name */
+void FUN_00008fa0(hkBufferedStreamWriter *self); /* derived name */
 
 /* hkSkinnedRefMeshShape: its hkClass at 0x57bcd20 is built by the
  * reflection initializer at 0x23402; slot 3 of its vtable (0x16a38c0,
@@ -7036,8 +7085,9 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
 
     virtual ~hknpDefaultExternMeshShapeGeometry();
 
-    int FUN_0003b980() const;                  /* vtable slot 5; derived name */
-    u16 FUN_0003b9e0(int triangleIndex) const; /* vtable slot 7; derived name */
+    int FUN_0003b980() const;                                      /* vtable slot 5; derived name */
+    void FUN_0003b990(int triangleIndex, Vec4 *verticesOut) const; /* vtable slot 6; derived name */
+    u16 FUN_0003b9e0(int triangleIndex) const;                     /* vtable slot 7; derived name */
 
     hkGeometry *geometry;
 };
@@ -7369,6 +7419,8 @@ class hkxAnimatedFloat : public hkReferencedObject
     const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ba30 */
 };
 
+class AllocatorBase; /* tlg_lib_unknown.h */
+
 /* hkArrayStreamWriter: its hkClass at 0x57c8750 is built by the reflection initializer at
  * 0x901fb; slot 3 of its vtable (address point 0x16a3300, FUN_0008ff00) returns it. Its hkClass has no parent (null third
  * argument at 0x90209): hkStreamWriter is not reflected. Its vtable keeps
@@ -7379,9 +7431,28 @@ extern const hkClass D_57c8750; /* hkArrayStreamWriter's hkClass */
 class hkArrayStreamWriter : public hkStreamWriter
 {
   public:
+    /* Who frees the array: the writer when it took it, nobody when it
+     * borrowed it (hkOstream's constructor, 0x81c4, borrows). derived
+     * names. */
+    enum ArrayOwnership { ARRAY_TAKE = 0, ARRAY_BORROW = 1 };
+
+    /* 0x8fe10 (slots 0 and 1 through the deleting destructor 0x8fe60): a
+     * taken array goes back to the thread's heap. */
     virtual ~hkArrayStreamWriter();
 
+    /* The class allocator's delete (the deleting destructor 0x8fe60 frees
+     * at the recorded size, 0x28 by default). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ff00 */
+
+    /* The members hkOstream's constructor (0x8140) gives a writer it builds
+     * inline: the array, the containers' allocator, the array's size as the
+     * write offset and ARRAY_BORROW. derived names. */
+    hkArray<char> *array;
+    AllocatorBase *allocator;
+    int offset;
+    int ownership;
 };
 
 /* hknpVehicleInstance: hkClass 0x57c1490 (size 0x120, parent hknpUnaryAction's
@@ -7802,7 +7873,9 @@ class hkpLinearParametricCurve : public hkpParametricCurve
  * finalized before it goes out of scope (0x3fa03, 0x64777, 0x6d20b), and
  * the command writers held at +0x390 of their owner are finalized through
  * their member at +0x10 (0x170078, 0x170507). */
-struct hkBlockStream; /* derived name */
+struct hkBlockStream;      /* derived name */
+struct BlockCache;         /* derived name; below */
+struct hkBlockStreamBlock; /* derived name; below */
 
 struct hkBlockStreamWriter /* derived name */
 {
@@ -7811,19 +7884,26 @@ struct hkBlockStreamWriter /* derived name */
 
     /* Binds the writer to a stream at its first block (0x938a0). derived
      * name. */
-    void FUN_000938a0(void *blockAllocator, hkBlockStream *stream);
+    void FUN_000938a0(BlockCache *cache, hkBlockStream *stream);
 
     /* Binds the writer to a stream to append to its last block (0x938c0):
      * the block's used bytes and elements become the writer's, and its
      * elements leave the stream's count until the writer closes the block
      * again. derived name. */
-    void FUN_000938c0(void *blockAllocator, hkBlockStream *stream);
+    void FUN_000938c0(BlockCache *cache, hkBlockStream *stream);
 
-    hkBlockStream *blockStream; /* derived name */
-    void *currentBlock;         /* derived name */
-    int currentByteOffset;      /* derived name */
-    int currentNumElements;     /* derived name */
-    void *allocator;            /* derived name */
+    /* Closes the current block (its header written, linked to a new block
+     * from the cache, its elements added to the stream's count) and returns
+     * the new block's data (0x939c0, 30 callers). derived name. */
+    void *FUN_000939c0();
+
+    hkBlockStream *blockStream;       /* derived name */
+    hkBlockStreamBlock *currentBlock; /* derived name */
+    int currentByteOffset;            /* derived name */
+    int currentNumElements;           /* derived name */
+    /* The cache the stream's new blocks come from (0x947f0 takes one from
+     * it). derived name. */
+    BlockCache *cache;
 };
 
 /* A command stream writer (vtable 0x16a3370, ruled hkBlockStreamCommandWriter,
@@ -7860,7 +7940,6 @@ class BlockStreamAllocator : public hkReferencedObject /* derived name */
  * block back, handing six to the allocator when the cache fills;
  * FUN_0008ef60 hands every cached block back (the world's step does, at
  * 0x49cb9, after each stream it builds with a cache on its stack). */
-class AllocatorBase; /* tlg_lib_unknown.h */
 
 struct BlockCache /* derived name */
 {
@@ -7914,6 +7993,10 @@ struct hkBlockStream /* derived name */
      * drops an empty last block of a stream of two or more). derived
      * name. */
     hkBlockStreamBlock *FUN_00095030(BlockCache *cache);
+    /* A block from the cache appended as the stream's last, its index
+     * recorded (0x947f0; the writer's 0x939c0 opens each new block with
+     * it). derived name. */
+    hkBlockStreamBlock *FUN_000947f0(BlockCache *cache);
 
     u8 unknown0[8];
     int numTotalElements; /* derived name */

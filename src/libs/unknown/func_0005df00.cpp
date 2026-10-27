@@ -4,5 +4,5 @@
 /* derived name: the linear velocity of a body, its motion's. */
 const Vec4 &hknpWorld::FUN_0005df00(int bodyId) const /* derived name */
 {
-    return motions[bodies[bodyId].motionId].linearVelocity;
+    return motions[bodyManager.bodies[bodyId].motionId].linearVelocity;
 }

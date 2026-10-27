@@ -2,10 +2,10 @@
 #include "tlg_hk_reflect.h"
 
 /* derived name: the writer continues the stream's last block. */
-void hkBlockStreamWriter::FUN_000938c0(void *blockAllocator, hkBlockStream *stream)
+void hkBlockStreamWriter::FUN_000938c0(BlockCache *blockCache, hkBlockStream *stream)
 {
     hkBlockStreamBlock *block = stream->blocks.data[stream->blocks.size - 1];
-    allocator = blockAllocator;
+    cache = blockCache;
     blockStream = stream;
     currentByteOffset = block->header.numElementsAndBytesUsed >> 16;
     currentNumElements = block->header.numElementsAndBytesUsed & 0xffff;
