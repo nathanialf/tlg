@@ -198,6 +198,15 @@ class AllocatorBase /* derived name */
     virtual void blockFree(void *pointer, int numBytes) = 0; /* slot 3; derived name */
     virtual void *FUN_00008d70(int &numBytes);               /* slot 4; derived name */
     virtual void FUN_00008d80(void *pointer, int numBytes);  /* slot 5; derived name */
+
+    /* Slot 5 for a number of elements of a type (the arrays' frees): the
+     * pointer and the count are the caller's arguments, read before the
+     * call loads the slot (0x9ce1 after 0x9cde). derived name. */
+    template <typename T> void freeElements(void *pointer, int numElements)
+    {
+        FUN_00008d80(pointer, numElements * sizeof(T));
+    }
+
     /* Slot 6 (the default 0x8d90): a buffer resized, from its old size to
      * the size asked for, which the allocator may round up in place (the
      * slab allocator's 0xefd0). derived name. Slots 7 to 11, signatures not
@@ -219,6 +228,16 @@ class AllocatorBase /* derived name */
      * returns its second base. */
     virtual AllocatorInterface *FUN_00001620();
 };
+
+template <typename T> inline void hkArray<T>::clearAndDeallocate()
+{
+    size = 0;
+    if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
+        hkContainerHeapAllocator::get().freeElements<T>(data, capacityAndFlags);
+    }
+    data = 0;
+    capacityAndFlags = DONT_DEALLOCATE_FLAG;
+}
 
 /* The interface's slots 2 to 10 in their vtable order, each named after
  * TwoBaseAllocator's overrider (primary slots 13 to 21) and typed from its
@@ -1400,10 +1419,30 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
      * allocator at +0x40, the rest to a new slab. derived name. */
     void *FUN_0000f090(int numBytes);
 
-    void *pointer8; /* derived name */
+    /* The free's slow path (0xf460, called directly by 130 sites; slot 3
+     * inlines it): a block larger than a slab goes back to the allocator at
+     * +0x40, one count fewer kept outside; a block that ends at the current
+     * top becomes the top, and FUN_0000f1e0 takes the freed blocks below it
+     * off too; any other is recorded by FUN_0000f2f0. derived names. */
+    void FUN_0000f460(void *pointer, int numBytes);
+    void FUN_0000f1e0();
+    void FUN_0000f2f0(void *pointer, int numBytes);
+
+    /* What the allocator keeps beside its slabs (derived names): the blocks
+     * freed out of order at +0 (24 bytes each, 0xf1e0 walks them), the
+     * count of blocks the allocator at +0x40 holds at +0x20. */
+    struct Impl {
+        u8 unknown0[0x20];
+        int numExternalAllocations;
+    };
+
+    Impl *pointer8; /* derived name */
     int slabSize;   /* derived name */
     char *cur;      /* derived name */
     char *end;      /* derived name */
+    u8 unknown28[0x18];
+    AllocatorBase *largeAllocator; /* derived name */
+    u8 unknown48[8];
 };
 
 /* The thread's memory router (derived name): FUN_0000bb40 makes the router
@@ -1421,7 +1460,6 @@ struct hkMemoryRouter /* derived name */
     /* Built first by the router's constructor (0xbb69); its destructor,
      * AllocatorBase's, is the router's (the tail jump at 0x8f62d). */
     Allocator0000ed40 stack; /* derived name */
-    u8 unknown28[0x28];
     /* The allocator the adaptor of vtable 0x168d430 forwards to (0xac60).
      * derived name. */
     AllocatorBase *allocator50;

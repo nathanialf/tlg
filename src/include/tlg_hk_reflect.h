@@ -142,6 +142,11 @@ template <typename T> struct hkArray {
         size = 0;
     }
 
+    /* Drop the elements and give the storage back to the containers'
+     * allocator unless the array does not own it (defined in
+     * tlg_lib_unknown.h, after AllocatorBase). derived name. */
+    void clearAndDeallocate();
+
     T &operator[](int index)
     {
         return data[index];
@@ -177,6 +182,10 @@ struct hkBitFieldStorage {
 };
 
 struct hkBitField {
+    /* The cleanup callback of its type info (0x9cc0; fourteen other type
+     * infos cite the same body). derived name. */
+    static void FUN_00009cc0(void *object);
+
     /* Resizes the field to a number of bits, filling the bits it gains
      * with the value (0x47b30; the first int is not read). derived name. */
     void FUN_00047b30(int startBit, int numBits, int fillValue); /* derived name */
@@ -188,6 +197,26 @@ struct hkBitField {
     }
 
     hkBitFieldStorage storage;
+};
+
+/* hkIntRealPair (type info "!hkIntRealPair" at 0x14b4435, hkClass 0x57b9560
+ * built at 0x15133: size 8, members key (hkInt32) and value (hkReal) from
+ * the records at 0x168e630), the element of hkSetIntFloatPair (hkClass
+ * 0x57b95e0, built at 0x151dc: size 0x18), Havok's set over an array of
+ * them with the count after it (derived names). */
+struct hkIntRealPair {
+    int key;
+    float value;
+};
+
+struct hkSetIntFloatPair {
+    /* The cleanup callback of its type info (0x15020; the other sets'
+     * type infos registered by 0x150c0 cite the same body). derived
+     * name. */
+    static void FUN_00015020(void *object);
+
+    hkArray<hkIntRealPair> elem; /* derived name */
+    int numElems;                /* derived name */
 };
 
 /* hkBool, the reflection's boolean (its name in the type-name table at
@@ -2110,6 +2139,18 @@ void FUN_00020700(hkcdStaticMeshTreeBase *self);                                
  * (0x5f7ffff0, about 1.8e19), row 38 row 33 negated. */
 extern const Vec4 D_14b2060[];
 
+/* hkQuaternion (the reflection's TYPE_QUATERNION, its name a string of the
+ * executable): four floats in one vector. Field name derived. */
+struct hkQuaternion {
+    /* Whether the four lanes are ordered numbers and the length's square
+     * is within epsilon of one (0x1a180; the game asks it at 0xeaeda1 and
+     * 0xeaf9f0 and tests the int). Row 3 of the constant table is one in
+     * each lane. derived name. */
+    int FUN_0001a180(float epsilon) const;
+
+    Vec4 vec; /* derived name */
+};
+
 /* hkAabb (hkClass 0x57b9c20): two hkVector4 bounds. Field names derived.
  * FUN_0014a1f0 empties it (min the largest value, max its negation, so any
  * point extends it); FUN_0014a220 makes it the whole space. */
@@ -2130,6 +2171,45 @@ Vec4 FUN_0014a2b0(const hkAabb &inner, const hkAabb &outer);
  * centre transformed, the half extents through the rotation's absolute
  * values); the compound and LOD shapes' slot 7 calls it on their own. */
 void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut); /* derived name */
+
+/* hkcdStaticTree::DefaultTreeStorage32 (type info
+ * "!hkcdStaticTree::DefaultTreeStorage32" at 0x14b56c0, hkClass 0x57ba910
+ * built at 0x1e3ba: size 0x30): the nodes, 32 bytes each, at +0 and the
+ * domain at +0x10 (derived names). */
+struct hkcdStaticTree {
+    struct DefaultTreeStorage32 {
+        struct Node {
+            u8 unknown0[0x20];
+        };
+
+        /* The cleanup callback of its type info (0x1e170; the other
+         * storages with 32-byte nodes cite the same body). derived name. */
+        static void FUN_0001e170(void *object);
+
+        hkArray<Node> nodes; /* derived name */
+        hkAabb domain;       /* derived name */
+    };
+};
+
+/* hkcdDynamicTree's default storage over its raw-ulong codec (type info
+ * "!hkcdDynamicTreeDefaultDynamicStoragehkcdDynamicTreeCodecRawUlong_typename"
+ * at 0x14b5e99, hkClass built by 0x1f750: size 0x18): the nodes, 64 bytes
+ * each, at +0 (derived names). */
+struct hkcdDynamicTree {
+    struct CodecRawUlong {
+        u8 unknown0[0x40];
+    };
+
+    template <typename CODEC> struct DefaultDynamicStorage {
+        /* The cleanup callback of its type info (0x1f650 for the raw-ulong
+         * codec; the other storages with 64-byte nodes cite the same body).
+         * derived name. */
+        static void FUN_0001f650(void *object);
+
+        hkArray<CODEC> nodes; /* derived name */
+        u8 unknown10[8];
+    };
+};
 
 /* hknpCompressedMeshShapeTree (type info 0x57be2f0, size 0xa0) and the
  * hkcdStaticMeshTree instance it is built on (type info 0x57be570) register
@@ -2960,6 +3040,9 @@ struct hknpWorldObject380Record /* derived name */
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
   public:
+    /* Slot 9 (0x31170): the records' block back to the allocator at
+     * 0x57b8480, the record pointers cleared. derived name. */
+    void FUN_00031170(hknpWorldObject380Record **records, int count);
     void FUN_000311b0(hknpWorldObject380Record **records, void *const *pointers,
                       int count);                  /* vtable slot 10; derived name */
     void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
@@ -3008,6 +3091,11 @@ struct hknpWorldObject4f8 /* derived name */
     /* Takes a body that is in the broad phase (0x639b0, through
      * hknpWorld::FUN_0004e0c0): reads its flags, bit 3 first. derived name. */
     void FUN_000639b0(int bodyId); /* derived name */
+    /* Runs 0x63a40 on each id of an array (0x64070; the island activation
+     * under the timer "TtActivateIslands" at 0x15ba28 and the step at
+     * 0x6ca67 call it). derived names. */
+    void FUN_00063a40(int id);
+    void FUN_00064070(const hkArray<int> &ids);
 
     hknpWorld *world; /* derived name */
 };
