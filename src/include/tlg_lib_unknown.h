@@ -76,6 +76,10 @@ void FUN_0002b0b0(Pair08Owner *self);                             /* derived nam
 void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived name */
 void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
 void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
+/* Out-of-line forwarders to the two scales (0x34900, 0x34910). derived
+ * names. */
+void FUN_00034900(Pair08Owner *self, float scale); /* derived name */
+void FUN_00034910(Pair08Owner *self, float scale); /* derived name */
 
 /* A new manifold's points (derived names): their count at +0 and their
  * positions from +0x40 (hknpSurfaceVelocityModifier's slot 7, 0x16d22a,
@@ -97,6 +101,29 @@ class Modifier16a5020 /* derived name */
 {
   public:
     void FUN_00162350(const void *threadContext, const void *sharedData, const void *bodyA,
+                      const void *bodyB, hknpManifoldCollisionCache *cache,
+                      const hknpManifold *manifold, Pair08Owner *jacobian,
+                      int jacobianIndex); /* vtable slot 7; derived name */
+};
+
+/* What the modifier of vtable 0x16a4850 keeps in a manifold's cache under
+ * property key 2: two factors at +4 and +8 (derived names). */
+struct ManifoldScaleProperty /* derived name */
+{
+    u8 unknown0[4];
+    float scaleB; /* derived name */
+    float scaleA; /* derived name */
+};
+
+/* The modifier of vtable 0x16a4850 (address point 0x16a4860, 8 bytes: slot
+ * 1 is the shared 0xd900; derived name): slot 7 (0x1570a0) scales the
+ * jacobian's valueA and valueB of every point by the two factors its cache
+ * keeps under property key 2. Its arguments are those of
+ * Modifier16a5020's slot 7. */
+class Modifier16a4860 /* derived name */
+{
+  public:
+    void FUN_001570a0(const void *threadContext, const void *sharedData, const void *bodyA,
                       const void *bodyB, hknpManifoldCollisionCache *cache,
                       const hknpManifold *manifold, Pair08Owner *jacobian,
                       int jacobianIndex); /* vtable slot 7; derived name */

@@ -1187,13 +1187,25 @@ class hkcdShape : public hkReferencedObject
  * bytes; scoped name "hkcdPlanarGeometryPrimitivesCollection28_typename",
  * a template instance): its finish constructor is inline in its finish
  * callback FUN_0001c990 and stores only the vtable. */
+/* From its record table at 0x168eec0: storage (an array of int) at +0x10,
+ * primaryBitmap at +0x20, secondaryBitmaps (26) at +0x24 and freeBlocks
+ * (832) at +0x8c. Its destructor (0x1c8e0, slot 0; the polygon
+ * collection's slot 0 too, which adds nothing to destroy) gives the storage
+ * back. */
 class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
 {
   public:
     hkcdPlanarGeometryPrimitivesCollection28(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag)
+        : hkReferencedObject(flag), storage(flag)
     {
     }
+
+    virtual ~hkcdPlanarGeometryPrimitivesCollection28();
+
+    hkArray<s32> storage;
+    u32 primaryBitmap;
+    u32 secondaryBitmaps[26];
+    u32 freeBlocks[832];
 };
 
 /* hkcdPlanarGeometryPolygonCollection (hkClass 0x57b9d70, built at 0x1c84f
@@ -1307,6 +1319,9 @@ class hknpDynamicCompoundShapeData : public hkReferencedObject
         : hkReferencedObject(flag), nodes(flag)
     {
     }
+
+    /* Out of line (0x342c0, slot 0): the nodes given back. */
+    virtual ~hknpDynamicCompoundShapeData();
 
     /* The tree's nodes from +0x10, each an AABB whose max's w the tree
      * keeps its own data in (the shape's slot 32, 0xf04a0, reads a leaf's
@@ -1700,28 +1715,65 @@ class hknpVehicleData : public hkReferencedObject
 
 void FUN_00069250(void *object, int finishing); /* derived name */
 
+/* hkxSpline::ControlPoint (hkClass 0x57c5f00, size 0x40; its five member
+ * records are built at run time by 0x85fc0). */
+struct hkxSplineControlPoint {
+    u8 unknown0[0x40];
+};
+
+/* From its record table at 0x16a08c0: controlPoints (an array of
+ * ControlPoint) at +0x10, isClosed (hkBool) at +0x20. */
 class hkxSpline : public hkReferencedObject
 {
   public:
-    hkxSpline(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxSpline(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), controlPoints(flag) {}
+
+    /* Out of line (0x85e90, slot 0): the control points given back. */
+    virtual ~hkxSpline();
+
+    hkArray<hkxSplineControlPoint> controlPoints;
 };
 
+/* From its hkClass (0x57c6580, size 0x28; records built at run time by 0x86d90): vectors (an array of reals) at +0x10, hint at +0x20. */
 class hkxAnimatedVector : public hkReferencedObject
 {
   public:
-    hkxAnimatedVector(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxAnimatedVector(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), vectors(flag) {}
+
+    /* Out of line (0x86c80, slot 0): the array given back. */
+    virtual ~hkxAnimatedVector();
+
+    hkArray<float> vectors;
 };
 
+/* From its record table at 0x16a0d80: selectedTriangles (an array of int) at +0x10. */
 class hkxTriangleSelectionChannel : public hkReferencedObject
 {
   public:
-    hkxTriangleSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxTriangleSelectionChannel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), selectedTriangles(flag)
+    {
+    }
+
+    /* Out of line (0x86f10, slot 0): the array given back. */
+    virtual ~hkxTriangleSelectionChannel();
+
+    hkArray<s32> selectedTriangles;
 };
 
+/* From its record table at 0x16a0e30: perVertexVectors (an array of reals) at +0x10. */
 class hkxVertexVectorDataChannel : public hkReferencedObject
 {
   public:
-    hkxVertexVectorDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxVertexVectorDataChannel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), perVertexVectors(flag)
+    {
+    }
+
+    /* Out of line (0x873a0, slot 0): the array given back. */
+    virtual ~hkxVertexVectorDataChannel();
+
+    hkArray<float> perVertexVectors;
 };
 
 /* hkxSparselyAnimatedBool (type info 0x57c8280, size 0x30, hkClass parent
@@ -1739,16 +1791,34 @@ class hkxSparselyAnimatedString : public hkReferencedObject
     hkxSparselyAnimatedString(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* From its hkClass (0x57c6850, size 0x28; records built at run time by 0x87b70): perVertexFloats (an array of reals) at +0x10, dimensions at +0x20. */
 class hkxVertexFloatDataChannel : public hkReferencedObject
 {
   public:
-    hkxVertexFloatDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxVertexFloatDataChannel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), perVertexFloats(flag)
+    {
+    }
+
+    /* Out of line (0x87a60, slot 0): the array given back. */
+    virtual ~hkxVertexFloatDataChannel();
+
+    hkArray<float> perVertexFloats;
 };
 
+/* From its record table at 0x16a12a0: perVertexInts (an array of int) at +0x10. */
 class hkxVertexIntDataChannel : public hkReferencedObject
 {
   public:
-    hkxVertexIntDataChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxVertexIntDataChannel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), perVertexInts(flag)
+    {
+    }
+
+    /* Out of line (0x88000, slot 0): the array given back. */
+    virtual ~hkxVertexIntDataChannel();
+
+    hkArray<s32> perVertexInts;
 };
 
 class hkxIndexBuffer : public hkReferencedObject
@@ -1757,10 +1827,19 @@ class hkxIndexBuffer : public hkReferencedObject
     hkxIndexBuffer(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* From its record table at 0x16a13d0: quaternions (an array of reals) at +0x10. */
 class hkxAnimatedQuaternion : public hkReferencedObject
 {
   public:
-    hkxAnimatedQuaternion(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxAnimatedQuaternion(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), quaternions(flag)
+    {
+    }
+
+    /* Out of line (0x885e0, slot 0): the array given back. */
+    virtual ~hkxAnimatedQuaternion();
+
+    hkArray<float> quaternions;
 };
 
 class hkxSparselyAnimatedInt : public hkReferencedObject
@@ -1769,16 +1848,31 @@ class hkxSparselyAnimatedInt : public hkReferencedObject
     hkxSparselyAnimatedInt(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* From its record table at 0x16a1520: selectedEdges (an array of int) at +0x10. */
 class hkxEdgeSelectionChannel : public hkReferencedObject
 {
   public:
-    hkxEdgeSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxEdgeSelectionChannel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), selectedEdges(flag)
+    {
+    }
+
+    /* Out of line (0x88bc0, slot 0): the array given back. */
+    virtual ~hkxEdgeSelectionChannel();
+
+    hkArray<s32> selectedEdges;
 };
 
+/* From its hkClass (0x57c6df0, size 0x28; records built at run time by 0x88ea0): matrices (an array of reals) at +0x10, hint at +0x20. */
 class hkxAnimatedMatrix : public hkReferencedObject
 {
   public:
-    hkxAnimatedMatrix(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxAnimatedMatrix(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), matrices(flag) {}
+
+    /* Out of line (0x88d90, slot 0): the array given back. */
+    virtual ~hkxAnimatedMatrix();
+
+    hkArray<float> matrices;
 };
 
 class hkxEnum : public hkReferencedObject
@@ -1911,10 +2005,19 @@ class hkxNodeSelectionSet : public hkxAttributeHolder
     hkStringPtr name;
 };
 
+/* From its record table at 0x16a2540: selectedVertices (an array of int) at +0x10. */
 class hkxVertexSelectionChannel : public hkReferencedObject
 {
   public:
-    hkxVertexSelectionChannel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxVertexSelectionChannel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), selectedVertices(flag)
+    {
+    }
+
+    /* Out of line (0x8bbe0, slot 0): the array given back. */
+    virtual ~hkxVertexSelectionChannel();
+
+    hkArray<s32> selectedVertices;
 };
 
 /* hkxBlob (hkClass 0x57c7a80, built at 0x8be52: size 0x20, one member
@@ -1958,10 +2061,30 @@ class hknpTyremarksInfo : public hkReferencedObject
 };
 
 /* hknpTyremarksWheel: vtable 0x1697af0, finish callback FUN_00042a50. */
+/* hknpTyremarkPoint (hkClass 0x57c1190, size 0x20, record table at
+ * 0x1697b30): pointLeft and pointRight. */
+struct hknpTyremarkPoint {
+    Vec4 pointLeft;
+    Vec4 pointRight;
+};
+
+/* From its record table at 0x1697c00: currentPosition (int) at +0xc, in
+ * hkReferencedObject's tail, numPoints (int) at +0x10, tyremarkPoints (an
+ * array of hknpTyremarkPoint) at +0x18. */
 class hknpTyremarksWheel : public hkReferencedObject
 {
   public:
-    hknpTyremarksWheel(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpTyremarksWheel(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), tyremarkPoints(flag)
+    {
+    }
+
+    /* Out of line (0x42900, slot 0): the points given back. */
+    virtual ~hknpTyremarksWheel();
+
+    int currentPosition;
+    int numPoints;
+    hkArray<hknpTyremarkPoint> tyremarkPoints;
 };
 
 /* hkcdSimdTree (type info 0x57bb3e0, vtable 0x1690d60): 0x18 bytes, its
@@ -3101,6 +3224,9 @@ class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
   public:
     KeyMask(hkFinishLoadedObjectFlag flag) : hknpShapeKeyMask(flag), filter(flag) {}
 
+    /* Out of line (0x349b0, slot 0): the filter given back. */
+    virtual ~KeyMask();
+
     void FUN_000381b0(u32 key, bool enabled); /* vtable slot 3 (0x34a80); derived name */
     bool FUN_000381d0();                      /* vtable slot 4 (0x34ac0); derived name */
     bool FUN_000381f0(u32 key) const;         /* vtable slot 5 (0x34ae0); derived name */
@@ -3251,7 +3377,25 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
  * returns it, or null when the key is taken or the cache is full. */
 struct hknpManifoldCollisionCache /* derived name */
 {
-    u8 unknown0[0x38];
+    /* A property reserved under a key, or null (the modifiers' slot 7 at
+     * 0x15d7f0 reads key 1, 0x1570a0 key 2): the properties sit from the
+     * byte offset at +0x16 in 16-byte units, each key's own offset in
+     * 4-byte units in its four bits of the word at +0x18. derived name. */
+    template <typename T> T *accessProperty(int key)
+    {
+        if (propertyKeysUsed & (1 << key)) {
+            const int offset =
+                propertyBufferOffset * 16 + ((propertyOffsets >> (key * 4)) & 0xf) * 4;
+            return reinterpret_cast<T *>(reinterpret_cast<char *>(this) + offset);
+        }
+        return 0;
+    }
+
+    u8 unknown0[0x16];
+    u8 propertyBufferOffset; /* derived name */
+    u8 propertyKeysUsed;     /* derived name */
+    u32 propertyOffsets;     /* derived name */
+    u8 unknown1c[0x1c];
     /* Set when the manifold is created from the bodies' materials (the
      * modifier slot 0x15db20): the smaller maxContactImpulse as a half and
      * the smaller fractionOfClippedImpulseToApply in 255ths. derived
@@ -4357,9 +4501,30 @@ class hknpConvexShape : public hknpShape
     hkRelArray<Vec4> vertices;
 };
 
-/* The settings a convex box is built under (derived name; 0x451e0 tests the
- * byte at +4). */
-struct ConvexBuildConfig000451e0;
+/* The settings a convex shape is built under (derived name; 0x451e0 tests
+ * the byte at +4, the vertex builder 0x44710 copies all 0x38 bytes). Its
+ * constructor 0x42f50 sets the defaults (the library's builder at 0x178912
+ * and the game's at 0xea52df and six more sites build one on the stack);
+ * the fields' meanings are not read yet. derived names. */
+struct ConvexBuildConfig000451e0 /* derived name */
+{
+    ConvexBuildConfig000451e0();
+
+    float unknown0;
+    hkBool unknown4;
+    float unknown8;
+    hkBool unknownC;
+    hkBool unknownD;
+    int unknown10;
+    float unknown14;
+    float unknown18;
+    void *unknown20;
+    int unknown28;
+    int unknown2c;
+    hkBool unknown30;
+    hkBool unknown31;
+    hkBool unknown32;
+};
 
 /* derived names: a convex shape of the box between an AABB's corners with a
  * convex radius (0x451e0), and of the box of half extents about the origin,
@@ -6374,6 +6539,29 @@ class hkAlignSceneToNodeOptions : public hkReferencedObject
     hkStringPtr nodeName;
 };
 
+/* hkxMaterialShader (hkClass 0x57c7340, size 0x48, parent
+ * hkReferencedObject; records built at run time by 0x8a4f0): name at +0x10,
+ * type at +0x18, vertexEntryName, geomEntryName and pixelEntryName at
+ * +0x20, +0x28 and +0x30, data (an array of bytes) at +0x38. Its finish
+ * constructor is inline in its finish callback FUN_0008a490: the four
+ * strings finished in order. */
+class hkxMaterialShader : public hkReferencedObject
+{
+  public:
+    hkxMaterialShader(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), name(flag), vertexEntryName(flag), geomEntryName(flag),
+          pixelEntryName(flag), data(flag)
+    {
+    }
+
+    hkStringPtr name;
+    u8 unknown18[8]; /* type, its width not read */
+    hkStringPtr vertexEntryName;
+    hkStringPtr geomEntryName;
+    hkStringPtr pixelEntryName;
+    hkArray<u8> data;
+};
+
 /* hkxMaterialShaderSet (hkClass parent hkReferencedObject): its finish
  * constructor 0x8b370 is out of line, jumped to by the finish callback
  * FUN_0008b070 and called by the reflection initializer at 0x8b11d. */
@@ -7581,11 +7769,16 @@ class hkxAnimatedFloat : public hkReferencedObject
     /* Its finish constructor, run by the finish callback FUN_0008ba40, has
      * nothing to fix up but the vtable (0x16a24c0); hkReferencedObject is
      * the hkClass's parent. */
-    hkxAnimatedFloat(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxAnimatedFloat(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), floats(flag) {}
 
+    /* Out of line (0x8b950, slot 0): the floats given back. */
     virtual ~hkxAnimatedFloat();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ba30 */
+
+    /* From its hkClass (records built at run time by 0x8ba60): floats (an
+     * array of reals) at +0x10, hint at +0x20. */
+    hkArray<float> floats;
 };
 
 class AllocatorBase; /* tlg_lib_unknown.h */
