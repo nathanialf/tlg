@@ -2,7 +2,9 @@
 # Install the IP-safety scan and the match gate as git hooks (opt-in):
 #   - pre-commit: refuses a local commit that breaks the gate
 #   - pre-push:   refuses to push a ref whose tip fails the gate (the backstop
-#                 for commits made with --no-verify)
+#                 for commits made with --no-verify); a tip whose tree the
+#                 pre-commit gate already passed is pushed without a second run
+#                 (the tree hashes are kept in <gitdir>/gated-trees)
 # Re-run any time either hook body changes.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -31,12 +33,16 @@ cat > "$HOOK" <<'EOF2'
 #   5. tools/build.sh progress-all  refresh docs/<slug>/PROGRESS.md,
 #                                   docs/<slug>/progress.json and README.md's
 #                                   progress block, then `git add` them
+#   6. record the staged tree's hash in <gitdir>/gated-trees, so the pre-push
+#      hook knows this exact tree passed the gate and does not run it again
 #
-# Steps 4 and 5 run only when a staged path can affect the build (src/,
+# Steps 4 to 6 run only when a staged path can affect the build (src/,
 # config/, tools/). Bypass with --no-verify only for a commit that cannot touch
 # the build and when the build is known green.
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
+GITDIR="$(git rev-parse --git-common-dir)"
+case "$GITDIR" in /*) ;; *) GITDIR="$ROOT/$GITDIR" ;; esac
 
 "$ROOT/tools/check_no_rom.sh"
 
@@ -72,6 +78,11 @@ if "$ROOT/tools/build.sh" progress-all >/dev/null 2>&1; then
 else
     echo "pre-commit: progress regen failed (non-fatal): commit proceeds" >&2
 fi
+
+# The tree about to be committed is exactly the staged index; the gate passed
+# on it, so the pre-push hook may push a commit of this tree without a second
+# run. A commit made with --no-verify records nothing and is gated at push.
+echo "$(cd "$ROOT" && git write-tree) $(date -u +%Y-%m-%dT%H:%M:%SZ) pre-commit" >> "$GITDIR/gated-trees"
 EOF2
 chmod +x "$HOOK"
 echo "Installed pre-commit hook at $HOOK"
@@ -79,13 +90,23 @@ echo "Installed pre-commit hook at $HOOK"
 cat > "$PUSH_HOOK" <<'EOF2'
 #!/usr/bin/env bash
 # Auto-installed by tools/install_hooks.sh. For each ref being pushed, check
-# out its tip in a temporary worktree and run tools/build.sh gate-all there.
-# `git push --no-verify` skips it.
+# out its tip in a temporary worktree and run tools/build.sh gate-all there,
+# unless the tip's tree is listed in <gitdir>/gated-trees: the pre-commit hook
+# (or an earlier push) ran the gate on exactly that tree and it passed, and the
+# gate is a function of the tree alone (the base files and the compilers are
+# the same ones, linked into the worktree). `git push --no-verify` skips it.
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
+GITDIR="$(git rev-parse --git-common-dir)"
+case "$GITDIR" in /*) ;; *) GITDIR="$ROOT/$GITDIR" ;; esac
 zero=0000000000000000000000000000000000000000
 while read -r local_ref local_sha remote_ref remote_sha; do
     [[ "$local_sha" == "$zero" ]] && continue   # deleting a ref
+    tree="$(git -C "$ROOT" rev-parse "$local_sha^{tree}")"
+    if [[ -f "$GITDIR/gated-trees" ]] && grep -q "^$tree " "$GITDIR/gated-trees"; then
+        echo "pre-push: tree $tree of $local_ref passed the gate at commit time; not run again"
+        continue
+    fi
     tmp="$(mktemp -d)"
     trap 'rm -rf "$tmp"; git -C "$ROOT" worktree prune' EXIT
     git -C "$ROOT" worktree add -q --detach "$tmp" "$local_sha"
@@ -99,6 +120,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
         exit 1
     fi
     git -C "$ROOT" worktree remove --force "$tmp"
+    echo "$tree $(date -u +%Y-%m-%dT%H:%M:%SZ) pre-push" >> "$GITDIR/gated-trees"
 done
 EOF2
 chmod +x "$PUSH_HOOK"

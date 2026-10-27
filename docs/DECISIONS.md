@@ -688,6 +688,12 @@ the vtables out in the same order. Round 35 named 0x1ba80 and 0x383f0 by
 a rule of the worker's (the first citing class the headers already size);
 their lowest-address citers are hknpRefMassDistribution (0x169a820) and
 hknpShapeMassProperties (0x1693ef0), and round 36 renames them.
+The fallback is a fallback: round 36's thunk 0x48890, shared by three
+task classes one function builds (0x48b20, one translation unit), sits
+beside hknpPreSolveTask's slots and is named for it, while its
+lowest-address citer is hknpPostSolveTask's vtable; inside one
+translation unit the vtables' order says nothing about which copy the
+linker kept, so the class beside the body governs whenever there is one.
 
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 

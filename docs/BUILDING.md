@@ -168,7 +168,11 @@ GitHub Pages on a push to `main` that changes one of them
   `tools/build.sh progress-all`, whose refreshed files are staged into the
   commit.
 - **pre-push**: `gate-all` on the tip of each pushed ref, in a temporary
-  worktree.
+  worktree, unless the tip's tree is one the pre-commit hook (or an earlier
+  push) already gated: the hooks record each gated tree's hash in
+  `.git/gated-trees`, and the gate is a function of the tree alone, so a
+  commit pushed as it was gated is not gated twice. A commit made with
+  `--no-verify` records nothing and is gated at push.
 
 `git commit --no-verify` bypasses the first and `git push --no-verify` the
 second; use either only for a commit that cannot touch the build.
