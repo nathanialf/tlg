@@ -6,7 +6,9 @@
  * needs (400 bytes with the 32-byte header, eight solver results and
  * eight temporaries). */
 // NONMATCHING: the counts' stores: the base merges +0 and +4 into one 8-byte
-// store and keeps +8 and +0xc apart; this merges both pairs (docs/NOTES.md, Round 29).
+// store and keeps +8 and +0xc apart; this merges both pairs. The base's shape
+// is a 16-byte copy aligned to 8 from a local whose first two counts come
+// from a constant (docs/NOTES.md, Rounds 29 and 30).
 void hkpPointToPathConstraintData::FUN_0007a020(hkpConstraintData::ConstraintInfo &infoOut) const
 {
     infoOut.atoms = &atoms;
