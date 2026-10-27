@@ -220,13 +220,32 @@ class hknpSolveFinalizeTask : public hkReferencedObject, public hknpTaskInterfac
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
-/* hknpCleanInactiveCachesTask: vtables 0x16a4210 and 0x16a4258; slot 6 opens the timer "Deactivation/Clean Inactive Caches". */
+/* hknpCleanInactiveCachesTask: vtables 0x16a4210 and 0x16a4258; slot 6 opens the timer "Deactivation/Clean Inactive Caches".
+ * 0x50 bytes from the thread's heap, built inline by FUN_00150330 at
+ * 0x150f68 (+0x3c and +0x40 cleared, the owner and a second pointer at
+ * +0x18 and +0x20). */
 class hknpCleanInactiveCachesTask : public hkReferencedObject,
                                     public hknpTaskInterface /* derived name */
 {
   public:
+    /* Empty (the shared 0xadd50); its deleting destructor is the shared
+     * 0x8a210 and the interface's thunk of it, 0x14f130, sits beside this
+     * class's slots (D15), cited by this vtable alone. */
+    virtual ~hknpCleanInactiveCachesTask();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* slot 5 (0x14eee0) */
+    virtual void process();
     /* slot 6 (0x14f0e0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    void *unknown18;    /* derived name */
+    void *unknown20;    /* derived name */
+    u8 unknown28[0x14]; /* derived name */
+    int unknown3c;      /* derived name */
+    void *unknown40;    /* derived name */
+    u8 unknown48[8];    /* derived name */
 };
 
 /* hknpProcessSecondRoundResultsTask: vtables 0x16a4290 and 0x16a42d8; slot 6 opens the timer "Collide/Process Second Round Results". */
@@ -256,16 +275,6 @@ class hknpPrepareConstraintsTask : public hkReferencedObject,
      * (+0x120 and +0x138). */
     hknpPrepareConstraintsTask(void *unknown18, void *unknown20, void *unknown28);
 
-    /* Empty (the shared 0xadd50); the deleting destructor is 0x383f0, the
-     * body every vtable of a 0x30-byte reference-counted class with an empty
-     * destructor cites (D15; none of the fifteen has other members beside
-     * it, so it is named for the first vtable among those our headers size
-     * to 0x30 and whose bases' destructors are inline and empty,
-     * docs/NOTES.md Round 35). */
-    virtual ~hknpPrepareConstraintsTask();
-
-    static void operator delete(void *object, unsigned long numBytes);
-
     /* slot 5 (0x154f50; the interface's slot 2 through the thunk 0x1550b0) */
     virtual void process();
     /* slot 6 (0x154f00, also the interface's slot 3) */
@@ -282,7 +291,9 @@ class hknpPrepareConstraintsTask : public hkReferencedObject,
  * the names their slot 6 gives: "Post Solve" (0x14bdd14), "Pre Solve"
  * (0x14bdd32) and "Post Collide" (0x14bdd3c), described in the third
  * state's colour. Slot 5 (0x48670, 0x487c0, 0x48960) runs under the
- * timer "Physics". */
+ * timer "Physics". Each is 0x30 bytes from the thread's heap, zeroed,
+ * then +0x20 and +0x18 cleared again; slot 5 passes +0x18 to the world's
+ * step functions. */
 class hknpPostSolveTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
   public:
@@ -290,15 +301,31 @@ class hknpPostSolveTask : public hkReferencedObject, public hknpTaskInterface /*
     virtual void process();
     /* slot 6 (0x486f0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    hknpWorld *world; /* derived name */
+    void *unknown20;  /* derived name */
+    void *unknown28;  /* derived name */
 };
 
 class hknpPreSolveTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
   public:
+    /* Empty; its deleting destructor is the shared 0x383f0 and the
+     * interface's thunk of it, 0x48890, sits beside this class's slots
+     * (D15), slot 1 of the three tasks' second vtables and of seven other
+     * 0x30-byte tasks'. */
+    virtual ~hknpPreSolveTask();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* slot 5 (0x487c0) */
     virtual void process();
     /* slot 6 (0x48840) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    hknpWorld *world; /* derived name */
+    void *unknown20;  /* derived name */
+    void *unknown28;  /* derived name */
 };
 
 class hknpPostCollideTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
@@ -308,6 +335,10 @@ class hknpPostCollideTask : public hkReferencedObject, public hknpTaskInterface 
     virtual void process();
     /* slot 6 (0x489f0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    hknpWorld *world; /* derived name */
+    void *unknown20;  /* derived name */
+    void *unknown28;  /* derived name */
 };
 
 /* hknpBuildConstraintsTask: vtables 0x16a46d0 and 0x16a4718; slot 6 opens the timer "Constraints/Build Active" or "Build Activated Constraints". */
@@ -320,10 +351,9 @@ class hknpBuildConstraintsTask : public hkReferencedObject,
      * address inside the owner (+0x138); the count at +0x38 starts at 0. */
     hknpBuildConstraintsTask(int unknown18, void *unknown28, void *unknown20, void *unknown30);
 
-    /* Empty (the shared 0xadd50); the deleting destructor is 0x1ba80, the
-     * body every vtable of a 0x40-byte reference-counted class with an empty
-     * destructor cites (D15; none of the four has other members beside it,
-     * so it is named for this one, docs/NOTES.md Round 35). */
+    /* Empty (the shared 0xadd50); its deleting destructor is the shared
+     * 0x1ba80 (named for hknpRefMassDistribution, D15) and the interface's
+     * thunk of it is 0x154e80, cited by this vtable alone. */
     virtual ~hknpBuildConstraintsTask();
 
     static void operator delete(void *object, unsigned long numBytes);

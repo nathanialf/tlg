@@ -163,6 +163,25 @@ template <typename T> struct hkArray {
         size = 0;
     }
 
+    int getSize() const
+    {
+        return size;
+    }
+
+    /* Room for n more elements at the end, the capacity not checked; the
+     * first of them returned. */
+    T *expandByUnchecked(int n)
+    {
+        const int oldSize = size;
+        size = oldSize + n;
+        return data + oldSize;
+    }
+
+    void setSizeUnchecked(int n)
+    {
+        size = n;
+    }
+
     /* Drop the elements and give the storage back to the containers'
      * allocator unless the array does not own it (defined in
      * tlg_lib_unknown.h, after AllocatorBase). derived name. */
@@ -1508,13 +1527,9 @@ class hknpVehicleDefaultBrake : public hknpVehicleBrake
     hknpVehicleDefaultBrake(hkFinishLoadedObjectFlag flag) : hknpVehicleBrake(flag) {}
 };
 
-/* hknpRefMassDistribution (parent hkReferencedObject): vtable 0x169a820,
- * finish callback FUN_00069a80. */
-class hknpRefMassDistribution : public hkReferencedObject
-{
-  public:
-    hknpRefMassDistribution(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-};
+/* hknpRefMassDistribution: defined after hkQuaternion, whose vector its
+ * member's hkClass holds. */
+class hknpRefMassDistribution;
 
 /* hknpVehicleDefaultSteering (parent hknpVehicleSteering): vtable 0x16a5750,
  * finish callback FUN_00077d60. */
@@ -1951,6 +1966,28 @@ struct hkMeshBoneIndexMapping {
     hkArray<s16> mapping; /* derived name */
 };
 
+/* hkMeshSectionCinfo (type info "!hkMeshSectionCinfo", hkClass 0x57bd7a0
+ * built by 0x26600, 0x40 bytes, nine members whose records 0x26600 writes
+ * at 0x57bd9e0): vertexBuffer and material (pointers) at +0 and +8,
+ * boneMatrixMap (struct hkMeshBoneIndexMapping) at +0x10, primitiveType
+ * (enum of hkUint8) at +0x20, numPrimitives (hkInt32) at +0x24, indexType
+ * (enum of hkUint8) at +0x28, indices (pointer, not serialized) at +0x30,
+ * vertexStartIndex and transformIndex (hkInt32) at +0x38 and +0x3c. The
+ * cleanup callback of its type info (0x265a0) destroys it in place. */
+struct hkMeshSectionCinfo {
+    static void FUN_000265a0(void *object); /* derived name */
+
+    void *vertexBuffer;
+    void *material;
+    hkMeshBoneIndexMapping boneMatrixMap;
+    u8 primitiveType;
+    int numPrimitives;
+    u8 indexType;
+    const void *indices;
+    int vertexStartIndex;
+    int transformIndex;
+};
+
 /* Its members from the record table at 0x1691d10 (size 0x68, hkClass
  * 0x57bd308, its parent hkReferencedObject's 0x57b8640): matrices and
  * inverseMatrices (arrays of hkMatrix4) at +0x10 and +0x20, matricesOrder
@@ -2363,6 +2400,35 @@ struct hkQuaternion {
     int FUN_0001a180(float epsilon) const;
 
     Vec4 vec; /* derived name */
+};
+
+/* hknpMassDistribution (hkClass 0x57c24f8, 0x30 bytes, no parent, built at
+ * 0x69aa0 from the record table 0x169a860): centerOfMassAndVolume
+ * (hkVector4) at +0, majorAxisSpace (hkQuaternion) at +0x10, inertiaTensor
+ * (hkVector4) at +0x20. */
+struct hknpMassDistribution {
+    hkVector4 centerOfMassAndVolume;
+    hkQuaternion majorAxisSpace;
+    hkVector4 inertiaTensor;
+};
+
+/* hknpRefMassDistribution (hkClass 0x57c2578, 0x40 bytes, parent
+ * hkReferencedObject, one member in its record table 0x169a8e0): vtable
+ * 0x169a820, finish callback FUN_00069a80. */
+class hknpRefMassDistribution : public hkReferencedObject
+{
+  public:
+    hknpRefMassDistribution(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Empty; the deleting destructor is 0x1ba80, the body every vtable of a
+     * 0x40-byte reference-counted class with an empty destructor cites
+     * (D15: no citing class has other members beside it, and this vtable is
+     * the lowest-address citer). */
+    virtual ~hknpRefMassDistribution();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hknpMassDistribution massDistribution;
 };
 
 /* hkAabb (hkClass 0x57b9c20): two hkVector4 bounds. Field names derived.
@@ -3193,16 +3259,28 @@ struct hknpBodyManager /* derived name */
     /* A body change scheduled for the next step (derived name): the body's
      * id at +0, 12 bytes. */
     struct ScheduledBodyChange {
-        int bodyId; /* derived name */
-        u8 unknown4[8];
+        int bodyId;    /* derived name */
+        u16 flags;     /* derived name; bits 0 and 1: on the lists at +0xe0 and +0xf0 */
+        int listIndex; /* derived name; 0x7fffffff when on neither */
     };
 
     void FUN_001612a0() const; /* derived name */
+
+    /* The active bodies' ids, four zeros written past the last (the
+     * solver's SIMD reads run over by up to three; 0x1612e0, called by
+     * 0x6d690 and the solve data task 0x16e0e0, which round the count up
+     * to four). derived name. */
+    const hkArray<u32> &FUN_001612e0();
 
     /* derived name: every scheduled change dropped, each body's index into
      * them reset to the invalid 0x7fffffff (0x161740; the world's step
      * runs it in its "clearAllScheduledBodyChanges" timer, 0x5107f). */
     void FUN_00161740();
+
+    /* derived name: both kinds' lists emptied, every scheduled change taken
+     * off them (0x161910; the world's step calls it at 0x4fee6 and
+     * 0x50001). */
+    void FUN_00161910();
 
     u8 unknown0[0x10];
     hkArray<hknpBody> bodies; /* derived name */
@@ -3211,6 +3289,11 @@ struct hknpBodyManager /* derived name */
     u8 unknownB0[0x10];
     hkArray<ScheduledBodyChange> scheduledBodyChanges; /* derived name */
     hkArray<int> scheduledBodyChangeIndices;           /* derived name */
+    /* The bodies of the two kinds of scheduled change (0x161790 appends to
+     * the first for kind 1, the second for kind 2; 4-byte elements, the
+     * destructor 0x160270 frees both). */
+    hkArray<u32> bodiesOfChange1; /* derived name */
+    hkArray<u32> bodiesOfChange2; /* derived name */
 };
 
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
@@ -3772,15 +3855,38 @@ struct hknpMotionPropertiesLibrary : public hkReferencedObject {
 class hknpCapsuleShape; /* 0x57bf490; 0x730d0 runs hknpConvexPolytopeShape's, vtable 0x169b260 */
 class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
 
+/* hkCompressedMassProperties (hkClass 0x57bc9e0, 0x20 bytes, no parent,
+ * built at 0x22a90 from the record table 0x1691090): centerOfMass, inertia
+ * and majorAxisSpace (hkInt16[4]) at +0, +8 and +0x10, mass and volume
+ * (hkReal) at +0x18 and +0x1c. */
+struct hkCompressedMassProperties {
+    s16 centerOfMass[4];
+    s16 inertia[4];
+    s16 majorAxisSpace[4];
+    float mass;
+    float volume;
+};
+
 /* hknpShapeMassProperties (hkClass 0x57bf240, 0x30 bytes, parent
  * hkReferencedObject; type info 0x57bf290, vtable 0x1693ef0): its finish
  * constructor 0x6fa80 is out of line, jumped to by the finish callback
  * FUN_00038d60 and called by the reflection initializer at 0x39094; it
- * stores only the vtable. */
+ * stores only the vtable. One member in its record table 0x1694330,
+ * compressedMassProperties at +0x10. */
 class hknpShapeMassProperties : public hkReferencedObject
 {
   public:
     hknpShapeMassProperties(hkFinishLoadedObjectFlag flag);
+
+    /* Empty; the deleting destructor is 0x383f0, the body every vtable of a
+     * 0x30-byte reference-counted class with an empty destructor cites
+     * (D15: no citing class has other members beside it, and this vtable is
+     * the lowest-address citer). */
+    virtual ~hknpShapeMassProperties();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkCompressedMassProperties compressedMassProperties;
 };
 
 /* hknpPhysicsSceneData (hkClass 0x57bf310, 0x28 bytes, parent
@@ -6530,6 +6636,17 @@ struct hknpBodyExitedBroadPhaseEvent /* derived name */
     u32 bodyId; /* derived name */
 };
 
+/* A body's debug event: the body's id at +0xc and its text from +0x10
+ * (its length not recovered). */
+struct hknpUnaryBodyDebugEvent /* derived name */
+{
+    void FUN_00155550(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyId;  /* derived name */
+    char text[]; /* derived name */
+};
+
 struct hknpBodyBreachedExpandedAabbEvent /* derived name */
 {
     void FUN_001554c0(hknpWorld *world, hkOstream &out) const; /* derived name */
@@ -7623,6 +7740,7 @@ class AllocatorBase; /* tlg_lib_unknown.h */
 
 struct BlockCache /* derived name */
 {
+    void *FUN_0008eec0();           /* derived name */
     void FUN_0008ef10(void *block); /* derived name */
     void FUN_0008ef60();            /* derived name */
 
@@ -7824,6 +7942,11 @@ struct StringMap /* derived name */
         const char *key; /* derived name */
         hkUlong value;   /* derived name */
     };
+
+    /* Out of line (0x91590): sixteen entries from the containers'
+     * allocator, every byte 0xff (a hash of -1 marks a free slot), none
+     * used. */
+    StringMap();
 
     Entry *entries;
     int numEntries;

@@ -505,6 +505,8 @@ class hknpGlobals : public hkReferencedObject
     u8 unknown10[0xf0];
 };
 
+extern hknpGlobals *D_57c8818; /* hknpGlobals's singleton instance */
+
 /* Its create function, the singleton record's (0x175f30). derived name. */
 hkReferencedObject *FUN_00175f30(); /* derived name */
 
