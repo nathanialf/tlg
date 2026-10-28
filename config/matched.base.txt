@@ -904,7 +904,7 @@ FUN_0003c240 src/libs/unknown/func_0003c240.cpp _ZN27hknpBreakableConstraintData
 _ZN24hknpDynamicCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000469a0.cpp _ZN24hknpDynamicCompoundShapeC2E24hkFinishLoadedObjectFlag
 FUN_0004bc60 src/libs/unknown/func_0004bc60.cpp
 FUN_0004e0c0 src/libs/unknown/func_0004e0c0.cpp
-FUN_00070a10 src/libs/unknown/func_00070a10.cpp _ZN14Object000709005resetEv
+FUN_00070a10 src/libs/unknown/func_00070a10.cpp _ZN20hknpAllHitsCollector5resetEv
 _ZN22hkpFixedConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007a610.cpp _ZN22hkpFixedConstraintDataC2E24hkFinishLoadedObjectFlag
 _ZN32hkpDeformableFixedConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007a830.cpp _ZN32hkpDeformableFixedConstraintDataC2E24hkFinishLoadedObjectFlag
 FUN_0014e4b0 src/libs/unknown/func_0014e4b0.cpp _ZN21hknpSolverFactoryTaskD2Ev
@@ -1623,8 +1623,8 @@ FUN_00184f40 src/libs/unknown/func_00184f40.cpp
 _ZN25hknpCharacterStateManagerC1Ev src/libs/unknown/func_000359d0.cpp
 _ZN25hknpCharacterStateManagerD1Ev src/libs/unknown/func_000359d0.cpp
 _ZN25hknpCharacterStateManagerD0Ev src/libs/unknown/func_000359d0.cpp
-_ZN14Object00070900D1Ev src/libs/unknown/func_00070a10.cpp
-_ZN14Object00070900D0Ev src/libs/unknown/func_00070a10.cpp
+_ZN20hknpAllHitsCollectorD1Ev src/libs/unknown/func_00070a10.cpp
+_ZN20hknpAllHitsCollectorD0Ev src/libs/unknown/func_00070a10.cpp
 _ZN16FiosStreamReaderD0Ev src/libs/unknown/func_000932c0.cpp
 FUN_001597f0 src/libs/unknown/func_001597f0.cpp _ZN17hknpProjectileGun12FUN_001597f0Ef
 _ZN13NodeEdgeListsD1Ev src/libs/unknown/func_0017a1f0.cpp

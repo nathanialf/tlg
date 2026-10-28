@@ -3,7 +3,7 @@
 
 /* derived name: slot 3 of the all-hits collector: no hints, the early-out
  * value back to the largest (the constant table's row 34), no hits. */
-void Object00070900::reset()
+void hknpAllHitsCollector::reset()
 {
     hints = 0;
     earlyOut = D_14b2060[34];
@@ -13,7 +13,7 @@ void Object00070900::reset()
 /* The destructor (0x70900): the collector emptied, then the hits' storage
  * given back when it is not the object's own; the deleting destructor
  * 0x70970 frees the 0x3f0 bytes after it. */
-Object00070900::~Object00070900()
+hknpAllHitsCollector::~hknpAllHitsCollector()
 {
     reset();
 }

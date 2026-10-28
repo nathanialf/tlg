@@ -9770,10 +9770,10 @@ struct hknpCollisionResult /* derived name */
  * with capacity 0x8000000a and the storage at +0x30, 0xe9c32c on). Slot 3
  * (FUN_00070a10) empties it; its destructors 0x70900 and 0x70970 empty it
  * and free the array. */
-class Object00070900 : public hknpCollisionQueryCollector /* derived name */
+class hknpAllHitsCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    virtual ~Object00070900();
+    virtual ~hknpAllHitsCollector();
 
     void reset(); /* vtable slot 3, FUN_00070a10 */
 

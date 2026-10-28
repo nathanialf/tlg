@@ -671,6 +671,12 @@ points), not the grid, and added DirectoryIterator0001bc80 0x168eb00
 0x16a6170 (a fact: the singleton string 0x14cc203),
 hknpCharacterStateManager 0x1692eb0 (the header's derived name; eleven
 state pointers) and Object00070900 0x169b100.
+Round 46's harvest renamed Object00070900 hknpAllHitsCollector (a derived
+name: the collector is 0x3f0 bytes, not reference-counted, with the hints
+int at +8, the early-out vector at +0x10 and an hkInplaceArray of ten
+0x60-byte hits at +0x20, hknpAllHitsCollector's shape; the row's first
+comment had it reference-counted, which the worker's reading of 0x70900
+corrected).
 Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
 singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
 string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its
@@ -1067,6 +1073,23 @@ size). The ILP scheduler stays; 0x184e20 is classified (a single witness
 against 1,199) and leaves the queues until a source whose DAG the ILP
 scheduler orders as the base does is derived.
 
+**Addendum, 2026-10-28 (round 46 harvest).** A witness for the level
+question, collected and not ruled on: 0x33990,
+hknpCompoundShapeInternalsKeyMask's deleting destructor (254 bytes), has
+the 187-byte destructor body (0x338d0, matched as the class's D1 in round
+46) inlined and tests the object for null before freeing 0x30 bytes. The
+fixed line calls the body and frees through hknpShapeKeyMask's untested
+delete, as the compressed mesh mask's matched 0x34a00 does. The inliner's
+threshold is 225 at -O2 and 275 at -O3 (3.3's
+`tools/clang/lib/CodeGen/BackendUtil.cpp:276-283`), raised to 325 for a
+callee with the inline hint (`lib/Transforms/IPO/Inliner.cpp:50,252-255`);
+no level was compiled. Two readings stay open: the level (to be measured
+over the region as the source scheduler was above, never per function) and
+the source (a class-specific operator delete of the compound mask's own
+that tests its argument, which changes the deleting destructor's shape and
+the inline cost both). Classified with 0x187750 and 0x184e20 until a second
+witness or a source reading.
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
@@ -1238,6 +1261,21 @@ line (none did: the gate ran before and after); a library function that
 needs infinities folded or reassociation (then `-ffinite-math-only` or
 `-ffast-math`, measured the same way); a function that needs `-fwrapv`
 back, which would split the region by flags as D22 splits it by compiler.
+
+**Addendum, 2026-10-28 (round 46 harvest).** The vehicle's speeds 0x165890
+and 0x165910 (hknpVehicleInstance's kilometres and miles an hour) multiply
+the chassis speed once by 0x40666667 (0x14ca400) and 0x400f2af7 (0x14ca404).
+Round 46 read the pair as Havok's divide-then-multiply folded under
+reciprocal math and reassociation, which would be this trigger. Measured in
+float: 0x40666667 is f(0.001f * 3600.0f), also f((1.0f / 1000.0f) *
+3600.0f), where f(3600.0f / 1000.0f) and 3.6f are 0x40666666; 0x400f2af7 is
+f(3600.0f / 1609.3f), also f(3.6f * f(1000.0f / 1609.3f)), where the
+reciprocal reading f(f(1.0f / 1609.3f) * 3600.0f) is 0x400f2af8, not the
+base's. Both constants are exact folds of a constant expression whose
+constants the source groups (a named conversion factor or a parenthesised
+product), which the fixed line folds with no flag; the reciprocal reading
+does not give the miles constant at all. No flag. The two functions return
+to the queue with the grouped form as the lead. The trigger stands.
 
 ## D25. The CRT's `__dso_handle` resolves from the base's own exit registrations (2026-10-27)
 
