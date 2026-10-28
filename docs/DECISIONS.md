@@ -664,6 +664,13 @@ hkClass 0x57b7fe8 its slot 3 returns, the string at 0x14b32c7),
 Elements000768c0 0x169b400, Object00006800 0x168caf0 and Object00199ec0
 0x16a67e0 (derived, named after their constructor, create function and
 initializer; the last a static instance stored RIP-relative at 0x199ed1).
+Round 45's harvest corrected round 44's naming of 0x1699510: it is the
+kind-1 splitter (FlaggedPoints00060c70, the nearest of up to 16 flagged
+points), not the grid, and added DirectoryIterator0001bc80 0x168eb00
+(anonymous namespace, the bare-lea form), hkDefaultClassNameRegistry
+0x16a6170 (a fact: the singleton string 0x14cc203),
+hknpCharacterStateManager 0x1692eb0 (the header's derived name; eleven
+state pointers) and Object00070900 0x169b100.
 Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
 singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
 string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its

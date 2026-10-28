@@ -3,7 +3,6 @@
 
 /* Kind 1: the points laid out four to a row, none flagged, then the cell
  * counts and the pairs. */
-// NONMATCHING: equal in quick_diff (55 instructions, 194 bytes); the vtable it stores, 0x1699510, is rowed as _ZTV21hknpGridSpaceSplitter (D14), and the class is this kind-1 splitter, not the kind-2 grid of 0x60c10; unclaimed until the row is ruled.
 FlaggedPoints00060c70::FlaggedPoints00060c70(int numPoints) : hknpSpaceSplitter(1)
 {
     unknown24 = 0;
