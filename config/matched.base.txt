@@ -1249,7 +1249,7 @@ _ZN9StringMapC1Ev src/libs/unknown/func_00091590.cpp
 FUN_0014f130 src/libs/unknown/func_0014f130.cpp _ZThn16_N27hknpCleanInactiveCachesTaskD0Ev
 FUN_00154e80 src/libs/unknown/func_00154e80.cpp _ZThn16_N24hknpBuildConstraintsTaskD0Ev
 FUN_001612e0 src/libs/unknown/func_001612e0.cpp _ZN15hknpBodyManager12FUN_001612e0Ev
-FUN_0000e5d0 src/libs/unknown/func_0000e5d0.cpp _Z12FUN_0000e5d0P11hkStringPtr
+_ZN11hkStringPtrD1Ev src/libs/unknown/func_0000e5d0.cpp
 FUN_0008fdc0 src/libs/unknown/func_0008fdc0.cpp _GLOBAL__I_a
 FUN_00161910 src/libs/unknown/func_00161910.cpp _ZN15hknpBodyManager12FUN_00161910Ev
 FUN_000265a0 src/libs/unknown/func_000265a0.cpp _ZN18hkMeshSectionCinfo12FUN_000265a0EPv
@@ -1500,3 +1500,24 @@ _ZN17hkLocalFrameGroupD0Ev src/libs/unknown/func_00003710.cpp
 _ZN14hkStringObjectD0Ev src/libs/unknown/func_00010850.cpp
 _ZN17hknpRefWorldCinfoD0Ev src/libs/unknown/func_00039100.cpp
 FUN_0003a290 src/libs/unknown/func_0003a290.cpp _ZNK68hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig5551612FUN_0003a290EiRK19hknpQueryFilterDataRK8hknpBody
+FUN_0003a2f0 src/libs/unknown/func_0003a2f0.cpp _ZNK68hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig5551612FUN_0003a2f0EibRK19hknpQueryFilterDataS2_
+_ZN14Object0000a280C1EP18hkReferencedObjectb src/libs/unknown/func_0000a280.cpp
+_ZN14Object0000b330C1EPvS0_ src/libs/unknown/func_0000b330.cpp
+_ZN15BufferAllocatorC1Ev src/libs/unknown/func_000908d0.cpp
+FUN_00066e80 src/libs/unknown/func_00066e80.cpp _ZN22hknpMaterialDescriptor12FUN_00066e80EPv
+_ZN15hknpRefMaterialD0Ev src/libs/unknown/func_0006c5d0.cpp
+_ZN22hknpBodyQualityLibraryD0Ev src/libs/unknown/func_00070f50.cpp
+FUN_00089b60 src/libs/unknown/func_00089b60.cpp _ZN17hkxMaterialEffectD1Ev
+FUN_000ad490 src/libs/unknown/func_000ad490.cpp _ZN19hkMemoryMeshTextureD1Ev
+FUN_000ad5b0 src/libs/unknown/func_000ad590.cpp _ZN15FileImageSourceD0Ev
+FUN_0017d4b0 src/libs/unknown/func_0017d490.cpp _ZN25hkAlignSceneToNodeOptionsD0Ev
+FUN_0017d850 src/libs/unknown/func_0017d830.cpp _ZN18hkTypeInfoRegistryD0Ev
+FUN_0017ec30 src/libs/unknown/func_0017ec10.cpp _ZN26hkDynamicClassNameRegistryD0Ev
+FUN_0019d600 src/libs/unknown/func_0019d5e0.cpp _ZN13XmlEndElementD0Ev
+FUN_0019d680 src/libs/unknown/func_0019d660.cpp _ZN13XmlCharactersD0Ev
+FUN_00007600 src/libs/unknown/func_00007600.cpp _ZN12Pool0000788012FUN_00007600EPFvPvES0_
+FUN_00007660 src/libs/unknown/func_00007600.cpp _ZN12Pool0000788012FUN_00007660EPv
+FUN_000076d0 src/libs/unknown/func_00007600.cpp _ZN12Pool0000788012FUN_000076d0EPv
+FUN_00011060 src/libs/unknown/func_00011060.cpp
+FUN_000110c0 src/libs/unknown/func_000110c0.cpp
+FUN_0008ffa0 src/libs/unknown/func_0008ffa0.cpp _ZN19hkArrayStreamWriter12FUN_0008ffa0Ev

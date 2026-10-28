@@ -3,7 +3,7 @@
 
 /* derived names: a callback that FUN_000076d0 stores at +0x310 of its object
  * (its argument at +0x318); it runs FUN_00017920 on its argument with 0. */
-void FUN_00007730(Class168e810 *self) /* derived name */
+void FUN_00007730(void *argument) /* derived name */
 {
-    FUN_00017920(self, 0);
+    FUN_00017920(static_cast<Class168e810 *>(argument), 0);
 }

@@ -173,6 +173,8 @@ struct hkFinishLoadedObjectFlag {
  * (the group filter's 0x3a290 tests the value once, after both paths). */
 typedef int hkBool32;
 
+class AllocatorBase; /* tlg_lib_unknown.h */
+
 template <typename T> struct hkArray {
     enum {
         CAPACITY_MASK = 0x3fffffff,            /* derived name */
@@ -246,6 +248,10 @@ template <typename T> struct hkArray {
     /* An element appended, the storage grown through FUN_00000b40 when it
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
     void pushBack(const T &element);
+
+    /* Room for n elements at least, from the allocator given (defined in
+     * tlg_lib_unknown.h). */
+    void reserve(AllocatorBase &allocator, int n);
 
     T &operator[](int index)
     {
@@ -956,6 +962,10 @@ void FUN_00006b90(Record00006b90 *self); /* derived name */
 class hkCriticalSection
 {
   public:
+    /* 0x1830: the mutex made recursive, each step checked (lines 16 to 19
+     * of the file), and the spin count kept. */
+    hkCriticalSection(int spinCount = 0);
+
     ~hkCriticalSection()
     {
         HK_POSIX_CHECK(HK_POSIX_CRITICAL_SECTION_INL, 28, pthread_mutex_destroy(&m_mutex));
@@ -1077,8 +1087,8 @@ class hkError : public hkReferencedObject
 extern hkError *D_57af768; /* hkError's instance */
 
 /* A string pointer whose finish constructor (FUN_0000e5c0, empty) and
- * destructor (FUN_0000e5d0, frees the string when bit 0 of the pointer marks
- * it owned) are out of line. */
+ * destructor (0xe5d0, frees the string when bit 0 of the pointer marks it
+ * owned) are out of line. */
 /* The string library's formatted print into a buffer of size bytes, a
  * wrapper over vsnprintf on a copy of the caller's argument list (0x17e20;
  * the error reports at 0x87bd and 0x119d6 pass their own). */
@@ -1111,6 +1121,13 @@ struct hkStringPtr {
         FUN_0000e5c0(this, flag);
     }
 
+    /* Out of line (0xe5d0): an owned string (bit 0 of the pointer) goes
+     * back to the thread's heap and the pointer is cleared. Members are
+     * destroyed after the destructor body of the class holding them, so
+     * a class's arrays declared after its name are given back first
+     * (hkxMaterialEffect's destructor 0x89b60). */
+    ~hkStringPtr();
+
     /* The string's length, 0 for a null string (callers 0x8965, 0x7778a).
      * derived name. */
     int FUN_0000e770() const;
@@ -1126,7 +1143,6 @@ struct hkStringPtr {
 };
 
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0000e5d0(hkStringPtr *self);                                /* derived name */
 /* derived name: the string copied (0xe550): null, or a copy of the other's
  * characters from the thread's heap, owned (bit 0 set). */
 void FUN_0000e550(hkStringPtr *self, const hkStringPtr *other);
@@ -1823,6 +1839,11 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
     bool FUN_0003a290(int queryType, const hknpQueryFilterData &filterData,
                       const hknpBody &body) const;
 
+    /* Slot 8 (0x3a2f0): two query filter datas against each other, the
+     * same test as slot 7's; the third argument is not read. derived name. */
+    bool FUN_0003a2f0(int queryType, bool argument2, const hknpQueryFilterData &filterDataA,
+                      const hknpQueryFilterData &filterDataB) const;
+
     /* The test of two filter infos, nonzero when they collide (inline in
      * slot 7: its two paths' values meet in one test). derived name. */
     hkBool32 isCollisionEnabled(u32 infoA, u32 infoB) const
@@ -2414,13 +2435,18 @@ class hkxMaterial : public hkxAttributeHolder
 class hkxMaterialEffect : public hkReferencedObject
 {
   public:
-    hkxMaterialEffect(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    hkxMaterialEffect(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), data(flag)
     {
         FUN_0000e5c0(&name, flag);
     }
 
+    /* Out of line (0x89b60, slot 0; 0x89bc0, slot 1): the data given back,
+     * then the name. */
+    virtual ~hkxMaterialEffect();
+
     hkStringPtr name;
-    u8 unknown18[0x18];
+    u8 unknown18[8];
+    hkArray<u8> data;
 };
 
 /* hkxNodeSelectionSet (hkClass 0x57c75b0, built at 0x8afe5: size 0x38,
@@ -5365,6 +5391,10 @@ struct hknpBodyQuality {
 struct hknpBodyQualityLibrary : public hkReferencedObject {
     virtual ~hknpBodyQualityLibrary();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x70f70 frees at the recorded size, 0x220 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     Signal00093530 qualityModifiedSignal;
     u8 unknown18[8];
     hknpBodyQuality qualities[32];
@@ -5399,11 +5429,6 @@ struct hknpMaterial {
         FUN_0000e5c0(&name, flag);
     }
 
-    ~hknpMaterial()
-    {
-        FUN_0000e5d0(&name);
-    }
-
     /* Out of line (0x6c700; the material library's copies at 0x776d0,
      * 0x77976 and 0x77a8f): the name copied as a string, the rest as bytes. */
     hknpMaterial(const hknpMaterial &other);
@@ -5417,8 +5442,23 @@ struct hknpMaterial {
     u8 unknown24[0x2c];
 };
 
+class hknpRefMaterial;
+
+/* Members from its record table at 0x16998c0: name, material (a
+ * reference-counted pointer) and materialId. */
 struct hknpMaterialDescriptor {
-    hkStringPtr name; /* derived name */
+    /* The cleanup callback of its type info (0x66e80; hkxAttribute's, the
+     * same layout to +0x10, holds the same body): the material's
+     * reference released, then the name destroyed. derived name. */
+    static void FUN_00066e80(void *object);
+
+    /* The material's reference released (after hknpRefMaterial, below);
+     * the name is destroyed after it. */
+    inline ~hknpMaterialDescriptor();
+
+    hkStringPtr name;
+    hknpRefMaterial *material;
+    u16 materialId;
 };
 
 void FUN_0006c6f0(hknpMaterial *self, hkFinishLoadedObjectFlag flag);           /* derived name */
@@ -5437,8 +5477,20 @@ class hknpRefMaterial : public hkReferencedObject
     hknpRefMaterial(hkFinishLoadedObjectFlag flag);
     virtual ~hknpRefMaterial();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x6c5f0 frees at the recorded size, 0x60 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hknpMaterial material;
 };
+
+inline hknpMaterialDescriptor::~hknpMaterialDescriptor()
+{
+    if (material) {
+        material->removeReference();
+    }
+    material = 0;
+}
 class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
 class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs 0x7d520, vtable 0x1695b10 */
 class hknpCompressedMeshShape;     /* 0x57c26c8; its finish constructor 0x158610 (below) */
@@ -7031,10 +7083,14 @@ class hkp6DofConstraintData
      * the constraint's builder at 0x79bd5 asks for each). derived name. */
     hkpConstraintMotor *FUN_0017bb20(MotorIndex index) const;
 
-    void FUN_0017b910(float newBreachImpulse);     /* vtable slot 10; derived name */
-    float FUN_0017b920() const;                    /* vtable slot 13; derived name */
-    void FUN_0017b930(int bodyIndex);              /* vtable slot 14; derived name */
-    u8 FUN_0017b950() const;                       /* vtable slot 15; derived name */
+    void FUN_0017b910(float newBreachImpulse); /* vtable slot 10; derived name */
+    float FUN_0017b920() const;                /* vtable slot 13; derived name */
+    void FUN_0017b930(int bodyIndex);          /* vtable slot 14; derived name */
+    u8 FUN_0017b950() const;                   /* vtable slot 15; derived name */
+    /* Slot 17 (0x17bb80): the ball-socket atom's inertia stabilization
+     * factor, clamped to [0, 1], copied into the compiled atoms unless
+     * they are to be rebuilt. derived name. */
+    hkResult FUN_0017bb80(float factor);
     hkResult FUN_0017bb70(float &factorOut) const; /* vtable slot 18; derived name */
     /* Slot 19 (0x17ca80): the impulses of the three linear results the
      * runtime map gives, zero for one it has none for. derived name. */
@@ -7267,6 +7323,10 @@ class hkAlignSceneToNodeOptions : public hkReferencedObject
     hkAlignSceneToNodeOptions(hkFinishLoadedObjectFlag flag);
     virtual ~hkAlignSceneToNodeOptions();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x17d4b0 frees at the recorded size, 0x20 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     void FUN_0017d550(const char *newName); /* derived name */
 
     hkBool invert;
@@ -7496,11 +7556,6 @@ struct hkxVertexDescriptionElementDecl {
         FUN_0000e5c0(&channelID, flag);
     }
 
-    ~hkxVertexDescriptionElementDecl()
-    {
-        FUN_0000e5d0(&channelID);
-    }
-
     u8 unknown0[0x10];
     hkStringPtr channelID;
 };
@@ -7675,7 +7730,9 @@ class hkMeshTexture : public hkReferencedObject
 
     hkMeshTexture(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    virtual ~hkMeshTexture();
+    /* Empty and inline: hkMemoryMeshTexture's destructor (0xad490) calls
+     * nothing after its members'. */
+    virtual ~hkMeshTexture() {}
 };
 
 /* hkMemoryMeshTexture, 0x30 bytes (type info 0x57bd648, parent
@@ -8565,6 +8622,11 @@ class hkArrayStreamWriter : public hkStreamWriter
     /* The members hkOstream's constructor (0x8140) gives a writer it builds
      * inline: the array, the containers' allocator, the array's size as the
      * write offset and ARRAY_BORROW. derived names. */
+    /* Slot 12 (0x8ffa0; the packfile writer calls it directly at 0x1a37d6
+     * and 0x1a384c): the array emptied and the offset rewound, then a
+     * terminating zero kept past the end. derived name. */
+    void FUN_0008ffa0();
+
     hkArray<char> *array;
     AllocatorBase *allocator;
     int offset;
@@ -9546,6 +9608,10 @@ class hkTypeInfoRegistry : public hkReferencedObject
   public:
     virtual ~hkTypeInfoRegistry();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x17d850 frees at the recorded size, 0x30 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     void FUN_0017d8b0(const hkTypeInfo *info); /* vtable slot 5; derived name */
     /* Slot 6: finishes a loaded object of a named type with the flag at
      * +0x28 and returns the type info, or null when no type of that name
@@ -9569,6 +9635,10 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
 {
   public:
     virtual ~hkDynamicClassNameRegistry();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x17ec30 (hkDefaultClassNameRegistry's slot 1 too) frees at the recorded size, 0x30 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     virtual void unknownVirtual5(); /* the folded 0x7f80: the name at +0x10 */
     virtual const hkClass *
@@ -9715,6 +9785,10 @@ class XmlEndElement : public XmlNode /* derived name */
   public:
     virtual ~XmlEndElement();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x19d600 frees at the recorded size, 0x18 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkStringPtr name; /* derived name */
 };
 
@@ -9722,6 +9796,10 @@ class XmlCharacters : public XmlNode /* derived name */
 {
   public:
     virtual ~XmlCharacters();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x19d680 frees at the recorded size, 0x18 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkStringPtr text; /* derived name */
 };

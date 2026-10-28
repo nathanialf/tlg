@@ -6,7 +6,5 @@
  * reverse of their order through hkStringPtr's out-of-line destructor. */
 void FUN_0008da10(void *object) /* derived name */
 {
-    hkxEnvironmentVariable *variable = static_cast<hkxEnvironmentVariable *>(object);
-    FUN_0000e5d0(&variable->value);
-    FUN_0000e5d0(&variable->name);
+    static_cast<hkxEnvironmentVariable *>(object)->~hkxEnvironmentVariable();
 }

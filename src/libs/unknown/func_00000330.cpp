@@ -7,5 +7,5 @@
  * hkStringPtr at +8. */
 void FUN_00000330(void *object) /* derived name */
 {
-    FUN_0000e5d0(&static_cast<hkMonitorStreamStringMapStringMap *>(object)->string);
+    static_cast<hkMonitorStreamStringMapStringMap *>(object)->~hkMonitorStreamStringMapStringMap();
 }

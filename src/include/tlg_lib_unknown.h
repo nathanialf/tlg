@@ -315,6 +315,24 @@ template <typename T> inline void hkArray<T>::clearAndDeallocate()
     capacityAndFlags = DONT_DEALLOCATE_FLAG;
 }
 
+/* The array's storage set to a capacity, through an allocator, for elements
+ * of a size (0xa70: reallocated in place by the allocator's slot 6 when the
+ * array owns its storage, else allocated and copied); the result is
+ * nonzero when the allocation failed. derived name. */
+hkResult FUN_00000a70(AllocatorBase &allocator, void *array, int numElements,
+                      int elementSize); /* derived name */
+
+/* Room for n elements at least: the capacity doubled, or n when that is
+ * more (hkArrayStreamWriter's terminator, 0x8ffa0). */
+template <typename T> inline void hkArray<T>::reserve(AllocatorBase &allocator, int n)
+{
+    const int capacity = getCapacity();
+    if (capacity < n) {
+        const int doubled = 2 * capacity;
+        FUN_00000a70(allocator, this, n < doubled ? doubled : n, sizeof(T));
+    }
+}
+
 /* The array's grow by one more element at least, through an allocator, for
  * elements of a size (0xb40, 470 call sites; the capacity doubled, or one
  * when empty, by the allocator's slot 6). derived name. */
@@ -824,6 +842,15 @@ class MemoryExtendedInterface /* derived name */
 class BufferAllocator : public AllocatorBase /* derived name */
 {
   public:
+    /* 0x908d0: no buffer yet, the free list empty over its own storage, the
+     * lock with no spinning (the memory system builds one at its +0x100,
+     * 0xc2dd). */
+    BufferAllocator();
+
+    /* Out of line (0x909a0, slot 0; 0x90930, slot 1): the lock destroyed,
+     * the free list left as it is. */
+    virtual ~BufferAllocator();
+
     void *blockAlloc(int numBytes); /* slot 2 (0x90b20); derived name */
     /* The allocation under the lock at +0x440 (0x90b70): slot 2 asks for
      * the rounded size exactly, slot 4 (0x90db0) lets the size it gets back
@@ -834,11 +861,35 @@ class BufferAllocator : public AllocatorBase /* derived name */
     void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9 (0x910a0) */
     void FUN_000910d0();                                          /* vtable slot 11; derived name */
 
-    char *bufferStart; /* derived name */
-    char *bufferEnd;   /* derived name */
-    char *currentEnd;  /* derived name */
-    u8 unknown20[8];
-    hkUlong peakUse; /* derived name */
+    /* A freed block the allocation takes back (0x90b70 scans them from
+     * the last for the smallest that fits). derived names. */
+    struct FreeBlock {
+        char *start;
+        int numBytes;
+    };
+
+    /* The freed blocks, an array over 64 entries of its own storage that
+     * the destructor does not give back. derived name. */
+    struct FreeBlockList {
+        FreeBlockList()
+            : data(storage), size(0),
+              capacityAndFlags(64 | hkArray<FreeBlock>::DONT_DEALLOCATE_FLAG)
+        {
+        }
+
+        FreeBlock *data;
+        int size;
+        int capacityAndFlags;
+        FreeBlock storage[64];
+    };
+
+    char *bufferStart;        /* derived name */
+    char *bufferEnd;          /* derived name */
+    char *currentEnd;         /* derived name */
+    int numAllocations;       /* derived name: counted by each allocation (0x90ccf, 0x90d21) */
+    hkUlong peakUse;          /* derived name */
+    FreeBlockList freeBlocks; /* derived name */
+    hkCriticalSection lock;   /* derived name */
 };
 
 struct MemorySystem {
@@ -848,7 +899,7 @@ struct MemorySystem {
     u8 unknown28[0xd8];
     /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
     BufferAllocator bufferAllocator; /* derived name */
-    u8 unknown130[0x6e30];
+    u8 unknown550[0x6a10];
     /* Set by the constructor from its fifth argument; bit 2 gives each
      * thread its own allocator (FUN_0000c590). */
     s32 flags; /* derived name */
@@ -984,6 +1035,46 @@ class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
 };
 
 void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
+
+/* A reference-counted object holding a reference to another and a flag
+ * (vtable 0x168d3f0, D14: slots 2 to 4 hkReferencedObject's). Built by
+ * seven functions from 0x4698 to 0x1a3773, on the stack at 0x4698. */
+class Object0000a280 : public hkReferencedObject /* derived name */
+{
+  public:
+    /* 0xa280: the object's reference taken, the object and the flag kept. */
+    Object0000a280(hkReferencedObject *object, bool flag);
+
+    /* Out of line (0xa3b0, slot 0; 0xa310, slot 1, the deleting one at the
+     * recorded size): the reference released and the pointer cleared. */
+    virtual ~Object0000a280();
+
+    hkReferencedObject *object; /* derived name */
+    bool flag;                  /* derived name */
+};
+
+/* A reference-counted object of 0x58 bytes (vtable 0x168d5b0, D14: slots 5
+ * to 13 its own) that hkBaseSystem's start (0x98d0) builds from its second
+ * and third arguments, a report function and the object it is called with
+ * by shape: a pointer map at +0x10 and an array of 4-byte elements at
+ * +0x20, both given back by the destructors, and a critical section at
+ * +0x48. */
+class Object0000b330 : public hkReferencedObject /* derived name */
+{
+  public:
+    /* 0xb330 */
+    Object0000b330(void *reportFunction, void *reportObject);
+
+    /* Out of line (0xb1a0, slot 0; 0xb250, slot 1). */
+    virtual ~Object0000b330();
+
+    PointerMap map;       /* derived name */
+    hkArray<u32> array;   /* derived name */
+    void *reportFunction; /* derived name */
+    void *reportObject;   /* derived name */
+    int unknown40;
+    hkCriticalSection criticalSection; /* derived name */
+};
 
 /* A reference-counted object of 0xf0 bytes (vtable 0x16a3e30, address
  * point 0x16a3e40): its out-of-line destructor body FUN_0012a8c0 stores the
@@ -1195,7 +1286,10 @@ class Pool00007880 : public hkReferencedObject /* derived name */
         u8 unknown1c[5];
         /* Set by slot 12 when it clears the worker's timers. derived name. */
         bool timersCleared;
-        u8 unknown22[0xe];
+        u8 unknown22[6];
+        /* What the pool signals to start the worker on a callback (slots 5
+         * and 6, through FUN_00007600). derived name. */
+        hkSemaphore workerStart;
         /* The worker's monitor stream: the loop (0x721c, 0x7228) copies the
          * thread's start and current pointers here; slot 12 rewinds the
          * second to the first. derived names. */
@@ -1203,10 +1297,15 @@ class Pool00007880 : public hkReferencedObject /* derived name */
         char *monitorStreamEnd;
     };
 
+    /* What a worker runs on the argument stored beside it. derived name. */
+    typedef void (*WorkCallback)(void *argument);
+
     virtual ~Pool00007880();
 
-    virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    /* Slots 5 (0x7660) and 6 (0x76d0): FUN_00007600 with the callbacks
+     * FUN_000076c0 and FUN_00007730. derived names. */
+    virtual void FUN_00007660(void *argument);
+    virtual void FUN_000076d0(void *argument);
     virtual bool FUN_000077a0() const; /* vtable slot 7; derived name */
     /* Slot 8 (0x7740): while workers run, one count of the semaphore taken
      * for each of them, then the flag and the running byte cleared.
@@ -1220,9 +1319,16 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     virtual void FUN_000075d0();                /* vtable slot 13; derived name */
     virtual void FUN_000071a0(int workerIndex); /* vtable slot 14; derived name */
 
+    /* Hands the workers a callback (0x7600, not a slot; inline in slots 5
+     * and 6): running set, the callback and its argument stored, each
+     * worker's start signalled from the last. derived name. */
+    void FUN_00007600(WorkCallback newCallback, void *argument);
+
     u8 unknownC[4];
     WorkerRecord workers[11]; /* derived name */
-    u8 unknown2d0[0x50];
+    u8 unknown2d0[0x40];
+    WorkCallback callback;  /* derived name */
+    void *callbackArgument; /* derived name */
     /* What a worker signals when it is done with a callback (the waits at
      * 0x7410 and 0x7761 take one count per worker). derived name. */
     hkSemaphore workerDone;
@@ -1631,6 +1737,10 @@ class FileImageSource : public ImageSource /* derived name */
     /* The class allocator inline, the thread heap's slot 2 called in
      * place (0xad7e9). */
     static void *operator new(unsigned long numBytes);
+
+    /* The reference-counted class delete: its deleting destructor 0xad5b0
+     * frees at the recorded size, 0x18 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     LoadedImage *FUN_000ad7b0(); /* vtable slot 6; derived name */
 
@@ -2093,6 +2203,46 @@ inline void hkpPrismaticConstraintData::operator delete(void *object, unsigned l
 }
 
 inline void hkpLinearClearanceConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkTypeInfoRegistry::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkDynamicClassNameRegistry::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkAlignSceneToNodeOptions::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void XmlEndElement::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void XmlCharacters::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void FileImageSource::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpBodyQualityLibrary::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpRefMaterial::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

@@ -6,5 +6,6 @@
  * same body): destroy the pair in place, which destroys its hkStringPtr. */
 void FUN_00000300(void *object) /* derived name */
 {
-    FUN_0000e5d0(&static_cast<hkMonitorStreamColorTableColorPair *>(object)->colorName);
+    static_cast<hkMonitorStreamColorTableColorPair *>(object)
+        ->~hkMonitorStreamColorTableColorPair();
 }
