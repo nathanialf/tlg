@@ -6,5 +6,5 @@
  * destructor. */
 void FUN_0000d380(void *object) /* derived name */
 {
-    FUN_0001c1f0(static_cast<hkRefCountedProperties *>(object));
+    static_cast<hkRefCountedProperties *>(object)->~hkRefCountedProperties();
 }

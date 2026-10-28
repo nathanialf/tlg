@@ -16,3 +16,13 @@ PointerMap::Iterator PointerMap::FUN_00013ad0(hkUlong key) const /* derived name
     }
     return reinterpret_cast<Iterator>(long(hashMod + 1));
 }
+
+hkResult PointerMap::FUN_00013d10(hkUlong key) /* derived name */
+{
+    Iterator it = FUN_00013ad0(key);
+    if (!isValid(it)) {
+        return HK_FAILURE;
+    }
+    FUN_00013c10(it);
+    return HK_SUCCESS;
+}

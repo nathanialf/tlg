@@ -653,7 +653,7 @@ FUN_00023160 src/libs/unknown/leaf_00023160.cpp _ZNK16hkMemoryMeshBody12FUN_0002
 FUN_00024b60 src/libs/unknown/leaf_00024b60.cpp _ZN22hkMultipleVertexBuffer12FUN_00024b60ERKNS_13LockedElementES2_
 FUN_0003b1d0 src/libs/unknown/func_0003b1d0.cpp _ZNK18hknpDecoratorShape12FUN_0003b1d0EPKvPv
 FUN_0003b1e0 src/libs/unknown/func_0003b1e0.cpp _ZNK18hknpDecoratorShape12FUN_0003b1e0EPKvS1_ifPvS2_
-FUN_0003b200 src/libs/unknown/func_0003b200.cpp _ZNK18hknpDecoratorShape12FUN_0003b200EPviiPKv
+FUN_0003b200 src/libs/unknown/func_0003b200.cpp _ZNK18hknpDecoratorShape12FUN_0003b200EPviiRK21ShapeKeyQuery000380b0
 FUN_00037e80 src/libs/unknown/func_00037e80.cpp _ZNK18hknpDecoratorShape12FUN_00037e80EPKvS1_Pv
 FUN_0003b220 src/libs/unknown/func_0003b220.cpp _ZNK18hknpDecoratorShape12FUN_0003b220EPKvS1_S1_S1_Pv
 FUN_0003b230 src/libs/unknown/func_0003b230.cpp _ZNK18hknpDecoratorShape12FUN_0003b230EPKvS1_S1_S1_Pv
@@ -1242,7 +1242,7 @@ _ZN24hknpVehicleDefaultEngineD0Ev src/libs/unknown/func_0015c430.cpp
 FUN_0008f640 src/libs/unknown/func_0008f640.cpp _ZN9UnionFindC2EP16UnionFindParentsi
 FUN_00161740 src/libs/unknown/func_00161740.cpp _ZN15hknpBodyManager12FUN_00161740Ev
 FUN_0018ce30 src/libs/unknown/func_0018ce30.cpp _ZNK29hknpBroadPhaseUpdateLayerTask12FUN_0018ce30EP11hkStringBufS1_
-FUN_00010690 src/libs/unknown/func_00010690.cpp _Z12FUN_00010690P15MersenneTwister
+_ZN15MersenneTwisterD1Ev src/libs/unknown/func_00010690.cpp
 _ZN27hknpMotionPropertiesLibraryC1Ev src/libs/unknown/func_00036d90.cpp _ZN27hknpMotionPropertiesLibraryC2Ev
 FUN_00048890 src/libs/unknown/func_00048890.cpp _ZThn16_N16hknpPreSolveTaskD0Ev
 _ZN9StringMapC1Ev src/libs/unknown/func_00091590.cpp
@@ -1553,3 +1553,12 @@ _ZN15BufferAllocatorD1Ev src/libs/unknown/func_000909a0.cpp
 FUN_00090930 src/libs/unknown/func_000909a0.cpp _ZN15BufferAllocatorD0Ev
 FUN_00093f30 src/libs/unknown/func_00093f30.cpp _Z12FUN_00093f30PKDv4_fiR6hkAabb
 FUN_0017edf0 src/libs/unknown/func_0017edf0.cpp _ZN26hkDynamicClassNameRegistry12FUN_0017edf0ERK9StringMap
+_ZN27hkUuidPseudoRandomGeneratorD1Ev src/libs/unknown/func_0000d9e0.cpp
+FUN_0000da50 src/libs/unknown/func_0000d9e0.cpp _ZN27hkUuidPseudoRandomGeneratorD0Ev
+_ZN11hkStringPtrC1EPKc src/libs/unknown/func_0000e3e0.cpp
+_ZN11hkStringPtrC1ERKS_ src/libs/unknown/func_0000e3e0.cpp
+FUN_00013d10 src/libs/unknown/func_00013ad0.cpp _ZN10PointerMap12FUN_00013d10Em
+FUN_000380b0 src/libs/unknown/func_000380b0.cpp _ZNK15hknpMaskedShape12FUN_000380b0EPviiRK21ShapeKeyQuery000380b0
+_ZN9hknpShapeD2Ev src/libs/unknown/func_0006fb50.cpp
+_ZN17hkxTextureInplaceD1Ev src/libs/unknown/func_0008aa90.cpp
+FUN_0008ab00 src/libs/unknown/func_0008aa90.cpp _ZN17hkxTextureInplaceD0Ev

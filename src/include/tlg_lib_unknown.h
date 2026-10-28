@@ -1392,14 +1392,29 @@ int FUN_000188a0(const ListNode000188a0 *node); /* derived name */
  * reference-counted object and seeds it from the time. */
 struct MersenneTwister /* derived name */
 {
+    /* Out of line (0x10690): the state given back to the thread's heap and
+     * forgotten; hkUuidPseudoRandomGenerator's destructors (0xd9e0, 0xda50)
+     * run it on their +0x10 after the lock's. */
+    ~MersenneTwister();
+
     u16 index;  /* derived name */
     u32 *state; /* derived name */
 };
 
-/* derived name: the state given back to the thread's heap and forgotten
- * (0x10690; the destructor and the deleting destructor of the object
- * 0xdaf0 builds run it on their +0x10). */
-void FUN_00010690(MersenneTwister *self);
+/* hkUuidPseudoRandomGenerator, the singleton registered by that name
+ * (create function 0xdaf0, vtable 0x168d8a0): a twister at +0x10 and a
+ * critical section at +0x20, 0x30 bytes. */
+class hkUuidPseudoRandomGenerator : public hkReferencedObject
+{
+  public:
+    /* Slot 0 (0xd9e0); slot 1 (0xda50) frees at the recorded size. */
+    virtual ~hkUuidPseudoRandomGenerator();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    MersenneTwister twister; /* derived name */
+    hkCriticalSection lock;  /* derived name */
+};
 
 /* A free list of fixed-size elements: the head of the free elements at +0
  * (each holds the next), the element size at +8, the bump pointer and the
@@ -1765,11 +1780,9 @@ class FileImageSource : public ImageSource /* derived name */
 {
   public:
     /* Over a copy of a file name (the texture's image source, 0xad7c0):
-     * the string copied out of line by FUN_0000e550, hkStringPtr's copy. */
-    FileImageSource(const hkStringPtr &name)
-    {
-        FUN_0000e550(&fileName, &name);
-    }
+     * the string copied out of line by hkStringPtr's copy constructor
+     * (0xe550). */
+    FileImageSource(const hkStringPtr &name) : fileName(name) {}
 
     virtual ~FileImageSource();
 
@@ -2301,7 +2314,22 @@ inline void hknpGlobals::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxTextureInplace::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkRefCountedProperties::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
 inline void BufferOstream::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkUuidPseudoRandomGenerator::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

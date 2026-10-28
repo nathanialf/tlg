@@ -6,10 +6,10 @@
  * and hknpConvexPolytopeShape: only when the third argument is -1 is the
  * value the fourth points to copied to the first, and 1 returned; else 0. */
 int hknpConvexShape::FUN_00045a80(u32 *argument1, int argument2, int argument3,
-                                  const u32 *argument4) const
+                                  const ShapeKeyQuery000380b0 &argument4) const
 {
     if (argument3 == -1) {
-        *argument1 = *argument4;
+        *argument1 = argument4.key;
         return 1;
     }
     return 0;

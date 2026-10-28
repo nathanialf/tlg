@@ -1108,6 +1108,9 @@ extern hkError *D_57af768; /* hkError's instance */
 int FUN_00017e20(char *buffer, int size, const char *format, va_list args); /* derived name */
 /* The string library's length (derived name; a wrapper over strlen). */
 int FUN_00017fe0(const char *s); /* derived name */
+/* The string library's copy (derived name; a wrapper over strcpy,
+ * 0x17fc0). */
+char *FUN_00017fc0(char *destination, const char *source); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
  * 0x17f40). */
 int FUN_00017f40(const char *a, const char *b); /* derived name */
@@ -1134,6 +1137,14 @@ struct hkStringPtr {
         FUN_0000e5c0(this, flag);
     }
 
+    /* Out of line (0xe3e0): a copy of the string from the thread's heap,
+     * owned (bit 0 set), or null. */
+    hkStringPtr(const char *string);
+
+    /* Out of line (0xe550): a copy of the other's characters, owned, or
+     * null. */
+    hkStringPtr(const hkStringPtr &other);
+
     /* Out of line (0xe5d0): an owned string (bit 0 of the pointer) goes
      * back to the thread's heap and the pointer is cleared. Members are
      * destroyed after the destructor body of the class holding them, so
@@ -1156,9 +1167,6 @@ struct hkStringPtr {
 };
 
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
-/* derived name: the string copied (0xe550): null, or a copy of the other's
- * characters from the thread's heap, owned (bit 0 set). */
-void FUN_0000e550(hkStringPtr *self, const hkStringPtr *other);
 
 /* A growable character buffer (derived name): 128 characters in place
  * (0x90 bytes; the constructor 0x11690 points the array at +0x10).
@@ -1362,10 +1370,10 @@ void FUN_0000dc40(hkUuidObject *self, hkFinishLoadedObjectFlag flag); /* derived
 /* hkRefCountedProperties, 16 bytes: entries, an array (type 0x16) of
  * hkRefCountedProperties::Entry, at +0 (type info at 0x57b85d8, registered
  * by the initializer at 0xd390). Its finish constructor (FUN_0001c1e0,
- * empty) and destructor (FUN_0001c1f0, releases each entry) are out of
+ * empty) and destructor (0x1c1f0, releases each entry) are out of
  * line. */
 struct hkRefCountedProperties {
-    /* 16 bytes: the referenced object at +0 (FUN_0001c1f0 drops a reference
+    /* 16 bytes: the referenced object at +0 (the destructor 0x1c1f0 drops a reference
      * on each) and the key at +8 that FUN_0001c2c0 searches by. */
     struct Entry {
         /* The cleanup callback of its type info (0xd300, registered by
@@ -1383,6 +1391,15 @@ struct hkRefCountedProperties {
      * allocate the 16 bytes from the thread's allocator and construct. */
     hkRefCountedProperties();
 
+    /* Out of line (0x1c1f0): each entry's reference released, the array
+     * given back. */
+    ~hkRefCountedProperties();
+
+    /* The class delete: back to the thread's heap at the class's size, no
+     * null test (inline in hknpShape's destructor, 0x6fb82; defined in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* The object under a key, the last entry first (0x1c550; the shapes ask
      * for key 0xf100 at 0x384be and 0x157118); null when none has it.
      * derived name. */
@@ -1392,7 +1409,6 @@ struct hkRefCountedProperties {
 };
 
 void FUN_0001c1e0(hkRefCountedProperties *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0001c1f0(hkRefCountedProperties *self);                                /* derived name */
 
 /* hkSimpleLocalFrame, polymorphic (vtable 0x168d8e0, address point
  * 0x168d8f0, stored by its finish callback 0x37f0; complete destructor
@@ -3564,6 +3580,26 @@ void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape 
 
 class hknpShapeKeyMask;
 
+/* What slot 21's fourth argument points to (derived names): 24 bytes, a
+ * key at +0 (the convex shapes' slot 21 copies it out) and a key mask at
+ * +8, which the masked shape replaces with its own (0x380b0). */
+struct ShapeKeyQuery000380b0 /* derived name */
+{
+    u32 key;
+    u8 unknown4[4];
+    const hknpShapeKeyMask *mask;
+    const void *unknown10;
+
+    /* A copy of another with a different mask: the record copied whole,
+     * then the mask set (the masked shape's 0x380b0 builds one in its
+     * call). derived name. */
+    ShapeKeyQuery000380b0(const ShapeKeyQuery000380b0 &other, const hknpShapeKeyMask *newMask)
+    {
+        *this = other;
+        mask = newMask;
+    }
+};
+
 /* The arguments of the shapes' slot 27, a level of detail chosen for a
  * shape (derived names): a context whose vector at +0x70 scales the size,
  * and a query whose first pointer leads to a 16-bit size at +0x76
@@ -3655,7 +3691,7 @@ class hknpShape : public hkReferencedObject
      * 0xdea30 builds one; the decorator's forwards). */
     virtual hknpShapeKeyMask *unknownVirtual20() const;
     virtual int unknownVirtual21(void *argument1, int argument2, int argument3,
-                                 const void *argument4) const;
+                                 const ShapeKeyQuery000380b0 &argument4) const;
     virtual void unknownVirtual22(const void *argument1, const void *argument2,
                                   void *argument3) const;
     virtual void unknownVirtual23(const void *argument1, const void *argument2,
@@ -3698,7 +3734,10 @@ class hknpShape : public hkReferencedObject
     u8 dispatchType;
     float convexRadius;
     u64 userData;
-    void *properties; /* a 16-byte object the destructor destroys and frees; derived name */
+    /* Destroyed and freed by the destructor when the shape was allocated
+     * (a size in the high half of +8), not loaded in place. derived
+     * name. */
+    hkRefCountedProperties *properties;
 };
 
 /* hknpDecoratorShape (type info 0x57bf020, vtable 0x16958d0 stored by its
@@ -3740,8 +3779,9 @@ class hknpDecoratorShape : public hknpShape
     void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
                       void *argument5, void *argument6) const; /* vtable slot 19; derived name */
     hknpShapeKeyMask *FUN_0003b1f0() const;                    /* vtable slot 20; derived name */
-    int FUN_0003b200(void *argument1, int argument2, int argument3,
-                     const void *argument4) const; /* vtable slot 21; derived name */
+    int
+    FUN_0003b200(void *argument1, int argument2, int argument3,
+                 const ShapeKeyQuery000380b0 &argument4) const; /* vtable slot 21; derived name */
     void FUN_00037e80(const void *argument1, const void *argument2,
                       void *argument3) const; /* vtable slot 22; derived name */
     void FUN_0003b220(const void *argument1, const void *argument2, const void *argument3,
@@ -3933,6 +3973,11 @@ class hknpMaskedShape : public hknpDecoratorShape
 
     virtual void FUN_00037d80(); /* vtable slot 31; derived name */
     virtual bool FUN_00037dd0(); /* vtable slot 32; derived name */
+
+    /* Slot 21 (0x380b0): the core shape's slot 21 asked with the shape's
+     * mask in a copy of the fourth argument's record. derived name. */
+    int FUN_000380b0(void *argument1, int argument2, int argument3,
+                     const ShapeKeyQuery000380b0 &argument4) const;
 
     hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
 
@@ -5282,8 +5327,9 @@ class hknpConvexShape : public hknpShape
      * third masked by the table at 0x16dc600 from a position. derived
      * name. */
     void FUN_0003c4e0(const u8 *indices, int position, Vec4 *verticesOut) const;
-    int FUN_00045a80(u32 *argument1, int argument2, int argument3,
-                     const u32 *argument4) const; /* vtable slot 21; derived name */
+    int
+    FUN_00045a80(u32 *argument1, int argument2, int argument3,
+                 const ShapeKeyQuery000380b0 &argument4) const; /* vtable slot 21; derived name */
     void FUN_00045aa0(const void *argument1, const void *argument2,
                       hknpShapeSlot22Output *output) const; /* vtable slot 22; derived name */
     /* Slot 28 (0x45a20; also the convex polytope's): the vertices handed
@@ -7461,6 +7507,13 @@ class hkxTextureInplace : public hkReferencedObject
         FUN_0000e5c0(&name, flag);
         FUN_0000e5c0(&originalFilename, flag);
     }
+
+    /* Out of line (0x8aa90, slot 0): the members destroy themselves; the
+     * deleting destructor (0x8ab00, slot 1) frees at the recorded size. */
+    virtual ~hkxTextureInplace();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     char fileType[4];
     hkArray<u8> data;
@@ -9753,6 +9806,11 @@ struct PointerMap /* derived name */
     }
 
     hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
+    /* The entry at a slot removed (0x13c10). derived name. */
+    void FUN_00013c10(Iterator it);
+    /* A key's entry removed, HK_FAILURE when there is none (0x13d10, the
+     * lookup 0x13ad0 inline). derived name. */
+    hkResult FUN_00013d10(hkUlong key);
     /* Sets the value of a key, growing the entries from the allocator given
      * when the map is more than half full (0x138a0); nonzero when the key
      * was new. */
