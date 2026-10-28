@@ -29,8 +29,8 @@ void FUN_00001200() /* derived name */
 /* derived name: the memory setup the game runs (0xe99650): the large block
  * allocator over the base allocator, the free-list allocator over it, the
  * memory system over both, installed and set up with the sizes. */
-hkResult FUN_00001140(AllocatorBase *base, const SizePair00006c30 &sizes,
-                      const TwoBaseAllocatorCinfo *cinfo, int flags) /* derived name */
+hkMemoryRouter *FUN_00001140(AllocatorBase *base, const SizePair00006c30 &sizes,
+                             const TwoBaseAllocatorCinfo *cinfo, int flags) /* derived name */
 {
     LargeBlockAllocator *large = new (D_57af810) LargeBlockAllocator(base);
     TwoBaseAllocator *freeList = new (D_57af9c0) TwoBaseAllocator(large, large, cinfo);

@@ -846,6 +846,10 @@ class hkBaseObject
     virtual void FUN_00000270() {}
 };
 
+/* hkBaseObject's hkClass, built by the reflection initializer at 0xe270
+ * (name "hkBaseObject", size 8, one implemented interface). */
+extern const hkClass D_57b86c0; /* hkBaseObject's hkClass */
+
 /* derived name: free a block of numBytes bytes on the thread's heap (the
  * memory router at %fs-relative 0x16d80b8, its heap at +0x58, slot 3). The
  * size comes as operator delete's, kept whole in a 64-bit register to the
@@ -1764,6 +1768,15 @@ struct hknpCompressedMeshShapeInternals {
     class KeyMask;
 };
 
+/* hknpVehicleVelocityDamper, the velocity dampers' interface (its hkClass
+ * at 0x57c2428, built by the reflection initializer at 0x69890: size 0x10,
+ * parent hkReferencedObject's, no members). */
+class hknpVehicleVelocityDamper : public hkReferencedObject
+{
+};
+
+extern const hkClass D_57c2428; /* hknpVehicleVelocityDamper's hkClass */
+
 /* hknpVehicleDefaultVelocityDamper: vtable 0x1695890, finish callback FUN_00035c60. */
 class hknpVehicleDefaultVelocityDamper : public hkReferencedObject
 {
@@ -1856,13 +1869,27 @@ class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
  * (+0x118, +0x119). */
 struct hknpVehicleTransmissionOutput /* derived name */
 {
-    u8 unknown0[0x11];
+    /* The engine speed slot 9 (0x680b0) shifts by. derived name. */
+    float transmissionRPM;
+    u8 unknown4[0xd];
     hkBool isReversing; /* derived name */
     s8 currentGear;     /* derived name */
     /* Set while the gear changes: slot 6 (0x67ffc) passes no torque then.
      * derived name. */
     hkBool isInGearChange;
+    /* The time left of a gear change (slot 9 counts it down from the
+     * clutch delay). derived name. */
+    float gearChangeTimeLeft;
 };
+
+/* hknpVehicleTransmission, the transmissions' interface (its hkClass at
+ * 0x57bff10, built by the reflection initializer at 0x3cbd0: size 0x10,
+ * parent hkReferencedObject's, no members). */
+class hknpVehicleTransmission : public hkReferencedObject
+{
+};
+
+extern const hkClass D_57bff10; /* hknpVehicleTransmission's hkClass */
 
 /* hknpVehicleDefaultTransmission: vtable 0x1699b90, finish callback FUN_00037a90. */
 class hknpVehicleDefaultTransmission : public hkReferencedObject
@@ -1884,7 +1911,11 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
     virtual bool FUN_00068130(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 8; derived name */
-    virtual void unknownVirtual9();
+    /* Slot 9 (0x680b0): the gear change's time counted down, then outside
+     * reverse one gear down below the downshift speed or up above the
+     * upshift speed, each starting a change. derived name. */
+    virtual void FUN_000680b0(float deltaTime, const hknpVehicleInstance *vehicle,
+                              hknpVehicleTransmissionOutput &output) const;
     virtual float FUN_00067ef0(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 10; derived name */
@@ -1898,6 +1929,18 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
     hkArray<float> gearsRatio;
     hkArray<float> wheelsTorqueRatio;
 };
+
+/* hkReferencedObject's hkClass (built at 0xe222). */
+extern const hkClass D_57b8640; /* hkReferencedObject's hkClass */
+
+/* hknpVehicleAerodynamics, the aerodynamics' interface (its hkClass at
+ * 0x57bf880, built by the reflection initializer at 0x3a040: size 0x10,
+ * parent hkReferencedObject's, no members). */
+class hknpVehicleAerodynamics : public hkReferencedObject
+{
+};
+
+extern const hkClass D_57bf880; /* hknpVehicleAerodynamics's hkClass */
 
 /* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback
  * FUN_0003a0d0. Members from its records (0x1695170 onward): airDensity,
@@ -2096,11 +2139,18 @@ class hknpVehicleEngine : public hkReferencedObject
     hknpVehicleEngine(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+/* Built by the reflection initializer at 0x3cc60. */
+extern const hkClass D_57bff60; /* hknpVehicleEngine's hkClass */
+
 class hknpVehicleBrake : public hkReferencedObject
 {
   public:
     hknpVehicleBrake(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
+
+/* Built by the reflection initializers at 0x6b620 and 0x618b0. */
+extern const hkClass D_57c26f8; /* hknpVehicleBrake's hkClass */
+extern const hkClass D_57c1988; /* hknpVehicleSteering's hkClass */
 
 class hknpVehicleInstance;
 
@@ -3224,6 +3274,28 @@ extern const Vec4 D_14b2060[58];
 /* Two in every lane (derived name): the Newton step of the reciprocal. */
 extern const Vec4 D_14b4380;
 
+/* One half and three in every lane (derived names): the Newton step of the
+ * reciprocal square root. */
+extern const Vec4 D_14b4360;
+extern const Vec4 D_14b4390;
+
+/* A vector's length over x, y and z, as Havok's hkVector4::length<3> is on
+ * this platform at its default accuracy: the square root of the squared
+ * length taken as the squared length times its reciprocal square root (an
+ * estimate refined by one Newton step), zero where the squared length is
+ * not positive (the vehicle's speeds, 0x165890 and 0x165910). derived
+ * name. */
+inline Vec4 length3(const Vec4 &v)
+{
+    const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    const Vec4 invLength =
+        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
+                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+    return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
+                         _mm_mul_ps(lengthSquared, invLength));
+}
+
 /* A vector's reciprocal, zero where a lane is zero, as Havok's
  * hkVector4::setReciprocal with its set-zero mode is on this platform: the
  * estimate refined by one Newton step, r(2 - vr), the lanes equal to zero
@@ -4015,11 +4087,19 @@ class hknpShapeKeyMask : public hkBaseObject
         return where;
     }
 
+    /* Its delete: the object back to the thread's heap at the class's size,
+     * no null test (the compressed mesh mask's deleting destructor 0x34a00
+     * frees 0x20 bytes; defined in tlg_lib_unknown.h beside the new). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     virtual void FUN_000381b0(u32 key, bool enabled) = 0; /* derived name */
     virtual bool FUN_000381d0() = 0;                      /* derived name */
     virtual bool FUN_000381f0(u32 key) const = 0;         /* derived name */
     virtual int FUN_00038210() const = 0;                 /* derived name */
 };
+
+/* Built by the reflection initializer at 0x62080. */
+extern const hkClass D_57c1aa8; /* hknpShapeKeyMask's hkClass */
 
 /* hkHandle, a typed index: the scoped type name of the compound shapes'
  * instance array at 0x14bb530 spells hkFreeListArray<hknpShapeInstance,
@@ -4069,6 +4149,11 @@ class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
 
     /* vtable slot 7 (0x33d30): the instance's bit in the filter. derived name. */
     int FUN_00033d30(hknpShapeInstanceId instanceId) const;
+
+    /* The instance's bit in the filter, read and set or cleared (inline in
+     * slots 7, 5 and 3: 0x33d30, 0x33cdc on, 0x33acc on). derived names. */
+    bool isInstanceEnabled(hknpShapeInstanceId instanceId) const;
+    void setInstanceEnabled(hknpShapeInstanceId instanceId, bool enabled);
 
     const hknpCompoundShape *shape;
     hkArray<hknpShapeKeyMask *> instanceMasks;
@@ -4454,7 +4539,11 @@ struct hknpBody {
     /* The body's index into the body manager's active list, 0x7fffffff when
      * it has none (0x1615a0 and 0x4c720 store that). */
     u32 indexIntoActiveListOrDeactivatedIslandId;
-    u8 unknown7c[0x14];
+    u8 unknown7c[3];
+    /* A byte the world's object at +0x4f8 records with the body's id
+     * (0x63956). derived name. */
+    u8 byte7f;
+    u8 unknown80[0x10];
 };
 
 /* What the world holds at +0x10 (derived name after hknpBodyManager.cpp, the
@@ -4761,11 +4850,23 @@ struct hknpWorldObject4f8 /* derived name */
      * asks it over its ids at 0x15b84f). derived name. */
     bool FUN_000640b0(const hkArray<int> &ids) const;
 
+    /* A body's byte at +0x7f and its id, recorded at +0x38. derived names. */
+    struct BodyRecord {
+        int byte7f;
+        u32 bodyId;
+    };
+
+    /* A body whose flags have bit 3 recorded (0x63930; the body changes
+     * the world applies, 0x16f077, and the game call it). derived name. */
+    void FUN_00063930(int bodyId);
+
     hknpWorld *world; /* derived name */
     void *unknown8;
     u8 unknown10[8];
     hkArray<void *> unknown18;
-    u8 unknown28[0x30];
+    u8 unknown28[0x10];
+    hkArray<BodyRecord> bodyRecords; /* derived name */
+    u8 unknown48[0x10];
     hkArray<void *> unknown58;
 };
 
@@ -5106,6 +5207,37 @@ class hknpFirstPersonGun : public hkReferencedObject
     u32 collisionFilterInfo;
 };
 
+/* A projectile of a projectile gun (derived name): a reference-counted
+ * object whose flags at +0xc mark it destroyed (bit 0; slot 13 of the gun
+ * sets it after the projectile's slot 5) and touched in a step (bit 1,
+ * cleared each step by 0x1598f0), its age at +0x14 (the gun's step adds the
+ * time step before the projectile's slot 7). derived names. */
+class hknpGunProjectile : public hkReferencedObject /* derived name */
+{
+  public:
+    enum {
+        FLAG_DESTROYED = 1 /* derived name */
+    };
+
+    /* Destroyed once: slot 5, then the flag (the gun's slots 10 and 13,
+     * 0x159750 and 0x1597f0, inline it). derived name. */
+    void destroy(hknpWorld *world)
+    {
+        if (!(flags & FLAG_DESTROYED)) {
+            onDestroy(world);
+            flags |= FLAG_DESTROYED;
+        }
+    }
+
+    virtual void onDestroy(hknpWorld *world); /* vtable slot 5; derived name */
+    virtual void unknownVirtual6();
+    virtual void update(hknpWorld *world); /* vtable slot 7; derived name */
+
+    u8 flags; /* derived name */
+    u8 unknownD[7];
+    float existenceTime; /* derived name */
+};
+
 /* hknpProjectileGun (type info 0x57bf7e0, vtable 0x16a4b30, address point
  * 0x16a4b40; finish constructor 0x1595c0): maxProjectiles at +0x34,
  * reloadTime and reload (floats) at +0x38 and +0x3c, projectiles (an array
@@ -5131,11 +5263,14 @@ class hknpProjectileGun : public hknpFirstPersonGun
     /* Slot 12 (0x1598f0): steps the projectiles. derived name. */
     virtual void updateProjectiles(float timeStep, hknpWorld *world, const void *characterBody,
                                    const hkTransform &viewTransform, bool fire, bool fireRmb);
+    /* Slot 13 (0x1597f0): every projectile older than the time destroyed,
+     * once. derived name. */
+    virtual void FUN_001597f0(float time);
 
     int maxProjectiles;
     float reloadTime;
     float reload;
-    hkArray<void *> projectiles;
+    hkArray<hknpGunProjectile *> projectiles;
     hknpWorld *npWorld;
 };
 
@@ -6288,9 +6423,14 @@ struct hkpSetLocalTranslationsConstraintAtom {
  * three enums (records from 0x169ed60) the third is SolvingMethod, items
  * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
 struct hkpConstraintAtom {
-    /* AtomType (its items from 0x169ea70), the two the pulley's
-     * constructor stores. */
-    enum AtomType { TYPE_SET_LOCAL_TRANSLATIONS = 3, TYPE_PULLEY = 20 };
+    /* AtomType (its items from 0x169ea70), the ones the constructors
+     * store. */
+    enum AtomType {
+        TYPE_SET_LOCAL_TRANSLATIONS = 3,
+        TYPE_STIFF_SPRING = 6,
+        TYPE_PULLEY = 20,
+        TYPE_SETUP_STABILIZATION = 23
+    };
 
     enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
 };
@@ -6474,6 +6614,11 @@ class hkpStiffSpringConstraintData : public hkpConstraintData /* vtable address 
 
     /* The finish constructor (0x7aa50): the atoms are left as loaded. */
     hkpStiffSpringConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new spring (0x7d660, called at 0x79847): the atoms typed, the
+     * pivots at the origin, the stabilization on with no limits, no length
+     * and no spring (-1). */
+    hkpStiffSpringConstraintData();
 
     /* Empty (the shared 0x3b640); the deleting destructor 0x7d610
      * (beside the class's slots) is the body the vtables of the reference-counted classes of
@@ -7085,7 +7230,7 @@ struct hkpRagdollMotorConstraintAtom {
     }
 
     u16 type; /* derived name */
-    bool isEnabled;
+    hkBool isEnabled;
     u8 unknown3;
     s16 initializedOffset;
     s16 previousTargetAnglesOffset;
@@ -7118,7 +7263,8 @@ class hkpRagdollConstraintData : public hkpConstraintData
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
-        u8 unknown100[0x30]; /* angFriction, twistLimit */
+        hkpAngFrictionConstraintAtom angFriction;
+        u8 unknown110[0x20]; /* twistLimit */
         hkpConeLimitConstraintAtom coneLimit;
         u8 unknown150[0x20]; /* planesLimit */
         hkpBallSocketConstraintAtom ballSocket;
@@ -7146,6 +7292,17 @@ class hkpRagdollConstraintData : public hkpConstraintData
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     void FUN_0007dad0(hkBool enable); /* derived name */
+
+    /* What the solver keeps for the constraint (derived names): its first
+     * twelve solver results are the motors' and the friction's. */
+    struct Runtime {
+        hkpSolverResults solverResults[12];
+    };
+
+    /* The motors enabled or not, the friction the opposite, and the
+     * runtime's results reset (0x7e220; the game jumps to it at
+     * 0xeb1a10). derived name. */
+    void FUN_0007e220(void *runtimeIn, hkBool isEnabled);
 
     hkpConstraintMotor *FUN_0007dfc0() const; /* derived name */
     hkpConstraintMotor *FUN_0007e0a0() const; /* derived name */
@@ -8807,6 +8964,8 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     const char *FUN_000aea20() const;                            /* vtable slot 12; derived name */
     void FUN_000aea30(const char *newName);                      /* vtable slot 13; derived name */
     void FUN_000ae860();                                         /* vtable slot 16; derived name */
+    /* Slot 15 (0xae9a0): a part appended. derived name. */
+    void FUN_000ae9a0(const hkSkinnedMeshShape::Part &part);
     /* Slot 10 (0xae820): a copy of a part. derived name. */
     void FUN_000ae820(int partIndex, hkSkinnedMeshShape::Part &partOut) const;
 
@@ -9429,6 +9588,10 @@ class hknpVehicleInstance : public hknpUnaryAction
         const hknpVehicleInstanceSlot8Argument *argument); /* vtable slot 8; derived name */
     void FUN_001659b0();                                   /* vtable slot 9; derived name */
     float FUN_00165880() const;                            /* vtable slot 13; derived name */
+    /* Slots 14 and 15 (0x165890, 0x165910): the chassis's speed in
+     * kilometres and in miles an hour. derived names. */
+    float FUN_00165890() const;
+    float FUN_00165910() const;
 
     /* What slot 16 fills (derived names): two flags, an int, vectors at
      * +0x10, +0x20 and +0x70, two pointer-sized fields at +0x30 and a
@@ -9477,7 +9640,7 @@ class hknpVehicleInstance : public hknpUnaryAction
         u8 unknownBc[4];
     };
 
-    void *world;
+    hknpWorld *world;
     u8 unknown28[0x30];
     hknpVehicleSuspension *suspension;
     u8 unknown60[8];
@@ -9600,16 +9763,21 @@ struct hknpCollisionResult /* derived name */
     u8 unknown0[0x60];
 };
 
-/* A collector that keeps every hit (derived name; vtable 0x169b100,
- * address point 0x169b110, no type info): the hits in an array at +0x20.
- * Slot 3 (FUN_00070a10) empties it; its destructors 0x70900 and 0x70970
- * empty it and free the array. */
-class hknpAllHitsCollector : public hknpCollisionQueryCollector /* derived name */
+/* A collector that keeps every hit, Havok's all-hits collector by its shape
+ * (derived name, after its destructor: the vtable row D14's ruling names,
+ * 0x169b100, address point 0x169b110, no type info), 0x3f0 bytes: the hits in an array
+ * at +0x20 over room for ten in the object (the game builds it on the stack
+ * with capacity 0x8000000a and the storage at +0x30, 0xe9c32c on). Slot 3
+ * (FUN_00070a10) empties it; its destructors 0x70900 and 0x70970 empty it
+ * and free the array. */
+class Object00070900 : public hknpCollisionQueryCollector /* derived name */
 {
   public:
+    virtual ~Object00070900();
+
     void reset(); /* vtable slot 3, FUN_00070a10 */
 
-    hkArray<hknpCollisionResult> hits; /* derived name */
+    hkInplaceArray<hknpCollisionResult, 10> hits; /* derived name */
 };
 
 class hknpFlippedGetClosestPointsQueryCollector
@@ -9725,6 +9893,9 @@ class hkpParametricCurve : public hkReferencedObject
   public:
     hkpParametricCurve(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
+
+/* Built by the reflection initializer at 0x7c030. */
+extern const hkClass D_57c3c68; /* hkpParametricCurve's hkClass */
 
 /* hkpLinearParametricCurve (hkClass 0x57c3268, 0x50 bytes, parent
  * hkpParametricCurve; finish callback FUN_00078b00;
@@ -10199,6 +10370,10 @@ struct StringMap /* derived name */
     /* Sets the value of a key, adding the entry when it is new (0x91690). */
     void FUN_00091690(const char *key, hkUlong value);                 /* derived name */
     hkUlong FUN_00091900(const char *key, hkUlong defaultValue) const; /* derived name */
+    /* Every key's string freed to the containers' allocator, then the map
+     * emptied through 0x91ac0: the map owns copies of its keys (0x180bf0;
+     * 0x19b0c6 calls it). derived name. */
+    void FUN_00180bf0();
 };
 
 /* The map's destructor, out of line (0x915e0): the entries go back to the
@@ -10255,6 +10430,21 @@ struct PointerMap /* derived name */
      * (hkVtableClassRegistry's creation, 0x1845f5). */
     PointerMap() : entries(0), numEntries(0), hashMod(-1) {}
 
+    /* The count's top bit: the map does not own its entries. derived
+     * name. */
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
+
+    /* Every entry marked empty and the count zeroed, the entries kept
+     * (inline in 0x13db0). derived name. */
+    void clear()
+    {
+        const int capacity = hashMod + 1;
+        for (int i = 0; i < capacity; i++) {
+            entries[i].key = hkUlong(-1);
+        }
+        numEntries &= DONT_DEALLOCATE_FLAG;
+    }
+
     Pair *entries;
     int numEntries;
     int hashMod;
@@ -10271,7 +10461,16 @@ struct PointerMap /* derived name */
         return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
     }
 
+    /* The value at a valid slot. derived name. */
+    hkUlong getValue(Iterator it) const
+    {
+        return entries[static_cast<int>(reinterpret_cast<hkUlong>(it))].value;
+    }
+
     hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
+    /* A key's value into out, HK_FAILURE when the key is absent (0x13b90,
+     * the lookup 0x13ad0 inline). derived name. */
+    hkResult FUN_00013b90(hkUlong key, hkUlong &out) const;
     /* The entry at a slot removed (0x13c10). derived name. */
     void FUN_00013c10(Iterator it);
     /* A key's entry removed, HK_FAILURE when there is none (0x13d10, the

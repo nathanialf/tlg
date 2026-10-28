@@ -26,3 +26,13 @@ hkResult PointerMap::FUN_00013d10(hkUlong key) /* derived name */
     FUN_00013c10(it);
     return HK_SUCCESS;
 }
+
+hkResult PointerMap::FUN_00013b90(hkUlong key, hkUlong &out) const /* derived name */
+{
+    Iterator it = FUN_00013ad0(key);
+    if (!isValid(it)) {
+        return HK_FAILURE;
+    }
+    out = getValue(it);
+    return HK_SUCCESS;
+}

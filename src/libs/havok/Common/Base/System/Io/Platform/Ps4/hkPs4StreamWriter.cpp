@@ -1,8 +1,6 @@
 /* src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp: the
  * file its assert names (config/homes.base.txt, FUN_00091ef0). */
-#include "tlg_hk_reflect.h"
-#include "tlg_sce_fios.h"
-#include "tlg_types.h"
+#include "tlg_lib_unknown.h"
 
 /* derived names: the stream writer over a Fios file handle at +0xc (vtable
  * address point 0x16a34f0, stored by the opener at 0x91d50: slot 5,
@@ -11,17 +9,23 @@
  * from the file. Slot 11 of the vtable 0x16a3560 (another class reading
  * through a Fios handle at +0xc, its slots 7 and 9 seeking) holds the same
  * body. */
-class hkPs4StreamWriter /* derived name */
+class hkPs4StreamWriter : public hkStreamWriter /* derived name */
 {
   public:
     virtual ~hkPs4StreamWriter();
+
+    /* The reference-counted class delete: the deleting destructor 0x91e30
+     * frees at the recorded size, 0x18 by default. */
+    static void operator delete(void *object, unsigned long numBytes)
+    {
+        freeReferencedObject(object, numBytes);
+    }
 
     void FUN_00091fe0();                           /* vtable slot 7; derived name */
     hkBool FUN_00091ff0() const;                   /* vtable slot 5; derived name */
     hkResult FUN_00092010(int offset, int whence); /* vtable slot 9; derived name */
     int FUN_00092030() const;                      /* vtable slot 10; derived name */
 
-    u8 unknown8[4];
     SceFiosFH handle; /* derived name */
     /* Whether the writer closes the handle (the destructor 0x91eb0 tests
      * it). derived name. */

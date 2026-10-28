@@ -3,3 +3,5 @@
 
 /* Both arrays start empty. */
 NodeEdgeLists::NodeEdgeLists() {}
+
+NodeEdgeLists::~NodeEdgeLists() {}

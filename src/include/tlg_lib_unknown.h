@@ -324,7 +324,9 @@ class AllocatorBase /* derived name */
      * block allocator's 0x13500; the router adaptors forward it). derived
      * name. */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const;
-    virtual void unknownVirtual11();
+    /* Slot 11: the peak use reset to the current use (TwoBaseAllocator's
+     * 0x2670, the buffer allocator's 0x910d0). derived name. */
+    virtual void resetPeak();
     /* Slot 12: the allocator's second interface, null by default (the
      * shared 0x42d0); named after TwoBaseAllocator's overrider, which
      * returns its second base. */
@@ -375,7 +377,9 @@ template <typename T> inline void hkArray<T>::pushBack(const T &element)
     if (size == getCapacity()) {
         FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
     }
-    data[size] = element;
+    /* Copy-constructed in place (a skinned mesh part goes over whole, 0xae9a0,
+     * where its assignment copies the handles one by one). */
+    new (&data[size]) T(element);
     size++;
 }
 
@@ -462,6 +466,8 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * size, none for no bytes; a larger one, or one of a size no free list
      * holds, the allocator below knows. */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const;
+    /* Slot 11 (0x2670): the peak back to what is in use now. */
+    virtual void resetPeak();
 
     u8 unknown10[0x10];
     u64 baseBytes;                   /* derived name */
@@ -752,8 +758,8 @@ class hkMemorySystem /* derived name */
                    AllocatorInterface *allocatorInterface, int flags);
     virtual ~hkMemorySystem();
     /* Slot 2 (0xc490): set up with the sizes, under the flags (the setup
-     * passes 3). derived name. */
-    virtual hkResult FUN_0000c490(const SizePair00006c30 &sizes, int flags);
+     * passes 3); the main thread's router back. derived name. */
+    virtual hkMemoryRouter *FUN_0000c490(const SizePair00006c30 &sizes, int flags);
     /* Slot 3 (0xc510): taken down under the flags (the quit at 0x17ab0
      * passes 3). derived name. */
     virtual hkResult mainQuit(int flags);
@@ -831,6 +837,10 @@ u64 FUN_0000bc60(const AllocatorBase *allocator, const void *payload); /* derive
 /* A copy of a string in such a block of the thread's heap (0x180c0).
  * derived name. */
 char *FUN_000180c0(const char *string); /* derived name */
+
+/* The string library's free of such a duplicate, to the allocator given
+ * (0x18090). derived name. */
+void FUN_00018090(char *string, AllocatorBase &allocator); /* derived name */
 
 /* Frees a block with that header through an allocator's slot 3, the header
  * included: its owner cleared first (0xbc80; called by hkStringPtr's
@@ -910,6 +920,9 @@ class BufferAllocator : public AllocatorBase /* derived name */
     void *FUN_00090b70(int &numBytesInOut, bool exactSize);
     void blockFree(void *pointer, int numBytes); /* slot 3 (0x90d90); derived name */
     bool FUN_00091090(int numBytes) const;       /* derived name */
+    /* The buffer handed over under the lock (0x90a10; the memory system's
+     * slots 2 and 3 set it and clear it). derived name. */
+    void FUN_00090a10(void *buffer, int numBytes);
     void getMemoryStatistics(MemoryStatistics &statistics) const; /* slot 9 (0x910a0) */
     void FUN_000910d0();                                          /* vtable slot 11; derived name */
 
@@ -944,18 +957,7 @@ class BufferAllocator : public AllocatorBase /* derived name */
     hkCriticalSection lock;   /* derived name */
 };
 
-struct MemorySystem {
-    u8 unknown0[0x18];
-    MemorySystemAllocator *allocator18;
-    MemoryExtendedInterface *extended20; /* derived name */
-    u8 unknown28[0xd8];
-    /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
-    BufferAllocator bufferAllocator; /* derived name */
-    u8 unknown550[0x6a10];
-    /* Set by the constructor from its fifth argument; bit 2 gives each
-     * thread its own allocator (FUN_0000c590). */
-    s32 flags; /* derived name */
-};
+struct MemorySystem; /* defined after hkMemoryRouter, which it holds */
 
 struct hkMemoryRouter;
 
@@ -1523,6 +1525,14 @@ struct FreeList /* derived name */
  * third as the maximum of the second). Field names derived. */
 struct MemoryStatistics /* derived name */
 {
+    /* Every figure unknown (-1) until an allocator reports it (0x268c on,
+     * TwoBaseAllocator's slot 11). */
+    MemoryStatistics()
+        : allocated(-1), inUse(-1), peakInUse(-1), available(-1), totalAvailable(-1),
+          largestBlock(-1)
+    {
+    }
+
     s64 allocated;      /* derived name */
     s64 inUse;          /* derived name */
     s64 peakInUse;      /* derived name */
@@ -1615,6 +1625,12 @@ class ThreadMemory : public AllocatorBase /* derived name */
         }
         return largeSizeToRow[(numBytes - 1) >> 10];
     }
+
+    /* Slots 7 and 8 (0x142a0, 0x14320): a batch of a row's size block by
+     * block through slots 2 and 3, a larger one passed to the allocator it
+     * draws from. */
+    virtual void blockAllocBatch(void **blocksOut, int numBlocks, int blockSize);
+    virtual void blockFreeBatch(void **blocks, int numBlocks, int blockSize);
 
     /* Slot 9 (0x14640): only what the free lists hold is known, the blocks
      * kept on them times their rows' sizes; every other figure is -1. */
@@ -1888,6 +1904,10 @@ class FiosStreamReader : public StreamReader /* derived name */
      * failed. */
     virtual ~FiosStreamReader();
 
+    /* The reference-counted class delete: its deleting destructor 0x93250
+     * frees at the recorded size, 0x18 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* Slot 6 (0x93300): up to the count of bytes read into the buffer from
      * an open handle; a read that brings nothing marks the reader failed.
      * derived name. */
@@ -2141,6 +2161,35 @@ struct hkMemoryRouter /* derived name */
     int int78; /* derived name */
 };
 
+/* The memory system's data (derived names) over its interface: the base
+ * allocator at +8 (the constructor's first argument), the sizes slot 2 was
+ * set up with at +0x10, the main thread's router at +0x80 and the buffer
+ * allocator at +0x100. */
+struct MemorySystem : public hkMemorySystem {
+    hkMemoryRouter *FUN_0000c490(const SizePair00006c30 &sizes, int flags);
+    /* Slot 3 (0xc510): the buffer given back to the base allocator, then
+     * the main router taken down and the extended allocator collected; the
+     * base allocator forgotten. */
+    hkResult mainQuit(int flags);
+
+    /* The flags' bits (derived names): the main thread's router (1), the
+     * buffer allocator's buffer (2). */
+    enum { FLAG_ROUTER = 1, FLAG_TEMPORARY = 2 };
+
+    AllocatorBase *baseAllocator; /* derived name */
+    SizePair00006c30 frameInfo;   /* derived name */
+    MemorySystemAllocator *allocator18;
+    MemoryExtendedInterface *extended20; /* derived name */
+    u8 unknown28[0x58];
+    hkMemoryRouter mainRouter; /* derived name */
+    /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
+    BufferAllocator bufferAllocator; /* derived name */
+    u8 unknown550[0x6a10];
+    /* Set by the constructor from its fifth argument; bit 2 gives each
+     * thread its own allocator (FUN_0000c590). */
+    s32 flags; /* derived name */
+};
+
 /* The thread's router, a thread-local pointer: the TLS segment's template
  * is at 0x16dc060 (0x70 bytes, 4 of them initialised, alignment 8), and the
  * GOT slot 0x16d80b8 holds this object's offset from the thread pointer,
@@ -2216,6 +2265,11 @@ inline void *LoadedImage::operator new(unsigned long numBytes)
 inline void *hknpShapeKeyMask::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
 inline void hkSlot::operator delete(void *object, unsigned long numBytes)
@@ -2339,6 +2393,11 @@ inline void hkTypeInfoRegistry::operator delete(void *object, unsigned long numB
 inline void *hkDynamicClassNameRegistry::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void FiosStreamReader::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
 }
 
 inline void hkDynamicClassNameRegistry::operator delete(void *object, unsigned long numBytes)
@@ -2875,6 +2934,41 @@ struct UlongMap /* derived name */
     int hashMod;  /* derived name */
 };
 
+/* A hash map of 16-bit keys (derived name): 16-byte pairs from the pointer
+ * at +0 (the key in the first two bytes, an empty slot's key 0xffff), the
+ * count at +8 with the don't-deallocate flag in its top bit, the hash mask
+ * at +0xc. The object FUN_0016d360 constructs holds one at +0x38, which its
+ * destructor 0x16d8c0 frees through the containers' allocator. */
+struct ShortKeyMap /* derived name */
+{
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
+
+    struct Pair {
+        u16 key; /* derived name */
+        u8 unknown2[6];
+        hkUlong value; /* derived name */
+    };
+
+    /* Every slot emptied and the count zeroed, the storage kept. derived
+     * name. */
+    void clear()
+    {
+        const int capacity = hashMod + 1;
+        for (int i = 0; i < capacity; i++) {
+            elems[i].key = u16(-1);
+        }
+        numElems &= DONT_DEALLOCATE_FLAG;
+    }
+
+    /* Emptied, the storage given back to the allocator unless the map does
+     * not own it, then left with no storage (0x199580). derived name. */
+    void FUN_00199580(AllocatorBase &allocator);
+
+    Pair *elems;  /* derived name */
+    int numElems; /* derived name */
+    int hashMod;  /* derived name */
+};
+
 /* Per-node lists of edges (derived names): the first edge of each node at
  * +0 and, per edge, the next edge at each of its two ends at +0x10. Built
  * empty at +0x50 of the object FUN_0016d360 constructs (0x16d3ca); 0x17a220
@@ -2901,6 +2995,10 @@ struct NodeEdgeLists /* derived name */
     };
 
     NodeEdgeLists();
+
+    /* Out of line (0x17a220; the owner's destructor 0x16d8c0 calls it at
+     * 0x16dac4): both arrays' storage given back. */
+    ~NodeEdgeLists();
 
     /* Puts an edge at the head of one of its nodes' lists (0x17a290). */
     void FUN_0017a290(unsigned int edgeIndex, const EdgeRecord0017a290 *edges,
