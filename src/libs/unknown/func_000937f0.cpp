@@ -19,3 +19,27 @@ void hkBlockStreamReader::FUN_000937f0(const hkBlockStreamRange *range)
         currentByteLocation = 0;
     }
 }
+
+/* derived name: the consumer starts at the range's first element, the
+ * stream marked partly freed, the elements of the first block to free
+ * (none without a block); an empty range leaves nothing to read. */
+void hkBlockStreamConsumer::FUN_00093ab0(BlockCache *cache, hkBlockStream *stream,
+                                         hkBlockStream *argument3, const hkBlockStreamRange *range)
+{
+    const int numElements = range->numElements;
+    if (numElements) {
+        stream->partiallyFreed = true;
+        currentBlock = range->startBlock;
+        currentByteLocation = currentBlock->data + range->startByteOffset;
+        numElementsToReadInThisBlock = range->startBlockNumElements;
+        numElementsToReadInOtherBlocks = numElements - numElementsToReadInThisBlock;
+        if (numElementsToReadInThisBlock == 0) {
+            currentByteLocation = 0;
+        }
+        this->stream = stream;
+        this->cache = cache;
+        numElementsToFreeInThisBlock = currentBlock ? numElementsToReadInThisBlock : 0;
+    } else {
+        currentByteLocation = 0;
+    }
+}

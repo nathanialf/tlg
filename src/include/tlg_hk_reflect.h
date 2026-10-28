@@ -243,11 +243,21 @@ template <typename T, int N> struct hkInplaceArray : public hkArray<T> {
  * template over the storage; the one instance used here is spelled out.
  * FUN_00047b30 resizes it, filling the new bits. */
 struct hkBitFieldStorage {
+    hkBitFieldStorage() {}
+
+    /* A loaded image's storage is left as loaded. */
+    hkBitFieldStorage(hkFinishLoadedObjectFlag flag) : words(flag) {}
+
     hkArray<u32> words;
     int numBits;
 };
 
 struct hkBitField {
+    hkBitField() {}
+
+    /* A loaded image's field is left as loaded. */
+    hkBitField(hkFinishLoadedObjectFlag flag) : storage(flag) {}
+
     /* The cleanup callback of its type info (0x9cc0; fourteen other type
      * infos cite the same body). derived name. */
     static void FUN_00009cc0(void *object);
@@ -3131,6 +3141,10 @@ class hknpShape;
  * 30 bytes of padding. The compound shapes keep arrays of them (the caller
  * at 0x42494 walks one). */
 struct hknpShapeInstance {
+    /* The cleanup callback of its type info (0x3caa0, registered at
+     * 0x3cb95): the shape's reference released. derived name. */
+    static void FUN_0003caa0(void *object);
+
     /* The transform with the scale applied to its rotation, column by
      * column (0x3ea90). derived name. */
     void FUN_0003ea90(hkTransform &transformOut) const;
@@ -5114,8 +5128,7 @@ class hknpRefMaterial : public hkReferencedObject
 };
 class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
 class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs 0x7d520, vtable 0x1695b10 */
-struct
-    hknpCompressedMeshShape; /* 0x57c26c8; FUN_00158610 runs hknpShape's, then vtable 0x16a4990 */
+class hknpCompressedMeshShape;     /* 0x57c26c8; its finish constructor 0x158610 (below) */
 
 /* hknpBreakableConstraintData's finish constructor (0x3c240, the class's
  * constructor below), called by name from its finish callback while the
@@ -5141,7 +5154,6 @@ class hknpDestructionShapeProperties : public hkReferencedObject
     hkBool hasDestructionShapes;
 };
 
-void FUN_00158610(hknpCompressedMeshShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 /* Slot 17 of hknpSphereShape's vtable (address point 0x1695c20) returns pi,
  * hknpCapsuleShape's (0x169b270) pi / 2. */
 float FUN_0003c660(const hknpSphereShape *self); /* derived name */
@@ -5161,15 +5173,50 @@ struct hknpCompressedMeshShapeData : public hkReferencedObject {
     hkcdSimdTree simdTree;
 };
 
+/* hknpCompositeShape: its hkClass at 0x57c2cf8 (parent 0x57bf1c0) is built by
+ * the reflection initializer at 0x71732, whose type info names the vtable
+ * 0x1697c80 (address point 0x1697c90), the intermediate base whose vtable the
+ * finish constructors of hknpLodShape, hknpCompressedHeightFieldShape and
+ * hknpCompressedMeshShape store before their own. Slot 3 (FUN_00042e80)
+ * returns it, and six derived vtables (0x1699c10, 0x16a3e40, 0x16a49a0,
+ * 0x16a5180, 0x16a5990, 0x16ca050) keep it. */
+extern const hkClass D_57c2cf8; /* hknpCompositeShape's hkClass */
+
+class hknpCompositeShape : public hknpShape
+{
+  public:
+    /* Inline: the type info's finish callback FUN_00071690 runs it, and
+     * hknpLodShape's finish constructor (0x68160) inlines it before storing
+     * its own vtable. */
+    hknpCompositeShape(hkFinishLoadedObjectFlag flag) : hknpShape(flag)
+    {
+        if (flag.finishing) {
+            flags |= 4;
+        }
+    }
+
+    virtual ~hknpCompositeShape();
+
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
+};
+
 /* hknpCompressedMeshShape (its records at 0x169aa40: data, a pointer to
  * hknpCompressedMeshShapeData, at +0x58; quadIsFlat and triangleIsInterior
  * at +0x60 and +0x78; numTriangles at +0x90): FUN_0010bf40 returns the mesh
  * tree's domain, which slot 7 of its vtable (0x158840, address point
  * 0x16a49a0) transforms into the AABB it reports (0x94060). */
-class hknpCompressedMeshShape : public hknpShape
+class hknpCompressedMeshShape : public hknpCompositeShape
 {
   public:
+    /* The finish constructor, out of line (0x158610; the row of the
+     * vtable's type info names it). */
+    hknpCompressedMeshShape(hkFinishLoadedObjectFlag flag);
+
     virtual ~hknpCompressedMeshShape();
+
+    /* What a loaded shape sets up after its members: the word at +0x90
+     * cleared and the data's triangles walked (0x10be70). derived name. */
+    void FUN_0010be70();
 
     const hkAabb *FUN_0010bf40() const; /* derived name */
     void FUN_00158840(const Mat4 &transform,
@@ -5421,6 +5468,10 @@ struct hkpSetLocalTranslationsConstraintAtom {
  * three enums (records from 0x169ed60) the third is SolvingMethod, items
  * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
 struct hkpConstraintAtom {
+    /* AtomType (its items from 0x169ea70), the two the pulley's
+     * constructor stores. */
+    enum AtomType { TYPE_SET_LOCAL_TRANSLATIONS = 3, TYPE_PULLEY = 20 };
+
     enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
 };
 
@@ -5641,6 +5692,10 @@ class hkpPulleyConstraintData : public hkpConstraintData /* vtable address point
 
     /* The finish constructor (0x7aec0): the atoms are left as loaded. */
     hkpPulleyConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new pulley (0x82510, called at 0x798f2): both atoms typed, the
+     * pivots at the origin, no rope, a leverage of one. */
+    hkpPulleyConstraintData();
 
     virtual ~hkpPulleyConstraintData();
 
@@ -7811,33 +7866,6 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
     hkGeometry *geometry;
 };
 
-/* hknpCompositeShape: its hkClass at 0x57c2cf8 (parent 0x57bf1c0) is built by
- * the reflection initializer at 0x71732, whose type info names the vtable
- * 0x1697c80 (address point 0x1697c90), the intermediate base whose vtable the
- * finish constructors of hknpLodShape, hknpCompressedHeightFieldShape and
- * hknpCompressedMeshShape store before their own. Slot 3 (FUN_00042e80)
- * returns it, and six derived vtables (0x1699c10, 0x16a3e40, 0x16a49a0,
- * 0x16a5180, 0x16a5990, 0x16ca050) keep it. */
-extern const hkClass D_57c2cf8; /* hknpCompositeShape's hkClass */
-
-class hknpCompositeShape : public hknpShape
-{
-  public:
-    /* Inline: the type info's finish callback FUN_00071690 runs it, and
-     * hknpLodShape's finish constructor (0x68160) inlines it before storing
-     * its own vtable. */
-    hknpCompositeShape(hkFinishLoadedObjectFlag flag) : hknpShape(flag)
-    {
-        if (flag.finishing) {
-            flags |= 4;
-        }
-    }
-
-    virtual ~hknpCompositeShape();
-
-    const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
-};
-
 /* What hknpExternMeshShapeData's buildContext points to (derived name; the
  * member is not serialized, flags 0x400): signals at +0x48, which slot 8 of
  * hknpExternMeshShape hands out. */
@@ -8625,6 +8653,11 @@ struct hkBlockStreamWriter /* derived name */
      * the new block's data (0x939c0, 30 callers). derived name. */
     void *FUN_000939c0();
 
+    /* Finishes the writer (0x93a10): the current block closed as 0x939c0
+     * closes it, or given back when nothing was written to it and the
+     * stream has another; the writer keeps no block. derived name. */
+    void FUN_00093a10();
+
     hkBlockStream *blockStream;       /* derived name */
     hkBlockStreamBlock *currentBlock; /* derived name */
     int currentByteOffset;            /* derived name */
@@ -8792,6 +8825,12 @@ struct hkBlockStreamReader /* derived name */
 struct hkBlockStreamConsumer : public hkBlockStreamReader /* derived name */
 {
     void FUN_00093a70(BlockCache *cache, hkBlockStream *stream); /* derived name */
+    /* Starting at a range (0x93ab0): the same over the range, the
+     * reader's start written out (the range's count read once, before the
+     * stream's flag is stored); the third argument is not read. derived
+     * name. */
+    void FUN_00093ab0(BlockCache *cache, hkBlockStream *stream, hkBlockStream *argument3,
+                      const hkBlockStreamRange *range); /* derived name */
 
     hkBlockStream *stream;            /* derived name */
     int numElementsToFreeInThisBlock; /* derived name */
@@ -9165,6 +9204,12 @@ class hkVtableClassRegistry : public hkReferencedObject
      * (0x902f0's `jmpq *%rax` after the slot load at +0x38). */
     virtual const hkClass *FUN_00184420(const void *object) const; /* vtable slot 7; derived name */
 
+    /* Registers the vtable of each type info under the class beside it in
+     * a second list, both lists ending at a null (0x184540; the builtin
+     * registry passes its type infos 0x16c82b0 and classes 0x16c9060 at
+     * 0x17ec05 and 0x17f067). derived name. */
+    void FUN_00184540(const hkTypeInfo *const *infos, const hkClass *const *classes);
+
     PointerMap map; /* derived name */
 };
 
@@ -9300,6 +9345,17 @@ struct hkPackfileHeader {
  * FUN_00061060, 2 the grid's FUN_00060c10). The grid's fields from that
  * lookup: two axes at +0x60 and +0x70 with their offsets at +0x40 and
  * +0x50, the cells in a row at +0x80 and the index mask at +0x84. */
+/* A 32-byte record the splitter's count walks (derived names): count
+ * entries of stride bytes from data, each with a word at +0xc. */
+struct SplitterRecord0018e380 /* derived name */
+{
+    int stride;
+    u8 unknown4[0xc];
+    int count;
+    u8 unknown14[4];
+    const u8 *data;
+};
+
 struct hknpGridSpaceSplitter /* derived name */
 {
     /* The cell of a position: its offset coordinate on each axis truncated
@@ -9307,9 +9363,16 @@ struct hknpGridSpaceSplitter /* derived name */
      * 0x148d40 and 0x1572ed). derived name. */
     void FUN_00060c10(const Vec4 &position, int *cellOut) const;
 
+    /* The number of the records' entries whose word at +0xc is set, over
+     * every record, plus the count at +0x1c (0x18e380; the solver's setup
+     * asks it of the world's splitter over three records at 0x14e678).
+     * derived name. */
+    int FUN_0018e380(const struct SplitterRecord0018e380 *records, int numRecords) const;
+
     u8 unknown0[0x18];
     int type; /* derived name */
-    u8 unknown1c[0x24];
+    int unknown1c;
+    u8 unknown20[0x20];
     Vec4 offsetX;       /* derived name */
     Vec4 offsetY;       /* derived name */
     Vec4 axisX;         /* derived name */

@@ -8,5 +8,5 @@ void FUN_0006b4f0(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_00158610(static_cast<hknpCompressedMeshShape *>(object), flag);
+    new (object) hknpCompressedMeshShape(flag);
 }

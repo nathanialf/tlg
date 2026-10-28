@@ -1279,6 +1279,9 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     /* Slots 2 and 4 (0x14aa0): an element of the free list. */
     void *FUN_00014aa0(); /* derived name */
 
+    /* Slot 8 (0x14be0): the non-null blocks pushed on the free list. */
+    virtual void blockFreeBatch(void **blocks, int numBlocks, int blockSize);
+
     FreeList freeList; /* derived name */
 };
 
