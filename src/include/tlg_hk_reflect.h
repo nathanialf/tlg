@@ -443,6 +443,15 @@ bool FUN_00185450(const hkClass *self, const hkClass *other);
 
 /* hkMatrix3 (the reflection's type name): three columns of four floats. */
 struct hkMatrix3 {
+    /* Column by column, each read after the one before is written (the
+     * fixed constraint's frames, 0x7be40). */
+    void operator=(const hkMatrix3 &m)
+    {
+        col0 = m.col0;
+        col1 = m.col1;
+        col2 = m.col2;
+    }
+
     Vec4 col0; /* derived name */
     Vec4 col1; /* derived name */
     Vec4 col2; /* derived name */
@@ -492,6 +501,21 @@ struct hkMatrix3 {
     /* derived name: the matrix transposed in place (0x1a980; the geometry
      * code calls it at 0xb1cbd, 0xb1e0c, 0xb1e86 and 0xb47d3). */
     void FUN_0001a980();
+};
+
+/* hkMassProperties (hkClass 0x57bcfa0 built at 0x23c7d: 0x50 bytes, member
+ * records at 0x1691b50): volume and mass (hkReal) at +0 and +4,
+ * centerOfMass at +0x10, inertiaTensor (hkMatrix3) at +0x20. */
+struct hkMassProperties {
+    /* The mass set from the volume at a density, the inertia scaled with
+     * it (0x2a560; the compound shape's mass build at 0x421da asks it of
+     * each child's properties). derived name. */
+    void FUN_0002a560(const Vec4 &density);
+
+    float volume;
+    float mass;
+    Vec4 centerOfMass;
+    hkMatrix3 inertiaTensor;
 };
 
 /* derived name: out = m times v, v's x, y and z broadcast and each scaling
@@ -836,6 +860,13 @@ void FUN_00006b90(Record00006b90 *self); /* derived name */
             HK_BREAKPOINT(0);                                                                      \
         }                                                                                          \
     } while (0)
+
+/* Havok's null pointer, as the checks' texts spell it (0x14b40d0). */
+#define HK_NULL 0
+
+/* The file the thread's checks name (the string at 0x14b4071). */
+#define HK_POSIX_THREAD_CPP                                                                        \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\Thread\\Thread\\Posix\\hkPosixThread.cpp"
 
 /* The file the critical section's checks name (the string at 0x14b2812). */
 #define HK_POSIX_CRITICAL_SECTION_INL                                                              \
@@ -2898,6 +2929,12 @@ Vec4 FUN_0014a2b0(const hkAabb &inner, const hkAabb &outer);
  * centre transformed, the half extents through the rotation's absolute
  * values); the compound and LOD shapes' slot 7 calls it on their own. */
 void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut); /* derived name */
+
+/* derived name: the same with every bound pushed out by a radius, a vector
+ * the caller holds in memory (0x93fa0; the shapes' slot 7 asks it with a
+ * zero radius, 0x12aabc). */
+void FUN_00093fa0(const Mat4 &transform, const hkAabb &aabb, const Vec4 &extraRadius,
+                  hkAabb &aabbOut); /* derived name */
 
 /* hkcdStaticTree::DefaultTreeStorage32 (type info
  * "!hkcdStaticTree::DefaultTreeStorage32" at 0x14b56c0, hkClass 0x57ba910
@@ -6543,6 +6580,9 @@ class hkpFixedConstraintData : public hkpConstraintData
 
     virtual ~hkpFixedConstraintData();
 
+    /* The pivot frames in each body's space (0x7be40). derived name. */
+    void FUN_0007be40(const hkTransform &pivotA, const hkTransform &pivotB);
+
     void FUN_0007bf20(
         hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
     hkBool FUN_0007bf70() const;                                /* vtable slot 7; derived name */
@@ -6707,6 +6747,10 @@ class hkp6DofConstraintData
     void FUN_0017b930(int bodyIndex);              /* vtable slot 14; derived name */
     u8 FUN_0017b950() const;                       /* vtable slot 15; derived name */
     hkResult FUN_0017bb70(float &factorOut) const; /* vtable slot 18; derived name */
+    /* Slot 19 (0x17ca80): the impulses of the three linear results the
+     * runtime map gives, zero for one it has none for. derived name. */
+    void FUN_0017ca80(const void *argument1, const void *argument2, const hkpSolverResults *results,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_0017b990(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
     /* Slot 6 (0x17b960): the compiled atoms' schemas and solver data, then
@@ -8733,8 +8777,18 @@ struct hkBlockStreamBlock /* derived name */
     /* The block's first eight bytes, which a consumer done with the block
      * reads at once (0x93bd3 and 0x93b8a load them in one 64-bit read). */
     struct Header {
-        u32 numElementsAndBytesUsed; /* derived name */
-        int blockIndexInStream;      /* derived name */
+        /* Written and changed as one word; the range's end point
+         * (0x92220) reads the element count alone, a 16-bit load. */
+        union {
+            u32 numElementsAndBytesUsed; /* derived name */
+
+            struct {
+                u16 numElements; /* derived name */
+                u16 bytesUsed;   /* derived name */
+            };
+        };
+
+        int blockIndexInStream; /* derived name */
     };
 
     Header getHeader() const
@@ -8794,6 +8848,11 @@ struct hkBlockStreamConsumedBlock /* derived name */
  * one with FUN_000937f0 (seventeen callers). */
 struct hkBlockStreamRange /* derived name */
 {
+    /* Ends the range where a writer is (0x92220): its count until then
+     * (the start stored it negated), and a start at the end of a full block
+     * moved to the next block. derived name. */
+    void FUN_00092220(const hkBlockStreamWriter *HK_RESTRICT writer);
+
     const hkBlockStreamBlock *startBlock; /* derived name */
     u16 startByteOffset;                  /* derived name */
     u16 startBlockNumElements;            /* derived name */

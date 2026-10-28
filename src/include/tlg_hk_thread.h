@@ -24,6 +24,22 @@ class hkSemaphore
     SceKernelSema semaphore; /* derived name */
 };
 
+/* hkThread (derived name; its functions are hkPosixThread.cpp's, the path
+ * its checks print): the kernel thread at +0 (m_thread, the name its check's
+ * text gives), null until started, and a status at +8 (2 on construction,
+ * 0x104b0). The destructor (0x104c0) joins a started thread as joinThread
+ * (0x10520, the name its check prints) does, inline. */
+class hkThread /* derived name */
+{
+  public:
+    ~hkThread();
+
+    void joinThread();
+
+    void *m_thread;
+    int status; /* derived name */
+};
+
 /* The object at +0x18 of Class168e810: a spin lock at +0x10; FUN_00015700
  * and FUN_000158f0 take a pointer and a count under it. */
 struct Object00015700; /* derived name */

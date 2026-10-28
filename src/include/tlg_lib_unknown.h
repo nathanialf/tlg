@@ -5,6 +5,7 @@
 #define TLG_LIB_UNKNOWN_H
 
 #include "tlg_hk_reflect.h"
+#include "tlg_hk_thread.h"
 #include "tlg_sce_fios.h"
 #include "tlg_simd.h"
 #include "tlg_types.h"
@@ -917,8 +918,15 @@ void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
  * vtable and frees the array of 24-byte elements at +0xb0. */
 struct Object0012a8c0 /* derived name */
 {
-    u8 unknown0[0xf0]; /* the size its deleting destructor 0x12a860 frees */
+    u8 unknown0[0x60];
+    hkAabb aabb;        /* derived name: the box slot 7 (0x12aa80) transforms */
+    u8 unknown80[0x70]; /* to the size its deleting destructor 0x12a860 frees */
 };
+
+/* Slot 7 of its vtable (and of 0x16a5990's): its box under a transform,
+ * no radius added. derived name. */
+void FUN_0012aa80(const Object0012a8c0 *self, const Mat4 &transform,
+                  hkAabb &aabbOut); /* derived name */
 
 void FUN_0012a8c0(Object0012a8c0 *self); /* derived name */
 
@@ -1128,7 +1136,10 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual bool FUN_000077a0() const; /* vtable slot 7; derived name */
-    virtual void unknownVirtual8();
+    /* Slot 8 (0x7740): while workers run, one count of the semaphore taken
+     * for each of them, then the flag and the running byte cleared.
+     * derived name. */
+    virtual void FUN_00007740();
     virtual int FUN_00007880() const; /* vtable slot 9; derived name */
     virtual void unknownVirtual10();
     virtual void unknownVirtual11();
@@ -1139,7 +1150,10 @@ class Pool00007880 : public hkReferencedObject /* derived name */
 
     u8 unknownC[4];
     WorkerRecord workers[11]; /* derived name */
-    u8 unknown2d0[0x58];
+    u8 unknown2d0[0x50];
+    /* What a worker signals when it is done with a callback (the waits at
+     * 0x7410 and 0x7761 take one count per worker). derived name. */
+    hkSemaphore workerDone;
     int count; /* derived name */
     u8 unknown32c[4];
     bool flag330;   /* derived name */

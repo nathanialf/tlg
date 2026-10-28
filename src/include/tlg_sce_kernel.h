@@ -14,8 +14,13 @@ typedef SceKernelSemaObject *SceKernelSema; /* derived name: an 8-byte handle */
 struct pthread_mutex;
 typedef pthread_mutex *pthread_mutex_t;
 
+/* A thread of the kernel library: a handle (hkThread keeps one, 0x104c0). */
+struct pthread;
+typedef pthread *pthread_t;
+
 extern "C" {
 int pthread_mutex_destroy(pthread_mutex_t *mutex);
+int pthread_join(pthread_t thread, void **valuePtr);
 int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr, int initCount,
                         int maxCount, const void *option);
 int sceKernelDeleteSema(SceKernelSema sema);
