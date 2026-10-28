@@ -377,9 +377,11 @@ template <typename T> inline void hkArray<T>::pushBack(const T &element)
     if (size == getCapacity()) {
         FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
     }
-    /* Copy-constructed in place (a skinned mesh part goes over whole, 0xae9a0,
-     * where its assignment copies the handles one by one). */
-    new (&data[size]) T(element);
+    /* Copy-constructed in place, or assigned when the type is plain old
+     * data (a skinned mesh part goes over whole, 0xae9a0, where its
+     * assignment copies the handles one by one; a body's record goes member
+     * by member, 0x63930). */
+    hkArrayUtil::constructWithCopy(data + size, element);
     size++;
 }
 
@@ -2767,10 +2769,23 @@ struct hknpCharacterOutput /* derived name */
     Vec4 velocity; /* derived name */
 };
 
+/* A character state's id (derived names): the index of its handler in the
+ * state manager, which travels zero-extended (0x35c40's `mov eax, esi`), as
+ * an enumeration with no negative value does; eleven ids, the manager's
+ * destructor's loop bound. */
+enum hknpCharacterStateType /* derived name */
+{
+    HKNP_CHARACTER_STATE_COUNT = 11 /* derived name */
+};
+
 /* The state manager (derived name; vtable 0x1692eb0): a reference-counted
  * object of 0x68 bytes the context holds a reference to, eleven state
  * pointers by id from +0x10 (the game registers its states into them from
- * 0xea9c20); FUN_00035c40 returns its handler for a state. */
+ * 0xea9c20, FUN_00035ba0 replacing one: a reference taken to the new
+ * handler, the old one's released); FUN_00035c40 returns its handler for a
+ * state. The owner at
+ * 0x3e9c0 calls slot 9 of the old state's handler and slot 8 of the new
+ * one, fetching each through that getter. */
 class hknpCharacterStateManager : public hkReferencedObject /* derived name */
 {
   public:
@@ -2786,7 +2801,10 @@ class hknpCharacterStateManager : public hkReferencedObject /* derived name */
         freeReferencedObject(object, numBytes);
     }
 
-    hkReferencedObject *registeredState[11]; /* derived name */
+    /* 0x35c40: the handler registered for a state. derived name. */
+    hkReferencedObject *FUN_00035c40(hknpCharacterStateType state) const;
+
+    hkReferencedObject *registeredState[HKNP_CHARACTER_STATE_COUNT]; /* derived name */
 };
 
 /* The character context (vtable 0x16969d0, address point 0x16969e0, D14's

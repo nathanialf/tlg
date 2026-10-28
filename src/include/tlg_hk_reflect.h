@@ -163,6 +163,71 @@ struct hkHalf {
     s16 value;
 };
 
+/* The array utilities' element traits (derived names): a type that
+ * declares itself plain old data is copied into an array by assignment,
+ * any other class by copy construction. A body's record goes in member by
+ * member through its id's own assignment (0x63930, 0x63e63), where a
+ * skinned mesh part, whose handles have their own assignment too, goes
+ * over whole (0xae9a0). */
+namespace hkTrait /* derived name */
+{
+struct TypeIsPod {};
+
+struct TypeIsClass {};
+
+template <typename T> struct IsPodType {
+    template <typename U> static char test(typename U::hkIsPodType *);
+    template <typename U> static int test(...);
+
+    enum { result = sizeof(test<T>(0)) == sizeof(char) };
+};
+
+template <bool POD> struct PodSelect {
+    typedef TypeIsClass type;
+};
+
+template <> struct PodSelect<true> {
+    typedef TypeIsPod type;
+};
+} // namespace hkTrait
+
+#define HK_DECLARE_POD_TYPE() typedef hkTrait::TypeIsPod hkIsPodType /* derived name */
+
+namespace hkArrayUtil /* derived name */
+{
+template <typename T> inline void constructWithCopy(T *t, const T &copy, hkTrait::TypeIsPod)
+{
+    *t = copy;
+}
+
+template <typename T> inline void constructWithCopy(T *t, const T &copy, hkTrait::TypeIsClass)
+{
+    new (t) T(copy);
+}
+
+template <typename T> inline void constructWithCopy(T *t, const T &copy)
+{
+    constructWithCopy(t, copy, typename hkTrait::PodSelect<hkTrait::IsPodType<T>::result>::type());
+}
+} // namespace hkArrayUtil
+
+/* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
+ * when it names no body. Its assignment is its own, as the other handles'
+ * are (cookbook 85): a record holding one is copied member by member
+ * (0x63930), and a pair of them field by field (0x63739). */
+struct hknpBodyId {
+    hknpBodyId() {}
+
+    explicit hknpBodyId(u32 v) : value(v) {}
+
+    void operator=(const hknpBodyId &other)
+    {
+        value = other.value;
+    }
+
+    u32 value; /* derived name */
+};
+
 /* hkArray, the reflection's array type (its name in the type-name table at
  * 0x14b30e4): a data pointer, a size and a capacity whose top bits are
  * flags (0x80000000 when the array does not own its storage, as the
@@ -544,6 +609,10 @@ struct hkMatrix3 {
         col1 = m.col1;
         col2 = m.col2;
     }
+
+    /* The identity, rows 29 to 31 of the constant table (hkpRotationalConstraintData's
+     * constructor, 0x83473; defined after the table). */
+    void setIdentity();
 
     Vec4 col0; /* derived name */
     Vec4 col1; /* derived name */
@@ -3327,6 +3396,13 @@ inline void storeHalves(hkHalf *halves, const Vec4 &v) /* derived name */
     _mm_storel_pd(reinterpret_cast<double *>(halves), _mm_castsi128_pd(bits));
 }
 
+inline void hkMatrix3::setIdentity()
+{
+    col0 = D_14b2060[29];
+    col1 = D_14b2060[30];
+    col2 = D_14b2060[31];
+}
+
 /* The identity transform, rows 29 to 32 of the constant table read as one
  * (hknpShape's slot 28 default asks its bounds under it, 0x6fc9c). derived
  * name. */
@@ -3469,6 +3545,24 @@ struct hkAabb {
 
     Vec4 min; /* derived name */
     Vec4 max; /* derived name */
+};
+
+/* hkcdAdf (hkClass 0x57bb290, built at 0x1f260: size 0x80, seven members
+ * from the records at 0x16900c0): an adaptive distance field over a box,
+ * its nodes and its 16-bit voxels in two arrays. FUN_0001f1e0 is its type
+ * info's cleanup callback. */
+struct hkcdAdf {
+    /* The cleanup callback (0x1f1e0): the field destroyed in place, its
+     * voxels' storage given back, then its nodes'. derived name. */
+    static void FUN_0001f1e0(void *object);
+
+    float accuracy;
+    hkAabb domain;
+    Vec4 origin;
+    Vec4 scale;
+    float range[2];
+    hkArray<u32> nodes;
+    hkArray<u16> voxels;
 };
 
 /* The nibble mask {15, 15, 15, 0} the box codecs read (a global copied
@@ -4620,7 +4714,26 @@ struct hknpMotion {
      * name. */
     void FUN_00157630(const Vec4 &newAngularVelocity);
 
-    u8 unknown0[0x10];
+    /* Back to the unused state (inlined in 0x476a0): every vector zero, the
+     * orientation the identity, no cell, no motion properties, not in use,
+     * no solver id. derived name. */
+    void reset()
+    {
+        hkString::memSet16(this, &D_14b2060[2], sizeof(*this) / 16);
+        orientation.vec = D_14b2060[32];
+        cellIndex = 0xff;
+        motionPropertiesId = 0;
+        unknown3f = 0;
+        solverId = 0x7fffffff;
+    }
+
+    union {
+        u8 unknown0[0x10];
+        /* A free motion's link to the next free one (0x476a0 stores the
+         * manager's first free id over the cleared motion). derived name. */
+        u32 nextFreeMotionId;
+    };
+
     hkQuaternion orientation; /* derived name */
     /* The inverse inertia in the first three, the w kept when 0x5f530 sets
      * them (Havok keeps the inverse mass there). derived name. */
@@ -4629,7 +4742,9 @@ struct hknpMotion {
     /* The motion's place in its cell's list of active motions, 0x7fffffff
      * when it is in none (0x47790). */
     u32 solverId;
-    u8 unknown30[0xe];
+    u8 unknown30[8];
+    u16 motionPropertiesId; /* derived name: 0x476a0 clears it */
+    u8 unknown3a[4];
     u8 cellIndex;
     u8 unknown3f;
     /* The vector FUN_0005df00 hands out for a body: its linear velocity,
@@ -4675,11 +4790,15 @@ struct hknpMotionManager /* derived name */
         u32 index;
     };
 
+    /* A motion given back (0x476a0, called at 0x4c5bc): reset, put at the
+     * head of the free list, one fewer in use. derived name. */
+    void FUN_000476a0(int motionId);
+
     u8 unknown0[8];
     hkArray<hknpMotion> motions;
     u32 unknown18;
-    u32 unknown1c;
-    u32 unknown20;
+    u32 firstFreeMotionId; /* derived name: invalid when none is free */
+    u32 numUsedMotions;    /* derived name */
     u32 peakMotionIndex;
     /* Per cell, the ids of its active motions; a motion's solverId is its
      * place in its cell's list. derived name. */
@@ -4786,9 +4905,59 @@ struct hknpWorldObject380Record /* derived name */
     u8 unknown8[0x118];
 };
 
+/* What slot 20 (0x30c10) and the slots at 0x30ca0 and 0x31320 hand to
+ * FUN_0002b6c0 (derived names). The pair's output at +0xa8 of the second
+ * argument records the writer's range and the count of what the call
+ * wrote past its start; the writer's range is two ints copied together
+ * (0x30c58), its two counters bumped at the call's end (0x2d74e). The
+ * 0x40-byte info whose first byte the callers clear is not read by the
+ * callee. */
+struct hknpWorldObject380Range /* derived name */
+{
+    int start; /* derived name */
+    int end;   /* derived name */
+};
+
+struct hknpWorldObject380Writer /* derived name */
+{
+    u8 unknown0[8];
+    hknpWorldObject380Range range; /* derived name */
+    int unknown10;
+    int unknown14;
+};
+
+struct hknpWorldObject380Output /* derived name */
+{
+    u8 unknown0[0x28];
+    hknpWorldObject380Range range; /* derived name */
+    u16 count;                     /* derived name */
+};
+
+struct hknpWorldObject380Pair /* derived name */
+{
+    u8 unknown0[0xa8];
+    hknpWorldObject380Output *output; /* derived name */
+};
+
+struct hknpWorldObject380Info /* derived name */
+{
+    hkBool flag; /* derived name */
+    u8 unknown1[0x3f];
+};
+
+int FUN_0002b6c0(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
+                 hknpWorldObject380Info *info, void *argument4, void *argument5, void *argument6,
+                 hknpWorldObject380Writer *writer); /* derived name */
+
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
   public:
+    /* Slot 20 (0x30c10): the pair processed through FUN_0002b6c0, its
+     * output given the writer's range and the count written past it.
+     * derived name. */
+    void FUN_00030c10(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
+                      void *argument4, void *argument5, void *argument6,
+                      hknpWorldObject380Writer *writer);
     /* Slot 9 (0x31170): the records' block back to the allocator at
      * 0x57b8480, the record pointers cleared. derived name. */
     void FUN_00031170(hknpWorldObject380Record **records, int count);
@@ -4852,8 +5021,10 @@ struct hknpWorldObject4f8 /* derived name */
 
     /* A body's byte at +0x7f and its id, recorded at +0x38. derived names. */
     struct BodyRecord {
+        HK_DECLARE_POD_TYPE();
+
         int byte7f;
-        u32 bodyId;
+        hknpBodyId bodyId;
     };
 
     /* A body whose flags have bit 3 recorded (0x63930; the body changes
@@ -6427,12 +6598,24 @@ struct hkpConstraintAtom {
      * store. */
     enum AtomType {
         TYPE_SET_LOCAL_TRANSLATIONS = 3,
+        TYPE_SET_LOCAL_ROTATIONS = 4,
         TYPE_STIFF_SPRING = 6,
+        TYPE_ANG = 13,
         TYPE_PULLEY = 20,
         TYPE_SETUP_STABILIZATION = 23
     };
 
     enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
+};
+
+/* hkpAngConstraintAtom (hkClass 0x57c4750, built at 0x807b0: 0x10 bytes,
+ * records 0x169d9a0): constrainedAxes (three hkUint8) at +2,
+ * numConstrainedAxes at +5, padding (ten bytes, not serialized) at +6. */
+struct hkpAngConstraintAtom {
+    u16 type; /* derived name */
+    u8 constrainedAxes[3];
+    u8 numConstrainedAxes;
+    u8 padding[10];
 };
 
 struct hkpSetupStabilizationAtom {
@@ -6773,11 +6956,15 @@ class hkpRotationalConstraintData : public hkpConstraintData /* vtable address p
   public:
     struct Atoms {
         hkpSetLocalRotationsConstraintAtom rotations;
-        u8 ang[0x10];
+        hkpAngConstraintAtom ang;
     };
 
     /* The finish constructor (0x7b5f0): the atoms are left as loaded. */
     hkpRotationalConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new rotational constraint (0x83440, called at 0x79939): both
+     * frames the identity, all three axes constrained. */
+    hkpRotationalConstraintData();
 
     virtual ~hkpRotationalConstraintData();
 
@@ -9423,12 +9610,6 @@ class hkArrayStreamWriter : public hkStreamWriter
  * at +0x68, wheelsInfo (array of hknpVehicleInstance::WheelInfo)
  * at +0x80, torque and rpm (hkReal) at +0xf8 and +0xfc, mainSteeringAngle
  * at +0x100. */
-/* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
- * when it names no body. */
-struct hknpBodyId {
-    u32 value; /* derived name */
-};
-
 /* hkContactPoint (its member records at 0x168d9b0): position and
  * separatingNormal, the distance in the normal's w. */
 struct hkContactPoint {

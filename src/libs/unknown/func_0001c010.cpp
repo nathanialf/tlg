@@ -69,18 +69,13 @@ DirectoryIterator0001bc80::~DirectoryIterator0001bc80()
 
 /* Slot 10 of the file system (0x1bc80; the stack canary for the probe's
  * handle): the listing, given up when it did not open. */
-// NONMATCHING: 33 of 96 instructions; the base keeps the path in r14 and the
-// result in r12 (zeroed before sceFiosDHOpen, the opened block first with
-// `mov r12, rbx`), the compile keeps the path in r12 and the result in rbx
-// (330 bytes against 336). Not worked yet (round 46 wrote it so the class's
-// vtable and destructors are emitted).
 hkReferencedObject *FiosFileSystem::FUN_0001bc80(const char *path, const char *pattern)
 {
     const char *top = FUN_00017fe0(path) ? path : ".";
     DirectoryIterator0001bc80 *iterator = new DirectoryIterator0001bc80(this, top, pattern);
-    if (iterator->opened) {
-        return iterator;
+    if (!iterator->opened) {
+        delete iterator;
+        return 0;
     }
-    delete iterator;
-    return 0;
+    return iterator;
 }

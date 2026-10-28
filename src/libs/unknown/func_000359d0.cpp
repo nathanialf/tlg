@@ -3,14 +3,14 @@
 
 hknpCharacterStateManager::hknpCharacterStateManager()
 {
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < HKNP_CHARACTER_STATE_COUNT; i++) {
         registeredState[i] = 0;
     }
 }
 
 hknpCharacterStateManager::~hknpCharacterStateManager()
 {
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < HKNP_CHARACTER_STATE_COUNT; i++) {
         if (registeredState[i]) {
             registeredState[i]->removeReference();
             registeredState[i] = 0;
