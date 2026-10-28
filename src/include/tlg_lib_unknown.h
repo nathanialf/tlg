@@ -268,6 +268,12 @@ class AllocatorBase /* derived name */
         return where;
     }
 
+    /* Its delete frees nothing: an allocator lives in storage its owner
+     * gives it, so a deleting destructor is the complete destructor's body
+     * (BlockListAllocator's slots 0 and 1 are one body, 0x8f120;
+     * BufferAllocator's are two equal ones, 0x909a0 and 0x90930). */
+    static void operator delete(void *, unsigned long) {}
+
     /* Slots 2 and 3 allocate and free a block of a given size; slots 4 and
      * 5 (FUN_00008d70, FUN_00008d80) are defaults the allocators keep that
      * forward to them (the layout of Havok's hkMemoryAllocator). */

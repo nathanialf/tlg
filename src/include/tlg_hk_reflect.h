@@ -3162,6 +3162,18 @@ inline Vec4 rotatedInverseDir(const hkQuaternion &q, const Vec4 &v) /* derived n
     return _mm_add_ps(result, result);
 }
 
+/* hkQTransform (the reflection's type name): a rotation as a quaternion and
+ * a translation. derived field names. */
+struct hkQTransform {
+    hkQuaternion rotation; /* derived name */
+    Vec4 translation;      /* derived name */
+};
+
+/* derived name: out = the point v under the transform, rotated by its
+ * quaternion and moved by its translation (0x10fe0; called at 0x4f19a,
+ * 0x5c660, 0x15743a and 0x15b2ef). */
+void FUN_00010fe0(Vec4 &out, const hkQTransform &t, const Vec4 &v);
+
 /* hknpMassDistribution (hkClass 0x57c24f8, 0x30 bytes, no parent, built at
  * 0x69aa0 from the record table 0x169a860): centerOfMassAndVolume
  * (hkVector4) at +0, majorAxisSpace (hkQuaternion) at +0x10, inertiaTensor
@@ -3195,6 +3207,23 @@ class hknpRefMassDistribution : public hkReferencedObject
  * FUN_0014a1f0 empties it (min the largest value, max its negation, so any
  * point extends it); FUN_0014a220 makes it the whole space. */
 struct hkAabb {
+    /* Empty: the minimum the largest value, the maximum the most negative,
+     * so that any point extends it (out of line at 0x14a1f0). derived
+     * name. */
+    void setEmpty()
+    {
+        Vec4 largest = D_14b2060[33];
+        min = largest;
+        max = _mm_xor_ps(largest, _mm_set1_ps(-0.0f));
+    }
+
+    /* Extended to hold a point. derived name. */
+    void includePoint(const Vec4 &point)
+    {
+        min = _mm_min_ps(min, point);
+        max = _mm_max_ps(max, point);
+    }
+
     void FUN_0014a1f0(); /* derived name */
     void FUN_0014a220(); /* derived name */
     /* Whether the box is valid: min at most max in x, y and z, and both
@@ -3205,6 +3234,11 @@ struct hkAabb {
     Vec4 min; /* derived name */
     Vec4 max; /* derived name */
 };
+
+/* derived name: the box around count points, their w lanes cleared when
+ * there is one at least (0x93f30; the geometry processing calls it at
+ * 0xb8628 and 0xba156). */
+void FUN_00093f30(const Vec4 *points, int numPoints, hkAabb &aabbOut);
 
 /* hkAabbUint32 (hkClass 0x57b9ca0 built at 0x1c6de: 0x20 bytes, six member
  * records at 0x168ebc0): a box in integer coordinates, min (three
@@ -4605,7 +4639,29 @@ class hknpWorldQualitySlot : public hkSlot /* derived name */
 /* The world's solver settings (derived name; at +0x390 of the world). */
 struct hknpSolverInfo /* derived name */
 {
-    u8 unknown0[0x160];
+    u8 unknown0[0xb4];
+    /* The steps and the micro steps of each (the solve loop at 0x3fbab
+     * counts them from the world's +0x444 and +0x44c). derived names. */
+    int numSteps;
+    u8 unknownB8[4];
+    int numMicroSteps;
+    u8 unknownC0[0x30];
+    Vec4 vectorF0;
+    u8 unknown100[0x60];
+};
+
+/* One step of the solve (derived names): its index, the step's scale from
+ * the settings' vector at +0xf0 (row 3 of the constant table added, one in
+ * each lane) and its flags, 1 for the first micro step of the first step, 2
+ * for the last of the last (0x6c260, called at 0x3fc06, 0x198cc2 and
+ * 0x198fe2). */
+struct hknpSolverStep /* derived name */
+{
+    void FUN_0006c260(const hknpSolverInfo &info, int step, int microStep); /* derived name */
+
+    int stepIndex; /* derived name */
+    Vec4 vector10;
+    int flags; /* derived name */
 };
 
 void FUN_000c4cd0(hknpWorld *world, hknpSolverInfo *solverInfo, hknpConstraint *constraints,
@@ -5366,10 +5422,44 @@ class hknpSphereShape : public hknpConvexShape
     void FUN_0003c670(const void *argument1, void *argument2) const;
 };
 
+/* The triangle's and the quad's counterparts of FUN_00168340 (0x1684a0 over
+ * three vertices, 0x168590 over four): 1 when they cannot answer. derived
+ * names. */
+int FUN_001684a0(const void *argument1, const Vec4 *vertices, float radius,
+                 void *argument2); /* derived name */
+int FUN_00168590(const void *argument1, const Vec4 *vertices, float radius,
+                 void *argument2); /* derived name */
+
 class hknpTriangleShape : public hknpConvexPolytopeShape
 {
   public:
     hknpTriangleShape(hkFinishLoadedObjectFlag flag);
+
+    /* The vertices as the triangle's own code reaches them: the array's
+     * byte offset added to its address as a character pointer, where
+     * hkRelArray::begin() sums integers. The base's triangle functions
+     * hold the offset as the base register (0x78393, 0x78511) where the
+     * sphere's and the convex shape's hold the shape (0x3c683, 0x45a38);
+     * the character pointer gives the triangle's form, the integer sum the
+     * scaled shapes' (0x16ae30). derived name. */
+    const Vec4 *getVertices() const
+    {
+        return reinterpret_cast<const Vec4 *>(reinterpret_cast<const char *>(&vertices) +
+                                              vertices.offset);
+    }
+
+    /* A quad when the fourth vertex is its own: its index, the 16 bits of
+     * the w lane's low half, is 3 (a triangle repeats a vertex there).
+     * derived name. */
+    bool isQuad() const
+    {
+        return reinterpret_cast<const s16 *>(&getVertices()[3])[6] == 3;
+    }
+
+    /* Slot 28 (0x78380): the triangle's or quad's own answer from its
+     * vertices and convex radius; the shape's default when that fails.
+     * derived name. */
+    void FUN_00078380(const void *argument1, void *argument2) const;
 };
 
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
@@ -8097,6 +8187,21 @@ struct hknpBinaryBodyDebugEvent /* derived name */
     char text[]; /* derived name */
 };
 
+/* A trigger's event (derived name, after the text its print writes,
+ * "TriggerEvent bodyIds="): the two bodies' ids at +0xc and +0x14 and
+ * whether the body left the trigger at +0x19. */
+struct hknpTriggerEvent /* derived name */
+{
+    void FUN_00040b70(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyIdA; /* derived name */
+    u8 unknown10[4];
+    u32 bodyIdB; /* derived name */
+    u8 unknown18;
+    bool exited; /* derived name */
+};
+
 struct hknpBodyBreachedExpandedAabbEvent /* derived name */
 {
     void FUN_001554c0(hknpWorld *world, hkOstream &out) const; /* derived name */
@@ -9816,6 +9921,9 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
     /* Slot 10 (0x17edb0): registers each class of a null-terminated list
      * under its own name, through slot 9. derived name. */
     virtual void FUN_0017edb0(const hkClass *const *classes);
+    /* Slot 11 (0x17edf0): registers every class of a map of names to
+     * classes under its own name, through slot 9. derived name. */
+    virtual void FUN_0017edf0(const StringMap &classes);
 
     const char *name; /* derived name */
     StringMap map;    /* derived name */
