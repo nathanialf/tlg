@@ -1032,6 +1032,21 @@ two loops as the developer wrote them), which closes the question in
 library region (ymm arithmetic, or the vectorizer's runtime checks), which
 would reopen the vectorizer half of the census.
 
+**Addendum, 2026-10-28 (round 41 harvest).** The pre-RA scheduler is
+3.3's own: the ILP list scheduler, which the x86-64 target selects
+(`lib/Target/X86/X86ISelLowering.cpp:201-202`, `Sched::ILP` for 64-bit;
+`SelectionDAGISel.cpp:241`, createDefaultScheduler). Round
+41 left FUN_00184e20 (the AABB's conversion to sortable integers) equal
+except for the order of its last instructions, and measured that the
+source-order scheduler (`-pre-RA-sched=source`) gives the base's 18
+instructions exactly; the supervisor ran the library line with
+`-mllvm -pre-RA-sched=source` between rounds (flags backed up and
+restored, `schedexp.log`): the function matches, and `gate-all` fails on
+253 of the 1,452 rows (1,199 equal, five of them also with a different
+size). The ILP scheduler stays; 0x184e20 is classified (a single witness
+against 1,199) and leaves the queues until a source whose DAG the ILP
+scheduler orders as the base does is derived.
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and

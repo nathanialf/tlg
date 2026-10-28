@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1571 vtables stored by a constructor that no type info names (below, with
+# 1567 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -41,8 +41,6 @@
 #   0x16990e0 stored by FUN_00048b20
 #   0x1699160 stored by FUN_00048b20
 #   0x16991e0 stored by FUN_00048b20
-#   0x1699260 stored by FUN_0005a0b0 FUN_0005a150 FUN_0005a340
-#   0x16994b0 stored by FUN_00060450 FUN_000604d0 FUN_00060530 FUN_000605b0
 #   0x16994e0 stored by FUN_00060b90
 #   0x1699510 stored by FUN_00060c70
 #   0x169ab10 stored by FUN_0005a230 FUN_0006bc50
@@ -62,7 +60,6 @@
 #   0x16a3d40 stored by FUN_00048b20
 #   0x16a3e30 stored by FUN_0012a8c0
 #   0x16a3f50 stored by FUN_00140a60 FUN_00140e70
-#   0x16a4000 stored by FUN_0014dd30 FUN_0014ddd0 FUN_0014deb0 FUN_0014df10
 #   0x16a4100 stored by FUN_00151250
 #   0x16a4180 stored by FUN_00151250
 #   0x16a4200 stored by FUN_00150330
@@ -70,7 +67,6 @@
 #   0x16a4300 stored by FUN_00150330
 #   0x16a4380 stored by FUN_0014e100 FUN_00150240
 #   0x16a4bf0 stored by FUN_00159ca0
-#   0x16a4cd0 stored by FUN_0015b410 FUN_0015b470 FUN_0015b6c0
 #   0x16a4ed0 stored by FUN_00150330 FUN_0015dee0
 #   0x16a5680 stored by FUN_0016e0e0 FUN_0016eaa0
 #   0x16a5700 stored by FUN_00048b20
