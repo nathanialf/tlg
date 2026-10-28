@@ -207,10 +207,23 @@ template <typename T> struct hkArray {
         return capacityAndFlags & CAPACITY_MASK;
     }
 
-    /* Drop the elements, keeping the storage. derived name. */
+    /* Drop the elements, keeping the storage: each destroyed from the last
+     * (hkMemoryResourceHandle's external links, 0x17f270; nothing for an
+     * element with no destructor). */
     void clear()
     {
+        destructElements(data, size);
         size = 0;
+    }
+
+    /* Elements destroyed in place from the last (Havok's array utilities'
+     * destruct, the storage handed in: the loop at 0x17f2a0 reads it once).
+     * derived name. */
+    static void destructElements(T *elements, int numElements)
+    {
+        for (int i = numElements - 1; i >= 0; i--) {
+            elements[i].~T();
+        }
     }
 
     int getSize() const
@@ -3091,8 +3104,11 @@ void FUN_00020700(hkcdStaticMeshTreeBase *self);                                
 /* The library's table of vector constants (derived name), extern, reached
  * through its GOT slot: row 33 (+0x210) holds the largest float less a few
  * units in each lane (0x7f7fffee), row 34 (+0x220) a large value
- * (0x5f7ffff0, about 1.8e19), row 38 row 33 negated. */
-extern const Vec4 D_14b2060[];
+ * (0x5f7ffff0, about 1.8e19), row 38 row 33 negated. 58 rows: the
+ * type names' strings start at row 58 (0x14b2400). Its size lets LICM hoist
+ * a row's load out of a loop where the loop reads it only under a branch
+ * (hknpLodShape's 0x68500 keeps the half in a register). */
+extern const Vec4 D_14b2060[58];
 
 /* hkQuaternion (the reflection's TYPE_QUATERNION, its name a string of the
  * executable): four floats in one vector. Field name derived. */
@@ -7551,7 +7567,13 @@ class hkResourceHandle : public hkResourceBase
 /* hkMemoryResourceHandle::ExternalLink (hkClass 0x57c85d0, built at
  * 0x8e9fc: size 0x10, member records at 0x16a3130): memberName and
  * externalId (hkStringPtr) at +0 and +8. */
-struct hkMemoryResourceHandleExternalLink;
+/* An external link (the names from the strings at 0x14c7caf and
+ * 0x14c7cba, in that order; hkxEnvironment::Variable's type info cites the
+ * same callbacks, the same layout). */
+struct hkMemoryResourceHandleExternalLink {
+    hkStringPtr memberName;
+    hkStringPtr externalId;
+};
 
 /* hkMemoryResourceHandle (vtable address point 0x16a6280; slot 0 the complete
  * destructor 0x17f180): members from its record table at 0x16a30b0: variant
@@ -7567,6 +7589,9 @@ class hkMemoryResourceHandle : public hkResourceHandle
     const char *FUN_0017f2d0() const;              /* vtable slot 6; derived name */
     const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
     void FUN_0017f320(hkReferencedObject *object); /* vtable slot 10; derived name */
+    /* Slot 14 (0x17f270): every external link destroyed, the storage kept.
+     * derived name. */
+    void FUN_0017f270();
 
     hkRefVariant variant;
     hkStringPtr name;
@@ -8578,11 +8603,23 @@ struct hknpLodShape : public hknpCompositeShape {
     void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
     void FUN_00068960(const Slot29Argument *argument1,
                       void *argument2) const; /* vtable slot 29; derived name */
+    /* Slot 27 (0x68500): the finest level whose distance, halved for the
+     * current level so the choice does not flicker, is below the query's
+     * scaled size; 0 when none is (the context is not read). derived
+     * name. */
+    int FUN_00068500(const LodContext000426b0 &context, const LodQuery000426b0 &query,
+                     int currentLod) const;
+
+    /* A level's limits (derived names; 8 bytes each in the records). */
+    struct LevelOfDetailInfo {
+        float maxDistance;
+        float maxShrink;
+    };
 
     /* Members from the records at 0x16965c0. */
     u8 unknown28[0x2c];
     int numLevelsOfDetail;
-    u8 infos[0x40];
+    LevelOfDetailInfo infos[8];
     const hknpShape *shapes[8];
     u8 unknownD8[0x38]; /* shapesMemorySizes, indexCurrentShapeOnSpu, currentShapePpuAddress */
     hkAabb aabb;        /* maximumAabb */
@@ -9693,7 +9730,13 @@ struct hkTypeInfo {
 class hkTypeInfoRegistry : public hkReferencedObject
 {
   public:
+    /* Inline in its creator (0x184e80): the map empty, both flags set. */
+    hkTypeInfoRegistry() : finishFlag(1), unknown2c(1) {}
+
     virtual ~hkTypeInfoRegistry();
+
+    /* The class allocator inline, as hkHardwareInfo's (0x184ea5). */
+    static void *operator new(unsigned long numBytes);
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
      * destructor 0x17d850 frees at the recorded size, 0x30 by default. */
@@ -9711,6 +9754,7 @@ class hkTypeInfoRegistry : public hkReferencedObject
 
     StringMap map;  /* derived name */
     int finishFlag; /* derived name; 1 on creation (0x184ed3) */
+    int unknown2c;  /* 1 on creation */
 };
 
 /* hkDefaultClassNameRegistry (vtable address point 0x16a6180) over the

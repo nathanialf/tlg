@@ -55,7 +55,11 @@ struct Pair08Owner {
     float value18;
     u8 value1c;
     u8 mode;
-    u8 unknown1e[0x1a];
+    u8 unknown1e[2];
+    /* The direction the entries' rows act along (FUN_00031740 projects the
+     * motions' linear velocities on it). derived name. */
+    Vec4 direction;
+    u8 unknown30[8];
     Pair08Target *target;
 };
 
@@ -2116,6 +2120,11 @@ inline void *hknpGlobals::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkTypeInfoRegistry::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hkVtableClassRegistry::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -2525,16 +2534,25 @@ class Object00061f00 : public hkReferencedObject /* derived name */
  * then the new handler told. */
 struct hknpCharacterInput /* derived name */
 {
-    u8 unknown0[0x30];
+    u8 unknown0[8];
+    hkBool wantJump; /* derived name */
+    u8 unknown9[7];
+    Vec4 up; /* derived name */
+    u8 unknown20[0x10];
     hkBool atLadder; /* derived name */
     u8 unknown31[0xf];
     /* The surface the character stands on, from +0x40: whether it moves,
      * then how well it supports the character (2: supported). */
     hkBool isSurfaceDynamic; /* derived name */
     u8 supportedState;       /* derived name */
+    u8 unknown42[0x4e];
+    Vec4 velocity; /* derived name: the character's, at +0x90 */
 };
 
-struct hknpCharacterOutput; /* derived name */
+struct hknpCharacterOutput /* derived name */
+{
+    Vec4 velocity; /* derived name */
+};
 
 /* The state manager (derived name): a reference-counted object the
  * context holds a reference to; FUN_00035c40 returns its handler for a
@@ -2650,6 +2668,13 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
   public:
     hknpCharacterStateOnGround();
     virtual ~hknpCharacterStateOnGround();
+
+    /* Slot 7 (0x6fd40): a jump starts jumping (state 1), a ladder climbing
+     * (state 3); a character no longer supported is in the air (state 2),
+     * its velocity first stripped of the part along up when the state kills
+     * it on launch. derived name. */
+    void FUN_0006fd40(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output);
 
     float gain;                         /* derived name */
     float walkSpeed;                    /* derived name */
