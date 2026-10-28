@@ -318,7 +318,7 @@ struct Values38Owner {
  * overridden by every allocator met so far, so its vtable in each holds the
  * this-adjusting thunks of the overriders (or their folded bodies). Slot 8
  * returns a byte count (TwoBaseAllocator: FUN_000022d0, thunk FUN_00002300;
- * LargeBlockAllocator: FUN_00012e20, thunk FUN_00012e30). */
+ * hkLargeBlockAllocator: FUN_00012e20, thunk FUN_00012e30). */
 class AllocatorInterface;
 struct MemoryStatistics;
 
@@ -466,7 +466,7 @@ struct ElementPool00198a20 /* derived name */
 class AllocatorInterface /* derived name */
 {
   public:
-    /* Empty and inline: LargeBlockAllocator's destructor (0x12370) calls
+    /* Empty and inline: hkLargeBlockAllocator's destructor (0x12370) calls
      * nothing for its second base. */
     virtual ~AllocatorInterface() {}
 
@@ -553,7 +553,7 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
  * free (slot 3, 0x133e0) subtracts both. Primary slots 13 to 18 override the
  * interface's slots 2 to 7, slot 19 its slot 10, slot 20 (FUN_00012e20) its
  * slot 8 and slot 21 its slot 9. */
-/* Each block of LargeBlockAllocator sits after a 0x20-byte chunk header
+/* Each block of hkLargeBlockAllocator sits after a 0x20-byte chunk header
  * whose second word holds the chunk's size, with flags in its low two bits
  * (derived names). */
 struct LargeBlockChunk /* derived name */
@@ -564,7 +564,7 @@ struct LargeBlockChunk /* derived name */
     LargeBlockChunk *prev; /* derived name */
 };
 
-/* The allocator over one block at +0x138 of LargeBlockAllocator (derived
+/* The allocator over one block at +0x138 of hkLargeBlockAllocator (derived
  * name; vtable 0x168e210, address point 0x168e220, stored in place by the
  * constructor FUN_00012160 at 0x12194, which clears +8 to +0x20; slots 0
  * and 1 the shared 0x4ac0): the block's start at +8 and the end of what is
@@ -590,13 +590,13 @@ class SingleBlockAllocator : public AllocatorBase /* derived name */
     char *top;   /* derived name */
 };
 
-class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
+class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* derived name */
 {
   public:
     /* Out of line (0x12160): the allocator its chunks come from at
      * +0x160. */
-    LargeBlockAllocator(AllocatorBase *server);
-    virtual ~LargeBlockAllocator();
+    hkLargeBlockAllocator(AllocatorBase *server);
+    virtual ~hkLargeBlockAllocator();
 
     /* The overriders not read yet, declared so the class is complete (slots
      * 2 and 3, 0x12910 and 0x133e0; primary slots 13 to 16, 18, 19 and 21). */
@@ -671,10 +671,10 @@ void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool,
                   void *param);                                     /* derived name */
 int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
 
-/* LargeBlockAllocator's primary slots 13 and 19 (interface slots 2 and 10),
+/* hkLargeBlockAllocator's primary slots 13 and 19 (interface slots 2 and 10),
  * reached through the second base by the thunks 0x133d0 and 0x13190. */
-void FUN_000131a0(LargeBlockAllocator *self);                          /* derived name */
-int FUN_00013060(LargeBlockAllocator *self, void *pointer, int value); /* derived name */
+void FUN_000131a0(hkLargeBlockAllocator *self);                          /* derived name */
+int FUN_00013060(hkLargeBlockAllocator *self, void *pointer, int value); /* derived name */
 
 /* A reference-counted allocator of 4096-byte pages (vtable address point
  * 0x168e8f0; constructor FUN_000195c0: a lock at +0x10, an array of every

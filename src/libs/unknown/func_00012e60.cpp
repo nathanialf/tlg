@@ -3,7 +3,7 @@
 
 /* derived name (the interface slot's name, after TwoBaseAllocator's
  * overrider): a block of the size is allocated and given straight back. */
-bool LargeBlockAllocator::FUN_00002230(int numBytes)
+bool hkLargeBlockAllocator::FUN_00002230(int numBytes)
 {
     void *block = blockAlloc(numBytes);
     if (block) {

@@ -677,6 +677,17 @@ int at +8, the early-out vector at +0x10 and an hkInplaceArray of ten
 0x60-byte hits at +0x20, hknpAllHitsCollector's shape; the row's first
 comment had it reference-counted, which the worker's reading of 0x70900
 corrected).
+Round 47's harvest added PageAllocator 0x168e8e0 (derived: a page allocator
+over hkReferencedObject, constructor 0x195c0, destructor 0x19780, no string),
+hkLargeBlockAllocator 0x168e290 (a fact: its slot 19, 0x13060, names it by the
+string at 0x14b4257; the class was LargeBlockAllocator, a derived name, and is
+renamed with its rows; two bases, the second vtable at +0xc0 inside the one
+`_ZTV` object, whose thunk 0x122f0 serves both of the second vtable's
+destructor slots and is named the D1's by D15), hkpConstraintMotor 0x169c750
+and hkpLimitedForceConstraintMotor 0x169c710 (facts: the strings at 0x14c00ae
+and 0x14c1e56 their hkClass builders store; the vtables are stored only by
+derived motors' clones, which build the bases in turn, so the citing function
+is a clone, 0x7c100).
 Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
 singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
 string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its

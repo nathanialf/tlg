@@ -310,8 +310,8 @@ FUN_00008a20 src/libs/unknown/leaf_00008a20.cpp _ZNK9hkOstream12getClassTypeEv
 FUN_00008ea0 src/libs/unknown/leaf_00008ea0.cpp _ZNK22hkBufferedStreamWriter12getClassTypeEv
 FUN_0000e3d0 src/libs/unknown/leaf_0000e3d0.cpp
 FUN_0000f080 src/libs/unknown/leaf_0000f080.cpp
-FUN_00012e20 src/libs/unknown/leaf_00012e20.cpp _ZNK19LargeBlockAllocator14allocatedBytesEv
-FUN_00012e30 src/libs/unknown/leaf_00012e20.cpp _ZThn8_NK19LargeBlockAllocator14allocatedBytesEv
+FUN_00012e20 src/libs/unknown/leaf_00012e20.cpp _ZNK21hkLargeBlockAllocator14allocatedBytesEv
+FUN_00012e30 src/libs/unknown/leaf_00012e20.cpp _ZThn8_NK21hkLargeBlockAllocator14allocatedBytesEv
 FUN_0001a440 src/libs/unknown/leaf_0001a440.cpp
 FUN_0001a4a0 src/libs/unknown/leaf_0001a4a0.cpp
 FUN_00023370 src/libs/unknown/leaf_00023370.cpp _ZNK21hkSkinnedRefMeshShape12getClassTypeEv
@@ -441,7 +441,7 @@ FUN_000089e0 src/libs/unknown/func_000089e0.cpp _ZN9hkOstream12FUN_000089e0Ev
 FUN_00009c10 src/libs/unknown/leaf_00009c10.cpp
 FUN_0000abf0 src/libs/unknown/func_0000abf0.cpp _ZNK10hkOArchive12FUN_0000abf0Ev
 FUN_0000df90 src/libs/unknown/leaf_0000df90.cpp _ZNK18hkSimpleLocalFrame12FUN_0000df90ERDv4_f
-FUN_00013500 src/libs/unknown/func_00013500.cpp _ZNK19LargeBlockAllocator12FUN_00013500EPKvi
+FUN_00013500 src/libs/unknown/func_00013500.cpp _ZNK21hkLargeBlockAllocator12FUN_00013500EPKvi
 FUN_00019b30 src/libs/unknown/leaf_00019b30.cpp _ZNK13PageAllocator12FUN_00019b30Ev
 FUN_0003b280 src/libs/unknown/func_0003b280.cpp _ZNK18hknpDecoratorShape12FUN_0003b280Ev
 FUN_0003b130 src/libs/unknown/func_0003b130.cpp _ZNK18hknpDecoratorShape12FUN_0003b130Ev
@@ -1045,7 +1045,7 @@ FUN_00009380 src/libs/unknown/func_00009380.cpp _ZNK22hkBufferedStreamWriter12FU
 FUN_000319f0 src/libs/unknown/func_000319f0.cpp
 FUN_0003bf20 src/libs/unknown/func_0003bf20.cpp _ZNK30hknpVehicleDefaultAerodynamics12FUN_0003bf20Ef
 FUN_00007f20 src/libs/unknown/leaf_00007d40.cpp _ZNK13hkClassMember12FUN_00007f20Ev
-FUN_00012e60 src/libs/unknown/func_00012e60.cpp _ZN19LargeBlockAllocator12FUN_00002230Ei
+FUN_00012e60 src/libs/unknown/func_00012e60.cpp _ZN21hkLargeBlockAllocator12FUN_00002230Ei
 FUN_00061280 src/libs/unknown/func_000604d0.cpp _ZN21FlaggedPoints00060c7012FUN_00061280ERKDv4_f
 FUN_001612a0 src/libs/unknown/func_001612a0.cpp _ZNK15hknpBodyManager12FUN_001612a0Ev
 FUN_0000ac90 src/libs/unknown/func_0000ac90.cpp _ZN17RouterAllocator509blockFreeEPvi
@@ -1126,7 +1126,7 @@ FUN_0001a770 src/libs/unknown/func_0001a770.cpp
 FUN_0003ea90 src/libs/unknown/func_0003ea90.cpp _ZNK17hknpShapeInstance12FUN_0003ea90ER11hkTransform
 _ZN12hknpMaterialC1ERKS_ src/libs/unknown/func_0006c700.cpp
 _ZN17hknpProjectileGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_001595c0.cpp
-FUN_00012ea0 src/libs/unknown/func_00012e60.cpp _ZThn8_N19LargeBlockAllocator12FUN_00002230Ei
+FUN_00012ea0 src/libs/unknown/func_00012e60.cpp _ZThn8_N21hkLargeBlockAllocator12FUN_00002230Ei
 FUN_00034da0 src/libs/unknown/func_00034da0.cpp
 FUN_000f6a90 src/libs/unknown/func_000f6a90.cpp _ZN18hknpWorldObject38812FUN_000f6a90EPK25hknpWorldStepContextf6a90PvS3_S3_
 FUN_0001a700 src/libs/unknown/func_0001a700.cpp _ZN15FileSystemEntry12FUN_0001a700EP18hkReferencedObjectPKcill
@@ -1693,3 +1693,8 @@ FUN_000409a0 src/libs/unknown/func_000409a0.cpp _ZNK28hknpCharacterProxySignalDa
 _ZN21FlaggedPoints00060c70D0Ev src/libs/unknown/func_000604d0.cpp
 _ZN31hkcdPlanarGeometryVertexStorageD0Ev src/libs/unknown/func_0009a760.cpp
 FUN_0001bc00 src/libs/unknown/func_0001bc00.cpp _ZN14FiosFileSystem12FUN_0001bc00EPKcR15FileSystemEntry
+_ZN21hkLargeBlockAllocatorD1Ev src/libs/unknown/func_00012370.cpp
+_ZN21hkLargeBlockAllocatorD0Ev src/libs/unknown/func_00012370.cpp
+_ZThn8_N21hkLargeBlockAllocatorD1Ev src/libs/unknown/func_00012370.cpp
+_ZN13PageAllocatorC1Ei src/libs/unknown/func_000195c0.cpp
+FUN_0017b030 src/libs/unknown/func_0017b030.cpp _ZNK30hkpSpringDamperConstraintMotor12FUN_0017b030Ev

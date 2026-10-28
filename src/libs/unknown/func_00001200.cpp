@@ -4,12 +4,12 @@
 /* The memory setup's objects, built in place in static storage: the large
  * block allocator at 0x57af810, the free-list allocator over it at
  * 0x57af9c0 and the memory system at 0x57b0520. derived names. */
-static char D_57af810[sizeof(LargeBlockAllocator)];
+static char D_57af810[sizeof(hkLargeBlockAllocator)];
 static char D_57af9c0[sizeof(TwoBaseAllocator)];
 static char D_57b0520[sizeof(hkMemorySystem)];
 
 /* The two allocators, recorded for the quit function. */
-static LargeBlockAllocator *D_57b7490;
+static hkLargeBlockAllocator *D_57b7490;
 static TwoBaseAllocator *D_57b7498;
 
 /* derived name: the quit function the setup stores at 0x57b99e8: each
@@ -21,7 +21,7 @@ void FUN_00001200() /* derived name */
         D_57b7498 = 0;
     }
     if (D_57b7490) {
-        D_57b7490->~LargeBlockAllocator();
+        D_57b7490->~hkLargeBlockAllocator();
         D_57b7490 = 0;
     }
 }
@@ -32,7 +32,7 @@ void FUN_00001200() /* derived name */
 hkMemoryRouter *FUN_00001140(AllocatorBase *base, const SizePair00006c30 &sizes,
                              const TwoBaseAllocatorCinfo *cinfo, int flags) /* derived name */
 {
-    LargeBlockAllocator *large = new (D_57af810) LargeBlockAllocator(base);
+    hkLargeBlockAllocator *large = new (D_57af810) hkLargeBlockAllocator(base);
     TwoBaseAllocator *freeList = new (D_57af9c0) TwoBaseAllocator(large, large, cinfo);
     hkMemorySystem *system = new (D_57b0520) hkMemorySystem(base, freeList, freeList, flags);
     D_57b99e0 = system;
