@@ -320,6 +320,18 @@ shape in round 8's queue.
 defines anywhere in the base (none found), or a relaxed form other than
 mov-to-lea (a `call *[rip+slot]` to `addr32 call`) that a function needs.
 
+**Addendum, 2026-10-28 (round 44 harvest).** A GOT slot the linker filled
+with the address of an object the executable defines is a slot the base
+keeps: a RELATIVE relocation among the import slots (eleven in the
+base). The code folds such a load into an arithmetic instruction
+(`mov esi, 0x1d0; add rsi, [rip+0x16d80d8]` at 0x6fc9c reads the
+constant table 0x14b2060 through the slot 0x16d80d8), which no
+relaxation to `lea` can express, so the linker left the GOT access.
+`BaseElf.got_slots` now names those slots after their target (`D_<hex>`),
+and the layout places a GOTPCREL reference to such an object at the
+base's slot instead of refusing it. FUN_0006fc70 (hknpShape's slot 28
+default, 104 bytes) is the first row placed this way.
+
 ## D11. The build is hosted: `-ffreestanding` dropped from both prefixes (2026-10-25)
 
 **Decision.** `config/flags.base.txt` no longer passes `-ffreestanding` for

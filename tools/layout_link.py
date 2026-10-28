@@ -207,8 +207,14 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
                 continue
             # The base has GOT slots for imports only: a GOT load of a symbol
             # the executable defines was relaxed by the linker to lea
-            # (docs/DECISIONS.md D10), so do the same.
+            # (docs/DECISIONS.md D10), so do the same; a load the code folds
+            # into an add cannot be relaxed, and the linker kept its slot (a
+            # RELATIVE relocation among the import slots, D10's addendum).
             if not mc.relaxable_got_load(code, r):
+                slot = base.relative_got_slots().get(BaseElf.base_identifier(r.symbol))
+                if slot is not None:
+                    struct.pack_into("<i", out, r.offset, slot + r.addend - P)
+                    continue
                 errors.append(f"+0x{r.offset:x} {r.symbol}: no GOT slot in the base and not a relaxable load")
                 continue
             try:

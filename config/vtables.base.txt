@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1562 vtables stored by a constructor that no type info names (below, with
+# 1560 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -39,8 +39,6 @@
 #   0x16990e0 stored by FUN_00048b20
 #   0x1699160 stored by FUN_00048b20
 #   0x16991e0 stored by FUN_00048b20
-#   0x16994e0 stored by FUN_00060b90
-#   0x1699510 stored by FUN_00060c70
 #   0x169ab10 stored by FUN_0005a230 _ZN17RefArrays0005a230C1EP9hknpWorld
 #   0x169b100 stored by FUN_00070900 FUN_00070970
 #   0x169b450 stored by FUN_000760c0 _ZN16Elements000760c0C1EPvS0_S0_iii

@@ -66,6 +66,7 @@ class BaseElf:
         self._dyn = None
         self._plt = None
         self._got = None
+        self._relative_got = None
         self._tls_got = None
         self._dso = None
         self._import_names = None
@@ -172,6 +173,24 @@ class BaseElf:
             for slot, name in self._import_slots((R_X86_64_GLOB_DAT,)).items():
                 self._got[name] = slot
         return self._got
+
+    def relative_got_slots(self) -> dict[str, int]:
+        """`D_<hex>` -> the GOT slot the linker filled with that address: a
+        RELATIVE relocation among the import slots, the slot of a GOT load
+        of an object the executable defines that the linker could not relax
+        to `lea` because the code folds it into an add (`mov esi, 0x1d0;
+        add rsi, [rip+slot]` at 0x6fc9c reads the constant table 0x14b2060
+        through 0x16d80d8; eleven such slots). A relaxable load of the same
+        object is still relaxed (docs/DECISIONS.md D10)."""
+        if self._relative_got is None:
+            self._relative_got = {}
+            imports = self.got_slots().values()
+            if imports:
+                lo, hi = min(imports) - 0x100, max(imports) + 0x100
+                for r_off, r_type, _s, r_add in self._dynamic()[1]:
+                    if r_type == R_X86_64_RELATIVE and lo <= r_off <= hi:
+                        self._relative_got.setdefault(f"D_{r_add:x}", r_off)
+        return self._relative_got
 
     def tls_got_slot(self, name: str) -> int | None:
         """The GOT slot holding the thread-pointer offset of the thread-local
