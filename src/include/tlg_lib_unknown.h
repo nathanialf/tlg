@@ -1071,6 +1071,9 @@ class Object0000a280 : public hkReferencedObject /* derived name */
      * recorded size): the reference released and the pointer cleared. */
     virtual ~Object0000a280();
 
+    /* The reference-counted class delete (below). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkReferencedObject *object; /* derived name */
     bool flag;                  /* derived name */
 };
@@ -2325,6 +2328,27 @@ inline void hkRefCountedProperties::operator delete(void *object, unsigned long 
 }
 
 inline void BufferOstream::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkOstream::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void Object0000a280::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkcdPlanarEntity::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpDefaultExternMeshShapeGeometry::operator delete(void *object,
+                                                                unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

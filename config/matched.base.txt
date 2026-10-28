@@ -1175,7 +1175,7 @@ FUN_0007a020 src/libs/unknown/func_0007a020.cpp _ZNK28hkpPointToPathConstraintDa
 _ZN30hkpSpringDamperConstraintMotorC1Ev src/libs/unknown/func_0017afe0.cpp
 _ZN26hkpPositionConstraintMotorC1Ev src/libs/unknown/func_00082430.cpp
 FUN_00180ea0 src/libs/unknown/func_00180ea0.cpp _ZNK16hkPackfileHeader16getSectionHeaderEPKvi
-FUN_00017f60 src/libs/unknown/func_00017f60.cpp _ZN8hkString10strCasecmpEPKcS1_
+FUN_00017f60 src/libs/unknown/func_00017f60.cpp _ZN8hkString12FUN_00017f60EPKcS1_
 _ZN18hknpDecoratorShapeC1EPK9hknpShape src/libs/unknown/func_0003b0a0.cpp
 _ZN31hkcdPlanarGeometryVertexStorageD1Ev src/libs/unknown/func_0009a760.cpp
 FUN_00008e00 src/libs/unknown/func_00008e00.cpp _ZN13AllocatorBase15blockAllocBatchEPPvii
@@ -1562,3 +1562,14 @@ FUN_000380b0 src/libs/unknown/func_000380b0.cpp _ZNK15hknpMaskedShape12FUN_00038
 _ZN9hknpShapeD2Ev src/libs/unknown/func_0006fb50.cpp
 _ZN17hkxTextureInplaceD1Ev src/libs/unknown/func_0008aa90.cpp
 FUN_0008ab00 src/libs/unknown/func_0008aa90.cpp _ZN17hkxTextureInplaceD0Ev
+FUN_000068e0 src/libs/unknown/func_000068e0.cpp _Z12FUN_000068e0v
+FUN_000369a0 src/libs/unknown/func_000369a0.cpp _ZN19hknpConstraintCinfo12FUN_000369a0EPv
+_ZN9hkOstreamD1Ev src/libs/unknown/func_00008310.cpp
+FUN_00008270 src/libs/unknown/func_00008310.cpp _ZN9hkOstreamD0Ev
+_ZN14Object0000a280D1Ev src/libs/unknown/func_0000a3b0.cpp
+FUN_0000a310 src/libs/unknown/func_0000a3b0.cpp _ZN14Object0000a280D0Ev
+FUN_00014e00 src/libs/unknown/func_00014e00.cpp _ZNK11hkClassEnum12FUN_00014e00EPKcPi
+_ZN16hkcdPlanarEntityD1Ev src/libs/unknown/func_0001d070.cpp
+FUN_0001d0e0 src/libs/unknown/func_0001d070.cpp _ZN16hkcdPlanarEntityD0Ev
+_ZN34hknpDefaultExternMeshShapeGeometryD1Ev src/libs/unknown/func_0003b870.cpp
+FUN_0003b8e0 src/libs/unknown/func_0003b870.cpp _ZN34hknpDefaultExternMeshShapeGeometryD0Ev

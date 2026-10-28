@@ -7,7 +7,7 @@ static inline char toLower(char c) /* derived name */
     return (c >= 'A' && c <= 'Z') ? char(c + ('a' - 'A')) : c;
 }
 
-int hkString::strCasecmp(const char *s1, const char *s2) /* derived name */
+int hkString::FUN_00017f60(const char *s1, const char *s2) /* derived name */
 {
     int i = 0;
     while (s1[i] != 0 || s2[i] != 0) {

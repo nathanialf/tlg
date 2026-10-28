@@ -96,7 +96,7 @@ inline void memSet16(void *dst, const void *value, int numQuads) /* derived name
 
 /* 0x17f60 (the name table's lookup FUN_00014e00 calls it): the strings
  * compared without case, -1, 0 or 1. derived name. */
-int strCasecmp(const char *s1, const char *s2); /* derived name */
+int FUN_00017f60(const char *s1, const char *s2); /* derived name */
 } // namespace hkString
 
 /* The scalar helpers (derived names): the larger and the smaller of two
@@ -444,6 +444,9 @@ struct hkClass {
      * first (0x4370; the XML and binary writers' walks over a class's
      * members call it, 0x19ef66, 0x1a0d5a). derived name. */
     const hkClassMember &FUN_00004370(int index) const;
+    /* The same member, the class's own tested first and the parents'
+     * walked after (0x43d0, beside it). derived name. */
+    const hkClassMember &FUN_000043d0(int index) const;
     /* The class's name, out of line (0x4200). derived name. */
     const char *FUN_00004200() const;
     /* The object's size, out of line (0x4580, one body with the other
@@ -988,6 +991,32 @@ class hkCriticalSection
     int spinCount;           /* derived name */
 };
 
+/* hkRefPtr, a counted reference (the reflection's TYPE_POINTER members a
+ * class holds this way): its destructor releases the object and clears the
+ * pointer (hknpConstraintCinfo's cleanup 0x369a0, after the name). The
+ * target must be a reference-counted class where it is destroyed. */
+template <typename T> struct hkRefPtr {
+    ~hkRefPtr()
+    {
+        if (pntr) {
+            pntr->removeReference();
+        }
+        pntr = 0;
+    }
+
+    T *operator->() const
+    {
+        return pntr;
+    }
+
+    operator T *() const
+    {
+        return pntr;
+    }
+
+    T *pntr; /* derived name */
+};
+
 /* hkReferencedObjectLock, the singleton registered by that name (record
  * 0x57b7b58, instance 0x57b7b50, created by 0x6800: vtable address point
  * 0x168cb00, 0x30 bytes, a critical section at +0x20 with spin count 4000).
@@ -1010,6 +1039,10 @@ class hkReferencedObjectLock : public hkReferencedObject
 };
 
 extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance */
+
+/* The instance's reference released and the pointer cleared (0x68e0; the
+ * base system's quit calls it at 0x9bc0). derived name. */
+void FUN_000068e0(); /* derived name */
 
 /* hkDummySingleton, the singleton registered by that name (record 0x57b80d0
  * filled by 0x9c50 on the list at 0x57b80b8, instance pointer 0x57b80c8):
@@ -1495,7 +1528,15 @@ class hkcdPlanarEntity : public hkReferencedObject
   public:
     hkcdPlanarEntity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), debugger(0) {}
 
-    void *debugger;
+    /* Out of line (0x1d070, slot 0; 0x1d0e0, slot 1, the deleting one at
+     * the recorded size): the debugger's reference released and the
+     * pointer cleared. */
+    virtual ~hkcdPlanarEntity();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkReferencedObject *debugger;
 };
 
 /* hkcdShape (type info 0x57b9ed0, vtable 0x168f2f0): its finish
@@ -6604,16 +6645,20 @@ inline void *operator new(unsigned long, void *where)
  * are built at run time by the initializer at 0x36a40): constraintData
  * (pointer) at +0, bodyA and bodyB (hkUint32) at +8 and +0xc, flags at
  * +0x10, name (hkStringPtr) at +0x18. Its finish constructor finishes the
- * name. */
-struct hknpConstraintData;
-
+ * name. constraintData is a counted reference to the constraint data
+ * (hkpConstraintData: the cleanup releases it). */
 struct hknpConstraintCinfo {
     hknpConstraintCinfo(hkFinishLoadedObjectFlag flag)
     {
         FUN_0000e5c0(&name, flag);
     }
 
-    hknpConstraintData *constraintData;
+    /* The cleanup callback of its type info (0x369a0, registered by the
+     * initializer at 0x36c62): the cinfo destroyed in place, the name, then
+     * the data's reference. derived name. */
+    static void FUN_000369a0(void *object);
+
+    hkRefPtr<hkpConstraintData> constraintData;
     u32 bodyA;
     u32 bodyB;
     u32 flags;
@@ -8117,6 +8162,10 @@ class hkOstream : public hkReferencedObject
 
     virtual ~hkOstream();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor 0x8270 frees at the recorded size. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     const hkClass *getClassType() const;            /* vtable slot 3, FUN_00008a20 */
     void FUN_000089e0();                            /* derived name */
     int FUN_000089f0(const void *buffer, int size); /* derived name */
@@ -8545,11 +8594,17 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
 
     virtual ~hknpDefaultExternMeshShapeGeometry();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     int FUN_0003b980() const;                                      /* vtable slot 5; derived name */
     void FUN_0003b990(int triangleIndex, Vec4 *verticesOut) const; /* vtable slot 6; derived name */
     u16 FUN_0003b9e0(int triangleIndex) const;                     /* vtable slot 7; derived name */
 
     hkGeometry *geometry;
+    /* To the 0x20 bytes of its hkClass (0x57bfc90, built at 0x3baa2), which
+     * the deleting destructor frees by default (0x3b948). */
+    u8 unknown18[8];
 };
 
 /* What hknpExternMeshShapeData's buildContext points to (derived name; the
