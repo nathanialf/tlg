@@ -639,6 +639,10 @@ struct hkTransform {
      * 0xeabd43). */
     void FUN_00010a10(struct hkMatrix4 &out) const;
 
+    /* derived name: set to the inverse of a rigid transform (0x10ad0;
+     * called at 0x4f52a and from the geometry code at 0xda921). */
+    void FUN_00010ad0(const hkTransform &t);
+
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
@@ -3384,6 +3388,16 @@ struct hkAabb {
     Vec4 max; /* derived name */
 };
 
+/* The nibble mask {15, 15, 15, 0} the box codecs read (a global copied
+ * from 0x14c6be0 by its file's initializer 0xa9f80). derived name. */
+extern Vec4 D_57c87c0;
+
+/* derived name: a box inside a parent from four bytes of code, each byte's
+ * high nibble moving the minimum in and its low nibble the maximum by the
+ * nibble squared in 255ths of the parent's extent (0xa9f10; the geometry
+ * code's 0xcf7af encodes with 0xa9da0 and decodes with it). */
+void FUN_000a9f10(const hkAabb &parent, const u8 *codes, hkAabb &aabbOut); /* derived name */
+
 /* derived name: the box around count points, their w lanes cleared when
  * there is one at least (0x93f30; the geometry processing calls it at
  * 0xb8628 and 0xba156). */
@@ -3582,18 +3596,22 @@ void FUN_000add70(hkSkinnedMeshShapeBoneSection *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* A signal (derived name): its slots in a list from the pointer at +0 (the
- * low two bits are flags), each slot's slot 1 destroying it; its
- * destructor FUN_00093530 is out of line. */
+ * low two bits are flags), each slot's slot 1 destroying it. */
 struct Signal00093530 /* derived name */
 {
     /* No slots (the finish constructors of the libraries clear their
      * unserialized signals). */
     Signal00093530() : slots(0) {}
 
+    /* Out of line (0x93530): the slots deleted once the memory system is
+     * up. Every holder's destructor calls it, member by member (the
+     * libraries' 0x36c80, 0x61380 and 0x70f50, the shape signals' cleanup
+     * 0x69960). */
+    ~Signal00093530();
+
     void *slots; /* derived name */
 };
 
-void FUN_00093530(Signal00093530 *self); /* derived name: the destructor */
 /* Every slot deleted (its slot 1) and the list emptied (0x93570; the
  * destructor runs it once the memory system is up, FUN_00009c10). derived
  * name. */
@@ -3695,6 +3713,30 @@ struct hknpShapeInstance {
     {
         return u16(reinterpret_cast<const int *>(&transform.translation)[3]);
     }
+
+    /* The first rotation column's w holds the instance's flags, written
+     * with the same six bits from bit 24 set (`or 0x3f000000` at 0x3ece8
+     * and 0x3ed73) and read with them masked off. derived names. */
+    enum Flags {
+        HAS_SCALE = 0x8,         /* derived name */
+        FLIP_ORIENTATION = 0x10, /* derived name */
+        SCALE_SURFACE = 0x20     /* derived name */
+    };
+
+    int getFlags() const /* derived name */
+    {
+        return reinterpret_cast<const int *>(&transform.rotation.col0)[3] & ~FLAGS_MASK;
+    }
+
+    void setFlags(int flags) /* derived name */
+    {
+        reinterpret_cast<int *>(&transform.rotation.col0)[3] = flags | FLAGS_MASK;
+    }
+
+    /* The scale set with the flags it implies, the surface flag for mode 0
+     * (0x3ed10; the game calls it at 0xea5b04 and 0xea6214). derived
+     * name. */
+    void FUN_0003ed10(const Vec4 &newScale, int scaleMode);
 
     hkTransform transform;
     Vec4 scale;
@@ -5121,7 +5163,12 @@ class hknpMountedBallGun : public hknpBallGun
     Vec4 position;
 };
 
-struct hknpMotionProperties; /* 0x57bf510, no vtable; the shared empty body FUN_000396a0 */
+/* hknpMotionProperties (type info 0x57bf510, no vtable; the shared empty
+ * body FUN_000396a0 finishes it): 0x40 bytes, its hkClass's size (0x57bf4c0,
+ * built at 0x39653); the members not read yet. */
+struct hknpMotionProperties {
+    u8 unknown0[0x40];
+};
 
 /* hknpMotionPropertiesId, the motion properties library's handle (the
  * template argument of its free-list array in the scoped type names,
@@ -5141,7 +5188,14 @@ struct hknpMotionPropertiesLibrary : public hkReferencedObject {
     hknpMotionPropertiesLibrary();
 
     hknpMotionPropertiesLibrary(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x36c80, slot 0): the entries' storage, then the
+     * signals; the deleting destructor (0x36cf0, slot 1) runs it and frees
+     * through the class's delete. */
     virtual ~hknpMotionPropertiesLibrary();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     Signal00093530 entryAddedSignal;
     Signal00093530 entryModifiedSignal;
@@ -5543,6 +5597,11 @@ class hknpConvexPolytopeShape : public hknpConvexShape
      * flags 3 when finishing. */
     hknpConvexPolytopeShape(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x72e50, slot 0 of its vtable and of the capsule's and
+     * the triangle's): the connectivity's reference released, then
+     * hknpShape's destructor. */
+    virtual ~hknpConvexPolytopeShape();
+
     /* hknpConvexPolytopeShape::Face (records from 0x1694e60): firstIndex
      * (hkUint16) at +0, numIndices and minHalfAngle (hkUint8) at +2 and
      * +3. */
@@ -5567,7 +5626,8 @@ class hknpConvexPolytopeShape : public hknpConvexShape
     hkRelArray<Vec4> planes;
     hkRelArray<Face> faces;
     hkRelArray<u8> indices;
-    Connectivity *connectivity;
+    /* A counted reference: the destructor releases it. */
+    hkRefPtr<Connectivity> connectivity;
 };
 
 /* hknpCapsuleShape (type info 0x57bf490; hkClass 0x57bf440, built at
@@ -6022,6 +6082,10 @@ class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
     hknpDefaultBroadPhaseConfig(hkFinishLoadedObjectFlag flag);
 
     Layer *FUN_00154e00(hkUlong layerIndex); /* vtable slot 6; derived name */
+    /* Slot 7 (0x154e10): each body's layer from its flags, by the first
+     * of bits 8, 3 and 0 it has: 1, 0, 3, and 2 for none. derived name. */
+    void FUN_00154e10(const struct hknpBodyId *bodyIds, int numBodyIds, const hknpBody *bodies,
+                      u8 *layersOut) const;
 
     Layer layers[4];
 };
@@ -6945,6 +7009,16 @@ struct hkpAngFrictionConstraintAtom {
     u8 padding[4];
 };
 
+/* hkpAngLimitConstraintAtom (the name a string of the executable,
+ * 0x14c4c64), 0x20 bytes as hkpLimitedHingeConstraintData::Atoms places it:
+ * isEnabled at +2 (the hinge's slot 7, 0x79278, tests it); the rest not
+ * read yet. */
+struct hkpAngLimitConstraintAtom {
+    u16 type; /* derived name */
+    u8 isEnabled;
+    u8 unknown3[0x1d];
+};
+
 /* hkpAngMotorConstraintAtom (type info 0x57c4920, size 0x20, record table
  * 0x169ee30): isEnabled at +2, motorAxis at +3, initializedOffset and
  * previousTargetAngleOffset (hkInt16) at +4 and +6, motor at +8,
@@ -7126,7 +7200,8 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
         hkpSetupStabilizationAtom setupStabilization;
         hkpAngMotorConstraintAtom angMotor;
         hkpAngFrictionConstraintAtom angFriction;
-        u8 unknownD0[0x30]; /* angLimit, 2dAng */
+        hkpAngLimitConstraintAtom angLimit;
+        u8 unknownF0[0x10]; /* 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
     };
 
@@ -7146,6 +7221,10 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
 
     void FUN_000791f0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* Slot 7 (0x79220): valid when the stabilized method has its setup
+     * enabled, both frames are orthonormal and an enabled motor has its
+     * limit enabled. */
+    hkBool unknownVirtual7() const;
     /* The motor on or off, the friction the other way, and the runtime's
      * motor and friction results cleared when there is one (0x79100,
      * called by the game at 0xeb19d9). derived name. */
@@ -7656,7 +7735,12 @@ class hkxMesh::UserChannelInfo : public hkxAttributeHolder
         FUN_0000e5c0(&className, flag);
     }
 
+    /* Out of line (0x89020, slot 0); the deleting destructor (0x89060,
+     * slot 1) runs it and frees through the class's delete. */
     virtual ~UserChannelInfo();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkStringPtr name;
     hkStringPtr className;
@@ -9538,6 +9622,9 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     {
     }
 
+    /* Slot 5 (0x7f5c0): the point at a parameter, between the points
+     * either side of it. derived name. */
+    void FUN_0007f5c0(float t, Vec4 &pointOnCurve) const;
     float FUN_0007fad0() const; /* vtable slot 9; derived name */
     /* Slot 10 (0x7fae0): the distance along the curve at a parameter,
      * interpolated in the segment the parameter falls in (the last one
@@ -9592,6 +9679,21 @@ struct hkBlockStreamWriter /* derived name */
      * closes it, or given back when nothing was written to it and the
      * stream has another; the writer keeps no block. derived name. */
     void FUN_00093a10();
+
+    /* Room for numBytes more in the current block, a new block when they
+     * do not fit (0x1785a0 inline). derived name. */
+    void *reserve(int numBytes);
+
+    /* The bytes reserved counted as one element written: the count read
+     * before the offset is written (every writer's advance in the region,
+     * 0x31994, 0x6f64c, 0x904f0's 0x90550, keeps `mov eax, [count]; add
+     * [offset], n; inc eax; mov [count], eax`). derived name. */
+    void advance(int numBytes)
+    {
+        const int numElements = currentNumElements + 1;
+        currentByteOffset += numBytes;
+        currentNumElements = numElements;
+    }
 
     hkBlockStream *blockStream;       /* derived name */
     hkBlockStreamBlock *currentBlock; /* derived name */
@@ -9696,6 +9798,39 @@ struct hkBlockStreamBlock /* derived name */
     u8 data[0xfe0]; /* derived name */
 };
 
+inline void *hkBlockStreamWriter::reserve(int numBytes)
+{
+    if (currentByteOffset + numBytes <= int(sizeof(currentBlock->data))) {
+        return currentBlock->data + currentByteOffset;
+    }
+    return FUN_000939c0();
+}
+
+/* A 16-byte collision cache (derived names): the two bodies' ids, its type
+ * and its size in 16-byte quads at +8 and +9, three 16-bit fields after.
+ * FUN_001785a0 writes one of type 1 for a new pair of the broad phase's
+ * walk (0x1742c3), the type and size as one 2-byte header (its `mov word
+ * [rax+8], 0x101` beside the merged pair of 16-bit zeros, cookbook 139). */
+struct CollisionCache001785a0 /* derived name */
+{
+    struct Header {
+        u8 type;        /* derived name */
+        u8 sizeInQuads; /* derived name */
+    };
+
+    u32 bodyIdA;
+    u32 bodyIdB;
+    Header header;
+    u16 unknownA;
+    u16 unknownC;
+    u16 unknownE;
+};
+
+/* derived name: the cache of a new pair appended to the writer; the world
+ * is not read. */
+void FUN_001785a0(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer); /* derived name */
+
 struct hkBlockStreamReader; /* derived name; below */
 
 struct hkBlockStream /* derived name */
@@ -9774,6 +9909,10 @@ struct hkBlockStreamReader /* derived name */
      * as many as are still to read, and its data returned; null at the
      * end, the reader emptied. derived name. */
     const void *FUN_00093bf0();
+    /* The same, the block after the new one and the new one's second
+     * cache line prefetched (0x93830, nineteen callers, the broad phase's
+     * pair walk 0x174184 among them). derived name. */
+    const void *FUN_00093830();
 
     const hkBlockStreamBlock *currentBlock; /* derived name */
     const u8 *currentByteLocation;          /* derived name */
@@ -9818,6 +9957,8 @@ class hkSecondaryCommandDispatcher : public hkReferencedObject /* derived name *
 {
   public:
     virtual void exec(const hkCommand &command) = 0; /* vtable slot 5; derived name */
+    /* Slot 6: the command written to a stream. derived name. */
+    virtual void print(const hkCommand &command, hkOstream &stream) const = 0;
 };
 
 /* A body command (derived names): primary type 4, secondary type 20, the
@@ -9893,6 +10034,7 @@ class hkDebugCommandProcessor : public hkSecondaryCommandDispatcher /* derived n
 {
   public:
     virtual void exec(const hkCommand &command);
+    virtual void print(const hkCommand &command, hkOstream &stream) const;
 };
 
 /* A map from strings to pointer-sized values (derived name): 24-byte
@@ -10269,6 +10411,17 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
 
 extern hkBuiltinTypeRegistry *D_57c8898; /* hkBuiltinTypeRegistry's instance */
 
+/* Its create function, the record's (0x17ef90): the registry once the
+ * three registries it hands out exist. derived name. */
+hkReferencedObject *FUN_0017ef90(); /* derived name */
+
+/* The builtin classes, a null-terminated list (derived name). */
+extern const hkClass *const D_16c9060[];
+
+/* The registry over them (0x57c8870), built by the builtin registry's
+ * file's static initializer 0x17f080 (derived name). */
+extern hkStaticClassNameRegistry D_57c8870;
+
 /* A shape's watcher (derived names): the owner at +0 (whose bool at +0x20
  * says some watched shape changed), the shape at +8, whose vtable slot 8
  * returns its two signals (at +0 one passing a byte of change flags, at +8
@@ -10483,6 +10636,43 @@ struct alignas(16) hkAabb16 {
 
 /* derived name: the union of count boxes (FUN_00185460). */
 void FUN_00185460(hkAabb16 *aabbOut, const hkAabb16 *aabbs, int count);
+
+/* What receives the keys a tree query finds, a batch at a time (derived
+ * names): slot 2 takes the keys and their count. */
+class TreeKeyCollector001876e0 /* derived name */
+{
+  public:
+    virtual ~TreeKeyCollector001876e0();
+
+    virtual void addKeys(const u32 *keys, int numKeys) = 0; /* vtable slot 2; derived name */
+};
+
+/* The keys of a query batched on the stack, 64 at a time, for a collector
+ * (derived names): flushed to it when the batch is full and once at the
+ * end. */
+struct TreeKeyBatch001876e0 /* derived name */
+{
+    void flush()
+    {
+        if (numKeys > 0) {
+            collector->addKeys(keys, numKeys);
+            numKeys = 0;
+        }
+    }
+
+    u32 keys[64];
+    int numKeys;
+    TreeKeyCollector001876e0 *collector;
+};
+
+/* derived names: the tree query proper (0x1856f0, 0x1afc bytes: the box's
+ * overlaps walked into the batch), and its entry point 0x1876e0, which
+ * batches the keys for a collector (called at 0x10dd88 with a fifth
+ * argument, 1, it does not read). */
+void FUN_001856f0(const void *tree, const void *argument2, TreeKeyBatch001876e0 *batch,
+                  const hkAabb &aabb); /* derived name */
+void FUN_001876e0(const void *tree, const void *argument2, TreeKeyCollector001876e0 *collector,
+                  const hkAabb &aabb, int argument5); /* derived name */
 
 /* derived name: the box around the boxes' centres (FUN_001854b0; called at
  * 0x13e807, which then clears the result's key). */

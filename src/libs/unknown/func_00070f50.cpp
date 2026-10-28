@@ -1,7 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-hknpBodyQualityLibrary::~hknpBodyQualityLibrary()
-{
-    FUN_00093530(&qualityModifiedSignal);
-}
+/* The signal's destructor is the one call. */
+hknpBodyQualityLibrary::~hknpBodyQualityLibrary() {}

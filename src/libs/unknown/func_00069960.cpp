@@ -6,7 +6,5 @@
  * their order through their out-of-line destructor. */
 void FUN_00069960(void *object) /* derived name */
 {
-    hknpShapeSignals *signals = static_cast<hknpShapeSignals *>(object);
-    FUN_00093530(&signals->shapeDestroyed);
-    FUN_00093530(&signals->shapeMutated);
+    static_cast<hknpShapeSignals *>(object)->~hknpShapeSignals();
 }

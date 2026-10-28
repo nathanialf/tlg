@@ -2287,6 +2287,16 @@ inline void hkxBlobMeshShape::operator delete(void *object, unsigned long numByt
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpMotionPropertiesLibrary::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxMesh::UserChannelInfo::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkpLimitedHingeConstraintData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

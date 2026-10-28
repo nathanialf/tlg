@@ -30,9 +30,9 @@ void FUN_00093570(Signal00093530 *self) /* derived name */
     }
 }
 
-void FUN_00093530(Signal00093530 *self) /* derived name */
+Signal00093530::~Signal00093530()
 {
     if (FUN_00009c10()) {
-        FUN_00093570(self);
+        FUN_00093570(this);
     }
 }

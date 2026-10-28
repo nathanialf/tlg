@@ -219,6 +219,11 @@ class RefArrays /* derived name */ : public hkReferencedObject
         u16 unknownE;
     };
 
+    /* Out of line (0x92280; the solver's tasks build one on the stack at
+     * 0x508e6 and 0x51501, its derived class's constructor at 0x15160f):
+     * the four arrays empty. */
+    RefArrays();
+
     ~RefArrays();
 
     /* The pointers handed back to the owner's slot 9 and dropped, and every
@@ -452,6 +457,11 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
                                 public hknpTaskInterface /* derived name */
 {
   public:
+    /* Out of line (0x15b6c0; built at 0x1505fa): the five pointers kept,
+     * the inplace array empty, three fields after it cleared. */
+    hknpPrepareNewPairsTask(void *argument1, void *argument2, void *argument3, void *argument4,
+                            void *argument5);
+
     /* Out of line (0x15b410, slot 0; its thunk from the task interface at
      * +0x10, 0x15b500, has the body inlined): the inplace array's storage
      * given back when it outgrew the object; the deleting destructor
@@ -479,7 +489,14 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
     void *unknown28;                    /* derived name */
     hkInplaceArray<int, 256> unknown30; /* derived name */
     void *unknown440;                   /* derived name */
-    u8 unknown448[0x38];
+    void *unknown448;                   /* derived name */
+    u8 unknown450[0xc];
+    int unknown45c;   /* derived name */
+    void *unknown460; /* derived name */
+    /* Two pointers, the constructor storing the second; the first is not
+     * read yet. derived name. */
+    void *unknown468[2];
+    u8 unknown478[8];
 };
 
 /* The narrow phase's pairs task (derived name; vtables 0x16a4ee0 and

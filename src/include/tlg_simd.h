@@ -42,6 +42,17 @@ template <int I> inline Vec4 broadcast(const Vec4 &v)
     return _mm_shuffle_ps(v, v, _MM_SHUFFLE(I, I, I, I));
 }
 
+/* A float held in every lane, as hkSimdReal::fromFloat sets it on this
+ * platform: the float loaded alone, then its lane shuffled to all four, so
+ * a converted integer stays one scalar conversion (the curve's point at a
+ * parameter, 0x7f602: `vcvtsi2ss; vpshufd`, where `_mm_set1_ps` of the
+ * conversion gives `vpshufd; vcvtdq2ps`). derived name. */
+inline Vec4 simdFromFloat(const float &x)
+{
+    const Vec4 s = _mm_load_ss(&x);
+    return _mm_shuffle_ps(s, s, _MM_SHUFFLE(0, 0, 0, 0));
+}
+
 inline Vec4 negateScalar(const Vec4 &s)
 {
     return _mm_sub_ps(_mm_setzero_ps(), s);
