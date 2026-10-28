@@ -72,6 +72,28 @@ inline void memCpy16(void *dst, const void *src, int numQuads) /* derived name *
     }
 }
 
+/* Fills of 4-byte words and 16-byte quads (derived names): the count
+ * stepped down to zero, one element stored a step (0x17a360 fills an
+ * object either way). */
+inline void memSet4(void *dst, const int value, int numWords) /* derived name */
+{
+    u32 *dst32 = static_cast<u32 *>(dst);
+    for (int i = numWords - 1; i >= 0; i--) {
+        *dst32 = value;
+        dst32++;
+    }
+}
+
+inline void memSet16(void *dst, const void *value, int numQuads) /* derived name */
+{
+    const Vec4 *valueQuad = static_cast<const Vec4 *>(value);
+    Vec4 *dstQuad = static_cast<Vec4 *>(dst);
+    for (int i = numQuads - 1; i >= 0; i--) {
+        *dstQuad = *valueQuad;
+        dstQuad++;
+    }
+}
+
 /* 0x17f60 (the name table's lookup FUN_00014e00 calls it): the strings
  * compared without case, -1, 0 or 1. derived name. */
 int strCasecmp(const char *s1, const char *s2); /* derived name */
@@ -639,6 +661,26 @@ struct hkClassMember {
         TYPE_MAX,
     };
 
+    /* The member flags, the reflection's own item names and values (the
+     * enum records at 0x168ce88 and 0x16a7108). */
+    enum FlagValues {
+        ALIGN_8 = 128,
+        ALIGN_16 = 256,
+        NOT_OWNED = 512,
+        SERIALIZE_IGNORED = 1024,
+        ALIGN_32 = 2048,
+        ALIGN_REAL = 256,
+    };
+
+    enum DeprecatedFlagValues {
+        DEPRECATED_SIZE_8 = 8,
+        DEPRECATED_ENUM_8 = 8,
+        DEPRECATED_SIZE_16 = 16,
+        DEPRECATED_ENUM_16 = 16,
+        DEPRECATED_SIZE_32 = 32,
+        DEPRECATED_ENUM_32 = 32,
+    };
+
     /* A type's name, size and alignment (derived names): 24-byte rows of the
      * table at 0x16dc150 (defined in the TU that reads it, D17), one per type
      * from TYPE_VOID to TYPE_MAX, its name in the type-name pool from
@@ -675,6 +717,13 @@ struct hkClassMember {
      * bytes. */
     const hkCustomAttributes *attributes;
 };
+
+/* derived name: a member record brought up to date (0x19f210, the
+ * callback the versioning walk at 0x19ef97 runs on every declared member
+ * of a version 4 or older): a TYPE_ZERO member becomes its subtype and is
+ * not serialized, an enum's or flags' deprecated size flag becomes its
+ * storage subtype. */
+void FUN_0019f210(hkClassMember *member);
 
 /* derived name: reads an integer of a member type from an address, widened
  * to 64 bits (0x91270: a switch on the type, an enum's or flags' storage by
@@ -1051,6 +1100,9 @@ struct hkStringPtr {
 
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0000e5d0(hkStringPtr *self);                                /* derived name */
+/* derived name: the string copied (0xe550): null, or a copy of the other's
+ * characters from the thread's heap, owned (bit 0 set). */
+void FUN_0000e550(hkStringPtr *self, const hkStringPtr *other);
 
 /* A growable character buffer (derived name): 128 characters in place
  * (0x90 bytes; the constructor 0x11690 points the array at +0x10).
@@ -2988,6 +3040,11 @@ void FUN_00184e20(hkAabbUint32 *aabbOut, const hkAabb &aabb, int key);
  * margins in every lane (negative when it sticks out); 0x14a2b0, called at
  * 0x75526 and 0x173aca. */
 Vec4 FUN_0014a2b0(const hkAabb &inner, const hkAabb &outer);
+
+/* derived name: whether inner lies in outer in x, y and z while the
+ * counter still runs, the counter stepped down then, else set to 0xff
+ * (0x14a2e0, called at 0x7514a and 0x1734ab). */
+bool FUN_0014a2e0(const hkAabb &inner, const hkAabb &outer, u8 &counter);
 
 /* derived name: the bounds of an AABB under a transform (0x94060: the
  * centre transformed, the half extents through the rotation's absolute
@@ -7258,6 +7315,10 @@ class hkResourceContainer : public hkResourceBase
 class hkMemoryResourceContainer : public hkResourceContainer
 {
   public:
+    /* Out of line (0x17fb60): the members finished, and when finishing
+     * each child pointed back at this container. */
+    hkMemoryResourceContainer(hkFinishLoadedObjectFlag flag);
+
     hkStringPtr name;
     hkMemoryResourceContainer *parent;
     hkArray<hkMemoryResourceHandle *> resourceHandles;
@@ -7287,8 +7348,6 @@ void FUN_0008c990(hkxVertexAnimation *self);                                  /*
 void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
 void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0017fb60(hkMemoryResourceContainer *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 void FUN_00087cf0(hkxVertexBuffer::VertexData *self); /* derived name */
 void FUN_0008a890(hkxSkinBinding *self);              /* derived name */
@@ -7484,6 +7543,7 @@ class hkMemoryMeshTexture : public hkMeshTexture
     void FUN_000ad760(TextureUsageType newUsageHint); /* vtable slot 16; derived name */
     int FUN_000ad770() const;                         /* vtable slot 17; derived name */
     void FUN_000ad780(int newTextureCoordChannel);    /* vtable slot 18; derived name */
+    class ImageSource *FUN_000ad7c0() const;          /* vtable slot 7; derived name */
 
     hkStringPtr filename;
     hkArray<u8> data;
@@ -7636,6 +7696,20 @@ class hkOstream : public hkReferencedObject
     hkOstream &FUN_00008810(const Vec4 &v);
 
     hkStreamWriter *writer; /* derived name */
+};
+
+/* A body's activation or deactivation event (derived name, after the text
+ * its print writes, "BodyActivationEvent "): the body's id at +0xc and
+ * whether it was activated at +0x10. The event dispatcher's print
+ * (0x6c110, a switch on the event type at +4) jumps to its print. */
+struct hknpBodyActivationEvent /* derived name */
+{
+    /* The event written to a stream (0x155430). derived name. */
+    void FUN_00155430(hknpWorld *world, hkOstream &stream) const;
+
+    u8 unknown0[0xc];
+    u32 bodyId;     /* derived name */
+    bool activated; /* derived name */
 };
 
 /* A stream over a caller's buffer (derived name; vtable 0x168c3a0, no type
@@ -8986,6 +9060,33 @@ class hkSecondaryCommandDispatcher : public hkReferencedObject /* derived name *
     virtual void exec(const hkCommand &command) = 0; /* vtable slot 5; derived name */
 };
 
+/* A body command (derived names): primary type 4, secondary type 20, the
+ * body's id after the header; 16 bytes padded. Slot 12 of the vtable at
+ * 0x16a5870 (FUN_00171180) builds one on its stack for the executor at
+ * +0x380 of its second argument. */
+struct BodyCommand00171180 : public hkCommand /* derived name */
+{
+    /* The header filled in order, then the id, taken by value. */
+    BodyCommand00171180(u32 id)
+    {
+        sizePaddedTo16 = 16;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 20;
+        bodyId = id;
+    }
+
+    u32 bodyId; /* derived name */
+};
+
+struct CommandOwner00171180 /* derived name */
+{
+    u8 unknown0[0x380];
+    hkSecondaryCommandDispatcher *dispatcher; /* derived name */
+};
+
+void FUN_00171180(void *self, CommandOwner00171180 *owner, const u32 &bodyId); /* derived name */
+
 /* The executors by primary type (derived name), eight references (the
  * constructor 0x90570 clears them; the simulation builds one on the stack
  * at 0x17008b and runs each command of a stream through it, 0x170396). */
@@ -9098,6 +9199,25 @@ struct hkContainerHeapAllocator {
     {
         return D_57b8480;
     }
+};
+
+/* A map from 16-bit keys to pointer-sized values, hashed and probed as
+ * PointerMap is (derived names): an empty entry's key is 0xffff. The
+ * lookups of 0x1659e7, 0x176ebc and 0x177394 ask it for a pointer or
+ * null. */
+struct U16PointerMap /* derived name */
+{
+    struct Pair {
+        u16 key;
+        hkUlong value;
+    };
+
+    /* derived name: the value of a key, or the default (0x199520). */
+    hkUlong FUN_00199520(u16 key, hkUlong defaultValue) const;
+
+    Pair *entries;
+    int numEntries;
+    int hashMod;
 };
 
 struct PointerMap /* derived name */

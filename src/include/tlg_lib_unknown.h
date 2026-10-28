@@ -664,7 +664,9 @@ class hkMemorySystem /* derived name */
     /* Slot 2 (0xc490): set up with the sizes, under the flags (the setup
      * passes 3). derived name. */
     virtual hkResult FUN_0000c490(const SizePair00006c30 &sizes, int flags);
-    virtual void unknownVirtual3();
+    /* Slot 3 (0xc510): taken down under the flags (the quit at 0x17ab0
+     * passes 3). derived name. */
+    virtual hkResult mainQuit(int flags);
     virtual void threadInit(hkMemoryRouter &router, const char *name, int flags); /* derived name */
     virtual void threadQuit(hkMemoryRouter &router, int flags);                   /* derived name */
     virtual void unknownVirtual6();
@@ -681,9 +683,20 @@ class hkMemorySystem /* derived name */
     virtual void garbageCollectThread(hkMemoryRouter &router);
     virtual void garbageCollectShared();
     virtual void garbageCollect();
+    virtual void unknownVirtual16();
+    /* Slot 17: the debug interface, null here (the shared 0x42d0); the
+     * monitor stream's reset asks for it (0xecb6). derived name. */
+    virtual void *getDebugInterface();
 };
 
 extern hkMemorySystem *D_57b7ba0;
+
+/* The memory system the setup FUN_00001140 built, and the function that
+ * takes its allocators down (derived names); the quit FUN_00017ab0 runs
+ * both. */
+extern hkMemorySystem *D_57b99e0;
+extern void (*D_57b99e8)();
+hkResult FUN_00017ab0();                   /* derived name */
 void FUN_00006c40(hkMemorySystem *system); /* derived name */
 hkMemorySystem *FUN_00006c50();            /* derived name */
 
@@ -1570,7 +1583,18 @@ class ImageSource : public hkReferencedObject /* derived name */
 class FileImageSource : public ImageSource /* derived name */
 {
   public:
+    /* Over a copy of a file name (the texture's image source, 0xad7c0):
+     * the string copied out of line by FUN_0000e550, hkStringPtr's copy. */
+    FileImageSource(const hkStringPtr &name)
+    {
+        FUN_0000e550(&fileName, &name);
+    }
+
     virtual ~FileImageSource();
+
+    /* The class allocator inline, the thread heap's slot 2 called in
+     * place (0xad7e9). */
+    static void *operator new(unsigned long numBytes);
 
     LoadedImage *FUN_000ad7b0(); /* vtable slot 6; derived name */
 
@@ -1890,9 +1914,34 @@ extern __thread hkMemoryRouter *D_16dc070;
  * template. FUN_0000ead0 gives back the buffer it records (+0 to +0x10,
  * owned when the byte at +0x20 is set), reading the pointer itself; its
  * argument is the block. */
-struct ThreadBuffer; /* derived name */
+struct ThreadBuffer /* derived name */
+{
+    /* A value command (derived names): the "Mf" marker and its text, and
+     * the value, 16 bytes in the stream. */
+    struct AddValueCommand {
+        const char *commandAndMonitor;
+        float value;
+    };
+
+    /* The stream emptied; under a debug memory system the warning value
+     * written into the calling thread's stream (0xeca0, called by 0x72fc).
+     * derived name. */
+    void FUN_0000eca0();
+
+    char *start;                     /* derived name */
+    char *end;                       /* derived name */
+    char *capacity;                  /* derived name */
+    char *capacityMinus16;           /* derived name: the last position a command fits */
+    bool isBufferAllocatedOnTheHeap; /* derived name */
+};
+
 extern __thread ThreadBuffer *D_16dc078;
 void FUN_0000ead0(ThreadBuffer *buffer); /* derived name */
+
+inline void *FileImageSource::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
 
 inline void *hkHardwareInfo::operator new(unsigned long numBytes)
 {
@@ -2657,5 +2706,60 @@ void FUN_00183d60(Object00183db0 *self);                     /* slot 1 of 0x16a6
 void FUN_0019a1e0(Object0019a230 *self);                     /* slot 1 of 0x16a6820 */
 void FUN_0019a770(Object0019a7c0 *self);                     /* slot 1 of 0x16a68d0 */
 void FUN_0019c100(Object0019c150 *self);                     /* slot 1 of 0x16a6960 */
+
+/* An object the collide step 0x15c5f0 resets before its work (derived
+ * names): 0x420 bytes, cleared to zero vectors when the thread's timer
+ * stream has room, else every word set to one; the choice kept at +0x410
+ * (FUN_0017a360). */
+struct Object0017a360 /* derived name */
+{
+    void FUN_0017a360(bool timersEnabled); /* derived name */
+
+    Vec4 unknown0[65];
+    bool timersEnabled; /* derived name */
+};
+
+/* A constraint atom's solver setup (derived names): the parameters at
+ * 0x17d430's first argument, the scales at its second, the result at its
+ * third; the 0x50-byte schema of type 10 written at the stream position
+ * and the position moved past it. */
+struct SetupParams0017d430 /* derived name */
+{
+    float unknown0;
+    float unknown4;
+    float unknown8;
+    float unknownc;
+    float unknown10;
+    float unknown14;
+};
+
+struct SetupScales0017d430 /* derived name */
+{
+    float unknown0;
+    float unknown4;
+    float unknown8;
+};
+
+struct SetupOut0017d430 /* derived name */
+{
+    u8 unknown0[0xc];
+    float unknownc;
+};
+
+struct Schema0017d430 /* derived name */
+{
+    u8 type;
+    u8 unknown1[0x2f];
+    float unknown30;
+    float unknown34;
+    float unknown38;
+    float unknown3c;
+    float unknown40;
+    u8 unknown44[0xc];
+};
+
+/* derived name: 0x17d430, called by the solver's setup at 0xcc9aa. */
+void FUN_0017d430(const SetupParams0017d430 *params, const SetupScales0017d430 *scales,
+                  SetupOut0017d430 *out, Schema0017d430 **schemaInOut);
 
 #endif

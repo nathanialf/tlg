@@ -12,11 +12,6 @@ static char D_57b0520[sizeof(hkMemorySystem)];
 static LargeBlockAllocator *D_57b7490;
 static TwoBaseAllocator *D_57b7498;
 
-/* The memory system the setup built, and the function that takes the
- * allocators down (derived names). */
-extern hkMemorySystem *D_57b99e0;
-extern void (*D_57b99e8)();
-
 /* derived name: the quit function the setup stores at 0x57b99e8: each
  * allocator destroyed in place, the one built last first, and forgotten. */
 void FUN_00001200() /* derived name */

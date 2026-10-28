@@ -787,7 +787,7 @@ _ZN21hkSkinnedRefMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00
 _ZN20hkMemoryMeshMaterialC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000accf0.cpp
 _ZN25hkStorageSkinnedMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000ae680.cpp
 _ZN17hknpWorldSnapshotC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0015bf30.cpp
-FUN_00188e90 src/libs/unknown/func_00188e90.cpp _ZN11ImageSourceC2Ev
+_ZN11ImageSourceC1Ev src/libs/unknown/func_00188e90.cpp
 FUN_000ad590 src/libs/unknown/func_000ad590.cpp _ZN15FileImageSourceD1Ev
 _ZN17Allocator0000ed40C1Ev src/libs/unknown/func_0000ed40.cpp
 _ZN21hknpPhysicsSystemDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00165a80.cpp
@@ -1466,3 +1466,14 @@ _ZN23hknpPrepareNewPairsTaskD1Ev src/libs/unknown/func_0015b410.cpp
 _ZN23hknpPrepareNewPairsTaskD0Ev src/libs/unknown/func_0015b410.cpp
 FUN_0015b500 src/libs/unknown/func_0015b410.cpp _ZThn16_N23hknpPrepareNewPairsTaskD1Ev
 FUN_0015b560 src/libs/unknown/func_0015b410.cpp _ZThn16_N23hknpPrepareNewPairsTaskD0Ev
+FUN_0017a360 src/libs/unknown/func_0017a360.cpp _ZN14Object0017a36012FUN_0017a360Eb
+FUN_0017d430 src/libs/unknown/func_0017d430.cpp
+FUN_00199520 src/libs/unknown/func_00199520.cpp _ZNK13U16PointerMap12FUN_00199520Etm
+FUN_0000eca0 src/libs/unknown/func_0000eca0.cpp _ZN12ThreadBuffer12FUN_0000eca0Ev
+_ZN25hkMemoryResourceContainerC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017fb60.cpp
+FUN_0019f210 src/libs/unknown/func_0019f210.cpp
+FUN_000ad7c0 src/libs/unknown/func_000ad7c0.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad7c0Ev
+FUN_00017ab0 src/libs/unknown/func_00017ab0.cpp
+FUN_0014a2e0 src/libs/unknown/func_0014a2e0.cpp
+FUN_00155430 src/libs/unknown/func_00155430.cpp _ZNK23hknpBodyActivationEvent12FUN_00155430EP9hknpWorldR9hkOstream
+FUN_00171180 src/libs/unknown/func_00171180.cpp
