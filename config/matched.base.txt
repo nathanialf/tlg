@@ -1582,3 +1582,11 @@ FUN_0014e7d0 src/libs/unknown/func_0014e4b0.cpp _ZThn16_N21hknpSolverFactoryTask
 FUN_00004a40 src/libs/unknown/func_00004a40.cpp _ZNK7hkClass12FUN_00004a40EPKc
 FUN_000043d0 src/libs/unknown/func_00004350.cpp _ZN7hkClass12FUN_000043d0Ei
 FUN_0006fc70 src/libs/unknown/func_0006fc70.cpp _ZNK9hknpShape12FUN_0006fc70EPKvPv
+_ZN21SpaceSplitter00060b90C1Ev src/libs/unknown/func_00060b90.cpp
+FUN_00019c80 src/libs/unknown/func_00019c80.cpp _ZNK13PageAllocator12FUN_00019c80ER16MemoryStatistics
+FUN_0002b040 src/libs/unknown/func_0002b040.cpp _Z12FUN_0002b040P11Pair08Ownerff
+FUN_00047720 src/libs/unknown/func_00047720.cpp _ZN17hknpMotionManager12FUN_00047720ER10hknpMotionj
+FUN_0005f530 src/libs/unknown/func_0005f530.cpp _ZN9hknpWorld12FUN_0005f530EiRKDv4_f
+_ZN19hknpModifierManagerD1Ev src/libs/unknown/func_000665c0.cpp
+_ZN16hkxBlobMeshShapeD1Ev src/libs/unknown/func_00085c40.cpp
+_ZN16hkxBlobMeshShapeD0Ev src/libs/unknown/func_00085c40.cpp

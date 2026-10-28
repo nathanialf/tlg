@@ -5,7 +5,7 @@
 /* derived name: every flagged point moved by the offset. */
 void FlaggedPoints00060c70::FUN_00061280(const Vec4 &offset)
 {
-    for (int i = 0; i < numPoints; i++) {
+    for (int i = 0; i < numCells; i++) {
         if (flags[i]) {
             points[i] = _mm_add_ps(points[i], offset);
         }

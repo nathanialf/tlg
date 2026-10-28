@@ -266,6 +266,10 @@ template <typename T> struct hkArray {
      * tlg_lib_unknown.h). */
     void reserve(AllocatorBase &allocator, int n);
 
+    /* n elements, the storage grown from the containers' allocator when it
+     * is too small (defined in tlg_lib_unknown.h). */
+    void setSize(int n);
+
     T &operator[](int index)
     {
         return data[index];
@@ -3208,6 +3212,40 @@ void FUN_00020700(hkcdStaticMeshTreeBase *self);                                
  * (hknpLodShape's 0x68500 keeps the half in a register). */
 extern const Vec4 D_14b2060[58];
 
+/* Two in every lane (derived name): the Newton step of the reciprocal. */
+extern const Vec4 D_14b4380;
+
+/* A vector's reciprocal, zero where a lane is zero, as Havok's
+ * hkVector4::setReciprocal with its set-zero mode is on this platform: the
+ * estimate refined by one Newton step, r(2 - vr), the lanes equal to zero
+ * masked off (0x5f530; FUN_00187750's 0x188540 spells it out). derived
+ * name. */
+inline Vec4 reciprocalOrZero(const Vec4 &v) /* derived name */
+{
+    const Vec4 r = _mm_rcp_ps(v);
+    const Vec4 refined = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(v, r)));
+    return _mm_andnot_ps(_mm_cmpeq_ps(v, _mm_setzero_ps()), refined);
+}
+
+/* Four hkHalf read as a vector: each into the top 16 bits of its lane,
+ * the 8 bytes loaded as one double (`vmovsd; vpunpcklwd` from zero,
+ * 0x5f56a). derived name. */
+inline Vec4 loadHalves(const hkHalf *halves) /* derived name */
+{
+    const __m128i packed = _mm_castpd_si128(_mm_load_sd(reinterpret_cast<const double *>(halves)));
+    return _mm_castsi128_ps(_mm_unpacklo_epi16(_mm_setzero_si128(), packed));
+}
+
+/* A vector stored as four hkHalf, rounded by row 47 of the constant table
+ * (1 + 1/256 in every lane) and truncated as hkHalf::setReal does, the 8
+ * bytes stored as one double (`vmovlpd`, 0x5f592). derived name. */
+inline void storeHalves(hkHalf *halves, const Vec4 &v) /* derived name */
+{
+    __m128i bits = _mm_srai_epi32(_mm_castps_si128(_mm_mul_ps(v, D_14b2060[47])), 16);
+    bits = _mm_packs_epi32(bits, bits);
+    _mm_storel_pd(reinterpret_cast<double *>(halves), _mm_castsi128_pd(bits));
+}
+
 /* The identity transform, rows 29 to 32 of the constant table read as one
  * (hknpShape's slot 28 default asks its bounds under it, 0x6fc9c). derived
  * name. */
@@ -4271,9 +4309,16 @@ class hknpModifierManager /* derived name */
     void FUN_00066790(CollisionCacheType type, hknpCollisionDetector *detector); /* derived name */
     void FUN_000667b0(hknpCollisionFilter *filter);                              /* derived name */
 
+    /* Out of line (0x665c0; the world's destructor calls it at 0x4b4d5
+     * before freeing the 0x570 bytes): the filter's reference released. */
+    ~hknpModifierManager();
+
     u8 unknown0[0x4e0];
     void *objects4e0[NUM_TYPES_4E0];                                      /* derived name */
     hknpCollisionDetector *collisionDetectors[NUM_COLLISION_CACHE_TYPES]; /* derived name */
+    /* The world's collision filter, a reference kept by FUN_000667b0.
+     * derived name. */
+    hkRefPtr<hknpCollisionFilter> collisionFilter;
 };
 
 /* The reference-counted object at +0x6c8 (set by the constructor at
@@ -4435,7 +4480,10 @@ struct hknpMotion {
 
     u8 unknown0[0x10];
     hkQuaternion orientation; /* derived name */
-    u8 unknown20[0xc];
+    /* The inverse inertia in the first three, the w kept when 0x5f530 sets
+     * them (Havok keeps the inverse mass there). derived name. */
+    hkHalf inverseInertia[4];
+    u8 unknown28[4];
     /* The motion's place in its cell's list of active motions, 0x7fffffff
      * when it is in none (0x47790). */
     u32 solverId;
@@ -4499,6 +4547,11 @@ struct hknpMotionManager /* derived name */
      * last id moves into its place, unless it was the last. derived
      * name. */
     void FUN_00047790(hknpMotion &motion);
+
+    /* A motion into its cell's list (0x47720; the cell changes at 0xcd57c
+     * after the removal above): its place the list's size, then its id
+     * appended. derived name. */
+    void FUN_00047720(hknpMotion &motion, u32 motionId);
 };
 
 /* The object at +0x4f8 of the world (derived names): the world at +0, the
@@ -4869,6 +4922,10 @@ struct hknpWorld {
     /* A body's motion's linear velocity, by reference (0x5df00). derived
      * name. */
     const Vec4 &FUN_0005df00(int bodyId) const; /* derived name */
+    /* A motion's inverse inertia set from an inertia, its w kept (0x5f530;
+     * the command dispatcher at 0x16efc4 passes the command's id and
+     * vector). derived name. */
+    void FUN_0005f530(int motionId, const Vec4 &inertia); /* derived name */
 
     /* Takes a body off the active list when it is active (flags bit 3), its
      * whole attached group when it heads one alone (0x4c720, called at
@@ -8955,7 +9012,13 @@ class hkxBlobMeshShape : public hkMeshShape
      * itself): the vtable, the blob's, then the name finished. */
     hkxBlobMeshShape(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x85b00, slot 0): the name, then the blob's bytes, the
+     * blob's destructor inline; the deleting destructor (0x85b70, slot 1)
+     * runs it and frees through the class's delete. */
     virtual ~hkxBlobMeshShape();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const;    /* vtable slot 3, FUN_00085d30 */
     const char *FUN_00085c20() const;       /* vtable slot 8; derived name */
@@ -10329,6 +10392,10 @@ struct hkPackfileHeader {
 class hknpSpaceSplitter : public hkBaseObject /* derived name */
 {
   public:
+    /* Out of line (0x605b0): the vtable, an empty array and the kind; it
+     * also fills the 17 by 17 byte table at 0x57c1660. */
+    hknpSpaceSplitter(int type);
+
     /* Out of line (0x604d0, slot 0): the array given back; the deleting
      * destructor (0x60530, slot 1) frees the 0x28 bytes. */
     virtual ~hknpSpaceSplitter();
@@ -10340,9 +10407,30 @@ class hknpSpaceSplitter : public hkBaseObject /* derived name */
      * derived name. */
     virtual void FUN_00061280(const Vec4 &offset) = 0;
 
-    hkArray<u16> unknown8; /* 2-byte entries */
-    int type;              /* derived name */
-    u8 unknown1c[0xc];
+    /* The pairs of numCells cells built into cellPairs (0x60a10, through
+     * a temporary array and FUN_000606d0). derived name. */
+    void FUN_00060a10(int numCells);
+
+    /* The pairs of cells, one 2-byte entry each, the first cell in the
+     * high byte (FUN_00060a10 fills them for the cells it is given).
+     * derived name. */
+    hkArray<u16> cellPairs;
+    int type;         /* derived name */
+    int numCells;     /* derived name */
+    int numCellPairs; /* derived name: numCells * (numCells + 1) / 2 */
+    int unknown24;
+};
+
+/* The single-cell splitter (derived name after its constructor; vtable
+ * 0x16994e0, D14): kind 0, one cell and its one pair. The world builds it
+ * (0x49933, in 0x28 bytes) unless its cinfo's byte at +0x50 is 1. Slot 3
+ * is the shared empty body 0x3b640. */
+class SpaceSplitter00060b90 : public hknpSpaceSplitter /* derived name */
+{
+  public:
+    SpaceSplitter00060b90();
+
+    virtual void FUN_00061280(const Vec4 &offset);
 };
 
 /* A 32-byte record the splitter's count walks (derived names): count

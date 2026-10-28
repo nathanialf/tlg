@@ -74,6 +74,22 @@ struct Pair08Entry {
     Vec4 vectorB; /* derived name; valueB in its w */
 };
 
+/* What a record of type 3 or 4 carries after its entries, 144 bytes
+ * (FUN_0002af30 skips them): three rows of three vectors 48 bytes apart,
+ * the first two of each with a value in their w that FUN_0002b040 scales,
+ * the first factor taking the second vector's of rows 0 and 1 and the
+ * first's of row 2. derived names. */
+struct Pair08Extra /* derived name */
+{
+    struct Row {
+        Vec4 vectorA; /* derived name */
+        Vec4 vectorB; /* derived name */
+        Vec4 vectorC; /* derived name */
+    };
+
+    Row rows[3]; /* derived name */
+};
+
 float *FUN_0002b010(Pair08Owner *self, int index);                /* derived name */
 float *FUN_0002b030(Pair08Owner *self, int index);                /* derived name */
 void FUN_0002b040(Pair08Owner *self, float scaleA, float scaleB); /* derived name */
@@ -343,6 +359,12 @@ template <typename T> inline void hkArray<T>::reserve(AllocatorBase &allocator, 
     }
 }
 
+template <typename T> inline void hkArray<T>::setSize(int n)
+{
+    reserve(hkContainerHeapAllocator::get(), n);
+    size = n;
+}
+
 /* The array's grow by one more element at least, through an allocator, for
  * elements of a size (0xb40, 470 call sites; the capacity doubled, or one
  * when empty, by the allocator's slot 6). derived name. */
@@ -579,8 +601,16 @@ class PageAllocator : public hkReferencedObject /* derived name */
   public:
     enum { PAGE_SIZE = 4096 }; /* derived name */
 
-    int FUN_00019b30() const; /* vtable slot 7; derived name */
-    int FUN_00019b50() const; /* vtable slot 9; derived name */
+    virtual void FUN_000198a0(void **pagesOut, int numPages);    /* vtable slot 5; derived name */
+    virtual void FUN_000199f0(void *const *pages, int numPages); /* vtable slot 6; derived name */
+    virtual int FUN_00019b30() const;                            /* vtable slot 7; derived name */
+    virtual int FUN_0000b670() const;                            /* vtable slot 8; derived name */
+    virtual int FUN_00019b50() const;                            /* vtable slot 9; derived name */
+    virtual void FUN_00019b60();                                 /* vtable slot 10; derived name */
+    /* Slot 11 (0x19c80): the statistics from slots 9, 7 and 8, every
+     * page free counted as available, the largest block a page. derived
+     * name. */
+    virtual void FUN_00019c80(MemoryStatistics &statistics) const; /* derived name */
 
     u8 unknownC[0x14];
     hkArray<void *> pages;     /* derived name */
@@ -2252,6 +2282,11 @@ inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxBlobMeshShape::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkpLimitedHingeConstraintData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -2938,33 +2973,24 @@ struct SortRecord00062100 /* derived name */
 
 bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b); /* derived name */
 
-/* A polymorphic base (derived names; vtable 0x16994b0, address point
- * 0x16994c0, stored by its constructor FUN_000605b0, which also fills a
- * static 17 by 17 table of pair indices at 0x57b1660): an array of 16-bit
- * values at +8 and an int at +0x18 from the constructor's argument. Its
- * slot 2 is hkBaseObject's. */
-class Points000605b0 : public hkBaseObject /* derived name */
+/* Up to 16 points over the space splitters' base (derived names; vtable
+ * 0x1699510, address point 0x1699520, stored by its constructor
+ * FUN_00060c70): the world builds it in 0x170 bytes (0x4991f) when its
+ * cinfo's byte at +0x50 is 1, and it is kind 1, whose cell is the nearest
+ * point (FUN_00061060). A flag per point from +0x28 (the constructor clears
+ * them) and the points from +0x70. Slot 3 (0x61280) moves every flagged
+ * point by an offset. */
+class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
 {
   public:
-    hkArray<u16> indices; /* derived name */
-    int kind;             /* derived name */
-};
+    /* Out of line (0x60c70): numPoints points on a grid four wide, 10 apart
+     * (the rows also rise by 5), none flagged, and their pairs. */
+    FlaggedPoints00060c70(int numPoints);
 
-/* Up to 18 points over that base (derived names; vtable 0x1699510, address
- * point 0x1699520, stored by its constructor FUN_00060c70, no row): the
- * count at +0x1c, the number of pairs n(n+1)/2 at +0x20, a flag per point
- * from +0x28 (the constructor clears them) and the points from +0x70. Slot
- * 3 (0x61280) moves every flagged point by an offset. */
-class FlaggedPoints00060c70 : public Points000605b0 /* derived name */
-{
-  public:
     virtual void FUN_00061280(const Vec4 &offset); /* vtable slot 3; derived name */
 
-    int numPoints; /* derived name */
-    int numPairs;  /* derived name */
-    int unknown24;
-    int flags[18];   /* derived name */
-    Vec4 points[18]; /* derived name */
+    int flags[16];   /* derived name */
+    Vec4 points[16]; /* derived name */
 };
 
 /* Deleting destructors written as calls while their classes' destructors
