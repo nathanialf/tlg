@@ -226,6 +226,14 @@ template <typename T> struct hkArray {
         size = n;
     }
 
+    /* An element appended, the capacity not checked: copied to the end,
+     * then counted (0x161490 reads the storage before the size). */
+    void pushBackUnchecked(const T &element)
+    {
+        *(data + size) = element;
+        size++;
+    }
+
     /* Drop the elements and give the storage back to the containers'
      * allocator unless the array does not own it (defined in
      * tlg_lib_unknown.h, after AllocatorBase). derived name. */
@@ -1019,6 +1027,21 @@ struct SingletonRecord /* derived name */
     void **instance;       /* derived name */
 };
 
+/* hkUuidPseudoRandomGenerator's create function (0xdaf0, the record's at
+ * 0x57b8610: a 0x30-byte object from the thread's heap, vtable 0x168d8a0,
+ * seeded from the clock). derived name. */
+hkReferencedObject *FUN_0000daf0(); /* derived name */
+
+/* A pointer-sized object its constructor clears (derived name): the
+ * uuid file's initializer (0xdc50) clears two after its registration, at
+ * 0x57b8638 and 0x57b8630, which nothing else in the library reads. */
+struct ClearedPointer0000dc50 /* derived name */
+{
+    ClearedPointer0000dc50() : pointer(0) {}
+
+    void *pointer; /* derived name */
+};
+
 /* hkError, the singleton registered by that name (record 0x57af770 built by
  * 0x1010, instance pointer 0x57af768; hkError.cpp's FUN_00000ee0 reports
  * through it): slot 5 takes a message's kind, its id, the description, the
@@ -1449,6 +1472,13 @@ class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
 
     virtual ~hkcdPlanarGeometryPrimitivesCollection28();
 
+    /* The class delete: the object back to the thread's heap at its size,
+     * no null test (the deleting destructor 0x1c930, slot 1). */
+    static void operator delete(void *object, unsigned long numBytes)
+    {
+        FUN_0000bcf0(object, numBytes);
+    }
+
     hkArray<s32> storage;
     u32 primaryBitmap;
     u32 secondaryBitmaps[26];
@@ -1876,10 +1906,25 @@ class hknpVehicleBrake : public hkReferencedObject
     hknpVehicleBrake(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
+class hknpVehicleInstance;
+
 class hknpVehicleSteering : public hkReferencedObject
 {
   public:
+    /* The steering a step's input gives (derived names): the main angle,
+     * then one angle per wheel. */
+    struct SteeringAnglesOutput {
+        float mainSteeringAngle;
+        hkArray<float> wheelsSteeringAngle;
+    };
+
     hknpVehicleSteering(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Slot 5: the step's steering from the filtered driver input. derived
+     * name. */
+    virtual void calcSteering(float deltaTime, const hknpVehicleInstance *vehicle,
+                              const void *filteredInfoOutput,
+                              SteeringAnglesOutput &steeringOutput) const = 0;
 };
 
 /* hknpVehicleDefaultEngine (hkClass 0x57c1310, 0x38 bytes, parent
@@ -1955,6 +2000,17 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
 
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 5 (0x16fb70): the main angle through slot 6, then each wheel
+     * that steers takes it and the others none. derived name. */
+    virtual void calcSteering(float deltaTime, const hknpVehicleInstance *vehicle,
+                              const void *filteredInfoOutput,
+                              SteeringAnglesOutput &steeringOutput) const;
+
+    /* Slot 6 (0x16fa80): the main angle. derived name. */
+    virtual void calcMainSteeringAngle(float deltaTime, const hknpVehicleInstance *vehicle,
+                                       const void *filteredInfoOutput,
+                                       SteeringAnglesOutput &steeringOutput) const;
 
     float maxSteeringAngle;
     float maxSpeedFullSteeringAngle;
@@ -4000,6 +4056,8 @@ struct hknpBody {
  * world's +0x10): the bodies' array from +0x10, the ids of the active
  * bodies from +0xa0. FUN_001612a0 fetches every active body ahead of the
  * solver. */
+struct hknpMotionManager;
+
 struct hknpBodyManager /* derived name */
 {
     /* A body change scheduled for the next step (derived name): the body's
@@ -4034,12 +4092,17 @@ struct hknpBodyManager /* derived name */
      * (0x161630, which walks nextAttachedBodyId back to the first). */
     void FUN_001615a0(int bodyId);
     void FUN_00161630(int bodyId);
+    /* derived name: a body put on the active list (0x161490, called at
+     * 0x4c65d): its flags marked, its index the list's end, its motion's
+     * cell recorded under its id. */
+    void FUN_00161490(int bodyId);
 
-    u8 unknown0[0x10];
-    hkArray<hknpBody> bodies; /* derived name */
+    u8 unknown0[8];
+    hknpMotionManager *motionManager; /* derived name */
+    hkArray<hknpBody> bodies;         /* derived name */
     u8 unknown20[0x80];
-    hkArray<u32> activeBodyIds; /* derived name */
-    u8 unknownB0[0x10];
+    hkArray<u32> activeBodyIds;                        /* derived name */
+    hkArray<u8> activeBodyCellIndices;                 /* derived name: by body id */
     hkArray<ScheduledBodyChange> scheduledBodyChanges; /* derived name */
     hkArray<int> scheduledBodyChangeIndices;           /* derived name */
     /* The bodies of the two kinds of scheduled change (0x161790 appends to
@@ -4957,6 +5020,18 @@ struct hknpShapeSlot29Input /* derived name */
 
 class hknpConvexShape;
 
+/* derived names: a count the convex shape's vertices give (0x1707d0,
+ * from the vertex count in 32-vertex blocks), and a build over a set of
+ * vertices with a radius that reports whether it failed (0x168d90). The
+ * convex and scaled convex shapes' slot 28 call both (0x45a20, 0x16cd81). */
+int FUN_001707d0(const hknpConvexShape *shape);
+hkResult FUN_00168d90(const void *argument1, const Vec4 *vertices, int numVertices, void *argument2,
+                      float convexRadius);
+
+/* A table of byte masks (derived name; 00 00 00 ff ff ff in the image)
+ * the convex shapes' slot 12 reads at a position and the one after. */
+extern const u8 D_16dc600[];
+
 /* Fills the output from the shape's vertices (its slot 13 gives their
  * count), at most maxCount of them (0x169330). derived names. */
 void FUN_00169330(const hknpConvexShape *shape, int mode, const Vec4 &scale, const Vec4 &offset,
@@ -4971,10 +5046,19 @@ class hknpConvexShape : public hknpShape
     int FUN_000430e0() const;         /* vtable slot 6; derived name */
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
+    /* Slot 12 (0x3c4e0; also the sphere's, triangle's and convex
+     * polytope's): three of the vertices by the indices, the second and
+     * third masked by the table at 0x16dc600 from a position. derived
+     * name. */
+    void FUN_0003c4e0(const u8 *indices, int position, Vec4 *verticesOut) const;
     int FUN_00045a80(u32 *argument1, int argument2, int argument3,
                      const u32 *argument4) const; /* vtable slot 21; derived name */
     void FUN_00045aa0(const void *argument1, const void *argument2,
                       hknpShapeSlot22Output *output) const; /* vtable slot 22; derived name */
+    /* Slot 28 (0x45a20; also the convex polytope's): the vertices handed
+     * to FUN_00168d90 with the convex radius, the shape's default (0x6fc70)
+     * when that fails. derived name. */
+    void FUN_00045a20(const void *argument1, void *argument2) const;
     /* Slot 29, kept by the convex, triangle, convex polytope and scaled
      * convex shapes' vtables. */
     void FUN_000430f0(const hknpShapeSlot29Input &input,
@@ -5402,7 +5486,11 @@ float FUN_00073940(const hknpCapsuleShape *self); /* derived name */
 
 /* hknpExternMeshShape (type info 0x57c28e8, size 0x70): its finish
  * constructor runs hknpShape's, stores 0x1697c80, sets bit 2 of the byte at
- * +0x10 when finishing, then stores its own vtable 0x16a5170. */
+ * +0x10 when finishing, then stores its own vtable 0x16a5170. Its records
+ * (0x169abc0, the hkClass 0x57c2898 built at 0x6c4f8 over
+ * hknpCompositeShape's): geometry (a pointer to hknpExternMeshShape::Geometry)
+ * at +0x60, boundingVolumeData (a pointer to hknpExternMeshShapeData) at
+ * +0x68. */
 class hknpExternMeshShape;
 
 /* hknpBroadPhaseConfig (hkClass 0x57c0248, size 0x10, no members of its own)
@@ -8119,6 +8207,14 @@ class hknpExternMeshShape : public hknpCompositeShape
     hknpExternMeshShape(hkFinishLoadedObjectFlag flag);
 
     hknpShapeSignals *FUN_000eafb0(); /* vtable slot 8; derived name */
+
+    /* The bounding volume's box in the shape's space (0xed580, out of
+     * line; its one caller is slot 7). derived name. */
+    void FUN_000ed580(hkAabb &aabbOut) const;
+
+    /* Slot 7 (0x166370): that box under a transform (0x94060). derived
+     * name. */
+    void FUN_00166370(const Mat4 &transform, hkAabb &aabbOut) const;
 
     u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
     void *geometry;

@@ -927,7 +927,23 @@ class RefArrays0005a230 : public hkReferencedObject /* derived name */
      * 0x5a349). */
     RefArrays0005a230(hknpWorld *world);
 
-    u8 unknown10[0x60]; /* to the size its deleting destructor 0x6b7d0 frees */
+    /* A 16-byte entry (derived names): the next entry of its run, 0xffff
+     * at the end, and a signal at +8. */
+    struct Entry {
+        u16 next;
+        Signal00093530 signal;
+    };
+
+    /* A run of entries given back (0x6bd90; the dirty walks at 0x5a96b,
+     * 0x5adbb and 0x5b1db): each entry's signal emptied, the run put at
+     * the head of the free list. derived name. */
+    void FUN_0006bd90(u16 first);
+
+    hknpWorld *world; /* derived name */
+    u8 unknown18[0x18];
+    u16 freeHead;           /* derived name: the first free entry, 0xffff for none */
+    hkArray<Entry> entries; /* derived name */
+    u8 unknown48[0x28];     /* to the size its deleting destructor 0x6b7d0 frees */
 };
 
 /* The class built over it by hknpWorld's constructor (0x494ff) when the
