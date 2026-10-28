@@ -1573,3 +1573,11 @@ _ZN16hkcdPlanarEntityD1Ev src/libs/unknown/func_0001d070.cpp
 FUN_0001d0e0 src/libs/unknown/func_0001d070.cpp _ZN16hkcdPlanarEntityD0Ev
 _ZN34hknpDefaultExternMeshShapeGeometryD1Ev src/libs/unknown/func_0003b870.cpp
 FUN_0003b8e0 src/libs/unknown/func_0003b870.cpp _ZN34hknpDefaultExternMeshShapeGeometryD0Ev
+_ZN27hknpBreakableConstraintDataD1Ev src/libs/unknown/func_0003c100.cpp
+_ZN27hknpMalleableConstraintDataD1Ev src/libs/unknown/func_00067a90.cpp
+FUN_0007fae0 src/libs/unknown/func_0007fae0.cpp _ZNK24hkpLinearParametricCurve12FUN_0007fae0Ef
+FUN_0008e540 src/libs/unknown/func_0008e540.cpp _ZN20hkRootLevelContainer12NamedVariant12FUN_0008e540EPv
+FUN_0014e4d0 src/libs/unknown/func_0014e4b0.cpp _ZN21hknpSolverFactoryTaskD0Ev
+FUN_0014e7d0 src/libs/unknown/func_0014e4b0.cpp _ZThn16_N21hknpSolverFactoryTaskD0Ev
+FUN_00004a40 src/libs/unknown/func_00004a40.cpp _ZNK7hkClass12FUN_00004a40EPKc
+FUN_000043d0 src/libs/unknown/func_00004350.cpp _ZN7hkClass12FUN_000043d0Ei

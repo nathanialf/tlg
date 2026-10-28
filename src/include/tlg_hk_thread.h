@@ -263,6 +263,10 @@ class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterfac
   public:
     virtual ~hknpSolverFactoryTask();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor 0x14e4d0 frees at the recorded size, 0x90 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* slot 5 (0x14e540; the interface's slot 2 through the thunk 0x14e840) */
     virtual void process();
     /* slot 6 (0x14e760, also the interface's slot 3) */

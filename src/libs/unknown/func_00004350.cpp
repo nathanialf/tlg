@@ -30,21 +30,9 @@ const hkClassMember &hkClass::FUN_00004370(int index) const
 /* derived name: the same lookup written from the class's own members out:
  * the index made local to the class, then the parents walked, each count
  * added until it is not negative. */
-// NONMATCHING: the base tests `this` for null after the count loop (`test
-// rdi, rdi; je` to the first-member fallback, on the path where the class
-// has a parent) and places the parents' walk before the hit; this form has
-// no such test. Equal in size (102 bytes) and in every other instruction.
-const hkClassMember &hkClass::FUN_000043d0(int index) const
+/* derived name: the member at an index for a class being edited: the
+ * const lookup above, inline. */
+hkClassMember &hkClass::FUN_000043d0(int index)
 {
-    int localIndex = index - FUN_00004350();
-    const hkClass *c = this;
-    localIndex += numDeclaredMembers;
-    while (localIndex < 0) {
-        c = c->parent;
-        if (!c) {
-            return declaredMembers[0];
-        }
-        localIndex += c->numDeclaredMembers;
-    }
-    return c->declaredMembers[localIndex];
+    return const_cast<hkClassMember &>(FUN_00004370(index));
 }

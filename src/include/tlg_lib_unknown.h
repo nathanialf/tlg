@@ -2378,6 +2378,11 @@ inline void hknpPrepareNewPairsTask::operator delete(void *object, unsigned long
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpSolverFactoryTask::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpVehicleSuspension::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

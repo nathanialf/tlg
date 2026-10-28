@@ -420,7 +420,31 @@ struct NameList00004270 /* derived name */
  * declaredMembers (simple arrays: a pointer and an int count) at +0x18 and
  * +0x28, from its own member table at 0x16a6b60; its constructor
  * FUN_000041a0 stores the twelve fields from +0 to +0x4c. */
-struct hkCustomAttributes;
+struct hkClass;
+
+/* hkVariant (the reflection's TYPE_VARIANT): an object and its class.
+ * derived field names. */
+struct hkVariant {
+    void *object;         /* derived name */
+    const hkClass *klass; /* derived name */
+};
+
+/* hkCustomAttributes: an array of named variants (24 bytes each) and its
+ * count. derived field names. */
+struct hkCustomAttributes {
+    struct Attribute {
+        const char *name; /* derived name */
+        hkVariant value;  /* derived name */
+    };
+
+    /* The value of the attribute of a name, null when none has it (inline
+     * in hkClass's 0x4a40; defined after the string library). derived
+     * name. */
+    const hkVariant *getAttribute(const char *attributeName) const;
+
+    const Attribute *attributes; /* derived name */
+    int numAttributes;           /* derived name */
+};
 
 struct hkClass {
     /* Out of line (0x41a0, called by every reflection initializer): the
@@ -444,14 +468,18 @@ struct hkClass {
      * first (0x4370; the XML and binary writers' walks over a class's
      * members call it, 0x19ef66, 0x1a0d5a). derived name. */
     const hkClassMember &FUN_00004370(int index) const;
-    /* The same member, the class's own tested first and the parents'
-     * walked after (0x43d0, beside it). derived name. */
-    const hkClassMember &FUN_000043d0(int index) const;
+    /* The same member for a class being edited (0x43d0, beside it: the
+     * const lookup inline; the caller at 0x180fb6). derived name. */
+    hkClassMember &FUN_000043d0(int index);
     /* The class's name, out of line (0x4200). derived name. */
     const char *FUN_00004200() const;
     /* The object's size, out of line (0x4580, one body with the other
      * classes' int getters at +0x10). derived name. */
     int FUN_00004580() const;
+    /* The value of the class's attribute of a name, null when it has no
+     * attributes or none of the name (0x4a40; hkTypeInfoRegistry's users
+     * from 0x17e187 ask it). derived name. */
+    const hkVariant *FUN_00004a40(const char *attributeName) const;
 
     const char *name;
     const hkClass *parent;
@@ -1147,6 +1175,19 @@ char *FUN_00017fc0(char *destination, const char *source); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
  * 0x17f40). */
 int FUN_00017f40(const char *a, const char *b); /* derived name */
+
+/* The items searched in order (the loop tested at the top, cookbook 60). */
+inline const hkVariant *hkCustomAttributes::getAttribute(const char *attributeName) const
+{
+    int i = -1;
+    while (++i < numAttributes) {
+        if (FUN_00017f40(attributes[i].name, attributeName) == 0) {
+            return &attributes[i].value;
+        }
+    }
+    return 0;
+}
+
 /* Whether a string ends with a suffix (0x181c0; derived name): both
  * lengths taken with strlen, then the tail compared. */
 hkBool FUN_000181c0(const char *string, const char *suffix); /* derived name */
@@ -3166,6 +3207,19 @@ void FUN_00020700(hkcdStaticMeshTreeBase *self);                                
  * a row's load out of a loop where the loop reads it only under a branch
  * (hknpLodShape's 0x68500 keeps the half in a register). */
 extern const Vec4 D_14b2060[58];
+
+/* The identity transform, rows 29 to 32 of the constant table read as one
+ * (hknpShape's slot 28 default asks its bounds under it, 0x6fc9c). derived
+ * name. */
+inline const Mat4 &identityTransform() /* derived name */
+{
+    return reinterpret_cast<const Mat4 &>(D_14b2060[29]);
+}
+
+struct hkAabb;
+/* The bounds handed on with both of slot 28's arguments (0x168230; the
+ * shapes' slot 28 default calls it). derived names. */
+void FUN_00168230(const void *argument1, const hkAabb &aabb, void *argument2); /* derived name */
 
 /* hkQuaternion (the reflection's TYPE_QUATERNION, its name a string of the
  * executable): four floats in one vector. Field name derived. */
@@ -7110,6 +7164,19 @@ class hkpWrappedConstraintData : public hkpConstraintData
      * wraps, whose reference it takes. */
     hkpWrappedConstraintData(hkpConstraintData *constraintData);
 
+    /* Inline: the wrapped data's reference released and the pointer
+     * cleared. The derived classes' destructors inline it after their own
+     * empty bodies (hknpBreakableConstraintData's 0x3c100,
+     * hknpMalleableConstraintData's 0x67a90, which this class's slot 0
+     * cites too: one body). */
+    virtual ~hkpWrappedConstraintData()
+    {
+        if (constraintData) {
+            constraintData->removeReference();
+        }
+        constraintData = 0;
+    }
+
     void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_00067c60() const;                      /* vtable slot 7; derived name */
     void FUN_0007d600(const void *argument1, const void *argument2, const void *argument3,
@@ -7735,6 +7802,20 @@ class hkRootLevelContainer
  * loaded. */
 struct hkRootLevelContainer::NamedVariant {
     NamedVariant(hkFinishLoadedObjectFlag flag);
+
+    /* The variant's reference released; the strings are destroyed after
+     * it, the class name first. */
+    ~NamedVariant()
+    {
+        if (variant) {
+            variant->removeReference();
+        }
+        variant = 0;
+    }
+
+    /* The cleanup callback of its type info (0x8e540, registered at
+     * 0x8e75e): the entry destroyed in place. derived name. */
+    static void FUN_0008e540(void *object);
 
     hkStringPtr name;
     hkStringPtr className;
@@ -9395,6 +9476,10 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     }
 
     float FUN_0007fad0() const; /* vtable slot 9; derived name */
+    /* Slot 10 (0x7fae0): the distance along the curve at a parameter,
+     * interpolated in the segment the parameter falls in (the last one
+     * extended past the end). derived name. */
+    float FUN_0007fae0(float t) const;
     /* Slot 14 (0x7fea0): every point moved under the transform. derived
      * name. */
     void FUN_0007fea0(const hkTransform &transform);
