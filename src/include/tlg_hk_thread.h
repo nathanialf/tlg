@@ -191,12 +191,42 @@ const char *FUN_00091b30(int state); /* derived name */
  * base destructor, the shape of a destructor the compiler could not alias
  * (cookbook 9): the destructor is the class's implicit, inline one. Here it
  * is declared, as the tasks reach it through a call. */
+/* What a RefArrays hands its pointers back to (derived name; the third
+ * argument of 0x50880 and 0x514a0): slot 7 takes what 0x92650 builds from
+ * the arrays, slot 9 a list of pointers. */
+class RefArraysOwner /* derived name */
+{
+  public:
+    virtual ~RefArraysOwner();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7(void *built);
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9(void *const *pointers, int numPointers);
+};
+
 class RefArrays /* derived name */ : public hkReferencedObject
 {
   public:
+    /* A 16-byte entry of the first array (derived names): two 16-bit
+     * fields at its end, reset to 0xffff and 0 by 0x92e70. */
+    struct Entry10 {
+        u8 unknown0[0xc];
+        u16 unknownC;
+        u16 unknownE;
+    };
+
     ~RefArrays();
 
-    hkArray<Vec4> array10;                    /* derived name */
+    /* The pointers handed back to the owner's slot 9 and dropped, and every
+     * entry of the first array reset (0x92e70, after the arrays' use at
+     * 0x50997 and 0x515b1). derived name. */
+    void FUN_00092e70(RefArraysOwner *owner);
+
+    hkArray<Entry10> array10;                 /* derived name */
     hkArray<int> array20;                     /* derived name */
     hkArray<void *> array30;                  /* derived name */
     hkArray<hkReferencedObject *> references; /* derived name */

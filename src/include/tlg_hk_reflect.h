@@ -737,6 +737,12 @@ class hkReferencedObject : public hkBaseObject
     /* A new object: size unknown, one reference. */
     hkReferencedObject() : memSizeAndRefCount(0xffff0001) {}
 
+    /* A copy is a new object too: the original's size and count are not
+     * copied (the analog status's copy, 0x151d5b). */
+    hkReferencedObject(const hkReferencedObject &) : hkBaseObject(), memSizeAndRefCount(0xffff0001)
+    {
+    }
+
     virtual ~hkReferencedObject() {}
 
     /* One more reference, counted only on an object with a known size (a
@@ -1555,6 +1561,20 @@ class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
 {
   public:
     hknpVehicleDriverInputAnalogStatus(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* The class allocator, inline: the thread's heap (0x151d58;
+     * tlg_lib_unknown.h); placement stays available beside it (the finish
+     * callback 0x378e0). */
+    static void *operator new(unsigned long numBytes);
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
+    /* Slot 5 (0x151d30): a new status with this one's values. derived
+     * name. */
+    hknpVehicleDriverInputAnalogStatus *FUN_00151d30() const;
 
     float positionX;
     float positionY;
@@ -4689,6 +4709,11 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * vtable. */
     hknpScaledConvexShapeBase(hkFinishLoadedObjectFlag flag);
 
+    /* Slot 10 (0x16ae20, the vtables 0x16a5390 and 0x16a54a0): the core
+     * convex shape's vertices scaled and moved into the buffer, each
+     * keeping its w; the buffer is returned. derived name. */
+    const Vec4 *FUN_0016ae20(Vec4 *HK_RESTRICT buffer, int bufferSize) const;
+
     /* The record's members (0x1696dc0): two vectors. */
     Vec4 scale;
     Vec4 translation;
@@ -4787,10 +4812,12 @@ template <typename T> class hkRelArray
         return size;
     }
 
-    /* The elements, `offset` bytes from the array itself. */
+    /* The elements, `offset` bytes from the array itself, the address
+     * computed as an integer (the scaled shapes' slot 10, 0x16ae30, adds
+     * the offset to it, not it to the offset). */
     const T *begin() const
     {
-        return reinterpret_cast<const T *>(reinterpret_cast<const char *>(this) + offset);
+        return reinterpret_cast<const T *>(hkUlong(this) + offset);
     }
 
     u16 size;   /* derived name */
