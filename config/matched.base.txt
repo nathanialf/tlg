@@ -1421,3 +1421,19 @@ _ZN22hkReferencedObjectLockD0Ev src/libs/unknown/func_000066f0.cpp
 FUN_000080c0 src/libs/unknown/func_000080c0.cpp _ZN9hkOstreamC1EP14hkStreamWriter
 _ZN17hknpCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00041590.cpp _ZN17hknpCompoundShapeC2E24hkFinishLoadedObjectFlag
 FUN_00199ec0 src/libs/unknown/func_00199ec0.cpp _GLOBAL__I_a
+_ZN14Object000ea540D1Ev src/libs/unknown/func_000ea540.cpp
+_ZN14Object000ea540D0Ev src/libs/unknown/func_000ea540.cpp
+_ZN21BroadPhaseCollideTaskD1Ev src/libs/unknown/func_0018ce80.cpp
+_ZN21BroadPhaseCollideTaskD0Ev src/libs/unknown/func_0018ce80.cpp
+_ZN14Object00185000C1EP12StreamReader src/libs/unknown/func_00185000.cpp
+_ZN14Object00185000D1Ev src/libs/unknown/func_001851c0.cpp
+_ZN14Object00185000D0Ev src/libs/unknown/func_001851c0.cpp
+_ZN12hkcdSimdTreeD1Ev src/libs/unknown/func_00021920.cpp
+_ZN12hkcdSimdTreeD0Ev src/libs/unknown/func_00021920.cpp
+_ZN27hknpStaticCompoundShapeDataD1Ev src/libs/unknown/func_000341d0.cpp
+_ZN27hknpStaticCompoundShapeDataD0Ev src/libs/unknown/func_000341d0.cpp
+_ZN23hknpVehicleDefaultBrakeD1Ev src/libs/unknown/func_0016a3b0.cpp
+_ZN23hknpVehicleDefaultBrakeD0Ev src/libs/unknown/func_0016a3b0.cpp
+FUN_00004370 src/libs/unknown/func_00004350.cpp
+FUN_0000d300 src/libs/unknown/func_0000d300.cpp
+FUN_00011870 src/libs/unknown/func_00011870.cpp

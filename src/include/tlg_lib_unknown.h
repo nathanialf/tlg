@@ -1554,14 +1554,28 @@ class StreamReader : public hkReferencedObject /* derived name */
     virtual int tell() const;                      /* vtable slot 11; derived name */
 };
 
-/* An input stream over a reader (derived name; vtable 0x16a65d0, address
- * point 0x16a65e0, with only the reference-counted object's slots; the
- * constructor 0x185060 opens the reader of a file name through the file
- * system at 0x57b9b70): the reader at +0x10. The image loader builds one on
- * the stack (0x18858c) and tests it with FUN_00185230 before reading. */
-class InputStream : public hkReferencedObject /* derived name */
+/* An input stream over a reader (derived name after its constructor, the
+ * vtable's row; vtable 0x16a65d0, address point 0x16a65e0, with only the
+ * reference-counted object's slots; the constructor 0x185060 opens the
+ * reader of a file name through the file system at 0x57b9b70): the reader
+ * at +0x10, whose reference it keeps. The image loader builds one on the
+ * stack (0x18858c) and tests it with FUN_00185230 before reading; the XML
+ * reader builds one over a reader (0x19dac2, 0x19e734). */
+class Object00185000 : public hkReferencedObject /* derived name */
 {
   public:
+    /* The constructor (0x185000): a new stream over the reader, whose
+     * reference it takes. */
+    Object00185000(StreamReader *reader);
+
+    /* Out of line (0x1851c0, slot 0): the reader's reference released;
+     * the deleting destructor (0x185120, slot 1) frees at the recorded
+     * size, 0x18 by default. */
+    virtual ~Object00185000();
+
+    /* The reference-counted class delete (below). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkBool FUN_00185230() const; /* derived name */
 
     StreamReader *reader; /* derived name */
@@ -1918,12 +1932,27 @@ inline void hkUuidObject::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void Object00185000::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkReferencedObjectLock::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
 
 inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpVehicleDefaultBrake::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpStaticCompoundShapeData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -1986,6 +2015,44 @@ inline void hknpVehicleDefaultEngine::operator delete(void *object, unsigned lon
 inline void hknpCharacterProxyCinfo::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+/* A 16-byte element of Object000ea540's array; its fields are not
+ * recovered. derived name. */
+struct Element000ea540 /* derived name */
+{
+    u8 unknown0[16];
+};
+
+/* A polymorphic object of 0x30 bytes (derived name; vtable 0x16a3cc0, three
+ * slots: the destructor 0xea540, the deleting destructor 0xea590, which
+ * frees 0x30 bytes on the thread's heap, and the shared empty 0xadd50). No
+ * constructor is out of line: the one construction, inline in 0xea610 at
+ * 0xeae3a as the base of the 0x58-byte Object000ea380, stores 1 at +0x10,
+ * 0 at +0x14, 0x20 at +0x18, false at +0x1c and an empty array at +0x20. */
+class Object000ea540 /* derived name */
+{
+  public:
+    virtual ~Object000ea540();
+
+    /* Slot 2: empty here (the shared 0xadd50). derived name. */
+    virtual void unknownVirtual2();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown8[8];
+    int unknown10;
+    int unknown14;
+    int unknown18;
+    bool unknown1c;
+    hkArray<Element000ea540> elements; /* derived name */
+};
+
+inline void Object000ea540::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
 }
 
 /* Three allocators that hold nothing of their own and hand every request to

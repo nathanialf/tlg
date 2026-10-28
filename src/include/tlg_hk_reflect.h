@@ -377,6 +377,10 @@ struct hkClass {
      * (0x42b0) and members (0x4350). derived names. */
     int FUN_000042b0() const; /* derived name */
     int FUN_00004350() const; /* derived name */
+    /* A member by its index over the class and its parents, the parents'
+     * first (0x4370; the XML and binary writers' walks over a class's
+     * members call it, 0x19ef66, 0x1a0d5a). derived name. */
+    const hkClassMember &FUN_00004370(int index) const;
     /* The class's name, out of line (0x4200). derived name. */
     const char *FUN_00004200() const;
     /* The object's size, out of line (0x4580, one body with the other
@@ -622,6 +626,10 @@ struct hkClassMember {
     s16 cArraySize;
     u16 flags;
     u16 offset;
+    /* The ninth record of hkClassMember's own member table (built at
+     * 0x7c13, its name the string at 0x14b2aa0); the records are 0x28
+     * bytes. */
+    const hkCustomAttributes *attributes;
 };
 
 /* derived name: reads an integer of a member type from an address, widened
@@ -1006,6 +1014,11 @@ struct hkStringBuf /* derived name */
      * name. */
     void FUN_00011db0();
 
+    /* Whether the string ends with a suffix, nonzero when it does (0x11870;
+     * the image loader asks it of a lowered file name at 0x1885c4).
+     * derived name. */
+    int FUN_00011870(const char *suffix) const;
+
     hkInplaceArray<char, 128> string; /* derived name */
 };
 
@@ -1190,6 +1203,12 @@ struct hkRefCountedProperties {
     /* 16 bytes: the referenced object at +0 (FUN_0001c1f0 drops a reference
      * on each) and the key at +8 that FUN_0001c2c0 searches by. */
     struct Entry {
+        /* The cleanup callback of its type info (0xd300, registered by
+         * 0xd390; the type infos of hkMultipleVertexBuffer::VertexBufferInfo
+         * and two others, whose first member is also a counted reference,
+         * cite the same body). derived name. */
+        static void FUN_0000d300(void *object);
+
         hkReferencedObject *object; /* derived name */
         u16 key;                    /* derived name */
         u8 unknownA[6];
@@ -1446,13 +1465,6 @@ class hknpDynamicCompoundShapeData : public hkReferencedObject
      * keeps its own data in (the shape's slot 32, 0xf04a0, reads a leaf's
      * and clears that w). derived name. */
     hkArray<struct hkAabb> nodes;
-};
-
-/* hknpStaticCompoundShapeData: vtable 0x1692950, finish callback FUN_00034440. */
-class hknpStaticCompoundShapeData : public hkReferencedObject
-{
-  public:
-    hknpStaticCompoundShapeData(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 /* hknpCompressedMeshShapeInternals (its own members not yet read) and its
@@ -1730,12 +1742,36 @@ class hknpVehicleDefaultEngine : public hknpVehicleEngine
     u8 unknownC[0x2c];
 };
 
-/* hknpVehicleDefaultBrake (parent hknpVehicleBrake): vtable 0x16a5350,
- * finish callback FUN_0005b300. */
+/* hknpVehicleDefaultBrake (hkClass 0x57c15e0 built at 0x5b433: 0x28 bytes,
+ * parent hknpVehicleBrake, members from the record table 0x1699460):
+ * vtable 0x16a5350, finish callback FUN_0005b300; wheelBrakingProperties
+ * at +0x10, wheelsMinTimeToBlock at +0x20. */
 class hknpVehicleDefaultBrake : public hknpVehicleBrake
 {
   public:
-    hknpVehicleDefaultBrake(hkFinishLoadedObjectFlag flag) : hknpVehicleBrake(flag) {}
+    /* hknpVehicleDefaultBrake::WheelBrakingProperties (hkClass 0x57c1560
+     * built at 0x5b38d: 0xc bytes, records at 0x16993e0). */
+    struct WheelBrakingProperties {
+        float maxBreakingTorque;
+        float minPedalInputToBlock;
+        hkBool isConnectedToHandbrake;
+    };
+
+    hknpVehicleDefaultBrake(hkFinishLoadedObjectFlag flag)
+        : hknpVehicleBrake(flag), wheelBrakingProperties(flag)
+    {
+    }
+
+    /* Out of line (0x16a3b0, slot 0): the wheels' properties given back;
+     * the deleting destructor (0x16a410, slot 1) frees at the recorded
+     * size, 0x28 by default. */
+    virtual ~hknpVehicleDefaultBrake();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkArray<WheelBrakingProperties> wheelBrakingProperties;
+    float wheelsMinTimeToBlock;
 };
 
 /* hknpRefMassDistribution: defined after hkQuaternion, whose vector its
@@ -2232,19 +2268,43 @@ class hknpTyremarksWheel : public hkReferencedObject
     hkArray<hknpTyremarkPoint> tyremarkPoints;
 };
 
+/* hkcdFourAabb (hkClass 0x57ba890 built at 0x1e100: 0x60 bytes, six
+ * member records at 0x168fc60): four boxes as six vectors of their
+ * bounds, lx, hx, ly, hy, lz and hz. */
+struct hkcdFourAabb {
+    hkVector4 lx;
+    hkVector4 hx;
+    hkVector4 ly;
+    hkVector4 hy;
+    hkVector4 lz;
+    hkVector4 hz;
+};
+
 /* hkcdSimdTree (type info 0x57bb3e0, vtable 0x1690d60): 0x18 bytes, its
- * nodes an hkArray at +8. Its finish constructor (0x21a20) is out of line:
- * the type info's finish callback FUN_0001f360 jumps to it, and
- * hknpExternMeshShapeData's finish constructor calls it on its member. */
+ * nodes an hkArray at +8 (member record 0x1690270). Its finish constructor
+ * (0x21a20) is out of line: the type info's finish callback FUN_0001f360
+ * jumps to it, and hknpExternMeshShapeData's finish constructor calls it on
+ * its member. */
 class hkcdSimdTree
 {
   public:
+    /* hkcdSimdTree::Node (hkClass 0x57bb310 built at 0x1f407 under the name
+     * hkcdSimdTreeNode: 0x70 bytes over hkcdFourAabb, one member record at
+     * 0x16901e0): four hkUint32 of data at +0x60. */
+    struct Node : public hkcdFourAabb {
+        u32 data[4];
+    };
+
     hkcdSimdTree(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x21920, slot 0): the nodes' storage given back; the
+     * deleting destructor (0x21980, slot 1) frees the 0x18 bytes on the
+     * thread's heap. */
     virtual ~hkcdSimdTree();
 
-    /* The nodes, an hkArray (size at +0x10, capacity and flags at +0x14);
-     * the element type is not recovered. */
-    u8 nodes[0x10]; /* derived name */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkArray<Node> nodes;
 };
 
 /* Polymorphic classes whose finish constructors are out of line, each
@@ -2800,6 +2860,25 @@ struct hkAabb {
     Vec4 max; /* derived name */
 };
 
+/* hkAabbUint32 (hkClass 0x57b9ca0 built at 0x1c6de: 0x20 bytes, six member
+ * records at 0x168ebc0): a box in integer coordinates, min (three
+ * hkUint32), expansionMin (three hkUint8) and expansionShift at +0xc, max,
+ * expansionMax and shapeKeyByte at +0x1c. */
+struct hkAabbUint32 {
+    u32 min[3];
+    u8 expansionMin[3];
+    u8 expansionShift;
+    u32 max[3];
+    u8 expansionMax[3];
+    u8 shapeKeyByte;
+};
+
+/* derived name: an AABB as integer coordinates that sort as its floats do
+ * (each float's bits with the sign flipped, or every bit for a negative
+ * one, halved; max one more), with the key in the fourth word of min
+ * (0x184e20; the broad phase's 0x189540 converts every body's box). */
+void FUN_00184e20(hkAabbUint32 *aabbOut, const hkAabb &aabb, int key);
+
 /* derived name: how far inner lies inside outer, the smallest of the six
  * margins in every lane (negative when it sticks out); 0x14a2b0, called at
  * 0x75526 and 0x173aca. */
@@ -2850,11 +2929,46 @@ struct hkcdStaticTree {
         hkArray<Codec3Axis5> nodes; /* derived name */
     };
 
+    /* 0x30 bytes (its hkClass, built at 0x1e5ac). */
     struct DefaultTreeStorage6 {
+        DefaultTreeStorage6(hkFinishLoadedObjectFlag flag) : nodes(flag) {}
+
         static void FUN_0001e270(void *object);
 
         hkArray<Codec3Axis6> nodes; /* derived name */
+        u8 unknown10[0x20];
     };
+};
+
+/* hknpStaticCompoundShapeTree (hkClass 0x57be120 built at 0x347ba: 0x30
+ * bytes over hkcdStaticTree::DefaultTreeStorage6, no members of its own). */
+struct hknpStaticCompoundShapeTree : public hkcdStaticTree::DefaultTreeStorage6 {
+    hknpStaticCompoundShapeTree(hkFinishLoadedObjectFlag flag)
+        : hkcdStaticTree::DefaultTreeStorage6(flag)
+    {
+    }
+};
+
+/* hknpStaticCompoundShapeData (vtable 0x1692950, finish callback
+ * FUN_00034440; hkClass 0x57be0a0 built at 0x3470d: 0x40 bytes, one member
+ * record at 0x1692a80): aabbTree at +0x10. */
+class hknpStaticCompoundShapeData : public hkReferencedObject
+{
+  public:
+    hknpStaticCompoundShapeData(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), aabbTree(flag)
+    {
+    }
+
+    /* Out of line (0x341d0, slot 0): the tree's nodes given back; the
+     * deleting destructor (0x34230, slot 1) frees at the recorded size,
+     * 0x40 by default. */
+    virtual ~hknpStaticCompoundShapeData();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hknpStaticCompoundShapeTree aabbTree;
 };
 
 /* hkcdDynamicTree's default storage over its raw-ulong codec (type info

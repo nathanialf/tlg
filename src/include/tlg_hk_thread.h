@@ -470,6 +470,42 @@ class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived nam
                       hkStringBuf *description) const; /* vtable slot 3; derived name */
 };
 
+/* An array whose first N elements live in the object on a 16-byte
+ * boundary: an int of padding after the array, then the storage (the
+ * collide task's array at +0x40 starts its storage at +0x60). derived
+ * name. */
+template <typename T, int N> struct hkInplaceArrayAligned16 : public hkArray<T> /* derived name */ {
+    hkInplaceArrayAligned16() : hkArray<T>(storage, 0, N) {}
+
+    int padding;
+    T storage[N] __attribute__((aligned(16)));
+};
+
+/* The broad phase's collide task (derived name after its slot 3's format
+ * "BroadPhase/Collide %i vs %i"; vtable 0x16a66f0): 0x120 bytes from the
+ * thread's heap, sixteen built inline by FUN_0018d640 (from 0x18d820) with
+ * the owner at +8, the index at +0x10 and an empty inplace array of 24
+ * eight-byte entries at +0x40. Slot 2 (0x18d230) is the work. */
+class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
+{
+  public:
+    /* Out of line (0x18ce80, slot 0): the array's storage given back; the
+     * deleting destructor (0x18ced0, slot 1) frees the 0x120 bytes. */
+    virtual ~BroadPhaseCollideTask();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* slot 2 (0x18d230) */
+    virtual void process();
+    /* slot 3 (0x18cf50) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    void *owner; /* derived name */
+    int index;   /* derived name */
+    u8 unknown14[0x2c];
+    hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
+};
+
 /* The solver's stage tasks (derived name): 0x30-byte objects built in an
  * array by 0x18e6e0, vtables 0x16a6760 and 0x16a67a8; slot 6 (0x18f140)
  * writes the task's name ("Solve/%s %i", the stage code from +0x20) into a
