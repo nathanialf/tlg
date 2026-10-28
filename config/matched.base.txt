@@ -1488,3 +1488,11 @@ FUN_0000dc50 src/libs/unknown/func_0000dc50.cpp _GLOBAL__I_a
 _ZN29hkpLimitedHingeConstraintDataD1Ev src/libs/unknown/func_00078ee0.cpp
 _ZN28hkpPointToPathConstraintDataD1Ev src/libs/unknown/func_00079f10.cpp
 _ZN26hkpPrismaticConstraintDataD1Ev src/libs/unknown/func_0007e600.cpp
+FUN_000640b0 src/libs/unknown/func_000640b0.cpp _ZNK18hknpWorldObject4f812FUN_000640b0ERK7hkArrayIiE
+_ZN29hkpLimitedHingeConstraintDataD0Ev src/libs/unknown/func_00078ee0.cpp
+_ZN28hkpPointToPathConstraintDataD0Ev src/libs/unknown/func_00079f10.cpp
+_ZN26hkpPrismaticConstraintDataD0Ev src/libs/unknown/func_0007e600.cpp
+_ZN32hkpLinearClearanceConstraintDataD0Ev src/libs/unknown/func_00083960.cpp
+_ZN32hkpLinearClearanceConstraintDataD1Ev src/libs/unknown/func_00083960.cpp
+FUN_00093bf0 src/libs/unknown/func_00093bf0.cpp _ZN19hkBlockStreamReader12FUN_00093bf0Ev
+FUN_0018cf50 src/libs/unknown/func_0018cf50.cpp _ZNK21BroadPhaseCollideTask7getNameEP11hkStringBufS1_

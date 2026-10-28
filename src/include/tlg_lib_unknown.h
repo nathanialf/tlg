@@ -2057,6 +2057,26 @@ inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkpLimitedHingeConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpPointToPathConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpPrismaticConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpLinearClearanceConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpPrepareNewPairsTask::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

@@ -473,7 +473,7 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
     void *unknown18;                    /* derived name */
     void *unknown20;                    /* derived name */
     void *unknown28;                    /* derived name */
-    hkInplaceArray<u32, 256> unknown30; /* derived name */
+    hkInplaceArray<int, 256> unknown30; /* derived name */
     void *unknown440;                   /* derived name */
     u8 unknown448[0x38];
 };
@@ -558,6 +558,21 @@ template <typename T, int N> struct hkInplaceArrayAligned16 : public hkArray<T> 
  * thread's heap, sixteen built inline by FUN_0018d640 (from 0x18d820) with
  * the owner at +8, the index at +0x10 and an empty inplace array of 24
  * eight-byte entries at +0x40. Slot 2 (0x18d230) is the work. */
+/* What the broad phase's collide tasks name themselves from (derived
+ * names): the layer pairs at +0x68 of the object at +8 of the owner, two
+ * ints a pair. */
+struct BroadPhaseLayers0018cf50 /* derived name */
+{
+    u8 unknown0[0x68];
+    const int *layerPairs; /* derived name */
+};
+
+struct BroadPhaseOwner0018cf50 /* derived name */
+{
+    u8 unknown0[8];
+    BroadPhaseLayers0018cf50 *layers; /* derived name */
+};
+
 class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
 {
   public:
@@ -572,8 +587,8 @@ class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
     /* slot 3 (0x18cf50) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    void *owner; /* derived name */
-    int index;   /* derived name */
+    BroadPhaseOwner0018cf50 *owner; /* derived name */
+    int index;                      /* derived name: the pair it collides */
     u8 unknown14[0x2c];
     hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
 };

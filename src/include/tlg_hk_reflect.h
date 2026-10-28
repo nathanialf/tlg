@@ -169,6 +169,10 @@ struct hkFinishLoadedObjectFlag {
     s32 finishing; /* derived name */
 };
 
+/* A boolean as an int, nonzero for true, as Havok's tests return it
+ * (the group filter's 0x3a290 tests the value once, after both paths). */
+typedef int hkBool32;
+
 template <typename T> struct hkArray {
     enum {
         CAPACITY_MASK = 0x3fffffff,            /* derived name */
@@ -1786,6 +1790,16 @@ class hknpGroupCollisionFilter : public hkReferencedObject
     u8 unknownC[0x94];
 };
 
+struct hknpBody;
+
+/* What a query is filtered with (derived names): the collision filter
+ * info at +4. */
+struct hknpQueryFilterData /* derived name */
+{
+    u16 materialId;
+    u32 collisionFilterInfo;
+};
+
 /* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback FUN_0003a3d0. */
 class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
     : public hkReferencedObject
@@ -1796,6 +1810,37 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
         : hkReferencedObject(flag)
     {
     }
+
+    /* Slot 7 (0x3a290, the group filter's too): a query against a body.
+     * Inside one system group other than 0 the subsystem ids decide, else
+     * the layers' lookup table. derived name. */
+    bool FUN_0003a290(int queryType, const hknpQueryFilterData &filterData,
+                      const hknpBody &body) const;
+
+    /* The test of two filter infos, nonzero when they collide (inline in
+     * slot 7: its two paths' values meet in one test). derived name. */
+    hkBool32 isCollisionEnabled(u32 infoA, u32 infoB) const
+    {
+        const u32 zeroIfSameSystemGroup = (infoA ^ infoB) & 0x7fff8000;
+        if (zeroIfSameSystemGroup == 0) {
+            if ((infoA & 0x7fff8000) != 0) {
+                const int idA = (infoA >> 5) & 0x1f;
+                const int dontCollideB = (infoB >> 10) & 0x1f;
+                if (idA == dontCollideB) {
+                    return 0;
+                }
+                const int idB = (infoB >> 5) & 0x1f;
+                const int dontCollideA = (infoA >> 10) & 0x1f;
+                return idB - dontCollideA;
+            }
+        }
+        const u32 layerBitsA = collisionLookupTable[infoA & 0x1f];
+        const u32 layerBitsB = u32(1 << (infoB & 0x1f));
+        return layerBitsA & layerBitsB;
+    }
+
+    u8 unknownC[8];
+    u32 collisionLookupTable[32]; /* derived name */
 };
 
 /* hknpSurfaceVelocity (hkClass 0x57c19d8, 0x10 bytes, parent
@@ -4037,7 +4082,8 @@ struct hknpBody {
 
     hkTransform transform;
     int flags;
-    u8 unknown44[0x1c];
+    u32 collisionFilterInfo; /* derived name */
+    u8 unknown48[0x18];
     u32 id;
     /* The next body of an attached group, the body itself when alone
      * (0x4c720 compares the two). */
@@ -4329,8 +4375,17 @@ struct hknpWorldObject4f8 /* derived name */
      * 0x6ca67 call it). derived names. */
     void FUN_00063a40(int id);
     void FUN_00064070(const hkArray<int> &ids);
+    /* Whether any of the ids' entries of the array at +0x18 is one of the
+     * pointers of the array at +0x58 (0x640b0; the prepare-new-pairs task
+     * asks it over its ids at 0x15b84f). derived name. */
+    bool FUN_000640b0(const hkArray<int> &ids) const;
 
     hknpWorld *world; /* derived name */
+    void *unknown8;
+    u8 unknown10[8];
+    hkArray<void *> unknown18;
+    u8 unknown28[0x30];
+    hkArray<void *> unknown58;
 };
 
 /* A slot of a member-function signal (vtable 0x1698ee0, ruled hkSlot, D14):
@@ -5819,6 +5874,9 @@ class hkpPrismaticConstraintData : public hkpConstraintData
 
     virtual ~hkpPrismaticConstraintData();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* Slot 7 (0x7e8a0): valid when both frames are orthonormal and the
      * limit's minimum is not above its maximum. */
     hkBool unknownVirtual7() const;
@@ -6184,6 +6242,9 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
     hkpLinearClearanceConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpLinearClearanceConstraintData();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_000839f0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
@@ -6638,6 +6699,9 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     hkpLimitedHingeConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpLimitedHingeConstraintData();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_000791f0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
@@ -7477,6 +7541,9 @@ class hkpPointToPathConstraintData : public hkpConstraintData
 
     virtual ~hkpPointToPathConstraintData();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     int unknownVirtual5() const;                                            /* slot 5 (0x3e420) */
     void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const; /* slot 6 (0x7a020) */
     hkBool unknownVirtual7() const;                                         /* slot 7 (0x7a590) */
@@ -7487,6 +7554,9 @@ class hkpPointToPathConstraintData : public hkpConstraintData
     hkpParametricCurve *path;
     float maxFrictionForce;
     hkEnum<OrientationConstraintType, s8> angularConstrainedDOF;
+    /* The member record built at 0x7f2xx under "transform_OS_KS"
+     * (0x14c072f): two transforms, to the class's 0xd0 bytes. */
+    hkTransform transform_OS_KS[2];
 };
 
 /* hkMemoryMeshMaterial, 0x80 bytes (type info 0x57bd4a8, vtable 0x16a3920 stored
@@ -9110,6 +9180,10 @@ struct hkBlockStreamReader /* derived name */
     void FUN_000937c0(const hkBlockStream *stream);
     /* At the start of a range (0x937f0). derived name. */
     void FUN_000937f0(const hkBlockStreamRange *range);
+    /* The next block made current (0x93bf0, five callers): its elements,
+     * as many as are still to read, and its data returned; null at the
+     * end, the reader emptied. derived name. */
+    const void *FUN_00093bf0();
 
     const hkBlockStreamBlock *currentBlock; /* derived name */
     const u8 *currentByteLocation;          /* derived name */
