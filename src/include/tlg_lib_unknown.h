@@ -110,6 +110,25 @@ struct hknpManifold /* derived name */
     int numPoints; /* derived name */
     u8 unknown4[0x3c];
     Vec4 positions[4]; /* derived name */
+    u8 unknown80[0x60];
+    /* The bodies' mass scales, each broadcast (the mass changer's slot 4,
+     * 0x69450, writes them). derived names. */
+    Vec4 massScaleA;
+    Vec4 massScaleB;
+};
+
+/* The modifier of vtable 0x169a5a0 (address point 0x169a5b0, no type info,
+ * 8 bytes: slot 1 is the shared 0xd900; derived name after the materials'
+ * mass changer members it reads). Slot 4 (0x69450), as a manifold is
+ * processed: when one body's material is debris, the other's heavy object
+ * factor f splits the masses, (1 + x) for the debris and (1 - x) for the
+ * other, x = (f - 1) / (f + 1). */
+class hknpMassChangerModifier /* derived name */
+{
+  public:
+    void FUN_00069450(const void *threadContext, const void *sharedData, const hknpCdBody &bodyA,
+                      const hknpCdBody &bodyB,
+                      hknpManifold *manifold); /* vtable slot 4; derived name */
 };
 
 /* The modifier of vtable 0x16a5010 (address point 0x16a5020; derived name),
@@ -1628,6 +1647,16 @@ class ThreadMemory : public AllocatorBase /* derived name */
         return largeSizeToRow[(numBytes - 1) >> 10];
     }
 
+    /* Slot 3 (0x14220): a block of a row's size onto its row's free list,
+     * or, when the list is full, through FUN_000147c0, which first gives
+     * part of the list back; a larger one back to the allocator it came
+     * from. */
+    virtual void blockFree(void *pointer, int numBytes);
+
+    /* A block onto a full row's list (0x147c0), the list emptied down to
+     * half its limit into the allocator first. derived name. */
+    void FUN_000147c0(int row, void *pointer);
+
     /* Slots 7 and 8 (0x142a0, 0x14320): a batch of a row's size block by
      * block through slots 2 and 3, a larger one passed to the allocator it
      * draws from. */
@@ -1676,10 +1705,15 @@ struct UnionFind /* derived name */
      * name. */
     int findRootOfNode(int node);
 
+    /* 0x8f7d0 (called at 0x14e94e): every node pointed straight at its
+     * root and the roots counted, once; the count kept with the state set
+     * (a join clears it). derived name. */
+    int FUN_0008f7d0();
+
     UnionFindParents *parents; /* derived name */
     int numNodes;              /* derived name */
     int state;                 /* derived name */
-    int unknown10;             /* derived name */
+    int numRoots;              /* derived name: -1 until counted */
     int unknown14;             /* derived name */
 };
 
@@ -2214,6 +2248,43 @@ struct ThreadBuffer /* derived name */
         float value;
     };
 
+    /* The timer commands (derived names): the marker and its name, the low
+     * half of the time-stamp counter, 16 bytes in the stream; a list's
+     * begin adds the name of its first split, 24 bytes. */
+    struct TimerCommand {
+        const char *commandAndMonitor;
+        u32 time0;
+    };
+
+    struct TimerBeginListCommand : public TimerCommand {
+        const char *nameOfFirstSplit;
+    };
+
+    /* A timer list begun (an "Lt" name and its first "St" split) and ended
+     * (the "lt" marker) when the stream has room, the time read last (the
+     * world's tasks, 0x48670 and 0x487c0, time their step this way, the
+     * stream read once for both). derived names. */
+    void timerBeginList(const char *name, const char *firstSplit)
+    {
+        if (end < capacityMinus16) {
+            TimerBeginListCommand *command = reinterpret_cast<TimerBeginListCommand *>(end);
+            command->commandAndMonitor = name;
+            command->nameOfFirstSplit = firstSplit;
+            command->time0 = u32(__builtin_readcyclecounter());
+            end = reinterpret_cast<char *>(command + 1);
+        }
+    }
+
+    void timerEndList(const char *name)
+    {
+        if (end < capacityMinus16) {
+            TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
+            command->commandAndMonitor = name;
+            command->time0 = u32(__builtin_readcyclecounter());
+            end = reinterpret_cast<char *>(command + 1);
+        }
+    }
+
     /* The stream emptied; under a debug memory system the warning value
      * written into the calling thread's stream (0xeca0, called by 0x72fc).
      * derived name. */
@@ -2358,6 +2429,11 @@ inline void hkxMesh::UserChannelInfo::operator delete(void *object, unsigned lon
 }
 
 inline void hkxTextureFile::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxMaterialShader::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

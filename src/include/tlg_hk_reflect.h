@@ -153,6 +153,19 @@ inline float fabs(float r)
  * truncation, `vpsrad $16; vpackssdw; vmovd` (0x15db42). Field name
  * derived. */
 struct hkHalf {
+    /* The float whose upper half the value is (0x69461: `movzx; shl 16`).
+     * derived name. */
+    float getReal() const
+    {
+        union {
+            u32 bits;
+            float real;
+        } value32;
+
+        value32.bits = u32(u16(value)) << 16;
+        return value32.real;
+    }
+
     void setReal(__m128 r)
     {
         __m128i bits = _mm_srai_epi32(_mm_castps_si128(r), 16);
@@ -716,6 +729,11 @@ struct hkTransform {
     /* derived name: set to the inverse of a rigid transform (0x10ad0;
      * called at 0x4f52a and from the geometry code at 0xda921). */
     void FUN_00010ad0(const hkTransform &t);
+
+    /* derived name: whether every column of the other transform is within
+     * epsilon of this one's in x, y and z (0x10e70; the world's body
+     * update asks it at 0x5d711, the game at 0xeaf6b7). */
+    hkBool32 FUN_00010e70(const hkTransform &other, const Vec4 &epsilon) const;
 
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
@@ -3754,6 +3772,10 @@ struct hknpCompressedMeshShapeTree {
      * derived name. */
     bool FUN_000a92c0(hkArray<u32> &filter) const;
 
+    /* The filter rebuilt for the tree (0xa9150): its storage given back,
+     * then a bit for each of the tree's keys, all set. derived name. */
+    void FUN_000a9150(hkArray<u32> &filter) const;
+
     /* A key's bit in the filter set or cleared (0xa9410), and read
      * (0xa9550); the key is the part below the shape's own bits. derived
      * names. */
@@ -4169,6 +4191,8 @@ class hknpDecoratorShape : public hknpShape
 class hknpShapeKeyMask : public hkBaseObject
 {
   public:
+    hknpShapeKeyMask() {}
+
     hknpShapeKeyMask(hkFinishLoadedObjectFlag flag) : hkBaseObject(flag) {}
 
     /* The class allocator: a block of the thread's heap (0xdea4d; defined
@@ -4287,6 +4311,10 @@ class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
   public:
     KeyMask(hkFinishLoadedObjectFlag flag) : hknpShapeKeyMask(flag), filter(flag) {}
 
+    /* A mask bound to no shape, its filter empty (inline in the shape's slot
+     * 20, 0x117200). */
+    KeyMask() : shape(0) {}
+
     /* Out of line (0x349b0, slot 0): the filter given back. */
     virtual ~KeyMask();
 
@@ -4295,7 +4323,7 @@ class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
     bool FUN_000381f0(u32 key) const;         /* vtable slot 5 (0x34ae0); derived name */
     int FUN_00038210() const;                 /* vtable slot 6 (0x2b020); derived name */
 
-    hknpCompressedMeshShape *shape;
+    const hknpCompressedMeshShape *shape;
     hkArray<u32> filter;
 };
 
@@ -5229,6 +5257,11 @@ struct hknpWorldStepContextf6a90 /* derived name */
 };
 
 struct hknpWorld {
+    /* Two of the step's stages, run by the solve tasks under the timer
+     * "Physics" (0x50fd0 by hknpPostSolveTask, 0x509f0 by hknpPreSolveTask).
+     * derived names. */
+    void FUN_00050fd0();
+    void FUN_000509f0();
     /* Hands a body id and a bool to the object at +0x4f8 when the flag at
      * +0x4f0 is set (the command dispatcher at 0x16ef96 calls it). derived
      * name. */
@@ -5775,6 +5808,14 @@ template <typename T> class hkRelArray
         return size;
     }
 
+    /* How far past an owner the elements end (the polytope's size, 0x1520f0,
+     * takes the farthest of its arrays'). derived name. */
+    int endOffset(const void *owner) const
+    {
+        return int(reinterpret_cast<const char *>(this) - static_cast<const char *>(owner)) +
+               offset + size * int(sizeof(T));
+    }
+
     /* The elements, `offset` bytes from the array itself, the address
      * computed as an integer (the scaled shapes' slot 10, 0x16ae30, adds
      * the offset to it, not it to the offset). */
@@ -5929,6 +5970,10 @@ class hknpConvexPolytopeShape : public hknpConvexShape
     };
     class Connectivity;
 
+    /* Slot 6 (0x1520f0): the object's size, to the end of the farthest of
+     * its four arrays rounded up to 16, never less than the class. derived
+     * name. */
+    int FUN_001520f0() const;
     int FUN_00072f70() const; /* vtable slot 13; derived name */
     /* Slot 14 (0x72f80, kept by the capsule and triangle shapes): a face's
      * plane and its minimum half angle. derived name. */
@@ -6192,7 +6237,16 @@ struct hknpMaterial {
      * fractionOfClippedImpulseToApply (hkReal) at +0x1c and +0x20. */
     float maxContactImpulse;
     float fractionOfClippedImpulseToApply;
-    u8 unknown24[0x2c];
+
+    /* massChangerCategory (an hkEnum of hkUint8, its items from 0x16999e0)
+     * and massChangerHeavyObjectFactor (hkHalf) at +0x24 and +0x26, from the
+     * records 0x66f10 builds (0x673ad, 0x6740b). */
+    enum MassChangerCategory { MASS_CHANGER_IGNORE, MASS_CHANGER_DEBRIS, MASS_CHANGER_HEAVY };
+
+    u8 massChangerCategory;
+    u8 unknown25;
+    hkHalf massChangerHeavyObjectFactor;
+    u8 unknown28[0x28];
 };
 
 class hknpRefMaterial;
@@ -6337,6 +6391,9 @@ class hknpCompressedMeshShape : public hknpCompositeShape
     void FUN_0010be70();
 
     const hkAabb *FUN_0010bf40() const; /* derived name */
+    /* Slot 20 (0x117200): a new key mask over the shape, its filter built
+     * by the mesh tree with every key enabled. derived name. */
+    hknpShapeKeyMask *FUN_00117200() const;
     void FUN_00158840(const Mat4 &transform,
                       hkAabb &aabbOut) const; /* vtable slot 7; derived name */
 
@@ -8209,6 +8266,13 @@ class hkxMaterialShader : public hkReferencedObject
           pixelEntryName(flag), data(flag)
     {
     }
+
+    /* Slot 0 (0x8a350): the data given back, then the four strings, the
+     * last first; the deleting destructor 0x8a3d0 is slot 1. */
+    virtual ~hkxMaterialShader();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkStringPtr name;
     u8 unknown18[8]; /* type, its width not read */
@@ -10222,6 +10286,10 @@ struct BlockCache /* derived name */
     void *FUN_0008eec0();           /* derived name */
     void FUN_0008ef10(void *block); /* derived name */
     void FUN_0008ef60();            /* derived name */
+    /* A batch of blocks taken back (0x8efa0): six or more go straight to
+     * the allocator, fewer join the cache, which hands six to the allocator
+     * first when they would overfill it. derived name. */
+    void FUN_0008efa0(hkBlockStreamBlock *const *blocks, int numBlocks);
 
     BlockStreamAllocator *allocator; /* derived name */
     void *blocks[8];                 /* derived name */
@@ -10326,6 +10394,13 @@ struct hkBlockStream /* derived name */
      * recorded (0x947f0; the writer's 0x939c0 opens each new block with
      * it). derived name. */
     hkBlockStreamBlock *FUN_000947f0(BlockCache *cache);
+    /* Every block given back to the cache in one batch, the ones freed
+     * while it was read dropped from the list first, and the stream left
+     * empty (0x94990, forty callers). derived name. */
+    void FUN_00094990(BlockCache *cache);
+    /* The stream emptied down to one block, the others given back to the
+     * cache (0x94880). derived name. */
+    void FUN_00094880(BlockCache *cache);
 
     u8 unknown0[8];
     int numTotalElements; /* derived name */
@@ -10366,6 +10441,28 @@ struct hkBlockStreamRange /* derived name */
     u16 startByteOffset;                  /* derived name */
     u16 startBlockNumElements;            /* derived name */
     int numElements;                      /* derived name */
+};
+
+/* What 0x167f70 resets for the simulation (derived names; the loop at
+ * 0x170770 runs it over an object's +0x10 with the owner's +0x250 and
+ * +0x258): a cache of its own at +0x258, a command stream at +0x280, the
+ * command writer at +0x380 and the range its commands start at, +0x390. */
+struct CommandStreams00167f70 /* derived name */
+{
+    /* The stream emptied with the cache given; a writer present is bound to
+     * it again and the range started where the writer is: its block, the
+     * offset and count in that block, and the stream's count so far
+     * negated, all read before the range is written. derived name. */
+    void FUN_00167f70(void *argument1, BlockCache *streamCache);
+
+    u8 unknown0[0x258];
+    BlockCache *cache; /* derived name */
+    u8 unknown260[0x20];
+    hkBlockStream commands; /* derived name */
+    u8 unknown2b0[0xd0];
+    hkBlockStreamCommandWriter *commandWriter; /* derived name */
+    u8 unknown388[8];
+    hkBlockStreamRange commandRange; /* derived name */
 };
 
 /* A block stream's reader (derived names), 0x18 bytes: the current block,

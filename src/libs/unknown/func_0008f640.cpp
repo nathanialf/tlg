@@ -11,5 +11,5 @@ UnionFind::UnionFind(UnionFindParents *parents_, int numNodes_) : parents(parent
         parents->data[i] = -1;
     }
     state = 1;
-    unknown10 = -1;
+    numRoots = -1;
 }
