@@ -1496,3 +1496,6 @@ _ZN32hkpLinearClearanceConstraintDataD0Ev src/libs/unknown/func_00083960.cpp
 _ZN32hkpLinearClearanceConstraintDataD1Ev src/libs/unknown/func_00083960.cpp
 FUN_00093bf0 src/libs/unknown/func_00093bf0.cpp _ZN19hkBlockStreamReader12FUN_00093bf0Ev
 FUN_0018cf50 src/libs/unknown/func_0018cf50.cpp _ZNK21BroadPhaseCollideTask7getNameEP11hkStringBufS1_
+_ZN17hkLocalFrameGroupD0Ev src/libs/unknown/func_00003710.cpp
+_ZN14hkStringObjectD0Ev src/libs/unknown/func_00010850.cpp
+_ZN17hknpRefWorldCinfoD0Ev src/libs/unknown/func_00039100.cpp

@@ -508,10 +508,30 @@ void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
  * each run under the spinning mutex at +0x10; reached through the second
  * base by the thunks 0x32d0, 0x3490, 0x3570, 0x3130 and 0x3700. Slot 15
  * stores its limit at +0xb50 and returns 0. */
-void FUN_00003140(TwoBaseAllocator *self);                          /* derived name */
-void FUN_000032e0(TwoBaseAllocator *self, int value);               /* derived name */
-int FUN_000034a0(TwoBaseAllocator *self, u64 limit);                /* derived name */
-int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b);         /* derived name */
+void FUN_00003140(TwoBaseAllocator *self);                  /* derived name */
+void FUN_000032e0(TwoBaseAllocator *self, int value);       /* derived name */
+int FUN_000034a0(TwoBaseAllocator *self, u64 limit);        /* derived name */
+int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b); /* derived name */
+
+/* A memory walk's callback (derived names): a block's start and size,
+ * whether it is allocated, its pool, and the walker's parameter. */
+typedef void (*MemoryWalkCallback)(void *start, unsigned long size, bool allocated, int pool,
+                                   void *param);
+
+/* The filter TwoBaseAllocator's slot 7 (0x2f10) walks its base allocator
+ * through (0x301d): the large blocks the allocator itself holds, sorted
+ * (FUN_00001630 fills them), are left out, every other block is handed on
+ * to the caller's callback with pool 0. derived names. */
+struct MemoryWalkFilter000015c0 /* derived name */
+{
+    void *unknown0;
+    hkArray<void *> ownBlocks;
+    MemoryWalkCallback callback;
+    void *callbackParam;
+};
+
+void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool,
+                  void *param);                                     /* derived name */
 int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
 
 /* LargeBlockAllocator's primary slots 13 and 19 (interface slots 2 and 10),
@@ -2073,6 +2093,21 @@ inline void hkpPrismaticConstraintData::operator delete(void *object, unsigned l
 }
 
 inline void hkpLinearClearanceConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkLocalFrameGroup::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkStringObject::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpRefWorldCinfo::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

@@ -1390,6 +1390,9 @@ class hkStringObject : public hkReferencedObject
 
     virtual ~hkStringObject();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkStringPtr string;
 };
 
@@ -1408,6 +1411,9 @@ class hkLocalFrameGroup : public hkReferencedObject
     }
 
     virtual ~hkLocalFrameGroup();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkStringPtr name;
 };
@@ -5299,6 +5305,9 @@ class hknpRefWorldCinfo : public hkReferencedObject
     }
 
     virtual ~hknpRefWorldCinfo();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hknpWorldCinfo info;
 };
