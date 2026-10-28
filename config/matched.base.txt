@@ -861,7 +861,7 @@ FUN_00047d90 src/libs/unknown/func_00047d90.cpp
 FUN_000902f0 src/libs/unknown/func_000902f0.cpp
 _ZN26hkBlockStreamCommandWriterC1Ev src/libs/unknown/func_000904c0.cpp
 FUN_000938a0 src/libs/unknown/func_000938a0.cpp
-FUN_00094df0 src/libs/unknown/func_00094df0.cpp
+FUN_00094df0 src/libs/unknown/func_00094d90.cpp
 _ZN19hkcdDynamicAabbTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009fc10.cpp
 FUN_000aaaf0 src/libs/unknown/func_000aaaf0.cpp
 FUN_0017bb20 src/libs/unknown/func_0017bb20.cpp
@@ -1537,3 +1537,11 @@ FUN_00068500 src/libs/unknown/func_00068500.cpp _ZNK12hknpLodShape12FUN_00068500
 FUN_00031740 src/libs/unknown/func_00031740.cpp
 FUN_000015c0 src/libs/unknown/func_000015c0.cpp _Z12FUN_000015c0PvmbiS_
 FUN_0017bb80 src/libs/unknown/func_0017bb80.cpp _ZN21hkp6DofConstraintData12FUN_0017bb80Ef
+FUN_0017a290 src/libs/unknown/func_0017a290.cpp _ZN13NodeEdgeLists12FUN_0017a290EjPK18EdgeRecord0017a290i
+_ZN11hknpGlobalsD1Ev src/libs/unknown/func_00175e30.cpp
+FUN_00175e90 src/libs/unknown/func_00175e30.cpp _ZN11hknpGlobalsD0Ev
+_ZN18BlockListAllocatorD1Ev src/libs/unknown/func_0008f120.cpp
+FUN_00094d90 src/libs/unknown/func_00094d90.cpp _ZN13hkBlockStream12FUN_00094d90EP10BlockCachePK19hkBlockStreamReader
+FUN_00167c20 src/libs/unknown/func_00167c20.cpp _ZN17CollideSharedData12FUN_00167c20EPK9hknpWorld
+FUN_001854b0 src/libs/unknown/func_001854b0.cpp _Z12FUN_001854b0P8hkAabb16PKS_i
+FUN_00000e40 src/libs/unknown/func_00000eb0.cpp _ZN13BufferOstreamD0Ev

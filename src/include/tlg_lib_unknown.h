@@ -620,10 +620,22 @@ class hknpGlobals : public hkReferencedObject
   public:
     hknpGlobals(); /* out of line, 0x175f70 */
 
+    /* Slot 0 (0x175e30): the directions given back; the triangle at +0x10
+     * is storage the constructor builds a shape in (0x78270), not a
+     * member, and nothing destroys it. */
+    virtual ~hknpGlobals();
+
     /* The class allocator inline, as hkHardwareInfo's (0x175f36). */
     static void *operator new(unsigned long numBytes);
 
-    u8 unknown10[0xf0];
+    /* The reference-counted delete (the deleting destructor 0x175e90,
+     * slot 1). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown10[0xe0];
+    /* 49 unit directions, the 7 by 7 grid the constructor maps through
+     * 0xc05b0 (16-byte elements, grown by 0xb40). derived name. */
+    hkArray<hkVector4> directions;
 };
 
 extern hknpGlobals *D_57c8818; /* hknpGlobals's singleton instance */
@@ -1504,9 +1516,14 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
 class BlockListAllocator : public AllocatorBase /* derived name */
 {
   public:
+    /* Slots 0 and 1 (0x8f120, one body): the lock destroyed, then
+     * AllocatorBase's destructor. */
+    virtual ~BlockListAllocator();
+
     void FUN_0008f560(); /* vtable slot 11; derived name */
 
-    u8 unknown8[0x18];
+    hkCriticalSection lock;      /* derived name */
+    AllocatorBase *parent;       /* derived name */
     MemoryStatistics statistics; /* derived name */
     void *blocks;                /* derived name */
 };
@@ -2269,6 +2286,16 @@ inline void hknpBodyQualityLibrary::operator delete(void *object, unsigned long 
 }
 
 inline void hknpRefMaterial::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpGlobals::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void BufferOstream::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

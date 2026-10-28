@@ -4630,6 +4630,24 @@ struct ModifierSharedData /* derived name */
     Vec4 vector20;
 };
 
+/* The same with the world's bodies and motions (derived names: one caller,
+ * 0x6cf08, fills it on its stack with FUN_00167c20 and hands it on with
+ * three block streams). */
+struct CollideSharedData : public ModifierSharedData /* derived name */
+{
+    /* The shared data from the world as 0x167c90 takes it, with the
+     * object at +0x1f0 stored before the select, then the bodies and
+     * motions, and the pair at +0x68 reset (0x167c20). */
+    void FUN_00167c20(const hknpWorld *world);
+
+    const hknpBody *bodies;    /* derived name */
+    const hknpMotion *motions; /* derived name */
+    const void *object40;
+    u8 unknown48[0x20];
+    int int68;
+    int int6c;
+};
+
 struct hknpWorldStepContextf6a90 /* derived name */
 {
     u8 unknown0[8];
@@ -4683,7 +4701,8 @@ struct hknpWorld {
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
     void *pointer1d8;
-    u8 unknown1e0[0x70];
+    u8 unknown1e0[0x10];
+    u8 unknown1f0[0x60]; /* CollideSharedData's object40 points here */
     Vec4 vector250;
     u8 unknown260[0x18];
     bool enabled278;
@@ -8024,6 +8043,11 @@ class BufferOstream : public hkOstream /* derived name */
 {
   public:
     virtual ~BufferOstream();
+
+    /* The reference-counted delete (tlg_lib_unknown.h): the deleting
+     * destructor (0xe40, slot 1) frees at the recorded size, 0x18 by
+     * default. */
+    static void operator delete(void *object, unsigned long numBytes);
 };
 
 /* The world's events print their names: the dispatcher at 0x6c110 switches
@@ -9311,8 +9335,18 @@ struct hkBlockStreamBlock /* derived name */
     u8 data[0xfe0]; /* derived name */
 };
 
+struct hkBlockStreamReader; /* derived name; below */
+
 struct hkBlockStream /* derived name */
 {
+    /* The blocks before the reader's current one freed (0x94d90, called
+     * at 0x64cc2 and 0x64d14), 0x94df0 inline. derived name. */
+    void FUN_00094d90(BlockCache *cache, const hkBlockStreamReader *reader);
+    /* The stream put back in order after blocks were freed out of it
+     * (0x94c60): the remaining blocks moved down and renumbered, their
+     * elements counted again, and a block from the cache when none is
+     * left. derived name. */
+    void FUN_00094c60(BlockCache *cache);
     void FUN_00094df0(BlockCache *cache, void *block, int index); /* derived name */
     /* The last block given back to the cache and dropped, the block before
      * it returned as the new last (0x95030; the writer's finalize 0x93a10
@@ -10055,5 +10089,9 @@ struct alignas(16) hkAabb16 {
 
 /* derived name: the union of count boxes (FUN_00185460). */
 void FUN_00185460(hkAabb16 *aabbOut, const hkAabb16 *aabbs, int count);
+
+/* derived name: the box around the boxes' centres (FUN_001854b0; called at
+ * 0x13e807, which then clears the result's key). */
+void FUN_001854b0(hkAabb16 *aabbOut, const hkAabb16 *aabbs, int count);
 
 #endif
