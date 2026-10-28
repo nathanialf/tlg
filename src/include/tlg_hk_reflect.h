@@ -512,6 +512,16 @@ struct hkMassProperties {
      * each child's properties). derived name. */
     void FUN_0002a560(const Vec4 &density);
 
+    /* The mass set, the inertia scaled by the new mass over the old: inline,
+     * so its scale is a local of the inlined body and the inliner brackets it
+     * with lifetime markers (docs/COOKBOOK.md). */
+    void scaleToMass(const Vec4 &newMass) /* derived name */
+    {
+        const Vec4 scale = _mm_div_ps(newMass, _mm_set1_ps(mass));
+        mass = _mm_cvtss_f32(newMass);
+        inertiaTensor.FUN_0001ac70(scale);
+    }
+
     float volume;
     float mass;
     Vec4 centerOfMass;
@@ -1748,6 +1758,40 @@ class hknpLinearSurfaceVelocity : public hkReferencedObject
 {
   public:
     hknpLinearSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+};
+
+/* hknpVehicleSuspension (hkClass 0x57c2f98 built at 0x78090, the string
+ * 0x14bf7d2: 0x20 bytes, parent hkReferencedObject, members at 0x169b640;
+ * vtable 0x16a4000, stored only by destructors, slot 5 pure). */
+class hknpVehicleSuspension : public hkReferencedObject
+{
+  public:
+    /* hknpVehicleSuspension::SuspensionWheelParameters (hkClass 0x57c2f18
+     * built at 0x77fed: 0x30 bytes, records at 0x169b5c0). */
+    struct SuspensionWheelParameters {
+        hkVector4 hardpointChassisSpace;
+        hkVector4 directionChassisSpace;
+        float length;
+    };
+
+    hknpVehicleSuspension(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), wheelParams(flag)
+    {
+    }
+
+    /* Out of line (0x14deb0, slot 0): the wheels' parameters given back;
+     * the deleting destructor (0x14df10, slot 1) frees at the recorded
+     * size, 0x20 by default. */
+    virtual ~hknpVehicleSuspension();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 5, pure; named after the default suspension's overrider
+     * (0x14dfa0), its parameters not recovered. derived name. */
+    virtual void FUN_0014dfa0() = 0;
+
+    hkArray<SuspensionWheelParameters> wheelParams;
 };
 
 /* hknpVehicleDefaultSuspension: vtable 0x16a4040, finish callback FUN_0003e590. */
@@ -9431,6 +9475,28 @@ struct hkPackfileHeader {
  * FUN_00061060, 2 the grid's FUN_00060c10). The grid's fields from that
  * lookup: two axes at +0x60 and +0x70 with their offsets at +0x40 and
  * +0x50, the cells in a row at +0x80 and the index mask at +0x84. */
+/* The space splitters' base (derived name; vtable 0x16994b0, D14): 0x28
+ * bytes; its constructor 0x605b0 stores the kind. The derived splitters'
+ * vtables 0x16994e0 and 0x1699510 keep its destructors. */
+class hknpSpaceSplitter : public hkBaseObject /* derived name */
+{
+  public:
+    /* Out of line (0x604d0, slot 0): the array given back; the deleting
+     * destructor (0x60530, slot 1) frees the 0x28 bytes. */
+    virtual ~hknpSpaceSplitter();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 3, pure: the splitter moved by an offset; named after the
+     * grid's overrider (0x61280, which adds it to the vectors at +0x70).
+     * derived name. */
+    virtual void FUN_00061280(const Vec4 &offset) = 0;
+
+    hkArray<u16> unknown8; /* 2-byte entries */
+    int type;              /* derived name */
+    u8 unknown1c[0xc];
+};
+
 /* A 32-byte record the splitter's count walks (derived names): count
  * entries of stride bytes from data, each with a word at +0xc. */
 struct SplitterRecord0018e380 /* derived name */

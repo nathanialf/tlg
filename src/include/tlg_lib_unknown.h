@@ -906,9 +906,32 @@ struct Object0003ea60 {
  * destructor FUN_0005a230 restores the vtable and frees the arrays; the
  * destructors of two derived classes (vtable 0x1699260 at 0x5a150, and
  * 0x5a14b's) end by running it. */
-struct RefArrays0005a230 /* derived name */
+class RefArrays0005a230 : public hkReferencedObject /* derived name */
 {
-    u8 unknown0[0x70]; /* the size its deleting destructor 0x6b7d0 frees */
+  public:
+    /* 0x6bc50: over the world (stored at +0x10), the arrays sized from it
+     * (the world builds it at 0x49594 and, under the derived class, at
+     * 0x5a349). */
+    RefArrays0005a230(hknpWorld *world);
+
+    u8 unknown10[0x60]; /* to the size its deleting destructor 0x6b7d0 frees */
+};
+
+/* The class built over it by hknpWorld's constructor (0x494ff) when the
+ * world's construction info asks for it (+0x71): 0x90 bytes, two more
+ * arrays (vtable 0x1699260, D14; destructors 0x5a0b0 and 0x5a150 end in
+ * the base's 0x5a230). derived name after its constructor. */
+class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
+{
+  public:
+    /* 0x5a340 */
+    RefArrays0005a340(hknpWorld *world);
+
+    /* Out of line (0x5a0b0, slot 0; 0x5a150, slot 1). */
+    virtual ~RefArrays0005a340();
+
+    hkArray<u8[0x28]> unknown70; /* 0x28-byte elements */
+    hkArray<u8[0x18]> unknown80; /* 0x18-byte elements */
 };
 
 void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
@@ -1965,6 +1988,16 @@ inline void hkReferencedObjectLock::operator delete(void *object, unsigned long 
 }
 
 inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpPrepareNewPairsTask::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpVehicleSuspension::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

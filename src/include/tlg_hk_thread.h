@@ -448,8 +448,34 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
                                 public hknpTaskInterface /* derived name */
 {
   public:
+    /* Out of line (0x15b410, slot 0; its thunk from the task interface at
+     * +0x10, 0x15b500, has the body inlined): the inplace array's storage
+     * given back when it outgrew the object; the deleting destructor
+     * (0x15b470, thunk 0x15b560) frees at the recorded size, 0x480 by
+     * default. */
+    virtual ~hknpPrepareNewPairsTask();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* slot 5 (0x15b7a0) */
+    virtual void process();
     /* slot 6 (0x15b740) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    /* The three pointers and two more the constructor 0x15b6c0 stores
+     * (+0x440 and +0x470). Whatever holds +0x470 is an array element, not
+     * a field of its own: the interface thunk 0x15b560 addresses the
+     * members from the interface pointer, which InstCombine does only
+     * when the -0x10 GEP ends in an array index (with a pointer field at
+     * +0x470 it ends there and every member is addressed from the
+     * adjusted pointer: `add rbx, -0x10`). */
+    void *unknown18;                    /* derived name */
+    void *unknown20;                    /* derived name */
+    void *unknown28;                    /* derived name */
+    hkInplaceArray<u32, 256> unknown30; /* derived name */
+    void *unknown440;                   /* derived name */
+    u8 unknown448[0x38];
 };
 
 /* The narrow phase's pairs task (derived name; vtables 0x16a4ee0 and

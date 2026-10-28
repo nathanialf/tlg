@@ -1456,3 +1456,13 @@ FUN_00092220 src/libs/unknown/func_00092220.cpp _ZN18hkBlockStreamRange12FUN_000
 FUN_00092e70 src/libs/unknown/func_00092e70.cpp _ZN9RefArrays12FUN_00092e70EP14RefArraysOwner
 FUN_0016ae20 src/libs/unknown/func_0016ae20.cpp _ZNK25hknpScaledConvexShapeBase12FUN_0016ae20EPDv4_fi
 FUN_00151d30 src/libs/unknown/func_00151d30.cpp _ZNK34hknpVehicleDriverInputAnalogStatus12FUN_00151d30Ev
+FUN_0002a560 src/libs/unknown/func_0002a560.cpp _ZN16hkMassProperties12FUN_0002a560ERKDv4_f
+_ZN21hknpVehicleSuspensionD1Ev src/libs/unknown/func_0014deb0.cpp
+_ZN21hknpVehicleSuspensionD0Ev src/libs/unknown/func_0014deb0.cpp
+_ZN17hknpSpaceSplitterD1Ev src/libs/unknown/func_000604d0.cpp
+_ZN17hknpSpaceSplitterD0Ev src/libs/unknown/func_000604d0.cpp
+_ZN17RefArrays0005a340C1EP9hknpWorld src/libs/unknown/func_0005a340.cpp
+_ZN23hknpPrepareNewPairsTaskD1Ev src/libs/unknown/func_0015b410.cpp
+_ZN23hknpPrepareNewPairsTaskD0Ev src/libs/unknown/func_0015b410.cpp
+FUN_0015b500 src/libs/unknown/func_0015b410.cpp _ZThn16_N23hknpPrepareNewPairsTaskD1Ev
+FUN_0015b560 src/libs/unknown/func_0015b410.cpp _ZThn16_N23hknpPrepareNewPairsTaskD0Ev
