@@ -1440,3 +1440,34 @@ already shown).
 **Trigger to revisit.** A library function whose base keeps `shr; and`
 on a contiguous mask the combine would have converted, or a matched row
 that fails under the patch; either reopens the mechanism.
+
+## D30. The library region was built with debug information (2026-10-28)
+
+**Decision.** The library prefix's flags carry `-g`. Nothing else
+changes: the gate compares the loaded segments, which debug information
+does not touch, and every row holds under it.
+
+**Why.** Round 31 measured the executable for loads the compiler refused
+to fold into their one user (`cmpfold.py`): the library region has 6
+such 32-bit sites against 742 folded, the game region 1 against 33,185;
+round 43 added the 64-bit census, 2 refused (0x15f6 in FUN_000015c0,
+0x13c4d in FUN_00013c10) against 356 folded. Round 31 also found that
+FUN_0017a290 matches only under `-g` and only with the loaded value in a
+named local, and that `gate-all` holds under `-g` on every row, but left
+the mechanism open. Round 43's worker found it:
+`lib/CodeGen/PeepholeOptimizer.cpp:431` in 3.3 folds a load into its
+user when the register `hasOneUse`, a count that includes the
+`DBG_VALUE` a named local's debug information adds, so under `-g` a
+load held in a named local keeps its own instruction; 3.6.2 counts
+`hasOneNonDBGUse` (`:325`, `:1006`). The refused folds are therefore the
+mark of debug information in the 3.3 generation, and the game's single
+site is noise under a compiler that no longer counts them. Under `-g`
+FUN_000015c0 (93 bytes) and FUN_0017bb80 (94 bytes) match as written
+with their values in named locals (`mid`, `compiled`), and the gate
+holds on every row (the harvest commit of round 43). A named local is
+the developer's form, not a crutch: it is what the debug information
+describes.
+
+**Trigger to revisit.** A library function whose base folds a load that
+a named local must hold, or a matched row that fails under `-g`; either
+reopens the mechanism.
