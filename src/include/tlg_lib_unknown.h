@@ -2297,6 +2297,16 @@ inline void hkxMesh::UserChannelInfo::operator delete(void *object, unsigned lon
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxTextureFile::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkVtableClassRegistry::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkpLimitedHingeConstraintData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

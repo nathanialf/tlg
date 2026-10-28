@@ -55,6 +55,11 @@ enum hkResult {
  * table; the motion construction info's limits start at it, 0x1590c9). */
 #define HK_REAL_HIGH 1.8446726e+19f
 
+/* Havok's smallest float step at one (its HK_REAL_EPSILON, the float
+ * epsilon 1.192092896e-07f: the rack and pinion's slot 7 compares with it,
+ * 0x83688). */
+#define HK_REAL_EPSILON 1.192092896e-07f
+
 /* A copy of 16-byte quads (derived names): the source and destination
  * stepped together, the source first, until the count runs out
  * (hkIndexedTransformSet's matrix copies 0x23700 and 0x23770 pass four
@@ -3318,6 +3323,12 @@ inline Vec4 rotatedInverseDir(const hkQuaternion &q, const Vec4 &v) /* derived n
 /* hkQTransform (the reflection's type name): a rotation as a quaternion and
  * a translation. derived field names. */
 struct hkQTransform {
+    /* Whether two transforms are within epsilon of each other: the
+     * quaternions in every lane, the second's sign flipped to the first's
+     * side, and the translations in x, y and z (0x903d0; the world asks it
+     * at 0x4c0e7 and 0x4f79a). derived name. */
+    bool FUN_000903d0(const hkQTransform &other, float epsilon) const;
+
     hkQuaternion rotation; /* derived name */
     Vec4 translation;      /* derived name */
 };
@@ -6758,18 +6769,34 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
 /* hkpRackAndPinionConstraintData (hkClass 0x57c4188, built at 0x7d1ee, 0xc0
  * bytes, parent hkpConstraintData; vtable 0x16a0200): atoms at +0x20 (record
  * table 0x169cd00: transforms at +0, rackAndPinion at +0x90). */
+/* hkpRackAndPinionConstraintAtom (0x10 bytes, member records from
+ * 0x169e420). */
+struct hkpRackAndPinionConstraintAtom {
+    u16 type; /* derived name */
+    float pinionRadiusOrScrewPitch;
+    hkBool isScrew;
+    s8 memOffsetToInitialAngleOffset;
+    s8 memOffsetToPrevAngle;
+    s8 memOffsetToRevolutionCounter;
+    u8 padding[4];
+};
+
 class hkpRackAndPinionConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom transforms;
-        u8 rackAndPinion[0x10];
+        hkpRackAndPinionConstraintAtom rackAndPinion;
     };
 
     /* The finish constructor (0x7d080): the atoms are left as loaded. */
     hkpRackAndPinionConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpRackAndPinionConstraintData();
+
+    /* Slot 7 (0x83630): both frames orthonormal and the pinion's radius or
+     * the screw's pitch not zero. */
+    hkBool unknownVirtual7() const;
 
     void FUN_000836c0(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
@@ -8570,8 +8597,31 @@ class hkBufferedStreamWriter : public hkStreamWriter
     hkBufferedStreamWriter(void *memory, int memorySize, hkBool memoryIsString);
 
     hkBool FUN_00009260() const; /* vtable slot 5; derived name */
+    /* Slot 7 (0x91f0): the buffer written out, then the stream flushed.
+     * derived name. */
+    void FUN_000091f0();
     hkBool FUN_00009280() const; /* vtable slot 8; derived name */
-    int FUN_00009380() const;    /* vtable slot 10; derived name */
+
+    /* The buffered bytes written to the stream until it takes no more;
+     * emptied when all went (0x91f0 inline). derived name. */
+    void flushBuffer()
+    {
+        if (stream) {
+            const int bytesLeft = bufferSize;
+            int bytesWritten = 0;
+            while (bytesWritten < bytesLeft) {
+                const int thisWrite =
+                    stream->write(buffer + bytesWritten, bytesLeft - bytesWritten);
+                bytesWritten += thisWrite;
+                if (thisWrite == 0) {
+                    return;
+                }
+            }
+            bufferSize = 0;
+        }
+    }
+
+    int FUN_00009380() const; /* vtable slot 10; derived name */
 
     hkStreamWriter *stream; /* derived name */
     /* The buffer, the bytes in it and its capacity, as the constructor
@@ -9128,8 +9178,13 @@ class hkxTextureFile : public hkReferencedObject
      * finished in order. */
     hkxTextureFile(hkFinishLoadedObjectFlag flag);
 
-    /* Slot 0 (0x87830): the three strings destroyed, the last first. */
+    /* Slot 0 (0x87830): the three strings destroyed, the last first; the
+     * deleting destructor (0x87870, slot 1) runs it and frees through the
+     * class's delete. */
     virtual ~hkxTextureFile();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000878e0 */
 
@@ -9209,6 +9264,34 @@ class hkArrayStreamWriter : public hkStreamWriter
  * at +0x68, wheelsInfo (array of hknpVehicleInstance::WheelInfo)
  * at +0x80, torque and rpm (hkReal) at +0xf8 and +0xfc, mainSteeringAngle
  * at +0x100. */
+/* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
+ * when it names no body. */
+struct hknpBodyId {
+    u32 value; /* derived name */
+};
+
+/* hkContactPoint (its member records at 0x168d9b0): position and
+ * separatingNormal, the distance in the normal's w. */
+struct hkContactPoint {
+    Vec4 position;
+    Vec4 separatingNormal;
+};
+
+/* What a wheel collide reports for a wheel (derived names, after the
+ * wheel info's members it fills): the contact point, the friction, the
+ * body and shape key, the suspension's length, its closing speed and its
+ * scaling factor. */
+struct WheelCollideOutput /* derived name */
+{
+    hkContactPoint contactPoint;
+    float contactFriction;
+    hknpBodyId contactBodyId;
+    u32 contactShapeKey;
+    float currentSuspensionLength;
+    float suspensionClosingSpeed;
+    float suspensionScalingFactor;
+};
+
 /* hknpVehicleWheelCollide (hkClass 0x57c1510, built at 0x5b2a1, 0x18 bytes,
  * parent hkReferencedObject, member records at 0x16992b0; vtable 0x169af50,
  * no type info, slots 5 to 9 pure): alreadyUsed (hkBool) at +0xc, type (the
@@ -9268,6 +9351,12 @@ class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
     }
 
     virtual ~hknpVehicleRayCastWheelCollide();
+
+    /* Slot 15 (0x159010): a wheel's output when its ray hits nothing: at
+     * the ray's end, against the suspension's direction, the suspension
+     * fully extended. derived name. */
+    void FUN_00159010(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                      WheelCollideOutput &output) const;
 };
 
 class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
@@ -9281,12 +9370,11 @@ class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
     }
 
     virtual ~hknpVehicleLinearCastWheelCollide();
-};
 
-/* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
- * when it names no body. */
-struct hknpBodyId {
-    u32 value; /* derived name */
+    /* Slot 14 (0x179700): the same body as the ray cast's slot 15, for a
+     * cast that hits nothing. derived name. */
+    void FUN_00179700(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                      WheelCollideOutput &output) const;
 };
 
 /* The argument of hknpVehicleInstance's slot 8 (derived name): a pointer at
@@ -9328,7 +9416,10 @@ class hknpUnaryAction : public hknpAction
 class hknpVehicleInstance : public hknpUnaryAction
 {
   public:
-    hknpVehicleInstance(hkFinishLoadedObjectFlag flag) : hknpUnaryAction(flag), world(0) {}
+    hknpVehicleInstance(hkFinishLoadedObjectFlag flag)
+        : hknpUnaryAction(flag), world(0), wheelsInfo(flag)
+    {
+    }
 
     virtual ~hknpVehicleInstance();
 
@@ -9360,10 +9451,40 @@ class hknpVehicleInstance : public hknpUnaryAction
      * second argument is not read. derived name. */
     void FUN_00162db0(const void *argument1, Slot16Output &out) const;
 
+    /* hknpVehicleInstance::WheelInfo (0xc0 bytes, member records from
+     * 0x16987a0). */
+    struct WheelInfo {
+        hkContactPoint contactPoint;
+        float contactFriction;
+        hknpBodyId contactBodyId;
+        u32 contactShapeKey;
+        u8 unknown2c[4];
+        Vec4 hardPointWs;
+        Vec4 rayEndPointWs;
+        float currentSuspensionLength;
+        u8 unknown54[0xc];
+        Vec4 suspensionDirectionWs;
+        Vec4 spinAxisChassisSpace;
+        Vec4 spinAxisWs;
+        hkQuaternion steeringOrientationChassisSpace;
+        float spinVelocity;
+        float noSlipIdealSpinVelocity;
+        float spinAngle;
+        float skidEnergyDensity;
+        float sideForce;
+        float forwardSlipVelocity;
+        float sideSlipVelocity;
+        u8 unknownBc[4];
+    };
+
     void *world;
-    u8 unknown28[0x40];
+    u8 unknown28[0x30];
+    hknpVehicleSuspension *suspension;
+    u8 unknown60[8];
     hknpVehicleWheelCollide *wheelCollide;
-    u8 unknown70[0x84];
+    u8 unknown70[0x10];
+    hkArray<WheelInfo> wheelsInfo;
+    u8 unknown90[0x64];
     hkBool tryingToReverse; /* record 0x1698d18 */
     u8 unknownF5[3];
     float torque; /* record at 0x1698a70's nineteenth */
@@ -10369,8 +10490,12 @@ class hkVtableClassRegistry : public hkReferencedObject
     static void *operator new(unsigned long numBytes);
 
     /* Slot 0 (0x184360): the map's entries given back to the container
-     * allocator, then the map's destructor. */
+     * allocator, then the map's destructor; the deleting destructor
+     * (0x1843a0, slot 1) runs it and frees through the class's delete. */
     virtual ~hkVtableClassRegistry();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     virtual void FUN_00184520(const void *vtable,
                               const hkClass *klass);               /* vtable slot 5; derived name */
@@ -10673,6 +10798,49 @@ void FUN_001856f0(const void *tree, const void *argument2, TreeKeyBatch001876e0 
                   const hkAabb &aabb); /* derived name */
 void FUN_001876e0(const void *tree, const void *argument2, TreeKeyCollector001876e0 *collector,
                   const hkAabb &aabb, int argument5); /* derived name */
+
+/* Three arrays the solver's setup describes for its tasks (derived names;
+ * the object at +0x10 of the step's context, 0x6dba1): elements of 0x40
+ * bytes at +0x10 and +0x20, of 0x30 bytes at +0x30. */
+struct SolverArrays0003f820 /* derived name */
+{
+    struct Element40 {
+        u8 unknown0[0x40];
+    };
+
+    struct Element30 {
+        u8 unknown0[0x30];
+    };
+
+    /* What 0x3f820 writes of one array (derived names): its element size,
+     * its count and its data. */
+    struct ArrayInfo {
+        int elementSize;
+        u8 unknown4[0xc];
+        int numElements;
+        u8 unknown14[4];
+        void *data;
+    };
+
+    /* The access mode in the low two bits and an id at +4 (derived
+     * names). */
+    struct Access {
+        u32 mode : 2;
+        u32 unknownBits : 30;
+        u8 id;
+        u8 unknown5[3];
+    };
+
+    /* The three arrays described, the last first, each with its access
+     * (0x3f820; the solver's setup calls it at 0x6dbb9 and 0x16e559).
+     * derived name. */
+    void FUN_0003f820(ArrayInfo *infosOut, Access *accessOut) const;
+
+    u8 unknown0[0x10];
+    hkArray<Element40> arrayA; /* derived name */
+    hkArray<Element40> arrayB; /* derived name */
+    hkArray<Element30> arrayC; /* derived name */
+};
 
 /* derived name: the box around the boxes' centres (FUN_001854b0; called at
  * 0x13e807, which then clears the result's key). */
