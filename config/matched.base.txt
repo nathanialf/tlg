@@ -1617,3 +1617,9 @@ FUN_00179700 src/libs/unknown/func_00179700.cpp _ZNK33hknpVehicleLinearCastWheel
 _ZN21hkVtableClassRegistryD0Ev src/libs/unknown/func_00184360.cpp
 FUN_00083630 src/libs/unknown/func_00083630.cpp _ZNK30hkpRackAndPinionConstraintData15unknownVirtual7Ev
 _ZN21FlaggedPoints00060c70C1Ei src/libs/unknown/func_00060c70.cpp
+_ZN12_GLOBAL__N_125DirectoryIterator0001bc80D1Ev src/libs/unknown/func_0001c010.cpp _ZN12_GLOBAL__N_125DirectoryIterator0001bc80D2Ev
+_ZN12_GLOBAL__N_125DirectoryIterator0001bc80D0Ev src/libs/unknown/func_0001c010.cpp
+FUN_00184f40 src/libs/unknown/func_00184f40.cpp
+_ZN25hknpCharacterStateManagerC1Ev src/libs/unknown/func_000359d0.cpp
+_ZN25hknpCharacterStateManagerD1Ev src/libs/unknown/func_000359d0.cpp
+_ZN25hknpCharacterStateManagerD0Ev src/libs/unknown/func_000359d0.cpp

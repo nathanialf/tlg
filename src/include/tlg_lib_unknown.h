@@ -1952,6 +1952,10 @@ class FiosFileSystem : public hkReferencedObject /* derived name */
     hkStreamWriter *FUN_0001a850(hkStreamWriter *writer, int flags);
     hkResult FUN_0001bbc0(const char *path); /* vtable slot 7; derived name */
     hkResult FUN_0001bbe0(const char *path); /* vtable slot 8; derived name */
+    /* Slot 10 (0x1bc80): a listing of the directory (the current one for an
+     * empty path) whose names pass the pattern, or null when it does not
+     * open; the iterator's class is local to the file. derived name. */
+    hkReferencedObject *FUN_0001bc80(const char *path, const char *pattern);
 };
 
 /* A reader interface whose slot 9 seeks and slot 10 tells (derived names):
@@ -2332,6 +2336,11 @@ inline void hkTypeInfoRegistry::operator delete(void *object, unsigned long numB
     freeReferencedObject(object, numBytes);
 }
 
+inline void *hkDynamicClassNameRegistry::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void hkDynamicClassNameRegistry::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -2699,11 +2708,26 @@ struct hknpCharacterOutput /* derived name */
     Vec4 velocity; /* derived name */
 };
 
-/* The state manager (derived name): a reference-counted object the
- * context holds a reference to; FUN_00035c40 returns its handler for a
- * state. */
+/* The state manager (derived name; vtable 0x1692eb0): a reference-counted
+ * object of 0x68 bytes the context holds a reference to, eleven state
+ * pointers by id from +0x10 (the game registers its states into them from
+ * 0xea9c20); FUN_00035c40 returns its handler for a state. */
 class hknpCharacterStateManager : public hkReferencedObject /* derived name */
 {
+  public:
+    /* 0x359d0: no state registered. */
+    hknpCharacterStateManager();
+
+    /* 0x35b10: each registered state's reference released; the deleting
+     * destructor 0x35a40 runs it and frees through the class's delete. */
+    virtual ~hknpCharacterStateManager();
+
+    static void operator delete(void *object, unsigned long numBytes)
+    {
+        freeReferencedObject(object, numBytes);
+    }
+
+    hkReferencedObject *registeredState[11]; /* derived name */
 };
 
 /* The character context (vtable 0x16969d0, address point 0x16969e0, D14's

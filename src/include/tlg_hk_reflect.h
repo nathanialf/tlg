@@ -10428,7 +10428,14 @@ class hkTypeInfoRegistry : public hkReferencedObject
 class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
 {
   public:
+    /* Inline in the creators (0x184f40, 0x17e9a0): the name stored, the map
+     * built out of line. */
+    hkDynamicClassNameRegistry(const char *registryName) : name(registryName) {}
+
     virtual ~hkDynamicClassNameRegistry();
+
+    /* The class allocator inline, as hkTypeInfoRegistry's (0x184f65). */
+    static void *operator new(unsigned long numBytes);
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
      * destructor 0x17ec30 (hkDefaultClassNameRegistry's slot 1 too) frees at the recorded size, 0x30 by default. */
@@ -10456,6 +10463,9 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
 class hkDefaultClassNameRegistry : public hkDynamicClassNameRegistry
 {
   public:
+    /* Named for the Havok version (the string 0x14b3b02 at +0x10). */
+    hkDefaultClassNameRegistry() : hkDynamicClassNameRegistry("hk_2014.2.0-r1") {}
+
     virtual ~hkDefaultClassNameRegistry();
 };
 
