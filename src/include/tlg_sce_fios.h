@@ -12,7 +12,20 @@ typedef long SceFiosSize;   /* derived name: a 64-bit byte count */
 struct SceFiosOpAttr;       /* derived name: the operation's attributes, null for the defaults */
 typedef int SceFiosOp;      /* derived name: a 32-bit asynchronous operation */
 
+/* A path's status (derived names): its size, three dates and its flags,
+ * bit 0 of which the file system's slot 9 turns into the entry's kind (read at
+ * 0x1bc3a); 0x50 bytes on the caller's stack. */
+struct SceFiosStat {
+    SceFiosOffset fileSize;
+    long accessDate;
+    long modificationDate;
+    long creationDate;
+    unsigned int statFlags;
+    unsigned char reserved[0x2c];
+};
+
 extern "C" {
+int sceFiosStatSync(const SceFiosOpAttr *attr, const char *path, SceFiosStat *stat);
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
 int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);

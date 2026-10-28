@@ -226,18 +226,10 @@ void FUN_000319f0(const Pair08Owner *self, void *argument2, void *argument3, voi
 void FUN_0002b390(Pair08Owner *self,
                   bool enable); /* derived name: sets or clears bit 2 of the byte at +1 */
 
-/* The object handed to FUN_0002b180 and FUN_0002b3b0 before the record
- * (FUN_0003d7d0 passes the one embedded at +0x390 of its second argument):
- * vectors at +0x20, +0x40 and +0x120, a float at +0x130. */
-struct Info0002b180 /* derived name */
-{
-    u8 unknown0[0x40];
-    Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
-    u8 unknown50[0xc0];
-    float value110; /* derived name; read by 0x2b670 */
-    u8 unknown114[0x1c];
-    float value130; /* derived name; read by 0x2b620 */
-};
+/* The object handed to FUN_0002b180 and FUN_0002b3b0 before the record is
+ * the world's solver settings at +0x390 (FUN_0003d7d0 passes the one
+ * embedded at +0x390 of its second argument). */
+typedef hknpSolverInfo Info0002b180;
 
 /* The values B of the record's first four entries, scaled by the product of
  * the info's +0x130 and the first lane of its +0x40 and negated, into a
@@ -249,13 +241,60 @@ void FUN_0002b670(const Info0002b180 *info, const float *values,
                   Pair08Owner *self); /* derived name */
 
 /* FUN_0002b3b0's output: an int at +0, a float at +4, a vector at +0x10,
- * floats from +0x30 and vectors from +0x40, one per entry. */
-struct Output0002b3b0; /* derived name */
+ * floats from +0x30 and vectors from +0x40, one per entry (the character
+ * proxy's contact handler 0x176d5e walks the floats from the count at +0;
+ * a count of -1 marks one not computed yet, 0x409aa). derived names. */
+struct Output0002b3b0 /* derived name */
+{
+    int numEntries;
+    float value4;
+    u8 unknown8[8];
+    Vec4 vector10;
+    u8 unknown20[0x10];
+    float values[4];
+    Vec4 vectors[4];
+};
 
 void FUN_0002b180(const Info0002b180 *info, Pair08Owner *self, const Vec4 &a,
                   const Vec4 &b); /* derived name */
 void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion *motionA,
                   const hknpMotion *motionB, Output0002b3b0 *out); /* derived name */
+void FUN_00034920(Pair08Owner *self, const Info0002b180 *info, const hknpMotion *motionA,
+                  const hknpMotion *motionB, Output0002b3b0 *out); /* derived name */
+
+/* What the character proxy's signal hands over second (derived names;
+ * hknpCharacterProxy's slot 5, 0x176cc0, reads it): the two bodies' ids at
+ * +0xc and +0x14, a pointer at +0x28 to where the pair's jacobian record
+ * sits (a block and an offset in it, flags at +0x26), and the record's
+ * output at +0x30 once computed. FUN_000409a0 returns that output,
+ * computing it into the buffer first when it is not there yet (the count
+ * -1). */
+struct JacobianLocation000409a0 /* derived name */
+{
+    u8 unknown0[0x26];
+    u8 flags; /* derived name: the handler skips the pair under 0x20 */
+    u8 unknown27;
+    char *block;     /* derived name */
+    u16 blockOffset; /* derived name */
+
+    Pair08Owner *record() const
+    {
+        return reinterpret_cast<Pair08Owner *>(block + blockOffset);
+    }
+};
+
+struct hknpCharacterProxySignalData /* derived name */
+{
+    const Output0002b3b0 *FUN_000409a0(const hknpWorld *world, Output0002b3b0 *buffer) const;
+
+    u8 unknown0[0xc];
+    u32 bodyIdA; /* derived name */
+    u8 unknown10[4];
+    u32 bodyIdB; /* derived name */
+    u8 unknown18[0x10];
+    const JacobianLocation000409a0 *jacobian; /* derived name */
+    Output0002b3b0 output;                    /* derived name */
+};
 
 /* The cell index of the motion of the record's first and second body (the
  * ints at +8 and +0xc index the world's bodies). */
@@ -427,7 +466,9 @@ struct ElementPool00198a20 /* derived name */
 class AllocatorInterface /* derived name */
 {
   public:
-    virtual ~AllocatorInterface();
+    /* Empty and inline: LargeBlockAllocator's destructor (0x12370) calls
+     * nothing for its second base. */
+    virtual ~AllocatorInterface() {}
 
     virtual void FUN_00003140() = 0;                        /* slot 2; derived name */
     virtual void FUN_000032e0(int value) = 0;               /* slot 3; derived name */
@@ -539,6 +580,10 @@ class SingleBlockAllocator : public AllocatorBase /* derived name */
      * peak; the rest of the block is available and the block the largest. */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
 
+    /* Slots 2 and 3, not read yet. */
+    virtual void *blockAlloc(int numBytes);
+    virtual void blockFree(void *pointer, int numBytes);
+
     char *start; /* derived name */
     char *limit; /* the block's end; derived name */
     char *end;   /* derived name */
@@ -574,7 +619,22 @@ class LargeBlockAllocator : public AllocatorBase, public AllocatorInterface /* d
      * size can be had, tried by allocating one and freeing it again. */
     virtual bool FUN_00002230(int numBytes);
 
-    u8 unknown10[0x190];
+    /* A page the allocator took from its server, kept on a ring through
+     * +8 with its size at +0x14 (the destructor 0x12370 walks the ring
+     * from the sentinel at +0x178). derived names. */
+    struct Page {
+        u8 unknown0[8];
+        Page *next;
+        u8 unknown10[4];
+        int size;
+    };
+
+    u8 unknown10[0x128];
+    SingleBlockAllocator blockAllocator; /* derived name; the constructor builds it in place */
+    AllocatorBase *server;               /* derived name */
+    u8 unknown168[0x10];
+    Page pages; /* derived name: the ring's sentinel */
+    u8 unknown190[0x10];
     u64 totalBlockBytes;   /* derived name */
     u64 totalPayloadBytes; /* derived name */
 };
@@ -639,10 +699,18 @@ class PageAllocator : public hkReferencedObject /* derived name */
      * name. */
     virtual void FUN_00019c80(MemoryStatistics &statistics) const; /* derived name */
 
-    u8 unknownC[0x14];
+    /* 0x195c0 (the game builds one at 0xe996d5 and 0xea4fdf): the lock
+     * with no spin count, no pages, a zero peak, then the initial pages
+     * when a size is given. */
+    PageAllocator(int initialBytes);
+
+    /* Pages for numBytes more (0x19640). derived name. */
+    void FUN_00019640(int numBytes);
+
+    hkCriticalSection lock;    /* derived name */
     hkArray<void *> pages;     /* derived name */
     hkArray<void *> freePages; /* derived name */
-    u64 peakBytesInUse;        /* derived name; the deleting destructor frees 0x48 */
+    int peakBytesInUse; /* derived name; slot 8 returns it; the deleting destructor frees 0x48 */
 };
 
 /* The memory system (derived name): a polymorphic object whose instance
@@ -2008,6 +2076,10 @@ class FiosFileSystem : public hkReferencedObject /* derived name */
     hkStreamWriter *FUN_0001a850(hkStreamWriter *writer, int flags);
     hkResult FUN_0001bbc0(const char *path); /* vtable slot 7; derived name */
     hkResult FUN_0001bbe0(const char *path); /* vtable slot 8; derived name */
+    /* Slot 9 (0x1bc00): the entry of a path from its status, its kind 1 or
+     * 2 from bit 0 of the status flags; a failure when there is no status.
+     * derived name. */
+    hkResult FUN_0001bc00(const char *path, FileSystemEntry &entry);
     /* Slot 10 (0x1bc80): a listing of the directory (the current one for an
      * empty path) whose names pass the pattern, or null when it does not
      * open; the iterator's class is local to the file. derived name. */
@@ -2438,6 +2510,11 @@ inline void hkxMaterialShader::operator delete(void *object, unsigned long numBy
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkcdPlanarGeometryVertexStorage::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkVtableClassRegistry::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -2639,6 +2716,11 @@ inline void hkpConstraintData::operator delete(void *object, unsigned long numBy
     freeReferencedObject(object, numBytes);
 }
 
+inline void *hkpConstraintMotor::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void hkpConstraintMotor::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -2836,8 +2918,11 @@ struct hknpCharacterInput /* derived name */
      * then how well it supports the character (2: supported). */
     hkBool isSurfaceDynamic; /* derived name */
     u8 supportedState;       /* derived name */
-    u8 unknown42[0x4e];
+    u8 unknown42[0xe];
+    Vec4 surfaceNormal; /* derived name: the climbing state jumps off along it */
+    u8 unknown60[0x30];
     Vec4 velocity; /* derived name: the character's, at +0x90 */
+    Vec4 gravity;  /* derived name: its length is the climbing state's jump speed */
 };
 
 struct hknpCharacterOutput /* derived name */
@@ -2955,6 +3040,18 @@ inline void hknpFirstPersonGun::operator delete(void *object, unsigned long numB
 {
     freeReferencedObject(object, numBytes);
 }
+
+/* The climbing state (derived name; its vtable 0x16968c0 has no type info
+ * and no row; slot 7 is 0x3e430). */
+class hknpCharacterStateClimbing : public hkReferencedObject /* derived name */
+{
+  public:
+    /* Slot 7 (0x3e430): off the ladder, the character is in the air
+     * (state 2); a jump pushes it off along the surface's normal at the
+     * speed of gravity's length first. derived name. */
+    void FUN_0003e430(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output);
+};
 
 /* The world's set of default modifiers (derived name; vtable 0x16991e0,
  * address point 0x16991f0, no type info; built inline by 0x48b20 at

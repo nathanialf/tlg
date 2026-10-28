@@ -77,6 +77,20 @@ inline void memCpy16(void *dst, const void *src, int numQuads) /* derived name *
     }
 }
 
+/* A copy of 4-byte words, counted up (a command copied into its block
+ * stream, 0x90540: `dec; jne`, where the quad copy's `while (n--)` gives
+ * `neg; inc; jne`). derived name. */
+inline void memCpy4(void *dst, const void *src, int numWords) /* derived name */
+{
+    u32 *d = static_cast<u32 *>(dst);
+    const u32 *s = static_cast<const u32 *>(src);
+    for (int i = 0; i < numWords; i++) {
+        *d = *s;
+        s++;
+        d++;
+    }
+}
+
 /* Fills of 4-byte words and 16-byte quads (derived names): the count
  * stepped down to zero, one element stored a step (0x17a360 fills an
  * object either way). */
@@ -1684,6 +1698,15 @@ class hkcdPlanarEntity : public hkReferencedObject
     hkReferencedObject *debugger;
 };
 
+/* hkcdFractureEngine (hkClass 0x57b9d20, built at 0x1c740: size 0x10,
+ * parent hkReferencedObject's, no members): its four enums, SplitResult,
+ * Type, ExecutionFlagValues and Topology, are the records at 0x168ede0. */
+class hkcdFractureEngine : public hkReferencedObject
+{
+};
+
+extern const hkClassEnum D_168ede0[]; /* derived name */
+
 /* hkcdShape (type info 0x57b9ed0, vtable 0x168f2f0): its finish
  * constructor FUN_0001cf40 is out of line, called by the finish callback
  * 0x1ca80 and by the reflection initializer at 0x1ccfe on a temporary; it
@@ -1806,7 +1829,12 @@ class hkcdPlanarGeometryVertexStorage /* derived name */
       public hkArray<hkcdPlanarGeometryVertex>
 {
   public:
+    /* Slot 0 (0x9a760); the deleting destructor 0x9a7b0 runs it inline and
+     * frees through the class's delete. */
     virtual ~hkcdPlanarGeometryVertexStorage();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 };
 
 struct hkcdPlanarGeometry : public hkcdPlanarEntity {
@@ -2138,6 +2166,9 @@ class hknpSurfaceVelocity : public hkReferencedObject
                                 const void *argument3, hkVector4 *HK_RESTRICT linearVelocityOut,
                                 hkVector4 *HK_RESTRICT angularVelocityOut) const = 0;
 };
+
+/* Its one enum, Space (its records at 0x1699770). */
+extern const hkClassEnum D_1699770[]; /* derived name */
 
 /* hknpCircularSurfaceVelocity: vtable 0x16a4f50, finish callback
  * FUN_0003af50; hkClass built at 0x3afe2 (0x30 bytes, parent
@@ -3257,6 +3288,9 @@ class hkMeshVertexBufferUtil /* derived name */
     static hkResult FUN_000ab4f0(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
                                  int elementIndex, const int *values); /* derived name */
 };
+
+/* hkMeshBody's one enum, PickDataIdentifier (its records at 0x1691e50). */
+extern const hkClassEnum D_1691e50[]; /* derived name */
 
 /* hkMeshBody, its parent (hkClass 0x57bd408, built at 0x246ae), a
  * hkReferencedObject with no members of its own. */
@@ -5183,9 +5217,14 @@ class hknpWorldQualitySlot : public hkSlot /* derived name */
 };
 
 /* The world's solver settings (derived name; at +0x390 of the world). */
+/* The jacobian helpers take it too (FUN_0002b180, FUN_0002b3b0 and
+ * FUN_0003d7d0's neighbours pass the world's +0x390): vectors at +0x20,
+ * +0x40 and +0x120, floats at +0x110 and +0x130. */
 struct hknpSolverInfo /* derived name */
 {
-    u8 unknown0[0xb4];
+    u8 unknown0[0x40];
+    Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
+    u8 unknown50[0x64];
     /* The steps and the micro steps of each (the solve loop at 0x3fbab
      * counts them from the world's +0x444 and +0x44c). derived names. */
     int numSteps;
@@ -5193,7 +5232,11 @@ struct hknpSolverInfo /* derived name */
     int numMicroSteps;
     u8 unknownC0[0x30];
     Vec4 vectorF0;
-    u8 unknown100[0x60];
+    u8 unknown100[0x10];
+    float value110; /* derived name; read by 0x2b670 */
+    u8 unknown114[0x1c];
+    float value130; /* derived name; read by 0x2b620 */
+    u8 unknown134[0x2c];
 };
 
 /* One step of the solve (derived names): its index, the step's scale from
@@ -5742,10 +5785,40 @@ class hknpScaledConvexShape : public hknpScaledConvexShapeBase
  * 8 then looks the pair up in the map; hknpConstraintCollisionFilter (its
  * hkClass parent) keeps all five. */
 struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
+
+    /* A 12-byte entry (derived names): the pair of body ids it is keyed
+     * by, both 0x7fffffff when the slot is empty (0x167b64 stops its probe
+     * at one), and the value. */
+    struct Pair {
+        u32 bodyIdA;
+        u32 bodyIdB;
+        u32 value;
+    };
+
     /* An empty map: no storage, no elements, the hash modulus -1. */
     hknpPairCollisionFilterMapPairFilterKeyOverrideType() : elem(0), numElems(0), hashMod(-1) {}
 
-    void *elem;
+    /* Every slot emptied and the count zeroed, the storage kept; each entry
+     * read once for both halves of its key (0x167193). derived name. */
+    void clear()
+    {
+        const int capacity = hashMod + 1;
+        for (int i = 0; i < capacity; i++) {
+            Pair &entry = elem[i];
+            entry.bodyIdA = 0x7fffffff;
+            entry.bodyIdB = 0x7fffffff;
+        }
+        numElems &= DONT_DEALLOCATE_FLAG;
+    }
+
+    /* Every slot emptied and the storage given back to the allocator
+     * unless the map does not own it, then no storage (0x167170, called by
+     * the constraint filter's destructor at 0x159c6f with the containers'
+     * allocator). derived name. */
+    void FUN_00167170(AllocatorBase &allocator);
+
+    Pair *elem;
     int numElems;
     int hashMod;
 };
@@ -6609,6 +6682,8 @@ class hkpConstraintData : public hkReferencedObject
     hkUlong userData; /* the record's member (0x169d660) */
 };
 
+extern const hkClass D_57c45a8; /* hkpConstraintData's hkClass */
+
 /* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
  * transformB (hkTransform) at +0x10 and +0x50 (member records 0x169e560 and
  * 0x169e588), after the atom's type and padding. */
@@ -7305,12 +7380,23 @@ class hkpConstraintMotor : public hkReferencedObject
 
     hkpConstraintMotor(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    /* The class allocator's delete, which the motors share
-     * (tlg_lib_unknown.h's reference-counted form). */
+    /* The class allocator, which the motors share: a block of the thread's
+     * heap (the clones, 0x17b054), and the reference-counted delete
+     * (tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Its placement form, which the finish callbacks construct in place
+     * with. */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
 
     hkEnum<MotorType, s8> type; /* derived name */
 };
+
+extern const hkClass D_57c3af0; /* hkpConstraintMotor's hkClass */
 
 class hkpLimitedForceConstraintMotor : public hkpConstraintMotor
 {
@@ -7322,6 +7408,10 @@ class hkpLimitedForceConstraintMotor : public hkpConstraintMotor
     float minForce; /* name from the executable's strings; offset derived */
     float maxForce; /* name from the executable's strings; offset derived */
 };
+
+/* Its member records, minForce and maxForce (the reflection initializer
+ * 0x825d0 passes them). */
+extern const hkClassMember D_169f6e0[]; /* derived name */
 
 /* hkpPositionConstraintMotor (hkClass 0x57c30e8), hkpVelocityConstraintMotor
  * (hkClass 0x57c32e8) and hkpCallbackConstraintMotor (hkClass 0x57c3cc0),
@@ -7408,6 +7498,10 @@ class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
         : hkpLimitedForceConstraintMotor(flag)
     {
     }
+
+    /* Slot 5 (0x17b030): a copy from the thread's heap, each level's
+     * members copied after its vtable is stored. derived name. */
+    hkpConstraintMotor *FUN_0017b030() const;
 
     float springConstant; /* name from the strings; offset derived */
     float springDamping;  /* name from the strings; offset derived */
@@ -7751,6 +7845,10 @@ class hkpWrappedConstraintData : public hkpConstraintData
 
     hkpConstraintData *constraintData;
 };
+
+/* Its one member record, constraintData (the reflection initializer 0x7e350
+ * passes it). */
+extern const hkClassMember D_169d1c0[]; /* derived name */
 
 /* hknpBridgeConstraintAtom (hkClass 0x57c1808, built at 0x61667, 0x18
  * bytes, parent hkpConstraintAtom's 0x57c4650). */
@@ -9330,7 +9428,24 @@ class hknpHeightFieldShape : public hknpCompositeShape
 {
   public:
     hknpHeightFieldShape(hkFinishLoadedObjectFlag flag) : hknpCompositeShape(flag) {}
+
+    /* The members from its ten records at 0x1694c90 (the reflection
+     * initializer 0x398d0 passes them). */
+    u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
+    hkAabb aabb;
+    Vec4 floatToIntScale;
+    Vec4 intToFloatScale;
+    int intSizeX;
+    int intSizeZ;
+    int numBitsX;
+    int numBitsZ;
+    u8 minMaxTree[0x30]; /* an hknpMinMaxQuadTree (hkClass 0x57c1000), not recovered */
+    int minMaxTreeCoarseness;
+    hkBool includeShapeKeyInSdfContacts;
 };
+
+/* Its member records. */
+extern const hkClassMember D_1694c90[]; /* derived name */
 
 /* hknpCompressedHeightFieldShape (type info 0x57c2378; hkClass 0x57c2328,
  * built at 0x6958a: size 0x120, parent hknpHeightFieldShape's 0x57bf540;
@@ -10257,6 +10372,11 @@ class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
     /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
      * destructor (0x90460) frees at the recorded size, 0x38 by default. */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 5 (0x904f0): the command copied into the stream as it is, in
+     * 4-byte words, its padded size reserved and counted as one element.
+     * derived name. */
+    void FUN_000904f0(const struct hkCommand &command);
 
     hkBlockStreamWriter writer; /* derived name */
     u8 unknown30[8];            /* to the 0x38 bytes the deleting destructor frees */
