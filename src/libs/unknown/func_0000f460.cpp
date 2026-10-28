@@ -19,3 +19,15 @@ void Allocator0000ed40::FUN_0000f460(void *pointer, int numBytes)
         FUN_0000f2f0(pointer, rounded);
     }
 }
+
+/* Slot 3, in the slow path's file: the slow path inline (0xef70). */
+void Allocator0000ed40::blockFree(void *pointer, int numBytes)
+{
+    const int rounded = (numBytes + 15) & ~15;
+    if (numBytes <= slabSize && static_cast<char *>(pointer) + rounded == cur &&
+        pointer != slabStart) {
+        cur = static_cast<char *>(pointer);
+        return;
+    }
+    FUN_0000f460(pointer, rounded);
+}

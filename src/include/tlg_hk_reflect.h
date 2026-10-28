@@ -3106,6 +3106,46 @@ struct hkQuaternion {
     Vec4 vec; /* derived name */
 };
 
+/* The cross product of a and b in the first three lanes (derived name). */
+inline Vec4 cross3(const Vec4 &a, const Vec4 &b) /* derived name */
+{
+    const Vec4 t = _mm_sub_ps(_mm_mul_ps(a, _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1))),
+                              _mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)), b));
+    return _mm_shuffle_ps(t, t, _MM_SHUFFLE(3, 0, 2, 1));
+}
+
+/* A direction rotated by a quaternion: twice the sum of v by w * w - 1/2,
+ * the imaginary part by its dot product with v and the cross product of the
+ * imaginary part and v by w (row 18 of the constant table is one half in
+ * each lane). Out of line at 0x11060, inline in hknpMotion's angular
+ * velocity getter (0x157510). derived name. */
+inline Vec4 rotatedDir(const hkQuaternion &q, const Vec4 &v) /* derived name */
+{
+    const Vec4 real = _mm_shuffle_ps(q.vec, q.vec, _MM_SHUFFLE(3, 3, 3, 3));
+    const Vec4 q2minus1 = _mm_sub_ps(_mm_mul_ps(real, real), D_14b2060[18]);
+    Vec4 result = _mm_mul_ps(v, q2minus1);
+    const Vec4 imagDotDir = _mm_dp_ps(q.vec, v, 0x7f);
+    result = _mm_add_ps(result, _mm_mul_ps(q.vec, imagDotDir));
+    const Vec4 imagCrossDir = cross3(q.vec, v);
+    result = _mm_add_ps(result, _mm_mul_ps(imagCrossDir, real));
+    return _mm_add_ps(result, result);
+}
+
+/* The inverse rotation: the cross product taken the other way round (out
+ * of line at 0x110c0, inline in the angular velocity setter 0x157630).
+ * derived name. */
+inline Vec4 rotatedInverseDir(const hkQuaternion &q, const Vec4 &v) /* derived name */
+{
+    const Vec4 real = _mm_shuffle_ps(q.vec, q.vec, _MM_SHUFFLE(3, 3, 3, 3));
+    const Vec4 q2minus1 = _mm_sub_ps(_mm_mul_ps(real, real), D_14b2060[18]);
+    Vec4 result = _mm_mul_ps(v, q2minus1);
+    const Vec4 imagDotDir = _mm_dp_ps(q.vec, v, 0x7f);
+    result = _mm_add_ps(result, _mm_mul_ps(q.vec, imagDotDir));
+    const Vec4 imagCrossDir = cross3(v, q.vec);
+    result = _mm_add_ps(result, _mm_mul_ps(imagCrossDir, real));
+    return _mm_add_ps(result, result);
+}
+
 /* hknpMassDistribution (hkClass 0x57c24f8, 0x30 bytes, no parent, built at
  * 0x69aa0 from the record table 0x169a860): centerOfMassAndVolume
  * (hkVector4) at +0, majorAxisSpace (hkQuaternion) at +0x10, inertiaTensor
@@ -4193,7 +4233,19 @@ struct hknpBodyManager /* derived name */
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
  * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
 struct hknpMotion {
-    u8 unknown0[0x2c];
+    /* The angular velocity in world space: the local one rotated by the
+     * orientation (0x157510; the callers 0x4bd56, 0x4f142, 0x163cac).
+     * derived name. */
+    void FUN_00157510(Vec4 &angularVelocityOut) const;
+
+    /* The angular velocity set from a world-space one, rotated into the
+     * motion's frame by the inverse of its orientation (0x157630). derived
+     * name. */
+    void FUN_00157630(const Vec4 &newAngularVelocity);
+
+    u8 unknown0[0x10];
+    hkQuaternion orientation; /* derived name */
+    u8 unknown20[0xc];
     /* The motion's place in its cell's list of active motions, 0x7fffffff
      * when it is in none (0x47790). */
     u32 solverId;
@@ -4204,7 +4256,8 @@ struct hknpMotion {
      * by the next getter (0x5df30), which rotates the vector at +0x50 by
      * the quaternion at +0x10, the angular one. derived name. */
     Vec4 linearVelocity;
-    u8 unknown50[0x30];
+    Vec4 angularVelocity; /* derived name: in the motion's frame */
+    u8 unknown60[0x20];
 };
 
 /* The world's motion manager at +0x110 (derived names: nothing names it):
@@ -7982,6 +8035,19 @@ struct hknpUnaryBodyDebugEvent /* derived name */
     char text[]; /* derived name */
 };
 
+/* The two-body form, printed by the dispatcher at 0x6c165 (derived
+ * names): the ids at +0xc and +0x14, the text from +0x18. */
+struct hknpBinaryBodyDebugEvent /* derived name */
+{
+    void FUN_001554f0(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyIdA; /* derived name */
+    u8 unknown10[4];
+    u32 bodyIdB; /* derived name */
+    char text[]; /* derived name */
+};
+
 struct hknpBodyBreachedExpandedAabbEvent /* derived name */
 {
     void FUN_001554c0(hknpWorld *world, hkOstream &out) const; /* derived name */
@@ -8770,6 +8836,27 @@ class hknpVehicleInstance : public hknpUnaryAction
         const hknpVehicleInstanceSlot8Argument *argument); /* vtable slot 8; derived name */
     void FUN_001659b0();                                   /* vtable slot 9; derived name */
     float FUN_00165880() const;                            /* vtable slot 13; derived name */
+
+    /* What slot 16 fills (derived names): two flags, an int, vectors at
+     * +0x10, +0x20 and +0x70, two pointer-sized fields at +0x30 and a
+     * rotation at +0x40. */
+    struct Slot16Output {
+        hkBool flag0;
+        hkBool flag1;
+        u8 unknown2[6];
+        int value8;
+        Vec4 vector10;
+        Vec4 vector20;
+        u64 unknown30;
+        u64 unknown38;
+        hkMatrix3 rotation;
+        Vec4 vector70;
+    };
+
+    /* Slot 16 (0x162db0): the first flag set, everything else zero and the
+     * rotation the identity (rows 29 to 31 of the constant table); the
+     * second argument is not read. derived name. */
+    void FUN_00162db0(const void *argument1, Slot16Output &out) const;
 
     void *world;
     u8 unknown28[0x40];

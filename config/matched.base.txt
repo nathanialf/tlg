@@ -1521,3 +1521,11 @@ FUN_000076d0 src/libs/unknown/func_00007600.cpp _ZN12Pool0000788012FUN_000076d0E
 FUN_00011060 src/libs/unknown/func_00011060.cpp
 FUN_000110c0 src/libs/unknown/func_000110c0.cpp
 FUN_0008ffa0 src/libs/unknown/func_0008ffa0.cpp _ZN19hkArrayStreamWriter12FUN_0008ffa0Ev
+FUN_0001add0 src/libs/unknown/func_0001add0.cpp
+FUN_0014a250 src/libs/unknown/func_0014a250.cpp
+FUN_0000ef70 src/libs/unknown/func_0000f460.cpp _ZN17Allocator0000ed409blockFreeEPvi
+_ZN8FreeListC1Ev src/libs/unknown/func_00018640.cpp
+FUN_001554f0 src/libs/unknown/func_001554f0.cpp _ZNK24hknpBinaryBodyDebugEvent12FUN_001554f0EP9hknpWorldR9hkOstream
+FUN_00157510 src/libs/unknown/func_00157510.cpp _ZNK10hknpMotion12FUN_00157510ERDv4_f
+FUN_00157630 src/libs/unknown/func_00157630.cpp _ZN10hknpMotion12FUN_00157630ERKDv4_f
+FUN_00162db0 src/libs/unknown/func_00162db0.cpp _ZNK19hknpVehicleInstance12FUN_00162db0EPKvRNS_12Slot16OutputE

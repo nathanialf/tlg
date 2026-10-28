@@ -1386,6 +1386,11 @@ void FUN_00010690(MersenneTwister *self);
  * fills a statistics record. */
 struct FreeList /* derived name */
 {
+    /* Out of line (0x18640; TwoBaseAllocator's constructor builds four at
+     * 0x19b8 to 0x19e6): the list empty, the fields at +0x10 and +0x38
+     * left as they are. */
+    FreeList();
+
     /* Sets the free list up (0x186a0): frees what it held, then keeps the
      * element size rounded up to the alignment, the block size and the two
      * allocators, a null block allocator taking the thread's router's
@@ -1429,10 +1434,17 @@ struct FreeList /* derived name */
 
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
-    u8 unknown10[0x30];
+    u8 unknown10[8];
+    u64 unknown18;
+    u64 unknown20;
+    u64 unknown28;
+    u64 unknown30;
+    u8 unknown38[8];
     char *top;      /* derived name */
     char *blockEnd; /* derived name */
-    u8 unknown50[0x18];
+    u64 unknown50;
+    u64 unknown58;
+    u64 unknown60;
     s64 numFreeElements; /* derived name */
 };
 
@@ -1982,7 +1994,9 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
 
     /* Slot 4 (0xef40): the requested size rounded up to 16 in place, then
      * the same fast path. */
-    /* Slot 3 (0xef70; slot 5 holds the same body). */
+    /* Slot 3 (0xef70; slot 5 holds the same body): a block at the top of
+     * the current slab, and not its first, popped in place; any other
+     * through the slow path at its rounded size. */
     virtual void blockFree(void *pointer, int numBytes);
 
     virtual void *FUN_00008d70(int &numBytes);
@@ -2012,7 +2026,10 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
     int slabSize;   /* derived name */
     char *cur;      /* derived name */
     char *end;      /* derived name */
-    u8 unknown28[0x18];
+    /* The current slab's start (0xf175 sets it with a new slab); the free's
+     * fast path never pops the block there. derived name. */
+    char *slabStart;
+    u8 unknown30[0x10];
     AllocatorBase *largeAllocator; /* derived name */
     u8 unknown48[8];
 };
