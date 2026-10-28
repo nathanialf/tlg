@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1567 vtables stored by a constructor that no type info names (below, with
+# 1564 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -24,8 +24,6 @@
 # (slot 3 <getter>)] [home <files>]`:
 #   0x168c630 stored by FUN_00001fb0 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
-#   0x168d3f0 stored by FUN_0000a280 FUN_0000a310 FUN_0000a3b0
-#   0x168d5b0 stored by FUN_0000b1a0 FUN_0000b250 FUN_0000b330
 #   0x168d680 stored by FUN_0000c360 _ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei
 #   0x168e290 stored by FUN_00012270 FUN_00012370 _ZN19LargeBlockAllocatorC1EP13AllocatorBase
 #   0x168e460 stored by FUN_00013ea0 FUN_000143a0
@@ -43,7 +41,7 @@
 #   0x16991e0 stored by FUN_00048b20
 #   0x16994e0 stored by FUN_00060b90
 #   0x1699510 stored by FUN_00060c70
-#   0x169ab10 stored by FUN_0005a230 FUN_0006bc50
+#   0x169ab10 stored by FUN_0005a230 _ZN17RefArrays0005a230C1EP9hknpWorld
 #   0x169b100 stored by FUN_00070900 FUN_00070970
 #   0x169b450 stored by FUN_000760c0 _ZN16Elements000760c0C1EPvS0_S0_iii
 #   0x169c710 stored by FUN_0007c100 FUN_00082480 FUN_0017b030 FUN_0017d0f0
@@ -52,7 +50,6 @@
 #   0x16a31d0 stored by FUN_00048b20
 #   0x16a3220 stored by FUN_0008f120 FUN_0008f180
 #   0x16a32a0 stored by _ZN14hkHardwareInfoC1Ev | home hkHardwareInfo.cpp
-#   0x16a3460 stored by FUN_000908d0 FUN_00090930 FUN_000909a0
 #   0x16a35c0 stored by FUN_00094170 FUN_00094230 FUN_000942e0
 #   0x16a36b0 stored by FUN_0009a8a0
 #   0x16a3b90 stored by FUN_000b31c0 FUN_000b32e0

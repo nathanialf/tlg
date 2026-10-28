@@ -1,0 +1,101 @@
+llvm-3.3 backport patch: BEXTR from (and (srl/sra x, imm), mask) (PS4)
+
+This patch CHANGES CODE GENERATION for a function that masks a shifted
+value with a contiguous mask on a BMI target (-march=btver2): the DAG
+combiner forms X86ISD::BEXTR, selected as `bextr`, where the 3.3 release
+forms BEXTR only from the __builtin_ia32_bextr intrinsics. It is upstream
+commit b25f0f5538fb of 2013-09-02 ("Create BEXTR instructions for (and
+((sra or srl) x, imm), (2**size - 1)). Fixes PR17028."), with the node's
+type fixed to SDTIntBinOp as in 3bf0317fec6a of 2013-10-01, both after the
+3.3 branch. The PS4 compiler's library generation forms it: the library
+region holds 135 `bextr` in 47 functions, and FUN_0003a290 (the group
+collision filter's slot 7) is equal to the base but for two of them.
+docs/DECISIONS.md D29 holds the measurement.
+
+diff -ru a/lib/Target/X86/X86ISelLowering.cpp b/lib/Target/X86/X86ISelLowering.cpp
+--- a/lib/Target/X86/X86ISelLowering.cpp
++++ b/lib/Target/X86/X86ISelLowering.cpp
+@@ -12766,6 +12766,7 @@
+   case X86ISD::BLSI:               return "X86ISD::BLSI";
+   case X86ISD::BLSMSK:             return "X86ISD::BLSMSK";
+   case X86ISD::BLSR:               return "X86ISD::BLSR";
++  case X86ISD::BEXTR:              return "X86ISD::BEXTR";
+   case X86ISD::MUL_IMM:            return "X86ISD::MUL_IMM";
+   case X86ISD::PTEST:              return "X86ISD::PTEST";
+   case X86ISD::TESTP:              return "X86ISD::TESTP";
+@@ -16464,9 +16465,10 @@
+   if (R.getNode())
+     return R;
+ 
+-  // Create BLSI, and BLSR instructions
++  // Create BLSI, BLSR and BEXTR instructions
+   // BLSI is X & (-X)
+   // BLSR is X & (X-1)
++  // BEXTR is ((X >> imm) & (2**size-1))
+   if (Subtarget->hasBMI() && (VT == MVT::i32 || VT == MVT::i64)) {
+     SDValue N0 = N->getOperand(0);
+     SDValue N1 = N->getOperand(1);
+@@ -16492,6 +16494,23 @@
+         isAllOnes(N1.getOperand(1)))
+       return DAG.getNode(X86ISD::BLSR, DL, VT, N0);
+ 
++    // Check for BEXTR (upstream b25f0f5538fb, 2013-09-02; the PS4
++    // compiler's library generation forms it: docs/DECISIONS.md D29)
++    if (N0.getOpcode() == ISD::SRA || N0.getOpcode() == ISD::SRL) {
++      ConstantSDNode *MaskNode = dyn_cast<ConstantSDNode>(N1);
++      ConstantSDNode *ShiftNode = dyn_cast<ConstantSDNode>(N0.getOperand(1));
++      if (MaskNode && ShiftNode) {
++        uint64_t Mask = MaskNode->getZExtValue();
++        uint64_t Shift = ShiftNode->getZExtValue();
++        if (isMask_64(Mask)) {
++          uint64_t MaskSize = CountPopulation_64(Mask);
++          if (Shift + MaskSize <= VT.getSizeInBits())
++            return DAG.getNode(X86ISD::BEXTR, DL, VT, N0.getOperand(0),
++                               DAG.getConstant(Shift | (MaskSize << 8), VT));
++        }
++      }
++    }
++
+     return SDValue();
+   }
+ 
+diff -ru a/lib/Target/X86/X86ISelLowering.h b/lib/Target/X86/X86ISelLowering.h
+--- a/lib/Target/X86/X86ISelLowering.h
++++ b/lib/Target/X86/X86ISelLowering.h
+@@ -278,6 +278,7 @@
+       BLSI,   // BLSI - Extract lowest set isolated bit
+       BLSMSK, // BLSMSK - Get mask up to lowest set bit
+       BLSR,   // BLSR - Reset lowest set bit
++      BEXTR,  // BEXTR - Bit field extract
+ 
+       UMUL, // LOW, HI, FLAGS = umul LHS, RHS
+ 
+diff -ru a/lib/Target/X86/X86InstrInfo.td b/lib/Target/X86/X86InstrInfo.td
+--- a/lib/Target/X86/X86InstrInfo.td
++++ b/lib/Target/X86/X86InstrInfo.td
+@@ -253,6 +253,7 @@
+ def X86blsi   : SDNode<"X86ISD::BLSI",   SDTIntUnaryOp>;
+ def X86blsmsk : SDNode<"X86ISD::BLSMSK", SDTIntUnaryOp>;
+ def X86blsr   : SDNode<"X86ISD::BLSR",   SDTIntUnaryOp>;
++def X86bextr  : SDNode<"X86ISD::BEXTR",  SDTIntBinOp>;
+ 
+ def X86mul_imm : SDNode<"X86ISD::MUL_IMM", SDTIntBinOp>;
+ 
+@@ -1761,6 +1762,17 @@
+                                 int_x86_bmi_bextr_64, loadi64>, VEX_W;
+ }
+ 
++let Predicates = [HasBMI] in {
++  def : Pat<(X86bextr GR32:$src1, GR32:$src2),
++            (BEXTR32rr GR32:$src1, GR32:$src2)>;
++  def : Pat<(X86bextr (loadi32 addr:$src1), GR32:$src2),
++            (BEXTR32rm addr:$src1, GR32:$src2)>;
++  def : Pat<(X86bextr GR64:$src1, GR64:$src2),
++            (BEXTR64rr GR64:$src1, GR64:$src2)>;
++  def : Pat<(X86bextr (loadi64 addr:$src1), GR64:$src2),
++            (BEXTR64rm addr:$src1, GR64:$src2)>;
++}
++
+ let Predicates = [HasBMI2], Defs = [EFLAGS] in {
+   defm BZHI32 : bmi_bextr_bzhi<0xF5, "bzhi{l}", GR32, i32mem,
+                                int_x86_bmi_bzhi_32, loadi32>;

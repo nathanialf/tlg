@@ -23,7 +23,8 @@
 #               already implements sspstrong), passed here; one nop after
 #               the stack check's failure call (sspnop, D26); one store
 #               merge per visit of a store (storemerge, D27); a function's
-#               jump tables before its end label (jumptable, D28).
+#               jump tables before its end label (jumptable, D28); bextr
+#               from a shifted, masked value (bextr, D29).
 #   src/game/   code from 0x1a3e00 up, the game and engine, built with the
 #               SDK 3.5 compiler: cdqe, merged constant stores (3,065), ud2
 #               after noreturn calls (503), int 0x41 debug traps, no

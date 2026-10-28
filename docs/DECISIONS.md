@@ -978,7 +978,8 @@ the from-source 3.3 after fetching the prebuilt, and `build.sh` requires it.
 carries a second backport, D26's nop after the stack check's failure
 call; `tools/build_llvm.sh 3.3` applies both and its stamp records the
 set. Round 33's harvest added the third, D27's single store merge per
-visit; round 34's the fourth, D28's jump tables inside the function.
+visit; round 34's the fourth, D28's jump tables inside the function;
+round 42's the fifth, D29's BEXTR combine.
 
 ## D21. The library region stays at -O2; FUN_00187750's loop unswitch is an open level question (2026-10-26)
 
@@ -1409,3 +1410,33 @@ it at the one place that cannot change any other byte of the function.
 **Trigger to revisit.** A library function whose base holds a table
 outside its FDE range, or a matched row that fails under the patch;
 either reopens the mechanism.
+
+## D29. The library compiler forms BEXTR from a shifted, masked value (2026-10-28)
+
+**Decision.** The library prefix's compiler (`cxx=3.3-src`) carries a
+fifth backport patch,
+`tools/patches/llvm-3.3-bextr-01-and-shift-mask-combine.patch`: the X86
+DAG combiner forms `X86ISD::BEXTR` from `(and (srl|sra x, imm), mask)`
+when the mask is contiguous and the field fits the type, selected as
+`bextr` on a BMI target. It is upstream commit b25f0f5538fb of
+2013-09-02 ("Create BEXTR instructions for (and ((sra or srl) x, imm),
+(2**size - 1)). Fixes PR17028."), with the node's type fixed as in
+3bf0317fec6a of 2013-10-01, both after the 3.3 branch and before 3.4;
+the 3.3 release forms BEXTR only from the `__builtin_ia32_bextr`
+intrinsics. The game prefix (4.0.0) has the combine upstream.
+
+**Why.** Round 42's worker left FUN_0003a290 (hknpGroupCollisionFilter's
+slot 7) equal except for two `bextr` (controls 0x505 and 0x50a) where
+the compile has `shr; and`, and counted the shape over the region: 135
+`bextr` in 47 library functions (one in a D22 stretch), none claimed,
+and no source form produces one under the release 3.3 without the
+intrinsic, which is no developer's spelling of a field extract. The
+patch ports the upstream combine unchanged; under it FUN_0003a290 is
+equal and `gate-all` holds on every row (the harvest commit of round
+42: no matched function held a shifted, masked field the combine
+converts, which the census of claimed rows under the release build had
+already shown).
+
+**Trigger to revisit.** A library function whose base keeps `shr; and`
+on a contiguous mask the combine would have converted, or a matched row
+that fails under the patch; either reopens the mechanism.

@@ -1499,3 +1499,4 @@ FUN_0018cf50 src/libs/unknown/func_0018cf50.cpp _ZNK21BroadPhaseCollideTask7getN
 _ZN17hkLocalFrameGroupD0Ev src/libs/unknown/func_00003710.cpp
 _ZN14hkStringObjectD0Ev src/libs/unknown/func_00010850.cpp
 _ZN17hknpRefWorldCinfoD0Ev src/libs/unknown/func_00039100.cpp
+FUN_0003a290 src/libs/unknown/func_0003a290.cpp _ZNK68hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig5551612FUN_0003a290EiRK19hknpQueryFilterDataRK8hknpBody
