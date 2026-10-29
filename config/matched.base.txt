@@ -828,7 +828,7 @@ FUN_0017ec10 src/libs/unknown/func_0017ec10.cpp _ZN26hkDynamicClassNameRegistryD
 FUN_0019d5e0 src/libs/unknown/func_0019d5e0.cpp _ZN13XmlEndElementD1Ev
 FUN_0019d660 src/libs/unknown/func_0019d660.cpp _ZN13XmlCharactersD1Ev
 FUN_001585d0 src/libs/unknown/func_001585d0.cpp _ZN18hknpWorldObject6c0C2Ev
-FUN_00000eb0 src/libs/unknown/func_00000eb0.cpp _ZN13BufferOstreamD1Ev
+_ZN13BufferOstreamD1Ev src/libs/unknown/func_00000eb0.cpp
 FUN_0000bb40 src/libs/unknown/func_0000bb40.cpp
 FUN_00083020 src/libs/unknown/func_00083020.cpp
 FUN_00083500 src/libs/unknown/func_00083500.cpp
@@ -1544,7 +1544,7 @@ _ZN18BlockListAllocatorD1Ev src/libs/unknown/func_0008f120.cpp
 FUN_00094d90 src/libs/unknown/func_00094d90.cpp _ZN13hkBlockStream12FUN_00094d90EP10BlockCachePK19hkBlockStreamReader
 FUN_00167c20 src/libs/unknown/func_00167c20.cpp _ZN17CollideSharedData12FUN_00167c20EPK9hknpWorld
 FUN_001854b0 src/libs/unknown/func_001854b0.cpp _Z12FUN_001854b0P8hkAabb16PKS_i
-FUN_00000e40 src/libs/unknown/func_00000eb0.cpp _ZN13BufferOstreamD0Ev
+_ZN13BufferOstreamD0Ev src/libs/unknown/func_00000eb0.cpp
 FUN_00010fe0 src/libs/unknown/func_00010fe0.cpp _Z12FUN_00010fe0RDv4_fRK12hkQTransformRKS_
 FUN_00040b70 src/libs/unknown/func_00040b70.cpp _ZNK16hknpTriggerEvent12FUN_00040b70EP9hknpWorldR9hkOstream
 FUN_0006c260 src/libs/unknown/func_0006c260.cpp _ZN14hknpSolverStep12FUN_0006c260ERK14hknpSolverInfoii
@@ -1828,3 +1828,13 @@ _ZN7hkxEnumD1Ev src/libs/unknown/func_00089740.cpp
 _ZN7hkxEnumD0Ev src/libs/unknown/func_00089740.cpp
 FUN_0001a9f0 src/libs/unknown/func_0001a9f0.cpp _ZN9hkMatrix312FUN_0001a9f0ERKS_S1_
 FUN_0001abb0 src/libs/unknown/func_0001abb0.cpp _ZN9hkMatrix312FUN_0001abb0ERKS_S1_
+FUN_00089bc0 src/libs/unknown/func_00089b60.cpp _ZN17hkxMaterialEffectD0Ev
+FUN_000ad4f0 src/libs/unknown/func_000ad490.cpp _ZN19hkMemoryMeshTextureD0Ev
+FUN_000cd870 src/libs/unknown/func_000cd870.cpp _Z12FUN_000cd870RKDv4_fS1_S1_R10hknpMotion
+FUN_0006e470 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual7ERK4Mat4R6hkAabb
+FUN_0006e6f0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual11ERKDv4_fPS0_
+FUN_0006e790 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual12EPKhiPDv4_f
+FUN_0006e970 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual14EiPDv4_fPh
+FUN_0006eb50 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual18EPKvPv
+FUN_0006f7d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual22EPKvS1_Pv
+FUN_0006f880 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual25EPKvS1_S1_S1_Pv

@@ -3011,6 +3011,9 @@ class hkxMaterialEffect : public hkReferencedObject
      * then the name. */
     virtual ~hkxMaterialEffect();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkStringPtr name;
     u8 unknown18[8];
     hkArray<u8> data;
@@ -9809,7 +9812,12 @@ class hkMemoryMeshTexture : public hkMeshTexture
         FUN_0000e5c0(&filename, flag);
     }
 
+    /* Out of line (0xad490, slot 0); the deleting destructor (0xad4f0,
+     * slot 1) frees through the class's delete. */
     virtual ~hkMemoryMeshTexture();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000247f0 */
     void FUN_000ad620(u8 *&dataOut, int &sizeOut,
@@ -10011,6 +10019,8 @@ struct hknpBodyActivationEvent /* derived name */
 class BufferOstream : public hkOstream /* derived name */
 {
   public:
+    /* Out of line (0xda0): the stream over size bytes at buffer. */
+    BufferOstream(char *buffer, int size);
     virtual ~BufferOstream();
 
     /* The reference-counted delete (tlg_lib_unknown.h): the deleting
@@ -10018,6 +10028,26 @@ class BufferOstream : public hkOstream /* derived name */
      * default. */
     static void operator delete(void *object, unsigned long numBytes);
 };
+
+/* Havok's error report (its HK_ERROR), as the "Not implemented" defaults of
+ * hknpShape.cpp expand it (0x6e470 on): the text streamed into a buffer of
+ * 512 bytes on the stack, handed to hkError's report with the id, the file
+ * and the line, and the trap when the report asks for it. The file and the
+ * line are the library build's __FILE__ and __LINE__, passed as the
+ * executable has them (as HK_POSIX_CHECK's). */
+#define HK_ERROR(id, file, line, text)                                                             \
+    do {                                                                                           \
+        char assertBuf[512];                                                                       \
+        BufferOstream ostr(assertBuf, sizeof(assertBuf));                                          \
+        ostr.FUN_00008440(text);                                                                   \
+        if (hkError::FUN_00014cb0(id, assertBuf, file, line)) {                                    \
+            HK_BREAKPOINT(0);                                                                      \
+        }                                                                                          \
+    } while (0)
+
+/* The file hknpShape.cpp's reports name (the string at 0x14bf150). */
+#define HK_NP_SHAPE_CPP                                                                            \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Collide\\Shape\\hknpShape.cpp"
 
 /* The world's events print their names: the dispatcher at 0x6c110 switches
  * on an event's 16-bit type at +4 (26 types) and calls the type's printer
@@ -11746,6 +11776,13 @@ struct Streams00174ea0 /* derived name */
  * a writer of its own (0x174ea0). derived name. */
 void FUN_00174ea0(Streams00174ea0 *self, hknpWorld *world, BlockCache *cache,
                   const hkBlockStreamRange *range, void *entries);
+
+/* A motion moved on by a time step (0xcd870; the caller 0x157be0 passes
+ * the motion's scaled velocities): its centre of mass along the linear
+ * velocity, its orientation turned by the half-angle quaternion of the
+ * angular velocity and renormalized. derived name. */
+void FUN_000cd870(const Vec4 &linearVelocity, const Vec4 &angularVelocity, const Vec4 &deltaTime,
+                  hknpMotion &motion); /* derived name */
 
 /* What 0x167f70 resets for the simulation (derived names; the loop at
  * 0x170770 runs it over an object's +0x10 with the owner's +0x250 and

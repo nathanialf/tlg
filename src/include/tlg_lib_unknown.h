@@ -2832,6 +2832,16 @@ inline void hkxEnum::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxMaterialEffect::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkMemoryMeshTexture::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxAnimatedVector::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
