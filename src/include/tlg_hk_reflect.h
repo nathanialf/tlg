@@ -589,6 +589,7 @@ struct NameList00004270 /* derived name */
  * +0x28, from its own member table at 0x16a6b60; its constructor
  * FUN_000041a0 stores the twelve fields from +0 to +0x4c. */
 struct hkClass;
+class hkStreamWriter;
 
 /* hkVariant (the reflection's TYPE_VARIANT): an object and its class.
  * derived field names. */
@@ -648,6 +649,14 @@ struct hkClass {
      * attributes or none of the name (0x4a40; hkTypeInfoRegistry's users
      * from 0x17e187 ask it). derived name. */
     const hkVariant *FUN_00004a40(const char *attributeName) const;
+    /* The class written to a stream for its signature (0x4660): its name,
+     * its members' types and its enums, recursing into the classes its
+     * members hold. derived name. */
+    void FUN_00004660(hkStreamWriter *writer) const;
+    /* The signature: the CRC-32 of the class and its parents written by
+     * 0x4660, of the class alone when bit 0 of the flags is set (0x45c0;
+     * the packfile writers call it). derived name. */
+    u32 FUN_000045c0(int signatureFlags) const;
 
     const char *name;
     const hkClass *parent;
@@ -711,8 +720,23 @@ struct hkMatrix3 {
     /* derived name: the rotation of a unit quaternion (0xbd30; the game
      * calls it at 0xeb1134 and four more sites): the columns from the
      * products of the quaternion with its double, the signs flipped by two
-     * masks, the diagonal from one. */
+     * masks, the diagonal from one. Out of line over the inline below. */
     void FUN_0000bd30(const struct hkQuaternion &q);
+
+    /* The same rotation inline (defined after hkQuaternion), as the world
+     * object's slot 12 sets two of them (0x311f0). derived name. */
+    void setRotation(const struct hkQuaternion &q);
+
+    /* The rotation made orthonormal again: through the quaternion it
+     * holds, normalized, and back (0xbf40; called at 0xb1e14). derived
+     * name. */
+    void FUN_0000bf40();
+
+    /* The element at a row and a column. */
+    float operator()(int row, int column) const
+    {
+        return reinterpret_cast<const float *>(&col0 + column)[row];
+    }
 
     Vec4 col0; /* derived name */
     Vec4 col1; /* derived name */
@@ -3838,8 +3862,94 @@ struct hkQuaternion {
      * derived name. */
     void FUN_00019ff0(const Vec4 &axis, const Vec4 &angle);
 
+    /* The quaternion of a rotation (inline in 0xbf40; out of line at
+     * 0x1a1c0): from the trace when it is positive, otherwise from the
+     * largest diagonal element, each lane written into an array on the
+     * stack and the four read back as one vector. derived name. */
+    void setFromRotation(const hkMatrix3 &r);
+    /* The same, out of line (0x1a1c0). derived name. */
+    void FUN_0001a1c0(const hkMatrix3 &r);
+
+    /* Scaled to unit length by the reciprocal square root refined by one
+     * Newton step, over all four lanes (0xc0b2). derived name. */
+    void normalize();
+
     Vec4 vec; /* derived name */
 };
+
+/* A scalar square root in the SSE unit (`vsqrtss` of a vector with the
+ * upper lanes zero). derived name. */
+inline float sqrtScalar(float value) /* derived name */
+{
+    return _mm_cvtss_f32(_mm_sqrt_ss(_mm_set_ss(value)));
+}
+
+inline void hkQuaternion::setFromRotation(const hkMatrix3 &r)
+{
+    alignas(16) float lanes[4];
+    const float trace = r(0, 0) + r(1, 1) + r(2, 2);
+    if (trace > 0.0f) {
+        const float s = sqrtScalar(trace + 1.0f);
+        const float t = 0.5f / s;
+        lanes[0] = (r(2, 1) - r(1, 2)) * t;
+        lanes[1] = (r(0, 2) - r(2, 0)) * t;
+        lanes[2] = (r(1, 0) - r(0, 1)) * t;
+        lanes[3] = 0.5f * s;
+    } else {
+        const int next[] = {1, 2, 0};
+        int i = 0;
+        if (r(1, 1) > r(0, 0)) {
+            i = 1;
+        }
+        if (r(2, 2) > r(i, i)) {
+            i = 2;
+        }
+        const int j = next[i];
+        const int k = next[j];
+        const float s = sqrtScalar(r(i, i) - (r(j, j) + r(k, k)) + 1.0f);
+        const float t = 0.5f / s;
+        lanes[i] = 0.5f * s;
+        lanes[3] = (r(k, j) - r(j, k)) * t;
+        lanes[j] = (r(j, i) + r(i, j)) * t;
+        lanes[k] = (r(k, i) + r(i, k)) * t;
+    }
+    vec = _mm_load_ps(lanes);
+}
+
+inline void hkQuaternion::normalize()
+{
+    const Vec4 lengthSquared = _mm_dp_ps(vec, vec, 0xff);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    const Vec4 invLength =
+        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
+                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+    vec = _mm_mul_ps(vec, invLength);
+}
+
+inline void hkMatrix3::setRotation(const hkQuaternion &quaternion)
+{
+    const Vec4 q = quaternion.vec;
+    const Vec4 q2 = _mm_add_ps(q, q);
+    const Vec4 t0 = _mm_mul_ps(_mm_shuffle_ps(q, q, _MM_SHUFFLE(3, 3, 3, 2)),
+                               _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(0, 1, 2, 2)));
+    const Vec4 t1 = _mm_mul_ps(_mm_shuffle_ps(q, q, _MM_SHUFFLE(1, 0, 0, 1)),
+                               _mm_shuffle_ps(q2, q2, _MM_SHUFFLE(2, 2, 1, 1)));
+    const Vec4 mask0 =
+        _mm_castsi128_ps(_mm_setr_epi32(0, int(0x80000000), int(0x80000000), int(0x80000000)));
+    const Vec4 mask1 =
+        _mm_castsi128_ps(_mm_setr_epi32(int(0x80000000), 0, int(0x80000000), int(0x80000000)));
+    const Vec4 a = _mm_xor_ps(t1, mask0);
+    const Vec4 b = _mm_xor_ps(t0, mask1);
+    const Vec4 one = D_14b2060[29];
+    const Vec4 c = _mm_add_ss(b, one);
+    col0 = _mm_sub_ps(c, a);
+    const Vec4 xx2 = _mm_mul_ss(q, q2);
+    const Vec4 f = _mm_sub_ps(_mm_xor_ps(c, mask0), _mm_move_ss(a, xx2));
+    col1 = _mm_shuffle_ps(f, f, _MM_SHUFFLE(2, 3, 0, 1));
+    const Vec4 g = _mm_movehl_ps(col0, col1);
+    const Vec4 h = _mm_sub_ss(_mm_sub_ss(one, xx2), t1);
+    col2 = _mm_shuffle_ps(g, h, _MM_SHUFFLE(2, 0, 3, 1));
+}
 
 /* The cross product of a and b in the first three lanes (derived name). */
 inline Vec4 cross3(const Vec4 &a, const Vec4 &b) /* derived name */
@@ -5630,9 +5740,24 @@ int FUN_0002b6c0(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
                  hknpWorldObject380Info *info, void *argument4, void *argument5, void *argument6,
                  hknpWorldObject380Writer *writer); /* derived name */
 
+/* What slot 12 (0x311f0) fills from two motions (derived names): their
+ * centres of mass and their orientations as rotations. */
+struct hknpWorldObject380MotionPair /* derived name */
+{
+    u8 unknown0[0x10];
+    Vec4 centerOfMassA;  /* derived name */
+    Vec4 centerOfMassB;  /* derived name */
+    hkMatrix3 rotationA; /* derived name */
+    hkMatrix3 rotationB; /* derived name */
+};
+
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
   public:
+    /* Slot 12 (0x311f0): the centres of mass copied and the orientations
+     * set as rotations, the third argument unread. derived name. */
+    void FUN_000311f0(hknpWorldObject380MotionPair *out, const hknpMotion &motionA,
+                      const void *argument2, const hknpMotion &motionB);
     /* Slot 20 (0x30c10): the pair processed through FUN_0002b6c0, its
      * output given the writer's range and the count written past it.
      * derived name. */
@@ -9898,13 +10023,28 @@ class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
 class Crc32StreamWriter : public hkStreamWriter /* derived name */
 {
   public:
-    /* Empty (the shared 0x270); the deleting destructor 0x4060 frees the
+    /* The running CRC starts at all ones (0x45e5). */
+    Crc32StreamWriter() : crc(0xffffffff) {}
+
+    /* Empty and inline (the shared 0x270): 0x45c0 destroys its writer on
+     * the stack without a call. The deleting destructor 0x4060 frees the
      * object through the class allocator (tlg_lib_unknown.h), the body every
      * vtable of a 16-byte reference-counted class with an empty destructor
      * cites (D15). */
-    virtual ~Crc32StreamWriter();
+    virtual ~Crc32StreamWriter() {}
 
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 5: always usable (the shared 0x40b0). */
+    virtual hkBool isOk() const
+    {
+        return true;
+    }
+
+    /* Slot 6 (0x40c0): each byte folded into the CRC, eight shifts with the
+     * reflected polynomial; the count is returned. The class's key
+     * function: its vtable and deleting destructor are emitted with it. */
+    virtual int write(const void *buffer, int size);
 
     u32 crc; /* derived name */
 };
