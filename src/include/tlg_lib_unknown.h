@@ -300,6 +300,30 @@ struct hknpCharacterProxySignalData /* derived name */
 int FUN_00010650(const Pair08Owner *self); /* derived name */
 int FUN_00034840(const Pair08Owner *self); /* derived name */
 
+/* A body as a 64-bit key (derived names): its byte at +0x7f in the low
+ * word and its id in the high one, the same two words as the world
+ * object's BodyRecord; 0x16e040 reads the id alone and compares the key
+ * whole. */
+union BodyKey0016e040 /* derived name */
+{
+    struct {
+        u32 byte7f;
+        int bodyId;
+    };
+
+    u64 key;
+};
+
+/* What the solver's step at 0xc4cd0 and 0xc5e30 holds the world in at
+ * +0x148 (derived name): 0x16e040 asks whether both keys of a pair still
+ * name live bodies, the same ones. */
+struct WorldReference0016e040 /* derived name */
+{
+    bool FUN_0016e040(const BodyKey0016e040 *pair) const; /* derived name */
+
+    const hknpWorld *world;
+};
+
 /* hknpMotionWeldTOICommand (the name its print, 0x170f20, writes: a fact):
  * the bodies' ids at +0xc and +0x14, which the print writes, and the pair's
  * jacobian record at +0x18. Field names derived. */
@@ -413,7 +437,10 @@ class AllocatorBase /* derived name */
 
 template <typename T> inline void hkArray<T>::clearAndDeallocate()
 {
-    size = 0;
+    /* The elements destroyed first, from the last (nothing for an element
+     * with no destructor; the string map's cleanup 0x360 runs each
+     * string's). */
+    clear();
     if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
         hkContainerHeapAllocator::get().freeElements<T>(data, getCapacity());
     }
@@ -461,6 +488,14 @@ template <typename T> inline void hkArray<T>::pushBack(const T &element)
      * by member, 0x63930). */
     hkArrayUtil::constructWithCopy(data + size, element);
     size++;
+}
+
+template <typename T> inline T &hkArray<T>::expandOne()
+{
+    if (size == getCapacity()) {
+        FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
+    }
+    return data[size++];
 }
 
 /* An array of 32-byte elements and the indices of the free ones (derived
@@ -1193,8 +1228,17 @@ class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
     /* Out of line (0x5a0b0, slot 0; 0x5a150, slot 1). */
     virtual ~RefArrays0005a340();
 
-    hkArray<u8[0x28]> unknown70; /* 0x28-byte elements */
-    hkArray<u8[0x18]> unknown80; /* 0x18-byte elements */
+    /* The arrays' elements, not typed yet (derived names). */
+    struct Element28 {
+        u8 unknown0[0x28];
+    };
+
+    struct Element18 {
+        u8 unknown0[0x18];
+    };
+
+    hkArray<Element28> unknown70; /* 0x28-byte elements */
+    hkArray<Element18> unknown80; /* 0x18-byte elements */
 };
 
 void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
@@ -1540,6 +1584,13 @@ struct MersenneTwister /* derived name */
      * forgotten; hkUuidPseudoRandomGenerator's destructors (0xd9e0, 0xda50)
      * run it on their +0x10 after the lock's. */
     ~MersenneTwister();
+
+    /* The state seeded (0x106e0; hkUuidPseudoRandomGenerator's creation
+     * seeds it from the time): allocated from the thread's heap the first
+     * time, then each word from the one before it. derived name. */
+    void FUN_000106e0(u32 seed);
+
+    enum { NUM_STATE_WORDS = 624 }; /* derived name */
 
     u16 index;  /* derived name */
     u32 *state; /* derived name */
@@ -2148,6 +2199,10 @@ class OffsetSeekableReader : public SeekableReader /* derived name */
 class BufferedStreamReader : public hkReferencedObject /* derived name */
 {
   public:
+    /* Out of line (0x942e0, slot 0): the stream's reference released and
+     * the buffer given back to the thread's heap. */
+    virtual ~BufferedStreamReader();
+
     hkBool isOk() const;                           /* vtable slot 5; derived name */
     BufferedStreamReader *FUN_000946f0();          /* vtable slot 9; derived name */
     hkResult FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */

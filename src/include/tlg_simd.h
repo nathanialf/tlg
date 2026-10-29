@@ -69,6 +69,15 @@ inline Vec4 setFromScalars(const Vec4 &a, const Vec4 &b, const Vec4 &c, const Ve
  * memory even right after the source was stored (the vector tolerances of
  * 0xaa340). */
 struct hkVector4 {
+    /* Assigned by its vector (Havok's hkVector4 declares its own
+     * assignment): a struct holding vectors is assigned one vector at a
+     * time, each stored before the next is read (the closest-hit
+     * collector's copy of a hit, 0x696ec). */
+    void operator=(const hkVector4 &v)
+    {
+        quad = v.quad;
+    }
+
     Vec4 quad; /* derived name */
 };
 

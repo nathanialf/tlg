@@ -373,6 +373,11 @@ template <typename T> struct hkArray {
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
     void pushBack(const T &element);
 
+    /* Room for one more element at the end, grown as pushBack grows: the
+     * new element returned (defined in tlg_lib_unknown.h; the solver's
+     * arrays at 0x92600). */
+    T &expandOne();
+
     /* Room for n elements at least, from the allocator given (defined in
      * tlg_lib_unknown.h). */
     void reserve(AllocatorBase &allocator, int n);
@@ -1558,7 +1563,14 @@ void FUN_0000d520(hkMonitorStreamStringMapStringMap *self,
 
 /* hkMonitorStreamStringMap: map, an array (type 0x16) of StringMap, at +0.
  * Its finish constructor is out of line and empty (FUN_0000d500). */
-struct hkMonitorStreamStringMap;
+struct hkMonitorStreamStringMap {
+    hkArray<hkMonitorStreamStringMapStringMap> map;
+};
+
+/* The cleanup callback of its type info (0x57af550, set at 0xa1b): the map
+ * destroyed in place, each string given back, then the array. derived
+ * name. */
+void FUN_00000360(void *object); /* derived name */
 
 void FUN_0000d500(hkMonitorStreamStringMap *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
@@ -2045,6 +2057,9 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
         : hkReferencedObject(flag), gearsRatio(flag), wheelsTorqueRatio(flag)
     {
     }
+
+    /* Out of line (0x67da0, slot 0): the arrays given back. */
+    virtual ~hknpVehicleDefaultTransmission();
 
     /* Slots 5 to 10 (0x67f40, 0x67ff0, 0x68030, 0x68130, 0x680b0,
      * 0x67ef0); slot 6 asks slot 10 for the ratio through the vtable. */
@@ -2627,10 +2642,21 @@ class hkxAnimatedQuaternion : public hkReferencedObject
     hkArray<float> quaternions;
 };
 
+/* From its record table at 0x16a1440 (hkClass 0x57c6c68, 0x30 bytes): ints
+ * (an array of int) at +0x10, times (an array of float) at +0x20. */
 class hkxSparselyAnimatedInt : public hkReferencedObject
 {
   public:
-    hkxSparselyAnimatedInt(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxSparselyAnimatedInt(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), ints(flag), times(flag)
+    {
+    }
+
+    /* Out of line (0x887b0, slot 0): the arrays given back. */
+    virtual ~hkxSparselyAnimatedInt();
+
+    hkArray<s32> ints;
+    hkArray<float> times;
 };
 
 /* From its record table at 0x16a1520: selectedEdges (an array of int) at +0x10. */
@@ -5261,6 +5287,13 @@ class hkSlot /* derived name */
  * passed by value as a two-byte struct, so a callee widens it itself or
  * masks it. Field name derived. */
 struct hknpMaterialId {
+    /* Assigned by its value, as the body id is (the closest-hit collector's
+     * copy of a hit, 0x6970f, moves it on its own). */
+    void operator=(const hknpMaterialId &other)
+    {
+        value = other.value;
+    }
+
     u16 value; /* derived name */
 };
 
@@ -5427,6 +5460,11 @@ struct hknpWorldStepContextf6a90 /* derived name */
 };
 
 struct hknpWorld {
+    /* A body's angular velocity in world space: its motion's local one
+     * rotated by the motion's orientation (0x5df30; the caller at
+     * 0x16126e). derived name. */
+    void FUN_0005df30(int bodyId, Vec4 &angularVelocityOut) const;
+
     /* Two of the step's stages, run by the solve tasks under the timer
      * "Physics" (0x50fd0 by hknpPostSolveTask, 0x509f0 by hknpPreSolveTask).
      * derived names. */
@@ -6288,7 +6326,24 @@ class hknpTriangleShape : public hknpConvexPolytopeShape
 class hknpConvexPolytopeShape::Connectivity : public hkReferencedObject
 {
   public:
-    Connectivity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    /* hknpConvexPolytopeShape::Connectivity::Edge (hkClass 0x57bf610,
+     * built at 0x39c56: 4 bytes, records 0x1694ee0). */
+    struct Edge {
+        u16 faceIndex;
+        u8 edgeIndex;
+    };
+
+    Connectivity(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), vertexEdges(flag), faceLinks(flag)
+    {
+    }
+
+    /* Out of line (0x39950, slot 0): the arrays given back. */
+    virtual ~Connectivity();
+
+    /* From its records at 0x1694f30 (hkClass 0x57bf690, 0x30 bytes). */
+    hkArray<Edge> vertexEdges;
+    hkArray<Edge> faceLinks;
 };
 
 /* hknpBreakableConstraintData, polymorphic, 0x28 bytes (type info
@@ -7385,7 +7440,13 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
 
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpLinMotorConstraintAtom motor;
-        u8 unknownB0[0x70]; /* three frictions, ang and three linear limits */
+        hkpLinFrictionConstraintAtom friction0;
+        hkpLinFrictionConstraintAtom friction1;
+        hkpLinFrictionConstraintAtom friction2;
+        hkpAngConstraintAtom ang;
+        hkpLinLimitConstraintAtom linLimit0;
+        hkpLinLimitConstraintAtom linLimit1;
+        hkpLinLimitConstraintAtom linLimit2;
     };
 
     /* The finish constructor (0x7ac70; hkClass built at 0x7ad45, parent
@@ -7399,6 +7460,9 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
 
     void FUN_000839f0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* Slot 7 (0x83a20): both frames' rotations orthonormal, each linear
+     * limit's range in order and fewer than four angular axes. */
+    hkBool unknownVirtual7() const;
     void FUN_00083a10(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
@@ -7605,6 +7669,10 @@ class hkpPositionConstraintMotor : public hkpLimitedForceConstraintMotor
     {
     }
 
+    /* Slot 5 (0x82480): a copy from the thread's heap, each level's
+     * members copied after its vtable is stored. derived name. */
+    hkpConstraintMotor *FUN_00082480() const;
+
     /* Names and offsets from the member records 0x169b830 to 0x169b8a8. */
     float tau;
     float damping;
@@ -7624,8 +7692,14 @@ class hkpVelocityConstraintMotor : public hkpLimitedForceConstraintMotor
      * reference-counted classes with empty destructors cite (D15). */
     virtual ~hkpVelocityConstraintMotor();
 
-    /* To the class's 0x28 bytes (its deleting destructor's size). */
-    u8 unknown18[0x10];
+    /* Slot 5 (0x7c100): a copy from the thread's heap, each level's
+     * members copied after its vtable is stored. derived name. */
+    hkpConstraintMotor *FUN_0007c100() const;
+
+    /* From its records at 0x169bbc0 (hkClass 0x57c32e8, 0x28 bytes). */
+    float tau;
+    float velocityTarget;
+    hkBool useVelocityTargetFromConstraintTargets;
 };
 
 class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
@@ -9541,6 +9615,7 @@ class hkGeometry : public hkReferencedObject
     struct Triangle;
 
     hkGeometry(hkFinishLoadedObjectFlag flag);
+    /* Out of line (0x27f50, slot 0): the arrays given back. */
     virtual ~hkGeometry();
 
     void FUN_00093c70(); /* derived name */
@@ -10323,10 +10398,29 @@ class hknpCollisionQueryCollector /* derived name */
     Vec4 earlyOut; /* derived name */
 };
 
-/* A query result as the collectors keep them (derived name): 0x60 bytes. */
+/* A query result as the collectors keep them (derived names): 0x60 bytes,
+ * a position, a normal and a fraction, then what the query and the hit
+ * each touched: a body, its shape's material, a shape key, the shape's
+ * filter info and user data. A hit is assigned member by member (the
+ * closest-hit collector's 0x696e0: the two ids each on their own, the
+ * words after them together). */
 struct hknpCollisionResult /* derived name */
 {
-    u8 unknown0[0x60];
+    struct BodyInfo {
+        hknpBodyId bodyId;
+        hknpMaterialId shapeMaterialId;
+        u32 shapeKey;
+        u32 shapeCollisionFilterInfo;
+        u64 shapeUserData;
+    };
+
+    hkVector4 position;
+    hkVector4 normal;
+    float fraction;
+    BodyInfo queryBodyInfo;
+    BodyInfo hitBodyInfo;
+    u32 queryType;
+    u32 unknown5c;
 };
 
 /* A collector that keeps every hit, Havok's all-hits collector by its shape
@@ -10448,8 +10542,12 @@ class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived na
 
     bool FUN_000696d0() const; /* vtable slot 6; derived name */
 
-    u8 hit[0x60];  /* derived name */
-    hkBool hasHit; /* derived name */
+    /* Slot 4 (0x696e0): a hit nearer than the kept one kept, its fraction
+     * the new early-out value. derived name. */
+    void FUN_000696e0(const hknpCollisionResult &result);
+
+    hknpCollisionResult hit; /* derived name */
+    hkBool hasHit;           /* derived name */
 };
 
 /* hkpParametricCurve (hkClass 0x57c3c68, 0x10 bytes, parent
@@ -10479,6 +10577,9 @@ class hkpLinearParametricCurve : public hkpParametricCurve
         : hkpParametricCurve(flag), points(flag), distance(flag)
     {
     }
+
+    /* Out of line (0x7f470, slot 0): the arrays given back. */
+    virtual ~hkpLinearParametricCurve();
 
     /* Slot 5 (0x7f5c0): the point at a parameter, between the points
      * either side of it. derived name. */
@@ -11118,11 +11219,25 @@ struct Object0019c150 : public hkReferencedObject /* derived name */
      * class registry. derived name. */
     virtual void FUN_0019cc20(const void *object, const hkClass &klass, void *argument3);
 
+    /* Slot 7 (0x19cc80): a pair added to the map at +0x30, the key's
+     * index in the map at +0x20 replaced by -2 and its entry there marked
+     * -2 too. derived name. */
+    void FUN_0019cc80(const void *key, const void *value);
     void FUN_0019cd00(const void *key, const void *value); /* vtable slot 8; derived name */
 
-    u8 unknown10[0x30];
-    PointerMap map40;   /* derived name */
-    u8 unknown50[0xe8]; /* to the size its deleting destructor 0x19c100 frees */
+    /* An entry of the array at +0x10 (derived names): 40 bytes, an index
+     * at +0x20 that slot 7 sets to -2. */
+    struct Entry28 {
+        u8 unknown0[0x20];
+        int index20;
+        u8 unknown24[4];
+    };
+
+    hkArray<Entry28> array10; /* derived name */
+    PointerMap map20;         /* derived name */
+    PointerMap map30;         /* derived name */
+    PointerMap map40;         /* derived name */
+    u8 unknown50[0xe8];       /* to the size its deleting destructor 0x19c100 frees */
 };
 
 /* Its out-of-line destructor body: restores the vtable, frees the arrays and
@@ -11208,7 +11323,7 @@ class hkTypeInfoRegistry : public hkReferencedObject
      * destructor 0x17d850 frees at the recorded size, 0x30 by default. */
     static void operator delete(void *object, unsigned long numBytes);
 
-    void FUN_0017d8b0(const hkTypeInfo *info); /* vtable slot 5; derived name */
+    virtual void FUN_0017d8b0(const hkTypeInfo *info); /* vtable slot 5; derived name */
     /* Slot 6: finishes a loaded object of a named type with the flag at
      * +0x28 and returns the type info, or null when no type of that name
      * is registered. */
@@ -11364,6 +11479,10 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
     virtual hkTypeInfoRegistry *FUN_0017e970();         /* vtable slot 5; derived name */
     virtual hkDefaultClassNameRegistry *FUN_0017e980(); /* vtable slot 6; derived name */
     virtual hkVtableClassRegistry *FUN_0017e990();      /* vtable slot 7; derived name */
+    /* Slot 8 (0x17ef10): a type added to the three registries, its class
+     * by its name, its type info, and its vtable when the class has one
+     * (an interface counted over it and its parents). derived name. */
+    virtual void FUN_0017ef10(const hkTypeInfo *info, const hkClass *klass);
 };
 
 extern hkBuiltinTypeRegistry *D_57c8898; /* hkBuiltinTypeRegistry's instance */

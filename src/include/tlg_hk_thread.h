@@ -208,9 +208,26 @@ class RefArraysOwner /* derived name */
     virtual void unknownVirtual9(void *const *pointers, int numPointers);
 };
 
+/* What hands the solver's arrays their objects (derived name; the factory
+ * task's +0x18, whose slots 2 and 3 the builder calls): slot 2 fills a
+ * count of pointers. */
+class RefArraysAllocator /* derived name */
+{
+  public:
+    virtual void unknownVirtual0();
+    virtual void unknownVirtual1();
+    virtual void allocate(void **pointersOut, int numPointers); /* slot 2; derived name */
+};
+
 class RefArrays /* derived name */ : public hkReferencedObject
 {
   public:
+    /* An entry's 16-bit index, passed by value as a two-byte struct (the
+     * callee widens it, 0x925e4). derived name. */
+    struct EntryId {
+        u16 value; /* derived name */
+    };
+
     /* A 16-byte entry of the first array (derived names): two 16-bit
      * fields at its end, reset to 0xffff and 0 by 0x92e70. */
     struct Entry10 {
@@ -230,6 +247,11 @@ class RefArrays /* derived name */ : public hkReferencedObject
      * entry of the first array reset (0x92e70, after the arrays' use at
      * 0x50997 and 0x515b1). derived name. */
     void FUN_00092e70(RefArraysOwner *owner);
+
+    /* A new pointer from the allocator appended to the third array, the
+     * entry at an index marked (+0xe) and given its position there (+0xc)
+     * (0x925d0; the factory task's slot 5 at 0x14e6da). derived name. */
+    void *FUN_000925d0(RefArraysAllocator *allocator, EntryId entryId);
 
     hkArray<Entry10> array10;                 /* derived name */
     hkArray<int> array20;                     /* derived name */
