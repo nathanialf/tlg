@@ -6,7 +6,7 @@
 void FUN_0002b670(const Info0002b180 *info, const float *values, Pair08Owner *self)
 {
     const int count = self->count < 4 ? self->count : 4;
-    const float scale = info->value110;
+    const float scale = lane(info->vector110, 0);
     Pair08Entry *entry = reinterpret_cast<Pair08Entry *>(self + 1);
     for (int i = 0; i < count; i++, entry++) {
         lane(entry->vectorB, 3) = -(scale * values[i]);

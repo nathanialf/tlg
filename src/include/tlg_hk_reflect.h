@@ -925,6 +925,11 @@ struct hkTransform {
      * called at 0x4f52a and from the geometry code at 0xda921). */
     void FUN_00010ad0(const hkTransform &t);
 
+    /* derived name: set to a's inverse times b, a being rigid: b's columns
+     * and its translation less a's taken into a's frame (0x10c30; called
+     * at 0x74fb2 and 0x159f0b). */
+    void FUN_00010c30(const hkTransform &a, const hkTransform &b);
+
     /* derived name: whether every column of the other transform is within
      * epsilon of this one's in x, y and z (0x10e70; the world's body
      * update asks it at 0x5d711, the game at 0xeaf6b7). */
@@ -1612,7 +1617,9 @@ struct hkStringBuf /* derived name */
     hkInplaceArray<char, 128> string; /* derived name */
 };
 
-void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
+/* The buffer set to a C string as its constructor sets it, null read as
+ * empty; the buffer returned (0x116c0). derived name. */
+hkStringBuf &FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
 /* Formatted into the buffer, printf style (0x11900). derived name. */
 void FUN_00011900(hkStringBuf *self, const char *format, ...); /* derived name */
 
@@ -3854,8 +3861,29 @@ struct hkcdStaticPvs;
 void FUN_0001d9e0(hkcdStaticPvs *self); /* derived name */
 
 /* hkcdStaticMeshTreeBase (type info 0x57bc360, size 0x70): an empty finish
- * constructor (one shared body) and an out-of-line destructor. */
-struct hkcdStaticMeshTreeBase;
+ * constructor (one shared body) and an out-of-line destructor. Its members
+ * are not typed yet. */
+struct hkcdStaticMeshTreeBase {
+    /* hkcdStaticMeshTreeBase::Connectivity (type info 0x57bc2e0, size 0x30;
+     * members from the records at 0x1690b30): headers, localLinks
+     * (hkUint8) and globalLinks (hkUint32). Its type info's cleanup
+     * (0x209b0) destroys it in place, the arrays from the last. */
+    struct Connectivity {
+        /* hkcdStaticMeshTreeBase::Connectivity::SectionHeader (8 bytes);
+         * its members are not typed yet. */
+        struct SectionHeader {
+            u8 unknown0[8];
+        };
+
+        hkArray<SectionHeader> headers;
+        hkArray<u8> localLinks;
+        hkArray<u32> globalLinks;
+    };
+
+    u8 unknown0[0x70];
+};
+
+void FUN_000209b0(void *object); /* derived name */
 
 void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_00020700(hkcdStaticMeshTreeBase *self);                                /* derived name */
@@ -5686,6 +5714,11 @@ struct hknpBodyManager /* derived name */
      * 0x4c65d): its flags marked, its index the list's end, its motion's
      * cell recorded under its id. */
     void FUN_00161490(int bodyId);
+    /* derived name: every body of the attached group a body starts that is
+     * in the broad phase or on a list put on the active list as 0x161490
+     * puts one (flag 8), then the group's motion into its cell's list
+     * (0x1614f0, called at 0x63dc6). */
+    void FUN_001614f0(int bodyId);
 
     /* derived name: for every scheduled change marked 4 whose body exists,
      * a body with flag 1 has its box recorded in the boxes at +0x28, its
@@ -6479,9 +6512,22 @@ class hknpWorldQualitySlot : public hkSlot /* derived name */
  * +0x40 and +0x120, floats at +0x110 and +0x130. */
 struct hknpSolverInfo /* derived name */
 {
-    u8 unknown0[0x40];
+    /* The step's times from a time step and a number of sub steps
+     * (0x61b30, called at 0x48f07): the time step and its half, the count
+     * in every lane, each divided by the count and the count by each, the
+     * sub step's in the vectors at +0xf0 and +0x100 (w zero) and, scaled
+     * by +0x50, at +0x110 and (negated, from the half) +0x120. derived
+     * name. */
+    void FUN_00061b30(float timeStep, float numSubSteps);
+
+    float timeStep;     /* derived name */
+    float halfTimeStep; /* derived name */
+    u8 unknown8[8];
+    Vec4 numSubStepsSplat; /* derived name */
+    u8 unknown20[0x20];
     Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
-    u8 unknown50[0x64];
+    float value50; /* derived name */
+    u8 unknown54[0x60];
     /* The steps and the micro steps of each (the solve loop at 0x3fbab
      * counts them from the world's +0x444 and +0x44c). derived names. */
     int numSteps;
@@ -6489,11 +6535,14 @@ struct hknpSolverInfo /* derived name */
     int numMicroSteps;
     u8 unknownC0[0x30];
     Vec4 vectorF0;
-    u8 unknown100[0x10];
-    float value110; /* derived name; read by 0x2b670 */
-    u8 unknown114[0x1c];
+    Vec4 vector100;
+    Vec4 vector110; /* derived name; 0x2b670 reads its first lane */
+    Vec4 vector120;
     float value130; /* derived name; read by 0x2b620 */
-    u8 unknown134[0x2c];
+    float value134;
+    float value138;
+    float value13c;
+    u8 unknown140[0x20];
 };
 
 /* One step of the solve (derived names): its index, the step's scale from
@@ -7478,6 +7527,11 @@ class hknpConvexPolytopeShape : public hknpConvexShape
      * the triangle's): the connectivity's reference released, then
      * hknpShape's destructor. */
     virtual ~hknpConvexPolytopeShape();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h; the capsule's deleting destructor 0x72ec0 frees
+     * through it). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* hknpConvexPolytopeShape::Face (records from 0x1694e60): firstIndex
      * (hkUint16) at +0, numIndices and minHalfAngle (hkUint8) at +2 and
@@ -9740,6 +9794,11 @@ class hkpWheelFrictionConstraintData : public hkpConstraintData
     int unknownVirtual5() const; /* slot 5 (FUN_0017cf20) */
     void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const; /* slot 6 (0x7c890) */
     hkBool unknownVirtual7() const;                                         /* slot 7 (0x17cf10) */
+    /* Slot 19 (0x17d010): the friction and slip impulses along the wheel's
+     * two axes (the first frame's second and third columns) under a
+     * rotation, summed. derived name. */
+    void FUN_0017d010(const hkMatrix3 *rotation, const void *argument2,
+                      const hkpSolverResults *results, Vec4 &out) const;
     void unknownVirtual20(hkBool wantRuntime,
                           ConstraintRuntimeInfo &infoOut) const; /* slot 20 (0x17cf30) */
 

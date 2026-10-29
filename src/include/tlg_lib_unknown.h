@@ -3030,6 +3030,11 @@ inline void Object0000b330::operator delete(void *object, unsigned long numBytes
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpConvexPolytopeShape::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpCompoundShape::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
