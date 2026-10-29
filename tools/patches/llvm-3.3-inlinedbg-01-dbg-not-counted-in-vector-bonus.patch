@@ -1,0 +1,33 @@
+llvm-3.3 backport patch: a debug intrinsic is not an instruction of the inline cost's vector bonus (PS4)
+
+This patch CHANGES CODE GENERATION under -g: the inline cost analysis counts
+a callee's instructions and its vector instructions, and raises the threshold
+by a vector bonus when the vector share is above a tenth or a half. The 3.3
+release counts llvm.dbg.value calls among the instructions, so a callee that
+earns the bonus at -g0 loses it at -g and is refused. It is upstream commit
+r200609 of 2014-02-01 (Chandler Carruth, from a patch by Dario Domizioli,
+"[inliner] Skip debug intrinsics even earlier in computing the inline cost so
+that they don't impact the vector bonus"), in the 3.5 release and inside the
+library compiler's generation (docs/DECISIONS.md D32's bracket). D33 holds
+the measurement.
+
+diff -ru a/lib/Analysis/IPA/InlineCost.cpp b/lib/Analysis/IPA/InlineCost.cpp
+--- a/lib/Analysis/IPA/InlineCost.cpp
++++ b/lib/Analysis/IPA/InlineCost.cpp
+@@ -806,6 +806,16 @@
+ bool CallAnalyzer::analyzeBlock(BasicBlock *BB) {
+   for (BasicBlock::iterator I = BB->begin(), E = llvm::prior(BB->end());
+        I != E; ++I) {
++    // FIXME: Currently, the number of instructions in a function regardless of
++    // our ability to simplify them during inline to constants or dead code,
++    // are actually used by the vector bonus heuristic. As long as that's true,
++    // we have to special case debug intrinsics here to prevent differences in
++    // inlining due to debug symbols. Eventually, the number of unsimplified
++    // instructions shouldn't factor into the cost computation, but until then,
++    // hack around it here.
++    if (isa<DbgInfoIntrinsic>(I))
++      continue;
++
+     ++NumInstructions;
+     if (isa<ExtractElementInst>(I) || I->getType()->isVectorTy())
+       ++NumVectorInstructions;

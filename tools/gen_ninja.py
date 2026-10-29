@@ -90,14 +90,16 @@ def main() -> int:
              "rule cxx",
              f"  command = VERSION={ver} tools/compile_cpp.sh $in $out",
              "  description = CXX $in",
+             # the depfile stays on disk (no `deps = gcc`, which would have
+             # ninja read it into its log and delete it): tools/match_check.py's
+             # compile_tu reads it to tell a fresh object from a stale one, and
+             # an object it does not recompile keeps the mtime ninja recorded
              "  depfile = $out.d",
-             "  deps = gcc",
              "",
              "rule gen_data",
              f"  command = VERSION={ver} .venv/bin/python -I tools/gen_data_inc.py $ident --out $out --depfile $out.d",
              "  description = GEN $out",
              "  depfile = $out.d",
-             "  deps = gcc",
              "  restat = 1",
              "",
              "rule gate",

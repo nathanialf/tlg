@@ -1,0 +1,42 @@
+llvm-3.3 backport patch: a debug intrinsic does not count against the memory dependence scan limit (PS4)
+
+This patch CHANGES CODE GENERATION under -g: MemoryDependenceAnalysis walks a
+block backwards from a load or store looking for its dependence and gives up
+after a fixed number of instructions (the block scan limit, 100). The 3.3
+release decrements that limit before it skips a debug intrinsic, so a block
+holding many llvm.dbg.value calls runs out of budget and a dependence that
+-g0 finds is unknown at -g, which changes what GVN and DSE do. It is upstream
+commit r194646 of 2013-11-13 (Yunzhong Gao, "Fixing a heisenbug where the
+memory dependence analysis behaves differently with and without -g"), in the
+3.4 release: the skip moved before the decrement, in getPointerDependencyFrom.
+The library region was built with debug information (docs/DECISIONS.md D30)
+by a compiler of that generation (D32's bracket); D33 holds the measurement.
+
+diff -ru a/lib/Analysis/MemoryDependenceAnalysis.cpp b/lib/Analysis/MemoryDependenceAnalysis.cpp
+--- a/lib/Analysis/MemoryDependenceAnalysis.cpp
++++ b/lib/Analysis/MemoryDependenceAnalysis.cpp
+@@ -371,18 +371,19 @@
+ 
+   // Walk backwards through the basic block, looking for dependencies.
+   while (ScanIt != BB->begin()) {
++    Instruction *Inst = --ScanIt;
++
++    if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(Inst))
++      // Debug intrinsics don't (and can't) cause dependences.
++      if (isa<DbgInfoIntrinsic>(II)) continue;
++
+     // Limit the amount of scanning we do so we don't end up with quadratic
+     // running time on extreme testcases.
+     --Limit;
+     if (!Limit)
+       return MemDepResult::getUnknown();
+ 
+-    Instruction *Inst = --ScanIt;
+-
+     if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(Inst)) {
+-      // Debug intrinsics don't (and can't) cause dependences.
+-      if (isa<DbgInfoIntrinsic>(II)) continue;
+-
+       // If we reach a lifetime begin or end marker, then the query ends here
+       // because the value is undefined.
+       if (II->getIntrinsicID() == Intrinsic::lifetime_start) {

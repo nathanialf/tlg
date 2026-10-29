@@ -1,9 +1,8 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* Blocked on a ruling, not claimed: the vtable 0x169ffd0 (address point
- * 0x169ffe0) is in neither vtables file (equal in quick_diff, the vptr
- * store its one unverified relocation; docs/NOTES.md, Round 53). */
+/* The vtable 0x169ffd0 (address point 0x169ffe0) is a derived row of
+ * config/vtables.derived.base.txt (docs/DECISIONS.md D14, round 53). */
 ConstraintData169ffe0::ConstraintData169ffe0()
 {
     atoms.transforms.type = hkpConstraintAtom::TYPE_SET_LOCAL_TRANSFORMS;

@@ -761,6 +761,22 @@ storing function by that function's current row, `_ZN21hknpVehicleSuspensionD1Ev
 column is the function that stores the vtable, a constructor or, as here, a
 destructor.
 
+Round 53's harvest added two rows. ConstraintData169ffe0 0x169ffd0 (a
+derived name already carried by the claimed slot 20 row 0x832b0; no type
+info and no string names it): stored only by its constructor 0x831a0, which
+sets a local-transforms atom and an angular friction atom (type 17), slot 5
+0x83330 returns 26, slot 7 is 0x832d0 and slot 20 0x832b0; the constructor,
+equal in quick_diff but for this relocation, is claimed with the row.
+hkPlatformObjectWriter 0x16a6910 (a derived name already carried by the
+claimed slot 6 row 0x19ae90, after the public Havok SDK class whose two
+virtuals, the object write and the raw write, sit in slots 5 and 6; no
+string names it): stored by its constructor 0x19a950 and both destructors
+0x19ab10 (slot 1) and 0x19abf0 (slot 0); the constructor keeps a 32-byte
+object taken through the memory router at +0x10, which the destructors
+release, and copies the host layout rules (the bytes 08 01 01 01 at
+0x14cb8f6) to its stack; seven slots, 2 to 4 the common 0x270, 0x42d0,
+0x69a0, 5 0x19aca0, 6 0x19ae90.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -1767,36 +1783,62 @@ derives the ranks from the IR and writes the shape the program has.
 magnitude the base computes as an IR shift would (a `vpslld 1` where the
 idiom's add should be).
 
+**Addendum (round 53).** The bracket refutes a second hypothesis the same
+way. Round 53's worker, on the quaternion from an axis and an angle
+(0x19ff0, 26 of 28 on one product's operand order), found that LLVM 4.0's
+`BuildRankMap` ranks only the instructions `mayBeMemoryDependent` admits
+(`Reassociate.cpp:166`), which would place the base's order, where 3.3 ranks
+the fixed list of `isUnmovableInstruction` (a phi, landing pad, alloca,
+load, invoke, non-debug call, division or remainder). That change is
+upstream r244244 of 2015-08-06 (review D11577, "Reassociate: Implement
+isUnmovableInstruction() without a hardcoded list", Matthias Braun,
+committed by Quentin Colombet), sixteen months after r206214; the 3.6.2
+release still carries 3.3's list. The library compiler ranks by 3.3's list,
+and the function's order is found among the instructions that list ranks
+(the SSE intrinsics 3.3 still lowers through calls, a division, a load),
+not by a later rule.
+
 ## D33. The library compiler counts no debug intrinsic in the inline cost's vector bonus nor in the memory dependence scan limit (2026-10-29)
 
-**Question (open; experiment pending).** Round 52's worker left three
-functions NONMATCHING on the library line's `-g` (D30) alone: 0xbf40 and
-0x1a1c0 compile equal at `-g0` and differ at `-g` because 3.3's inline cost
-counts a function's `llvm.dbg.value` calls among its instructions before
-the vector bonus is decided (`lib/Analysis/IPA/InlineCost.cpp:809-811`,
-`analyzeBlock`; the callee's cost 330 against the threshold 325, the bonus
-withheld), and 0x30ca0 (189 of 197 at `-g0`) because 3.3's memory dependence
-scan decrements its block scan limit before it skips a debug intrinsic
-(`lib/Analysis/MemoryDependenceAnalysis.cpp:376-384`,
-`getPointerDependencyFrom`), so a block with many `dbg.value`s runs out of
-budget and a load's dependence is unknown. Upstream fixed both: r194646
-(2013-11-13, Yunzhong Gao, "Fixing a heisenbug where the memory dependence
-analysis behaves differently with and without -g": the skip moved before
-the decrement, in 3.4) and r200609 (2014-02-01, Chandler Carruth from a
-patch by Dario Domizioli, "[inliner] Skip debug intrinsics even earlier in
-computing the inline cost so that they don't impact the vector bonus": the
-intrinsic skipped before `++NumInstructions`, in 3.5). Both sit before
-r206214 and the second after r196925, inside the generation D32 brackets
-for the library compiler, and both were filed by engineers of the PS4
-toolchain team, so the model predicts the base's compiler carries them.
-They are candidate seventh and eighth backports, measured as D31 was: an
-experimental compiler with both patches, the three functions compiled under
-it, and `gate-all` holding on every claimed function under the swapped
-compiler. Until then the compiler is unchanged, the three functions are
-parked, and a worker that meets a shape equal at `-g0` and refused at `-g`
-by one of these two counts classifies it as this question.
+**Decision.** The library prefix compiles with a seventh and an eighth
+backport patch: `tools/patches/llvm-3.3-memdepdbg-01-dbg-before-scan-limit.patch`
+(upstream r194646 of 2013-11-13, Yunzhong Gao, "Fixing a heisenbug where the
+memory dependence analysis behaves differently with and without -g": in
+`getPointerDependencyFrom` a debug intrinsic is skipped before the block
+scan limit is decremented, as the 3.4 release has it) and
+`tools/patches/llvm-3.3-inlinedbg-01-dbg-not-counted-in-vector-bonus.patch`
+(upstream r200609 of 2014-02-01, Chandler Carruth from a patch by Dario
+Domizioli, "[inliner] Skip debug intrinsics even earlier in computing the
+inline cost so that they don't impact the vector bonus": `analyzeBlock`
+skips a debug intrinsic before counting it, as the 3.5 release has it). A
+debug intrinsic is then neither an instruction of the inline cost's vector
+bonus nor a step of the memory dependence scan, and the library line's `-g`
+(D30) changes neither decision.
 
-**Trigger to revisit.** The experiment's result, recorded here as a
-decision or a refutation; or a library function whose base shows the
-3.3 count (an inline refused, or a dependence lost, by debug intrinsics
-alone).
+**Evidence.** Round 52's worker left three functions NONMATCHING on `-g`
+alone: 0xbf40 and 0x1a1c0 compile equal at `-g0` and differ at `-g` because
+3.3's inline cost counts the callee's `llvm.dbg.value` calls among its
+instructions before the vector bonus is decided
+(`lib/Analysis/IPA/InlineCost.cpp:809-811`; the callee's cost 330 against the
+threshold 325, the bonus withheld), and 0x30ca0 (189 of 197 at `-g0`)
+because 3.3's memory dependence scan decrements its block scan limit before
+it skips a debug intrinsic (`lib/Analysis/MemoryDependenceAnalysis.cpp:376-384`),
+so a block with many `dbg.value`s runs out of budget and a load's dependence
+is unknown. Both upstream fixes sit inside the library compiler's generation
+(after r196925 of 2013-12-10 for the second, before r206214 of 2014-04-14
+for both, D32's bracket) and both were filed by engineers of the PS4
+toolchain team, so the model predicts the base's compiler carries them.
+Measured as D31 was: an experimental 3.3 built in the supervisor's scratch
+space from the live source with both patches; under it 0xbf40 and 0x1a1c0
+compile equal and 0x30ca0 reaches its `-g0` figure (189 of 197, its
+remainder another shape), and `gate-all` in a snapshot of the tree holds on
+every one of the 1,872 claimed functions (every library object rebuilt under
+the swapped compiler, 3,104 relocations resolved, every segment identical).
+The live compiler was rebuilt with both patches after round 53's harvest,
+and the hook's gate on the adopting commit holds under it. 0xbf40, 0x1a1c0
+and 0x30ca0 return to the queue.
+
+**Trigger to revisit.** A library function whose base shows the 3.3 count
+(an inline refused, or a dependence lost, by debug intrinsics alone); or a
+third place where 3.3's `-g` output differs from its `-g0` output by a
+count of debug intrinsics, which would be measured the same way.
