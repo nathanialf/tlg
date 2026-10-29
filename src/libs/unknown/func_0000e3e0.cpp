@@ -28,17 +28,31 @@ hkStringPtr::hkStringPtr(const hkStringPtr &other)
     }
 }
 
-hkStringPtr &hkStringPtr::operator=(const char *string)
+/* A C string assigned unless it is the one held: an owned old string given
+ * back first, then an owned copy of the new one, or null. Both assignments
+ * run it in place (0xe620, 0xe6c0). derived name. */
+static inline void assignString(hkStringPtr &self, const char *string) /* derived name */
 {
-    if (cString() != string) {
-        if (reinterpret_cast<hkUlong>(stringAndFlag) & 1) {
-            FUN_0000bc80(*D_16dc070->temp58, const_cast<char *>(stringAndFlag - 1));
+    if (self.cString() != string) {
+        if (reinterpret_cast<hkUlong>(self.stringAndFlag) & 1) {
+            FUN_0000bc80(*D_16dc070->temp58, const_cast<char *>(self.stringAndFlag - 1));
         }
         if (string) {
-            stringAndFlag = duplicateOwned(string);
+            self.stringAndFlag = duplicateOwned(string);
         } else {
-            stringAndFlag = 0;
+            self.stringAndFlag = 0;
         }
     }
+}
+
+hkStringPtr &hkStringPtr::operator=(const char *string)
+{
+    assignString(*this, string);
+    return *this;
+}
+
+hkStringPtr &hkStringPtr::operator=(const hkStringPtr &other)
+{
+    assignString(*this, other.cString());
     return *this;
 }

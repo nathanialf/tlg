@@ -270,6 +270,20 @@ template <typename T> inline void constructWithCopy(T *t, const T &copy)
 {
     constructWithCopy(t, copy, typename hkTrait::PodSelect<hkTrait::IsPodType<T>::result>::type());
 }
+
+/* An element default-constructed in place: nothing for plain old data, the
+ * constructor for a class (an expanded array's new element, 0x17f386). */
+template <typename T> inline void construct(T *, hkTrait::TypeIsPod) {}
+
+template <typename T> inline void construct(T *t, hkTrait::TypeIsClass)
+{
+    new (t) T;
+}
+
+template <typename T> inline void construct(T *t)
+{
+    construct(t, typename hkTrait::PodSelect<hkTrait::IsPodType<T>::result>::type());
+}
 } // namespace hkArrayUtil
 
 /* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
@@ -1514,6 +1528,10 @@ struct hkStringPtr {
      * back first when owned, then a copy of the new one, owned, or null. */
     hkStringPtr &operator=(const char *string);
 
+    /* Out of line (0xe6c0): the other's string assigned as a C string, the
+     * assignment above inline. */
+    hkStringPtr &operator=(const hkStringPtr &other);
+
     /* Out of line (0xe5d0): an owned string (bit 0 of the pointer) goes
      * back to the thread's heap and the pointer is cleared. Members are
      * destroyed after the destructor body of the class holding them, so
@@ -1571,10 +1589,6 @@ struct hkStringBuf /* derived name */
 void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
 /* Formatted into the buffer, printf style (0x11900). derived name. */
 void FUN_00011900(hkStringBuf *self, const char *format, ...); /* derived name */
-
-/* The assignment: the other's string, copied when the other owns it
- * (0xe6c0). derived name. */
-void FUN_0000e6c0(hkStringPtr *self, const hkStringPtr *other); /* derived name */
 
 /* The string library's byte copy, a wrapper over memcpy (0x17e70). */
 void FUN_00017e70(void *dst, const void *src, unsigned int n); /* derived name */
@@ -2245,7 +2259,11 @@ struct hknpVehicleTransmissionOutput /* derived name */
 {
     /* The engine speed slot 9 (0x680b0) shifts by. derived name. */
     float transmissionRPM;
-    u8 unknown4[0xd];
+    /* Slot 6's torque, shared to the wheels by their ratios. derived
+     * name. */
+    float mainTransmittedTorque;
+    float *wheelsTransmittedTorque; /* derived name */
+    u8 unknown10;
     hkBool isReversing; /* derived name */
     s8 currentGear;     /* derived name */
     /* Set while the gear changes: slot 6 (0x67ffc) passes no torque then.
@@ -2279,7 +2297,11 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
 
     /* Slots 5 to 10 (0x67f40, 0x67ff0, 0x68030, 0x68130, 0x680b0,
      * 0x67ef0); slot 6 asks slot 10 for the ratio through the vtable. */
-    virtual void unknownVirtual5();
+    /* Slot 5 (0x67f40): the output filled from slots 8, 6 and 7, each
+     * wheel's torque its ratio of the main one, then slot 9's shift. derived
+     * name. */
+    virtual void FUN_00067f40(float deltaTime, const hknpVehicleInstance *vehicle,
+                              hknpVehicleTransmissionOutput &output) const;
     /* Slot 6: the torque passed on, none while the gear changes. derived
      * name. */
     virtual float FUN_00067ff0(const hknpVehicleInstance *vehicle,
@@ -5560,7 +5582,10 @@ struct hknpBody {
     u32 nextAttachedBodyId;
     int motionId;
     u32 broadPhaseId; /* -1 while the body is not in the broad phase */
-    u8 unknown70[3];
+    u8 unknown70[2];
+    /* Its quality, an index into the world's body quality library
+     * (0x5b4ef). derived name. */
+    u8 qualityId;
     /* Two values 0x161400 clears when it resets a body's flags. derived
      * names. */
     u8 byte73;
@@ -6488,11 +6513,25 @@ void FUN_00175a80(const hknpWorld *world, int threadIndex, const void *streamA, 
 void FUN_00175a80(const hknpWorld *world, int threadIndex, const void *streamA, const void *streamB,
                   const void *array);
 
+struct hknpBodyQualityLibrary;
+struct hknpBodyQuality;
+
+/* derived name: one body integrated over a step (0xcd040; the attached
+ * bodies' walk 0x5b490 runs it on each): the body, the step's argument, its
+ * quality, then the world's vector at +0x250, its solver settings and its
+ * data at +0x1f0. */
+void FUN_000cd040(hknpBody *body, void *argument, const hknpBodyQuality *quality,
+                  const Vec4 *vector, const hknpSolverInfo *solverInfo, void *data1f0);
+
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
      * rotated by the motion's orientation (0x5df30; the caller at
      * 0x16126e). derived name. */
     void FUN_0005df30(int bodyId, Vec4 &angularVelocityOut) const;
+
+    /* Each body attached to a body integrated in turn, the first one
+     * included (0x5b490). derived name. */
+    void FUN_0005b490(int firstBodyId, void *argument);
 
     /* Two of the step's stages, run by the solve tasks under the timer
      * "Physics" (0x50fd0 by hknpPostSolveTask, 0x509f0 by hknpPreSolveTask).
@@ -6592,7 +6631,8 @@ struct hknpWorld {
     /* The material library: the constructor subscribes 0x4bc60 to its
      * materialAddedSignal and 0x4bc40 to its materialModifiedSignal. */
     hknpMaterialLibrary *materialLibrary; /* derived name */
-    u8 unknown650[0x10];
+    u8 unknown650[8];
+    hknpBodyQualityLibrary *qualityLibrary; /* derived name */
     /* A bit per material id: FUN_0004bc40, the handler of the library's
      * materialModifiedSignal, sets the id's bit; FUN_0004bc60, the handler
      * of its materialAddedSignal, keeps the field as long as the
@@ -10130,6 +10170,9 @@ class hkMemoryResourceHandle : public hkResourceHandle
     const char *FUN_0017f2d0() const;              /* vtable slot 6; derived name */
     const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
     void FUN_0017f320(hkReferencedObject *object); /* vtable slot 10; derived name */
+    /* Slot 11 (0x17f330): an external link appended, its member name and
+     * id copied. derived name. */
+    void FUN_0017f330(const char *memberName, const char *externalId);
     /* Slot 14 (0x17f270): every external link destroyed, the storage kept.
      * derived name. */
     void FUN_0017f270();

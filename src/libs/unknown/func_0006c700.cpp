@@ -3,6 +3,6 @@
 
 hknpMaterial::hknpMaterial(const hknpMaterial &other)
 {
-    FUN_0000e6c0(&name, &other.name);
+    name = other.name;
     FUN_00017e70(&isExclusive, &other.isExclusive, sizeof(hknpMaterial) - sizeof(hkStringPtr));
 }

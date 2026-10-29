@@ -609,6 +609,7 @@ template <typename T> inline T &hkArray<T>::expandOne()
     if (size == getCapacity()) {
         FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
     }
+    hkArrayUtil::construct(data + size);
     return data[size++];
 }
 
