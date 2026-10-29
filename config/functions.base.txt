@@ -1568,7 +1568,7 @@
 0x0006c810 0x34 _ZN23hknpWorldObject1d0SmallD0Ev
 0x0006c850 0xe3f FUN_0006c850
 0x0006d690 0x864 FUN_0006d690
-0x0006df00 0xa6 FUN_0006df00
+0x0006df00 0xa6 _ZN15hknpVehicleDataD1Ev
 0x0006dfb0 0xdf FUN_0006dfb0
 0x0006e0a0 0x32f FUN_0006e0a0
 0x0006e3d0 0x9a FUN_0006e3d0
@@ -1593,7 +1593,7 @@
 0x0006fa60 0x11 FUN_0006fa60
 0x0006fa80 0xf _ZN23hknpShapeMassPropertiesC1E24hkFinishLoadedObjectFlag
 0x0006fa90 0xf _ZN9hknpShapeC1E24hkFinishLoadedObjectFlag
-0x0006faa0 0xa6 FUN_0006faa0
+0x0006faa0 0xa6 _ZN9hknpShapeD0Ev
 0x0006fb50 0x64 _ZN9hknpShapeD2Ev
 0x0006fbd0 0x97 FUN_0006fbd0
 0x0006fc70 0x68 FUN_0006fc70

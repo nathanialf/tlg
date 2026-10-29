@@ -3030,7 +3030,7 @@ inline void Object0000b330::operator delete(void *object, unsigned long numBytes
     freeReferencedObject(object, numBytes);
 }
 
-inline void hknpConvexPolytopeShape::operator delete(void *object, unsigned long numBytes)
+inline void hknpShape::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -4389,5 +4389,19 @@ struct Schema0017d430 /* derived name */
 /* derived name: 0x17d430, called by the solver's setup at 0xcc9aa. */
 void FUN_0017d430(const SetupParams0017d430 *params, const SetupScales0017d430 *scales,
                   SetupOut0017d430 *out, Schema0017d430 **schemaInOut);
+
+/* What a loaded buffer of the thread's heap keeps at its end (derived
+ * names): the number of objects to clean up in its last four bytes, after
+ * that many records of an object's type info and the object. */
+struct LoadedObjectRecord /* derived name */
+{
+    const hkTypeInfo *type; /* derived name */
+    void *object;           /* derived name */
+};
+
+/* A loaded buffer given back (0x19bb80; the loader's 0x19a7c0 frees each of
+ * its buffers with it): each recorded object cleaned up through its type
+ * info, then the block freed; always 0. derived name. */
+int FUN_0019bb80(void *buffer); /* derived name */
 
 #endif

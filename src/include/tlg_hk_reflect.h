@@ -2749,11 +2749,13 @@ class hkpVehicleFrictionDescription : public hkReferencedObject
   public:
     hkpVehicleFrictionDescription(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    /* Empty (the shared 0x3b640); the deleting destructor 0x691d0, beside
+    /* Empty and inline (the shared 0x3b640; hknpVehicleData's destructor
+     * 0x6df00 has nothing of it): the deleting destructor 0x691d0, beside
      * the finish callback of hknpVehicleData (which holds a friction
-     * description at +0xb0), is the body the vtables of the 0xe0-byte
-     * reference-counted classes with empty destructors cite (D15). */
-    virtual ~hkpVehicleFrictionDescription();
+     * description at +0xb0, and whose file emits the vtable with it), is
+     * the body the vtables of the 0xe0-byte reference-counted classes with
+     * empty destructors cite (D15). */
+    virtual ~hkpVehicleFrictionDescription() {}
 
     static void operator delete(void *object, unsigned long numBytes);
 
@@ -4917,6 +4919,11 @@ class alignas(16) hknpShape : public hkReferencedObject
     }
 
     virtual ~hknpShape();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h): the shapes' deleting destructors free through it
+     * (hknpShape's own 0x6faa0, the capsule's 0x72ec0). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slots 5 and 6: the defaults (0x6e3d0, 0x6e510) report "Not
      * implemented" and return 22 and 0. */
@@ -7527,11 +7534,6 @@ class hknpConvexPolytopeShape : public hknpConvexShape
      * the triangle's): the connectivity's reference released, then
      * hknpShape's destructor. */
     virtual ~hknpConvexPolytopeShape();
-
-    /* The reference-counted class delete (freeReferencedObject in
-     * tlg_lib_unknown.h; the capsule's deleting destructor 0x72ec0 frees
-     * through it). */
-    static void operator delete(void *object, unsigned long numBytes);
 
     /* hknpConvexPolytopeShape::Face (records from 0x1694e60): firstIndex
      * (hkUint16) at +0, numIndices and minHalfAngle (hkUint8) at +2 and
@@ -10513,6 +10515,9 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
      * null slot left for it. derived name. */
     int FUN_000acfc0(hkMeshTexture *texture);
     void FUN_000ad1c0(hkMeshTexture *texture); /* vtable slot 13; derived name */
+    /* Slot 14 (0xad1f0): the texture at an index replaced, the new one's
+     * reference taken and the old one's released. derived name. */
+    void FUN_000ad1f0(int index, hkMeshTexture *texture);
     void FUN_000ad2a0(Vec4 &diffuse, Vec4 &ambient, Vec4 &specular,
                       Vec4 &emissive) const; /* vtable slot 15; derived name */
     void FUN_000ad2d0(const Vec4 &diffuse, const Vec4 &ambient, const Vec4 &specular,
@@ -12893,6 +12898,11 @@ class hkPrimaryCommandDispatcher /* derived name */
 {
   public:
     void FUN_00090830(const hkCommand &command); /* derived name */
+
+    /* The executor of a primary type set, its reference taken and the
+     * previous one's released (0x90780; the world's constructor sets
+     * three, 0x49771 to 0x497a7). derived name. */
+    void FUN_00090780(u32 primaryType, hkSecondaryCommandDispatcher *dispatcher);
 
     hkSecondaryCommandDispatcher *dispatchers[8]; /* derived name */
 };

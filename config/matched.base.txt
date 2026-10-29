@@ -1228,7 +1228,7 @@ _ZN24hknpGroupCollisionFilterD0Ev src/libs/unknown/func_0003a350.cpp
 FUN_0003ddd0 src/libs/unknown/func_0003ddd0.cpp _ZNK35hknpLinearIntegrationClippedCommand12FUN_0003ddd0EP9hknpWorldR9hkOstream
 _ZN23hknpCharacterProxyCinfoD0Ev src/libs/unknown/func_000404b0.cpp
 _ZN18DefaultModifierSetD0Ev src/libs/unknown/func_00048ad0.cpp
-_ZN29hkpVehicleFrictionDescriptionD0Ev src/libs/unknown/func_000691d0.cpp
+_ZN29hkpVehicleFrictionDescriptionD0Ev src/libs/unknown/func_00069250.cpp
 FUN_000788f0 src/libs/unknown/func_000788f0.cpp _Z12FUN_000788f0Pvi
 _ZN25hkpCogWheelConstraintDataD0Ev src/libs/unknown/func_0007b3b0.cpp
 _ZN26hkpVelocityConstraintMotorD0Ev src/libs/unknown/func_0007c0b0.cpp
@@ -1927,3 +1927,7 @@ FUN_0017d010 src/libs/unknown/func_0017d010.cpp _ZNK30hkpWheelFrictionConstraint
 FUN_000116c0 src/libs/unknown/func_000116c0.cpp _Z12FUN_000116c0P11hkStringBufPKc
 FUN_00061b30 src/libs/unknown/func_00061b30.cpp _ZN14hknpSolverInfo12FUN_00061b30Eff
 _ZN16hknpCapsuleShapeD0Ev src/libs/unknown/func_00072e50.cpp
+_ZN15hknpVehicleDataD1Ev src/libs/unknown/func_0006df00.cpp
+_ZN9hknpShapeD0Ev src/libs/unknown/func_0006fb50.cpp
+FUN_00090780 src/libs/unknown/func_00090780.cpp _ZN26hkPrimaryCommandDispatcher12FUN_00090780EjP28hkSecondaryCommandDispatcher
+FUN_000ad1f0 src/libs/unknown/func_000ad1f0.cpp _ZN20hkMemoryMeshMaterial12FUN_000ad1f0EiP13hkMeshTexture
