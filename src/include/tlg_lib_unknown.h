@@ -623,14 +623,32 @@ template <typename T> inline T &hkArray<T>::expandOne(AllocatorBase &allocator)
 
 /* An array of 32-byte elements and the indices of the free ones (derived
  * names): FUN_00198a70 grows the elements, FUN_00198a20 hands an index
- * back; FUN_0013e090 builds one and walks it. */
+ * back; FUN_0013e090 builds one and walks it. The elements are the nodes
+ * of the broad phase's trees (BroadPhaseTree00142a40, below). */
 struct ElementPool00198a20 /* derived name */
 {
+    /* A node (derived names): its box; its two children, a leaf's first
+     * the index of its bucket and its second NO_CHILD; the number of leaves
+     * under it, which the refit 0x197610 counts. */
     struct Element {
-        u8 unknown0[0x20];
+        enum { NO_CHILD = 0x7fffffff };
+
+        hkAabb16 aabb;
+        int children[2];
+        int numLeaves;
+        u8 unknown1c[4];
     };
 
     void FUN_00198a20(int index); /* derived name */
+
+    /* Room for numElements (0x196570): the elements grown to that size and
+     * each new index handed to the free list, the highest first. derived
+     * name. */
+    void FUN_00196570(int numElements);
+
+    /* The boxes and the leaf counts of a subtree refitted from its leaves
+     * (0x197610, recursive); its number of leaves back. derived name. */
+    int FUN_00197610(Element *node);
 
     hkArray<Element> elements; /* derived name */
     hkArray<int> freeIndices;  /* derived name */
@@ -3542,6 +3560,255 @@ inline AllocatorBase &hkContainerTempAllocator::get()
 {
     return D_57b8470;
 }
+
+/* An array over the temporary allocator with its first N elements in place
+ * (derived name; Havok's hkInplaceArray over hkContainerTempAllocator): the
+ * storage it grew to given back to that allocator when it goes. */
+template <typename T, int N> struct TempInplaceArray : public hkArray<T> /* derived name */ {
+    TempInplaceArray() : hkArray<T>(storage, 0, N) {}
+
+    ~TempInplaceArray()
+    {
+        this->size = 0;
+        if ((this->capacityAndFlags & hkArray<T>::DONT_DEALLOCATE_FLAG) == 0) {
+            hkContainerTempAllocator::get().template freeElements<T>(this->data,
+                                                                     this->getCapacity());
+        }
+        this->data = 0;
+        this->capacityAndFlags = hkArray<T>::DONT_DEALLOCATE_FLAG;
+    }
+
+    T storage[N];
+};
+
+/* The same without storage in place (derived name), sized at construction
+ * through the temporary allocator's slot 4, which may round the size up. */
+template <typename T> struct TempArray : public hkArray<T> /* derived name */ {
+    TempArray() {}
+
+    explicit TempArray(int n)
+    {
+        int numBytes = n * int(sizeof(T));
+        int capacity = 0;
+        this->data = 0;
+        if (n != 0) {
+            this->data = static_cast<T *>(hkContainerTempAllocator::get().FUN_00008d70(numBytes));
+            capacity = numBytes / int(sizeof(T));
+        }
+        this->size = n;
+        this->capacityAndFlags = capacity ? capacity : hkArray<T>::DONT_DEALLOCATE_FLAG;
+    }
+
+    ~TempArray()
+    {
+        this->size = 0;
+        if ((this->capacityAndFlags & hkArray<T>::DONT_DEALLOCATE_FLAG) == 0) {
+            hkContainerTempAllocator::get().template freeElements<T>(this->data,
+                                                                     this->getCapacity());
+        }
+        this->data = 0;
+        this->capacityAndFlags = hkArray<T>::DONT_DEALLOCATE_FLAG;
+    }
+};
+
+/* A block of the thread's stack allocator, rounded up to 128 bytes
+ * (derived names; Havok's hkLocalBuffer and hkLocalArray): the fast paths of
+ * Allocator0000ed40's slots 2 and 3 inline, a block that does not fit in
+ * the slab or is not the top one through FUN_0000f090 and FUN_0000f460. */
+inline void *stackBlockAlloc(int numBytes) /* derived name */
+{
+    Allocator0000ed40 &stack = D_16dc070->stack;
+    if (numBytes <= stack.slabSize) {
+        char *block = stack.cur;
+        char *blockEnd = block + numBytes;
+        if (blockEnd <= stack.end) {
+            stack.cur = blockEnd;
+            return block;
+        }
+    }
+    return stack.FUN_0000f090(numBytes);
+}
+
+inline void stackBlockFree(void *pointer, int numBytes) /* derived name */
+{
+    Allocator0000ed40 &stack = D_16dc070->stack;
+    if (stack.slabSize >= numBytes && static_cast<char *>(pointer) + numBytes == stack.cur &&
+        stack.slabStart != pointer) {
+        stack.cur = static_cast<char *>(pointer);
+    } else {
+        stack.FUN_0000f460(pointer, numBytes);
+    }
+}
+
+template <typename T> struct LocalBuffer /* derived name */ {
+    LocalBuffer(int n) : data(static_cast<T *>(stackBlockAlloc(roundedSize(n)))), size(n) {}
+
+    ~LocalBuffer()
+    {
+        stackBlockFree(data, roundedSize(size));
+    }
+
+    static int roundedSize(int n)
+    {
+        return (n * int(sizeof(T)) + 127) & ~127;
+    }
+
+    T *data;
+    int size;
+};
+
+template <typename T> struct LocalArray : public hkArray<T> /* derived name */ {
+    explicit LocalArray(int n)
+        : hkArray<T>(n ? static_cast<T *>(stackBlockAlloc(LocalBuffer<T>::roundedSize(n))) : 0, 0,
+                     n),
+          localMemory(this->data), initialCapacity(n)
+    {
+    }
+
+    ~LocalArray()
+    {
+        if (localMemory == this->data) {
+            this->size = 0;
+        }
+        stackBlockFree(localMemory, LocalBuffer<T>::roundedSize(initialCapacity));
+    }
+
+    T *localMemory;      /* derived name */
+    int initialCapacity; /* derived name */
+};
+
+/* One of the broad phase's trees (derived names; the layer updates time
+ * themselves "TtUpdateVolatileTree" and "TtUpdateNonVolatileTree"): its
+ * nodes from a pool, its leaves buckets of up to 31 boxes, each box keyed
+ * by the body it belongs to. */
+struct BroadPhaseTree00142a40 /* derived name */
+{
+    typedef ElementPool00198a20::Element Node;
+
+    /* A leaf's bucket, 0x200 bytes: the number of boxes, the updates since
+     * its boxes were last sorted, the boxes from +0x10. */
+    struct Bucket {
+        int numEntries;
+        int age;
+        u8 unknown8[8];
+        hkAabb16 entries[31];
+    };
+
+    /* A box on the rebuild's lists, 16 bytes: its body's key, then twice
+     * its centre (the sum of the bounds) on each axis. */
+    struct Entry {
+        u32 key;
+        u32 centre2[3];
+    };
+
+    ElementPool00198a20 nodes;
+    int root; /* NO_CHILD when the tree is empty */
+    int numLeaves;
+    int numEntries; /* the boxes in all the buckets */
+    Bucket *buckets;
+    u8 unknown38[8];
+    hkArray<int> freeBuckets;
+    /* A subtree with no more boxes than this becomes one leaf (0x13f52e). */
+    int maxLeafEntries;
+};
+
+/* The walk of a tree into a flat list (0x13b790, recursive): an item per
+ * node, a leaf's node pointers in order of the walk. derived names. */
+struct TreeWalk0013b790 /* derived name */
+{
+    /* A node's place in the walk: its first leaf, the leaves under each
+     * child, the items of the children. */
+    struct Item {
+        int firstLeaf;
+        int numLeft;
+        int numRight;
+        int leftItem;
+        int rightItem;
+    };
+
+    /* The node and its subtree from the next item on, its leaves from
+     * firstLeaf on; the leaf after its last back. derived name. */
+    int FUN_0013b790(const BroadPhaseTree00142a40::Node *node, int &numItems, int firstLeaf);
+
+    TempInplaceArray<Item, 32> items;
+    TempInplaceArray<BroadPhaseTree00142a40::Node *, 128> leaves;
+    const BroadPhaseTree00142a40 *tree;
+};
+
+/* A leaf's age and its place in the walk, sorted by age (0x13b6c0, a
+ * quicksort over [first, last]). derived names. */
+struct LeafAge0013b6c0 /* derived name */
+{
+    int age;
+    int leaf;
+};
+
+void FUN_0013b6c0(LeafAge0013b6c0 *ages, int first, int last); /* derived name */
+
+/* The nodes of a subtree into the two lists, the inner ones and the leaves
+ * (0x1985d0). derived name. */
+void FUN_001985d0(int nodeIndex, BroadPhaseTree00142a40 *tree, hkArray<int> &innerNodes,
+                  hkArray<int> &leafNodes); /* derived name */
+
+/* A node rebuilt over the bodies of the keys given: 0x13c340 splits them
+ * under the box of their centres, 0x13de80 puts them in one leaf. derived
+ * names. */
+void FUN_0013c340(BroadPhaseTree00142a40 *tree, int nodeIndex, const hkAabb16 *centres,
+                  const hknpBody *bodies, const int *keys, int numKeys); /* derived name */
+void FUN_0013de80(BroadPhaseTree00142a40 *tree, int nodeIndex, const hknpBody *bodies,
+                  const int *keys, int numKeys); /* derived name */
+
+/* A reference-counted object of the vtable 0x16a5b70 (no row yet: its
+ * constructor 0x176420 builds it from a construction info and stores the
+ * vtable at 0x176450; the game builds one at 0xea901a). The object at +0x20
+ * starts null; 0x177130 sets it, a reference taken on the new one before the
+ * old one's is released (the game passes its +0x60 at 0xea9048). derived
+ * names. */
+struct Object00176420 /* derived name */
+{
+    void FUN_00177130(hkReferencedObject *object); /* derived name */
+
+    u8 unknown0[0x20];
+    hkReferencedObject *object20; /* derived name */
+};
+
+/* The broad phase's trees by layer (derived names): a tree per layer from
+ * +0x10, two flags per layer after them, the number of layers at +0x60. */
+struct BroadPhaseLayers00142a40 /* derived name */
+{
+    u8 unknown0[0x10];
+    BroadPhaseTree00142a40 *trees[8];
+    bool flag50[8];
+    bool updatePending[8]; /* cleared by both trees' updates */
+    int numLayers;
+    u8 unknown64[0x2c];
+    /* While the first does not exceed the second, the broad phase's update
+     * runs FUN_00141500 first (0x142bff). derived names. */
+    u32 count90;
+    u32 count94;
+};
+
+/* The work the broad phase's update runs first (0x141500, 0x1533 bytes).
+ * derived name. */
+void FUN_00141500(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies);
+
+/* A tree's update (0x13e090): its boxes refreshed from the bodies unless
+ * kept, the oldest buckets' ages reset beyond the number given, then the
+ * tree rebuilt top-down over its leaves, a leaf whose boxes stray far from
+ * its parent's split dissolved into its parent's lists. The first and the
+ * fourth arguments are not read. derived names. */
+void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree,
+                  const hknpBody *bodies, int layer, bool keepAabbs, int maxAgedLeaves);
+
+/* A layer's volatile tree updated (0x142a40, from the layer task's slot 2
+ * at 0x18d1c2) under its timer. derived name. */
+void FUN_00142a40(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int layer);
+void FUN_00142af0(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int layer,
+                  bool refreshAabbs); /* derived name */
+/* The broad phase's update (0x142bb0): every layer's tree that holds
+ * boxes updated, the volatile one when flagged, else the non-volatile one
+ * when pending or in mode 1, which refreshes its boxes. derived name. */
+void FUN_00142bb0(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int mode);
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
 

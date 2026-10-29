@@ -537,6 +537,12 @@ struct hkBitField {
         storage.words.data[index >> 5] |= 1 << (index & 31);
     }
 
+    /* Clears one bit (derived name). */
+    void clear(int index)
+    {
+        storage.words.data[index >> 5] &= ~(1 << (index & 31));
+    }
+
     /* Every bit set in another field of the same size set here too (inline
      * in 0x66080): four words at a time through the vector unit, then the
      * words left one by one through two walking pointers. derived name. */
@@ -7434,6 +7440,14 @@ template <typename T> class hkRelArray
         return reinterpret_cast<const T *>(hkUlong(this) + offset);
     }
 
+    /* The same through a character pointer, the offset added to the
+     * array's address (the convex shape's finish constructor, 0x42ec4,
+     * folds the array's place into its loop's start). derived name. */
+    T *beginBytes()
+    {
+        return reinterpret_cast<T *>(reinterpret_cast<char *>(this) + offset);
+    }
+
     u16 size;   /* derived name */
     u16 offset; /* derived name */
 };
@@ -10494,6 +10508,10 @@ class hkpPointToPathConstraintData : public hkpConstraintData
      * itself. */
     hkpPointToPathConstraintData();
 
+    /* The path set (0x79f70, from the constraint's builder at 0x79656): a
+     * reference taken on the new one before the old one's is released. */
+    void setPath(hkpParametricCurve *newPath); /* derived name */
+
     enum OrientationConstraintType {
         CONSTRAIN_ORIENTATION_INVALID,
         CONSTRAIN_ORIENTATION_NONE,
@@ -12839,6 +12857,12 @@ struct hkBlockStreamConsumer : public hkBlockStreamReader /* derived name */
     void FUN_00093ab0(BlockCache *cache, hkBlockStream *stream, hkBlockStream *argument3,
                       const hkBlockStreamRange *range); /* derived name */
 
+    /* The next block made current as the reader's FUN_00093830 makes it
+     * (0x93b10, inline there), then the block left freed as far as this
+     * consumer consumed it: back to the stream when every element was,
+     * else the consumed ones taken off its count. derived name. */
+    const void *FUN_00093b10();
+
     hkBlockStream *stream;            /* derived name */
     int numElementsToFreeInThisBlock; /* derived name */
     BlockCache *cache;                /* derived name */
@@ -13136,6 +13160,62 @@ struct U16PointerMap /* derived name */
     Pair *entries;
     int numEntries;
     int hashMod;
+
+    /* A slot as an iterator (derived names): the first used slot, the next
+     * used one after a slot, one past the hash mask at the end. */
+    int getIterator() const
+    {
+        int i = 0;
+        while (i <= hashMod) {
+            const int index = i++;
+            const u16 key = entries[index].key;
+            if (key != 0xffff) {
+                return index;
+            }
+        }
+        return i;
+    }
+
+    int getNext(int it) const
+    {
+        int i;
+        for (i = it + 1; i <= hashMod; i++) {
+            const u16 key = entries[i].key;
+            if (key != 0xffff) {
+                break;
+            }
+        }
+        return i;
+    }
+
+    bool isValid(int it) const
+    {
+        return it <= hashMod;
+    }
+
+    hkUlong getValue(int it) const
+    {
+        return entries[it].value;
+    }
+};
+
+/* A map of bit fields (derived names): each value a block from the
+ * thread's heap that records its own size first (0x199770 frees one at
+ * that size, 0x199880 frees them all), the field after it; 0x199600 builds
+ * one. */
+struct BitFieldMap00199770 /* derived name */
+{
+    struct Block {
+        int numBytes;
+        hkBitField bits;
+    };
+
+    /* One bit cleared in every field long enough to hold it (0x1997d0; the
+     * callers at 0x1608ef and 0x16dc62). derived name. */
+    void FUN_001997d0(int bitIndex);
+
+    u8 unknown0[8];
+    U16PointerMap fields;
 };
 
 struct PointerMap /* derived name */
