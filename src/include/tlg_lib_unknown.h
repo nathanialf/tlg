@@ -923,8 +923,34 @@ hkReferencedObject *FUN_00175f30(); /* derived name */
 
 /* The other singletons' create functions (each record's second field) and
  * the instance pointers not declared with their classes: */
-hkReferencedObject *FUN_00183c40(); /* hkDebugDisplay's; derived name */
-class hkProcessFactory;
+/* hkProcessFactory, the singleton registered by that name (the string at
+ * 0x14cbab3; record 0x57c88f0 filled by 0x183f90, instance pointer
+ * 0x57c88e8): 0x28 bytes from the thread's heap (0x183f29), vtable 0x16a6530
+ * (no type info; slots 0 and 1 its destructors 0x183db0 and 0x183d60). */
+class hkProcessFactory : public hkReferencedObject
+{
+  public:
+    /* 24-byte entries, each releasing its string at +0 (0x183e53). derived
+     * name. */
+    struct Entry {
+        hkStringPtr name; /* derived name */
+        u8 unknown8[0x10];
+    };
+
+    /* A zero int, an empty array and a lock of 2000 spins (0x183f00). */
+    hkProcessFactory() : unknownC(0), lock(new hkCriticalSection(2000)) {}
+
+    virtual ~hkProcessFactory(); /* 0x183db0 */
+
+    /* The class allocator: a block of the thread's heap (defined beside the
+     * router). */
+    static void *operator new(unsigned long numBytes);
+
+    int unknownC;            /* in the base's tail padding */
+    hkArray<Entry> entries;  /* derived name */
+    hkCriticalSection *lock; /* derived name; freed at 0x10 bytes (0x183e2b) */
+};
+
 extern hkProcessFactory *D_57c88e8; /* hkProcessFactory's instance */
 hkReferencedObject *FUN_00183f00(); /* hkProcessFactory's; derived name */
 hkReferencedObject *FUN_001845b0(); /* hkVtableClassRegistry's; derived name */
@@ -2097,9 +2123,24 @@ struct LoadedImage : public hkReferencedObject /* derived name */
 {
     LoadedImage(const RawImage &raw);
 
+    /* Out of line (0x1a0310, slot 0): the arrays freed, the parts first;
+     * the deleting destructor (0x1a03a0, slot 1) runs it and frees through
+     * the class's delete. */
+    virtual ~LoadedImage();
+
+    /* Slot 5 (0x1a0620): the width, height and parts copied out to a raw
+     * image. derived name. */
+    virtual void FUN_001a0620(RawImage &rawOut) const;
+    /* Slot 6, the folded 0x7f80: the storage of the array at +0x10.
+     * derived name. */
+    virtual const u8 *FUN_00007f80() const;
+
     /* The class allocator: a block of the thread's heap (0x1a073d;
      * defined beside the router). */
     static void *operator new(unsigned long numBytes);
+
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<u8> unknown10;       /* empty from the constructor; elements not read */
     int width;                   /* derived name */
@@ -2606,6 +2647,21 @@ inline void *LoadedImage::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkCriticalSection::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *hkDebugDisplay::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *hkProcessFactory::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hknpShapeKeyMask::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -2714,6 +2770,11 @@ inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
 }
 
 inline void hknpCompoundShape::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void LoadedImage::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -3923,12 +3984,12 @@ void FUN_00176b20(hknpCharacterProxy *self);                 /* slot 1 of 0x16a5
 void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5d20 */
 void FUN_0017f130(hkMemoryResourceHandle *self);             /* slot 1 of 0x16a6270 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
-void FUN_00181ba0(Object00181b10 *self);                     /* slot 1 of 0x16a6470 */
+void FUN_00181ba0(hkBinaryPackfileWriter *self);             /* slot 1 of 0x16a6470 */
 void FUN_001837c0(Object00183810 *self);                     /* slot 1 of 0x16a64f0 */
 void FUN_00183d60(Object00183db0 *self);                     /* slot 1 of 0x16a6530 */
 void FUN_0019a1e0(Object0019a230 *self);                     /* slot 1 of 0x16a6820 */
 void FUN_0019a770(Object0019a7c0 *self);                     /* slot 1 of 0x16a68d0 */
-void FUN_0019c100(Object0019c150 *self);                     /* slot 1 of 0x16a6960 */
+void FUN_0019c100(hkPackfileWriter *self);                   /* slot 1 of 0x16a6960 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived
  * names): 0x420 bytes, cleared to zero vectors when the thread's timer

@@ -5,12 +5,14 @@
  * constructor FUN_0019be50. It adds nothing to destroy and runs the base's
  * destructor body FUN_0019c150, which stores the base's vtable (0x16a6970);
  * the deleting destructor FUN_00181ba0 frees 0x140 bytes by default.
- * Written as a call because neither class has a name yet. */
-struct Object0019c150; /* derived name */
+ * Written as a call: the classes (hkBinaryPackfileWriter over
+ * hkPackfileWriter, derived names) are named, their destructors not yet
+ * written as such. */
+struct hkPackfileWriter; /* derived name */
 
-void FUN_0019c150(Object0019c150 *self); /* derived name */
+void FUN_0019c150(hkPackfileWriter *self); /* derived name */
 
-void FUN_00181bf0(Object0019c150 *self) /* derived name */
+void FUN_00181bf0(hkPackfileWriter *self) /* derived name */
 {
     FUN_0019c150(self);
 }

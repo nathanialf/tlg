@@ -1415,7 +1415,7 @@ FUN_0001aca0 src/libs/unknown/func_0001aca0.cpp _ZN9hkMatrix312FUN_0001aca0ERKDv
 FUN_00073110 src/libs/unknown/func_00073110.cpp _ZNK16hknpCapsuleShape12FUN_00073110EPKvPv
 FUN_0007e8a0 src/libs/unknown/func_0007e8a0.cpp _ZNK26hkpPrismaticConstraintData15unknownVirtual7Ev
 FUN_001845b0 src/libs/unknown/func_001845b0.cpp
-FUN_0019cc20 src/libs/unknown/func_0019cc20.cpp _ZN14Object0019c15012FUN_0019cc20EPKvRK7hkClassPv
+FUN_0019cc20 src/libs/unknown/func_0019cc20.cpp _ZN16hkPackfileWriter12FUN_0019cc20EPKvRK7hkClassPv
 _ZN22hkReferencedObjectLockD1Ev src/libs/unknown/func_000066f0.cpp
 _ZN22hkReferencedObjectLockD0Ev src/libs/unknown/func_000066f0.cpp
 FUN_000080c0 src/libs/unknown/func_000080c0.cpp _ZN9hkOstreamC1EP14hkStreamWriter
@@ -1726,7 +1726,7 @@ FUN_00083a20 src/libs/unknown/func_00083a20.cpp _ZNK32hkpLinearClearanceConstrai
 _ZN22hkxSparselyAnimatedIntD1Ev src/libs/unknown/func_000887b0.cpp _ZN22hkxSparselyAnimatedIntD2Ev
 FUN_000925d0 src/libs/unknown/func_000925d0.cpp _ZN9RefArrays12FUN_000925d0EP18RefArraysAllocatorNS_7EntryIdE
 FUN_0017ef10 src/libs/unknown/func_0017ef10.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017ef10EPK10hkTypeInfoPK7hkClass
-FUN_0019cc80 src/libs/unknown/func_0019cc80.cpp _ZN14Object0019c15012FUN_0019cc80EPKvS1_
+FUN_0019cc80 src/libs/unknown/func_0019cc80.cpp _ZN16hkPackfileWriter12FUN_0019cc80EPKvS1_
 FUN_00000360 src/libs/unknown/func_00000360.cpp _Z12FUN_00000360Pv
 FUN_0005df30 src/libs/unknown/func_0005df30.cpp _ZNK9hknpWorld12FUN_0005df30EiRDv4_f
 FUN_00082480 src/libs/unknown/func_00082480.cpp _ZNK26hkpPositionConstraintMotor12FUN_00082480Ev
@@ -1797,3 +1797,9 @@ _ZN19hkcdDynamicAabbTreeD0Ev src/libs/unknown/func_0009fc10.cpp
 FUN_0001a360 src/libs/unknown/func_0001a360.cpp
 FUN_00006a60 src/libs/unknown/func_00006a60.cpp _GLOBAL__I_a
 FUN_0019a5f0 src/libs/unknown/func_0019a5f0.cpp _Z12FUN_0019a5f0v
+_ZN17hknpCompoundShapeD1Ev src/libs/unknown/func_00041650.cpp
+FUN_00183c40 src/libs/unknown/func_00183c40.cpp
+FUN_00183f00 src/libs/unknown/func_00183f00.cpp
+_ZN22hkBinaryPackfileWriterC1ERKN16hkPackfileWriter7OptionsE src/libs/unknown/func_00181b10.cpp
+_ZN11LoadedImageD1Ev src/libs/unknown/func_001a0310.cpp
+_ZN11LoadedImageD0Ev src/libs/unknown/func_001a0310.cpp

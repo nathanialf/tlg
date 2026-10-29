@@ -1193,6 +1193,10 @@ class hkCriticalSection
      * of the file), and the spin count kept. */
     hkCriticalSection(int spinCount = 0);
 
+    /* The class allocator: a block of the thread's heap (0x183ca9; defined
+     * beside the router). */
+    static void *operator new(unsigned long numBytes);
+
     ~hkCriticalSection()
     {
         HK_POSIX_CHECK(HK_POSIX_CRITICAL_SECTION_INL, 28, pthread_mutex_destroy(&m_mutex));
@@ -5668,18 +5672,19 @@ inline hkUlong slotLinkFlags(const void *link) /* derived name */
 
 /* The head is walked as the first link: prevLink starts at the signal
  * itself, the address the signal's destructor is then called on
- * (hknpCompoundShape's 0x4166f keeps it in %r14 for both). */
+ * (hknpCompoundShape's 0x4166f keeps it in %r14 for both). The link it
+ * patches is a tagged word, read and written as an integer. */
 inline void hkSignal0::fire()
 {
+    hkUlong *prevLink = reinterpret_cast<hkUlong *>(this);
     hkSlot *slot = untagSlotLink(slots);
     slots = reinterpret_cast<void *>(reinterpret_cast<hkUlong>(slot) | 1);
-    hkSlot **prevLink = reinterpret_cast<hkSlot **>(this);
     while (slot) {
         hkSlot *next = untagSlotLink(slot->next);
         if (slotLinkFlags(slot->next) == 0) {
             static_cast<hkSlot0 *>(slot)->call();
             if (slotLinkFlags(slot->next) == 0) {
-                prevLink = &slot->next;
+                prevLink = reinterpret_cast<hkUlong *>(&slot->next);
                 slot = next;
                 continue;
             }
@@ -5687,8 +5692,7 @@ inline void hkSignal0::fire()
         /* Unsubscribed, before the call or during it: unlinked and
          * deleted, the predecessor's flags kept. */
         delete slot;
-        *prevLink =
-            reinterpret_cast<hkSlot *>(slotLinkFlags(*prevLink) | reinterpret_cast<hkUlong>(next));
+        *prevLink = (*prevLink & 3) | reinterpret_cast<hkUlong>(next);
         slot = next;
     }
     slots = untagSlotLink(slots);
@@ -11664,18 +11668,36 @@ class hkPrimaryCommandDispatcher /* derived name */
     hkSecondaryCommandDispatcher *dispatchers[8]; /* derived name */
 };
 
-/* hkDebugDisplay, the singleton registered by that name (record filled by
- * 0x183cd0, its instance pointer at 0x57c88c0, created by 0x183c40).
+/* hkDebugDisplay, the singleton registered by that name (the string at
+ * 0x14cbaa4; record 0x57c88c8 filled by 0x183cd0, instance pointer
+ * 0x57c88c0): 0x28 bytes from the thread's heap (0x183c69), vtable 0x16a64f0
+ * (no type info; slots 0 and 1 its destructors 0x183810 and 0x1837c0).
  * FUN_001839d0 draws a line: start, end, colour, an id and a tag. derived
  * names but the class's. */
 class hkDebugDisplay : public hkReferencedObject
 {
   public:
+    /* An empty array and a lock of 1000 spins (0x183c40). */
+    hkDebugDisplay() : lock(new hkCriticalSection(1000)) {}
+
+    virtual ~hkDebugDisplay(); /* 0x183810 */
+
+    /* The class allocator: a block of the thread's heap (defined beside the
+     * router). */
+    static void *operator new(unsigned long numBytes);
+
     void FUN_001839d0(const hkVector4 &start, const hkVector4 &end, int color, int id,
                       int tag); /* derived name */
+
+    /* Pointer-sized elements, freed without destruction (0x1838ac). */
+    hkArray<void *> handlers; /* derived name */
+    hkCriticalSection *lock;  /* derived name; freed at 0x10 bytes (0x183888) */
 };
 
-extern hkDebugDisplay *D_57c88c0;
+/* Its create function, the record's (0x183c40). derived name. */
+hkReferencedObject *FUN_00183c40(); /* derived name */
+
+extern hkDebugDisplay *D_57c88c0; /* hkDebugDisplay's instance */
 
 /* The tag the debug commands draw under (derived name): an int nothing in
  * the library writes, read at 0x8ec5b. */
@@ -11863,15 +11885,26 @@ struct PointerMap /* derived name */
  * tail-jumps to it, 0x184393). */
 void FUN_0000e5c0(PointerMap *self); /* derived name */
 
-/* The reference-counted base (derived name; vtable address point 0x16a6970,
- * constructor FUN_0019be50, destructor body FUN_0019c150; slot 9 pure) of the
- * class whose constructor is FUN_00181b10 (vtable address point 0x16a6480):
- * an array at +0x10 and pointer maps at +0x20, +0x30 and +0x40, a string
- * map from +0x50. Slot 8 (FUN_0019cd00) adds a pair to the map at +0x40. */
+/* hkPackfileWriter (derived name: the file of its strings is
+ * hkPackfileWriter.cpp, 0x14cce52; vtable 0x16a6960, constructor
+ * FUN_0019be50, destructor FUN_0019c150; slot 9 pure), the reference-counted
+ * base of the binary packfile writer: an array at +0x10 and pointer maps at
+ * +0x20, +0x30 and +0x40, a string map from +0x50. */
 class hkVtableClassRegistry;
 
-struct Object0019c150 : public hkReferencedObject /* derived name */
+struct hkPackfileWriter : public hkReferencedObject /* derived name */
 {
+    /* The options it is built over (0x19bff0 to 0x19c050 read an int at +0,
+     * +4, bytes at +8 and +9, pointers at +0x10 and +0x18 and an int at
+     * +0x20). derived name. */
+    struct Options;
+
+    hkPackfileWriter(const Options &options); /* 0x19be50 */
+
+    /* Out of line (0x19c150): the vtable restored, the arrays and maps
+     * from +0x78 on freed. */
+    virtual ~hkPackfileWriter();
+
     /* Slot 5 (0x19c3c0): the contents, their class, a vtable class
      * registry (the built-in one's when null) and a fourth argument handed
      * on to FUN_0019c480. derived names. */
@@ -11884,8 +11917,20 @@ struct Object0019c150 : public hkReferencedObject /* derived name */
     /* Slot 7 (0x19cc80): a pair added to the map at +0x30, the key's
      * index in the map at +0x20 replaced by -2 and its entry there marked
      * -2 too. derived name. */
-    void FUN_0019cc80(const void *key, const void *value);
-    void FUN_0019cd00(const void *key, const void *value); /* vtable slot 8; derived name */
+    virtual void FUN_0019cc80(const void *key, const void *value);
+    /* Slot 8 (0x19cd00): a pair added to the map at +0x40. derived name. */
+    virtual void FUN_0019cd00(const void *key, const void *value);
+
+    /* Slot 9, pure here: the save, over a stream writer and the save
+     * options (the binary writer's 0x183350). derived name. */
+    virtual void FUN_00183350(void *writer, const void *options) = 0;
+
+    /* Slot 10 (0x19d0d0): a section added by its tag. derived name. */
+    virtual void FUN_0019d0d0(const char *sectionTag);
+    virtual void FUN_0019d190(); /* slot 11; derived name, arguments not read */
+    /* Slot 12 (0x19d280): the objects of a class placed in the section of
+     * a tag. derived name. */
+    virtual void FUN_0019d280(const hkClass &klass, const char *sectionTag);
 
     /* An entry of the array at +0x10 (derived names): 40 bytes, an index
      * at +0x20 that slot 7 sets to -2. */
@@ -11904,13 +11949,35 @@ struct Object0019c150 : public hkReferencedObject /* derived name */
 
 /* Its out-of-line destructor body: restores the vtable, frees the arrays and
  * maps from +0x78 on. derived name. */
-void FUN_0019c150(Object0019c150 *self); /* derived name */
+void FUN_0019c150(hkPackfileWriter *self); /* derived name */
 
-/* The class built over it by FUN_00181b10 (vtable 0x16a6470): it adds
+/* The section tags (derived names): pointers to the strings "__classnames__"
+ * (0x14cb9fc) and "__types__" (0x14cb791). */
+extern const char *D_16dcb70;
+extern const char *D_16dcbb8;
+
+/* The reflection's own classes (each built with its name, 0x11ec4 for
+ * hkClassEnumItem's; the others are the classes of hkClass's members
+ * parent, declaredEnums and declaredMembers, 0x3ada to 0x3b01). */
+extern const hkClass D_57b77f0; /* hkClass's hkClass */
+extern const hkClass D_57b7d18; /* hkClassMember's hkClass */
+extern const hkClass D_57b93e0; /* hkClassEnum's hkClass */
+extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
+
+/* hkBinaryPackfileWriter (derived name; vtable 0x16a6470), the writer
+ * hkSerializeUtil's savePackfile builds on its stack (0x17dc2a): it adds
  * nothing to destroy (its complete destructor FUN_00181bf0 runs the base's)
  * and its deleting destructor 0x181ba0 frees 0x140 bytes. */
-struct Object00181b10 : Object0019c150 /* derived name */
+struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
 {
+    /* 0x181b10: the class names' section, and the reflection's own
+     * classes in the types' section. */
+    hkBinaryPackfileWriter(const Options &options);
+
+    virtual ~hkBinaryPackfileWriter(); /* 0x181bf0 */
+
+    virtual void FUN_00183350(void *writer, const void *options); /* slot 9 */
+
     u8 unknown138[0x8];
 };
 
