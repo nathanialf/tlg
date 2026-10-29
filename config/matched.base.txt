@@ -1931,3 +1931,4 @@ _ZN15hknpVehicleDataD1Ev src/libs/unknown/func_0006df00.cpp
 _ZN9hknpShapeD0Ev src/libs/unknown/func_0006fb50.cpp
 FUN_00090780 src/libs/unknown/func_00090780.cpp _ZN26hkPrimaryCommandDispatcher12FUN_00090780EjP28hkSecondaryCommandDispatcher
 FUN_000ad1f0 src/libs/unknown/func_000ad1f0.cpp _ZN20hkMemoryMeshMaterial12FUN_000ad1f0EiP13hkMeshTexture
+_ZN28hkpPointToPathConstraintDataC1Ev src/libs/unknown/func_00079dc0.cpp

@@ -9502,6 +9502,10 @@ struct hkpBridgeConstraintAtom;
 void FUN_0007d030(hkpBridgeConstraintAtom *self, hkpConstraintData *data); /* derived name */
 
 struct hkpBridgeConstraintAtom {
+    /* A bridge atom (type 1) with no data yet; the owner's constructor
+     * initializes it (0x79dc0). */
+    hkpBridgeConstraintAtom() : type(1), constraintData(0) {}
+
     hkpBridgeConstraintAtom(hkFinishLoadedObjectFlag flag)
     {
         if (flag.finishing) {
@@ -9520,6 +9524,8 @@ struct hkpBridgeConstraintAtom {
  * constraint atoms (hkpPointToPathConstraintData's path follows them at
  * +0x40). */
 struct alignas(16) hkpBridgeAtoms {
+    hkpBridgeAtoms() {}
+
     hkpBridgeAtoms(hkFinishLoadedObjectFlag flag) : bridgeAtom(flag) {}
 
     hkpBridgeConstraintAtom bridgeAtom;
@@ -10430,6 +10436,12 @@ class hkpPointToPathConstraintData : public hkpConstraintData
         : hkpConstraintData(flag), atoms(flag)
     {
     }
+
+    /* The constructor, out of line (0x79dc0; the constraint's builder at
+     * 0x79629): no path, no friction, no orientation constraint (NONE),
+     * both frames the identity, and the bridge atom over the data
+     * itself. */
+    hkpPointToPathConstraintData();
 
     enum OrientationConstraintType {
         CONSTRAIN_ORIENTATION_INVALID,
