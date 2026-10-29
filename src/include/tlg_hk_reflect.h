@@ -201,6 +201,19 @@ struct hkHalf {
         return value32.real;
     }
 
+    /* The upper half of the float's bits (0x30e6b: `vmovd; shr 16`).
+     * derived name. */
+    void setReal(float r)
+    {
+        union {
+            float real;
+            u32 bits;
+        } value32;
+
+        value32.real = r;
+        value = s16(value32.bits >> 16);
+    }
+
     void setReal(__m128 r)
     {
         __m128i bits = _mm_srai_epi32(_mm_castps_si128(r), 16);
@@ -1258,6 +1271,8 @@ class hkCriticalSection
     /* The class allocator: a block of the thread's heap (0x183ca9; defined
      * beside the router). */
     static void *operator new(unsigned long numBytes);
+    /* Back to the thread's heap at the class's size (0x183888). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     ~hkCriticalSection()
     {
@@ -4548,6 +4563,12 @@ struct hknpShapeInstance {
      * name. */
     void FUN_0003ed10(const Vec4 &newScale, int scaleMode);
 
+    /* The inverse of the scaled transform (0x3ead0; the compound shapes'
+     * queries from 0xd162e call it): the rotation transposed and each row
+     * divided by the scale (its reciprocal refined once), the translation
+     * carried back through it and negated. derived name. */
+    void FUN_0003ead0(hkTransform &inverseOut) const;
+
     /* The free-list operations (the instances' array names the instance
      * as its own): a free instance has 0xff in the fifth byte of its
      * padding (the compound's add, 0x41223) and a live one zero there. */
@@ -4689,8 +4710,10 @@ class alignas(16) hknpShape : public hkReferencedObject
 
     virtual ~hknpShape();
 
-    virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    /* Slots 5 and 6: the defaults (0x6e3d0, 0x6e510) report "Not
+     * implemented" and return 22 and 0. */
+    virtual int unknownVirtual5() const;
+    virtual int unknownVirtual6() const;
     /* Slot 7: the shape's bounds under a transform. */
     virtual void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const;
     virtual int unknownVirtual8() const;
@@ -5223,10 +5246,17 @@ class Modifier16a4de0 /* derived name */
  * +0x20 (0x15db20 reads both bodies' there). */
 struct hknpMaterial;
 
+struct hknpMotion;
+
 struct hknpCdBody /* derived name */
 {
-    u8 unknown0[0x20];
+    const hknpBody *body;       /* derived name */
+    const hknpShape *rootShape; /* derived name: null where 0x30ca0 builds one */
+    const hknpMotion *motion;   /* derived name */
+    /* The shape collided, the body's own (0x31026 reads it at +0x48). */
+    const hknpShape *leafShape;   /* derived name */
     const hknpMaterial *material; /* derived name */
+    u32 shapeKey;                 /* derived name: -1 for the whole shape */
 };
 
 /* The modifier of vtable 0x16a4e50 (address point 0x16a4e60, no type info,
@@ -5358,7 +5388,7 @@ struct hknpBody {
     hkTransform transform;
     int flags;
     u32 collisionFilterInfo; /* derived name */
-    u8 unknown48[8];
+    const hknpShape *shape;  /* derived name */
     /* The body's box in the broad phase's coordinates (0x161400 copies it
      * whole). derived name. */
     hkAabb16 aabb;
@@ -5726,8 +5756,17 @@ struct hknpWorldObject380Output /* derived name */
 
 struct hknpWorldObject380Pair /* derived name */
 {
-    u8 unknown0[0xa8];
+    u8 unknown0[0x90];
+    /* How the bodies' properties are combined, 0 to 3 (the switches at
+     * 0x30e5a and 0x31378). derived name. */
+    u8 combineType;
+    u8 unknown91[0x17];
     hknpWorldObject380Output *output; /* derived name */
+    u8 unknownB0[0x10];
+    /* Added to the bodies' centres of mass (0x30f36, 0x315ba). derived
+     * names. */
+    Vec4 offsetA;
+    Vec4 offsetB;
 };
 
 struct hknpWorldObject380Info /* derived name */
@@ -5742,14 +5781,82 @@ int FUN_0002b6c0(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
 
 /* What slot 12 (0x311f0) fills from two motions (derived names): their
  * centres of mass and their orientations as rotations. */
-struct hknpWorldObject380MotionPair /* derived name */
+struct hknpWorldObject380Bodies /* derived name */
 {
-    u8 unknown0[0x10];
     Vec4 centerOfMassA;  /* derived name */
     Vec4 centerOfMassB;  /* derived name */
     hkMatrix3 rotationA; /* derived name */
     hkMatrix3 rotationB; /* derived name */
+    /* Two scalars broadcast (100 and -0.05 in 0x30ca0, the floats at
+     * 0x16dc5e0 and 0x16dc5e4 in 0x31320). derived names. */
+    Vec4 vector80;
+    Vec4 vector90;
+    /* The combined properties, by the pair's combine type (0x30e5a). */
+    hkHalf halfA0; /* derived name */
+    u8 byteA2;     /* derived name */
+    u8 unknownA3;
+    hkHalf halfA4; /* derived name */
+    hkHalf halfA6; /* derived name */
+    hkHalf halfA8; /* derived name */
+    u8 unknownAA[2];
+    u32 flags;   /* derived name */
+    u16 valueB0; /* derived name */
+    u8 unknownB2[6];
+    const void *pointerB8; /* derived name */
+    const void *pointerC0; /* derived name */
+    u8 unknownC8[8];
 };
+
+/* What slot 12 (0x311f0) fills: the bodies' part at +0x10, which slot 14
+ * (0x31320) hands to FUN_0002b6c0 (derived names). */
+struct hknpWorldObject380MotionPair /* derived name */
+{
+    u8 unknown0[0x10];
+    hknpWorldObject380Bodies bodies; /* derived name */
+};
+
+/* The fourth argument of FUN_0002b6c0 (derived names): the two motions'
+ * inverse inertias and masses as vectors, and four pointers (into the
+ * pair's output in 0x31320, to stack arrays in 0x30ca0). */
+struct hknpWorldObject380Inertias /* derived name */
+{
+    Vec4 inverseInertiaA; /* derived name */
+    Vec4 inverseInertiaB; /* derived name */
+    void *pointer20;      /* derived name */
+    Vec4 *pointer28;      /* derived name */
+    Vec4 *pointer30;      /* derived name */
+    Vec4 *pointer38;      /* derived name */
+};
+
+/* The first argument of FUN_0002b6c0 (derived names): two floats whose
+ * product scales the pair's inverse mass (0x30fbf). */
+struct hknpWorldObject380StepInfo /* derived name */
+{
+    u8 unknown0[0x40];
+    float value40; /* derived name */
+    u8 unknown44[0x80];
+    float valueC4; /* derived name */
+};
+
+/* The third argument of 0x30ca0 (derived names): kept in the bodies' part
+ * with the pointer at its +0x38. */
+struct hknpWorldObject380Source /* derived name */
+{
+    u8 unknown0[0x38];
+    const void *pointer38; /* derived name */
+};
+
+/* The pair processed with its bodies' part built on the stack (0x30ca0;
+ * called by slot 14, 0x314fc, and by 0x76c7b): the motions' centres of
+ * mass and rotations, the properties combined by the pair's combine type,
+ * the inverse masses' reciprocal scaled into a stack array, two bodies
+ * described, then FUN_0002b6c0. derived name. */
+int FUN_00030ca0(hknpWorldObject380Pair *pair, const hknpWorldObject380StepInfo *stepInfo,
+                 const hknpWorldObject380Source *source, u32 flags, u16 valueB0,
+                 const hknpBody *bodyA, float value0, float value1, float value2,
+                 const hknpMotion *motionA, const hknpMaterial *materialA, const hknpBody *bodyB,
+                 const hknpMotion *motionB, const hknpMaterial *materialB,
+                 hknpWorldObject380Writer *writer); /* derived name */
 
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
@@ -6140,6 +6247,32 @@ struct hknpWorldStepContextf6a90 /* derived name */
     hknpWorld *world; /* derived name */
 };
 
+/* What the world holds at +0x1e0 (derived names): its slot 13 casts a ray
+ * over the world's bodies (the world's 0x35d40 hands it the query, the
+ * bodies, the world, the world's +0x1f0 and the collector). */
+class hknpCollisionQueryCollector;
+
+class hknpWorldObject1e0 /* derived name */
+{
+  public:
+    virtual void unknownVirtual0();
+    virtual void unknownVirtual1();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    virtual void
+    castRay(const void *query, const hknpBody *bodies, const hknpWorld *world, const void *context,
+            hknpCollisionQueryCollector *collector) const; /* vtable slot 13; derived name */
+};
+
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
      * rotated by the motion's orientation (0x5df30; the caller at
@@ -6150,6 +6283,10 @@ struct hknpWorld {
      * "Physics" (0x50fd0 by hknpPostSolveTask, 0x509f0 by hknpPreSolveTask).
      * derived names. */
     void FUN_00050fd0();
+    /* A ray cast over the bodies under the "WorldCastRay" timer (0x35d40;
+     * the projectile gun's 0x158bca and the game's casts call it). derived
+     * name. */
+    void FUN_00035d40(const void *query, hknpCollisionQueryCollector *collector) const;
     void FUN_000509f0();
     /* The stage after the collide tasks (0x505f0, run by
      * hknpPostCollideTask under the timer "StCollide"). derived name. */
@@ -6207,7 +6344,8 @@ struct hknpWorld {
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
     void *pointer1d8;
-    u8 unknown1e0[0x10];
+    hknpWorldObject1e0 *object1e0; /* derived name */
+    u8 unknown1e8[8];
     u8 unknown1f0[0x60]; /* CollideSharedData's object40 points here */
     Vec4 vector250;
     u8 unknown260[8];
@@ -6373,6 +6511,9 @@ class hknpProjectileGun : public hknpFirstPersonGun
     /* Slot 13 (0x1597f0): every projectile older than the time destroyed,
      * once. derived name. */
     virtual void FUN_001597f0(float time);
+    /* Slot 10 (0x159750): every projectile destroyed in the gun's world and
+     * released, the array emptied; the world argument is not read. */
+    virtual void reset(hknpWorld *world);
 
     int maxProjectiles;
     float reloadTime;
@@ -6520,7 +6661,30 @@ class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
  * built at 0x22a90 from the record table 0x1691090): centerOfMass, inertia
  * and majorAxisSpace (hkInt16[4]) at +0, +8 and +0x10, mass and volume
  * (hkReal) at +0x18 and +0x1c. */
+/* What hkCompressedMassProperties packs (derived names; no string names the
+ * class): volume and mass at +0 and +4, the centre of mass at +0x10, the
+ * diagonal of the inertia at +0x20 and its axes as a quaternion at +0x30
+ * (0x26100 reads them so). */
+struct hkDiagonalizedMassProperties /* derived name */
+{
+    float volume;
+    float mass;
+    u8 unknown8[8];
+    Vec4 centerOfMass;
+    Vec4 inertiaTensor;
+    hkQuaternion majorAxisSpace;
+};
+
+/* Every lane's sign bit (derived name), shared by the library's vector code. */
+extern const Vec4 D_14b41d0;
+
 struct hkCompressedMassProperties {
+    /* Packed from the diagonalized properties (0x26100; the shapes' mass
+     * builds call it): the centre of mass and the inertia as packed vectors,
+     * the axes' quaternion in 16 bits a lane (30000 for one), the mass and
+     * the volume as they are. derived name. */
+    void FUN_00026100(const hkDiagonalizedMassProperties &properties);
+
     s16 centerOfMass[4];
     s16 inertia[4];
     s16 majorAxisSpace[4];
@@ -7790,6 +7954,7 @@ struct hkpConstraintAtom {
         TYPE_LIN = 7,
         TYPE_ANG = 13,
         TYPE_PULLEY = 20,
+        TYPE_RACK_AND_PINION = 21,
         TYPE_SETUP_STABILIZATION = 23
     };
 
@@ -8347,6 +8512,11 @@ class hkpRackAndPinionConstraintData : public hkpConstraintData
 
     /* The finish constructor (0x7d080): the atoms are left as loaded. */
     hkpRackAndPinionConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new one (0x83570; 0x799f9 builds one): both frames the identity, a
+     * pinion of radius 1, the runtime offsets of the angles and the
+     * revolution counter. */
+    hkpRackAndPinionConstraintData();
 
     virtual ~hkpRackAndPinionConstraintData();
 
@@ -11949,6 +12119,14 @@ struct CommandStreams00167f70 /* derived name */
 /* A block stream's reader (derived names), 0x18 bytes: the current block,
  * the next element's address in it (null when the block is empty), the
  * elements left in the other blocks and in this one. */
+/* A pointer moved by a byte offset through its integer value, as Havok's
+ * hkAddByteOffsetConst is (the block reader's advance tests the result for
+ * null again, 0x65fa8). */
+template <typename T> inline const T *hkAddByteOffsetConst(const T *base, long offset)
+{
+    return reinterpret_cast<const T *>(reinterpret_cast<hkUlong>(base) + offset);
+}
+
 struct hkBlockStreamReader /* derived name */
 {
     /* At the stream's first block, every later element still to read
@@ -11964,6 +12142,24 @@ struct hkBlockStreamReader /* derived name */
      * cache line prefetched (0x93830, nineteen callers, the broad phase's
      * pair walk 0x174184 among them). derived name. */
     const void *FUN_00093830();
+
+    /* The element read now, null at the end. derived name. */
+    const void *access() const
+    {
+        return currentByteLocation;
+    }
+
+    /* The next element of a size: within the block, or the next block's
+     * first (0x65f80 to 0x65fa3). derived name. */
+    const void *advance(int elementSize)
+    {
+        numElementsToReadInThisBlock--;
+        if (numElementsToReadInThisBlock > 0) {
+            currentByteLocation = hkAddByteOffsetConst(currentByteLocation, elementSize);
+            return currentByteLocation;
+        }
+        return FUN_00093830();
+    }
 
     const hkBlockStreamBlock *currentBlock; /* derived name */
     const u8 *currentByteLocation;          /* derived name */
@@ -12062,11 +12258,14 @@ class hkDebugDisplay : public hkReferencedObject
     /* An empty array and a lock of 1000 spins (0x183c40). */
     hkDebugDisplay() : lock(new hkCriticalSection(1000)) {}
 
-    virtual ~hkDebugDisplay(); /* 0x183810 */
+    /* The lock deleted, then the array (0x183810); the deleting destructor
+     * is 0x1837c0. */
+    virtual ~hkDebugDisplay();
 
     /* The class allocator: a block of the thread's heap (defined beside the
      * router). */
     static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_001839d0(const hkVector4 &start, const hkVector4 &end, int color, int id,
                       int tag); /* derived name */

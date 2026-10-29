@@ -1355,8 +1355,8 @@ FUN_0017b700 src/libs/unknown/func_0017b700.cpp
 FUN_0017f130 src/libs/unknown/func_0017f130.cpp
 FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
 FUN_00181ba0 src/libs/unknown/func_00181ba0.cpp
-FUN_001837c0 src/libs/unknown/func_001837c0.cpp
-FUN_00183d60 src/libs/unknown/func_00183d60.cpp
+_ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
+_ZN16hkProcessFactoryD0Ev src/libs/unknown/func_00183d60.cpp
 FUN_0019a1e0 src/libs/unknown/func_0019a1e0.cpp
 FUN_0019a770 src/libs/unknown/func_0019a770.cpp
 FUN_0019c100 src/libs/unknown/func_0019c100.cpp
@@ -1418,7 +1418,7 @@ FUN_001845b0 src/libs/unknown/func_001845b0.cpp
 FUN_0019cc20 src/libs/unknown/func_0019cc20.cpp _ZN16hkPackfileWriter12FUN_0019cc20EPKvRK7hkClassPv
 _ZN22hkReferencedObjectLockD1Ev src/libs/unknown/func_000066f0.cpp
 _ZN22hkReferencedObjectLockD0Ev src/libs/unknown/func_000066f0.cpp
-FUN_000080c0 src/libs/unknown/func_000080c0.cpp _ZN9hkOstreamC1EP14hkStreamWriter
+_ZN9hkOstreamC1EP14hkStreamWriter src/libs/unknown/func_000080c0.cpp
 _ZN17hknpCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00041590.cpp _ZN17hknpCompoundShapeC2E24hkFinishLoadedObjectFlag
 FUN_00199ec0 src/libs/unknown/func_00199ec0.cpp _GLOBAL__I_a
 _ZN14Object000ea540D1Ev src/libs/unknown/func_000ea540.cpp
@@ -1841,3 +1841,24 @@ FUN_0006f880 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hkn
 _ZN17Crc32StreamWriter5writeEPKvi src/libs/unknown/func_00004060.cpp
 FUN_0000bd30 src/libs/unknown/func_0000bd30.cpp _ZN9hkMatrix312FUN_0000bd30ERK12hkQuaternion
 FUN_000311f0 src/libs/unknown/func_000311f0.cpp _ZN18hknpWorldObject38012FUN_000311f0EP28hknpWorldObject380MotionPairRK10hknpMotionPKvS4_
+FUN_0006e3d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual5Ev
+FUN_0006e510 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual6Ev
+FUN_0006e5b0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual9Ev
+FUN_0006e650 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual10EPDv4_fi
+FUN_0006e830 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual13Ev
+FUN_0006e8d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual15EiPDv4_fS1_
+FUN_0006ea10 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual16EPKvS1_Pvbi
+FUN_0006eab0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual17Ev
+FUN_0006f920 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual26EPKvS1_S1_S1_Pv
+FUN_0006f9c0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual23EPKvS1_S1_S1_Pv
+FUN_0006fbd0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual20Ev
+FUN_00174050 src/libs/havok/Physics/Physics/Collide/Dispatcher/hknpCollisionDispatcher.cpp _Z12FUN_00174050v
+_ZN30hkpRackAndPinionConstraintDataC1Ev src/libs/unknown/func_00083570.cpp _ZN30hkpRackAndPinionConstraintDataC2Ev
+FUN_00159750 src/libs/unknown/func_00159750.cpp _ZN17hknpProjectileGun5resetEP9hknpWorld
+FUN_00035d40 src/libs/unknown/func_00035d40.cpp _ZNK9hknpWorld12FUN_00035d40EPKvP27hknpCollisionQueryCollector
+FUN_00026100 src/libs/unknown/func_00026100.cpp _ZN26hkCompressedMassProperties12FUN_00026100ERK28hkDiagonalizedMassProperties
+FUN_00035ba0 src/libs/unknown/func_00035ba0.cpp _ZN25hknpCharacterStateManager12FUN_00035ba0EP18hknpCharacterState22hknpCharacterStateType
+FUN_00090250 src/libs/unknown/func_00090250.cpp _Z12FUN_00090250P12hkRefVariantP18hkReferencedObject
+FUN_00065f30 src/libs/unknown/func_00065f30.cpp _Z12FUN_00065f30P14Object00065f20PK13hkBlockStream
+_ZN13BufferOstreamC1EPci src/libs/unknown/func_00000da0.cpp _ZN13BufferOstreamC2EPci
+FUN_00019190 src/libs/unknown/func_00019190.cpp _ZN8FreeList12FUN_00019190Ev

@@ -956,11 +956,14 @@ class hkProcessFactory : public hkReferencedObject
     /* A zero int, an empty array and a lock of 2000 spins (0x183f00). */
     hkProcessFactory() : unknownC(0), lock(new hkCriticalSection(2000)) {}
 
-    virtual ~hkProcessFactory(); /* 0x183db0 */
+    /* The lock deleted, then the entries (0x183db0); the deleting
+     * destructor is 0x183d60. */
+    virtual ~hkProcessFactory();
 
     /* The class allocator: a block of the thread's heap (defined beside the
      * router). */
     static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
 
     int unknownC;            /* in the base's tail padding */
     hkArray<Entry> entries;  /* derived name */
@@ -1437,24 +1440,6 @@ void FUN_0012aa80(const Object0012a8c0 *self, const Mat4 &transform,
 
 void FUN_0012a8c0(Object0012a8c0 *self); /* derived name */
 
-/* Two reference-counted objects of 0x28 bytes guarded by a critical section
- * (a 16-byte block at +0x20 the destructor destroys and frees): the
- * out-of-line destructor FUN_00183810 (vtable 0x16a64f0) frees an array of
- * 8-byte elements at +0x10, FUN_00183db0 (vtable 0x16a6530) an array of
- * 24-byte elements at +0x10, each releasing its hkStringPtr at +0. */
-struct Object00183810 /* derived name */
-{
-    u8 unknown0[0x28]; /* the size its deleting destructor 0x1837c0 frees */
-};
-
-struct Object00183db0 /* derived name */
-{
-    u8 unknown0[0x28]; /* the size its deleting destructor 0x183d60 frees */
-};
-
-void FUN_00183810(Object00183810 *self); /* derived name */
-void FUN_00183db0(Object00183db0 *self); /* derived name */
-
 /* A reference-counted object of 0x48 bytes (vtable 0x16a6820, stored by
  * FUN_00199f80 and the out-of-line destructor FUN_0019a230): the destructor
  * destroys the 0x40-byte object at +0x10 (FUN_0019a0b0) and frees it, then
@@ -1795,6 +1780,16 @@ class hkUuidPseudoRandomGenerator : public hkReferencedObject
  * end of the current block at +0x40 and +0x48, the free count at +0x68.
  * FUN_00019230 adds a block, FUN_00018770 frees them all, FUN_00019440
  * fills a statistics record. */
+/* A free list's block header (derived names): the next block, the block's
+ * memory, its element count at +0x18; 0x20 bytes. */
+struct FreeListBlock /* derived name */
+{
+    FreeListBlock *next;
+    void *memory;
+    u8 unknown10[8];
+    u64 numElements;
+};
+
 struct FreeList /* derived name */
 {
     /* Out of line (0x18640; TwoBaseAllocator's constructor builds four at
@@ -1843,20 +1838,26 @@ struct FreeList /* derived name */
         return FUN_00019230();
     }
 
+    /* The blocks whose elements are all free given back to the block
+     * allocator, their headers to the element allocator when it keeps them
+     * apart, and counted (0x19190; slots 13 and 14 of TwoBaseAllocator,
+     * 0x31e3 and 0x33e2, call it). derived name. */
+    int FUN_00019190();
+
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
     u8 unknown10[8];
     u64 unknown18;
-    u64 unknown20;
-    u64 unknown28;
+    FreeListBlock *freeBlocks; /* derived name */
+    u64 blockSize;             /* derived name */
     u64 unknown30;
     u8 unknown38[8];
-    char *top;      /* derived name */
-    char *blockEnd; /* derived name */
-    u64 unknown50;
-    u64 unknown58;
-    u64 unknown60;
-    s64 numFreeElements; /* derived name */
+    char *top;                       /* derived name */
+    char *blockEnd;                  /* derived name */
+    AllocatorBase *blockAllocator;   /* derived name */
+    AllocatorBase *elementAllocator; /* derived name */
+    u64 totalNumElements;            /* derived name */
+    s64 numFreeElements;             /* derived name */
 };
 
 /* An allocator's statistics, six signed byte counts (the copy in slot 9 of
@@ -2032,6 +2033,10 @@ struct UnionFind /* derived name */
      * (a join clears it). derived name. */
     int FUN_0008f7d0();
 
+    /* 0x8f710: two nodes joined, under the root of the first. derived
+     * name. */
+    void FUN_0008f710(int nodeA, int nodeB);
+
     UnionFindParents *parents; /* derived name */
     int numNodes;              /* derived name */
     int state;                 /* derived name */
@@ -2064,7 +2069,20 @@ struct Object00065f20 /* derived name */
     bool open; /* derived name */
 };
 
-void FUN_00065f10(Object00065f20 *self);                       /* derived name */
+void FUN_00065f10(Object00065f20 *self); /* derived name */
+
+/* An edge of the union-find's stream (derived names): two node indices and
+ * a word the join does not read, 12 bytes. */
+struct UnionFindEdge /* derived name */
+{
+    int nodeA;
+    int nodeB;
+    u32 unknown8;
+};
+
+/* Every edge of a stream joined (0x65f30, called at 0x6dd17 under the
+ * "StUnionFind" timer). derived name. */
+void FUN_00065f30(Object00065f20 *self, const hkBlockStream *edges);
 void FUN_00065f20(Object00065f20 *self);                       /* derived name */
 Record00065f00 *FUN_00065f00(Object00065f20 *self, int index); /* derived name */
 
@@ -2620,6 +2638,28 @@ struct ThreadBuffer /* derived name */
         }
     }
 
+    /* One timer begun ("Tt" and its name) and ended (the "Et" marker), as
+     * the world's ray cast times itself (0x35d40). derived names. */
+    void timerBegin(const char *name)
+    {
+        if (end < capacityMinus16) {
+            TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
+            command->commandAndMonitor = name;
+            command->time0 = u32(__builtin_readcyclecounter());
+            end = reinterpret_cast<char *>(command + 1);
+        }
+    }
+
+    void timerEnd(const char *name)
+    {
+        if (end < capacityMinus16) {
+            TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
+            command->commandAndMonitor = name;
+            command->time0 = u32(__builtin_readcyclecounter());
+            end = reinterpret_cast<char *>(command + 1);
+        }
+    }
+
     void timerEndList(const char *name)
     {
         if (end < capacityMinus16) {
@@ -2785,6 +2825,21 @@ inline void freeReferencedObject(void *object, unsigned long numBytes) /* derive
 {
     const u32 memSize = static_cast<hkReferencedObject *>(object)->memSizeAndRefCount >> 16;
     D_16dc070->temp58->blockFree(object, memSize == 0xffff ? int(numBytes) : int(memSize));
+}
+
+inline void hkCriticalSection::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, int(numBytes));
+}
+
+inline void hkDebugDisplay::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkProcessFactory::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
 }
 
 inline void hkUuidObject::operator delete(void *object, unsigned long numBytes)
@@ -3556,6 +3611,11 @@ class hknpCharacterStateManager : public hkReferencedObject /* derived name */
     /* 0x35c40: the handler registered for a state. derived name. */
     hknpCharacterState *FUN_00035c40(hknpCharacterStateType state) const;
 
+    /* 0x35ba0: a handler registered for a state, referenced before the one
+     * it replaces is released (the game registers its states at 0xea9c25
+     * on). derived name. */
+    void FUN_00035ba0(hknpCharacterState *handler, hknpCharacterStateType state);
+
     hknpCharacterState *registeredState[HKNP_CHARACTER_STATE_COUNT]; /* derived name */
 };
 
@@ -4057,8 +4117,6 @@ void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5
 void FUN_0017f130(hkMemoryResourceHandle *self);             /* slot 1 of 0x16a6270 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
 void FUN_00181ba0(hkBinaryPackfileWriter *self);             /* slot 1 of 0x16a6470 */
-void FUN_001837c0(Object00183810 *self);                     /* slot 1 of 0x16a64f0 */
-void FUN_00183d60(Object00183db0 *self);                     /* slot 1 of 0x16a6530 */
 void FUN_0019a1e0(Object0019a230 *self);                     /* slot 1 of 0x16a6820 */
 void FUN_0019a770(Object0019a7c0 *self);                     /* slot 1 of 0x16a68d0 */
 void FUN_0019c100(hkPackfileWriter *self);                   /* slot 1 of 0x16a6960 */
