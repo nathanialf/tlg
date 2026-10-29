@@ -355,7 +355,7 @@ FUN_00003700 src/libs/unknown/func_00003700.cpp
 FUN_00008d80 src/libs/unknown/func_00008d80.cpp _ZN13AllocatorBase12FUN_00008d80EPvi
 FUN_0000d520 src/libs/unknown/func_0000d520.cpp
 FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK18hkSimpleLocalFrame12FUN_0000dcb0Ev
-FUN_00010680 src/libs/unknown/leaf_00010680.cpp
+_ZN15MersenneTwisterC1Ev src/libs/unknown/leaf_00010680.cpp
 FUN_00013190 src/libs/unknown/func_00013190.cpp
 FUN_000133d0 src/libs/unknown/func_000133d0.cpp
 FUN_00014c40 src/libs/unknown/func_00014c40.cpp _ZNK18FixedSizeAllocator12FUN_00014c40ER16MemoryStatistics
@@ -1269,7 +1269,7 @@ FUN_00008e50 src/libs/unknown/func_00008e50.cpp _ZN13AllocatorBase14blockFreeBat
 FUN_000426b0 src/libs/unknown/func_000426b0.cpp _ZNK17hknpCompoundShape12FUN_000426b0ERK18LodContext000426b0RK16LodQuery000426b0i
 FUN_00184660 src/libs/unknown/func_00184660.cpp _ZNK6hkAabb12FUN_00184660Ev
 FUN_00198a20 src/libs/unknown/func_00198a20.cpp _ZN19ElementPool00198a2012FUN_00198a20Ei
-FUN_0019e6b0 src/libs/unknown/func_0019e6b0.cpp _ZN11hkXmlParser12FUN_0019e6b0EPv
+FUN_0019e6b0 src/libs/unknown/func_0019e6b0.cpp _ZN11hkXmlParser12FUN_0019e6b0EPNS_4NodeE
 _ZN17RouterAllocator50D0Ev src/libs/unknown/func_0000ac10.cpp
 FUN_000481c0 src/libs/unknown/func_000481c0.cpp _Z12FUN_000481c0P9RefArrays
 FUN_00048210 src/libs/unknown/func_00048210.cpp _Z12FUN_00048210P16RefArrays1698f80
@@ -1811,3 +1811,11 @@ _ZN21hkWorkerThreadContextC1Ei src/libs/unknown/func_0008f570.cpp
 FUN_000639b0 src/libs/unknown/func_000639b0.cpp _ZN18hknpWorldObject4f812FUN_000639b0Ei
 FUN_00070a50 src/libs/unknown/func_00070a10.cpp _ZN20hknpAllHitsCollector12FUN_00070a50ERK19hknpCollisionResult
 FUN_000ae780 src/libs/unknown/func_000ae780.cpp _ZNK25hkStorageSkinnedMeshShape12FUN_000ae780EN18hkSkinnedMeshShape9BoneSetIdER7hkArrayIsE
+_ZN11hkXmlParserD1Ev src/libs/unknown/func_0019da00.cpp
+_ZN11hkXmlParserD0Ev src/libs/unknown/func_0019da00.cpp
+FUN_0000daf0 src/libs/unknown/func_0000daf0.cpp
+_ZN18hknpCompositeShapeD1Ev src/libs/unknown/func_00042e00.cpp
+FUN_001806b0 src/libs/unknown/func_001806b0.cpp _ZN25hkMemoryResourceContainer12FUN_001806b0EPKcPKS_
+FUN_0017f3e0 src/libs/unknown/func_0017f3e0.cpp _ZN22hkMemoryResourceHandle12FUN_0017f3e0EPKc
+FUN_000138a0 src/libs/unknown/func_000138a0.cpp _ZN10PointerMap12FUN_000138a0ER13AllocatorBasemm
+FUN_0016ae80 src/libs/unknown/func_0016ae80.cpp _ZNK25hknpScaledConvexShapeBase12FUN_0016ae80EPKhiPDv4_f

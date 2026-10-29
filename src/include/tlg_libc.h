@@ -11,6 +11,8 @@
 #include "stdlib.h"
 
 typedef long time_t;
+/* FreeBSD's clock_t, a 32-bit int (the seed at 0xdb5f keeps eax). */
+typedef int clock_t;
 
 extern "C" {
 int strcmp(const char *a, const char *b);
@@ -24,6 +26,7 @@ char *strncpy(char *dst, const char *src, size_t n);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
 time_t time(time_t *t);
+clock_t clock(void);
 int printf(const char *format, ...);
 int vsnprintf(char *s, size_t n, const char *format, va_list args);
 void perror(const char *message);

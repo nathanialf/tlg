@@ -3,7 +3,7 @@
 
 /* derived name: slot 6 of hkXmlParser: a node put back, for the next read
  * to return first. */
-void hkXmlParser::FUN_0019e6b0(void *node)
+void hkXmlParser::FUN_0019e6b0(Node *node)
 {
     pendingNodes.pushBack(node);
 }

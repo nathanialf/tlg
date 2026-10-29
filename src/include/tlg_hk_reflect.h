@@ -388,6 +388,22 @@ template <typename T> struct hkArray {
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
     void pushBack(const T &element);
 
+    /* The element at an index destroyed and the last one moved into its
+     * place as raw words, without its copy constructor (hkMemoryResource
+     * Handle's link removal 0x17f3e0: two 8-byte moves). derived name. */
+    void removeAt(int index)
+    {
+        data[index].~T();
+        size--;
+        if (size != index) {
+            u64 *dst = reinterpret_cast<u64 *>(data + index);
+            const u64 *src = reinterpret_cast<const u64 *>(data + size);
+            for (int i = 0; i < int(sizeof(T) / sizeof(u64)); i++) {
+                dst[i] = src[i];
+            }
+        }
+    }
+
     /* Elements copied onto the end, the storage grown first as setSize
      * grows it (defined in tlg_lib_unknown.h; the skinned mesh's bone list,
      * 0xae780). */
@@ -1499,14 +1515,27 @@ void FUN_00017e70(void *dst, const void *src, unsigned int n); /* derived name *
 class hkXmlParser : public hkReferencedObject /* derived name */
 {
   public:
+    /* A node the reads return (derived names): reference counted, its kind
+     * at +0xc (1 for an element). The parser deletes the ones handed back
+     * through their deleting destructor (the call at 0x19da40). */
+    struct Node : public hkReferencedObject {
+        int kind; /* derived name */
+    };
+
     hkXmlParser();
+    /* Out of line (0x19da00, slot 0): the nodes handed back deleted, then
+     * the members; the deleting destructor (0x19d920, slot 1) frees through
+     * the class's delete. */
     virtual ~hkXmlParser();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 6 (0x19e6b0): a node handed back, to be returned again by the
      * next read. derived name. */
-    void FUN_0019e6b0(void *node);
+    void FUN_0019e6b0(Node *node);
 
-    hkArray<void *> pendingNodes; /* derived name */
+    hkArray<Node *> pendingNodes; /* derived name */
     hkStringPtr lastError;        /* derived name */
 };
 
@@ -3655,6 +3684,12 @@ extern const Vec4 D_14b4380;
 extern const Vec4 D_14b4360;
 extern const Vec4 D_14b4390;
 
+/* Two pi, pi and four over pi in every lane (derived names): the sine
+ * approximation's wrap and slope (0x1a012 to 0x1a042). */
+extern const Vec4 D_14b42f0;
+extern const Vec4 D_14b4300;
+extern const Vec4 D_14b4320;
+
 /* A vector's length over x, y and z, as Havok's hkVector4::length<3> is on
  * this platform at its default accuracy: the square root of the squared
  * length taken as the squared length times its reciprocal square root (an
@@ -3756,6 +3791,11 @@ struct hkQuaternion {
      * 0xeaf9f0 and tests the int). Row 3 of the constant table is one in
      * each lane. derived name. */
     int FUN_0001a180(float epsilon) const;
+
+    /* The rotation about a unit axis by an angle (every lane the angle),
+     * the sine and cosine approximated (0x19ff0; the caller at 0x17885b).
+     * derived name. */
+    void FUN_00019ff0(const Vec4 &axis, const Vec4 &angle);
 
     Vec4 vec; /* derived name */
 };
@@ -6464,6 +6504,11 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * the smallest magnitude of the scale's direction. derived name. */
     float FUN_0016ad80() const;
 
+    /* Slot 12 (0x16ae80, both vtables): the core convex shape's vertices by
+     * index, then each of the count scaled and moved, its w kept. derived
+     * name. */
+    void FUN_0016ae80(const u8 *indices, int numIndices, Vec4 *verticesOut) const;
+
     /* The record's members (0x1696dc0): two vectors. */
     Vec4 scale;
     Vec4 translation;
@@ -6657,6 +6702,20 @@ hkResult FUN_00168d90(const void *argument1, const Vec4 *vertices, int numVertic
 /* A table of byte masks (derived name; 00 00 00 ff ff ff in the image)
  * the convex shapes' slot 12 reads at a position and the one after. */
 extern const u8 D_16dc600[];
+
+/* Three vertices by their indices, the second and third masked by the
+ * table from a position (derived name): the convex shapes' slot 12 and the
+ * scaled convex shapes' (0x16aeac, inline) take them this way. */
+inline void verticesByIndex(const Vec4 *v, const u8 *indices, int position,
+                            Vec4 *verticesOut) /* derived name */
+{
+    const Vec4 v0 = v[indices[0]];
+    const Vec4 v1 = v[indices[1] & D_16dc600[position + 1]];
+    const Vec4 v2 = v[indices[2] & D_16dc600[position]];
+    verticesOut[0] = v0;
+    verticesOut[1] = v1;
+    verticesOut[2] = v2;
+}
 
 /* Fills the output from the shape's vertices (its slot 13 gives their
  * count), at most maxCount of them (0x169330). derived names. */
@@ -7254,7 +7313,8 @@ class hknpCompositeShape : public hknpShape
     }
 
     /* Inline: hknpCompoundShape's destructor holds it (0x417cc, the
-     * vtable, then the edge welding map's arrays). */
+     * vtable, then the edge welding map's arrays); the vtable's slot 0 is
+     * the copy every user emits (0x42c90, beside the constructor). */
     virtual ~hknpCompositeShape() {}
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
@@ -9447,6 +9507,9 @@ class hkMemoryResourceHandle : public hkResourceHandle
     /* Slot 14 (0x17f270): every external link destroyed, the storage kept.
      * derived name. */
     void FUN_0017f270();
+    /* Slot 12 (0x17f3e0): the first external link of a member name
+     * removed. derived name. */
+    void FUN_0017f3e0(const char *memberName);
 
     hkRefVariant variant;
     hkStringPtr name;

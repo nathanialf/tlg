@@ -1563,6 +1563,9 @@ void FUN_00076070(Elements000760c0 *self); /* derived name */
  * low half into a random seed with the time and a process value. */
 u64 FUN_00184cf0(); /* derived name */
 
+/* The tick counter (0x92200, a jump to FUN_00184cf0). derived name. */
+u64 FUN_00092200(); /* derived name */
+
 /* A four-byte structure layout description (FUN_00180ee0, FUN_00180ef0):
  * the rules {8, 1, 1, 1} and {8, 1, 0, 1} sit in rodata at 0x14cb8f6 and
  * 0x14cb8fa, just before the assert string of hkStructureLayout.cpp; the
@@ -1742,6 +1745,9 @@ int FUN_000188a0(const ListNode000188a0 *node); /* derived name */
  * reference-counted object and seeds it from the time. */
 struct MersenneTwister /* derived name */
 {
+    /* Out of line (0x10680): no state until the first seeding. */
+    MersenneTwister();
+
     /* Out of line (0x10690): the state given back to the thread's heap and
      * forgotten; hkUuidPseudoRandomGenerator's destructors (0xd9e0, 0xda50)
      * run it on their +0x10 after the lock's. */
@@ -1764,9 +1770,20 @@ struct MersenneTwister /* derived name */
 class hkUuidPseudoRandomGenerator : public hkReferencedObject
 {
   public:
+    /* Inline in the create function (0xdaf0): the twister, a lock of 5000
+     * spins, then the twister seeded from the time, the clock and the tick
+     * counter. */
+    hkUuidPseudoRandomGenerator() : lock(5000)
+    {
+        twister.FUN_000106e0(u32(time(0)) ^ u32(clock()) ^ u32(FUN_00092200()));
+    }
+
     /* Slot 0 (0xd9e0); slot 1 (0xda50) frees at the recorded size. */
     virtual ~hkUuidPseudoRandomGenerator();
 
+    /* The class allocator: a block of the thread's heap (defined beside the
+     * router). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     MersenneTwister twister; /* derived name */
@@ -2678,6 +2695,11 @@ inline void *hkProcessFactory::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkUuidPseudoRandomGenerator::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hknpShapeKeyMask::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -2791,6 +2813,11 @@ inline void hknpCompoundShape::operator delete(void *object, unsigned long numBy
 }
 
 inline void LoadedImage::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkXmlParser::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

@@ -5,11 +5,5 @@
  * their indices masked by the table at the position after and at it. */
 void hknpConvexShape::FUN_0003c4e0(const u8 *indices, int position, Vec4 *verticesOut) const
 {
-    const Vec4 *v = vertices.begin();
-    const Vec4 v0 = v[indices[0]];
-    const Vec4 v1 = v[indices[1] & D_16dc600[position + 1]];
-    const Vec4 v2 = v[indices[2] & D_16dc600[position]];
-    verticesOut[0] = v0;
-    verticesOut[1] = v1;
-    verticesOut[2] = v2;
+    verticesByIndex(vertices.begin(), indices, position, verticesOut);
 }
