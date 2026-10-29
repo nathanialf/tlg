@@ -2633,6 +2633,18 @@ inline void hknpCompoundShapeInternalsKeyMask::operator delete(void *object, uns
     }
 }
 
+inline void hkcdStaticTree::DefaultTreeStorage6::operator delete(void *object,
+                                                                 unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, int(numBytes));
+}
+
+inline void hkcdDynamicTree::DefaultTree48Storage::operator delete(void *object,
+                                                                   unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, int(numBytes));
+}
+
 inline void hkSlot::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -2758,6 +2770,16 @@ inline void hkxVertexSelectionChannel::operator delete(void *object, unsigned lo
 
 inline void hkcdPlanarGeometryPolygonCollection::operator delete(void *object,
                                                                  unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkcdStaticAabbTree::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkcdDynamicAabbTree::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

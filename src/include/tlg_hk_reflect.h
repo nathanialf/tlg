@@ -3117,39 +3117,6 @@ class hknpMaskedShape;           /* 0x37b90, vtable 0x1693a90 */
 
 void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
-/* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
- * parent hkReferencedObject's; vtable 0x1690de0, address point 0x1690df0):
- * shouldDeleteTree (hkBool) at +0xc and treePtr at +0x10, from its record
- * table at 0x16903e0. Its finish constructor (0x22700) is out of line: the
- * finish callback FUN_0001ff50 jumps to it, the reflection initializer at
- * 0x1fffd calls it. A finished object owns its tree when it was allocated
- * (a memory size in the high half of +8), not loaded in place. */
-class hkcdStaticAabbTree : public hkReferencedObject
-{
-  public:
-    hkcdStaticAabbTree(hkFinishLoadedObjectFlag flag);
-    virtual ~hkcdStaticAabbTree();
-
-    hkBool shouldDeleteTree;
-    void *treePtr;
-};
-
-/* hkcdDynamicAabbTree (hkClass 0x57bc890, built at 0x22592: size 0x18,
- * parent hkReferencedObject's; vtable 0x16a37b0, address point 0x16a37c0):
- * shouldDeleteTree (hkBool) at +0xc and treePtr at +0x10, from its record
- * table at 0x1690d90. Its finish constructor (0x9fc10) is out of line, as
- * the static tree's: the finish callback FUN_000224f0 jumps to it, the
- * reflection initializer at 0x2259d calls it. */
-class hkcdDynamicAabbTree : public hkReferencedObject
-{
-  public:
-    hkcdDynamicAabbTree(hkFinishLoadedObjectFlag flag);
-    virtual ~hkcdDynamicAabbTree();
-
-    hkBool shouldDeleteTree;
-    void *treePtr;
-};
-
 /* hknpCompressedMeshShapeData, polymorphic (type info 0x57be1f0, vtable
  * 0x1692b10): slot 0, the complete destructor FUN_00034b20, runs the
  * out-of-line FUN_00034b80, which restores the vtable. */
@@ -3698,6 +3665,11 @@ inline Vec4 normalized3(const Vec4 &v) /* derived name */
     return _mm_mul_ps(v, _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength));
 }
 
+/* A unit vector perpendicular to v, w zero: v's x, y and z turned a
+ * quarter about z, or about y when that is longer, then normalized (0x1a360;
+ * called at 0x73ef9). derived name. */
+void FUN_0001a360(Vec4 &perpendicularOut, const Vec4 &v); /* derived name */
+
 /* A vector's reciprocal, zero where a lane is zero, as Havok's
  * hkVector4::setReciprocal with its set-zero mode is on this platform: the
  * estimate refined by one Newton step, r(2 - vr), the lanes equal to zero
@@ -4003,11 +3975,39 @@ struct hkcdStaticTree {
     struct DefaultTreeStorage6 {
         DefaultTreeStorage6(hkFinishLoadedObjectFlag flag) : nodes(flag) {}
 
+        /* The class delete: back to the thread's heap at its size, no null
+         * test (the static AABB tree's destructor, 0x22847; defined in
+         * tlg_lib_unknown.h). */
+        static void operator delete(void *object, unsigned long numBytes);
+
         static void FUN_0001e270(void *object);
 
         hkArray<Codec3Axis6> nodes; /* derived name */
         u8 unknown10[0x20];
     };
+};
+
+/* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
+ * parent hkReferencedObject's; vtable 0x1690de0, address point 0x1690df0):
+ * shouldDeleteTree (hkBool) at +0xc and treePtr at +0x10, from its record
+ * table at 0x16903e0. Its finish constructor (0x22700) is out of line: the
+ * finish callback FUN_0001ff50 jumps to it, the reflection initializer at
+ * 0x1fffd calls it. A finished object owns its tree when it was allocated
+ * (a memory size in the high half of +8), not loaded in place. */
+class hkcdStaticAabbTree : public hkReferencedObject
+{
+  public:
+    hkcdStaticAabbTree(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x227f0, slot 0; 0x22730, slot 1, the deleting one at
+     * the recorded size): the tree deleted when the object owns it. */
+    virtual ~hkcdStaticAabbTree();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkBool shouldDeleteTree;
+    hkcdStaticTree::DefaultTreeStorage6 *treePtr;
 };
 
 /* hknpStaticCompoundShapeTree (hkClass 0x57be120 built at 0x347ba: 0x30
@@ -4069,6 +4069,41 @@ struct hkcdDynamicTree {
         hkArray<CODEC> nodes; /* derived name */
         u8 unknown10[8];
     };
+
+    /* hkcdDynamicTree::DefaultTree48Storage (hkClass 0x57bbb60 built at
+     * 0x20246 onward: 0x20 bytes, its parent 0x57bbbb0): the 48-byte nodes
+     * at +0 (derived name). */
+    struct DefaultTree48Storage {
+        /* The class delete: back to the thread's heap at its size, no null
+         * test (the dynamic AABB tree's destructor, 0x9fd57; defined in
+         * tlg_lib_unknown.h). */
+        static void operator delete(void *object, unsigned long numBytes);
+
+        hkArray<CodecRawUint> nodes; /* derived name */
+        u8 unknown10[0x10];
+    };
+};
+
+/* hkcdDynamicAabbTree (hkClass 0x57bc890, built at 0x22592: size 0x18,
+ * parent hkReferencedObject's; vtable 0x16a37b0, address point 0x16a37c0):
+ * shouldDeleteTree (hkBool) at +0xc and treePtr at +0x10, from its record
+ * table at 0x1690d90. Its finish constructor (0x9fc10) is out of line, as
+ * the static tree's: the finish callback FUN_000224f0 jumps to it, the
+ * reflection initializer at 0x2259d calls it. */
+class hkcdDynamicAabbTree : public hkReferencedObject
+{
+  public:
+    hkcdDynamicAabbTree(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x9fd00, slot 0; 0x9fc40, slot 1, the deleting one at
+     * the recorded size): the tree deleted when the object owns it. */
+    virtual ~hkcdDynamicAabbTree();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkBool shouldDeleteTree;
+    hkcdDynamicTree::DefaultTree48Storage *treePtr; /* the record's class, 0x57bbb60 */
 };
 
 /* hknpCompressedMeshShapeTree (type info 0x57be2f0, size 0xa0) and the
@@ -10986,12 +11021,36 @@ class hknpCollisionQueryCollector /* derived name */
 struct hknpCollisionResult /* derived name */
 {
     struct BodyInfo {
+        /* No body, material or shape key; the filter info and user data
+         * zero (inline in the closest-hit collector's reset, 0x69670 on).
+         * derived name. */
+        void clear()
+        {
+            bodyId.value = 0x7fffffff;
+            shapeKey = 0xffffffff;
+            shapeMaterialId.value = 0xffff;
+            shapeCollisionFilterInfo = 0;
+            shapeUserData = 0;
+        }
+
         hknpBodyId bodyId;
         hknpMaterialId shapeMaterialId;
         u32 shapeKey;
         u32 shapeCollisionFilterInfo;
         u64 shapeUserData;
     };
+
+    /* An empty result: no query type, at the origin, at the largest
+     * fraction, touching nothing (0x69640). derived name. */
+    void clear()
+    {
+        queryType = 0;
+        normal.quad = _mm_setzero_ps();
+        position.quad = _mm_setzero_ps();
+        fraction = HK_REAL_MAX;
+        queryBodyInfo.clear();
+        hitBodyInfo.clear();
+    }
 
     hkVector4 position;
     hkVector4 normal;
@@ -11120,6 +11179,10 @@ class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived na
     virtual ~hknpClosestHitCollector();
 
     bool FUN_000696d0() const; /* vtable slot 6; derived name */
+
+    /* Slot 3 (0x69640): no hints, the early-out value the largest (row 34
+     * of the constant table), the kept hit cleared and none kept. */
+    void reset();
 
     /* Slot 4 (0x696e0): a hit nearer than the kept one kept, its fraction
      * the new early-out value. derived name. */
@@ -11889,6 +11952,15 @@ bool FUN_0017de40(const void *object, const hkClass *klass); /* derived name */
 struct hkTypeInfo {
     typedef void (*FinishLoadedObjectFunction)(void *object, int finishing); /* derived name */
     typedef void (*CleanupLoadedObjectFunction)(void *object);               /* derived name */
+
+    /* A type's registration, built by its file's static initializer
+     * (hkBaseObject's at 0x6a60: the fields stored in order). */
+    hkTypeInfo(const char *typeName_, const char *scopedName_, FinishLoadedObjectFunction finish,
+               CleanupLoadedObjectFunction cleanup, const void *vtable_, hkUlong size_)
+        : typeName(typeName_), scopedName(scopedName_), finishFunction(finish),
+          cleanupFunction(cleanup), vtable(vtable_), size(size_)
+    {
+    }
 
     void FUN_00092f90(void *object, int finishing) const; /* derived name */
     void FUN_00092fc0(void *object) const;                /* derived name */

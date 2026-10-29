@@ -1,5 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include "tlg_hk_reflect.h"
+#include "tlg_lib_unknown.h"
 
 /* A finished tree is the object's to delete unless the object was loaded in
  * place (no memory size). The tree pointer is left as loaded. */
@@ -7,5 +7,12 @@ hkcdStaticAabbTree::hkcdStaticAabbTree(hkFinishLoadedObjectFlag flag) : hkRefere
 {
     if (flag.finishing) {
         shouldDeleteTree = (memSizeAndRefCount >> 16) != 0;
+    }
+}
+
+hkcdStaticAabbTree::~hkcdStaticAabbTree()
+{
+    if (treePtr && shouldDeleteTree) {
+        delete treePtr;
     }
 }

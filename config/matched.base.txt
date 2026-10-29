@@ -1789,3 +1789,10 @@ FUN_001797b0 src/libs/unknown/func_001797b0.cpp _ZNK33hknpVehicleLinearCastWheel
 FUN_0005dbc0 src/libs/unknown/func_0005dbc0.cpp _ZNK9hknpWorld12FUN_0005dbc0EiRDv4_fS1_
 FUN_000279a0 src/libs/unknown/func_000279a0.cpp _ZN24hkMemoryMeshVertexBuffer12FUN_000279a0ERKN18hkMeshVertexBuffer9LockInputERNS0_14LockedVerticesE
 _ZN19RefPtrArray000906f0D1Ev src/libs/unknown/func_000906f0.cpp
+FUN_00069640 src/libs/unknown/func_00069640.cpp _ZN23hknpClosestHitCollector5resetEv
+_ZN18hkcdStaticAabbTreeD1Ev src/libs/unknown/func_00022700.cpp
+_ZN18hkcdStaticAabbTreeD0Ev src/libs/unknown/func_00022700.cpp
+_ZN19hkcdDynamicAabbTreeD1Ev src/libs/unknown/func_0009fc10.cpp
+_ZN19hkcdDynamicAabbTreeD0Ev src/libs/unknown/func_0009fc10.cpp
+FUN_0001a360 src/libs/unknown/func_0001a360.cpp
+FUN_00006a60 src/libs/unknown/func_00006a60.cpp _GLOBAL__I_a
