@@ -718,6 +718,22 @@ conflicts and derived checks are unchanged (171, 0, 72 and 0 failing) and
 the unnamed listing grew from 1,551 to 1,757 entries, the locals' vtables
 now attributed to the functions that build them (the listing's header says
 "stored by a function" for that reason).
+Round 50's harvest added hkDebugDisplay 0x16a64f0 and hkProcessFactory
+0x16a6530 (facts: the singleton strings at 0x14cbaa4 and 0x14cbab3 their
+registrations 0x183cd0 and 0x183f90 store into the records 0x57c88c8 and
+0x57c88f0 beside the create functions 0x183c40 and 0x183f00, which allocate
+the 0x28-byte objects and store the vtables), hkPackfileWriter 0x16a6960
+and hkBinaryPackfileWriter 0x16a6470 (derived: the base's constructor
+0x19be50 belongs to the file whose path string at 0x14cce52,
+hkPackfileWriter.cpp, its functions load at 0x19cb3f and 0x19d01e; the
+derived class is built on the stack of hkSerializeUtil's savePackfile,
+0x17da40, a fact from its warning string at 0x14cb438, whose calls to slot
+6, the contents, and slot 9, the save, are the two calls the public API
+makes over hkBinaryPackfileWriter; the base's slot 9 is pure, a dynamic
+relocation) and LoadedImage 0x16a7580 (derived, the header's class, stored
+by its constructor 0x1a04d0 and its destructors 0x1a0310 and 0x1a03a0).
+The functions 0x183c40, 0x183f00, 0x181b10 and 0x1a0310 were blocked on
+these rows.
 Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
 singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
 string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its
@@ -817,6 +833,21 @@ claimed and never through a fold. The resolver runs after the row names
 and D15's alias, so no existing row's resolution changes; the gate held
 on every row (the commit's hook). 0xb120 is claimed over it.
 
+**Addendum, 2026-10-29 (round 50 harvest).** A translation unit's own
+callback the linker folded is spelled under the folded body's name.
+hkBaseObject's type-info registration (0x6a60) passes a finish and a
+cleanup callback, both the empty body 0x6660 in the base (the body its
+vtable's slots 0 and 1 cite too, FUN_00006660). The TU defines them as two
+overloads of FUN_00006660 with external linkage: a `static` callback is
+reached by an assembler-resolved displacement to the TU's own copy, which
+the gate cannot place (D17 attributes data, not a folded function), while
+the external name carries a relocation that resolves to the body the
+linker kept. The spelling emits the base's bytes and steers nothing; the
+two overloads are one name per address applied to a body with two
+signatures. The type-info size the registration stores is written as the
+literal 16 the bytes hold (hkBaseObject is 8 bytes; what the registration
+measured is not yet known).
+
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 
 **Decision.** Where the base keeps a destructor's vptr store and emits
@@ -898,6 +929,23 @@ every segment identical to the base.
 **Trigger to revisit.** A named local whose extent does not hold the field's
 target (an attribution the gate then fails as a wrong address), or a
 compiler whose section relocations carry a different addend convention.
+
+**Addendum, 2026-10-29 (round 50 harvest).** A function-local static is
+a file-local object with a longer name. hkSerializeDeprecated's create
+function (0x19a5f0) builds its instance as a static of the function,
+guarded (`__cxa_guard_acquire` at 0x19a5fe; the object at 0x57c8a08, the
+guard byte at 0x57c8a18). The mangled object
+`_ZZ12FUN_0019a5f0vE9D_57c8a08` is the identifier D_57c8a08 to
+`BaseElf.base_identifier` (the last component after the function's
+encoding, with any discriminator); the guard `_ZGVZ...` is not the
+object: `tools/layout_link.py` places it at the object's address plus the
+two symbols' distance in the object file's section (the compiler lays the
+guard out beside the object in the unit's `.bss`, 0x10 after the 16-byte
+object here, and the linker keeps the unit's layout), and the gate checks
+every reference against the base's field as for any symbol. 0x19a5f0's
+twelve relocations resolve to the base's targets (three to the guard, six
+to the object, the two guard imports and the vtable row of D14); the row
+is claimed in this harvest.
 
 ## D18. A table's content is generated at build time from the user's executable (2026-10-26)
 
@@ -1611,3 +1659,39 @@ describes.
 **Trigger to revisit.** A library function whose base folds a load that
 a named local must hold, or a matched row that fails under `-g`; either
 reopens the mechanism.
+
+## D31. The library compiler folds a lane-0 scalar operation into its insert (2026-10-29)
+
+**Question (open; experiment pending).** Round 50's worker left 0xbd30
+(hkMatrix3 from a quaternion) NONMATCHING on one shape: the base holds a
+bare `vaddss` whose upper lanes come from its first operand and feed the
+vector operations after it (`c = _mm_add_ss(b, one)`, then
+`_mm_sub_ps(c, a)`), where the 3.3 compile adds and then inserts
+(`vaddss; vinsertps`), which reorders what follows. Measured between rounds
+with a two-line probe under the library flags: LLVM 3.3 (the release and
+the from-source build) and 3.4.2 emit `vaddss; vinsertps`; 3.5.2 emits the
+bare `vaddss`. Upstream added the selection in r196925 (2013-12-10, Andrea
+Di Biagio, "Ensure that the backend no longer emits unnecessary vector
+insert instructions immediately after SSE scalar fp instructions like addss
+or mulss": patterns that select ADDSS, SUBSS, MULSS and DIVSS, their SD
+forms and their VEX forms from a scalar operation on lane 0 followed by
+X86Movss or, under SSE4.1 and AVX, X86insrtps) and r197145 (2013-12-12,
+the packed operation followed by an insert), both after the 3.4 branch
+(3.4.2 lacks the effect) and in 3.5. The 3.3 source has no such pattern
+(`lib/Target/X86/X86InstrSSE.td`) and lowers a lane-0 float insert to
+INSERTPS whenever SSE4.1 is on (`X86ISelLowering.cpp`,
+`LowerINSERT_VECTOR_ELT_SSE4`), so no spelling of the intrinsic produces
+the base's bytes. The worker counts the shape in 0xbf40, 0x30ca0, 0x311f0
+and 0xcd910 as well. The candidate is a sixth backport patch of r196925
+(its 125-line pattern block, placed before `/// Unop Arithmetic` as
+upstream placed it), built as an experimental compiler in the supervisor's
+scratch space first; it is adopted only when the probe gives the bare
+`vaddss` under it, 0xbd30 compiles equal under it, and `gate-all` holds on
+every row under the swapped compiler (the procedure of D21's -O3
+measurement). Until then the compiler is unchanged, 0xbd30 and the four
+functions are parked, and a worker that meets the shape classifies it as
+this question.
+
+**Trigger to revisit.** The experiment's result, recorded here as a
+decision or a refutation; or a library function whose base keeps
+`vinsertps` after a lane-0 scalar operation.

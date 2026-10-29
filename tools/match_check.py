@@ -204,6 +204,18 @@ def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
     return out
 
 
+def object_symbol(obj: Path, name: str) -> tuple[int, int, int] | None:
+    """(section index, value, size) of a symbol the object defines, or None."""
+    from elftools.elf.elffile import ELFFile
+    with obj.open("rb") as f:
+        elf = ELFFile(f)
+        symtab = elf.get_section_by_name(".symtab")
+        for s in symtab.iter_symbols():
+            if s.name == name and s["st_shndx"] not in ("SHN_UNDEF", "SHN_ABS"):
+                return s["st_shndx"], s["st_value"], s["st_size"]
+    return None
+
+
 def object_bytes_of(obj: Path, section_index: int, value: int, size: int) -> bytes:
     """The bytes a local data symbol (a string literal) covers in the object."""
     from elftools.elf.elffile import ELFFile

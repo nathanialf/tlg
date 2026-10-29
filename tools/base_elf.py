@@ -258,6 +258,14 @@ class BaseElf:
             n = int(m.group(1))
             start = m.end()
             return sym[start:start + n]
+        # a function-local static, `_ZZ<function>E<len><name>[_<n>]`: the
+        # object is named D_<hex> like a file-local one (docs/DECISIONS.md
+        # D17); its guard `_ZGVZ...` is not the object and is placed by
+        # tools/layout_link.py beside it
+        if sym.startswith("_ZZ"):
+            m = re.search(r"E(\d+)(D_[0-9a-fA-F]+)(?:_\d+)?$", sym)
+            if m and len(m.group(2)) == int(m.group(1)):
+                return m.group(2)
         m = re.match(r"^_ZN[KVr]*", sym)
         if m:
             pos, last = m.end(), None

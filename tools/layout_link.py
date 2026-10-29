@@ -124,6 +124,18 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     s = base.address_of(r.symbol)
     if s is not None:
         return s, ""
+    if r.symbol.startswith("_ZGVZ"):
+        # the guard of a function-local static (docs/DECISIONS.md D17): the
+        # compiler lays the guard out beside the object in the unit's .bss and
+        # the linker keeps the unit's layout, so the guard sits at the object's
+        # address plus their distance in the object file; the gate checks every
+        # reference against the base's field as for any symbol
+        static = "_ZZ" + r.symbol[len("_ZGVZ"):]
+        s = base.address_of(static)
+        here = mc.object_symbol(obj, static)
+        if s is not None and here is not None and here[0] == r.sym_section:
+            return s + (r.sym_value - here[1]), ""
+        return None, f"{r.symbol}: the guard of a function-local static the base does not place ({static})"
     # a symbol the object itself defines in a data section: a string literal
     # or a local constant; find its bytes in the base
     if isinstance(r.sym_section, int) and r.sym_section > 0:

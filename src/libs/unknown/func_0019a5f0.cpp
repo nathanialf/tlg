@@ -5,9 +5,6 @@
  * the instance a static of this function, built on the first call (its guard
  * at 0x57c8a18; the empty destructor not registered for exit), returned
  * with a reference added. */
-// NONMATCHING: equal in quick_diff (31 instructions, 140 bytes); the gate
-// cannot place the function's static (_ZZ...E9D_57c8a08) or its guard
-// (_ZGVZ..., 0x57c8a18): tooling, docs/NOTES.md Round 50.
 hkReferencedObject *FUN_0019a5f0() /* derived name */
 {
     static hkSerializeDeprecated D_57c8a08;
