@@ -3666,11 +3666,14 @@ class Object00061f00 : public hkReferencedObject /* derived name */
  * then the new handler told. */
 struct hknpCharacterInput /* derived name */
 {
-    u8 unknown0[8];
+    /* The stick's two axes (the climbing state's 0x3e4b0 scales them).
+     * derived names. */
+    float inputLR;
+    float inputUD;
     hkBool wantJump; /* derived name */
     u8 unknown9[7];
-    Vec4 up; /* derived name */
-    u8 unknown20[0x10];
+    Vec4 up;         /* derived name */
+    Vec4 forward;    /* derived name */
     hkBool atLadder; /* derived name */
     u8 unknown31[0xf];
     /* The surface the character stands on, from +0x40: whether it moves,
@@ -3678,8 +3681,9 @@ struct hknpCharacterInput /* derived name */
     hkBool isSurfaceDynamic; /* derived name */
     u8 supportedState;       /* derived name */
     u8 unknown42[0xe];
-    Vec4 surfaceNormal; /* derived name: the climbing state jumps off along it */
-    u8 unknown60[0x30];
+    Vec4 surfaceNormal;   /* derived name: the climbing state jumps off along it */
+    Vec4 surfaceVelocity; /* derived name */
+    u8 unknown70[0x20];
     Vec4 velocity; /* derived name: the character's, at +0x90 */
     Vec4 gravity;  /* derived name: its length is the climbing state's jump speed */
 };
@@ -3829,9 +3833,36 @@ inline void hknpFirstPersonGun::operator delete(void *object, unsigned long numB
 
 /* The climbing state (derived name; its vtable 0x16968c0 has no type info
  * and no row; slot 7 is 0x3e430). */
+/* What the character's movement is computed from (derived names; 0x3bc10
+ * takes it with the output velocity). */
+struct CharacterMovementInput /* derived name */
+{
+    CharacterMovementInput() : flag68(false) {}
+
+    Vec4 forward;
+    Vec4 up;
+    Vec4 surfaceNormal;
+    Vec4 currentVelocity;
+    Vec4 desiredVelocity;
+    Vec4 surfaceVelocity;
+    float gain;
+    float maxVelocityDelta;
+    bool flag68;
+};
+
+/* The movement toward the desired velocity along the surface, into the
+ * output velocity (0x3bc10). derived name. */
+void FUN_0003bc10(const CharacterMovementInput &input, Vec4 &velocityOut);
+
 class hknpCharacterStateClimbing : public hkReferencedObject /* derived name */
 {
   public:
+    /* Slot 6 (0x3e4b0): on the ladder, moved along the surface by the
+     * stick, ten metres a second, pressed one tenth into the surface.
+     * derived name. */
+    void FUN_0003e4b0(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output);
+
     /* Slot 7 (0x3e430): off the ladder, the character is in the air
      * (state 2); a jump pushes it off along the surface's normal at the
      * speed of gravity's length first. derived name. */
