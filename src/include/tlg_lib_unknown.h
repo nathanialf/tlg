@@ -570,6 +570,18 @@ template <typename T> inline void hkArray<T>::setSize(AllocatorBase &allocator, 
     size = n;
 }
 
+template <typename T>
+inline void hkArray<T>::setSize(AllocatorBase &allocator, int n, const T &fill)
+{
+    reserve(allocator, n);
+    const int numNew = n - size;
+    T *const added = data + size;
+    for (int i = 0; i < numNew; i++) {
+        added[i] = fill;
+    }
+    size = n;
+}
+
 template <typename T> inline void hkArray<T>::append(const T *elements, int numElements)
 {
     const int newSize = size + numElements;
@@ -1896,6 +1908,14 @@ struct FreeList /* derived name */
      * left as they are. */
     FreeList();
 
+    /* Built set up (0x18580; TwoBaseAllocator's constructor builds its
+     * size classes' lists in place at 0x1c48): the element size rounded up
+     * to the alignment, the block size, the two allocators (a null block
+     * allocator taking the thread's router's temporary allocator) and the
+     * number of elements a block holds. */
+    FreeList(u64 newElementSize, u64 newAlignment, u64 newBlockSize,
+             AllocatorBase *newBlockAllocator, AllocatorBase *newElementAllocator);
+
     /* Sets the free list up (0x186a0): frees what it held, then keeps the
      * element size rounded up to the alignment, the block size and the two
      * allocators, a null block allocator taking the thread's router's
@@ -1945,12 +1965,12 @@ struct FreeList /* derived name */
 
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
-    u8 unknown10[8];
+    u64 unknown10;
     u64 unknown18;
-    FreeListBlock *freeBlocks; /* derived name */
-    u64 blockSize;             /* derived name */
-    u64 unknown30;
-    u8 unknown38[8];
+    FreeListBlock *freeBlocks;       /* derived name */
+    u64 blockSize;                   /* derived name */
+    u64 unknown30;                   /* the alignment (0x18580); derived name */
+    u64 elementsPerBlock;            /* derived name */
     char *top;                       /* derived name */
     char *blockEnd;                  /* derived name */
     AllocatorBase *blockAllocator;   /* derived name */

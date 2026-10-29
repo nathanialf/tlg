@@ -1971,3 +1971,8 @@ FUN_0007dd30 src/libs/unknown/func_0007dd30.cpp _ZNK24hkpRagdollConstraintData15
 _ZN15hkxVertexBufferD1Ev src/libs/unknown/func_00089fd0.cpp
 _ZN15hkxVertexBufferD0Ev src/libs/unknown/func_00089fd0.cpp
 _ZN15hkxVertexBuffer10VertexDataD1Ev src/libs/unknown/func_00087cf0.cpp
+FUN_00157be0 src/libs/unknown/func_00157be0.cpp _Z12FUN_00157be0R10hknpMotionRKDv4_fS3_
+FUN_0017ee60 src/libs/unknown/func_0017ee60.cpp _ZN26hkDynamicClassNameRegistry12FUN_0017ee60ERKS_
+_ZN8FreeListC1EmmmP13AllocatorBaseS1_ src/libs/unknown/func_00018580.cpp
+FUN_000263e0 src/libs/unknown/func_000263e0.cpp _ZNK26hkCompressedMassProperties12FUN_000263e0ER28hkDiagonalizedMassProperties
+FUN_00090100 src/libs/unknown/func_00090100.cpp _ZN19hkArrayStreamWriter12FUN_00090100Eii

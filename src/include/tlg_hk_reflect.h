@@ -466,6 +466,10 @@ template <typename T> struct hkArray {
      * tlg_lib_unknown.h; the string buffer's, 0x115f0). */
     void setSize(AllocatorBase &allocator, int n);
 
+    /* The same, the elements it gains set to a value (an array stream
+     * writer's seek pads with zero, 0x9018e). derived name. */
+    void setSize(AllocatorBase &allocator, int n, const T &fill);
+
     T &operator[](int index)
     {
         return data[index];
@@ -5907,7 +5911,9 @@ struct hknpMotion {
     /* The motion's place in its cell's list of active motions, 0x7fffffff
      * when it is in none (0x47790). */
     u32 solverId;
-    u8 unknown30[8];
+    u8 unknown30[6];
+    /* A speed the velocity scale scales too (0x157bfa). derived name. */
+    hkHalf half36;
     u16 motionPropertiesId; /* derived name: 0x476a0 clears it */
     u8 unknown3a[4];
     u8 cellIndex;
@@ -5917,7 +5923,10 @@ struct hknpMotion {
      * the quaternion at +0x10, the angular one. derived name. */
     Vec4 linearVelocity;
     Vec4 angularVelocity; /* derived name: in the motion's frame */
-    u8 unknown60[0x20];
+    /* The velocities of the previous step (derived names): the velocity
+     * scale scales them and moves the motion by them (0x157be0). */
+    hkVector4 previousLinearVelocity;
+    hkVector4 previousAngularVelocity;
 };
 
 /* The world's motion manager at +0x110 (derived names: nothing names it):
@@ -7230,6 +7239,13 @@ struct hkCompressedMassProperties {
      * the axes' quaternion in 16 bits a lane (30000 for one), the mass and
      * the volume as they are. derived name. */
     void FUN_00026100(const hkDiagonalizedMassProperties &properties);
+
+    /* Unpacked into the diagonalized properties (0x263e0; the callers at
+     * 0x157132, 0x161a9d and 0x161c1d): the two packed vectors, each lane's
+     * 16 bits scaled by the exponent in the fourth, the mass and the volume,
+     * and the quaternion back from its 16 bits a lane, normalized. derived
+     * name. */
+    void FUN_000263e0(hkDiagonalizedMassProperties &properties) const;
 
     s16 centerOfMass[4];
     s16 inertia[4];
@@ -11990,6 +12006,12 @@ class hkArrayStreamWriter : public hkStreamWriter
      * all of them written. derived name. */
     int FUN_00090000(const void *data, int numBytes);
 
+    /* The seek (0x90100): from the start, the offset or the end (0, 1, 2;
+     * any other keeps the offset); past the end the array grows, zero
+     * filled with a terminating zero kept past it; a negative place fails.
+     * derived name. */
+    hkResult FUN_00090100(int offset, int whence);
+
     hkArray<char> *array;
     AllocatorBase *allocator;
     int offset;
@@ -12945,6 +12967,12 @@ struct CommandStreams00167f70 /* derived name */
      * negated, all read before the range is written. derived name. */
     void FUN_00167f70(void *argument1, BlockCache *streamCache);
 
+    /* A motion's previous-step velocities scaled, and the speed at +0x36 with
+ * them, the motion moved by the old ones over the part of the step the
+ * scale adds, (factor - 1) times the step (0x157be0; the world's 0x5dad1
+ * passes its step's time). derived name. */
+    void FUN_00157be0(hknpMotion &motion, const Vec4 &factor, const Vec4 &deltaTime);
+
     u8 unknown0[0x258];
     BlockCache *cache; /* derived name */
     u8 unknown260[0x20];
@@ -13691,8 +13719,10 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
     virtual void unknownVirtual5(); /* the folded 0x7f80: the name at +0x10 */
     virtual const hkClass *
     FUN_0017ec90(const char *className) const; /* vtable slot 6; derived name */
-    virtual void unknownVirtual7();            /* 0x17eca0 */
-    virtual void unknownVirtual8();            /* FUN_0017ed60: sets the name */
+    /* Slot 7 (0x17eca0): every class the registry holds appended. derived
+     * name. */
+    virtual void FUN_0017eca0(hkArray<const hkClass *> &classesOut) const;
+    virtual void unknownVirtual8(); /* FUN_0017ed60: sets the name */
     /* Slot 9 (0x17ed70): registers a class under a name, the class's own
      * when none is given. derived name. */
     virtual void FUN_0017ed70(const hkClass *klass, const char *className);
@@ -13702,6 +13732,9 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
     /* Slot 11 (0x17edf0): registers every class of a map of names to
      * classes under its own name, through slot 9. derived name. */
     virtual void FUN_0017edf0(const StringMap &classes);
+    /* Slot 12 (0x17ee60): every class of another registry registered under
+     * its own name, through slot 9. derived name. */
+    virtual void FUN_0017ee60(const hkDynamicClassNameRegistry &other);
 
     const char *name; /* derived name */
     StringMap map;    /* derived name */
