@@ -6,7 +6,8 @@
  * pulled back instead while the vehicle reverses with automatic reverse on,
  * never below zero. */
 float hknpVehicleDefaultAnalogDriverInput::FUN_00151de0(
-    const hknpVehicleInstance *vehicle, const hknpVehicleDriverInputAnalogStatus *status) const
+    float deltaTime, const hknpVehicleInstance *vehicle,
+    const hknpVehicleDriverInputAnalogStatus *status, hknpVehicleFilteredDriverInput &output) const
 {
     float brakeInput;
     if (vehicle->isReversing && autoReverse) {

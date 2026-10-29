@@ -435,6 +435,10 @@ template <typename T> struct hkArray {
      * is too small (defined in tlg_lib_unknown.h). */
     void setSize(int n);
 
+    /* n elements, the storage grown from the allocator given (defined in
+     * tlg_lib_unknown.h; the string buffer's, 0x115f0). */
+    void setSize(AllocatorBase &allocator, int n);
+
     T &operator[](int index)
     {
         return data[index];
@@ -1514,6 +1518,10 @@ struct hkStringBuf /* derived name */
 {
     hkStringBuf(const hkStringPtr &source);
 
+    /* Out of line (0x115f0; the image loader's at 0x1885ad and the XML
+     * reader's at 0x19e1c1): a copy of a C string, null read as empty. */
+    hkStringBuf(const char *s);
+
     /* The characters' length, without the terminator the array holds. */
     int getLength() const
     {
@@ -2175,22 +2183,47 @@ class hknpVehicleInstance;
  * initialSlope and deadZone (floats) at +0xc to +0x14, autoReverse (hkBool)
  * at +0x18. Slot 6 (FUN_00151d90) is the accelerator input, slot 7
  * (FUN_00151de0) the brake input. */
+/* The driver's input filtered for a step, which the driver input's slot 5
+ * fills (derived names; the pedals, the steering, the handbrake and whether
+ * the driver is trying to reverse, at +0, +4, +8, +0xc and +0xd). */
+struct hknpVehicleFilteredDriverInput /* derived name */
+{
+    float acceleratorPedalInput;
+    float brakePedalInput;
+    float steeringWheelInput;
+    hkBool handbrakeOn;
+    hkBool tryingToReverse;
+};
+
 class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
 {
   public:
     hknpVehicleDefaultAnalogDriverInput(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    float FUN_00151d90(
-        const hknpVehicleInstance *vehicle,
-        const hknpVehicleDriverInputAnalogStatus *status) const; /* vtable slot 6; derived name */
-    float FUN_00151de0(
-        const hknpVehicleInstance *vehicle,
-        const hknpVehicleDriverInputAnalogStatus *status) const; /* vtable slot 7; derived name */
-    /* Slot 11 (0x151e10): the steering input from the stick's x, nothing
+    /* Slot 5 (0x152010): the filtered input from slots 6 to 9 and the
+     * status's handbrake. derived name. */
+    virtual void FUN_00152010(float deltaTime, const hknpVehicleInstance *vehicle,
+                              const hknpVehicleDriverInputAnalogStatus *status,
+                              hknpVehicleFilteredDriverInput &output);
+    /* Slot 6 (0x151d90): the accelerator. derived name. */
+    virtual float FUN_00151d90(float deltaTime, const hknpVehicleInstance *vehicle,
+                               const hknpVehicleDriverInputAnalogStatus *status,
+                               hknpVehicleFilteredDriverInput &output) const;
+    /* Slot 7 (0x151de0): the brake. derived name. */
+    virtual float FUN_00151de0(float deltaTime, const hknpVehicleInstance *vehicle,
+                               const hknpVehicleDriverInputAnalogStatus *status,
+                               hknpVehicleFilteredDriverInput &output) const;
+    /* Slot 8 (0x151ea0): whether the driver is trying to reverse. derived
+     * name. */
+    virtual hkBool FUN_00151ea0(float deltaTime, const hknpVehicleInstance *vehicle,
+                                const hknpVehicleDriverInputAnalogStatus *status,
+                                hknpVehicleFilteredDriverInput &output) const;
+    /* Slot 9 (0x151e10): the steering input from the stick's x, nothing
      * inside the dead zone, the initial slope up to the change point and a
      * straight line to full beyond it. derived name. */
-    float FUN_00151e10(const hknpVehicleInstance *vehicle,
-                       const hknpVehicleDriverInputAnalogStatus *status) const;
+    virtual float FUN_00151e10(float deltaTime, const hknpVehicleInstance *vehicle,
+                               const hknpVehicleDriverInputAnalogStatus *status,
+                               hknpVehicleFilteredDriverInput &output) const;
 
     float slopeChangePointX;
     float initialSlope;
@@ -2446,10 +2479,12 @@ class hknpVehicleSuspension : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x14deb0, slot 0): the wheels' parameters given back;
-     * the deleting destructor (0x14df10, slot 1) frees at the recorded
-     * size, 0x20 by default. */
-    virtual ~hknpVehicleSuspension();
+    /* Inline (the default suspension's destructors hold it, 0x14dd7d and
+     * 0x14de1e): the wheels' parameters given back. Its own copies, slot 0
+     * (0x14deb0) and the deleting destructor (0x14df10, slot 1, freeing at
+     * the recorded size, 0x20 by default), are emitted with the vtable where
+     * a derived class's destructor uses it. */
+    virtual ~hknpVehicleSuspension() {}
 
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
@@ -2462,10 +2497,31 @@ class hknpVehicleSuspension : public hkReferencedObject
 };
 
 /* hknpVehicleDefaultSuspension: vtable 0x16a4040, finish callback FUN_0003e590. */
-class hknpVehicleDefaultSuspension : public hkReferencedObject
+class hknpVehicleDefaultSuspension : public hknpVehicleSuspension
 {
   public:
-    hknpVehicleDefaultSuspension(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    /* hknpVehicleDefaultSuspension::WheelSpringSuspensionParameters (the
+     * names from the executable's strings; 12 bytes, the order derived). */
+    struct WheelSpringSuspensionParameters {
+        float strength;
+        float dampingCompression;
+        float dampingRelaxation;
+    };
+
+    hknpVehicleDefaultSuspension(hkFinishLoadedObjectFlag flag)
+        : hknpVehicleSuspension(flag), wheelSpringParams(flag)
+    {
+    }
+
+    /* Out of line (0x14dd30, slot 0): the springs' parameters given back,
+     * then the base's; the deleting destructor (0x14ddd0, slot 1) frees at
+     * the recorded size, 0x30 by default. */
+    virtual ~hknpVehicleDefaultSuspension();
+
+    /* Slot 5 (0x14dfa0). derived name. */
+    virtual void FUN_0014dfa0();
+
+    hkArray<WheelSpringSuspensionParameters> wheelSpringParams;
 };
 
 /* hknpBodyReference: vtable 0x1696d20, finish callback FUN_0003f520. */
@@ -3589,7 +3645,13 @@ class hkMemoryMeshVertexBuffer
      * the host's order once loaded. */
     hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x27770, slot 0): the vertex memory given back; the
+     * deleting destructor (0x276d0, slot 1) frees at the recorded size,
+     * 0x1b0 by default. */
     virtual ~hkMemoryMeshVertexBuffer();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Swaps every element of every vertex to the other byte order (0x27520).
      * derived name. */
@@ -5358,7 +5420,15 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
  * FUN_00150240): its destructor 0x14e100 is out of line, and its deleting
  * destructor 0x14e0b0 runs it and frees the 0x1a0 bytes unless null
  * (written as calls while the class is opaque, cookbook 15). */
-class hknpWorldObject1d0Large; /* derived name */
+struct hknpWorld;
+
+class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
+{
+  public:
+    /* Slot 5 (0x151c80): the world's streams of a thread checked, the
+     * checks empty in this build. derived name. */
+    void FUN_00151c80(hknpWorld *world, int threadIndex);
+};
 
 void FUN_0014e100(hknpWorldObject1d0Large *self); /* derived name */
 void FUN_0014e0b0(hknpWorldObject1d0Large *self); /* derived name */
@@ -6273,6 +6343,25 @@ class hknpWorldObject1e0 /* derived name */
             hknpCollisionQueryCollector *collector) const; /* vtable slot 13; derived name */
 };
 
+/* The world's streams at +0x260 (derived names; built by FUN_00174590):
+ * twelve blocks of 0x100 bytes, each with an inline array of 24 at +0x20,
+ * then three arrays at +0xc00, +0xc10 (16-byte elements) and +0xc20. */
+struct hknpWorldStreams260 /* derived name */
+{
+    u8 blocks[12][0x100];
+    hkArray<u8> arrayC00;
+    hkArray<Vec4> arrayC10;
+    hkArray<u8> arrayC20;
+};
+
+/* The world's stream checks, empty in this build: two functions the linker
+ * gives one empty body (0x175a80), called with five and seven arguments by
+ * the large object's slot 5 (0x151c80). derived names. */
+void FUN_00175a80(const hknpWorld *world, int threadIndex, const void *streamA, const void *streamB,
+                  const void *array, const void *unknown, int flags);
+void FUN_00175a80(const hknpWorld *world, int threadIndex, const void *streamA, const void *streamB,
+                  const void *array);
+
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
      * rotated by the motion's orientation (0x5df30; the caller at
@@ -6348,7 +6437,8 @@ struct hknpWorld {
     u8 unknown1e8[8];
     u8 unknown1f0[0x60]; /* CollideSharedData's object40 points here */
     Vec4 vector250;
-    u8 unknown260[8];
+    /* Built by FUN_00174590 at 0x49ca9. derived name. */
+    struct hknpWorldStreams260 *streams260;
     /* Handed first to the broad phase's pair walk (0x174eea). derived
      * name. */
     void *pointer268;
@@ -7411,6 +7501,17 @@ struct hknpBodyQualityLibraryCinfo /* derived name */
     hkBool enableContactCaching;
 };
 
+/* hkUFloat8 (the reflection's type name in the material's records): an
+ * unsigned float in eight bits. */
+struct hkUFloat8 {
+    /* Out of line (0x935b0, called by the material's constructor and the
+     * constraint datas' at 0x77650 to 0x17b2e2): the code of the nearest
+     * value not above the float. derived name. */
+    hkUFloat8 &operator=(const float &value);
+
+    u8 value; /* derived name */
+};
+
 /* hknpMaterial (type info 0x57c1f40, no vtable, cleanup 0x300) and
  * hknpMaterialDescriptor (type info 0x57c1fc0, no vtable, cleanup 0x66e80):
  * each finish constructor (FUN_0006c6f0, FUN_0006c800) runs hkStringPtr's on
@@ -7426,6 +7527,21 @@ struct hknpMaterial {
     /* Out of line (0x6c700; the material library's copies at 0x776d0,
      * 0x77976 and 0x77a8f): the name copied as a string, the rest as bytes. */
     hknpMaterial(const hknpMaterial &other);
+
+    /* Out of line (0x6c650): the default material (its values in the
+     * definition). */
+    hknpMaterial();
+
+    /* The trigger types and the combine policies (the items of the enums
+     * TriggerType and CombinePolicy, 0x1699970 and 0x16999b0). */
+    enum TriggerType {
+        TRIGGER_TYPE_NONE,
+        TRIGGER_TYPE_BROAD_PHASE,
+        TRIGGER_TYPE_NARROW_PHASE,
+        TRIGGER_TYPE_CONTACT_SOLVER
+    };
+
+    enum CombinePolicy { COMBINE_AVG, COMBINE_MIN, COMBINE_MAX };
 
     /* The flags the material keeps in step with its values (bits 20 to
      * 25, 0x6c740); the rest of the word is the user's. derived names. */
@@ -7449,8 +7565,8 @@ struct hknpMaterial {
     hkStringPtr name;
     u32 isExclusive;
     u32 flags;
-    u8 triggerType;              /* an enum of hkUint8, TRIGGER_TYPE_NONE first */
-    u8 triggerManifoldTolerance; /* an hkUFloat8 */
+    u8 triggerType; /* an enum of hkUint8, TRIGGER_TYPE_NONE first */
+    hkUFloat8 triggerManifoldTolerance;
     hkHalf dynamicFriction;
     hkHalf staticFriction;
     hkHalf restitution;
@@ -7470,7 +7586,7 @@ struct hknpMaterial {
     hkHalf massChangerHeavyObjectFactor;
     hkHalf softContactForceFactor;
     hkHalf softContactDampFactor;
-    u8 softContactSeperationVelocity; /* an hkUFloat8; the record's spelling */
+    hkUFloat8 softContactSeperationVelocity; /* the record's spelling */
     u8 unknown2d[3];
     hknpSurfaceVelocity *surfaceVelocity;
     hkHalf disablingCollisionsBetweenCvxCvxDynamicObjectsDistance;
@@ -8751,8 +8867,17 @@ class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
     {
     }
 
+    /* Slot 5 (0x17d0f0): a copy from the thread's heap, each level's
+     * members copied after its vtable is stored. derived name. */
+    hkpConstraintMotor *FUN_0017d0f0() const;
+
     CalcMotorDataCallbackFunc callbackFunc; /* name from the strings; offset derived */
     hkEnum<CallbackType, u32> callbackType; /* name from the strings; offset derived */
+    /* The user's values (names from the strings; offsets from the copy,
+     * 0x17d0f0, which copies the 0x40 bytes). */
+    hkUlong userData0;
+    hkUlong userData1;
+    hkUlong userData2;
 };
 
 /* hkpSpringDamperConstraintMotor (hkClass 0x57c5bf8, parent
@@ -10467,6 +10592,16 @@ class hkBufferedStreamWriter : public hkStreamWriter
      * with a buffer of its own of bufferSize bytes from the thread's heap,
      * aligned to 64 (0x8eb0). */
     hkBufferedStreamWriter(hkStreamWriter *stream_, int bufferSize_);
+
+    /* The class allocator, inline: the thread's heap (the file system's
+     * 0x1a886; tlg_lib_unknown.h); placement stays available beside it
+     * (BufferOstream's constructor, 0xda0). */
+    static void *operator new(unsigned long numBytes);
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
 
     hkBool FUN_00009260() const; /* vtable slot 5; derived name */
     /* Slot 7 (0x91f0): the buffer written out, then the stream flushed.
@@ -12365,6 +12500,14 @@ void FUN_000915e0(StringMap *self); /* derived name */
  * D_57b8480 (the bit field's resize 0x47b30 passes it), handed out by
  * reference, so the calls through it are virtual (0x915e0's `jmpq *%rcx`). */
 struct hkContainerHeapAllocator {
+    /* Defined in tlg_lib_unknown.h, after the allocator's class. */
+    static AllocatorBase &get(); /* derived name */
+};
+
+/* The temporary allocator (derived name, after the heap allocator's): the
+ * router's first static allocator, D_57b8470, which the string buffer's
+ * array grows from (0x115f0 passes it). */
+struct hkContainerTempAllocator /* derived name */ {
     /* Defined in tlg_lib_unknown.h, after the allocator's class. */
     static AllocatorBase &get(); /* derived name */
 };

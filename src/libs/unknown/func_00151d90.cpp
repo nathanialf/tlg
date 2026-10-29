@@ -6,7 +6,8 @@
  * read the other way while the vehicle reverses with automatic reverse on;
  * full while it reverses without it. */
 float hknpVehicleDefaultAnalogDriverInput::FUN_00151d90(
-    const hknpVehicleInstance *vehicle, const hknpVehicleDriverInputAnalogStatus *status) const
+    float deltaTime, const hknpVehicleInstance *vehicle,
+    const hknpVehicleDriverInputAnalogStatus *status, hknpVehicleFilteredDriverInput &output) const
 {
     const bool reversing = vehicle->isReversing;
     float input;

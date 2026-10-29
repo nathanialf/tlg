@@ -564,6 +564,12 @@ template <typename T> inline void hkArray<T>::setSize(int n)
     size = n;
 }
 
+template <typename T> inline void hkArray<T>::setSize(AllocatorBase &allocator, int n)
+{
+    reserve(allocator, n);
+    size = n;
+}
+
 template <typename T> inline void hkArray<T>::append(const T *elements, int numElements)
 {
     const int newSize = size + numElements;
@@ -2248,8 +2254,12 @@ class StreamReader : public hkReferencedObject /* derived name */
 {
   public:
     virtual hkBool isOk() const; /* vtable slot 5; derived name */
-    virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
+    /* Slot 6: up to numBytes bytes read into the buffer, the count read.
+     * derived name. */
+    virtual int read(void *buffer, int numBytes);
+    /* Slot 7 (0x8f080, the readers' shared one): numBytes skipped by
+     * reading them, the count skipped. derived name. */
+    virtual int skip(int numBytes);
     virtual void unknownVirtual8();
     virtual StreamReader *unknownVirtual9();
     virtual hkResult seek(int offset, int whence); /* vtable slot 10; derived name */
@@ -2269,6 +2279,10 @@ class Object00185000 : public hkReferencedObject /* derived name */
     /* The constructor (0x185000): a new stream over the reader, whose
      * reference it takes. */
     Object00185000(StreamReader *reader);
+
+    /* The constructor of a file name (0x185060): the stream over the
+     * reader the file system opens, buffered. */
+    Object00185000(const char *name);
 
     /* Out of line (0x1851c0, slot 0): the reader's reference released;
      * the deleting destructor (0x185120, slot 1) frees at the recorded
@@ -2318,7 +2332,14 @@ class FiosStreamReader : public StreamReader /* derived name */
  * FUN_000098d0 and stored in the slot at 0x57b9b70, the singleton the
  * string "hkFileSystem" names): slot 7 removes a file and slot 8 creates a
  * directory through Fios. */
-class hkFileSystem;
+class hkFileSystem : public hkReferencedObject
+{
+  public:
+    /* Slot 5: a reader of the named file, through the flags (bit 0
+     * buffered; the Fios file system's 0x1bb50). derived name. */
+    virtual StreamReader *FUN_0001bb50(const char *name, int flags) = 0;
+};
+
 extern hkFileSystem *D_57b9b70; /* hkFileSystem's instance */
 
 /* The native file reader of a file name (0x93180): the file opened, a
@@ -2412,9 +2433,17 @@ class OffsetSeekableReader : public SeekableReader /* derived name */
  * (0x94700) empties the buffer and seeks the stream, slot 11 (0x94720) tells
  * the stream's position less what is still buffered; slot 5 (0x94580) is
  * readable while bytes are buffered, else asks the stream. */
-class BufferedStreamReader : public hkReferencedObject /* derived name */
+class BufferedStreamReader : public StreamReader /* derived name */
 {
   public:
+    /* Out of line (0x94170): a reader over the stream, its reference
+     * taken, with a buffer of bufferSize bytes from the thread's heap. */
+    BufferedStreamReader(StreamReader *stream, int bufferSize);
+
+    /* The class allocator, inline: the thread's heap (the file system's
+     * 0x1a7e6). */
+    static void *operator new(unsigned long numBytes);
+
     /* Out of line (0x942e0, slot 0): the stream's reference released and
      * the buffer given back to the thread's heap. */
     virtual ~BufferedStreamReader();
@@ -2715,6 +2744,16 @@ inline void *hknpVehicleDriverInputAnalogStatus::operator new(unsigned long numB
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *BufferedStreamReader::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *hkBufferedStreamWriter::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *LoadedImage::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -2893,6 +2932,11 @@ inline void hkxMaterialEffect::operator delete(void *object, unsigned long numBy
 }
 
 inline void hkMemoryMeshTexture::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkMemoryMeshVertexBuffer::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -3336,6 +3380,11 @@ extern RouterAllocator58 D_57b8480;
 inline AllocatorBase &hkContainerHeapAllocator::get()
 {
     return D_57b8480;
+}
+
+inline AllocatorBase &hkContainerTempAllocator::get()
+{
+    return D_57b8470;
 }
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */

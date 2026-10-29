@@ -7,7 +7,8 @@
  * there along the line that reaches 1 at full deflection, signed as the
  * stick is. */
 float hknpVehicleDefaultAnalogDriverInput::FUN_00151e10(
-    const hknpVehicleInstance *vehicle, const hknpVehicleDriverInputAnalogStatus *status) const
+    float deltaTime, const hknpVehicleInstance *vehicle,
+    const hknpVehicleDriverInputAnalogStatus *status, hknpVehicleFilteredDriverInput &output) const
 {
     const float x = status->positionX;
     const float absX = hkMath::fabs(x);
