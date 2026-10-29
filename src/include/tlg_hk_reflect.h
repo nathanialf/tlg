@@ -308,8 +308,13 @@ template <typename T> struct hkArray {
     {
     }
 
-    /* The storage given back (the vertex storage's destructor 0x9a760). */
-    ~hkArray()
+    /* The storage given back (the vertex storage's destructor 0x9a760).
+     * Declared inline: clang 3.3 gives the inliner's hint (threshold 325
+     * for 225) only to a function written with the keyword
+     * (CodeGenFunction.cpp:497-504), and hknpCompoundShape's destructor
+     * (0x41650) holds this one, clearAndDeallocate inside it, within the
+     * free-list array's destructor, which fits only with the hint. */
+    inline ~hkArray()
     {
         clearAndDeallocate();
     }
@@ -370,8 +375,11 @@ template <typename T> struct hkArray {
 
     /* Drop the elements and give the storage back to the containers'
      * allocator unless the array does not own it (defined in
-     * tlg_lib_unknown.h, after AllocatorBase). derived name. */
-    void clearAndDeallocate();
+     * tlg_lib_unknown.h, after AllocatorBase). The keyword is on this
+     * declaration: a class template's member takes it from the declaration
+     * in the class, not from the definition outside (0x41650 inlines it).
+     * derived name. */
+    inline void clearAndDeallocate();
 
     /* An element appended, the storage grown through FUN_00000b40 when it
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
@@ -2673,7 +2681,11 @@ class hkxVertexFloatDataChannel : public hkReferencedObject
     /* Out of line (0x87a60, slot 0): the array given back. */
     virtual ~hkxVertexFloatDataChannel();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<float> perVertexFloats;
+    u8 dimensions; /* an enum of hkUint8 (its record's type and subtype, 0x87c1e) */
 };
 
 /* From its record table at 0x16a12a0: perVertexInts (an array of int) at +0x10. */
@@ -2687,6 +2699,9 @@ class hkxVertexIntDataChannel : public hkReferencedObject
 
     /* Out of line (0x88000, slot 0): the array given back. */
     virtual ~hkxVertexIntDataChannel();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<s32> perVertexInts;
 };
@@ -2725,6 +2740,9 @@ class hkxAnimatedQuaternion : public hkReferencedObject
     /* Out of line (0x885e0, slot 0): the array given back. */
     virtual ~hkxAnimatedQuaternion();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<float> quaternions;
 };
 
@@ -2757,6 +2775,9 @@ class hkxEdgeSelectionChannel : public hkReferencedObject
     /* Out of line (0x88bc0, slot 0): the array given back. */
     virtual ~hkxEdgeSelectionChannel();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<s32> selectedEdges;
 };
 
@@ -2769,7 +2790,11 @@ class hkxAnimatedMatrix : public hkReferencedObject
     /* Out of line (0x88d90, slot 0): the array given back. */
     virtual ~hkxAnimatedMatrix();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<float> matrices;
+    u8 hint; /* an enum of hkUint8 (its record's type and subtype, 0x88f47) */
 };
 
 class hkxEnum : public hkReferencedObject
@@ -2918,6 +2943,9 @@ class hkxVertexSelectionChannel : public hkReferencedObject
 
     /* Out of line (0x8bbe0, slot 0): the array given back. */
     virtual ~hkxVertexSelectionChannel();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<s32> selectedVertices;
 };
@@ -4027,6 +4055,22 @@ struct hknpCompressedMeshShapeTree;
 void FUN_000a9140(hknpCompressedMeshShapeTree *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
+/* What the mesh tree's walk (0x104000, its per-section pass 0x104110) asks
+ * of the query it is given (derived names): slot 2 whether a key is wanted
+ * (called at 0x10454b), slot 3 the work on one primitive of a section, with
+ * the walk's collector (0x10456f), slot 4 a vector the walk reads
+ * (0x104a3f). The one query read so far is the compressed mesh shape's slot
+ * 29 (0x127a50). */
+class MeshTreeQuery00104000 /* derived name */
+{
+  public:
+    virtual ~MeshTreeQuery00104000() {}
+
+    virtual bool unknownVirtual2(u32 key) const = 0;
+    virtual void unknownVirtual3(const void *section, int primitiveIndex, void *collector) = 0;
+    virtual const Vec4 *unknownVirtual4() const = 0;
+};
+
 struct hknpCompressedMeshShapeTree {
     /* The finish constructor is out of line (0xa9140). */
     hknpCompressedMeshShapeTree(hkFinishLoadedObjectFlag flag)
@@ -4048,6 +4092,13 @@ struct hknpCompressedMeshShapeTree {
      * names. */
     void FUN_000a9410(hkArray<u32> &filter, u32 key, bool enabled) const;
     bool FUN_000a9550(const hkArray<u32> &filter, u32 key) const;
+
+    /* The walk over every section of the tree (0x104000) with a query: the
+     * collector reset unless asked to keep it, its two arrays grown for the
+     * sections' counts, each section passed (0x104110), and the collector
+     * finished when asked. derived name. */
+    void FUN_00104000(void *collector, MeshTreeQuery00104000 *query, bool keepCollector,
+                      bool finishCollector, bool argument6) const;
 
     u8 unknown0[0x10];
     hkAabb domain;
@@ -4584,7 +4635,14 @@ class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
     {
     }
 
-    virtual ~hknpCompoundShapeInternalsKeyMask(); /* vtable slots 0 and 1, 0x338d0 and 0x33990 */
+    /* Slots 0 and 1, 0x338d0 and 0x33990 (func_00033d30.cpp). Declared
+     * inline: the deleting destructor holds the whole body, which only the
+     * inliner's hinted threshold admits. */
+    inline virtual ~hknpCompoundShapeInternalsKeyMask();
+
+    /* The class delete: back to the thread's heap at the class's size,
+     * after a null test (0x33a58; defined in tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_000381b0(u32 key, bool enabled); /* vtable slot 3 (0x33a90); derived name */
     bool FUN_000381d0();                      /* vtable slot 4 (0x1bad0); derived name */
@@ -5572,8 +5630,10 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
     /* The elements in use destroyed, the free ones left alone; the array
      * then gives its storage back with none left to destroy (the material
      * library's 0x612f0 and hknpCompoundShape's 0x41720: one walk, then
-     * the size cleared and the storage freed). */
-    ~hkFreeListArray()
+     * the size cleared and the storage freed). Declared inline:
+     * hknpCompoundShape's destructor holds it, past the threshold a
+     * function without the keyword gets (0x41650). */
+    inline ~hkFreeListArray()
     {
         for (int i = 0; i < elements.getSize(); i++) {
             if (!Ops::isEmpty(elements[i])) {
@@ -6423,10 +6483,12 @@ struct hknpShapeSlot22Output /* derived name */
  * shape's vertices as v * scale + offset. */
 struct hknpShapeSlot29Input /* derived name */
 {
-    int mode; /* derived name */
-    u8 unknown4[0x1c];
-    Vec4 scale; /* derived name */
-    u8 unknown30[0x10];
+    int mode;     /* derived name */
+    hkBool flag4; /* the compressed mesh's walk's last argument (0x127a97); derived name */
+    u8 unknown5[0x1b];
+    Vec4 scale;  /* derived name */
+    int value30; /* the compressed mesh's query's +0x20 (0x127a70); derived name */
+    u8 unknown34[0xc];
     Vec4 offset; /* derived name */
 };
 
@@ -7076,6 +7138,9 @@ class hknpCompressedMeshShape : public hknpCompositeShape
     hknpShapeKeyMask *FUN_00117200() const;
     void FUN_00158840(const Mat4 &transform,
                       hkAabb &aabbOut) const; /* vtable slot 7; derived name */
+    /* Slot 29 (0x127a50): the mesh tree walked with a query over the input.
+     * derived name. */
+    int FUN_00127a50(const hknpShapeSlot29Input &input, void *collector) const;
 
     hknpCompressedMeshShapeData *data;
     /* The rest of the record's members (0x169aa40); the counts are not
@@ -10419,11 +10484,15 @@ class hkxAnimatedFloat : public hkReferencedObject
     /* Out of line (0x8b950, slot 0): the floats given back. */
     virtual ~hkxAnimatedFloat();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     const hkClass *getClassType() const; /* vtable slot 3, FUN_0008ba30 */
 
     /* From its hkClass (records built at run time by 0x8ba60): floats (an
      * array of reals) at +0x10, hint at +0x20. */
     hkArray<float> floats;
+    u8 hint; /* an enum of hkUint8 (its record's type and subtype, 0x8bb07) */
 };
 
 class AllocatorBase; /* tlg_lib_unknown.h */

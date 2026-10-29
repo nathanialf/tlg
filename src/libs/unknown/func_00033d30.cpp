@@ -53,10 +53,8 @@ void hknpCompoundShapeInternalsKeyMask::FUN_000381b0(u32 key, bool enabled) /* d
 }
 
 /* Slot 0 (0x338d0): every instance's own mask deleted, then the filter and
- * the masks' array given back. The deleting destructor 0x33990 is
- * NONMATCHING: the base inlines this body into it and tests the object for
- * null before freeing its 0x30 bytes; the compile calls the body and frees
- * with no test (docs/NOTES.md Round 46). */
+ * the masks' array given back. The deleting destructor (0x33990, slot 1)
+ * holds this body and the class delete's null test. */
 hknpCompoundShapeInternalsKeyMask::~hknpCompoundShapeInternalsKeyMask()
 {
     for (int i = 0; i < instanceMasks.size; i++) {

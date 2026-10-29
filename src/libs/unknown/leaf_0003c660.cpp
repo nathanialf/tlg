@@ -4,5 +4,5 @@
 /* derived name: slot 17 of hknpSphereShape's vtable (0x1695c20). */
 float FUN_0003c660(const hknpSphereShape *self) /* derived name */
 {
-    return 3.14159265358979f;
+    return HK_REAL_PI;
 }

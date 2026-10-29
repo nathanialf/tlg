@@ -224,7 +224,7 @@ FUN_000ad740 src/libs/unknown/leaf_000ad740.cpp _ZN19hkMemoryMeshTexture12FUN_00
 FUN_000ad750 src/libs/unknown/leaf_000ad750.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad750Ev
 FUN_000ad760 src/libs/unknown/leaf_000ad760.cpp _ZN19hkMemoryMeshTexture12FUN_000ad760EN13hkMeshTexture16TextureUsageTypeE
 FUN_000ad910 src/libs/unknown/func_000ad910.cpp
-FUN_00128640 src/libs/unknown/leaf_00128640.cpp
+FUN_00128640 src/libs/unknown/func_00127a50.cpp _ZNK12_GLOBAL__N_117TreeQuery00127a5015unknownVirtual4Ev
 FUN_0012a850 src/libs/unknown/func_0012a850.cpp
 FUN_0014e0a0 src/libs/unknown/func_0014e0a0.cpp
 FUN_0015dc50 src/libs/unknown/func_0015dc50.cpp
@@ -1766,3 +1766,12 @@ _ZN26hkxVertexVectorDataChannelD0Ev src/libs/unknown/func_000873a0.cpp
 _ZN29hkpPointToPlaneConstraintDataC1Ev src/libs/unknown/func_0007bae0.cpp _ZN29hkpPointToPlaneConstraintDataC2Ev
 FUN_00072d30 src/libs/unknown/func_00072d30.cpp _ZN24CollisionDetector169b23012FUN_00072d30EPK23ModifierContext0017a000PKvP26hknpManifoldCollisionCacheS4_S4_S4_S4_i
 FUN_0000b120 src/libs/unknown/func_0000b120.cpp _GLOBAL__I_a
+FUN_00127a50 src/libs/unknown/func_00127a50.cpp _ZNK23hknpCompressedMeshShape12FUN_00127a50ERK20hknpShapeSlot29InputPv
+_ZN33hknpCompoundShapeInternalsKeyMaskD0Ev src/libs/unknown/func_00033d30.cpp
+_ZN25hkxVertexFloatDataChannelD0Ev src/libs/unknown/func_00087a60.cpp
+_ZN23hkxVertexIntDataChannelD0Ev src/libs/unknown/func_00088000.cpp
+_ZN21hkxAnimatedQuaternionD0Ev src/libs/unknown/func_000885e0.cpp
+_ZN23hkxEdgeSelectionChannelD0Ev src/libs/unknown/func_00088bc0.cpp
+_ZN17hkxAnimatedMatrixD0Ev src/libs/unknown/func_00088d90.cpp
+_ZN16hkxAnimatedFloatD0Ev src/libs/unknown/func_0008b950.cpp
+_ZN25hkxVertexSelectionChannelD0Ev src/libs/unknown/func_0008bbe0.cpp

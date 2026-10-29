@@ -4,5 +4,5 @@
 /* derived name: slot 17 of hknpCapsuleShape's vtable (0x169b270). */
 float FUN_00073940(const hknpCapsuleShape *self) /* derived name */
 {
-    return 3.14159265358979f * 0.5f;
+    return HK_REAL_PI * 0.5f;
 }

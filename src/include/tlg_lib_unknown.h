@@ -2626,6 +2626,13 @@ inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numByt
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
+inline void hknpCompoundShapeInternalsKeyMask::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
 inline void hkSlot::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -2710,6 +2717,41 @@ inline void hkxTriangleSelectionChannel::operator delete(void *object, unsigned 
 }
 
 inline void hkxVertexVectorDataChannel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxVertexFloatDataChannel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxVertexIntDataChannel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxAnimatedQuaternion::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxEdgeSelectionChannel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxAnimatedMatrix::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxAnimatedFloat::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxVertexSelectionChannel::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
