@@ -5,7 +5,6 @@
  * line. */
 hknpPhysicsSystemData::hknpPhysicsSystemData(hkFinishLoadedObjectFlag flag)
     : hkReferencedObject(flag), materials(flag), motionProperties(flag), motionCinfos(flag),
-      bodyCinfos(flag), constraintCinfos(flag), referencedObjects(flag)
+      bodyCinfos(flag), constraintCinfos(flag), referencedObjects(flag), name(flag)
 {
-    FUN_0000e5c0(&name, flag);
 }

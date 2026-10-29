@@ -8,7 +8,6 @@
  * within 5. */
 hknpMaterial::hknpMaterial()
 {
-    FUN_0000e3d0(&name);
     FUN_00018160(this, 0, sizeof(hknpMaterial));
     triggerType = TRIGGER_TYPE_NONE;
     triggerManifoldTolerance = HK_REAL_MAX;

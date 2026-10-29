@@ -612,6 +612,14 @@ template <typename T> inline T &hkArray<T>::expandOne()
     return data[size++];
 }
 
+template <typename T> inline T &hkArray<T>::expandOne(AllocatorBase &allocator)
+{
+    if (size == getCapacity()) {
+        FUN_00000b40(allocator, this, sizeof(T));
+    }
+    return data[size++];
+}
+
 /* An array of 32-byte elements and the indices of the free ones (derived
  * names): FUN_00198a70 grows the elements, FUN_00198a20 hands an index
  * back; FUN_0013e090 builds one and walks it. */
@@ -1641,6 +1649,15 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
  * started by 0x10580 on FUN_00007180 with the record as its argument), the
  * worker's index plus one at +0x18. Slot 14 (0x71a0) is a worker's loop,
  * taking its index (it reads the record's +0x18 at index * 64). */
+/* A monitor stream's extent, as a thread pool hands out its workers'
+ * streams (0x77b0: 16-byte elements, the start then the end). derived
+ * names. */
+struct MonitorStreamRange /* derived name */
+{
+    const char *begin; /* derived name */
+    const char *end;   /* derived name */
+};
+
 class Pool00007880 : public hkReferencedObject /* derived name */
 {
   public:
@@ -1679,7 +1696,9 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     virtual void FUN_00007740();
     virtual int FUN_00007880() const; /* vtable slot 9; derived name */
     virtual void unknownVirtual10();
-    virtual void unknownVirtual11();
+    /* Slot 11 (0x77b0): each worker's monitor stream appended, its start
+     * and end, the array grown from the allocator given. derived name. */
+    virtual void FUN_000077b0(hkArray<MonitorStreamRange> &streamsOut, AllocatorBase &allocator);
     /* Slot 12: every worker's monitor stream rewound to its start. */
     virtual void FUN_00007850();                /* vtable slot 12; derived name */
     virtual void FUN_000075d0();                /* vtable slot 13; derived name */
@@ -2624,6 +2643,16 @@ struct MemorySystem : public hkMemorySystem {
  * -0x60, which places it at +0x10 of the template. Every reader adds that
  * slot to %fs:0. */
 extern __thread hkMemoryRouter *D_16dc070;
+
+/* The runtime given back to the thread's heap at its recorded size when
+ * there is one (a pointer of 0 or 1 holds none: `cmp 2; jb`, 0x700e1), then
+ * the data's reference released (the member's destructor). */
+inline hknpConstraint::~hknpConstraint()
+{
+    if (reinterpret_cast<hkUlong>(runtime) > 1) {
+        D_16dc070->temp58->blockFree(runtime, runtimeSize);
+    }
+}
 
 /* The thread's 0x28-byte block (derived name): FUN_014aff00 allocates it
  * from the router's heap at +0x60 and clears it; the GOT slot 0x16d80d0

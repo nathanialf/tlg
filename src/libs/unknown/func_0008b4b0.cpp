@@ -2,10 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 hkxNode::hkxNode(hkFinishLoadedObjectFlag flag)
-    : hkxAttributeHolder(flag), keyFrames(flag), children(flag), annotations(flag),
-      linearKeyFrameHints(flag)
+    : hkxAttributeHolder(flag), name(flag), uuid(flag), keyFrames(flag), children(flag),
+      annotations(flag), linearKeyFrameHints(flag), userProperties(flag)
 {
-    FUN_0000e5c0(&name, flag);
-    FUN_0000dbc0(&uuid, flag);
-    FUN_0000e5c0(&userProperties, flag);
 }

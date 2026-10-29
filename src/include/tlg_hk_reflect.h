@@ -427,6 +427,10 @@ template <typename T> struct hkArray {
      * arrays at 0x92600). */
     T &expandOne();
 
+    /* The same, the storage grown from the allocator given (defined in
+     * tlg_lib_unknown.h; the thread pool's timer streams, 0x77b0). */
+    T &expandOne(AllocatorBase &allocator);
+
     /* Room for n elements at least, from the allocator given (defined in
      * tlg_lib_unknown.h). */
     void reserve(AllocatorBase &allocator, int n);
@@ -1469,7 +1473,11 @@ struct hkStringPtr;
 void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 struct hkStringPtr {
-    hkStringPtr() = default;
+    /* Out of line (0xe3d0): a null string. Called on each new element by
+     * the array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c and
+     * 0x17f386; an inline one would be folded into its callers, which the
+     * base calls (hkXmlParser's constructor tail-calls it, 0x19d8e0). */
+    hkStringPtr();
 
     /* The finish constructor, as a member initializer runs it (the out-of-line
      * body is FUN_0000e5c0; hknpFirstPersonGun's finish constructor runs it
@@ -1545,10 +1553,6 @@ void FUN_000116c0(hkStringBuf *self, const char *string); /* derived name */
 /* Formatted into the buffer, printf style (0x11900). derived name. */
 void FUN_00011900(hkStringBuf *self, const char *format, ...); /* derived name */
 
-/* The default constructor: a null string (called on each new element by the
- * array growers at 0xc93b to 0xcb23, and by 0x3a575, 0x6c66c, 0x17f386). */
-void FUN_0000e3d0(hkStringPtr *self); /* derived name */
-
 /* The assignment: the other's string, copied when the other owns it
  * (0xe6c0). derived name. */
 void FUN_0000e6c0(hkStringPtr *self, const hkStringPtr *other); /* derived name */
@@ -1598,11 +1602,7 @@ class hkXmlParser : public hkReferencedObject /* derived name */
  * callback FUN_0008da10 (hkMemoryResourceHandle::ExternalLink's type info,
  * 0x57c8620, cites the same two). */
 struct hkxEnvironmentVariable {
-    hkxEnvironmentVariable(hkFinishLoadedObjectFlag flag)
-    {
-        FUN_0000e5c0(&name, flag);
-        FUN_0000e5c0(&value, flag);
-    }
+    hkxEnvironmentVariable(hkFinishLoadedObjectFlag flag) : name(flag), value(flag) {}
 
     hkStringPtr name;
     hkStringPtr value;
@@ -1722,11 +1722,21 @@ void FUN_0000d500(hkMonitorStreamStringMap *self, hkFinishLoadedObjectFlag flag)
 
 /* hkUuid, 16 bytes: data, four 32-bit unsigned ints (type 0x08, array of
  * 4). Its finish constructor is out of line and empty (FUN_0000dbc0). */
+struct hkUuid;
+void FUN_0000dbc0(hkUuid *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
 struct hkUuid {
+    hkUuid() = default;
+
+    /* The finish constructor, as a member initializer runs it (hkxNode's,
+     * 0x8b4b0, between its name's and its user properties'). */
+    hkUuid(hkFinishLoadedObjectFlag flag)
+    {
+        FUN_0000dbc0(this, flag);
+    }
+
     u32 data[4];
 };
-
-void FUN_0000dbc0(hkUuid *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkUuidObject, 32 bytes and polymorphic: uuid (an hkUuid) at +0xc. Its
  * finish constructor is out of line (FUN_0000dc40: stores the vtable
@@ -1809,10 +1819,7 @@ void FUN_0001c1e0(hkRefCountedProperties *self, hkFinishLoadedObjectFlag flag); 
 class hkStringObject : public hkReferencedObject
 {
   public:
-    hkStringObject(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
-    {
-        FUN_0000e5c0(&string, flag);
-    }
+    hkStringObject(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), string(flag) {}
 
     virtual ~hkStringObject();
 
@@ -1831,10 +1838,7 @@ struct hkLocalFrame;
 class hkLocalFrameGroup : public hkReferencedObject
 {
   public:
-    hkLocalFrameGroup(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
-    {
-        FUN_0000e5c0(&name, flag);
-    }
+    hkLocalFrameGroup(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), name(flag) {}
 
     virtual ~hkLocalFrameGroup();
 
@@ -1847,9 +1851,9 @@ class hkLocalFrameGroup : public hkReferencedObject
 class hkSimpleLocalFrame : public hkReferencedObject
 {
   public:
-    hkSimpleLocalFrame(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), children(flag)
+    hkSimpleLocalFrame(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), children(flag), name(flag)
     {
-        FUN_0000e5c0(&name, flag);
     }
 
     void FUN_0000df30(Mat4 &out) const;          /* vtable slot 5; derived name */
@@ -2123,22 +2127,8 @@ class hknpVehicleDefaultVelocityDamper : public hkReferencedObject
     hknpVehicleDefaultVelocityDamper(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
-/* hknpCharacterRigidBodyCinfo: vtable 0x1692f70, finish callback FUN_000361c0;
- * 0x90 bytes (its deleting destructor's size). */
-class hknpCharacterRigidBodyCinfo : public hkReferencedObject
-{
-  public:
-    hknpCharacterRigidBodyCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-
-    /* Empty (the shared 0x1c1e0); the deleting destructor 0x36160, beside
-     * the finish callback, is the body the vtables of the 0x90-byte
-     * reference-counted classes with empty destructors cite (D15). */
-    virtual ~hknpCharacterRigidBodyCinfo();
-
-    static void operator delete(void *object, unsigned long numBytes);
-
-    u8 unknownC[0x84];
-};
+/* hknpCharacterRigidBodyCinfo is defined after hkQuaternion, which it holds. */
+class hknpCharacterRigidBodyCinfo;
 
 /* hknpMaterialPalette: vtable 0x16937b0, finish callback FUN_000377c0. */
 class hknpMaterialPalette : public hkReferencedObject
@@ -3079,10 +3069,7 @@ class hkxNode : public hkxAttributeHolder
 class hkxMaterial : public hkxAttributeHolder
 {
   public:
-    hkxMaterial(hkFinishLoadedObjectFlag flag) : hkxAttributeHolder(flag)
-    {
-        FUN_0000e5c0(&name, flag);
-    }
+    hkxMaterial(hkFinishLoadedObjectFlag flag) : hkxAttributeHolder(flag), name(flag) {}
 
     hkStringPtr name;
     /* To the record's 0xe0 bytes (its member records are built at run
@@ -3097,9 +3084,9 @@ class hkxMaterial : public hkxAttributeHolder
 class hkxMaterialEffect : public hkReferencedObject
 {
   public:
-    hkxMaterialEffect(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), data(flag)
+    hkxMaterialEffect(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), data(flag), name(flag)
     {
-        FUN_0000e5c0(&name, flag);
     }
 
     /* Out of line (0x89b60, slot 0; 0x89bc0, slot 1): the data given back,
@@ -3124,9 +3111,8 @@ class hkxNodeSelectionSet : public hkxAttributeHolder
 {
   public:
     hkxNodeSelectionSet(hkFinishLoadedObjectFlag flag)
-        : hkxAttributeHolder(flag), selectedNodes(flag)
+        : hkxAttributeHolder(flag), selectedNodes(flag), name(flag)
     {
-        FUN_0000e5c0(&name, flag);
     }
 
     hkArray<hkxNode *> selectedNodes;
@@ -3952,6 +3938,48 @@ struct hkQuaternion {
     void normalize();
 
     Vec4 vec; /* derived name */
+};
+
+class hknpShape;
+struct hknpWorld;
+
+/* hknpCharacterRigidBodyCinfo: vtable 0x1692f70, finish callback FUN_000361c0;
+ * 0x90 bytes (its deleting destructor's size); members from the record
+ * table at 0x1692fb0. */
+class hknpCharacterRigidBodyCinfo : public hkReferencedObject
+{
+  public:
+    hknpCharacterRigidBodyCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Out of line (0x176380): a 75 kg character without friction, upright
+     * on y, climbing up to 60 degrees, with no shape, world or body yet. */
+    hknpCharacterRigidBodyCinfo();
+
+    /* Empty (the shared 0x1c1e0); the deleting destructor 0x36160, beside
+     * the finish callback, is the body the vtables of the 0x90-byte
+     * reference-counted classes with empty destructors cite (D15). */
+    virtual ~hknpCharacterRigidBodyCinfo();
+
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u32 collisionFilterInfo;
+    const hknpShape *shape;
+    hknpWorld *world;
+    Vec4 position;
+    hkQuaternion orientation;
+    float mass;
+    float dynamicFriction;
+    float staticFriction;
+    float weldingTolerance;
+    hknpBodyId reservedBodyId;
+    u8 additionMode;
+    u8 activationMode;
+    Vec4 up;
+    float maxSlope;
+    float maxForce;
+    float maxSpeedForSimplexSolver;
+    float supportDistance;
+    float hardSupportDistance;
 };
 
 /* A scalar square root in the SSE unit (`vsqrtss` of a vector with the
@@ -5683,14 +5711,36 @@ struct hknpMotionManager /* derived name */
 struct hknpWorld;
 
 /* hknpConstraint (hkClass 0x57c2b78, built at 0x706c5: size 0x40; its
- * member records are built at run time): the two bodies' ids at +4 and
- * +0xc, which the constraint filter reads. Field names derived. */
+ * member records are built at run time, from 0x70200): bodyUidA and
+ * bodyUidB (hkUint64) at +0 and +8, whose halves at +4 and +0xc the
+ * constraint filter reads as the bodies' ids; data (a pointer) at +0x10,
+ * id, immediateId, flags and type from +0x18, atoms at +0x20 and their
+ * sizes, runtimeSize at +0x2e, runtime at +0x30, userData at +0x38. The
+ * names after the bodies' are the records'. */
+class hkpConstraintData;
+
 struct hknpConstraint {
+    /* Inline where its type info's cleanup (0x700d0) runs it (defined in
+     * tlg_lib_unknown.h, after the thread's memory router). */
+    inline ~hknpConstraint();
+
     u8 unknown0[4];
     u32 bodyIdA; /* derived name */
     u8 unknown8[4];
     u32 bodyIdB; /* derived name */
-    u8 unknown10[0x30];
+    hkRefPtr<hkpConstraintData> data;
+    u32 id;
+    u16 immediateId;
+    u8 flags;
+    u8 type;
+    void *atoms;
+    u16 sizeOfAtoms;
+    u16 sizeOfSchemas;
+    u8 numSolverResults;
+    u8 numSolverElemTemps;
+    u16 runtimeSize;
+    void *runtime;
+    u64 userData;
 };
 
 /* The reference-counted object at +0x6c0 of the world (derived names: no
@@ -7519,10 +7569,7 @@ struct hkUFloat8 {
 struct hknpMaterial {
     /* Inline where hknpRefMaterial's finish constructor and destructor run
      * them (0x6c7e0, 0x6c5d0 finish and destroy the name directly). */
-    hknpMaterial(hkFinishLoadedObjectFlag flag)
-    {
-        FUN_0000e5c0(&name, flag);
-    }
+    hknpMaterial(hkFinishLoadedObjectFlag flag) : name(flag) {}
 
     /* Out of line (0x6c700; the material library's copies at 0x776d0,
      * 0x77976 and 0x77a8f): the name copied as a string, the rest as bytes. */
@@ -8207,6 +8254,17 @@ class hkpPointToPathConstraintData; /* defined after hkEnum */
 
 void FUN_0007f120(void *object, int finishing); /* derived name */
 
+/* hkpCogWheelConstraintAtom (0x10 bytes, member records from 0x169dc60). */
+struct hkpCogWheelConstraintAtom {
+    u16 type; /* derived name */
+    float cogWheelRadiusA;
+    float cogWheelRadiusB;
+    hkBool isScrew;
+    s8 memOffsetToInitialAngleOffset;
+    s8 memOffsetToPrevAngle;
+    s8 memOffsetToRevolutionCounter;
+};
+
 /* hkpCogWheelConstraintData (hkClass 0x57c3e88, built at 0x7cb3b, 0xc0 bytes, parent hkpConstraintData; vtable 0x169c2b0): atoms at +0x20 (record table 0x169ca30: transforms at +0, cogWheels at +0x90). */
 class hkpCogWheelConstraintData : public hkpConstraintData
 {
@@ -8214,7 +8272,7 @@ class hkpCogWheelConstraintData : public hkpConstraintData
     /* 0xa0 bytes at +0x20 (what slot 6 hands on). */
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom transforms;
-        u8 cogWheels[0x10];
+        hkpCogWheelConstraintAtom cogWheels;
     };
 
     /* The finish constructor (0x7c9d0): the atoms are left as loaded. */
@@ -8225,6 +8283,10 @@ class hkpCogWheelConstraintData : public hkpConstraintData
      * vtables of the 0xc0-byte reference-counted classes with empty
      * destructors cite (D15). */
     virtual ~hkpCogWheelConstraintData();
+
+    /* Slot 7 (0x7b4c0): both frames orthonormal and neither wheel's radius
+     * zero. */
+    hkBool unknownVirtual7() const;
 
     void FUN_0007b570(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
@@ -8692,10 +8754,7 @@ inline void *operator new(unsigned long, void *where)
  * name. constraintData is a counted reference to the constraint data
  * (hkpConstraintData: the cleanup releases it). */
 struct hknpConstraintCinfo {
-    hknpConstraintCinfo(hkFinishLoadedObjectFlag flag)
-    {
-        FUN_0000e5c0(&name, flag);
-    }
+    hknpConstraintCinfo(hkFinishLoadedObjectFlag flag) : name(flag) {}
 
     /* The cleanup callback of its type info (0x369a0, registered by the
      * initializer at 0x36c62): the cinfo destroyed in place, the name, then
@@ -8716,10 +8775,7 @@ struct hknpConstraintCinfo {
  * motionType, position, orientation, velocities, mass and the rest up to
  * localFrame at +0x90. Its finish constructor finishes the name. */
 struct hknpBodyCinfo {
-    hknpBodyCinfo(hkFinishLoadedObjectFlag flag)
-    {
-        FUN_0000e5c0(&name, flag);
-    }
+    hknpBodyCinfo(hkFinishLoadedObjectFlag flag) : name(flag) {}
 
     const hknpShape *shape;
     s32 flags;
@@ -9684,10 +9740,9 @@ class hkxMesh::UserChannelInfo : public hkxAttributeHolder
 {
   public:
     /* Inline where its type info's finish callback (0x890e0) runs it. */
-    UserChannelInfo(hkFinishLoadedObjectFlag flag) : hkxAttributeHolder(flag)
+    UserChannelInfo(hkFinishLoadedObjectFlag flag)
+        : hkxAttributeHolder(flag), name(flag), className(flag)
     {
-        FUN_0000e5c0(&name, flag);
-        FUN_0000e5c0(&className, flag);
     }
 
     /* Out of line (0x89020, slot 0); the deleting destructor (0x89060,
@@ -9710,10 +9765,9 @@ class hkxMesh::UserChannelInfo : public hkxAttributeHolder
 class hkxTextureInplace : public hkReferencedObject
 {
   public:
-    hkxTextureInplace(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), data(flag)
+    hkxTextureInplace(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), data(flag), name(flag), originalFilename(flag)
     {
-        FUN_0000e5c0(&name, flag);
-        FUN_0000e5c0(&originalFilename, flag);
     }
 
     /* Out of line (0x8aa90, slot 0): the members destroy themselves; the
@@ -9740,10 +9794,8 @@ class hkxTextureInplace : public hkReferencedObject
 class hkxScene : public hkReferencedObject
 {
   public:
-    hkxScene(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
+    hkxScene(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), modeller(flag), asset(flag)
     {
-        FUN_0000e5c0(&modeller, flag);
-        FUN_0000e5c0(&asset, flag);
     }
 
     hkStringPtr modeller;
@@ -9889,6 +9941,13 @@ class hkxEnvironment : public hkReferencedObject
 {
   public:
     hkxEnvironment(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x17d560, slot 0; the deleting destructor 0x17d600,
+     * slot 1): the variables destroyed from the last, each value before
+     * its name, and their storage given back. */
+    virtual ~hkxEnvironment();
+
+    hkArray<hkxEnvironmentVariable> variables; /* the record's member (0x16a29a0) */
 };
 
 class hkRootLevelContainer
@@ -10030,10 +10089,7 @@ class hkMemoryResourceContainer : public hkResourceContainer
  * name byteStride and channelID, the hkStringPtr at +0x10). Its finish
  * constructor finishes the channel name, its destructor destroys it. */
 struct hkxVertexDescriptionElementDecl {
-    hkxVertexDescriptionElementDecl(hkFinishLoadedObjectFlag flag)
-    {
-        FUN_0000e5c0(&channelID, flag);
-    }
+    hkxVertexDescriptionElementDecl(hkFinishLoadedObjectFlag flag) : channelID(flag) {}
 
     u8 unknown0[0x10];
     hkStringPtr channelID;
@@ -10227,9 +10283,9 @@ extern const hkClass D_57bd5f8; /* hkMemoryMeshTexture's hkClass, built at 0x248
 class hkMemoryMeshTexture : public hkMeshTexture
 {
   public:
-    hkMemoryMeshTexture(hkFinishLoadedObjectFlag flag) : hkMeshTexture(flag), data(flag)
+    hkMemoryMeshTexture(hkFinishLoadedObjectFlag flag)
+        : hkMeshTexture(flag), data(flag), filename(flag)
     {
-        FUN_0000e5c0(&filename, flag);
     }
 
     /* Out of line (0xad490, slot 0); the deleting destructor (0xad4f0,
@@ -10309,17 +10365,28 @@ class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
     int end;    /* derived name */
 };
 
+/* A stream writer that keeps a running checksum (derived name): the value
+ * at +0xc, set by this base's constructor, so before the derived class's
+ * vtable is stored (0x45c0 stores +0xc at 0x45e5 and the vptr after it, at
+ * 0x45f7; a member of the class that owns the vtable is set after the vptr). */
+class CrcStreamWriter : public hkStreamWriter /* derived name */
+{
+  public:
+    explicit CrcStreamWriter(u32 initialCrc) : crc(initialCrc) {}
+
+    u32 crc; /* derived name */
+};
+
 /* A stream writer that only computes the CRC-32 of what it is given
  * (derived name; vtable 0x168c980, address point 0x168c990, no type info,
  * built on the stack by 0x45c0, which returns the complement of the CRC):
- * the running CRC at +0xc, starting at all ones; slot 5 (0x40b0) answers
- * true, slot 6 (0x40c0) folds each byte in with the reflected polynomial
- * 0xedb88320. */
-class Crc32StreamWriter : public hkStreamWriter /* derived name */
+ * the running CRC starting at all ones; slot 5 (0x40b0) answers true, slot 6
+ * (0x40c0) folds each byte in with the reflected polynomial 0xedb88320. */
+class Crc32StreamWriter : public CrcStreamWriter /* derived name */
 {
   public:
     /* The running CRC starts at all ones (0x45e5). */
-    Crc32StreamWriter() : crc(0xffffffff) {}
+    Crc32StreamWriter() : CrcStreamWriter(0xffffffff) {}
 
     /* Empty and inline (the shared 0x270): 0x45c0 destroys its writer on
      * the stack without a call. The deleting destructor 0x4060 frees the
@@ -10340,8 +10407,6 @@ class Crc32StreamWriter : public hkStreamWriter /* derived name */
      * reflected polynomial; the count is returned. The class's key
      * function: its vtable and deleting destructor are emitted with it. */
     virtual int write(const void *buffer, int size);
-
-    u32 crc; /* derived name */
 };
 
 /* An output archive over a stream writer (derived name): a reference-counted
@@ -12147,7 +12212,7 @@ struct hkBlockStream /* derived name */
     hkBlockStreamBlock *FUN_00095030(BlockCache *cache);
     /* A block from the cache appended as the stream's last, its index
      * recorded (0x947f0; the writer's 0x939c0 opens each new block with
-     * it). derived name. */
+     * it; the stream's setup 0x94750 runs it in place). derived name. */
     hkBlockStreamBlock *FUN_000947f0(BlockCache *cache);
     /* Every block given back to the cache in one batch, the ones freed
      * while it was read dropped from the list first, and the stream left
@@ -12157,8 +12222,14 @@ struct hkBlockStream /* derived name */
      * cache (0x94880). derived name. */
     void FUN_00094880(BlockCache *cache);
 
-    /* Copied into each new block's +0x10 (0x94837). derived name. */
-    void *pointer0;
+    /* The stream set up over a cache (0x94750): the cache's allocator
+     * kept, nothing counted or freed, the zeroing chosen, and its first
+     * block appended (0x947f0 inline). derived name. */
+    void FUN_00094750(BlockCache *cache, hkBool zero);
+
+    /* The cache's allocator, taken when the stream is set up (0x9475a) and
+     * copied into each new block's +0x10 (0x94837). derived name. */
+    BlockStreamAllocator *allocator;
     int numTotalElements; /* derived name */
     u8 unknownC[0xc];
     hkBool partiallyFreed; /* derived name */

@@ -4,7 +4,6 @@
 /* The flags and the keyframe are left as loaded; the node name's finish
  * constructor is out of line. */
 hkAlignSceneToNodeOptions::hkAlignSceneToNodeOptions(hkFinishLoadedObjectFlag flag)
-    : hkReferencedObject(flag)
+    : hkReferencedObject(flag), nodeName(flag)
 {
-    FUN_0000e5c0(&nodeName, flag);
 }

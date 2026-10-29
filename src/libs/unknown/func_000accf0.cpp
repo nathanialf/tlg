@@ -2,7 +2,6 @@
 #include "tlg_hk_reflect.h"
 
 hkMemoryMeshMaterial::hkMemoryMeshMaterial(hkFinishLoadedObjectFlag flag)
-    : hkMeshMaterial(flag), textures(flag)
+    : hkMeshMaterial(flag), textures(flag), materialName(flag)
 {
-    FUN_0000e5c0(&materialName, flag);
 }

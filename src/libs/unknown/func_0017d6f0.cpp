@@ -3,4 +3,7 @@
 
 /* hkxEnvironment's finish constructor: nothing loaded needs fixing up, so
  * only the vtable is set. */
-hkxEnvironment::hkxEnvironment(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+hkxEnvironment::hkxEnvironment(hkFinishLoadedObjectFlag flag)
+    : hkReferencedObject(flag), variables(flag)
+{
+}

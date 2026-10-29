@@ -3,7 +3,6 @@
 
 /* Out of line: the finish callback 0x22fb0 jumps here. */
 hkMemoryMeshBody::hkMemoryMeshBody(hkFinishLoadedObjectFlag flag)
-    : hkMeshBody(flag), vertexBuffers(flag)
+    : hkMeshBody(flag), vertexBuffers(flag), name(flag)
 {
-    FUN_0000e5c0(&name, flag);
 }

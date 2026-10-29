@@ -3,7 +3,7 @@
 
 /* hkxBlobMeshShape's finish constructor: the mesh shape and the blob need
  * only their vtables; the name finishes. */
-hkxBlobMeshShape::hkxBlobMeshShape(hkFinishLoadedObjectFlag flag) : hkMeshShape(flag), blob(flag)
+hkxBlobMeshShape::hkxBlobMeshShape(hkFinishLoadedObjectFlag flag)
+    : hkMeshShape(flag), blob(flag), name(flag)
 {
-    FUN_0000e5c0(&name, flag);
 }

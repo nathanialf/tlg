@@ -4,7 +4,6 @@
 /* hkRootLevelContainer::NamedVariant's finish constructor: the name and the
  * class name finish; the variant is left as loaded. */
 hkRootLevelContainer::NamedVariant::NamedVariant(hkFinishLoadedObjectFlag flag)
+    : name(flag), className(flag)
 {
-    FUN_0000e5c0(&name, flag);
-    FUN_0000e5c0(&className, flag);
 }

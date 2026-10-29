@@ -2,7 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 /* The bone arrays are left as loaded. */
-hkSkinnedRefMeshShape::hkSkinnedRefMeshShape(hkFinishLoadedObjectFlag flag) : hkMeshShape(flag)
+hkSkinnedRefMeshShape::hkSkinnedRefMeshShape(hkFinishLoadedObjectFlag flag)
+    : hkMeshShape(flag), name(flag)
 {
-    FUN_0000e5c0(&name, flag);
 }
