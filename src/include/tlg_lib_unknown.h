@@ -101,6 +101,36 @@ void FUN_0002b120(Pair08Owner *self, float scale);                /* derived nam
  * names. */
 void FUN_00034900(Pair08Owner *self, float scale); /* derived name */
 void FUN_00034910(Pair08Owner *self, float scale); /* derived name */
+/* Out-of-line forwarders to the state's set (0x34930) and the target's
+ * store (0x34950). derived names. */
+void FUN_00034930(Pair08Owner *self);                       /* derived name */
+void FUN_00034950(Pair08Owner *self, Pair08Target *target); /* derived name */
+
+/* The collision detector of vtable 0x169b220 (address point 0x169b230,
+ * 16 bytes, no type info; built in place at +0x98 of the default modifier
+ * set, 0x49e6c, its int at +0xa0 zero; derived names): slots 0 and 2 are
+ * the shared empty 0x3b640, slot 1 the 16-byte delete 0x13e50. Slot 3
+ * (0x72d30) passes a cache of three quads or more to the callback, slot 5,
+ * of every modifier of the shared data's list (+0x38) whose mask meets the
+ * cache's; slot 4 (0x72dc0) first lets the cache's solver record go
+ * (0x34930), unbinds its target and clears the cache's reference. The
+ * arguments are passed through unread but for the cache. */
+class CollisionDetector169b230 /* derived name */
+{
+  public:
+    virtual ~CollisionDetector169b230();
+    virtual void unknownVirtual2();
+    virtual void FUN_00072d30(const void *sharedData, const void *argument2,
+                              hknpManifoldCollisionCache *cache, const void *argument4,
+                              const void *argument5, const void *argument6, const void *argument7,
+                              int argument8); /* derived names */
+    virtual void FUN_00072dc0(const void *sharedData, const void *argument2,
+                              hknpManifoldCollisionCache *cache, const void *argument4,
+                              const void *argument5, const void *argument6, const void *argument7,
+                              int argument8); /* derived names */
+
+    int unknown8;
+};
 
 /* A new manifold's points (derived names): their count at +0 and their
  * positions from +0x40 (hknpSurfaceVelocityModifier's slot 7, 0x16d22a,
@@ -1380,13 +1410,41 @@ class Elements000768c0 : public Elements000760c0 /* derived name */
 };
 
 void FUN_000760c0(Elements000760c0 *self); /* derived name */
+
 /* An object of 0xa0 bytes (vtable 0x16a3f50, no type info; constructor
  * FUN_00140a60, out-of-line destructor FUN_00140e70, which restores the
  * vtable and releases the pointers from +0x10 up to the count at +0x60);
  * its deleting destructor 0x140e20 runs the destructor and frees the 0xa0
  * bytes unless null (written as calls while the class is opaque, cookbook
  * 15). derived names. */
-struct Object00140a60; /* derived name */
+/* What the object keeps at +0x98, made on first use by its slot 7 (derived
+ * name): 0xf8 bytes from the thread's heap, built by the out-of-line
+ * constructor 0x18d640, which gives it the broad phase's tasks (the
+ * per-layer update tasks, the collide tasks); 0x18d960 sets it up for a
+ * step from its four arguments (the second's +0x1e0 and +0x10 read). */
+class BroadPhaseTasks0018d640 /* derived name */
+{
+  public:
+    BroadPhaseTasks0018d640();
+
+    static void *operator new(unsigned long numBytes);
+
+    void FUN_0018d960(void *argument1, void *argument2, void *argument3,
+                      void *argument4); /* derived names */
+
+    u8 unknown0[0xf8];
+};
+
+struct Object00140a60 /* derived name */
+{
+    /* Slot 7 (0x142e00): the tasks made on first use, then set up from the
+     * arguments as they came. derived name. */
+    void FUN_00142e00(void *argument1, void *argument2, void *argument3,
+                      void *argument4); /* derived names */
+
+    u8 unknown0[0x98];
+    BroadPhaseTasks0018d640 *tasks; /* derived name */
+};
 
 void FUN_00140e70(Object00140a60 *self); /* derived name */
 void FUN_00140e20(Object00140a60 *self); /* derived name */
@@ -1740,6 +1798,10 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
 class BlockListAllocator : public AllocatorBase /* derived name */
 {
   public:
+    /* 0x8f180: the lock with a spin count of 1000, the parent kept, the
+     * counts of what was drawn zeroed and no block yet. */
+    BlockListAllocator(AllocatorBase *parent);
+
     /* Slots 0 and 1 (0x8f120, one body): the lock destroyed, then
      * AllocatorBase's destructor. */
     virtual ~BlockListAllocator();
@@ -2487,6 +2549,16 @@ inline void *hknpShapeKeyMask::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *BroadPhaseTasks0018d640::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+template <typename T> inline void *hkQueue<T>::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numBytes)
 {
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
@@ -2556,6 +2628,11 @@ inline void hkReferencedObjectLock::operator delete(void *object, unsigned long 
 }
 
 inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpCompoundShape::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -2906,6 +2983,19 @@ class RouterAllocator58 : public AllocatorBase /* derived name */
     virtual void getMemoryStatistics(MemoryStatistics &statistics) const;  /* slot 9, 0xb0a0 */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const; /* slot 10, 0xb0d0 */
 };
+
+/* The three, static objects built by one initializer (0xb120) and
+ * destroyed at exit; the third is the allocator the containers use, an
+ * object, not a pointer, reached by address from 1,621 sites. derived
+ * names. */
+extern RouterAllocator50 D_57b8470;
+extern RouterAllocator60 D_57b8478;
+extern RouterAllocator58 D_57b8480;
+
+inline AllocatorBase &hkContainerHeapAllocator::get()
+{
+    return D_57b8480;
+}
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
 
@@ -3457,7 +3547,6 @@ void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_0017f180(hkMemoryResourceHandle *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
-void FUN_00041650(hknpCompoundShape *self);
 
 void FUN_0000ddd0(hkSimpleLocalFrame *self);               /* slot 1 of 0x168d8e0 */
 void FUN_00019730(PageAllocator *self);                    /* slot 1 of 0x168e8e0 */
@@ -3474,7 +3563,6 @@ void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d
  * 0x3c540; D15). */
 void FUN_0003c370(hknpSphereShape *self);                    /* slot 1 of 0x1695c10 */
 void FUN_0003e1b0(hknpDummyShape *self);                     /* slot 1 of 0x16967b0 */
-void FUN_00041600(hknpCompoundShape *self);                  /* slot 1 of 0x1697900 */
 void FUN_000467a0(hknpPhysicsSceneData *self);               /* slot 1 of 0x1697ea0 */
 void FUN_0004aff0(hknpWorld *self);                          /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169ab10 */

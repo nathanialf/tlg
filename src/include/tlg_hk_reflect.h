@@ -3945,15 +3945,29 @@ struct Signal00093530 /* derived name */
  * name. */
 void FUN_00093570(Signal00093530 *self); /* derived name */
 
+/* A signal whose slots take no argument (derived name): fire calls slot 3
+ * of each slot with nothing but the slot (0x416c5 and 0x37ca5 load no
+ * argument register), defined after hkSlot. */
+struct hkSignal0 : public Signal00093530 /* derived name */
+{
+    /* Every slot called in turn, the list marked firing meanwhile (the
+     * low bit of the head); a slot whose link is flagged, before its call
+     * or after it, is unlinked and deleted, its predecessor's flags kept.
+     * The head's flags are cleared at the end (0x416ee). */
+    void fire();
+};
+
 /* hknpShapeSignals, a reflected struct (hkClass at 0x57c2478); at most 16
  * bytes, the member after it in hknpMaskedShape sitting at +0x60: two
  * signals, each a pointer to its slot list (hknpScaledConvexShape's finish
  * constructor clears both; the shape watcher subscribes to the first, which
- * passes a byte of change flags, and the second, which passes the shape as
- * it is destroyed). Field names derived. */
+ * passes a byte of change flags (the masked shape's slot 32 fires it with 2,
+ * 0x37e35), and the second, fired with no argument by the shapes'
+ * destructors, hknpCompoundShape's at 0x416b0 and the masked shape's at
+ * 0x37c90). Field names derived. */
 struct hknpShapeSignals {
-    Signal00093530 shapeMutated;   /* derived name */
-    Signal00093530 shapeDestroyed; /* derived name */
+    Signal00093530 shapeMutated; /* derived name */
+    hkSignal0 shapeDestroyed;    /* derived name */
 };
 
 /* hknpShapeSignals's type info (0x57c24c8, built with its hkClass by
@@ -4066,9 +4080,17 @@ struct hknpShapeInstance {
      * name. */
     void FUN_0003ed10(const Vec4 &newScale, int scaleMode);
 
+    /* The free-list operations (the instances' array names the instance
+     * as its own): a free instance has 0xff in the fifth byte of its
+     * padding (the compound's add, 0x41223) and a live one zero there. */
+    static hkBool32 isEmpty(const hknpShapeInstance &instance)
+    {
+        return instance.padding[4] != 0;
+    }
+
     hkTransform transform;
     Vec4 scale;
-    hknpShape *shape;
+    hkRefPtr<const hknpShape> shape;
     u16 shapeTag;
     u16 destructionTag;
     u8 padding[30];
@@ -4641,11 +4663,25 @@ struct hknpManifoldCollisionCache /* derived name */
         return 0;
     }
 
-    u8 unknown0[0x16];
+    u8 unknown0[9];
+    /* The size in 16-byte quads (the 16-byte cache's header byte at +9;
+     * the detector's slots look past the first two quads only from three).
+     * derived name. */
+    u8 sizeInQuads;
+    u8 unknownA[0xc];
     u8 propertyBufferOffset; /* derived name */
     u8 propertyKeysUsed;     /* derived name */
     u32 propertyOffsets;     /* derived name */
-    u8 unknown1c[0x1c];
+    u8 unknown1c[8];
+    /* The modifier bits the cache asks for (the collision detector's slot
+     * 3, 0x72d5a, tests each modifier's mask against it). derived name. */
+    u32 enabledModifiers;
+    /* The cache's solver record, a block's address and the record's byte
+     * offset in it (0x72dec adds them; slot 4 clears both). derived
+     * names. */
+    u8 *solverBlock;
+    u16 solverOffset;
+    u8 unknown32[6];
     /* Set when the manifold is created from the bodies' materials (the
      * modifier slot 0x15db20): the smaller maxContactImpulse as a half and
      * the smaller fractionOfClippedImpulseToApply in 255ths. derived
@@ -5278,9 +5314,60 @@ class hkSlot /* derived name */
      * tlg_lib_unknown.h beside the router). */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* Slot 2, pure here (0x1698f00 holds __cxa_pure_virtual): whether a
+     * member-function pointer of size bytes is the one the slot holds
+     * (0x47d60 in the member-function slots). */
+    virtual int FUN_00047d60(const void *otherMethod, int size) const = 0;
+
     hkSlot *next; /* derived name */
     void *object; /* derived name */
 };
+
+/* A slot of a signal without arguments (derived name): slot 3 calls it. */
+class hkSlot0 : public hkSlot /* derived name */
+{
+  public:
+    virtual void call() = 0; /* derived name */
+};
+
+/* The two flag bits a slot link keeps low (derived names). */
+inline hkSlot *untagSlotLink(const void *link) /* derived name */
+{
+    return reinterpret_cast<hkSlot *>(reinterpret_cast<hkUlong>(link) & ~hkUlong(3));
+}
+
+inline hkUlong slotLinkFlags(const void *link) /* derived name */
+{
+    return reinterpret_cast<hkUlong>(link) & 3;
+}
+
+/* The head is walked as the first link: prevLink starts at the signal
+ * itself, the address the signal's destructor is then called on
+ * (hknpCompoundShape's 0x4166f keeps it in %r14 for both). */
+inline void hkSignal0::fire()
+{
+    hkSlot *slot = untagSlotLink(slots);
+    slots = reinterpret_cast<void *>(reinterpret_cast<hkUlong>(slot) | 1);
+    hkSlot **prevLink = reinterpret_cast<hkSlot **>(this);
+    while (slot) {
+        hkSlot *next = untagSlotLink(slot->next);
+        if (slotLinkFlags(slot->next) == 0) {
+            static_cast<hkSlot0 *>(slot)->call();
+            if (slotLinkFlags(slot->next) == 0) {
+                prevLink = &slot->next;
+                slot = next;
+                continue;
+            }
+        }
+        /* Unsubscribed, before the call or during it: unlinked and
+         * deleted, the predecessor's flags kept. */
+        delete slot;
+        *prevLink =
+            reinterpret_cast<hkSlot *>(slotLinkFlags(*prevLink) | reinterpret_cast<hkUlong>(next));
+        slot = next;
+    }
+    slots = untagSlotLink(slots);
+}
 
 /* hknpMaterialId, the material library's 16-bit handle (the template
  * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
@@ -5312,6 +5399,20 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
 
     /* A loaded image's array is left as loaded. */
     hkFreeListArray(hkFinishLoadedObjectFlag flag) : elements(flag) {}
+
+    /* The elements in use destroyed, the free ones left alone; the array
+     * then gives its storage back with none left to destroy (the material
+     * library's 0x612f0 and hknpCompoundShape's 0x41720: one walk, then
+     * the size cleared and the storage freed). */
+    ~hkFreeListArray()
+    {
+        for (int i = 0; i < elements.getSize(); i++) {
+            if (!Ops::isEmpty(elements[i])) {
+                elements[i].~T();
+            }
+        }
+        elements.setSizeUnchecked(0);
+    }
 
     hkArray<T> elements;
     int firstFree;
@@ -5686,6 +5787,30 @@ class hknpProjectileGun : public hknpFirstPersonGun
     hknpWorld *npWorld;
 };
 
+/* A ring of elements (derived name; Havok's queue, no string names it):
+ * the storage at +0, its capacity at +8, the head and the tail at +0xc
+ * and +0x10, the count at +0x14. The ball gun keeps its bullets' body ids
+ * in one, made by its finish constructor (0x157e53). */
+template <typename T>
+struct hkQueue /* derived name */
+{
+    hkQueue() : data(0), capacity(0), head(0), tail(0), elementsInUse(0) {}
+
+    /* From the thread's heap (tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+
+    /* Room for n elements (0x157ca0 for body ids): a larger block, the
+     * elements copied over in order from the head, the old block freed.
+     * derived name. */
+    void setCapacity(int n); /* derived name */
+
+    T *data;           /* derived name */
+    int capacity;      /* derived name */
+    int head;          /* derived name */
+    int tail;          /* derived name */
+    int elementsInUse; /* derived name */
+};
+
 class hknpBallGun : public hknpFirstPersonGun
 {
   public:
@@ -5702,7 +5827,7 @@ class hknpBallGun : public hknpFirstPersonGun
     float damageMultiplier;
     int maxBulletsInWorld;
     Vec4 bulletOffsetFromCenter;
-    void *addedBodyIds;
+    hkQueue<hknpBodyId> *addedBodyIds;
     u16 materialId;
     u16 motionPropertiesId;
     void *bulletShape;
@@ -5723,16 +5848,45 @@ class hknpMountedBallGun : public hknpBallGun
 
 /* hknpMotionProperties (type info 0x57bf510, no vtable; the shared empty
  * body FUN_000396a0 finishes it): 0x40 bytes, its hkClass's size (0x57bf4c0,
- * built at 0x39653); the members not read yet. */
+ * built at 0x39653), the members from its twenty records at 0x16948a0. */
 struct hknpMotionProperties {
-    u8 unknown0[0x40];
+    u32 isExclusive;
+    u32 flags;
+    float gravityFactor;
+    float timeFactor;
+    float maxLinearSpeed;
+    float maxAngularSpeed;
+    float linearDamping;
+    float angularDamping;
+    float solverStabilizationSpeedThreshold;
+    float solverStabilizationSpeedReduction;
+    float maxDistSqrd;
+    float maxRotSqrd;
+    float invBlockSize;
+    s16 pathingUpperThreshold;
+    s16 pathingLowerThreshold;
+    u8 numDeactivationFrequencyPasses;
+    u8 deactivationVelocityScaleSquare;
+    u8 minimumPathingVelocityScaleSquare;
+    u8 spikingVelocityScaleThresholdSquared;
+    u8 minimumSpikingVelocityScaleSquared;
 };
 
 /* hknpMotionPropertiesId, the motion properties library's handle (the
  * template argument of its free-list array in the scoped type names,
  * 0x14bf45a); fields not typed yet. */
 struct hknpMotionPropertiesId;
-struct hknpMotionPropertiesFreeListArrayOperations;
+
+/* The library's free-list operations (the name the scoped type names
+ * spell): a free entry holds the next free index in its first word and
+ * 0xff in numDeactivationFrequencyPasses (the library's add, 0x3718f and
+ * 0x37195). */
+struct hknpMotionPropertiesFreeListArrayOperations {
+    static hkBool32 isEmpty(const hknpMotionProperties &element)
+    {
+        return element.numDeactivationFrequencyPasses == 0xff;
+    }
+};
 
 /* hknpMotionPropertiesLibrary (type info 0x57bf0a0, vtable 0x1693770):
  * entryAddedSignal, entryModifiedSignal and entryRemovedSignal at +0x10,
@@ -6508,6 +6662,16 @@ struct hknpMaterial {
     u8 unknown28[0x28];
 };
 
+/* The material library's free-list operations (the name the scoped type
+ * names spell): a free material has a negative maxContactImpulse (the
+ * library's destructor skips those, 0x612f8). */
+struct hknpMaterialFreeListArrayOperations {
+    static hkBool32 isEmpty(const hknpMaterial &material)
+    {
+        return material.maxContactImpulse < 0.0f;
+    }
+};
+
 class hknpRefMaterial;
 
 /* Members from its record table at 0x16998c0: name, material (a
@@ -6660,7 +6824,9 @@ class hknpCompositeShape : public hknpShape
         }
     }
 
-    virtual ~hknpCompositeShape();
+    /* Inline: hknpCompoundShape's destructor holds it (0x417cc, the
+     * vtable, then the edge welding map's arrays). */
+    virtual ~hknpCompositeShape() {}
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
 
@@ -9797,7 +9963,13 @@ class hknpCompoundShape : public hknpCompositeShape
      * cleared. */
     hknpCompoundShape(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x41650, slot 0): the destroyed signal fired, then the
+     * members; the deleting destructor (0x41600, slot 1) runs it and frees
+     * through the class's delete. */
     virtual ~hknpCompoundShape();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000418b0 */
     void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00041870 */
@@ -9849,6 +10021,10 @@ class hknpStaticCompoundShape : public hknpCompoundShape
     /* vtable slot 3, FUN_00038740, also of hknpStaticCompoundShapeInternals
      * (0x1692840), which does not override it */
     const hkClass *getClassType() const;
+
+    /* Its one record (0x169ab60, a pointer to hknpStaticCompoundShapeData):
+     * in the compound's tail padding, at +0xb8. */
+    hknpStaticCompoundShapeData *boundingVolumeData;
 };
 
 /* hknpStaticCompoundShapeInternals, 0xc0 bytes (type info 0x57bde70, vtable
@@ -11089,19 +11265,13 @@ void FUN_000915e0(StringMap *self); /* derived name */
  * entries (key, value; a key of -1 marks a free slot) at +0, the count at +8
  * and the hash mask at +0xc. FUN_00013b30 looks a key up (the hash
  * (key >> 4) * 0x9e3779b1) and returns its value or the default. */
-/* The allocator the containers use (derived name): an object, not a
- * pointer, reached by address from 1,621 sites. */
-extern AllocatorBase D_57b8480;
-
 /* hkContainerHeapAllocator, the allocator argument of the bit field's
  * hkArray in the scoped type names (0x14b7368): its allocator is
  * D_57b8480 (the bit field's resize 0x47b30 passes it), handed out by
  * reference, so the calls through it are virtual (0x915e0's `jmpq *%rcx`). */
 struct hkContainerHeapAllocator {
-    static AllocatorBase &get() /* derived name */
-    {
-        return D_57b8480;
-    }
+    /* Defined in tlg_lib_unknown.h, after the allocator's class. */
+    static AllocatorBase &get(); /* derived name */
 };
 
 /* A map from 16-bit keys to pointer-sized values, hashed and probed as

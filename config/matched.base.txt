@@ -1307,7 +1307,7 @@ FUN_00037bf0 src/libs/unknown/func_00037bf0.cpp
 FUN_0003b050 src/libs/unknown/func_0003b050.cpp
 FUN_0003c370 src/libs/unknown/func_0003c370.cpp
 FUN_0003e1b0 src/libs/unknown/func_0003e1b0.cpp
-FUN_00041600 src/libs/unknown/func_00041600.cpp
+_ZN17hknpCompoundShapeD0Ev src/libs/unknown/func_00041650.cpp
 FUN_00037d80 src/libs/unknown/func_00037d80.cpp _ZN15hknpMaskedShape12FUN_00037d80Ev
 FUN_000271f0 src/libs/unknown/func_00027130.cpp _ZN14hkVertexFormat12FUN_000271f0ERKNS_7ElementE
 FUN_00045190 src/libs/unknown/func_00045190.cpp
@@ -1731,3 +1731,9 @@ FUN_00000360 src/libs/unknown/func_00000360.cpp _Z12FUN_00000360Pv
 FUN_0005df30 src/libs/unknown/func_0005df30.cpp _ZNK9hknpWorld12FUN_0005df30EiRDv4_f
 FUN_00082480 src/libs/unknown/func_00082480.cpp _ZNK26hkpPositionConstraintMotor12FUN_00082480Ev
 _ZN20BufferedStreamReaderD1Ev src/libs/unknown/func_000942e0.cpp _ZN20BufferedStreamReaderD2Ev
+_ZN23hknpStaticCompoundShapeD1Ev src/libs/unknown/func_000386c0.cpp
+_ZN24hknpDynamicCompoundShapeD1Ev src/libs/unknown/func_00046a90.cpp
+FUN_00142e00 src/libs/unknown/func_00142e00.cpp _ZN14Object00140a6012FUN_00142e00EPvS0_S0_S0_
+FUN_00072dc0 src/libs/unknown/func_00072dc0.cpp _ZN24CollisionDetector169b23012FUN_00072dc0EPKvS1_P26hknpManifoldCollisionCacheS1_S1_S1_S1_i
+_ZN18BlockListAllocatorC1EP13AllocatorBase src/libs/unknown/func_0008f180.cpp _ZN18BlockListAllocatorC2EP13AllocatorBase
+_ZN11hknpBallGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00157e00.cpp _ZN11hknpBallGunC2E24hkFinishLoadedObjectFlag

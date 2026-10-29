@@ -5,9 +5,5 @@
  * destroy the instance in place, which releases its shape's reference. */
 void hknpShapeInstance::FUN_0003caa0(void *object)
 {
-    hknpShapeInstance *instance = static_cast<hknpShapeInstance *>(object);
-    if (instance->shape) {
-        instance->shape->removeReference();
-    }
-    instance->shape = 0;
+    static_cast<hknpShapeInstance *>(object)->~hknpShapeInstance();
 }
