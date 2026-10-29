@@ -684,6 +684,12 @@ struct hkMatrix3 {
      * constructor, 0x83473; defined after the table). */
     void setIdentity();
 
+    /* derived name: the rotation of a unit quaternion (0xbd30; the game
+     * calls it at 0xeb1134 and four more sites): the columns from the
+     * products of the quaternion with its double, the signs flipped by two
+     * masks, the diagonal from one. */
+    void FUN_0000bd30(const struct hkQuaternion &q);
+
     Vec4 col0; /* derived name */
     Vec4 col1; /* derived name */
     Vec4 col2; /* derived name */
@@ -1800,7 +1806,9 @@ class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
     {
     }
 
-    virtual ~hkcdPlanarGeometryPrimitivesCollection28();
+    /* Inline: the polygon collection's deleting destructor (0x95f10) holds
+     * it; the type info's finish callback emits it beside its own body. */
+    virtual ~hkcdPlanarGeometryPrimitivesCollection28() {}
 
     /* The class delete: the object back to the thread's heap at its size,
      * no null test (the deleting destructor 0x1c930, slot 1). */
@@ -1824,6 +1832,13 @@ class hkcdPlanarGeometryPolygonCollection : public hkcdPlanarGeometryPrimitivesC
 {
   public:
     hkcdPlanarGeometryPolygonCollection(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (its D1 the linker folded into the base's 0x1c8e0; the
+     * deleting one 0x95f10, slot 1). */
+    virtual ~hkcdPlanarGeometryPolygonCollection();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 };
 
 /* hkcdPlanarSolid (hkClass 0x57ba410, built at 0x1d880: size 0x30, parent
@@ -3302,6 +3317,16 @@ class hkMeshVertexBuffer : public hkReferencedObject
 
     struct LockedVertices; /* derived name */
 
+    /* What a lock asks for (derived names): the first vertex and the number
+     * of vertices (all from the first when negative, 0x279b0), the access
+     * flags at +0xc (FLAG_WRITE, 2, makes the lock a write lock). */
+    struct LockInput {
+        int startVertex; /* derived name */
+        int numVertices; /* derived name */
+        u8 unknown8[4];
+        int lockFlags; /* derived name */
+    };
+
     hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
                           float *values); /* vtable slot 11; derived name */
     hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
@@ -3358,13 +3383,6 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
         hkMeshVertexBuffer *vertexBuffer;
         void *lockedVertices; /* not serialized */
         hkBool isLocked;
-    };
-
-    /* What a lock asks for (derived names): the access flags at +0xc
-     * (FLAG_WRITE, 2, makes the lock a write lock). */
-    struct LockInput {
-        u8 unknown0[0xc];
-        int lockFlags; /* derived name */
     };
 
     hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
@@ -3454,6 +3472,9 @@ struct hkMeshVertexBuffer::LockedVertices /* derived name */
     Buffer buffers[32]; /* derived name */
     int numBuffers;     /* derived name */
     int numVertices;    /* derived name */
+    /* Set by the memory buffer's lock, whose elements share one vertex
+     * stride (0x279ca). derived name. */
+    hkBool isInterleaved;
 };
 
 /* hkMemoryMeshVertexBuffer, polymorphic (vtable address point 0x16921b0):
@@ -3489,7 +3510,12 @@ class hkMemoryMeshVertexBuffer
 
     bool FUN_00027280() const; /* vtable slot 6; derived name */
     int FUN_00027290() const;  /* vtable slot 8; derived name */
-    void FUN_00027b10();       /* vtable slot 15; derived name */
+    /* Slot 9 (0x279a0): every element locked over the vertex memory from
+     * the first vertex asked for, unless the buffer is locked already (0).
+     * derived name. */
+    int FUN_000279a0(const hkMeshVertexBuffer::LockInput &input,
+                     hkMeshVertexBuffer::LockedVertices &lockedVerticesOut);
+    void FUN_00027b10(); /* vtable slot 15; derived name */
 
     u8 unknown8[4];
     hkVertexFormat format;
@@ -3745,7 +3771,7 @@ struct hkQuaternion {
 inline Vec4 cross3(const Vec4 &a, const Vec4 &b) /* derived name */
 {
     const Vec4 t = _mm_sub_ps(_mm_mul_ps(a, _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1))),
-                              _mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)), b));
+                              _mm_mul_ps(b, _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1))));
     return _mm_shuffle_ps(t, t, _MM_SHUFFLE(3, 0, 2, 1));
 }
 
@@ -5054,6 +5080,18 @@ class hknpWorldObject1d0Large; /* derived name */
 void FUN_0014e100(hknpWorldObject1d0Large *self); /* derived name */
 void FUN_0014e0b0(hknpWorldObject1d0Large *self); /* derived name */
 
+/* hkAabb16 (the reflection's class name, the string at 0x14b826d): a
+ * box in 16-bit coordinates, the three minimum coordinates and a key in the
+ * low eight bytes, the three maximum coordinates and a second key in the
+ * high eight, read and written as one aligned vector (FUN_00185460). The
+ * field names are derived. */
+struct alignas(16) hkAabb16 {
+    u16 min[3]; /* derived name */
+    u16 key;    /* derived name */
+    u16 max[3]; /* derived name */
+    u16 key1;   /* derived name */
+};
+
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
 /* hknpBody (hkClass 0x57bfa50, 0x90 bytes, record table 0x1695350):
@@ -5067,14 +5105,22 @@ struct hknpBody {
     hkTransform transform;
     int flags;
     u32 collisionFilterInfo; /* derived name */
-    u8 unknown48[0x18];
+    u8 unknown48[8];
+    /* The body's box in the broad phase's coordinates (0x161400 copies it
+     * whole). derived name. */
+    hkAabb16 aabb;
     u32 id;
     /* The next body of an attached group, the body itself when alone
      * (0x4c720 compares the two). */
     u32 nextAttachedBodyId;
     int motionId;
     u32 broadPhaseId; /* -1 while the body is not in the broad phase */
-    u8 unknown70[8];
+    u8 unknown70[3];
+    /* Two values 0x161400 clears when it resets a body's flags. derived
+     * names. */
+    u8 byte73;
+    u16 word74;
+    u8 unknown76[2];
     /* The body's index into the body manager's active list, 0x7fffffff when
      * it has none (0x1615a0 and 0x4c720 store that). */
     u32 indexIntoActiveListOrDeactivatedIslandId;
@@ -5131,10 +5177,19 @@ struct hknpBodyManager /* derived name */
      * cell recorded under its id. */
     void FUN_00161490(int bodyId);
 
+    /* derived name: for every scheduled change marked 4 whose body exists,
+     * a body with flag 1 has its box recorded in the boxes at +0x28, its
+     * flags 0x3c00 cleared and its bytes at +0x73 and +0x74 zeroed
+     * (0x161400; the collide stage at 0x6dc9d and the solver factory task
+     * at 0x14eade). */
+    void FUN_00161400();
+
     u8 unknown0[8];
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
-    u8 unknown20[0x80];
+    u8 unknown20[8];
+    hkAabb16 *previousAabbs; /* derived name: by body id */
+    u8 unknown30[0x70];
     hkArray<u32> activeBodyIds;                        /* derived name */
     hkArray<u8> activeBodyCellIndices;                 /* derived name: by body id */
     hkArray<ScheduledBodyChange> scheduledBodyChanges; /* derived name */
@@ -5159,6 +5214,11 @@ struct hknpMotion {
      * name. */
     void FUN_00157630(const Vec4 &newAngularVelocity);
 
+    /* The velocity of a point moving with the motion: the linear velocity
+     * plus the world angular velocity crossed with the point's offset from
+     * the centre of mass (0x157580). derived name. */
+    void FUN_00157580(const Vec4 &position, Vec4 &velocityOut) const;
+
     /* Back to the unused state (inlined in 0x476a0): every vector zero, the
      * orientation the identity, no cell, no motion properties, not in use,
      * no solver id. derived name. */
@@ -5177,6 +5237,9 @@ struct hknpMotion {
         /* A free motion's link to the next free one (0x476a0 stores the
          * manager's first free id over the cleared motion). derived name. */
         u32 nextFreeMotionId;
+        /* A motion's centre of mass in world space (0x157580 measures a
+         * point's offset from it). derived name. */
+        Vec4 centerOfMass;
     };
 
     hkQuaternion orientation; /* derived name */
@@ -5821,6 +5884,9 @@ struct hknpWorld {
     /* A body's motion's linear velocity, by reference (0x5df00). derived
      * name. */
     const Vec4 &FUN_0005df00(int bodyId) const; /* derived name */
+    /* A body's motion's linear velocity and its angular velocity in world
+     * space (0x5dbc0). derived name. */
+    void FUN_0005dbc0(int bodyId, Vec4 &linearVelocityOut, Vec4 &angularVelocityOut) const;
     /* A motion's inverse inertia set from an inertia, its w kept (0x5f530;
      * the command dispatcher at 0x16efc4 passes the command's id and
      * vector). derived name. */
@@ -9686,6 +9752,12 @@ class hkOstream : public hkReferencedObject
      * returned. */
     hkOstream &FUN_00008550(unsigned int value);
 
+    /* derived names: the operator<< of an int (0x84c0, "%i") and of a
+     * float (0x8600, "%f", widened for the variadic call), each formatted
+     * into the same buffer on the stack. */
+    hkOstream &FUN_000084c0(int value);
+    hkOstream &FUN_00008600(float value);
+
     /* derived name: the operator<< of a bool (0x83a0): "true" or "false",
      * its strlen bytes, and the stream returned. */
     hkOstream &FUN_000083a0(hkBool b);
@@ -10620,7 +10692,7 @@ extern const hkClassMember D_16992b0[]; /* derived name */
 
 /* hknpVehicleRayCastWheelCollide (type info at 0x7604a, vtable 0x16a4aa0)
  * and hknpVehicleLinearCastWheelCollide (0x38 bytes, type info at 0x708de,
- * vtable 0x16a5bd0): their members are not typed yet. */
+ * vtable 0x16a5bd0). */
 class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
 {
   public:
@@ -10647,7 +10719,8 @@ class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
 class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
 {
   public:
-    hknpVehicleLinearCastWheelCollide(hkFinishLoadedObjectFlag flag) : hknpVehicleWheelCollide(flag)
+    hknpVehicleLinearCastWheelCollide(hkFinishLoadedObjectFlag flag)
+        : hknpVehicleWheelCollide(flag), wheelStates(flag)
     {
         if (flag.finishing) {
             type = LINEAR_CAST_WHEEL_COLLIDE;
@@ -10660,6 +10733,26 @@ class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
      * cast that hits nothing. derived name. */
     void FUN_00179700(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
                       WheelCollideOutput &output) const;
+
+    /* Slot 11 (0x1797b0): a point moved onto the plane of the wheel's cast,
+     * taken into the wheel's space, its z cleared, and brought back. derived
+     * name. */
+    void FUN_001797b0(const class hknpVehicleInstance *vehicle, u8 wheelIndex, Vec4 &point) const;
+
+    /* hknpVehicleLinearCastWheelCollide::WheelState (its hkClass string at
+     * 0x14bf35d, records at 0x169afc0, 0x80 bytes). */
+    struct WheelState {
+        hkAabb aabb;
+        const hknpShape *shape;
+        hkTransform transform;
+        Vec4 to;
+    };
+
+    /* The members from the records at 0x169b060. */
+    hkArray<WheelState> wheelStates;
+    float maxExtraPenetration;
+    float startPointTolerance;
+    u32 chassisBody; /* an hkUint32 in the record */
 };
 
 /* The argument of hknpVehicleInstance's slot 8 (derived name): a pointer at
@@ -12202,18 +12295,6 @@ struct hknpGridSpaceSplitter /* derived name */
     Vec4 axisY;         /* derived name */
     int numCellsPerRow; /* derived name */
     int cellMask;       /* derived name */
-};
-
-/* hkAabb16 (the reflection's class name, the string at 0x14b826d): a
- * box in 16-bit coordinates, the three minimum coordinates and a key in the
- * low eight bytes, the three maximum coordinates and a second key in the
- * high eight, read and written as one aligned vector (FUN_00185460). The
- * field names are derived. */
-struct alignas(16) hkAabb16 {
-    u16 min[3]; /* derived name */
-    u16 key;    /* derived name */
-    u16 max[3]; /* derived name */
-    u16 key1;   /* derived name */
 };
 
 /* derived name: the union of count boxes (FUN_00185460). */

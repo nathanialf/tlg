@@ -228,10 +228,13 @@ class RefArrays /* derived name */ : public hkReferencedObject
         u16 value; /* derived name */
     };
 
-    /* A 16-byte entry of the first array (derived names): two 16-bit
-     * fields at its end, reset to 0xffff and 0 by 0x92e70. */
+    /* A 16-byte entry of the first array (derived names): the task and two
+     * 16-bit values it is added with (0x922f0), then two 16-bit fields,
+     * reset to 0xffff and 0 by 0x92e70. */
     struct Entry10 {
-        u8 unknown0[0xc];
+        hknpTaskInterface *task;
+        u16 unknown8;
+        u16 unknownA;
         u16 unknownC;
         u16 unknownE;
     };
@@ -252,6 +255,12 @@ class RefArrays /* derived name */ : public hkReferencedObject
      * entry at an index marked (+0xe) and given its position there (+0xc)
      * (0x925d0; the factory task's slot 5 at 0x14e6da). derived name. */
     void *FUN_000925d0(RefArraysAllocator *allocator, EntryId entryId);
+
+    /* A task appended to the first array with its two values, its fields
+     * at +0xc and +0xe reset; the new entry's index returned (0x922f0; the
+     * world's step stages at 0x50554, 0x50e76 and 0x50f42, the solver
+     * factory task at 0x14e69f, 0x18d960 six times). derived name. */
+    EntryId FUN_000922f0(hknpTaskInterface *task, int value8, int valueA);
 
     hkArray<Entry10> array10;                 /* derived name */
     hkArray<int> array20;                     /* derived name */

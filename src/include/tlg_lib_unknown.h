@@ -2756,6 +2756,12 @@ inline void hkxVertexSelectionChannel::operator delete(void *object, unsigned lo
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkcdPlanarGeometryPolygonCollection::operator delete(void *object,
+                                                                 unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxSpline::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -3198,6 +3204,26 @@ inline void SupportShape000a8ef0::getSupportPoint(const void *shapeA, const Vec4
     pointOut.vertexA = _mm_blend_ps(vertexA, vertexAInfo, 8);
 }
 
+/* A face of the penetration query's polytope (derived names): its plane's
+ * normal at +0, three edges of 0x20 bytes from +0x10, each starting at a
+ * support point, and the plane's distance from the origin at +0x70. */
+struct Face000a9cf0 /* derived name */
+{
+    struct Edge {
+        const SupportPoint000a8ef0 *vertex; /* derived name */
+        u8 unknown8[0x18];
+    };
+
+    /* The plane through the three vertices (0xa9cf0; the query at
+     * 0xa7d3d): the normal of the edges' cross product, normalized, and
+     * the distance along it of the first vertex. derived name. */
+    void FUN_000a9cf0();
+
+    Vec4 normal;    /* derived name */
+    Edge edges[3];  /* derived name */
+    float distance; /* derived name */
+};
+
 struct SupportQuery000a8ef0 /* derived name */
 {
     /* The support point for a direction (0xa8ef0; the query's caller at
@@ -3209,6 +3235,17 @@ struct SupportQuery000a8ef0 /* derived name */
     u8 unknown58[0x18];
     const void *shapeA; /* derived name */
     const void *shapeB; /* derived name */
+};
+
+/* Eight references (derived name): the world keeps one at +0x610, which
+ * its destructor destroys and frees as 0x40 bytes (0x4b65c), and 0x170020
+ * builds two on its stack. The destructor (0x906f0) releases them from the
+ * last. */
+struct RefPtrArray000906f0 /* derived name */
+{
+    ~RefPtrArray000906f0();
+
+    hkRefPtr<hkReferencedObject> references[8]; /* derived name */
 };
 
 /* A block that holds its own size (derived name): FUN_00199600 takes one
@@ -3596,6 +3633,22 @@ struct NodeEdgeLists /* derived name */
     /* Puts an edge at the head of one of its nodes' lists (0x17a290). */
     void FUN_0017a290(unsigned int edgeIndex, const EdgeRecord0017a290 *edges,
                       int node); /* derived name */
+
+    /* Takes an edge out of one of its nodes' lists (0x17a2d0; the owner's
+     * edge removal 0x16df30 at each of the edge's two nodes): its
+     * predecessor's link, or the node's first edge, takes its link, which
+     * is cleared. derived name. */
+    void FUN_0017a2d0(unsigned int edgeIndex, const EdgeRecord0017a290 *edges, int node);
+
+    /* The link an edge keeps at a node: the first of its pair at its first
+     * node, the second at the other. derived name. */
+    int *linkAt(unsigned int edgeIndex, const EdgeRecord0017a290 *edges, int node)
+    {
+        const EdgeRecord0017a290 &edge = edges[edgeIndex];
+        EdgeLinks &links = nextEdge.data[edge.linkIndex];
+        const int nodeA = edge.nodeA;
+        return nodeA == node ? &links.next[0] : &links.next[1];
+    }
 
     hkArray<int> firstEdge;      /* derived name */
     hkArray<EdgeLinks> nextEdge; /* derived name */
