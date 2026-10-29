@@ -296,6 +296,26 @@ struct hknpCharacterProxySignalData /* derived name */
     Output0002b3b0 output;                    /* derived name */
 };
 
+/* The record's first and second ints (0x10650, 0x34840). derived names. */
+int FUN_00010650(const Pair08Owner *self); /* derived name */
+int FUN_00034840(const Pair08Owner *self); /* derived name */
+
+/* hknpMotionWeldTOICommand (the name its print, 0x170f20, writes: a fact):
+ * the bodies' ids at +0xc and +0x14, which the print writes, and the pair's
+ * jacobian record at +0x18. Field names derived. */
+struct hknpMotionWeldTOICommand {
+    /* The record's output computed from the motions of its two bodies
+     * (0x3d7d0; the print 0x170f20 writes its normal and positions).
+     * derived name. */
+    void FUN_0003d7d0(const hknpWorld *world, Output0002b3b0 *out) const;
+
+    u8 unknown0[0xc];
+    u32 bodyIdA; /* derived name */
+    u8 unknown10[4];
+    u32 bodyIdB;         /* derived name */
+    Pair08Owner *record; /* derived name */
+};
+
 /* The cell index of the motion of the record's first and second body (the
  * ints at +8 and +0xc index the world's bodies). */
 u8 FUN_0002afa0(const hknpWorld *world, const Pair08Owner *self); /* derived name */
@@ -2939,6 +2959,28 @@ enum hknpCharacterStateType /* derived name */
     HKNP_CHARACTER_STATE_COUNT = 11 /* derived name */
 };
 
+class hknpCharacterContext;
+
+/* A character state's handler (derived names): what the manager holds by
+ * id. The context's state change (0x3e9c0) tells the state it leaves
+ * through slot 9 and the state it enters through slot 8, each with the
+ * other state, the input and the output; slot 7 is the update (the in-air
+ * state's 0x365e0). */
+class hknpCharacterState : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void update(hknpCharacterContext &context, const hknpCharacterInput &input,
+                        hknpCharacterOutput &output); /* slot 7; derived name */
+    virtual void enterState(hknpCharacterContext &context, int previousState,
+                            const hknpCharacterInput &input,
+                            hknpCharacterOutput &output); /* slot 8; derived name */
+    virtual void leaveState(hknpCharacterContext &context, int nextState,
+                            const hknpCharacterInput &input,
+                            hknpCharacterOutput &output); /* slot 9; derived name */
+};
+
 /* The state manager (derived name; vtable 0x1692eb0): a reference-counted
  * object of 0x68 bytes the context holds a reference to, eleven state
  * pointers by id from +0x10 (the game registers its states into them from
@@ -2963,9 +3005,9 @@ class hknpCharacterStateManager : public hkReferencedObject /* derived name */
     }
 
     /* 0x35c40: the handler registered for a state. derived name. */
-    hkReferencedObject *FUN_00035c40(hknpCharacterStateType state) const;
+    hknpCharacterState *FUN_00035c40(hknpCharacterStateType state) const;
 
-    hkReferencedObject *registeredState[HKNP_CHARACTER_STATE_COUNT]; /* derived name */
+    hknpCharacterState *registeredState[HKNP_CHARACTER_STATE_COUNT]; /* derived name */
 };
 
 /* The character context (vtable 0x16969d0, address point 0x16969e0, D14's

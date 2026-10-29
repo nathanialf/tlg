@@ -150,6 +150,20 @@ inline int max2(int a, int b)
     return _mm_cvtsi128_si32(_mm_max_epi32(_mm_cvtsi32_si128(a), _mm_cvtsi32_si128(b)));
 }
 
+/* The float forms too, on the scalars set into vectors (vmaxss, vminss):
+ * the zero of a max is a vector zero, which no scalar zero of the function
+ * is shared with (the transmission's 0x68030 sets it again after its call,
+ * where the sum's zero before its loop stays in place). */
+inline float min2(float a, float b)
+{
+    return _mm_cvtss_f32(_mm_min_ss(_mm_set_ss(a), _mm_set_ss(b)));
+}
+
+inline float max2(float a, float b)
+{
+    return _mm_cvtss_f32(_mm_max_ss(_mm_set_ss(a), _mm_set_ss(b)));
+}
+
 /* The magnitude of a float in a vector register: the bits doubled, which
  * shifts the sign out, then shifted back down with a zero in its place
  * (`vpaddd; vpsrld $1`, the aerodynamics' drag at 0x3bf3f; every such pair
@@ -661,6 +675,11 @@ struct hkMatrix3 {
      * the cross product of the first two, within epsilon (0xbde0; the
      * constraint datas' slot 7 asks it of their frames with 1e-5). */
     bool FUN_0000bde0(float epsilon = 1e-5f) const;
+
+    /* derived name: whether this and m differ by at most epsilon in the x,
+     * y and z of each column, column by column (0x1ad50; its one caller is
+     * 0x3ec40). */
+    bool FUN_0001ad50(const hkMatrix3 &m, float epsilon) const;
 
     /* derived name: the cross-product matrix of r, so that this times v is
      * r cross v (0x1aca0; called at 0xb1c72, 0xb1c89 and 0x1576eb). */
@@ -2034,7 +2053,11 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
      * name. */
     virtual float FUN_00067ff0(const hknpVehicleInstance *vehicle,
                                const hknpVehicleTransmissionOutput &output) const;
-    virtual void unknownVirtual7();
+    /* Slot 7 (0x68030): the wheels' spin in revolutions a minute, each by
+     * its share of the torque, through the gear's ratio, never negative.
+     * derived name. */
+    virtual float FUN_00068030(const hknpVehicleInstance *vehicle,
+                               const hknpVehicleTransmissionOutput &output) const;
     virtual bool FUN_00068130(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleTransmissionOutput &output) const; /* vtable slot 8; derived name */
@@ -3427,6 +3450,17 @@ void FUN_00020700(hkcdStaticMeshTreeBase *self);                                
  * (hknpLodShape's 0x68500 keeps the half in a register). */
 extern const Vec4 D_14b2060[58];
 
+/* hkPackedVector3 (hkClass 0x57b98e0, built at 0x1560d: 8 bytes, one
+ * member record at 0x168e770, values, four hkInt16 aligned to 8): a
+ * vector as three 16-bit mantissas over a shared exponent in the fourth. */
+struct alignas(8) hkPackedVector3 {
+    /* The vector packed (0x92ef0; FUN_00026100 packs two). derived
+     * name. */
+    void FUN_00092ef0(const Vec4 &v);
+
+    s16 values[4];
+};
+
 /* Two in every lane (derived name): the Newton step of the reciprocal. */
 extern const Vec4 D_14b4380;
 
@@ -4163,7 +4197,9 @@ class alignas(16) hknpShape : public hkReferencedObject
      * slot 7 bounds under a fixed transform, handed with both arguments to
      * FUN_00168230; the sphere's slot 28 falls back to it. derived name. */
     void FUN_0006fc70(const void *argument1, void *argument2) const;
-    virtual void unknownVirtual29(const void *argument1, void *argument2) const;
+    /* Slot 29: a value the masked shape's override (0x38130) hands back
+     * from the core shape's. */
+    virtual int unknownVirtual29(const void *argument1, void *argument2) const;
     /* Slot 30: the shared empty body 0x3b640, kept by every shape vtable
      * read so far. */
     virtual void unknownVirtual30();
@@ -4247,8 +4283,8 @@ class hknpDecoratorShape : public hknpShape
                      int currentLod) const; /* vtable slot 27; derived name */
     void FUN_0003b260(const void *argument1,
                       void *argument2) const; /* vtable slot 28; derived name */
-    void FUN_0003b270(const void *argument1,
-                      void *argument2) const; /* vtable slot 29; derived name */
+    int FUN_0003b270(const void *argument1,
+                     void *argument2) const; /* vtable slot 29; derived name */
 
     const hknpShape *coreShape;
     int coreShapeSize; /* the record's second member (TYPE_INT32, +0x30) */
@@ -4400,6 +4436,21 @@ class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
     hkArray<u32> filter;
 };
 
+/* What slot 29 of the shapes takes first (derived names): 0x50 bytes on a
+ * 16-byte boundary (the masked shape's 0x38130 copies it in four vector
+ * moves and two words), a shape key mask at +8, which the masked shape
+ * replaces with its own; hknpLodShape's slot 29 reads a level of detail
+ * at +0x10. */
+struct alignas(16) ShapeQuery00038130 /* derived name */
+{
+    const void *unknown0;
+    const hknpShapeKeyMask *mask;
+    int levelOfDetail;
+    u8 unknown14[0x2c];
+    const void *unknown40;
+    const void *unknown48;
+};
+
 /* hknpMaskedShape, polymorphic, 0x70 bytes (type info 0x57bea28, vtable
  * 0x1693a80, address point 0x1693a90), reflected with hknpDecoratorShape as
  * its parent (hkClass 0x57be9d8): members from its record table at
@@ -4446,6 +4497,10 @@ class hknpMaskedShape : public hknpDecoratorShape
                      const ShapeKeyQuery000380b0 &argument4) const;
 
     hknpShapeSignals *FUN_00038120(); /* vtable slot 8; derived name */
+
+    /* Slot 29 (0x38130): the core shape's slot 29 asked with the shape's
+     * mask in a copy of the first argument's record. derived name. */
+    int FUN_00038130(const ShapeQuery00038130 &argument1, void *argument2) const;
 
     hknpShapeKeyMask *mask;
     MaskWrapper maskWrapper;
@@ -6798,6 +6853,10 @@ class hkpConstraintData : public hkReferencedObject
 };
 
 extern const hkClass D_57c45a8; /* hkpConstraintData's hkClass */
+/* Its one enum and its one member record (userData), which the
+ * reflection initializer 0x7f3f0 passes. */
+extern const hkClassEnum D_169d860[];   /* derived name */
+extern const hkClassMember D_169d660[]; /* derived name */
 
 /* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
  * transformB (hkTransform) at +0x10 and +0x50 (member records 0x169e560 and
@@ -7991,6 +8050,10 @@ class hknpMalleableConstraintData : public hkpWrappedConstraintData
     /* The finish constructor, out of line (0x67960): when finishing, the
      * atom is bridged to this object again. */
     hknpMalleableConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* The constructor, out of line (0x678e0): over the data it wraps, a
+     * bridge atom, a strength of 0.01, the atom bridged to this object. */
+    hknpMalleableConstraintData(hkpConstraintData *constraintData, bool wantRuntime);
 
     virtual ~hknpMalleableConstraintData();
 
@@ -9771,8 +9834,8 @@ struct hknpLodShape : public hknpCompositeShape {
     };
 
     void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
-    void FUN_00068960(const Slot29Argument *argument1,
-                      void *argument2) const; /* vtable slot 29; derived name */
+    int FUN_00068960(const Slot29Argument *argument1,
+                     void *argument2) const; /* vtable slot 29; derived name */
     /* Slot 27 (0x68500): the finest level whose distance, halved for the
      * current level so the choice does not flicker, is below the query's
      * scaled size; 0 when none is (the context is not read). derived
@@ -10143,7 +10206,8 @@ class hknpVehicleInstance : public hknpUnaryAction
     };
 
     hknpWorld *world;
-    u8 unknown28[0x30];
+    hknpVehicleData *data;
+    u8 unknown30[0x28];
     hknpVehicleSuspension *suspension;
     u8 unknown60[8];
     hknpVehicleWheelCollide *wheelCollide;
