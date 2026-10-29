@@ -9,7 +9,7 @@ void *hkSerializeDeprecated::FUN_0019a490(void *reader, const void *details,
 {
     if (errorOut && errorOut->id == 0) {
         errorOut->id = 7;
-        FUN_0000e620(&errorOut->defaultMessage, D_14cca20);
+        errorOut->defaultMessage = D_14cca20;
     }
     return 0;
 }

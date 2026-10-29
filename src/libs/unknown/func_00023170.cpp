@@ -5,5 +5,5 @@
  * name. */
 void hkMemoryMeshBody::FUN_00023170(const char *newName) /* derived name */
 {
-    FUN_0000e620(&name, newName);
+    name = newName;
 }

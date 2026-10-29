@@ -7,7 +7,7 @@ void FileSystemEntry::FUN_0001a700(hkReferencedObject *fileSystem, const char *p
                                    s64 value10, s64 value18)
 {
     this->fileSystem = fileSystem;
-    FUN_0000e620(&this->path, path);
+    this->path = path;
     this->flags = flags;
     this->value10 = value10;
     this->value18 = value18;

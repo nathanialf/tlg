@@ -1495,6 +1495,10 @@ struct hkStringPtr {
      * null. */
     hkStringPtr(const hkStringPtr &other);
 
+    /* Out of line (0xe620): a string other than its own, the old one given
+     * back first when owned, then a copy of the new one, owned, or null. */
+    hkStringPtr &operator=(const char *string);
+
     /* Out of line (0xe5d0): an owned string (bit 0 of the pointer) goes
      * back to the thread's heap and the pointer is cleared. Members are
      * destroyed after the destructor body of the class holding them, so
@@ -1622,10 +1626,6 @@ void FUN_0000e540(hkStringPtr *self, const char *string, int length); /* derived
  * new one (copied through the arena of the thread's block) or null; the
  * constructor at 0xe540 clears the pointer and tail-calls it. */
 void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived name */
-
-/* Assigns a C string: unless it is the one held, drops an owned copy and
- * stores an owned copy of the new one (or null); returns the pointer. */
-hkStringPtr *FUN_0000e620(hkStringPtr *self, const char *string); /* derived name */
 
 /* What a load or save reports when it fails (derived names): an error id at
  * +0 (0: none yet) and a message at +8. The deprecated serializer's stubs set
@@ -3466,6 +3466,13 @@ class hkMeshVertexBuffer : public hkReferencedObject
         int lockFlags; /* derived name */
     };
 
+    /* What a partial lock asks for besides (derived names): the number of
+     * elements and their indices into the format (0x27a40 reads them). */
+    struct PartialLockInput {
+        int numLockElements;    /* derived name */
+        int elementIndices[32]; /* derived name */
+    };
+
     hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
                           float *values); /* vtable slot 11; derived name */
     hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
@@ -3659,6 +3666,12 @@ class hkMemoryMeshVertexBuffer
      * the first vertex asked for, unless the buffer is locked already (0).
      * derived name. */
     int FUN_000279a0(const hkMeshVertexBuffer::LockInput &input,
+                     hkMeshVertexBuffer::LockedVertices &lockedVerticesOut);
+    /* Slot 10 (0x27a40): the elements the partial input names locked over
+     * the vertex memory from the first vertex asked for, unless the buffer
+     * is locked already (0). derived name. */
+    int FUN_00027a40(const hkMeshVertexBuffer::LockInput &input,
+                     const hkMeshVertexBuffer::PartialLockInput &partialInput,
                      hkMeshVertexBuffer::LockedVertices &lockedVerticesOut);
     void FUN_00027b10(); /* vtable slot 15; derived name */
 
@@ -5103,6 +5116,37 @@ class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
     hkArray<u32> filter;
 };
 
+/* What slot 23 of the shapes takes fourth (derived names): 0x60 bytes on a
+ * 16-byte boundary, a shape key mask at +0x28, which the masked shape
+ * replaces with its own (0x38010). Its copy goes field by field, the vectors
+ * before the float at +0x38, as both copies in the executable have it (the
+ * masked shape's 0x38010 and hknpLodShape's slot 23, 0x68810, which builds
+ * the same record around a new key). */
+struct alignas(16) ShapeQuery00038010 /* derived name */
+{
+    ShapeQuery00038010(const ShapeQuery00038010 &other)
+        : unknown0(other.unknown0), unknown8(other.unknown8), unknown10(other.unknown10),
+          unknown18(other.unknown18), unknown20(other.unknown20), mask(other.mask),
+          unknown30(other.unknown30), unknown34(other.unknown34)
+    {
+        unknown40 = other.unknown40;
+        unknown50 = other.unknown50;
+        unknown38 = other.unknown38;
+    }
+
+    const void *unknown0;
+    const void *unknown8;
+    const void *unknown10;
+    u64 unknown18;
+    const void *unknown20;
+    const hknpShapeKeyMask *mask;
+    u8 unknown30;
+    int unknown34;
+    float unknown38;
+    Vec4 unknown40;
+    Vec4 unknown50;
+};
+
 /* What slot 29 of the shapes takes first (derived names): 0x50 bytes on a
  * 16-byte boundary (the masked shape's 0x38130 copies it in four vector
  * moves and two words), a shape key mask at +8, which the masked shape
@@ -5157,6 +5201,11 @@ class hknpMaskedShape : public hknpDecoratorShape
 
     virtual void FUN_00037d80(); /* vtable slot 31; derived name */
     virtual bool FUN_00037dd0(); /* vtable slot 32; derived name */
+
+    /* Slot 23 (0x38010): the core shape's slot 23 asked with the shape's
+     * mask in a copy of the fourth argument's record. derived name. */
+    void FUN_00038010(const void *argument1, const void *argument2, const void *argument3,
+                      const ShapeQuery00038010 &argument4, void *argument5) const;
 
     /* Slot 21 (0x380b0): the core shape's slot 21 asked with the shape's
      * mask in a copy of the fourth argument's record. derived name. */
@@ -6080,12 +6129,21 @@ struct hknpWorldObject4f8 /* derived name */
      * next one at +0x54, an id at +0x58 the walk of a body's entry starts
      * from, and a flag at +0x61 set once 0x63a40 has run for it. */
     struct Entry18 {
-        u8 unknown0[0x54];
+        u8 unknown0[0x50];
+        int id50;    /* derived name; appended to the array at +0x68 by 0x63620 */
         int nextId;  /* 0x7fffffff ends the walk */
         int firstId; /* derived name */
-        u8 unknown5c[5];
+        /* Where its id went in the array at +0x68, less the int at +0x80
+         * (0x63620). derived name. */
+        int index5c;
+        u8 unknown60;
         bool flag61;
     };
+
+    /* Each pending entry of the array at +0x58 given its place and its id
+     * appended to the array at +0x68, then the pending array emptied
+     * (0x63620; the step at 0x6d49e and 0x14fcc8 call it). derived name. */
+    void FUN_00063620();
 
     hknpWorld *world;            /* derived name */
     MotionRecord *motionRecords; /* derived name */
@@ -6094,7 +6152,10 @@ struct hknpWorldObject4f8 /* derived name */
     u8 unknown28[0x10];
     hkArray<BodyRecord> bodyRecords; /* derived name */
     u8 unknown48[0x10];
-    hkArray<void *> unknown58;
+    hkArray<Entry18 *> unknown58;
+    hkArray<int> ids68; /* derived name */
+    u8 unknown78[8];
+    int int80; /* derived name */
 };
 
 /* A slot of a member-function signal (vtable 0x1698ee0, ruled hkSlot, D14):
@@ -8118,6 +8179,7 @@ struct hkpConstraintAtom {
         TYPE_ANG = 13,
         TYPE_PULLEY = 20,
         TYPE_RACK_AND_PINION = 21,
+        TYPE_COG_WHEEL = 22,
         TYPE_SETUP_STABILIZATION = 23
     };
 
@@ -8277,6 +8339,10 @@ class hkpCogWheelConstraintData : public hkpConstraintData
 
     /* The finish constructor (0x7c9d0): the atoms are left as loaded. */
     hkpCogWheelConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new one (0x7b400): both frames the identity, both wheels of radius
+     * 1, the runtime offsets of the angles and the revolution counter. */
+    hkpCogWheelConstraintData();
 
     /* Empty (the shared 0x3b640); the deleting destructor 0x7b3b0, beside
      * the class's slots 6 and 20 (0x7b570, 0x7b590), is the body the
@@ -9287,6 +9353,11 @@ class hkpWrappedConstraintData : public hkpConstraintData
         }
         constraintData = 0;
     }
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor 0x7d480, beside the constructors, frees at the recorded
+     * size, 0x20 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_00067c60() const;                      /* vtable slot 7; derived name */

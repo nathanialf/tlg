@@ -5,5 +5,5 @@
  * 0x16a38c0) sets its name. */
 void hkSkinnedRefMeshShape::FUN_000aa890(const char *newName) /* derived name */
 {
-    FUN_0000e620(&name, newName);
+    name = newName;
 }

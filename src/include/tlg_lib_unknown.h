@@ -2545,6 +2545,11 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
 
     virtual void *FUN_00008d70(int &numBytes);
 
+    /* Slot 6 (0xefd0): both sizes rounded up to 16; the top block of the
+     * slab grown or shrunk in place when the new size still fits, any
+     * other moved to a new block and the old one freed. */
+    virtual void *FUN_00008d90(void *pointer, int oldNumBytes, int &numBytesInOut);
+
     /* The slow path (0xf090): a request larger than a slab goes to the
      * allocator at +0x40, the rest to a new slab. derived name. */
     void *FUN_0000f090(int numBytes);
@@ -2906,6 +2911,11 @@ inline void hkDebugDisplay::operator delete(void *object, unsigned long numBytes
 }
 
 inline void hkProcessFactory::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpWrappedConstraintData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

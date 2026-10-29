@@ -27,3 +27,18 @@ hkStringPtr::hkStringPtr(const hkStringPtr &other)
         stringAndFlag = duplicateOwned(string);
     }
 }
+
+hkStringPtr &hkStringPtr::operator=(const char *string)
+{
+    if (cString() != string) {
+        if (reinterpret_cast<hkUlong>(stringAndFlag) & 1) {
+            FUN_0000bc80(*D_16dc070->temp58, const_cast<char *>(stringAndFlag - 1));
+        }
+        if (string) {
+            stringAndFlag = duplicateOwned(string);
+        } else {
+            stringAndFlag = 0;
+        }
+    }
+    return *this;
+}

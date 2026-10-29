@@ -5,5 +5,5 @@
  * 0x16a07a0) sets its name. */
 void hkxBlobMeshShape::FUN_00085c30(const char *newName) /* derived name */
 {
-    FUN_0000e620(&name, newName);
+    name = newName;
 }

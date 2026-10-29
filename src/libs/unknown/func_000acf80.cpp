@@ -6,5 +6,5 @@
  * body for its filename. */
 void hkMemoryMeshMaterial::FUN_000acf80(const char *newName) /* derived name */
 {
-    FUN_0000e620(&materialName, newName);
+    materialName = newName;
 }

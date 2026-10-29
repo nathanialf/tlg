@@ -8,5 +8,5 @@
  * name at +0x18 the linker folded onto this copy. */
 void hkAlignSceneToNodeOptions::FUN_0017d550(const char *newName) /* derived name */
 {
-    FUN_0000e620(&nodeName, newName);
+    nodeName = newName;
 }

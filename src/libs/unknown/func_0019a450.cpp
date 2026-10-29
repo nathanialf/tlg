@@ -9,7 +9,7 @@ hkResult hkSerializeDeprecated::FUN_0019a450(const void *object, const void *kla
 {
     if (errorOut && errorOut->id == 0) {
         errorOut->id = 7;
-        FUN_0000e620(&errorOut->defaultMessage, D_14cc986);
+        errorOut->defaultMessage = D_14cc986;
     }
     return HK_FAILURE;
 }

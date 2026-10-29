@@ -5,5 +5,5 @@
  * sets its name. */
 void hkStorageSkinnedMeshShape::FUN_000aea30(const char *newName) /* derived name */
 {
-    FUN_0000e620(&name, newName);
+    name = newName;
 }

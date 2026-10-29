@@ -80,6 +80,13 @@ void hknpShape::unknownVirtual18(const void *argument1, void *argument2) const
     HK_ERROR(0x168b0b4f, HK_NP_SHAPE_CPP, 102, "Not implemented");
 }
 
+int hknpShape::unknownVirtual21(void *argument1, int argument2, int argument3,
+                                const ShapeKeyQuery000380b0 &argument4) const
+{
+    HK_ERROR(0xafb26ded, HK_NP_SHAPE_CPP, 123, "Not implemented");
+    return argument2;
+}
+
 void hknpShape::unknownVirtual22(const void *argument1, const void *argument2,
                                  void *argument3) const
 {
