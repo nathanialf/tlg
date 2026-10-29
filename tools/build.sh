@@ -102,11 +102,12 @@ gate_all() {
     for v in ${TLG_VERSIONS}; do
         echo "==> gate-all: ${v}"
         VERSION="${v}" "${ROOT}/tools/build.sh" prepare
+        # ninja's default target is the gate itself (tools/gen_ninja.py: the
+        # objects, then tools/check_elf.py --gate), so the gate runs once here
         if [ -f tools/gen_ninja.py ]; then
             n="$(ninja_bin)"
             VERSION="${v}" "${n}" -C "${ROOT}"
-        fi
-        if [ -f tools/check_elf.py ]; then
+        elif [ -f tools/check_elf.py ]; then
             VERSION="${v}" "${VENV_PY}" tools/check_elf.py --gate
         fi
     done

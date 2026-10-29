@@ -755,6 +755,12 @@ reflected polynomial 0xedb88320; the tree had already named its deleting
 destructor's row 0x4060 and declared the class), so 0x45c0 is claimable
 as written.
 
+Round 52 added no vtable. hknpVehicleSuspension's row (0x16a4000) names its
+storing function by that function's current row, `_ZN21hknpVehicleSuspensionD1Ev`
+(0x14deb0, the destructor the round claimed from func_0014dd30.cpp); the
+column is the function that stores the vtable, a constructor or, as here, a
+destructor.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -1760,3 +1766,37 @@ derives the ranks from the IR and writes the shape the program has.
 `and` where the source's magnitude is the add-and-shift idiom; or a
 magnitude the base computes as an IR shift would (a `vpslld 1` where the
 idiom's add should be).
+
+## D33. The library compiler counts no debug intrinsic in the inline cost's vector bonus nor in the memory dependence scan limit (2026-10-29)
+
+**Question (open; experiment pending).** Round 52's worker left three
+functions NONMATCHING on the library line's `-g` (D30) alone: 0xbf40 and
+0x1a1c0 compile equal at `-g0` and differ at `-g` because 3.3's inline cost
+counts a function's `llvm.dbg.value` calls among its instructions before
+the vector bonus is decided (`lib/Analysis/IPA/InlineCost.cpp:809-811`,
+`analyzeBlock`; the callee's cost 330 against the threshold 325, the bonus
+withheld), and 0x30ca0 (189 of 197 at `-g0`) because 3.3's memory dependence
+scan decrements its block scan limit before it skips a debug intrinsic
+(`lib/Analysis/MemoryDependenceAnalysis.cpp:376-384`,
+`getPointerDependencyFrom`), so a block with many `dbg.value`s runs out of
+budget and a load's dependence is unknown. Upstream fixed both: r194646
+(2013-11-13, Yunzhong Gao, "Fixing a heisenbug where the memory dependence
+analysis behaves differently with and without -g": the skip moved before
+the decrement, in 3.4) and r200609 (2014-02-01, Chandler Carruth from a
+patch by Dario Domizioli, "[inliner] Skip debug intrinsics even earlier in
+computing the inline cost so that they don't impact the vector bonus": the
+intrinsic skipped before `++NumInstructions`, in 3.5). Both sit before
+r206214 and the second after r196925, inside the generation D32 brackets
+for the library compiler, and both were filed by engineers of the PS4
+toolchain team, so the model predicts the base's compiler carries them.
+They are candidate seventh and eighth backports, measured as D31 was: an
+experimental compiler with both patches, the three functions compiled under
+it, and `gate-all` holding on every claimed function under the swapped
+compiler. Until then the compiler is unchanged, the three functions are
+parked, and a worker that meets a shape equal at `-g0` and refused at `-g`
+by one of these two counts classifies it as this question.
+
+**Trigger to revisit.** The experiment's result, recorded here as a
+decision or a refutation; or a library function whose base shows the
+3.3 count (an inline refused, or a dependence lost, by debug intrinsics
+alone).
