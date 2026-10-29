@@ -4586,6 +4586,20 @@ struct Signal00093530 /* derived name */
      * fires. derived name. */
     void FUN_000933e0(const void *object);
 
+    /* The slot of an object and a member-function pointer of size bytes
+     * unsubscribed (0x93470; 0x155b10 drops its two): the first whose
+     * object is the object and whose slot 2 recognizes the method, unlinked
+     * and deleted, or flagged while the signal fires; whether one was.
+     * derived name. */
+    bool FUN_00093470(const void *object, const void *method, int size);
+
+    /* An object's member function unsubscribed by its pointer, as the
+     * subscriber passes it (0x155b10). derived name. */
+    template <typename Object, typename Method> bool unsubscribe(Object *object, Method method)
+    {
+        return FUN_00093470(object, &method, sizeof(method));
+    }
+
     void *slots; /* derived name */
 };
 
@@ -6260,6 +6274,54 @@ class hkSlot0 : public hkSlot /* derived name */
 {
   public:
     virtual void call() = 0; /* derived name */
+};
+
+/* What a listener of 0x155ea0 subscribes to (derived names): an object
+ * whose slot 8 returns two signals; the listener's FUN_00155b00 goes to the
+ * first and its FUN_00155b10 to the second (0x156026, 0x15607c). */
+struct ListenedSignals00155b10 /* derived name */
+{
+    Signal00093530 signalA;
+    Signal00093530 signalB;
+};
+
+class ListenedObject00155b10 /* derived name */
+{
+  public:
+    virtual void unknownVirtual0();
+    virtual void unknownVirtual1();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual ListenedSignals00155b10 *FUN_slot8(); /* vtable slot 8; derived name */
+};
+
+struct ListenerOwner00155b10 /* derived name */
+{
+    u8 unknown0[0x20];
+    bool changed; /* derived name */
+};
+
+/* The listener 0x155ea0 builds (derived names): its owner at +0, the
+ * object it listens to at +8, a flag at +0x20 that the first callback ors
+ * its argument into. */
+class Listener00155b10 /* derived name */
+{
+  public:
+    /* The first signal's callback (0x155b00): the argument or'ed into the
+     * flag, the owner marked. */
+    void FUN_00155b00(u8 value);
+    /* The second's (0x155b10): both callbacks unsubscribed, the object
+     * dropped, the owner marked. */
+    void FUN_00155b10();
+
+    ListenerOwner00155b10 *owner;   /* derived name */
+    ListenedObject00155b10 *object; /* derived name */
+    u8 unknown10[0x10];
+    u8 flag; /* derived name */
 };
 
 /* The two flag bits a slot link keeps low (derived names). */
@@ -9686,6 +9748,16 @@ class hkpWheelFrictionConstraintData : public hkpConstraintData
 
 void FUN_0007b110(void *object, int finishing); /* derived name */
 
+/* hkpEllipticalLimitConstraintAtom (hkClass 0x57c4cf0, 0x30 bytes in
+ * hkp6DofConstraintData's blueprints): the two limit angles at +8 and +0xc,
+ * each within [0, pi] for a valid constraint (0x17ba2f). derived names. */
+struct hkpEllipticalLimitConstraintAtom {
+    u8 unknown0[8];
+    float maxAngle0;
+    float maxAngle1;
+    u8 unknown10[0x20];
+};
+
 /* hkp6DofConstraintData, polymorphic (type info 0x57c5ac8, size 0x2b0): its
  * finish constructor FUN_0017b5f0 runs 0x82850 (the constraint data
  * base's), stores the vtable 0x16a5d20 and resets the packed u16 pairs of
@@ -9710,9 +9782,15 @@ class hkp6DofConstraintData
          * runtime keeps them. */
         Blueprints(hkFinishLoadedObjectFlag flag);
 
-        u8 unknown0[0xb0]; /* linearIsFixed to setupStabilization */
+        hkBool linearIsFixed[3];
+        u8 padding3[0xd];
+        hkpSetLocalTransformsConstraintAtom transforms;
+        hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
-        u8 unknown110[0x80]; /* angFriction to stiffSpring */
+        hkpAngFrictionConstraintAtom angFriction;
+        hkpTwistLimitConstraintAtom twistLimit;
+        hkpEllipticalLimitConstraintAtom ellipticalLimit;
+        u8 unknown170[0x20]; /* stiffSpring */
         hkpLinMotorConstraintAtom linearMotor0;
         hkpLinMotorConstraintAtom linearMotor1;
         hkpLinMotorConstraintAtom linearMotor2;
@@ -9729,6 +9807,8 @@ class hkp6DofConstraintData
     float FUN_0017b920() const;                /* vtable slot 13; derived name */
     void FUN_0017b930(int bodyIndex);          /* vtable slot 14; derived name */
     u8 FUN_0017b950() const;                   /* vtable slot 15; derived name */
+    /* Slot 7 (0x17b9e0): whether the constraint is valid. derived name. */
+    hkBool FUN_0017b9e0() const;
     /* Slot 17 (0x17bb80): the ball-socket atom's inertia stabilization
      * factor, clamped to [0, 1], copied into the compiled atoms unless
      * they are to be rebuilt. derived name. */
@@ -12671,6 +12751,80 @@ struct CommandOwner00171180 /* derived name */
     hkSecondaryCommandDispatcher *dispatcher; /* derived name */
 };
 
+/* An event of two bodies entering or leaving each other's manifold (derived
+ * names; primary type 4, secondary type 0, 0x30 bytes padded): each body as
+ * its byte at +0x7f and its id, the status at +0x19 (0 when the manifold is
+ * created, 1 when it goes), and two keys left at -1. */
+struct ManifoldEvent169b1a0 : public hkCommand /* derived name */
+{
+    enum Status /* derived names */
+    {
+        STATUS_CREATED = 0,
+        STATUS_DESTROYED = 1
+    };
+
+    /* The header filled in order, then the bodies' words, the status and
+     * the keys. */
+    ManifoldEvent169b1a0(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB, Status manifoldStatus)
+    {
+        sizePaddedTo16 = 0x30;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 0;
+        byte7fA = bodyByte7fA;
+        bodyIdA = idA;
+        byte7fB = bodyByte7fB;
+        bodyIdB = idB;
+        unknown18 = 0;
+        status = u8(manifoldStatus);
+        keyA = 0xffffffff;
+        keyB = 0xffffffff;
+    }
+
+    u32 byte7fA;
+    u32 bodyIdA;
+    u32 byte7fB;
+    u32 bodyIdB;
+    u8 unknown18;
+    u8 status;
+    u32 keyA;
+    u32 keyB;
+};
+
+/* A manifold's state as the modifier of vtable 0x169b190 tracks it (derived
+ * names): 0 before the manifold is created, 1 once it is, 2 once it goes;
+ * the creation also resets the 16-bit value at +0xe. */
+struct ManifoldCache169b1a0 /* derived name */
+{
+    u8 unknown0[0xa];
+    u8 state;
+    u8 unknownB[3];
+    u16 valueE;
+};
+
+/* A modifier of the world's default set (vtable 0x169b190, address point
+ * 0x169b1a0, no type info; 16 bytes, slot 1 the shared 0x13e50; built at
+ * 0x49e00 among the twenty): slot 2 (0x71520) and slot 3 (0x715d0) post an
+ * event to the context's dispatcher when a manifold is created and when it
+ * goes, once each. derived name. */
+class Modifier169b1a0 /* derived name */
+{
+  public:
+    virtual ~Modifier169b1a0();
+    /* Slot 2 (0x71520). derived name. */
+    virtual void FUN_00071520(CommandOwner00171180 *context, const void *sharedData,
+                              const hknpCdBody *cdBodyA, const void *argument4,
+                              const hknpCdBody *cdBodyB, const void *argument6,
+                              ManifoldCache169b1a0 *cache);
+    /* Slot 3 (0x715d0). derived name. */
+    virtual void FUN_000715d0(CommandOwner00171180 *context, const void *sharedData,
+                              ManifoldCache169b1a0 *cache, const void *argument4,
+                              const void *argument5, const hknpCdBody *cdBodyA,
+                              const hknpCdBody *cdBodyB);
+
+    int unknown8;
+};
+
 void FUN_00171180(void *self, CommandOwner00171180 *owner, const u32 &bodyId); /* derived name */
 
 /* The executors by primary type (derived name), eight references (the
@@ -12917,6 +13071,19 @@ struct PointerMap /* derived name */
  * onto the shared empty body 0xe5c0 (the vtable class registry's destructor
  * tail-jumps to it, 0x184393). */
 void FUN_0000e5c0(PointerMap *self); /* derived name */
+
+/* A pointer map that gives its entries back to the containers' heap when it
+ * is destroyed, then runs the map's own destructor (Object0000b330's member
+ * at +0x10; its destructor 0xb1a0 ends with the two calls). derived
+ * name. */
+struct OwnedPointerMap : public PointerMap /* derived name */
+{
+    ~OwnedPointerMap()
+    {
+        FUN_00013db0(hkContainerHeapAllocator::get());
+        FUN_0000e5c0(this);
+    }
+};
 
 /* hkPackfileWriter (derived name: the file of its strings is
  * hkPackfileWriter.cpp, 0x14cce52; vtable 0x16a6960, constructor

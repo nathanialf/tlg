@@ -1437,7 +1437,10 @@ class Object0000b330 : public hkReferencedObject /* derived name */
     /* Out of line (0xb1a0, slot 0; 0xb250, slot 1). */
     virtual ~Object0000b330();
 
-    PointerMap map;       /* derived name */
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    OwnedPointerMap map;  /* derived name */
     hkArray<u32> array;   /* derived name */
     void *reportFunction; /* derived name */
     void *reportObject;   /* derived name */
@@ -3018,6 +3021,11 @@ inline void RefArrays0005a230::operator delete(void *object, unsigned long numBy
 }
 
 inline void hkPlatformObjectWriter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void Object0000b330::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
