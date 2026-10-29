@@ -2822,6 +2822,16 @@ inline void hkXmlParser::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkMonitorStreamColorTable::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxEnum::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxAnimatedVector::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

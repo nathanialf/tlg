@@ -741,6 +741,11 @@ struct hkMatrix3 {
      * transformed by a). */
     void FUN_0001a9f0(const hkMatrix3 &a, const hkMatrix3 &b);
 
+    /* derived name: this set to a times the transpose of b (0x1abb0; its
+     * callers 0x262a2, 0x26507 and 0x6e2a7): every column of both read
+     * first, then each result column from the same lane of b's columns. */
+    void FUN_0001abb0(const hkMatrix3 &a, const hkMatrix3 &b);
+
     /* derived name: each column scaled, lane by lane, by a vector (0x1ac70;
      * called from 0x2913b, 0x293d2 and 0x2968e). */
     void FUN_0001ac70(const Vec4 &scale);
@@ -1613,20 +1618,35 @@ class hkSerializeDeprecated : public hkReferencedObject
                        SerializeErrorDetails *errorOut); /* vtable slots 8 and 9; derived name */
 };
 
-/* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
- * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot. */
-class hkMonitorStreamColorTable : public hkReferencedObject
-{
-  public:
-    hkMonitorStreamColorTable(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
-
-    virtual ~hkMonitorStreamColorTable();
-};
-
 /* hkMonitorStreamColorTable::ColorPair, 16 bytes: colorName (hkStringPtr) at
  * +0, then color. */
 struct hkMonitorStreamColorTableColorPair {
     hkStringPtr colorName;
+    u32 color;
+};
+
+/* The polymorphic table of color pairs; its vtable is 0x168c1b0 (its finish
+ * callback FUN_000002c0 stores 0x168c1c0), its destructor the first slot:
+ * the pairs (16 bytes each, their names destroyed from the last) at +0x10,
+ * 0x28 bytes (the deleting destructor's default size). */
+class hkMonitorStreamColorTable : public hkReferencedObject
+{
+  public:
+    hkMonitorStreamColorTable(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), colorPairs(flag)
+    {
+    }
+
+    /* Out of line (0x100, slot 0); the deleting destructor (0x1a0, slot 1)
+     * frees through the class's delete. */
+    virtual ~hkMonitorStreamColorTable();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* The member names from the type's records (0x14b260c on). */
+    hkArray<hkMonitorStreamColorTableColorPair> colorPairs;
+    u32 defaultColor;
 };
 
 /* hkMonitorStreamStringMap::StringMap: id (type 0x0a, 64-bit unsigned) at
@@ -2862,10 +2882,28 @@ class hkxAnimatedMatrix : public hkReferencedObject
     u8 hint; /* an enum of hkUint8 (its record's type and subtype, 0x88f47) */
 };
 
+/* hkxEnum::Item (hkClass 0x57c6fc0, built at 0x899b1: size 0x10): value
+ * (INT32) at +0, name (STRINGPTR) at +8. */
+struct hkxEnumItem {
+    int value;
+    hkStringPtr name;
+};
+
+/* hkxEnum (hkClass 0x57c7040, built at 0x89a5a: size 0x20, parent
+ * hkReferencedObject's): items (an array of hkxEnum::Item) at +0x10. */
 class hkxEnum : public hkReferencedObject
 {
   public:
-    hkxEnum(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxEnum(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), items(flag) {}
+
+    /* Out of line (0x89740, slot 0); the deleting destructor (0x897e0,
+     * slot 1) frees through the class's delete. */
+    virtual ~hkxEnum();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkArray<hkxEnumItem> items;
 };
 
 /* hkxCamera: 0x50 bytes (its deleting destructor's size). */
@@ -8014,7 +8052,21 @@ struct hkpConeLimitConstraintAtom {
     u8 refAxisInB;
     u8 angleMeasurementMode; /* hkEnum of hkUint8 */
     u8 memOffsetToAngleOffset;
-    u8 unknown7[0x19];
+    u8 unknown7[1];
+    float minAngle;
+    float maxAngle;
+    float angularLimitsTauFactor;
+    u8 unknown14[0xc];
+};
+
+/* hkpTwistLimitConstraintAtom (its name a string of the executable,
+ * 0x14c1212): minAngle and maxAngle at +8 and +0xc (the ragdoll limits'
+ * validity test 0x7c937), 0x20 bytes in the atoms that hold it. */
+struct hkpTwistLimitConstraintAtom {
+    u8 unknown0[8];
+    float minAngle;
+    float maxAngle;
+    u8 unknown10[0x10];
 };
 
 /* hkpRagdollLimitsData (parent hkpConstraintData, 0xf0 bytes): atoms at
@@ -8027,9 +8079,10 @@ class hkpRagdollLimitsData : public hkpConstraintData
   public:
     struct Atoms {
         hkpSetLocalRotationsConstraintAtom rotations;
-        u8 twistLimit[0x20];
+        hkpTwistLimitConstraintAtom twistLimit;
         hkpConeLimitConstraintAtom coneLimit;
-        u8 planesLimit[0x20];
+        /* A cone limit atom too (its angles at +0xd8 and +0xdc). */
+        hkpConeLimitConstraintAtom planesLimit;
     };
 
     hkpRagdollLimitsData(hkFinishLoadedObjectFlag flag) : hkpConstraintData(flag)
@@ -10070,6 +10123,10 @@ class hkBufferedStreamWriter : public hkStreamWriter
      * to flush to, nothing written, and when the memory is to hold a string
      * one byte kept back for its terminator and the memory zeroed. */
     hkBufferedStreamWriter(void *memory, int memorySize, hkBool memoryIsString);
+    /* derived names: the writer over a stream it holds a reference to,
+     * with a buffer of its own of bufferSize bytes from the thread's heap,
+     * aligned to 64 (0x8eb0). */
+    hkBufferedStreamWriter(hkStreamWriter *stream_, int bufferSize_);
 
     hkBool FUN_00009260() const; /* vtable slot 5; derived name */
     /* Slot 7 (0x91f0): the buffer written out, then the stream flushed.
@@ -11949,6 +12006,12 @@ struct U16PointerMap /* derived name */
 
     /* derived name: the value of a key, or the default (0x199520). */
     hkUlong FUN_00199520(u16 key, hkUlong defaultValue) const;
+    /* derived name: the value of a key set, the table rebuilt first when
+     * more than half full (0x1992f0, as the pointer map's 0x138a0); nonzero
+     * when the key was new. */
+    int FUN_001992f0(AllocatorBase &allocator, u16 key, hkUlong value);
+    /* derived name: the table rebuilt at a new capacity (0x199390). */
+    void FUN_00199390(AllocatorBase &allocator, int newCapacity);
 
     Pair *entries;
     int numEntries;
