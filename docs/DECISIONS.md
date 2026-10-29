@@ -1670,39 +1670,45 @@ reopens the mechanism.
 
 ## D31. The library compiler folds a lane-0 scalar operation into its insert (2026-10-29)
 
-**Question (open; experiment pending).** Round 50's worker left 0xbd30
-(hkMatrix3 from a quaternion) NONMATCHING on one shape: the base holds a
-bare `vaddss` whose upper lanes come from its first operand and feed the
-vector operations after it (`c = _mm_add_ss(b, one)`, then
-`_mm_sub_ps(c, a)`), where the 3.3 compile adds and then inserts
-(`vaddss; vinsertps`), which reorders what follows. Measured between rounds
-with a two-line probe under the library flags: LLVM 3.3 (the release and
-the from-source build) and 3.4.2 emit `vaddss; vinsertps`; 3.5.2 emits the
-bare `vaddss`. Upstream added the selection in r196925 (2013-12-10, Andrea
-Di Biagio, "Ensure that the backend no longer emits unnecessary vector
-insert instructions immediately after SSE scalar fp instructions like addss
-or mulss": patterns that select ADDSS, SUBSS, MULSS and DIVSS, their SD
-forms and their VEX forms from a scalar operation on lane 0 followed by
-X86Movss or, under SSE4.1 and AVX, X86insrtps) and r197145 (2013-12-12,
-the packed operation followed by an insert), both after the 3.4 branch
-(3.4.2 lacks the effect) and in 3.5. The 3.3 source has no such pattern
-(`lib/Target/X86/X86InstrSSE.td`) and lowers a lane-0 float insert to
-INSERTPS whenever SSE4.1 is on (`X86ISelLowering.cpp`,
-`LowerINSERT_VECTOR_ELT_SSE4`), so no spelling of the intrinsic produces
-the base's bytes. The worker counts the shape in 0xbf40, 0x30ca0, 0x311f0
-and 0xcd910 as well. The candidate is a sixth backport patch of r196925
-(its 125-line pattern block, placed before `/// Unop Arithmetic` as
-upstream placed it), built as an experimental compiler in the supervisor's
-scratch space first; it is adopted only when the probe gives the bare
-`vaddss` under it, 0xbd30 compiles equal under it, and `gate-all` holds on
-every row under the swapped compiler (the procedure of D21's -O3
-measurement). Until then the compiler is unchanged, 0xbd30 and the four
-functions are parked, and a worker that meets the shape classifies it as
-this question.
+**Decision.** The library prefix compiles with a sixth backport patch,
+`tools/patches/llvm-3.3-scalarfp-01-lane0-op-insert.patch`: the pattern
+block of upstream r196925 (2013-12-10, Andrea Di Biagio, "Ensure that the
+backend no longer emits unnecessary vector insert instructions immediately
+after SSE scalar fp instructions like addss or mulss"), which selects
+ADDSS, SUBSS, MULSS and DIVSS, their SD forms and their VEX forms from a
+scalar operation on lane 0 followed by X86Movss or, under SSE4.1 and AVX,
+X86insrtps, placed in `lib/Target/X86/X86InstrSSE.td` before `/// Unop
+Arithmetic` as upstream placed it. r197145 (the packed operation followed
+by an insert) is not taken: no library function has shown that shape.
 
-**Trigger to revisit.** The experiment's result, recorded here as a
-decision or a refutation; or a library function whose base keeps
-`vinsertps` after a lane-0 scalar operation.
+**Evidence.** Round 50's worker left 0xbd30 (hkMatrix3 from a quaternion)
+NONMATCHING on one shape: the base holds a bare `vaddss` whose upper
+lanes come from its first operand and feed the vector operations after it
+(`c = _mm_add_ss(b, one)`, then `_mm_sub_ps(c, a)`), where the 3.3 compile
+adds and then inserts (`vaddss; vinsertps`), which reorders what follows.
+Measured with a two-line probe under the library flags: LLVM 3.3 (the
+release and the from-source build) and 3.4.2 emit `vaddss; vinsertps`;
+3.5.2 emits the bare `vaddss`. The 3.3 source has no such pattern and
+lowers a lane-0 float insert to INSERTPS whenever SSE4.1 is on
+(`X86ISelLowering.cpp`, `LowerINSERT_VECTOR_ELT_SSE4`), so no spelling of
+the intrinsic produces the base's bytes without the pattern. The patch was
+built as an experimental compiler in the supervisor's scratch space first
+(the procedure of D21's -O3 measurement): under it the probe folds to the
+bare `vaddss`, and `gate-all` in a scratch worktree holds on every one of
+the 1,793 functions then claimed (`gate: OK`, 2,714 relocations resolved);
+0xbd30 drops from a reordered function to 3 divergent instructions (a
+`vpshufd` register pair at 0x63 and 0x68, and `vmovss xmm0, xmm3, xmm0`
+where the base has `vinsertps xmm0, xmm3, xmm0, 0` at 0xbda9), a source
+shape for the worker. The live compiler was rebuilt with the patch
+(`tools/build_llvm.sh 3.3`) after round 51's harvest, and the hook's gate
+on the adopting commit holds on every claimed function (1834) under it. 0xbd30 and the
+four functions the worker counted with the shape (0xbf40, 0x30ca0, 0x311f0
+and 0xcd910) return to the queue.
+
+**Trigger to revisit.** A library function whose base keeps `vinsertps`
+after a lane-0 scalar operation on a vector; or a packed operation
+followed by an insert (r197145's shape), which would be a seventh patch
+measured the same way.
 
 ## D32. The library compiler keeps a constant-count vector shift intrinsic as a call (2026-10-29)
 
