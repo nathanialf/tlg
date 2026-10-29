@@ -1924,6 +1924,9 @@ class hkSimpleLocalFrame : public hkReferencedObject
     const char *FUN_0000dcb0() const;            /* vtable slot 9; derived name */
     int FUN_0000e160() const;                    /* vtable slot 12; derived name */
     hkLocalFrame *FUN_0000e170(int index) const; /* vtable slot 13; derived name */
+    /* Slot 15 (0xe0b0): the group set, its reference taken and the old
+     * one's released. derived name. */
+    void FUN_0000e0b0(hkLocalFrameGroup *newGroup);
 
     Mat4 transform;
     hkArray<hkLocalFrame *> children;
