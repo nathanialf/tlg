@@ -17,3 +17,8 @@ hknpAllHitsCollector::~hknpAllHitsCollector()
 {
     reset();
 }
+
+void hknpAllHitsCollector::FUN_00070a50(const hknpCollisionResult &hit)
+{
+    hits.pushBack(hit);
+}

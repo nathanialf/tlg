@@ -117,6 +117,9 @@ inline void memSet16(void *dst, const void *value, int numQuads) /* derived name
     }
 }
 
+/* numBytes bytes cleared, a zero quad at a time (0x18250). derived name. */
+void FUN_00018250(void *dst, int numBytes); /* derived name */
+
 /* 0x17f60 (the name table's lookup FUN_00014e00 calls it): the strings
  * compared without case, -1, 0 or 1. derived name. */
 int FUN_00017f60(const char *s1, const char *s2); /* derived name */
@@ -384,6 +387,11 @@ template <typename T> struct hkArray {
     /* An element appended, the storage grown through FUN_00000b40 when it
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
     void pushBack(const T &element);
+
+    /* Elements copied onto the end, the storage grown first as setSize
+     * grows it (defined in tlg_lib_unknown.h; the skinned mesh's bone list,
+     * 0xae780). */
+    void append(const T *elements, int numElements);
 
     /* Room for one more element at the end, grown as pushBack grows: the
      * new element returned (defined in tlg_lib_unknown.h; the solver's
@@ -783,6 +791,10 @@ void FUN_00010f20(Vec4 &out, const hkMatrix3 &m, const Vec4 &v);
 
 /* hkTransform (the reflection's TYPE_TRANSFORM, 64 bytes): a rotation and
  * a translation. */
+/* Whether a and b differ by at most epsilon in every element of their three
+ * columns' x, y and z (0x1add0). derived name. */
+bool FUN_0001add0(const hkMatrix3 &a, const hkMatrix3 &b, const Vec4 &epsilon);
+
 struct hkTransform {
     /* derived name: a usable transform, its translation's x, y and z
      * numbers (not NaN) and its rotation orthonormal (0x10ce0; the game
@@ -802,6 +814,11 @@ struct hkTransform {
      * epsilon of this one's in x, y and z (0x10e70; the world's body
      * update asks it at 0x5d711, the game at 0xeaf6b7). */
     hkBool32 FUN_00010e70(const hkTransform &other, const Vec4 &epsilon) const;
+
+    /* derived name: whether the other transform is within epsilon of this
+     * one, the rotation by FUN_0001add0 and then the translation, in x, y
+     * and z (0x10de0; the game asks it at 0xeaeec5). */
+    bool FUN_00010de0(const hkTransform &other, float epsilon) const;
 
     /* The identity: the rotation's, a zero translation (inline in
      * hkpPointToPlaneConstraintData's constructor, 0x7bb2b). Defined after
@@ -4191,6 +4208,12 @@ struct Signal00093530 /* derived name */
      * 0x69960). */
     ~Signal00093530();
 
+    /* Every slot of an object unsubscribed (0x933e0; the constraint
+     * filter's and the character proxy's destructors, 0x159700 to
+     * 0x176bd3): unlinked and deleted, or only flagged while the signal
+     * fires. derived name. */
+    void FUN_000933e0(const void *object);
+
     void *slots; /* derived name */
 };
 
@@ -5611,10 +5634,30 @@ struct hknpWorldObject4f8 /* derived name */
      * the world applies, 0x16f077, and the game call it). derived name. */
     void FUN_00063930(int bodyId);
 
-    hknpWorld *world; /* derived name */
-    void *unknown8;
+    /* A 16-byte record by motion id; its byte at +0xb is cleared when a
+     * body of the motion is taken and the byte is not 0xff (0x639e0).
+     * derived names. */
+    struct MotionRecord {
+        u8 unknown0[0xb];
+        u8 byteB;
+        u8 unknownC[4];
+    };
+
+    /* What the array at +0x18 points to (derived names): the id of the
+     * next one at +0x54, an id at +0x58 the walk of a body's entry starts
+     * from, and a flag at +0x61 set once 0x63a40 has run for it. */
+    struct Entry18 {
+        u8 unknown0[0x54];
+        int nextId;  /* 0x7fffffff ends the walk */
+        int firstId; /* derived name */
+        u8 unknown5c[5];
+        bool flag61;
+    };
+
+    hknpWorld *world;            /* derived name */
+    MotionRecord *motionRecords; /* derived name */
     u8 unknown10[8];
-    hkArray<void *> unknown18;
+    hkArray<Entry18 *> unknown18;
     u8 unknown28[0x10];
     hkArray<BodyRecord> bodyRecords; /* derived name */
     u8 unknown48[0x10];
@@ -5961,7 +6004,11 @@ struct hknpWorld {
     u8 unknown1e0[0x10];
     u8 unknown1f0[0x60]; /* CollideSharedData's object40 points here */
     Vec4 vector250;
-    u8 unknown260[0x18];
+    u8 unknown260[8];
+    /* Handed first to the broad phase's pair walk (0x174eea). derived
+     * name. */
+    void *pointer268;
+    u8 unknown270[8];
     bool enabled278;
     u8 unknown279[7];
     u8 unknown280[0x108];
@@ -9426,6 +9473,13 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * each child pointed back at this container. */
     hkMemoryResourceContainer(hkFinishLoadedObjectFlag flag);
 
+    /* Slot 15 (0x1806b0): the first child after the previous one given
+     * (from the first when none) whose name is the one given, or the next
+     * child at all when no name is given; null when none is left. derived
+     * name. */
+    hkMemoryResourceContainer *FUN_001806b0(const char *childName,
+                                            const hkMemoryResourceContainer *previous);
+
     hkStringPtr name;
     hkMemoryResourceContainer *parent;
     hkArray<hkMemoryResourceHandle *> resourceHandles;
@@ -10162,9 +10216,11 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     void
     FUN_000ae770(hkSkinnedMeshShape::BoneSetId boneSetId,
                  hkSkinnedMeshShape::BoneSet &boneSetOut) const; /* vtable slot 7; derived name */
-    const char *FUN_000aea20() const;                            /* vtable slot 12; derived name */
-    void FUN_000aea30(const char *newName);                      /* vtable slot 13; derived name */
-    void FUN_000ae860();                                         /* vtable slot 16; derived name */
+    /* Slot 8 (0xae780): a bone set's bones copied out. derived name. */
+    void FUN_000ae780(hkSkinnedMeshShape::BoneSetId boneSetId, hkArray<s16> &bonesOut) const;
+    const char *FUN_000aea20() const;       /* vtable slot 12; derived name */
+    void FUN_000aea30(const char *newName); /* vtable slot 13; derived name */
+    void FUN_000ae860();                    /* vtable slot 16; derived name */
     /* Slot 15 (0xae9a0): a part appended. derived name. */
     void FUN_000ae9a0(const hkSkinnedMeshShape::Part &part);
     /* Slot 10 (0xae820): a copy of a part. derived name. */
@@ -10174,7 +10230,7 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at
      * +0x50. */
     u8 unknownC[4];
-    u8 bonesBuffer[0x10];
+    hkArray<s16> bonesBuffer;
     hkArray<hkSkinnedMeshShape::BoneSet> boneSets;
     u8 boneSections[0x10];
     hkArray<hkSkinnedMeshShape::Part> parts;
@@ -11078,6 +11134,8 @@ class hknpAllHitsCollector : public hknpCollisionQueryCollector /* derived name 
     virtual ~hknpAllHitsCollector();
 
     void reset(); /* vtable slot 3, FUN_00070a10 */
+    /* Slot 4 (0x70a50): a hit appended. derived name. */
+    void FUN_00070a50(const hknpCollisionResult &hit);
 
     hkInplaceArray<hknpCollisionResult, 10> hits; /* derived name */
 };
@@ -11434,7 +11492,10 @@ struct hkBlockStreamBlock /* derived name */
      * and when the block becomes the stream's last (0x9505f). derived
      * name. */
     hkBlockStreamBlock *next;
-    u8 unknown10[0x10];
+    /* The stream's pointer at +0, copied when the block joins it
+     * (0x94837). derived name. */
+    void *pointer10;
+    u8 unknown18[8];
     u8 data[0xfe0]; /* derived name */
 };
 
@@ -11501,11 +11562,15 @@ struct hkBlockStream /* derived name */
      * cache (0x94880). derived name. */
     void FUN_00094880(BlockCache *cache);
 
-    u8 unknown0[8];
+    /* Copied into each new block's +0x10 (0x94837). derived name. */
+    void *pointer0;
     int numTotalElements; /* derived name */
     u8 unknownC[0xc];
     hkBool partiallyFreed; /* derived name */
-    u8 unknown19[7];
+    /* A new block cleared whole when set, else only its first 32 bytes
+     * (0x94805). derived name. */
+    hkBool zeroNewBlocks;
+    u8 unknown1a[6];
     hkArray<hkBlockStreamBlock *> blocks; /* derived name */
 };
 
@@ -11541,6 +11606,26 @@ struct hkBlockStreamRange /* derived name */
     u16 startBlockNumElements;            /* derived name */
     int numElements;                      /* derived name */
 };
+
+/* The broad phase's pair walk (0x174100, also the caller of the reader's
+ * FUN_00093830 at 0x174184): the world's +0x268 object, the world (its
+ * material library's +0x28), the range of pairs to read, the writer and an
+ * optional array of 16-byte entries it appends to. derived name. */
+void FUN_00174100(void *argument1, hknpWorld *world, const hkBlockStreamRange *range,
+                  hkBlockStreamWriter *writer, void *entries);
+
+/* An object with a block stream at +0x400 that 0x174ea0 appends the walk's
+ * output to (the simulation's 0x6cb88 and 0x15bcc8 pass it). derived name. */
+struct Streams00174ea0 /* derived name */
+{
+    u8 unknown0[0x400];
+    hkBlockStream stream400; /* derived name */
+};
+
+/* The walk over a range written to the end of the object's stream through
+ * a writer of its own (0x174ea0). derived name. */
+void FUN_00174ea0(Streams00174ea0 *self, hknpWorld *world, BlockCache *cache,
+                  const hkBlockStreamRange *range, void *entries);
 
 /* What 0x167f70 resets for the simulation (derived names; the loop at
  * 0x170770 runs it over an object's +0x10 with the owner's +0x250 and
@@ -12069,6 +12154,9 @@ class hkTypeInfoRegistry : public hkReferencedObject
     /* Slot 7: cleans up a loaded object of a named type and returns the
      * type info, or null when no type of that name is registered. */
     const hkTypeInfo *FUN_0017d920(void *object, const char *typeName) const; /* derived name */
+    /* Slot 8: every type info of another registry registered here too.
+     * derived name. */
+    void FUN_0017d7a0(const hkTypeInfoRegistry *other);
     const hkTypeInfo *FUN_0017d960(const char *typeName) const; /* vtable slot 9; derived name */
 
     StringMap map;  /* derived name */

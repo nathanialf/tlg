@@ -564,6 +564,22 @@ template <typename T> inline void hkArray<T>::setSize(int n)
     size = n;
 }
 
+template <typename T> inline void hkArray<T>::append(const T *elements, int numElements)
+{
+    const int newSize = size + numElements;
+    const int capacity = getCapacity();
+    if (newSize > capacity) {
+        const int doubled = 2 * capacity;
+        FUN_00000a70(hkContainerHeapAllocator::get(), this, doubled > newSize ? doubled : newSize,
+                     sizeof(T));
+    }
+    T *dst = data + size;
+    for (int i = 0; i < numElements; i++) {
+        dst[i] = elements[i];
+    }
+    size = newSize;
+}
+
 /* The array's grow by one more element at least, through an allocator, for
  * elements of a size (0xb40, 470 call sites; the capacity doubled, or one
  * when empty, by the allocator's slot 6). derived name. */
@@ -3347,6 +3363,13 @@ void FUN_00199770(SizedBlock00199600 *block); /* derived name */
  * thread's router given up, always a success. */
 hkResult FUN_00009a80(); /* derived name */
 
+/* The thread's setup with its router (0x9a60). derived name. */
+hkResult FUN_00009a60(hkMemoryRouter *router); /* derived name */
+
+/* The calling thread's number (derived name), stored by the worker's
+ * context (0x8f5e1). */
+extern __thread int D_16dc068;
+
 /* What a worker thread holds while it runs (FUN_000071a0 keeps one on its
  * stack, 0x80 bytes): the constructor FUN_0008f570 builds the router,
  * turns on flush-to-zero, hands the router to the memory system under the
@@ -3356,6 +3379,8 @@ hkResult FUN_00009a80(); /* derived name */
 class hkWorkerThreadContext
 {
   public:
+    /* 0x8f570: the thread's number kept in its thread-local word last. */
+    hkWorkerThreadContext(int threadNumber);
     ~hkWorkerThreadContext();
 
     hkMemoryRouter memoryRouter; /* derived name */
