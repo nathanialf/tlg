@@ -17,3 +17,17 @@ hknpCapsuleShape::hknpCapsuleShape(hkFinishLoadedObjectFlag flag) : hknpConvexPo
                  USE_SMALL_FACE_INDICES;
     }
 }
+
+/* hknpConvexPolytopeShape's finish constructor, then the triangle's flags
+ * when the object is being finished (0x78230). The triangle's vtable comes
+ * with it, and its deleting destructor (0x780a0, the polytope's destructor
+ * inline and the triangle's 0x40 bytes freed; the polytope's vtable cites
+ * the same body). */
+hknpTriangleShape::hknpTriangleShape(hkFinishLoadedObjectFlag flag) : hknpConvexPolytopeShape(flag)
+{
+    if (flag.finishing) {
+        flags |= IS_CONVEX_SHAPE | IS_CONVEX_POLYTOPE_SHAPE |
+                 SUPPORTS_COLLISIONS_WITH_INTERIOR_TRIANGLES | USE_NORMAL_TO_FIND_SUPPORT_PLANE |
+                 USE_SMALL_FACE_INDICES | IS_TRIANGLE_OR_QUAD_SHAPE;
+    }
+}

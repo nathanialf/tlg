@@ -539,7 +539,7 @@ struct hkBitField {
 
     /* Every bit set in another field of the same size set here too (inline
      * in 0x66080): four words at a time through the vector unit, then the
-     * words left one by one. derived name. */
+     * words left one by one through two walking pointers. derived name. */
     void orWith(const hkBitField &other)
     {
         const int numQuadWords = storage.words.size & ~3;
@@ -555,10 +555,10 @@ struct hkBitField {
             }
         }
         if (i < storage.words.size) {
-            u32 *const words = storage.words.data;
-            const u32 *const otherWords = other.storage.words.data;
+            u32 *words = storage.words.data + i;
+            const u32 *otherWords = other.storage.words.data + i;
             for (; i < storage.words.size; i++) {
-                words[i] |= otherWords[i];
+                *words++ |= *otherWords++;
             }
         }
     }
@@ -1225,6 +1225,29 @@ class hkReferencedObject : public hkBaseObject
     void removeReference() const
     {
         if ((memSizeAndRefCount & 0xffff0000) != 0) {
+            /* volatile: as in addReference. */
+            volatile u32 *count = &memSizeAndRefCount;
+            u32 oldValue, newValue;
+            do {
+                oldValue = *count;
+                newValue = (oldValue & 0xffff0000) | u16(oldValue - 1);
+            } while (__sync_val_compare_and_swap(count, oldValue, newValue) != oldValue);
+            if (u16(newValue) == 0) {
+                FUN_000069a0();
+            }
+        }
+    }
+
+    /* The same release with the word read once into a named value for the
+     * test, which keeps that read its own instruction under the debug
+     * information (D30): the platform object writer's release of its copier
+     * (0x19ac0c) and 26 other releases of the region (0x68db8 in
+     * hknpTyremarksInfo's destructor, 0x19a570 the parsed node's), against
+     * the folded test of removeReference. derived name. */
+    void releaseReference() const
+    {
+        const u32 sizeAndCount = memSizeAndRefCount;
+        if ((sizeAndCount & 0xffff0000) != 0) {
             /* volatile: as in addReference. */
             volatile u32 *count = &memSizeAndRefCount;
             u32 oldValue, newValue;
@@ -3317,6 +3340,11 @@ class hknpTyremarksWheel : public hkReferencedObject
  * member records at 0x168fc60): four boxes as six vectors of their
  * bounds, lx, hx, ly, hy, lz and hz. */
 struct hkcdFourAabb {
+    /* All four boxes empty: the minima the largest value, the maxima its
+     * negation (rows 33 and 38 of the vector constants; the simd tree's
+     * finish constructor, 0x21a7f). derived name. */
+    void setEmpty(); /* derived name */
+
     hkVector4 lx;
     hkVector4 hx;
     hkVector4 ly;
@@ -3337,15 +3365,25 @@ class hkcdSimdTree
      * hkcdSimdTreeNode: 0x70 bytes over hkcdFourAabb, one member record at
      * 0x16901e0): four hkUint32 of data at +0x60. */
     struct Node : public hkcdFourAabb {
+        /* Empty boxes and no data (derived name). */
+        void clear()
+        {
+            setEmpty();
+            data[0] = data[1] = data[2] = data[3] = 0;
+        }
+
         u32 data[4];
     };
 
+    /* Out of line (0x21a20): a finished tree has its two root nodes at
+     * least, cleared when it had fewer. */
     hkcdSimdTree(hkFinishLoadedObjectFlag flag);
 
-    /* Out of line (0x21920, slot 0): the nodes' storage given back; the
-     * deleting destructor (0x21980, slot 1) frees the 0x18 bytes on the
-     * thread's heap. */
-    virtual ~hkcdSimdTree();
+    /* Inline: the nodes' storage given back. hknpExternMeshShapeData's
+     * destructor (0x35310) holds it; 0x21920 (slot 0) is the copy kept
+     * beside the finish constructor, and the deleting destructor (0x21980,
+     * slot 1) frees the 0x18 bytes on the thread's heap. */
+    virtual ~hkcdSimdTree() {}
 
     static void operator delete(void *object, unsigned long numBytes);
 
@@ -3902,6 +3940,16 @@ void FUN_00020700(hkcdStaticMeshTreeBase *self);                                
  * (hknpLodShape's 0x68500 keeps the half in a register). */
 extern const Vec4 D_14b2060[58];
 
+inline void hkcdFourAabb::setEmpty()
+{
+    lx.quad = D_14b2060[33];
+    ly.quad = D_14b2060[33];
+    lz.quad = D_14b2060[33];
+    hx.quad = D_14b2060[38];
+    hy.quad = D_14b2060[38];
+    hz.quad = D_14b2060[38];
+}
+
 /* hkPackedVector3 (hkClass 0x57b98e0, built at 0x1560d: 8 bytes, one
  * member record at 0x168e770, values, four hkInt16 aligned to 8): a
  * vector as three 16-bit mantissas over a shared exponent in the fourth. */
@@ -4409,7 +4457,7 @@ struct hkcdStaticTree {
         static void FUN_0001e270(void *object);
 
         hkArray<Codec3Axis6> nodes; /* derived name */
-        u8 unknown10[0x20];
+        hkAabb domain;              /* derived name */
     };
 };
 
@@ -11350,9 +11398,14 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
 /* What hknpExternMeshShapeData's buildContext points to (derived name; the
  * member is not serialized, flags 0x400): signals at +0x48, which slot 8 of
  * hknpExternMeshShape hands out. */
-struct hknpExternMeshShapeBuildContext /* derived name */
+class hknpExternMeshShapeBuildContext /* derived name */
 {
-    u8 unknown0[0x48];
+  public:
+    /* Polymorphic: the shape data's destructor deletes it through its
+     * slot 1 (0x35333). */
+    virtual ~hknpExternMeshShapeBuildContext();
+
+    u8 unknown8[0x40];
     hknpShapeSignals mutationSignals; /* derived name */
 };
 
@@ -11367,12 +11420,19 @@ class hknpExternMeshShapeData : public hkReferencedObject
      * (FUN_000354c0) and the reflection initializer (0x3558a) each hold a
      * copy. The build context is not serialized and starts null. */
     hknpExternMeshShapeData(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag), simdTree(flag)
+        : hkReferencedObject(flag), aabbTree(flag), simdTree(flag)
     {
         buildContext = 0;
     }
 
-    u8 aabbTree[0x30];
+    /* Out of line (0x35310, slot 0; the deleting destructor 0x353c0, slot
+     * 1): the build context deleted, then the trees. */
+    virtual ~hknpExternMeshShapeData();
+
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkcdStaticTree::DefaultTreeStorage6 aabbTree;
     hkcdSimdTree simdTree;
     hknpExternMeshShapeBuildContext *buildContext;
 };

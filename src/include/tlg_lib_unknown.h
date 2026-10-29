@@ -1373,7 +1373,11 @@ class RefArrays0005a230 : public hkReferencedObject /* derived name */
     u8 unknown18[0x18];
     u16 freeHead;           /* derived name: the first free entry, 0xffff for none */
     hkArray<Entry> entries; /* derived name */
-    u8 unknown48[0x28];     /* to the size its deleting destructor 0x6b7d0 frees */
+    /* Two arrays of 16-bit words, given back by the destructor (0x5a24b,
+     * 0x5a284). derived names. */
+    hkArray<u16> array48;
+    u8 unknown58[8];
+    hkArray<u16> array60;
 };
 
 /* The class built over it by hknpWorld's constructor (0x494ff) when the
@@ -1477,16 +1481,24 @@ struct Object0019a230 /* derived name */
 
 void FUN_0019a230(Object0019a230 *self); /* derived name */
 
-/* A reference-counted object of 0x40 bytes (vtable 0x16a68d0): its
- * out-of-line destructor FUN_0019a7c0 runs FUN_0019bb80 on every element of
- * the pointer array at +0x30 and frees it, then the pointer maps at +0x20
- * and +0x10. */
-struct Object0019a7c0 /* derived name */
+/* A reference-counted object of 0x40 bytes (vtable 0x16a68d0, D14), the
+ * cache hkPlatformObjectWriter's constructor builds in place (0x19aa7b):
+ * two pointer maps and an array of loaded buffers. */
+class Object0019a7c0 : public hkReferencedObject /* derived name */
 {
-    u8 unknown0[0x40]; /* the size its deleting destructor 0x19a770 frees */
-};
+  public:
+    /* Out of line (0x19a7c0, slot 0; the deleting destructor 0x19a770,
+     * slot 1): every buffer given back through FUN_0019bb80, then the
+     * members' own destructors. */
+    virtual ~Object0019a7c0();
 
-void FUN_0019a7c0(Object0019a7c0 *self); /* derived name */
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    OwnedPointerMap map10;   /* derived name */
+    OwnedPointerMap map20;   /* derived name */
+    hkArray<void *> buffers; /* derived name */
+};
 
 /* An object of 0x160 bytes with its own class allocator (vtable 0x169b460,
  * constructor FUN_000763a0) holding an array of 0x500-byte elements at
@@ -3025,6 +3037,16 @@ inline void hkPlatformObjectWriter::operator delete(void *object, unsigned long 
     freeReferencedObject(object, numBytes);
 }
 
+inline void Object0019a7c0::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpExternMeshShapeData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void Object0000b330::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -4332,7 +4354,6 @@ void FUN_0017f130(hkMemoryResourceHandle *self);             /* slot 1 of 0x16a6
 void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
 void FUN_00181ba0(hkBinaryPackfileWriter *self);             /* slot 1 of 0x16a6470 */
 void FUN_0019a1e0(Object0019a230 *self);                     /* slot 1 of 0x16a6820 */
-void FUN_0019a770(Object0019a7c0 *self);                     /* slot 1 of 0x16a68d0 */
 void FUN_0019c100(hkPackfileWriter *self);                   /* slot 1 of 0x16a6960 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived

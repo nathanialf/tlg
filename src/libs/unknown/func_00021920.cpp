@@ -10,6 +10,14 @@ inline void hkcdSimdTree::operator delete(void *object, unsigned long numBytes)
     }
 }
 
-/* hkcdSimdTree's destructor (slot 0 of its vtable): the nodes' storage
- * given back. */
-hkcdSimdTree::~hkcdSimdTree() {}
+/* hkcdSimdTree's finish constructor: a finished tree with fewer than two
+ * nodes gets its two root nodes, cleared. Its vtable comes with it, and the
+ * inline destructor's two copies the vtable cites (0x21920, 0x21980). */
+hkcdSimdTree::hkcdSimdTree(hkFinishLoadedObjectFlag flag) : nodes(flag)
+{
+    if (flag.finishing && nodes.size < 2) {
+        nodes.setSize(2);
+        nodes[0].clear();
+        nodes[1].clear();
+    }
+}

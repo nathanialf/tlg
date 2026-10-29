@@ -1035,7 +1035,7 @@ _ZN26hkpCallbackConstraintMotorC1ENS_12CallbackTypeEPFvvE src/libs/unknown/func_
 FUN_0019a450 src/libs/unknown/func_0019a450.cpp _ZN21hkSerializeDeprecated12FUN_0019a450EPKvS1_PvS1_S2_P21SerializeErrorDetails
 _ZN15hknpSphereShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0003c540.cpp
 _ZN16hknpCapsuleShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00072e50.cpp
-_ZN17hknpTriangleShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00078230.cpp
+_ZN17hknpTriangleShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00072e50.cpp
 FUN_000938c0 src/libs/unknown/func_000938c0.cpp _ZN19hkBlockStreamWriter12FUN_000938c0EP10BlockCacheP13hkBlockStream
 FUN_000937c0 src/libs/unknown/func_000937c0.cpp _ZN19hkBlockStreamReader12FUN_000937c0EPK13hkBlockStream
 FUN_00093bc0 src/libs/unknown/func_00093bc0.cpp _ZN26hkBlockStreamConsumedBlock12FUN_00093bc0Ev
@@ -1358,7 +1358,7 @@ FUN_00181ba0 src/libs/unknown/func_00181ba0.cpp
 _ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
 _ZN16hkProcessFactoryD0Ev src/libs/unknown/func_00183d60.cpp
 FUN_0019a1e0 src/libs/unknown/func_0019a1e0.cpp
-FUN_0019a770 src/libs/unknown/func_0019a770.cpp
+_ZN14Object0019a7c0D0Ev src/libs/unknown/func_0019a7c0.cpp
 FUN_0019c100 src/libs/unknown/func_0019c100.cpp
 FUN_000083a0 src/libs/unknown/func_000083a0.cpp _ZN9hkOstream12FUN_000083a0E6hkBool
 _ZN15hknpMaskedShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00037b90.cpp _ZN15hknpMaskedShapeC2E24hkFinishLoadedObjectFlag
@@ -1933,3 +1933,12 @@ FUN_00090780 src/libs/unknown/func_00090780.cpp _ZN26hkPrimaryCommandDispatcher1
 FUN_000ad1f0 src/libs/unknown/func_000ad1f0.cpp _ZN20hkMemoryMeshMaterial12FUN_000ad1f0EiP13hkMeshTexture
 _ZN28hkpPointToPathConstraintDataC1Ev src/libs/unknown/func_00079dc0.cpp
 FUN_0000e0b0 src/libs/unknown/func_0000e0b0.cpp _ZN18hkSimpleLocalFrame12FUN_0000e0b0EP17hkLocalFrameGroup
+FUN_00066080 src/libs/unknown/func_00066080.cpp _Z12FUN_00066080PK14Object00065f20R10hkBitField
+_ZN22hkPlatformObjectWriterD1Ev src/libs/unknown/func_0019abf0.cpp
+_ZN22hkPlatformObjectWriterD0Ev src/libs/unknown/func_0019abf0.cpp
+_ZN17RefArrays0005a230D2Ev src/libs/unknown/func_0005a230.cpp
+_ZN17hknpTriangleShapeD0Ev src/libs/unknown/func_00072e50.cpp
+FUN_0019bb80 src/libs/unknown/func_0019bb80.cpp _Z12FUN_0019bb80Pv
+_ZN12hkcdSimdTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00021920.cpp
+_ZN23hknpExternMeshShapeDataD1Ev src/libs/unknown/func_00035310.cpp
+_ZN23hknpExternMeshShapeDataD0Ev src/libs/unknown/func_00035310.cpp
