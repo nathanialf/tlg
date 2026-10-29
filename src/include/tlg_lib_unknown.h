@@ -106,6 +106,50 @@ void FUN_00034910(Pair08Owner *self, float scale); /* derived name */
 void FUN_00034930(Pair08Owner *self);                       /* derived name */
 void FUN_00034950(Pair08Owner *self, Pair08Target *target); /* derived name */
 
+/* A modifier as the cache callbacks reach it (derived names): slot 5
+ * takes the thread's context, the shared data, the two bodies, the cache
+ * and an int. */
+class CacheModifier0017a000 /* derived name */
+{
+  public:
+    virtual void unknownVirtual0();
+    virtual void unknownVirtual1();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5(const void *threadContext, const void *sharedData,
+                                 const void *bodyA, const void *bodyB,
+                                 hknpManifoldCollisionCache *cache, int value) const;
+};
+
+/* The modifiers the context's +0x38 points to (derived names): the union
+ * of their masks, their count, then each one's mask and pointer, 16 bytes
+ * apart from +8. */
+struct ModifierSet0017a000 /* derived name */
+{
+    struct Entry {
+        u32 mask;
+        CacheModifier0017a000 *modifier;
+    };
+
+    u32 enabledModifiers;
+    int numModifiers;
+    Entry entries[1];
+};
+
+struct ModifierContext0017a000 /* derived name */
+{
+    u8 unknown0[0x38];
+    const ModifierSet0017a000 *modifiers; /* derived name */
+};
+
+/* Slot 5 of every modifier whose mask meets the cache's, when any does
+ * (0x17a000; the collision detectors' slot 3 at 0x72d30 holds the same
+ * walk). derived name. */
+void FUN_0017a000(hknpManifoldCollisionCache *cache, const ModifierContext0017a000 *threadContext,
+                  const void *sharedData, const void *bodyA, const void *bodyB,
+                  int value); /* derived name */
+
 /* The collision detector of vtable 0x169b220 (address point 0x169b230,
  * 16 bytes, no type info; built in place at +0x98 of the default modifier
  * set, 0x49e6c, its int at +0xa0 zero; derived names): slots 0 and 2 are
@@ -2998,6 +3042,84 @@ inline AllocatorBase &hkContainerHeapAllocator::get()
 }
 
 void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
+
+/* A record of the memory in use (derived names; Havok's memory snapshot,
+ * no string names it): the allocator its arrays grow from at +0, the
+ * allocations (24 bytes each) at +8, the providers (48 bytes: a name of up
+ * to 31 characters, then their parents' indices) at +0x18. 0x11170 adds a
+ * provider under a parent, 0x11280 an allocation of a provider. */
+struct MemorySnapshot00011280 /* derived name */
+{
+    struct Allocation {
+        const void *start;
+        int size;
+        int sourceId;
+        int traceId; /* -1: none */
+        u8 status;
+    };
+
+    /* An allocation of a provider recorded with no trace; its index
+     * returned (0x11280; the memory system's report at 0xd125 records its
+     * blocks with it). derived name. */
+    int FUN_00011280(int sourceId, u8 status, const void *address, int size);
+
+    AllocatorBase *allocator;
+    hkArray<Allocation> allocations;
+};
+
+/* What the penetration query FUN_000a6e30 asks a support point of (derived
+ * names): slot 2 of the object at +0x50 gives, for a direction, the two
+ * shapes' supporting vertices (the second's w an index). */
+class SupportShape000a8ef0 /* derived name */
+{
+  public:
+    virtual void unknownVirtual0();
+    virtual void unknownVirtual1();
+    virtual void unknownVirtual2(const void *shapeA, const Vec4 &direction, const void *shapeB,
+                                 const void *query, Vec4 *vertexBOut, Vec4 *vertexAInfoOut,
+                                 Vec4 *vertexAOut) const; /* derived names */
+
+    /* The support point of the difference for a direction: slot 2's two
+     * vertices, then their difference and the first's position with its
+     * index (inline in 0xa8ef0, its locals bracketed as an inlined
+     * helper's, cookbook 120). derived name. */
+    inline void getSupportPoint(const void *shapeA, const Vec4 &direction, const void *shapeB,
+                                const void *query, struct SupportPoint000a8ef0 &pointOut) const;
+};
+
+/* A support point of the Minkowski difference (derived names): the
+ * difference at +0, the second shape's vertex at +0x10 and the first's at
+ * +0x20 with the index of the vertex in its w. */
+struct SupportPoint000a8ef0 /* derived name */
+{
+    Vec4 difference; /* derived name */
+    Vec4 vertexB;    /* derived name */
+    Vec4 vertexA;    /* derived name */
+};
+
+inline void SupportShape000a8ef0::getSupportPoint(const void *shapeA, const Vec4 &direction,
+                                                  const void *shapeB, const void *query,
+                                                  SupportPoint000a8ef0 &pointOut) const
+{
+    Vec4 vertexAInfo;
+    Vec4 vertexA;
+    unknownVirtual2(shapeA, direction, shapeB, query, &pointOut.vertexB, &vertexAInfo, &vertexA);
+    pointOut.difference = _mm_sub_ps(pointOut.vertexB, vertexA);
+    pointOut.vertexA = _mm_blend_ps(vertexA, vertexAInfo, 8);
+}
+
+struct SupportQuery000a8ef0 /* derived name */
+{
+    /* The support point for a direction (0xa8ef0; the query's caller at
+     * 0xa7153 and twice after). derived name. */
+    void FUN_000a8ef0(const Vec4 &direction, SupportPoint000a8ef0 &pointOut) const;
+
+    u8 unknown0[0x50];
+    const SupportShape000a8ef0 *support; /* derived name */
+    u8 unknown58[0x18];
+    const void *shapeA; /* derived name */
+    const void *shapeB; /* derived name */
+};
 
 /* A block that holds its own size (derived name): FUN_00199600 takes one
  * from the thread's temporary allocator, a 0x28-byte header (its byte size

@@ -55,6 +55,10 @@ enum hkResult {
  * table; the motion construction info's limits start at it, 0x1590c9). */
 #define HK_REAL_HIGH 1.8446726e+19f
 
+/* Pi as Havok spells it (its HK_REAL_PI; the sphere's slot 17 returns it,
+ * 0x3c660). */
+#define HK_REAL_PI 3.14159265358979f
+
 /* Havok's smallest float step at one (its HK_REAL_EPSILON, the float
  * epsilon 1.192092896e-07f: the rack and pinion's slot 7 compares with it,
  * 0x83688). */
@@ -1107,6 +1111,12 @@ class hkReferencedObject : public hkBaseObject
      * at 0x44e86 calls slot 4 when the count reaches zero. derived name. */
     virtual void FUN_000069a0() const;
 
+    /* One reference fewer on each of numObjects objects, their pointers
+     * pointerStriding bytes apart (0x69c0, beside slot 4; hknpLodShape's
+     * levels at 0x681c7 and 0x682b6). derived name. */
+    static void FUN_000069c0(const hkReferencedObject *const *objects, int numObjects,
+                             int pointerStriding);
+
     /* mutable: a const object still takes references. */
     mutable u32 memSizeAndRefCount;
 };
@@ -1819,6 +1829,13 @@ class hkcdPlanarGeometryPlanesCollection;
 class hkcdPlanarSolid : public hkcdPlanarEntity
 {
   public:
+    /* hkcdPlanarSolid::Node (the scoped name a string of the executable,
+     * hkClass 0x57ba310): 0x28 bytes (the node storage's free, 0x1d529),
+     * its members not read. */
+    struct Node {
+        u8 unknown0[0x28];
+    };
+
     class NodeStorage;
 
     hkcdPlanarSolid(hkFinishLoadedObjectFlag flag);
@@ -1892,10 +1909,22 @@ struct hkcdPlanarGeometry : public hkcdPlanarEntity {
     void *vertices;
 };
 
+/* Its members from the records at 0x168f620: storage (the nodes) at +0x10,
+ * aabbs at +0x20, firstFreeNodeId (hkUint32) at +0x30. */
 class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
 {
   public:
-    NodeStorage(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    NodeStorage(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), storage(flag), aabbs(flag)
+    {
+    }
+
+    /* Out of line (0x1d4c0, slot 0): the arrays given back. */
+    virtual ~NodeStorage();
+
+    hkArray<Node> storage;
+    hkArray<struct hkAabb> aabbs;
+    u32 firstFreeNodeId;
 };
 
 /* Reference-counted classes whose finish constructors are inline in their
@@ -2013,6 +2042,11 @@ class hknpVehicleDefaultAnalogDriverInput : public hkReferencedObject
     float FUN_00151de0(
         const hknpVehicleInstance *vehicle,
         const hknpVehicleDriverInputAnalogStatus *status) const; /* vtable slot 7; derived name */
+    /* Slot 11 (0x151e10): the steering input from the stick's x, nothing
+     * inside the dead zone, the initial slope up to the change point and a
+     * straight line to full beyond it. derived name. */
+    float FUN_00151e10(const hknpVehicleInstance *vehicle,
+                       const hknpVehicleDriverInputAnalogStatus *status) const;
 
     float slopeChangePointX;
     float initialSlope;
@@ -2577,12 +2611,22 @@ class hkxVertexVectorDataChannel : public hkReferencedObject
 };
 
 /* hkxSparselyAnimatedBool (type info 0x57c8280, size 0x30, hkClass parent
- * hkReferencedObject, built at 0x8e2fd): the finish callback FUN_0008e280
- * runs the inline finish constructor, nothing to fix up but the vtable. */
+ * hkReferencedObject, built at 0x8e2fd, member records at 0x16a2b70): bools
+ * (an array of hkBool) at +0x10 and times (an array of reals) at +0x20. The
+ * finish callback FUN_0008e280 runs the inline finish constructor. */
 class hkxSparselyAnimatedBool : public hkReferencedObject
 {
   public:
-    hkxSparselyAnimatedBool(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxSparselyAnimatedBool(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), bools(flag), times(flag)
+    {
+    }
+
+    /* Out of line (0x8e120, slot 0): the arrays given back. */
+    virtual ~hkxSparselyAnimatedBool();
+
+    hkArray<hkBool> bools;
+    hkArray<float> times;
 };
 
 class hkxSparselyAnimatedString : public hkReferencedObject
@@ -2621,10 +2665,26 @@ class hkxVertexIntDataChannel : public hkReferencedObject
     hkArray<s32> perVertexInts;
 };
 
+/* Its members from the records the initializer 0x88350 builds at
+ * 0x57c6b20: indexType (an enum of hkUint8) at +0xc, indices16 and
+ * indices32 (arrays of hkUint16 and hkUint32) at +0x10 and +0x20,
+ * vertexBaseOffset and length (hkUint32) at +0x30 and +0x34. */
 class hkxIndexBuffer : public hkReferencedObject
 {
   public:
-    hkxIndexBuffer(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxIndexBuffer(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), indices16(flag), indices32(flag)
+    {
+    }
+
+    /* Out of line (0x881d0, slot 0): the arrays given back. */
+    virtual ~hkxIndexBuffer();
+
+    u8 indexType; /* an enum of hkUint8; its items not read */
+    hkArray<u16> indices16;
+    hkArray<u32> indices32;
+    u32 vertexBaseOffset;
+    u32 length;
 };
 
 /* From its record table at 0x16a13d0: quaternions (an array of reals) at +0x10. */
@@ -4104,6 +4164,37 @@ void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape 
                   const void *argument3, const void *argument4, void *argument5); /* derived name */
 
 class hknpShapeKeyMask;
+
+/* What a shape's mass properties are built from (derived names; the
+ * second member's name is a string of the executable, m_inertiaFactor):
+ * the quality at +0, the inertia factor at +4, the mass, or a density
+ * negated, at +8 (the sphere's mass properties, 0x168340). */
+struct MassConfig00168340 /* derived name */
+{
+    int quality;
+    float inertiaFactor;
+    float massOrNegativeDensity;
+};
+
+/* Mass properties with the inertia diagonalized (derived names): the
+ * volume and the mass at +0 and +4, the centre of mass at +0x10, the
+ * inertia's diagonal at +0x20 and the rotation to its principal axes at
+ * +0x30. */
+struct DiagonalizedMassProperties00168340 /* derived name */
+{
+    float volume;
+    float mass;
+    u8 unknown8[8];
+    Vec4 centerOfMass;
+    Vec4 inertiaTensor;
+    Vec4 majorAxisSpace; /* a quaternion */
+};
+
+/* A solid sphere's mass properties, a failure for a radius not above zero
+ * (0x168340; the sphere shape's mass properties at 0x3c694 fall back to
+ * hknpShape's on a failure). derived name. */
+hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, float radius,
+                      DiagonalizedMassProperties00168340 &propertiesOut); /* derived name */
 
 /* What slot 21's fourth argument points to (derived names): 24 bytes, a
  * key at +0 (the convex shapes' slot 21 copies it out) and a key mask at
@@ -6644,10 +6735,36 @@ struct hknpMaterial {
      * 0x77976 and 0x77a8f): the name copied as a string, the rest as bytes. */
     hknpMaterial(const hknpMaterial &other);
 
-    hkStringPtr name; /* derived name */
-    u8 unknown8[0x14];
-    /* From the member records 0x66f10 builds: maxContactImpulse and
-     * fractionOfClippedImpulseToApply (hkReal) at +0x1c and +0x20. */
+    /* The flags the material keeps in step with its values (bits 20 to
+     * 25, 0x6c740); the rest of the word is the user's. derived names. */
+    enum Flags {
+        ENABLE_RESTITUTION = 1 << 20,      /* derived name */
+        ENABLE_TRIGGER = 1 << 21,          /* derived name */
+        ENABLE_IMPULSE_CLIPPING = 1 << 22, /* derived name */
+        ENABLE_MASS_CHANGER = 1 << 23,     /* derived name */
+        ENABLE_SOFT_CONTACTS = 1 << 24,    /* derived name */
+        ENABLE_SURFACE_VELOCITY = 1 << 25, /* derived name */
+        AUTO_FLAGS_MASK = 0x3f << 20       /* derived name */
+    };
+
+    /* The automatic flags set from the values (0x6c740; the library's
+     * copies at 0x776d8 and 0x77a97 call it after each copy). derived
+     * name. */
+    void FUN_0006c740();
+
+    /* The members from the records 0x66f10 builds (names and offsets from
+     * its stores, 0x66f10 to 0x676a0). */
+    hkStringPtr name;
+    u32 isExclusive;
+    u32 flags;
+    u8 triggerType;              /* an enum of hkUint8, TRIGGER_TYPE_NONE first */
+    u8 triggerManifoldTolerance; /* an hkUFloat8 */
+    hkHalf dynamicFriction;
+    hkHalf staticFriction;
+    hkHalf restitution;
+    u8 frictionCombinePolicy;    /* an enum of hkUint8 */
+    u8 restitutionCombinePolicy; /* an enum of hkUint8 */
+    hkHalf weldingTolerance;
     float maxContactImpulse;
     float fractionOfClippedImpulseToApply;
 
@@ -6659,7 +6776,16 @@ struct hknpMaterial {
     u8 massChangerCategory;
     u8 unknown25;
     hkHalf massChangerHeavyObjectFactor;
-    u8 unknown28[0x28];
+    hkHalf softContactForceFactor;
+    hkHalf softContactDampFactor;
+    u8 softContactSeperationVelocity; /* an hkUFloat8; the record's spelling */
+    u8 unknown2d[3];
+    hknpSurfaceVelocity *surfaceVelocity;
+    hkHalf disablingCollisionsBetweenCvxCvxDynamicObjectsDistance;
+    u8 unknown3a[6];
+    u64 userData;
+    hkBool isShared;
+    u8 unknown49[7];
 };
 
 /* The material library's free-list operations (the name the scoped type
@@ -8507,10 +8633,20 @@ class hkp6DofConstraintData
      * items MOTOR_TWIST, MOTOR_SWING0, MOTOR_SWING1 and MOTOR_ALL. */
     enum MotorIndex { MOTOR_TWIST = 0, MOTOR_SWING0 = 1, MOTOR_SWING1 = 2, MOTOR_ALL = 3 };
 
+    /* Its members from the records at 0x169f730. */
     struct Blueprints {
+        /* Out of line (0x17b0d0; the finish callback 0x82660 jumps to it):
+         * the motors' runtime offsets reset by their own finish
+         * constructors, then, when finishing, set to where the compiled
+         * runtime keeps them. */
+        Blueprints(hkFinishLoadedObjectFlag flag);
+
         u8 unknown0[0xb0]; /* linearIsFixed to setupStabilization */
         hkpRagdollMotorConstraintAtom ragdollMotors;
-        u8 unknown110[0xe0]; /* angFriction to linearMotor2 */
+        u8 unknown110[0x80]; /* angFriction to stiffSpring */
+        hkpLinMotorConstraintAtom linearMotor0;
+        hkpLinMotorConstraintAtom linearMotor1;
+        hkpLinMotorConstraintAtom linearMotor2;
         hkpBallSocketConstraintAtom ballSocket;
     };
 
@@ -8551,8 +8687,6 @@ class hkp6DofConstraintData
 };
 
 void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0017b0d0(hkp6DofConstraintData::Blueprints *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkx scene classes (the reflection TUs from 0x87e20), each with an
  * out-of-line finish constructor or destructor:
@@ -10332,6 +10466,10 @@ class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
      * fully extended. derived name. */
     void FUN_00159010(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
                       WheelCollideOutput &output) const;
+
+    /* Slot 12 (0x158a40): the box around every wheel's ray, from its hard
+     * point to its end point. derived name. */
+    void FUN_00158a40(const class hknpVehicleInstance *vehicle, hkAabb &aabbOut) const;
 };
 
 class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide

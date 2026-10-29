@@ -8,5 +8,5 @@ void FUN_00082660(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0017b0d0(static_cast<hkp6DofConstraintData::Blueprints *>(object), flag);
+    new (object) hkp6DofConstraintData::Blueprints(flag);
 }

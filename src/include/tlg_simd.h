@@ -4,9 +4,20 @@
 #ifndef TLG_SIMD_H
 #define TLG_SIMD_H
 
+#include <tmmintrin.h>
 #include <xmmintrin.h>
 
 typedef __m128 Vec4;
+
+/* A vector's x, y and z with a zero w, as the SSSE3 byte alignment of its
+ * lanes moved up one over a zero (vpshufd 0x90, vpalignr 4; the same pair
+ * sits at 0x1a364 and in some 240 other places of the library). derived
+ * name. */
+inline Vec4 setXYZ_0(const Vec4 &v) /* derived name */
+{
+    return _mm_castsi128_ps(_mm_alignr_epi8(
+        _mm_setzero_si128(), _mm_shuffle_epi32(_mm_castps_si128(v), _MM_SHUFFLE(2, 1, 0, 0)), 4));
+}
 
 /* One lane of a vector in memory as a float, read and written in place, as
  * Havok's hkVector4 operator() gives it (a single `vmovss`, not a vector
