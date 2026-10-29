@@ -1969,6 +1969,8 @@ class BlockListAllocator : public AllocatorBase /* derived name */
 class ThreadMemory : public AllocatorBase /* derived name */
 {
   public:
+    virtual void *blockAlloc(int numBytes); /* slot 2 (0x140e0) */
+
     virtual void FUN_00014690(); /* vtable slot 13; derived name */
 
     /* Gives the thread's allocator the allocator it draws from and how many
@@ -2563,11 +2565,34 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
     void FUN_0000f1e0();
     void FUN_0000f2f0(void *pointer, int numBytes);
 
+    /* Taken down (0xee00; a thread router's taking down passes null). The
+     * argument's meaning is not recovered. derived name. */
+    void FUN_0000ee00(void *argument);
+
+    /* Set up over its three allocators (0xed60; the thread's router setup
+     * 0xc590 calls it): what it keeps beside its slabs from the internal
+     * allocator, no slab yet. derived name. */
+    void FUN_0000ed60(AllocatorBase *newSlabAllocator, AllocatorBase *newLargeAllocator,
+                      AllocatorBase *newInternalAllocator, int newSlabSize);
+
     /* What the allocator keeps beside its slabs (derived names): the blocks
-     * freed out of order at +0 (24 bytes each, 0xf1e0 walks them), the
-     * count of blocks the allocator at +0x40 holds at +0x20. */
+     * freed out of order at +0 (24 bytes each, 0xf1e0 walks them), a second
+     * array at +0x10, the count of blocks the allocator at +0x40 holds at
+     * +0x20; built empty in a block of the internal allocator (0xed88). */
     struct Impl {
-        u8 unknown0[0x20];
+        struct FreeBlock {
+            u8 unknown0[0x18];
+        };
+
+        Impl() : numExternalAllocations(0) {}
+
+        static void *operator new(unsigned long, void *where)
+        {
+            return where;
+        }
+
+        hkArray<FreeBlock> freeBlocks;
+        hkArray<void *> array10;
         int numExternalAllocations;
     };
 
@@ -2578,9 +2603,10 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
     /* The current slab's start (0xf175 sets it with a new slab); the free's
      * fast path never pops the block there. derived name. */
     char *slabStart;
-    u8 unknown30[0x10];
-    AllocatorBase *largeAllocator; /* derived name */
-    u8 unknown48[8];
+    char *pointer30;                  /* derived name */
+    AllocatorBase *slabAllocator;     /* derived name */
+    AllocatorBase *largeAllocator;    /* derived name */
+    AllocatorBase *internalAllocator; /* derived name */
 };
 
 /* The thread's memory router (derived name): FUN_0000bb40 makes the router
@@ -2609,7 +2635,10 @@ struct hkMemoryRouter /* derived name */
      * derived name. */
     AllocatorBase *allocator60;
     void *pointer68; /* derived name */
-    u8 unknown70[8];
+    /* The router's place in the memory system's thread records (0xc827).
+     * derived name. */
+    int threadIndex;
+    u8 unknown74[4];
     int int78; /* derived name */
 };
 
@@ -2636,7 +2665,24 @@ struct MemorySystem : public hkMemorySystem {
     hkMemoryRouter mainRouter; /* derived name */
     /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
     BufferAllocator bufferAllocator; /* derived name */
-    u8 unknown550[0x6a10];
+
+    /* One record per thread router (derived names): the thread's allocator,
+     * then two pointers and the record's in-use flag, which taking the
+     * router down clears (0xc870, 0xc87c). */
+    struct ThreadData {
+        ThreadMemory memory;
+        void *pointer190;
+        void *pointer198;
+        bool inUse;
+    };
+
+    /* Slot 5 (0xc810): the thread's router taken down by the flags: its
+     * stack allocator and temporary allocator (2), then its record and
+     * the router itself (1). */
+    void threadQuit(hkMemoryRouter &router, int flags);
+
+    ThreadData threads[64]; /* derived name */
+    u8 unknown6f50[0x10];
     /* Set by the constructor from its fifth argument; bit 2 gives each
      * thread its own allocator (FUN_0000c590). */
     s32 flags; /* derived name */

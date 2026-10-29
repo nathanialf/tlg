@@ -381,6 +381,15 @@ template <typename T> struct hkArray {
         size = n;
     }
 
+    /* The array set over storage it does not own (the memory texture's
+     * slot 6, 0xad6c4). derived name. */
+    void setDataUserFree(T *newData, int newSize, int capacity)
+    {
+        data = newData;
+        size = newSize;
+        capacityAndFlags = capacity | DONT_DEALLOCATE_FLAG;
+    }
+
     /* An element appended, the capacity not checked: copied to the end,
      * then counted (0x161490 reads the storage before the size). */
     void pushBackUnchecked(const T &element)
@@ -1017,6 +1026,12 @@ struct hkClassMember {
      * struct's object size, -1 for an enum or flags element, else the
      * type's size (0x7f20). derived name. */
     int FUN_00007f20() const;
+
+    /* The member's size in bytes (0x7d60): its type's size, an enum's or
+     * flags' storage size, or a struct's object size, times its C array
+     * size (one when it is not an array); -1 for a type without a size of
+     * its own. derived name. */
+    int FUN_00007d60() const;
 
     /* The integer the member holds at an address, read by its type and
      * subtype (FUN_00091270). derived name. */
@@ -8177,6 +8192,7 @@ struct hkpConstraintAtom {
         TYPE_STIFF_SPRING = 6,
         TYPE_LIN = 7,
         TYPE_ANG = 13,
+        TYPE_ANG_FRICTION = 17,
         TYPE_PULLEY = 20,
         TYPE_RACK_AND_PINION = 21,
         TYPE_COG_WHEEL = 22,
@@ -8780,15 +8796,31 @@ class hkpRackAndPinionConstraintData : public hkpConstraintData
  * constructor 0x831a0 when 0x79b63 copies 0xa0 bytes of atoms into one.
  * (The class of address point 0x16a5d30, constructor 0x17b170, is
  * hkp6DofConstraintData, its type info's vtable.) */
+/* hkpAngFrictionConstraintAtom (0x10 bytes, record table 0x169da20):
+ * isEnabled, firstFrictionAxis and numFrictionAxes (hkUint8) at +2 to +4,
+ * maxFrictionTorque at +8, padding (4 bytes, not serialized) at +0xc. */
+struct hkpAngFrictionConstraintAtom {
+    u16 type; /* derived name */
+    u8 isEnabled;
+    u8 firstFrictionAxis;
+    u8 numFrictionAxes;
+    float maxFrictionTorque;
+    u8 padding[4];
+};
+
 class ConstraintData169ffe0 : public hkpConstraintData /* derived name */
 {
   public:
     /* The constructor's stores: local transforms (type 2) at +0, both
-     * identity, and an atom of type 0x11 at +0x90. */
+     * identity, and an angular friction atom (type 0x11) at +0x90. */
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom transforms;
-        u8 unknown90[0x10];
+        hkpAngFrictionConstraintAtom angFriction; /* derived name */
     };
+
+    /* Out of line (0x831a0): both frames the identity, friction on the
+     * three axes from the first, no torque. */
+    ConstraintData169ffe0();
 
     virtual ~ConstraintData169ffe0();
 
@@ -9024,18 +9056,6 @@ class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
 
     float springConstant; /* name from the strings; offset derived */
     float springDamping;  /* name from the strings; offset derived */
-};
-
-/* hkpAngFrictionConstraintAtom (0x10 bytes, record table 0x169da20):
- * isEnabled, firstFrictionAxis and numFrictionAxes (hkUint8) at +2 to +4,
- * maxFrictionTorque at +8, padding (4 bytes, not serialized) at +0xc. */
-struct hkpAngFrictionConstraintAtom {
-    u16 type; /* derived name */
-    u8 isEnabled;
-    u8 firstFrictionAxis;
-    u8 numFrictionAxes;
-    float maxFrictionTorque;
-    u8 padding[4];
 };
 
 /* hkpAngLimitConstraintAtom (the name a string of the executable,
@@ -10368,7 +10388,10 @@ class hkMemoryMeshTexture : public hkMeshTexture
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000247f0 */
     void FUN_000ad620(u8 *&dataOut, int &sizeOut,
-                      Format &formatOut);             /* vtable slot 5; derived name */
+                      Format &formatOut); /* vtable slot 5; derived name */
+    /* Slot 6 (0xad640): raw data copied into the texture's own array, any
+     * other format's data kept where it is, unowned. derived name. */
+    void FUN_000ad640(u8 *newData, int numBytes, Format newFormat);
     Format FUN_000ad6e0() const;                      /* vtable slot 8; derived name */
     bool FUN_000ad710() const;                        /* vtable slot 11; derived name */
     void FUN_000ad720(bool newHasMipMaps);            /* vtable slot 12; derived name */
@@ -10492,6 +10515,75 @@ class hkOArchive : public hkReferencedObject /* derived name */
     hkBool FUN_0000abf0() const; /* derived name */
     /* derived name: one byte written to the stream (0xa420). */
     void FUN_0000a420(char c);
+    /* derived name: a 16-bit value written (0xa480), swapped when the
+     * archive swaps. */
+    void FUN_0000a480(u16 value);
+
+    /* An array of elements written, each element's bytes reversed first
+     * when the archive swaps (out of line at 0xa520; inline in the writes of
+     * one value): copied through a 512-byte buffer a chunk at a time, the
+     * last chunk the remainder. derived name. */
+    void writeArrayGeneric(const void *array, int elemSize, int arraySize)
+    {
+        if (byteSwap) {
+            char buffer[512];
+            const int elemsPerBuffer = 512 / elemSize;
+            int numBytes = arraySize * elemSize;
+            const int lastBytes = numBytes % 512;
+            const int lastElems = lastBytes / elemSize;
+            const char *src = static_cast<const char *>(array);
+            while (numBytes > 0) {
+                int chunkBytes = 512;
+                int chunkElems = elemsPerBuffer;
+                if (numBytes < 512) {
+                    chunkBytes = lastBytes;
+                    chunkElems = lastElems;
+                }
+                FUN_00017e70(buffer, src, chunkBytes);
+                char *p = buffer;
+                switch (elemSize) {
+                case 8:
+                    for (int i = 0; i < chunkElems; i++, p += 8) {
+                        char t0 = p[0];
+                        p[0] = p[7];
+                        p[7] = t0;
+                        char t1 = p[1];
+                        p[1] = p[6];
+                        p[6] = t1;
+                        char t2 = p[2];
+                        p[2] = p[5];
+                        p[5] = t2;
+                        char t3 = p[3];
+                        p[3] = p[4];
+                        p[4] = t3;
+                    }
+                    break;
+                case 4:
+                    for (int i = 0; i < chunkElems; i++, p += 4) {
+                        char t0 = p[0];
+                        p[0] = p[3];
+                        p[3] = t0;
+                        char t1 = p[1];
+                        p[1] = p[2];
+                        p[2] = t1;
+                    }
+                    break;
+                case 2:
+                    for (int i = 0; i < chunkElems; i++, p += 2) {
+                        char t0 = p[0];
+                        p[0] = p[1];
+                        p[1] = t0;
+                    }
+                    break;
+                }
+                writer->write(buffer, chunkBytes);
+                src += chunkBytes;
+                numBytes -= chunkBytes;
+            }
+        } else {
+            writer->write(array, elemSize * arraySize);
+        }
+    }
 
     hkStreamWriter *writer; /* derived name */
     hkBool byteSwap;        /* derived name */
@@ -13003,6 +13095,12 @@ class hkDefaultClassNameRegistry : public hkDynamicClassNameRegistry
 /* The classes of a null-terminated list finished for a class version
  * (0x19aff0, out of line). derived name. */
 void FUN_0019aff0(const hkClass *const *classes, int classVersion); /* derived name */
+
+/* derived names: a class brought up to a class version (0x19eee0, the done
+ * map keeping each class it has seen), and each class of a null-terminated
+ * list brought up through one map (0x19f270, the first step of 0x19aff0). */
+void FUN_0019eee0(const hkClass *klass, PointerMap &done, int classVersion);
+void FUN_0019f270(const hkClass *const *classes, int classVersion);
 
 /* A class name registry over a static list of classes (derived name;
  * vtable 0x16a63b0, address point 0x16a63c0, no type info), 0x28 bytes: a
