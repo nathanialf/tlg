@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1552 vtables stored by a constructor that no type info names (below, with
+# 1551 vtables stored by a constructor that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -40,7 +40,6 @@
 #   0x169ffd0 stored by FUN_000831a0
 #   0x16a31d0 stored by FUN_00048b20
 #   0x16a32a0 stored by _ZN14hkHardwareInfoC1Ev | home hkHardwareInfo.cpp
-#   0x16a35c0 stored by FUN_00094170 FUN_00094230 FUN_000942e0
 #   0x16a36b0 stored by FUN_0009a8a0
 #   0x16a3b90 stored by FUN_000b31c0 FUN_000b32e0
 #   0x16a3bd0 stored by FUN_000b3490 FUN_000b35d0 FUN_000b3670 FUN_000b3700

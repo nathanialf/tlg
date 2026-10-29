@@ -688,6 +688,23 @@ and hkpLimitedForceConstraintMotor 0x169c710 (facts: the strings at 0x14c00ae
 and 0x14c1e56 their hkClass builders store; the vtables are stored only by
 derived motors' clones, which build the bases in turn, so the citing function
 is a clone, 0x7c100).
+Round 48's harvest added BufferedStreamReader 0x16a35c0 (derived: a reader
+over hkReferencedObject that buffers another stream, the header's name;
+stored by its constructor 0x94170, called at 0x1a7f7 with a 0x4000-byte
+buffer, and by its destructors 0x94230 and 0x942e0; no string) and the three
+router allocators RouterAllocator50 0x168d430, RouterAllocator60 0x168d4b0
+and RouterAllocator58 0x168d530 (derived from the router offset each slot 2
+loads, 0x50 at 0xac76, 0x60 at 0xae06, 0x58 at 0xaf96; one static instance
+each at 0x57b8470, 0x57b8478 and 0x57b8480, built in place by the one
+initializer 0xb120, which forms the instance's address in a register
+before the store, `lea rsi, [rip+instance]; mov [rsi], vptr`, because the
+same register is the exit registration's argument; the verifier's walk
+now reads that form as the static store it is, `tools/vtable_names.py`
+`_walk`, measured over the whole table: no other row changed). The third
+instance is D_57b8480, the containers' allocator, declared an AllocatorBase
+in tlg_hk_reflect.h; its type is RouterAllocator58 by the store at 0xb18e,
+and the declaration follows when 0xb120 is written (the class is declared
+after the header that declares the object).
 Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
 singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
 string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its

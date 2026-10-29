@@ -194,8 +194,14 @@ class Walker:
                 v = regs.get(ins.reg_name(ops[1].reg))
                 # `mov [this], vptr`, or `mov [rip+instance], vptr`: a static
                 # instance built in place by its initializer (the system
-                # allocator at 0x4b3b, hkSerializeDeprecated at 0x19a618)
-                static = dst.mem.base == X86_REG_RIP
+                # allocator at 0x4b3b, hkSerializeDeprecated at 0x19a618);
+                # the instance's address may sit in a register first
+                # (`lea rsi, [rip+instance]; mov [rsi], vptr` at 0xb138,
+                # where the same register is the exit registration's
+                # argument), so a base holding a static address outside
+                # the vtables is the same store
+                static = dst.mem.base == X86_REG_RIP or (
+                    base in regs and dst.mem.disp == 0 and not self.in_relro(regs[base]))
                 if (base in this and dst.mem.disp == 0 or static) and not dst.mem.index \
                         and v is not None and self.in_relro(v) and self.is_address_point(v):
                     seq.append(v)
