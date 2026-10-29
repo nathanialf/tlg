@@ -747,6 +747,14 @@ so the class is in an anonymous namespace, and `BaseElf._verify_derived`
 accepts that mangling of the row's class name; its initializer matches
 under the file's own init symbol `_GLOBAL__I_a` (the row's symbol column).
 
+Round 51's harvest added Crc32StreamWriter 0x168c980 (derived: no type
+info and no string names it; hkClass's signature function 0x45c0 builds it
+on its stack at 0x45ec, the only store site, seeds the CRC with all ones
+and returns its complement, and slot 6 0x40c0 folds each byte in with the
+reflected polynomial 0xedb88320; the tree had already named its deleting
+destructor's row 0x4060 and declared the class), so 0x45c0 is claimable
+as written.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -1695,3 +1703,34 @@ this question.
 **Trigger to revisit.** The experiment's result, recorded here as a
 decision or a refutation; or a library function whose base keeps
 `vinsertps` after a lane-0 scalar operation.
+
+## D32. The library compiler keeps a constant-count vector shift intrinsic as a call (2026-10-29)
+
+**Question (open; experiment pending).** Round 51's worker left 0x19ff0
+(the quaternion from an axis and an angle) NONMATCHING on one shape: the
+base multiplies a value by its magnitude value first (`vmulps xmm1, xmm0,
+xmm1`), the 3.3 compile magnitude first. Reassociate commutes a
+commutative operation by rank (3.3 `lib/Transforms/Scalar/Reassociate.cpp`,
+`OptimizeInst`, swapped when `RHSRank < LHSRank`), and the magnitude is
+cookbook 70's `psrld` by 1 of the value's bits, which 3.3 keeps as the
+`@llvm.x86.sse2.psrli.d` call: a call is an unmovable instruction ranked by
+its position (`isUnmovableInstruction`), so the magnitude ranks below the
+value and sorts first. With the shift written as an IR shift (a scratch
+probe, not a source) the function compiles equal. Measured between rounds
+with a five-line probe under the library flags: 3.3 and 3.4.2 keep the
+call; 3.5.2 and 3.6.2 fold a constant-count `psrli` into `lshr` (3.6.2
+`lib/Transforms/InstCombine/InstCombineCalls.cpp:620-685`, the
+`x86_sse2_psrli_d` case of `visitCallInst`). The same generation step as
+D31 (a change after the 3.4 branch, in 3.5). The candidate is a seventh
+backport of the upstream commit that added that fold (to be identified
+from the 3.5 history of that file), measured as D31's: an experimental
+compiler in the supervisor's scratch space, the probe folding to `lshr`
+under it, 0x19ff0 compiling equal, and `gate-all` holding on every row
+under the swapped compiler. Until then the compiler is unchanged, 0x19ff0
+is parked, and a worker that meets the shape (a magnitude feeding a
+commutative floating-point operation with its operands reversed)
+classifies it as this question.
+
+**Trigger to revisit.** The experiment's result, recorded here as a
+decision or a refutation; or a library function whose base keeps the
+magnitude first.
