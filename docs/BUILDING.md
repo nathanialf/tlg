@@ -101,6 +101,17 @@ matching prefix) to `build/base/obj/<path>.o`, and the `gate` target.
 `tools/build.sh regen` rewrites it after adding a source; `verify` checks the
 hashes alone; `clean` and `distclean` remove the build output.
 
+The gate (`gate-all`, what the hooks run) does not start from `setup`: its
+`prepare` step verifies the hashes and rewrites `build.ninja`, and ninja
+rebuilds what changed from its dependency log (every header a TU includes is
+in the object's depfile; each object names its compiler binary as an implicit
+input, so a rebuilt compiler rebuilds every object). `TLG_CLEAN=1
+tools/build.sh gate-all` deletes `build/base/` first, the from-scratch form.
+The gate writes `build/base/gate.pickle` (its per-function results and the
+laid-out image, keyed by the configuration rows and the claimed objects'
+sizes and mtimes); `progress-all` reuses it when the key still matches
+instead of laying the image out a second time.
+
 A claimed table whose bytes carry the package's content (records, string
 pointers) is committed as its type, count and name only (`docs/DECISIONS.md`
 D18): its row of `config/data.base.txt` names the TU that defines it, and its

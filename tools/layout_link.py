@@ -114,6 +114,16 @@ def object_data_symbols(obj: Path) -> dict[str, tuple[bytes, list[mc.Reloc], boo
     return out
 
 
+def bytes_at(base: BaseElf, va: int, blob: bytes) -> bool:
+    """Whether `blob` is the base's bytes at `va`, inside one loaded segment
+    (what BaseElf.find_bytes would report at that address)."""
+    for p in base.loaded_segments():
+        if p["vaddr"] <= va and va + len(blob) <= p["vaddr"] + p["filesz"]:
+            o = p["offset"] + va - p["vaddr"]
+            return base.data[o:o + len(blob)] == blob
+    return False
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                            hint: int | None = None) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why).
@@ -142,6 +152,12 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
         try:
             if r.sym_size == 0 and r.addend >= 0 and r.symbol.startswith("."):
                 blob = mc.object_bytes_of(obj, r.sym_section, r.sym_value + r.addend, 0)
+                # the base's own field is tried first: when the entry's bytes
+                # sit where it points, that is the placement (the scan of every
+                # loaded segment below is the same answer and cost the gate
+                # minutes per short constant)
+                if hint is not None and bytes_at(base, hint + r.addend, blob):
+                    return hint, ""
                 hits = base.find_bytes(blob)
                 if len(hits) == 1:
                     return hits[0] - r.addend, ""
@@ -151,6 +167,8 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                               if hits else f"literal {blob[:24]!r} of {r.symbol} not found in the base")
             blob = mc.object_bytes_of(obj, r.sym_section, r.sym_value, r.sym_size)
             if blob:
+                if hint is not None and bytes_at(base, hint, blob):
+                    return hint, ""
                 hits = base.find_bytes(blob)
                 if len(hits) == 1:
                     return hits[0], ""

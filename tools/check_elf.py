@@ -28,7 +28,9 @@ unclaimed ones under `unassigned`, in 1 MiB address ranges.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import pickle
 import re
 import subprocess
 import sys
@@ -117,7 +119,28 @@ def check_all() -> tuple[dict[str, dict], bool]:
     return results, ok
 
 
+def gate_cache_key() -> str:
+    """What the gate's result is a function of: the configuration rows and the
+    objects of the claimed translation units (path, size, mtime), so a progress
+    run right after a gate on the same tree reuses the gate's layout instead of
+    rebuilding the image a second time."""
+    h = hashlib.sha256()
+    for stem in ("matched", "functions", "data", "data_schema", "vtables", "vtables.derived"):
+        p = config_path(REPO_ROOT, VERSION, stem, "txt")
+        h.update(p.read_bytes() if p.exists() else b"")
+    for tu in sorted({tu for _fn, tu, _sym in load_matched()}):
+        obj = build_dir(REPO_ROOT, VERSION) / "obj" / (tu + ".o")
+        st = obj.stat() if obj.exists() else None
+        h.update(f"{tu} {st.st_size if st else -1} {st.st_mtime_ns if st else -1}\n".encode())
+    return h.hexdigest()
+
+
+def gate_cache_path() -> Path:
+    return build_dir(REPO_ROOT, VERSION) / "gate.pickle"
+
+
 def run_gate(_args) -> int:
+    key = gate_cache_key()
     results, ok = check_all()
     print(f"gate ({VERSION}): {len(results)} claimed function(s)")
     for fn, r in sorted(results.items(), key=lambda kv: kv[1]["tu"]):
@@ -132,6 +155,12 @@ def run_gate(_args) -> int:
     # its relocations resolved, the rest of the segment from the base, and the
     # image compared with the base byte for byte (tools/layout_link.py)
     lay = layout_link.build_image(VERSION)
+    try:
+        gate_cache_path().parent.mkdir(parents=True, exist_ok=True)
+        with open(gate_cache_path(), "wb") as f:
+            pickle.dump({"key": key, "results": results, "ok": ok, "lay": lay}, f)
+    except OSError as e:
+        print(f"check_elf: gate cache not written ({e})", file=sys.stderr)
     for fn, why in sorted(lay["errors"].items()):
         print(f"  LAYOUT ERROR {fn}: {why}")
     for name, sg in lay["segments"].items():
@@ -153,7 +182,21 @@ def run_gate(_args) -> int:
 
 # ----- --progress ------------------------------------------------------------
 
-def build_tree(results: dict[str, dict]) -> dict:
+def cached_gate() -> dict | None:
+    """The last gate's results and layout, when nothing they depend on has
+    changed since (gate_cache_key); else None."""
+    p = gate_cache_path()
+    if not p.exists():
+        return None
+    try:
+        with open(p, "rb") as f:
+            c = pickle.load(f)
+    except Exception:  # noqa: BLE001
+        return None
+    return c if c.get("key") == gate_cache_key() else None
+
+
+def build_tree(results: dict[str, dict], lay: dict | None = None) -> dict:
     funcs = load_functions_ordered()
     data = baseelf_path(REPO_ROOT, VERSION).read_bytes()
     phdrs = read_phdrs(data)
@@ -201,7 +244,8 @@ def build_tree(results: dict[str, dict]) -> dict:
         prog_list.append(entry)
         tot_mf += pmf; tot_f += pf; tot_mb += pmb; tot_b += pb
 
-    lay = layout_link.build_image(VERSION, log=lambda *a, **k: None)
+    if lay is None:
+        lay = layout_link.build_image(VERSION, log=lambda *a, **k: None)
     sections: dict[str, list[int]] = {}
     extracted: dict[str, int] = {}
     for name, sg in lay["segments"].items():
@@ -335,8 +379,14 @@ def _splice(path: Path, body: str) -> bool:
 
 
 def run_progress(args) -> int:
-    results, _ok = check_all()
-    tree = build_tree(results)
+    c = cached_gate()
+    if c is not None:
+        results, lay = c["results"], c["lay"]
+        print(f"progress ({VERSION}): the gate's results and layout reused ({gate_cache_path().relative_to(REPO_ROOT)})")
+    else:
+        results, _ok = check_all()
+        lay = None
+    tree = build_tree(results, lay)
     t = tree["totals"]
     print(f"progress ({VERSION}): {t['matched_funcs']}/{t['total_funcs']} functions, "
           f"{t['matched_bytes']}/{t['total_bytes']} .text bytes "

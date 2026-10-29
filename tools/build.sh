@@ -54,6 +54,20 @@ setup() {
     regen_ninja
 }
 
+# The gate's build: the base files verified and build.ninja rewritten, the
+# objects rebuilt by ninja from its dependency log (every header a TU includes
+# is in its depfile; the compiler binary is an implicit input of every object,
+# so a rebuilt compiler rebuilds everything). TLG_CLEAN=1 removes the build
+# directory first, the from-scratch gate.
+prepare() {
+    if [ "${TLG_CLEAN:-0}" = 1 ]; then
+        setup
+    else
+        verify_base
+        regen_ninja
+    fi
+}
+
 do_progress() {
     if [ ! -f tools/check_elf.py ]; then
         echo "build.sh: no tools/check_elf.py yet; nothing to regenerate" >&2
@@ -87,7 +101,7 @@ gate_all() {
     [ "${missing}" -eq 0 ] || exit 1
     for v in ${TLG_VERSIONS}; do
         echo "==> gate-all: ${v}"
-        VERSION="${v}" "${ROOT}/tools/build.sh" setup
+        VERSION="${v}" "${ROOT}/tools/build.sh" prepare
         if [ -f tools/gen_ninja.py ]; then
             n="$(ninja_bin)"
             VERSION="${v}" "${n}" -C "${ROOT}"
@@ -110,6 +124,7 @@ progress_all() {
 cmd="${1:-help}"
 case "$cmd" in
     setup)        setup ;;
+    prepare)      prepare ;;
     verify)       verify_base ;;
     regen)        regen_ninja ;;
     clean)        rm -rf "${TLG_BUILD_DIR}" ;;

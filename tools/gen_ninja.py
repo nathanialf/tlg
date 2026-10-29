@@ -37,6 +37,34 @@ def sources() -> list[str]:
                   if p.is_file() and p.suffix in SRC_EXTS)
 
 
+def compilers(flags: Path) -> list[tuple[str, str]]:
+    """(prefix, compiler path relative to the repo) per line of the flags
+    file that names one with cxx=<version> (tools/compile_cpp.sh); a prefix
+    without one compiles with the project default."""
+    out = []
+    for line in flags.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        parts = line.split()
+        if len(parts) >= 2 and parts[1].startswith("cxx="):
+            sel = parts[1][len("cxx="):]
+            cc = f"tools/cc/llvm-{sel}/bin/clang"
+            out.append((parts[0], cc if (REPO_ROOT / cc).exists() else sel))
+    return out
+
+
+DEFAULT_CXX = "tools/cc/llvm-4.0.0/bin/clang"
+
+
+def compiler_of(src: str, table: list[tuple[str, str]]) -> str:
+    best, bestlen = DEFAULT_CXX, -1
+    for prefix, cc in table:
+        if src.startswith(prefix) and len(prefix) > bestlen:
+            best, bestlen = cc, len(prefix)
+    return best
+
+
 def esc(s: str) -> str:
     return s.replace("$", "$$").replace(" ", "$ ").replace(":", "$:")
 
@@ -88,11 +116,14 @@ def main() -> int:
                      f"{esc(str(elf))}")
         lines.append(f"  ident = {ident}")
     objs = []
+    table = compilers(REPO_ROOT / flags)
     for s in srcs:
         o = f"{bd}/obj/{s}.o"
         objs.append(o)
         gen = "".join(f" {esc(g)}" for g in gen_of.pop(s, []))
-        lines.append(f"build {esc(o)}: cxx {esc(s)} | tools/compile_cpp.sh {esc(str(flags))}{gen}")
+        cc = compiler_of(s, table)
+        ccdep = f" {esc(cc)}" if (REPO_ROOT / cc).exists() else ""
+        lines.append(f"build {esc(o)}: cxx {esc(s)} | tools/compile_cpp.sh {esc(str(flags))}{ccdep}{gen}")
     for tu in gen_of:
         print(f"gen_ninja: {tu} (config/data.{ver}.txt) is not a source under src/", file=sys.stderr)
         return 1
