@@ -1976,3 +1976,4 @@ FUN_0017ee60 src/libs/unknown/func_0017ee60.cpp _ZN26hkDynamicClassNameRegistry1
 _ZN8FreeListC1EmmmP13AllocatorBaseS1_ src/libs/unknown/func_00018580.cpp
 FUN_000263e0 src/libs/unknown/func_000263e0.cpp _ZNK26hkCompressedMassProperties12FUN_000263e0ER28hkDiagonalizedMassProperties
 FUN_00090100 src/libs/unknown/func_00090100.cpp _ZN19hkArrayStreamWriter12FUN_00090100Eii
+FUN_001997d0 src/libs/unknown/func_001997d0.cpp _ZN19BitFieldMap0019977012FUN_001997d0Ei

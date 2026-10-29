@@ -13353,41 +13353,48 @@ struct U16PointerMap /* derived name */
     int numEntries;
     int hashMod;
 
-    /* A slot as an iterator (derived names): the first used slot, the next
-     * used one after a slot, one past the hash mask at the end. */
-    int getIterator() const
+    /* A slot as an iterator, as the pointer map's (derived names): the
+     * first used slot, the next used one after a slot, one past the hash
+     * mask at the end. The first slot's walk increments before its test
+     * (its latch exits, so LoopRotate leaves it, cookbook 185); each key is
+     * read into a named value. */
+    struct IteratorTag;
+    typedef IteratorTag *Iterator;
+
+    Iterator getIterator() const
     {
         int i = 0;
         while (i <= hashMod) {
             const int index = i++;
             const u16 key = entries[index].key;
             if (key != 0xffff) {
-                return index;
+                i = index;
+                break;
             }
         }
-        return i;
+        return reinterpret_cast<Iterator>(hkUlong(i));
     }
 
-    int getNext(int it) const
+    Iterator getNext(Iterator it) const
     {
-        int i;
-        for (i = it + 1; i <= hashMod; i++) {
+        int i = static_cast<int>(reinterpret_cast<hkUlong>(it));
+        for (i += 1; i <= hashMod; i++) {
             const u16 key = entries[i].key;
             if (key != 0xffff) {
                 break;
             }
         }
-        return i;
+        return reinterpret_cast<Iterator>(hkUlong(i));
     }
 
-    bool isValid(int it) const
+    bool isValid(Iterator it) const
     {
-        return it <= hashMod;
+        return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
     }
 
-    hkUlong getValue(int it) const
+    hkUlong getValue(Iterator it) const
     {
-        return entries[it].value;
+        return entries[static_cast<int>(reinterpret_cast<hkUlong>(it))].value;
     }
 };
 
