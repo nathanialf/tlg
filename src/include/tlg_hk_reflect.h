@@ -3272,7 +3272,7 @@ extern const hkClass D_57bcf20; /* hkMultipleVertexBuffer's hkClass, built at 0x
 class hkMultipleVertexBuffer : public hkMeshVertexBuffer
 {
   public:
-    /* hkMultipleVertexBuffer::LockedElement (records from 0x16919e0, 7 bytes):
+    /* hkMultipleVertexBuffer::LockedElement (records from 0x1691a30, 7 bytes):
      * the hkUint8 members from +0 and the hkInt8 emulatedIndex at +6. */
     struct LockedElement {
         u8 vertexBufferIndex;
@@ -3288,6 +3288,28 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
      * the sort at 0x257f2 takes it. */
     static bool FUN_00024b60(const LockedElement &a, const LockedElement &b);
 
+    /* hkMultipleVertexBuffer::ElementInfo (records from 0x16919e0, 2
+     * bytes): where an element of the format comes from. */
+    struct ElementInfo {
+        u8 vertexBufferIndex;
+        u8 elementIndex;
+    };
+
+    /* hkMultipleVertexBuffer::VertexBufferInfo (hkClass 0x57bcda0, built
+     * at 0x23975: 0x18 bytes, records from 0x16917a0). */
+    struct VertexBufferInfo {
+        hkMeshVertexBuffer *vertexBuffer;
+        void *lockedVertices; /* not serialized */
+        hkBool isLocked;
+    };
+
+    /* What a lock asks for (derived names): the access flags at +0xc
+     * (FLAG_WRITE, 2, makes the lock a write lock). */
+    struct LockInput {
+        u8 unknown0[0xc];
+        int lockFlags; /* derived name */
+    };
+
     hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
     virtual ~hkMultipleVertexBuffer();
 
@@ -3295,10 +3317,17 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
     bool FUN_00024bd0() const;                          /* vtable slot 6; derived name */
     void FUN_00024be0(hkVertexFormat &formatOut) const; /* vtable slot 7; derived name */
     int FUN_00024bf0() const;                           /* vtable slot 8; derived name */
+    /* Slot 9 (0x25670): every element of the format locked, none when
+     * the buffer is locked already (0); the locked elements set from the
+     * element infos, then the lock proper (0x25700). derived names. */
+    int FUN_00025670(const LockInput &input, LockedVertices &lockedVerticesOut);
+    int FUN_00025700(const LockInput &input, LockedVertices &lockedVerticesOut);
 
     hkVertexFormat vertexFormat;
     hkArray<LockedElement> lockedElements;
-    u8 unknown120[0x28];
+    hkMeshVertexBuffer *lockedBuffer;
+    hkArray<ElementInfo> elementInfos;
+    hkArray<VertexBufferInfo> vertexBufferInfos;
     int numVertices;
     hkBool isLocked;
     u32 updateCount;
@@ -3570,6 +3599,20 @@ inline Vec4 length3(const Vec4 &v)
                    _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
                          _mm_mul_ps(lengthSquared, invLength));
+}
+
+/* A vector scaled to unit length over x, y and z by the same reciprocal
+ * square root, zero where the squared length is not positive, as Havok's
+ * hkVector4::normalize<3> is on this platform at its default accuracy (the
+ * scaled convex shape's slot 17, 0x16ad80). derived name. */
+inline Vec4 normalized3(const Vec4 &v) /* derived name */
+{
+    const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    const Vec4 invLength =
+        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
+                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+    return _mm_mul_ps(v, _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength));
 }
 
 /* A vector's reciprocal, zero where a lane is zero, as Havok's
@@ -5662,6 +5705,9 @@ struct hknpWorld {
      * derived names. */
     void FUN_00050fd0();
     void FUN_000509f0();
+    /* The stage after the collide tasks (0x505f0, run by
+     * hknpPostCollideTask under the timer "StCollide"). derived name. */
+    void FUN_000505f0();
     /* Hands a body id and a bool to the object at +0x4f8 when the flag at
      * +0x4f0 is set (the command dispatcher at 0x16ef96 calls it). derived
      * name. */
@@ -5727,7 +5773,11 @@ struct hknpWorld {
      * only when the flag is set). */
     bool enabled4f0;               /* derived name */
     hknpWorldObject4f8 *object4f8; /* derived name */
-    u8 unknown500[0x130];
+    u8 unknown500[0x128];
+    /* The step's current stage (hknpPostCollideTask's work sets 8 before
+     * its stage, 0x489ad). derived name. */
+    int simulationStage;
+    u8 unknown62c[4];
     /* The constructor copies it from hknpWorldCinfo's gravity (record at
      * 0x1698370, +0x60) at 0x48d84, and 0x4ae7e copies it back. */
     Vec4 gravity; /* derived name */
@@ -6162,6 +6212,10 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * convex shape's vertices scaled and moved into the buffer, each
      * keeping its w; the buffer is returned. derived name. */
     const Vec4 *FUN_0016ae20(Vec4 *HK_RESTRICT buffer, int bufferSize) const;
+
+    /* Slot 17 (0x16ad80, both vtables): the core shape's value scaled by
+     * the smallest magnitude of the scale's direction. derived name. */
+    float FUN_0016ad80() const;
 
     /* The record's members (0x1696dc0): two vectors. */
     Vec4 scale;
@@ -10975,6 +11029,33 @@ struct hkBlockStreamWriter /* derived name */
     /* The cache the stream's new blocks come from (0x947f0 takes one from
      * it). derived name. */
     BlockCache *cache;
+    /* To the 0x28 bytes the writers keep apart (the command writer's 0x38
+     * bytes end 0x28 after its writer at +0x10; the pairs task's writers
+     * sit 0x28 apart), not read by the writer's functions. */
+    u8 unknown20[8];
+};
+
+/* The writers of the narrow phase's pairs task (derived names): a stack
+ * object of its work (0x15ea30, at -0x808), every writer finalized at its
+ * end in its "StFinalizeWriters" timer (0x15e030), the three from +0x128
+ * only when the first of them was bound. */
+struct CollideWriters0015e030 /* derived name */
+{
+    /* derived name */
+    void FUN_0015e030();
+
+    hkBlockStreamWriter writer0;
+    hkBlockStreamWriter writer28;
+    hkBlockStreamWriter writer50;
+    hkBlockStreamWriter writer78;
+    hkBlockStreamWriter writerA0;
+    u8 unknownC8[8];
+    hkBlockStreamWriter writerD0;
+    u8 unknownF8[8];
+    hkBlockStreamWriter writer100;
+    hkBlockStreamWriter writer128;
+    hkBlockStreamWriter writer150;
+    hkBlockStreamWriter writer178;
 };
 
 /* A command stream writer (vtable 0x16a3370, ruled hkBlockStreamCommandWriter,
@@ -11000,7 +11081,6 @@ class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
     void FUN_000904f0(const struct hkCommand &command);
 
     hkBlockStreamWriter writer; /* derived name */
-    u8 unknown30[8];            /* to the 0x38 bytes the deleting destructor frees */
 };
 
 /* The allocator of the block streams' blocks (derived names): reference

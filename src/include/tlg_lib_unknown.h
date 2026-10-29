@@ -3464,6 +3464,9 @@ struct ShortKeyMap /* derived name */
      * not own it, then left with no storage (0x199580). derived name. */
     void FUN_00199580(AllocatorBase &allocator);
 
+    /* Empty, no storage: the hash mask -1 (0x16d3bf). */
+    ShortKeyMap() : elems(0), numElems(0), hashMod(-1) {}
+
     Pair *elems;  /* derived name */
     int numElems; /* derived name */
     int hashMod;  /* derived name */
@@ -3506,6 +3509,42 @@ struct NodeEdgeLists /* derived name */
 
     hkArray<int> firstEdge;      /* derived name */
     hkArray<EdgeLinks> nextEdge; /* derived name */
+};
+
+/* The object the world's set-up builds at +0x148 of the world (derived
+ * names; 0x48b9e): the world at +0 (null when built), the 64-byte edge
+ * records at +8 with their count at +0x10, an array of 8-byte entries at
+ * +0x20 (its destructor 0x16d8c0 destroys them from the last), a
+ * ShortKeyMap at +0x38, a count and a last index (0x7fffffff: none) at
+ * +0x48 and +0x4c, the node edge lists at +0x50. The constructor (0x16d360)
+ * builds them empty and runs the set-up 0x16d3f0 with its last two
+ * arguments. */
+struct Entry0016d360 /* derived name */
+{
+    u8 unknown0[8];
+};
+
+class Owner0016d360 /* derived name */
+{
+  public:
+    Owner0016d360(hknpWorld *world_, void *argument2, int argument3);
+
+    /* The set-up (0x16d3f0): the world's signal at +0x5b8 fired with the
+     * world and this object, then the storage sized. derived names. */
+    void FUN_0016d3f0(void *argument2, int argument3);
+
+    hknpWorld *world;          /* derived name */
+    EdgeRecord0017a290 *edges; /* derived name */
+    int numEdges;              /* derived name */
+    u8 unknown14[4];
+    int int18; /* derived name */
+    u8 unknown1c[4];
+    hkArray<Entry0016d360> entries; /* derived name */
+    u8 unknown30[8];
+    ShortKeyMap map;         /* derived name */
+    int int48;               /* derived name */
+    int lastIndex;           /* derived name */
+    NodeEdgeLists edgeLists; /* derived name */
 };
 
 /* The world's two tables of shape functions (derived names), filled by its
