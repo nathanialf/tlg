@@ -1701,7 +1701,7 @@ the 1,793 functions then claimed (`gate: OK`, 2,714 relocations resolved);
 where the base has `vinsertps xmm0, xmm3, xmm0, 0` at 0xbda9), a source
 shape for the worker. The live compiler was rebuilt with the patch
 (`tools/build_llvm.sh 3.3`) after round 51's harvest, and the hook's gate
-on the adopting commit holds on every claimed function (1834) under it. 0xbd30 and the
+on the adopting commit holds on every claimed function (1,834) under it. 0xbd30 and the
 four functions the worker counted with the shape (0xbf40, 0x30ca0, 0x311f0
 and 0xcd910) return to the queue.
 
@@ -1712,31 +1712,51 @@ measured the same way.
 
 ## D32. The library compiler keeps a constant-count vector shift intrinsic as a call (2026-10-29)
 
-**Question (open; experiment pending).** Round 51's worker left 0x19ff0
-(the quaternion from an axis and an angle) NONMATCHING on one shape: the
-base multiplies a value by its magnitude value first (`vmulps xmm1, xmm0,
-xmm1`), the 3.3 compile magnitude first. Reassociate commutes a
-commutative operation by rank (3.3 `lib/Transforms/Scalar/Reassociate.cpp`,
-`OptimizeInst`, swapped when `RHSRank < LHSRank`), and the magnitude is
-cookbook 70's `psrld` by 1 of the value's bits, which 3.3 keeps as the
-`@llvm.x86.sse2.psrli.d` call: a call is an unmovable instruction ranked by
-its position (`isUnmovableInstruction`), so the magnitude ranks below the
-value and sorts first. With the shift written as an IR shift (a scratch
-probe, not a source) the function compiles equal. Measured between rounds
-with a five-line probe under the library flags: 3.3 and 3.4.2 keep the
-call; 3.5.2 and 3.6.2 fold a constant-count `psrli` into `lshr` (3.6.2
-`lib/Transforms/InstCombine/InstCombineCalls.cpp:620-685`, the
-`x86_sse2_psrli_d` case of `visitCallInst`). The same generation step as
-D31 (a change after the 3.4 branch, in 3.5). The candidate is a seventh
-backport of the upstream commit that added that fold (to be identified
-from the 3.5 history of that file), measured as D31's: an experimental
-compiler in the supervisor's scratch space, the probe folding to `lshr`
-under it, 0x19ff0 compiling equal, and `gate-all` holding on every row
-under the swapped compiler. Until then the compiler is unchanged, 0x19ff0
-is parked, and a worker that meets the shape (a magnitude feeding a
-commutative floating-point operation with its operands reversed)
-classifies it as this question.
+**Decision.** The library compiler keeps a constant-count packed shift
+intrinsic (`_mm_srli_epi32` and its family) as the intrinsic call, as LLVM
+3.3 does; the upstream fold of such a call into an IR shift is refuted for
+the region and is not backported. A function whose magnitude (cookbook 70:
+`vpaddd x, x; vpsrld 1`) feeds a commutative floating-point operation with
+its operands in the other order is a source-shape question for the worker
+(the ranks Reassociate sorts by), not a compiler question.
 
-**Trigger to revisit.** The experiment's result, recorded here as a
-decision or a refutation; or a library function whose base keeps the
-magnitude first.
+**Evidence.** Round 51's worker left 0x19ff0 (the quaternion from an axis
+and an angle) NONMATCHING on one shape: the base multiplies a value by its
+magnitude value first (`vmulps xmm1, xmm0, xmm1`), the 3.3 compile
+magnitude first. 3.3's Reassociate commutes a vector FMul or FAdd by rank
+(`lib/Transforms/Scalar/Reassociate.cpp:1837-1852`, the lower rank first;
+a load or a call other than a debug intrinsic is unmovable and ranked by
+its position in the block, `:253-289`), and the magnitude's `psrld` is the
+`@llvm.x86.sse2.psrli.d` call, so its rank is its position where the
+value's is its expression depth over its loads' positions. The worker's
+scratch compile with the shift as an IR `lshr` compiled equal, and 3.5.2
+and 3.6.2 fold a constant-count `psrli` into `lshr`, which made the fold a
+backport candidate (upstream r207058 of 2014-04-24, Michael J. Spencer,
+"[InstCombine][x86] Constant fold psll intrinsics", review D3359, and
+r207299 of 2014-04-26, Andrea Di Biagio, "[InstCombine][X86] Teach how to
+fold calls to SSE2/AVX2 packed logical shift right intrinsics"). The
+refutation is the base's own bytes: under those releases the folded pair
+`lshr (shl x, 1), 1` is folded further into `and x, 0x7fffffff` by the
+vector form of InstCombine's shift-by-constant folds (upstream r206045,
+relanded as r206214 on 2014-04-14, Matt Arsenault, "Fix shift by constants
+for vector"), which precedes r207058 and r207299 in trunk, so any upstream
+compiler that folds the intrinsic also folds the pair: the worker's
+five-line probe compiles under 3.5.2 and 3.6.2 to one `vandps` with a
+sign-mask constant, under 3.3 to `vpaddd; vpsrld`. The library region
+holds 196 `vpaddd x, x, y; vpsrld 1` magnitudes in 84 functions and not one
+`vandps`, `vandpd` or `vpand` with a 0x7fffffff splat (census of the
+disassembly below 0x1a3e00 against the base's constants), so the base's
+compiler did not fold the intrinsic. The library compiler is therefore a
+generation after r196925 (2013-12-10, D31's selection, present) and before
+r206214 (2014-04-14, absent), read as a trunk snapshot (Sony's own changes,
+D27's single store merge among them, sit outside that model). 0x19ff0
+returns to the queue with its residual reclassified: the base's value-first
+order says the magnitude's rank is at least the value's, so the source
+places more unmovable instructions (loads) between the value's last load
+and the magnitude's call, or builds the value in fewer layers; the worker
+derives the ranks from the IR and writes the shape the program has.
+
+**Trigger to revisit.** A library function whose base holds a sign-mask
+`and` where the source's magnitude is the add-and-shift idiom; or a
+magnitude the base computes as an IR shift would (a `vpslld 1` where the
+idiom's add should be).
