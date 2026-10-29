@@ -2158,17 +2158,32 @@ void FUN_00065f10(Object00065f20 *self); /* derived name */
 void FUN_00066080(const Object00065f20 *self, hkBitField &bitsOut);
 
 /* An edge of the union-find's stream (derived names): two node indices and
- * a word the join does not read, 12 bytes. */
+ * the index of the range each is relative to (0x65fd0 adds the ranges'
+ * starts; the join 0x65f30 reads neither), 12 bytes. */
 struct UnionFindEdge /* derived name */
 {
     int nodeA;
     int nodeB;
-    u32 unknown8;
+    u8 rangeA;
+    u8 rangeB;
+    u8 unknownA[2];
+};
+
+/* A range of nodes (derived names): its first node, 8 bytes. */
+struct UnionFindRange /* derived name */
+{
+    int firstNode;
+    u8 unknown4[4];
 };
 
 /* Every edge of a stream joined (0x65f30, called at 0x6dd17 under the
  * "StUnionFind" timer). derived name. */
 void FUN_00065f30(Object00065f20 *self, const hkBlockStream *edges);
+/* The same over edges whose nodes are relative to ranges (0x65fd0, called
+ * at 0x14e928 for each of a list's streams): each node offset by its range's
+ * first. derived name. */
+void FUN_00065fd0(Object00065f20 *self, const hkBlockStream *edges,
+                  const hkArray<UnionFindRange> &ranges);
 void FUN_00065f20(Object00065f20 *self);                       /* derived name */
 Record00065f00 *FUN_00065f00(Object00065f20 *self, int index); /* derived name */
 

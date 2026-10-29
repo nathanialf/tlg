@@ -14,3 +14,12 @@ void hknpMaskedShape::FUN_00037d80()
     mask = coreShape->unknownVirtual20();
     FUN_00037dd0();
 }
+
+/* derived name: slot 32: the mask's slot 4 asked, the mutation signal
+ * fired with 2, the mask's answer returned. */
+bool hknpMaskedShape::FUN_00037dd0()
+{
+    const bool result = mask->FUN_000381d0();
+    mutationSignals.shapeMutated.fire(2);
+    return result;
+}

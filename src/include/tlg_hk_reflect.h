@@ -3691,6 +3691,13 @@ void FUN_00024db0(hkMultipleVertexBuffer *self);                                
  * hkMeshSection (a reflected class; hkMemoryMeshShape's override 0x2ad50
  * reads a pointer at +0x28 and an int at +0x38 of it). */
 struct hkMeshSection {
+    u8 unknown0[0x28];
+    /* The section's material (hkMemoryMeshShape's slot 7 keeps a reference
+     * to it). derived name. */
+    class hkMeshMaterial *material;
+    u8 unknown30[8];
+    int sectionIndex; /* derived name */
+
     /* The enum PrimitiveType (its hkClassEnum 0x1692178 beside
      * MeshSectionIndexType's, after the class name's string at 0x14b7f7f):
      * names and values from its items at 0x1692100. Fields not typed yet. */
@@ -4715,9 +4722,16 @@ struct hkSignal0 : public Signal00093530 /* derived name */
  * 0x37e35), and the second, fired with no argument by the shapes'
  * destructors, hknpCompoundShape's at 0x416b0 and the masked shape's at
  * 0x37c90). Field names derived. */
+/* A signal whose slots take one argument (derived name): fire calls slot 3
+ * of each slot with the argument (the masked shape's slot 32 fires its
+ * mutation signal with 2, 0x37e35); defined after hkSlot. */
+template <typename P0> struct hkSignal1 : public Signal00093530 /* derived name */ {
+    void fire(P0 p0);
+};
+
 struct hknpShapeSignals {
-    Signal00093530 shapeMutated; /* derived name */
-    hkSignal0 shapeDestroyed;    /* derived name */
+    hkSignal1<u8> shapeMutated; /* derived name */
+    hkSignal0 shapeDestroyed;   /* derived name */
 };
 
 /* hknpShapeSignals's type info (0x57c24c8, built with its hkClass by
@@ -5666,6 +5680,25 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
  * FUN_00150240): its destructor 0x14e100 is out of line, and its deleting
  * destructor 0x14e0b0 runs it and frees the 0x1a0 bytes unless null
  * (written as calls while the class is opaque, cookbook 15). */
+/* The world's integer space (derived names, after Havok's
+ * hkIntSpaceUtil): the broad phase's box and the offsets and scales that
+ * map it to 15 bits; the world's constructor sets it from its description
+ * at 0x4995b. */
+struct hkIntSpaceUtil /* derived name */
+{
+    /* Set from a box (0x936a0): the scale 32767 over the span (its
+     * reciprocal refined once, w one before the scale and zero after), the
+     * offsets the box's minimum negated and that plus a step's span, the
+     * scale's reciprocal; every w zero. derived name. */
+    void FUN_000936a0(const hkAabb &newAabb);
+
+    Vec4 bitOffsetLow;
+    Vec4 bitOffsetHigh;
+    Vec4 bitScale;
+    Vec4 bitScaleInv;
+    hkAabb aabb;
+};
+
 struct hknpWorld;
 
 class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
@@ -5699,6 +5732,10 @@ struct alignas(16) hkAabb16 {
  * (FUN_0003a670 stores it there; the caller at 0x5f45b passes a world point
  * rotated into the body). */
 struct hknpBody {
+    /* The flag bits the world's tests read (derived names): a static body
+     * and an active one (0x4d436 tests both, `test 9`). */
+    enum { IS_STATIC = 1 << 0, IS_ACTIVE = 1 << 3 };
+
     void FUN_0003a670(const Vec4 &centerOfMassLocal); /* derived name */
 
     hkTransform transform;
@@ -6271,6 +6308,9 @@ struct hknpWorldObject4f8 /* derived name */
     /* Takes a body that is in the broad phase (0x639b0, through
      * hknpWorld::FUN_0004e0c0): reads its flags, bit 3 first. derived name. */
     void FUN_000639b0(int bodyId); /* derived name */
+    /* A pair of bodies recorded (0x655b0; the world's 0x4d400 tail-calls
+     * it with a constraint's two bodies). derived name. */
+    void FUN_000655b0(int bodyIdA, int bodyIdB);
     /* Runs 0x63a40 on each id of an array (0x64070; the island activation
      * under the timer "TtActivateIslands" at 0x15ba28 and the step at
      * 0x6ca67 call it). derived names. */
@@ -6373,6 +6413,13 @@ class hkSlot0 : public hkSlot /* derived name */
     virtual void call() = 0; /* derived name */
 };
 
+/* A slot of a signal with one argument (derived name): slot 3 calls it. */
+template <typename P0> class hkSlot1 : public hkSlot /* derived name */
+{
+  public:
+    virtual void call(P0 p0) = 0; /* derived name */
+};
+
 /* What a listener of 0x155ea0 subscribes to (derived names): an object
  * whose slot 8 returns two signals; the listener's FUN_00155b00 goes to the
  * first and its FUN_00155b10 to the second (0x156026, 0x15607c). */
@@ -6453,6 +6500,29 @@ inline void hkSignal0::fire()
         }
         /* Unsubscribed, before the call or during it: unlinked and
          * deleted, the predecessor's flags kept. */
+        delete slot;
+        *prevLink = (*prevLink & 3) | reinterpret_cast<hkUlong>(next);
+        slot = next;
+    }
+    slots = untagSlotLink(slots);
+}
+
+/* The same walk, each slot called with the argument. */
+template <typename P0> inline void hkSignal1<P0>::fire(P0 p0)
+{
+    hkUlong *prevLink = reinterpret_cast<hkUlong *>(this);
+    hkSlot *slot = untagSlotLink(slots);
+    slots = reinterpret_cast<void *>(reinterpret_cast<hkUlong>(slot) | 1);
+    while (slot) {
+        hkSlot *next = untagSlotLink(slot->next);
+        if (slotLinkFlags(slot->next) == 0) {
+            static_cast<hkSlot1<P0> *>(slot)->call(p0);
+            if (slotLinkFlags(slot->next) == 0) {
+                prevLink = reinterpret_cast<hkUlong *>(&slot->next);
+                slot = next;
+                continue;
+            }
+        }
         delete slot;
         *prevLink = (*prevLink & 3) | reinterpret_cast<hkUlong>(next);
         slot = next;
@@ -6761,6 +6831,12 @@ struct hknpWorld {
     /* Hands a body to the object at +0x4f8 when it is in the broad phase
      * (22 callers, 0x5b711 to 0x178399). derived name. */
     void FUN_0004e0c0(int bodyId); /* derived name */
+    /* A constraint's bodies recorded with the object at +0x4f8 when the
+     * flag at +0x4f0 is set (0x4d400, called at 0x4d329 and 0x4fc4f); unless
+     * the third argument says not to, each of the two bodies that is in the
+     * world, neither static nor active, is handed over first. derived
+     * name. */
+    void FUN_0004d400(const hknpConstraint *constraint, hkBool32 keepInactive);
     /* A body's motion's linear velocity, by reference (0x5df00). derived
      * name. */
     const Vec4 &FUN_0005df00(int bodyId) const; /* derived name */
@@ -11211,11 +11287,26 @@ class hkMemoryMeshShape : public hkMeshShape
     const hkClass *getClassType() const;    /* vtable slot 3, FUN_00023de0 */
     const char *FUN_0002a910() const;       /* vtable slot 8; derived name */
     void FUN_0002a920(const char *newName); /* vtable slot 9; derived name */
+    /* Slot 7 (0x2ad50): a section given back, its material kept by the
+     * shape's own section, a reference taken on it before the old one's is
+     * released. derived name. */
+    void FUN_0002ad50(const hkMeshSection &section);
+
+    /* A section as the shape keeps it, 0x38 bytes (the lock 0x2abd0 and
+     * slot 7 index them so): its vertex buffer and material at +0 and +8.
+     * derived names. */
+    struct Section {
+        void *vertexBuffer;
+        hkMeshMaterial *material;
+        u8 unknown10[0x28];
+    };
 
     /* From its record table at 0x1691bf0: sections (array) at +0x10,
      * indices16 and indices32 (arrays) at +0x20 and +0x30, name
      * (hkStringPtr, finished by its finish constructor 0x2a940) at +0x40. */
-    u8 unknownC[0x34];
+    u8 unknownC[4];
+    hkArray<Section> sections;
+    u8 unknown20[0x20];
     hkStringPtr name;
 };
 
@@ -11825,6 +11916,12 @@ class hkArrayStreamWriter : public hkStreamWriter
      * and 0x1a384c): the array emptied and the offset rewound, then a
      * terminating zero kept past the end. derived name. */
     void FUN_0008ffa0();
+
+    /* The write (0x90000): the array grown past the offset when it is
+     * short, a terminating zero kept past its end either way (when there
+     * is room), the bytes copied in at the offset and the offset moved on;
+     * all of them written. derived name. */
+    int FUN_00090000(const void *data, int numBytes);
 
     hkArray<char> *array;
     AllocatorBase *allocator;

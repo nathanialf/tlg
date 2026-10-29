@@ -3,6 +3,7 @@
 
 /* Out of line: the finish callback 0x23df0 jumps here. The arrays at +0x10
  * to +0x30 are left as loaded. */
-hkMemoryMeshShape::hkMemoryMeshShape(hkFinishLoadedObjectFlag flag) : hkMeshShape(flag), name(flag)
+hkMemoryMeshShape::hkMemoryMeshShape(hkFinishLoadedObjectFlag flag)
+    : hkMeshShape(flag), sections(flag), name(flag)
 {
 }
