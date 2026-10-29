@@ -1149,6 +1149,30 @@ that tests its argument, which changes the deleting destructor's shape and
 the inline cost both). Classified with 0x187750 and 0x184e20 until a second
 witness or a source reading.
 
+**Addendum, 2026-10-29 (round 49 harvest).** The second witness arrived
+(0x41650, hknpCompoundShape's destructor: the free-list array's destructor
+and hkArray::clearAndDeallocate are inlined in the base, and the worker's
+scratch diagnostic inlines them only from a threshold of 275), so the level
+was measured over the region as the ruling requires: the library line with
+-O3 in place of -O2, flags backed up and restored, every claimed row
+(`o3exp_O3.log`). Seven of 1,762 rows differ at -O3 (0x14640, 0x27240,
+0x2b670, 0x310f0, 0x904f0, 0x17a360, 0x18e380, three of them with no
+instruction in common with the base), and 0x33990 does not match at -O3
+either. -O3 is refuted; the level is -O2. The witnesses' mechanism is the
+other threshold: 3.3 raises the inliner's threshold from 225 to 325 for a
+callee carrying the inline hint (`lib/Transforms/IPO/Inliner.cpp:249-255`),
+and clang 3.3 gives the hint only when the `inline` keyword appears
+explicitly on some declaration of the function
+(`tools/clang/lib/CodeGen/CodeGenFunction.cpp:497-504`,
+`isInlineSpecified`): a function defined in its class body gets none. The
+witnesses are therefore a source question in the method's own terms: the
+callee the base inlines was declared `inline` in the original source, and
+the tree writes the keyword where the bytes prove the hint (0x33990's
+class destructor, defined in the deleting destructor's own translation
+unit; 0x41650's free-list destructor), never a flag. Both leave the
+classified set and return to the queue with that lead; 0x187750 stays
+parked (its shape is the unswitch, not the inliner).
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
