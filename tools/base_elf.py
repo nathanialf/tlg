@@ -69,6 +69,7 @@ class BaseElf:
         self._relative_got = None
         self._tls_got = None
         self._dso = None
+        self._fold_starts = None
         self._import_names = None
 
     # --- bytes -------------------------------------------------------------
@@ -288,6 +289,41 @@ class BaseElf:
         other = "2" if m.group(2) == "1" else "1"
         return sym[:m.start(2)] + other + sym[m.end(2):]
 
+    def folded_destructor(self, sym: str) -> int | None:
+        """A destructor symbol no row names, resolved by its class's vtable
+        (D15): the linker folded the identical destructor bodies of
+        different classes into one function, which carries one name, and
+        every other class's vtable still points at that body. Slot 0 of the
+        class's primary vtable is its complete destructor (D1, and D2 with
+        it), slot 1 its deleting destructor (D0). The vtable is one the
+        executable names or a ruled derived row, and the body it points at
+        must already carry a class's name (a FUN_ row is unresolved, so the
+        body gets its name when it is claimed, never through a fold)."""
+        import re
+        m = re.fullmatch(r"_ZN(.+)D([012])Ev", sym)
+        if not m:
+            return None
+        enc, slot = m.group(1), (1 if m.group(2) == "0" else 0)
+        for vt in ("_ZTV" + enc, "_ZTVN" + enc + "E"):
+            addr = self.vtables.get(vt)
+            if addr is None and vt in self._derived:
+                try:
+                    addr = self._verify_derived(vt)
+                except ValueError:
+                    addr = None
+            if addr is None:
+                continue
+            try:
+                target = int.from_bytes(self.read(addr + 0x10 + 8 * slot, 8), "little")
+            except Exception:
+                return None
+            if self._fold_starts is None:
+                self._fold_starts = {a: n for n, (a, _s) in self.func_by_name.items()}
+            owner = self._fold_starts.get(target)
+            if owner is not None and not owner.startswith("FUN_"):
+                return target
+        return None
+
     def address_of(self, name: str) -> int | None:
         """Where the base put `name`: a function of the table (by its mangled
         name or its bare identifier), a `D_<hex>` data label, a vtable the
@@ -298,6 +334,9 @@ class BaseElf:
         alias = self.ctor_alias(name)
         if alias in self.func_by_name:
             return self.func_by_name[alias][0]
+        folded = self.folded_destructor(name)
+        if folded is not None:
+            return folded
         if name.startswith("_ZTV"):
             if name in self.vtables:
                 return self.vtables[name]

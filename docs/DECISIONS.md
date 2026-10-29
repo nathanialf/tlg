@@ -705,6 +705,19 @@ instance is D_57b8480, the containers' allocator, declared an AllocatorBase
 in tlg_hk_reflect.h; its type is RouterAllocator58 by the store at 0xb18e,
 and the declaration follows when 0xb120 is written (the class is declared
 after the header that declares the object).
+Round 49's harvest added TreeQuery00127a50 0x16a3df0 (derived; a class of
+an anonymous namespace, the address point 0x16a3e00 stored by one bare lea
+into a 0x30-byte object on the stack of the compressed mesh shape's slot 29,
+0x127a50, and handed to the tree walk 0x104000, which calls its slots 2, 3
+and 4 at 0x10454b, 0x10456f and 0x104a3f; slots 0, 1, 2 and 4 are folded
+one-line bodies, slot 3 its work 0x127b20). The verifier's walk now takes a
+store of an address point into the function's own frame (`mov [rbp-X],
+vptr`) as the in-place construction of a local, so a function that builds
+such an object is its citing function; over the whole table the rows,
+conflicts and derived checks are unchanged (171, 0, 72 and 0 failing) and
+the unnamed listing grew from 1,551 to 1,757 entries, the locals' vtables
+now attributed to the functions that build them (the listing's header says
+"stored by a function" for that reason).
 Round 40's harvest renamed Object00006800 hkReferencedObjectLock (the
 singleton string at 0x14b2c9c, a fact), added hkOstream 0x168d100 (the
 string at 0x14b31e4) and hknpCompoundShape 0x1697900 (slot 3 returns its
@@ -785,6 +798,24 @@ beside hknpPreSolveTask's slots and is named for it, while its
 lowest-address citer is hknpPostSolveTask's vtable; inside one
 translation unit the vtables' order says nothing about which copy the
 linker kept, so the class beside the body governs whenever there is one.
+
+**Addendum, 2026-10-29 (round 49 harvest).** A code reference to a folded
+destructor resolves through the class's vtable. The static initializer
+0xb120 builds the three router allocators in place and registers each
+class's complete destructor with `__cxa_atexit`; the base registers 0x4ac0
+for all three, the one empty body the linker kept, whose row is
+`_ZN17hkMallocAllocatorD1Ev`. The compile names `_ZN17RouterAllocator50D1Ev`
+and the other two, which no row can name (one name per address). Each
+class's vtable, a ruled row (D14), holds that body in its slot 0: the
+executable's own statement that the class's complete destructor is 0x4ac0.
+`tools/base_elf.py` `folded_destructor` therefore resolves a destructor
+symbol no row names by its class's primary vtable: slot 0 for D1 and D2,
+slot 1 for D0, when the vtable is one the executable names or a ruled
+derived row and the body in the slot already carries a class's name. A
+slot pointing at a FUN_ row is refused, so a body is named when it is
+claimed and never through a fold. The resolver runs after the row names
+and D15's alias, so no existing row's resolution changes; the gate held
+on every row (the commit's hook). 0xb120 is claimed over it.
 
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 

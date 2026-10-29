@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1551 vtables stored by a constructor that no type info names (below, with
+# 1757 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -22,28 +22,196 @@
 #
 # Vtables no type info names: `<vtable address> stored by <functions> [hkClass <name>
 # (slot 3 <getter>)] [home <files>]`:
+#   0x168c2e0 stored by FUN_000003f0
+#   0x168c360 stored by FUN_00000ce0
+#   0x168c400 stored by FUN_000012a0
+#   0x168c480 stored by FUN_000012a0
+#   0x168c4b0 stored by FUN_00001420
+#   0x168c5f0 stored by FUN_00001500
 #   0x168c630 stored by FUN_00001fb0 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo
+#   0x168c7c0 stored by FUN_00003820
+#   0x168c910 stored by FUN_00003ed0
+#   0x168c940 stored by FUN_00003ed0
+#   0x168c980 stored by FUN_000045c0
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
+#   0x168cfb0 stored by FUN_00008000
+#   0x168d1b0 stored by FUN_00008c80
+#   0x168d310 stored by FUN_00009db0
+#   0x168d340 stored by FUN_00009db0
 #   0x168d680 stored by FUN_0000c360 _ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei
+#   0x168d7b0 stored by FUN_0000d390
+#   0x168d9a0 stored by FUN_0000e310
+#   0x168daa0 stored by FUN_0000f660
+#   0x168dad0 stored by FUN_0000f660
+#   0x168db00 stored by FUN_0000f660
+#   0x168db30 stored by FUN_0000f660
+#   0x168df40 stored by FUN_00010790
+#   0x168e140 stored by FUN_00011390
+#   0x168e170 stored by FUN_00011e50
 #   0x168e460 stored by FUN_00013ea0 FUN_000143a0
+#   0x168e790 stored by FUN_000155a0
 #   0x168e800 stored by FUN_00016d40 FUN_00016f90
+#   0x168ea30 stored by FUN_0001a500
 #   0x168ea90 stored by FUN_000098d0
+#   0x168eb60 stored by FUN_0001c5d0
+#   0x168f410 stored by FUN_0001d2b0
+#   0x168f490 stored by FUN_0001d3d0
+#   0x168f690 stored by FUN_0001d6a0
+#   0x168f710 stored by FUN_0001d6a0
+#   0x168f990 stored by FUN_0001d920
+#   0x168fb50 stored by FUN_0001dd10
+#   0x168fb80 stored by FUN_0001dd10
+#   0x168fc50 stored by FUN_0001e090
+#   0x168fdd0 stored by FUN_0001e340
+#   0x168fe00 stored by FUN_0001e340
+#   0x168fe30 stored by FUN_0001e340
+#   0x168fe60 stored by FUN_0001e340
+#   0x168fe90 stored by FUN_0001e9f0
+#   0x168ff10 stored by FUN_0001e9f0
+#   0x1690030 stored by FUN_0001e9f0
+#   0x16900b0 stored by FUN_0001f260
+#   0x16901d0 stored by FUN_0001f380
+#   0x1690260 stored by FUN_0001f380
+#   0x1690290 stored by FUN_0001f750
+#   0x16904a0 stored by FUN_000201a0
+#   0x1690520 stored by FUN_000201a0
+#   0x16905a0 stored by FUN_000201a0
+#   0x1690620 stored by FUN_00020ac0
+#   0x1690650 stored by FUN_00020ac0
+#   0x1690680 stored by FUN_00020ac0
+#   0x16906b0 stored by FUN_00020ac0
+#   0x16906e0 stored by FUN_00020ac0
+#   0x1690710 stored by FUN_00020ac0
+#   0x1690910 stored by FUN_00020ac0
+#   0x1690b20 stored by FUN_00020ac0
+#   0x1690ba0 stored by FUN_00020ac0
+#   0x1690cc0 stored by FUN_000213d0
+#   0x1690cf0 stored by FUN_000213d0
+#   0x1690d20 stored by FUN_000213d0
+#   0x1691080 stored by FUN_00022a90
+#   0x1691150 stored by FUN_00022bb0
+#   0x1691520 stored by FUN_00022fd0
+#   0x1691810 stored by FUN_000238f0
+#   0x16919d0 stored by FUN_000238f0
+#   0x1691b40 stored by FUN_00023c10
+#   0x1691d00 stored by FUN_00024490
+#   0x1691e70 stored by FUN_000246f0
+#   0x1692390 stored by FUN_00027c00
+#   0x1692410 stored by FUN_00027c00
 #   0x16926d0 stored by FUN_00048b20
+#   0x1692a40 stored by FUN_00034490
+#   0x1692a70 stored by FUN_00034490
+#   0x1692bb0 stored by FUN_00034f50
+#   0x1692cf0 stored by FUN_00035640
+#   0x1692d70 stored by FUN_00035640
+#   0x1692e40 stored by FUN_000358d0
+#   0x1693810 stored by FUN_00037900
+#   0x1694190 stored by FUN_00038a20
+#   0x16945c0 stored by FUN_000393d0
+#   0x1694c80 stored by FUN_000398d0
+#   0x1694ed0 stored by FUN_00039b30
+#   0x16956d0 stored by FUN_0003ad80
+#   0x1695700 stored by FUN_0003ad80
+#   0x1695730 stored by FUN_0003ad80
+#   0x1695800 stored by FUN_0003af70
+#   0x1695a60 stored by FUN_0003bb20
+#   0x1695f40 stored by FUN_0003cb00
+#   0x1696440 stored by FUN_0003d1f0
+#   0x16964c0 stored by FUN_0003d420
+#   0x16966d0 stored by FUN_0003e040
+#   0x1696990 stored by FUN_0003e5b0
+#   0x1696d80 stored by FUN_0003f660
+#   0x1696db0 stored by FUN_0003f660
+#   0x16977f0 stored by FUN_00040ea0
+#   0x1697a10 stored by FUN_00042770
+#   0x1697a90 stored by FUN_00042770
+#   0x1697bf0 stored by FUN_00042a70
+#   0x1698790 stored by FUN_000479c0
 #   0x1698eb0 stored by FUN_00048b20
 #   0x1698f10 stored by FUN_00048b20
+#   0x1698f80 stored by FUN_00050880 FUN_000514a0
+#   0x1698fc0 stored by FUN_000523b0 FUN_00052630 FUN_000528b0 FUN_00052b30 FUN_00052db0 FUN_00056390 FUN_000565b0 FUN_000567d0 FUN_000569f0 FUN_00056c10 FUN_00056e60 FUN_00057340 FUN_00057a10 FUN_00057c00 FUN_00104b70
+#   0x1699010 stored by FUN_000523b0 FUN_00052630 FUN_000528b0 FUN_00052b30 FUN_00052db0
 #   0x1699060 stored by FUN_00048b20
 #   0x16990e0 stored by FUN_00048b20
 #   0x1699160 stored by FUN_00048b20
 #   0x16991e0 stored by FUN_00048b20
+#   0x16993d0 stored by FUN_0005b320
+#   0x1699450 stored by FUN_0005b320
+#   0x1699690 stored by FUN_000615e0
+#   0x1699710 stored by FUN_000617b0
+#   0x1699790 stored by FUN_00061e00
+#   0x16998b0 stored by FUN_00066f10
+#   0x1699930 stored by FUN_00066f10
+#   0x169a6f0 stored by FUN_00156880 FUN_00158bf0 FUN_00179210 FUN_00e9afa0 FUN_00e9b430
+#   0x169a760 stored by FUN_00069980
+#   0x169a8d0 stored by FUN_00069aa0
 #   0x169ab10 stored by FUN_0005a230 _ZN17RefArrays0005a230C1EP9hknpWorld
 #   0x169b450 stored by FUN_000760c0 _ZN16Elements000760c0C1EPvS0_S0_iii
+#   0x169b510 stored by FUN_00077e60
+#   0x169b630 stored by FUN_00077f80
+#   0x169b7a0 stored by FUN_00078660
+#   0x169b820 stored by FUN_000787f0
+#   0x169b9f0 stored by FUN_00078b20
+#   0x169bdf0 stored by FUN_0007a870
+#   0x169be70 stored by FUN_0007a870
+#   0x169bea0 stored by FUN_0007aa90
+#   0x169bf20 stored by FUN_0007aa90
+#   0x169bf50 stored by FUN_0007acc0
+#   0x169c0c0 stored by FUN_0007acc0
+#   0x169c1a0 stored by FUN_0007af00
+#   0x169c220 stored by FUN_0007b160
+#   0x169c4a0 stored by FUN_0007b940
+#   0x169caa0 stored by FUN_0007cc30
+#   0x169cb20 stored by FUN_0007cc30
+#   0x169cb50 stored by FUN_0007ce60
+#   0x169cc70 stored by FUN_0007ce60
+#   0x169ccf0 stored by FUN_0007d0c0
+#   0x169cdc0 stored by FUN_0007d2e0
+#   0x169d3f0 stored by FUN_0007eaf0
+#   0x169d650 stored by FUN_0007f3f0
+#   0x169d990 stored by FUN_00080690
+#   0x169da10 stored by FUN_00080690
+#   0x169dae0 stored by FUN_00080690
+#   0x169dc50 stored by FUN_00080690
+#   0x169de10 stored by FUN_00080690
+#   0x169dee0 stored by FUN_00080690
+#   0x169e0f0 stored by FUN_00080690
+#   0x169e6c0 stored by FUN_00080690
+#   0x169ee20 stored by FUN_00080690
+#   0x169f080 stored by FUN_00080690
+#   0x169f150 stored by FUN_00080690
+#   0x169f400 stored by FUN_00082050
+#   0x169f490 stored by FUN_00082290
+#   0x169f510 stored by FUN_00082290
 #   0x169ffd0 stored by FUN_000831a0
+#   0x16a06d0 stored by FUN_00085190
+#   0x16a0750 stored by FUN_00085190
+#   0x16a0970 stored by FUN_00086380
+#   0x16a1040 stored by FUN_00087e60
+#   0x16a1200 stored by FUN_00087e60
+#   0x16a17a0 stored by FUN_00089940
+#   0x16a18b0 stored by FUN_00089ee0
+#   0x16a1f90 stored by FUN_0008b510
+#   0x16a23d0 stored by FUN_0008b890
+#   0x16a2560 stored by FUN_0008bde0
+#   0x16a2dc0 stored by FUN_0008e460
+#   0x16a2fd0 stored by FUN_0008e6b0
+#   0x16a3000 stored by FUN_0008e8c0
+#   0x16a3120 stored by FUN_0008e8c0
 #   0x16a31d0 stored by FUN_00048b20
 #   0x16a32a0 stored by _ZN14hkHardwareInfoC1Ev | home hkHardwareInfo.cpp
 #   0x16a36b0 stored by FUN_0009a8a0
+#   0x16a37f0 stored by FUN_000a6d60
+#   0x16a3820 stored by FUN_000a2260 FUN_000a47e0
 #   0x16a3b90 stored by FUN_000b31c0 FUN_000b32e0
 #   0x16a3bd0 stored by FUN_000b3490 FUN_000b35d0 FUN_000b3670 FUN_000b3700
+#   0x16a3c10 stored by FUN_000c68d0
+#   0x16a3c40 stored by FUN_000d7270
+#   0x16a3cf0 stored by FUN_000f04f0
 #   0x16a3d40 stored by FUN_00048b20
+#   0x16a3d90 stored by FUN_0010dbc0
+#   0x16a3dc0 stored by FUN_0010bf50
 #   0x16a3e30 stored by FUN_0012a8c0
 #   0x16a3f50 stored by FUN_00140a60 FUN_00140e70
 #   0x16a4100 stored by FUN_00151250
@@ -54,6 +222,7 @@
 #   0x16a4380 stored by FUN_0014e100 FUN_00150240
 #   0x16a4bf0 stored by FUN_00159ca0
 #   0x16a4ed0 stored by FUN_00150330 FUN_0015dee0
+#   0x16a55b0 stored by FUN_0016af40
 #   0x16a5680 stored by FUN_0016e0e0 FUN_0016eaa0
 #   0x16a5700 stored by FUN_00048b20
 #   0x16a5820 stored by FUN_00048b20
@@ -62,20 +231,23 @@
 #   0x16a5b40 stored by FUN_00176420
 #   0x16a5b70 stored by FUN_00176420 FUN_00176b70
 #   0x16a6110 stored by FUN_0017ef90
+#   0x16a6400 stored by FUN_00183350
 #   0x16a6470 stored by FUN_00181b10
 #   0x16a64f0 stored by FUN_00183810 FUN_00183c40
 #   0x16a6530 stored by FUN_00183db0 FUN_00183f00
-#   0x16a6660 stored by FUN_0018d640
-#   0x16a6690 stored by FUN_0018d640
-#   0x16a66c0 stored by FUN_0018d640
-#   0x16a6720 stored by FUN_0018d640
+#   0x16a6660 stored by _ZN23BroadPhaseTasks0018d640C1Ev
+#   0x16a6690 stored by _ZN23BroadPhaseTasks0018d640C1Ev
+#   0x16a66c0 stored by _ZN23BroadPhaseTasks0018d640C1Ev
+#   0x16a6720 stored by _ZN23BroadPhaseTasks0018d640C1Ev
 #   0x16a6820 stored by FUN_00199f80 FUN_0019a230
 #   0x16a68d0 stored by FUN_0019a7c0
 #   0x16a6910 stored by FUN_0019a950 FUN_0019ab10 FUN_0019abf0
 #   0x16a6960 stored by FUN_0019be50 FUN_0019c150
 #   0x16a69e0 stored by FUN_0019d450 FUN_0019d500
+#   0x16a6c70 stored by FUN_0019f710
+#   0x16a6d90 stored by FUN_0019f710
 #   0x16a7580 stored by FUN_001a0310 FUN_001a03a0 _ZN11LoadedImageC1ERK8RawImage
-#   0x16a7620 stored by FUN_001b0a40 FUN_00202800 FUN_00230b40 FUN_00333580 FUN_003ef750 FUN_003fd0a0 FUN_00402fe0 FUN_00416db0 FUN_004215c0 FUN_00441670 FUN_004477a0 FUN_00459230 FUN_0045b4e0 FUN_0045b650 FUN_0045b7d0 FUN_004a6bf0 FUN_004af420 FUN_0052bd30 FUN_0083e370 FUN_0088b2b0 FUN_008bcc60 FUN_00948040 FUN_00a190f0 FUN_00a1cd10 FUN_00a4a4e0 FUN_00a94780 FUN_00b4b3d0 FUN_00b5cf90 FUN_00b5d170 FUN_00b5d6e0 FUN_00cb5f90 FUN_00cfebd0 FUN_00d886b0 FUN_00fe1b70 FUN_01388680 FUN_01388780 FUN_013b2640 FUN_013cc010 FUN_013ccbf0 FUN_013cd140 FUN_013cd1f0
+#   0x16a7620 stored by FUN_001b0a40 FUN_00202800 FUN_00230b40 FUN_00333580 FUN_003ef750 FUN_003fd0a0 FUN_00402fe0 FUN_00416db0 FUN_004215c0 FUN_00441670 FUN_004477a0 FUN_00459230 FUN_0045b4e0 FUN_0045b650 FUN_0045b7d0 FUN_004a6bf0 FUN_004af420 FUN_0052bd30 FUN_0083e370 FUN_0088b2b0 FUN_008bcc60 FUN_00948040 FUN_00a036a0 FUN_00a190f0 FUN_00a1cd10 FUN_00a4a4e0 FUN_00a94780 FUN_00aa8750 FUN_00aa9e70 FUN_00b4b3d0 FUN_00b5cf90 FUN_00b5d170 FUN_00b5d6e0 FUN_00cb5f90 FUN_00cfebd0 FUN_00d886b0 FUN_00eac8a0 FUN_00fe1b70 FUN_01388680 FUN_01388780 FUN_013b2640 FUN_013cc010 FUN_013ccbf0 FUN_013cd140 FUN_013cd1f0
 #   0x16a7650 stored by FUN_001bbc30 FUN_00203010
 #   0x16a76d0 stored by FUN_002030d0
 #   0x16a76f8 stored by FUN_00204080 FUN_00204320 FUN_007609e0
@@ -183,7 +355,7 @@
 #   0x16a9ce0 stored by FUN_00472250 FUN_004723e0 FUN_00472510
 #   0x16a9d18 stored by FUN_00472640 FUN_00472d70 FUN_00472e10
 #   0x16a9d90 stored by FUN_00475070 FUN_00476080
-#   0x16a9dc8 stored by FUN_0047dd70 FUN_0047de60
+#   0x16a9dc8 stored by FUN_0047a6e0 FUN_0047dd70 FUN_0047de60 | home vm-core.cpp
 #   0x16a9e30 stored by FUN_0047a6e0 | home vm-core.cpp
 #   0x16a9e70 stored by FUN_0047e4e0 FUN_00490030 FUN_00490090
 #   0x16a9f58 stored by FUN_004a9fb0 FUN_004aa160 FUN_004aa220
@@ -265,7 +437,7 @@
 #   0x16ac3a8 stored by FUN_00684a90 FUN_00685840
 #   0x16ac538 stored by FUN_00690a30 FUN_00690db0
 #   0x16ac5b0 stored by FUN_0069b4c0 FUN_0069b740
-#   0x16ac620 stored by FUN_0069d390 FUN_0069d3d0
+#   0x16ac620 stored by FUN_0069cb70 FUN_0069d390 FUN_0069d3d0
 #   0x16ac670 stored by FUN_006d2bf0 FUN_006d5ba0
 #   0x16ac6e8 stored by FUN_006e0900 FUN_006e09c0
 #   0x16ac720 stored by FUN_006e0770 FUN_006e0a80 FUN_006e0ab0
@@ -476,7 +648,8 @@
 #   0x16b2260 stored by FUN_00a54260
 #   0x16b2298 stored by FUN_00a5d530 FUN_00a5e250
 #   0x16b22e0 stored by FUN_00a64050 FUN_00a64370 FUN_00a64410
-#   0x16b2358 stored by FUN_00a66790 FUN_00a667e0
+#   0x16b2328 stored by FUN_00733dc0
+#   0x16b2358 stored by FUN_00733dc0 FUN_00a66790 FUN_00a667e0
 #   0x16b2388 stored by FUN_00a773b0 FUN_00a77570
 #   0x16b23c0 stored by FUN_00a7aff0
 #   0x16b23f8 stored by FUN_00a7b250
@@ -521,6 +694,7 @@
 #   0x16b3960 stored by FUN_00abf490
 #   0x16b39e8 stored by FUN_00ad5a00 FUN_00ad5c50
 #   0x16b3a20 stored by FUN_00ad5c50 FUN_00ad5e20 FUN_00ad5ee0
+#   0x16b3a60 stored by FUN_004a2de0
 #   0x16b3a88 stored by FUN_00ad6850 FUN_00ad6a00
 #   0x16b3ae8 stored by FUN_004ae010 FUN_004ae230 FUN_00ad82b0
 #   0x16b3b08 stored by FUN_00ad8d30 FUN_00ad8ef0
@@ -658,6 +832,8 @@
 #   0x16b7ad8 stored by FUN_00be56b0 FUN_00be6290
 #   0x16b7b58 stored by FUN_00be8ca0 FUN_00be9e30
 #   0x16b7ba0 stored by FUN_00bea370 FUN_00beae10
+#   0x16b7be8 stored by FUN_005269a0 FUN_00aec5d0
+#   0x16b7c08 stored by FUN_005269a0 FUN_00aec5d0
 #   0x16b7c28 stored by FUN_00bed400 FUN_00c32940
 #   0x16b7c98 stored by FUN_00bedb40 FUN_00beec30 FUN_00beed20
 #   0x16b7cd0 stored by FUN_00bef8c0 FUN_00bf0180 FUN_00bf0290
@@ -666,9 +842,11 @@
 #   0x16b7d98 stored by FUN_00bf5de0 FUN_00bf7ad0
 #   0x16b7dd0 stored by FUN_00bf7d70 FUN_00bf8e10
 #   0x16b7e18 stored by FUN_00bff9d0 FUN_013a1bf0
-#   0x16b7e70 stored by FUN_0059d7d0 FUN_00c136f0 FUN_00c13820 FUN_00c13c70
+#   0x16b7e70 stored by FUN_0059d7d0 FUN_0059e8d0 FUN_00c136f0 FUN_00c13820 FUN_00c13c70 FUN_00d4b940
 #   0x16b7f00 stored by FUN_00c18d90 FUN_00c19090
 #   0x16b7f48 stored by FUN_00c18f10 FUN_00c19860
+#   0x16b7f80 stored by FUN_005269a0 FUN_00aec5d0 FUN_00c0e890
+#   0x16b7f98 stored by FUN_005269a0 FUN_00aec5d0 FUN_00c0e890
 #   0x16b7fb0 stored by FUN_00c19b00 FUN_00c19c80 FUN_00c19d70
 #   0x16b8040 stored by FUN_00c19f10 FUN_00c1a5e0
 #   0x16b8088 stored by FUN_00c1af80
@@ -720,6 +898,11 @@
 #   0x16b92f8 stored by FUN_00ccfbe0 FUN_00ccfd00 FUN_00ccfdb0 FUN_013aedc0 FUN_013aef00
 #   0x16b9330 stored by FUN_00cd36c0 FUN_00cd37e0 FUN_00cd3890
 #   0x16b93f8 stored by FUN_00cd7ee0 FUN_00cd8720
+#   0x16b9588 stored by FUN_00cdde30
+#   0x16b95a8 stored by FUN_00cdde30
+#   0x16b95e8 stored by FUN_00cdde30
+#   0x16b9608 stored by FUN_00cdde30
+#   0x16b9628 stored by FUN_00cdde30
 #   0x16b96c8 stored by FUN_00ced570 FUN_00ced620
 #   0x16b9720 stored by FUN_00ced790 FUN_00cee190 FUN_00cee240
 #   0x16b97a0 stored by FUN_00cef1f0 FUN_00eb2710
@@ -736,6 +919,7 @@
 #   0x16b9b20 stored by FUN_00cf5c50 FUN_00cf6440 FUN_00cf6670
 #   0x16b9ba0 stored by FUN_00cf7fb0
 #   0x16b9c70 stored by FUN_00cfc3e0 FUN_013b3740 FUN_013b37f0
+#   0x16b9cb0 stored by FUN_001afd70
 #   0x16b9e38 stored by FUN_00d00a40
 #   0x16b9e98 stored by FUN_00c1e120 FUN_00d0b590
 #   0x16b9f78 stored by FUN_00d11040 FUN_00d11330
@@ -773,8 +957,8 @@
 #   0x16baf50 stored by FUN_00d96d30 FUN_00d96d70
 #   0x16bb0c0 stored by FUN_00da4250
 #   0x16bb578 stored by FUN_00db4100 FUN_00db4280
-#   0x16bba90 stored by FUN_00dd2650 FUN_00dd2820 FUN_00dd2890 | home vm-core.cpp
-#   0x16bc170 stored by FUN_00dd2820 FUN_00dd2890 FUN_013c84c0 FUN_013c8500
+#   0x16bba90 stored by FUN_00dd2650 FUN_00dd2820 FUN_00dd2890 FUN_00de4790 | home vm-aux.cpp vm-core.cpp
+#   0x16bc170 stored by FUN_00dd2820 FUN_00dd2890 FUN_00de43d0 FUN_00de4790 FUN_013c84c0 FUN_013c8500 | home vm-aux.cpp
 #   0x16bd3b0 stored by FUN_00b981a0 FUN_00df0f40 | home ComputeInterface.cpp
 #   0x16bd420 stored by FUN_00df3830
 #   0x16bd480 stored by FUN_00d418a0 FUN_00d41de0 FUN_00df9a60
@@ -801,7 +985,7 @@
 #   0x16bda38 stored by FUN_00e5a170 FUN_00e5a350
 #   0x16bdaa8 stored by FUN_00e5acb0 FUN_00e5aea0 FUN_00e5af00
 #   0x16bdb18 stored by FUN_00c63220 FUN_00e5b150
-#   0x16bdb40 stored by FUN_00e5b7e0 FUN_00e5b830
+#   0x16bdb40 stored by FUN_00c4fdb0 FUN_00e5b7e0 FUN_00e5b830
 #   0x16bdc60 stored by FUN_00e5c990 FUN_00e5d180
 #   0x16bdd60 stored by FUN_00e628f0 FUN_00e62a90
 #   0x16bdda8 stored by FUN_00e62c90 FUN_00e62e50
@@ -898,8 +1082,8 @@
 #   0x16c0f10 stored by FUN_010453a0 FUN_010458a0
 #   0x16c0f78 stored by FUN_01047db0 FUN_01048190
 #   0x16c0fb0 stored by FUN_0104c7a0 FUN_0104f130
-#   0x16c1088 stored by FUN_010640d0 FUN_01064110
-#   0x16c10d8 stored by FUN_01064210 FUN_01064250
+#   0x16c1088 stored by FUN_01061610 FUN_010640d0 FUN_01064110
+#   0x16c10d8 stored by FUN_01061610 FUN_01064210 FUN_01064250
 #   0x16c1128 stored by FUN_010644d0 FUN_010647f0
 #   0x16c1160 stored by FUN_01064ad0 FUN_010679f0
 #   0x16c11a8 stored by FUN_01068420 FUN_010686b0
@@ -1033,13 +1217,17 @@
 #   0x16c7290 stored by FUN_00294950 FUN_0134a180 FUN_0134a250
 #   0x16c72b8 stored by FUN_01349f20
 #   0x16c72e0 stored by FUN_00326c10 FUN_0033b550 FUN_0050cb90 FUN_005ccd60 FUN_006233e0 FUN_00657410 FUN_00840f90 FUN_0085eb50 FUN_0091bb60 FUN_0092ddb0 FUN_00953d00 FUN_0096ac80 FUN_00991fe0 FUN_009f5f50 FUN_00ad9d20 FUN_00b389c0 FUN_00bdd2f0 FUN_00bf1e30 FUN_00bf5f90 FUN_00c7aee0 FUN_00c93c40 FUN_00cf2ea0 FUN_00d00e40 FUN_00d5d260 FUN_00e01d40 FUN_00e03660 FUN_00e10cd0 FUN_0134a310 FUN_0134a6f0
-#   0x16c7328 stored by FUN_0134a810 FUN_0134a860 FUN_0134b4e0
+#   0x16c7328 stored by FUN_003073c0 FUN_0033a570 FUN_00356580 FUN_003a8a90 FUN_003bbd50 FUN_00441580 FUN_004417e0 FUN_0044e520 FUN_00459b30 FUN_00516950 FUN_0051a910 FUN_0051b980 FUN_0134a810 FUN_0134a860 FUN_0134b4e0
+#   0x16c7368 stored by FUN_0033a570 FUN_00385e20 FUN_003a72f0 FUN_003a8a90 FUN_003af570 FUN_003b3b30 FUN_003b68c0 FUN_003cf0a0 FUN_003d6ac0 FUN_004477a0 FUN_0045a990 FUN_00516950 FUN_0051b980 FUN_0051edf0 FUN_0051fad0 FUN_00522400 FUN_005229a0 FUN_00ac0230
 #   0x16c7388 stored by FUN_0134a770 FUN_0134a7c0
 #   0x16c73a8 stored by FUN_002aa7b0 FUN_0069d690 FUN_0077c7f0 FUN_00840f90 FUN_00909420 FUN_0092ddb0 FUN_00953d00 FUN_00a2b8c0 FUN_00ad9d20 FUN_00b774e0 FUN_00bf0510 FUN_00bf1e30 FUN_00bf5f90 FUN_00c7aee0 FUN_00ca4420 FUN_00cd0750 FUN_00d1ffc0 FUN_00dfe9a0 FUN_00e10cd0 FUN_00e82e80 FUN_011004c0 FUN_0134ae30
 #   0x16c73f0 stored by FUN_00326c10 FUN_0035bad0 FUN_004080d0 FUN_005abe60 FUN_005c1890 FUN_005fb1d0 FUN_006233e0 FUN_007f50d0 FUN_008068c0 FUN_0080b770 FUN_0085eb50 FUN_0087afb0 FUN_00925b30 FUN_00953d00 FUN_0096ac80 FUN_009f5f50 FUN_00a1d2d0 FUN_00a9af80 FUN_00b4d530 FUN_00b790b0 FUN_00b83fb0 FUN_00bdc120 FUN_00bf0510 FUN_00c7aee0 FUN_00e10cd0 FUN_00e82e80 FUN_0134b170 FUN_0134b430
-#   0x16c7438 stored by FUN_0134b220 FUN_0134b370 FUN_0134b3c0 FUN_0134b600
+#   0x16c7438 stored by FUN_002ee7a0 FUN_00317150 FUN_00373310 FUN_0037c730 FUN_003bd7e0 FUN_003c8210 FUN_004417e0 FUN_004477a0 FUN_00459b30 FUN_0051b980 FUN_00910de0 FUN_0134b220 FUN_0134b370 FUN_0134b3c0 FUN_0134b600
+#   0x16c7458 stored by FUN_003a7c40 FUN_003cf0a0 FUN_003e4c10
+#   0x16c7478 stored by FUN_0030fe90 FUN_0033a570 FUN_003a8a90
 #   0x16c7498 stored by FUN_00326c10 FUN_0035bad0 FUN_00657410 FUN_00991fe0 FUN_00ccdee0 FUN_00ceb0b0 FUN_00d57330 FUN_0134c7d0
 #   0x16c74e0 stored by FUN_00326c10 FUN_00537dd0 FUN_0069d690 FUN_00b389c0 FUN_00b4d530 FUN_00bf1e30 FUN_00ce9810 FUN_00d1ffc0 FUN_0134c9e0
+#   0x16c7540 stored by FUN_0033b1d0
 #   0x16c7560 stored by FUN_0033e000 FUN_0134cb30
 #   0x16c7598 stored by FUN_003442a0 FUN_0134d360 FUN_0134d3d0
 #   0x16c7608 stored by FUN_00344a60
@@ -1093,11 +1281,13 @@
 #   0x16cad28 stored by FUN_00429840 FUN_013509e0 FUN_01350aa0
 #   0x16cad60 stored by FUN_002370b0 FUN_01350b60 FUN_01350be0
 #   0x16cada8 stored by FUN_00474ae0
-#   0x16cae00 stored by FUN_01387f60 FUN_01387ff0 FUN_01388080 FUN_013880d0
+#   0x16cade0 stored by FUN_0072e720 FUN_009ff690 FUN_00a11900
+#   0x16cae00 stored by FUN_00729f90 FUN_0072e720 FUN_00759ff0 FUN_009ff690 FUN_00a11900 FUN_01387f60 FUN_01387ff0 FUN_01388080 FUN_013880d0
 #   0x16cae20 stored by FUN_004a8e50 FUN_01352de0 FUN_01352e90
 #   0x16cae48 stored by FUN_013534f0 FUN_01353b30
 #   0x16cae70 stored by FUN_005073e0 FUN_00704230 FUN_009fa9f0 FUN_01354610 FUN_013546c0 FUN_013cf780
 #   0x16caee0 stored by FUN_01354780 FUN_01354f30
+#   0x16caf48 stored by FUN_00516610
 #   0x16cafb0 stored by FUN_01357f40 FUN_01358000
 #   0x16cafe0 stored by FUN_01358100 FUN_013581c0
 #   0x16cb010 stored by FUN_01358290 FUN_01358350
@@ -1126,6 +1316,7 @@
 #   0x16cb788 stored by FUN_01368dd0 FUN_0136a140
 #   0x16cb7b0 stored by FUN_01368710
 #   0x16cb7d0 stored by FUN_013671a0
+#   0x16cb850 stored by FUN_00729f90 FUN_00759ff0
 #   0x16cb8b0 stored by FUN_0136b940 FUN_0136bba0
 #   0x16cb8f8 stored by FUN_00783b40 FUN_0136b9f0
 #   0x16cb920 stored by FUN_007a1fb0
@@ -1172,7 +1363,7 @@
 #   0x16cc2d0 stored by FUN_008791f0 FUN_01373420 FUN_01373550
 #   0x16cc308 stored by FUN_00879380 FUN_01373690
 #   0x16cc340 stored by FUN_008794f0 FUN_01373810
-#   0x16cc378 stored by FUN_01372e50
+#   0x16cc378 stored by FUN_00886dc0 FUN_01372e50
 #   0x16cc398 stored by FUN_008f5760 FUN_008f5830 FUN_00901550 FUN_00b225a0 FUN_00b22670 FUN_00ca3bd0 FUN_00cafd10
 #   0x16cc478 stored by FUN_009232e0 FUN_013755d0 FUN_01375710
 #   0x16cc5b8 stored by FUN_009232e0 FUN_013752a0
@@ -1287,7 +1478,7 @@
 #   0x16cec90 stored by FUN_00b0d680 FUN_0138fb20 FUN_0138fc40
 #   0x16ced88 stored by FUN_00b14040 FUN_01392660
 #   0x16cedb0 stored by FUN_00b1fbe0 FUN_01392a50
-#   0x16cede8 stored by FUN_00b32dd0
+#   0x16cede8 stored by FUN_00b2e380 FUN_00b32dd0
 #   0x16cee20 stored by FUN_00b32dd0 FUN_01393650 FUN_01393670
 #   0x16cee58 stored by FUN_00b32dd0 FUN_01393730
 #   0x16ceea0 stored by FUN_00b37ce0
@@ -1307,6 +1498,7 @@
 #   0x16cfb98 stored by FUN_00b40f10
 #   0x16cffb0 stored by FUN_00b43190 FUN_0139b550
 #   0x16cffe8 stored by FUN_00b45ce0
+#   0x16d0040 stored by FUN_00a092d0
 #   0x16d0060 stored by FUN_00b49c30 FUN_0139be10 FUN_0139bf00
 #   0x16d0098 stored by FUN_00b49df0 FUN_0139bff0 FUN_0139c0c0
 #   0x16d00d0 stored by FUN_00b4a980 FUN_0139c190 FUN_0139c250
@@ -1316,7 +1508,7 @@
 #   0x16d0180 stored by FUN_00b98790 FUN_00bd2190 FUN_00bd2650 FUN_0139e050 FUN_0139e090 FUN_0139e450
 #   0x16d01a8 stored by FUN_00b8c400 FUN_0139dbd0
 #   0x16d0228 stored by FUN_00b98590
-#   0x16d0270 stored by FUN_0139e160 FUN_0139e190
+#   0x16d0270 stored by FUN_00bb7bc0 FUN_00bb96e0 FUN_00bba900 FUN_0139e160 FUN_0139e190
 #   0x16d0298 stored by FUN_00bf9780 FUN_013a05f0
 #   0x16d0300 stored by FUN_00bfa840 FUN_00bfb1c0 FUN_00bfbb40 FUN_00bfc4c0 FUN_00bfce40 FUN_00bfd7c0 FUN_0139ef10 FUN_0139f070 FUN_0139f1d0 FUN_0139f330 FUN_0139f490 FUN_0139f5f0 FUN_0139f750 FUN_0139f8b0 FUN_0139fa10 FUN_0139fdd0 FUN_0139ff30 FUN_013a02f0 FUN_013a0450 FUN_013a0520
 #   0x16d0338 stored by FUN_00bfa840 FUN_0139ef10 FUN_0139f070
@@ -1380,6 +1572,7 @@
 #   0x16d2118 stored by FUN_00d0daf0 FUN_013b55b0 FUN_013b5610
 #   0x16d2178 stored by FUN_00d0df00 FUN_013b4d70
 #   0x16d21d8 stored by FUN_00d10e60 FUN_013b5680 FUN_013b5740
+#   0x16d2210 stored by FUN_00d338a0
 #   0x16d2230 stored by FUN_00d34e50
 #   0x16d2280 stored by FUN_00d45e30 FUN_013b8b60
 #   0x16d22b8 stored by FUN_00d48470 FUN_013b8d30 FUN_013b8e50
@@ -1401,6 +1594,7 @@
 #   0x16d2710 stored by FUN_00d7c6b0 FUN_013bb7c0 FUN_013bb860
 #   0x16d2748 stored by FUN_00d7f280 FUN_013bbd00
 #   0x16d27b8 stored by FUN_00d881a0
+#   0x16d2818 stored by FUN_00de43d0 | home vm-aux.cpp
 #   0x16d2d20 stored by FUN_00df4b70 FUN_013c8b50 | home InstanceBufferCompute.cpp
 #   0x16d2d40 stored by FUN_00dfca70 FUN_013c96e0 FUN_013c9710 | home TileCull.cpp
 #   0x16d2d60 stored by FUN_00e538f0 FUN_013c9a40
@@ -1424,38 +1618,45 @@
 #   0x16d3248 stored by FUN_00e93310
 #   0x16d3280 stored by FUN_00e93a70
 #   0x16d3308 stored by FUN_00e99520
+#   0x16d3408 stored by FUN_00e9a380
 #   0x16d34d0 stored by FUN_013cc900 FUN_013cc950
 #   0x16d3550 stored by FUN_00eac8a0 FUN_013cc010
 #   0x16d3578 stored by FUN_00ea5be0
 #   0x16d3628 stored by FUN_013ccbf0
 #   0x16d3650 stored by FUN_00ebbba0
 #   0x16d3670 stored by FUN_00ebf4d0 FUN_00f0e070 FUN_00f0e3d0 FUN_00f0e560 FUN_013cd2a0 FUN_013cd310
-#   0x16d3690 stored by FUN_013d2990
-#   0x16d36e0 stored by FUN_013d2a00
+#   0x16d3690 stored by FUN_00f320c0 FUN_013d2990
+#   0x16d36e0 stored by FUN_00f320c0 FUN_013d2a00
 #   0x16d3750 stored by FUN_013d30f0 FUN_013d3140
 #   0x16d3778 stored by FUN_00f3fb20 FUN_013d2460
+#   0x16d3798 stored by FUN_00f39850 FUN_00f4de30
+#   0x16d3800 stored by FUN_00f39850
 #   0x16d3840 stored by FUN_013d3040 FUN_013d3090
 #   0x16d3868 stored by FUN_013d2f90 FUN_013d2fe0
 #   0x16d3908 stored by FUN_013d2b70 FUN_013d2c10
 #   0x16d3950 stored by FUN_013d2ee0 FUN_013d2f30
 #   0x16d3978 stored by FUN_013ce050 FUN_013d1600
+#   0x16d39a8 stored by FUN_00f4de30
 #   0x16d39f0 stored by FUN_013d3970
-#   0x16d3a30 stored by FUN_013d62f0
-#   0x16d3a80 stored by FUN_013d6360
+#   0x16d3a30 stored by FUN_00f602f0 FUN_013d62f0
+#   0x16d3a80 stored by FUN_00f602f0 FUN_013d6360
 #   0x16d3ad0 stored by FUN_00f66e00 FUN_00f66ef0 FUN_013d63d0 FUN_013d64c0 FUN_013d65a0 FUN_013d6640
 #   0x16d3b18 stored by FUN_013d5c30
 #   0x16d3b48 stored by FUN_013d31a0 FUN_013d35e0
 #   0x16d3b70 stored by FUN_013d6840 FUN_013d6890
 #   0x16d3b98 stored by FUN_013d66e0 FUN_013d6790
 #   0x16d3be0 stored by FUN_013da160 FUN_013da1b0
-#   0x16d3c08 stored by FUN_00f7d610
+#   0x16d3c08 stored by FUN_00f7baf0 FUN_00f7c020 FUN_00f7d610
+#   0x16d3c70 stored by FUN_00f7baf0
+#   0x16d3cb8 stored by FUN_00f7baf0
+#   0x16d3d00 stored by FUN_00f7c020 FUN_00f7d610
 #   0x16d3d48 stored by FUN_00f7d610
 #   0x16d3d88 stored by FUN_013d6f30 FUN_013d9d50 FUN_013d9ec0 FUN_013da020 FUN_013da0c0
 #   0x16d3dd0 stored by FUN_013d8b70 FUN_013d9060
 #   0x16d3df0 stored by FUN_013d8d70 FUN_013d8fa0 FUN_013d93b0
 #   0x16d3e10 stored by FUN_013d8e40
 #   0x16d3e30 stored by FUN_013d6d50 FUN_013d8710
-#   0x16d3e60 stored by FUN_013d7400
+#   0x16d3e60 stored by FUN_00f7d610 FUN_013d7400
 #   0x16d3e80 stored by FUN_013dc380 FUN_013dc420 FUN_013dc4f0
 #   0x16d3ec8 stored by FUN_013da210 FUN_013dbbd0
 #   0x16d3ef8 stored by FUN_00fba720 FUN_013e1850 FUN_013e1b30 FUN_013e1ea0 FUN_013e2310 FUN_013e2990 FUN_013e30b0 FUN_013e34f0 FUN_013e3c00 FUN_013e3ca0 FUN_013e3d40 FUN_013e3e20 FUN_013e3f30 FUN_013e40a0 FUN_013e4200
@@ -1484,8 +1685,8 @@
 #   0x16d4ed0 stored by FUN_00fe9df0 FUN_013ed3c0 FUN_013ed4f0 FUN_013ed580
 #   0x16d4f90 stored by FUN_00fe9df0 FUN_013ed3c0
 #   0x16d5050 stored by FUN_013ed250 FUN_013ed2e0
-#   0x16d50b0 stored by FUN_013e96a0 FUN_013eb840
-#   0x16d5120 stored by FUN_013e99e0 FUN_013eb8a0
+#   0x16d50b0 stored by FUN_00ff8ba0 FUN_013e96a0 FUN_013eb840
+#   0x16d5120 stored by FUN_00fec060 FUN_00ff1940 FUN_013e99e0 FUN_013eb8a0
 #   0x16d5140 stored by FUN_00ff6830 FUN_00ff6950 FUN_00ff69f0 FUN_00ff8740 FUN_00ff8880 FUN_00ffde40 FUN_00ffe050
 #   0x16d5188 stored by FUN_013e9310 FUN_013ecea0
 #   0x16d51b8 stored by FUN_013ef2e0 FUN_013ef330
@@ -1505,6 +1706,7 @@
 #   0x16d56e8 stored by FUN_013fb5f0 FUN_013fb820 FUN_01400e60
 #   0x16d5710 stored by FUN_013fac20 FUN_013fb820
 #   0x16d5760 stored by FUN_013fb0e0 FUN_013fb5f0
+#   0x16d5800 stored by FUN_010abee0 FUN_011b6430
 #   0x16d5878 stored by FUN_014068b0 FUN_01406b30
 #   0x16d5a48 stored by FUN_0140d9d0 FUN_0140dc00 FUN_01411be0
 #   0x16d5a70 stored by FUN_0140d390 FUN_0140dc00
@@ -1528,12 +1730,16 @@
 #   0x16d6408 stored by FUN_014591d0 FUN_01459400 FUN_0145f630
 #   0x16d6468 stored by FUN_01458df0 FUN_014591d0
 #   0x16d64d8 stored by FUN_01458a70 FUN_01459400
+#   0x16d6528 stored by FUN_011b66e0
 #   0x16d65a8 stored by FUN_01467d60
 #   0x16d65f0 stored by FUN_01467f40 FUN_01468170 FUN_0146dae0
 #   0x16d6618 stored by FUN_01467570 FUN_01468170
 #   0x16d6668 stored by FUN_01467a30 FUN_01467f40
 #   0x16d68e8 stored by FUN_01478250 FUN_014782f0
 #   0x16d6930 stored by FUN_01475840 FUN_01477560
+#   0x16d6960 stored by FUN_01203d30 FUN_01210dc0
+#   0x16d69c8 stored by FUN_01210dc0
+#   0x16d6a10 stored by FUN_01203d30
 #   0x16d6a50 stored by FUN_014785c0
 #   0x16d6a90 stored by FUN_0121a680 FUN_01222fb0 FUN_012230a0 FUN_0147a300 FUN_0147a3f0 FUN_0147a4d0 FUN_0147a570
 #   0x16d6ad8 stored by FUN_0121a680 FUN_01479f50
@@ -1546,8 +1752,8 @@
 #   0x16d75d0 stored by FUN_012564c0 FUN_01483140 FUN_01483270 FUN_01483300
 #   0x16d7690 stored by FUN_012564c0 FUN_01483140
 #   0x16d7750 stored by FUN_01482fd0 FUN_01483060
-#   0x16d77b0 stored by FUN_0147f7e0 FUN_014815c0
-#   0x16d7820 stored by FUN_0147fb20 FUN_01481620
+#   0x16d77b0 stored by FUN_01265270 FUN_0147f7e0 FUN_014815c0
+#   0x16d7820 stored by FUN_01258730 FUN_0125e010 FUN_0147fb20 FUN_01481620
 #   0x16d7840 stored by FUN_01262f00 FUN_01263020 FUN_012630c0 FUN_01264e10 FUN_01264f50
 #   0x16d7888 stored by FUN_0147f600 FUN_01482c20
 #   0x16d78b8 stored by FUN_014836d0 FUN_01485060 FUN_01485100

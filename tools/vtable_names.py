@@ -202,7 +202,11 @@ class Walker:
                 # the vtables is the same store
                 static = dst.mem.base == X86_REG_RIP or (
                     base in regs and dst.mem.disp == 0 and not self.in_relro(regs[base]))
-                if (base in this and dst.mem.disp == 0 or static) and not dst.mem.index \
+                # `mov [rbp-X], vptr`: an object on the function's own stack,
+                # built in place (the visitor the compressed mesh's slot 29
+                # hands to the tree walk, 0x127a7a)
+                local = base in ("rbp", "rsp")
+                if (base in this and dst.mem.disp == 0 or static or local) and not dst.mem.index \
                         and v is not None and self.in_relro(v) and self.is_address_point(v):
                     seq.append(v)
             elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
@@ -547,7 +551,7 @@ def main(argv=None) -> int:
         f"# {len(conflicts)} names registered with two vtables (below, not written);",
         f"# {len(untraced)} registrations whose constructor's vptr store the walk cannot find (below);",
         f"# {sum(1 for v in shared.values() if len(v) > 1)} vtables registered by more than one class;",
-        f"# {len(unnamed)} vtables stored by a constructor that no type info names (below, with",
+        f"# {len(unnamed)} vtables stored by a function (its object, a static instance or a local) that no type info names (below, with",
         "# the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).",
         "#",
         "# Vtables registered by more than one class (the derived class keeps the base's):",
@@ -574,7 +578,7 @@ def main(argv=None) -> int:
         print(f"| names with two vtables | {len(conflicts)} |")
         print(f"| constructor vptr not traced | {len(untraced)} |")
         print(f"| vtables named by ruling | {len(elf._derived)} |")
-        print(f"| vtables stored by a constructor, unnamed | {len(unnamed)} |")
+        print(f"| vtables stored by a function, unnamed | {len(unnamed)} |")
     else:
         print(f"vtable_names: {len(rows)} rows, {len(unmangled)} unmangled, {len(conflicts)} conflicts, "
               f"{len(untraced)} untraced, {len(elf._derived)} derived, {len(unnamed)} unnamed -> {out.relative_to(REPO_ROOT)}")
