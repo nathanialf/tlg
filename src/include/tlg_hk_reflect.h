@@ -1393,6 +1393,19 @@ template <typename T> struct hkRefPtr {
         pntr = 0;
     }
 
+    /* A new object held: a reference taken on it before the old one's is
+     * released (the modifier manager's filter, 0x667b0). */
+    void operator=(T *e)
+    {
+        if (e) {
+            e->addReference();
+        }
+        if (pntr) {
+            pntr->removeReference();
+        }
+        pntr = e;
+    }
+
     T *operator->() const
     {
         return pntr;
@@ -8633,6 +8646,9 @@ class hkpPrismaticConstraintData : public hkpConstraintData
 
     /* Slot 7 (0x7e8a0): valid when both frames are orthonormal and the
      * limit's minimum is not above its maximum. */
+    /* The motor set (0x7e7c0; the game at 0xeb15fa), the references
+     * swapped. derived name. */
+    void FUN_0007e7c0(hkpConstraintMotor *motor);
     hkBool unknownVirtual7() const;
 
     void FUN_0007e870(
@@ -9466,9 +9482,10 @@ class hkpRagdollConstraintData : public hkpConstraintData
         hkpSetupStabilizationAtom setupStabilization;
         hkpRagdollMotorConstraintAtom ragdollMotors;
         hkpAngFrictionConstraintAtom angFriction;
-        u8 unknown110[0x20]; /* twistLimit */
+        hkpTwistLimitConstraintAtom twistLimit;
         hkpConeLimitConstraintAtom coneLimit;
-        u8 unknown150[0x20]; /* planesLimit */
+        /* A cone limit atom too, as the ragdoll limits' (0x7dda4). */
+        hkpConeLimitConstraintAtom planesLimit;
         hkpBallSocketConstraintAtom ballSocket;
     };
 
@@ -9478,6 +9495,11 @@ class hkpRagdollConstraintData : public hkpConstraintData
     hkpRagdollConstraintData(hkFinishLoadedObjectFlag flag);
 
     virtual ~hkpRagdollConstraintData();
+
+    /* Slot 7 (0x7dd30): as the ragdoll limits' test, after the ball and
+     * socket's stabilized method asks for the stabilization atom, the
+     * cone's maximum allowed up to pi itself. */
+    hkBool unknownVirtual7() const;
 
     void FUN_0007dce0(
         hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
@@ -9494,6 +9516,13 @@ class hkpRagdollConstraintData : public hkpConstraintData
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     void FUN_0007dad0(hkBool enable); /* derived name */
+
+    /* The three motors set (0x7dff0, 0x7e170, 0x7e0b0; the game at 0xeb16a0
+     * to 0xeb16d3): a reference taken on the new one before the old one's
+     * is released. derived names. */
+    void FUN_0007dff0(hkpConstraintMotor *motor);
+    void FUN_0007e170(hkpConstraintMotor *motor);
+    void FUN_0007e0b0(hkpConstraintMotor *motor);
 
     /* What the solver keeps for the constraint (derived names): its first
      * twelve solver results are the motors' and the friction's. */
@@ -9610,6 +9639,9 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     /* Slot 7 (0x79220): valid when the stabilized method has its setup
      * enabled, both frames are orthonormal and an enabled motor has its
      * limit enabled. */
+    /* The motor set (0x79140; the game at 0xeb159e), the references
+     * swapped. derived name. */
+    void FUN_00079140(hkpConstraintMotor *motor);
     hkBool unknownVirtual7() const;
     /* The motor on or off, the friction the other way, and the runtime's
      * motor and friction results cleared when there is one (0x79100,
@@ -10111,6 +10143,10 @@ class hkxVertexBuffer : public hkReferencedObject
         {
         }
 
+        /* Out of line (0x87cf0; the type info's cleanup 0x87e20 and the
+         * buffer's destructor 0x89fd0 call it): the arrays from the last. */
+        ~VertexData();
+
         hkArray<u32> vectorData;
         hkArray<u32> floatData;
         hkArray<u32> uint32Data;
@@ -10125,6 +10161,13 @@ class hkxVertexBuffer : public hkReferencedObject
     };
 
     hkxVertexBuffer(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x89fd0, slot 0; the deleting destructor 0x8a080, slot
+     * 1): the description's elements, then the vertex data. */
+    virtual ~hkxVertexBuffer();
+
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     VertexData data;
     hkxVertexDescription desc;
@@ -10457,6 +10500,23 @@ class hkResourceHandle : public hkResourceBase
 {
   public:
     hkResourceHandle(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
+
+    /* The interface's slots 5 to 15, in the vtable order of
+     * hkMemoryResourceHandle (0x16a6280), whose overriders the tree names
+     * on that class; slot 15 is named after its overrider (0x17f770). Only
+     * slot 15 is called through the interface so far (the container's
+     * 0x17fa0e). derived names. */
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    virtual void unknownVirtual13();
+    virtual void unknownVirtual14();
+    virtual void FUN_0017f770(void *argument);
 };
 
 /* hkMemoryResourceHandle::ExternalLink (hkClass 0x57c85d0, built at
@@ -10505,6 +10565,10 @@ class hkResourceContainer : public hkResourceBase
 {
   public:
     hkResourceContainer(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
+
+    /* Every resource of this container and of its children, recursively,
+     * appended (0x17fa60, called directly). derived name. */
+    void FUN_0017fa60(hkArray<hkResourceHandle *> &handlesOut);
 };
 
 /* hkMemoryResourceContainer (hkClass 0x57c84b0, built at 0x8e94d: size
@@ -10525,6 +10589,10 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * name. */
     hkMemoryResourceContainer *FUN_001806b0(const char *childName,
                                             const hkMemoryResourceContainer *previous);
+
+    /* Slot 17 (0x17f9b0): every resource, recursively, handed the argument
+     * through its slot 15. derived name. */
+    void FUN_0017f9b0(void *argument);
 
     hkStringPtr name;
     hkMemoryResourceContainer *parent;
@@ -10548,8 +10616,7 @@ void FUN_0008dc50(hkxMeshSection *self);                                      /*
 void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
-void FUN_00087cf0(hkxVertexBuffer::VertexData *self); /* derived name */
-void FUN_0008a890(hkxSkinBinding *self);              /* derived name */
+void FUN_0008a890(hkxSkinBinding *self); /* derived name */
 /* hkSkinBinding (vtable 0x16a3860): slot 0, the complete destructor
  * FUN_000aa370, runs the out-of-line FUN_000aa3d0, which restores the
  * vtable. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the

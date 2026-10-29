@@ -659,6 +659,11 @@ struct ElementPool00198a20 /* derived name */
  * body. The executable holds no vtable of the interface itself (no run of
  * nine __cxa_pure_virtual slots after two destructors), and every allocator
  * met so far overrides all nine, so they are pure. */
+/* A memory walk's callback (derived names): a block's start and size,
+ * whether it is allocated, its pool, and the walker's parameter. */
+typedef void (*MemoryWalkCallback)(void *start, unsigned long size, bool allocated, int pool,
+                                   void *param);
+
 class AllocatorInterface /* derived name */
 {
   public:
@@ -666,12 +671,12 @@ class AllocatorInterface /* derived name */
      * nothing for its second base. */
     virtual ~AllocatorInterface() {}
 
-    virtual void FUN_00003140() = 0;                        /* slot 2; derived name */
-    virtual void FUN_000032e0(int value) = 0;               /* slot 3; derived name */
-    virtual int FUN_000034a0(u64 limit) = 0;                /* slot 4; derived name */
-    virtual u64 FUN_00003580() const = 0;                   /* slot 5; derived name */
-    virtual bool FUN_00002230(int numBytes) = 0;            /* slot 6; derived name */
-    virtual int FUN_00002f10(void *a, void *b) = 0;         /* slot 7; derived name */
+    virtual void FUN_00003140() = 0;             /* slot 2; derived name */
+    virtual void FUN_000032e0(int value) = 0;    /* slot 3; derived name */
+    virtual int FUN_000034a0(u64 limit) = 0;     /* slot 4; derived name */
+    virtual u64 FUN_00003580() const = 0;        /* slot 5; derived name */
+    virtual bool FUN_00002230(int numBytes) = 0; /* slot 6; derived name */
+    virtual int FUN_00002f10(MemoryWalkCallback callback, void *param) = 0; /* slot 7 */
     virtual u64 allocatedBytes() const = 0;                 /* slot 8; derived name */
     virtual void FUN_00002330(int value) = 0;               /* slot 9; derived name */
     virtual int FUN_000035a0(void *pointer, int value) = 0; /* slot 10; derived name */
@@ -711,7 +716,7 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual void FUN_000032e0(int value);
     virtual int FUN_000034a0(u64 limit);
     virtual bool FUN_00002230(int numBytes);
-    virtual int FUN_00002f10(void *a, void *b);
+    virtual int FUN_00002f10(MemoryWalkCallback callback, void *param);
     virtual void FUN_00002330(int value);
     virtual int FUN_000035a0(void *pointer, int value);
 
@@ -802,7 +807,12 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
     virtual void FUN_000032e0(int value);
     virtual int FUN_000034a0(u64 limit);
     virtual u64 FUN_00003580() const;
-    virtual int FUN_00002f10(void *a, void *b);
+    /* Every chunk of every page handed to the callback with its payload,
+     * its size and whether it is in use, the top chunk marked first
+     * (0x12ee0, primary slot 18; the thunk 0x12fb0 holds a copy); a page
+     * without chunks, or a chain that runs out before the page's footer,
+     * ends the walk. derived name. */
+    virtual int FUN_00002f10(MemoryWalkCallback callback, void *param);
     virtual void FUN_00002330(int value);
     virtual int FUN_000035a0(void *pointer, int value);
 
@@ -815,6 +825,16 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * size can be had, tried by allocating one and freeing it again. */
     virtual bool FUN_00002230(int numBytes);
 
+    /* A chunk of a page (derived names, dlmalloc's): its head holds the
+     * size with the in-use bits low (1 the previous chunk's, 2 its own);
+     * the payload follows the 32-byte header. */
+    struct Chunk {
+        u64 prevFoot;
+        u64 head;
+        Chunk *next;
+        Chunk *prev;
+    };
+
     /* A page the allocator took from its server, kept on a ring through
      * +8 with its size at +0x14 (the destructor 0x12370 walks the ring
      * from the sentinel at +0x178). derived names. */
@@ -823,14 +843,20 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
         Page *next;
         u8 unknown10[4];
         int size;
+        /* The page's first chunk and its end; the chunk before the end is
+         * the footer the walk stops at. derived names. */
+        Chunk *firstChunk;
+        char *end;
     };
 
-    u8 unknown10[0x128];
+    u8 unknown10[0x18];
+    Chunk *top;  /* derived name */
+    u64 topSize; /* derived name */
+    u8 unknown38[0x100];
     SingleBlockAllocator blockAllocator; /* derived name; the constructor builds it in place */
     AllocatorBase *server;               /* derived name */
     u8 unknown168[0x10];
-    Page pages; /* derived name: the ring's sentinel */
-    u8 unknown190[0x10];
+    Page pages;            /* derived name: the ring's sentinel */
     u64 totalBlockBytes;   /* derived name */
     u64 totalPayloadBytes; /* derived name */
 };
@@ -845,11 +871,6 @@ void FUN_00003140(TwoBaseAllocator *self);                  /* derived name */
 void FUN_000032e0(TwoBaseAllocator *self, int value);       /* derived name */
 int FUN_000034a0(TwoBaseAllocator *self, u64 limit);        /* derived name */
 int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b); /* derived name */
-
-/* A memory walk's callback (derived names): a block's start and size,
- * whether it is allocated, its pool, and the walker's parameter. */
-typedef void (*MemoryWalkCallback)(void *start, unsigned long size, bool allocated, int pool,
-                                   void *param);
 
 /* The filter TwoBaseAllocator's slot 7 (0x2f10) walks its base allocator
  * through (0x301d): the large blocks the allocator itself holds, sorted
@@ -3076,6 +3097,11 @@ inline void Object0019a7c0::operator delete(void *object, unsigned long numBytes
 }
 
 inline void hknpExternMeshShapeData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxVertexBuffer::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

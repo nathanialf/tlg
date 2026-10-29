@@ -6,5 +6,5 @@
  * destructor. */
 void FUN_00087e20(void *object) /* derived name */
 {
-    FUN_00087cf0(static_cast<hkxVertexBuffer::VertexData *>(object));
+    static_cast<hkxVertexBuffer::VertexData *>(object)->~VertexData();
 }

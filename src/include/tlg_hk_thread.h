@@ -262,6 +262,12 @@ class RefArrays /* derived name */ : public hkReferencedObject
      * factory task at 0x14e69f, 0x18d960 six times). derived name. */
     EntryId FUN_000922f0(hknpTaskInterface *task, int value8, int valueA);
 
+    /* Room reserved for a number of entries in the first array and the
+     * references, and for a number of ints in the second (0x92510; the
+     * world's step stages at 0x504d8 and 0x50e28, the solver factory task at
+     * 0x14e68e). derived name. */
+    void FUN_00092510(int numEntries, int numInts);
+
     hkArray<Entry10> array10;                 /* derived name */
     hkArray<int> array20;                     /* derived name */
     hkArray<void *> array30;                  /* derived name */
