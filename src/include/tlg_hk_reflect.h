@@ -390,6 +390,18 @@ template <typename T, int N> struct hkInplaceArray : public hkArray<T> {
     T storage[N];
 };
 
+/* An array whose first N elements live in the object on a 16-byte
+ * boundary: an int of padding after the array, then the storage (the
+ * collide task's array at +0x40 starts its storage at +0x60, the world
+ * contexts' at +0x2a0 at +0x2c0). derived
+ * name. */
+template <typename T, int N> struct hkInplaceArrayAligned16 : public hkArray<T> /* derived name */ {
+    hkInplaceArrayAligned16() : hkArray<T>(storage, 0, N) {}
+
+    int padding;
+    T storage[N] __attribute__((aligned(16)));
+};
+
 /* hkBitField (type info registered at 0x9e2b, size 0x18): its member
  * storage at +0 (record 0x168d2f0), a hkBitFieldStorage of hkArray<unsigned
  * int> (the scoped type names at 0x14b332f onward) whose words are at +0
@@ -2816,11 +2828,27 @@ class hknpCharacterProxyCinfo : public hkReferencedObject
     u8 unknownC[0xa4];
 };
 
-/* hknpTyremarksInfo: vtable 0x169a080, finish callback FUN_00042a20. */
+class hknpTyremarksWheel;
+
+/* hknpTyremarksInfo: vtable 0x169a080, finish callback FUN_00042a20; from
+ * its record table at 0x1697b80 (hkClass 0x57c1210, 0x28 bytes):
+ * minTyremarkEnergy and maxTyremarkEnergy at +0xc and +0x10, tyremarksWheel
+ * (an array of pointers to hknpTyremarksWheel) at +0x18. */
 class hknpTyremarksInfo : public hkReferencedObject
 {
   public:
-    hknpTyremarksInfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpTyremarksInfo(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), tyremarksWheel(flag)
+    {
+    }
+
+    /* Slot 6 (0x69150): a wheel's points as strips, left and right of each
+     * point in turn, from the oldest. derived name. */
+    void FUN_00069150(const hknpVehicleInstance *vehicle, int wheel, Vec4 *stripsOut) const;
+
+    float minTyremarkEnergy;
+    float maxTyremarkEnergy;
+    hkArray<hknpTyremarksWheel *> tyremarksWheel;
 };
 
 /* hknpTyremarksWheel: vtable 0x1697af0, finish callback FUN_00042a50. */
@@ -2844,6 +2872,13 @@ class hknpTyremarksWheel : public hkReferencedObject
 
     /* Out of line (0x42900, slot 0): the points given back. */
     virtual ~hknpTyremarksWheel();
+
+    /* A point counted from the oldest: the points are a ring that starts
+     * at currentPosition (inline in 0x69150). derived name. */
+    const hknpTyremarkPoint &getTyremarkPoint(int point) const
+    {
+        return tyremarkPoints.data[(currentPosition + point) % numPoints];
+    }
 
     int currentPosition;
     int numPoints;
@@ -4029,7 +4064,11 @@ struct LodQuery000426b0 /* derived name */
     const LodSource000426b0 *source; /* derived name */
 };
 
-class hknpShape : public hkReferencedObject
+/* Aligned to 16 bytes: its hkClass is 0x30 bytes with members to +0x28,
+ * hknpDecoratorShape's 0x40 with members to +0x34 and hknpCompositeShape's
+ * 0x60 with members to +0x54 (the hkClass sizes, built at 0x38fd9,
+ * 0x38b95 and 0x71755). */
+class alignas(16) hknpShape : public hkReferencedObject
 {
   public:
     /* The shape flags: the item names are the executable's strings (from
@@ -4917,6 +4956,21 @@ class hknpWorldObject6c0 : public hknpWorldObject6c0Base /* derived name */
     hknpWorldObject6c0();
 };
 
+/* Storage a triangle shape is built in (derived names): 0xe0 bytes, the
+ * triangle hknpGlobals keeps at +0x10 copied in and its convex radius (at
+ * +0x14) set, by 0x78160. */
+void FUN_00078160(void *buffer, float convexRadius); /* derived name */
+
+struct InplaceTriangle00078160 /* derived name */
+{
+    InplaceTriangle00078160(float convexRadius)
+    {
+        FUN_00078160(buffer, convexRadius);
+    }
+
+    Vec4 buffer[14];
+};
+
 /* The pool at +0x6f0 of the world (derived names: nothing names it), 0x1f60
  * bytes from the thread's heap, built at 0x50325: eight contexts of 0x3c0
  * bytes from +0x10 (each constructed by 0x167cd0, which sets its index to
@@ -4928,8 +4982,23 @@ class hknpWorldObject6c0 : public hknpWorldObject6c0Base /* derived name */
 struct hknpWorldContextPool /* derived name */
 {
     struct Context {
+        /* Out of line (0x167cd0): no index, the two triangles built with
+         * a radius of 0.01, the entries empty and the three words at
+         * +0x39c, +0x3a0 and +0x3b0 cleared. */
+        Context();
+
         int index;
-        u8 unknown4[0x3bc];
+        u8 unknown4[0x4c];
+        InplaceTriangle00078160 triangle0; /* derived name */
+        InplaceTriangle00078160 triangle1; /* derived name */
+        u8 unknown210[0x90];
+        hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
+        u8 unknown380[0x1c];
+        int unknown39c;
+        void *unknown3a0;
+        u8 unknown3a8[8];
+        int unknown3b0;
+        u8 unknown3b4[0xc];
     };
 
     /* A free context taken from the head of the list (0x16ff90): the head
@@ -5020,6 +5089,9 @@ class hknpWorldObject380 : public hkReferencedObject /* derived name */
     void FUN_00030c10(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
                       void *argument4, void *argument5, void *argument6,
                       hknpWorldObject380Writer *writer);
+    /* Slot 8 (0x310f0): count records in one block from the allocator at
+     * 0x57b8480, their addresses stored in order. derived name. */
+    void FUN_000310f0(int count, hknpWorldObject380Record **recordsOut);
     /* Slot 9 (0x31170): the records' block back to the allocator at
      * 0x57b8480, the record pointers cleared. derived name. */
     void FUN_00031170(hknpWorldObject380Record **records, int count);
@@ -6234,6 +6306,10 @@ class hknpWorldSnapshot : public hkReferencedObject
 
 class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs 0x7d520, vtable 0x1699a90 */
 
+/* hknpMalleableConstraintData's finish constructor (0x67960, the class's
+ * constructor below), called by name from its finish callback while the
+ * class has pure slots this header does not override (as the breakable
+ * data's). derived name. */
 void FUN_00067960(hknpMalleableConstraintData *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
@@ -6427,13 +6503,47 @@ struct hknpCompressedMeshShapeData : public hkReferencedObject {
  * 0x16a5180, 0x16a5990, 0x16ca050) keep it. */
 extern const hkClass D_57c2cf8; /* hknpCompositeShape's hkClass */
 
+/* hknpSparseCompactMap<hkUint16> (hkClass 0x57bef50, built at 0x38a8d:
+ * 0x28 bytes, no parent; records at 0x16941a0). The second member's
+ * spelling is the record's string. */
+template <typename T> struct hknpSparseCompactMap {
+    /* An empty map: the arrays empty, then the key mask all ones and no
+     * secondary key bits (inline in hknpCompositeShape's constructor,
+     * 0x42e34 to 0x42e67). */
+    hknpSparseCompactMap()
+    {
+        secondaryKeyMask = 0xffffffff;
+        sencondaryKeyBits = 0;
+    }
+
+    /* A loaded image's map is left as loaded. */
+    hknpSparseCompactMap(hkFinishLoadedObjectFlag flag)
+        : primaryKeyToIndex(flag), valueAndSecondaryKeys(flag)
+    {
+    }
+
+    u32 secondaryKeyMask;
+    u32 sencondaryKeyBits;
+    hkArray<u16> primaryKeyToIndex;
+    hkArray<u16> valueAndSecondaryKeys;
+};
+
+/* The cleanup callback of its type info (0x57befa0): the map destroyed in
+ * place (0x389a0). derived name. */
+void FUN_000389a0(void *object); /* derived name */
+
 class hknpCompositeShape : public hknpShape
 {
   public:
     /* Inline: the type info's finish callback FUN_00071690 runs it, and
      * hknpLodShape's finish constructor (0x68160) inlines it before storing
      * its own vtable. */
-    hknpCompositeShape(hkFinishLoadedObjectFlag flag) : hknpShape(flag)
+    /* A new composite shape, out of line (0x42e00; hknpCompoundShape's
+     * constructor 0x412a0 and hknpExternMeshShape's 0x166010 call it):
+     * dispatch type 2, an empty edge welding map, no shape tag codec. */
+    hknpCompositeShape();
+
+    hknpCompositeShape(hkFinishLoadedObjectFlag flag) : hknpShape(flag), edgeWeldingMap(flag)
     {
         if (flag.finishing) {
             flags |= 4;
@@ -6443,6 +6553,12 @@ class hknpCompositeShape : public hknpShape
     virtual ~hknpCompositeShape();
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00042e80 */
+
+    /* The members from the records at 0x169b1d0 (the hkClass is 0x60
+     * bytes, its members end at +0x54; a derived class's first member
+     * goes in the tail from +0x54, hknpLodShape's numLevelsOfDetail). */
+    hknpSparseCompactMap<u16> edgeWeldingMap;
+    u32 shapeTagCodecInfo; /* hkUint32 in the record */
 };
 
 /* hknpCompressedMeshShape (its records at 0x169aa40: data, a pointer to
@@ -6470,7 +6586,6 @@ class hknpCompressedMeshShape : public hknpCompositeShape
     void FUN_00158840(const Mat4 &transform,
                       hkAabb &aabbOut) const; /* vtable slot 7; derived name */
 
-    u8 unknown28[0x30];
     hknpCompressedMeshShapeData *data;
     /* The rest of the record's members (0x169aa40); the counts are not
      * serialized (flags 0x400). */
@@ -6729,6 +6844,7 @@ struct hkpConstraintAtom {
     /* AtomType (its items from 0x169ea70), the ones the constructors
      * store. */
     enum AtomType {
+        TYPE_BRIDGE = 1,
         TYPE_SET_LOCAL_TRANSLATIONS = 3,
         TYPE_SET_LOCAL_ROTATIONS = 4,
         TYPE_STIFF_SPRING = 6,
@@ -7851,14 +7967,19 @@ class hkpWrappedConstraintData : public hkpConstraintData
 extern const hkClassMember D_169d1c0[]; /* derived name */
 
 /* hknpBridgeConstraintAtom (hkClass 0x57c1808, built at 0x61667, 0x18
- * bytes, parent hkpConstraintAtom's 0x57c4650). */
+ * bytes, parent hkpConstraintAtom's 0x57c4650; records 0x1699620):
+ * numSolverResults at +4, constraintData at +8 (not owned, flags 0x200),
+ * padding (four bytes, not serialized) at +0x10. */
 struct hknpBridgeConstraintAtom {
     u16 type; /* derived name */
-    u8 unknown2[0x16];
+    u8 unknown2[2];
+    int numSolverResults;
+    hkpConstraintData *constraintData;
+    u8 padding[4];
 };
 
 /* hknpMalleableConstraintData, polymorphic, 0x40 bytes (type info 0x57c18d8,
- * vtable 0x1699a90; its finish constructor FUN_00067960 runs
+ * vtable 0x1699a90; its finish constructor 0x67960 runs
  * hkpWrappedConstraintData's 0x7d520): members atom (an
  * hknpBridgeConstraintAtom) at +0x20, wantsRuntime at +0x38 and strength
  * (float) at +0x3c (record table 0x16996a0); FUN_00067c40 writes the
@@ -7867,7 +7988,22 @@ struct hknpBridgeConstraintAtom {
 class hknpMalleableConstraintData : public hkpWrappedConstraintData
 {
   public:
+    /* The finish constructor, out of line (0x67960): when finishing, the
+     * atom is bridged to this object again. */
+    hknpMalleableConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual ~hknpMalleableConstraintData();
+
+    /* The atom bridged to this object, its solver results counted from the
+     * wrapped data's runtime info (inline in both constructors, 0x6792d
+     * and 0x6799b). derived name. */
+    void bridgeAtom(bool wantRuntime)
+    {
+        atom.constraintData = this;
+        ConstraintRuntimeInfo info;
+        constraintData->unknownVirtual20(wantRuntime, info);
+        atom.numSolverResults = info.numSolverResults;
+    }
 
     void FUN_00067b00(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     void FUN_00067c40(float newStrength);             /* derived name */
@@ -9431,7 +9567,6 @@ class hknpHeightFieldShape : public hknpCompositeShape
 
     /* The members from its ten records at 0x1694c90 (the reflection
      * initializer 0x398d0 passes them). */
-    u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
     hkAabb aabb;
     Vec4 floatToIntScale;
     Vec4 intToFloatScale;
@@ -9477,8 +9612,8 @@ class hknpExternMeshShape : public hknpCompositeShape
      * name. */
     void FUN_00166370(const Mat4 &transform, hkAabb &aabbOut) const;
 
-    u8 unknown28[0x38]; /* hknpCompositeShape's members, not recovered */
-    void *geometry;
+    /* Aligned to 16 bytes (the record's flag 0x100, ALIGN_16), at +0x60. */
+    alignas(16) void *geometry;
     hknpExternMeshShapeData *boundingVolumeData;
 };
 
@@ -9539,8 +9674,9 @@ class hknpCompoundShape : public hknpCompositeShape
     int FUN_000426b0(const LodContext000426b0 &context, const LodQuery000426b0 &query,
                      int currentLod) const;
 
-    u8 unknown28[0x38];
-    hkFreeListArray<hknpShapeInstance, hknpShapeInstanceId, 8, hknpShapeInstance> instances;
+    /* Aligned to 16 bytes (the record's flag 0x100, ALIGN_16), at +0x60. */
+    alignas(16)
+        hkFreeListArray<hknpShapeInstance, hknpShapeInstanceId, 8, hknpShapeInstance> instances;
     /* The AABB slot 7 transforms (updateAabb recomputes it). */
     hkAabb aabb;
     /* Members from the record table 0x169b520 (hkClass 0x57c2e78, size
@@ -9651,7 +9787,6 @@ struct hknpLodShape : public hknpCompositeShape {
     };
 
     /* Members from the records at 0x16965c0. */
-    u8 unknown28[0x2c];
     int numLevelsOfDetail;
     LevelOfDetailInfo infos[8];
     const hknpShape *shapes[8];
@@ -9855,6 +9990,13 @@ class hknpVehicleWheelCollide : public hkReferencedObject
     hkEnum<WheelCollideType, u8> type;
     u32 wheelCollisionFilterInfo;
 };
+
+/* Its hkClass (0x57c1510), its one enum, WheelCollideType (0x16993b0), and
+ * its member records (0x16992b0), which the reflection initializer 0x5b250
+ * passes. */
+extern const hkClass D_57c1510;         /* hknpVehicleWheelCollide's hkClass */
+extern const hkClassEnum D_16993b0[];   /* derived name */
+extern const hkClassMember D_16992b0[]; /* derived name */
 
 /* hknpVehicleRayCastWheelCollide (type info at 0x7604a, vtable 0x16a4aa0)
  * and hknpVehicleLinearCastWheelCollide (0x38 bytes, type info at 0x708de,
@@ -11066,6 +11208,10 @@ class hkDefaultClassNameRegistry : public hkDynamicClassNameRegistry
     virtual ~hkDefaultClassNameRegistry();
 };
 
+/* The classes of a null-terminated list finished for a class version
+ * (0x19aff0, out of line). derived name. */
+void FUN_0019aff0(const hkClass *const *classes, int classVersion); /* derived name */
+
 /* A class name registry over a static list of classes (derived name;
  * vtable 0x16a63b0, address point 0x16a63c0, no type info), 0x28 bytes: a
  * name at +0x10, the null-terminated list at +0x18, its class version at
@@ -11079,10 +11225,25 @@ class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
   public:
     hkStaticClassNameRegistry(const hkClass *const *classes, int classVersion, const char *name);
 
+    /* The list's classes finished once, before the first lookup (inline in
+     * slots 6 and 7). derived name. */
+    void checkIfReady() const
+    {
+        if (!ready) {
+            FUN_0019aff0(classes, classVersion);
+            ready = 1;
+        }
+    }
+
+    /* Slot 6 (0x181940): the listed class of a name, null when none is.
+     * derived name. */
+    const hkClass *FUN_00181940(const char *className) const;
+
     const char *name;              /* derived name */
     const hkClass *const *classes; /* derived name */
     int classVersion;              /* derived name */
-    int ready;                     /* derived name */
+    /* Set by the lookups, which are const. derived name. */
+    mutable int ready;
 };
 
 /* hkVtableClassRegistry, 0x20 bytes, vtable address point 0x16a6580: the

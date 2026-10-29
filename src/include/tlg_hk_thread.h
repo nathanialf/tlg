@@ -563,17 +563,6 @@ class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived nam
                       hkStringBuf *description) const; /* vtable slot 3; derived name */
 };
 
-/* An array whose first N elements live in the object on a 16-byte
- * boundary: an int of padding after the array, then the storage (the
- * collide task's array at +0x40 starts its storage at +0x60). derived
- * name. */
-template <typename T, int N> struct hkInplaceArrayAligned16 : public hkArray<T> /* derived name */ {
-    hkInplaceArrayAligned16() : hkArray<T>(storage, 0, N) {}
-
-    int padding;
-    T storage[N] __attribute__((aligned(16)));
-};
-
 /* The broad phase's collide task (derived name after its slot 3's format
  * "BroadPhase/Collide %i vs %i"; vtable 0x16a66f0): 0x120 bytes from the
  * thread's heap, sixteen built inline by FUN_0018d640 (from 0x18d820) with
