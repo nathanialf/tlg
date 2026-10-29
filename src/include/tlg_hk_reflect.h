@@ -789,6 +789,11 @@ struct hkTransform {
      * update asks it at 0x5d711, the game at 0xeaf6b7). */
     hkBool32 FUN_00010e70(const hkTransform &other, const Vec4 &epsilon) const;
 
+    /* The identity: the rotation's, a zero translation (inline in
+     * hkpPointToPlaneConstraintData's constructor, 0x7bb2b). Defined after
+     * hkMatrix3's. derived name. */
+    inline void setIdentity();
+
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
@@ -1941,10 +1946,17 @@ class hknpDynamicCompoundShapeData : public hkReferencedObject
     /* Out of line (0x342c0, slot 0): the nodes given back. */
     virtual ~hknpDynamicCompoundShapeData();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* The tree's nodes from +0x10, each an AABB whose max's w the tree
      * keeps its own data in (the shape's slot 32, 0xf04a0, reads a leaf's
      * and clears that w). derived name. */
     hkArray<struct hkAabb> nodes;
+    /* The rest of its one member, aabbTree (an hknpDynamicCompoundShapeTree,
+     * record 0x1692a50, from +0x10), to the class's 0x30 bytes (its hkClass
+     * built at 0x345bb). */
+    u8 unknown20[0x10];
 };
 
 /* hknpCompressedMeshShapeInternals (its own members not yet read) and its
@@ -2565,7 +2577,11 @@ class hkxSpline : public hkReferencedObject
     /* Out of line (0x85e90, slot 0): the control points given back. */
     virtual ~hkxSpline();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<hkxSplineControlPoint> controlPoints;
+    hkBool isClosed;
 };
 
 /* From its hkClass (0x57c6580, size 0x28; records built at run time by 0x86d90): vectors (an array of reals) at +0x10, hint at +0x20. */
@@ -2577,7 +2593,11 @@ class hkxAnimatedVector : public hkReferencedObject
     /* Out of line (0x86c80, slot 0): the array given back. */
     virtual ~hkxAnimatedVector();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<float> vectors;
+    u8 hint; /* an enum of hkUint8 (its record's type and subtype, 0x86e37) */
 };
 
 /* From its record table at 0x16a0d80: selectedTriangles (an array of int) at +0x10. */
@@ -2591,6 +2611,9 @@ class hkxTriangleSelectionChannel : public hkReferencedObject
 
     /* Out of line (0x86f10, slot 0): the array given back. */
     virtual ~hkxTriangleSelectionChannel();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<s32> selectedTriangles;
 };
@@ -2606,6 +2629,9 @@ class hkxVertexVectorDataChannel : public hkReferencedObject
 
     /* Out of line (0x873a0, slot 0): the array given back. */
     virtual ~hkxVertexVectorDataChannel();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<float> perVertexVectors;
 };
@@ -2981,6 +3007,9 @@ class hknpTyremarksWheel : public hkReferencedObject
 
     /* Out of line (0x42900, slot 0): the points given back. */
     virtual ~hknpTyremarksWheel();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* A point counted from the oldest: the points are a ring that starts
      * at currentPosition (inline in 0x69150). derived name. */
@@ -3651,6 +3680,12 @@ inline void hkMatrix3::setIdentity()
     col0 = D_14b2060[29];
     col1 = D_14b2060[30];
     col2 = D_14b2060[31];
+}
+
+inline void hkTransform::setIdentity()
+{
+    rotation.setIdentity();
+    translation = _mm_setzero_ps();
 }
 
 /* The identity transform, rows 29 to 32 of the constant table read as one
@@ -7305,9 +7340,11 @@ struct hkpConstraintAtom {
      * store. */
     enum AtomType {
         TYPE_BRIDGE = 1,
+        TYPE_SET_LOCAL_TRANSFORMS = 2,
         TYPE_SET_LOCAL_TRANSLATIONS = 3,
         TYPE_SET_LOCAL_ROTATIONS = 4,
         TYPE_STIFF_SPRING = 6,
+        TYPE_LIN = 7,
         TYPE_ANG = 13,
         TYPE_PULLEY = 20,
         TYPE_SETUP_STABILIZATION = 23
@@ -7749,16 +7786,28 @@ class hkpRagdollLimitsData : public hkpConstraintData
  * lin at +0x90, record table 0x169c4b0). Its slot 20 (0x7bb90), kept by
  * hkpStiffSpringConstraintData and hkpPulleyConstraintData, wants 8 bytes
  * of runtime and one solver result, or none. */
+/* hkpLinConstraintAtom (its member name a string of the executable):
+ * axisIndex (hkUint8) at +2 after the atom's type, 0x10 bytes. */
+struct hkpLinConstraintAtom {
+    u16 type; /* derived name */
+    u8 axisIndex;
+    u8 padding[0xd];
+};
+
 class hkpPointToPlaneConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom transforms;
-        u8 lin[0x10];
+        hkpLinConstraintAtom lin;
     };
 
     /* The finish constructor (0x7b900): the atoms are left as loaded. */
     hkpPointToPlaneConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new constraint (0x7bae0, called at 0x798c0): both frames the
+     * identity, the plane's normal the first axis. */
+    hkpPointToPlaneConstraintData();
 
     virtual ~hkpPointToPlaneConstraintData();
 

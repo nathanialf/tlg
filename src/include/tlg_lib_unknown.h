@@ -143,9 +143,27 @@ struct ModifierContext0017a000 /* derived name */
     const ModifierSet0017a000 *modifiers; /* derived name */
 };
 
-/* Slot 5 of every modifier whose mask meets the cache's, when any does
- * (0x17a000; the collision detectors' slot 3 at 0x72d30 holds the same
- * walk). derived name. */
+/* Slot 5 of every modifier whose mask meets the cache's, when any does: a
+ * set whose masks meet the cache's has at least one modifier. Inline in
+ * the collision detectors' slot 3 (0x72d30) and out of line as 0x17a000.
+ * derived name. */
+inline void fireCacheModifiers(hknpManifoldCollisionCache *cache, /* derived name */
+                               const ModifierContext0017a000 *threadContext, const void *sharedData,
+                               const void *bodyA, const void *bodyB, int value)
+{
+    const u32 enabled = cache->enabledModifiers;
+    const ModifierSet0017a000 *modifiers = threadContext->modifiers;
+    if (modifiers->enabledModifiers & enabled) {
+        int i = 0;
+        do {
+            if (modifiers->entries[i].mask & enabled) {
+                modifiers->entries[i].modifier->unknownVirtual5(threadContext, sharedData, bodyA,
+                                                                bodyB, cache, value);
+            }
+        } while (++i < modifiers->numModifiers);
+    }
+}
+
 void FUN_0017a000(hknpManifoldCollisionCache *cache, const ModifierContext0017a000 *threadContext,
                   const void *sharedData, const void *bodyA, const void *bodyB,
                   int value); /* derived name */
@@ -158,20 +176,20 @@ void FUN_0017a000(hknpManifoldCollisionCache *cache, const ModifierContext0017a0
  * of every modifier of the shared data's list (+0x38) whose mask meets the
  * cache's; slot 4 (0x72dc0) first lets the cache's solver record go
  * (0x34930), unbinds its target and clears the cache's reference. The
- * arguments are passed through unread but for the cache. */
+ * fourth and fifth arguments are not read. */
 class CollisionDetector169b230 /* derived name */
 {
   public:
     virtual ~CollisionDetector169b230();
     virtual void unknownVirtual2();
-    virtual void FUN_00072d30(const void *sharedData, const void *argument2,
+    virtual void FUN_00072d30(const ModifierContext0017a000 *threadContext, const void *sharedData,
                               hknpManifoldCollisionCache *cache, const void *argument4,
-                              const void *argument5, const void *argument6, const void *argument7,
-                              int argument8); /* derived names */
-    virtual void FUN_00072dc0(const void *sharedData, const void *argument2,
+                              const void *argument5, const void *bodyA, const void *bodyB,
+                              int value); /* derived names */
+    virtual void FUN_00072dc0(const ModifierContext0017a000 *threadContext, const void *sharedData,
                               hknpManifoldCollisionCache *cache, const void *argument4,
-                              const void *argument5, const void *argument6, const void *argument7,
-                              int argument8); /* derived names */
+                              const void *argument5, const void *bodyA, const void *bodyB,
+                              int value); /* derived names */
 
     int unknown8;
 };
@@ -2677,6 +2695,36 @@ inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
 }
 
 inline void hknpCompoundShape::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxAnimatedVector::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxTriangleSelectionChannel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxVertexVectorDataChannel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxSpline::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpTyremarksWheel::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpDynamicCompoundShapeData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
