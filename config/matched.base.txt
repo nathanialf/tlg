@@ -1909,3 +1909,7 @@ FUN_0003e4b0 src/libs/unknown/func_0003e4b0.cpp _ZN26hknpCharacterStateClimbing1
 FUN_000831a0 src/libs/unknown/func_000831a0.cpp _ZN21ConstraintData169ffe0C2Ev
 FUN_0000bf40 src/libs/unknown/func_0000bf40.cpp _ZN9hkMatrix312FUN_0000bf40Ev
 FUN_0001a1c0 src/libs/unknown/func_0001a1c0.cpp _ZN12hkQuaternion12FUN_0001a1c0ERK9hkMatrix3
+FUN_0008f080 src/libs/unknown/func_0008f080.cpp _ZN12StreamReader4skipEi
+FUN_00094750 src/libs/unknown/func_000947f0.cpp _ZN13hkBlockStream12FUN_00094750EP10BlockCache6hkBool
+_ZN17RefArrays0005a340D1Ev src/libs/unknown/func_0005a0b0.cpp
+_ZN17RefArrays0005a340D0Ev src/libs/unknown/func_0005a0b0.cpp

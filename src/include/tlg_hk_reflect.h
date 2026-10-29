@@ -537,6 +537,32 @@ struct hkBitField {
         storage.words.data[index >> 5] |= 1 << (index & 31);
     }
 
+    /* Every bit set in another field of the same size set here too (inline
+     * in 0x66080): four words at a time through the vector unit, then the
+     * words left one by one. derived name. */
+    void orWith(const hkBitField &other)
+    {
+        const int numQuadWords = storage.words.size & ~3;
+        int i = 0;
+        if (numQuadWords > 0) {
+            const u32 *const otherWords = other.storage.words.data;
+            u32 *const words = storage.words.data;
+            for (; i < numQuadWords; i += 4) {
+                const __m128 bits = _mm_load_ps(reinterpret_cast<const float *>(words + i));
+                const __m128 otherBits =
+                    _mm_load_ps(reinterpret_cast<const float *>(otherWords + i));
+                _mm_store_ps(reinterpret_cast<float *>(words + i), _mm_or_ps(bits, otherBits));
+            }
+        }
+        if (i < storage.words.size) {
+            u32 *const words = storage.words.data;
+            const u32 *const otherWords = other.storage.words.data;
+            for (; i < storage.words.size; i++) {
+                words[i] |= otherWords[i];
+            }
+        }
+    }
+
     hkBitFieldStorage storage;
 };
 

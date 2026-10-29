@@ -5,6 +5,6 @@
  * the destructor 0x5a230, then the object back to the thread's heap at its recorded size. */
 void FUN_0006b7d0(RefArrays0005a230 *self)
 {
-    FUN_0005a230(self);
+    self->RefArrays0005a230::~RefArrays0005a230();
     freeReferencedObject(self, sizeof(RefArrays0005a230));
 }

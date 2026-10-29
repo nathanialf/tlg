@@ -1337,7 +1337,7 @@ struct Object0003ea60 {
 /* A reference-counted object, 0x70 bytes (vtable 0x169ab20, constructor
  * FUN_0006bc50) holding arrays at +0x38 (16-byte elements, each releasing
  * the object at +8 of the element), +0x48 and +0x60. Its out-of-line
- * destructor FUN_0005a230 restores the vtable and frees the arrays; the
+ * destructor (0x5a230) restores the vtable and frees the arrays; the
  * destructors of two derived classes (vtable 0x1699260 at 0x5a150, and
  * 0x5a14b's) end by running it. */
 class RefArrays0005a230 : public hkReferencedObject /* derived name */
@@ -1347,6 +1347,15 @@ class RefArrays0005a230 : public hkReferencedObject /* derived name */
      * (the world builds it at 0x49594 and, under the derived class, at
      * 0x5a349). */
     RefArrays0005a230(hknpWorld *world);
+
+    /* The destructor (0x5a230, its base variant, which stores the vtable
+     * and frees the arrays; slot 0, 0x6b7c0, jumps to it and slot 1,
+     * 0x6b7d0, calls it). */
+    virtual ~RefArrays0005a230();
+
+    /* The reference-counted class delete (freeReferencedObject; the
+     * derived class's deleting destructor 0x5a150). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* A 16-byte entry (derived names): the next entry of its run, 0xffff
      * at the end, and a signal at +8. */
@@ -1392,8 +1401,6 @@ class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
     hkArray<Element28> unknown70; /* 0x28-byte elements */
     hkArray<Element18> unknown80; /* 0x18-byte elements */
 };
-
-void FUN_0005a230(RefArrays0005a230 *self); /* derived name */
 
 /* A reference-counted object holding a reference to another and a flag
  * (vtable 0x168d3f0, D14: slots 2 to 4 hkReferencedObject's). Built by
@@ -1624,6 +1631,14 @@ class hkObjectCopier : public hkReferencedObject /* derived name */
 class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
 {
   public:
+    /* Out of line (0x19abf0, slot 0; the deleting destructor 0x19ab10,
+     * slot 1): the copier's reference released, then the cache's when
+     * there is one. */
+    virtual ~hkPlatformObjectWriter();
+
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     const Layout00180ef0 &FUN_0019ab00() const; /* derived name */
     /* Slot 6 (0x19ae90): raw bytes to a stream, failing unless all of them
      * were written. derived name. */
@@ -1631,6 +1646,10 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
                           int size); /* vtable slot 6; derived name */
 
     hkObjectCopier *copier; /* derived name */
+    /* Null when the layouts are the host's, else the constructor's argument
+     * with a reference taken, or a new 0x40-byte object of the vtable
+     * 0x16a68d0 (0x19aa7b). derived name. */
+    hkReferencedObject *cache;
 };
 
 /* A polymorphic pool (vtables 0x168cbb0 and 0x16d3390, the second a
@@ -2093,11 +2112,17 @@ struct Object00065f20 /* derived name */
     UnionFind *unionFind;       /* derived name */
     UnionFindParents *parents;  /* derived name */
     Record00065f00 records[12]; /* derived name */
-    u8 unknown190[8];
-    bool open; /* derived name */
+    int numNodes;               /* derived name */
+    int numRecords;             /* derived name: the records in use, 0x66080's count */
+    bool open;                  /* derived name */
 };
 
 void FUN_00065f10(Object00065f20 *self); /* derived name */
+
+/* Every record's bits into one field: the field sized to the first record's
+ * bits and cleared, then each record's bits set in it (0x66080; the caller
+ * at 0x14eb93). derived name. */
+void FUN_00066080(const Object00065f20 *self, hkBitField &bitsOut);
 
 /* An edge of the union-find's stream (derived names): two node indices and
  * a word the join does not read, 12 bytes. */
@@ -2983,6 +3008,16 @@ inline void hkReferencedObjectLock::operator delete(void *object, unsigned long 
 }
 
 inline void hkxBlob::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void RefArrays0005a230::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkPlatformObjectWriter::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
