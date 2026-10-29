@@ -777,6 +777,23 @@ release, and copies the host layout rules (the bytes 08 01 01 01 at
 0x14cb8f6) to its stack; seven slots, 2 to 4 the common 0x270, 0x42d0,
 0x69a0, 5 0x19aca0, 6 0x19ae90.
 
+Round 54's harvest added two rows. RefArrays0005a230 0x169ab10 (the base
+of RefArrays0005a340, whose row names it; no type info and no string names
+it): stored by its constructor 0x6bc50 (already the row
+`_ZN17RefArrays0005a230C1EP9hknpWorld`) and by its base destructor 0x5a230,
+which the round renamed `_ZN17RefArrays0005a230D2Ev`; the matched slot 0
+0x6b7c0 is a jump to it and the matched slot 1 0x6b7d0 calls it, the D1
+calling its own D2 of cookbook 9; eight slots, 5 to 7 0x6b820, 0x6c110,
+0x3b640. Object0019a7c0 0x16a68d0 (named by the tree after its destructor;
+no string names it): the 64-byte cache hkPlatformObjectWriter's constructor
+0x19a950 builds in place at 0x19aa7b when no cache is handed in and the
+layouts differ, two pointer maps at +0x10 and +0x20 and an array at +0x30,
+the public Havok SDK's hkPlatformObjectWriter::Cache by layout, stored also
+by its destructor 0x19a7c0 (slot 0; slot 1 0x19a770 is claimed); five
+slots, nothing beyond hkReferencedObject's. The round's third request,
+0x169b190 (the manifold event modifier whose slots 2 and 3, 0x71520 and
+0x715d0, the round matched), needs no row: nothing claimed stores it.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
