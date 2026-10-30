@@ -57,7 +57,7 @@ int hknpShape::unknownVirtual15(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut
     return 0;
 }
 
-void hknpShape::unknownVirtual14(int faceIndex, Vec4 *planeOut, u8 *valueOut) const
+void hknpShape::unknownVirtual14(int faceIndex, Vec4 *planeOut, hknpFaceAngle *angleOut) const
 {
     HK_ERROR(0x7d77da16, HK_NP_SHAPE_CPP, 83, "Not implemented");
 }

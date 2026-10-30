@@ -1,0 +1,15 @@
+/* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_lib_unknown.h"
+
+/* derived name: slot 10 of hkPackfileWriter's vtable (0x16a6960): a section
+ * added by its tag when the tag is new, a copy of the tag kept with its
+ * index among the sections. */
+void hkPackfileWriter::FUN_0019d0d0(const char *sectionTag)
+{
+    int index;
+    if (sectionTagToIndex.get(sectionTag, &index) == HK_FAILURE) {
+        char *tag = FUN_000180c0(sectionTag);
+        sectionTagToIndex.insert(tag, sectionTags.getSize());
+        sectionTags.pushBack(tag);
+    }
+}

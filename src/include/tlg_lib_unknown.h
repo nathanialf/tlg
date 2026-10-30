@@ -4470,6 +4470,17 @@ inline void DefaultModifierSet::operator delete(void *object, unsigned long numB
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkGeometry::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpConvexPolytopeShape::Connectivity::operator delete(void *object,
+                                                                   unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 /* The on-ground state (derived name; vtable 0x169ae30, address point
  * 0x169ae40, no row yet; constructor 0x6fcf0: gain 0.95, walk speed 10
  * and maximum acceleration 200 from +0xc, then three flags from +0x18, the

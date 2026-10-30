@@ -5160,6 +5160,19 @@ struct LodQuery000426b0 /* derived name */
     const LodSource000426b0 *source; /* derived name */
 };
 
+/* A face's minimum half angle as slot 14 hands it out (derived names): one
+ * byte, its low seven bits the angle in steps of pi / 255 (the polytope's
+ * slot 17, 0x1540a0). It is a struct: every caller's out object sits on an
+ * 8-byte boundary (0x45af0's at -0x30 below the guard at -0x28, 0x18f430's
+ * two at -0x850 and -0x848, 0x1540a0's at -0x48 below a plane at -0x40),
+ * the preferred alignment the data layout gives an aggregate (a0:0:64),
+ * where a lone byte local takes any address (0x1887a0's at -0x171 to
+ * -0x174). */
+struct hknpFaceAngle /* derived name */
+{
+    u8 value; /* derived name */
+};
+
 /* Aligned to 16 bytes: its hkClass is 0x30 bytes with members to +0x28,
  * hknpDecoratorShape's 0x40 with members to +0x34 and hknpCompositeShape's
  * 0x60 with members to +0x54 (the hkClass sizes, built at 0x38fd9,
@@ -5223,7 +5236,7 @@ class alignas(16) hknpShape : public hkReferencedObject
     virtual void unknownVirtual11(const Vec4 &direction, Vec4 *vertexOut) const;
     virtual void unknownVirtual12(const u8 *ids, int numIds, Vec4 *verticesOut) const;
     virtual int unknownVirtual13() const;
-    virtual void unknownVirtual14(int faceIndex, Vec4 *planeOut, u8 *valueOut) const;
+    virtual void unknownVirtual14(int faceIndex, Vec4 *planeOut, hknpFaceAngle *angleOut) const;
     virtual int unknownVirtual15(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut) const;
     /* Slot 16: the default (0x6ea10) reports "Not implemented" and
      * returns 0; hknpConvexShape's (0x45bb0) reads a vector through the
@@ -5322,7 +5335,7 @@ class hknpDecoratorShape : public hknpShape
                       Vec4 *verticesOut) const; /* vtable slot 12; derived name */
     int FUN_0003b170() const;                   /* vtable slot 13; derived name */
     void FUN_0003b180(int faceIndex, Vec4 *planeOut,
-                      u8 *valueOut) const; /* vtable slot 14; derived name */
+                      hknpFaceAngle *angleOut) const; /* vtable slot 14; derived name */
     int FUN_0003b190(int faceIndex, Vec4 *planeOut,
                      Vec4 *verticesOut) const; /* vtable slot 15; derived name */
     int FUN_0003b1a0(const void *argument1, const void *argument2, void *argument3, bool argument4,
@@ -7449,6 +7462,12 @@ class hknpConvexPolytopeShape; /* 0x57bf760; FUN_001520b0, vtable 0x16a4460 */
  * (0x26100 reads them so). */
 struct hkDiagonalizedMassProperties /* derived name */
 {
+    /* Unpacked into full mass properties (0x26490; seven callers, the
+     * shapes' mass builds among them): the inertia rebuilt as the axes'
+     * rotation scaled by the diagonal times the rotation's transpose, then
+     * the volume, the centre of mass and the mass. derived name. */
+    void FUN_00026490(hkMassProperties &out) const;
+
     float volume;
     float mass;
     u8 unknown8[8];
@@ -7949,7 +7968,11 @@ class hknpConvexPolytopeShape : public hknpConvexShape
     int FUN_00072f70() const; /* vtable slot 13; derived name */
     /* Slot 14 (0x72f80, kept by the capsule and triangle shapes): a face's
      * plane and its minimum half angle. derived name. */
-    void FUN_00072f80(int faceIndex, Vec4 &planeOut, u8 &minAngleOut) const;
+    void FUN_00072f80(int faceIndex, Vec4 &planeOut, hknpFaceAngle &minAngleOut) const;
+
+    /* Slot 17 (0x1540a0, kept by the triangle shape): the smallest face
+     * angle. derived name. */
+    float FUN_001540a0() const;
 
     /* The bytes a polytope shape of a class of sizeOfBaseClass bytes
      * needs with its vertices, faces, planes and indices after it, each
@@ -8072,8 +8095,16 @@ class hknpConvexPolytopeShape::Connectivity : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x39950, slot 0): the arrays given back. */
-    virtual ~Connectivity();
+    /* The arrays given back (0x39950, slot 0; the deleting destructor
+     * 0x399d0 holds the same body). Inline, emitted with the vtable where
+     * the object is built (the finish callback 0x39ae0): the executable
+     * holds the complete destructor before the deleting one (cookbook
+     * 187). */
+    inline virtual ~Connectivity() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* From its records at 0x1694f30 (hkClass 0x57bf690, 0x30 bytes). */
     hkArray<Edge> vertexEdges;
@@ -10690,11 +10721,42 @@ class hkxMeshSection : public hkReferencedObject
     hkArray<hkMeshBoneIndexMapping> boneMatrixMap;
 };
 
-/* hkxAttribute's members from its record table at 0x16a23e0: name
- * (hkStringPtr) at +0, value at +8. */
-struct hkxAttribute {
-    hkStringPtr name;
+/* A reference-counted pointer to an hkReferencedObject whose class is looked
+ * up from the object's vtable (derived name: the reflection types it as a
+ * pointer to hkReferencedObject). FUN_00090250 stores a new object, adding a
+ * reference to it and removing one from the old; FUN_000902f0 returns the
+ * object's hkClass through the registry singleton at 0x57c8910 (slot 7), or
+ * null. */
+struct hkRefVariant /* derived name */ {
+    hkReferencedObject *object; /* derived name */
 };
+
+void FUN_00090250(hkRefVariant *self, hkReferencedObject *object); /* derived name */
+const hkClass *FUN_000902f0(const hkRefVariant *self);             /* derived name */
+
+/* hkxAttribute's members from its record table at 0x16a23e0: name
+ * (hkStringPtr) at +0, value at +8; one enum, its records at 0x16a2490.
+ * Its type info's cleanup is this destructor, a body the linker folded
+ * with hknpMaterialDescriptor's (0x66e80): the value's reference released,
+ * then the name destroyed. */
+struct hkxAttribute {
+    inline ~hkxAttribute();
+
+    hkStringPtr name;
+    hkRefVariant value;
+};
+
+inline hkxAttribute::~hkxAttribute()
+{
+    if (value.object) {
+        value.object->removeReference();
+    }
+    value.object = 0;
+}
+
+extern const hkClassMember D_16a23e0[];         /* derived name: hkxAttribute's records */
+extern const hkClassEnum D_16a2490[];           /* derived name: hkxAttribute's enum */
+void FUN_0008b870(void *object, int finishing); /* derived name: its type info's finish callback */
 
 /* hkxEnvironment (hkClass 0x57c8130, parent hkReferencedObject, built at
  * 0x8db07): its finish constructor 0x17d6f0 is out of line, jumped to by the
@@ -10747,19 +10809,6 @@ struct hkRootLevelContainer::NamedVariant {
     hkReferencedObject *variant;
 };
 struct hkMemoryResourceContainer;
-
-/* A reference-counted pointer to an hkReferencedObject whose class is looked
- * up from the object's vtable (derived name: the reflection types it as a
- * pointer to hkReferencedObject). FUN_00090250 stores a new object, adding a
- * reference to it and removing one from the old; FUN_000902f0 returns the
- * object's hkClass through the registry singleton at 0x57c8910 (slot 7), or
- * null. */
-struct hkRefVariant /* derived name */ {
-    hkReferencedObject *object; /* derived name */
-};
-
-void FUN_00090250(hkRefVariant *self, hkReferencedObject *object); /* derived name */
-const hkClass *FUN_000902f0(const hkRefVariant *self);             /* derived name */
 
 /* hkResourceBase (hkClass 0x57c86d0, built at 0x8eb5c: size 0x10, parent
  * hkReferencedObject's, one enum and no members) and hkResourceHandle
@@ -11809,8 +11858,18 @@ class hkGeometry : public hkReferencedObject
     struct Triangle;
 
     hkGeometry(hkFinishLoadedObjectFlag flag);
-    /* Out of line (0x27f50, slot 0): the arrays given back. */
-    virtual ~hkGeometry();
+
+    /* The arrays given back (0x27f50, slot 0; the deleting destructor
+     * 0x27fd0 holds the same body). Inline: the executable holds the
+     * complete destructor before the deleting one, the order a vtable's
+     * first use emits them in, where an out-of-line destructor emits the
+     * deleting one first (3.3 CGCXX.cpp:232-246, cookbook 187); its
+     * translation unit is one that builds the object. */
+    inline virtual ~hkGeometry() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h): the deleting destructor frees through it. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_00093c70(); /* derived name */
 
@@ -13691,6 +13750,9 @@ struct StringMap /* derived name */
     /* Sets the value of a key, adding the entry when it is new (0x91690). */
     void FUN_00091690(const char *key, hkUlong value);                 /* derived name */
     hkUlong FUN_00091900(const char *key, hkUlong defaultValue) const; /* derived name */
+    /* A key's value through the out pointer: HK_FAILURE, the out left
+     * alone, when the key is not in the map (0x919e0). derived name. */
+    hkResult FUN_000919e0(const char *key, hkUlong *valueOut) const;
     /* Every key's string freed to the containers' allocator, then the map
      * emptied through 0x91ac0: the map owns copies of its keys (0x180bf0;
      * 0x19b0c6 calls it). derived name. */
@@ -13700,6 +13762,33 @@ struct StringMap /* derived name */
 /* The map's destructor, out of line (0x915e0): the entries go back to the
  * allocator at 0x57b8480 at (hashMod + 1) * 24 bytes. derived name. */
 void FUN_000915e0(StringMap *self); /* derived name */
+
+/* The map over values of a type (derived names): each value kept as the
+ * pointer-sized word, read back through a word of the lookup's own and
+ * converted. The word is a local of the inlined lookup, so the inliner marks
+ * its lifetime; the packfile writer's section test (0x19d0d0) holds it at
+ * -0x28 beside the guard, and the marked frame leaves the guard's address
+ * read again at the check (3.3 StackColoring.cpp:709, :519-531: two markers
+ * and 16 bytes of frame clear the memory operands MachineCSE needs to share
+ * the GOT load). */
+template <typename V>
+struct StringMapOf : public StringMap /* derived name */
+{
+    hkResult get(const char *key, V *valueOut) const /* derived name */
+    {
+        hkUlong value;
+        if (FUN_000919e0(key, &value) == HK_SUCCESS) {
+            *valueOut = V(value);
+            return HK_SUCCESS;
+        }
+        return HK_FAILURE;
+    }
+
+    void insert(const char *key, V value) /* derived name */
+    {
+        FUN_00091690(key, hkUlong(value));
+    }
+};
 
 /* A map from pointers to pointer-sized values (derived name): 16-byte
  * entries (key, value; a key of -1 marks a free slot) at +0, the count at +8
@@ -13960,7 +14049,12 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
     PointerMap map20;         /* derived name */
     PointerMap map30;         /* derived name */
     PointerMap map40;         /* derived name */
-    u8 unknown50[0xe8];       /* to the size its deleting destructor 0x19c100 frees */
+    u8 unknown50[0x28];       /* derived name */
+    /* The sections' tags, each a copy the writer owns, and each tag's
+     * index among them (slot 10, 0x19d0d0). derived names. */
+    hkArray<char *> sectionTags;
+    StringMapOf<int> sectionTagToIndex;
+    u8 unknownA0[0x98]; /* to the size its deleting destructor 0x19c100 frees */
 };
 
 /* Its out-of-line destructor body: restores the vtable, frees the arrays and

@@ -513,7 +513,7 @@ FUN_0003b120 src/libs/unknown/func_0003b120.cpp _ZNK18hknpDecoratorShape12FUN_00
 FUN_0003b140 src/libs/unknown/func_0003b140.cpp _ZNK18hknpDecoratorShape12FUN_0003b140EPDv4_fi
 FUN_0003b150 src/libs/unknown/func_0003b150.cpp _ZNK18hknpDecoratorShape12FUN_0003b150ERKDv4_fPS0_
 FUN_0003b160 src/libs/unknown/func_0003b160.cpp _ZNK18hknpDecoratorShape12FUN_0003b160EPKhiPDv4_f
-FUN_0003b180 src/libs/unknown/func_0003b180.cpp _ZNK18hknpDecoratorShape12FUN_0003b180EiPDv4_fPh
+FUN_0003b180 src/libs/unknown/func_0003b180.cpp _ZNK18hknpDecoratorShape12FUN_0003b180EiPDv4_fP13hknpFaceAngle
 FUN_0003b190 src/libs/unknown/func_0003b190.cpp _ZNK18hknpDecoratorShape12FUN_0003b190EiPDv4_fS1_
 FUN_0003b1c0 src/libs/unknown/func_0003b1c0.cpp _ZNK18hknpDecoratorShape12FUN_0003b1c0Ev
 FUN_0003b1f0 src/libs/unknown/func_0003b1f0.cpp _ZNK18hknpDecoratorShape12FUN_0003b1f0Ev
@@ -1716,8 +1716,8 @@ FUN_00068030 src/libs/unknown/func_00068030.cpp _ZNK30hknpVehicleDefaultTransmis
 FUN_0007f3f0 src/libs/unknown/func_0007f3f0.cpp _GLOBAL__I_a
 FUN_0016e040 src/libs/unknown/func_0016e040.cpp _ZNK22WorldReference0016e04012FUN_0016e040EPK15BodyKey0016e040
 FUN_000106e0 src/libs/unknown/func_000106e0.cpp _ZN15MersenneTwister12FUN_000106e0Ej
-_ZN10hkGeometryD1Ev src/libs/unknown/func_00027f50.cpp _ZN10hkGeometryD2Ev
-_ZN23hknpConvexPolytopeShape12ConnectivityD1Ev src/libs/unknown/func_00039950.cpp _ZN23hknpConvexPolytopeShape12ConnectivityD2Ev
+_ZN10hkGeometryD1Ev src/libs/unknown/func_00093c60.cpp
+_ZN23hknpConvexPolytopeShape12ConnectivityD1Ev src/libs/unknown/func_00039ae0.cpp
 _ZN30hknpVehicleDefaultTransmissionD1Ev src/libs/unknown/func_00067da0.cpp _ZN30hknpVehicleDefaultTransmissionD2Ev
 FUN_000696e0 src/libs/unknown/func_000696e0.cpp _ZN23hknpClosestHitCollector12FUN_000696e0ERK19hknpCollisionResult
 FUN_0007c100 src/libs/unknown/func_0007c100.cpp _ZNK26hkpVelocityConstraintMotor12FUN_0007c100Ev
@@ -1834,7 +1834,7 @@ FUN_000cd870 src/libs/unknown/func_000cd870.cpp _Z12FUN_000cd870RKDv4_fS1_S1_R10
 FUN_0006e470 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual7ERK4Mat4R6hkAabb
 FUN_0006e6f0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual11ERKDv4_fPS0_
 FUN_0006e790 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual12EPKhiPDv4_f
-FUN_0006e970 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual14EiPDv4_fPh
+FUN_0006e970 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual14EiPDv4_fP13hknpFaceAngle
 FUN_0006eb50 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual18EPKvPv
 FUN_0006f7d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual22EPKvS1_Pv
 FUN_0006f880 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual25EPKvS1_S1_S1_Pv
@@ -2012,6 +2012,14 @@ FUN_0000c1b0 src/libs/unknown/func_0000c1b0.cpp _GLOBAL__I_a
 FUN_0008e380 src/libs/unknown/func_0008e380.cpp _GLOBAL__I_a
 FUN_0008e460 src/libs/unknown/func_0008e460.cpp _GLOBAL__I_a
 FUN_00091d50 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp _Z12FUN_00091d50PKcii
+FUN_0008b890 src/libs/unknown/func_0008b890.cpp _GLOBAL__I_a
 _ZN20hknpHeightFieldShapeD2Ev src/libs/unknown/func_00175c00.cpp
 _ZN30hknpCompressedHeightFieldShapeD1Ev src/libs/unknown/func_00175c00.cpp
 _ZN30hknpCompressedHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp
+FUN_001540a0 src/libs/unknown/func_001540a0.cpp _ZNK23hknpConvexPolytopeShape12FUN_001540a0Ev
+FUN_0019d0d0 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019d0d0EPKc
+FUN_00026490 src/libs/unknown/func_00026490.cpp _ZNK28hkDiagonalizedMassProperties12FUN_00026490ER16hkMassProperties
+FUN_00094060 src/libs/unknown/func_00094060.cpp
+_ZN10hkGeometryD0Ev src/libs/unknown/func_00093c60.cpp
+_ZN23hknpStaticCompoundShapeD0Ev src/libs/unknown/func_000386c0.cpp
+_ZN23hknpConvexPolytopeShape12ConnectivityD0Ev src/libs/unknown/func_00039ae0.cpp
