@@ -18,3 +18,22 @@ void *hkBlockStreamWriter::FUN_000939c0()
     currentNumElements = 0;
     return nextBlock->data;
 }
+
+void hkBlockStreamWriter::FUN_000938f0(int numElements, int elementSize)
+{
+    const int blockSize = int(sizeof(currentBlock->data));
+    const int numFitting = hkMath::min2(numElements, (blockSize - currentByteOffset) / elementSize);
+    if (numFitting > 0) {
+        currentByteOffset += numFitting * elementSize;
+        currentNumElements += numFitting;
+        numElements -= numFitting;
+    }
+    const int numPerBlock = blockSize / elementSize;
+    while (numElements > 0) {
+        FUN_000939c0();
+        const int numInBlock = hkMath::min2(numElements, numPerBlock);
+        numElements -= numInBlock;
+        currentByteOffset = numInBlock * elementSize;
+        currentNumElements = numInBlock;
+    }
+}

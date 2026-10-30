@@ -511,6 +511,11 @@ template <typename T> struct hkArray {
      * tlg_lib_unknown.h). */
     void reserve(AllocatorBase &allocator, int n);
 
+    /* n more elements at the end, the storage grown from the containers'
+     * allocator as reserve grows it, the first of them returned (defined in
+     * tlg_lib_unknown.h; the static class registry's slot 7, 0x181860). */
+    T *expandBy(int n);
+
     /* n elements, the storage grown from the containers' allocator when it
      * is too small and the elements it gains default-constructed, nothing
      * for plain old data or a trivial constructor (defined in
@@ -916,6 +921,13 @@ struct hkMatrix3 {
         col2 = m.col2;
     }
 
+    void setZero()
+    {
+        col0 = _mm_setzero_ps();
+        col1 = _mm_setzero_ps();
+        col2 = _mm_setzero_ps();
+    }
+
     /* The identity, rows 29 to 31 of the constant table (hkpRotationalConstraintData's
      * constructor, 0x83473; defined after the table). */
     void setIdentity();
@@ -1006,6 +1018,13 @@ struct hkMatrix3 {
  * records at 0x1691b50): volume and mass (hkReal) at +0 and +4,
  * centerOfMass at +0x10, inertiaTensor (hkMatrix3) at +0x20. */
 struct hkMassProperties {
+    /* Everything zero (the capsule's mass build, 0x1683f1). */
+    hkMassProperties() : volume(0.0f), mass(0.0f)
+    {
+        centerOfMass = _mm_setzero_ps();
+        inertiaTensor.setZero();
+    }
+
     /* The mass set from the volume at a density, the inertia scaled with
      * it (0x2a560; the compound shape's mass build at 0x421da asks it of
      * each child's properties). derived name. */
@@ -3718,6 +3737,11 @@ struct hkcdFourAabb {
      * finish constructor, 0x21a7f). derived name. */
     void setEmpty(); /* derived name */
 
+    /* All four boxes the one box (its coordinates broadcast, the minima
+     * first; the tree query 0x187610). Defined after hkAabb. derived
+     * name. */
+    inline void setAll(const struct hkAabb &aabb);
+
     hkVector4 lx;
     hkVector4 hx;
     hkVector4 ly;
@@ -3957,6 +3981,15 @@ class hkMeshVertexBuffer : public hkReferencedObject
   public:
     hkMeshVertexBuffer(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
+    /* A buffer of its own made (0x1692028), and whether the buffer can be
+     * shared rather than copied (slot 6, the multiple buffer's 0x24bd0):
+     * the interface's slots 5 and 6, named after hkMultipleVertexBuffer's
+     * overriders. derived names. */
+    hkMeshVertexBuffer() {}
+
+    virtual hkMeshVertexBuffer *FUN_00025590();
+    virtual bool FUN_00024bd0() const;
+
     struct LockedVertices; /* derived name */
 
     /* What a lock asks for (derived names): the first vertex and the number
@@ -4037,7 +4070,17 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
     };
 
     hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
+    /* The copy, out of line (0x24fb0; slot 5 makes one). */
+    hkMultipleVertexBuffer(const hkMultipleVertexBuffer &other);
     virtual ~hkMultipleVertexBuffer();
+
+    /* From the thread's heap (tlg_lib_unknown.h; slot 5's copy). */
+    static void *operator new(unsigned long numBytes);
+
+    /* Slot 5 (0x25590): the buffer itself, one reference more, when it is
+     * sharable; else a copy, sharable when every buffer it holds is, its
+     * construction complete. derived name. */
+    hkMeshVertexBuffer *FUN_00025590();
 
     const hkClass *getClassType() const;                /* vtable slot 3, FUN_000238c0 */
     bool FUN_00024bd0() const;                          /* vtable slot 6; derived name */
@@ -4741,6 +4784,16 @@ struct hkAabb {
     Vec4 max; /* derived name */
 };
 
+inline void hkcdFourAabb::setAll(const hkAabb &aabb)
+{
+    lx.quad = broadcast<0>(aabb.min);
+    ly.quad = broadcast<1>(aabb.min);
+    lz.quad = broadcast<2>(aabb.min);
+    hx.quad = broadcast<0>(aabb.max);
+    hy.quad = broadcast<1>(aabb.max);
+    hz.quad = broadcast<2>(aabb.max);
+}
+
 /* hkcdAdf (hkClass 0x57bb290, built at 0x1f260: size 0x80, seven members
  * from the records at 0x16900c0): an adaptive distance field over a box,
  * its nodes and its 16-bit voxels in two arrays. FUN_0001f1e0 is its type
@@ -4780,7 +4833,17 @@ void FUN_00093f30(const Vec4 *points, int numPoints, hkAabb &aabbOut);
  * records at 0x168ebc0): a box in integer coordinates, min (three
  * hkUint32), expansionMin (three hkUint8) and expansionShift at +0xc, max,
  * expansionMax and shapeKeyByte at +0x1c. */
-struct hkAabbUint32 {
+struct alignas(16) hkAabbUint32 {
+    /* Copied as its two quads, both read before either is written (the
+     * sorted boxes gathered at 0x184dc0). */
+    void operator=(const hkAabbUint32 &other)
+    {
+        const Vec4 low = reinterpret_cast<const Vec4 *>(&other)[0];
+        const Vec4 high = reinterpret_cast<const Vec4 *>(&other)[1];
+        reinterpret_cast<Vec4 *>(this)[0] = low;
+        reinterpret_cast<Vec4 *>(this)[1] = high;
+    }
+
     u32 min[3];
     u8 expansionMin[3];
     u8 expansionShift;
@@ -4794,6 +4857,27 @@ struct hkAabbUint32 {
  * one, halved; max one more), with the key in the fourth word of min
  * (0x184e20; the broad phase's 0x189540 converts every body's box). */
 void FUN_00184e20(hkAabbUint32 *aabbOut, const hkAabb &aabb, int key);
+
+/* Havok's radix sort (derived names): an item is a 32-bit key and the
+ * caller's word; FUN_00184770 sorts a count of them, a multiple of four,
+ * through a buffer of as many. */
+namespace hkRadixSort /* derived name */
+{
+struct SortData32 {
+    u32 key;
+    u32 userData;
+};
+
+void FUN_00184770(SortData32 *data, int numObjects, SortData32 *buffer); /* derived name */
+} // namespace hkRadixSort
+
+/* derived name: integer boxes sorted by their first minimum coordinate
+ * (0x184d50; the broad phase's 0x189540 calls it after padding the boxes
+ * to a multiple of four with keys of all ones): the keys and indices
+ * sorted, the boxes gathered in that order into the second array, then
+ * copied back. */
+void FUN_00184d50(hkAabbUint32 *aabbs, int numAabbs, hkArray<hkRadixSort::SortData32> &sortArray,
+                  hkArray<hkAabbUint32> &sortedAabbs);
 
 /* derived name: how far inner lies inside outer, the smallest of the six
  * margins in every lane (negative when it sticks out); 0x14a2b0, called at
@@ -5525,6 +5609,15 @@ class hknpShapeKeyMask;
  * negated, at +8 (the sphere's mass properties, 0x168340). */
 struct MassConfig00168340 /* derived name */
 {
+    /* The defaults, set from the density down (0x157139 stores -1000,
+     * then 1.5, then quality 0): a density of 1000, the factor 1.5. */
+    MassConfig00168340()
+    {
+        massOrNegativeDensity = -1000.0f;
+        inertiaFactor = 1.5f;
+        quality = 0;
+    }
+
     int quality;
     float inertiaFactor;
     float massOrNegativeDensity;
@@ -8067,6 +8160,10 @@ struct hkDiagonalizedMassProperties /* derived name */
      * the volume, the centre of mass and the mass. derived name. */
     void FUN_00026490(hkMassProperties &out) const;
 
+    /* Set from full mass properties, the inertia diagonalized (0x26300;
+     * the capsule's mass build calls it at 0x168440). derived name. */
+    void FUN_00026300(const hkMassProperties &properties);
+
     float volume;
     float mass;
     u8 unknown8[8];
@@ -8078,7 +8175,10 @@ struct hkDiagonalizedMassProperties /* derived name */
 /* Every lane's sign bit (derived name), shared by the library's vector code. */
 extern const Vec4 D_14b41d0;
 
-struct hkCompressedMassProperties {
+/* 8-aligned (its packed vectors' alignment): hknpShapeMassProperties holds
+ * it at +0x10, after the reference count's word (the record table
+ * 0x1694330). */
+struct alignas(8) hkCompressedMassProperties {
     /* Packed from the diagonalized properties (0x26100; the shapes' mass
      * builds call it): the centre of mass and the inertia as packed vectors,
      * the axes' quaternion in 16 bits a lane (30000 for one), the mass and
@@ -8120,6 +8220,35 @@ class hknpShapeMassProperties : public hkReferencedObject
 
     hkCompressedMassProperties compressedMassProperties;
 };
+
+/* A capsule's volume, mass and inertia, from its axis and radius at unit
+ * mass (0x28b80, the inertia computer's; the capsule's mass build calls it
+ * at 0x16842c); a failure for a degenerate capsule. derived name. */
+hkResult FUN_00028b80(const Vec4 &start, const Vec4 &end, float radius, float mass,
+                      hkMassProperties &result); /* derived name */
+
+/* derived name: a capsule's mass properties for a config (0x1683d0; the
+ * capsule shape's slot 28 at 0x73136 falls back to hknpShape's on a
+ * failure): computed at unit mass and diagonalized, then the mass set, a
+ * negative one a density over the volume, and the inertia scaled by it and
+ * by the config's factor. */
+hkResult FUN_001683d0(const MassConfig00168340 &config, const Vec4 &start, const Vec4 &end,
+                      float radius, hkDiagonalizedMassProperties &propertiesOut);
+
+/* What 0x1570f0 makes of a shape's mass properties (derived names): the
+ * centre of mass with the volume in w, the rotation to the principal axes,
+ * and the inertia's diagonal over the mass. */
+struct ShapeMass001570f0 /* derived name */
+{
+    Vec4 centerOfMassAndVolume;
+    Vec4 majorAxisSpace;
+    Vec4 inertiaOverMass;
+};
+
+/* derived name: a shape's mass properties summarized (0x1570f0, called at
+ * 0x17662a): the compressed ones the shape keeps under property key 0xf100
+ * unpacked, or else those its slot 28 builds for the default config. */
+void FUN_001570f0(ShapeMass001570f0 &out, const hknpShape *shape);
 
 /* hknpPhysicsSceneData (hkClass 0x57bf310, 0x28 bytes, parent
  * hkReferencedObject, two members in its record table at 0x1694550; type
@@ -14031,6 +14160,12 @@ struct hkBlockStreamWriter /* derived name */
      * the new block's data (0x939c0, 30 callers). derived name. */
     void *FUN_000939c0();
 
+    /* numElements elements of a size counted as written (0x938f0; the
+     * caller at 0x2d83f writes them itself): as many as fit in the current
+     * block, then each new block (0x939c0's close, inline) filled with as
+     * many as a block holds. derived name. */
+    void FUN_000938f0(int numElements, int elementSize);
+
     /* Finishes the writer (0x93a10): the current block closed as 0x939c0
      * closes it, or given back when nothing was written to it and the
      * stream has another; the writer keeps no block. derived name. */
@@ -15100,6 +15235,24 @@ struct PointerMap /* derived name */
     void FUN_00013db0(AllocatorBase &allocator); /* derived name */
 };
 
+/* The map typed by its key and value (derived name; Havok's hkPointerMap
+ * over the untyped one): a lookup through a value of its own, as the
+ * string map's typed form does (cookbook 196: the class copies' lookup
+ * 0x19a8b1 keeps the guard's address apart). */
+template <typename K, typename V>
+struct PointerMapOf : public PointerMap /* derived name */
+{
+    hkResult get(K key, V *valueOut) const /* derived name */
+    {
+        hkUlong value;
+        if (FUN_00013b90(hkUlong(key), value) == HK_SUCCESS) {
+            *valueOut = V(value);
+            return HK_SUCCESS;
+        }
+        return HK_FAILURE;
+    }
+};
+
 /* The map's own destructor, out of line and empty: the linker folded it
  * onto the shared empty body 0xe5c0 (the vtable class registry's destructor
  * tail-jumps to it, 0x184393). */
@@ -15418,6 +15571,9 @@ class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
     /* Slot 6 (0x181940): the listed class of a name, null when none is.
      * derived name. */
     const hkClass *FUN_00181940(const char *className) const;
+
+    /* Slot 7 (0x181860): every listed class appended. derived name. */
+    void FUN_00181860(hkArray<const hkClass *> &classesOut) const;
 
     const char *name;              /* derived name */
     const hkClass *const *classes; /* derived name */
@@ -15775,6 +15931,15 @@ void FUN_001856f0(const void *tree, const void *argument2, TreeKeyBatch001876e0 
                   const hkAabb &aabb); /* derived name */
 void FUN_001876e0(const void *tree, const void *argument2, TreeKeyCollector001876e0 *collector,
                   const hkAabb &aabb, int argument5); /* derived name */
+
+/* derived names: the four-box form of the query (0x1871f0), and its entry
+ * point 0x187610 (called at 0x10c1c0 and 0x10ddb8 with a fourth argument,
+ * 1, which it hands on), which sets the four boxes from one and batches the
+ * keys for a collector. */
+void FUN_001871f0(const void *tree, const hkcdFourAabb &aabbs, TreeKeyBatch001876e0 *batch,
+                  int argument4); /* derived name */
+void FUN_00187610(const void *tree, const hkAabb &aabb, TreeKeyCollector001876e0 *collector,
+                  int argument4); /* derived name */
 
 /* Three arrays the solver's setup describes for its tasks (derived names;
  * the object at +0x10 of the step's context, 0x6dba1): elements of 0x40

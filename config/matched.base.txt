@@ -2140,3 +2140,12 @@ FUN_0010be70 src/libs/unknown/func_0010be70.cpp
 _ZN23hknpPairCollisionFilterD1Ev src/libs/unknown/func_00167170.cpp
 _ZN23hknpPairCollisionFilterD0Ev src/libs/unknown/func_00167170.cpp
 FUN_001679a0 src/libs/unknown/func_00167170.cpp
+FUN_00184d50 src/libs/unknown/func_00184d50.cpp
+FUN_000938f0 src/libs/unknown/func_000939c0.cpp
+FUN_001570f0 src/libs/unknown/func_001570f0.cpp
+FUN_001683d0 src/libs/unknown/func_001683d0.cpp
+FUN_00181860 src/libs/unknown/func_00181860.cpp
+FUN_00187610 src/libs/unknown/func_00187610.cpp
+FUN_0019a880 src/libs/unknown/func_0019a880.cpp
+FUN_000071a0 src/libs/unknown/func_000071a0.cpp
+FUN_00025590 src/libs/unknown/func_00025590.cpp

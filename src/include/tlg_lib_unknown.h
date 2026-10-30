@@ -633,6 +633,14 @@ template <typename T> inline void hkArray<T>::reserve(AllocatorBase &allocator, 
     }
 }
 
+template <typename T> inline T *hkArray<T>::expandBy(int n)
+{
+    const int oldSize = size;
+    reserve(hkContainerHeapAllocator::get(), oldSize + n);
+    size += n;
+    return data + oldSize;
+}
+
 template <typename T> inline void hkArray<T>::setSize(int n)
 {
     reserve(hkContainerHeapAllocator::get(), n);
@@ -1801,6 +1809,30 @@ struct Layout00180ef0 {
 /* The layout built with the host's rules (0x180ee0). derived name. */
 void FUN_00180ee0(Layout00180ef0 *self); /* derived name */
 
+/* An object graph deep-copied under its class (0x19b2b0, Havok's deep
+ * copier: the copies already made by original, the vtable and type-info
+ * registries and the copy flags, all null or zero from 0x19a8cf). derived
+ * names. */
+void *FUN_0019b2b0(const void *data, const hkClass &klass, PointerMap *previousCopies,
+                   const void *vtableRegistry, const void *typeInfoRegistry,
+                   int flags); /* derived name */
+
+/* What 0x19aca0 keeps at +0x18 of its object (derived names): the classes
+ * it has copied, by original, the classes whose layout is done, and every
+ * copy made. */
+struct ClassCopies0019a880 /* derived name */
+{
+    /* A class's copy, made the first time (0x19a880, three calls from
+     * 0x19aca0): deep-copied as an hkClass, kept, and its member offsets
+     * computed under the layout given. derived name. */
+    hkClass *FUN_0019a880(const hkClass *klass, const Layout00180ef0 &layout);
+
+    u8 unknown0[0x10];
+    PointerMapOf<const hkClass *, hkClass *> copies;
+    PointerMap classesDone;
+    hkArray<hkClass *> allCopies;
+};
+
 /* The member offsets of a class and, when recurse is set, of its members'
  * classes, computed in place under the rules; each class done is added to
  * the map (0x180f50). derived name. */
@@ -1885,6 +1917,8 @@ struct MonitorStreamRange /* derived name */
     const char *end;   /* derived name */
 };
 
+class hkWorkerThreadContext;
+
 class Pool00007880 : public hkReferencedObject /* derived name */
 {
   public:
@@ -1927,9 +1961,16 @@ class Pool00007880 : public hkReferencedObject /* derived name */
      * and end, the array grown from the allocator given. derived name. */
     virtual void FUN_000077b0(hkArray<MonitorStreamRange> &streamsOut, AllocatorBase &allocator);
     /* Slot 12: every worker's monitor stream rewound to its start. */
-    virtual void FUN_00007850();                /* vtable slot 12; derived name */
-    virtual void FUN_000075d0();                /* vtable slot 13; derived name */
-    virtual void FUN_000071a0(int workerIndex); /* vtable slot 14; derived name */
+    virtual void FUN_00007850(); /* vtable slot 12; derived name */
+    virtual void FUN_000075d0(); /* vtable slot 13; derived name */
+    /* Slot 14 (0x71a0): a worker's loop: its thread context built for the
+     * worker's thread, the thread's monitor stream resized to the pool's
+     * buffer size when there is one and its extent recorded, then the
+     * callbacks run (0x7280) until the pool stops. derived name. */
+    virtual void FUN_000071a0(int workerIndex);
+
+    /* The worker's callbacks run (0x7280, not a slot). derived name. */
+    void FUN_00007280(int workerIndex, hkWorkerThreadContext &context);
 
     /* Hands the workers a callback (0x7600, not a slot; inline in slots 5
      * and 6): running set, the callback and its argument stored, each
@@ -1945,7 +1986,9 @@ class Pool00007880 : public hkReferencedObject /* derived name */
      * 0x7410 and 0x7761 take one count per worker). derived name. */
     hkSemaphore workerDone;
     int count; /* derived name */
-    u8 unknown32c[4];
+    /* The size each worker's monitor stream is given (0x71de). derived
+     * name. */
+    int timerBufferSize;
     bool flag330;   /* derived name */
     hkBool running; /* derived name */
     /* To the 0x348 bytes the deleting destructor (0x7390) frees by
@@ -3096,6 +3139,10 @@ struct ThreadBuffer /* derived name */
         }
     }
 
+    /* The stream given a buffer of a size (0xeb90; a pool's worker sizes
+     * its thread's stream with it, 0x7201). derived name. */
+    void FUN_0000eb90(int size);
+
     /* The stream emptied; under a debug memory system the warning value
      * written into the calling thread's stream (0xeca0, called by 0x72fc).
      * derived name. */
@@ -3110,6 +3157,11 @@ struct ThreadBuffer /* derived name */
 
 extern __thread ThreadBuffer *D_16dc078;
 void FUN_0000ead0(ThreadBuffer *buffer); /* derived name */
+
+inline void *hkMultipleVertexBuffer::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
 
 inline void *FileImageSource::operator new(unsigned long numBytes)
 {
