@@ -20,6 +20,30 @@ static int readAll(StreamReader *stream, void *buffer, int size) /* derived name
     return numRead;
 }
 
+int BufferedStreamReader::read(void *dst, int numBytes)
+{
+    int numRead = 0;
+    int numLeft = numBuffered - position;
+    const char *src = buffer + position;
+    while (numBytes > numLeft) {
+        FUN_00017e70(hkAddByteOffset(dst, numRead), src, numLeft);
+        position = 0;
+        numBuffered = 0;
+        numRead += numLeft;
+        const int numFilled = readAll(stream, buffer, bufferSize);
+        if (numFilled == 0) {
+            return numRead;
+        }
+        numBuffered = numFilled;
+        numBytes -= numLeft;
+        numLeft = numFilled;
+        src = buffer + position;
+    }
+    FUN_00017e70(hkAddByteOffset(dst, numRead), src, numBytes);
+    position += numBytes;
+    return numRead + numBytes;
+}
+
 int BufferedStreamReader::FUN_00094490(int numBytes)
 {
     int numSkipped;

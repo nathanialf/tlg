@@ -4853,8 +4853,27 @@ void FUN_00095aa0(hkcdPlanarGeometryPrimitivesPlane *self,
 class hkcdPlanarGeometryPlanesCollection : public hkReferencedObject
 {
   public:
+    /* The cache at +0x30 (derived names), 0x30 bytes from the thread's
+     * heap: an array of 16-byte entries first. */
+    struct Cache {
+        /* Back to the thread's heap at its size (the destructor, 0x9ca1b).
+         * derived name. */
+        static void operator delete(void *object, unsigned long numBytes);
+
+        hkArray<Vec4> entries;
+        u8 unknown10[0x20];
+    };
+
     hkcdPlanarGeometryPlanesCollection(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x9c960, slot 0; the deleting destructor 0x9c910, slot
+     * 1, before it, calls it): the critical section deleted, the cache
+     * deleted and cleared when there is one, then the planes. */
     virtual ~hkcdPlanarGeometryPlanesCollection();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x40 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Allocates the 0x10-byte critical section (0x1830 constructs it) and
      * keeps it at +0x38 (0x9c430). derived name. */
@@ -4862,8 +4881,8 @@ class hkcdPlanarGeometryPlanesCollection : public hkReferencedObject
 
     Vec4 offsetAndScale;
     hkArray<hkcdPlanarGeometryPrimitivesPlane> planes;
-    void *cache;
-    void *criticalAccess;
+    Cache *cache;
+    hkCriticalSection *criticalAccess;
 };
 
 /* hkcdStaticPvs (type info 0x57ba5e0, size 0x70; defined after
@@ -7079,7 +7098,12 @@ struct hknpManifoldCollisionCache /* derived name */
      * names. */
     u8 *solverBlock;
     u16 solverOffset;
-    u8 unknown32[6];
+    /* The friction and restitution combined from the bodies' materials
+     * (0x179ed0): the friction, the static friction above it, the
+     * restitution. derived names. */
+    hkHalf friction;
+    hkHalf staticFrictionExtra;
+    hkHalf restitution;
     /* Set when the manifold is created from the bodies' materials (the
      * modifier slot 0x15db20): the smaller maxContactImpulse as a half and
      * the smaller fractionOfClippedImpulseToApply in 255ths. derived
@@ -7490,6 +7514,8 @@ struct hknpMaterialId {
  * transform's rotation columns hold the center of mass in the body's space
  * (FUN_0003a670 stores it there; the caller at 0x5f45b passes a world point
  * rotated into the body). */
+extern bool D_16dc5f8; /* derived name: whether the bodies release their shapes' references */
+
 struct hknpBody {
     /* The flag bits the world's tests read (derived names): a static body
      * and an active one (0x4d436 tests both, `test 9`), and one that raises
@@ -7498,6 +7524,14 @@ struct hknpBody {
     enum { IS_STATIC = 1 << 0, IS_ACTIVE = 1 << 3, RAISE_TRIGGER_EVENTS = 1 << 4 };
 
     void FUN_0003a670(const Vec4 &centerOfMassLocal); /* derived name */
+
+    /* A free body's link to the next free one, its first word (the body
+     * manager's give back stores it there, 0x160765). derived name. */
+    u32 &nextFreeBodyId()
+    {
+        return *reinterpret_cast<u32 *>(&transform);
+    }
+
     /* The radius of the sphere about a centre of mass in world space that
      * bounds the shape's box in the body's space, kept as a half (0x3a820;
      * the world's body setup at 0x4c121 and six more call it). derived
@@ -7541,6 +7575,110 @@ struct hknpBody {
 
 extern const hkClassMember D_1695350[]; /* derived name: hknpBody's records */
 extern const hkClassEnum D_16956b0[];   /* derived name: its one enum */
+
+struct PointerMap /* derived name */
+{
+    /* An entry: an empty one's key is -1. derived names. */
+    struct Pair {
+        hkUlong key;
+        hkUlong value;
+    };
+
+    /* An empty map: no entries, none in use, the hash mask -1
+     * (hkVtableClassRegistry's creation, 0x1845f5). */
+    PointerMap() : entries(0), numEntries(0), hashMod(-1) {}
+
+    /* The count's top bit: the map does not own its entries. derived
+     * name. */
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
+
+    /* The same out of line (0x13d80; the memory system's object clears its
+     * map at +0x10 with it, 0xb60d). derived name. */
+    void FUN_00013d80();
+
+    /* Every entry marked empty and the count zeroed, the entries kept
+     * (inline in 0x13db0 and 0x13d80). derived name. */
+    void clear()
+    {
+        const int capacity = hashMod + 1;
+        for (int i = 0; i < capacity; i++) {
+            entries[i].key = hkUlong(-1);
+        }
+        numEntries &= DONT_DEALLOCATE_FLAG;
+    }
+
+    Pair *entries;
+    int numEntries;
+    int hashMod;
+
+    struct IteratorTag;
+    typedef IteratorTag *Iterator;
+
+    /* The slot of a key, or one past the hash mask when it is absent
+     * (0x13ad0). derived name. */
+    Iterator FUN_00013ad0(hkUlong key) const; /* derived name */
+
+    bool isValid(Iterator it) const
+    {
+        return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
+    }
+
+    /* The first used slot, or one past the hash mask (inline in
+     * hkVtableClassRegistry's slot 8, 0x184430). derived name. */
+    Iterator getIterator() const
+    {
+        int i;
+        for (i = 0; i <= hashMod; i++) {
+            const hkUlong key = entries[i].key;
+            if (key != hkUlong(-1)) {
+                break;
+            }
+        }
+        return reinterpret_cast<Iterator>(hkUlong(i));
+    }
+
+    /* The used slot after one, or one past the hash mask. derived name. */
+    Iterator getNext(Iterator it) const
+    {
+        int i = static_cast<int>(reinterpret_cast<hkUlong>(it));
+        for (i += 1; i <= hashMod; i++) {
+            const hkUlong key = entries[i].key;
+            if (key != hkUlong(-1)) {
+                break;
+            }
+        }
+        return reinterpret_cast<Iterator>(hkUlong(i));
+    }
+
+    /* The value at a valid slot. derived name. */
+    hkUlong getValue(Iterator it) const
+    {
+        return entries[static_cast<int>(reinterpret_cast<hkUlong>(it))].value;
+    }
+
+    hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
+    /* A key's value into out, HK_FAILURE when the key is absent (0x13b90,
+     * the lookup 0x13ad0 inline). derived name. */
+    hkResult FUN_00013b90(hkUlong key, hkUlong &out) const;
+    /* The entry at a slot removed (0x13c10). derived name. */
+    void FUN_00013c10(Iterator it);
+    /* A key's entry removed, HK_FAILURE when there is none (0x13d10, the
+     * lookup 0x13ad0 inline). derived name. */
+    hkResult FUN_00013d10(hkUlong key);
+    /* Sets the value of a key, growing the entries from the allocator given
+     * when the map is more than half full (0x138a0); nonzero when the key
+     * was new. */
+    int FUN_000138a0(AllocatorBase &allocator, hkUlong key, hkUlong value); /* derived name */
+    /* Rebuilds the entries at a new capacity (at least 8) from the
+     * allocator given, reinserting every used one (0x13940). */
+    void FUN_00013940(AllocatorBase &allocator, int newCapacity); /* derived name */
+    /* Makes room for a number of entries without a rebuild: the capacity
+     * doubled from 8 until it is twice the number (0x13e30). */
+    void FUN_00013e30(AllocatorBase &allocator, int numElements); /* derived name */
+    /* Every entry marked empty and the entries given back to the allocator
+     * given unless the map does not own them (0x13db0). derived name. */
+    void FUN_00013db0(AllocatorBase &allocator); /* derived name */
+};
 
 /* What the world holds at +0x10 (derived name after hknpBodyManager.cpp, the
  * file 0x1607c0 cites; the callers at 0x6c953 and 0x18d0c0 pass the
@@ -7630,14 +7768,40 @@ struct hknpBodyManager /* derived name */
      * value is negative, which returns the default -1. */
     float FUN_00160e40(u32 bodyId, float value);
 
+    /* A record of the map at +0x48 (derived names), 0x30 bytes: a vector
+     * whose w is -1 on a free one, the next free record at +0x20. */
+    struct Record48 {
+        Vec4 vector0;
+        u8 unknown10[0x10];
+        int nextFree;
+        u8 unknown24[0xc];
+    };
+
+    /* A body given back (0x160660; the world's body removal at 0x4eb73 and
+     * the destructor 0x1602c5): its flags cleared, its shape's reference
+     * released when the global flag allows, its id and motion invalid, its
+     * record of the map at +0x48 freed, and the body put at the head of
+     * the free list through its first word. derived name. */
+    void FUN_00160660(u32 bodyId);
+
     u8 unknown0[8];
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
-    u8 unknown20[8];
+    u32 unknown20;
+    /* The first free body, linked through each free body's first word
+     * (0x160767). derived name. */
+    u32 firstFreeBodyId;
     hkAabb16 *previousAabbs; /* derived name: by body id */
     u8 unknown30[8];
     hkArray<BodyEntry> bodyEntries; /* derived name: by body id */
-    u8 unknown48[0x58];
+    /* Records by body id: the record's index by the body's id, the
+     * records, the first free one. derived names. */
+    PointerMap recordIndices48;
+    hkArray<Record48> records58;
+    int firstFreeRecord68;
+    u8 unknown6c[0x2c];
+    int numBodies98; /* derived name: one fewer for each body given back */
+    u8 unknown9c[4];
     hkArray<u32> activeBodyIds;                        /* derived name */
     hkArray<u8> activeBodyCellIndices;                 /* derived name: by body id */
     hkArray<ScheduledBodyChange> scheduledBodyChanges; /* derived name */
@@ -7748,6 +7912,11 @@ struct hknpMotionManager /* derived name */
      * memset, cookbook 82). */
     hknpMotionManager();
 
+    /* Out of line (0x47450; the world's destructor calls it at 0x4bc07):
+     * the motions' aligned storage given back to the thread's heap unless
+     * it was handed in, then the cells' lists and the motions. */
+    ~hknpMotionManager();
+
     /* Walks the motions in use from index 1; 0x7fffffff once past the end
      * (the loop at 0x373c7 stops on it). */
     struct MotionIterator {
@@ -7781,7 +7950,10 @@ struct hknpMotionManager /* derived name */
 
     u8 unknown0[8];
     hkArray<hknpMotion> motions;
-    u32 unknown18;
+    /* Set when the motions' storage is not the manager's to free (the
+     * destructor tests it, 0x47461). derived name. */
+    bool storageIsExternal;
+    u8 unknown19[3];
     u32 firstFreeMotionId; /* derived name: invalid when none is free */
     u32 numUsedMotions;    /* derived name */
     u32 peakMotionIndex;
@@ -17266,110 +17438,6 @@ struct hkContainerHeapAllocator {
 struct hkContainerTempAllocator /* derived name */ {
     /* Defined in tlg_lib_unknown.h, after the allocator's class. */
     static AllocatorBase &get(); /* derived name */
-};
-
-struct PointerMap /* derived name */
-{
-    /* An entry: an empty one's key is -1. derived names. */
-    struct Pair {
-        hkUlong key;
-        hkUlong value;
-    };
-
-    /* An empty map: no entries, none in use, the hash mask -1
-     * (hkVtableClassRegistry's creation, 0x1845f5). */
-    PointerMap() : entries(0), numEntries(0), hashMod(-1) {}
-
-    /* The count's top bit: the map does not own its entries. derived
-     * name. */
-    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
-
-    /* The same out of line (0x13d80; the memory system's object clears its
-     * map at +0x10 with it, 0xb60d). derived name. */
-    void FUN_00013d80();
-
-    /* Every entry marked empty and the count zeroed, the entries kept
-     * (inline in 0x13db0 and 0x13d80). derived name. */
-    void clear()
-    {
-        const int capacity = hashMod + 1;
-        for (int i = 0; i < capacity; i++) {
-            entries[i].key = hkUlong(-1);
-        }
-        numEntries &= DONT_DEALLOCATE_FLAG;
-    }
-
-    Pair *entries;
-    int numEntries;
-    int hashMod;
-
-    struct IteratorTag;
-    typedef IteratorTag *Iterator;
-
-    /* The slot of a key, or one past the hash mask when it is absent
-     * (0x13ad0). derived name. */
-    Iterator FUN_00013ad0(hkUlong key) const; /* derived name */
-
-    bool isValid(Iterator it) const
-    {
-        return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
-    }
-
-    /* The first used slot, or one past the hash mask (inline in
-     * hkVtableClassRegistry's slot 8, 0x184430). derived name. */
-    Iterator getIterator() const
-    {
-        int i;
-        for (i = 0; i <= hashMod; i++) {
-            const hkUlong key = entries[i].key;
-            if (key != hkUlong(-1)) {
-                break;
-            }
-        }
-        return reinterpret_cast<Iterator>(hkUlong(i));
-    }
-
-    /* The used slot after one, or one past the hash mask. derived name. */
-    Iterator getNext(Iterator it) const
-    {
-        int i = static_cast<int>(reinterpret_cast<hkUlong>(it));
-        for (i += 1; i <= hashMod; i++) {
-            const hkUlong key = entries[i].key;
-            if (key != hkUlong(-1)) {
-                break;
-            }
-        }
-        return reinterpret_cast<Iterator>(hkUlong(i));
-    }
-
-    /* The value at a valid slot. derived name. */
-    hkUlong getValue(Iterator it) const
-    {
-        return entries[static_cast<int>(reinterpret_cast<hkUlong>(it))].value;
-    }
-
-    hkUlong FUN_00013b30(hkUlong key, hkUlong defaultValue) const; /* derived name */
-    /* A key's value into out, HK_FAILURE when the key is absent (0x13b90,
-     * the lookup 0x13ad0 inline). derived name. */
-    hkResult FUN_00013b90(hkUlong key, hkUlong &out) const;
-    /* The entry at a slot removed (0x13c10). derived name. */
-    void FUN_00013c10(Iterator it);
-    /* A key's entry removed, HK_FAILURE when there is none (0x13d10, the
-     * lookup 0x13ad0 inline). derived name. */
-    hkResult FUN_00013d10(hkUlong key);
-    /* Sets the value of a key, growing the entries from the allocator given
-     * when the map is more than half full (0x138a0); nonzero when the key
-     * was new. */
-    int FUN_000138a0(AllocatorBase &allocator, hkUlong key, hkUlong value); /* derived name */
-    /* Rebuilds the entries at a new capacity (at least 8) from the
-     * allocator given, reinserting every used one (0x13940). */
-    void FUN_00013940(AllocatorBase &allocator, int newCapacity); /* derived name */
-    /* Makes room for a number of entries without a rebuild: the capacity
-     * doubled from 8 until it is twice the number (0x13e30). */
-    void FUN_00013e30(AllocatorBase &allocator, int numElements); /* derived name */
-    /* Every entry marked empty and the entries given back to the allocator
-     * given unless the map does not own them (0x13db0). derived name. */
-    void FUN_00013db0(AllocatorBase &allocator); /* derived name */
 };
 
 /* The map typed by its key and value (derived name; Havok's hkPointerMap

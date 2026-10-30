@@ -17,3 +17,10 @@ u32 hknpMotionManager::FUN_000475c0()
     numUsedMotions++;
     return motionId;
 }
+
+hknpMotionManager::~hknpMotionManager()
+{
+    if (!storageIsExternal) {
+        FUN_0000bc00(*D_16dc070->temp58, motions.data);
+    }
+}

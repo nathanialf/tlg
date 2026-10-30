@@ -3158,6 +3158,11 @@ class BufferedStreamReader : public StreamReader /* derived name */
     virtual ~BufferedStreamReader();
 
     hkBool isOk() const; /* vtable slot 5; derived name */
+    /* Slot 6 (0x94360): what is buffered copied out first; while more is
+     * asked, the buffer emptied and filled again from the stream, the
+     * count read so far returned once the stream gives nothing; then the
+     * rest from the buffer. */
+    int read(void *buffer, int numBytes);
     /* Slot 7 (0x94490): what is buffered skipped first; past it the
      * buffer emptied, a 512th of the rest skipped in the stream and the
      * buffer filled again, then as much as it holds of what is left; the
@@ -4385,6 +4390,18 @@ inline void hknpPhysicsSceneData::operator delete(void *object, unsigned long nu
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkcdPlanarGeometryPlanesCollection::operator delete(void *object,
+                                                                unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkcdPlanarGeometryPlanesCollection::Cache::operator delete(void *object,
+                                                                       unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
 inline void *hkArrayStreamWriter::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -4757,6 +4774,37 @@ struct TreeWalk0013b790 /* derived name */
     TempInplaceArray<Item, 32> items;
     TempInplaceArray<BroadPhaseTree00142a40::Node *, 128> leaves;
     BroadPhaseTree00142a40 *tree;
+};
+
+/* An entry the pair processing 0x717d0 sorts in an array of its own
+ * (derived names), 24 bytes: an int, two bodies' ids, a 64-bit value. The
+ * sort 0x72980 orders by the two ids read as one 64-bit key, the low word
+ * the first id (hkAlgorithm::quickSortRecursive, tlg_hk_algorithm.h); the
+ * pivot is assigned member by member, the ids by their own assignment. */
+struct BodyPairEntry000717d0 /* derived name */
+{
+    BodyPairEntry000717d0() {}
+
+    BodyPairEntry000717d0(const BodyPairEntry000717d0 &other)
+        : value0(other.value0), bodyA(other.bodyA), bodyB(other.bodyB), value10(other.value10)
+    {
+    }
+
+    /* The two ids as one 64-bit key. derived name. */
+    u64 getKey() const
+    {
+        return *reinterpret_cast<const u64 *>(&bodyA);
+    }
+
+    bool operator<(const BodyPairEntry000717d0 &other) const
+    {
+        return getKey() < other.getKey();
+    }
+
+    u32 value0;
+    hknpBodyId bodyA;
+    hknpBodyId bodyB;
+    u64 value10;
 };
 
 /* A leaf's age and its place in the walk, sorted by age (0x13b6c0,
@@ -5773,7 +5821,6 @@ void FUN_0008c110(hkxNode *self);
 void FUN_0008d2c0(hkxScene *self);
 void FUN_0009b1c0(hkcdPlanarGeometry *self);
 void FUN_0009c120(hkcdPlanarCsgOperand *self);
-void FUN_0009c960(hkcdPlanarGeometryPlanesCollection *self);
 void FUN_000aa6d0(hkSkinnedRefMeshShape *self);
 void FUN_001586d0(hknpCompressedMeshShape *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
@@ -5795,34 +5842,33 @@ void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d
 /* Also slot 1 of hknpConvexShape's vtable 0x1697d90 (one body for the
  * classes of 0x30 bytes, named for the sphere's constructor beside it,
  * 0x3c540; D15). */
-void FUN_0003c370(hknpSphereShape *self);                    /* slot 1 of 0x1695c10 */
-void FUN_0004aff0(hknpWorld *self);                          /* slot 1 of 0x1699220 */
-void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169ab10 */
-void FUN_000870e0(hkxMaterial *self);                        /* slot 1 of 0x16a0db0 */
-void FUN_00089330(hkxAttributeHolder *self);                 /* slot 1 of 0x16a1670 */
-void FUN_0008beb0(hkxMesh *self);                            /* slot 1 of 0x16a25a0 */
-void FUN_0008c0c0(hkxNode *self);                            /* slot 1 of 0x16a25e0 */
-void FUN_0008c940(hkxVertexAnimation *self);                 /* slot 1 of 0x16a26c0 */
-void FUN_0008d270(hkxScene *self);                           /* slot 1 of 0x16a2910 */
-void FUN_0008dc00(hkxMeshSection *self);                     /* slot 1 of 0x16a29d0 */
-void FUN_0009b170(hkcdPlanarGeometry *self);                 /* slot 1 of 0x16a36f0 */
-void FUN_0009c0d0(hkcdPlanarCsgOperand *self);               /* slot 1 of 0x16a3730 */
-void FUN_0009c910(hkcdPlanarGeometryPlanesCollection *self); /* slot 1 of 0x16a3770 */
-void FUN_000aa680(hkSkinnedRefMeshShape *self);              /* slot 1 of 0x16a38b0 */
-void FUN_000ad920(hkStorageSkinnedMeshShape *self);          /* slot 1 of 0x16a3af0 */
-void FUN_00157ea0(hknpBallGun *self);                        /* slot 1 of 0x16a48d0 */
-void FUN_00158680(hknpCompressedMeshShape *self);            /* slot 1 of 0x16a4990 */
-void FUN_00159600(hknpProjectileGun *self);                  /* slot 1 of 0x16a4b30 */
-void FUN_0015bf50(hknpWorldSnapshot *self);                  /* slot 1 of 0x16a4d50 */
-void FUN_00162580(hknpVehicleInstance *self);                /* slot 1 of 0x16a5090 */
-void FUN_00165aa0(hknpPhysicsSystemData *self);              /* slot 1 of 0x16a5130 */
-void FUN_00166130(hknpExternMeshShape *self);                /* slot 1 of 0x16a5170 */
-void FUN_0016a640(hknpScaledConvexShapeBase *self);          /* slot 1 of 0x16a5390 */
-void FUN_00176b20(hknpCharacterProxy *self);                 /* slot 1 of 0x16a5b70 */
-void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5d20 */
-void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
-void FUN_00181ba0(hkBinaryPackfileWriter *self);             /* slot 1 of 0x16a6470 */
-void FUN_0019c100(hkPackfileWriter *self);                   /* slot 1 of 0x16a6960 */
+void FUN_0003c370(hknpSphereShape *self);           /* slot 1 of 0x1695c10 */
+void FUN_0004aff0(hknpWorld *self);                 /* slot 1 of 0x1699220 */
+void FUN_0006b7d0(RefArrays0005a230 *self);         /* slot 1 of 0x169ab10 */
+void FUN_000870e0(hkxMaterial *self);               /* slot 1 of 0x16a0db0 */
+void FUN_00089330(hkxAttributeHolder *self);        /* slot 1 of 0x16a1670 */
+void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
+void FUN_0008c0c0(hkxNode *self);                   /* slot 1 of 0x16a25e0 */
+void FUN_0008c940(hkxVertexAnimation *self);        /* slot 1 of 0x16a26c0 */
+void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
+void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
+void FUN_0009b170(hkcdPlanarGeometry *self);        /* slot 1 of 0x16a36f0 */
+void FUN_0009c0d0(hkcdPlanarCsgOperand *self);      /* slot 1 of 0x16a3730 */
+void FUN_000aa680(hkSkinnedRefMeshShape *self);     /* slot 1 of 0x16a38b0 */
+void FUN_000ad920(hkStorageSkinnedMeshShape *self); /* slot 1 of 0x16a3af0 */
+void FUN_00157ea0(hknpBallGun *self);               /* slot 1 of 0x16a48d0 */
+void FUN_00158680(hknpCompressedMeshShape *self);   /* slot 1 of 0x16a4990 */
+void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */
+void FUN_0015bf50(hknpWorldSnapshot *self);         /* slot 1 of 0x16a4d50 */
+void FUN_00162580(hknpVehicleInstance *self);       /* slot 1 of 0x16a5090 */
+void FUN_00165aa0(hknpPhysicsSystemData *self);     /* slot 1 of 0x16a5130 */
+void FUN_00166130(hknpExternMeshShape *self);       /* slot 1 of 0x16a5170 */
+void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
+void FUN_00176b20(hknpCharacterProxy *self);        /* slot 1 of 0x16a5b70 */
+void FUN_0017b700(hkp6DofConstraintData *self);     /* slot 1 of 0x16a5d20 */
+void FUN_0017fbd0(hkMemoryResourceContainer *self); /* slot 1 of 0x16a6300 */
+void FUN_00181ba0(hkBinaryPackfileWriter *self);    /* slot 1 of 0x16a6470 */
+void FUN_0019c100(hkPackfileWriter *self);          /* slot 1 of 0x16a6960 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived
  * names): 0x420 bytes, cleared to zero vectors when the thread's timer

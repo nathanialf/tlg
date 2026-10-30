@@ -1329,7 +1329,7 @@ FUN_0008dc00 src/libs/unknown/func_0008dc00.cpp
 _ZN15hkcdPlanarSolidD0Ev src/libs/unknown/func_00095870.cpp
 FUN_0009b170 src/libs/unknown/func_0009b170.cpp
 FUN_0009c0d0 src/libs/unknown/func_0009c0d0.cpp
-FUN_0009c910 src/libs/unknown/func_0009c910.cpp
+_ZN34hkcdPlanarGeometryPlanesCollectionD0Ev src/libs/unknown/func_0009c910.cpp
 _ZN13hkSkinBindingD0Ev src/libs/unknown/leaf_000242d0.cpp
 FUN_000aa680 src/libs/unknown/func_000aa680.cpp
 FUN_000ad920 src/libs/unknown/func_000ad920.cpp
@@ -2404,3 +2404,7 @@ FUN_00067c80 src/libs/unknown/func_000678e0.cpp _ZNK27hknpMalleableConstraintDat
 _ZN20hknpPhysicsSceneDataD1Ev src/libs/unknown/func_000467a0.cpp
 FUN_00022950 src/libs/unknown/func_00022950.cpp _GLOBAL__I_a
 _ZN21hkLargeBlockAllocator13addToSnapshotEPvi src/libs/unknown/func_00013060.cpp
+FUN_00160660 src/libs/unknown/func_00160660.cpp
+FUN_00094360 src/libs/unknown/func_00094490.cpp _ZN20BufferedStreamReader4readEPvi
+_ZN34hkcdPlanarGeometryPlanesCollectionD1Ev src/libs/unknown/func_0009c910.cpp
+_ZN17hknpMotionManagerD1Ev src/libs/havok/Physics/Physics/Dynamics/Motion/hknpMotionManager.cpp _ZN17hknpMotionManagerD2Ev
