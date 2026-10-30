@@ -585,6 +585,10 @@ struct hknpMotionWeldTOICommand {
      * (0x3d7d0; the print 0x170f20 writes its normal and positions).
      * derived name. */
     void FUN_0003d7d0(const hknpWorld *world, Output0002b3b0 *out) const;
+    /* The command written to a stream (0x170f20; the command dispatch
+     * 0x171040 jumps to it): the bodies' ids, then the record's normal and
+     * four positions. derived name. */
+    void FUN_00170f20(const hknpWorld *world, hkOstream &out) const;
 
     u8 unknown0[0xc];
     u32 bodyIdA; /* derived name */

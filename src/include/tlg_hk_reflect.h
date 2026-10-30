@@ -16153,7 +16153,12 @@ struct hknpCollisionDetector /* derived name */
 {
     virtual ~hknpCollisionDetector();
     virtual void unknownVirtual2();
-    virtual void unknownVirtual3();
+    /* Slot 3 (0x1559b0 in the composite detectors): the child caches' streams
+     * are its fourth and fifth arguments. derived name. */
+    virtual void unknownVirtual3(hknpWorldContextPool::Context *context, const void *sharedData,
+                                 const hknpCollisionCache *cache, hkBlockStream *childCacheStream,
+                                 hkBlockStream *childCacheStreamPpu, hknpCdBody *cdBodyA,
+                                 hknpCdBody *cdBodyB, int argument8) = 0;
     virtual void collide(hknpWorldContextPool::Context *context, const void *sharedData,
                          const hknpCollisionCache *cache, void *argument4, void *argument5,
                          hknpCdBody *cdBodyA, hknpCdBody *cdBodyB,
@@ -16170,6 +16175,11 @@ struct hknpCompositeCollisionDetector : public hknpCollisionDetector /* derived 
     void FUN_00155750(hknpWorldContextPool::Context *context, const void *sharedData,
                       const hknpCompositeCollisionCache *cache, void *argument4, void *argument5,
                       hknpCdBody *cdBodyA, hknpCdBody *cdBodyB, int argument8);
+    /* Slot 3 (0x1559b0): the child dispatch over the composite's caches. derived name. */
+    void unknownVirtual3(hknpWorldContextPool::Context *context, const void *sharedData,
+                         const hknpCollisionCache *cache, hkBlockStream *childCacheStream,
+                         hkBlockStream *childCacheStreamPpu, hknpCdBody *cdBodyA,
+                         hknpCdBody *cdBodyB, int argument8);
 };
 
 /* The world's streams at +0x260 (derived names; built by FUN_00174590):
@@ -16480,6 +16490,20 @@ struct hkBlockStreamConsumer : public hkBlockStreamReader /* derived name */
      * consumer consumed it: back to the stream when every element was,
      * else the consumed ones taken off its count. derived name. */
     const void *FUN_00093b10();
+
+    /* The next element of a size: its address taken first, kept while the
+     * block has elements left, else the consumer's next block (0x155a5f to
+     * 0x155a84). derived name. */
+    const void *consumeAndAdvance(int elementSize)
+    {
+        const u8 *next = hkAddByteOffsetConst(currentByteLocation, elementSize);
+        numElementsToReadInThisBlock--;
+        if (numElementsToReadInThisBlock > 0) {
+            currentByteLocation = next;
+            return next;
+        }
+        return FUN_00093b10();
+    }
 
     hkBlockStream *stream;            /* derived name */
     int numElementsToFreeInThisBlock; /* derived name */
@@ -17890,6 +17914,7 @@ struct VelocityAccumulator00085450 /* derived name */
     u8 unknown0[0x30];
     Vec4 invMasses;
     hkMatrix3 coreFromWorld;
+    Vec4 centerOfMassInWorld; /* derived name: at +0x70 (0x17d320) */
 };
 
 /* What a builder reads of its query (derived names): the factor of the
@@ -17941,5 +17966,24 @@ struct AngularConstraintInfo00085450 /* derived name */
  * schema type 12. */
 void FUN_00085450(const AngularConstraintInfo00085450 &info, const ConstraintQueryIn00085450 &in,
                   ConstraintQueryOut00085450 &out);
+
+/* A jacobian of a linear row and an angular row per body (derived names):
+ * the direction, then each body's row in its core space, the inverse of the
+ * diagonal in A's w and the diagonal in B's. */
+struct LinearJacobian0017d320 /* derived name */
+{
+    Vec4 linear;
+    Vec4 angular[2];
+};
+
+/* derived name: a linear jacobian along a direction through a point
+ * (0x17d320; the setup calls it at 0xcc3ac): the angular rows the arm of
+ * each body's centre of mass crossed with the direction, in the core space,
+ * B's the other way round; the diagonal the rows' squares weighted by the
+ * inertias plus the masses, kept above an epsilon; its inverse also
+ * returned. */
+void FUN_0017d320(const hkVector4 &direction, const hkVector4 &position,
+                  const ConstraintQueryIn00085450 &in, LinearJacobian0017d320 &jac,
+                  float &invDiagOut);
 
 #endif
