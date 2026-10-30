@@ -7,7 +7,7 @@ hkReferencedObject *hkRefCountedProperties::FUN_0001c550(u16 key) const
     const Entry *entry = entries.data;
     for (int i = entries.size - 1; i >= 0; i--) {
         if (entry[i].key == key) {
-            return entry[i].object;
+            return entry[i].object.pntr;
         }
     }
     return 0;

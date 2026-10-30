@@ -3806,6 +3806,18 @@ inline void hknpVehicleDefaultEngine::operator delete(void *object, unsigned lon
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpTyremarksInfo::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline hknpTyremarksInfo::~hknpTyremarksInfo()
+{
+    for (int i = 0; i < tyremarksWheel.getSize(); i++) {
+        tyremarksWheel[i]->releaseReference();
+    }
+}
+
 inline void hknpCharacterProxyCinfo::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

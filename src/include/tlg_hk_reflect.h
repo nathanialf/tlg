@@ -2140,8 +2140,11 @@ struct hkRefCountedProperties {
          * cite the same body). derived name. */
         static void FUN_0000d300(void *object);
 
-        hkReferencedObject *object; /* derived name */
-        u16 key;                    /* derived name */
+        /* A counted reference: released and cleared when the entry is
+         * destroyed (the destructor 0x1c1f0, the cleanup callback 0xd300).
+         * derived name. */
+        hkRefPtr<hkReferencedObject> object;
+        u16 key; /* derived name */
         u8 unknownA[6];
     };
 
@@ -3682,9 +3685,21 @@ class hknpTyremarksInfo : public hkReferencedObject
     {
     }
 
+    /* Slot 0 (0x68e80; the deleting destructor 0x68d80, slot 1, before
+     * it, holds the same body): each wheel released, the first first, then
+     * the array's storage given back. Declared `inline` for the hint (the
+     * deleting destructor holds the body, cookbook 194) and defined in
+     * tlg_lib_unknown.h; both variants are emitted with the vtable, in the
+     * file of the key function, slot 6. */
+    inline virtual ~hknpTyremarksInfo();
+
+    /* The class delete (defined in tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x28 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* Slot 6 (0x69150): a wheel's points as strips, left and right of each
      * point in turn, from the oldest. derived name. */
-    void FUN_00069150(const hknpVehicleInstance *vehicle, int wheel, Vec4 *stripsOut) const;
+    virtual void FUN_00069150(const hknpVehicleInstance *vehicle, int wheel, Vec4 *stripsOut) const;
 
     float minTyremarkEnergy;
     float maxTyremarkEnergy;
@@ -10471,7 +10486,23 @@ struct hknpBodyCinfo {
     u8 unknown13[5];
     u64 userData;
     hkStringPtr name;
-    u8 unknown28[0x78];
+    u8 motionType;
+    u8 unknown29[7];
+    Vec4 position;
+    Vec4 orientation;
+    Vec4 linearVelocity;
+    Vec4 angularVelocity;
+    float mass;
+    /* The two counted references the cleanup callback (0x38260) releases,
+     * the last first, before the name. */
+    hkRefPtr<hknpRefMassDistribution> massDistribution;
+    u16 motionPropertiesId;
+    u8 unknown82[2];
+    u32 reservedBodyId;
+    u32 reservedMotionId;
+    float collisionLookAheadDistance;
+    hkRefPtr<hkLocalFrame> localFrame;
+    u8 unknown98[8];
 };
 
 /* Its members' defaults (the hkClass's, at 0x14b97d4): each member's offset
@@ -14746,10 +14777,48 @@ struct BodyCommand00171180 : public hkCommand /* derived name */
     u32 bodyId; /* derived name */
 };
 
+/* A constraint's record in the table the modifiers read (derived names):
+ * 64 bytes, the constraint's data at +0x10 and its number of solver
+ * results at +0x2c (0x16fbe0). */
+struct ConstraintRecord0016fbe0 /* derived name */
+{
+    u8 unknown0[0x10];
+    hknpBreakableConstraintData *data;
+    u8 unknown18[0x14];
+    u8 numSolverResults;
+    u8 unknown2d[0x13];
+};
+
+/* What holds the constraints' records, at +0x150 (derived names). */
+struct ConstraintTable0016fbe0 /* derived name */
+{
+    u8 unknown0[0x150];
+    ConstraintRecord0016fbe0 *constraints;
+};
+
 struct CommandOwner00171180 /* derived name */
 {
-    u8 unknown0[0x380];
+    u8 unknown0[8];
+    ConstraintTable0016fbe0 *constraintTable; /* derived name */
+    u8 unknown10[0x370];
     hkSecondaryCommandDispatcher *dispatcher; /* derived name */
+};
+
+/* A constraint command (derived names): primary type 4, secondary type 21,
+ * the constraint's id after the header; 16 bytes padded (0x16fbe0 builds
+ * one when a breakable constraint's impulses pass its threshold). */
+struct ConstraintCommand0016fbe0 : public hkCommand /* derived name */
+{
+    ConstraintCommand0016fbe0(u32 id)
+    {
+        sizePaddedTo16 = 16;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 21;
+        constraintId = id;
+    }
+
+    u32 constraintId; /* derived name */
 };
 
 /* An event of two bodies entering or leaving each other's manifold (derived

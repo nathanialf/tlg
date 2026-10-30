@@ -6,9 +6,5 @@
  * reference. */
 void hkRefCountedProperties::Entry::FUN_0000d300(void *object)
 {
-    Entry *entry = static_cast<Entry *>(object);
-    if (entry->object) {
-        entry->object->removeReference();
-    }
-    entry->object = 0;
+    static_cast<Entry *>(object)->~Entry();
 }

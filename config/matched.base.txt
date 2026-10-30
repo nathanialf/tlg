@@ -2160,3 +2160,8 @@ FUN_0008bde0 src/libs/unknown/func_0008bdc0.cpp _GLOBAL__I_a
 FUN_0008e020 src/libs/unknown/func_0008e000.cpp _GLOBAL__I_a
 FUN_0008e2a0 src/libs/unknown/func_0008e280.cpp _GLOBAL__I_a
 FUN_00181d00 src/libs/unknown/func_00181d00.cpp _ZNK22hkBinaryPackfileWriter12FUN_00181d00ER27PackfileSaveContext00181dc0RK7hkClassi
+_ZN22hkRefCountedPropertiesD1Ev src/libs/unknown/func_0001c1f0.cpp
+FUN_00038260 src/libs/unknown/func_00038260.cpp
+_ZN17hknpTyremarksInfoD1Ev src/libs/unknown/func_00069150.cpp
+_ZN17hknpTyremarksInfoD0Ev src/libs/unknown/func_00069150.cpp
+FUN_0016fbe0 src/libs/unknown/func_0016fbe0.cpp _Z12FUN_0016fbe0PvP20CommandOwner00171180RKjPK16hkpSolverResults
