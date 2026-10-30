@@ -4665,6 +4665,11 @@ inline void hkxSparselyAnimatedBool::operator delete(void *object, unsigned long
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxSparselyAnimatedString::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxSparselyAnimatedInt::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

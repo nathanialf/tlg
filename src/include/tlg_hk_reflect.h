@@ -3291,8 +3291,11 @@ class hkxSparselyAnimatedBool : public hkReferencedObject
     hkArray<float> times;
 };
 
-/* Members from its records (0x16a0ea0): strings (an array of hkStringPtr)
- * at +0x10, times (an array of reals) at +0x20. */
+/* hkxSparselyAnimatedString (type info 0x57c67a0, size 0x30, hkClass
+ * parent hkReferencedObject, built at 0x87770, member records at
+ * 0x16a0ea0): strings (an array of hkStringPtr) at +0x10 and times (an
+ * array of reals) at +0x20. The finish callback FUN_00087750 runs the
+ * inline finish constructor. */
 class hkxSparselyAnimatedString : public hkReferencedObject
 {
   public:
@@ -3300,6 +3303,16 @@ class hkxSparselyAnimatedString : public hkReferencedObject
         : hkReferencedObject(flag), strings(flag), times(flag)
     {
     }
+
+    /* The arrays given back, each string destroyed from the last (0x87570,
+     * slot 0; the deleting destructor 0x87640 holds the same body). Inline,
+     * emitted with the vtable: the executable holds the complete destructor
+     * before the deleting one (cookbook 187). */
+    inline virtual ~hkxSparselyAnimatedString() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<hkStringPtr> strings;
     hkArray<float> times;
@@ -13094,6 +13107,12 @@ class hknpHeightFieldShape : public hknpCompositeShape
      * base's D1 before D0 is a vtable initializer's order. Slot 7 0x12aa80
      * is shared with the compressed shape's vtable. */
     virtual ~hknpHeightFieldShape() {}
+
+    /* A min-max tree cell's bounds (0x12b670): the level's cell at x and z,
+     * when inside the level's resolution, its eight 16-bit values widened
+     * and scaled by the tree's multiplier from its offset, the minima from
+     * the first four and the maxima from the last four. derived name. */
+    void FUN_0012b670(int level, int x, int z, Vec4 *minOut, Vec4 *maxOut) const;
 
     /* The members from its ten records at 0x1694c90 (the reflection
      * initializer 0x398d0 passes them). */
