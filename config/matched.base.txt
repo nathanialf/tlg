@@ -2081,3 +2081,11 @@ FUN_00174de0 src/libs/unknown/func_00174de0.cpp _ZN19hknpWorldStreams26012FUN_00
 _ZN14Object000ea380D1Ev src/libs/unknown/func_000ea540.cpp
 _ZN14Object000ea380D0Ev src/libs/unknown/func_000ea540.cpp
 FUN_001a0780 src/libs/unknown/func_001a0780.cpp _Z12FUN_001a0780RK8RawImage
+FUN_001659c0 src/libs/unknown/func_001659c0.cpp _ZN19BitFieldMap0019977012FUN_001659c0EjtRKPv
+_ZN11hkAlgorithm18quickSortRecursiveIPvNS_4lessIS1_EEEEvPT_iiT0_ src/libs/unknown/func_00001770.cpp
+_ZN11hkAlgorithm18quickSortRecursiveIjNS_4lessIjEEEEvPT_iiT0_ src/libs/unknown/func_0015b600.cpp
+FUN_0000ead0 src/libs/unknown/func_0000ead0.cpp
+FUN_000656e0 src/libs/unknown/func_000656e0.cpp _ZN18hknpWorldObject4f812FUN_000656e0Eii
+FUN_00066860 src/libs/unknown/func_00066860.cpp _ZN18hknpWorldObject4f812MotionRecord12FUN_00066860Eib
+FUN_0000e1b0 src/libs/unknown/func_0000e190.cpp _GLOBAL__I_a
+FUN_0001c9b0 src/libs/unknown/func_0001c8e0.cpp _GLOBAL__I_a

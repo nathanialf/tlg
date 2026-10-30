@@ -2240,6 +2240,9 @@ class hkcdShape : public hkReferencedObject
  * (832) at +0x8c. Its destructor (0x1c8e0, slot 0; the polygon
  * collection's slot 0 too, which adds nothing to destroy) gives the storage
  * back. */
+extern const hkClass D_57b9df0;         /* hkcdPlanarGeometryPrimitivesCollection28's hkClass */
+extern const hkClassMember D_168eec0[]; /* derived name: its records */
+
 class hkcdPlanarGeometryPrimitivesCollection28 : public hkReferencedObject
 {
   public:
@@ -2640,8 +2643,10 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
     hkArray<float> wheelsTorqueRatio;
 };
 
-/* hkReferencedObject's hkClass (built at 0xe222). */
-extern const hkClass D_57b8640; /* hkReferencedObject's hkClass */
+/* hkReferencedObject's hkClass (built at 0xe222) and its one member's
+ * record (0x168d980). */
+extern const hkClass D_57b8640;         /* hkReferencedObject's hkClass */
+extern const hkClassMember D_168d980[]; /* derived name: hkReferencedObject's records */
 
 /* hknpVehicleAerodynamics, the aerodynamics' interface (its hkClass at
  * 0x57bf880, built by the reflection initializer at 0x3a040: size 0x10,
@@ -6892,7 +6897,17 @@ struct hknpWorldObject4f8 /* derived name */
      * body of the motion is taken and the byte is not 0xff (0x639e0).
      * derived names. */
     struct MotionRecord {
-        u8 unknown0[0xb];
+        /* The record set up (0x66860; the world's constructor sets the
+         * first at 0x49be0 with 0 and true): a zero vector packed into
+         * three 10-bit fields, the identity quaternion into four bytes,
+         * the two-bit value and the byte 0 when the flag is set, else
+         * 0xff. derived name. */
+        void FUN_00066860(int value, bool flag);
+
+        u32 packedVector;     /* derived name */
+        u8 packedRotation[4]; /* derived name */
+        u8 unknown8[2];
+        u8 byteA; /* derived name */
         u8 byteB;
         u8 unknownC[4];
     };
@@ -6911,6 +6926,52 @@ struct hknpWorldObject4f8 /* derived name */
         u8 unknown60;
         bool flag61;
     };
+
+    /* An entry's group walked from its first id, each entry not yet
+     * flagged given its flag and run through 0x63a40 (0x639b0, 0x655b0 and
+     * 0x656e0 hold the walk inline). derived name. */
+    void activateGroup(const Entry18 *entry) /* derived name */
+    {
+        if (entry) {
+            int id = entry->firstId;
+            do {
+                Entry18 *current = unknown18[id];
+                const int nextId = current->nextId;
+                if (!current->flag61) {
+                    current->flag61 = true;
+                    FUN_00063a40(id);
+                }
+                id = nextId;
+            } while (id != 0x7fffffff);
+        }
+    }
+
+    /* Every entry of the group whose first id is `first` given `newFirst`
+     * as its first id, nothing done when the two are one (0x656e0 holds it
+     * inline after linking the groups: the early-out its caller has already
+     * settled is a third way into the caller's join until the late
+     * SimplifyCFG, so GVN leaves the join's loads in place, cookbook 205).
+     * derived name. */
+    void setGroupFirstId(int first, int newFirst) /* derived name */
+    {
+        if (first != newFirst) {
+            Entry18 *entry = unknown18[first];
+            for (;;) {
+                entry->firstId = newFirst;
+                const int nextId = entry->nextId;
+                if (nextId == 0x7fffffff) {
+                    break;
+                }
+                entry = unknown18[nextId];
+            }
+        }
+    }
+
+    /* Two entries' groups joined (0x656e0; 0x655b0 tail-calls it with a
+     * pair's two entries): the first group's last entry linked to the second
+     * group, whose entries take the first group's first id, and the joined
+     * group activated when either entry was. derived name. */
+    void FUN_000656e0(int indexA, int indexB);
 
     /* Each pending entry of the array at +0x58 given its place and its id
      * appended to the array at +0x68, then the pending array emptied

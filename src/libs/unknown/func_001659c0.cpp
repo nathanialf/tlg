@@ -1,22 +1,24 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: the key and the map pointer in r15 and r12 where the base has them in r12 and r15
-// (greedy allocates the key first, its interval 16 slots longer than the map pointer's because the
-// lea of the map is scheduled after ADJCALLSTACKDOWN64; with the lea first the two tie and the map,
-// the lower vreg, goes first, as -pre-RA-sched=source shows); everything else equal (NOTES Round 58B).
+/* Each grow path hands its new field to the map itself (the two insert calls
+ * are one in the executable, merged by the tail merge after register
+ * allocation, so the key and the map pointer each end in both paths); the
+ * element's slot is taken before the element is read. */
 void BitFieldMap00199770::FUN_001659c0(u32 bitIndex, u16 key,
                                        void *const &element) /* derived name */
 {
     Block *block = fields.FUN_00199520<Block *>(key, 0);
-    if (!block || u32(block->bits.storage.numBits) <= bitIndex) {
+    if (!block) {
+        block = FUN_00199600(8, numBits, HK_NULL);
+        fields.FUN_001992f0(hkContainerHeapAllocator::get(), key, block);
+    } else if (u32(block->bits.storage.numBits) <= bitIndex) {
         Block *newBlock = FUN_00199600(8, numBits, block);
-        if (block) {
-            FUN_00199770(block);
-        }
+        FUN_00199770(block);
         fields.FUN_001992f0(hkContainerHeapAllocator::get(), key, newBlock);
         block = newBlock;
     }
     block->bits.set(bitIndex);
-    block->elements[bitIndex] = element;
+    void **slot = &block->elements[bitIndex]; /* derived name */
+    *slot = element;
 }
