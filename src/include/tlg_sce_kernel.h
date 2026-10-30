@@ -14,6 +14,15 @@ typedef SceKernelSemaObject *SceKernelSema; /* derived name: an 8-byte handle */
 struct pthread_mutex;
 typedef pthread_mutex *pthread_mutex_t;
 
+/* A mutex's attributes: a handle, as FreeBSD's pthread_mutexattr_t is (the
+ * critical section's constructor keeps one on its stack, 0x184f). */
+struct pthread_mutex_attr;
+typedef pthread_mutex_attr *pthread_mutexattr_t;
+
+/* FreeBSD's recursive mutex type (the critical section's settype passes 2,
+ * 0x188e). */
+#define PTHREAD_MUTEX_RECURSIVE 2
+
 /* A thread of the kernel library: a handle (hkThread keeps one, 0x104c0). */
 struct pthread;
 typedef pthread *pthread_t;
@@ -24,6 +33,10 @@ typedef pthread_attr *pthread_attr_t;
 
 extern "C" {
 int pthread_mutex_destroy(pthread_mutex_t *mutex);
+int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
+int pthread_mutexattr_init(pthread_mutexattr_t *attr);
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
+int pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
 int pthread_mutex_lock(pthread_mutex_t *mutex);
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
 int pthread_mutex_unlock(pthread_mutex_t *mutex);

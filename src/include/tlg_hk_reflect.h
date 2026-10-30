@@ -6475,6 +6475,30 @@ struct hknpFaceAngle /* derived name */
     u8 value; /* derived name */
 };
 
+/* The spheres a shape's slot 18 measures (derived names): their centres,
+ * their number and their common radius (the capsule's 0x73950 reads them). */
+struct SignedDistanceQuery /* derived name */
+{
+    const Vec4 *sphereCenters;
+    int numSpheres;
+    float sphereRadius;
+};
+
+/* A sphere's contact with a shape, 0x50 bytes (derived names): the point on
+ * the shape's surface, the normal, the signed distance, the sphere's index
+ * (the polytope's 0x152170 writes it), no shape key and no shape tag. */
+struct SignedDistanceContact /* derived name */
+{
+    Vec4 position;
+    Vec4 normal;
+    float distance;
+    u16 sphereIndex;
+    u8 unknown26[0x22];
+    u32 shapeKey;
+    u16 shapeTag;
+    u8 unknown4e[2];
+};
+
 /* Aligned to 16 bytes: its hkClass is 0x30 bytes with members to +0x28,
  * hknpDecoratorShape's 0x40 with members to +0x34 and hknpCompositeShape's
  * 0x60 with members to +0x54 (the hkClass sizes, built at 0x38fd9,
@@ -6551,7 +6575,11 @@ class alignas(16) hknpShape : public hkReferencedObject
      * (hknpShape's 0x6eb50 and 0x6ebf0, hknpConvexShape's from 0x45a80,
      * hknpStaticCompoundShape's from 0x418c0, hknpConvexPolytopeShape's
      * 0x152170); their types and names are not recovered. */
-    virtual void unknownVirtual18(const void *argument1, void *argument2) const;
+    /* Slot 18: the signed distance of each sphere of a query from the
+     * shape, a contact for each (the capsule's 0x73950, the polytope's
+     * 0x152170). derived name. */
+    virtual void unknownVirtual18(const SignedDistanceQuery &query,
+                                  SignedDistanceContact *contactsOut) const;
     virtual void unknownVirtual19(const void *argument1, const void *argument2, int argument3,
                                   float argument4, void *argument5, void *argument6) const;
     /* Slot 20: a new key mask for the shape (hknpStaticCompoundShape's
@@ -6655,8 +6683,8 @@ class hknpDecoratorShape : public hknpShape
     int FUN_0003b1a0(const void *argument1, const void *argument2, void *argument3, bool argument4,
                      int argument5) const; /* vtable slot 16; derived name */
     float FUN_0003b1c0() const;            /* vtable slot 17; derived name */
-    void FUN_0003b1d0(const void *argument1,
-                      void *argument2) const; /* vtable slot 18; derived name */
+    void FUN_0003b1d0(const SignedDistanceQuery &query,
+                      SignedDistanceContact *contactsOut) const; /* vtable slot 18; derived name */
     void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
                       void *argument5, void *argument6) const; /* vtable slot 19; derived name */
     hknpShapeKeyMask *FUN_0003b1f0() const;                    /* vtable slot 20; derived name */
@@ -7570,6 +7598,12 @@ struct hknpBody {
      * name. */
     void FUN_0003a820(const Vec4 &centerOfMassWorld);
 
+    /* The motion's frame taken from the body's transform (0x3a920; the
+     * world's calls at 0x4e485, 0x5bb14 and 0x5cc4d): the inverse of the
+     * transform's rotation packed into 16 bits a lane at +0x80, the
+     * inverse's translation into the rotation's w lanes. derived name. */
+    void FUN_0003a920();
+
     hkTransform transform;
     int flags;
     u32 collisionFilterInfo; /* derived name */
@@ -7602,7 +7636,10 @@ struct hknpBody {
     /* A byte the world's object at +0x4f8 records with the body's id
      * (0x63956). derived name. */
     u8 byte7f;
-    u8 unknown80[0x10];
+    /* A quaternion, 16 bits a lane, 30000 for one (0x3a920 packs it).
+     * derived name. */
+    s16 motionToBodyRotation[4];
+    u8 unknown88[8];
 };
 
 extern const hkClassMember D_1695350[]; /* derived name: hknpBody's records */
@@ -9267,6 +9304,12 @@ struct hknpWorld {
      * recorded with the other body at +0x4f8. derived name. */
     void FUN_0004c5f0(u32 bodyId, int motionId);
 
+    /* The object at +0x6b8 replaced (0x35eb0; the constructor at 0x4a26e,
+     * the game at 0xea98db): the world's own at +0x6c0 when none is given,
+     * the new one's reference taken before the old one's is released.
+     * derived name. */
+    void FUN_00035eb0(hknpWorldObject6c0 *object);
+
     u8 unknown0[0x10];
     /* The bodies and their active list (0x4c720 passes +0x10 to the body
      * manager's functions and indexes the bodies at +0x20); FUN_0004c170 (in
@@ -9286,6 +9329,14 @@ struct hknpWorld {
      * constraint of its first body and of its second (the walk 0x4c670 to
      * 0x4c6fc). */
     struct ConstraintLinks {
+        /* The next constraint of a body, by whether the body is the
+         * constraint's first (its id loaded into the parameter, the load its
+         * own instruction, 0x4c6da). derived name. */
+        u32 next(u32 firstBodyId, u32 bodyId) const
+        {
+            return firstBodyId == bodyId ? nextOfBodyA : nextOfBodyB;
+        }
+
         u32 nextOfBodyA;
         u32 nextOfBodyB;
     };
@@ -9344,9 +9395,10 @@ struct hknpWorld {
      * world subscribes to the signal at +0x10 of its object at +0x658
      * (0x4b0d2), sets the id's bit. */
     hkBitField bits678; /* derived name */
-    u8 unknown690[0x30];
-    hknpWorldObject6c0 *object6c0;        /* derived name */
-    hknpEventDispatcher *eventDispatcher; /* derived name */
+    u8 unknown690[0x28];
+    hkRefPtr<hknpWorldObject6c0> object6b8; /* derived name */
+    hknpWorldObject6c0 *object6c0;          /* derived name */
+    hknpEventDispatcher *eventDispatcher;   /* derived name */
     /* To the 0x720 bytes its deleting destructor (0x4aff0) frees. */
     u8 unknown6d0[0x50];
 };
@@ -10504,6 +10556,11 @@ class hknpCapsuleShape : public hknpConvexPolytopeShape
      * each with its index in the w lane (the 0.5 exponent bits over it).
      * derived name. */
     const Vec4 *FUN_000731a0(Vec4 *buffer, int bufferSize) const;
+
+    /* Slot 18 (0x73950): each sphere's closest point on the segment, its
+     * distance less both radii, the contact on the capsule's surface. */
+    void unknownVirtual18(const SignedDistanceQuery &query,
+                          SignedDistanceContact *contactsOut) const;
 
     /* Slot 28 (0x73110): the capsule's own answer from its segment and
      * convex radius; the shape's default when that fails. derived name. */

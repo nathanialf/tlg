@@ -75,7 +75,8 @@ float hknpShape::unknownVirtual17() const
     return 0.0f;
 }
 
-void hknpShape::unknownVirtual18(const void *argument1, void *argument2) const
+void hknpShape::unknownVirtual18(const SignedDistanceQuery &query,
+                                 SignedDistanceContact *contactsOut) const
 {
     HK_ERROR(0x168b0b4f, HK_NP_SHAPE_CPP, 102, "Not implemented");
 }

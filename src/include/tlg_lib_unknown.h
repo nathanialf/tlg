@@ -1106,6 +1106,12 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
     int FUN_00013500(const void *pointer, int numBytes) const; /* derived name */
 
     virtual u64 allocatedBytes() const; /* vtable slot 20, FUN_00012e20; derived name */
+
+    /* Slot 11 (0x13530): the pages' sizes as allocated, the payloads in
+     * use, the difference available; the largest block the larger of the
+     * top and the biggest free chunk of the highest tree bin from the top's
+     * bin up, found down each bin's right children (dlmalloc's tree). */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
     /* Slot 17 (0x12e60; the interface's slot 6): whether a block of the
      * size can be had, tried by allocating one and freeing it again. */
     virtual bool FUN_00002230(int numBytes);
