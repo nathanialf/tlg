@@ -4539,6 +4539,11 @@ inline void hkpLinearParametricCurve::operator delete(void *object, unsigned lon
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpVehicleLinearCastWheelCollide::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxIndexBuffer::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

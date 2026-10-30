@@ -7191,16 +7191,9 @@ class hknpWorldObject1e0 /* derived name */
                            hknpCollisionQueryCollector *startPointCollector) const;
 };
 
-/* The world's streams at +0x260 (derived names; built by FUN_00174590):
- * twelve blocks of 0x100 bytes, each with an inline array of 24 at +0x20,
- * then three arrays at +0xc00, +0xc10 (16-byte elements) and +0xc20. */
-struct hknpWorldStreams260 /* derived name */
-{
-    u8 blocks[12][0x100];
-    hkArray<u8> arrayC00;
-    hkArray<Vec4> arrayC10;
-    hkArray<u8> arrayC20;
-};
+/* The world's streams at +0x260 (hknpWorldStreams260, defined after
+ * hkBlockStream below). */
+struct hknpWorldStreams260;
 
 /* The world's stream checks, empty in this build: two functions the linker
  * gives one empty body (0x175a80), called with five and seven arguments by
@@ -12878,7 +12871,14 @@ class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
         }
     }
 
+    /* Out of line (0x178d80, slot 0; the deleting destructor 0x178c80 is
+     * emitted beside it): each wheel state's shape released, then the
+     * states' storage given back. */
     virtual ~hknpVehicleLinearCastWheelCollide();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 14 (0x179700): the same body as the ray cast's slot 15, for a
      * cast that hits nothing. derived name. */
@@ -13645,6 +13645,44 @@ struct hkBlockStream /* derived name */
     hkBool zeroNewBlocks;
     u8 unknown1a[6];
     hkArray<hkBlockStreamBlock *> blocks; /* derived name */
+};
+
+/* A block stream that keeps its first 24 block pointers in place (derived
+ * name): the stream, the inline storage its array starts in, 0x100 bytes. */
+struct hkBlockStreamInplace /* derived name */
+{
+    hkBlockStream stream;
+    hkBlockStreamBlock *inlineBlocks[24];
+    u8 unknownF0[0x10];
+};
+
+/* The world's streams at +0x260 (derived names; built by FUN_00174590):
+ * twelve block streams of 0x100 bytes, named by their offsets, then three
+ * arrays at +0xc00, +0xc10 (16-byte elements) and +0xc20. The streams go in
+ * pairs (the checks of 0x151c80 take +0, +0x100 and +0x400, +0x500 and
+ * +0x200, +0x300). */
+struct hknpWorldStreams260 /* derived name */
+{
+    /* Every stream's blocks given back to the cache (0x174de0; the world's
+     * teardown at 0x4b3ad), the first of each pair before the second, the
+     * pairs in the order 0, 2, 1, 4, 3, 5. derived name. */
+    void FUN_00174de0(BlockCache *cache);
+
+    hkBlockStreamInplace stream000;
+    hkBlockStreamInplace stream100;
+    hkBlockStreamInplace stream200;
+    hkBlockStreamInplace stream300;
+    hkBlockStreamInplace stream400;
+    hkBlockStreamInplace stream500;
+    hkBlockStreamInplace stream600;
+    hkBlockStreamInplace stream700;
+    hkBlockStreamInplace stream800;
+    hkBlockStreamInplace stream900;
+    hkBlockStreamInplace streamA00;
+    hkBlockStreamInplace streamB00;
+    hkArray<u8> arrayC00;
+    hkArray<Vec4> arrayC10;
+    hkArray<u8> arrayC20;
 };
 
 /* What a consumer keeps of the block it reads (derived names): the stream,

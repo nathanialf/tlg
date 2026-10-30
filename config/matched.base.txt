@@ -2075,3 +2075,6 @@ _ZN18hkpHingeLimitsDataC1Ev src/libs/unknown/func_00083060.cpp _ZN18hkpHingeLimi
 FUN_00045af0 src/libs/unknown/func_00045af0.cpp _ZNK15hknpConvexShape12FUN_00045af0EiPDv4_fS1_
 FUN_00088b00 src/libs/unknown/func_00088b00.cpp _GLOBAL__I_a
 FUN_00088a00 src/libs/unknown/func_00088a00.cpp _Z12FUN_00088a00Pv
+_ZN33hknpVehicleLinearCastWheelCollideD1Ev src/libs/unknown/func_00178d80.cpp
+_ZN33hknpVehicleLinearCastWheelCollideD0Ev src/libs/unknown/func_00178d80.cpp
+FUN_00174de0 src/libs/unknown/func_00174de0.cpp _ZN19hknpWorldStreams26012FUN_00174de0EP10BlockCache
