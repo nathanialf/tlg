@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1752 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
+# 1742 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -32,13 +32,11 @@
 #   0x168c7c0 stored by FUN_00003820
 #   0x168c910 stored by FUN_00003ed0
 #   0x168c940 stored by FUN_00003ed0
-#   0x168c980 stored by FUN_000045c0
 #   0x168cba0 stored by FUN_00006d70 FUN_000073e0
 #   0x168cfb0 stored by FUN_00008000
 #   0x168d1b0 stored by FUN_00008c80
 #   0x168d310 stored by FUN_00009db0
 #   0x168d340 stored by FUN_00009db0
-#   0x168d680 stored by FUN_0000c360 _ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei
 #   0x168d7b0 stored by FUN_0000d390
 #   0x168d9a0 stored by FUN_0000e310
 #   0x168daa0 stored by FUN_0000f660
@@ -146,7 +144,6 @@
 #   0x169a6f0 stored by FUN_00156880 FUN_00158bf0 FUN_00179210 FUN_00e9afa0 FUN_00e9b430
 #   0x169a760 stored by FUN_00069980
 #   0x169a8d0 stored by FUN_00069aa0
-#   0x169ab10 stored by FUN_0005a230 _ZN17RefArrays0005a230C1EP9hknpWorld
 #   0x169b450 stored by FUN_000760c0 _ZN16Elements000760c0C1EPvS0_S0_iii
 #   0x169b510 stored by FUN_00077e60
 #   0x169b630 stored by FUN_00077f80
@@ -184,7 +181,6 @@
 #   0x169f400 stored by FUN_00082050
 #   0x169f490 stored by FUN_00082290
 #   0x169f510 stored by FUN_00082290
-#   0x169ffd0 stored by FUN_000831a0
 #   0x16a06d0 stored by FUN_00085190
 #   0x16a0750 stored by FUN_00085190
 #   0x16a0970 stored by FUN_00086380
@@ -202,7 +198,6 @@
 #   0x16a31d0 stored by FUN_00048b20
 #   0x16a32a0 stored by _ZN14hkHardwareInfoC1Ev | home hkHardwareInfo.cpp
 #   0x16a36b0 stored by FUN_0009a8a0
-#   0x16a37f0 stored by FUN_000a6d60
 #   0x16a3820 stored by FUN_000a2260 FUN_000a47e0
 #   0x16a3b90 stored by FUN_000b31c0 FUN_000b32e0
 #   0x16a3bd0 stored by FUN_000b3490 FUN_000b35d0 FUN_000b3670 FUN_000b3700
@@ -212,7 +207,6 @@
 #   0x16a3d40 stored by FUN_00048b20
 #   0x16a3d90 stored by FUN_0010dbc0
 #   0x16a3dc0 stored by FUN_0010bf50
-#   0x16a3e30 stored by FUN_0012a8c0
 #   0x16a3f50 stored by FUN_00140a60 FUN_00140e70
 #   0x16a4100 stored by FUN_00151250
 #   0x16a4180 stored by FUN_00151250
@@ -236,10 +230,6 @@
 #   0x16a6690 stored by _ZN23BroadPhaseTasks0018d640C1Ev
 #   0x16a66c0 stored by _ZN23BroadPhaseTasks0018d640C1Ev
 #   0x16a6720 stored by _ZN23BroadPhaseTasks0018d640C1Ev
-#   0x16a6820 stored by FUN_00199f80 FUN_0019a230
-#   0x16a68d0 stored by FUN_0019a7c0
-#   0x16a6910 stored by FUN_0019a950 FUN_0019ab10 FUN_0019abf0
-#   0x16a69e0 stored by FUN_0019d450 FUN_0019d500
 #   0x16a6c70 stored by FUN_0019f710
 #   0x16a6d90 stored by FUN_0019f710
 #   0x16a7620 stored by FUN_001b0a40 FUN_00202800 FUN_00230b40 FUN_00333580 FUN_003ef750 FUN_003fd0a0 FUN_00402fe0 FUN_00416db0 FUN_004215c0 FUN_00441670 FUN_004477a0 FUN_00459230 FUN_0045b4e0 FUN_0045b650 FUN_0045b7d0 FUN_004a6bf0 FUN_004af420 FUN_0052bd30 FUN_0083e370 FUN_0088b2b0 FUN_008bcc60 FUN_00948040 FUN_00a036a0 FUN_00a190f0 FUN_00a1cd10 FUN_00a4a4e0 FUN_00a94780 FUN_00aa8750 FUN_00aa9e70 FUN_00b4b3d0 FUN_00b5cf90 FUN_00b5d170 FUN_00b5d6e0 FUN_00cb5f90 FUN_00cfebd0 FUN_00d886b0 FUN_00eac8a0 FUN_00fe1b70 FUN_01388680 FUN_01388780 FUN_013b2640 FUN_013cc010 FUN_013ccbf0 FUN_013cd140 FUN_013cd1f0
