@@ -1160,6 +1160,13 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * cleared when the bin empties. derived name. */
     void FUN_00012550(TreeChunk *chunk);
 
+    /* A free chunk put into its tree bin by its size (0x12410, dlmalloc's
+     * insert_large_chunk; the free 0x133e0 ends with it). derived name. */
+    void FUN_00012410(TreeChunk *chunk, u64 size);
+
+    /* The head's in-use bits (dlmalloc's PINUSE_BIT and CINUSE_BIT). */
+    enum { PREVIOUS_IN_USE = 1, IN_USE = 2, IN_USE_BITS = 3 };
+
     /* A chunk's header alone (derived name): the allocator's empty top
      * is one (0x12211: no size, both in-use bits set). */
     struct ChunkHeader {
@@ -1244,6 +1251,14 @@ class PageAllocator : public hkReferencedObject /* derived name */
      * with no spin count, no pages, a zero peak, then the initial pages
      * when a size is given. */
     PageAllocator(int initialBytes);
+
+    /* Out of line (0x19780, slot 0; the deleting one 0x19730, slot 1,
+     * before it): every page given back to the thread's heap, then the
+     * members. */
+    virtual ~PageAllocator();
+
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* A page's header (derived names): the allocator it came from at +0x10
      * (0x196a9). */
@@ -2083,15 +2098,6 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
     hkReferencedObject *cache;
 };
 
-/* A record of the binary writer's save, 0x48 bytes (derived names): its
- * destructor (0x19b0b0, out of line) frees what it owns. */
-struct PackfileSaveRecord0019b0b0 /* derived name */
-{
-    ~PackfileSaveRecord0019b0b0();
-
-    u8 unknown0[0x48];
-};
-
 /* What the binary writer's save (0x183350) builds on its stack and hands
  * its section writers (derived names): arrays of 64-byte and 8-byte
  * entries at +8 and +0x18, the stream at +0x28, an object writer at +0x30,
@@ -2113,7 +2119,8 @@ struct PackfileSaveContext00181dc0 /* derived name */
     hkStreamWriter *writer;
     hkPlatformObjectWriter objectWriter; /* derived name */
     StringMap classNameOffsets;
-    hkArray<PackfileSaveRecord0019b0b0> records; /* derived name */
+    hkArray<hkRelocationInfo>
+        records; /* derived name (the relocations, 0x19b0b0 their destructor) */
     hkBool byteSwap;
 };
 
@@ -5050,13 +5057,24 @@ void FUN_0019d370(char *buffer, int size); /* derived name */
  * FUN_00061f00 stores; the game builds one at 0xea9d11. Slot 6 (0x61f40),
  * when the object it is given reads mode 1 (FUN_0000b670), moves a point
  * along a direction by the float at +0xc (1.5 on construction). */
+class hknpCharacterContext;
+struct hknpCharacterInput;
+struct hknpCharacterOutput;
+
 class Object00061f00 : public hkReferencedObject /* derived name */
 {
   public:
     Object00061f00();
     virtual ~Object00061f00();
 
-    float valueC; /* derived name */
+    /* Slot 6 (0x61f40): on the first update in its state the character's
+     * velocity along up raised to the speed that reaches the height under
+     * the gravity, sqrt(2 g h), when it is below it; on a later one the
+     * context changes to state 2. derived name. */
+    void FUN_00061f40(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output);
+
+    float valueC; /* derived name: the height of the jump, 1.5 on construction */
 };
 
 /* The character controller's state machine (derived names throughout: no
@@ -5187,6 +5205,10 @@ class hknpCharacterContext : public hkReferencedObject /* derived name */
 
     void FUN_0003e9c0(int state, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* derived name */
+
+    /* The updates since the state changed (the getter folded onto the
+     * int-at-+0x40 body 0xb670; 0x61f40 asks it). derived name. */
+    int FUN_0000b670() const;
 
     int characterType;                             /* derived name: 0x3ea60 sets it */
     const hknpCharacterStateManager *stateManager; /* derived name */
@@ -5331,6 +5353,11 @@ inline void hknpVehicleLinearCastWheelCollide::operator delete(void *object, uns
 }
 
 inline void hkxIndexBuffer::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void PageAllocator::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -5688,18 +5715,15 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
  * are not (cookbook 15, 97): the base destructor, then the object back to
  * the thread's heap at its recorded size, the class's own by default. The
  * base destructors not declared elsewhere come first. derived names. */
-void FUN_00019780(PageAllocator *self);
 void FUN_00023200(hkMemoryMeshBody *self);
 void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_000467f0(hknpPhysicsSceneData *self);
 void FUN_0004b040(hknpWorld *self);
-void FUN_0007de50(hkpRagdollConstraintData *self);
 void FUN_00087130(hkxMaterial *self);
 void FUN_0008bf00(hkxMesh *self);
 void FUN_0008c110(hkxNode *self);
 void FUN_0008d2c0(hkxScene *self);
-void FUN_00095870(hkcdPlanarSolid *self);
 void FUN_0009b1c0(hkcdPlanarGeometry *self);
 void FUN_0009c120(hkcdPlanarCsgOperand *self);
 void FUN_0009c960(hkcdPlanarGeometryPlanesCollection *self);
@@ -5713,7 +5737,6 @@ void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
 
-void FUN_00019730(PageAllocator *self);                    /* slot 1 of 0x168e8e0 */
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
 void FUN_000234a0(hkIndexedTransformSet *self);            /* slot 1 of 0x1691760 */
 void FUN_00024b80(hkMultipleVertexBuffer *self);           /* slot 1 of 0x1691ff0 */
@@ -5729,7 +5752,6 @@ void FUN_0003c370(hknpSphereShape *self);                    /* slot 1 of 0x1695
 void FUN_000467a0(hknpPhysicsSceneData *self);               /* slot 1 of 0x1697ea0 */
 void FUN_0004aff0(hknpWorld *self);                          /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169ab10 */
-void FUN_0007de00(hkpRagdollConstraintData *self);           /* slot 1 of 0x169d0d0 */
 void FUN_000870e0(hkxMaterial *self);                        /* slot 1 of 0x16a0db0 */
 void FUN_00089330(hkxAttributeHolder *self);                 /* slot 1 of 0x16a1670 */
 void FUN_0008beb0(hkxMesh *self);                            /* slot 1 of 0x16a25a0 */
@@ -5737,7 +5759,6 @@ void FUN_0008c0c0(hkxNode *self);                            /* slot 1 of 0x16a2
 void FUN_0008c940(hkxVertexAnimation *self);                 /* slot 1 of 0x16a26c0 */
 void FUN_0008d270(hkxScene *self);                           /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);                     /* slot 1 of 0x16a29d0 */
-void FUN_00095820(hkcdPlanarSolid *self);                    /* slot 1 of 0x16a3630 */
 void FUN_0009b170(hkcdPlanarGeometry *self);                 /* slot 1 of 0x16a36f0 */
 void FUN_0009c0d0(hkcdPlanarCsgOperand *self);               /* slot 1 of 0x16a3730 */
 void FUN_0009c910(hkcdPlanarGeometryPlanesCollection *self); /* slot 1 of 0x16a3770 */

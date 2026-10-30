@@ -2556,10 +2556,18 @@ class hkcdPlanarEntity : public hkReferencedObject
   public:
     hkcdPlanarEntity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), debugger(0) {}
 
-    /* Out of line (0x1d070, slot 0; 0x1d0e0, slot 1, the deleting one at
-     * the recorded size): the debugger's reference released and the
-     * pointer cleared. */
-    virtual ~hkcdPlanarEntity();
+    /* Inline (0x1d070, slot 0, before 0x1d0e0, slot 1, the deleting one at
+     * the recorded size, as the vtable's initializer orders them; emitted
+     * with the vtable where the finish callback uses it, func_0001d190.cpp;
+     * hkcdPlanarSolid's destructor 0x95870 holds it): the debugger's
+     * reference released and the pointer cleared. */
+    virtual ~hkcdPlanarEntity()
+    {
+        if (debugger) {
+            debugger->removeReference();
+        }
+        debugger = 0;
+    }
 
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
@@ -2668,8 +2676,13 @@ class hkcdPlanarSolid : public hkcdPlanarEntity
 
     hkcdPlanarSolid(hkFinishLoadedObjectFlag flag);
 
-    NodeStorage *nodes;
-    hkcdPlanarGeometryPlanesCollection *planes;
+    /* Out of line (0x95870, slot 0; the deleting one 0x95820, slot 1,
+     * before it): the members' references released, then
+     * hkcdPlanarEntity's, inline. */
+    virtual ~hkcdPlanarSolid();
+
+    hkRefPtr<NodeStorage> nodes;
+    hkRefPtr<hkcdPlanarGeometryPlanesCollection> planes;
     u32 rootNodeId;
 };
 
@@ -4962,9 +4975,25 @@ inline Vec4 normalized3(const Vec4 &v) /* derived name */
     return _mm_mul_ps(v, _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength));
 }
 
-/* A unit vector perpendicular to v, w zero: v's x, y and z turned a
- * quarter about z, or about y when that is longer, then normalized (0x1a360;
- * called at 0x73ef9). derived name. */
+/* A vector perpendicular to v, not normalized: v's x, y and z turned a
+ * quarter about z, or about y when that is longer, as Havok's
+ * hkVector4Util::calculatePerpendicularVector is (inline in the linear
+ * curve's binormal, 0x7fbbd). derived name. */
+inline Vec4 perpendicular3(const Vec4 &v) /* derived name */
+{
+    const Vec4 xyz = setXYZ_0(v);
+    const Vec4 yx00 = _mm_shuffle_ps(xyz, xyz, _MM_SHUFFLE(3, 3, 0, 1));
+    const Vec4 z0x0 = _mm_shuffle_ps(xyz, xyz, _MM_SHUFFLE(3, 0, 3, 2));
+    const Vec4 flipX = _mm_castsi128_ps(_mm_setr_epi32(int(0x80000000), 0, 0, 0));
+    const Vec4 a = _mm_xor_ps(yx00, flipX);
+    const Vec4 b = _mm_xor_ps(z0x0, flipX);
+    const Vec4 lengthA = _mm_dp_ps(v, v, 0x3f);
+    const Vec4 lengthB = _mm_dp_ps(z0x0, z0x0, 0xff);
+    return _mm_blendv_ps(a, b, _mm_cmplt_ps(lengthA, lengthB));
+}
+
+/* A unit vector perpendicular to v, w zero: the perpendicular above,
+ * normalized (0x1a360; called at 0x73ef9). derived name. */
 void FUN_0001a360(Vec4 &perpendicularOut, const Vec4 &v); /* derived name */
 
 /* A vector's reciprocal, zero where a lane is zero, as Havok's
@@ -7377,11 +7406,41 @@ struct alignas(16) hkAabb16 {
         }
     }
 
+    /* The box's key, its low half first (0x19f5dd: the two halves joined
+     * into one word). derived name. */
+    u32 getKey() const
+    {
+        return key | (u32(key1) << 16);
+    }
+
+    /* Boxes ordered by their minimum x (0x13b5a0 sorts by it). derived
+     * name. */
+    bool operator<(const hkAabb16 &other) const
+    {
+        return min[0] < other.min[0];
+    }
+
     u16 min[3];
     u16 key;
     u16 max[3];
     u16 key1;
 };
+
+/* A pair of keys (derived names): two boxes found overlapping. */
+struct hkKeyPair /* derived name */
+{
+    u32 keyA;
+    u32 keyB;
+};
+
+/* Every overlapping pair of a run of boxes sorted by their minimum x, the
+ * run closed by a box no other reaches (0x19f550; 0x198030 calls it at
+ * 0x1981b4): each box against the ones after it whose x starts inside it,
+ * two at a time, the y and z overlap read from the signs of the two
+ * coordinates' differences at once; a pair past the room counted as
+ * skipped. The pairs written back. derived name. */
+int FUN_0019f550(const hkAabb16 *boxes, int numBoxes, hkKeyPair *pairsOut, int maxNumPairs,
+                 int &numPairsSkippedOut); /* derived name */
 
 /* hknpMaterialId, the material library's 16-bit handle (the template
  * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
@@ -9084,7 +9143,8 @@ class hknpGunProjectile : public hkReferencedObject /* derived name */
 {
   public:
     enum {
-        FLAG_DESTROYED = 1 /* derived name */
+        FLAG_DESTROYED = 1, /* derived name */
+        FLAG_TOUCHED = 2    /* derived name */
     };
 
     /* Destroyed once: slot 5, then the flag (the gun's slots 10 and 13,
@@ -9097,9 +9157,20 @@ class hknpGunProjectile : public hkReferencedObject /* derived name */
         }
     }
 
+    /* Aged by a step, then updated in the world (the gun's slot 12,
+     * 0x1598f0, inlines it: the world read before the age is stored).
+     * derived name. */
+    void step(hknpWorld *world, float timeStep)
+    {
+        existenceTime += timeStep;
+        update(world, timeStep);
+    }
+
     virtual void onDestroy(hknpWorld *world); /* vtable slot 5; derived name */
     virtual void unknownVirtual6();
-    virtual void update(hknpWorld *world); /* vtable slot 7; derived name */
+    /* Slot 7: the step's update, the time step still in xmm0 at the call
+     * (0x159944). derived name. */
+    virtual void update(hknpWorld *world, float timeStep);
 
     u8 flags; /* derived name */
     u8 unknownD[7];
@@ -9915,10 +9986,11 @@ class hknpConvexShape : public hknpShape
     /* A new convex shape of dispatch type 1 under a convex radius, its
      * vertices right after the object (inlined in the sphere's creation,
      * 0x3c5ca to 0x3c5ed). derived name. */
-    hknpConvexShape(int numVertices, float radius) : hknpShape(1)
+    hknpConvexShape(int numVertices, float radius, int sizeOfBaseClass = sizeof(hknpConvexShape))
+        : hknpShape(1)
     {
         convexRadius = radius;
-        vertices.offset = sizeof(hknpConvexShape) - HK_OFFSET_OF(hknpConvexShape, vertices);
+        vertices.offset = u16(sizeOfBaseClass - HK_OFFSET_OF(hknpConvexShape, vertices));
         vertices.size = u16(numVertices);
     }
 
@@ -10002,6 +10074,26 @@ class hknpConvexPolytopeShape : public hknpConvexShape
      * flags 3 when finishing. */
     hknpConvexPolytopeShape(hkFinishLoadedObjectFlag flag);
 
+    /* A new polytope of a class of sizeOfBaseClass bytes, its vertices,
+     * planes (one a face), faces and indices after the object in that
+     * order, each block 16-aligned as FUN_001542f0 sizes them (inlined in
+     * the capsule's creation, 0x72fb0). derived name. */
+    hknpConvexPolytopeShape(int numVertices, int numFaces, int numIndices, float radius,
+                            int sizeOfBaseClass)
+        : hknpConvexShape(numVertices, radius, sizeOfBaseClass)
+    {
+        flags = IS_CONVEX_SHAPE | IS_CONVEX_POLYTOPE_SHAPE | USE_SMALL_FACE_INDICES;
+        int offset = ((sizeOfBaseClass + 15) & ~15) + numVertices * int(sizeof(Vec4));
+        planes.offset = u16(offset - HK_OFFSET_OF(hknpConvexPolytopeShape, planes));
+        planes.size = u16(numFaces);
+        offset += numFaces * int(sizeof(Vec4));
+        faces.offset = u16(offset - HK_OFFSET_OF(hknpConvexPolytopeShape, faces));
+        faces.size = u16(numFaces);
+        offset += (numFaces * int(sizeof(Face)) + 15) & ~15;
+        indices.offset = u16(offset - HK_OFFSET_OF(hknpConvexPolytopeShape, indices));
+        indices.size = u16(numIndices);
+    }
+
     /* Out of line (0x72e50, slot 0 of its vtable and of the capsule's and
      * the triangle's): the connectivity's reference released, then
      * hknpShape's destructor. */
@@ -10054,6 +10146,22 @@ class hknpCapsuleShape : public hknpConvexPolytopeShape
     /* The finish constructor, out of line (0x730d0, jumped to by the finish
      * callback FUN_000394a0). */
     hknpCapsuleShape(hkFinishLoadedObjectFlag flag);
+
+    /* A new capsule's polytope: eight vertices, six faces, 24 indices
+     * (inlined in 0x72fb0). derived name. */
+    hknpCapsuleShape(float radius)
+        : hknpConvexPolytopeShape(8, 6, 24, radius, sizeof(hknpCapsuleShape))
+    {
+    }
+
+    /* The segment set and the polytope built around it (0x73260). derived
+     * name. */
+    void FUN_00073260(const Vec4 &a_, const Vec4 &b_);
+
+    /* The capsule and its polytope from the thread's heap, built over a
+     * segment and given its allocated size (0x72fb0; the convex builder
+     * calls it at 0x44931). derived name. */
+    static hknpCapsuleShape *FUN_00072fb0(const Vec4 &a_, const Vec4 &b_, float radius);
 
     int FUN_00073170() const; /* vtable slot 6; derived name */
 
@@ -12122,6 +12230,8 @@ class hkpRagdollConstraintData : public hkpConstraintData
      * on gets it again. */
     hkpRagdollConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x7de50, slot 0; the deleting one 0x7de00, slot 1,
+     * before it): each motor's reference released, the first first. */
     virtual ~hkpRagdollConstraintData();
 
     /* Slot 7 (0x7dd30): as the ragdoll limits' test, after the ball and
@@ -12973,6 +13083,17 @@ class hkxTextureInplace : public hkReferencedObject
  * +0x30, appliedTransform (hkMatrix3) at +0xc0. Its finish constructor is
  * inline where the type info's finish callback (0x8b6f0) runs it; only the
  * two strings have anything to finish. */
+/* hkxScene's defaults (derived names): an offset per member, -1 for none,
+ * then appliedTransform's, the identity rotation (0x14c3474, the class's
+ * defaults pointer). */
+struct hkxSceneDefaults /* derived name */
+{
+    int defaultOffsets[15];
+    float appliedTransform[12];
+};
+
+extern const hkClassMember D_16a2180[]; /* derived name: hkxScene's records */
+
 class hkxScene : public hkReferencedObject
 {
   public:
@@ -15703,6 +15824,13 @@ class hkpParametricCurve : public hkReferencedObject
 {
   public:
     hkpParametricCurve(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* The curve's slots from 5 (derived names, after the linear curve's
+     * overriders): the point at a parameter, slot 6, and the tangent at a
+     * parameter (the binormal 0x7fb50 asks slot 7 for it). */
+    virtual void FUN_0007f5c0(float t, Vec4 &pointOnCurve) const = 0;
+    virtual void unknownVirtual6() = 0;
+    virtual void FUN_0007f870(float t, Vec4 &tangent) const = 0;
 };
 
 /* Built by the reflection initializer at 0x7c030. */
@@ -15738,7 +15866,9 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     /* Slot 5 (0x7f5c0): the point at a parameter, between the points
      * either side of it. derived name. */
     void FUN_0007f5c0(float t, Vec4 &pointOnCurve) const;
-    float FUN_0007fad0() const; /* vtable slot 9; derived name */
+    void unknownVirtual6();                          /* vtable slot 6 (0x7f650) */
+    void FUN_0007f870(float t, Vec4 &tangent) const; /* vtable slot 7; derived name */
+    float FUN_0007fad0() const;                      /* vtable slot 9; derived name */
     /* Slot 10 (0x7fae0): the distance along the curve at a parameter,
      * interpolated in the segment the parameter falls in (the last one
      * extended past the end). derived name. */
@@ -15747,6 +15877,10 @@ class hkpLinearParametricCurve : public hkpParametricCurve
      * replaced from the containers' allocator when it is too small. derived
      * name. */
     void FUN_0007fde0(hkArray<Vec4> &pointsOut) const;
+    /* Slot 11 (0x7fb50): the binormal at a parameter, the tangent crossed
+     * with the direction kept not parallel to it, or a perpendicular when
+     * the tangent is too near the y axis, normalized. derived name. */
+    void FUN_0007fb50(float t, Vec4 &binormal) const;
     /* Slot 14 (0x7fea0): every point moved under the transform. derived
      * name. */
     void FUN_0007fea0(const hkTransform &transform);
@@ -17989,6 +18123,27 @@ struct AccessIdLess0018e3e0 /* derived name */
     }
 
     const SolverArrays0003f820::Access *accesses;
+};
+
+/* What 0x72400 sorts by pointer (derived names): a 32-bit key at +0x50,
+ * compared unsigned (0x72c83). */
+struct Keyed00072c10 /* derived name */
+{
+    u8 unknown0[0x50];
+    u32 key;
+};
+
+/* The order 0x72400 sorts them in (0x72c10, its quick sort's instantiation):
+ * a null pointer before any object, objects by their keys. derived name. */
+struct KeyLess00072c10 /* derived name */
+{
+    bool operator()(const Keyed00072c10 *const &a, const Keyed00072c10 *const &b) const
+    {
+        if (!a) {
+            return b != HK_NULL;
+        }
+        return b && a->key < b->key;
+    }
 };
 
 /* derived name: the box around the boxes' centres (FUN_001854b0; called at

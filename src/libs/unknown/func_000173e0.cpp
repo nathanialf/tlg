@@ -6,7 +6,8 @@
  * inline into it), back from the interface at +0x10 to the object. Written
  * as a call because the overrider's body is not written yet; the object is
  * never null here, so the conversion goes through a reference. */
-void FUN_000173e0(Interface168e888 *self, void *pointer, void *other) /* derived name */
+void FUN_000173e0(Interface168e888 *self, TaskNode000172c0 *node,
+                  TaskNode000172c0 *successor) /* derived name */
 {
-    FUN_000172c0(&static_cast<Class168e810 &>(*self), pointer, other);
+    FUN_000172c0(&static_cast<Class168e810 &>(*self), node, successor);
 }

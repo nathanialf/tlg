@@ -137,7 +137,9 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     void FUN_00017970(const Handle00016350 *const *handles, int numHandles);
 
     Object00015700 *object18; /* derived name */
-    u8 unknown20[0x330];
+    u8 unknown20[0x10];
+    hkCriticalSection lock; /* derived name; slots 7 to 9 run under it */
+    u8 unknown40[0x310];
     Runner00016350 defaultRunner; /* derived name */
     u8 unknown360[0x10];
 };
@@ -149,9 +151,22 @@ void FUN_00016ee0(Class168e810 *self);
 /* The interface's thunk of it (slot 1 of the second vtable, 0x16f30), on
  * the object 16 bytes before the interface. derived name. */
 void FUN_00016f30(Interface168e888 *self);
-void FUN_000172c0(Class168e810 *self, void *pointer, void *other); /* derived name */
-void FUN_000173f0(Class168e810 *self, void *pointer, int count);   /* derived name */
-void FUN_00017540(Class168e810 *self, void *pointer, int count);   /* derived name */
+
+/* A node slot 7 links (derived names): its count at +0, -1 once the node
+ * is done, and the nodes that wait on it at +0x10. */
+struct TaskNode000172c0 /* derived name */
+{
+    int counter;
+    u8 unknown4[0xc];
+    hkArray<TaskNode000172c0 *> successors;
+};
+
+/* Slot 7 (0x172c0), under the lock: a node made to wait on another unless
+ * that one is done, its count raised (0x173f0 links pairs of them). derived
+ * names. */
+void FUN_000172c0(Class168e810 *self, TaskNode000172c0 *node, TaskNode000172c0 *successor);
+void FUN_000173f0(Class168e810 *self, void *pointer, int count); /* derived name */
+void FUN_00017540(Class168e810 *self, void *pointer, int count); /* derived name */
 
 /* Handles run through an interface (0x92fe0; Class168e810's slot 11 hands
  * it the ones that name something): one through slot 7, two or more as a

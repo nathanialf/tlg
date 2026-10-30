@@ -1292,7 +1292,7 @@ FUN_00007390 src/libs/unknown/func_00007390.cpp _Z12FUN_00007390P12Pool00007880
 _ZN22hkBufferedStreamWriterD0Ev src/libs/unknown/func_00008ff0.cpp
 _ZN18hkSimpleLocalFrameD0Ev src/libs/unknown/func_0000de20.cpp
 FUN_00016ee0 src/libs/unknown/func_00016ee0.cpp
-FUN_00019730 src/libs/unknown/func_00019730.cpp
+_ZN13PageAllocatorD0Ev src/libs/unknown/func_00019780.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
 FUN_000234a0 src/libs/unknown/func_000234a0.cpp
 FUN_00024b80 src/libs/unknown/func_00024b80.cpp
@@ -1317,7 +1317,7 @@ FUN_0004aff0 src/libs/unknown/func_0004aff0.cpp
 FUN_0008f6a0 src/libs/unknown/func_0008f6a0.cpp _ZN9UnionFind14findRootOfNodeEi
 _ZN18hknpMountedBallGunD0Ev src/libs/unknown/func_00166890.cpp
 FUN_0006b7d0 src/libs/unknown/func_0006b7d0.cpp
-FUN_0007de00 src/libs/unknown/func_0007de00.cpp
+_ZN24hkpRagdollConstraintDataD0Ev src/libs/unknown/func_0007de50.cpp
 FUN_000870e0 src/libs/unknown/func_000870e0.cpp
 FUN_00089330 src/libs/unknown/func_00089330.cpp
 _ZN14hkxSkinBindingD0Ev src/libs/unknown/func_0008a9b0.cpp
@@ -1326,7 +1326,7 @@ FUN_0008c0c0 src/libs/unknown/func_0008c0c0.cpp
 FUN_0008c940 src/libs/unknown/func_0008c940.cpp
 FUN_0008d270 src/libs/unknown/func_0008d270.cpp
 FUN_0008dc00 src/libs/unknown/func_0008dc00.cpp
-FUN_00095820 src/libs/unknown/func_00095820.cpp
+_ZN15hkcdPlanarSolidD0Ev src/libs/unknown/func_00095870.cpp
 FUN_0009b170 src/libs/unknown/func_0009b170.cpp
 FUN_0009c0d0 src/libs/unknown/func_0009c0d0.cpp
 FUN_0009c910 src/libs/unknown/func_0009c910.cpp
@@ -1563,8 +1563,8 @@ FUN_00008270 src/libs/unknown/func_00008310.cpp _ZN9hkOstreamD0Ev
 _ZN10hkOArchiveD1Ev src/libs/unknown/func_0000a3b0.cpp
 FUN_0000a310 src/libs/unknown/func_0000a3b0.cpp _ZN10hkOArchiveD0Ev
 FUN_00014e00 src/libs/unknown/func_00014e00.cpp _ZNK11hkClassEnum12FUN_00014e00EPKcPi
-_ZN16hkcdPlanarEntityD1Ev src/libs/unknown/func_0001d070.cpp
-FUN_0001d0e0 src/libs/unknown/func_0001d070.cpp _ZN16hkcdPlanarEntityD0Ev
+_ZN16hkcdPlanarEntityD1Ev src/libs/unknown/func_0001d190.cpp
+FUN_0001d0e0 src/libs/unknown/func_0001d190.cpp _ZN16hkcdPlanarEntityD0Ev
 _ZN34hknpDefaultExternMeshShapeGeometryD1Ev src/libs/unknown/func_0003b870.cpp
 FUN_0003b8e0 src/libs/unknown/func_0003b870.cpp _ZN34hknpDefaultExternMeshShapeGeometryD0Ev
 _ZN27hknpBreakableConstraintDataD1Ev src/libs/unknown/func_0003c100.cpp
@@ -2379,3 +2379,12 @@ FUN_00168230 src/libs/unknown/func_00168230.cpp _Z12FUN_00168230RK18MassConfig00
 _ZN16hkRelocationInfoD1Ev src/libs/unknown/func_0019b0b0.cpp _ZN16hkRelocationInfoD2Ev
 FUN_000086f0 src/libs/unknown/func_000086f0.cpp _ZN9hkOstream12FUN_000086f0EPKcz
 FUN_00090a10 src/libs/unknown/func_00090a10.cpp _ZN15BufferAllocator12FUN_00090a10EPvi
+_ZN13PageAllocatorD1Ev src/libs/unknown/func_00019780.cpp
+FUN_00072fb0 src/libs/unknown/func_00072fb0.cpp _ZN16hknpCapsuleShape12FUN_00072fb0ERKDv4_fS2_f
+_ZN24hkpRagdollConstraintDataD1Ev src/libs/unknown/func_0007de50.cpp
+FUN_000172c0 src/libs/unknown/func_000172c0.cpp _Z12FUN_000172c0P12Class168e810P16TaskNode000172c0S2_
+FUN_00019b60 src/libs/unknown/func_00019b60.cpp _ZN13PageAllocator12FUN_00019b60Ev
+FUN_0007fb50 src/libs/unknown/func_0007fb50.cpp _ZNK24hkpLinearParametricCurve12FUN_0007fb50EfRDv4_f
+FUN_0008b740 src/libs/unknown/func_0008b6f0.cpp _GLOBAL__I_a
+FUN_001598f0 src/libs/unknown/func_001598f0.cpp _ZN17hknpProjectileGun17updateProjectilesEfP9hknpWorldPKvRK11hkTransformbb
+_ZN15hkcdPlanarSolidD1Ev src/libs/unknown/func_00095870.cpp
