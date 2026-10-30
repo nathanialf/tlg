@@ -1,26 +1,28 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: the base keeps `not v` in the match block before the capacity test and `and`
-// after the push (no andn), and leaves the loop through a separate bits test whose exit
-// stores a constant 0; this compile forms andn (sunk after the push) and folds the two loop
-// conditions into one branch (NOTES Round 61B). Round 62B: the base is the bits test
-// trivially unswitched out of the scan loop (LoopUnswitch.cpp:562, IsTrivialUnswitchCondition),
-// which needs the test alone in the inner header (not folded into `and`) and an exit block
-// without a phi; the outer loop's LCSSA phi of bits in the shared exit blocks it (NOTES Round
-// 62B has the measured forms).
+// NONMATCHING: equal but for the outer loop's shape (NOTES Round 64B). The name pushed
+// before the bits are cleared, the mask computed before the push, gives the base's frame and
+// its `not` before the capacity test with the `and` after the push. Left: the base's outer
+// loop is unrotated (the numItems load in the entry, one bits test shared by the entry and the
+// push, its zero on a split edge); here the inner scan's bits test is hoisted by LICM and
+// trivially unswitched into the outer header before the outer loop is visited, which LoopRotate
+// then rotates with a guard.
 hkResult hkClassEnum::FUN_00014ce0(int flagValue, hkArray<const char *> &bitsOut,
                                    int &bitsOver) const /* derived name */
 {
     bitsOut.clear();
     int bits = flagValue;
-    for (int i = numItems - 1; bits && i >= 0; i--) {
+    int i = numItems;
+    while (bits && i-- > 0) {
         const Item &item = items[i];
-        if ((item.getValue() & bits) == item.getValue()) {
-            bits &= ~item.getValue();
+        int value = item.getValue();
+        if ((value & bits) == value) {
+            int mask = ~value;
             bitsOut.pushBack(item.getName());
+            bits &= mask;
         }
     }
     bitsOver = bits;
-    return bits ? HK_FAILURE : HK_SUCCESS;
+    return bits == 0 ? HK_SUCCESS : HK_FAILURE;
 }

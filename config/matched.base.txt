@@ -200,7 +200,7 @@ FUN_00087e20 src/libs/unknown/func_00087e20.cpp
 FUN_00087e40 src/libs/unknown/func_00087e40.cpp
 FUN_00089140 src/libs/unknown/func_00089140.cpp
 FUN_00089ec0 src/libs/unknown/func_00089ec0.cpp
-FUN_0008a830 src/libs/unknown/func_0008a830.cpp
+_ZN14hkxSkinBindingD1Ev src/libs/unknown/func_0008a9b0.cpp
 FUN_0008b070 src/libs/unknown/func_0008b070.cpp
 FUN_0008b870 src/libs/unknown/func_0008b870.cpp
 FUN_0008c930 src/libs/unknown/func_0008c930.cpp
@@ -212,7 +212,7 @@ FUN_0008e5c0 src/libs/unknown/func_0008e5c0.cpp
 FUN_0008e820 src/libs/unknown/func_0008e820.cpp
 FUN_0008e870 src/libs/unknown/func_0008e870.cpp
 FUN_00092200 src/libs/unknown/func_00092200.cpp
-FUN_000aa370 src/libs/unknown/func_000aa370.cpp
+_ZN13hkSkinBindingD1Ev src/libs/unknown/leaf_000242d0.cpp
 FUN_000acae0 src/libs/unknown/leaf_000acae0.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acae0Ev
 FUN_000acaf0 src/libs/unknown/leaf_000acaf0.cpp _ZN20hkMemoryMeshMaterial12FUN_000acaf0Em
 FUN_000ad6e0 src/libs/unknown/leaf_000ad6e0.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad6e0Ev
@@ -1320,7 +1320,7 @@ FUN_0006b7d0 src/libs/unknown/func_0006b7d0.cpp
 FUN_0007de00 src/libs/unknown/func_0007de00.cpp
 FUN_000870e0 src/libs/unknown/func_000870e0.cpp
 FUN_00089330 src/libs/unknown/func_00089330.cpp
-FUN_0008a840 src/libs/unknown/func_0008a840.cpp
+_ZN14hkxSkinBindingD0Ev src/libs/unknown/func_0008a9b0.cpp
 FUN_0008beb0 src/libs/unknown/func_0008beb0.cpp
 FUN_0008c0c0 src/libs/unknown/func_0008c0c0.cpp
 FUN_0008c940 src/libs/unknown/func_0008c940.cpp
@@ -1330,7 +1330,7 @@ FUN_00095820 src/libs/unknown/func_00095820.cpp
 FUN_0009b170 src/libs/unknown/func_0009b170.cpp
 FUN_0009c0d0 src/libs/unknown/func_0009c0d0.cpp
 FUN_0009c910 src/libs/unknown/func_0009c910.cpp
-FUN_000aa380 src/libs/unknown/func_000aa380.cpp
+_ZN13hkSkinBindingD0Ev src/libs/unknown/leaf_000242d0.cpp
 FUN_000aa680 src/libs/unknown/func_000aa680.cpp
 FUN_000ad920 src/libs/unknown/func_000ad920.cpp
 _ZN20hknpHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp
@@ -2369,3 +2369,5 @@ FUN_00170f20 src/libs/unknown/func_00170f20.cpp _ZNK24hknpMotionWeldTOICommand12
 _ZN14hkMemorySystemD2Ev src/libs/unknown/hkMemorySystem.cpp
 _ZN22hkFreeListMemorySystemD0Ev src/libs/unknown/func_0000c360.cpp
 FUN_0008f220 src/libs/unknown/func_0008f220.cpp _ZN18BlockListAllocator10blockAllocEi
+_ZN14hkxSkinBindingD2Ev src/libs/unknown/func_0008a9b0.cpp
+_ZN13hkSkinBindingD2Ev src/libs/unknown/leaf_000242d0.cpp

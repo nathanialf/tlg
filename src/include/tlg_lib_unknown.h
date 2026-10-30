@@ -3599,7 +3599,50 @@ struct ThreadBuffer /* derived name */
 };
 
 extern __thread ThreadBuffer *D_16dc078;
-void FUN_0000ead0(ThreadBuffer *buffer); /* derived name */
+
+/* A timer kept by its owner between steps and written to the stream whole
+ * under a new name (0x17aeb0 copies 20 bytes, the record's data size: the
+ * value at +0x10 after the two counters). derived names. */
+/* A marker: the name alone, 8 bytes in the stream. derived name. */
+struct TimerMarker /* derived name */
+{
+    const char *commandAndMonitor;
+};
+
+struct TimerRecordBase /* derived name */
+{
+    const char *commandAndMonitor;
+    u32 time0;
+    u32 time1;
+};
+
+struct TimerRecord : public TimerRecordBase /* derived name */
+{
+    u32 value;
+};
+
+/* An owner of step timers (derived name): two records at +0xa8 and +0xc0,
+ * the second written only when its value is set, two groups at +0xd8 and
+ * +0x268 that write their own (FUN_0017a970, FUN_0017abe0), and the flag at
+ * +0x410 that turns the writing on; FUN_0017a3c0 writes the owner's first
+ * commands. Its writer is called by 0x15c5f0 (0x15d77d). */
+struct StepTimers /* derived name */
+{
+    /* 0x17aeb0. derived name. */
+    void FUN_0017aeb0(ThreadBuffer &stream);
+
+    u8 unknown0[0xa8];
+    TimerRecord timerA8; /* derived name */
+    TimerRecord timerC0; /* derived name */
+    u8 groupD8[0x190];   /* derived name */
+    u8 group268[0x1a8];  /* derived name */
+    bool enabled;        /* derived name */
+};
+
+void FUN_0017a3c0(StepTimers *self, ThreadBuffer &stream); /* derived name */
+void FUN_0017a970(void *group, ThreadBuffer &stream);      /* derived name */
+void FUN_0017abe0(void *group, ThreadBuffer &stream);      /* derived name */
+void FUN_0000ead0(ThreadBuffer *buffer);                   /* derived name */
 
 inline void *hkMultipleVertexBuffer::operator new(unsigned long numBytes)
 {
@@ -5271,6 +5314,16 @@ inline void hkxIndexBuffer::operator delete(void *object, unsigned long numBytes
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkSkinBinding::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxSkinBinding::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkcdPlanarSolid::NodeStorage::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -5650,7 +5703,6 @@ void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169a
 void FUN_0007de00(hkpRagdollConstraintData *self);           /* slot 1 of 0x169d0d0 */
 void FUN_000870e0(hkxMaterial *self);                        /* slot 1 of 0x16a0db0 */
 void FUN_00089330(hkxAttributeHolder *self);                 /* slot 1 of 0x16a1670 */
-void FUN_0008a840(hkxSkinBinding *self);                     /* slot 1 of 0x16a1cb0 */
 void FUN_0008beb0(hkxMesh *self);                            /* slot 1 of 0x16a25a0 */
 void FUN_0008c0c0(hkxNode *self);                            /* slot 1 of 0x16a25e0 */
 void FUN_0008c940(hkxVertexAnimation *self);                 /* slot 1 of 0x16a26c0 */
@@ -5660,7 +5712,6 @@ void FUN_00095820(hkcdPlanarSolid *self);                    /* slot 1 of 0x16a3
 void FUN_0009b170(hkcdPlanarGeometry *self);                 /* slot 1 of 0x16a36f0 */
 void FUN_0009c0d0(hkcdPlanarCsgOperand *self);               /* slot 1 of 0x16a3730 */
 void FUN_0009c910(hkcdPlanarGeometryPlanesCollection *self); /* slot 1 of 0x16a3770 */
-void FUN_000aa380(hkSkinBinding *self);                      /* slot 1 of 0x16a3850 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);              /* slot 1 of 0x16a38b0 */
 void FUN_000ad920(hkStorageSkinnedMeshShape *self);          /* slot 1 of 0x16a3af0 */
 void FUN_00157ea0(hknpBallGun *self);                        /* slot 1 of 0x16a48d0 */

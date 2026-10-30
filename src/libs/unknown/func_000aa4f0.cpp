@@ -4,6 +4,6 @@
 /* hkSkinBinding's finish constructor: nothing loaded needs fixing up, so
  * only the vtable is set. */
 hkSkinBinding::hkSkinBinding(hkFinishLoadedObjectFlag flag)
-    : hkMeshShape(flag), worldFromBoneTransforms(flag), boneNames(flag)
+    : hkMeshShape(flag), skin(flag), worldFromBoneTransforms(flag), boneNames(flag)
 {
 }

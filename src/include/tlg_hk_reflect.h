@@ -12781,9 +12781,8 @@ void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /
  * hkxMaterialShaderSet (type info 0x57c7680, size 0x20): FUN_0008b370
  * stores the vtable 0x16a1f30.
  * hkxSkinBinding, polymorphic (type info 0x57c7500, size 0x80, vtable
- * 0x16a1cc0 stored by its finish constructor FUN_0008a9b0): slot 0, the
- * complete destructor FUN_0008a830, runs the out-of-line FUN_0008a890,
- * which restores the vtable and frees the arrays from +0x30 down. */
+ * 0x16a1cc0 stored by its finish constructor FUN_0008a9b0): its inline
+ * destructor's three variants 0x8a830, 0x8a840 and 0x8a890. */
 /* hkxVertexDescription (hkClass 0x57c7f40, built at 0x8d20a: size 0x10,
  * one member record at 0x16a27a0): decls (an array of its ElementDecl, class
  * 0x57c7ec0) at +0. Its finish constructor is out of line, the empty body at
@@ -13053,16 +13052,23 @@ class hkxSkinBinding : public hkReferencedObject
 {
   public:
     hkxSkinBinding(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag), nodeNames(flag), bindPose(flag)
+        : hkReferencedObject(flag), mesh(flag), nodeNames(flag), bindPose(flag)
     {
     }
 
-    /* Slot 0 (FUN_0008a830) runs the out-of-line FUN_0008a890; the
-     * deleting destructor 0x8a840 frees 0x80. */
-    virtual ~hkxSkinBinding();
+    /* Inline, emitted with the vtable where the finish constructor uses it
+     * (func_0008a9b0.cpp): the base variant 0x8a890 frees the arrays from
+     * +0x28 down and releases the mesh; the complete one 0x8a830 is a jump
+     * to it and the deleting one 0x8a840 frees 0x80 after it (an inline
+     * destructor's complete variant is not an alias of its base one). */
+    virtual ~hkxSkinBinding() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* The record's members (0x16a1cf0). */
-    hkxMesh *mesh;
+    hkRefPtr<hkxMesh> mesh;
     hkArray<hkStringPtr> nodeNames;
     hkArray<hkMatrix4> bindPose;
     hkMatrix4 initSkinTransform;
@@ -13367,13 +13373,10 @@ void FUN_0008dc50(hkxMeshSection *self);                                      /*
 void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
-void FUN_0008a890(hkxSkinBinding *self); /* derived name */
-/* hkSkinBinding (vtable 0x16a3860): slot 0, the complete destructor
- * FUN_000aa370, runs the out-of-line FUN_000aa3d0, which restores the
- * vtable. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
+/* hkSkinBinding (vtable 0x16a3860): its inline destructor's variants are
+ * 0xaa370, 0xaa380 and 0xaa3d0. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
  * complete destructor FUN_000ad910, runs the out-of-line FUN_000adba0. */
 class hkSkinBinding;
-void FUN_000aa3d0(hkSkinBinding *self);             /* derived name */
 void FUN_000adba0(hkStorageSkinnedMeshShape *self); /* derived name */
 
 /* hkpPointToPathConstraintData's members, from the records its reflection
@@ -14243,7 +14246,16 @@ class hkSkinBinding : public hkMeshShape
 {
   public:
     hkSkinBinding(hkFinishLoadedObjectFlag flag);
-    virtual ~hkSkinBinding();
+
+    /* Inline, emitted with the vtable in the file of the key function
+     * getClassType: the base variant 0xaa3d0 frees the arrays from +0x28
+     * down and releases the skin; the complete one 0xaa370 is a jump to it
+     * and the deleting one 0xaa380 frees the object after it. */
+    virtual ~hkSkinBinding() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const;             /* vtable slot 3, FUN_000242d0 */
     void FUN_000aa520(const hkMeshSection &section); /* vtable slot 7; derived name */
@@ -14251,7 +14263,7 @@ class hkSkinBinding : public hkMeshShape
     void FUN_000aa540(const char *newName);          /* vtable slot 9; derived name */
 
     /* The record's members (0x1691c90). */
-    hkMeshShape *skin;
+    hkRefPtr<hkMeshShape> skin;
     hkArray<hkMatrix4> worldFromBoneTransforms;
     hkArray<hkStringPtr> boneNames;
 };
