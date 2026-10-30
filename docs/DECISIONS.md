@@ -1294,6 +1294,28 @@ unit; 0x41650's free-list destructor), never a flag. Both leave the
 classified set and return to the queue with that lead; 0x187750 stays
 parked (its shape is the unswitch, not the inliner).
 
+**Addendum, 2026-10-30 (round 58 harvest).** The second witness of the
+unswitch shape arrived (0x13e090, the layer tree update: two copies of the
+leaf gather loop with the `split` test after the loop's guard, NOTES Round
+58), and both flag readings were measured over the region with an
+experiment build of the live 3.3 source (two hidden options, the live
+install untouched; scratchpad exp33/, every claimed library TU compiled
+under each and its `.text` compared with the live object's; the baseline
+run under no option finds every one of the 1,829 TUs identical). Non-trivial
+unswitching at -O2 (`createLoopUnswitchPass(SizeLevel)` in place of
+`SizeLevel || OptLevel < 3`) changes one claimed function, 0x1806b0
+(hkMemoryResourceContainer, 60 instructions from 52, no longer equal), and
+matches neither witness (0x187750 at 0.23, 0x13e090 at 0.03): refuted. -O3
+measured again over the 2,076 rows changes fourteen TUs with sixteen
+claimed functions, among them hknp's own (0x2b670, 0x310f0, 0x18e380,
+0x142a40's three siblings) and hkBase's (0x14640, 0x904f0, 0x1806b0), so a
+level raised for one library is refuted with the plain level. The shape has
+no flag in the region; it is a source question, (b) of the ruling: the two
+loops as the developer wrote them, or a structure that duplicates the loop
+(a template or an inline helper instantiated on the guard). Both functions
+stay parked with that lead until a source reading arrives; neither is a
+round's queue item.
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
@@ -1851,6 +1873,17 @@ and the function's order is found among the instructions that list ranks
 (the SSE intrinsics 3.3 still lowers through calls, a division, a load),
 not by a later rule.
 
+**Addendum, 2026-10-30 (D36).** D36 restores, for one condition of
+LoopRotate, the state before r181230 (2013-05-06), which 3.3 carries and
+the bracket's lower bound r196925 (2013-12-10) postdates by seven months.
+The bracket is read as a trunk snapshot; a snapshot after r196925 holds
+r181230, so the base's rotation is either a vendor change on top of the
+snapshot or a branch whose point predates May 2013 with r196925's selection
+cherry-picked. Both readings keep every measurement above; neither is
+established. The bracket stays as the bound on upstream changes considered
+for a backport; D36 is a reversion inside it, taken on the region's
+measurement alone.
+
 ## D33. The library compiler counts no debug intrinsic in the inline cost's vector bonus nor in the memory dependence scan limit (2026-10-29)
 
 **Decision.** The library prefix compiles with a seventh and an eighth
@@ -1985,3 +2018,52 @@ return to the queue.
 **Trigger to revisit.** A claimed function whose frame the backport moves;
 or a protected function the base lays out in index order where the rule
 would group an array or an address-taken object.
+
+## D36. A loop whose latch LoopRotate has just folded is not rotated (2026-10-30)
+
+**Decision.** The library compiler carries an eleventh backport,
+`tools/patches/llvm-3.3-looprotate-01-no-rotation-after-latch-fold.patch`:
+in `LoopRotate::rotateLoop` the exiting-latch test no longer consults
+`SimplifiedLatch`, so a loop whose latch `simplifyLoopLatch` has just
+folded into the final exiting block (a scan `while (i < n && buf[i] != c)
+i++;`, the increment folded into the test's block) is left as it is, the
+header test first and the increment in the body. That is the state of the
+condition before upstream r181230 (9c72b071fe4e, 2013-05-06, Andrew Trick,
+"Rotate multi-exit loops even if the latch was simplified.", PR10293),
+which 3.3 (branched 2013-05-07) carries. Nothing else of r181230 is
+reverted: the latch fold, `runOnLoop`'s repeat and the fold's return value
+stay as 3.3 has them. The flags line is unchanged.
+
+**Evidence.** Round 58 (NOTES "Round 58") classified two functions whose
+scans the base leaves unrotated after the fold: 0x19da90 (the XML reader:
+five scans at 0x19db90, 0x19dbf0, 0x19ddd0, 0x19df20, 0x19e2e8 and the
+attribute parse's pointer walks from 0x19e3b8) and 0x1a0780 (the image's
+part check at 0x1a07c0), each with the header's `cmp i, n; jge` first and
+`lea rax, [rsi+1]` in the body, which 3.3 rotates; the reader's comment
+loop, whose latch has two predecessors and is not folded, is rotated in the
+base as 3.3 rotates it, the converse the patch keeps. The region was
+measured with an experiment build of the live source (a hidden option
+`-rotate-simplified-latch=false` reproducing the condition's pre-state, the
+live install untouched; scratchpad exp33/): every claimed library TU
+(1,829) compiled under the option and its `.text` compared with the live
+object's; the baseline run under no option finds all 1,829 identical; under
+the option exactly one TU differs, `func_0019da90.cpp`, and only in its
+unclaimed function. No claimed function changes. Under it 0x1a0780 compiles
+equal to the base (0.29 before, the first difference at instruction 4) and
+0x19da90 goes from 0.06 to 0.53 with its first difference moved from
+instruction 26 to 139 (its loops take the base's shape; the rest is its own
+residual). The claimed set is silent on the condition (none of the 2,076
+functions holds a folded-latch scan), so the ruling rests on the two
+witnesses and the absence of a counter-witness; D32's addendum records what
+the reversion says about the bracket.
+
+**Adopted, 2026-10-30.** The live compiler rebuilt with the eleven patches
+(`tools/build_llvm.sh 3.3`, the previous install backed up); the gate holds
+on every claimed row under it; 0x1a0780 is claimed under it (its row added
+in the adopting commit) and 0x19da90 returns to the queue with its residual
+from instruction 139.
+
+**Trigger to revisit.** A claimed function whose folded-latch scan the base
+holds rotated (the condition's post-state), or a base loop the patch now
+leaves unrotated where the base rotates it; either reopens the condition
+and the reading of the bracket.

@@ -1,0 +1,35 @@
+llvm-3.3 backport patch: a loop whose latch was just folded is not rotated (PS4)
+
+This patch CHANGES CODE GENERATION for a loop whose latch LoopRotate's
+simplifyLoopLatch folds into the final exiting block (a scan such as
+`while (i < n && buf[i] != c) i++;`): the loop is left unrotated, the header
+test first and the increment in the body, as LLVM did before
+
+  r181230  9c72b071fe4e  2013-05-06  Andrew Trick, "Rotate multi-exit loops
+           even if the latch was simplified." (fixes PR10293)
+
+which 3.3 (branched 2013-05-07) carries. The patch takes the SimplifiedLatch
+parameter out of rotateLoop's exiting-latch test, restoring r181230's
+pre-state for that condition and nothing else (the latch fold itself, the
+repeat loop in runOnLoop and the latch's return value stay as 3.3 has them).
+Measured over every claimed library row: no claimed function changes;
+0x1a0780 matches under it and 0x19da90's loops take the base's shape.
+docs/DECISIONS.md D36.
+
+--- a/lib/Transforms/Scalar/LoopRotation.cpp
++++ b/lib/Transforms/Scalar/LoopRotation.cpp
+@@ -290,9 +290,11 @@
+   if (OrigLatch == 0)
+     return false;
+ 
+-  // Rotate if either the loop latch does *not* exit the loop, or if the loop
+-  // latch was just simplified.
+-  if (L->isLoopExiting(OrigLatch) && !SimplifiedLatch)
++  // Rotate only if the loop latch does *not* exit the loop. Before r181230 a
++  // latch that simplifyLoopLatch had just folded into the final exit left the
++  // loop as it was; the PS4 compiler of docs/DECISIONS.md D36 keeps that
++  // behaviour, so SimplifiedLatch is not consulted here.
++  if (L->isLoopExiting(OrigLatch))
+     return false;
+ 
+   // Check size of original header and reject loop if it is very big or we can't

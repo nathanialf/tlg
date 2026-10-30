@@ -2080,3 +2080,4 @@ _ZN33hknpVehicleLinearCastWheelCollideD0Ev src/libs/unknown/func_00178d80.cpp
 FUN_00174de0 src/libs/unknown/func_00174de0.cpp _ZN19hknpWorldStreams26012FUN_00174de0EP10BlockCache
 _ZN14Object000ea380D1Ev src/libs/unknown/func_000ea540.cpp
 _ZN14Object000ea380D0Ev src/libs/unknown/func_000ea540.cpp
+FUN_001a0780 src/libs/unknown/func_001a0780.cpp _Z12FUN_001a0780RK8RawImage

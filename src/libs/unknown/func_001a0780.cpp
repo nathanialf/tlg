@@ -19,10 +19,6 @@ static inline int partSize(int type)
     }
 }
 
-// NONMATCHING: classified (docs/NOTES.md, Round 58): equal but for the
-// inner check's loop, which the base leaves unrotated after LoopRotate folds
-// its decrement into the exiting compare (`dec ecx; js` heading the loop),
-// as LLVM did before upstream r181230; 3.3 rotates it.
 /* derived name: the bits a pixel of the raw image takes (0x188686 halves
  * them to bytes for the rows it swaps): -1 when a part's start does not lie
  * below every part's end, else the parts' sizes summed. */
