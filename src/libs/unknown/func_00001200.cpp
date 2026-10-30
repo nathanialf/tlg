@@ -6,7 +6,7 @@
  * 0x57af9c0 and the memory system at 0x57b0520. derived names. */
 static char D_57af810[sizeof(hkLargeBlockAllocator)];
 static char D_57af9c0[sizeof(TwoBaseAllocator)];
-static char D_57b0520[sizeof(hkMemorySystem)];
+static char D_57b0520[sizeof(hkFreeListMemorySystem)];
 
 /* The two allocators, recorded for the quit function. */
 static hkLargeBlockAllocator *D_57b7490;
@@ -34,7 +34,8 @@ hkMemoryRouter *FUN_00001140(AllocatorBase *base, const SizePair00006c30 &sizes,
 {
     hkLargeBlockAllocator *large = new (D_57af810) hkLargeBlockAllocator(base);
     TwoBaseAllocator *freeList = new (D_57af9c0) TwoBaseAllocator(large, large, cinfo);
-    hkMemorySystem *system = new (D_57b0520) hkMemorySystem(base, freeList, freeList, flags);
+    hkFreeListMemorySystem *system =
+        new (D_57b0520) hkFreeListMemorySystem(base, freeList, freeList, flags);
     D_57b99e0 = system;
     D_57b7490 = large;
     D_57b7498 = freeList;

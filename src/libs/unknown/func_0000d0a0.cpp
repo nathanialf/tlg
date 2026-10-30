@@ -4,7 +4,7 @@
 /* derived name: slot 14 of the memory system's vtable (address point
  * 0x168d690): collect the garbage of the allocator at +0x20, when there is
  * one. */
-void FUN_0000d0a0(hkMemorySystem *self)
+void FUN_0000d0a0(hkFreeListMemorySystem *self)
 {
     if (self->extended20) {
         self->extended20->FUN_00003140();

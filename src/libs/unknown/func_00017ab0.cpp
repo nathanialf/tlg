@@ -9,7 +9,7 @@ hkResult FUN_00017ab0()
     hkResult result = HK_SUCCESS;
     if (D_57b99e0) {
         result = D_57b99e0->mainQuit(3);
-        D_57b99e0->~hkMemorySystem();
+        D_57b99e0->~hkFreeListMemorySystem();
         D_57b99e0 = 0;
         FUN_00006c40(0);
     }

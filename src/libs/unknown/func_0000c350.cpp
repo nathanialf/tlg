@@ -5,7 +5,7 @@
  * tail-calls the complete destructor and frees nothing, so the class's
  * operator delete is empty. Written as a call because the complete
  * destructor has no name yet. */
-void FUN_0000c350(hkMemorySystem *self) /* derived name */
+void FUN_0000c350(hkFreeListMemorySystem *self) /* derived name */
 {
     FUN_0000c360(self);
 }
