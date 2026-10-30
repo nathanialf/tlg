@@ -1,7 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include <smmintrin.h>
-
-#include "tlg_hk_reflect.h"
+#include "tlg_lib_unknown.h"
 
 /* derived name: the point at a parameter, interpolated between the points
  * on either side of it; past the last point, the last segment's start. */

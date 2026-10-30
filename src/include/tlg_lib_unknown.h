@@ -5459,6 +5459,11 @@ inline void hkpLinearParametricCurve::operator delete(void *object, unsigned lon
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkPackfileWriter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpVehicleLinearCastWheelCollide::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -5883,8 +5888,6 @@ void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
 void FUN_00176b20(hknpCharacterProxy *self);        /* slot 1 of 0x16a5b70 */
 void FUN_0017b700(hkp6DofConstraintData *self);     /* slot 1 of 0x16a5d20 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self); /* slot 1 of 0x16a6300 */
-void FUN_00181ba0(hkBinaryPackfileWriter *self);    /* slot 1 of 0x16a6470 */
-void FUN_0019c100(hkPackfileWriter *self);          /* slot 1 of 0x16a6960 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived
  * names): 0x420 bytes, cleared to zero vectors when the thread's timer

@@ -17539,7 +17539,7 @@ struct OwnedPointerMap : public PointerMap /* derived name */
 
 /* hkPackfileWriter (derived name: the file of its strings is
  * hkPackfileWriter.cpp, 0x14cce52; vtable 0x16a6960, constructor
- * FUN_0019be50, destructor FUN_0019c150; slot 9 pure), the reference-counted
+ * FUN_0019be50, destructor 0x19c150; slot 9 pure), the reference-counted
  * base of the binary packfile writer: an array at +0x10 and pointer maps at
  * +0x20, +0x30 and +0x40, a string map from +0x50. */
 class hkVtableClassRegistry;
@@ -17553,9 +17553,15 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
 
     hkPackfileWriter(const Options &options); /* 0x19be50 */
 
-    /* Out of line (0x19c150): the vtable restored, the arrays and maps
-     * from +0x78 on freed. */
+    /* Out of line (0x19c150, the class's key function): the section tags
+     * the writer copied freed, then its members destroyed, the last built
+     * first; the deleting destructor 0x19c100 frees 0x138 bytes by
+     * default. */
     virtual ~hkPackfileWriter();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 5 (0x19c3c0): the contents, their class, a vtable class
      * registry (the built-in one's when null) and a fourth argument handed
@@ -17609,15 +17615,22 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
     };
 
     hkArray<Entry28> array10; /* derived name */
-    PointerMap map20;         /* derived name */
-    PointerMap map30;         /* derived name */
-    PointerMap map40;         /* derived name */
-    u8 unknown50[0x28];       /* derived name */
+    OwnedPointerMap map20;    /* derived name */
+    OwnedPointerMap map30;    /* derived name */
+    OwnedPointerMap map40;    /* derived name */
+    StringMap map50;          /* derived name */
+    OwnedPointerMap map68;    /* derived name */
     /* The sections' tags, each a copy the writer owns, and each tag's
      * index among them (slot 10, 0x19d0d0). derived names. */
     hkArray<char *> sectionTags;
     StringMapOf<int> sectionTagToIndex;
-    u8 unknownA0[0x10]; /* derived name */
+
+    /* 16-byte entries (the destructor frees size * 16). derived names. */
+    struct EntryA0 {
+        u8 unknown0[0x10];
+    };
+
+    hkArray<EntryA0> arrayA0; /* derived name */
     /* The contents' and their class's indices in the map at +0x20 (slot
      * 5, 0x19c3c0). derived names. */
     int contentsIndex;
@@ -17625,17 +17638,28 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
     u8 unknownB8[8];
     /* The section each object slot 11 placed goes to, by the object's
      * address. derived name. */
-    PointerMap objectToSectionIndex;
+    OwnedPointerMap objectToSectionIndex;
     /* A section's index by a class's name, set by slot 12 (0x19d280; the
      * index passed zero-extended).
      * derived name. */
     StringMapOf<u32> classNameToSection;
-    u8 unknownE8[0x50]; /* to the size its deleting destructor 0x19c100 frees */
+    hkArray<void *> arrayE8; /* derived name */
+    OwnedPointerMap mapF8;   /* derived name */
+    int int108;              /* -1 from the constructor; derived name */
+    u8 unknown10c[4];
+    /* The options' words copied by the constructor (0x19bff0 to 0x19c023).
+     * derived names. */
+    int option110;
+    int option114;
+    u8 option118;
+    u8 option119;
+    u8 unknown11a[6];
+    void *option120;
+    /* The options' 16-bit values copied in (0x19c03f to 0x19c092), the last
+     * member, to the size its deleting destructor 0x19c100 frees. derived
+     * name. */
+    hkArray<u16> array128;
 };
-
-/* Its out-of-line destructor body: restores the vtable, frees the arrays and
- * maps from +0x78 on. derived name. */
-void FUN_0019c150(hkPackfileWriter *self); /* derived name */
 
 /* The section tags (derived names): pointers to the strings "__classnames__"
  * (0x14cb9fc) and "__types__" (0x14cb791). */
@@ -17653,7 +17677,7 @@ extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
 
 /* hkBinaryPackfileWriter (derived name; vtable 0x16a6470), the writer
  * hkSerializeUtil's savePackfile builds on its stack (0x17dc2a): it adds
- * nothing to destroy (its complete destructor FUN_00181bf0 runs the base's)
+ * nothing to destroy (its complete destructor 0x181bf0 runs the base's)
  * and its deleting destructor 0x181ba0 frees 0x140 bytes. */
 /* What the binary writer's save (0x183350) hands its section writers
  * (derived name; defined in tlg_lib_unknown.h, after hkPlatformObjectWriter). */

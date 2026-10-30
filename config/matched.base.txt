@@ -231,7 +231,7 @@ FUN_0016ced0 src/libs/unknown/func_0016ced0.cpp _ZN21hknpScaledConvexShape12FUN_
 FUN_0017d790 src/libs/unknown/func_0017d790.cpp
 FUN_0017ed60 src/libs/unknown/leaf_0017ed60.cpp
 FUN_00180ef0 src/libs/unknown/leaf_00180ef0.cpp
-FUN_00181bf0 src/libs/unknown/func_00181bf0.cpp
+_ZN22hkBinaryPackfileWriterD1Ev src/libs/unknown/func_00181b10.cpp
 FUN_00195fe0 src/libs/unknown/func_00195fe0.cpp
 FUN_000058a0 src/libs/unknown/leaf_000058a0.cpp
 FUN_00006d00 src/libs/unknown/leaf_00006d00.cpp
@@ -1348,12 +1348,13 @@ FUN_00176b20 src/libs/unknown/func_00176b20.cpp
 FUN_0017b700 src/libs/unknown/func_0017b700.cpp
 _ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
 FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
-FUN_00181ba0 src/libs/unknown/func_00181ba0.cpp
+_ZN22hkBinaryPackfileWriterD0Ev src/libs/unknown/func_00181b10.cpp
 _ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
 _ZN16hkProcessFactoryD0Ev src/libs/unknown/func_00183d60.cpp
 _ZN14Object0019a230D0Ev src/libs/unknown/func_0019a230.cpp
 _ZN14Object0019a7c0D0Ev src/libs/unknown/func_0019a7c0.cpp
-FUN_0019c100 src/libs/unknown/func_0019c100.cpp
+_ZN16hkPackfileWriterD0Ev src/libs/unknown/func_0019c100.cpp
+_ZN16hkPackfileWriterD1Ev src/libs/unknown/func_0019c100.cpp
 FUN_000083a0 src/libs/unknown/func_000083a0.cpp _ZN9hkOstream12FUN_000083a0E6hkBool
 _ZN15hknpMaskedShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00037b90.cpp _ZN15hknpMaskedShapeC2E24hkFinishLoadedObjectFlag
 FUN_000083f0 src/libs/unknown/func_000083f0.cpp _ZN9hkOstream12FUN_000083f0Ec
@@ -1715,7 +1716,7 @@ _ZN23hknpConvexPolytopeShape12ConnectivityD1Ev src/libs/unknown/func_00039ae0.cp
 _ZN30hknpVehicleDefaultTransmissionD1Ev src/libs/unknown/func_00067f40.cpp
 FUN_000696e0 src/libs/unknown/func_000696e0.cpp _ZN23hknpClosestHitCollector12FUN_000696e0ERK19hknpCollisionResult
 FUN_0007c100 src/libs/unknown/func_0007c100.cpp _ZNK26hkpVelocityConstraintMotor12FUN_0007c100Ev
-_ZN24hkpLinearParametricCurveD1Ev src/libs/unknown/func_00078b00.cpp
+_ZN24hkpLinearParametricCurveD1Ev src/libs/unknown/func_0007f5c0.cpp
 FUN_00083a20 src/libs/unknown/func_00083a20.cpp _ZNK32hkpLinearClearanceConstraintData15unknownVirtual7Ev
 _ZN22hkxSparselyAnimatedIntD1Ev src/libs/unknown/func_00088900.cpp
 FUN_000925d0 src/libs/unknown/func_000925d0.cpp _ZN9RefArrays12FUN_000925d0EP18RefArraysAllocatorNS_7EntryIdE
@@ -1808,7 +1809,7 @@ FUN_000ae780 src/libs/unknown/func_000ae780.cpp _ZNK25hkStorageSkinnedMeshShape1
 _ZN11hkXmlParserD1Ev src/libs/unknown/func_0019da00.cpp
 _ZN11hkXmlParserD0Ev src/libs/unknown/func_0019da00.cpp
 FUN_0000daf0 src/libs/unknown/func_0000daf0.cpp
-_ZN18hknpCompositeShapeD1Ev src/libs/unknown/func_00042e00.cpp
+_ZN18hknpCompositeShapeD1Ev src/libs/unknown/leaf_00042e80.cpp
 FUN_001806b0 src/libs/unknown/func_001806b0.cpp _ZN25hkMemoryResourceContainer12FUN_001806b0EPKcPKS_
 FUN_0017f3e0 src/libs/unknown/func_0017f3e0.cpp _ZN22hkMemoryResourceHandle12FUN_0017f3e0EPKc
 FUN_000138a0 src/libs/unknown/func_000138a0.cpp _ZN10PointerMap12FUN_000138a0ER13AllocatorBasemm
@@ -1880,7 +1881,7 @@ _ZN14hkxEnvironmentD1Ev src/libs/unknown/func_0017d560.cpp
 _ZN27hknpCharacterRigidBodyCinfoC1Ev src/libs/unknown/func_00176380.cpp
 _ZN27hknpBreakableConstraintDataD0Ev src/libs/unknown/func_0003c100.cpp
 _ZN27hknpMalleableConstraintDataD0Ev src/libs/unknown/func_00067a90.cpp
-_ZN24hkpWrappedConstraintDataD0Ev src/libs/unknown/func_0007d520.cpp
+_ZN24hkpWrappedConstraintDataD0Ev src/libs/unknown/func_0007d5b0.cpp
 _ZN11hkStringPtraSEPKc src/libs/unknown/func_0000e3e0.cpp
 FUN_0000efd0 src/libs/unknown/func_0000efd0.cpp _ZN17Allocator0000ed4012FUN_00008d90EPviRi
 FUN_00027a40 src/libs/unknown/func_00027a40.cpp _ZN24hkMemoryMeshVertexBuffer12FUN_00027a40ERKN18hkMeshVertexBuffer9LockInputERKNS0_16PartialLockInputERNS0_14LockedVerticesE
@@ -2022,7 +2023,7 @@ _ZN19hknpMaterialLibraryD1Ev src/libs/unknown/func_00061480.cpp
 _ZN19hknpMaterialLibraryD0Ev src/libs/unknown/func_00061480.cpp
 _ZN30hknpVehicleDefaultTransmissionD0Ev src/libs/unknown/func_00067f40.cpp
 FUN_000731a0 src/libs/unknown/func_000731a0.cpp
-_ZN24hkpLinearParametricCurveD0Ev src/libs/unknown/func_00078b00.cpp
+_ZN24hkpLinearParametricCurveD0Ev src/libs/unknown/func_0007f5c0.cpp
 _ZN22hkxSparselyAnimatedIntD0Ev src/libs/unknown/func_00088900.cpp
 FUN_0019c3c0 src/libs/unknown/func_0019c3c0.cpp _ZN16hkPackfileWriter12FUN_0019c3c0EPKvRK7hkClassPK21hkVtableClassRegistryPv
 FUN_000395e0 src/libs/unknown/func_000395e0.cpp _GLOBAL__I_a
@@ -2119,7 +2120,7 @@ FUN_0003ec40 src/libs/unknown/func_0003ec40.cpp
 FUN_000034a0 src/libs/unknown/func_000034a0.cpp
 FUN_00010b40 src/libs/unknown/func_00010b40.cpp
 FUN_00018ba0 src/libs/unknown/func_00018ba0.cpp
-_ZN18hknpCompositeShapeD0Ev src/libs/unknown/func_00042e00.cpp
+_ZN18hknpCompositeShapeD0Ev src/libs/unknown/leaf_00042e80.cpp
 FUN_00156dc0 src/libs/unknown/func_00156dc0.cpp
 FUN_00010d10 src/libs/unknown/func_00010d10.cpp
 FUN_00012550 src/libs/unknown/func_00012550.cpp
