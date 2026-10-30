@@ -9,19 +9,13 @@ Object000ea540::~Object000ea540() {}
 typedef hkcdDynamicTree::DefaultTree48Storage Tree48; /* derived name */
 typedef hkcdDynamicTree::CodecRawUint Tree48Node;     /* derived name */
 
-/* A new leaf put into the tree beside the leaf whose union with it is the
- * nearest and smallest, under a new branch from the free list; nothing when
- * the free list cannot grow. derived name. */
-static void insertLeaf(Tree48 &tree, u32 leaf)
+/* A new leaf put under a tree that has a root: beside the leaf whose union
+ * with it is the nearest and smallest, under a new branch from the free
+ * list; nothing when the free list cannot grow (its early return leaves the
+ * descent's children array without the end of its lifetime, so the array
+ * keeps its own slot, as the copy in optimizeTree does). derived name. */
+static void insertLeafBelow(Tree48 &tree, u32 leaf, const hkAabb &leafAabb, u32 root)
 {
-    Tree48Node &leafNode = tree.getNode(leaf);
-    const u32 root = tree.root;
-    if (root == 0) {
-        tree.root = leaf;
-        leafNode.parent = 0;
-        return;
-    }
-    const hkAabb leafAabb = leafNode.aabb;
     if (tree.firstFree == 0 && tree.FUN_00022600(1) != HK_SUCCESS) {
         return;
     }
@@ -33,8 +27,8 @@ static void insertLeaf(Tree48 &tree, u32 leaf)
      * child whose union with it is the nearer and smaller is taken. */
     Tree48Node *node = &tree.getNode(root);
     if (node->children[0] != 0) {
-        const Vec4 extent = _mm_sub_ps(leafAabb.max, leafAabb.min);
         const Vec4 center = _mm_add_ps(leafAabb.min, leafAabb.max);
+        const Vec4 extent = _mm_sub_ps(leafAabb.max, leafAabb.min);
         do {
             Tree48Node *children[2] = {&tree.getNode(node->children[0]),
                                        &tree.getNode(node->children[1])};
@@ -48,7 +42,8 @@ static void insertLeaf(Tree48 &tree, u32 leaf)
                 costs[i] = _mm_mul_ps(_mm_dp_ps(offset, offset, 0x7f),
                                       _mm_dp_ps(size, D_14b2060[3], 0x7f));
             }
-            node = children[_mm_cvtss_f32(costs[0]) > _mm_cvtss_f32(costs[1])];
+            /* The costs compared as scalars by their first lanes. */
+            node = children[_mm_ucomigt_ss(costs[0], costs[1])];
         } while (node->children[0] != 0);
     }
 
@@ -57,15 +52,35 @@ static void insertLeaf(Tree48 &tree, u32 leaf)
         tree.root = branch;
     } else {
         Tree48Node &parentNode = tree.getNode(parent);
-        parentNode.children[parentNode.children[1] == u32(node - tree.nodes.data)] = branch;
+        const u32 nodeIndex = u32(node - tree.nodes.data);
+        parentNode.children[parentNode.children[1] == nodeIndex] = branch;
     }
     branchNode.parent = node->parent;
     branchNode.children[0] = u32(node - tree.nodes.data);
     branchNode.children[1] = leaf;
     node->parent = branch;
     tree.getNode(leaf).parent = branch;
-    branchNode.aabb.min = _mm_min_ps(leafAabb.min, node->aabb.min);
-    branchNode.aabb.max = _mm_max_ps(leafAabb.max, node->aabb.max);
+    /* The branch's box, the union of the two, built and then stored. */
+    hkAabb branchAabb;
+    branchAabb.min = _mm_min_ps(leafAabb.min, node->aabb.min);
+    branchAabb.max = _mm_max_ps(leafAabb.max, node->aabb.max);
+    branchNode.aabb = branchAabb;
+}
+
+/* A leaf put into the tree: the root when the tree is empty, else below
+ * it. Its box is read before the test (the product of its index shared with
+ * the insert's stores). derived name. */
+static void insertLeaf(Tree48 &tree, u32 leaf)
+{
+    Tree48Node &leafNode = tree.getNode(leaf);
+    const hkAabb leafAabb = leafNode.aabb;
+    const u32 root = tree.root;
+    if (root == 0) {
+        tree.root = leaf;
+        leafNode.parent = 0;
+        return;
+    }
+    insertLeafBelow(tree, leaf, leafAabb, root);
 }
 
 /* A leaf for a box and its data, from the free list (grown when empty),
@@ -86,13 +101,10 @@ static u32 insert(Tree48 &tree, const hkAabb &aabb, u32 data)
     return leaf;
 }
 
-/* The shape data from a tree of the geometry's triangles: the tree rebuilt
- * and, when that succeeds, its nodes copied in order from the root into a
- * new storage that takes its place; then the static tree built from it, and
- * the simd tree from that when asked or when the geometry wants a build
- * context, which it then gets. derived name. */
-static hknpExternMeshShapeData *
-createShapeData(Tree48 &tree, const hknpExternMeshShape::Geometry *geometry, bool buildSimdTree)
+/* The tree rebuilt from its root and, when that succeeds, its nodes
+ * copied in order from the root into a new storage that takes its place.
+ * derived name. */
+static void optimizeTree(Tree48 &tree)
 {
     if (tree.FUN_0009db50(tree.root, 1, 32, 16) == HK_SUCCESS && tree.root != 0) {
         Tree48 compact;
@@ -103,7 +115,45 @@ createShapeData(Tree48 &tree, const hknpExternMeshShape::Geometry *geometry, boo
         tree.firstFree = firstFree;
         tree.root = 1;
     }
+}
 
+/* A triangle's box inserted as a leaf with its index. derived name. */
+static void insertTriangle(Tree48 &tree, const Vec4 *vertices, u32 index)
+{
+    hkAabb aabb;
+    aabb.min = _mm_min_ps(_mm_min_ps(vertices[0], vertices[1]), vertices[2]);
+    aabb.max = _mm_max_ps(_mm_max_ps(vertices[0], vertices[1]), vertices[2]);
+    insert(tree, aabb, index);
+}
+
+/* The geometry's triangles read one at a time into the caller's vertex
+ * buffer and inserted, a degenerate one's index listed instead when asked;
+ * then the tree optimized. The insertion is this function's first inlined
+ * call, so the descent's array is placed after the copy in the builder's
+ * frame (the inliner takes a function's first call site first and the rest
+ * from the last; each callee's allocas go to the front). derived name. */
+static void buildTree(Tree48 &tree, const hknpExternMeshShape::Geometry *geometry, Vec4 *vertices,
+                      int numTriangles, const Vec4 &toleranceVector,
+                      hkArray<int> *degenerateTriangles)
+{
+    for (int i = 0; i < numTriangles; i++) {
+        geometry->unknownVirtual6(i, vertices);
+        if (FUN_00185520(vertices[0], vertices[1], vertices[2], toleranceVector) == 0) {
+            insertTriangle(tree, vertices, i);
+        } else if (degenerateTriangles) {
+            degenerateTriangles->pushBack(i);
+        }
+    }
+    optimizeTree(tree);
+}
+
+/* The shape data from the tree: the static tree built from it, and the
+ * simd tree from that when asked or when the geometry wants a build
+ * context, which it then gets. derived name. */
+static hknpExternMeshShapeData *createShapeData(const Tree48 &tree,
+                                                const hknpExternMeshShape::Geometry *geometry,
+                                                bool buildSimdTree)
+{
     hknpExternMeshShapeData *data = new hknpExternMeshShapeData();
     FUN_000dea80(&data->aabbTree, tree);
     data->simdTree.clear();
@@ -116,38 +166,17 @@ createShapeData(Tree48 &tree, const hknpExternMeshShape::Geometry *geometry, boo
     return data;
 }
 
-// NONMATCHING: 0xea610 is 26 normalized lines from the base (frame
-// offsets masked). Its frame order is the base's (the copy -0x50, the
-// descent's children -0x60, the tree -0x80, the vertices -0xb0, the
-// tolerance -0xc0: the copy's helper inlined after the insert, its alloca
-// spliced in front), but StackColoring merges the children into the copy's
-// slot (both carry the inliner's markers, disjoint: 3.3
-// StackColoring.cpp:741-779) where the base keeps both. Left besides: the
-// leaf block multiplies the leaf's index by 48 shift first (the multiply not
-// a single add's operand, X86ISelLowering.cpp:16185) and the box's read back
-// reuses it, where this source multiplies lea first and MachineCSE shares
-// one product with every path; the register and spill choices that follow
-// (docs/NOTES.md, Round 58).
+/* The tolerance comes before the array (the order of the incoming
+ * registers' copies, rdx then xmm0, gives the parameters' order). */
 hknpExternMeshShapeData *FUN_000ea610(const hknpExternMeshShape::Geometry *geometry,
-                                      bool buildSimdTree, hkArray<int> *degenerateTriangles,
-                                      float tolerance)
+                                      bool buildSimdTree, float tolerance,
+                                      hkArray<int> *degenerateTriangles)
 {
     Tree48 tree;
     Vec4 vertices[3];
     const int numTriangles = geometry->unknownVirtual5();
     const Vec4 toleranceVector = _mm_set1_ps(tolerance);
     tree.FUN_00022600(2 * numTriangles);
-    for (int i = 0; i < numTriangles; i++) {
-        geometry->unknownVirtual6(i, vertices);
-        if (FUN_00185520(vertices[0], vertices[1], vertices[2], toleranceVector) == 0) {
-            hkAabb aabb;
-            aabb.min = _mm_min_ps(_mm_min_ps(vertices[0], vertices[1]), vertices[2]);
-            aabb.max = _mm_max_ps(_mm_max_ps(vertices[0], vertices[1]), vertices[2]);
-            insert(tree, aabb, i);
-        } else if (degenerateTriangles) {
-            degenerateTriangles->pushBack(i);
-        }
-    }
-
+    buildTree(tree, geometry, vertices, numTriangles, toleranceVector, degenerateTriangles);
     return createShapeData(tree, geometry, buildSimdTree);
 }

@@ -2149,3 +2149,5 @@ FUN_00187610 src/libs/unknown/func_00187610.cpp
 FUN_0019a880 src/libs/unknown/func_0019a880.cpp
 FUN_000071a0 src/libs/unknown/func_000071a0.cpp
 FUN_00025590 src/libs/unknown/func_00025590.cpp
+FUN_00180ea0 src/libs/unknown/func_00180ea0.cpp _ZNK16hkPackfileHeader16getSectionHeaderEPKvi
+FUN_000ea610 src/libs/unknown/func_000ea540.cpp _Z12FUN_000ea610PKN19hknpExternMeshShape8GeometryEbfP7hkArrayIiE

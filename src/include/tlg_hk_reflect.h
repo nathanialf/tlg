@@ -5075,11 +5075,6 @@ struct hkcdDynamicTree {
          * registrations, 0x1f750 and 0x201a0, cite). derived name. */
         static void FUN_0001f5f0(void *object);
 
-        /* numNodes more nodes linked into the free list, the array grown
-         * as needed (0x22600 for the raw-uint codec): HK_FAILURE when it
-         * cannot grow. derived name. */
-        hkResult FUN_00022600(int numNodes);
-
         /* A node by its index, the index unsigned (zero-extended where
          * 0xea610 reaches a node; its free link is read through the
          * array's int index). derived name. */
@@ -5094,7 +5089,14 @@ struct hkcdDynamicTree {
 
     /* hkcdDynamicTree::DynamicStorage32 (hkClass 0x57bb890: 0x18 bytes, no
      * members of its own). */
-    struct DynamicStorage32 : public DefaultDynamicStorage<CodecRawUint> {};
+    struct DynamicStorage32 : public DefaultDynamicStorage<CodecRawUint> {
+        /* numNodes more nodes linked into the free list, the array grown
+         * as needed (0x22600, the raw-uint codec's): HK_FAILURE when it
+         * cannot grow. Declared here rather than on the template, whose
+         * nested name with template arguments the gate's symbol reader does
+         * not resolve (docs/NOTES.md, Round 58B). derived name. */
+        hkResult FUN_00022600(int numNodes);
+    };
 
     /* hkcdDynamicTree::Tree over a storage (hkClass 0x57bbbb0 for
      * DynamicStorage32: 0x20 bytes, its three members from the records at
@@ -13153,8 +13155,8 @@ int FUN_00185520(const Vec4 &vertex0, const Vec4 &vertex1, const Vec4 &vertex2,
  * that when asked or when the geometry wants a build context, which it then
  * gets. derived name. */
 hknpExternMeshShapeData *FUN_000ea610(const hknpExternMeshShape::Geometry *geometry,
-                                      bool buildSimdTree, hkArray<int> *degenerateTriangles,
-                                      float tolerance); /* derived name */
+                                      bool buildSimdTree, float tolerance,
+                                      hkArray<int> *degenerateTriangles); /* derived name */
 
 /* What hknpCompoundShape's constructor from a description (0x412a0, the
  * static compound shape's at 0x38466 runs it) is built from: 0x28 bytes,
