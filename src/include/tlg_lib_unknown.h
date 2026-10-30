@@ -4170,17 +4170,13 @@ struct RefPtrArray000906f0 /* derived name */
     hkRefPtr<hkReferencedObject> references[8]; /* derived name */
 };
 
-/* A block that holds its own size (derived name): FUN_00199600 takes one
- * from the thread's temporary allocator, a 0x28-byte header (its byte size
- * at +0, an element size at +4, a bit field's words at +8 in the block,
- * the element storage pointer at +0x20) before the bits and the elements;
- * FUN_00199770 gives it back at that size. */
-struct SizedBlock00199600 /* derived name */
-{
-    int numBytes; /* derived name */
-};
-
-void FUN_00199770(SizedBlock00199600 *block); /* derived name */
+/* A field of a bit field map holds its own size (BitFieldMap00199770::
+ * Block): FUN_00199600 takes one from the thread's temporary allocator, a
+ * 0x28-byte header (its byte size at +0, an element size at +4, a bit
+ * field's words at +8 in the block, the element storage pointer at +0x20)
+ * before the bits and the elements; FUN_00199770 gives it back at that
+ * size. */
+void FUN_00199770(BitFieldMap00199770::Block *block); /* derived name */
 
 /* The thread's teardown (derived name; 0x9a80): the thread's block and the
  * thread's router given up, always a success. */
@@ -4486,6 +4482,21 @@ inline void hknpVehicleDefaultTransmission::operator delete(void *object, unsign
 }
 
 inline void hkpLinearParametricCurve::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxIndexBuffer::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkcdPlanarSolid::NodeStorage::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxSparselyAnimatedBool::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

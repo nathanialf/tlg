@@ -4,7 +4,7 @@
 /* derived names: slot 22 of hknpConvexShape's vtable (address point
  * 0x1697da0): a convex shape answers with itself, bit 3 of the flags
  * cleared and the value 1. */
-void hknpConvexShape::FUN_00045aa0(const void *argument1, const void *argument2,
+void hknpConvexShape::FUN_00045aa0(const u32 *keys, int numKeys,
                                    hknpShapeSlot22Output *output) const
 {
     output->shape = this;

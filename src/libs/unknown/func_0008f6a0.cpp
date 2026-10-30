@@ -18,3 +18,22 @@ int UnionFind::findRootOfNode(int node)
     }
     return node;
 }
+
+/* derived name: two nodes joined: their roots found (and their paths
+ * compressed), then the root of higher index hung under the other, which
+ * takes both sizes (a root's negative parent). */
+void UnionFind::FUN_0008f710(int nodeA, int nodeB)
+{
+    const int rootA = findRootOfNode(nodeA);
+    const int rootB = findRootOfNode(nodeB);
+    if (rootA != rootB) {
+        const int size = parents->data[rootA] + parents->data[rootB];
+        if (rootA < rootB) {
+            parents->data[rootA] = size;
+            parents->data[rootB] = rootA;
+        } else {
+            parents->data[rootB] = size;
+            parents->data[rootA] = rootB;
+        }
+    }
+}

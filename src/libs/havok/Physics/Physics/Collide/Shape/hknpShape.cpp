@@ -87,8 +87,7 @@ int hknpShape::unknownVirtual21(void *argument1, int argument2, int argument3,
     return argument2;
 }
 
-void hknpShape::unknownVirtual22(const void *argument1, const void *argument2,
-                                 void *argument3) const
+void hknpShape::unknownVirtual22(const u32 *keys, int numKeys, void *argument3) const
 {
     HK_ERROR(0x1d729a31, HK_NP_SHAPE_CPP, 129, "Not implemented");
 }

@@ -322,6 +322,17 @@ template <typename T> inline void construct(T *t, int n)
         construct(t + i);
     }
 }
+
+/* n elements copied by assignment. Its own function: inlined, the loop's
+ * source step comes out before the destination's (the curve's points
+ * copied out, 0x7fde0), where the loop written in place steps the
+ * destination first. derived name. */
+template <typename T> inline void copy(T *dst, const T *src, int n)
+{
+    for (int i = 0; i < n; i++) {
+        dst[i] = src[i];
+    }
+}
 } // namespace hkArrayUtil
 
 /* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
@@ -2362,8 +2373,15 @@ class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x1d4c0, slot 0): the arrays given back. */
-    virtual ~NodeStorage();
+    /* The arrays given back (0x1d4c0, slot 0; the deleting destructor
+     * 0x1d550 holds the same body). Inline, emitted with the vtable: the
+     * executable holds the complete destructor before the deleting one
+     * (cookbook 187). */
+    inline virtual ~NodeStorage() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<Node> storage;
     hkArray<struct hkAabb> aabbs;
@@ -3138,8 +3156,15 @@ class hkxSparselyAnimatedBool : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x8e120, slot 0): the arrays given back. */
-    virtual ~hkxSparselyAnimatedBool();
+    /* The arrays given back (0x8e120, slot 0; the deleting destructor
+     * 0x8e1b0 holds the same body). Inline, emitted with the vtable: the
+     * executable holds the complete destructor before the deleting one
+     * (cookbook 187). */
+    inline virtual ~hkxSparselyAnimatedBool() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<hkBool> bools;
     hkArray<float> times;
@@ -3200,8 +3225,15 @@ class hkxIndexBuffer : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x881d0, slot 0): the arrays given back. */
-    virtual ~hkxIndexBuffer();
+    /* The arrays given back (0x881d0, slot 0; the deleting destructor
+     * 0x88260 holds the same body). Inline, emitted with the vtable: the
+     * executable holds the complete destructor before the deleting one
+     * (cookbook 187). */
+    inline virtual ~hkxIndexBuffer() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     u8 indexType; /* an enum of hkUint8; its items not read */
     hkArray<u16> indices16;
@@ -5276,8 +5308,10 @@ class alignas(16) hknpShape : public hkReferencedObject
     virtual hknpShapeKeyMask *unknownVirtual20() const;
     virtual int unknownVirtual21(void *argument1, int argument2, int argument3,
                                  const ShapeKeyQuery000380b0 &argument4) const;
-    virtual void unknownVirtual22(const void *argument1, const void *argument2,
-                                  void *argument3) const;
+    /* Slot 22: a leaf of the shape by a path of shape keys, into an output
+     * (the LOD shape's 0x68440 hands its level the keys shifted by its key
+     * bits, at most ten of them). derived names. */
+    virtual void unknownVirtual22(const u32 *keys, int numKeys, void *argument3) const;
     virtual void unknownVirtual23(const void *argument1, const void *argument2,
                                   const void *argument3, const void *argument4,
                                   void *argument5) const;
@@ -5368,7 +5402,7 @@ class hknpDecoratorShape : public hknpShape
     int
     FUN_0003b200(void *argument1, int argument2, int argument3,
                  const ShapeKeyQuery000380b0 &argument4) const; /* vtable slot 21; derived name */
-    void FUN_00037e80(const void *argument1, const void *argument2,
+    void FUN_00037e80(const u32 *keys, int numKeys,
                       void *argument3) const; /* vtable slot 22; derived name */
     void FUN_0003b220(const void *argument1, const void *argument2, const void *argument3,
                       const void *argument4,
@@ -5741,6 +5775,9 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
                       const hknpCollisionFilterShapeInput &b) const;
 };
 
+extern const hkClass D_57c0cb0;                 /* hknpCollisionFilter's hkClass */
+void FUN_0003e340(void *object, int finishing); /* derived name: its type info's finish callback */
+
 /* A collision cache that keeps properties beside its contact data
  * (derived names): FUN_0017a0a0 reserves a property under a key (a bit of
  * the byte at +0x17 marks each key in use) of a size and an alignment, and
@@ -5920,13 +5957,37 @@ class hknpModifierManager /* derived name */
  * FUN_0006bf60 the signal of an event type for all (type 2 at 0x1596f5),
  * each created on first use. FUN_0004fbd0 and FUN_0004fbe0 forward to
  * them. */
-struct hknpEventSignal; /* derived name */
+struct hknpEventSignal : public Signal00093530 /* derived name */
+{};
 
 class hknpEventDispatcher /* derived name */
 {
   public:
+    /* A body's signals, one entry per event type, chained from the body's
+     * first entry through next; free entries chain from firstFreeEntry
+     * (0x6bdf0 takes one, or a new one, for a type the body has none of).
+     * derived names. */
+    struct BodySignalEntry {
+        u16 next;
+        u16 eventType;
+        hknpEventSignal signal;
+    };
+
     hknpEventSignal *FUN_0006bdf0(int eventType, int bodyId); /* derived name */
     hknpEventSignal *FUN_0006bf60(int eventType);             /* derived name */
+
+    /* A removed body's signals (0x6c050; the world's body removal calls it
+     * at 0x4e9fe): the body's first entry kept for later while removals
+     * are deferred, else every slot of each of its signals deleted and its
+     * entries put back on the free list. derived name. */
+    void FUN_0006c050(hknpBodyId bodyId);
+
+    u8 unknown0[0x30];
+    u16 firstFreeEntry;               /* derived name */
+    hkArray<BodySignalEntry> entries; /* derived name */
+    hkArray<u16> bodyFirstEntry;      /* derived name */
+    hkBool deferRemovals;             /* derived name */
+    hkArray<u16> pendingRemovals;     /* derived name */
 };
 
 /* The polymorphic object at +0x1d0 of the world (derived name), one of two
@@ -7430,6 +7491,18 @@ struct hknpMotionProperties {
     u8 minimumSpikingVelocityScaleSquared;
 };
 
+/* The defaults its hkClass carries (0x14ba280): an offset into the block per
+ * member, -1 for none and -2 for zero (derived reading), then the three
+ * values under their members' record names. The rows are generated from
+ * the executable (D18). */
+struct hknpMotionPropertiesDefaults /* derived name */
+{
+    int defaultOffsets[20];
+    float gravityFactor;
+    float timeFactor;
+    float solverStabilizationSpeedThreshold;
+};
+
 extern const hkClassMember D_16948a0[];         /* derived name: hknpMotionProperties's records */
 extern const hkClassEnum D_1694c40[];           /* derived name: its two enums */
 void FUN_000395c0(void *object, int finishing); /* derived name: its type info's finish callback */
@@ -7917,7 +7990,7 @@ class hknpConvexShape : public hknpShape
     int
     FUN_00045a80(u32 *argument1, int argument2, int argument3,
                  const ShapeKeyQuery000380b0 &argument4) const; /* vtable slot 21; derived name */
-    void FUN_00045aa0(const void *argument1, const void *argument2,
+    void FUN_00045aa0(const u32 *keys, int numKeys,
                       hknpShapeSlot22Output *output) const; /* vtable slot 22; derived name */
     /* Slot 28 (0x45a20; also the convex polytope's): the vertices handed
      * to FUN_00168d90 with the convex radius, the shape's default (0x6fc70)
@@ -8171,6 +8244,41 @@ struct hknpWorldCinfo {
 
 void FUN_0003b640(hknpWorldCinfo *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003b650(hknpWorldCinfo *self);                                /* derived name */
+
+/* Its type info's callbacks (0x46c60, 0x46c70): the finish constructor and
+ * the destructor above. derived names. */
+void FUN_00046c60(void *object, int finishing); /* derived name */
+void FUN_00046c70(void *object);                /* derived name */
+
+/* The defaults its hkClass carries (0x14bd370): an offset into the block per
+ * member, -1 for none and -2 for zero (derived reading), then the values,
+ * each under its member's record name; the booleans one byte each, the
+ * gravity four floats. The rows are generated from the executable (D18). */
+struct hknpWorldCinfoDefaults /* derived name */
+{
+    int defaultOffsets[33];
+    int bodyBufferCapacity;
+    int motionBufferCapacity;
+    int constraintBufferCapacity;
+    u8 simulationType;
+    int numSplitterCells;
+    float gravity[4];
+    u8 enableContactCaching;
+    u8 mergeEventsBeforeDispatch;
+    float collisionTolerance;
+    float solverTau;
+    float solverDamp;
+    int solverIterations;
+    int solverMicrosteps;
+    float defaultSolverTimestep;
+    float maxApproachSpeedForHighQualitySolver;
+    u8 enableDeactivation;
+    float unitScale;
+    u8 applyUnitScaleToStaticConstants;
+};
+
+extern const hkClassMember D_1698190[]; /* derived name: hknpWorldCinfo's records */
+extern const hkClassEnum D_1698770[];   /* derived name: its enum */
 
 /* hknpRefWorldCinfo (hkClass 0x57bf2c0, built at 0x39330: size 0x100,
  * parent hkReferencedObject's 0x57b8640, one member record at 0x16945a0;
@@ -12271,6 +12379,11 @@ struct hknpLodShape : public hknpCompositeShape {
     void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
     int FUN_00068960(const Slot29Argument *argument1,
                      void *argument2) const; /* vtable slot 29; derived name */
+    /* Slot 22 (0x68440): the level the first key selects (its top key
+     * bits) asked for the leaf, the keys handed on with this shape's bits
+     * shifted out (each the next key's bits set below it), at most ten.
+     * derived names. */
+    void FUN_00068440(const u32 *keys, int numKeys, void *argument3) const;
     /* Slot 27 (0x68500): the finest level whose distance, halved for the
      * current level so the choice does not flicker, is below the query's
      * scaled size; 0 when none is (the context is not read). derived
@@ -12537,6 +12650,8 @@ class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
      * point to its end point. derived name. */
     void FUN_00158a40(const class hknpVehicleInstance *vehicle, hkAabb &aabbOut) const;
 };
+
+void FUN_00075f60(void *object, int finishing); /* derived name: its type info's finish callback */
 
 class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
 {
@@ -13027,6 +13142,10 @@ class hkpLinearParametricCurve : public hkpParametricCurve
      * interpolated in the segment the parameter falls in (the last one
      * extended past the end). derived name. */
     float FUN_0007fae0(float t) const;
+    /* Slot 13 (0x7fde0): the points copied out, the output's storage
+     * replaced from the containers' allocator when it is too small. derived
+     * name. */
+    void FUN_0007fde0(hkArray<Vec4> &pointsOut) const;
     /* Slot 14 (0x7fea0): every point moved under the transform. derived
      * name. */
     void FUN_0007fea0(const hkTransform &transform);
@@ -13785,9 +13904,12 @@ struct StringMap /* derived name */
      * end 0x18 after its map at +0x18). derived name. */
     u8 unknown10[8];
 
-    void FUN_00091ac0();                         /* derived name */
-    Iterator FUN_00091600() const;               /* derived name */
-    Iterator FUN_00091650(Iterator it) const;    /* derived name */
+    void FUN_00091ac0();                      /* derived name */
+    Iterator FUN_00091600() const;            /* derived name */
+    Iterator FUN_00091650(Iterator it) const; /* derived name */
+    /* The slot of a key, or one past the hash mask when the key is not in
+     * the map (0x91840; called at 0x181f03). derived name. */
+    Iterator FUN_00091840(const char *key) const;
     bool FUN_00013890(Iterator it) const;        /* derived name */
     const char *FUN_00091630(Iterator it) const; /* derived name */
     hkUlong FUN_00091640(Iterator it) const;     /* derived name */
@@ -13856,9 +13978,14 @@ struct hkContainerTempAllocator /* derived name */ {
 };
 
 /* A map from 16-bit keys to pointer-sized values, hashed and probed as
- * PointerMap is (derived names): an empty entry's key is 0xffff. The
- * lookups of 0x1659e7, 0x176ebc and 0x177394 ask it for a pointer or
- * null. */
+ * PointerMap is (derived names): an empty entry's key is 0xffff. The lookup
+ * and the insert are member templates over the value's type, as Havok's
+ * typed maps keep theirs: the lookups of 0x1659e7, 0x176ebc and 0x177394
+ * get the pointer itself back, with no integer cast for CodeGenPrepare to
+ * sink into each block that uses it (0x1659c0's critical edge to its end
+ * is split as the base holds it only when the value its phi takes is the
+ * one the grow path passes on). Their files instantiate them for the bit
+ * field map's blocks. */
 struct U16PointerMap /* derived name */
 {
     struct Pair {
@@ -13867,11 +13994,11 @@ struct U16PointerMap /* derived name */
     };
 
     /* derived name: the value of a key, or the default (0x199520). */
-    hkUlong FUN_00199520(u16 key, hkUlong defaultValue) const;
+    template <typename V> V FUN_00199520(u16 key, V defaultValue) const;
     /* derived name: the value of a key set, the table rebuilt first when
      * more than half full (0x1992f0, as the pointer map's 0x138a0); nonzero
      * when the key was new. */
-    int FUN_001992f0(AllocatorBase &allocator, u16 key, hkUlong value);
+    template <typename V> int FUN_001992f0(AllocatorBase &allocator, u16 key, V value);
     /* derived name: the table rebuilt at a new capacity (0x199390). */
     void FUN_00199390(AllocatorBase &allocator, int newCapacity);
 
@@ -13932,16 +14059,32 @@ struct BitFieldMap00199770 /* derived name */
 {
     struct Block {
         int numBytes;
+        int elementSize; /* derived name */
         hkBitField bits;
+        /* One element per bit, set with it (0x1659c0). derived name. */
+        void **elements;
     };
 
     /* One bit cleared in every field long enough to hold it (0x1997d0; the
      * callers at 0x1608ef and 0x16dc62). derived name. */
     void FUN_001997d0(int bitIndex);
 
-    u8 unknown0[8];
+    /* A bit set in the field of a key, its element stored beside it; the
+     * field made, or remade as large as the map's size and the old one
+     * given back, when it cannot hold the bit (0x1659c0; the world's body
+     * setup at 0x17668b). derived name. */
+    void FUN_001659c0(u32 bitIndex, u16 key, void *const &element);
+
+    int numBits; /* derived name: the size a new field is made at */
+    u8 unknown4[4];
     U16PointerMap fields;
 };
+
+/* A field of a map made from the thread's heap: its header, the bits for
+ * numElements and the elements of elementSize bytes after them, cleared,
+ * then what an old field holds copied in (0x199600). derived names. */
+BitFieldMap00199770::Block *FUN_00199600(int elementSize, int numElements,
+                                         const BitFieldMap00199770::Block *copyFrom);
 
 struct PointerMap /* derived name */
 {

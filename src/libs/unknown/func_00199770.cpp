@@ -3,7 +3,7 @@
 
 /* derived name: the block goes back to the calling thread's temporary
  * allocator at the size it holds. */
-void FUN_00199770(SizedBlock00199600 *block)
+void FUN_00199770(BitFieldMap00199770::Block *block)
 {
     D_16dc070->temp58->blockFree(block, block->numBytes);
 }
