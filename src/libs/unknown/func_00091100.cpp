@@ -1,19 +1,26 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-/* The copy in units of a type, the last first: an unsigned index from the
- * count's units (the base's `movsxd; shr; dec` and the index's zero
- * extension, `mov eax, eax`, in the loop), the loop on what is left of it
- * (derived name). */
+/* The copy in units of a type, the last first: nothing when less than a
+ * unit is left, else an unsigned index from the count's units (the base's
+ * `movsxd; shr; dec` and the index's zero extension, `mov eax, eax`, in
+ * the loop), the loop on what is left of it (derived name). The early
+ * return keeps its own test where the caller has tested the count already
+ * (cookbook 346). */
 template <typename T> static inline void copyBackwards(void *dst, const void *src, int n)
 {
     T *d = static_cast<T *>(dst);
     const T *s = static_cast<const T *>(src);
+    unsigned int left = n;
+    if (left < sizeof(T)) {
+        return;
+    }
     unsigned int i = n / sizeof(T) - 1;
-    for (unsigned int left = n; left >= sizeof(T); left -= sizeof(T)) {
+    do {
         d[i] = s[i];
         i--;
-    }
+        left -= sizeof(T);
+    } while (left >= sizeof(T));
 }
 
 /* Whether a copy can go in units of a type: the count at least one unit
@@ -25,12 +32,6 @@ template <typename T> static inline bool fitsUnits(const void *dst, const void *
            (reinterpret_cast<hkUlong>(src) & (sizeof(T) - 1)) == 0;
 }
 
-// NONMATCHING: every instruction but the wide loops' guards: the base keeps
-// `cmp edx, 8; jb` (4, 2) before each wide loop, which here goes: the
-// helper's rotated guard is the test's own `icmp ugt n, 7` (EarlyCSE merges
-// the two after inlining), JumpThreading threads the bool phi of fitsUnits
-// before GVN, and GVN's equality propagation on the test's `and` then
-// folds the guard (docs/NOTES.md, Round 63A).
 void FUN_00091100(void *dst, const void *src, int n)
 {
     if (fitsUnits<u64>(dst, src, n)) {
