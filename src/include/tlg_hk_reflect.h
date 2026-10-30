@@ -886,6 +886,10 @@ struct hkClass {
     /* The same member for a class being edited (0x43d0, beside it: the
      * const lookup inline; the caller at 0x180fb6). derived name. */
     hkClassMember &FUN_000043d0(int index);
+    /* One of the class's own members by its index, to edit (0x4450: the
+     * declared members at +0x28; the versioning at 0x19ef52). derived
+     * name. */
+    hkClassMember *FUN_00004450(int index);
     /* The default of a member by its index over the class and its parents,
      * written to a stream at the member's size (0x4940): the class's
      * defaults hold an offset per member from the defaults themselves, -2
@@ -993,6 +997,10 @@ struct hkClassEnum {
     hkResult FUN_00014ce0(int flagValue, hkArray<const char *> &bitsOut, int &bitsOver) const;
     hkResult FUN_00014dc0(int value, const char **nameOut) const;     /* derived name */
     hkResult FUN_00014e00(const char *itemName, int *valueOut) const; /* derived name */
+    /* The enum written into a signature (0x14e80; hkClass's 0x4660 calls
+     * it for each declared enum): its name, each item's name and value,
+     * then the count, through an archive over the writer. derived name. */
+    void FUN_00014e80(hkStreamWriter *writer) const;
 
     const char *name;
     const Item *items;
@@ -1049,6 +1057,13 @@ struct hkMatrix3 {
     float operator()(int row, int column) const
     {
         return reinterpret_cast<const float *>(&col0 + column)[row];
+    }
+
+    /* A column by its index (the point-to-plane data's slot 19, 0x7bcc1,
+     * reads one of a product's on the stack). */
+    const Vec4 &getColumn(int column) const
+    {
+        return (&col0)[column];
     }
 
     Vec4 col0; /* derived name */
@@ -2711,6 +2726,17 @@ class hknpMaterialPalette : public hkReferencedObject
   public:
     hknpMaterialPalette(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), entries(flag) {}
 
+    /* The entries destroyed from the last, then their storage (0x375a0,
+     * slot 0; the deleting destructor 0x37690 holds the same body). Inline,
+     * emitted with the vtable in the finish callback's file: the executable
+     * holds the complete destructor before the deleting one (cookbook
+     * 187). */
+    inline virtual ~hknpMaterialPalette() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<hknpMaterialDescriptor> entries;
 };
 
@@ -3338,6 +3364,11 @@ class hknpVehicleData : public hkReferencedObject
 
     virtual ~hknpVehicleData();
 
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h): the deleting destructor (0x6dfb0, slot 1) frees
+     * at the recorded size, 0x1b0 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     Vec4 gravity;
     s8 numWheels;
     hkMatrix3 chassisOrientation;
@@ -3355,6 +3386,9 @@ class hknpVehicleData : public hkReferencedObject
     hkArray<hknpVehicleDataWheelComponentParams> wheelParams;
     hkArray<s8> numWheelsPerAxle;
     hkpVehicleFrictionDescription frictionDescription;
+    /* The last two of its records (built at 0x6939b: size 0x1b0). */
+    Vec4 chassisFrictionInertiaInvDiag;
+    hkBool alreadyInitialised;
 };
 
 void FUN_00069250(void *object, int finishing); /* derived name */
@@ -6270,6 +6304,8 @@ class hknpCompoundShapeKeyMask : public hknpShapeKeyMask
     virtual int FUN_00033d30(hknpShapeInstanceId instanceId) const = 0; /* derived name */
 };
 
+extern const hkClass D_57c2ec8; /* hknpCompoundShapeKeyMask's hkClass */
+
 /* hknpCompoundShapeInternalsKeyMask (hkClass 0x57bdf20, built at 0x34508:
  * size 0x30, parent hknpCompoundShapeKeyMask's 0x57c2ec8; member records at
  * 0x16929d0): shape (a pointer to hknpCompoundShape, not serialized) at +8,
@@ -7271,52 +7307,8 @@ struct InplaceTriangle00078160 /* derived name */
     Vec4 buffer[14];
 };
 
-/* The pool at +0x6f0 of the world (derived names: nothing names it), 0x1f60
- * bytes from the thread's heap, built at 0x50325: eight contexts of 0x3c0
- * bytes from +0x10 (each constructed by 0x167cd0, which sets its index to
- * -1), handed out and taken back through a lock-free list. The head at
- * +0x1e10 holds the first free index in its low four bits and a tag above
- * them, which every take advances (0x16ff90); next[] holds each free
- * context's successor, 0xf ending the list (the world's setup at 0x5038c
- * links 0 to 7). */
-struct hknpWorldContextPool /* derived name */
-{
-    struct Context {
-        /* Out of line (0x167cd0): no index, the two triangles built with
-         * a radius of 0.01, the entries empty and the three words at
-         * +0x39c, +0x3a0 and +0x3b0 cleared. */
-        Context();
-
-        int index;
-        u8 unknown4[0x4c];
-        InplaceTriangle00078160 triangle0; /* derived name */
-        InplaceTriangle00078160 triangle1; /* derived name */
-        u8 unknown210[0x90];
-        hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
-        u8 unknown380[0x1c];
-        int unknown39c;
-        void *unknown3a0;
-        u8 unknown3a8[8];
-        int unknown3b0;
-        u8 unknown3b4[0xc];
-    };
-
-    /* A free context taken from the head of the list (0x16ff90): the head
-     * moves to its successor with the tag advanced, and the taken one's
-     * link is marked 0xf. */
-    Context *FUN_0016ff90();
-
-    /* A context back on the list, at its own index (0x16ffe0). */
-    void FUN_0016ffe0(const Context *context);
-
-    u8 unknown0[0x10];
-    Context contexts[8];
-    u32 freeHead;
-    /* volatile: the links change under other threads' takes and gives
-     * back, so a take reads its successor afresh on every attempt (0x16ffad,
-     * a load of its own, not folded into the `or`). */
-    volatile int next[8];
-};
+/* The world's context pool (defined after the block streams). */
+struct hknpWorldContextPool;
 
 /* The reference-counted object at +0x380 of the world (derived names: no
  * type info names its vtable 0x16926d0, address point 0x16926e0), 0x10
@@ -8972,6 +8964,14 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
      * allocator). derived name. */
     void FUN_00167170(AllocatorBase &allocator);
 
+    /* A key's value set, the entry added when the key is new (0x166dc0):
+     * the map grown to twice its slots first once it is half full
+     * (FUN_00166eb0, which inserts the old entries again), the slot found
+     * from the key's 64-bit hash, ids swapped (the first in the high
+     * word); whether the key was new. derived names. */
+    int FUN_00166dc0(AllocatorBase &allocator, Key key, u32 value);
+    void FUN_00166eb0(AllocatorBase &allocator, int newCapacity);
+
     Pair *elem;
     int numElems;
     int hashMod;
@@ -9148,6 +9148,16 @@ class hknpConvexShape : public hknpShape
     /* The finish constructor, out of line (0x42e90). */
     hknpConvexShape(hkFinishLoadedObjectFlag flag);
 
+    /* A new convex shape of dispatch type 1 under a convex radius, its
+     * vertices right after the object (inlined in the sphere's creation,
+     * 0x3c5ca to 0x3c5ed). derived name. */
+    hknpConvexShape(int numVertices, float radius) : hknpShape(1)
+    {
+        convexRadius = radius;
+        vertices.offset = sizeof(hknpConvexShape) - HK_OFFSET_OF(hknpConvexShape, vertices);
+        vertices.size = u16(numVertices);
+    }
+
     int FUN_000430e0() const;         /* vtable slot 6; derived name */
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
@@ -9317,6 +9327,27 @@ class hknpSphereShape : public hknpConvexShape
 {
   public:
     hknpSphereShape(hkFinishLoadedObjectFlag flag);
+
+    /* A sphere of a centre and a radius: four vertices, each the centre
+     * with a w of one half, after the object (inlined in 0x3c580). */
+    hknpSphereShape(const Vec4 &center, float radius) : hknpConvexShape(4, radius)
+    {
+        flags =
+            IS_CONVEX_SHAPE | USE_SINGLE_POINT_MANIFOLD | USE_SMALL_FACE_INDICES | IS_SPHERE_SHAPE;
+        Vec4 *v = vertices.beginBytes();
+        for (int i = 0; i < 4; i++) {
+            v[i] = center;
+        }
+        for (int i = 0; i < 4; i++) {
+            reinterpret_cast<float *>(&v[i])[3] = 0.5f;
+        }
+    }
+
+    /* The shape and its vertices from the thread's heap, built and given
+     * its allocated size (0x3c580; the convex builder at 0x44b92, the
+     * projectile gun at 0x158156, the extern mesh at 0x166a4c and the game
+     * call it). derived name. */
+    static hknpSphereShape *FUN_0003c580(const Vec4 &center, float radius);
 
     /* Slot 28 (0x3c670): the sphere's own answer from its centre, the first
      * vertex, and its convex radius; the shape's default when that fails.
@@ -10785,6 +10816,12 @@ class hkpPointToPlaneConstraintData : public hkpConstraintData
 
     /* Slot 7 (0x7bbb0): both frames' rotations orthonormal. */
     hkBool unknownVirtual7() const;
+
+    /* Slot 19 (0x7bc00): the plane's normal, the column of the lin atom's
+     * axis of the second frame's rotation under the rotation the second
+     * argument points to, scaled by the float the third points to. */
+    void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
+                      Vec4 &out) const;
 
     void FUN_0007bb90(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
@@ -14887,6 +14924,17 @@ class BlockStreamAllocator : public hkReferencedObject /* derived name */
 
 struct BlockCache /* derived name */
 {
+    /* Every cached block handed back (0x8ef60 run inline, then the 0x50
+     * bytes freed when the cache is deleted: 0x16ff31, 0x168047). */
+    ~BlockCache()
+    {
+        FUN_0008ef60();
+    }
+
+    /* Back to the thread's heap at its size (defined in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkBlockStreamBlock *FUN_0008eec0();           /* derived name */
     void FUN_0008ef10(hkBlockStreamBlock *block); /* derived name */
     void FUN_0008ef60();                          /* derived name */
@@ -15039,6 +15087,78 @@ struct hkBlockStreamInplace /* derived name */
     hkBlockStream stream;
     hkBlockStreamBlock *inlineBlocks[24];
     u8 unknownF0[0x10];
+};
+
+/* The pool at +0x6f0 of the world (derived names: nothing names it), 0x1f60
+ * bytes from the thread's heap, built at 0x50325: eight contexts of 0x3c0
+ * bytes from +0x10 (each constructed by 0x167cd0, which sets its index to
+ * -1), handed out and taken back through a lock-free list. The head at
+ * +0x1e10 holds the first free index in its low four bits and a tag above
+ * them, which every take advances (0x16ff90); next[] holds each free
+ * context's successor, 0xf ending the list (the world's setup at 0x5038c
+ * links 0 to 7). */
+struct hknpWorldContextPool /* derived name */
+{
+    struct Context {
+        /* Out of line (0x167cd0): no index, the two triangles built with
+         * a radius of 0.01, the entries empty and the three words at
+         * +0x39c, +0x3a0 and +0x3b0 cleared. */
+        Context();
+
+        /* The context cleaned with two caches (0x167ff0): its object at
+         * +0x380 deleted, its stream at +0x280 given back to the second,
+         * and its own caches handed back. derived name. */
+        void FUN_00167ff0(BlockCache *cacheA, BlockCache *cacheB);
+
+        int index;
+        u8 unknown4[0x4c];
+        InplaceTriangle00078160 triangle0; /* derived name */
+        InplaceTriangle00078160 triangle1; /* derived name */
+        u8 unknown210[0x40];
+        /* Two block caches (0x167ff0 hands back the first and frees it
+         * unless it is the second, then the second). derived names. */
+        BlockCache *cache250;
+        BlockCache *cache258;
+        u8 unknown260[0x40];
+        hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
+        u8 unknown380[0x1c];
+        int unknown39c;
+        void *unknown3a0;
+        u8 unknown3a8[8];
+        int unknown3b0;
+        u8 unknown3b4[0xc];
+    };
+
+    /* A free context taken from the head of the list (0x16ff90): the head
+     * moves to its successor with the tag advanced, and the taken one's
+     * link is marked 0xf. */
+    Context *FUN_0016ff90();
+
+    /* A context back on the list, at its own index (0x16ffe0). */
+    void FUN_0016ffe0(const Context *context);
+
+    /* Every context in use cleaned with the first context's caches, the
+     * pool's stream given back to its cache and the cache freed, then the
+     * first context, and no context in use (0x16feb0; the world's stage at
+     * 0x513be). derived name. */
+    void FUN_0016feb0();
+
+    /* How many contexts are in use, in two counts (0x16feb0 adds them and
+     * clears both at once). derived names. */
+    int numUsed0;
+    int numUsed4;
+    u8 unknown8[8];
+    Context contexts[8];
+    u32 freeHead;
+    /* volatile: the links change under other threads' takes and gives
+     * back, so a take reads its successor afresh on every attempt (0x16ffad,
+     * a load of its own, not folded into the `or`). */
+    volatile int next[8];
+    u8 unknown1e34[0x1c];
+    /* A stream of the pool's own over its cache, both given back and the
+     * cache freed by 0x16feb0. derived names. */
+    hkBlockStreamInplace stream;
+    BlockCache *cache;
 };
 
 /* The world's streams at +0x260 (derived names; built by FUN_00174590):
@@ -16276,6 +16396,14 @@ void FUN_0019aff0(const hkClass *const *classes, int classVersion); /* derived n
  * map keeping each class it has seen), and each class of a null-terminated
  * list brought up through one map (0x19f270, the first step of 0x19aff0). */
 void FUN_0019eee0(const hkClass *klass, PointerMap &done, int classVersion);
+/* Two steps of the walk (derived names): the class's own fixes for version
+ * 1 (0x19efc0), and a callback run on every declared member of the class and
+ * its parents not yet marked with the flag in the done map (0x19f110; the
+ * callbacks 0x19f1f0 for versions to 3 and 0x19f210 to 4). */
+void FUN_0019efc0(const hkClass *klass, PointerMap &done);
+void FUN_0019f110(const hkClass *klass, PointerMap &done, int flag,
+                  void (*callback)(hkClassMember *member));
+void FUN_0019f1f0(hkClassMember *member);
 void FUN_0019f270(const hkClass *const *classes, int classVersion);
 
 /* A class name registry over a static list of classes (derived name;

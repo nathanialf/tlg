@@ -1730,6 +1730,12 @@ class Object0000a280 : public hkReferencedObject /* derived name */
     /* The reference-counted class delete (below). */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* The archive's writes (hkOArchive's in tlg_hk_reflect.h, the same
+     * object): raw bytes to the writer (the body folded onto hkOstream's
+     * 0x89f0) and a 32-bit value (0xa7a0). derived names. */
+    int FUN_000089f0(const void *buffer, int size);
+    void FUN_0000a7a0(int value);
+
     hkReferencedObject *object; /* derived name */
     bool flag;                  /* derived name */
 };
@@ -3457,6 +3463,11 @@ inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numByt
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
+inline void BlockCache::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
 inline void hknpCompoundShapeInternalsKeyMask::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -3645,6 +3656,16 @@ inline void hkxMaterialShaderSet::operator delete(void *object, unsigned long nu
 }
 
 inline void hknpPairCollisionFilter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpVehicleData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpMaterialPalette::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

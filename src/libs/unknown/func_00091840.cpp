@@ -34,3 +34,15 @@ hkUlong StringMap::FUN_00091900(const char *key, hkUlong defaultValue) const
     const int index = int(reinterpret_cast<hkUlong>(FUN_00091840(key)));
     return index <= hashMod ? entries[index].value : defaultValue;
 }
+
+/* derived name: a key's value when its slot is in the map, through the
+ * slot's lookup above (inlined). */
+hkResult StringMap::FUN_000919e0(const char *key, hkUlong *valueOut) const
+{
+    const int slot = int(reinterpret_cast<hkUlong>(FUN_00091840(key)));
+    if (slot <= hashMod) {
+        *valueOut = entries[slot].value;
+        return HK_SUCCESS;
+    }
+    return HK_FAILURE;
+}
