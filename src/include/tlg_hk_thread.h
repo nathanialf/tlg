@@ -152,8 +152,9 @@ class Interface168e888 /* derived name */
     virtual void FUN_000172c0(TaskNode000172c0 *node,
                               TaskNode000172c0 *successor) = 0; /* slot 4; derived name */
     virtual void FUN_000173f0(const TaskPair000173f0 *pairs,
-                              int numPairs) = 0;                 /* slot 5; derived name */
-    virtual void FUN_00017540(void *pointer, int count) = 0;     /* slot 6; derived name */
+                              int numPairs) = 0; /* slot 5; derived name */
+    virtual void FUN_00017540(TaskNode000172c0 *const *nodes,
+                              int numNodes) = 0;                 /* slot 6; derived name */
     virtual void FUN_00017930(const Handle00016350 *handle) = 0; /* slot 7; derived name */
     virtual void FUN_00017970(const Handle00016350 *const *handles,
                               int numHandles) = 0;           /* slot 8; derived name */
@@ -180,7 +181,7 @@ struct WaitingSemaphore00016d40 /* derived name */
  * number, and the node. */
 struct ReadyEntry00017540 /* derived name */
 {
-    u32 key;
+    int key;
     TaskNode000172c0 *node;
 };
 
@@ -217,7 +218,11 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     /* Slot 8 (0x173f0), under the lock: slot 7's link for each pair.
      * derived names. */
     virtual void FUN_000173f0(const TaskPair000173f0 *pairs, int numPairs);
-    virtual void FUN_00017540(void *pointer, int count);     /* vtable slot 9; derived name */
+    /* Slot 9 (0x17540), under the lock: each node counted down with the
+     * next sequence number, the ones that reach zero pushed on the ready
+     * queue by priority, as many waiting semaphores taken; then, the lock
+     * left, those semaphores signalled. derived names. */
+    virtual void FUN_00017540(TaskNode000172c0 *const *nodes, int numNodes);
     virtual void FUN_00017930(const Handle00016350 *handle); /* vtable slot 10; derived name */
     /* Slot 11 (0x17970): the handles that name something gathered into a
      * temporary array and handed to the interface's run of several
@@ -248,7 +253,12 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
 struct TaskNode000172c0 /* derived name */
 {
     int counter;
-    u8 unknown4[0xc];
+    /* The node's priority, the high half of its key in the ready queue,
+     * and the sequence number slot 9 gives it when it is counted down
+     * (0x17540). derived names. */
+    u16 priority;
+    u16 sequence;
+    u8 unknown8[8];
     hkArray<TaskNode000172c0 *> successors;
 };
 

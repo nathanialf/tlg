@@ -360,7 +360,8 @@ FUN_000170c0 src/libs/unknown/func_00016ee0.cpp _ZThn16_N12Class168e810D1Ev
 FUN_000173e0 src/libs/unknown/func_000172c0.cpp _ZThn16_N12Class168e81012FUN_000172c0EP16TaskNode000172c0S1_
 FUN_00017530 src/libs/unknown/func_000173f0.cpp _ZThn16_N12Class168e81012FUN_000173f0EPK16TaskPair000173f0i
 FUN_000173f0 src/libs/unknown/func_000173f0.cpp
-FUN_00017910 src/libs/unknown/func_00017910.cpp
+FUN_00017910 src/libs/unknown/func_00017540.cpp _ZThn16_N12Class168e81012FUN_00017540EPKP16TaskNode000172c0i
+FUN_00017540 src/libs/unknown/func_00017540.cpp
 FUN_00017a50 src/libs/unknown/func_00017970.cpp _ZThn16_N12Class168e81012FUN_00017970EPKPK14Handle00016350i
 FUN_00017240 src/libs/unknown/func_00017240.cpp _ZN12Class168e81012FUN_00017240EPvi
 FUN_00017250 src/libs/unknown/func_00017240.cpp _ZThn16_N12Class168e81012FUN_00017240EPvi
@@ -2453,3 +2454,4 @@ FUN_0016dc90 src/libs/unknown/func_0016dc90.cpp
 FUN_00178310 src/libs/unknown/func_00178310.cpp
 _ZN11LoadedImageC1ERK8RawImage src/libs/unknown/func_001a04d0.cpp _ZN11LoadedImageC2ERK8RawImage
 FUN_00091100 src/libs/unknown/func_00091100.cpp
+FUN_000170d0 src/libs/unknown/func_000170d0.cpp
