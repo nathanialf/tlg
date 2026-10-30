@@ -124,6 +124,16 @@ def bytes_at(base: BaseElf, va: int, blob: bytes) -> bool:
     return False
 
 
+_OBJ_FUNCS: dict[Path, dict] = {}
+
+
+def _object_functions(obj: Path) -> dict:
+    """match_check.object_functions, once per object."""
+    if obj not in _OBJ_FUNCS:
+        _OBJ_FUNCS[obj] = mc.object_functions(obj)
+    return _OBJ_FUNCS[obj]
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                            hint: int | None = None) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why).
@@ -146,6 +156,27 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
         if s is not None and here is not None and here[0] == r.sym_section:
             return s + (r.sym_value - here[1]), ""
         return None, f"{r.symbol}: the guard of a function-local static the base does not place ({static})"
+    # a function the object defines under a name no row carries (a finish or
+    # cleanup callback the linker folded onto a constructor's body, whose row
+    # names the constructor: docs/DECISIONS.md D15's round 57 addendum): placed
+    # where the base's own field points when the function's code sits there,
+    # instruction by instruction with its relocations masked and their targets
+    # checked, as the gate compares a claimed row (match_check.compare); a raw
+    # byte search cannot find it when the code holds an unrelocated field (a
+    # vtable load, 0x87950's and 0x85d80's initializers)
+    if hint is not None and not r.symbol.startswith("."):
+        funcs = _object_functions(obj)
+        if r.symbol in funcs:
+            code, relocs = funcs[r.symbol]
+            try:
+                base_bytes = base.read(hint, len(code))
+            except Exception:  # noqa: BLE001
+                base_bytes = b""
+            if len(base_bytes) == len(code):
+                res = mc.compare(code, relocs, base_bytes, hint, base)
+                if res["obj_insns"] == res["base_insns"] and res["equal"] == res["obj_insns"] \
+                        and res["targets_ok"]:
+                    return hint, ""
     # a symbol the object itself defines in a data section: a string literal
     # or a local constant; find its bytes in the base
     if isinstance(r.sym_section, int) and r.sym_section > 0:

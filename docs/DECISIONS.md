@@ -928,6 +928,15 @@ nowhere else. `FUN_<addr>` is the address's name in
 is known, so no second name is given to the address; the row of the body
 keeps its destructor's or constructor's symbol.
 
+**Addendum, 2026-10-30 (rounds 62A and 64B).** The gate placed a folded callback by finding its
+raw bytes in the base, which fails when the callback's code holds a relocation field (a vtable's
+GOT load in hkxBlobMeshShape's and hkxTextureFile's finish callbacks, 0x85d40 and 0x878f0:
+"bytes occur 0 times"). tools/layout_link.py now places such a function where the base's own
+field at the referencing site points, when the function's code compares equal there instruction
+by instruction with its relocations masked and their targets verified (match_check.compare, the
+gate's own comparison); the raw search stays for literals. The spelling rule is unchanged:
+`FUN_<addr>(...)` with external linkage, the body byte-equal to the folded one.
+
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 
 **Decision.** Where the base keeps a destructor's vptr store and emits
