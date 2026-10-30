@@ -2362,8 +2362,8 @@
 0x000acb30 0x6 FUN_000acb30
 0x000acb40 0x1a8 FUN_000acb40
 0x000accf0 0x17 _ZN20hkMemoryMeshMaterialC1E24hkFinishLoadedObjectFlag
-0x000acd10 0x10e FUN_000acd10
-0x000ace20 0xd9 FUN_000ace20
+0x000acd10 0x10e _ZN20hkMemoryMeshMaterialD0Ev
+0x000ace20 0xd9 _ZN20hkMemoryMeshMaterialD1Ev
 0x000acf00 0x10 FUN_000acf00
 0x000acf10 0x2f FUN_000acf10
 0x000acf40 0x35 FUN_000acf40

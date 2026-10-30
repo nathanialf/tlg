@@ -26,3 +26,11 @@ StringMap::Iterator StringMap::FUN_00091840(const char *key) const
     }
     return reinterpret_cast<Iterator>(static_cast<hkUlong>(hashMod + 1));
 }
+
+/* derived name: a key's value, or the default when the key is not in the
+ * map: the lookup above inline, its slot tested against the hash mask. */
+hkUlong StringMap::FUN_00091900(const char *key, hkUlong defaultValue) const
+{
+    const int index = int(reinterpret_cast<hkUlong>(FUN_00091840(key)));
+    return index <= hashMod ? entries[index].value : defaultValue;
+}

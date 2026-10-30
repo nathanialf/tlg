@@ -5,7 +5,7 @@
 # equal to the base (tools/match_check.py); a row that no longer matches fails
 # the gate. Add a row when a function reaches 1.0; never remove one to pass.
 FUN_000104b0 src/libs/unknown/leaf_000104b0.cpp _Z12FUN_000104b0P10PairRecord
-FUN_00004450 src/libs/unknown/leaf_00004450.cpp _Z12FUN_00004450P6Pool40i
+FUN_00004450 src/libs/unknown/leaf_00004450.cpp
 FUN_00011320 src/libs/unknown/leaf_00011320.cpp _Z12FUN_00011320P8FiveIntsiiiii
 FUN_00014af0 src/libs/unknown/leaf_00014af0.cpp _Z12FUN_00014af0P11CountedListP8ListNode
 FUN_0000df30 src/libs/unknown/leaf_0000df30.cpp _ZNK18hkSimpleLocalFrame12FUN_0000df30ER4Mat4
@@ -2207,3 +2207,11 @@ FUN_00004470 src/libs/unknown/func_00004350.cpp
 FUN_0003a1b0 src/libs/unknown/func_0003a1b0.cpp
 FUN_00006800 src/libs/unknown/func_00006800.cpp
 FUN_0000b580 src/libs/unknown/func_0000b580.cpp
+FUN_000aea40 src/libs/unknown/func_000aea40.cpp
+FUN_0018d050 src/libs/unknown/func_0018d050.cpp
+FUN_000092a0 src/libs/unknown/func_000092a0.cpp
+FUN_00091900 src/libs/unknown/func_00091840.cpp
+FUN_0003efb0 src/libs/unknown/func_0003efb0.cpp
+_ZN20hkMemoryMeshMaterialD1Ev src/libs/unknown/func_000accf0.cpp
+_ZN20hkMemoryMeshMaterialD0Ev src/libs/unknown/func_000accf0.cpp
+FUN_0019f110 src/libs/unknown/func_0019f110.cpp

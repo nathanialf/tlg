@@ -3637,6 +3637,11 @@ inline void hkMemoryMeshTexture::operator delete(void *object, unsigned long num
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkMemoryMeshMaterial::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxEnvironment::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -4376,6 +4381,30 @@ struct BroadPhaseLayers00142a40 /* derived name */
 /* The work the broad phase's update runs first (0x141500, 0x1533 bytes).
  * derived name. */
 void FUN_00141500(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies);
+
+/* What the broad phase's update task works on (derived names): the trees
+ * by layer at +8 and the body manager at +0x10 (0x18d0c9). */
+struct BroadPhaseTaskData0018d050 /* derived name */
+{
+    u8 unknown0[8];
+    BroadPhaseLayers00142a40 *layers; /* derived name */
+    hknpBodyManager *bodyManager;     /* derived name */
+};
+
+/* One of the three 16-byte tasks BroadPhaseTasks0018d640's constructor
+ * builds (vtable 0x16a6690, address point 0x16a66a0, no type info; slot 1
+ * the shared 0x13e50): its data at +8. Slot 2 (0x18d050), timed as the
+ * collide stage's broad phase, fetches the active bodies and updates the
+ * layers' trees from them. derived name. */
+class BroadPhaseUpdateTask0018d050 /* derived name */
+{
+  public:
+    virtual ~BroadPhaseUpdateTask0018d050();
+
+    void FUN_0018d050(); /* vtable slot 2; derived name */
+
+    BroadPhaseTaskData0018d050 *data; /* derived name */
+};
 
 /* A tree's update (0x13e090): its boxes refreshed from the bodies unless
  * kept, the oldest buckets' ages reset beyond the number given, then the

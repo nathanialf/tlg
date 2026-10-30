@@ -5,5 +5,5 @@
  * 0x16a3920) returns one of its textures by index. */
 hkMeshTexture *hkMemoryMeshMaterial::FUN_000acfb0(int index) const /* derived name */
 {
-    return textures.data[index];
+    return textures[index];
 }

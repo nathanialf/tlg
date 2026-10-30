@@ -3,12 +3,5 @@
 
 void hkMemoryMeshMaterial::FUN_000ad1f0(int index, hkMeshTexture *texture)
 {
-    hkMeshTexture **slot = &textures.data[index];
-    if (texture) {
-        texture->addReference();
-    }
-    if (*slot) {
-        (*slot)->removeReference();
-    }
-    *slot = texture;
+    textures[index] = texture;
 }

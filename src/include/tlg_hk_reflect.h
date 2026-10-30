@@ -872,6 +872,13 @@ struct hkClass {
      * (0x42b0) and members (0x4350). derived names. */
     int FUN_000042b0() const; /* derived name */
     int FUN_00004350() const; /* derived name */
+    /* The class's own counts and members, out of line (0x42f0: its
+     * implemented interfaces; 0x4440: its declared members; 0x4450: a
+     * declared member by index; the writers' walks call them, 0x180f50 and
+     * 0x19f16f). derived names. */
+    int FUN_000042f0() const;                           /* derived name */
+    int FUN_00004440() const;                           /* derived name */
+    const hkClassMember &FUN_00004450(int index) const; /* derived name */
     /* A member by its index over the class and its parents, the parents'
      * first (0x4370; the XML and binary writers' walks over a class's
      * members call it, 0x19ef66, 0x1a0d5a). derived name. */
@@ -923,6 +930,21 @@ struct hkClass {
     u32 flags;                            /* derived name */
     u32 describedVersion;                 /* derived name */
 };
+
+/* A class's parent (0x4250), and a member record's class, the same body
+ * the linker kept for both (the member accessor's copy at 0x7f60 is
+ * referenced by nothing; one name per address, D15). derived names. */
+const hkClass *FUN_00004250(const hkClass *self);         /* derived name */
+const hkClass *FUN_00004250(const hkClassMember *member); /* derived name */
+
+/* The classes a class's members hold, walked (0x19f110, recursive; the
+ * writer's 0x19ef8c): each class once per mark bit, its members' classes
+ * first, each member handed to the callback, then its parent. derived
+ * names. */
+struct PointerMap;
+typedef void (*MemberCallback0019f110)(const hkClassMember &member); /* derived name */
+void FUN_0019f110(const hkClass *klass, PointerMap *visited, int mark,
+                  MemberCallback0019f110 callback); /* derived name */
 
 /* Whether a class has a vtable, which its root class tells (0x45a0).
  * derived name. */
@@ -4504,6 +4526,15 @@ void FUN_0001d9e0(hkcdStaticPvs *self); /* derived name */
  * (hknpLodShape's 0x68500 keeps the half in a register). */
 extern const Vec4 D_14b2060[58];
 
+/* derived name: the step from one point toward another at a speed (0x156cd0;
+ * the callers at 0x158292 and 0x166b88): when the two are more than
+ * epsilon (row 35) apart, the speed along the way plus a correction from a
+ * velocity scaled by minus half the distance over the speed, the
+ * correction kept no longer than the speed; else the difference itself.
+ * derived names. */
+void FUN_00156cd0(const Vec4 &from, const Vec4 &to, float speed, const Vec4 &velocity,
+                  Vec4 &out); /* derived name */
+
 inline void hkcdFourAabb::setEmpty()
 {
     lx.quad = D_14b2060[33];
@@ -6138,6 +6169,12 @@ template <typename TYPE, TYPE INVALID_VALUE, typename DISCRIMINANT> struct hkHan
 
 struct hknpShapeInstanceIdDiscriminant;
 typedef hkHandle<short, 32767, hknpShapeInstanceIdDiscriminant> hknpShapeInstanceId;
+
+/* The cleanup callback of the instances' free-list array's type info
+ * (0x3efb0, registered by 0x3f090 under the scoped name at 0x14bb594): the
+ * array destroyed in place. The free-list array is defined below. derived
+ * name. */
+void FUN_0003efb0(void *object); /* derived name */
 
 /* hknpCompoundShapeKeyMask (hkClass 0x57c2ec8, built at 0x77f36: size 8,
  * parent hknpShapeKeyMask's 0x57c1aa8, no members): the interface adds slot
@@ -12322,7 +12359,14 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
     /* Out of line (0xaccf0): the finish callback 0x246d0 jumps to it, the
      * reflection initializer at 0x24784 runs it on a temporary. */
     hkMemoryMeshMaterial(hkFinishLoadedObjectFlag flag);
+    /* Out of line (0xace20, slot 0; the deleting destructor 0xacd10, slot
+     * 1, before it in the file as clang emits them): the textures, then the
+     * name. */
     virtual ~hkMemoryMeshMaterial();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0x80 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000246c0 */
     hkResult FUN_000acf00(const hkVertexFormat &format,
@@ -12352,7 +12396,9 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
     void FUN_000acb30(float amount);         /* vtable slot 22; derived name */
 
     hkStringPtr materialName;
-    hkArray<hkMeshTexture *> textures;
+    /* Counted references: the destructor (0xace20) releases each from the
+     * last and clears it, as the array destroys its elements. */
+    hkArray<hkRefPtr<hkMeshTexture>> textures;
     Vec4 diffuseColor;
     Vec4 ambientColor;
     Vec4 specularColor;
@@ -12892,6 +12938,12 @@ class hkBufferedStreamWriter : public hkStreamWriter
      * derived name. */
     void FUN_000091f0();
     hkBool FUN_00009280() const; /* vtable slot 8; derived name */
+    /* Slot 9 (0x92a0): with a stream, the buffer written out and the
+     * stream sought; without one, the buffer's size set from the start,
+     * itself or its end, kept within the capacity (a failure when it had
+     * to be clamped; a negative position or another origin empties the
+     * buffer and fails). derived name. */
+    hkResult FUN_000092a0(int offset, int whence);
 
     /* The buffered bytes written to the stream until it takes no more;
      * emptied when all went (0x91f0 inline). derived name. */
@@ -13130,6 +13182,12 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     void FUN_000ae6b0(int sectionIndex, hkSkinnedMeshShape::BoneSection &sectionOut) const;
     /* Slot 10 (0xae820): a copy of a part. derived name. */
     void FUN_000ae820(int partIndex, hkSkinnedMeshShape::Part &partOut) const;
+    /* Slot 17 (0xaea40): a bone set added over a copy of the bones at the
+     * bone buffer's end; its index back. The bones are restrict (D9): the
+     * append's copy loop became a memcpy of (n - 1) * 2 + 2 bytes
+     * (0xaeaf3), LoopIdiom's form, which it forms only when the source
+     * cannot alias the buffer. derived name. */
+    int FUN_000aea40(const s16 *HK_RESTRICT bones, int numBones);
 
     /* From its record table at 0x1692420: bonesBuffer, boneSets,
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at
@@ -14698,6 +14756,11 @@ struct hkBlockStream /* derived name */
      * cache (0x94880). derived name. */
     void FUN_00094880(BlockCache *cache);
 
+    /* Another stream's blocks appended to this one's, through the cache
+     * (0x94a10; the world's streams move their pairs on with it, 0x174fbc).
+     * derived name. */
+    void FUN_00094a10(BlockCache *cache, hkBlockStream *other);
+
     /* The stream set up over a cache (0x94750): the cache's allocator
      * kept, nothing counted or freed, the zeroing chosen, and its first
      * block appended (0x947f0 inline). derived name. */
@@ -14730,12 +14793,35 @@ struct hkBlockStreamInplace /* derived name */
  * arrays at +0xc00, +0xc10 (16-byte elements) and +0xc20. The streams go in
  * pairs (the checks of 0x151c80 take +0, +0x100 and +0x400, +0x500 and
  * +0x200, +0x300). */
+struct CommandStreams00167f70;
+
 struct hknpWorldStreams260 /* derived name */
 {
+    /* A 16-byte record of the array at +0xc20 (derived names): its first
+     * word and the int at +0xc, which 0x174f30 clears. */
+    struct EntryC20 {
+        /* Both cleared (inline in 0x174f30). derived name. */
+        void reset()
+        {
+            unknown0 = 0;
+            unknownC = 0;
+        }
+
+        u64 unknown0;
+        u32 unknown8;
+        u32 unknownC;
+    };
+
     /* Every stream's blocks given back to the cache (0x174de0; the world's
      * teardown at 0x4b3ad), the first of each pair before the second, the
      * pairs in the order 0, 2, 1, 4, 3, 5. derived name. */
     void FUN_00174de0(BlockCache *cache);
+
+    /* When the pair at +0x400 holds anything (0x174f30, called at
+     * 0x179a5b): the records at +0xc20 cleared, the pair processed with
+     * them (0x717d0), then appended to the pair at +0x200 and reset, all
+     * through the context's cache. derived name. */
+    void FUN_00174f30(CommandStreams00167f70 *context);
 
     hkBlockStreamInplace stream000;
     hkBlockStreamInplace stream100;
@@ -14751,8 +14837,15 @@ struct hknpWorldStreams260 /* derived name */
     hkBlockStreamInplace streamB00;
     hkArray<u8> arrayC00;
     hkArray<Vec4> arrayC10;
-    hkArray<u8> arrayC20;
+    hkArray<EntryC20> arrayC20;
 };
+
+/* The pair at +0x400 of the world's streams processed with the records at
+ * +0xc20 (0x717d0, 0x915 bytes; the streams' 0x174fa6 passes 0 last).
+ * derived names. */
+void FUN_000717d0(CommandStreams00167f70 *context, hkBlockStreamInplace *streamA,
+                  hkBlockStreamInplace *streamB, hkArray<hknpWorldStreams260::EntryC20> *entries,
+                  int argument5); /* derived name */
 
 /* What a consumer keeps of the block it reads (derived names): the stream,
  * the cache freed blocks go to, the block and the number of its elements
