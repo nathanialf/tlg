@@ -8295,6 +8295,13 @@ struct hknpWorldObject4f8 /* derived name */
      * (0x63620; the step at 0x6d49e and 0x14fcc8 call it). derived name. */
     void FUN_00063620();
 
+    /* A body's attached group activated (0x63da0; 0x4c964 and 0x63b58 call
+     * it): the bodies put on the active list (0x1614f0), the motion's
+     * record byte cleared, then each body of the group from the body round
+     * to it again recorded at +0x88 and the new records' ids handed to the
+     * world's +0x1e0 object (its slot 4). derived name. */
+    void FUN_00063da0(int bodyId);
+
     hknpWorld *world;            /* derived name */
     MotionRecord *motionRecords; /* derived name */
     u8 unknown10[8];
@@ -8306,6 +8313,8 @@ struct hknpWorldObject4f8 /* derived name */
     hkArray<int> ids68; /* derived name */
     u8 unknown78[8];
     int int80; /* derived name */
+    u8 unknown84[4];
+    hkArray<BodyRecord> activatedBodies; /* derived name */
 };
 
 /* A slot of a member-function signal (vtable 0x1698ee0, ruled hkSlot, D14):
@@ -8684,7 +8693,10 @@ class hknpWorldObject1e0 /* derived name */
     virtual void unknownVirtual1();
     virtual void unknownVirtual2();
     virtual void unknownVirtual3();
-    virtual void unknownVirtual4();
+    /* Slot 4: bodies by their ids, the ids a stride of bytes apart (the
+     * activation of a body's group, 0x63ea3, hands it the ids it has
+     * recorded, their count and 8). derived names. */
+    virtual void unknownVirtual4(const hknpBodyId *bodyIds, int numBodyIds, int stride);
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
@@ -11274,6 +11286,14 @@ struct hkpLinMotorConstraintAtom {
     u8 padding[12]; /* not serialized: the atom is 0x20 bytes */
 };
 
+/* hkpLinConstraintAtom (its member name a string of the executable):
+ * axisIndex (hkUint8) at +2 after the atom's type, 0x10 bytes. */
+struct hkpLinConstraintAtom {
+    u16 type; /* derived name */
+    u8 axisIndex;
+    u8 padding[0xd];
+};
+
 /* hkpLinLimitConstraintAtom (records 0x169e1f0): axisIndex (hkUint8) at
  * +2, min and max (hkReal) at +4 and +8, padding at +0xc. */
 struct hkpLinLimitConstraintAtom {
@@ -11298,13 +11318,23 @@ class hkpPrismaticConstraintData : public hkpConstraintData
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpLinMotorConstraintAtom motor;
         hkpLinFrictionConstraintAtom friction;
-        u8 unknownC0[0x30]; /* ang, lin0, lin1 */
+        hkpAngConstraintAtom ang;
+        hkpLinConstraintAtom lin0;
+        hkpLinConstraintAtom lin1;
         hkpLinLimitConstraintAtom linLimit;
     };
 
     /* What the solver keeps for the constraint (derived names): its first
-     * four solver results are the motor's and the friction's. */
+     * four solver results are the motor's and the friction's; the two lin
+     * atoms' and the limit's follow the three angular ones (slot 19 reads
+     * the 8th to the 10th). */
     struct Runtime {
+        enum SolverResult {
+            SOLVER_RESULT_LIN_0 = 7,
+            SOLVER_RESULT_LIN_1 = 8,
+            SOLVER_RESULT_LIN_LIMIT = 9
+        };
+
         hkpSolverResults solverResults[4];
     };
 
@@ -11333,6 +11363,12 @@ class hkpPrismaticConstraintData : public hkpConstraintData
     void FUN_0007e910(void *runtime, hkBool isEnabled);
     void FUN_0007e890(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    /* Slot 19 (0x7e950): the linear impulse, each lin atom's and the
+     * limit's axis column of the first frame's rotation under the first
+     * transform's, scaled by its solver result's impulse. derived name. */
+    void FUN_0007e950(const hkTransform &transformA, const hkTransform &transformB,
+                      const hkpSolverResults *results, Vec4 &out) const;
 
     Atoms atoms;
 };
@@ -11745,14 +11781,6 @@ class hkpRagdollLimitsData : public hkpConstraintData
  * lin at +0x90, record table 0x169c4b0). Its slot 20 (0x7bb90), kept by
  * hkpStiffSpringConstraintData and hkpPulleyConstraintData, wants 8 bytes
  * of runtime and one solver result, or none. */
-/* hkpLinConstraintAtom (its member name a string of the executable):
- * axisIndex (hkUint8) at +2 after the atom's type, 0x10 bytes. */
-struct hkpLinConstraintAtom {
-    u16 type; /* derived name */
-    u8 axisIndex;
-    u8 padding[0xd];
-};
-
 class hkpPointToPlaneConstraintData : public hkpConstraintData
 {
   public:
@@ -14026,6 +14054,11 @@ class hkOstream : public hkReferencedObject
      * over the writer, whose reference it takes. */
     hkOstream(hkStreamWriter *writer);
 
+    /* Out of line (0x8140; the packfile's 0x19b30e builds one over its
+     * string buffer): a stream over an array, its writer built here and
+     * taken without a reference of its own. derived name. */
+    hkOstream(hkArray<char> &buffer);
+
     virtual ~hkOstream();
 
     /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
@@ -15228,6 +15261,16 @@ class hkArrayStreamWriter : public hkStreamWriter
      * borrowed it (hkOstream's constructor, 0x81c4, borrows). derived
      * names. */
     enum ArrayOwnership { ARRAY_TAKE = 0, ARRAY_BORROW = 1 };
+
+    /* A writer over an array (inline in hkOstream's constructor 0x8140,
+     * defined in tlg_lib_unknown.h): the array, the containers' allocator,
+     * the array's size as the write offset and the ownership, then a
+     * terminating zero kept past the end. derived name. */
+    inline hkArrayStreamWriter(hkArray<char> *array_, ArrayOwnership ownership_);
+
+    /* The class allocator: a block of the thread's heap (0x8170 to
+     * 0x818d; defined beside the router). */
+    static void *operator new(unsigned long numBytes);
 
     /* 0x8fe10 (slots 0 and 1 through the deleting destructor 0x8fe60): a
      * taken array goes back to the thread's heap. */
@@ -17288,6 +17331,14 @@ struct OwnedPointerMap : public PointerMap /* derived name */
     {
         FUN_00013db0(hkContainerHeapAllocator::get());
         FUN_0000e5c0(this);
+    }
+
+    /* A key's value set, the entries grown from the containers' heap
+     * (inline in 0xb390, which removes through the map's own member).
+     * derived name. */
+    int insert(hkUlong key, hkUlong value)
+    {
+        return FUN_000138a0(hkContainerHeapAllocator::get(), key, value);
     }
 };
 

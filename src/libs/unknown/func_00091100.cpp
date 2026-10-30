@@ -1,13 +1,15 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-/* The copy in units of a type, the last first: the index from the signed
- * count, the loop on what is left of it (derived name). */
+/* The copy in units of a type, the last first: an unsigned index from the
+ * count's units (the base's `movsxd; shr; dec` and the index's zero
+ * extension, `mov eax, eax`, in the loop), the loop on what is left of it
+ * (derived name). */
 template <typename T> static inline void copyBackwards(void *dst, const void *src, int n)
 {
     T *d = static_cast<T *>(dst);
     const T *s = static_cast<const T *>(src);
-    int i = int(n / sizeof(T)) - 1;
+    unsigned int i = n / sizeof(T) - 1;
     for (unsigned int left = n; left >= sizeof(T); left -= sizeof(T)) {
         d[i] = s[i];
         i--;
@@ -23,11 +25,12 @@ template <typename T> static inline bool fitsUnits(const void *dst, const void *
            (reinterpret_cast<hkUlong>(src) & (sizeof(T) - 1)) == 0;
 }
 
-// NONMATCHING: the byte copy and the four tests equal; each wider copy's
-// loop differs: the base keeps the loop's guard (`cmp edx, 8; jb` again
-// after the tests) and steps a 32-bit index from (sext(n) >> 3) - 1, where
-// this compile drops the guard as implied by the tests (GVN) and steps two
-// pointers (docs/NOTES.md, Round 62A).
+// NONMATCHING: every instruction but the wide loops' guards: the base keeps
+// `cmp edx, 8; jb` (4, 2) before each wide loop, which here goes: the
+// helper's rotated guard is the test's own `icmp ugt n, 7` (EarlyCSE merges
+// the two after inlining), JumpThreading threads the bool phi of fitsUnits
+// before GVN, and GVN's equality propagation on the test's `and` then
+// folds the guard (docs/NOTES.md, Round 63A).
 void FUN_00091100(void *dst, const void *src, int n)
 {
     if (fitsUnits<u64>(dst, src, n)) {

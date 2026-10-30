@@ -2390,3 +2390,11 @@ FUN_001598f0 src/libs/unknown/func_001598f0.cpp _ZN17hknpProjectileGun17updatePr
 _ZN15hkcdPlanarSolidD1Ev src/libs/unknown/func_00095870.cpp
 FUN_00167ff0 src/libs/unknown/func_00167ff0.cpp
 _ZN17hknpTriangleShapeC1Ei src/libs/unknown/func_00078270.cpp _ZN17hknpTriangleShapeC2Ei
+FUN_0000b390 src/libs/unknown/func_0000b390.cpp
+FUN_00014690 src/libs/unknown/func_00014690.cpp
+_ZN9hkOstreamC1ER7hkArrayIcE src/libs/unknown/func_00008140.cpp _ZN9hkOstreamC2ER7hkArrayIcE
+FUN_00063da0 src/libs/unknown/func_00063da0.cpp
+_ZN14Object00065f20D1Ev src/libs/unknown/func_00065de0.cpp _ZN14Object00065f20D2Ev
+_ZN17RefArrays0005a230C1EP9hknpWorld src/libs/unknown/func_0006bc50.cpp _ZN17RefArrays0005a230C2EP9hknpWorld
+FUN_00077f80 src/libs/unknown/func_00077f80.cpp _GLOBAL__I_a
+FUN_0007e950 src/libs/unknown/func_0007e950.cpp

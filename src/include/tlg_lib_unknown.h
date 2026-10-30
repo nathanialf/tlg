@@ -1699,13 +1699,19 @@ class RefArrays0005a230 : public hkReferencedObject /* derived name */
     void FUN_0006bd90(u16 first);
 
     hknpWorld *world; /* derived name */
-    u8 unknown18[0x18];
+    /* Three pointers the constructor clears (0x6bcc3 to 0x6bcd3). derived
+     * names. */
+    void *pointer18;
+    void *pointer20;
+    void *pointer28;
     u16 freeHead;           /* derived name: the first free entry, 0xffff for none */
     hkArray<Entry> entries; /* derived name */
     /* Two arrays of 16-bit words, given back by the destructor (0x5a24b,
-     * 0x5a284). derived names. */
+     * 0x5a284); the first sized by the constructor to the capacity of the
+     * world's bodies, every word 0xffff. derived names. */
     hkArray<u16> array48;
-    u8 unknown58[8];
+    hkBool flag58; /* derived name: cleared by the constructor */
+    u8 unknown59[7];
     hkArray<u16> array60;
 };
 
@@ -2584,6 +2590,19 @@ class ThreadMemory : public AllocatorBase /* derived name */
      * first word, and how many (slot 13 gives them back four at a time).
      * derived names. */
     struct FreeList {
+        /* The first block taken off, or null when there is none (inline in
+         * slot 13, 0x14730). derived name. */
+        void *pop()
+        {
+            if (head) {
+                void *block = head;
+                numElem--;
+                head = *static_cast<void **>(block);
+                return block;
+            }
+            return HK_NULL;
+        }
+
         void *head;
         int numElem;
     };
@@ -2605,13 +2624,22 @@ class ThreadMemory : public AllocatorBase /* derived name */
  * nodes. */
 struct UnionFindParents /* derived name */
 {
+    /* Back to the thread's heap at its size, 0x10 bytes (the owner's
+     * destructor, 0x65e2f). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     int *data; /* derived name */
+    u8 unknown8[8];
 };
 
 struct UnionFind /* derived name */
 {
     /* 0x8f640: every node its own root. */
     UnionFind(UnionFindParents *parents, int numNodes);
+
+    /* Back to the thread's heap at its size, 0x18 bytes (the owner's
+     * destructor, 0x65e01). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* 0x8f6a0 (called at 0x62ce4): a node's root, every node on the way
      * made a child of the root. A negative parent marks a root. derived
@@ -2682,6 +2710,11 @@ struct Record00065f00 /* derived name */
  * 0x14e946, after the records are filled). */
 struct Object00065f20 /* derived name */
 {
+    /* Out of line (0x65de0): the union-find and its parents deleted, the
+     * parents' storage given back at the node count's size, then the
+     * records' bit fields. */
+    ~Object00065f20();
+
     UnionFind *unionFind;       /* derived name */
     UnionFindParents *parents;  /* derived name */
     Record00065f00 records[12]; /* derived name */
@@ -3746,6 +3779,16 @@ inline void BlockCache::operator delete(void *object, unsigned long numBytes)
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
+inline void UnionFindParents::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void UnionFind::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
 inline void hknpCompoundShapeInternalsKeyMask::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -4326,6 +4369,19 @@ inline void Crc32StreamWriter::operator delete(void *object, unsigned long numBy
 inline void hkArrayStreamWriter::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void *hkArrayStreamWriter::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline hkArrayStreamWriter::hkArrayStreamWriter(hkArray<char> *array_, ArrayOwnership ownership_)
+    : array(array_), allocator(&hkContainerHeapAllocator::get()), offset(array_->getSize()),
+      ownership(ownership_)
+{
+    array->reserve(*allocator, array->getSize() + 1);
+    array->data[array->getSize()] = 0;
 }
 
 inline void hknpCharacterRigidBodyCinfo::operator delete(void *object, unsigned long numBytes)
