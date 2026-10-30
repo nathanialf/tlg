@@ -1,11 +1,11 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-void CommandStreams00167f70::FUN_00167f70(void *argument1, BlockCache *streamCache)
+void hknpWorldContextPool::Context::FUN_00167f70(void *argument1, BlockCache *streamCache)
 {
-    commands.FUN_00094880(streamCache);
+    stream.FUN_00094880(streamCache);
     if (commandWriter) {
-        commandWriter->writer.FUN_000938a0(cache, &commands);
+        commandWriter->writer.FUN_000938a0(cache258, &stream);
         const hkBlockStreamWriter &writer = commandWriter->writer;
         const hkBlockStreamBlock *block = writer.currentBlock;
         const int byteOffset = writer.currentByteOffset;

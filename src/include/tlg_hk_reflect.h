@@ -16842,14 +16842,22 @@ struct hknpWorldContextPool /* derived name */
 {
     struct Context {
         /* Out of line (0x167cd0): no index, the two triangles built with
-         * a radius of 0.01, the entries empty and the three words at
-         * +0x39c, +0x3a0 and +0x3b0 cleared. */
+         * a radius of 0.01, the entries empty, the command range's count
+         * and the words at +0x3a0 and +0x3b0 cleared. */
         Context();
 
         /* The context cleaned with two caches (0x167ff0): its object at
          * +0x380 deleted, its stream at +0x280 given back to the second,
          * and its own caches handed back. derived name. */
         void FUN_00167ff0(BlockCache *cacheA, BlockCache *cacheB);
+
+        /* The stream emptied with the cache given; a writer present is bound
+         * to it again over the context's cache at +0x258 and the range
+         * started where the writer is: its block, the offset and count in
+         * that block, and the stream's count so far negated, all read before
+         * the range is written (0x167f70; the loop at 0x170770 runs it over
+         * every context of the pool). derived name. */
+        void FUN_00167f70(void *argument1, BlockCache *streamCache);
 
         int index;
         u8 unknown4[4];
@@ -16876,8 +16884,10 @@ struct hknpWorldContextPool /* derived name */
         hknpWorldObject380Record *records268[3];
         hkBlockStream stream;                      /* derived name */
         hkBlockStreamCommandWriter *commandWriter; /* derived name */
-        u8 unknown388[0x14];
-        int unknown39c;
+        u8 unknown388[8];
+        /* Where the writer's commands start (0x167f70); its count cleared by
+         * the constructor. derived name. */
+        hkBlockStreamRange commandRange;
         void *unknown3a0;
         u8 unknown3a8[8];
         int unknown3b0;
@@ -16976,7 +16986,6 @@ struct hknpCompositeCollisionDetector : public hknpCollisionDetector /* derived 
  * arrays at +0xc00, +0xc10 (16-byte elements) and +0xc20. The streams go in
  * pairs (the checks of 0x151c80 take +0, +0x100 and +0x400, +0x500 and
  * +0x200, +0x300). */
-struct CommandStreams00167f70;
 
 struct hknpWorldStreams260 /* derived name */
 {
@@ -17004,7 +17013,7 @@ struct hknpWorldStreams260 /* derived name */
      * 0x179a5b): the records at +0xc20 cleared, the pair processed with
      * them (0x717d0), then appended to the pair at +0x200 and reset, all
      * through the context's cache. derived name. */
-    void FUN_00174f30(CommandStreams00167f70 *context);
+    void FUN_00174f30(hknpWorldContextPool::Context *context);
 
     hkBlockStream stream000;
     hkBlockStream stream100;
@@ -17026,8 +17035,8 @@ struct hknpWorldStreams260 /* derived name */
 /* The pair at +0x400 of the world's streams processed with the records at
  * +0xc20 (0x717d0, 0x915 bytes; the streams' 0x174fa6 passes 0 last).
  * derived names. */
-void FUN_000717d0(CommandStreams00167f70 *context, hkBlockStream *streamA, hkBlockStream *streamB,
-                  hkArray<hknpWorldStreams260::EntryC20> *entries,
+void FUN_000717d0(hknpWorldContextPool::Context *context, hkBlockStream *streamA,
+                  hkBlockStream *streamB, hkArray<hknpWorldStreams260::EntryC20> *entries,
                   int argument5); /* derived name */
 
 /* What a consumer keeps of the block it reads (derived names): the stream,
@@ -17147,42 +17156,11 @@ void FUN_00174ea0(Streams00174ea0 *self, hknpWorld *world, BlockCache *cache,
 void FUN_000cd870(const Vec4 &linearVelocity, const Vec4 &angularVelocity, const Vec4 &deltaTime,
                   hknpMotion &motion); /* derived name */
 
-/* What 0x167f70 resets for the simulation (derived names; the loop at
- * 0x170770 runs it over an object's +0x10 with the owner's +0x250 and
- * +0x258): a cache of its own at +0x258, a command stream at +0x280, the
- * command writer at +0x380 and the range its commands start at, +0x390. */
-struct CommandStreams00167f70 /* derived name */
-{
-    /* The stream emptied with the cache given; a writer present is bound to
-     * it again and the range started where the writer is: its block, the
-     * offset and count in that block, and the stream's count so far
-     * negated, all read before the range is written. derived name. */
-    void FUN_00167f70(void *argument1, BlockCache *streamCache);
-
-    /* A motion's previous-step velocities scaled, and the speed at +0x36 with
+/* A motion's previous-step velocities scaled, and the speed at +0x36 with
  * them, the motion moved by the old ones over the part of the step the
  * scale adds, (factor - 1) times the step (0x157be0; the world's 0x5dad1
  * passes its step's time). derived name. */
-    void FUN_00157be0(hknpMotion &motion, const Vec4 &factor, const Vec4 &deltaTime);
-
-    u8 unknown0[0x258];
-    BlockCache *cache; /* derived name */
-    u8 unknown260[0x20];
-    hkBlockStream commands;                    /* derived name */
-    hkBlockStreamCommandWriter *commandWriter; /* derived name */
-    u8 unknown388[8];
-    hkBlockStreamRange commandRange; /* derived name */
-};
-
-/* The caches a thread's streams are emptied with (derived names): the
- * first at +0x258, as CommandStreams00167f70 keeps its own, and a second
- * at +0x260 (the step's callers 0x14f5a0 and 0x15000c pass it). */
-struct StreamCaches0015e980 /* derived name */
-{
-    u8 unknown0[0x258];
-    BlockCache *cache;       /* derived name */
-    BlockCache *secondCache; /* derived name */
-};
+void FUN_00157be0(hknpMotion &motion, const Vec4 &factor, const Vec4 &deltaTime);
 
 /* Seven block streams of a step (derived names; an array of them hangs off
  * +0x108 of the callers' object, each in use when its byte at +0x700 is
@@ -17190,13 +17168,13 @@ struct StreamCaches0015e980 /* derived name */
  * mode 1 the other three, the last with the second cache. */
 struct StepStreams0015e980 /* derived name */
 {
-    void FUN_0015e980(const StreamCaches0015e980 *caches, int mode); /* derived name */
+    void FUN_0015e980(const hknpWorldContextPool::Context *context, int mode); /* derived name */
 
     /* The streams set up over the caches and marked in use (0x15e8b0; the
      * collide task's slot 5 runs it at 0x15eb54 on a set not in use yet):
      * the first two zeroing their blocks, and in mode 1 the other three,
      * the last zeroing, over the second cache. derived name. */
-    void FUN_0015e8b0(const StreamCaches0015e980 *caches, int mode);
+    void FUN_0015e8b0(const hknpWorldContextPool::Context *context, int mode);
 
     hkBlockStream slot0;
     hkBlockStream slot1;

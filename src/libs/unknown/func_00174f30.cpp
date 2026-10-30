@@ -9,15 +9,15 @@ static void resetEntries(hkArray<hknpWorldStreams260::EntryC20> &entries) /* der
     }
 }
 
-void hknpWorldStreams260::FUN_00174f30(CommandStreams00167f70 *context) /* derived name */
+void hknpWorldStreams260::FUN_00174f30(hknpWorldContextPool::Context *context) /* derived name */
 {
     if (stream400.numTotalElements == 0) {
         return;
     }
     resetEntries(arrayC20);
     FUN_000717d0(context, &stream400, &stream500, &arrayC20, 0);
-    stream200.FUN_00094a10(context->cache, &stream400);
-    stream300.FUN_00094a10(context->cache, &stream500);
-    stream400.FUN_00094880(context->cache);
-    stream500.FUN_00094880(context->cache);
+    stream200.FUN_00094a10(context->cache258, &stream400);
+    stream300.FUN_00094a10(context->cache258, &stream500);
+    stream400.FUN_00094880(context->cache258);
+    stream500.FUN_00094880(context->cache258);
 }
