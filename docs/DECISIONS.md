@@ -1345,6 +1345,14 @@ becomes equal. REFUTED: the base's generator ran on the optimizer's in-memory mo
 one-step compile does. 0x174f30's residual is a use-list-order question of its source (which
 value is defined or used first), never a pipeline or a flag.
 
+**Addendum, 2026-10-30 (round 64A).** A third witness of the unswitch shape: 0x605b0,
+hknpSpaceSplitter's constructor, whose base holds two copies of an inner loop that -O3's
+non-trivial unswitch reproduces (and -O3 is refuted over the region, the round 58 addendum). It
+joins 0x13e090 and 0x187750 under (b): a source question, parked, never a flag; a fourth witness
+is reported, not worked. Two further details of 0x605b0 (a 64-bit `a - 1`, a u16 mask emitted as
+`shl 16; add 0x10000; shr 16`, the mask shape also at 0x18e820) are source questions of their
+own and go with it.
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
@@ -2096,3 +2104,39 @@ from instruction 139.
 holds rotated (the condition's post-state), or a base loop the patch now
 leaves unrotated where the base rotates it; either reopens the condition
 and the reading of the bracket.
+
+## D37. A vtable another translation unit defines is not emitted available_externally (2026-10-30)
+
+**Decision.** The library compiler carries upstream r189852 (clang ee6aa0c62e8b, 2013-09-03,
+Rafael Espindola, "Don't emit an available_externally vtable pointing to linkonce_odr funcs.",
+PR13124) as its twelfth backport, tools/patches/llvm-3.3-vtable-01-no-available-externally.patch:
+at -O2, a referenced vtable whose key function another translation unit defines is no longer
+emitted available_externally, so the optimizer cannot read its slots and a call through it
+stays a call through the vtable. A vtable is still emitted, and a call through it still folds,
+in the translation unit that defines the class's key function; a function whose bytes hold such
+a fold therefore lives in that file, as the executable's own files did.
+
+**Evidence.** Round 64B's 0xc360 (hkFreeListMemorySystem's destructor) equals the base but for
+one call, ThreadMemory's slot 13, which the live 3.3 folds to a direct call; the base keeps
+`call [rax+0x68]`. 3.3's CGVTables.cpp emits every referenced vtable available_externally when
+optimizing (getVTableLinkage, shouldEmitVTableAtEndOfTranslationUnit); r189852 removed that,
+inside the compiler's bracket (D32: after r196925 of 2013-12-10, before r206214). Second witness
+0x158bf0 at 0x158c45. Measured with an experiment clang (the live source plus the commit's
+change to CGVTables.cpp) over every claimed library TU at 2bf6508: 2,022 of 2,024 TUs
+unchanged; 0xc360's TU changes and 0xc360 becomes equal; 0x181b10's TU changes and
+hkBinaryPackfileWriter's constructor loses the fold of its slot 10 call, because its file in
+this tree did not define the class's key function (the destructor 0x181bf0, `jmp 0x19c150`):
+with that destructor defined in the same file, as hkBinaryPackfileWriter.cpp defined it, the
+constructor is equal again under the patch and the destructor matches too. A compile-time
+fold that depends on the vtable's presence is a fact about the file, not the flag.
+
+**Adopted.** A first adoption commit was refused by the gate: three files held inline destructors
+(hknpCompositeShape's, hkpLinearParametricCurve's, hkpWrappedConstraintData's) that 3.3's
+available_externally emission alone had put there; round 64A moved them to their key functions'
+files, defined hkBinaryPackfileWriter's destructor beside its constructor and hkPackfileWriter's
+0x19c150 under its D1 row, all equal under the eleven patch compiler. The live 3.3 then rebuilt
+with the twelve patches (tools/build_llvm.sh 3.3), 0xc360 claimed, the gate holding on every row.
+
+**Trigger.** A claimed function that loses a direct call to a virtual slot under a later
+compiler, or a draft whose only residual is a direct call where the base holds a call through
+the vtable, is this decision: the key function's file, never a flag.

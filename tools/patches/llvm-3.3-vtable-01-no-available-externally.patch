@@ -1,0 +1,78 @@
+llvm-3.3 backport patch: no available_externally vtable for a class whose key function is elsewhere (PS4)
+
+This patch CHANGES CODE GENERATION at -O2 for a virtual call through an
+object whose vtable another translation unit defines: clang 3.3 emits every
+referenced vtable as available_externally when optimizing, so the optimizer
+reads the slot and folds the call to a direct one (ThreadMemory's slot 13 in
+hkFreeListMemorySystem's destructor 0xc360, hknpVehicleRayCastWheelCollide's
+at 0x158c45), where the executable keeps the call through the vtable. Upstream
+removed the emission in
+
+  r189852  ee6aa0c62e8b  2013-09-03  Rafael Espindola, "Don't emit an
+           available_externally vtable pointing to linkonce_odr funcs."
+           (fixes PR13124)
+
+which is inside the executable's compiler bracket (after r196925, before
+r206214; docs/DECISIONS.md D32). The patch is that commit's change to
+CGVTables.cpp (getVTableLinkage and shouldEmitVTableAtEndOfTranslationUnit)
+applied to 3.3's text; its test change is not carried. A vtable is still
+emitted strongly, and a call through it still folds, in the translation
+unit that defines the class's key function, as the executable's own files
+did (hkBinaryPackfileWriter's constructor 0x181b10 beside its destructor
+0x181bf0). Measured over every claimed library row at 2bf6508 (2,024 TUs):
+no claimed function changes once 0x181b10's file holds its class's key
+function; 0xc360 and 0x181bf0 match under it. docs/DECISIONS.md D37.
+
+--- a/tools/clang/lib/CodeGen/CGVTables.cpp
++++ b/tools/clang/lib/CodeGen/CGVTables.cpp
+@@ -734,12 +734,7 @@
+     switch (keyFunction->getTemplateSpecializationKind()) {
+       case TSK_Undeclared:
+       case TSK_ExplicitSpecialization:
+-        // When compiling with optimizations turned on, we emit all vtables,
+-        // even if the key function is not defined in the current translation
+-        // unit. If this is the case, use available_externally linkage.
+-        if (!def && CodeGenOpts.OptimizationLevel)
+-          return llvm::GlobalVariable::AvailableExternallyLinkage;
+-
++        assert(def && "Should not have been asked to emit this");
+         if (keyFunction->isInlined())
+           return !Context.getLangOpts().AppleKext ?
+                    llvm::GlobalVariable::LinkOnceODRLinkage :
+@@ -758,9 +753,7 @@
+                  llvm::Function::InternalLinkage;
+   
+       case TSK_ExplicitInstantiationDeclaration:
+-        return !Context.getLangOpts().AppleKext ?
+-                 llvm::GlobalVariable::AvailableExternallyLinkage :
+-                 llvm::Function::InternalLinkage;
++        llvm_unreachable("Should not have been asked to emit this");
+     }
+   }
+ 
+@@ -776,7 +769,7 @@
+     return llvm::GlobalVariable::LinkOnceODRLinkage;
+ 
+   case TSK_ExplicitInstantiationDeclaration:
+-    return llvm::GlobalVariable::AvailableExternallyLinkage;
++    llvm_unreachable("Should not have been asked to emit this");
+ 
+   case TSK_ExplicitInstantiationDefinition:
+       return llvm::GlobalVariable::WeakODRLinkage;
+@@ -875,16 +868,6 @@
+ /// we define that v-table?
+ static bool shouldEmitVTableAtEndOfTranslationUnit(CodeGenModule &CGM,
+                                                    const CXXRecordDecl *RD) {
+-  // If we're building with optimization, we always emit v-tables
+-  // since that allows for virtual function calls to be devirtualized.
+-  // If the v-table is defined strongly elsewhere, this definition
+-  // will be emitted available_externally.
+-  //
+-  // However, we don't want to do this in -fapple-kext mode, because
+-  // kext mode does not permit devirtualization.
+-  if (CGM.getCodeGenOpts().OptimizationLevel && !CGM.getLangOpts().AppleKext)
+-    return true;
+-
+   return !CGM.getVTables().isVTableExternal(RD);
+ }
+ 

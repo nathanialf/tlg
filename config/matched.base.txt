@@ -2433,3 +2433,4 @@ _ZN22hkpHingeConstraintDataC1Ev src/libs/unknown/func_0007ec90.cpp _ZN22hkpHinge
 FUN_0019cdf0 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019cdf0EPKvPK7hkClassPKc
 _ZN12ThreadMemoryD1Ev src/libs/unknown/func_00014690.cpp
 _ZN12ThreadMemory10blockAllocEi src/libs/unknown/func_00014690.cpp
+_ZN22hkFreeListMemorySystemD1Ev src/libs/unknown/func_0000c360.cpp
