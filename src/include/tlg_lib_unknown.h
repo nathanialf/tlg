@@ -444,6 +444,41 @@ struct hknpCharacterProxySignalData /* derived name */
 int FUN_00010650(const Pair08Owner *self); /* derived name */
 int FUN_00034840(const Pair08Owner *self); /* derived name */
 
+/* What slot 11 of the modifier at 0x16a4e60 receives (derived name): the
+ * pair whose bodies the event names first. */
+struct ImpulseClippedInput0015db70 /* derived name */
+{
+    Pair08Owner *pair; /* derived name */
+};
+
+/* An event of two bodies and a pair (derived names; primary type 4,
+ * secondary type 3, 0x30 bytes padded): each body as its byte at +0x7f
+ * and its id, as the manifold events give them, then the pair and an
+ * impulse (the modifier slot 0x15db70 posts one). */
+struct ImpulseEvent0015db70 : public hkCommand /* derived name */
+{
+    /* The header filled in order, then the bodies' words; the pair and
+     * the impulse are the poster's to set. */
+    ImpulseEvent0015db70(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB)
+    {
+        sizePaddedTo16 = 0x30;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 3;
+        byte7fA = bodyByte7fA;
+        bodyIdA = idA;
+        byte7fB = bodyByte7fB;
+        bodyIdB = idB;
+    }
+
+    u32 byte7fA;
+    u32 bodyIdA;
+    u32 byte7fB;
+    u32 bodyIdB;
+    Pair08Owner *pair; /* derived name */
+    float impulse;     /* derived name */
+};
+
 /* A body as a 64-bit key (derived names): its byte at +0x7f in the low
  * word and its id in the high one, the same two words as the world
  * object's BodyRecord; 0x16e040 reads the id alone and compares the key
@@ -2882,10 +2917,49 @@ struct hkJobQueue /* derived name */
         FinishJobFunc finishJobFunc; /* derived name */
     };
 
-    u8 unknown0[0x18];
+    /* A queued job (derived name): 256 bytes, the queues' element (0x50f1
+     * scales the head by 256 and copies 0xf8 bytes out). */
+    struct JobQueueEntry /* derived name */
+    {
+        u8 unknown0[0x100];
+    };
+
+    /* The shared state (derived name), 0x220 bytes from the heap
+     * (0x577a): a 16-bit count per job type from +0 (each cleared by the
+     * constructor, 0x57fa), a mask of the job types in use at +0x20 (one
+     * bit set per type, 0x5812), from +0x2a the number of threads waiting
+     * on each semaphore, from +0x38 the job queues, each a ring of
+     * entries. */
+    struct DynamicData /* derived name */
+    {
+        s16 unknown0[16];
+        u32 jobTypesMask; /* derived name */
+        int unknown24;
+        hkBool unknown28;
+        s16 numThreadsWaiting[7];             /* derived name */
+        hkQueue<JobQueueEntry> jobQueues[20]; /* derived name */
+        u8 unknown218[8];
+    };
+
+    /* derived name: when a job is queued and a thread waits for one,
+     * wake one waiting thread: the first of the CPU queues from +0x50 to
+     * +0x54 that holds a job and has a waiting thread; else, if any queue
+     * holds a job, the first waiting thread from the first CPU queue on. */
+    void FUN_00006480(DynamicData *data); /* derived name */
+
+    u8 unknown0[0x10];
+    DynamicData *data;           /* derived name */
     JobPopFunc popJobFunc;       /* derived name */
     FinishJobFunc finishJobFunc; /* derived name */
-    u8 unknown28[0x108];
+    u8 unknown28[0x10];
+    int numJobQueues; /* derived name */
+    u8 unknown3c[0x14];
+    int cpuQueuesBegin; /* derived name */
+    int cpuQueuesEnd;   /* derived name */
+    u8 unknown58[0x30];
+    hkSemaphore *waitingThreadSemaphores[5]; /* derived name */
+    int numWaitingThreadSemaphores;          /* derived name */
+    u8 unknownb4[0x7c];
     CustomJobType customJobs[15]; /* derived name */
 };
 

@@ -2187,3 +2187,15 @@ FUN_0000ba70 src/libs/unknown/func_0000b970.cpp _ZN14Object0000b33012FUN_0000ba7
 FUN_00010580 src/libs/unknown/func_000104c0.cpp _ZN8hkThread11startThreadEPFPvS0_ES0_PKci
 FUN_0019cd20 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019cd20EPKc
 FUN_000933e0 src/libs/unknown/func_000933e0.cpp _ZN14Signal0009353012FUN_000933e0EPKv
+FUN_00067c60 src/libs/unknown/func_00067c60.cpp _ZNK24hkpWrappedConstraintData12FUN_00067c60Ev
+FUN_0007d5b0 src/libs/unknown/func_0007d5b0.cpp _ZNK24hkpWrappedConstraintData12FUN_0007d5b0ERN17hkpConstraintData14ConstraintInfoE
+FUN_00067b30 src/libs/unknown/func_00067b30.cpp _ZNK24hkpWrappedConstraintData12FUN_00067b30E6hkBoolR21ConstraintRuntimeInfo
+FUN_0008ef10 src/libs/unknown/func_0008ef10.cpp _ZN10BlockCache12FUN_0008ef10EPv
+FUN_0007d740 src/libs/unknown/func_0007d740.cpp
+FUN_00006480 src/libs/unknown/func_00006480.cpp
+FUN_0001a0a0 src/libs/unknown/func_0001a0a0.cpp
+FUN_0015db70 src/libs/unknown/func_0015db70.cpp
+FUN_00017970 src/libs/unknown/func_00017970.cpp
+FUN_000ad820 src/libs/unknown/func_000ad820.cpp
+FUN_00026300 src/libs/unknown/func_00026300.cpp
+FUN_000466a0 src/libs/unknown/func_000466a0.cpp

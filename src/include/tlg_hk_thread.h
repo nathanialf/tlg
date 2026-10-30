@@ -117,8 +117,9 @@ class Interface168e888 /* derived name */
  * with the interface above at +0x10, the object above at +0x18, a critical
  * section at +0x30 and 64 semaphores from +0x148, each released once by
  * FUN_000170d0 under the lock (flag at +0x362). Slots 5 and 12 forward to
- * the object at +0x18; slots 7, 8, 9 and 11 (FUN_000172c0, FUN_000173f0,
- * FUN_00017540, FUN_00017970) run under the critical section. */
+ * the object at +0x18; slots 7, 8 and 9 (FUN_000172c0, FUN_000173f0,
+ * FUN_00017540) run under the critical section, slot 11 (FUN_00017970)
+ * takes no lock. */
 class Class168e810 : public hkReferencedObject, public Interface168e888 /* derived name */
 {
   public:
@@ -129,6 +130,11 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
                               u16 value);                    /* vtable slot 6; derived name */
     virtual void FUN_00017930(const Handle00016350 *handle); /* vtable slot 10; derived name */
     virtual void FUN_00017260(void *pointer, int count);     /* vtable slot 12; derived name */
+
+    /* Slot 11 (0x17970): the handles that name something gathered into a
+     * temporary array and handed to the interface's run of several
+     * (FUN_00092fe0). derived name. */
+    void FUN_00017970(const Handle00016350 *const *handles, int numHandles);
 
     Object00015700 *object18; /* derived name */
     u8 unknown20[0x330];
@@ -146,7 +152,12 @@ void FUN_00016f30(Interface168e888 *self);
 void FUN_000172c0(Class168e810 *self, void *pointer, void *other); /* derived name */
 void FUN_000173f0(Class168e810 *self, void *pointer, int count);   /* derived name */
 void FUN_00017540(Class168e810 *self, void *pointer, int count);   /* derived name */
-void FUN_00017970(Class168e810 *self, void *pointer, int count);   /* derived name */
+
+/* Handles run through an interface (0x92fe0; Class168e810's slot 11 hands
+ * it the ones that name something): one through slot 7, two or more as a
+ * batch. derived name. */
+void FUN_00092fe0(Interface168e888 *runner, const Handle00016350 *const *handles,
+                  int numHandles); /* derived name */
 
 /* What FUN_00016350 runs on the object with a mode: the work of one handle,
  * or of none (derived names). A handle whose first int is -1 names

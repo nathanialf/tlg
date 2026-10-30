@@ -1822,6 +1822,22 @@ char *FUN_00017fc0(char *destination, const char *source); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
  * 0x17f40). */
 int FUN_00017f40(const char *a, const char *b); /* derived name */
+/* The string library's byte comparison (derived name; a wrapper over
+ * memcmp, the count widened unsigned, 0x18180). */
+int FUN_00018180(const void *a, const void *b, int numBytes); /* derived name */
+
+/* Two strings compared, either of them null: a null string sorts before
+ * any other (hkMemoryMeshTexture's comparison, 0xad898). derived name. */
+inline int compareStrings(const char *a, const char *b) /* derived name */
+{
+    if (a && b) {
+        return FUN_00017f40(a, b);
+    }
+    if (a) {
+        return 1;
+    }
+    return b ? -1 : 0;
+}
 
 /* The items searched in order (the loop tested at the top, cookbook 60). */
 inline const hkVariant *hkCustomAttributes::getAttribute(const char *attributeName) const
@@ -4478,6 +4494,10 @@ extern const Vec4 D_14b4380;
 extern const Vec4 D_14b4360;
 extern const Vec4 D_14b4390;
 
+/* One and a half pi in every lane (derived names). */
+extern const Vec4 D_14b4370;
+extern const Vec4 D_14b4310;
+
 /* Two pi, pi and four over pi in every lane (derived names): the sine
  * approximation's wrap and slope (0x1a012 to 0x1a042). */
 extern const Vec4 D_14b42f0;
@@ -4610,6 +4630,11 @@ struct hkQuaternion {
     /* Scaled to unit length by the reciprocal square root refined by one
      * Newton step, over all four lanes (0xc0b2). derived name. */
     void normalize();
+
+    /* The angle of the rotation, twice the arc cosine of w's magnitude
+     * (0x1a0a0; the caller at 0x5e5b2 compares it with a limit). derived
+     * name. */
+    float FUN_0001a0a0() const;
 
     Vec4 vec; /* derived name */
 };
@@ -4746,6 +4771,26 @@ inline Vec4 cross3(const Vec4 &a, const Vec4 &b) /* derived name */
     const Vec4 t = _mm_sub_ps(_mm_mul_ps(a, _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1))),
                               _mm_mul_ps(b, _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1))));
     return _mm_shuffle_ps(t, t, _MM_SHUFFLE(3, 0, 2, 1));
+}
+
+/* A vector scaled to unit length over x, y and z where its squared length
+ * is positive, left as it is where not, as Havok's
+ * hkVector4::normalizeIfNotZero<3> is on this platform: the reciprocal
+ * square root of normalized3, then a select on the negated squared length
+ * below zero (the stiff spring's impulse, 0x7d740; the convex shape's face
+ * planes, 0x466a0). derived name. */
+inline Vec4 normalizedIfNotZero3(const Vec4 &v) /* derived name */
+{
+    const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    const Vec4 invLength =
+        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
+                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+    const Vec4 normalized =
+        _mm_mul_ps(v, _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength));
+    const Vec4 positive =
+        _mm_cmplt_ps(_mm_sub_ps(_mm_setzero_ps(), lengthSquared), _mm_setzero_ps());
+    return _mm_blendv_ps(v, normalized, positive);
 }
 
 /* A direction rotated by a quaternion: twice the sum of v by w * w - 1/2,
@@ -6503,12 +6548,19 @@ struct hknpCdBody /* derived name */
  * at 0x49d51 among the world's twenty: slot 2 (0x15db10) returns its mask
  * 0x81; slot 3 (0x15db20), called when a manifold is created, fills the
  * cache's impulse limit from the bodies' materials; slot 11 (0x15db70). */
+struct CommandOwner00171180;
+struct ImpulseClippedInput0015db70;
+
 class Modifier16a4e60 /* derived name */
 {
   public:
     void FUN_0015db20(const void *threadContext, const void *sharedData, const hknpCdBody *bodyA,
                       const hknpCdBody *bodyB,
                       ManifoldCreatedInput *input); /* vtable slot 3; derived name */
+    /* Slot 11 (0x15db70): an event of the two bodies, the pair and the
+     * impulse posted to the context's dispatcher. derived name. */
+    void FUN_0015db70(const CommandOwner00171180 *context, const ImpulseClippedInput0015db70 *input,
+                      const float &impulse) const; /* vtable slot 11; derived name */
 };
 
 /* The world's constructor (0x4a1bb to 0x4a258) fills two tables of the
@@ -8125,6 +8177,12 @@ struct hkQueue /* derived name */
      * derived name. */
     void setCapacity(int n); /* derived name */
 
+    /* The number of elements queued (derived name). */
+    int getSize() const
+    {
+        return elementsInUse;
+    }
+
     T *data;           /* derived name */
     int capacity;      /* derived name */
     int head;          /* derived name */
@@ -8286,6 +8344,12 @@ struct hkDiagonalizedMassProperties /* derived name */
     Vec4 inertiaTensor;
     hkQuaternion majorAxisSpace;
 };
+
+/* The inertia diagonalized in place, its principal axes out (0x2a7a0;
+ * the diagonal mass properties' set, 0x26378): the eigenvalues by an
+ * iteration of ten steps (0x1b540), kept above a floor, the axes
+ * normalized. derived name. */
+void FUN_0002a7a0(hkMatrix3 &inertia, hkMatrix3 &axesOut); /* derived name */
 
 /* Every lane's sign bit (derived name), shared by the library's vector code. */
 extern const Vec4 D_14b41d0;
@@ -8802,6 +8866,10 @@ class hknpConvexShape : public hknpShape
      * third masked by the table at 0x16dc600 from a position. derived
      * name. */
     void FUN_0003c4e0(const u8 *indices, int position, Vec4 *verticesOut) const;
+    /* Slot 14 (0x466a0; also the sphere's): a face's plane from its four
+     * vertices, the face's index a byte per vertex as slot 15 reads it, the
+     * normal the cross product of the diagonals, no angle. derived name. */
+    void FUN_000466a0(int faceIndex, Vec4 *planeOut, hknpFaceAngle *angleOut) const;
     int
     FUN_00045a80(u32 *argument1, int argument2, int argument3,
                  const ShapeKeyQuery000380b0 &argument4) const; /* vtable slot 21; derived name */
@@ -10102,6 +10170,9 @@ class hkpStiffSpringConstraintData : public hkpConstraintData /* vtable address 
     void FUN_0007d6e0(
         hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     hkBool FUN_0007d710() const;                           /* vtable slot 7; derived name */
+    void FUN_0007d740(const hkTransform &transformA, const hkTransform &transformB,
+                      const hkpSolverResults *results,
+                      Vec4 &out) const; /* vtable slot 19; derived name */
 
     Atoms atoms;
 };
@@ -12294,6 +12365,10 @@ class hkMemoryMeshTexture : public hkMeshTexture
     static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000247f0 */
+    /* The reflected class as a static member (no object): the comparison
+     * at 0xad83d calls it; its body is slot 3's, one address
+     * (FUN_000247f0). derived name. */
+    static const hkClass *FUN_000247f0();
     void FUN_000ad620(u8 *&dataOut, int &sizeOut,
                       Format &formatOut); /* vtable slot 5; derived name */
     /* Slot 6 (0xad640): raw data copied into the texture's own array, any
@@ -12309,6 +12384,9 @@ class hkMemoryMeshTexture : public hkMeshTexture
     int FUN_000ad770() const;                         /* vtable slot 17; derived name */
     void FUN_000ad780(int newTextureCoordChannel);    /* vtable slot 18; derived name */
     class ImageSource *FUN_000ad7c0() const;          /* vtable slot 7; derived name */
+    /* Slot 20 (0xad820): whether another texture is a memory texture with
+     * the same format, flags, name, channel and data. derived name. */
+    hkBool FUN_000ad820(const hkMeshTexture *other) const;
 
     hkStringPtr filename;
     hkArray<u8> data;
@@ -14930,11 +15008,21 @@ struct ConstraintTable0016fbe0 /* derived name */
     ConstraintRecord0016fbe0 *constraints;
 };
 
+/* What the context holds at +0x228 (derived name): the bodies at +0x48,
+ * indexed by id (0x15dbb7, 0x161db7). */
+struct BodyView0015db70 /* derived name */
+{
+    u8 unknown0[0x48];
+    const hknpBody *bodies; /* derived name */
+};
+
 struct CommandOwner00171180 /* derived name */
 {
     u8 unknown0[8];
     ConstraintTable0016fbe0 *constraintTable; /* derived name */
-    u8 unknown10[0x370];
+    u8 unknown10[0x218];
+    const BodyView0015db70 *bodyView; /* derived name */
+    u8 unknown230[0x150];
     hkSecondaryCommandDispatcher *dispatcher; /* derived name */
 };
 
