@@ -42,9 +42,9 @@ const Vec4 *TreeQuery00127a50::unknownVirtual4() const
 } // namespace
 
 int hknpCompressedMeshShape::FUN_00127a50(const hknpShapeSlot29Input &input,
-                                          void *collector) const /* derived name */
+                                          hkGeometry *geometry) const /* derived name */
 {
     TreeQuery00127a50 query(input.mode, convexRadius, input.scale, input.value30);
-    data->meshTree.FUN_00104000(collector, &query, false, true, input.flag4);
+    data->meshTree.FUN_00104000(geometry, &query, false, true, input.flag4);
     return 0;
 }

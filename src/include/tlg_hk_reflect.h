@@ -2151,6 +2151,11 @@ class hkXmlParser : public hkReferencedObject /* derived name */
          * (defined in tlg_lib_unknown.h). */
         static void *operator new(unsigned long numBytes);
 
+        /* The node as a start element, null when it is another kind
+         * (defined after XmlStartElement; hkSerializeDeprecated's slot 10
+         * tests the kind, then the pointer, 0x19a529). derived name. */
+        inline class XmlStartElement *asStart();
+
         int kind; /* derived name */
     };
 
@@ -2266,6 +2271,12 @@ class hkSerializeDeprecated : public hkReferencedObject
                           SerializeErrorDetails *errorOut); /* vtable slot 6; derived name */
     void *FUN_0019a490(void *reader, const void *details,
                        SerializeErrorDetails *errorOut); /* vtable slots 8 and 9; derived name */
+    /* Slot 10 (0x19a4d0): with error details, the stream's first node
+     * read; a start element named "hkpackfile" reports the stub's error
+     * unless one was already; the node released. A failure either way.
+     * derived name. */
+    hkResult FUN_0019a4d0(StreamReader *reader, const void *details,
+                          SerializeErrorDetails *errorOut);
 };
 
 /* hkMonitorStreamColorTable::ColorPair, 16 bytes: colorName (hkStringPtr) at
@@ -3078,11 +3089,62 @@ class hknpGroupCollisionFilter : public hkReferencedObject
 struct hknpBody;
 
 /* What a query is filtered with (derived names): the collision filter
- * info at +4. */
+ * info at +4, user data at +8; a new one has no material and no user data
+ * (the ray cast wheel collide's query, 0x158afc). */
 struct hknpQueryFilterData /* derived name */
 {
+    hknpQueryFilterData() : materialId(0xffff), userData(0) {}
+
     u16 materialId;
     u32 collisionFilterInfo;
+    u64 userData;
+};
+
+class hknpCollisionFilter;
+
+/* A collision query (derived names after Havok's): the filter, the
+ * filter data and a level of detail, none of them set but the data's
+ * defaults; the filter and the level cleared in the constructor's body
+ * (0x158b0a, after the data's stores). */
+struct hknpCollisionQuery /* derived name */
+{
+    hknpCollisionQuery()
+    {
+        filter = HK_NULL;
+        levelOfDetail = 0;
+    }
+
+    const hknpCollisionFilter *filter;
+    hknpQueryFilterData filterData;
+    u8 levelOfDetail;
+};
+
+/* A ray (derived names after Havok's hkcdRay): its origin, its direction
+ * with w one and a negative zero made positive, and the direction's
+ * reciprocal, a zero lane's the largest float of the lane's sign, its w
+ * the signs of x, y and z as bits over the exponent of one half. */
+struct hkcdRay /* derived name */
+{
+    /* From a start to an end (inline in 0x158ae0). derived name. */
+    void setEndPoints(const Vec4 &start, const Vec4 &end);
+
+    Vec4 origin;
+    Vec4 direction;
+    Vec4 invDirection;
+};
+
+/* A ray cast query (derived names): the query, the ray from +0x20 and
+ * flags at +0x50, cleared. */
+struct hknpRayCastQuery : public hknpCollisionQuery /* derived name */
+{
+    hknpRayCastQuery(const Vec4 &start, const Vec4 &end)
+    {
+        ray.setEndPoints(start, end);
+        flags = 0;
+    }
+
+    hkcdRay ray;
+    u32 flags;
 };
 
 struct hknpCollisionFilterContext;
@@ -4920,6 +4982,22 @@ inline Vec4 simdReciprocalOrZero(const Vec4 &v) /* derived name */
     return _mm_andnot_ps(equalsZero, refined);
 }
 
+inline void hkcdRay::setEndPoints(const Vec4 &start, const Vec4 &end)
+{
+    Vec4 dir = _mm_blend_ps(_mm_sub_ps(end, start), D_14b2060[3], 8);
+    dir = _mm_andnot_ps(_mm_cmpeq_ps(dir, _mm_setzero_ps()), dir);
+    const Vec4 r = _mm_rcp_ps(dir);
+    const Vec4 inv = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, dir)));
+    const __m128i sign = _mm_slli_epi32(_mm_srli_epi32(_mm_castps_si128(dir), 31), 31);
+    const Vec4 signedMax =
+        _mm_castsi128_ps(_mm_xor_si128(sign, _mm_castps_si128(_mm_set1_ps(HK_REAL_MAX))));
+    const Vec4 safeInv = _mm_blendv_ps(inv, signedMax, _mm_cmpeq_ps(dir, _mm_setzero_ps()));
+    const int signs = (_mm_movemask_ps(_mm_cmple_ps(_mm_setzero_ps(), dir)) & 7) | 0x3f000000;
+    direction = dir;
+    invDirection = _mm_insert_ps(safeInv, _mm_castsi128_ps(_mm_cvtsi32_si128(signs)), 0x30);
+    origin = start;
+}
+
 /* Four hkHalf read as a vector: each into the top 16 bits of its lane,
  * the 8 bytes loaded as one double (`vmovsd; vpunpcklwd` from zero,
  * 0x5f56a). derived name. */
@@ -5867,6 +5945,8 @@ struct hknpCompressedMeshShapeTree;
 void FUN_000a9140(hknpCompressedMeshShapeTree *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
+class hkGeometry;
+
 /* What the mesh tree's walk (0x104000, its per-section pass 0x104110) asks
  * of the query it is given (derived names): slot 2 whether a key is wanted
  * (called at 0x10454b), slot 3 the work on one primitive of a section, with
@@ -5924,11 +6004,17 @@ struct hknpCompressedMeshShapeTree
     bool FUN_000a9550(const hkArray<u32> &filter, u32 key) const;
 
     /* The walk over every section of the tree (0x104000) with a query: the
-     * collector reset unless asked to keep it, its two arrays grown for the
-     * sections' counts, each section passed (0x104110), and the collector
-     * finished when asked. derived name. */
-    void FUN_00104000(void *collector, MeshTreeQuery00104000 *query, bool keepCollector,
-                      bool finishCollector, bool argument6) const;
+     * geometry emptied unless asked to keep it, its triangles grown by the
+     * tree's primitive keys and its vertices by three for each, each section
+     * passed (0x104110), and the geometry's vertices welded (0x1891e0, with
+     * no tolerance) when asked. derived name. */
+    void FUN_00104000(hkGeometry *geometry, MeshTreeQuery00104000 *query, bool keepGeometry,
+                      bool weldVertices, int argument6) const;
+
+    /* One section's primitives added to the geometry through the query
+     * (0x104110, 0xa55 bytes). derived names. */
+    void FUN_00104110(int sectionIndex, hkGeometry *geometry, MeshTreeQuery00104000 *query,
+                      int argument4, int argument5, int argument6) const;
 };
 
 /* hkSkinnedMeshShape::BoneSection (type info 0x57bdc18, size 0x10): an
@@ -8754,8 +8840,8 @@ struct hknpWorld {
      * derived names. */
     void FUN_00050fd0();
     /* A ray cast over the bodies under the "WorldCastRay" timer (0x35d40;
-     * the projectile gun's 0x158bca and the game's casts call it). derived
-     * name. */
+     * the ray cast wheel collide's slot 13, 0x158bca, and the game's casts
+     * call it). derived name. */
     void FUN_00035d40(const void *query, hknpCollisionQueryCollector *collector) const;
     /* A shape cast over the bodies under the "WorldCastShape" timer
      * (0x35de0; the shape phantom's 0x156bd2 and 0x179440 call it).
@@ -10653,7 +10739,7 @@ class hknpCompressedMeshShape : public hknpCompositeShape
                       hkAabb &aabbOut) const; /* vtable slot 7; derived name */
     /* Slot 29 (0x127a50): the mesh tree walked with a query over the input.
      * derived name. */
-    int FUN_00127a50(const hknpShapeSlot29Input &input, void *collector) const;
+    int FUN_00127a50(const hknpShapeSlot29Input &input, hkGeometry *geometry) const;
 
     hknpCompressedMeshShapeData *data;
     /* The rest of the record's members (0x169aa40); the counts are not
@@ -11705,6 +11791,12 @@ struct hknpConstraintCinfo {
  * motionType, position, orientation, velocities, mass and the rest up to
  * localFrame at +0x90. Its finish constructor finishes the name. */
 struct hknpBodyCinfo {
+    /* Out of line (0x3a560; the game builds them at 0xea8801 on): no shape,
+     * flags or filter info, material 0, the quality and the reserved ids
+     * invalid, at rest at the origin unrotated, a mass of -1 (left to the
+     * shape), no motion properties and no look-ahead. */
+    hknpBodyCinfo();
+
     hknpBodyCinfo(hkFinishLoadedObjectFlag flag)
         : name(flag), massDistribution(flag), localFrame(flag)
     {
@@ -14319,6 +14411,11 @@ class hkGeometry : public hkReferencedObject
     hkArray<Triangle> triangles;
 };
 
+/* The geometry's vertices that lie within a tolerance welded into one, the
+ * triangles' indices rewritten (0x1891e0; the mesh tree's walk ends with
+ * it at no tolerance). derived name. */
+void FUN_001891e0(hkGeometry *geometry, float tolerance);
+
 /* hkGeometry::Triangle: the vertex indices a, b and c and the material, four
  * hkInt32 (member records 0x168e950 to 0x168e9c8). */
 struct hkGeometry::Triangle {
@@ -15041,28 +15138,6 @@ extern const hkClassMember D_16992b0[]; /* derived name */
 /* hknpVehicleRayCastWheelCollide (type info at 0x7604a, vtable 0x16a4aa0)
  * and hknpVehicleLinearCastWheelCollide (0x38 bytes, type info at 0x708de,
  * vtable 0x16a5bd0). */
-class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
-{
-  public:
-    hknpVehicleRayCastWheelCollide(hkFinishLoadedObjectFlag flag) : hknpVehicleWheelCollide(flag)
-    {
-        if (flag.finishing) {
-            type = RAY_CAST_WHEEL_COLLIDE;
-        }
-    }
-
-    virtual ~hknpVehicleRayCastWheelCollide();
-
-    /* Slot 15 (0x159010): a wheel's output when its ray hits nothing: at
-     * the ray's end, against the suspension's direction, the suspension
-     * fully extended. derived name. */
-    void FUN_00159010(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
-                      WheelCollideOutput &output) const;
-
-    /* Slot 12 (0x158a40): the box around every wheel's ray, from its hard
-     * point to its end point. derived name. */
-    void FUN_00158a40(const class hknpVehicleInstance *vehicle, hkAabb &aabbOut) const;
-};
 
 void FUN_00075f60(void *object, int finishing); /* derived name: its type info's finish callback */
 
@@ -15247,6 +15322,36 @@ class hknpVehicleInstance : public hknpUnaryAction
     u8 unknown100
         [0x18]; /* mainSteeringAngle, mainSteeringAngleAssumingNoReduction, wheelsSteeringAngle */
     hkBool isReversing; /* record 0x1698e08 */
+};
+
+/* hknpVehicleRayCastWheelCollide (after the vehicle: slot 13 takes a wheel's info). */
+class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
+{
+  public:
+    hknpVehicleRayCastWheelCollide(hkFinishLoadedObjectFlag flag) : hknpVehicleWheelCollide(flag)
+    {
+        if (flag.finishing) {
+            type = RAY_CAST_WHEEL_COLLIDE;
+        }
+    }
+
+    virtual ~hknpVehicleRayCastWheelCollide();
+
+    /* Slot 15 (0x159010): a wheel's output when its ray hits nothing: at
+     * the ray's end, against the suspension's direction, the suspension
+     * fully extended. derived name. */
+    void FUN_00159010(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                      WheelCollideOutput &output) const;
+
+    /* Slot 12 (0x158a40): the box around every wheel's ray, from its hard
+     * point to its end point. derived name. */
+    void FUN_00158a40(const class hknpVehicleInstance *vehicle, hkAabb &aabbOut) const;
+
+    /* Slot 13 (0x158ae0): a wheel's ray, from its hard point to its end
+     * point, cast in the world under the world's collision filter and the
+     * wheels' filter info. derived name. */
+    void FUN_00158ae0(const hknpVehicleInstance::WheelInfo &wheelInfo, const hknpWorld *world,
+                      hknpCollisionQueryCollector *collector) const;
 };
 
 /* hknpCharacterProxy (derived name: its timers "findSupportingContacts",
@@ -17470,6 +17575,11 @@ class XmlStartElement : public hkXmlParser::Node /* derived name */
     hkStringPtr name;                 /* derived name */
     hkArray<XmlAttribute> attributes; /* derived name */
 };
+
+inline XmlStartElement *hkXmlParser::Node::asStart()
+{
+    return kind == 1 ? static_cast<XmlStartElement *>(this) : HK_NULL;
+}
 
 class XmlEndElement : public hkXmlParser::Node /* derived name */
 {

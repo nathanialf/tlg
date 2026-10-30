@@ -3239,6 +3239,12 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
      * top becomes the top, and FUN_0000f1e0 takes the freed blocks below it
      * off too; any other is recorded by FUN_0000f2f0. derived names. */
     void FUN_0000f460(void *pointer, int numBytes);
+    /* After the top moved down (0xf1e0, tail-called by 0xef70 and 0xf460):
+     * the blocks freed out of order that end at the top popped, the top
+     * moving down to each one's start; the slabs above the top given up
+     * but the last, the latest kept at +0x30 and the one kept before it
+     * freed; then the end and the first freed block's end set again.
+     * derived name. */
     void FUN_0000f1e0();
     void FUN_0000f2f0(void *pointer, int numBytes);
 
@@ -3259,8 +3265,12 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
      * array at +0x10, the count of blocks the allocator at +0x40 holds at
      * +0x20; built empty in a block of the internal allocator (0xed88). */
     struct Impl {
+        /* A block freed out of order: its start and its end (0xf1e0 pops
+         * the ones that end at the top). derived names. */
         struct FreeBlock {
-            u8 unknown0[0x18];
+            char *start;
+            char *end;
+            u8 unknown10[8];
         };
 
         Impl() : numExternalAllocations(0) {}
@@ -4983,7 +4993,11 @@ struct hknpCharacterInput /* derived name */
     u8 unknown42[0xe];
     Vec4 surfaceNormal;   /* derived name: the climbing state jumps off along it */
     Vec4 surfaceVelocity; /* derived name */
-    u8 unknown70[0x20];
+    u8 unknown70[8];
+    /* The step's time (the in-air state scales its acceleration and the
+     * gravity by it, 0x36693 and 0x366e6). derived name. */
+    float deltaTime;
+    u8 unknown7c[0x14];
     Vec4 velocity; /* derived name: the character's, at +0x90 */
     Vec4 gravity;  /* derived name: its length is the climbing state's jump speed */
 };
@@ -5112,6 +5126,13 @@ class hknpCharacterStateInAir : public hkReferencedObject /* derived name */
     virtual ~hknpCharacterStateInAir();
 
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 6 (0x36610): the movement at the air speed toward the stick,
+     * along the up axis, accelerating at most the maximum over the step;
+     * the vertical part of the velocity then put back as it came in, and
+     * the gravity added over the step. derived name. */
+    void FUN_00036610(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output);
 
     void FUN_000365e0(hknpCharacterContext &context, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* vtable slot 7; derived name */
