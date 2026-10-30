@@ -9,7 +9,7 @@ int hknpConvexShape::FUN_00045a80(u32 *argument1, int argument2, int argument3,
                                   const ShapeKeyQuery000380b0 &argument4) const
 {
     if (argument3 == -1) {
-        *argument1 = argument4.key;
+        *argument1 = argument4.path.key;
         return 1;
     }
     return 0;

@@ -1293,8 +1293,16 @@ int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b); /* derived name */
  * to the caller's callback with pool 0. derived names. */
 struct MemoryWalkFilter000015c0 /* derived name */
 {
-    void *unknown0;
-    hkArray<void *> ownBlocks;
+    /* The blocks of the free lists given, the ones in use and the free
+     * ones, counted, gathered into an array from the allocator (each
+     * block's memory, or the block itself when it has none of its own
+     * apart) and sorted (0x1630). */
+    MemoryWalkFilter000015c0(AllocatorBase *allocator, FreeList *const *freeLists, int numFreeLists,
+                             MemoryWalkCallback callback, void *param);
+
+    AllocatorBase *allocator; /* derived name */
+    void **ownBlocks;         /* derived name */
+    int numOwnBlocks;         /* derived name */
     MemoryWalkCallback callback;
     void *callbackParam;
 };
@@ -2338,16 +2346,11 @@ void FUN_00007390(Pool00007880 *self); /* derived name */
  * loop for the record's index. */
 void *FUN_00007180(void *argument); /* derived name */
 
-/* A singly linked node (derived name): the next node at +0. FUN_000188a0
- * counts a list's nodes; 0x1630 sums the counts of the two lists at +0x18
- * and +0x20 of each of its objects before it allocates eight bytes per
- * node. */
-struct ListNode000188a0 /* derived name */
-{
-    ListNode000188a0 *next; /* derived name */
-};
-
-int FUN_000188a0(const ListNode000188a0 *node); /* derived name */
+/* The number of blocks in a chain (0x188a0; the memory walk's filter
+ * 0x1630 sums the counts of each free list's two chains before it
+ * allocates eight bytes per block). derived name. */
+struct FreeListBlock;
+int FUN_000188a0(const FreeListBlock *block); /* derived name */
 
 /* A Mersenne twister (MT19937): 624 words of state in a block of 2496 bytes
  * the seeding (FUN_000106e0, multiplier 1812433253) allocates on first use

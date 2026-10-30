@@ -2442,3 +2442,9 @@ FUN_00061060 src/libs/unknown/func_00061060.cpp
 FUN_001781b0 src/libs/unknown/func_001781b0.cpp
 FUN_00171040 src/libs/unknown/func_00171040.cpp
 FUN_000199f0 src/libs/unknown/func_000199f0.cpp
+FUN_00068810 src/libs/unknown/func_00068810.cpp
+_ZN22hkpFixedConstraintDataC1Ev src/libs/unknown/func_0007bcf0.cpp _ZN22hkpFixedConstraintDataC2Ev
+FUN_001839d0 src/libs/unknown/func_001839d0.cpp
+FUN_000aae70 src/libs/unknown/func_000aae70.cpp
+FUN_000cf8d0 src/libs/unknown/func_000cf8d0.cpp
+_ZN24MemoryWalkFilter000015c0C1EP13AllocatorBasePKP8FreeListiPFvPvmbiS6_ES6_ src/libs/unknown/func_00001630.cpp _ZN24MemoryWalkFilter000015c0C2EP13AllocatorBasePKP8FreeListiPFvPvmbiS6_ES6_

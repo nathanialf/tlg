@@ -4798,6 +4798,14 @@ class hkMemoryMeshVertexBuffer : public hkMeshVertexBuffer
     hkBool isSharable;
 };
 
+/* Strided byte copies (derived names): numBytes of each of count items
+ * copied between two strides (0xaacb0; one memcpy when both strides are the
+ * item's size), and numBytes of each zeroed (0xaafd0; one memset when the
+ * stride is the item's size). */
+void FUN_000aacb0(const void *src, int srcStride, void *dst, int dstStride, int numBytes,
+                  int count);                                      /* derived name */
+void FUN_000aafd0(void *dst, int stride, int numBytes, int count); /* derived name */
+
 class hkMeshVertexBufferUtil /* derived name */
 {
   public:
@@ -6410,6 +6418,28 @@ struct hkDiagonalizedMassProperties;
 hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, float radius,
                       hkDiagonalizedMassProperties &propertiesOut); /* derived name */
 
+/* The masks of a key's leading bits, by the number of bits (derived name):
+ * none for 0, every bit for 32. */
+extern const u32 D_14ca040[33];
+
+/* A shape key and the number of its bits in use (derived names), 8 bytes,
+ * the head of the shapes' queries (slots 21 and 23). */
+struct hknpShapeKeyPath /* derived name */
+{
+    u32 key;
+    int keySize;
+
+    /* A sub-key appended below the key's bits in use: the key's leading
+     * bits kept, the sub-key plus one in the next numBits and every bit
+     * below it set (the LOD shape's 0x68380 and 0x68810). derived name. */
+    void appendSubKey(int subKey, int numBits)
+    {
+        const int size = keySize; /* derived name */
+        key = (key & D_14ca040[size]) | (((subKey + 1) << (32 - numBits - size)) - 1);
+        keySize = size + numBits;
+    }
+};
+
 /* What slot 21's fourth argument points to (derived names): 24 bytes, a
  * key at +0 (the convex shapes' slot 21 copies it out), the number of its
  * bits in use at +4 and a key mask at +8, which the masked shape replaces
@@ -6417,16 +6447,10 @@ hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, floa
  * and appends its own bits to the key (0x68380). */
 struct ShapeKeyQuery000380b0 /* derived name */
 {
-    u32 key;
-    int keySize;
+    hknpShapeKeyPath path;
     const hknpShapeKeyMask *mask;
     int levelOfDetail;
     u8 unknown14[4];
-
-    /* A sub-key appended below the key's bits in use: the key's leading
-     * bits kept, the sub-key plus one in the next numBits and every bit
-     * below it set (the LOD shape's 0x68380). derived name. */
-    inline void appendSubKey(int subKey, int numBits); /* derived name */
 
     /* A copy of another with a different mask: the record copied whole,
      * then the mask set (the masked shape's 0x380b0 builds one in its
@@ -6437,17 +6461,6 @@ struct ShapeKeyQuery000380b0 /* derived name */
         mask = newMask;
     }
 };
-
-/* The masks of a key's leading bits, by the number of bits (derived name):
- * none for 0, every bit for 32. */
-extern const u32 D_14ca040[33];
-
-inline void ShapeKeyQuery000380b0::appendSubKey(int subKey, int numBits)
-{
-    const int size = keySize; /* derived name */
-    key = (key & D_14ca040[size]) | (((subKey + 1) << (32 - numBits - size)) - 1);
-    keySize = size + numBits;
-}
 
 /* The arguments of the shapes' slot 27, a level of detail chosen for a
  * shape (derived names): a context whose vector at +0x70 scales the size,
@@ -6895,7 +6908,19 @@ struct alignas(16) ShapeQuery00038010 /* derived name */
 {
     ShapeQuery00038010(const ShapeQuery00038010 &other)
         : unknown0(other.unknown0), unknown8(other.unknown8), unknown10(other.unknown10),
-          unknown18(other.unknown18), unknown20(other.unknown20), mask(other.mask),
+          keyPath(other.keyPath), unknown20(other.unknown20), mask(other.mask),
+          unknown30(other.unknown30), unknown34(other.unknown34)
+    {
+        unknown40 = other.unknown40;
+        unknown50 = other.unknown50;
+        unknown38 = other.unknown38;
+    }
+
+    /* The same with a different key mask (the LOD shape's 0x68810 stores
+     * no mask in the copy's place). derived name. */
+    ShapeQuery00038010(const ShapeQuery00038010 &other, const hknpShapeKeyMask *newMask)
+        : unknown0(other.unknown0), unknown8(other.unknown8), unknown10(other.unknown10),
+          keyPath(other.keyPath), unknown20(other.unknown20), mask(newMask),
           unknown30(other.unknown30), unknown34(other.unknown34)
     {
         unknown40 = other.unknown40;
@@ -6906,7 +6931,7 @@ struct alignas(16) ShapeQuery00038010 /* derived name */
     const void *unknown0;
     const void *unknown8;
     const void *unknown10;
-    u64 unknown18;
+    hknpShapeKeyPath keyPath; /* derived name: the LOD shape appends its level (0x68810) */
     const void *unknown20;
     const hknpShapeKeyMask *mask;
     u8 unknown30;
@@ -11641,6 +11666,7 @@ struct hkpConstraintAtom {
         TYPE_RACK_AND_PINION = 21,
         TYPE_COG_WHEEL = 22,
         TYPE_SETUP_STABILIZATION = 23,
+        TYPE_3D_ANG = 24,
         TYPE_DEFORMABLE_3D_LIN = 25,
         TYPE_DEFORMABLE_3D_ANG = 26
     };
@@ -13167,11 +13193,21 @@ class hkpFixedConstraintData : public hkpConstraintData
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpBallSocketConstraintAtom ballSocket;
-        u8 ang[0x10];
+
+        /* hkp3dAngConstraintAtom (derived layout): its type and padding. */
+        struct {
+            u16 type; /* derived name */
+            u8 padding[0xe];
+        } ang;
     };
 
     /* The finish constructor (0x7a610): the atoms are left as loaded. */
     hkpFixedConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new one (0x7bcf0): the atoms typed and set to their defaults, both
+     * frames the identity, then the stabilization on and the ball socket
+     * solved by the stabilized method. */
+    hkpFixedConstraintData();
 
     virtual ~hkpFixedConstraintData();
 
@@ -15551,6 +15587,18 @@ struct hknpLodShape : public hknpCompositeShape {
      * shifted out (each the next key's bits set below it), at most ten.
      * derived names. */
     void FUN_00068440(const u32 *keys, int numKeys, void *argument3) const;
+
+    /* What slot 23's second argument holds at +0x18 (derived names). */
+    struct Slot23Argument {
+        u8 unknown0[0x18];
+        u8 levelOfDetail; /* derived name */
+    };
+
+    /* Slot 23 (0x68810): the level the second argument asks for, at most
+     * the last, asked with the query's key extended by the level and no
+     * key mask. derived name. */
+    void FUN_00068810(const void *argument1, const Slot23Argument *argument2, const void *argument3,
+                      const ShapeQuery00038010 &argument4, void *argument5) const;
     /* Slot 21 (0x68380): the query's level of detail, at most the last
      * level, asked with the key shifted by this shape's bits and the
      * query's key extended by the level (its bits set below it). derived
@@ -16261,12 +16309,14 @@ class hknpScaledQueryCollector : public hknpCollisionQueryCollector /* derived n
     /* Empty; the deleting destructor is 0xcf880 (in both vtables). */
     virtual ~hknpScaledQueryCollector();
 
-    void FUN_000cf8c0();       /* vtable slot 3; derived name */
+    void FUN_000cf8c0(); /* vtable slot 3; derived name */
+    /* Slot 4 (0xcf8d0). derived name. */
+    void FUN_000cf8d0(const struct hknpCollisionResult &hit);
     bool FUN_000cfa10() const; /* vtable slot 6; derived name */
 
     Vec4 positionScale;                          /* derived name */
     Vec4 normalScale;                            /* derived name */
-    const Mat4 *transform;                       /* derived name */
+    const hkTransform *transform;                /* derived name */
     hknpCollisionQueryCollector *childCollector; /* derived name */
 };
 
@@ -17484,6 +17534,37 @@ void FUN_00168120(const hkArray<hkBlockStreamLinkedRange> &ranges,
  * (no type info; slots 0 and 1 its destructors 0x183810 and 0x1837c0).
  * FUN_001839d0 draws a line: start, end, colour, an id and a tag. derived
  * names but the class's. */
+/* What the debug display hands its drawing to (derived name; the display's
+ * array at +0x10): slot 19 draws a line. */
+class hkDebugDisplayHandler /* derived name */
+{
+  public:
+    virtual void unknownVirtual0();
+    virtual void unknownVirtual1();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4();
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    virtual void unknownVirtual13();
+    virtual void unknownVirtual14();
+    virtual void unknownVirtual15();
+    virtual void unknownVirtual16();
+    virtual void unknownVirtual17();
+    virtual void unknownVirtual18();
+    /* Slot 19: a line from start to end in a colour, under an id and a
+     * tag (the display's 0x1839d0 hands each handler its line). derived
+     * name. */
+    virtual void displayLine(const hkVector4 &start, const hkVector4 &end, int color, int id,
+                             int tag);
+};
+
 class hkDebugDisplay : public hkReferencedObject
 {
   public:
@@ -17499,12 +17580,14 @@ class hkDebugDisplay : public hkReferencedObject
     static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* A line drawn by every handler under the lock (0x1839d0). derived
+     * name. */
     void FUN_001839d0(const hkVector4 &start, const hkVector4 &end, int color, int id,
                       int tag); /* derived name */
 
-    /* Pointer-sized elements, freed without destruction (0x1838ac). */
-    hkArray<void *> handlers; /* derived name */
-    hkCriticalSection *lock;  /* derived name; freed at 0x10 bytes (0x183888) */
+    /* Freed without destruction (0x1838ac). */
+    hkArray<hkDebugDisplayHandler *> handlers; /* derived name */
+    hkCriticalSection *lock;                   /* derived name; freed at 0x10 bytes (0x183888) */
 };
 
 /* Its create function, the record's (0x183c40). derived name. */

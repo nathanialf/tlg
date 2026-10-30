@@ -6,7 +6,7 @@ int hknpLodShape::FUN_00068380(void *argument1, int argument2, int key,
 {
     const int level = hkMath::min2(query.levelOfDetail, numLevelsOfDetail - 1);
     ShapeKeyQuery000380b0 levelQuery = query; /* derived name */
-    levelQuery.appendSubKey(level, numShapeKeyBits);
+    levelQuery.path.appendSubKey(level, numShapeKeyBits);
     return shapes[level]->unknownVirtual21(argument1, argument2, ((key + 1) << numShapeKeyBits) - 1,
                                            levelQuery);
 }

@@ -27,8 +27,7 @@ static inline int binarySearch(const void *key, void *const *blocks, int numBloc
 void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool, void *param)
 {
     MemoryWalkFilter000015c0 *filter = static_cast<MemoryWalkFilter000015c0 *>(param);
-    if (allocated &&
-        binarySearch(start, filter->ownBlocks.data, filter->ownBlocks.getSize()) >= 0) {
+    if (allocated && binarySearch(start, filter->ownBlocks, filter->numOwnBlocks) >= 0) {
         return;
     }
     filter->callback(start, size, allocated, 0, filter->callbackParam);
