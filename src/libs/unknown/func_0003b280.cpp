@@ -3,7 +3,7 @@
 
 /* derived name: slot 8 of hknpDecoratorShape's vtable (address point
  * 0x16958e0) forwards to the same slot of the wrapped shape at +0x28. */
-int hknpDecoratorShape::FUN_0003b280() const /* derived name */
+hknpShapeSignals *hknpDecoratorShape::FUN_0003b280() const /* derived name */
 {
     return coreShape->unknownVirtual8();
 }

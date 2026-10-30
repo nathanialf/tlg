@@ -1,17 +1,11 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include "tlg_lib_unknown.h"
+#include "tlg_hk_reflect.h"
 
-void Listener00155b10::FUN_00155b00(u8 value)
+void ShapeWatcher::FUN_00155b10()
 {
-    flag |= value;
-    owner->changed = true;
-}
-
-void Listener00155b10::FUN_00155b10()
-{
-    ListenedSignals00155b10 *signals = object->FUN_slot8();
-    signals->signalA.unsubscribe(this, &Listener00155b10::FUN_00155b00);
-    signals->signalB.unsubscribe(this, &Listener00155b10::FUN_00155b10);
-    object = 0;
-    owner->changed = true;
+    hknpShapeSignals *signals = shape->unknownVirtual8();
+    signals->shapeMutated.unsubscribe(this, &ShapeWatcher::FUN_00155b00);
+    signals->shapeDestroyed.unsubscribe(this, &ShapeWatcher::FUN_00155b10);
+    shape = 0;
+    owner->anyShapeChanged = true;
 }

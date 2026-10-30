@@ -3371,6 +3371,11 @@ inline void hkAlignSceneToNodeOptions::operator delete(void *object, unsigned lo
     freeReferencedObject(object, numBytes);
 }
 
+inline void XmlStartElement::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void XmlEndElement::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);

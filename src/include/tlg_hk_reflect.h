@@ -27,6 +27,20 @@ enum hkResult {
     HK_FAILURE = 1  /* derived name */
 };
 
+/* A pointer moved by a byte offset through its integer value, as Havok's
+ * hkAddByteOffsetConst is (the block reader's advance tests the result for
+ * null again, 0x65fa8). */
+template <typename T> inline const T *hkAddByteOffsetConst(const T *base, long offset)
+{
+    return reinterpret_cast<const T *>(reinterpret_cast<hkUlong>(base) + offset);
+}
+
+/* The same for a pointer to write through, as Havok's hkAddByteOffset is. */
+template <typename T> inline T *hkAddByteOffset(T *base, long offset)
+{
+    return reinterpret_cast<T *>(reinterpret_cast<hkUlong>(base) + offset);
+}
+
 /* Havok's assert in its release form (docs/DECISIONS.md D16): the build
  * compiles no checks, and the statement is a null statement. The id is 0
  * where the original id is not in the executable. */
@@ -5019,7 +5033,9 @@ class alignas(16) hknpShape : public hkReferencedObject
     virtual int unknownVirtual6() const;
     /* Slot 7: the shape's bounds under a transform. */
     virtual void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const;
-    virtual int unknownVirtual8() const;
+    /* Slot 8: the shape's signals (the default 0x42d0 has none; the shape
+     * watcher's 0x155b10 unsubscribes from both). */
+    virtual hknpShapeSignals *unknownVirtual8() const;
     virtual int unknownVirtual9() const;
     virtual const Vec4 *unknownVirtual10(Vec4 *buffer, int bufferSize) const;
     virtual void unknownVirtual11(const Vec4 &direction, Vec4 *vertexOut) const;
@@ -5115,7 +5131,7 @@ class hknpDecoratorShape : public hknpShape
 
     void FUN_0003b120(const Mat4 &transform,
                       hkAabb &aabbOut) const;                     /* vtable slot 7; derived name */
-    int FUN_0003b280() const;                                     /* vtable slot 8; derived name */
+    hknpShapeSignals *FUN_0003b280() const;                       /* vtable slot 8; derived name */
     int FUN_0003b130() const;                                     /* vtable slot 9; derived name */
     const Vec4 *FUN_0003b140(Vec4 *buffer, int bufferSize) const; /* vtable slot 10; derived name */
     void FUN_0003b150(const Vec4 &direction,
@@ -5566,7 +5582,7 @@ struct hknpManifoldCollisionCache /* derived name */
     template <typename T> T *getProperty(int key)
     {
         const int offset = propertyBufferOffset * 16 + ((propertyOffsets >> (key * 4)) & 0xf) * 4;
-        return reinterpret_cast<T *>(reinterpret_cast<char *>(this) + offset);
+        return hkAddByteOffset(reinterpret_cast<T *>(this), offset);
     }
 
     /* The bytes the properties take: 64 once full (bit 0 of the keys byte,
@@ -5580,12 +5596,15 @@ struct hknpManifoldCollisionCache /* derived name */
         return full * 64 + ((((propertyOffsets & 0xf) * 4 + 15) & ~15) & -(1 - full));
     }
 
-    /* One of the three float arrays past the properties. derived name. */
+    /* One of the three float arrays past the properties, the offset
+     * applied through the pointer's integer value (hkAddByteOffset), so the
+     * address is opaque to the loop strength reduction of a walk over it
+     * (0x156e90). derived name. */
     float *pointValues(int index)
     {
-        return reinterpret_cast<float *>(reinterpret_cast<char *>(this) +
-                                         (propertyBufferOffset * 16 + propertyBufferSize()) +
-                                         index * ((pointValueCount + 3) & ~3) * int(sizeof(float)));
+        return hkAddByteOffset(reinterpret_cast<float *>(this),
+                               propertyBufferOffset * 16 + propertyBufferSize() +
+                                   index * ((pointValueCount + 3) & ~3) * sizeof(float));
     }
 };
 
@@ -6471,54 +6490,6 @@ template <typename P0> class hkSlot1 : public hkSlot /* derived name */
 {
   public:
     virtual void call(P0 p0) = 0; /* derived name */
-};
-
-/* What a listener of 0x155ea0 subscribes to (derived names): an object
- * whose slot 8 returns two signals; the listener's FUN_00155b00 goes to the
- * first and its FUN_00155b10 to the second (0x156026, 0x15607c). */
-struct ListenedSignals00155b10 /* derived name */
-{
-    Signal00093530 signalA;
-    Signal00093530 signalB;
-};
-
-class ListenedObject00155b10 /* derived name */
-{
-  public:
-    virtual void unknownVirtual0();
-    virtual void unknownVirtual1();
-    virtual void unknownVirtual2();
-    virtual void unknownVirtual3();
-    virtual void unknownVirtual4();
-    virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
-    virtual ListenedSignals00155b10 *FUN_slot8(); /* vtable slot 8; derived name */
-};
-
-struct ListenerOwner00155b10 /* derived name */
-{
-    u8 unknown0[0x20];
-    bool changed; /* derived name */
-};
-
-/* The listener 0x155ea0 builds (derived names): its owner at +0, the
- * object it listens to at +8, a flag at +0x20 that the first callback ors
- * its argument into. */
-class Listener00155b10 /* derived name */
-{
-  public:
-    /* The first signal's callback (0x155b00): the argument or'ed into the
-     * flag, the owner marked. */
-    void FUN_00155b00(u8 value);
-    /* The second's (0x155b10): both callbacks unsubscribed, the object
-     * dropped, the owner marked. */
-    void FUN_00155b10();
-
-    ListenerOwner00155b10 *owner;   /* derived name */
-    ListenedObject00155b10 *object; /* derived name */
-    u8 unknown10[0x10];
-    u8 flag; /* derived name */
 };
 
 /* The two flag bits a slot link keeps low (derived names). */
@@ -13017,14 +12988,6 @@ struct CommandStreams00167f70 /* derived name */
 /* A block stream's reader (derived names), 0x18 bytes: the current block,
  * the next element's address in it (null when the block is empty), the
  * elements left in the other blocks and in this one. */
-/* A pointer moved by a byte offset through its integer value, as Havok's
- * hkAddByteOffsetConst is (the block reader's advance tests the result for
- * null again, 0x65fa8). */
-template <typename T> inline const T *hkAddByteOffsetConst(const T *base, long offset)
-{
-    return reinterpret_cast<const T *>(reinterpret_cast<hkUlong>(base) + offset);
-}
-
 struct hkBlockStreamReader /* derived name */
 {
     /* At the stream's first block, every later element still to read
@@ -13928,6 +13891,9 @@ struct ShapeWatcherOwner /* derived name */
 struct ShapeWatcher /* derived name */
 {
     void FUN_00155b00(u8 changeFlags); /* derived name */
+    /* The second signal's handler (0x155b10): both handlers unsubscribed,
+     * the shape dropped, the owner marked changed. derived name. */
+    void FUN_00155b10(); /* derived name */
 
     ShapeWatcherOwner *owner; /* derived name */
     const hknpShape *shape;   /* derived name */
@@ -13947,6 +13913,29 @@ class XmlNode : public hkReferencedObject /* derived name */
 {
   public:
     int type; /* derived name */
+};
+
+/* A start element's attribute (derived names): its name and its value,
+ * 16 bytes, destroyed value first (0x19d490). */
+struct XmlAttribute /* derived name */
+{
+    hkStringPtr name;  /* derived name */
+    hkStringPtr value; /* derived name */
+};
+
+/* The start element (vtable 0x16a69e0), 0x28 bytes: built in place by the
+ * reader at 0x19e52b, node type 1. */
+class XmlStartElement : public XmlNode /* derived name */
+{
+  public:
+    virtual ~XmlStartElement();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
+     * destructor 0x19d500 frees at the recorded size, 0x28 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkStringPtr name;                 /* derived name */
+    hkArray<XmlAttribute> attributes; /* derived name */
 };
 
 class XmlEndElement : public XmlNode /* derived name */
