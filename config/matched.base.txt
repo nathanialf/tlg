@@ -2448,3 +2448,7 @@ FUN_001839d0 src/libs/unknown/func_001839d0.cpp
 FUN_000aae70 src/libs/unknown/func_000aae70.cpp
 FUN_000cf8d0 src/libs/unknown/func_000cf8d0.cpp
 _ZN24MemoryWalkFilter000015c0C1EP13AllocatorBasePKP8FreeListiPFvPvmbiS6_ES6_ src/libs/unknown/func_00001630.cpp _ZN24MemoryWalkFilter000015c0C2EP13AllocatorBasePKP8FreeListiPFvPvmbiS6_ES6_
+FUN_000a9410 src/libs/unknown/func_000a9410.cpp _ZNK27hknpCompressedMeshShapeTree12FUN_000a9410ER7hkArrayIjEjb
+FUN_0016dc90 src/libs/unknown/func_0016dc90.cpp
+FUN_00178310 src/libs/unknown/func_00178310.cpp
+_ZN11LoadedImageC1ERK8RawImage src/libs/unknown/func_001a04d0.cpp _ZN11LoadedImageC2ERK8RawImage

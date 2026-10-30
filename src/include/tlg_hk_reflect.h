@@ -390,6 +390,11 @@ template <typename T> struct hkArray {
     /* A loaded image's array is left as loaded. */
     hkArray(hkFinishLoadedObjectFlag) {}
 
+    /* A copy of another array: empty, then its elements appended (defined
+     * in tlg_lib_unknown.h; the loaded image's constructor 0x1a04d0, the
+     * storage taken at the other's size when it has any). */
+    inline hkArray(const hkArray &other);
+
     /* An array over storage it does not own (hkInplaceArray's). */
     hkArray(T *buffer, int initialSize, int capacity)
         : data(buffer), size(initialSize), capacityAndFlags(capacity | DONT_DEALLOCATE_FLAG)
@@ -11658,6 +11663,8 @@ struct hkpConstraintAtom {
         TYPE_LIN = 7,
         TYPE_LIN_SOFT = 8,
         TYPE_LIN_LIMIT = 9,
+        TYPE_LIN_FRICTION = 10,
+        TYPE_LIN_MOTOR = 11,
         TYPE_2D_ANG = 12,
         TYPE_ANG = 13,
         TYPE_ANG_LIMIT = 14,
@@ -11718,6 +11725,8 @@ struct hkpLinFrictionConstraintAtom {
 class hkpConstraintMotor;
 
 struct hkpLinMotorConstraintAtom {
+    hkpLinMotorConstraintAtom() {}
+
     hkpLinMotorConstraintAtom(hkFinishLoadedObjectFlag)
     {
         initializedOffset = -1;
@@ -11773,6 +11782,8 @@ class hkpPrismaticConstraintData : public hkpConstraintData
      * linLimit from +0xb0. Its finish constructor (0x7e520) is out of line:
      * when finishing, the motor's offsets into the runtime are set. */
     struct Atoms {
+        Atoms() {}
+
         Atoms(hkFinishLoadedObjectFlag flag);
 
         hkpSetLocalTransformsConstraintAtom transforms;
@@ -11802,6 +11813,12 @@ class hkpPrismaticConstraintData : public hkpConstraintData
      * 0x120 bytes, parent hkpConstraintData's 0x57c45a8): the atoms finish
      * themselves. vtable 0x169d1f0, address point 0x169d200. */
     hkpPrismaticConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new one (0x7e3d0): the atoms typed, the friction on, both frames
+     * the identity, the limit unbounded on the first axis, no friction
+     * force, the motor off with no motor and its offsets into the runtime,
+     * the angles all constrained and the lin atoms on the other two axes. */
+    hkpPrismaticConstraintData();
 
     virtual ~hkpPrismaticConstraintData();
 
@@ -12310,6 +12327,8 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
      * linear limits from +0xb0. Its finish constructor (0x83880) is out of
      * line: when finishing, the motor's offsets into the runtime are set. */
     struct Atoms {
+        Atoms() {}
+
         Atoms(hkFinishLoadedObjectFlag flag);
 
         hkpSetLocalTransformsConstraintAtom transforms;

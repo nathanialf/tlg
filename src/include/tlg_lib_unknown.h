@@ -841,6 +841,13 @@ inline void hkArray<T>::insertAt(int index, const T *elements, int numElements)
     size = newSize;
 }
 
+template <typename T>
+inline hkArray<T>::hkArray(const hkArray &other)
+    : data(0), size(0), capacityAndFlags(DONT_DEALLOCATE_FLAG)
+{
+    append(other.data, other.size);
+}
+
 template <typename T> inline void hkArray<T>::append(const T *elements, int numElements)
 {
     const int newSize = size + numElements;
@@ -1756,6 +1763,10 @@ struct Object00178580 /* derived name */
     s32 index; /* derived name */
     u8 unknown10[8];
     hknpWorld *world; /* derived name */
+    u8 unknown20[0x30];
+    /* The linear velocity's change over the last step (0x178310). derived
+     * name. */
+    Vec4 acceleration;
 };
 
 void FUN_00178580(Object00178580 *self, const void *argument); /* derived name */
@@ -1765,6 +1776,14 @@ void FUN_00178580(Object00178580 *self, const void *argument); /* derived name *
  * already equals it within the constant table's tolerance (0x178460; the
  * game calls it at 0xeb059d, 0xeb0c79 and 0xeb0ef5). */
 void FUN_00178460(Object00178580 *self, const Vec4 &angularVelocity);
+
+/* derived name: the body's linear velocity set to the one given, its
+ * angular velocity kept, the change over the step's time kept at +0x50;
+ * when the motion already moves so within the constant table's tolerance,
+ * only the body handed to the world's 0x4e0c0 when asked (0x178310; the
+ * game calls it at 0xeb0590, 0xeb0c69 and 0xeb0ee7). */
+void FUN_00178310(Object00178580 *self, const Vec4 &linearVelocity, const Vec4 &deltaTime,
+                  bool activate);
 
 struct Object0003ea60 {
     u8 unknown0[0xc];
@@ -2986,6 +3005,12 @@ struct RawImagePart /* derived name */
 struct RawImage /* derived name */
 {
     RawImage();
+
+    /* Member by member, the parts through the array's copy (inline in the
+     * loaded image's constructor 0x1a04d0: the two ints copied apart). */
+    RawImage(const RawImage &other) : width(other.width), height(other.height), pixels(other.pixels)
+    {
+    }
 
     int width;  /* derived name */
     int height; /* derived name */
@@ -5801,6 +5826,11 @@ struct Entry0016d360 /* derived name */
     u8 unknown0[8];
 };
 
+/* A constraint record built (0x1754d0): its two bodies' keys, its data,
+ * its id and the cinfo's flags. derived name. */
+void FUN_001754d0(EdgeRecord0017a290 *edge, BodyKey0016e040 keyA, BodyKey0016e040 keyB,
+                  hkpConstraintData *data, unsigned int id, u8 flags); /* derived name */
+
 class Owner0016d360 /* derived name */
 {
   public:
@@ -5809,6 +5839,17 @@ class Owner0016d360 /* derived name */
     /* The set-up (0x16d3f0): the world's signal at +0x5b8 fired with the
      * world and this object, then the storage sized. derived names. */
     void FUN_0016d3f0(void *argument2, int argument3);
+
+    /* An edge set up for a new constraint (0x16dc90; the world's
+     * constraint add at 0x4d254, after taking the record from the free
+     * list): the record built from the cinfo and its bodies' keys, its name
+     * kept, the first-edge array grown to the world's body capacity (no
+     * edge, 0x7fffffff, for the new bodies), then the edge put at the head
+     * of both its nodes' lists. derived name. */
+    void FUN_0016dc90(unsigned int edgeIndex, const hknpConstraintCinfo &cinfo);
+
+    /* The record's name kept (0x16ddd0). derived name. */
+    void FUN_0016ddd0(unsigned int edgeIndex, const char *name);
 
     /* An edge taken out (0x16df30; the world's 0x4d620 after firing its
      * signal): out of both its nodes' lists while the object has a world,

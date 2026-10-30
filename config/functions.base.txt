@@ -1834,7 +1834,7 @@
 0x0007e2f0 0x1b FUN_0007e2f0
 0x0007e310 0x23 FUN_0007e310
 0x0007e350 0x79 FUN_0007e350
-0x0007e3d0 0x13b FUN_0007e3d0
+0x0007e3d0 0x13b _ZN26hkpPrismaticConstraintDataC1Ev
 0x0007e520 0x19 _ZN26hkpPrismaticConstraintData5AtomsC1E24hkFinishLoadedObjectFlag
 0x0007e550 0xa6 _ZN26hkpPrismaticConstraintDataD0Ev
 0x0007e600 0x5c _ZN26hkpPrismaticConstraintDataD1Ev
