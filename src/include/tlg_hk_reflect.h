@@ -15862,12 +15862,20 @@ class hknpVehicleWheelCollide : public hkReferencedObject
     }
 
     virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    /* Slot 6 collides every wheel (the ray cast's 0x158bf0, the linear
+     * cast's 0x178e40), filling one output per wheel. derived name. */
+    virtual void collideWheels(float deltaTime, const class hknpVehicleInstance *vehicle,
+                               WheelCollideOutput *outputs, const hknpWorld *world);
     virtual void unknownVirtual7();
     /* Slot 8: empty in both wheel collides (0x175a80, 0xadd50); the vehicle's
      * slot 8 hands it the pointer at +0x10 of its own argument. */
     virtual void unknownVirtual8(void *argument);
     virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    /* Slot 11: told of each wheel's output once it is collided (empty here,
+     * the shared 0x3b640). derived name. */
+    virtual void wheelCollideCallback(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                                      WheelCollideOutput &output);
 
     hkBool alreadyUsed;
     hkEnum<WheelCollideType, u8> type;
@@ -16093,21 +16101,33 @@ class hknpVehicleRayCastWheelCollide : public hknpVehicleWheelCollide
 
     virtual ~hknpVehicleRayCastWheelCollide();
 
-    /* Slot 15 (0x159010): a wheel's output when its ray hits nothing: at
-     * the ray's end, against the suspension's direction, the suspension
-     * fully extended. derived name. */
-    void FUN_00159010(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
-                      WheelCollideOutput &output) const;
+    /* Slot 6 (0x158bf0): each wheel's ray cast into a closest-hit collector
+     * built for it, its output from the hit (slot 14) or without one (slot
+     * 15), then the callback (slot 11). derived name. */
+    void collideWheels(float deltaTime, const hknpVehicleInstance *vehicle,
+                       WheelCollideOutput *outputs, const hknpWorld *world);
 
     /* Slot 12 (0x158a40): the box around every wheel's ray, from its hard
      * point to its end point. derived name. */
-    void FUN_00158a40(const class hknpVehicleInstance *vehicle, hkAabb &aabbOut) const;
+    virtual void FUN_00158a40(const hknpVehicleInstance *vehicle, hkAabb &aabbOut) const;
 
     /* Slot 13 (0x158ae0): a wheel's ray, from its hard point to its end
      * point, cast in the world under the world's collision filter and the
      * wheels' filter info. derived name. */
-    void FUN_00158ae0(const hknpVehicleInstance::WheelInfo &wheelInfo, const hknpWorld *world,
-                      hknpCollisionQueryCollector *collector) const;
+    virtual void FUN_00158ae0(const hknpVehicleInstance::WheelInfo &wheelInfo,
+                              const hknpWorld *world, hknpCollisionQueryCollector *collector) const;
+
+    /* Slot 14 (0x158e20): a wheel's output from the hit its ray kept.
+     * derived name. */
+    virtual void FUN_00158e20(const hknpVehicleInstance *vehicle, u8 wheelIndex,
+                              const class hknpClosestHitCollector &collector,
+                              WheelCollideOutput &output, const hknpWorld *world) const;
+
+    /* Slot 15 (0x159010): a wheel's output when its ray hits nothing: at
+     * the ray's end, against the suspension's direction, the suspension
+     * fully extended. derived name. */
+    virtual void FUN_00159010(const hknpVehicleInstance *vehicle, u8 wheelIndex,
+                              WheelCollideOutput &output) const;
 };
 
 /* hknpCharacterProxy (derived name: its timers "findSupportingContacts",
@@ -16223,6 +16243,14 @@ class hknpCollisionQueryCollector /* derived name */
     virtual void addHit(const struct hknpCollisionResult &hit);
     virtual void unknownVirtual5();
     virtual bool unknownVirtual6() const;
+
+    /* No hints, the early-out value the largest (row 34 of the constant
+     * table), as slot 3 resets them. */
+    hknpCollisionQueryCollector()
+    {
+        hints = 0;
+        earlyOut = D_14b2060[34];
+    }
 
     int hints; /* derived name */
     u8 unknownC[4];
@@ -16404,8 +16432,20 @@ class QueryProcessor0010b090 /* derived name */
 class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    /* Empty; the deleting destructor is 0x69600. */
-    virtual ~hknpClosestHitCollector();
+    /* The kept hit cleared, then slot 3 run through the vtable (built in
+     * place at 0x158cb5). */
+    hknpClosestHitCollector()
+    {
+        hit.clear();
+        hit.unknown5c = 0;
+        reset();
+    }
+
+    /* Empty and inline: the queries that build the collector on the stack
+     * (0x156880, 0x158bf0, 0x179210) call no destructor. The class's key
+     * function is then slot 3 (reset), whose file emits the vtable and the
+     * deleting destructor 0x69600. */
+    virtual ~hknpClosestHitCollector() {}
 
     bool FUN_000696d0() const; /* vtable slot 6; derived name */
 
