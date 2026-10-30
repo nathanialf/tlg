@@ -409,7 +409,7 @@ template <typename T> struct hkArray {
     /* Drop the elements, keeping the storage: each destroyed from the last
      * (hkMemoryResourceHandle's external links, 0x17f270; nothing for an
      * element with no destructor). */
-    void clear()
+    inline void clear()
     {
         destructElements(data, size);
         size = 0;
@@ -2009,6 +2009,11 @@ struct hkStringBuf /* derived name */
      * reader's at 0x19e1c1): a copy of a C string, null read as empty. */
     hkStringBuf(const char *s);
 
+    /* The characters given back to the temporary allocator they grow from
+     * (defined in tlg_lib_unknown.h; the XML reader's end tag frees its
+     * name's buffer through 0x57b8470, 0x19e23c). */
+    inline ~hkStringBuf();
+
     /* The characters' length, without the terminator the array holds. */
     int getLength() const
     {
@@ -2886,7 +2891,18 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
 
 /* hkReferencedObject's hkClass (built at 0xe222) and its one member's
  * record (0x168d980). */
-extern const hkClass D_57b8640;         /* hkReferencedObject's hkClass */
+extern const hkClass D_57b8640; /* hkReferencedObject's hkClass */
+
+/* hknpShapeTagCodec (hkClass 0x57c1b00, built at 0x66140: size 0x10,
+ * parent hkReferencedObject, one enum, Type, at 0x1699890, whose items are
+ * TYPE_NULL, TYPE_MATERIAL_PALETTE, TYPE_UFM and TYPE_USER): its one member,
+ * type, a byte of that enum at +0xc. */
+class hknpShapeTagCodec : public hkReferencedObject
+{
+  public:
+    u8 type;
+};
+
 extern const hkClassMember D_168d980[]; /* derived name: hkReferencedObject's records */
 
 /* hknpVehicleAerodynamics, the aerodynamics' interface (its hkClass at
@@ -5643,8 +5659,9 @@ template <typename P0> struct hkSignal1 : public Signal00093530 /* derived name 
     void fire(P0 p0);
 };
 
-/* The same with two arguments (derived name): the world fires one with
- * itself and a constraint's id when the constraint is enabled (0x4fcab). */
+/* A signal whose slots take two arguments (derived name): fire calls slot 3
+ * of each slot with both (the world's constraint signals pass the world and
+ * a constraint id, 0x4fd8b); defined after hkSlot. */
 template <typename P0, typename P1> struct hkSignal2 : public Signal00093530 /* derived name */ {
     void fire(P0 p0, P1 p1);
 };
@@ -7816,6 +7833,18 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
         elements.setSizeUnchecked(0);
     }
 
+    /* An element given back: destroyed, made the free list's head (its
+     * operations mark it empty over the old head), the id the head (the
+     * material library's removal, 0x77cf6). */
+    void release(Id id)
+    {
+        const int index = id.value;
+        T &element = elements[index];
+        element.~T();
+        Ops::setEmpty(element, firstFree);
+        firstFree = index;
+    }
+
     hkArray<T> elements;
     int firstFree;
 };
@@ -7840,9 +7869,14 @@ struct hknpMaterialLibrary : public hkReferencedObject {
      * tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* A material removed (0x77c70; the game calls it at 0xeb2828): the
+     * removed signal fired with its id, then its entry given back to the
+     * free list. derived name. */
+    void FUN_00077c70(hknpMaterialId id);
+
     Signal00093530 materialAddedSignal;
     Signal00093530 materialModifiedSignal;
-    Signal00093530 materialRemovedSignal;
+    hkSignal1<hknpMaterialId> materialRemovedSignal;
     hkFreeListArray<hknpMaterial, hknpMaterialId, 8, hknpMaterialFreeListArrayOperations> entries;
 };
 
@@ -8036,12 +8070,40 @@ void FUN_00175a80(const hknpWorld *world, int threadIndex, const void *streamA, 
 struct hknpBodyQualityLibrary;
 struct hknpBodyQuality;
 
+/* A body quality's handle, passed by value as a one-byte struct, as the
+ * material id is (the world's quality set, 0x5fcf0, compares the body's
+ * byte with it in memory: as a struct its argument carries no debug value
+ * of its own between the load and the compare). Field name derived. */
+struct hknpBodyQualityId /* derived name */
+{
+    u8 value;
+};
+
 /* derived name: one body integrated over a step (0xcd040; the attached
  * bodies' walk 0x5b490 runs it on each): the body, the step's argument, its
  * quality, then the world's vector at +0x250, its solver settings and its
  * data at +0x1f0. */
 void FUN_000cd040(hknpBody *body, void *argument, const hknpBodyQuality *quality,
                   const Vec4 *vector, const hknpSolverInfo *solverInfo, void *data1f0);
+
+/* The world's signals, a member of their own (derived names): the constraint
+ * filter's unsubscribe from the one at +0x5e0 (0x159bf0) and the character
+ * proxy's from those at +0x5f0, +0x5f8 and +0x608 (0x176b88 to 0x176baa)
+ * fold the world's load into the address, the add of two offsets the
+ * selection DAG combines (a field of a field). Where the group starts is
+ * not known; at +0x5a0 it holds every signal typed so far. The constraint
+ * filter subscribes 0x159dd0 to the constraint signal at +0x5d8 (which
+ * disables the collisions between the constraint's bodies) and 0x159df0 to
+ * the one at +0x5e0 (which hands the pair back), 0x159ca0, and
+ * unsubscribes from both in its destructor (0x159bc0). */
+struct hknpWorldSignals /* derived name */
+{
+    hkSignal2<hknpWorld *, int> bodyChangedSignal; /* 0x5fcf0 (quality), 0x60100 (filter info) */
+    u8 unknown8[0x30];
+    hkSignal2<hknpWorld *, u32> constraintAddedSignal;   /* 0x4fc10 enables, 0x4d32e */
+    hkSignal2<hknpWorld *, u32> constraintRemovedSignal; /* 0x4fcf0 disables, 0x4d4de */
+    u8 unknown48[0x28];
+};
 
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
@@ -8074,9 +8136,22 @@ struct hknpWorld {
     /* Hands a body id and a bool to the object at +0x4f8 when the flag at
      * +0x4f0 is set (the command dispatcher at 0x16ef96 calls it). derived
      * name. */
-    void FUN_0005b560(int bodyId, bool flag);                 /* derived name */
-    void FUN_0004bcc0(hknpCollisionFilter *filter);           /* derived name */
-    void *FUN_00051610() const;                               /* derived name */
+    void FUN_0005b560(int bodyId, bool flag);       /* derived name */
+    void FUN_0004bcc0(hknpCollisionFilter *filter); /* derived name */
+    void *FUN_00051610() const;                     /* derived name */
+    /* A constraint disabled, once (bit 2 of its flags), the constraint
+     * signal at +0x5e0 fired with the world and its id (0x4fcf0; the game
+     * calls it from 0xeadb24). derived name. */
+    void FUN_0004fcf0(u32 constraintId);
+    /* A body's quality set when it changes (0x5fcf0; the qualities'
+     * modifier 0x16ef20 and the game call it): the body's collision caches
+     * rebuilt unless asked not to (FUN_0005bf80, mode 0), then the body
+     * signal fired with the world and the body. derived names. */
+    void FUN_0005fcf0(int bodyId, hknpBodyQualityId qualityId, int rebuildMode);
+    /* The same for a body's collision filter info (0x60100; the qualities'
+     * modifier calls it at 0x16ef49). derived name. */
+    void FUN_00060100(int bodyId, u32 collisionFilterInfo, int rebuildMode);
+    void FUN_0005bf80(int bodyId);                            /* derived name */
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
     hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
     void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
@@ -8155,11 +8230,9 @@ struct hknpWorld {
      * only when the flag is set). */
     bool enabled4f0;               /* derived name */
     hknpWorldObject4f8 *object4f8; /* derived name */
-    u8 unknown500[0xd8];
-    /* Fired with the world and a constraint's id when the constraint is
-     * enabled (0x4fc10). derived name. */
-    hkSignal2<hknpWorld *, u32> constraintEnabledSignal;
-    u8 unknown5e0[0x48];
+    u8 unknown500[0xa0];
+    hknpWorldSignals signals; /* derived name */
+    u8 unknown610[0x18];
     /* The step's current stage (hknpPostCollideTask's work sets 8 before
      * its stage, 0x489ad). derived name. */
     int simulationStage;
@@ -8904,6 +8977,11 @@ class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
      * vtable; the subscribed world is left as loaded. */
     hknpConstraintCollisionFilter(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line, the class's key function (D0 0x159b70 before D1
+     * 0x159bc0): unsubscribed from the world, then the pair filter's
+     * destructor inline. */
+    ~hknpConstraintCollisionFilter();
+
     void FUN_00159dd0(hknpWorld *world, u32 constraintId); /* derived name */
     void FUN_00159df0(hknpWorld *world, u32 constraintId); /* derived name */
 
@@ -9538,6 +9616,13 @@ struct hknpMaterial {
      * definition). */
     hknpMaterial();
 
+    /* The placement form the free list's operations build a free entry
+     * with (0x77d1d). */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     /* The trigger types and the combine policies (the items of the enums
      * TriggerType and CombinePolicy, 0x1699970 and 0x16999b0). */
     enum TriggerType {
@@ -9609,6 +9694,16 @@ struct hknpMaterialFreeListArrayOperations {
     static hkBool32 isEmpty(const hknpMaterial &material)
     {
         return material.maxContactImpulse < 0.0f;
+    }
+
+    /* A free material: a default one (0x6c650), its maxContactImpulse -1,
+     * the next free id kept in its first word after the name (0x77d1d to
+     * 0x77d32). */
+    static void setEmpty(hknpMaterial &material, u32 next)
+    {
+        new (&material) hknpMaterial();
+        material.maxContactImpulse = -1.0f;
+        material.isExclusive = next;
     }
 };
 
@@ -10881,7 +10976,8 @@ class hkpConstraintMotor : public hkReferencedObject
         TYPE_POSITION,
         TYPE_VELOCITY,
         TYPE_SPRING_DAMPER,
-        TYPE_CALLBACK
+        TYPE_CALLBACK,
+        TYPE_MAX
     };
 
     hkpConstraintMotor() {}
@@ -10901,7 +10997,9 @@ class hkpConstraintMotor : public hkReferencedObject
         return where;
     }
 
-    hkEnum<MotorType, s8> type; /* derived name */
+    /* The one member of the class's record (built at 0x7b7e0: type, an
+     * enum MotorType of hkInt8 at +0xc). */
+    hkEnum<MotorType, s8> type;
 };
 
 extern const hkClass D_57c3af0; /* hkpConstraintMotor's hkClass */
@@ -12141,10 +12239,19 @@ class hkxEnvironment : public hkReferencedObject
     hkArray<hkxEnvironmentVariable> variables; /* the record's member (0x16a29a0) */
 };
 
+/* hkRootLevelContainer: namedVariants, an array of NamedVariant (0x18
+ * bytes each), at +0. */
 class hkRootLevelContainer
 {
   public:
     struct NamedVariant;
+
+    /* The cleanup callback of its type info (0x8e5d0, registered at
+     * 0x8e7c6): the object destroyed in place, its entries from the last,
+     * then their storage. derived name. */
+    static void FUN_0008e5d0(void *object);
+
+    hkArray<NamedVariant> namedVariants;
 };
 
 /* hkRootLevelContainer::NamedVariant (hkClass 0x57c83b0, built at 0x8e71d:

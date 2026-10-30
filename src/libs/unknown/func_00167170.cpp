@@ -38,3 +38,5 @@ int hknpPairCollisionFilter::FUN_001679a0(const hknpCollisionFilterContext &cont
     }
     return int(out - pairs);
 }
+
+void FUN_00158a30(hknpPairCollisionFilterMapPairFilterKeyOverrideType *self) {}

@@ -2786,8 +2786,8 @@
 0x001598f0 0x114 FUN_001598f0
 0x00159a30 0xff FUN_00159a30
 0x00159b40 0x23 _ZN29hknpConstraintCollisionFilterC1E24hkFinishLoadedObjectFlag
-0x00159b70 0x4c FUN_00159b70
-0x00159bc0 0xc0 FUN_00159bc0
+0x00159b70 0x4c _ZN29hknpConstraintCollisionFilterD0Ev
+0x00159bc0 0xc0 _ZN29hknpConstraintCollisionFilterD1Ev
 0x00159ca0 0x127 FUN_00159ca0
 0x00159dd0 0x1a FUN_00159dd0
 0x00159df0 0x20 FUN_00159df0

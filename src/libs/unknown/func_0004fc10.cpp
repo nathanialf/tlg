@@ -7,6 +7,6 @@ void hknpWorld::FUN_0004fc10(u32 constraintId, hkBool32 keepInactive) /* derived
     if (constraint.flags & 4) {
         constraint.flags &= ~4;
         FUN_0004d400(&constraint, keepInactive);
-        constraintEnabledSignal.fire(this, constraintId);
+        signals.constraintAddedSignal.fire(this, constraintId);
     }
 }

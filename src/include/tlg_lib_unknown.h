@@ -3630,10 +3630,17 @@ inline void hknpPairCollisionFilter::operator delete(void *object, unsigned long
     freeReferencedObject(object, numBytes);
 }
 
+/* The map's own destructor, out of line and empty: defined in the pair
+ * filter's file, where the filter's destructor holds it (0x1671f0), and
+ * called by the constraint filter's (0x159c7b), where the linker folded it
+ * onto the shared empty body 0x158a30 (as 0xe5c0 for the pointer maps). */
+void FUN_00158a30(hknpPairCollisionFilterMapPairFilterKeyOverrideType *self); /* derived name */
+
 inline hknpPairCollisionFilterMapPairFilterKeyOverrideType::
     ~hknpPairCollisionFilterMapPairFilterKeyOverrideType()
 {
     FUN_00167170(hkContainerHeapAllocator::get());
+    FUN_00158a30(this);
 }
 
 inline void hkMemoryMeshTexture::operator delete(void *object, unsigned long numBytes)
@@ -4101,6 +4108,16 @@ inline AllocatorBase &hkContainerHeapAllocator::get()
 inline AllocatorBase &hkContainerTempAllocator::get()
 {
     return D_57b8470;
+}
+
+inline hkStringBuf::~hkStringBuf()
+{
+    string.size = 0;
+    if ((string.capacityAndFlags & hkArray<char>::DONT_DEALLOCATE_FLAG) == 0) {
+        hkContainerTempAllocator::get().freeElements<char>(string.data, string.getCapacity());
+    }
+    string.data = 0;
+    string.capacityAndFlags = hkArray<char>::DONT_DEALLOCATE_FLAG;
 }
 
 /* An array over the temporary allocator with its first N elements in place
@@ -5197,7 +5214,6 @@ void FUN_0009c960(hkcdPlanarGeometryPlanesCollection *self);
 void FUN_000aa6d0(hkSkinnedRefMeshShape *self);
 void FUN_001586d0(hknpCompressedMeshShape *self);
 void FUN_00159650(hknpProjectileGun *self);
-void FUN_00159bc0(hknpConstraintCollisionFilter *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
@@ -5244,7 +5260,6 @@ void FUN_000ad920(hkStorageSkinnedMeshShape *self);          /* slot 1 of 0x16a3
 void FUN_00157ea0(hknpBallGun *self);                        /* slot 1 of 0x16a48d0 */
 void FUN_00158680(hknpCompressedMeshShape *self);            /* slot 1 of 0x16a4990 */
 void FUN_00159600(hknpProjectileGun *self);                  /* slot 1 of 0x16a4b30 */
-void FUN_00159b70(hknpConstraintCollisionFilter *self);      /* slot 1 of 0x16a4c20 */
 void FUN_0015bf50(hknpWorldSnapshot *self);                  /* slot 1 of 0x16a4d50 */
 void FUN_00162580(hknpVehicleInstance *self);                /* slot 1 of 0x16a5090 */
 void FUN_00165aa0(hknpPhysicsSystemData *self);              /* slot 1 of 0x16a5130 */
