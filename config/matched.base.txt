@@ -2006,3 +2006,8 @@ FUN_00014990 src/libs/unknown/func_00014990.cpp _GLOBAL__I_a
 FUN_0001c0f0 src/libs/unknown/func_0001c0f0.cpp _GLOBAL__I_a
 FUN_00022a90 src/libs/unknown/func_00022a90.cpp _GLOBAL__I_a
 FUN_000393d0 src/libs/unknown/func_000393d0.cpp _GLOBAL__I_a
+FUN_0000a1d0 src/libs/unknown/func_0000a1d0.cpp _GLOBAL__I_a
+FUN_00009470 src/libs/unknown/func_00009470.cpp _GLOBAL__I_a
+FUN_0000c1b0 src/libs/unknown/func_0000c1b0.cpp _GLOBAL__I_a
+FUN_0008e380 src/libs/unknown/func_0008e380.cpp _GLOBAL__I_a
+FUN_0008e460 src/libs/unknown/func_0008e460.cpp _GLOBAL__I_a

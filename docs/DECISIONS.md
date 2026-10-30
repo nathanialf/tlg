@@ -905,6 +905,22 @@ signatures. The type-info size the registration stores is written as the
 literal 16 the bytes hold (hkBaseObject is 8 bytes; what the registration
 measured is not yet known).
 
+**Addendum, 2026-10-30 (round 57 harvest).** When the folded body's row
+carries a constructor's or a destructor's name, no overload of that name
+can take the callback's signature. The callback is then spelled under the
+address's own name, `FUN_<addr>(void *)`, with external linkage: hkColor,
+hkTraceStreamTitle and hkFourTransposedPointsf (0xa1d0, 0x9470, 0xc1b0)
+pass their cleanup as `FUN_00008d60`, the empty body whose row is
+AllocatorBase's base destructor; hkPackfileHeader and
+hkPackfileSectionHeader (0x8e380, 0x8e460) pass `FUN_0008c0a0`, the
+empty body whose row is hkxVertexDescription's finish constructor. The
+gate places the symbol as it placed 0x6a60's: the object's own bytes of
+the function sit at the base's field, so the reference resolves there and
+nowhere else. `FUN_<addr>` is the address's name in
+`config/functions.base.txt`, the name every callee carries until its own
+is known, so no second name is given to the address; the row of the body
+keeps its destructor's or constructor's symbol.
+
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 
 **Decision.** Where the base keeps a destructor's vptr store and emits
@@ -1906,3 +1922,46 @@ commit holds on them under the asm spelling.
 **Trigger to revisit.** A library function whose base merges two counter
 reads into one tail; or a site where the asm's ordering moves a read the
 base schedules otherwise.
+
+## D35. The stack protector's frame layout: arrays nearest the guard, then address-taken objects (2026-10-30)
+
+**Decision.** The library region's protected frames are laid out as
+upstream r197653 (2013-12-19) and r200601 (2014-02-01) lay them out: the
+`StackProtector` pass classifies each alloca (a large array, a small array,
+an address-taken object under the strong rules, or none) and the prolog
+and epilog inserter assigns the classified objects after the guard in that
+order, each set in frame-index order, then the rest in index order. LLVM
+3.3 places after the guard only an array allocation or a `char` array of
+8 bytes or more (`FunctionLoweringInfo.cpp:90-99`,
+`PrologEpilogInserter.cpp:583-629`), everything else in index order. The
+3.3 line adopts the layout as a backport (the ninth patch) once it holds on
+every row; until then the three functions below stay unclaimed.
+
+**Evidence.** The base's layer tree update (0x13e090, 0x29cf bytes) has
+21 frame objects. Its 3.3 -O2 IR laid out by the 3.5.2 back end
+(`tools/cc/llvm-3.5.2/bin/llc -print-after=prologepilog`, the same codegen
+flags) puts every one at the base's displacement: the guard at -0x30, the
+sort's entry tail -0x40, the walk -0x6e8, the leaves' arrays -0x1130, the
+buffers -0x1150, the jobs -0x1760, the dropped nodes -0x1870, the children's
+boxes -0x1890, the extent -0x189c, the entry -0x18b0, the box -0x18c0, the
+centres -0x18d0, the keys' byte count -0x18d4, the ages -0x18f8, the leaf
+jobs -0x1908, the four node lists -0x1928 to -0x1988 and the keys -0x1998
+(every displacement the base's instructions use). The 3.3 back end on the
+same IR puts the byte count at -0x44, the ages at -0x1150 and the walk at
+-0x6f0: the byte count's alloca is the inlined TempArray constructor's,
+spliced to the front of the entry block (`InlineFunction.cpp:628-667`) and
+so the lowest index, yet the base places it after the boxes and before the
+ages, where the address-taken group begins. No source order under 3.3
+gives that. Both upstream revisions sit inside the compiler bracket of D32
+(after r196925 of 2013-12-10, before r206214 of 2014-04-14; r200601 is of
+the day D33's r200609 is of), so the rule is of the base's generation, not
+a later one. Measured over the region (the supervisor's run, round 57's
+harvest: every library object that loads the guard, 56 objects, 84
+functions, each function's IR through both back ends and the allocas'
+order by offset compared): the 3.5 rule reorders the allocas of exactly
+three functions, 0x13e090, 0x19da90 (the XML reader) and 0x30ca0, none
+claimed; every claimed function's order is the same under both.
+
+**Trigger to revisit.** A claimed function whose frame the backport moves;
+or a protected function the base lays out in index order where the rule
+would group an array or an address-taken object.
