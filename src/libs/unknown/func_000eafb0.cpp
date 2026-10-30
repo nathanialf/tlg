@@ -6,6 +6,6 @@
  * the mutation signals of its data's build context, null without one. */
 hknpShapeSignals *hknpExternMeshShape::FUN_000eafb0()
 {
-    hknpExternMeshShapeBuildContext *context = boundingVolumeData->buildContext;
+    Object000ea380 *context = boundingVolumeData->buildContext;
     return context ? &context->mutationSignals : 0;
 }

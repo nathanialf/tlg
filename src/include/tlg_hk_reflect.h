@@ -3664,6 +3664,20 @@ class hkcdSimdTree
      * least, cleared when it had fewer. */
     hkcdSimdTree(hkFinishLoadedObjectFlag flag);
 
+    /* A new tree: its two root nodes, cleared (inline in 0xea610). */
+    hkcdSimdTree()
+    {
+        clear();
+    }
+
+    /* Back to the two root nodes, cleared. derived name. */
+    void clear()
+    {
+        nodes.setSize(2);
+        nodes[0].clear();
+        nodes[1].clear();
+    }
+
     /* Inline: the nodes' storage given back. hknpExternMeshShapeData's
      * destructor (0x35310) holds it; 0x21920 (slot 0) is the copy kept
      * beside the finish constructor, and the deleting destructor (0x21980,
@@ -4775,6 +4789,12 @@ struct hkcdStaticTree {
     struct DefaultTreeStorage6 {
         DefaultTreeStorage6(hkFinishLoadedObjectFlag flag) : nodes(flag) {}
 
+        /* A new one: no nodes, the domain empty. */
+        DefaultTreeStorage6()
+        {
+            domain.setEmpty();
+        }
+
         /* The class delete: back to the thread's heap at its size, no null
          * test (the static AABB tree's destructor, 0x22847; defined in
          * tlg_lib_unknown.h). */
@@ -4846,17 +4866,51 @@ class hknpStaticCompoundShapeData : public hkReferencedObject
  * at 0x14b5e99, hkClass built by 0x1f750: size 0x18): the nodes, 64 bytes
  * each, at +0 (derived names). */
 struct hkcdDynamicTree {
+    /* The 64-byte codec, over CodecRaw<unsigned long> (records 0x1690040:
+     * aabb, parent at +0x20 and children at +0x28, each an hkUlong). */
     struct CodecRawUlong {
+        typedef hkUlong Index;
+
         u8 unknown0[0x40];
     };
 
     /* The 48-byte codec (type info "!hkcdDynamicTree::CodecRawUint"; the
-     * size the cleanup callback 0x1f5f0's element size). */
+     * size the cleanup callback 0x1f5f0's element size), over
+     * hkcdDynamicTree::CodecRaw<unsigned int>, whose records (0x168ffc0)
+     * name its members: a node's box, its parent and its two children, node
+     * indices with 0 for none. A leaf has no first child and its data in
+     * the second; a free node holds the next free one's index in its first
+     * word (0x22600 links them). */
     struct CodecRawUint {
-        u8 unknown0[0x30];
+        typedef u32 Index;
+
+        hkAabb aabb;
+        u32 parent;
+        u32 children[2];
     };
 
+    /* The dynamic storage of a codec's nodes, with the members its parent
+     * hkcdDynamicTree::DynamicStorage0 records (0x16902f0 for the raw-uint
+     * codec): the nodes and the first free node. It has a constructor, so
+     * a class over it lays its members out in its tail padding (the tree's
+     * numLeaves at +0x14), and 3.3 types that base as a byte array, which
+     * the stack protector counts as a large array (0xea610's frame). */
     template <typename CODEC> struct DefaultDynamicStorage {
+        /* Empty: the nodes given back and none free (the stack trees of
+         * 0xea610 store the size before the data, the constructor's stores
+         * overwritten by the clear's). */
+        DefaultDynamicStorage()
+        {
+            clear();
+        }
+
+        /* derived name. */
+        void clear()
+        {
+            nodes.clearAndDeallocate();
+            firstFree = 0;
+        }
+
         /* The cleanup callback of its type info (0x1f650 for the raw-ulong
          * codec; the other storages with 64-byte nodes cite the same body).
          * derived name. */
@@ -4866,23 +4920,67 @@ struct hkcdDynamicTree {
          * registrations, 0x1f750 and 0x201a0, cite). derived name. */
         static void FUN_0001f5f0(void *object);
 
-        hkArray<CODEC> nodes; /* derived name */
-        u8 unknown10[8];
+        /* numNodes more nodes linked into the free list, the array grown
+         * as needed (0x22600 for the raw-uint codec): HK_FAILURE when it
+         * cannot grow. derived name. */
+        hkResult FUN_00022600(int numNodes);
+
+        /* A node by its index, the index unsigned (zero-extended where
+         * 0xea610 reaches a node; its free link is read through the
+         * array's int index). derived name. */
+        CODEC &getNode(typename CODEC::Index index)
+        {
+            return nodes.data[index];
+        }
+
+        hkArray<CODEC> nodes;
+        typename CODEC::Index firstFree;
+    };
+
+    /* hkcdDynamicTree::DynamicStorage32 (hkClass 0x57bb890: 0x18 bytes, no
+     * members of its own). */
+    struct DynamicStorage32 : public DefaultDynamicStorage<CodecRawUint> {};
+
+    /* hkcdDynamicTree::Tree over a storage (hkClass 0x57bbbb0 for
+     * DynamicStorage32: 0x20 bytes, its three members from the records at
+     * 0x1690530). */
+    template <typename STORAGE> struct Tree : public STORAGE {
+        /* An empty tree. */
+        Tree() : numLeaves(0), path(0), root(0) {}
+
+        u32 numLeaves;
+        u32 path;
+        u32 root;
     };
 
     /* hkcdDynamicTree::DefaultTree48Storage (hkClass 0x57bbb60 built at
-     * 0x20246 onward: 0x20 bytes, its parent 0x57bbbb0): the 48-byte nodes
-     * at +0 (derived name). */
-    struct DefaultTree48Storage {
+     * 0x20246 onward: 0x20 bytes, no members of its own, its parent the
+     * tree over DynamicStorage32). */
+    struct DefaultTree48Storage : public Tree<DynamicStorage32> {
         /* The class delete: back to the thread's heap at its size, no null
          * test (the dynamic AABB tree's destructor, 0x9fd57; defined in
          * tlg_lib_unknown.h). */
         static void operator delete(void *object, unsigned long numBytes);
 
-        hkArray<CodecRawUint> nodes; /* derived name */
-        u8 unknown10[0x10];
+        /* The subtree of a node rebuilt (0x9db50; the extern mesh's builder
+         * hands it the root, 1, 32 and 16). derived name. */
+        hkResult FUN_0009db50(u32 node, int argument2, int argument3, int argument4);
+
+        /* The tree's nodes copied into another storage from its root down,
+         * the root at index 1 (0xbd460). derived name. */
+        void FUN_000bd460(DefaultTree48Storage &treeOut) const;
     };
 };
+
+/* A static tree built from a dynamic tree's nodes (0xdea80; the extern
+ * mesh's builder). derived name. */
+void FUN_000dea80(hkcdStaticTree::DefaultTreeStorage6 *self,
+                  const hkcdDynamicTree::DefaultTree48Storage &tree); /* derived name */
+
+/* A simd tree built from a static tree (0xded30; the extern mesh's
+ * builder). derived name. */
+void FUN_000ded30(hkcdSimdTree *self,
+                  const hkcdStaticTree::DefaultTreeStorage6 &tree); /* derived name */
 
 /* hkcdDynamicAabbTree (hkClass 0x57bc890, built at 0x22592: size 0x18,
  * parent hkReferencedObject's; vtable 0x16a37b0, address point 0x16a37c0):
@@ -12253,19 +12351,62 @@ class hknpDefaultExternMeshShapeGeometry : public hkReferencedObject
     u8 unknown18[8];
 };
 
-/* What hknpExternMeshShapeData's buildContext points to (derived name; the
- * member is not serialized, flags 0x400): signals at +0x48, which slot 8 of
- * hknpExternMeshShape hands out. */
-class hknpExternMeshShapeBuildContext /* derived name */
+/* A 16-byte element of Object000ea540's array; its fields are not
+ * recovered. derived name. */
+struct Element000ea540 /* derived name */
+{
+    u8 unknown0[16];
+};
+
+/* A polymorphic object of 0x30 bytes (derived name; vtable 0x16a3cc0, three
+ * slots: the destructor 0xea540, the deleting destructor 0xea590, which
+ * frees 0x30 bytes on the thread's heap, and the shared empty 0xadd50). No
+ * constructor is out of line: the one construction, inline in 0xea610 at
+ * 0xeae3a as the base of the 0x58-byte Object000ea380, stores 1 at +0x10,
+ * 0 at +0x14, 0x20 at +0x18, false at +0x1c and an empty array at +0x20. */
+class Object000ea540 /* derived name */
 {
   public:
-    /* Polymorphic: the shape data's destructor deletes it through its
-     * slot 1 (0x35333). */
-    virtual ~hknpExternMeshShapeBuildContext();
+    Object000ea540() : unknown10(1), unknown14(0), unknown18(32), unknown1c(false) {}
 
-    u8 unknown8[0x40];
+    virtual ~Object000ea540();
+
+    /* Slot 2: empty here (the shared 0xadd50). derived name. */
+    virtual void unknownVirtual2();
+
+    /* The thread's heap (tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown8[8];
+    int unknown10;
+    int unknown14;
+    int unknown18;
+    bool unknown1c;
+    hkArray<Element000ea540> elements; /* derived name */
+};
+
+/* The 0x58-byte class over it (derived name; vtable 0x16a3c90, slots its
+ * destructors 0xea380 and 0xea440 and the shared empty 0xadd50): what
+ * hknpExternMeshShapeData's buildContext points to (the member is not
+ * serialized, flags 0x400), built by the extern mesh's builder 0xea610
+ * (0xeae0f) when the geometry's slot 8 asks for it, value-initialized: a
+ * SIMD tree at +0x30 and the signals at +0x48 that slot 8 of
+ * hknpExternMeshShape hands out. Its destructor is inline, emitted with the
+ * vtable in the builder's file, the base's inline in it; the shape data's
+ * destructor deletes it through slot 1 (0x35333). */
+class Object000ea380 : public Object000ea540 /* derived name */
+{
+  public:
+    inline virtual ~Object000ea380();
+
+    hkcdSimdTree tree;                /* derived name */
     hknpShapeSignals mutationSignals; /* derived name */
 };
+
+/* With the hint (3.3 inlines the body into the deleting destructor 0xea440
+ * only at the hinted threshold, its cost between 225 and 260). */
+inline Object000ea380::~Object000ea380() {}
 
 /* hknpExternMeshShapeData (hkClass 0x57be420 built at 0x35585, parent
  * hkReferencedObject, 0x60 bytes): aabbTree (struct) at +0x10, simdTree
@@ -12283,16 +12424,29 @@ class hknpExternMeshShapeData : public hkReferencedObject
         buildContext = 0;
     }
 
+    /* A new one (inline in the builder 0xea610): empty trees, no build
+     * context. */
+    hknpExternMeshShapeData() : buildContext(0) {}
+
     /* Out of line (0x35310, slot 0; the deleting destructor 0x353c0, slot
      * 1): the build context deleted, then the trees. */
     virtual ~hknpExternMeshShapeData();
 
-    /* The reference-counted class delete (freeReferencedObject). */
+    /* The thread's heap, inline (0xeab18), and the reference-counted class
+     * delete (freeReferencedObject); both in tlg_lib_unknown.h. Placement
+     * stays available beside them (the finish callback, 0x354c0). */
+    static void *operator new(unsigned long numBytes);
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     static void operator delete(void *object, unsigned long numBytes);
 
     hkcdStaticTree::DefaultTreeStorage6 aabbTree;
     hkcdSimdTree simdTree;
-    hknpExternMeshShapeBuildContext *buildContext;
+    Object000ea380 *buildContext;
 };
 
 /* hknpExternMeshShape (hkClass 0x57c2898, parent hknpCompositeShape, 0x70
@@ -12387,6 +12541,21 @@ class hknpCompressedHeightFieldShape : public hknpHeightFieldShape
 class hknpExternMeshShape : public hknpCompositeShape
 {
   public:
+    /* hknpExternMeshShape::Geometry (the name the shape's geometry record
+     * gives): the mesh the shape reads its triangles from, over
+     * hkReferencedObject; hknpDefaultExternMeshShapeGeometry fills slots 5
+     * to 7 and keeps the shared false 0x1bad0 in slot 8. derived names. */
+    class Geometry : public hkReferencedObject
+    {
+      public:
+        virtual int unknownVirtual5() const = 0; /* the number of triangles */
+        /* A triangle's three vertices. */
+        virtual void unknownVirtual6(int triangleIndex, Vec4 *verticesOut) const = 0;
+        virtual u16 unknownVirtual7(int triangleIndex) const = 0; /* its material */
+        /* Whether the shape data gets a build context (0xead68). */
+        virtual bool unknownVirtual8() const;
+    };
+
     /* The finish constructor, out of line (0x1660e0): the finish callback
      * FUN_0006c440 jumps to it, the reflection initializer calls it at
      * 0x6c506. */
@@ -12406,6 +12575,21 @@ class hknpExternMeshShape : public hknpCompositeShape
     alignas(16) void *geometry;
     hknpExternMeshShapeData *boundingVolumeData;
 };
+
+/* Whether a triangle is degenerate under a tolerance (0x185520; the extern
+ * mesh's builder and 0x152406 call it): nonzero when it is. derived name. */
+int FUN_00185520(const Vec4 &vertex0, const Vec4 &vertex1, const Vec4 &vertex2,
+                 const Vec4 &tolerance); /* derived name */
+
+/* The shape data for a geometry (0xea610): a dynamic tree of its
+ * triangles' boxes, a triangle the tolerance finds degenerate (0x185520)
+ * left out and its index added to the array when there is one; the tree
+ * rebuilt and compacted, the static tree built from it, the simd tree from
+ * that when asked or when the geometry wants a build context, which it then
+ * gets. derived name. */
+hknpExternMeshShapeData *FUN_000ea610(const hknpExternMeshShape::Geometry *geometry,
+                                      bool buildSimdTree, hkArray<int> *degenerateTriangles,
+                                      float tolerance); /* derived name */
 
 /* What hknpCompoundShape's constructor from a description (0x412a0, the
  * static compound shape's at 0x38466 runs it) is built from: 0x28 bytes,

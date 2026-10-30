@@ -3282,6 +3282,11 @@ inline void Object0019a7c0::operator delete(void *object, unsigned long numBytes
     freeReferencedObject(object, numBytes);
 }
 
+inline void *hknpExternMeshShapeData::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void hknpExternMeshShapeData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -3694,36 +3699,10 @@ inline void hknpCharacterProxyCinfo::operator delete(void *object, unsigned long
     freeReferencedObject(object, numBytes);
 }
 
-/* A 16-byte element of Object000ea540's array; its fields are not
- * recovered. derived name. */
-struct Element000ea540 /* derived name */
+inline void *Object000ea540::operator new(unsigned long numBytes)
 {
-    u8 unknown0[16];
-};
-
-/* A polymorphic object of 0x30 bytes (derived name; vtable 0x16a3cc0, three
- * slots: the destructor 0xea540, the deleting destructor 0xea590, which
- * frees 0x30 bytes on the thread's heap, and the shared empty 0xadd50). No
- * constructor is out of line: the one construction, inline in 0xea610 at
- * 0xeae3a as the base of the 0x58-byte Object000ea380, stores 1 at +0x10,
- * 0 at +0x14, 0x20 at +0x18, false at +0x1c and an empty array at +0x20. */
-class Object000ea540 /* derived name */
-{
-  public:
-    virtual ~Object000ea540();
-
-    /* Slot 2: empty here (the shared 0xadd50). derived name. */
-    virtual void unknownVirtual2();
-
-    static void operator delete(void *object, unsigned long numBytes);
-
-    u8 unknown8[8];
-    int unknown10;
-    int unknown14;
-    int unknown18;
-    bool unknown1c;
-    hkArray<Element000ea540> elements; /* derived name */
-};
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
 
 inline void Object000ea540::operator delete(void *object, unsigned long numBytes)
 {
@@ -3731,20 +3710,6 @@ inline void Object000ea540::operator delete(void *object, unsigned long numBytes
         D_16dc070->temp58->blockFree(object, int(numBytes));
     }
 }
-
-/* The 0x58-byte class over it (derived name; vtable 0x16a3c90, slots its
- * destructors 0xea380 and 0xea440 and the shared empty 0xadd50), built
- * inline in 0xea610 (0xeae0f): a SIMD tree at +0x30 and two signals. Its
- * destructors are in the base class's file, the base's inline in them. */
-class Object000ea380 : public Object000ea540 /* derived name */
-{
-  public:
-    virtual ~Object000ea380();
-
-    hkcdSimdTree tree;       /* derived name */
-    Signal00093530 signal48; /* derived name */
-    Signal00093530 signal50; /* derived name */
-};
 
 /* Three allocators that hold nothing of their own and hand every request to
  * one of the calling thread's router allocators (vtables 0x168d430,
