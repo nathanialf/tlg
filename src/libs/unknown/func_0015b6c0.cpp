@@ -3,8 +3,9 @@
 
 hknpPrepareNewPairsTask::hknpPrepareNewPairsTask(void *argument1, void *argument2, void *argument3,
                                                  void *argument4, void *argument5)
-    : unknown18(argument1), unknown20(argument2), unknown28(argument3), unknown440(argument4),
-      unknown448(0), unknown45c(0), unknown460(0)
+    : unknown18(argument1), contextPool(static_cast<hknpWorldContextPool *>(argument2)),
+      stream28(static_cast<const hkBlockStream *>(argument3)), unknown440(argument4), status(0),
+      unknown45c(0), unknown460(0)
 {
     unknown468[1] = argument5;
 }

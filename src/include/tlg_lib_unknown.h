@@ -560,10 +560,44 @@ struct WorldReference0016e040 /* derived name */
     const hknpWorld *world;
 };
 
+/* The physics' commands (derived names): their kind at +4, which the
+ * world's command printer switches on (0x171040). */
+struct hknpCommand /* derived name */
+{
+    u8 unknown0[4];
+    u16 secondaryType; /* derived name */
+    u8 unknown6[2];
+};
+
+/* The commands the printer writes by name (the names its strings give,
+ * facts; the field names derived from the labels it prints). */
+struct CellIndexModifiedCommand : public hknpCommand {
+    u32 id;
+    u32 motionIndex;
+    u8 oldCellIndex;
+    u8 newCellIndex;
+};
+
+struct hknpAtomSolverForceClippedCommand : public hknpCommand {
+    u8 unknown8[4];
+    float factor;
+};
+
+struct hknpValidateTriggerEventCommand : public hknpCommand {
+    u8 unknown8[4];
+    u32 id0;
+    u8 unknown10[4];
+    u32 id1;
+};
+
+struct hknpAddContactConstraintRangeCommand : public hknpCommand {
+    u32 idA;
+};
+
 /* hknpMotionWeldTOICommand (the name its print, 0x170f20, writes: a fact):
  * the bodies' ids at +0xc and +0x14, which the print writes, and the pair's
  * jacobian record at +0x18. Field names derived. */
-struct hknpMotionWeldTOICommand {
+struct hknpMotionWeldTOICommand : public hknpCommand {
     /* The record's output computed from the motions of its two bodies
      * (0x3d7d0; the print 0x170f20 writes its normal and positions).
      * derived name. */
@@ -573,11 +607,24 @@ struct hknpMotionWeldTOICommand {
      * four positions. derived name. */
     void FUN_00170f20(const hknpWorld *world, hkOstream &out) const;
 
-    u8 unknown0[0xc];
+    u8 unknown8[4];
     u32 bodyIdA; /* derived name */
     u8 unknown10[4];
     u32 bodyIdB;         /* derived name */
     Pair08Owner *record; /* derived name */
+};
+
+/* The world's command printer (derived name; vtable 0x16a5820, built by
+ * the world's constructor 0x48b20, slot 5 0x170940): the world at +0x10. */
+class CommandPrinter00171040 : public hkReferencedObject /* derived name */
+{
+  public:
+    /* Slot 6 (0x171040): a command of the physics' own kinds written to a
+     * stream, by its kind; the weld command through its own print. derived
+     * name. */
+    void FUN_00171040(const hknpCommand &command, hkOstream &out) const;
+
+    const hknpWorld *world; /* derived name */
 };
 
 /* The cell index of the motion of the record's first and second body (the

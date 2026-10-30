@@ -20,3 +20,37 @@ void *BlockListAllocator::blockAlloc(int numBytes)
     lock.leave();
     return payload;
 }
+
+// NONMATCHING: 43 of 95, same size: the base loads the list's link in the
+// loop's header on the first pass too (`lea rdx, [rbp-0x30]`, then `mov rdx,
+// [rcx]` from the copy of the head on the stack), where GVN's load PRE here
+// forwards the stored head into the preheader and keeps the load in the
+// latch; the registers of this and the block follow (docs/NOTES.md, Round
+// 65A).
+/* Slot 3 (0x8f330): under the lock, the block found on the list from a
+ * copy of its head and unlinked, the counts lowered and the block given
+ * back to the parent at the size it drew; a pointer not on the list is
+ * left alone. */
+void BlockListAllocator::blockFree(void *pointer, int numBytes)
+{
+    if (!pointer) {
+        return;
+    }
+    lock.enter();
+    Block *block = static_cast<Block *>(pointer) - 1;
+    const int size = (numBytes + int(sizeof(Block)) + 15) & ~15;
+    Block *head = blocks;
+    Block **link = &head;
+    while (Block *cur = *link) {
+        if (cur == block) {
+            *link = block->next;
+            blocks = head;
+            statistics.allocated -= size;
+            statistics.inUse -= numBytes;
+            parent->blockFree(block, block->size);
+            break;
+        }
+        link = &cur->next;
+    }
+    lock.leave();
+}

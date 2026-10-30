@@ -128,6 +128,14 @@ struct WorkItem00017280 /* derived name */
 
 struct TaskNode000172c0;
 
+/* A node and one that is to wait on it (derived names): slot 8 (0x173f0)
+ * links an array of them. */
+struct TaskPair000173f0 /* derived name */
+{
+    TaskNode000172c0 *node;
+    TaskNode000172c0 *successor;
+};
+
 /* An interface of ten slots, the second base (at +0x10, vtable address point
  * 0x168e888) of Class168e810, which overrides slots 2 to 9 in its primary
  * slots 5 to 12. */
@@ -142,8 +150,9 @@ class Interface168e888 /* derived name */
     virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
                               u16 value) = 0; /* slot 3; derived name */
     virtual void FUN_000172c0(TaskNode000172c0 *node,
-                              TaskNode000172c0 *successor) = 0;  /* slot 4; derived name */
-    virtual void FUN_000173f0(void *pointer, int count) = 0;     /* slot 5; derived name */
+                              TaskNode000172c0 *successor) = 0; /* slot 4; derived name */
+    virtual void FUN_000173f0(const TaskPair000173f0 *pairs,
+                              int numPairs) = 0;                 /* slot 5; derived name */
     virtual void FUN_00017540(void *pointer, int count) = 0;     /* slot 6; derived name */
     virtual void FUN_00017930(const Handle00016350 *handle) = 0; /* slot 7; derived name */
     virtual void FUN_00017970(const Handle00016350 *const *handles,
@@ -205,7 +214,9 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
      * unless that one is done, its count raised (0x173f0 links pairs of
      * them). derived names. */
     virtual void FUN_000172c0(TaskNode000172c0 *node, TaskNode000172c0 *successor);
-    virtual void FUN_000173f0(void *pointer, int count);     /* vtable slot 8; derived name */
+    /* Slot 8 (0x173f0), under the lock: slot 7's link for each pair.
+     * derived names. */
+    virtual void FUN_000173f0(const TaskPair000173f0 *pairs, int numPairs);
     virtual void FUN_00017540(void *pointer, int count);     /* vtable slot 9; derived name */
     virtual void FUN_00017930(const Handle00016350 *handle); /* vtable slot 10; derived name */
     /* Slot 11 (0x17970): the handles that name something gathered into a
@@ -627,12 +638,23 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
      * when the -0x10 GEP ends in an array index (with a pointer field at
      * +0x470 it ends there and every member is addressed from the
      * adjusted pointer: `add rbx, -0x10`). */
-    void *unknown18;                    /* derived name */
-    void *unknown20;                    /* derived name */
-    void *unknown28;                    /* derived name */
-    hkInplaceArray<int, 256> unknown30; /* derived name */
-    void *unknown440;                   /* derived name */
-    void *unknown448;                   /* derived name */
+    /* The pairs given to the world's object at +0x4f8 when the world has it
+     * (0x15b7a0), else the pairs prepared (0x15b8e0). derived name. */
+    void FUN_0015b8e0(hknpWorldContextPool::Context *context);
+
+    void *unknown18;                   /* derived name */
+    hknpWorldContextPool *contextPool; /* derived name: slot 5 takes a context from it */
+    const hkBlockStream *stream28;     /* derived name: read from its start by slot 5 */
+    hkInplaceArray<int, 256> ids;      /* derived name: filled by 0x63ec0 */
+    void *unknown440;                  /* derived name */
+
+    /* A byte at +0x132 slot 5 sets when the world's object found one of the
+     * ids (derived name). */
+    struct Status0015b7a0 {
+        u8 unknown0[0x132];
+        bool found; /* derived name */
+    } *status;
+
     u8 unknown450[0xc];
     int unknown45c;   /* derived name */
     void *unknown460; /* derived name */
@@ -769,12 +791,34 @@ struct SolverStageConfig0018ef40 /* derived name */
     int numSubStages; /* derived name */
 };
 
+/* A stage list of the solver (derived names): records of a stride at +0
+ * from +0x18, each with a count at +0xc that the stage task's name prints
+ * (0x18f1a6). */
+struct SolverStageList0018f140 /* derived name */
+{
+    struct Record {
+        u8 unknown0[0xc];
+        int count;
+    };
+
+    const Record &get(int i) const
+    {
+        return *reinterpret_cast<const Record *>(records + i * stride);
+    }
+
+    int stride;
+    u8 unknown4[0x14];
+    const char *records;
+};
+
 struct SolverStages0018ef40 /* derived name */
 {
     u8 unknown0[0x10];
     hknpWorldContextPool *contextPool; /* derived name */
     u8 unknown18[0x10];
     SolverStageConfig0018ef40 *config; /* derived name */
+    u8 unknown30[0x40];
+    SolverStageList0018f140 *lists[3]; /* derived name: by a stage's first index */
 };
 
 /* A stage's description (derived names): its type first (1 and 0 name the
@@ -794,6 +838,12 @@ struct SolverStageInfo0018ef40 /* derived name */
 class hknpSolverStageTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
   public:
+    /* slot 5 (0x18ef40; the interface's slot 2 through a thunk) */
+    virtual void process();
+    /* slot 6 (0x18f140; the interface's slot 3 through the thunk 0x18f280,
+     * emitted with it) */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
     SolverStages0018ef40 *stages; /* derived name */
     SolverStageInfo0018ef40 info; /* derived name */
     /* The stage and sub-stage the next run takes, cleared by the builder
@@ -862,7 +912,6 @@ void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; de
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
 void FUN_00154f50(hknpPrepareConstraintsTask *self);        /* vtable slot 5; derived name */
 void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
-void FUN_0015b7a0(hknpPrepareNewPairsTask *self);           /* vtable slot 5; derived name */
 void FUN_0015dc60(hknpCollidePairsTask *self);              /* vtable slot 1; derived name */
 void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
 void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
@@ -873,7 +922,5 @@ void FUN_0016e9f0(hknpSolveDataTask *self); /* vtable slot 1 (0x16a5680); derive
 void FUN_0016ea40(hknpTaskInterface *self);
 void FUN_001798c0(hknpPrepareExistingPairsTask *self); /* vtable slot 5; derived name */
 void FUN_0018ef40(hknpSolverStageTask *self);          /* vtable slot 5; derived name */
-void FUN_0018f140(hknpSolverStageTask *self, hkStringBuf *name,
-                  hkStringBuf *description); /* vtable slot 6; derived name */
 
 #endif

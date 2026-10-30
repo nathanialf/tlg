@@ -8471,6 +8471,8 @@ class hknpWorldObject388 : public hkReferencedObject /* derived name */
                       void *argument3);
 };
 
+struct hkBlockStreamReader; /* below */
+
 struct hknpWorldObject4f8 /* derived name */
 {
     void FUN_00062b20(int bodyId, bool flag); /* derived name */
@@ -8489,6 +8491,9 @@ struct hknpWorldObject4f8 /* derived name */
      * pointers of the array at +0x58 (0x640b0; the prepare-new-pairs task
      * asks it over its ids at 0x15b84f). derived name. */
     bool FUN_000640b0(const hkArray<int> &ids) const;
+    /* The ids a reader's stream names gathered (0x63ec0; the prepare-new-
+     * pairs task at 0x15b844). derived name. */
+    void FUN_00063ec0(hkBlockStreamReader &reader, hkArray<int> &ids);
 
     /* A body's byte at +0x7f and its id, recorded at +0x38. derived names. */
     struct BodyRecord {
@@ -16068,11 +16073,28 @@ struct hknpCharacterProxyContact /* derived name */
     u8 unknown0[0x30];
 };
 
+/* What the proxy's support check fills (derived names; vtable slot 6 of the
+ * proxy, 0x1781b0): whether it is supported at +1. */
+struct hknpCharacterSurfaceInfo /* derived name */
+{
+    u8 unknown0;
+    u8 supportedState; /* derived name */
+};
+
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
 {
   public:
     virtual void FUN_00176cc0(hknpCharacterProxySignalSource *source,
                               hknpCharacterProxySignalData *data); /* vtable slot 5; derived name */
+
+    /* Slot 6 (0x1781b0, timed as "checkSupport"): slot 7 gathers the
+     * supporting contacts in a direction into an array of up to 20 at
+     * first, its answer kept in the surface info; when supported, slot 8
+     * builds the surface from them. derived names. */
+    virtual void FUN_001781b0(const Vec4 &direction, hknpCharacterSurfaceInfo &surface);
+    virtual bool FUN_00177660(const Vec4 &direction, hkArray<int> &supports); /* slot 7 */
+    virtual void FUN_00177e00(const hkArray<int> &supports, hknpCharacterSurfaceInfo &surface,
+                              const Vec4 &direction); /* slot 8 */
 
     void FUN_00176b10(hknpCharacterProxySignalSource *source,
                       hknpCharacterProxySignalData *data); /* derived name */
@@ -16761,7 +16783,9 @@ struct hknpWorldContextPool /* derived name */
         void FUN_00167ff0(BlockCache *cacheA, BlockCache *cacheB);
 
         int index;
-        u8 unknown4[0x34];
+        u8 unknown4[4];
+        hknpWorld *world; /* derived name: the prepare-new-pairs task reads it (0x15b814) */
+        u8 unknown10[0x28];
         /* The world's modifier manager (the composite detectors' child
          * dispatch reads it, 0x1557be). derived name. */
         hknpModifierManager *modifierManager;

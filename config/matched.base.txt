@@ -358,7 +358,8 @@ FUN_000133d0 src/libs/unknown/func_000133d0.cpp
 FUN_00014c40 src/libs/unknown/func_00014c40.cpp _ZNK18FixedSizeAllocator12FUN_00014c40ER16MemoryStatistics
 FUN_000170c0 src/libs/unknown/func_00016ee0.cpp _ZThn16_N12Class168e810D1Ev
 FUN_000173e0 src/libs/unknown/func_000172c0.cpp _ZThn16_N12Class168e81012FUN_000172c0EP16TaskNode000172c0S1_
-FUN_00017530 src/libs/unknown/func_00017530.cpp
+FUN_00017530 src/libs/unknown/func_000173f0.cpp _ZThn16_N12Class168e81012FUN_000173f0EPK16TaskPair000173f0i
+FUN_000173f0 src/libs/unknown/func_000173f0.cpp
 FUN_00017910 src/libs/unknown/func_00017910.cpp
 FUN_00017a50 src/libs/unknown/func_00017970.cpp _ZThn16_N12Class168e81012FUN_00017970EPKPK14Handle00016350i
 FUN_00017240 src/libs/unknown/func_00017240.cpp _ZN12Class168e81012FUN_00017240EPvi
@@ -417,7 +418,8 @@ FUN_00150230 src/libs/unknown/func_00150230.cpp
 FUN_001550b0 src/libs/unknown/func_001550b0.cpp
 FUN_00155420 src/libs/unknown/func_00155420.cpp
 FUN_00156870 src/libs/unknown/func_00156870.cpp
-FUN_0015bf10 src/libs/unknown/func_0015bf10.cpp
+FUN_0015bf10 src/libs/unknown/func_0015b7a0.cpp _ZThn16_N23hknpPrepareNewPairsTask7processEv
+FUN_0015b7a0 src/libs/unknown/func_0015b7a0.cpp _ZN23hknpPrepareNewPairsTask7processEv
 FUN_0015dcb0 src/libs/unknown/func_0015dcb0.cpp
 FUN_0015fa40 src/libs/unknown/func_0015fa40.cpp
 FUN_00165880 src/libs/unknown/leaf_00165880.cpp _ZNK19hknpVehicleInstance12FUN_00165880Ev
@@ -430,7 +432,7 @@ FUN_0017d550 src/libs/unknown/func_0017d550.cpp _ZN25hkAlignSceneToNodeOptions12
 FUN_0017f310 src/libs/unknown/func_0017f310.cpp _ZNK22hkMemoryResourceHandle12FUN_0017f310Ev
 FUN_0017f320 src/libs/unknown/func_0017f320.cpp _ZN22hkMemoryResourceHandle12FUN_0017f320EP18hkReferencedObject
 FUN_0018f130 src/libs/unknown/func_0018f130.cpp
-FUN_0018f280 src/libs/unknown/func_0018f280.cpp
+FUN_0018f280 src/libs/unknown/func_0018f140.cpp _ZThn16_NK19hknpSolverStageTask7getNameEP11hkStringBufS1_
 FUN_0019ab00 src/libs/unknown/leaf_0019ab00.cpp _ZNK22hkPlatformObjectWriter12FUN_0019ab00Ev
 FUN_00006640 src/libs/unknown/leaf_00006640.cpp
 FUN_000076c0 src/libs/unknown/func_000076c0.cpp
@@ -2436,3 +2438,7 @@ _ZN12ThreadMemory10blockAllocEi src/libs/unknown/func_00014690.cpp
 _ZN22hkFreeListMemorySystemD1Ev src/libs/unknown/func_0000c360.cpp
 _ZN12Class168e810D1Ev src/libs/unknown/func_00016ee0.cpp
 FUN_001a0620 src/libs/unknown/func_001a0620.cpp
+FUN_00061060 src/libs/unknown/func_00061060.cpp
+FUN_001781b0 src/libs/unknown/func_001781b0.cpp
+FUN_00171040 src/libs/unknown/func_00171040.cpp
+FUN_000199f0 src/libs/unknown/func_000199f0.cpp
