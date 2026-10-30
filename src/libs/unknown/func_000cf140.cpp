@@ -18,20 +18,22 @@ void FUN_000cd5f0(void *argument1, hknpWorld *world, const u32 *motionIds, int n
  * at 0x6db5c): both arrays sized to the motions rounded up to four, the
  * first motion's (the static one's) and the padding's zero, the others'
  * built by 0xcd5f0. derived name. */
-// NONMATCHING: same size, every instruction the base's, in its order but
-// the entry's: the base reads the motions' count (`movsxd r12, [rdx + 8]`)
-// before the velocities' capacity and spills the ids' array from rdx, this
-// compile reads the capacity first through a copy in rax (docs/NOTES.md,
-// Round 64A).
+// NONMATCHING: 84 of 86, same size: the padding loop's two pointer
+// induction variables, whose preheader adds the base orders velocity first
+// and whose latch increments it orders sums first; LSR builds both in one
+// order (phi order), which the scheduler follows in both blocks: here sums
+// first in the preheader (this form) or velocity first in the latch (the
+// loop over two pointers set before it). The padding counts computed before
+// the arrays are sized give the entry's order (docs/NOTES.md, Round 65A).
 void FUN_000cf140(void *argument1, hknpWorld *world, const hkArray<u32> *motionIds,
                   hkArray<SolverVelocity000cf140> &velocities,
                   hkArray<SolverVelocity000cf140> &sums)
 {
     const int numMotions = motionIds->getSize();
     const int numPadded = (numMotions + 3) & ~3;
-    velocities.setSize(numPadded);
     const int numPadding = numPadded - numMotions;
     const int numOthers = numMotions - 1;
+    velocities.setSize(numPadded);
     sums.setSize(numPadded);
     SolverVelocity000cf140 *velocity = velocities.data;
     SolverVelocity000cf140 *sum = sums.data;

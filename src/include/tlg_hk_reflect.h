@@ -510,11 +510,19 @@ template <typename T> struct hkArray {
      * 0xae780). */
     void append(const T *elements, int numElements);
 
-    /* Another array's elements copied over, as Havok's _copyFromArray
-     * does: the storage grown as reserve grows it, the elements both hold
-     * assigned, the rest copy-constructed, then the size (defined in
-     * tlg_lib_unknown.h; the loaded image's slot 5, 0x1a0620). */
+    /* Another array's elements copied over through the helper below, from
+     * the heap allocator (defined in tlg_lib_unknown.h; the loaded image's
+     * slot 5, 0x1a0620). */
     inline hkArray &operator=(const hkArray &other);
+
+    /* The copy itself, a level of its own as Havok's _copyFromArray is: the
+     * storage grown as reserve grows it, the elements both hold assigned,
+     * the rest copy-constructed, then the size (defined in
+     * tlg_lib_unknown.h). Each inlining level reruns IndVars' exit rewrite on
+     * the copy loop, whose minimum's operands come out in the other order at
+     * each level: 0x1a0620's count is expanded new-first, the order of four
+     * levels (cookbook 340). */
+    inline void _copyFromArray(AllocatorBase &allocator, const hkArray &other); /* derived name */
 
     /* Room for one more element at the end, grown as pushBack grows: the
      * new element returned (defined in tlg_lib_unknown.h; the solver's

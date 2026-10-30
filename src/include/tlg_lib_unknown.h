@@ -812,16 +812,22 @@ template <typename T> inline void hkArray<T>::append(const T *elements, int numE
 
 template <typename T> inline hkArray<T> &hkArray<T>::operator=(const hkArray &other)
 {
+    _copyFromArray(hkContainerHeapAllocator::get(), other);
+    return *this;
+}
+
+template <typename T>
+inline void hkArray<T>::_copyFromArray(AllocatorBase &allocator, const hkArray &other)
+{
     const int oldSize = size;
     const int newSize = other.size;
     const int numAssigned = newSize > oldSize ? oldSize : newSize;
-    reserve(hkContainerHeapAllocator::get(), newSize);
+    reserve(allocator, newSize);
     destructElements(data + newSize, oldSize - newSize);
     hkArrayUtil::copy(data, other.data, numAssigned);
     hkArrayUtil::constructWithArray(data + numAssigned, newSize - numAssigned,
                                     other.data + numAssigned);
     size = newSize;
-    return *this;
 }
 
 /* The array's grow by one more element at least, through an allocator, for
