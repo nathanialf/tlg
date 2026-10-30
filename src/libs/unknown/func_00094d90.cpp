@@ -13,7 +13,7 @@ void hkBlockStream::FUN_00094d90(BlockCache *cache, const hkBlockStreamReader *r
 
 /* derived name: a block is freed out of the stream while it is read: its
  * slot is cleared, the stream marked, and the block given to the cache. */
-void hkBlockStream::FUN_00094df0(BlockCache *cache, void *block, int index)
+void hkBlockStream::FUN_00094df0(BlockCache *cache, hkBlockStreamBlock *block, int index)
 {
     blocks.data[index] = 0;
     partiallyFreed = true;

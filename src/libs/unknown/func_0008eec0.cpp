@@ -3,7 +3,7 @@
 
 /* derived name: a block from the cache; when the cache is empty, six are
  * fetched from the allocator first and the last of them handed out. */
-void *BlockCache::FUN_0008eec0()
+hkBlockStreamBlock *BlockCache::FUN_0008eec0()
 {
     if (numBlocks > 0) {
         numBlocks--;

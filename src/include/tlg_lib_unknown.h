@@ -1127,13 +1127,30 @@ class hknpGlobals : public hkReferencedObject
      * slot 1). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    u8 unknown10[0xe0];
+    /* The triangle shape the constructor builds in place (0x78270), the
+     * prototype each in-place triangle copies (0x78160). derived name. */
+    Vec4 triangleShapeStorage[14];
     /* 49 unit directions, the 7 by 7 grid the constructor maps through
      * 0xc05b0 (16-byte elements, grown by 0xb40). derived name. */
     hkArray<hkVector4> directions;
 };
 
 extern hknpGlobals *D_57c8818; /* hknpGlobals's singleton instance */
+
+/* A triangle shape built in a buffer of its own (derived names): the
+ * globals' prototype copied in, its convex radius set (0x78160, out of
+ * line; the callers from 0x6ec63 build one on their stacks). */
+struct InplaceTriangleShape00078160 /* derived name */
+{
+    InplaceTriangleShape00078160(float convexRadius);
+
+    hknpTriangleShape *getTriangleShape()
+    {
+        return reinterpret_cast<hknpTriangleShape *>(buffer);
+    }
+
+    Vec4 buffer[14];
+};
 
 /* Its create function, the singleton record's (0x175f30). derived name. */
 hkReferencedObject *FUN_00175f30(); /* derived name */

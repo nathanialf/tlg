@@ -3,7 +3,7 @@
 
 /* derived name: a block taken back into the cache; when the cache is full,
  * six of its blocks go back to the allocator. */
-void BlockCache::FUN_0008ef10(void *block)
+void BlockCache::FUN_0008ef10(hkBlockStreamBlock *block)
 {
     blocks[numBlocks] = block;
     numBlocks++;

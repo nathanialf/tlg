@@ -1209,7 +1209,7 @@ _ZN14hkxTextureFileC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000878f0.
 _ZN7hkxNodeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008b4b0.cpp
 FUN_000aa570 src/libs/unknown/func_000aa570.cpp _Z12FUN_000aa570N13hkMeshSection13PrimitiveTypeEi
 FUN_00009c50 src/libs/unknown/func_00009c50.cpp _GLOBAL__I_a
-FUN_0008ef10 src/libs/unknown/func_0008ef10.cpp _ZN10BlockCache12FUN_0008ef10EPv
+FUN_0008ef10 src/libs/unknown/func_0008ef10.cpp _ZN10BlockCache12FUN_0008ef10EP18hkBlockStreamBlock
 FUN_0015dcc0 src/libs/unknown/func_0015dcc0.cpp _Z12FUN_0015dcc0P17hknpTaskInterface
 FUN_00185460 src/libs/unknown/func_00185460.cpp _Z12FUN_00185460P8hkAabb16PKS_i
 _ZN12hkUuidObjectD0Ev src/libs/unknown/func_0000d990.cpp
@@ -2165,3 +2165,5 @@ FUN_00038260 src/libs/unknown/func_00038260.cpp
 _ZN17hknpTyremarksInfoD1Ev src/libs/unknown/func_00069150.cpp
 _ZN17hknpTyremarksInfoD0Ev src/libs/unknown/func_00069150.cpp
 FUN_0016fbe0 src/libs/unknown/func_0016fbe0.cpp _Z12FUN_0016fbe0PvP20CommandOwner00171180RKjPK16hkpSolverResults
+FUN_0008efa0 src/libs/unknown/func_0008efa0.cpp _ZN10BlockCache12FUN_0008efa0EPP18hkBlockStreamBlocki
+FUN_00078160 src/libs/unknown/func_00078160.cpp _ZN28InplaceTriangleShape00078160C1Ef

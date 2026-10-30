@@ -14294,8 +14294,10 @@ class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
 class BlockStreamAllocator : public hkReferencedObject /* derived name */
 {
   public:
-    virtual void blockAllocBatch(void **blocksOut, int numBlocks) = 0; /* slot 5; derived name */
-    virtual void blockFreeBatch(void **blocks, int numBlocks) = 0;     /* slot 6; derived name */
+    virtual void blockAllocBatch(hkBlockStreamBlock **blocksOut,
+                                 int numBlocks) = 0; /* slot 5; derived name */
+    virtual void blockFreeBatch(hkBlockStreamBlock **blocks,
+                                int numBlocks) = 0; /* slot 6; derived name */
 };
 
 /* A thread's cache of free blocks (derived names): the allocator it
@@ -14307,16 +14309,16 @@ class BlockStreamAllocator : public hkReferencedObject /* derived name */
 
 struct BlockCache /* derived name */
 {
-    void *FUN_0008eec0();           /* derived name */
-    void FUN_0008ef10(void *block); /* derived name */
-    void FUN_0008ef60();            /* derived name */
+    hkBlockStreamBlock *FUN_0008eec0();           /* derived name */
+    void FUN_0008ef10(hkBlockStreamBlock *block); /* derived name */
+    void FUN_0008ef60();                          /* derived name */
     /* A batch of blocks taken back (0x8efa0): six or more go straight to
      * the allocator, fewer join the cache, which hands six to the allocator
      * first when they would overfill it. derived name. */
-    void FUN_0008efa0(hkBlockStreamBlock *const *blocks, int numBlocks);
+    void FUN_0008efa0(hkBlockStreamBlock **blocks, int numBlocks);
 
     BlockStreamAllocator *allocator; /* derived name */
-    void *blocks[8];                 /* derived name */
+    hkBlockStreamBlock *blocks[8];   /* derived name */
     int numBlocks;                   /* derived name */
 };
 
@@ -14411,7 +14413,7 @@ struct hkBlockStream /* derived name */
      * elements counted again, and a block from the cache when none is
      * left. derived name. */
     void FUN_00094c60(BlockCache *cache);
-    void FUN_00094df0(BlockCache *cache, void *block, int index); /* derived name */
+    void FUN_00094df0(BlockCache *cache, hkBlockStreamBlock *block, int index); /* derived name */
     /* The last block given back to the cache and dropped, the block before
      * it returned as the new last (0x95030; the writer's finalize 0x93a10
      * drops an empty last block of a stream of two or more). derived

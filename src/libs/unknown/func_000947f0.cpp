@@ -3,7 +3,7 @@
 
 hkBlockStreamBlock *hkBlockStream::FUN_000947f0(BlockCache *cache)
 {
-    hkBlockStreamBlock *block = static_cast<hkBlockStreamBlock *>(cache->FUN_0008eec0());
+    hkBlockStreamBlock *block = cache->FUN_0008eec0();
     if (zeroNewBlocks) {
         hkString::FUN_00018250(block, sizeof(hkBlockStreamBlock));
     } else {
@@ -27,7 +27,7 @@ void hkBlockStream::FUN_00094750(BlockCache *cache, hkBool zero)
     partiallyFreed = false;
     zeroNewBlocks = zero;
 
-    hkBlockStreamBlock *block = static_cast<hkBlockStreamBlock *>(cache->FUN_0008eec0());
+    hkBlockStreamBlock *block = cache->FUN_0008eec0();
     if (zeroNewBlocks) {
         hkString::FUN_00018250(block, sizeof(hkBlockStreamBlock));
     } else {
