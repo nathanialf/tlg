@@ -312,6 +312,16 @@ template <typename T> inline void construct(T *t)
 {
     construct(t, typename hkTrait::PodSelect<hkTrait::IsPodType<T>::result>::type());
 }
+
+/* n elements default-constructed in place, as an array that grows by its
+ * size constructs the ones it gains (the body manager's entries, 0x160fb0,
+ * where the constructor's two stores are one). derived name. */
+template <typename T> inline void construct(T *t, int n)
+{
+    for (int i = 0; i < n; i++) {
+        construct(t + i);
+    }
+}
 } // namespace hkArrayUtil
 
 /* A body's id (derived name): a 32-bit handle passed by value, 0x7fffffff
@@ -452,6 +462,10 @@ template <typename T> struct hkArray {
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
     void pushBack(const T &element);
 
+    /* The same, the storage grown from the allocator given (defined in
+     * tlg_lib_unknown.h; a local frame's descendants, 0xdd83). */
+    void pushBack(AllocatorBase &allocator, const T &element);
+
     /* The element at an index destroyed and the last one moved into its
      * place as raw words, without its copy constructor (hkMemoryResource
      * Handle's link removal 0x17f3e0: two 8-byte moves). derived name. */
@@ -487,7 +501,9 @@ template <typename T> struct hkArray {
     void reserve(AllocatorBase &allocator, int n);
 
     /* n elements, the storage grown from the containers' allocator when it
-     * is too small (defined in tlg_lib_unknown.h). */
+     * is too small and the elements it gains default-constructed, nothing
+     * for plain old data or a trivial constructor (defined in
+     * tlg_lib_unknown.h). */
     void setSize(int n);
 
     /* n elements, the storage grown from the allocator given (defined in
@@ -2034,7 +2050,36 @@ class hkStringObject : public hkReferencedObject
     hkStringPtr string;
 };
 
-struct hkLocalFrame;
+class hkLocalFrameGroup;
+
+/* hkLocalFrame (hkClass 0x57b7698, built at 0x38aa: size 0x10, parent
+ * hkReferencedObject's 0x57b8640, no members): a frame of a tree of named
+ * frames. Its vtable slots 5 to 16 are the frames' interface; the one
+ * implementation the executable holds is hkSimpleLocalFrame's (address
+ * point 0x168d8f0), whose bodies are named there. No vtable of this class
+ * is in the executable. */
+class hkLocalFrame : public hkReferencedObject
+{
+  public:
+    hkLocalFrame(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    virtual void unknownVirtual5();  /* vtable slot 5 */
+    virtual void unknownVirtual6();  /* vtable slot 6 */
+    virtual void unknownVirtual7();  /* vtable slot 7 */
+    virtual void unknownVirtual8();  /* vtable slot 8 */
+    virtual void unknownVirtual9();  /* vtable slot 9 */
+    virtual void unknownVirtual10(); /* vtable slot 10 */
+    virtual void unknownVirtual11(); /* vtable slot 11 */
+    /* Slots 12 and 13: the number of child frames and a child by index
+     * (hkSimpleLocalFrame's 0xe160 and 0xe170). derived names. */
+    virtual int numChildFrames() const;
+    virtual hkLocalFrame *childFrame(int index) const;
+    virtual void unknownVirtual14(); /* vtable slot 14 */
+    virtual void unknownVirtual15(); /* vtable slot 15 */
+    /* Slot 16 (0xdd20): every frame below this one appended, each child
+     * before its own children. derived name. */
+    virtual void FUN_0000dd20(hkArray<hkLocalFrame *> &descendants, AllocatorBase &allocator) const;
+};
 
 /* hkLocalFrameGroup (hkClass 0x57b76f0, built at 0x3914: size 0x18, parent
  * hkReferencedObject's 0x57b8640, one member record at 0x168c7a0): name
@@ -2053,11 +2098,11 @@ class hkLocalFrameGroup : public hkReferencedObject
     hkStringPtr name;
 };
 
-class hkSimpleLocalFrame : public hkReferencedObject
+class hkSimpleLocalFrame : public hkLocalFrame
 {
   public:
     hkSimpleLocalFrame(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag), children(flag), name(flag)
+        : hkLocalFrame(flag), children(flag), name(flag)
     {
     }
 
@@ -5639,7 +5684,10 @@ struct hknpManifoldCollisionCache /* derived name */
     u8 propertyBufferOffset; /* derived name */
     u8 propertyKeysUsed;     /* derived name */
     u32 propertyOffsets;     /* derived name */
-    u8 unknown1c[8];
+    u8 unknown1c[6];
+    /* Flags; bits 0 and 2 together ask the modifier slot 0x161f10 for its
+     * event. derived name. */
+    u16 flags22;
     /* The modifier bits the cache asks for (the collision detector's slot
      * 3, 0x72d5a, tests each modifier's mask against it). derived name. */
     u32 enabledModifiers;
@@ -5939,6 +5987,11 @@ struct hknpBodyManager /* derived name */
 
     void FUN_001612a0() const; /* derived name */
 
+    /* derived name: each active body's box copied into its previous box,
+     * the body and the box eight ids ahead fetched into the cache
+     * (0x161350, called at 0x6c9b9 and 0x18d5b0). */
+    void FUN_00161350();
+
     /* The active bodies' ids, four zeros written past the last (the
      * solver's SIMD reads run over by up to three; 0x1612e0, called by
      * 0x6d690 and the solve data task 0x16e0e0, which round the count up
@@ -5978,12 +6031,32 @@ struct hknpBodyManager /* derived name */
      * at 0x14eade). */
     void FUN_00161400();
 
+    /* A body's entry (derived names): a half at +0, -1 by default, and a
+     * 16-bit value at +2, 0xffff by default. */
+    struct BodyEntry {
+        BodyEntry()
+        {
+            half.setReal(-1.0f);
+            value = 0xffff;
+        }
+
+        hkHalf half;
+        u16 value;
+    };
+
+    /* derived name: a body's value set in its entry (0x160f30, called at
+     * 0x5f9da): the entries grown to the bodies' capacity first, the new
+     * ones the defaults, unless the value is the default 0xffff. */
+    void FUN_00160f30(u32 bodyId, u16 value);
+
     u8 unknown0[8];
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
     u8 unknown20[8];
     hkAabb16 *previousAabbs; /* derived name: by body id */
-    u8 unknown30[0x70];
+    u8 unknown30[8];
+    hkArray<BodyEntry> bodyEntries; /* derived name: by body id */
+    u8 unknown48[0x58];
     hkArray<u32> activeBodyIds;                        /* derived name */
     hkArray<u8> activeBodyCellIndices;                 /* derived name: by body id */
     hkArray<ScheduledBodyChange> scheduledBodyChanges; /* derived name */
@@ -10977,6 +11050,11 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
     virtual int tell() const;
 };
 
+/* derived name: zero bytes written until the writer's position is a
+ * multiple of the alignment (0x1a1e80; its scratch from the thread's stack
+ * allocator). */
+void FUN_001a1e80(hkStreamWriter *writer, int alignment);
+
 /* A stream writer that only counts (derived name; vtable 0x16a6af0, address
  * point 0x16a6b00, no type info; constructor FUN_0019f670, built on the stack
  * at 0x19ad01 and 0x19c76d): the write position at +0xc and the end of what
@@ -11149,6 +11227,10 @@ class hkOstream : public hkReferencedObject
     const hkClass *getClassType() const;            /* vtable slot 3, FUN_00008a20 */
     void FUN_000089e0();                            /* derived name */
     int FUN_000089f0(const void *buffer, int size); /* derived name */
+    /* derived name: the writer at +0x10 (out of line, folded with every
+     * other getter of a pointer at +0x10 into 0x7f80; the packfile
+     * writer's name record calls it, 0x1a3530). */
+    hkStreamWriter *FUN_00007f80() const;
 
     /* derived name: the operator<< of a C string (0x8440): writes its
      * strlen bytes, or "(null)" for a null pointer, and returns the
@@ -13068,6 +13150,39 @@ struct CommandStreams00167f70 /* derived name */
     hkBlockStreamRange commandRange; /* derived name */
 };
 
+/* The caches a thread's streams are emptied with (derived names): the
+ * first at +0x258, as CommandStreams00167f70 keeps its own, and a second
+ * at +0x260 (the step's callers 0x14f5a0 and 0x15000c pass it). */
+struct StreamCaches0015e980 /* derived name */
+{
+    u8 unknown0[0x258];
+    BlockCache *cache;       /* derived name */
+    BlockCache *secondCache; /* derived name */
+};
+
+/* Seven block streams of a step (derived names; an array of them hangs off
+ * +0x108 of the callers' object, each in use when its byte at +0x700 is
+ * set, 0x14f58e), each 0x100 bytes from the last: what follows a stream in
+ * its 0x100 is not yet read. FUN_0015e980 empties the first four, and in
+ * mode 1 the other three, the last with the second cache. */
+struct StepStreams0015e980 /* derived name */
+{
+    struct Slot {
+        hkBlockStream stream;
+        u8 unknown30[0xd0];
+    };
+
+    void FUN_0015e980(const StreamCaches0015e980 *caches, int mode); /* derived name */
+
+    Slot slot0;
+    Slot slot1;
+    Slot slot2;
+    Slot slot3;
+    Slot slot4;
+    Slot slot5;
+    Slot slot6;
+};
+
 /* A block stream's reader (derived names), 0x18 bytes: the current block,
  * the next element's address in it (null when the block is empty), the
  * elements left in the other blocks and in this one. */
@@ -13221,6 +13336,39 @@ struct ManifoldEvent169b1a0 : public hkCommand /* derived name */
     u8 status;
     u32 keyA;
     u32 keyB;
+};
+
+/* An event of two bodies (derived names; primary type 4, secondary type 2,
+ * 0x40 bytes): each body as its byte at +0x7f and its id, as the manifold
+ * events give them, then a zero word, the byte 2, a zero int and a vector
+ * (the table's third, D_14b2060[2]). The modifier slot 0x161f10 posts one. */
+struct BodyPairEvent00161f10 : public hkCommand /* derived name */
+{
+    /* The header filled in order, then the bodies' words and the rest. */
+    BodyPairEvent00161f10(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB)
+    {
+        sizePaddedTo16 = 0x40;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 2;
+        byte7fA = bodyByte7fA;
+        bodyIdA = idA;
+        byte7fB = bodyByte7fB;
+        bodyIdB = idB;
+        unknown18 = 0;
+        unknown20 = 2;
+        unknown24 = 0;
+        vector30 = D_14b2060[2];
+    }
+
+    u32 byte7fA;
+    u32 bodyIdA;
+    u32 byte7fB;
+    u32 bodyIdB;
+    u64 unknown18;
+    u8 unknown20;
+    u32 unknown24;
+    Vec4 vector30;
 };
 
 /* A manifold's state as the modifier of vtable 0x169b190 tracks it (derived

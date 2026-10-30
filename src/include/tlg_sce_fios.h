@@ -24,7 +24,18 @@ struct SceFiosStat {
     unsigned char reserved[0x2c];
 };
 
+/* A file open's parameters (derived names): the open flags at +0, 1 to
+ * read, then zeros; 24 bytes on the caller's stack (0x931a0). */
+struct SceFiosOpenParams {
+    unsigned int openFlags;
+    unsigned int reserved4;
+    void *buffer;
+    SceFiosSize bufferLength;
+};
+
 extern "C" {
+int sceFiosFHOpenSync(const SceFiosOpAttr *attr, SceFiosFH *fh, const char *path,
+                      const SceFiosOpenParams *params);
 int sceFiosStatSync(const SceFiosOpAttr *attr, const char *path, SceFiosStat *stat);
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);

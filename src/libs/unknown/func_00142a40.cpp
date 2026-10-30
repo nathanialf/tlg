@@ -71,10 +71,14 @@ static inline void appendEntries(BroadPhaseTree00142a40::Entry *list,
 // NONMATCHING: written as the function the program has, for its callers'
 // sake (its first and fourth arguments are not read, so 3.3's
 // DeadArgumentElimination passes neither from a caller in this unit); in
-// progress (docs/NOTES.md, Round 56): the walk, the refresh, the ageing,
-// the bucket pass and the bounds of a job have the base's shape; the two
-// dissolve loops are laid out inline here and after the loop's latch in the
-// base, and the frame is 0x30 bytes short.
+// progress (docs/NOTES.md, Rounds 56 and 57). The frame is a classified
+// compiler residual: the base lays out the objects holding arrays first
+// and the address-taken ones after them (the stack protector's layout of
+// LLVM 3.5, which 3.3's frame finalization does not have); under that
+// layout every local here lands at the base's offset. Open beside it: the
+// insertion sort's inner index (64 bits here, 32 in the base, the final
+// copy's tail addressed through the index), the two dissolve loops' block
+// order and the extent's reload after the left one, the jobs' size reload.
 void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree,
                   const hknpBody *bodies, int layer, bool keepAabbs, int maxAgedLeaves)
 {
@@ -97,17 +101,24 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         maxBucket = hkMath::max2(maxBucket, bucket);
     }
     const int numLeaves = tree->numLeaves;
-    TempInplaceArray<int, 128> leafOfBucket;
-    TempInplaceArray<bool, 1024> removed;
-    hkInplaceArray<hkAabb16, 64> leafAabbs;
-    leafOfBucket.setSize(hkContainerTempAllocator::get(), int(maxBucket) + 1);
-    leafAabbs.setSize(numLeaves);
-    removed.setSize(hkContainerTempAllocator::get(), numLeaves);
+
+    /* One object (0xa40 bytes): built in this order as the base builds
+     * them, laid out in ascending order of address, and the walk's item
+     * counter, dead before it is built, shares its first bytes. */
+    struct Leaves /* derived name */ {
+        TempInplaceArray<int, 128> leafOfBucket;
+        TempInplaceArray<bool, 1024> removed;
+        hkInplaceArrayAligned16<hkAabb16, 64> aabbs;
+    } leaves;
+
+    leaves.leafOfBucket.setSize(hkContainerTempAllocator::get(), int(maxBucket) + 1);
+    leaves.aabbs.setSize(numLeaves);
+    leaves.removed.setSize(hkContainerTempAllocator::get(), numLeaves);
     for (int i = 0; i < walk.leaves.size; i++) {
-        leafOfBucket[walk.leaves[i]->children[0]] = i;
+        leaves.leafOfBucket[walk.leaves[i]->children[0]] = i;
     }
     for (int i = 0; i < numLeaves; i++) {
-        removed[i] = false;
+        leaves.removed[i] = false;
     }
 
     /* The boxes refreshed from their bodies, two at a time. */
@@ -168,14 +179,14 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         const int bucketIndex = leaf->children[0];
         Bucket *const buckets = tree->buckets;
         Bucket &bucket = buckets[u32(bucketIndex)];
-        const int leafIndex = leafOfBucket[bucketIndex];
+        const int leafIndex = leaves.leafOfBucket[bucketIndex];
         if (bucket.numEntries == 0) {
-            bool &leafRemoved = removed[leafIndex];
+            bool &leafRemoved = leaves.removed[leafIndex];
             tree->freeBuckets.pushBack(bucketIndex);
             tree->numLeaves--;
             leafRemoved = true;
         } else {
-            hkAabb16 &leafAabb = leafAabbs[leafIndex];
+            hkAabb16 &leafAabb = leaves.aabbs[leafIndex];
             FUN_001854b0(&leafAabb, bucket.entries, bucket.numEntries);
             leafAabb.key = 0;
         }
@@ -239,27 +250,26 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         const int numLeft = item.numLeft;
         const int numRight = item.numRight;
         const int firstLeaf = item.firstLeaf;
-        hkAabb16 leftAabb;
-        setEmpty(leftAabb);
+        hkAabb16 childAabbs[2];
+        setEmpty(childAabbs[0]);
         for (int i = 0; i < numLeft; i++) {
-            const int leafIndex = leafOfBucket[walk.leaves[firstLeaf + i]->children[0]];
-            if (!removed[leafIndex]) {
-                includeAabb(leftAabb, leafAabbs[leafIndex]);
+            const int leafIndex = leaves.leafOfBucket[walk.leaves[firstLeaf + i]->children[0]];
+            if (!leaves.removed[leafIndex]) {
+                includeAabb(childAabbs[0], leaves.aabbs[leafIndex]);
             }
         }
-        hkAabb16 rightAabb;
-        setEmpty(rightAabb);
+        setEmpty(childAabbs[1]);
         int numRightEntries = 0;
         for (int i = 0; i < numRight; i++) {
             const int bucketIndex = walk.leaves[firstLeaf + numLeft + i]->children[0];
-            const int leafIndex = leafOfBucket[bucketIndex];
-            if (!removed[leafIndex]) {
+            const int leafIndex = leaves.leafOfBucket[bucketIndex];
+            if (!leaves.removed[leafIndex]) {
                 numRightEntries += tree->buckets[bucketIndex].numEntries;
-                includeAabb(rightAabb, leafAabbs[leafIndex]);
+                includeAabb(childAabbs[1], leaves.aabbs[leafIndex]);
             }
         }
-        hkAabb16 aabb = leftAabb;
-        includeAabb(aabb, rightAabb);
+        hkAabb16 aabb = childAabbs[0];
+        includeAabb(aabb, childAabbs[1]);
         int numInherited = job.numInherited;
         for (int i = 0; i < numInherited; i++) {
             includeCentre(aabb, buffers[other].data[job.start + i]);
@@ -279,41 +289,41 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         /* A leaf that reaches well past the middle on the other side, and
          * has not aged, is dissolved into the boxes the children inherit. */
         const u32 upper = middle + slack;
-        if (leftAabb.max[axis] > upper) {
+        if (childAabbs[0].max[axis] > upper) {
             for (int i = 0; i < numLeft; i++) {
                 const int bucketIndex = walk.leaves[firstLeaf + i]->children[0];
                 Bucket &bucket = tree->buckets[bucketIndex];
                 if (bucket.age != 0) {
                     continue;
                 }
-                const int leafIndex = leafOfBucket[bucketIndex];
-                if (removed[leafIndex] || leafAabbs[leafIndex].max[axis] <= upper) {
+                const int leafIndex = leaves.leafOfBucket[bucketIndex];
+                if (leaves.removed[leafIndex] || leaves.aabbs[leafIndex].max[axis] <= upper) {
                     continue;
                 }
                 appendEntries(buffers[other].data + job.start + numInherited, bucket);
                 tree->freeBuckets.pushBack(bucketIndex);
                 numInherited += bucket.numEntries;
                 tree->numLeaves--;
-                removed[leafIndex] = true;
+                leaves.removed[leafIndex] = true;
             }
         }
         const u32 lower = middle - slack;
-        if (rightAabb.min[axis] < lower) {
+        if (childAabbs[1].min[axis] < lower) {
             for (int i = 0; i < numRight; i++) {
                 const int bucketIndex = walk.leaves[firstLeaf + numLeft + i]->children[0];
                 Bucket &bucket = tree->buckets[bucketIndex];
                 if (bucket.age != 0) {
                     continue;
                 }
-                const int leafIndex = leafOfBucket[bucketIndex];
-                if (removed[leafIndex] || leafAabbs[leafIndex].min[axis] >= lower) {
+                const int leafIndex = leaves.leafOfBucket[bucketIndex];
+                if (leaves.removed[leafIndex] || leaves.aabbs[leafIndex].min[axis] >= lower) {
                     continue;
                 }
                 appendEntries(buffers[other].data + job.start + numInherited, bucket);
                 tree->freeBuckets.pushBack(bucketIndex);
                 numInherited += bucket.numEntries;
                 tree->numLeaves--;
-                removed[leafIndex] = true;
+                leaves.removed[leafIndex] = true;
                 numRightEntries -= bucket.numEntries;
             }
         }
@@ -436,10 +446,10 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
             }
             for (int i = 0; i < leafNodes.size; i++) {
                 const int bucketIndex = tree->nodes.elements[leafNodes[i]].children[0];
-                const int leafIndex = leafOfBucket[bucketIndex];
-                if (!removed[leafIndex]) {
+                const int leafIndex = leaves.leafOfBucket[bucketIndex];
+                if (!leaves.removed[leafIndex]) {
                     if (split) {
-                        includeAabb(centres, leafAabbs[leafIndex]);
+                        includeAabb(centres, leaves.aabbs[leafIndex]);
                     }
                     const Bucket &bucket = tree->buckets[bucketIndex];
                     for (int j = 0; j < bucket.numEntries; j++) {
@@ -498,7 +508,7 @@ void FUN_00142af0(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int 
 void FUN_00142bb0(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int mode)
 {
     D_16dc078->timerBegin("TtUpdateBroadPhase");
-    if (layers->count90 <= layers->count94) {
+    if (layers->lowestMarkedId <= layers->highestMarkedId) {
         FUN_00141500(layers, bodies);
     }
     for (int i = 0; i < layers->numLayers; i++) {

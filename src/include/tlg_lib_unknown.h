@@ -242,6 +242,20 @@ class Modifier16a5020 /* derived name */
                       int jacobianIndex); /* vtable slot 7; derived name */
 };
 
+/* The modifier of vtable 0x16a4f90 (address point 0x16a4fa0; derived
+ * name), slot 1 the shared 0xd900, slot 10 0x161cc0: slot 5 (0x161f10), as
+ * a cache's modifiers are fired (fireCacheModifiers' arguments), posts a
+ * body pair event to the context's dispatcher when the cache's flags at
+ * +0x22 have bits 0 and 2 both set. */
+class Modifier16a4fa0 /* derived name */
+{
+  public:
+    void
+    FUN_00161f10(CommandOwner00171180 *context, const void *sharedData, const hknpCdBody *cdBodyA,
+                 const hknpCdBody *cdBodyB,
+                 const hknpManifoldCollisionCache *cache) const; /* vtable slot 5; derived name */
+};
+
 /* The second argument of the modifier slot 0x156e90: a vector at +0x20 of
  * the object at +0x18 (derived names). */
 struct ModifierVector00156e90 /* derived name */
@@ -591,12 +605,14 @@ template <typename T> inline void hkArray<T>::reserve(AllocatorBase &allocator, 
 template <typename T> inline void hkArray<T>::setSize(int n)
 {
     reserve(hkContainerHeapAllocator::get(), n);
+    hkArrayUtil::construct(data + size, n - size);
     size = n;
 }
 
 template <typename T> inline void hkArray<T>::setSize(AllocatorBase &allocator, int n)
 {
     reserve(allocator, n);
+    hkArrayUtil::construct(data + size, n - size);
     size = n;
 }
 
@@ -666,6 +682,15 @@ template <typename T> inline T &hkArray<T>::expandOne()
     }
     hkArrayUtil::construct(data + size);
     return data[size++];
+}
+
+template <typename T> inline void hkArray<T>::pushBack(AllocatorBase &allocator, const T &element)
+{
+    if (size == getCapacity()) {
+        FUN_00000b40(allocator, this, sizeof(T));
+    }
+    hkArrayUtil::constructWithCopy(data + size, element);
+    size++;
 }
 
 template <typename T> inline T &hkArray<T>::expandOne(AllocatorBase &allocator)
@@ -1655,19 +1680,12 @@ class BroadPhaseTasks0018d640 /* derived name */
     u8 unknown0[0xf8];
 };
 
-struct Object00140a60 /* derived name */
-{
-    /* Slot 7 (0x142e00): the tasks made on first use, then set up from the
-     * arguments as they came. derived name. */
-    void FUN_00142e00(void *argument1, void *argument2, void *argument3,
-                      void *argument4); /* derived names */
+/* The object is the broad phase's trees by layer (BroadPhaseLayers00142a40,
+ * below: its slot 4 marks bodies, slot 5 is the update 0x142bb0). */
+struct BroadPhaseLayers00142a40;
 
-    u8 unknown0[0x98];
-    BroadPhaseTasks0018d640 *tasks; /* derived name */
-};
-
-void FUN_00140e70(Object00140a60 *self); /* derived name */
-void FUN_00140e20(Object00140a60 *self); /* derived name */
+void FUN_00140e70(BroadPhaseLayers00142a40 *self); /* derived name */
+void FUN_00140e20(BroadPhaseLayers00142a40 *self); /* derived name */
 
 /* Its deleting destructor (0x76070, beside 0x760c0; both vtables' slot
  * 1): the destructor, then the 0x160 bytes back to the thread's heap
@@ -2491,6 +2509,14 @@ class FiosStreamReader : public StreamReader /* derived name */
      * failed. */
     virtual ~FiosStreamReader();
 
+    /* A new reader over an opened handle, ok while the handle is valid
+     * (0x931ee, inline in FUN_00093180). */
+    FiosStreamReader(SceFiosFH fileHandle) : handle(fileHandle), ok(fileHandle >= 0) {}
+
+    /* The class allocator: a block of the thread's heap (0x931eb; defined
+     * beside the router). */
+    static void *operator new(unsigned long numBytes);
+
     /* The reference-counted class delete: its deleting destructor 0x93250
      * frees at the recorded size, 0x18 by default. */
     static void operator delete(void *object, unsigned long numBytes);
@@ -2508,6 +2534,11 @@ class FiosStreamReader : public StreamReader /* derived name */
     SceFiosFH handle; /* derived name */
     hkBool ok;        /* derived name */
 };
+
+/* A reader of a file opened through Fios for reading, or null when the
+ * open fails (0x93180; the file system's slot at 0x1bb60 hands it on).
+ * derived name. */
+StreamReader *FUN_00093180(const char *path);
 
 /* The file system the library installs (derived name; vtable 0x168ea90,
  * address point 0x168eaa0, built as a bare reference-counted object by
@@ -3009,6 +3040,11 @@ inline void *hkBufferedStreamWriter::operator new(unsigned long numBytes)
 }
 
 inline void *LoadedImage::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *FiosStreamReader::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
@@ -3934,19 +3970,34 @@ struct Object00176420 /* derived name */
 };
 
 /* The broad phase's trees by layer (derived names): a tree per layer from
- * +0x10, two flags per layer after them, the number of layers at +0x60. */
+ * +0x10, two flags per layer after them, the number of layers at +0x60;
+ * the bodies marked for the update in a bit field at +0x78, the lowest and
+ * highest marked ids at +0x90 and +0x94 (slot 4 of the vtable at address
+ * point 0x16a3f60, 0x143390, marks them; slot 5 is the update 0x142bb0). */
 struct BroadPhaseLayers00142a40 /* derived name */
 {
+    /* Slot 4 (0x143390): each of the ids, striding bytes apart, marked,
+     * the field grown to a multiple of 32 bits that holds it, and the
+     * lowest and highest marked ids kept. derived name. */
+    void FUN_00143390(const u32 *ids, int numIds, int striding);
+
+    /* Slot 7 (0x142e00): the tasks made on first use, then set up from the
+     * arguments as they came. derived name. */
+    void FUN_00142e00(void *argument1, void *argument2, void *argument3,
+                      void *argument4); /* derived names */
+
     u8 unknown0[0x10];
     BroadPhaseTree00142a40 *trees[8];
     bool flag50[8];
     bool updatePending[8]; /* cleared by both trees' updates */
     int numLayers;
-    u8 unknown64[0x2c];
+    u8 unknown64[0x14];
+    hkBitField markedBodies;
     /* While the first does not exceed the second, the broad phase's update
      * runs FUN_00141500 first (0x142bff). derived names. */
-    u32 count90;
-    u32 count94;
+    u32 lowestMarkedId;
+    u32 highestMarkedId;
+    BroadPhaseTasks0018d640 *tasks; /* derived name */
 };
 
 /* The work the broad phase's update runs first (0x141500, 0x1533 bytes).

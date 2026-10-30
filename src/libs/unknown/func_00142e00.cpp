@@ -3,8 +3,8 @@
 
 /* derived name: slot 7 of the 0xa0-byte object of vtable 0x16a3f50: the
  * broad phase's tasks made on first use, then set up. */
-void Object00140a60::FUN_00142e00(void *argument1, void *argument2, void *argument3,
-                                  void *argument4)
+void BroadPhaseLayers00142a40::FUN_00142e00(void *argument1, void *argument2, void *argument3,
+                                            void *argument4)
 {
     if (!tasks) {
         tasks = new BroadPhaseTasks0018d640();
