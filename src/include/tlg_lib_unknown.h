@@ -968,10 +968,27 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
         char *end;
     };
 
-    u8 unknown10[0x18];
-    Chunk *top;  /* derived name */
-    u64 topSize; /* derived name */
-    u8 unknown38[0x100];
+    /* A free chunk of a tree bin (dlmalloc's tree chunk, derived names):
+     * its children, its parent, the bin it is in. */
+    struct TreeChunk : public Chunk {
+        TreeChunk *child[2];
+        TreeChunk *parent;
+        u32 index;
+    };
+
+    /* A free chunk taken off its tree bin (0x12550, dlmalloc's
+     * unlink_large_chunk without the address checks; the allocation and
+     * free paths 0x12620, 0x131a0 and 0x133e0 call it): from its ring when
+     * it has siblings, else replaced by its rightmost leaf, the bin's bit
+     * cleared when the bin empties. derived name. */
+    void FUN_00012550(TreeChunk *chunk);
+
+    u8 unknown10[8];
+    u32 treemap; /* derived name: a bit for each tree bin in use */
+    u8 unknown1c[0xc];
+    Chunk *top;                          /* derived name */
+    u64 topSize;                         /* derived name */
+    TreeChunk *treebins[32];             /* derived name */
     SingleBlockAllocator blockAllocator; /* derived name; the constructor builds it in place */
     AllocatorBase *server;               /* derived name */
     u8 unknown168[0x10];
@@ -3359,6 +3376,22 @@ inline void hkxEnum::operator delete(void *object, unsigned long numBytes)
 inline void hkxMaterialEffect::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void hkxMaterialShaderSet::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpPairCollisionFilter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline hknpPairCollisionFilterMapPairFilterKeyOverrideType::
+    ~hknpPairCollisionFilterMapPairFilterKeyOverrideType()
+{
+    FUN_00167170(hkContainerHeapAllocator::get());
 }
 
 inline void hkMemoryMeshTexture::operator delete(void *object, unsigned long numBytes)

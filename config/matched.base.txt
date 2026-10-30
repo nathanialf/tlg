@@ -1174,7 +1174,7 @@ FUN_0007b110 src/libs/unknown/func_0007b110.cpp
 FUN_0007a020 src/libs/unknown/func_0007a020.cpp _ZNK28hkpPointToPathConstraintData15unknownVirtual6ERN17hkpConstraintData14ConstraintInfoE
 _ZN30hkpSpringDamperConstraintMotorC1Ev src/libs/unknown/func_0017afe0.cpp
 _ZN26hkpPositionConstraintMotorC1Ev src/libs/unknown/func_00082430.cpp
-FUN_00180ea0 src/libs/unknown/func_00180ea0.cpp _ZNK16hkPackfileHeader16getSectionHeaderEPKvi
+_ZNK16hkPackfileHeader16getSectionHeaderEPKvi src/libs/unknown/func_00180ea0.cpp
 FUN_00017f60 src/libs/unknown/func_00017f60.cpp _ZN8hkString12FUN_00017f60EPKcS1_
 _ZN18hknpDecoratorShapeC1EPK9hknpShape src/libs/unknown/func_0003b0a0.cpp
 _ZN31hkcdPlanarGeometryVertexStorageD1Ev src/libs/unknown/func_0009a760.cpp
@@ -2126,3 +2126,17 @@ FUN_00010b40 src/libs/unknown/func_00010b40.cpp
 FUN_00018ba0 src/libs/unknown/func_00018ba0.cpp
 _ZN18hknpCompositeShapeD0Ev src/libs/unknown/func_00042e00.cpp
 FUN_00156dc0 src/libs/unknown/func_00156dc0.cpp
+FUN_00010d10 src/libs/unknown/func_00010d10.cpp
+FUN_00012550 src/libs/unknown/func_00012550.cpp
+_ZN18hknpFirstPersonGunD1Ev src/libs/unknown/func_00156620.cpp
+_ZN18hknpFirstPersonGunD0Ev src/libs/unknown/func_00156620.cpp
+_ZN19hknpExternMeshShapeC1EPKNS_8GeometryEP23hknpExternMeshShapeData src/libs/unknown/func_00166010.cpp _ZN19hknpExternMeshShapeC2EPKNS_8GeometryEP23hknpExternMeshShapeData
+FUN_00002330 src/libs/unknown/func_00002330.cpp
+FUN_0015e8b0 src/libs/unknown/func_0015e8b0.cpp
+FUN_0017e860 src/libs/unknown/func_0017e860.cpp
+_ZN20hkxMaterialShaderSetD1Ev src/libs/unknown/func_0008b370.cpp
+_ZN20hkxMaterialShaderSetD0Ev src/libs/unknown/func_0008b370.cpp
+FUN_0010be70 src/libs/unknown/func_0010be70.cpp
+_ZN23hknpPairCollisionFilterD1Ev src/libs/unknown/func_00167170.cpp
+_ZN23hknpPairCollisionFilterD0Ev src/libs/unknown/func_00167170.cpp
+FUN_001679a0 src/libs/unknown/func_00167170.cpp

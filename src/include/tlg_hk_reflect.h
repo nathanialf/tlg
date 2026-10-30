@@ -1086,6 +1086,12 @@ struct hkTransform {
      * read, then a's translation added. */
     void FUN_00010b40(const hkTransform &a, const hkTransform &b);
 
+    /* derived name: set to a times the inverse of b, b being rigid (0x10d10;
+     * called at 0x1593fa): the rotations' product with b's transposed,
+     * every input read first, and a's translation less b's carried through
+     * that product. */
+    void FUN_00010d10(const hkTransform &a, const hkTransform &b);
+
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
@@ -5098,12 +5104,63 @@ struct hkcdStaticMeshTreeBase {
         u8 count;
     };
 
+    /* hkcdStaticMeshTreeBase::Section (hkClass 0x57bc010, 0x60 bytes over
+     * the static tree of the dynamic storage 4); its members not typed
+     * yet. */
+    struct Section {
+        u8 unknown0[0x60];
+    };
+
+    /* hkcdStaticMeshTreeBase::Primitive (hkClass 0x57bc090: its four vertex
+     * indices; the enum Type's items from its record). A triangle repeats
+     * its third index, a custom primitive its second and third too, and an
+     * unused one holds 0xde 0xad 0xde 0xad. */
+    struct Primitive {
+        enum Type { INVALID, TRIANGLE, QUAD, CUSTOM, NUM_TYPES };
+
+        /* The four indices read first: the second and third, used on both
+         * paths, are loaded once, so each test is a select over loaded values
+         * (CodeGenPrepare makes a branch of a select whose compare has a
+         * one-use load) and the type a value the caller's switch tests
+         * (0x10be70); the unused marker's test is an if, its four compares
+         * folded to one condition before InstCombine can split the last into
+         * a select of its own. */
+        Type getType() const
+        {
+            const u8 a = indices[0];
+            const u8 b = indices[1];
+            const u8 c = indices[2];
+            const u8 d = indices[3];
+            if (d == c) {
+                return c == b ? CUSTOM : TRIANGLE;
+            }
+            if (a == 0xde && b == 0xad && c == 0xde && d == 0xad) {
+                return INVALID;
+            }
+            return QUAD;
+        }
+
+        u8 indices[4];
+    };
+
+    /* A loaded image's arrays are left as loaded. */
+    hkcdStaticMeshTreeBase(hkFinishLoadedObjectFlag flag)
+        : sections(flag), primitives(flag), sharedVerticesIndex(flag)
+    {
+    }
+
     /* Out of line (0x20700): its arrays given back from the last. */
     ~hkcdStaticMeshTreeBase();
 
     u8 unknown0[0x10];
     hkAabb domain;
-    u8 unknown30[0x40];
+    /* The members from the records at 0x1690bb0. */
+    int numPrimitiveKeys;
+    int bitsPerKey;
+    u32 maxKeyValue;
+    hkArray<Section> sections;
+    hkArray<Primitive> primitives;
+    hkArray<u16> sharedVerticesIndex;
 };
 
 void FUN_000209b0(void *object); /* derived name */
@@ -5121,7 +5178,8 @@ template <typename CONFIG, typename DATARUN>
 struct hkcdStaticMeshTree : public hkcdStaticMeshTreeBase {
     /* A loaded image's arrays are left as loaded. */
     hkcdStaticMeshTree(hkFinishLoadedObjectFlag flag)
-        : packedVertices(flag), sharedVertices(flag), primitiveDataRuns(flag)
+        : hkcdStaticMeshTreeBase(flag), packedVertices(flag), sharedVertices(flag),
+          primitiveDataRuns(flag)
     {
     }
 
@@ -6078,8 +6136,16 @@ void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
  * the first and +0x44 of the second (7, as hknpGroupCollisionFilter's
  * 0x3a290 reads them), two body ids (8), a flag and two inputs with their
  * filter info at +4 (9, 0x3a2f0). */
-struct hknpCollisionFilterContext;     /* derived name */
-struct hknpCollisionFilterBodyIdPair;  /* derived name */
+struct hknpCollisionFilterContext; /* derived name */
+
+/* A pair of bodies a filter is asked about (derived name), copied member
+ * by member (the pair filter's slot 5 keeps a pair by copying its first id
+ * from the register it compared, its second read again). */
+struct hknpCollisionFilterBodyIdPair /* derived name */
+{
+    hknpBodyId bodyIdA;
+    hknpBodyId bodyIdB;
+};
 struct hknpCollisionFilterQueryInput;  /* derived name */
 struct hknpCollisionFilterTargetInput; /* derived name */
 struct hknpCollisionFilterShapeInput;  /* derived name */
@@ -7707,7 +7773,12 @@ class hknpFirstPersonGun : public hkReferencedObject
     /* The finish constructor, out of line (0x156620; its type info's
      * finish callback 0x3ccf0 jumps to it). */
     hknpFirstPersonGun(hkFinishLoadedObjectFlag flag);
-    virtual ~hknpFirstPersonGun();
+    /* Inline and defined in the class's file (func_00156620.cpp): the
+     * deleting destructor 0x156680 holds the body (cost 250 to 275, the
+     * hint's, cookbook 164), while the derived guns' destructors, which do
+     * not see the definition, call it (0x15802c, 0x159744). The vtable and
+     * both variants are emitted with slot 5, the key function. */
+    inline virtual ~hknpFirstPersonGun();
 
     /* The class allocator's delete, for the guns derived from it too:
      * their deleting destructors free at the recorded size (0x156680 for
@@ -7753,7 +7824,9 @@ class hknpFirstPersonGun : public hkReferencedObject
     hkEnum<Type, u8> type;
     hkStringPtr name;
     u8 keyboardKey; /* an enum of hkUint8; its items not read */
-    hkArray<void *> listeners;
+    /* Each one reference-counted: the destructor (0x156790) releases
+     * them before the array goes. */
+    hkArray<hkReferencedObject *> listeners;
     u32 collisionFilterInfo;
 };
 
@@ -8225,17 +8298,63 @@ class hknpScaledConvexShape : public hknpScaledConvexShapeBase
 struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
     enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
 
-    /* A 12-byte entry (derived names): the pair of body ids it is keyed
-     * by, both 0x7fffffff when the slot is empty (0x167b64 stops its probe
-     * at one), and the value. */
-    struct Pair {
+    /* A key (derived names): the pair of body ids, the smaller first; a
+     * slot is empty when either is 0x7fffffff (0x167b64 stops its probe at
+     * one). Copied whole, as one 8-byte load (the probe at 0x167a3b). */
+    struct Key {
         u32 bodyIdA;
         u32 bodyIdB;
+    };
+
+    /* A 12-byte entry: the key and the value (derived names). */
+    struct Pair {
+        Key key;
         u32 value;
     };
 
     /* An empty map: no storage, no elements, the hash modulus -1. */
     hknpPairCollisionFilterMapPairFilterKeyOverrideType() : elem(0), numElems(0), hashMod(-1) {}
+
+    /* Given back to the containers' allocator (defined in tlg_lib_unknown.h;
+     * the body it runs, 0x167170, is out of line in the pair filter's
+     * file, where the filter's destructor holds it, 0x1671f0). */
+    inline ~hknpPairCollisionFilterMapPairFilterKeyOverrideType();
+
+    static bool isEmptyKey(Key key) /* derived name */
+    {
+        return key.bodyIdA == 0x7fffffff || key.bodyIdB == 0x7fffffff;
+    }
+
+    static bool equalKeys(Key a, Key b) /* derived name */
+    {
+        return a.bodyIdA == b.bodyIdA && a.bodyIdB == b.bodyIdB;
+    }
+
+    /* The slot of a key as Havok's map iterators carry it, an integer as
+     * wide as a pointer, the modulus plus one when the key is not in the
+     * map (Fibonacci hashing of the second id); isValid tests one. derived
+     * names. */
+    static hkUlong hash(Key key, u32 mod) /* derived name */
+    {
+        return hkUlong(key.bodyIdB * 0x9e3779b1) & mod;
+    }
+
+    hkUlong findKey(Key key) const
+    {
+        if (hashMod > 0) {
+            for (u32 i = hash(key, hashMod); !isEmptyKey(elem[i].key); i = (i + 1) & hashMod) {
+                if (equalKeys(elem[i].key, key)) {
+                    return i;
+                }
+            }
+        }
+        return hashMod + 1;
+    }
+
+    bool isValid(hkUlong it) const
+    {
+        return int(it) <= hashMod;
+    }
 
     /* Every slot emptied and the count zeroed, the storage kept; each entry
      * read once for both halves of its key (0x167193). derived name. */
@@ -8244,8 +8363,8 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
         const int capacity = hashMod + 1;
         for (int i = 0; i < capacity; i++) {
             Pair &entry = elem[i];
-            entry.bodyIdA = 0x7fffffff;
-            entry.bodyIdB = 0x7fffffff;
+            entry.key.bodyIdA = 0x7fffffff;
+            entry.key.bodyIdB = 0x7fffffff;
         }
         numElems &= DONT_DEALLOCATE_FLAG;
     }
@@ -8284,8 +8403,17 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
      * handed to the world's FUN_0005c120 with the pair. derived name. */
     int FUN_00167660(hknpWorld *world, u32 bodyIdA, u32 bodyIdB, int mode); /* derived name */
 
+    /* Inline and emitted with the vtable in the class's file (D1 0x1671f0
+     * before D0 0x1672c0); the constraint filter's destructor holds it,
+     * calling the map's out-of-line body (0x159c6f). */
+    inline virtual ~hknpPairCollisionFilter() {}
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x28 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hknpPairCollisionFilterMapPairFilterKeyOverrideType disabledPairs;
-    hknpCollisionFilter *childFilter;
+    hkRefPtr<hknpCollisionFilter> childFilter;
 };
 
 /* hknpConstraintCollisionFilter (type info 0x57c0368; hkClass 0x57c0318,
@@ -11348,13 +11476,23 @@ class hkxMaterialShader : public hkReferencedObject
     hkArray<u8> data;
 };
 
-/* hkxMaterialShaderSet (hkClass parent hkReferencedObject): its finish
- * constructor 0x8b370 is out of line, jumped to by the finish callback
- * FUN_0008b070 and called by the reflection initializer at 0x8b11d. */
+/* hkxMaterialShaderSet (hkClass 0x57c7630 built at 0x8b112: size 0x20,
+ * parent hkReferencedObject, its one member shaders from the records at
+ * 0x16a1f00): its finish constructor 0x8b370 is out of line, jumped to by
+ * the finish callback FUN_0008b070 and called by the reflection initializer
+ * at 0x8b11d. The destructor is the implicit one, emitted with the vtable
+ * where the finish constructor stores it (0x8b180, its deleting one
+ * 0x8b250 after it). */
 class hkxMaterialShaderSet : public hkReferencedObject
 {
   public:
     hkxMaterialShaderSet(hkFinishLoadedObjectFlag flag);
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x20 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkArray<hkRefPtr<hkxMaterialShader>> shaders;
 };
 
 /* hkxLight (hkClass parent hkReferencedObject, built at 0x8c560): its
@@ -12854,6 +12992,11 @@ class hknpExternMeshShape : public hknpCompositeShape
      * 0x6c506. */
     hknpExternMeshShape(hkFinishLoadedObjectFlag flag);
 
+    /* A new shape over a geometry and its bounding volume, a reference
+     * taken on each (0x166010): the key bits enough for the geometry's
+     * triangle count, and the shape not for the SPU. */
+    hknpExternMeshShape(const Geometry *geometry_, hknpExternMeshShapeData *data);
+
     hknpShapeSignals *FUN_000eafb0(); /* vtable slot 8; derived name */
 
     /* The bounding volume's box in the shape's space (0xed580, out of
@@ -12865,7 +13008,7 @@ class hknpExternMeshShape : public hknpCompositeShape
     void FUN_00166370(const Mat4 &transform, hkAabb &aabbOut) const;
 
     /* Aligned to 16 bytes (the record's flag 0x100, ALIGN_16), at +0x60. */
-    alignas(16) void *geometry;
+    alignas(16) const Geometry *geometry;
     hknpExternMeshShapeData *boundingVolumeData;
 };
 
@@ -14334,6 +14477,12 @@ struct StepStreams0015e980 /* derived name */
 
     void FUN_0015e980(const StreamCaches0015e980 *caches, int mode); /* derived name */
 
+    /* The streams set up over the caches and marked in use (0x15e8b0; the
+     * collide task's slot 5 runs it at 0x15eb54 on a set not in use yet):
+     * the first two zeroing their blocks, and in mode 1 the other three,
+     * the last zeroing, over the second cache. derived name. */
+    void FUN_0015e8b0(const StreamCaches0015e980 *caches, int mode);
+
     Slot slot0;
     Slot slot1;
     Slot slot2;
@@ -14341,6 +14490,8 @@ struct StepStreams0015e980 /* derived name */
     Slot slot4;
     Slot slot5;
     Slot slot6;
+    hkBool inUse; /* derived name */
+    u8 unknown701[0xf];
 };
 
 /* A block stream's reader (derived names), 0x18 bytes: the current block,
