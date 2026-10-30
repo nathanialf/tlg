@@ -1600,8 +1600,6 @@ bool FUN_0000d270(hkFreeListMemorySystem *self, int numBytes); /* derived name *
  * there is one. derived name. */
 void FUN_0000d2c0(hkFreeListMemorySystem *self, int value); /* derived name */
 
-void FUN_0000c360(hkFreeListMemorySystem *self); /* derived name */
-
 /* A polymorphic class with an empty virtual destructor and the global
  * operator delete: its deleting destructor FUN_00021a00 (beside hkcdSimdTree's
  * code) is one shared body in slot 1 of 175 vtables, whose slot 0 is an
@@ -2483,8 +2481,9 @@ class BlockListAllocator : public AllocatorBase /* derived name */
     BlockListAllocator(AllocatorBase *parent);
 
     /* Slots 0 and 1 (0x8f120, one body): the lock destroyed, then
-     * AllocatorBase's destructor. */
-    virtual ~BlockListAllocator();
+     * AllocatorBase's destructor. Inline: the memory system's destructor
+     * 0xc360 holds it for its member at +0x28. */
+    virtual ~BlockListAllocator() {}
 
     /* Slots 2 and 3 (0x8f220, 0x8f330): under the lock. */
     virtual void *blockAlloc(int numBytes);
@@ -2494,11 +2493,20 @@ class BlockListAllocator : public AllocatorBase /* derived name */
 
     void FUN_0008f560(); /* vtable slot 11; derived name */
 
+    /* The header before each block (0x8f2b1 to 0x8f2c2): the next block
+     * on the list, the size drawn from the parent and the size asked for.
+     * derived names. */
+    struct Block {
+        Block *next;
+        int size;
+        int numBytes;
+    };
+
     /* mutable: the const statistics read takes it too. */
     mutable hkCriticalSection lock; /* derived name */
     AllocatorBase *parent;          /* derived name */
     MemoryStatistics statistics;    /* derived name */
-    void *blocks;                   /* derived name */
+    Block *blocks;                  /* derived name */
 };
 
 /* A thread's allocator (derived name; vtable 0x168e460, address point
@@ -2511,6 +2519,15 @@ class ThreadMemory : public AllocatorBase /* derived name */
   public:
     /* Out of line (0x143a0): the free lists and the tables cleared. */
     ThreadMemory();
+
+    /* Slots 0 and 1 (0x13ea0, one body): the cached blocks given back
+     * (slot 13) before AllocatorBase's destructor; the memory system's
+     * destructor 0xc360 holds it for each thread's record, slot 13 called
+     * through the vtable. */
+    virtual ~ThreadMemory()
+    {
+        FUN_00014690();
+    }
 
     virtual void *blockAlloc(int numBytes); /* slot 2 (0x140e0) */
 
@@ -3342,7 +3359,13 @@ struct hkMemoryRouter /* derived name */
 class hkMemorySystem
 {
   public:
-    virtual ~hkMemorySystem() {}
+    /* Out of line and empty (0x6c80, hkMemorySystem.cpp). */
+    virtual ~hkMemorySystem();
+
+    /* Its delete frees nothing: the system lives in storage its setup gives
+     * it (FUN_00001140), so the free-list system's deleting destructor
+     * 0xc350 is a jump to the complete one. */
+    static void operator delete(void *, unsigned long) {}
 
     /* Slot 2 (0xc490): set up with the sizes, under the flags (the setup
      * passes 3); the main thread's router back. derived name. */

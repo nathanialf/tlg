@@ -26,7 +26,6 @@ FUN_00599980 src/game/unknown/func_00599980.cpp _Z12FUN_00599980P11Owner583950Pv
 FUN_0059d3b0 src/game/unknown/func_0059d3b0.cpp _Z12FUN_0059d3b0P11Owner583950Pv
 FUN_00000270 src/libs/unknown/leaf_00000270.cpp
 FUN_00006660 src/libs/unknown/leaf_00006660.cpp
-FUN_00006c80 src/libs/unknown/leaf_00006c80.cpp
 _ZN13AllocatorBaseD2Ev src/libs/unknown/leaf_00008d60.cpp
 FUN_0000d500 src/libs/unknown/leaf_0000d500.cpp
 _ZN11StackTracerD1Ev src/libs/unknown/leaf_0000d940.cpp
@@ -85,7 +84,6 @@ _ZN17hkMallocAllocatorD1Ev src/libs/unknown/func_00004ac0.cpp
 FUN_00007e00 src/libs/unknown/leaf_00007e00.cpp
 FUN_00007f80 src/libs/unknown/leaf_00007f80.cpp
 FUN_0000bc60 src/libs/unknown/leaf_0000bc60.cpp
-FUN_0000c350 src/libs/unknown/func_0000c350.cpp
 FUN_0000d2b0 src/libs/unknown/leaf_0000d2b0.cpp
 FUN_0000d370 src/libs/unknown/func_0000d370.cpp
 FUN_0000d380 src/libs/unknown/func_0000d380.cpp
@@ -1536,7 +1534,7 @@ FUN_0017bb80 src/libs/unknown/func_0017bb80.cpp _ZN21hkp6DofConstraintData12FUN_
 FUN_0017a290 src/libs/unknown/func_0017a290.cpp _ZN13NodeEdgeLists12FUN_0017a290EjPK18EdgeRecord0017a290i
 _ZN11hknpGlobalsD1Ev src/libs/unknown/func_00175e30.cpp
 FUN_00175e90 src/libs/unknown/func_00175e30.cpp _ZN11hknpGlobalsD0Ev
-_ZN18BlockListAllocatorD1Ev src/libs/unknown/func_0008f120.cpp
+_ZN18BlockListAllocatorD1Ev src/libs/unknown/func_0008f220.cpp
 FUN_00094d90 src/libs/unknown/func_00094d90.cpp _ZN13hkBlockStream12FUN_00094d90EP10BlockCachePK19hkBlockStreamReader
 FUN_00167c20 src/libs/unknown/func_00167c20.cpp _ZN17CollideSharedData12FUN_00167c20EPK9hknpWorld
 FUN_001854b0 src/libs/unknown/func_001854b0.cpp _Z12FUN_001854b0P8hkAabb16PKS_i
@@ -2368,3 +2366,6 @@ _ZN13hknpBodyCinfoC1Ev src/libs/unknown/func_0003a560.cpp _ZN13hknpBodyCinfoC2Ev
 FUN_0017d320 src/libs/unknown/func_0017d320.cpp
 FUN_001559b0 src/libs/unknown/func_001559b0.cpp _ZN30hknpCompositeCollisionDetector15unknownVirtual3EPN20hknpWorldContextPool7ContextEPKvPK18hknpCollisionCacheP13hkBlockStreamS9_P10hknpCdBodySB_i
 FUN_00170f20 src/libs/unknown/func_00170f20.cpp _ZNK24hknpMotionWeldTOICommand12FUN_00170f20EPK9hknpWorldR9hkOstream
+_ZN14hkMemorySystemD2Ev src/libs/unknown/hkMemorySystem.cpp
+_ZN22hkFreeListMemorySystemD0Ev src/libs/unknown/func_0000c360.cpp
+FUN_0008f220 src/libs/unknown/func_0008f220.cpp _ZN18BlockListAllocator10blockAllocEi
