@@ -1323,6 +1323,19 @@ loops as the developer wrote them, or a structure that duplicates the loop
 stay parked with that lead until a source reading arrives; neither is a
 round's queue item.
 
+**Addendum, 2026-10-30 (round 62B's question).** Round 62B found that code-generating a TU from
+its own serialized bitcode (`clang -emit-llvm` at the library line, then `clang -Xclang
+-disable-llvm-optzns` on the .bc) makes 0x174f30 equal, where the one-step compile differs in
+the registers of a clear loop's two induction variables, and asked whether the base's code
+generator ran on deserialized IR (use-list order is what the round trip changes). Measured over
+every claimed library TU at 560c963 (1,937 TUs, scratchpad rtexp/run.sh in a snapshot
+worktree): 17 TUs change their text and 18 claimed functions among them stop matching (0x17f60,
+0x27a40, 0x310f0, 0x68440, 0x68500, 0x69150, 0x76910, 0x7fea0, 0x92e70, 0xae780, 0x142a40,
+0x142af0, 0x142bb0, 0x158a40, 0x16ae20, 0x185460, 0x1854b0, 0x18e380), while 0x174f30 alone
+becomes equal. REFUTED: the base's generator ran on the optimizer's in-memory module, as the
+one-step compile does. 0x174f30's residual is a use-list-order question of its source (which
+value is defined or used first), never a pipeline or a flag.
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
