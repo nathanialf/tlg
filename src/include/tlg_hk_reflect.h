@@ -7286,6 +7286,10 @@ class hknpModifierManager /* derived name */
         NUM_COLLISION_CACHE_TYPES = 9 /* derived name */
     };
 
+    /* A modifier filed under each callback its slot 2 names, with the body
+     * flags it acts on, at the end of each set or at its front (0x66630;
+     * the world's constructor adds its own at 0x4a089 on). derived name. */
+    void FUN_00066630(u32 flags, CacheModifier0017a000 *modifier, int append);
     void FUN_00066770(Type4e0 type, void *object);                               /* derived name */
     void FUN_00066790(CollisionCacheType type, hknpCollisionDetector *detector); /* derived name */
     void FUN_000667b0(hknpCollisionFilter *filter);                              /* derived name */
@@ -8017,7 +8021,9 @@ struct hknpMotionManager /* derived name */
      * head of the free list, one fewer in use. derived name. */
     void FUN_000476a0(int motionId);
 
-    u8 unknown0[8];
+    /* The world's body manager (0xcd585 reads the bodies and their cells
+     * through it). derived name. */
+    hknpBodyManager *bodyManager;
     hkArray<hknpMotion> motions;
     /* Set when the motions' storage is not the manager's to free (the
      * destructor tests it, 0x47461). derived name. */
@@ -8040,6 +8046,35 @@ struct hknpMotionManager /* derived name */
      * after the removal above): its place the list's size, then its id
      * appended. derived name. */
     void FUN_00047720(hknpMotion &motion, u32 motionId);
+
+    /* A motion moved to another cell (inline in the world's 0xcd4c0): out
+     * of its cell's list and into the new one's when it is in one, then
+     * each body attached to it flagged, an active one's cell recorded.
+     * derived name. */
+    void setCellIndex(hknpMotion &motion, u32 motionId, u8 cellIndex)
+    {
+        if (motion.cellIndex == cellIndex) {
+            return;
+        }
+        if (motion.solverId == 0 || motion.solverId == 0x7fffffff) {
+            motion.cellIndex = cellIndex;
+        } else {
+            FUN_00047790(motion, motionId);
+            motion.cellIndex = cellIndex;
+            FUN_00047720(motion, motionId);
+        }
+        hknpBodyManager &bodies = *bodyManager;
+        const u32 firstBodyId = motion.firstAttachedBodyId;
+        u32 bodyId = firstBodyId;
+        do {
+            hknpBody &body = bodies.bodies[bodyId];
+            if (body.flags & hknpBody::IS_ACTIVE) {
+                bodies.activeBodyCellIndices[bodyId] = cellIndex;
+            }
+            body.flags |= 0x1000;
+            bodyId = body.nextAttachedBodyId;
+        } while (bodyId != firstBodyId);
+    }
 };
 
 /* The object at +0x4f8 of the world (derived names): the world at +0, the
@@ -9200,6 +9235,8 @@ struct hknpConstraintManager /* derived name */
     int peakConstraintId;
 };
 
+class hknpSpaceSplitter;
+
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
      * rotated by the motion's orientation (0x5df30; the caller at
@@ -9246,6 +9283,11 @@ struct hknpWorld {
     /* The same for a body's collision filter info (0x60100; the qualities'
      * modifier calls it at 0x16ef49). derived name. */
     void FUN_00060100(int bodyId, u32 collisionFilterInfo, int rebuildMode);
+    /* Flags set on a body (0x601e0; the qualities' modifier at 0x16ef65 and
+     * the game): those beyond the low four, when any is not set yet, the
+     * body handed to the +0x1e0 object (slot 4), rebuilt unless asked not
+     * to, then the body signal fired. derived name. */
+    void FUN_000601e0(hknpBodyId bodyId, u32 flags, int rebuildMode);
     /* The same for a body's materialId (0x5fc00). derived name. */
     void FUN_0005fc00(int bodyId, hknpMaterialId materialId, int rebuildMode);
     /* A body's motion properties id recorded in the body manager's entry
@@ -9310,6 +9352,12 @@ struct hknpWorld {
      * derived name. */
     void FUN_00035eb0(hknpWorldObject6c0 *object);
 
+    /* A motion's cell from the space splitter (0xcd4c0; the step's motion
+     * update at 0x5cb5e): when it changes, the motion moved to the new
+     * cell's list if it is in one, and each body attached to it flagged,
+     * an active one's cell recorded. derived name. */
+    void FUN_000cd4c0(hknpMotion &motion, u32 motionId);
+
     u8 unknown0[0x10];
     /* The bodies and their active list (0x4c720 passes +0x10 to the body
      * manager's functions and indexes the bodies at +0x20); FUN_0004c170 (in
@@ -9347,7 +9395,8 @@ struct hknpWorld {
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
-    void *pointer1d8;
+    /* The space splitter (derived name; 0xcd4e8 reads its kind). */
+    hknpSpaceSplitter *spaceSplitter;
     hknpWorldObject1e0 *object1e0; /* derived name */
     u8 unknown1e8[8];
     u8 unknown1f0[0x60]; /* CollideSharedData's object40 points here */
@@ -10508,6 +10557,12 @@ class hknpConvexPolytopeShape : public hknpConvexShape
     /* Slot 17 (0x1540a0, kept by the triangle shape): the smallest face
      * angle. derived name. */
     float FUN_001540a0() const;
+
+    /* Slot 18 (0x152170, kept by the triangle shape): each sphere's
+     * closest point on the polytope from FUN_00187750 over the planes,
+     * its distance less the convex radius plus the sphere's. */
+    void unknownVirtual18(const SignedDistanceQuery &query,
+                          SignedDistanceContact *contactsOut) const;
 
     /* The bytes a polytope shape of a class of sizeOfBaseClass bytes
      * needs with its vertices, faces, planes and indices after it, each
@@ -14370,6 +14425,10 @@ class hkOArchive : public hkReferencedObject /* derived name */
     /* derived name: a 32-bit value written (0xa7a0), swapped when the
      * archive swaps. */
     void FUN_0000a7a0(int value);
+    /* derived name: an array of 16-bit values written (0xa8d0; the binary
+     * packfile writer's save at 0x18361d), each swapped when the archive
+     * swaps. */
+    void FUN_0000a8d0(const u16 *array, int numElements);
 
     /* An array of elements written, each element's bytes reversed first
      * when the archive swaps (0xa520): copied through a 512-byte buffer a
@@ -18339,7 +18398,7 @@ struct SplitterRecord0018e380 /* derived name */
     const u8 *data;
 };
 
-struct hknpGridSpaceSplitter /* derived name */
+struct hknpGridSpaceSplitter : public hknpSpaceSplitter /* derived name */
 {
     /* The cell of a position: its offset coordinate on each axis truncated
      * and masked, rows of numCellsPerRow (0x60c10; called at 0xcd518,
@@ -18352,10 +18411,7 @@ struct hknpGridSpaceSplitter /* derived name */
      * derived name. */
     int FUN_0018e380(const struct SplitterRecord0018e380 *records, int numRecords) const;
 
-    u8 unknown0[0x18];
-    int type; /* derived name */
-    int unknown1c;
-    u8 unknown20[0x20];
+    u8 unknown28[0x18];
     Vec4 offsetX;       /* derived name */
     Vec4 offsetY;       /* derived name */
     Vec4 axisX;         /* derived name */

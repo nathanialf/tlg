@@ -5,7 +5,7 @@ void CollideSharedData::FUN_00167c20(const hknpWorld *world)
 {
     solverInfo = &world->solverInfo;
     vector20 = world->vector250;
-    pointer8 = world->pointer1d8;
+    pointer8 = world->spaceSplitter;
     object40 = world->unknown1f0;
     object0 = world->enabled278 ? world->unknown280 : 0;
     bodies = world->bodyManager.bodies.data;

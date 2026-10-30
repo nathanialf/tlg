@@ -825,7 +825,7 @@ FUN_0017ec10 src/libs/unknown/func_0017ec10.cpp _ZN26hkDynamicClassNameRegistryD
 FUN_0019d5e0 src/libs/unknown/func_0019d5e0.cpp _ZN13XmlEndElementD1Ev
 FUN_0019d660 src/libs/unknown/func_0019d660.cpp _ZN13XmlCharactersD1Ev
 FUN_001585d0 src/libs/unknown/func_001585d0.cpp _ZN18hknpWorldObject6c0C2Ev
-_ZN13BufferOstreamD1Ev src/libs/unknown/func_00000eb0.cpp
+_ZN13BufferOstreamD1Ev src/libs/havok/Common/Base/System/Error/hkError.cpp
 FUN_0000bb40 src/libs/unknown/func_0000bb40.cpp
 FUN_00083020 src/libs/unknown/func_00083020.cpp
 FUN_00083500 src/libs/unknown/func_00083500.cpp
@@ -1539,7 +1539,7 @@ _ZN18BlockListAllocatorD1Ev src/libs/unknown/func_0008f220.cpp
 FUN_00094d90 src/libs/unknown/func_00094d90.cpp _ZN13hkBlockStream12FUN_00094d90EP10BlockCachePK19hkBlockStreamReader
 FUN_00167c20 src/libs/unknown/func_00167c20.cpp _ZN17CollideSharedData12FUN_00167c20EPK9hknpWorld
 FUN_001854b0 src/libs/unknown/func_001854b0.cpp _Z12FUN_001854b0P8hkAabb16PKS_i
-_ZN13BufferOstreamD0Ev src/libs/unknown/func_00000eb0.cpp
+_ZN13BufferOstreamD0Ev src/libs/havok/Common/Base/System/Error/hkError.cpp
 FUN_00010fe0 src/libs/unknown/func_00010fe0.cpp _Z12FUN_00010fe0RDv4_fRK12hkQTransformRKS_
 FUN_00040b70 src/libs/unknown/func_00040b70.cpp _ZNK16hknpTriggerEvent12FUN_00040b70EP9hknpWorldR9hkOstream
 FUN_0006c260 src/libs/unknown/func_0006c260.cpp _ZN14hknpSolverStep12FUN_0006c260ERK14hknpSolverInfoii
@@ -1855,7 +1855,7 @@ FUN_00026100 src/libs/unknown/func_00026100.cpp _ZN26hkCompressedMassProperties1
 FUN_00035ba0 src/libs/unknown/func_00035ba0.cpp _ZN25hknpCharacterStateManager12FUN_00035ba0EP18hknpCharacterState22hknpCharacterStateType
 FUN_00090250 src/libs/unknown/func_00090250.cpp _Z12FUN_00090250P12hkRefVariantP18hkReferencedObject
 FUN_00065f30 src/libs/unknown/func_00065f30.cpp _Z12FUN_00065f30P14Object00065f20PK13hkBlockStream
-_ZN13BufferOstreamC1EPci src/libs/unknown/func_00000da0.cpp _ZN13BufferOstreamC2EPci
+_ZN13BufferOstreamC1EPci src/libs/havok/Common/Base/System/Error/hkError.cpp _ZN13BufferOstreamC2EPci
 FUN_00019190 src/libs/unknown/func_00019190.cpp _ZN8FreeList12FUN_00019190Ev
 _ZN12hknpMaterialC1Ev src/libs/unknown/func_0006c650.cpp _ZN12hknpMaterialC2Ev
 FUN_0000bde0 src/libs/unknown/func_0000bde0.cpp _ZNK9hkMatrix312FUN_0000bde0Ef
@@ -2424,3 +2424,7 @@ FUN_0004c5f0 src/libs/unknown/func_0004c5f0.cpp _ZN9hknpWorld12FUN_0004c5f0Eji
 _ZN17hkCriticalSectionC1Ei src/libs/unknown/func_00001830.cpp _ZN17hkCriticalSectionC2Ei
 FUN_00035eb0 src/libs/unknown/func_00035eb0.cpp _ZN9hknpWorld12FUN_00035eb0EP18hknpWorldObject6c0
 FUN_00013530 src/libs/unknown/func_00013530.cpp _ZNK21hkLargeBlockAllocator19getMemoryStatisticsER16MemoryStatistics
+FUN_00000ee0 src/libs/havok/Common/Base/System/Error/hkError.cpp _Z12FUN_00000ee0PKc
+FUN_00018770 src/libs/unknown/func_00018770.cpp _ZN8FreeList12FUN_00018770Ev
+FUN_000cd4c0 src/libs/unknown/func_000cd4c0.cpp _ZN9hknpWorld12FUN_000cd4c0ER10hknpMotionj
+FUN_000601e0 src/libs/unknown/func_000601e0.cpp _ZN9hknpWorld12FUN_000601e0E10hknpBodyIdji

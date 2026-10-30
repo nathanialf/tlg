@@ -14,5 +14,5 @@ int hknpGridSpaceSplitter::FUN_0018e380(const SplitterRecord0018e380 *records, i
             }
         }
     }
-    return count + unknown1c;
+    return count + numCells;
 }

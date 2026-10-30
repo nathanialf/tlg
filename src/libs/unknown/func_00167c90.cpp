@@ -5,6 +5,6 @@ void ModifierSharedData::FUN_00167c90(const hknpWorld *world)
 {
     solverInfo = &world->solverInfo;
     vector20 = world->vector250;
-    pointer8 = world->pointer1d8;
+    pointer8 = world->spaceSplitter;
     object0 = world->enabled278 ? world->unknown280 : 0;
 }

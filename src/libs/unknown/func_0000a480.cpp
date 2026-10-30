@@ -74,3 +74,13 @@ void hkOArchive::FUN_0000a7a0(int value)
 {
     writeArrayGeneric(&value, sizeof(value), 1);
 }
+
+// NONMATCHING: 20 of 85 (docs/NOTES.md, Round 64A): the base keeps the last
+// chunk's element count as its own value (`lastBytes / 2`, spilled with the
+// byte count) and selects it against 256 in the loop; here the inlined
+// write's chunk count is folded into the byte count's select halved
+// (`sdiv (select c, lastBytes, 512), 2`), one value fewer live.
+void hkOArchive::FUN_0000a8d0(const u16 *array, int numElements)
+{
+    writeArrayGeneric(array, sizeof(u16), numElements);
+}

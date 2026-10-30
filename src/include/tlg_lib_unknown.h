@@ -114,7 +114,9 @@ class CacheModifier0017a000 /* derived name */
   public:
     virtual void unknownVirtual0();
     virtual void unknownVirtual1();
-    virtual void unknownVirtual2();
+    /* Slot 2: a bit for each callback the modifier takes part in, the
+     * index of its set in the manager (0x66650). derived name. */
+    virtual u32 unknownVirtual2();
     virtual void unknownVirtual3();
     virtual void unknownVirtual4();
     virtual void unknownVirtual5(const void *threadContext, const void *sharedData,
@@ -2358,6 +2360,26 @@ struct FreeList /* derived name */
      * owner at 0x1c81 calls it on a list it keeps using, so it is a member
      * of its own, which the destructor runs. */
     void FUN_00018770(); /* derived name */
+
+    /* A chain of blocks given back, their elements uncounted: the block
+     * with its elements to the block allocator, or, when the element
+     * allocator keeps the headers apart, the memory to the one and the
+     * header to the other (twice inline in 0x18770). derived name. */
+    void giveBackBlocks(FreeListBlock *block)
+    {
+        while (block) {
+            totalNumElements -= block->numElements;
+            numFreeElements -= block->numElements;
+            FreeListBlock *next = block->next;
+            if (!elementAllocator) {
+                blockAllocator->FUN_00008d80(block, int(blockSize));
+            } else {
+                blockAllocator->FUN_00008d80(block->memory, int(blockSize));
+                elementAllocator->blockFree(block, sizeof(FreeListBlock));
+            }
+            block = next;
+        }
+    }
 
     ~FreeList()
     {
@@ -5828,6 +5850,10 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
     FlaggedPoints00060c70(int numPoints);
 
     virtual void FUN_00061280(const Vec4 &offset); /* vtable slot 3; derived name */
+
+    /* The cell of a position, its nearest point (0x61060; the world's motion
+     * update at 0xcd50a). derived name. */
+    void FUN_00061060(const Vec4 &position, int *cellOut) const;
 
     /* New bodies spread over the points (0x611a0; the island activation
      * calls it for a splitter of kind 1 at 0x63bc8): the running total
