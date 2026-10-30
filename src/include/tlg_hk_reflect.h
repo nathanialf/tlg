@@ -872,9 +872,6 @@ struct hkClass {
      * (0x42b0) and members (0x4350). derived names. */
     int FUN_000042b0() const; /* derived name */
     int FUN_00004350() const; /* derived name */
-    /* A member's default value written to a stream, HK_FAILURE when it
-     * has none (0x4940; the XML writer's 0x1a1c99). derived name. */
-    hkResult FUN_00004940(int memberIndex, hkStreamWriter *writer) const;
     /* The class's own counts and members, out of line (0x42f0: its
      * implemented interfaces; 0x4440: its declared members; 0x4450: a
      * declared member by index; the writers' walks call them, 0x180f50 and
@@ -973,6 +970,18 @@ bool FUN_000045a0(const hkClass *self); /* derived name */
  * names. */
 struct hkClassEnum {
     struct Item {
+        /* The value and the name by value (the flags' decomposition reads
+         * the name before its array grows, 0x14d60). derived names. */
+        int getValue() const
+        {
+            return value;
+        }
+
+        const char *getName() const
+        {
+            return name;
+        }
+
         int value;
         const char *name;
     };
