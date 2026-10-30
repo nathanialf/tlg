@@ -2011,3 +2011,4 @@ FUN_00009470 src/libs/unknown/func_00009470.cpp _GLOBAL__I_a
 FUN_0000c1b0 src/libs/unknown/func_0000c1b0.cpp _GLOBAL__I_a
 FUN_0008e380 src/libs/unknown/func_0008e380.cpp _GLOBAL__I_a
 FUN_0008e460 src/libs/unknown/func_0008e460.cpp _GLOBAL__I_a
+FUN_00091d50 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp _Z12FUN_00091d50PKcii

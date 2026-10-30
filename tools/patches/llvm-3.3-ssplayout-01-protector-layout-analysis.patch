@@ -1,0 +1,842 @@
+llvm-3.3 backport patch: the stack protector's analysis lays out the protected frame (PS4)
+
+This patch CHANGES CODE GENERATION for every function that carries a stack
+canary, and only for those: the layout of an unprotected frame stays index
+order. The StackProtector pass becomes an analysis that classifies each
+alloca it protects (a large array: an array, or a structure holding one, of
+ssp-buffer-size bytes or more, or an alloca of that size or of a variable
+size; a small array; an object whose address is taken under the strong
+rules), and the prolog and epilog inserter and the local stack slot pass
+take that classification instead of MachineFrameInfo's MayNeedSP flag,
+which goes. In this patch only the large arrays move next to the guard (each
+in frame-index order); llvm-3.3-ssplayout-02 adds the other two groups. It
+ports three upstream commits by Josh Magee, all after the 3.3 branch:
+
+  r191570  8ecfb52388e1  2013-09-27  "[stackprotector] Refactor the
+           StackProtector pass from a single .cpp file into StackProtector.h
+           and StackProtector.cpp."
+  r193653  3f1c0e35e639  2013-10-29  "[stackprotector] Update the
+           StackProtector pass to perform datalayout analysis."
+  r197653  22b8ba2d6769  2013-12-19  "[stackprotector] Use analysis from the
+           StackProtector pass for stack layout in PEI and LocalStackSlot
+           passes."
+
+Adapted to 3.3: the class in the new include/llvm/CodeGen/StackProtector.h
+is 3.3's own (it keeps the TargetLoweringBase constructor, reads
+SSPBufferSize from the TargetMachine options and builds the Triple where 3.3
+did, and still inserts the guard as the 3.3 pass does; the upstream parents
+had moved to a TargetMachine, r184349, to the stack-protector-buffer-size
+attribute, r186217 and r186863, and to the intrinsic check of r188766, none
+of which is ported). PEI::getAnalysisUsage is in ShrinkWrapping.cpp in 3.3
+(upstream r193749 of 2013-10-31 moved it), so the requirement is added
+there. The callers and passes in the targets this build leaves out (MBlaze,
+Hexagon, NVPTX) are not touched. r199716 (the checked return of the buffer
+size attribute) has nothing to apply to in 3.3. X86FastISel records the
+guard's frame index as upstream does, which concerns -O0 only.
+Moving the pass after addPreISel changes nothing on X86, which adds no
+pre-ISel pass. The PS4 compiler is of this generation (D32's bracket: after
+r196925 of 2013-12-10, before r206214 of 2014-04-14), and the base's frames
+follow the rule (docs/DECISIONS.md D35).
+
+--- a/include/llvm/CodeGen/MachineFrameInfo.h
++++ b/include/llvm/CodeGen/MachineFrameInfo.h
+@@ -100,11 +100,6 @@
+     // cannot alias any other memory objects.
+     bool isSpillSlot;
+ 
+-    // MayNeedSP - If true the stack object triggered the creation of the stack
+-    // protector. We should allocate this object right after the stack
+-    // protector.
+-    bool MayNeedSP;
+-
+     /// Alloca - If this stack object is originated from an Alloca instruction
+     /// this value saves the original IR allocation. Can be NULL.
+     const AllocaInst *Alloca;
+@@ -114,9 +109,9 @@
+     bool PreAllocated;
+ 
+     StackObject(uint64_t Sz, unsigned Al, int64_t SP, bool IM,
+-                bool isSS, bool NSP, const AllocaInst *Val)
++                bool isSS, const AllocaInst *Val)
+       : SPOffset(SP), Size(Sz), Alignment(Al), isImmutable(IM),
+-        isSpillSlot(isSS), MayNeedSP(NSP), Alloca(Val), PreAllocated(false) {}
++        isSpillSlot(isSS), Alloca(Val), PreAllocated(false) {}
+   };
+ 
+   /// Objects - The list of stack objects allocated...
+@@ -379,14 +374,6 @@
+     return Objects[ObjectIdx+NumFixedObjects].Alloca;
+   }
+ 
+-  /// NeedsStackProtector - Returns true if the object may need stack
+-  /// protectors.
+-  bool MayNeedStackProtector(int ObjectIdx) const {
+-    assert(unsigned(ObjectIdx+NumFixedObjects) < Objects.size() &&
+-           "Invalid Object Idx!");
+-    return Objects[ObjectIdx+NumFixedObjects].MayNeedSP;
+-  }
+-
+   /// getObjectOffset - Return the assigned stack offset of the specified object
+   /// from the incoming stack pointer.
+   ///
+@@ -500,7 +487,7 @@
+   /// a nonnegative identifier to represent it.
+   ///
+   int CreateStackObject(uint64_t Size, unsigned Alignment, bool isSS,
+-                        bool MayNeedSP = false, const AllocaInst *Alloca = 0);
++                        const AllocaInst *Alloca = 0);
+ 
+   /// CreateSpillStackObject - Create a new statically sized stack object that
+   /// represents a spill slot, returning a nonnegative identifier to represent
+@@ -520,7 +507,7 @@
+   /// variable sized object is created, whether or not the index returned is
+   /// actually used.
+   ///
+-  int CreateVariableSizedObject(unsigned Alignment);
++  int CreateVariableSizedObject(unsigned Alignment, const AllocaInst *Alloca);
+ 
+   /// getCalleeSavedInfo - Returns a reference to call saved info vector for the
+   /// current function.
+--- /dev/null
++++ b/include/llvm/CodeGen/StackProtector.h
+@@ -0,0 +1,118 @@
++//===-- StackProtector.h - Stack Protector Insertion ------------*- C++ -*-===//
++//
++//                     The LLVM Compiler Infrastructure
++//
++// This file is distributed under the University of Illinois Open Source
++// License. See LICENSE.TXT for details.
++//
++//===----------------------------------------------------------------------===//
++//
++// This pass inserts stack protectors into functions which need them. A variable
++// with a random value in it is stored onto the stack before the local variables
++// are allocated. Upon exiting the block, the stored value is checked. If it's
++// changed, then there was some sort of violation and the program aborts.
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_CODEGEN_STACKPROTECTOR_H
++#define LLVM_CODEGEN_STACKPROTECTOR_H
++
++#include "llvm/ADT/SmallPtrSet.h"
++#include "llvm/ADT/ValueMap.h"
++#include "llvm/Analysis/Dominators.h"
++#include "llvm/Pass.h"
++#include "llvm/Target/TargetLowering.h"
++
++namespace llvm {
++class Function;
++class Module;
++class PHINode;
++
++class StackProtector : public FunctionPass {
++public:
++  /// SSPLayoutKind.  Stack Smashing Protection (SSP) rules require that
++  /// vulnerable stack allocations are located close the stack protector.
++  enum SSPLayoutKind {
++    SSPLK_None,       ///< Did not trigger a stack protector.  No effect on data
++                      ///< layout.
++    SSPLK_LargeArray, ///< Array or nested array >= SSP-buffer-size.  Closest
++                      ///< to the stack protector.
++    SSPLK_SmallArray, ///< Array or nested array < SSP-buffer-size. 2nd closest
++                      ///< to the stack protector.
++    SSPLK_AddrOf      ///< The address of this allocation is exposed and
++                      ///< triggered protection.  3rd closest to the protector.
++  };
++
++  /// A mapping of AllocaInsts to their required SSP layout.
++  typedef ValueMap<const AllocaInst *, SSPLayoutKind> SSPLayoutMap;
++
++private:
++  /// TLI - Keep a pointer of a TargetLowering to consult for determining
++  /// target type sizes.
++  const TargetLoweringBase *TLI;
++
++  Function *F;
++  Module *M;
++
++  DominatorTree *DT;
++
++  /// Layout - Mapping of allocations to the required SSPLayoutKind.
++  /// StackProtector analysis will update this map when determining if an
++  /// AllocaInst triggers a stack protector.
++  SSPLayoutMap Layout;
++
++  /// VisitedPHIs - The set of PHI nodes visited when determining
++  /// if a variable's reference has been taken.  This set
++  /// is maintained to ensure we don't visit the same PHI node multiple
++  /// times.
++  SmallPtrSet<const PHINode *, 16> VisitedPHIs;
++
++  /// InsertStackProtectors - Insert code into the prologue and epilogue of
++  /// the function.
++  ///
++  ///  - The prologue code loads and stores the stack guard onto the stack.
++  ///  - The epilogue checks the value stored in the prologue against the
++  ///    original value. It calls __stack_chk_fail if they differ.
++  bool InsertStackProtectors();
++
++  /// CreateFailBB - Create a basic block to jump to when the stack protector
++  /// check fails.
++  BasicBlock *CreateFailBB();
++
++  /// ContainsProtectableArray - Check whether the type either is an array or
++  /// contains an array of sufficient size so that we need stack protectors
++  /// for it.
++  /// \param [out] IsLarge is set to true if a protectable array is found and
++  /// it is "large" ( >= ssp-buffer-size).  In the case of a structure with
++  /// multiple arrays, this gets set if any of them is large.
++  bool ContainsProtectableArray(Type *Ty, bool &IsLarge, bool Strong = false,
++                                bool InStruct = false) const;
++
++  /// \brief Check whether a stack allocation has its address taken.
++  bool HasAddressTaken(const Instruction *AI);
++
++  /// RequiresStackProtector - Check whether or not this function needs a
++  /// stack protector based upon the stack protector level.
++  bool RequiresStackProtector();
++
++public:
++  static char ID; // Pass identification, replacement for typeid.
++  StackProtector() : FunctionPass(ID), TLI(0) {
++    initializeStackProtectorPass(*PassRegistry::getPassRegistry());
++  }
++  StackProtector(const TargetLoweringBase *tli)
++      : FunctionPass(ID), TLI(tli) {
++    initializeStackProtectorPass(*PassRegistry::getPassRegistry());
++  }
++
++  virtual void getAnalysisUsage(AnalysisUsage &AU) const {
++    AU.addPreserved<DominatorTree>();
++  }
++
++  SSPLayoutKind getSSPLayout(const AllocaInst *AI) const;
++
++  virtual bool runOnFunction(Function &Fn);
++};
++} // end namespace llvm
++
++#endif // LLVM_CODEGEN_STACKPROTECTOR_H
+--- a/lib/CodeGen/LocalStackSlotAllocation.cpp
++++ b/lib/CodeGen/LocalStackSlotAllocation.cpp
+@@ -17,12 +17,14 @@
+ #define DEBUG_TYPE "localstackalloc"
+ #include "llvm/CodeGen/Passes.h"
+ #include "llvm/ADT/STLExtras.h"
++#include "llvm/ADT/SetVector.h"
+ #include "llvm/ADT/SmallSet.h"
+ #include "llvm/ADT/Statistic.h"
+ #include "llvm/CodeGen/MachineFrameInfo.h"
+ #include "llvm/CodeGen/MachineFunction.h"
+ #include "llvm/CodeGen/MachineFunctionPass.h"
+ #include "llvm/CodeGen/MachineRegisterInfo.h"
++#include "llvm/CodeGen/StackProtector.h"
+ #include "llvm/IR/Constants.h"
+ #include "llvm/IR/DerivedTypes.h"
+ #include "llvm/IR/Instructions.h"
+@@ -60,18 +62,27 @@
+ 
+   class LocalStackSlotPass: public MachineFunctionPass {
+     SmallVector<int64_t,16> LocalOffsets;
++    /// StackObjSet - A set of stack object indexes
++    typedef SmallSetVector<int, 8> StackObjSet;
+ 
+     void AdjustStackOffset(MachineFrameInfo *MFI, int FrameIdx, int64_t &Offset,
+                            bool StackGrowsDown, unsigned &MaxAlign);
++    void AssignProtectedObjSet(const StackObjSet &UnassignedObjs,
++                               SmallSet<int, 16> &ProtectedObjs,
++                               MachineFrameInfo *MFI, bool StackGrowsDown,
++                               int64_t &Offset, unsigned &MaxAlign);
+     void calculateFrameObjectOffsets(MachineFunction &Fn);
+     bool insertFrameReferenceRegisters(MachineFunction &Fn);
+   public:
+     static char ID; // Pass identification, replacement for typeid
+-    explicit LocalStackSlotPass() : MachineFunctionPass(ID) { }
++    explicit LocalStackSlotPass() : MachineFunctionPass(ID) {
++      initializeLocalStackSlotPassPass(*PassRegistry::getPassRegistry());
++    }
+     bool runOnMachineFunction(MachineFunction &MF);
+ 
+     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+       AU.setPreservesCFG();
++      AU.addRequired<StackProtector>();
+       MachineFunctionPass::getAnalysisUsage(AU);
+     }
+ 
+@@ -81,8 +92,11 @@
+ 
+ char LocalStackSlotPass::ID = 0;
+ char &llvm::LocalStackSlotAllocationID = LocalStackSlotPass::ID;
+-INITIALIZE_PASS(LocalStackSlotPass, "localstackalloc",
+-                "Local Stack Slot Allocation", false, false)
++INITIALIZE_PASS_BEGIN(LocalStackSlotPass, "localstackalloc",
++                      "Local Stack Slot Allocation", false, false)
++INITIALIZE_PASS_DEPENDENCY(StackProtector)
++INITIALIZE_PASS_END(LocalStackSlotPass, "localstackalloc",
++                    "Local Stack Slot Allocation", false, false)
+ 
+ bool LocalStackSlotPass::runOnMachineFunction(MachineFunction &MF) {
+   MachineFrameInfo *MFI = MF.getFrameInfo();
+@@ -145,6 +159,22 @@
+   ++NumAllocations;
+ }
+ 
++/// AssignProtectedObjSet - Helper function to assign large stack objects (i.e.,
++/// those required to be close to the Stack Protector) to stack offsets.
++void LocalStackSlotPass::AssignProtectedObjSet(const StackObjSet &UnassignedObjs,
++                                           SmallSet<int, 16> &ProtectedObjs,
++                                           MachineFrameInfo *MFI,
++                                           bool StackGrowsDown, int64_t &Offset,
++                                           unsigned &MaxAlign) {
++
++  for (StackObjSet::const_iterator I = UnassignedObjs.begin(),
++        E = UnassignedObjs.end(); I != E; ++I) {
++    int i = *I;
++    AdjustStackOffset(MFI, i, Offset, StackGrowsDown, MaxAlign);
++    ProtectedObjs.insert(i);
++  }
++}
++
+ /// calculateFrameObjectOffsets - Calculate actual frame offsets for all of the
+ /// abstract stack objects.
+ ///
+@@ -156,11 +186,13 @@
+     TFI.getStackGrowthDirection() == TargetFrameLowering::StackGrowsDown;
+   int64_t Offset = 0;
+   unsigned MaxAlign = 0;
++  StackProtector *SP = &getAnalysis<StackProtector>();
+ 
+   // Make sure that the stack protector comes before the local variables on the
+   // stack.
+-  SmallSet<int, 16> LargeStackObjs;
++  SmallSet<int, 16> ProtectedObjs;
+   if (MFI->getStackProtectorIndex() >= 0) {
++    StackObjSet LargeArrayObjs;
+     AdjustStackOffset(MFI, MFI->getStackProtectorIndex(), Offset,
+                       StackGrowsDown, MaxAlign);
+ 
+@@ -170,12 +202,21 @@
+         continue;
+       if (MFI->getStackProtectorIndex() == (int)i)
+         continue;
+-      if (!MFI->MayNeedStackProtector(i))
+-        continue;
+ 
+-      AdjustStackOffset(MFI, i, Offset, StackGrowsDown, MaxAlign);
+-      LargeStackObjs.insert(i);
++      switch (SP->getSSPLayout(MFI->getObjectAllocation(i))) {
++      case StackProtector::SSPLK_None:
++      case StackProtector::SSPLK_SmallArray:
++      case StackProtector::SSPLK_AddrOf:
++        continue;
++      case StackProtector::SSPLK_LargeArray:
++        LargeArrayObjs.insert(i);
++        continue;
++      }
++      llvm_unreachable("Unexpected SSPLayoutKind.");
+     }
++
++    AssignProtectedObjSet(LargeArrayObjs, ProtectedObjs, MFI, StackGrowsDown,
++                          Offset, MaxAlign);
+   }
+ 
+   // Then assign frame offsets to stack objects that are not used to spill
+@@ -185,7 +226,7 @@
+       continue;
+     if (MFI->getStackProtectorIndex() == (int)i)
+       continue;
+-    if (LargeStackObjs.count(i))
++    if (ProtectedObjs.count(i))
+       continue;
+ 
+     AdjustStackOffset(MFI, i, Offset, StackGrowsDown, MaxAlign);
+--- a/lib/CodeGen/MachineFunction.cpp
++++ b/lib/CodeGen/MachineFunction.cpp
+@@ -480,12 +480,11 @@
+ /// a nonnegative identifier to represent it.
+ ///
+ int MachineFrameInfo::CreateStackObject(uint64_t Size, unsigned Alignment,
+-                      bool isSS, bool MayNeedSP, const AllocaInst *Alloca) {
++                      bool isSS, const AllocaInst *Alloca) {
+   assert(Size != 0 && "Cannot allocate zero size stack objects!");
+   Alignment = clampStackAlignment(!TFI.isStackRealignable() || !RealignOption,
+                                   Alignment, TFI.getStackAlignment());
+-  Objects.push_back(StackObject(Size, Alignment, 0, false, isSS, MayNeedSP,
+-                                Alloca));
++  Objects.push_back(StackObject(Size, Alignment, 0, false, isSS, Alloca));
+   int Index = (int)Objects.size() - NumFixedObjects - 1;
+   assert(Index >= 0 && "Bad frame index!");
+   ensureMaxAlignment(Alignment);
+@@ -500,7 +499,7 @@
+                                              unsigned Alignment) {
+   Alignment = clampStackAlignment(!TFI.isStackRealignable() || !RealignOption,
+                                   Alignment, TFI.getStackAlignment()); 
+-  CreateStackObject(Size, Alignment, true, false);
++  CreateStackObject(Size, Alignment, true);
+   int Index = (int)Objects.size() - NumFixedObjects - 1;
+   ensureMaxAlignment(Alignment);
+   return Index;
+@@ -511,11 +510,12 @@
+ /// variable sized object is created, whether or not the index returned is
+ /// actually used.
+ ///
+-int MachineFrameInfo::CreateVariableSizedObject(unsigned Alignment) {
++int MachineFrameInfo::CreateVariableSizedObject(unsigned Alignment,
++                                                const AllocaInst *Alloca) {
+   HasVarSizedObjects = true;
+   Alignment = clampStackAlignment(!TFI.isStackRealignable() || !RealignOption,
+                                   Alignment, TFI.getStackAlignment()); 
+-  Objects.push_back(StackObject(0, Alignment, 0, false, false, true, 0));
++  Objects.push_back(StackObject(0, Alignment, 0, false, false, Alloca));
+   ensureMaxAlignment(Alignment);
+   return (int)Objects.size()-NumFixedObjects-1;
+ }
+@@ -538,7 +538,6 @@
+                               Align, TFI.getStackAlignment()); 
+   Objects.insert(Objects.begin(), StackObject(Size, Align, SPOffset, Immutable,
+                                               /*isSS*/   false,
+-                                              /*NeedSP*/ false,
+                                               /*Alloca*/ 0));
+   return -++NumFixedObjects;
+ }
+--- a/lib/CodeGen/MachineFunctionPass.cpp
++++ b/lib/CodeGen/MachineFunctionPass.cpp
+@@ -51,6 +51,7 @@
+   AU.addPreserved("domfrontier");
+   AU.addPreserved("loops");
+   AU.addPreserved("lda");
++  AU.addPreserved("stack-protector");
+ 
+   FunctionPass::getAnalysisUsage(AU);
+ }
+--- a/lib/CodeGen/Passes.cpp
++++ b/lib/CodeGen/Passes.cpp
+@@ -422,10 +422,10 @@
+ /// Add common passes that perform LLVM IR to IR transforms in preparation for
+ /// instruction selection.
+ void TargetPassConfig::addISelPrepare() {
+-  addPass(createStackProtectorPass(getTargetLowering()));
+-
+   addPreISel();
+ 
++  addPass(createStackProtectorPass(getTargetLowering()));
++
+   if (PrintISelInput)
+     addPass(createPrintFunctionPass("\n\n"
+                                     "*** Final LLVM Code input to ISel ***\n",
+--- a/lib/CodeGen/PrologEpilogInserter.cpp
++++ b/lib/CodeGen/PrologEpilogInserter.cpp
+@@ -23,6 +23,7 @@
+ #include "PrologEpilogInserter.h"
+ #include "llvm/ADT/IndexedMap.h"
+ #include "llvm/ADT/STLExtras.h"
++#include "llvm/ADT/SetVector.h"
+ #include "llvm/ADT/SmallSet.h"
+ #include "llvm/ADT/Statistic.h"
+ #include "llvm/CodeGen/MachineDominators.h"
+@@ -31,6 +32,7 @@
+ #include "llvm/CodeGen/MachineLoopInfo.h"
+ #include "llvm/CodeGen/MachineRegisterInfo.h"
+ #include "llvm/CodeGen/RegisterScavenging.h"
++#include "llvm/CodeGen/StackProtector.h"
+ #include "llvm/IR/InlineAsm.h"
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/Compiler.h"
+@@ -50,6 +52,7 @@
+                 "Prologue/Epilogue Insertion", false, false)
+ INITIALIZE_PASS_DEPENDENCY(MachineLoopInfo)
+ INITIALIZE_PASS_DEPENDENCY(MachineDominatorTree)
++INITIALIZE_PASS_DEPENDENCY(StackProtector)
+ INITIALIZE_PASS_DEPENDENCY(TargetPassConfig)
+ INITIALIZE_PASS_END(PEI, "prologepilog",
+                     "Prologue/Epilogue Insertion & Frame Finalization",
+@@ -59,6 +62,9 @@
+ STATISTIC(NumBytesStackSpace,
+           "Number of bytes used for stack in all functions");
+ 
++/// StackObjSet - A set of stack object indexes
++typedef SmallSetVector<int, 8> StackObjSet;
++
+ /// runOnMachineFunction - Insert prolog/epilog code and replace abstract
+ /// frame indexes with appropriate references.
+ ///
+@@ -472,11 +478,28 @@
+   }
+ }
+ 
++/// AssignProtectedObjSet - Helper function to assign large stack objects (i.e.,
++/// those required to be close to the Stack Protector) to stack offsets.
++static void
++AssignProtectedObjSet(const StackObjSet &UnassignedObjs,
++                      SmallSet<int, 16> &ProtectedObjs,
++                      MachineFrameInfo *MFI, bool StackGrowsDown,
++                      int64_t &Offset, unsigned &MaxAlign) {
++
++  for (StackObjSet::const_iterator I = UnassignedObjs.begin(),
++        E = UnassignedObjs.end(); I != E; ++I) {
++    int i = *I;
++    AdjustStackOffset(MFI, i, StackGrowsDown, Offset, MaxAlign);
++    ProtectedObjs.insert(i);
++  }
++}
++
+ /// calculateFrameObjectOffsets - Calculate actual frame offsets for all of the
+ /// abstract stack objects.
+ ///
+ void PEI::calculateFrameObjectOffsets(MachineFunction &Fn) {
+   const TargetFrameLowering &TFI = *Fn.getTarget().getFrameLowering();
++  StackProtector *SP = &getAnalysis<StackProtector>();
+ 
+   bool StackGrowsDown =
+     TFI.getStackGrowthDirection() == TargetFrameLowering::StackGrowsDown;
+@@ -582,8 +605,9 @@
+ 
+   // Make sure that the stack protector comes before the local variables on the
+   // stack.
+-  SmallSet<int, 16> LargeStackObjs;
++  SmallSet<int, 16> ProtectedObjs;
+   if (MFI->getStackProtectorIndex() >= 0) {
++    StackObjSet LargeArrayObjs;
+     AdjustStackOffset(MFI, MFI->getStackProtectorIndex(), StackGrowsDown,
+                       Offset, MaxAlign);
+ 
+@@ -600,12 +624,21 @@
+         continue;
+       if (MFI->getStackProtectorIndex() == (int)i)
+         continue;
+-      if (!MFI->MayNeedStackProtector(i))
+-        continue;
+ 
+-      AdjustStackOffset(MFI, i, StackGrowsDown, Offset, MaxAlign);
+-      LargeStackObjs.insert(i);
++      switch (SP->getSSPLayout(MFI->getObjectAllocation(i))) {
++      case StackProtector::SSPLK_None:
++      case StackProtector::SSPLK_SmallArray:
++      case StackProtector::SSPLK_AddrOf:
++        continue;
++      case StackProtector::SSPLK_LargeArray:
++        LargeArrayObjs.insert(i);
++        continue;
++      }
++      llvm_unreachable("Unexpected SSPLayoutKind.");
+     }
++
++    AssignProtectedObjSet(LargeArrayObjs, ProtectedObjs, MFI, StackGrowsDown,
++                          Offset, MaxAlign);
+   }
+ 
+   // Then assign frame offsets to stack objects that are not used to spill
+@@ -622,7 +655,7 @@
+       continue;
+     if (MFI->getStackProtectorIndex() == (int)i)
+       continue;
+-    if (LargeStackObjs.count(i))
++    if (ProtectedObjs.count(i))
+       continue;
+ 
+     AdjustStackOffset(MFI, i, StackGrowsDown, Offset, MaxAlign);
+--- a/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp
++++ b/lib/CodeGen/SelectionDAG/FunctionLoweringInfo.cpp
+@@ -87,16 +87,8 @@
+         TySize *= CUI->getZExtValue();   // Get total allocated size.
+         if (TySize == 0) TySize = 1; // Don't create zero-sized stack objects.
+ 
+-        // The object may need to be placed onto the stack near the stack
+-        // protector if one exists. Determine here if this object is a suitable
+-        // candidate. I.e., it would trigger the creation of a stack protector.
+-        bool MayNeedSP =
+-          (AI->isArrayAllocation() ||
+-           (TySize >= 8 && isa<ArrayType>(Ty) &&
+-            cast<ArrayType>(Ty)->getElementType()->isIntegerTy(8)));
+         StaticAllocaMap[AI] =
+-          MF->getFrameInfo()->CreateStackObject(TySize, Align, false,
+-                                                MayNeedSP, AI);
++          MF->getFrameInfo()->CreateStackObject(TySize, Align, false, AI);
+       }
+ 
+   for (; BB != EB; ++BB)
+--- a/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
++++ b/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+@@ -3259,7 +3259,7 @@
+ 
+   // Inform the Frame Information that we have just allocated a variable-sized
+   // object.
+-  FuncInfo.MF->getFrameInfo()->CreateVariableSizedObject(Align ? Align : 1);
++  FuncInfo.MF->getFrameInfo()->CreateVariableSizedObject(Align ? Align : 1, &I);
+ }
+ 
+ void SelectionDAGBuilder::visitLoad(const LoadInst &I) {
+--- a/lib/CodeGen/ShrinkWrapping.cpp
++++ b/lib/CodeGen/ShrinkWrapping.cpp
+@@ -45,6 +45,7 @@
+ #include "llvm/CodeGen/MachineInstr.h"
+ #include "llvm/CodeGen/MachineLoopInfo.h"
+ #include "llvm/CodeGen/MachineRegisterInfo.h"
++#include "llvm/CodeGen/StackProtector.h"
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/Compiler.h"
+ #include "llvm/Support/Debug.h"
+@@ -92,6 +93,7 @@
+   }
+   AU.addPreserved<MachineLoopInfo>();
+   AU.addPreserved<MachineDominatorTree>();
++  AU.addRequired<StackProtector>();
+   AU.addRequired<TargetPassConfig>();
+   MachineFunctionPass::getAnalysisUsage(AU);
+ }
+--- a/lib/CodeGen/StackProtector.cpp
++++ b/lib/CodeGen/StackProtector.cpp
+@@ -15,11 +15,11 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #define DEBUG_TYPE "stack-protector"
++#include "llvm/CodeGen/StackProtector.h"
+ #include "llvm/CodeGen/Passes.h"
+ #include "llvm/ADT/SmallPtrSet.h"
+ #include "llvm/ADT/Statistic.h"
+ #include "llvm/ADT/Triple.h"
+-#include "llvm/Analysis/Dominators.h"
+ #include "llvm/IR/Attributes.h"
+ #include "llvm/IR/Constants.h"
+ #include "llvm/IR/DataLayout.h"
+@@ -37,73 +37,19 @@
+ STATISTIC(NumAddrTaken, "Number of local variables that have their address"
+                         " taken.");
+ 
+-namespace {
+-  class StackProtector : public FunctionPass {
+-    /// TLI - Keep a pointer of a TargetLowering to consult for determining
+-    /// target type sizes.
+-    const TargetLoweringBase *TLI;
+-
+-    Function *F;
+-    Module *M;
+-
+-    DominatorTree *DT;
+-
+-    /// VisitedPHIs - The set of PHI nodes visited when determining
+-    /// if a variable's reference has been taken.  This set 
+-    /// is maintained to ensure we don't visit the same PHI node multiple
+-    /// times.
+-    SmallPtrSet<const PHINode*, 16> VisitedPHIs;
+-
+-    /// InsertStackProtectors - Insert code into the prologue and epilogue of
+-    /// the function.
+-    ///
+-    ///  - The prologue code loads and stores the stack guard onto the stack.
+-    ///  - The epilogue checks the value stored in the prologue against the
+-    ///    original value. It calls __stack_chk_fail if they differ.
+-    bool InsertStackProtectors();
+-
+-    /// CreateFailBB - Create a basic block to jump to when the stack protector
+-    /// check fails.
+-    BasicBlock *CreateFailBB();
+-
+-    /// ContainsProtectableArray - Check whether the type either is an array or
+-    /// contains an array of sufficient size so that we need stack protectors
+-    /// for it.
+-    bool ContainsProtectableArray(Type *Ty, bool Strong = false,
+-                                  bool InStruct = false) const;
+-
+-    /// \brief Check whether a stack allocation has its address taken.
+-    bool HasAddressTaken(const Instruction *AI);
+-
+-    /// RequiresStackProtector - Check whether or not this function needs a
+-    /// stack protector based upon the stack protector level.
+-    bool RequiresStackProtector();
+-  public:
+-    static char ID;             // Pass identification, replacement for typeid.
+-    StackProtector() : FunctionPass(ID), TLI(0) {
+-      initializeStackProtectorPass(*PassRegistry::getPassRegistry());
+-    }
+-    StackProtector(const TargetLoweringBase *tli)
+-      : FunctionPass(ID), TLI(tli) {
+-      initializeStackProtectorPass(*PassRegistry::getPassRegistry());
+-    }
+-
+-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+-      AU.addPreserved<DominatorTree>();
+-    }
+-
+-    virtual bool runOnFunction(Function &Fn);
+-  };
+-} // end anonymous namespace
+-
+ char StackProtector::ID = 0;
+ INITIALIZE_PASS(StackProtector, "stack-protector",
+-                "Insert stack protectors", false, false)
++                "Insert stack protectors", false, true)
+ 
+ FunctionPass *llvm::createStackProtectorPass(const TargetLoweringBase *tli) {
+   return new StackProtector(tli);
+ }
+ 
++StackProtector::SSPLayoutKind StackProtector::getSSPLayout(const AllocaInst *AI)
++                                                           const {
++  return AI ? Layout.lookup(AI) : SSPLK_None;
++}
++
+ bool StackProtector::runOnFunction(Function &Fn) {
+   F = &Fn;
+   M = F->getParent();
+@@ -115,42 +61,54 @@
+   return InsertStackProtectors();
+ }
+ 
+-/// ContainsProtectableArray - Check whether the type either is an array or
+-/// contains a char array of sufficient size so that we need stack protectors
+-/// for it.
+-bool StackProtector::ContainsProtectableArray(Type *Ty, bool Strong,
+-                                              bool InStruct) const {
++/// \param [out] IsLarge is set to true if a protectable array is found and
++/// it is "large" ( >= ssp-buffer-size).  In the case of a structure with
++/// multiple arrays, this gets set if any of them is large.
++bool StackProtector::ContainsProtectableArray(Type *Ty, bool &IsLarge,
++                                              bool Strong, bool InStruct)
++                                              const {
+   if (!Ty) return false;
+   if (ArrayType *AT = dyn_cast<ArrayType>(Ty)) {
+-    // In strong mode any array, regardless of type and size, triggers a
+-    // protector
+-    if (Strong)
+-      return true;
+     const TargetMachine &TM = TLI->getTargetMachine();
+     if (!AT->getElementType()->isIntegerTy(8)) {
+       Triple Trip(TM.getTargetTriple());
+ 
+       // If we're on a non-Darwin platform or we're inside of a structure, don't
+       // add stack protectors unless the array is a character array.
+-      if (InStruct || !Trip.isOSDarwin())
+-          return false;
++      // However, in strong mode any array, regardless of type and size,
++      // triggers a protector.
++      if (!Strong && (InStruct || !Trip.isOSDarwin()))
++        return false;
+     }
+ 
+     // If an array has more than SSPBufferSize bytes of allocated space, then we
+     // emit stack protectors.
+-    if (TM.Options.SSPBufferSize <= TLI->getDataLayout()->getTypeAllocSize(AT))
++    if (TM.Options.SSPBufferSize <= TLI->getDataLayout()->getTypeAllocSize(AT)) {
++      IsLarge = true;
++      return true;
++    }
++
++    if (Strong)
++      // Require a protector for all arrays in strong mode
+       return true;
+   }
+ 
+   const StructType *ST = dyn_cast<StructType>(Ty);
+   if (!ST) return false;
+ 
++  bool NeedsProtector = false;
+   for (StructType::element_iterator I = ST->element_begin(),
+          E = ST->element_end(); I != E; ++I)
+-    if (ContainsProtectableArray(*I, Strong, true))
+-      return true;
++    if (ContainsProtectableArray(*I, IsLarge, Strong, true)) {
++      // If the element is a protectable array and is large (>= SSPBufferSize)
++      // then we are done.  If the protectable array is not large, then
++      // keep looking in case a subsequent element is a large array.
++      if (IsLarge)
++        return true;
++      NeedsProtector = true;
++    }
+ 
+-  return false;
++  return NeedsProtector;
+ }
+ 
+ bool StackProtector::HasAddressTaken(const Instruction *AI) {
+@@ -202,11 +160,13 @@
+ /// address taken.
+ bool StackProtector::RequiresStackProtector() {
+   bool Strong = false;
++  bool NeedsProtector = false;
+   if (F->getAttributes().hasAttribute(AttributeSet::FunctionIndex,
+-                                      Attribute::StackProtectReq))
+-    return true;
+-  else if (F->getAttributes().hasAttribute(AttributeSet::FunctionIndex,
+-                                           Attribute::StackProtectStrong))
++                                      Attribute::StackProtectReq)) {
++    NeedsProtector = true;
++    Strong = true; // Use the same heuristic as strong to determine SSPLayout
++  } else if (F->getAttributes().hasAttribute(AttributeSet::FunctionIndex,
++                                             Attribute::StackProtectStrong))
+     Strong = true;
+   else if (!F->getAttributes().hasAttribute(AttributeSet::FunctionIndex,
+                                             Attribute::StackProtect))
+@@ -219,34 +179,45 @@
+            II = BB->begin(), IE = BB->end(); II != IE; ++II) {
+       if (AllocaInst *AI = dyn_cast<AllocaInst>(II)) {
+         if (AI->isArrayAllocation()) {
+-          // SSP-Strong: Enable protectors for any call to alloca, regardless
+-          // of size.
+-          if (Strong)
+-            return true;
+-  
++          unsigned BufferSize = TLI->getTargetMachine().Options.SSPBufferSize;
+           if (const ConstantInt *CI =
+                dyn_cast<ConstantInt>(AI->getArraySize())) {
+-            unsigned BufferSize = TLI->getTargetMachine().Options.SSPBufferSize;
+-            if (CI->getLimitedValue(BufferSize) >= BufferSize)
++            if (CI->getLimitedValue(BufferSize) >= BufferSize) {
+               // A call to alloca with size >= SSPBufferSize requires
+               // stack protectors.
+-              return true;
+-          } else // A call to alloca with a variable size requires protectors.
+-            return true;
++              Layout.insert(std::make_pair(AI, SSPLK_LargeArray));
++              NeedsProtector = true;
++            } else if (Strong) {
++              // Require protectors for all alloca calls in strong mode.
++              Layout.insert(std::make_pair(AI, SSPLK_SmallArray));
++              NeedsProtector = true;
++            }
++          } else {
++            // A call to alloca with a variable size requires protectors.
++            Layout.insert(std::make_pair(AI, SSPLK_LargeArray));
++            NeedsProtector = true;
++          }
++          continue;
+         }
+ 
+-        if (ContainsProtectableArray(AI->getAllocatedType(), Strong))
+-          return true;
++        bool IsLarge = false;
++        if (ContainsProtectableArray(AI->getAllocatedType(), IsLarge, Strong)) {
++          Layout.insert(std::make_pair(AI, IsLarge ? SSPLK_LargeArray
++                                                   : SSPLK_SmallArray));
++          NeedsProtector = true;
++          continue;
++        }
+ 
+         if (Strong && HasAddressTaken(AI)) {
+-          ++NumAddrTaken; 
+-          return true;
++          ++NumAddrTaken;
++          Layout.insert(std::make_pair(AI, SSPLK_AddrOf));
++          NeedsProtector = true;
+         }
+       }
+     }
+   }
+ 
+-  return false;
++  return NeedsProtector;
+ }
+ 
+ /// InsertStackProtectors - Insert code into the prologue and epilogue of the
+--- a/lib/Target/X86/X86FastISel.cpp
++++ b/lib/Target/X86/X86FastISel.cpp
+@@ -1568,6 +1568,8 @@
+     const Value *Op1 = I.getArgOperand(0); // The guard's value.
+     const AllocaInst *Slot = cast<AllocaInst>(I.getArgOperand(1));
+ 
++    MFI.setStackProtectorIndex(FuncInfo.StaticAllocaMap[Slot]);
++
+     // Grab the frame index.
+     X86AddressMode AM;
+     if (!X86SelectAddress(Slot, AM)) return false;

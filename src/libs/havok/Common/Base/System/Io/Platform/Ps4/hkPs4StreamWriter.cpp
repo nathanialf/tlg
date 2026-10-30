@@ -78,9 +78,6 @@ int hkPs4StreamWriter::FUN_00092030() const /* derived name */
 /* derived names: a writer of a file opened through Fios with the open
  * flags given, or null when the open fails (0x91d50; the file system's
  * slot at 0x1bb9d asks it). The mode is not read. */
-// NONMATCHING: equal but for the frame: the base sets the handle first and
-// keeps the parameters nearer the guard, which 3.3's frame layout gives
-// only to an object declared first (docs/NOTES.md, Round 57).
 hkStreamWriter *FUN_00091d50(const char *path, int mode, int openFlags)
 {
     SceFiosFH handle = -1;

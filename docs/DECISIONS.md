@@ -1962,6 +1962,26 @@ order by offset compared): the 3.5 rule reorders the allocas of exactly
 three functions, 0x13e090, 0x19da90 (the XML reader) and 0x30ca0, none
 claimed; every claimed function's order is the same under both.
 
+**Adopted, 2026-10-30.** The live 3.3 prefix carries the ninth and tenth
+backports, `llvm-3.3-ssplayout-01-protector-layout-analysis` (upstream
+r191570 of 2013-09-27, r193653 of 2013-10-29 and r197653 of 2013-12-19:
+the stack protector pass as an analysis that classifies its allocas, read
+by the prolog and epilog inserter and the local stack slot pass in place of
+MachineFrameInfo's MayNeedSP flag) and
+`llvm-3.3-ssplayout-02-sspstrong-layout-rules` (r200601 of 2014-02-01, the
+three groups after the guard, and r199684 of 2014-01-20, the
+classification carried when stack coloring merges slots). r199658 (the IR
+rewrite stack coloring's merge does for alias analysis) and r206486 of
+2014-04-17 (the ssp-buffer-size attribute, after the bracket) are not
+ported; the class in the new StackProtector.h is 3.3's own, still
+inserting the guard as 3.3 does. The patches' headers hold every
+adaptation. Under the rebuilt compiler every one of 0x13e090's frame
+objects sits at the base's displacement (the function's remaining
+differences are source), the PS4 stream writer's opener 0x91d50 compiles
+equal and is claimed, and the gate holds on every claimed function (2,007
+on the backport's own run, then this commit's hook). 0x19da90 and 0x30ca0
+return to the queue.
+
 **Trigger to revisit.** A claimed function whose frame the backport moves;
 or a protected function the base lays out in index order where the rule
 would group an array or an address-taken object.
