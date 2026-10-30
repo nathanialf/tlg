@@ -3812,10 +3812,12 @@ class hkxMaterialEffect : public hkReferencedObject
 
 /* hkxNodeSelectionSet (hkClass 0x57c75b0, built at 0x8afe5: size 0x38,
  * parent hkxAttributeHolder's, member records at 0x16a1eb0): selectedNodes
- * (an array of pointers to hkxNode, class 0x57c77b0) at +0x20, name
- * (hkStringPtr) at +0x30. The finish callback 0x8af30 finishes the name. */
-struct hkxNode;
-
+ * (an array of pointers to hkxNode, class 0x57c77b0, each holding a
+ * reference) at +0x20, name (hkStringPtr) at +0x30. The finish callback
+ * 0x8af30 finishes the name. The destructor is the implicit one, emitted
+ * with the vtable where the inline finish constructor stores it (0x8ad10:
+ * the name, then each node's reference from the last, then the base's
+ * destructor; the deleting one 0x8ae00 after it). */
 class hkxNodeSelectionSet : public hkxAttributeHolder
 {
   public:
@@ -3824,7 +3826,11 @@ class hkxNodeSelectionSet : public hkxAttributeHolder
     {
     }
 
-    hkArray<hkxNode *> selectedNodes;
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x38 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkArray<hkRefPtr<hkxNode>> selectedNodes;
     hkStringPtr name;
 };
 
@@ -13382,13 +13388,19 @@ class hkMemoryMeshShape : public hkMeshShape
      * released. derived name. */
     void FUN_0002ad50(const hkMeshSection &section);
 
-    /* A section as the shape keeps it, 0x38 bytes (the lock 0x2abd0 and
-     * slot 7 index them so): its vertex buffer and material at +0 and +8.
-     * derived names. */
+    /* A section as the shape keeps it (type info "!hkMemoryMeshShape::Section",
+     * registered by 0x23e10), 0x38 bytes (the lock 0x2abd0 and slot 7 index
+     * them so): its vertex buffer and material held at +0 and +8, the bone
+     * matrix map at +0x10. The cleanup callback of its type info (0x23cf0)
+     * destroys it in place: the map's indices freed, then each reference
+     * released and cleared. derived names. */
     struct Section {
-        void *vertexBuffer;
-        hkMeshMaterial *material;
-        u8 unknown10[0x28];
+        static void FUN_00023cf0(void *object); /* derived name */
+
+        hkRefPtr<hkMeshVertexBuffer> vertexBuffer;
+        hkRefPtr<hkMeshMaterial> material;
+        hkMeshBoneIndexMapping boneMatrixMap;
+        u8 unknown20[0x18];
     };
 
     /* From its record table at 0x1691bf0: sections (array) at +0x10,

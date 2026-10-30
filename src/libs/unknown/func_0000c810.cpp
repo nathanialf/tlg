@@ -1,7 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-void MemorySystem::threadQuit(hkMemoryRouter &router, int flags)
+void hkMemorySystem::threadQuit(hkMemoryRouter &router, int flags)
 {
     ThreadData &thread = threads[router.threadIndex];
     if (flags & FLAG_TEMPORARY) {

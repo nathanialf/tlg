@@ -1355,50 +1355,21 @@ struct hkMemoryRouter;
  * Slots 6 to 12 are the memory system's (0xd230 to 0xd2b0), not read
  * here. derived names. */
 /* A pair of ints (derived names): the memory system's constructor
- * FUN_0000c270 builds one at its +0x10 from (0, 32768) with FUN_00006c30;
+ * builds one at its +0x10 from (0, 32768) with its constructor 0x6c30;
  * the game (0xe9963f) builds one on its stack from (1048576, 32768) and
  * hands it to the memory setup FUN_00001140, which passes it to the memory
  * system's slot 2. */
 struct SizePair00006c30 {
+    /* Out of line (0x6c30). */
+    SizePair00006c30(int first, int second);
+
     s32 first;
     s32 second;
 };
 
-class hkMemorySystem /* derived name */
-{
-  public:
-    /* Out of line (0xc270): its second, third and fourth arguments at +8,
-     * +0x18 and +0x20, the fifth its flags. */
-    hkMemorySystem(AllocatorBase *base, AllocatorBase *allocator,
-                   AllocatorInterface *allocatorInterface, int flags);
-    virtual ~hkMemorySystem();
-    /* Slot 2 (0xc490): set up with the sizes, under the flags (the setup
-     * passes 3); the main thread's router back. derived name. */
-    virtual hkMemoryRouter *FUN_0000c490(const SizePair00006c30 &sizes, int flags);
-    /* Slot 3 (0xc510): taken down under the flags (the quit at 0x17ab0
-     * passes 3). derived name. */
-    virtual hkResult mainQuit(int flags);
-    virtual void threadInit(hkMemoryRouter &router, const char *name, int flags); /* derived name */
-    virtual void threadQuit(hkMemoryRouter &router, int flags);                   /* derived name */
-    virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
-    virtual void unknownVirtual8();
-    virtual void unknownVirtual9();
-    virtual void unknownVirtual10();
-    virtual void unknownVirtual11();
-    virtual void unknownVirtual12();
-    /* Slots 13 and 14 (the memory system's 0xd080 and 0xd0a0): the
-     * collection of a thread's router and of what the threads share; slot
-     * 15 (0x6cb0, the base's own) runs the calling thread's, then the
-     * shared one. derived names. */
-    virtual void garbageCollectThread(hkMemoryRouter &router);
-    virtual void garbageCollectShared();
-    virtual void garbageCollect();
-    virtual void unknownVirtual16();
-    /* Slot 17: the debug interface, null here (the shared 0x42d0); the
-     * monitor stream's reset asks for it (0xecb6). derived name. */
-    virtual void *getDebugInterface();
-};
+/* The memory system (0xc270's class; defined after hkMemoryRouter, which
+ * it holds). */
+class hkMemorySystem;
 
 extern hkMemorySystem *D_57b7ba0;
 
@@ -1471,43 +1442,6 @@ void *FUN_0000bba0(AllocatorBase &allocator, int numBytes, int alignment); /* de
  * through the allocator's slot 3: 0xbc00. derived name. */
 void FUN_0000bc00(AllocatorBase &allocator, void *payload); /* derived name */
 
-/* The memory system with vtable 0x168d690, whose slot 4 (FUN_0000c590)
- * loads the path of hkFreeListMemorySystem.cpp (config/homes.base.txt). Its
- * constructor FUN_0000c270 stores its second, third and fourth arguments at
- * +8, +0x18 and +0x20; the object at +0x20 is called through its fifth and
- * sixth virtual slots (FUN_0000d230, FUN_0000d250). Complete destructor
- * FUN_0000c360, deleting destructor FUN_0000c350. */
-struct MemorySystemAllocator;
-
-/* The allocator interface at +0x20 of the memory system (derived names):
- * slots 0 and 1 its destructors, slot 2 collects its garbage (called by
- * FUN_0000d0a0). */
-class MemoryExtendedInterface /* derived name */
-{
-  public:
-    virtual ~MemoryExtendedInterface();
-    virtual void garbageCollect() = 0; /* derived name */
-    virtual void unknownVirtual3() = 0;
-    /* Slot 4: takes a 64-bit value (the memory system's slot 6, FUN_0000d230,
-     * widens its int with movslq) and returns an int. */
-    virtual int unknownVirtual4(s64 value) = 0;
-    /* Slot 5: returns a 64-bit value, which the memory system's slot 7
-     * (FUN_0000d250) truncates to an int, keeping the call: the return is
-     * duplicated into a tail call only when the phi's incoming value is the
-     * call itself (tools/cc/src/llvm-3.3.src/lib/Transforms/Scalar/
-     * CodeGenPrepare.cpp:761, DupRetToEnableTailCallOpts), and here it is the
-     * trunc. */
-    virtual s64 unknownVirtual5() = 0;
-    /* Slot 6: a bool the memory system's slot 9 (FUN_0000d290) hands back. */
-    virtual bool unknownVirtual6() = 0;
-    virtual void unknownVirtual7() = 0;
-    virtual void unknownVirtual8() = 0;
-    /* Slot 9: takes an int; the allocator at 0x57af9c0, whose second base
-     * this is, does it under its spinning mutex (0x2330, through the thunk
-     * FUN_00002400). */
-    virtual void unknownVirtual9(int value) = 0;
-};
-
 /* An allocator over one fixed buffer (derived name; vtable address point
  * 0x16a3470, slots 0 and 1 0x909a0 and 0x90930, slots 2 to 5 0x90b20 to
  * 0x90dc0): the buffer's start at +8 and end at +0x10, the end of what is in
@@ -1572,31 +1506,29 @@ class BufferAllocator : public AllocatorBase /* derived name */
     hkCriticalSection lock;   /* derived name */
 };
 
-struct MemorySystem; /* defined after hkMemoryRouter, which it holds */
-
 struct hkMemoryRouter;
 
 /* Slot 13 of the memory system's vtable: with a thread allocator per
  * thread (flags bit 2), runs slot 13 of the router's one. derived name. */
-void FUN_0000d080(MemorySystem *self, hkMemoryRouter &router); /* derived name */
+void FUN_0000d080(hkMemorySystem *self, hkMemoryRouter &router); /* derived name */
 
-void FUN_0000d0a0(MemorySystem *self); /* derived name */
+void FUN_0000d0a0(hkMemorySystem *self); /* derived name */
 /* Slots 6 and 7 of the memory system's vtable: hand an int to slot 4 of
  * the allocator interface at +0x20, and read slot 5 back as an int; 0
  * without one. derived names. */
-int FUN_0000d230(MemorySystem *self, int value); /* derived name */
-int FUN_0000d250(MemorySystem *self);            /* derived name */
-bool FUN_0000d290(MemorySystem *self);           /* derived name */
+int FUN_0000d230(hkMemorySystem *self, int value);     /* derived name */
+int FUN_0000d250(hkMemorySystem *self);                /* derived name */
+bool FUN_0000d290(hkMemorySystem *self, int numBytes); /* derived name */
 
 /* Slot 8 of the memory system's vtable: whether its buffer allocator could
  * hold a block of a size. derived name. */
-bool FUN_0000d270(MemorySystem *self, int numBytes); /* derived name */
+bool FUN_0000d270(hkMemorySystem *self, int numBytes); /* derived name */
 
 /* Slot 20: hands an int to slot 9 of the allocator interface at +0x20, when
  * there is one. derived name. */
-void FUN_0000d2c0(MemorySystem *self, int value); /* derived name */
+void FUN_0000d2c0(hkMemorySystem *self, int value); /* derived name */
 
-void FUN_0000c360(MemorySystem *self); /* derived name */
+void FUN_0000c360(hkMemorySystem *self); /* derived name */
 
 /* A polymorphic class with an empty virtual destructor and the global
  * operator delete: its deleting destructor FUN_00021a00 (beside hkcdSimdTree's
@@ -2420,6 +2352,10 @@ class BlockListAllocator : public AllocatorBase /* derived name */
      * AllocatorBase's destructor. */
     virtual ~BlockListAllocator();
 
+    /* Slots 2 and 3 (0x8f220, 0x8f330): under the lock. */
+    virtual void *blockAlloc(int numBytes);
+    virtual void blockFree(void *pointer, int numBytes);
+
     void FUN_0008f560(); /* vtable slot 11; derived name */
 
     hkCriticalSection lock;      /* derived name */
@@ -2436,6 +2372,9 @@ class BlockListAllocator : public AllocatorBase /* derived name */
 class ThreadMemory : public AllocatorBase /* derived name */
 {
   public:
+    /* Out of line (0x143a0): the free lists and the tables cleared. */
+    ThreadMemory();
+
     virtual void *blockAlloc(int numBytes); /* slot 2 (0x140e0) */
 
     virtual void FUN_00014690(); /* vtable slot 13; derived name */
@@ -3207,16 +3146,52 @@ struct hkMemoryRouter /* derived name */
     int int78; /* derived name */
 };
 
-/* The memory system's data (derived names) over its interface: the base
- * allocator at +8 (the constructor's first argument), the sizes slot 2 was
- * set up with at +0x10, the main thread's router at +0x80 and the buffer
- * allocator at +0x100. */
-struct MemorySystem : public hkMemorySystem {
-    hkMemoryRouter *FUN_0000c490(const SizePair00006c30 &sizes, int flags);
+/* The memory system (a derived name, D14's row for vtable 0x168d680:
+ * stored by the constructor 0xc270 and the complete destructor 0xc360).
+ * Its slot 4 (0xc590) loads the path of hkFreeListMemorySystem.cpp
+ * (config/homes.base.txt). The base allocator at +8 (the constructor's
+ * first argument), the sizes slot 2 was set up with at +0x10, the
+ * allocator and its interface at +0x18 and +0x20, a block-list allocator
+ * over the base allocator at +0x28, the main thread's router at +0x80, the
+ * buffer allocator at +0x100, one record per thread from +0x550, a
+ * critical section at +0x6f50 and the flags at +0x6f60. */
+class hkMemorySystem /* derived name */
+{
+  public:
+    /* Out of line (0xc270): the members built in order, the sizes (0,
+     * 32768), each thread's record, the critical section with no spin. */
+    hkMemorySystem(AllocatorBase *base, AllocatorBase *allocator,
+                   AllocatorInterface *allocatorInterface, int flags);
+    virtual ~hkMemorySystem();
+    /* Slot 2 (0xc490): set up with the sizes, under the flags (the setup
+     * passes 3); the main thread's router back. derived name. */
+    virtual hkMemoryRouter *FUN_0000c490(const SizePair00006c30 &sizes, int flags);
     /* Slot 3 (0xc510): the buffer given back to the base allocator, then
-     * the main router taken down and the extended allocator collected; the
-     * base allocator forgotten. */
-    hkResult mainQuit(int flags);
+     * the main router taken down and the allocator interface collected;
+     * the base allocator forgotten (the quit at 0x17ab0 passes 3). */
+    virtual hkResult mainQuit(int flags);
+    virtual void threadInit(hkMemoryRouter &router, const char *name, int flags); /* derived name */
+    /* Slot 5 (0xc810): the thread's router taken down by the flags: its
+     * stack allocator and temporary allocator (2), then its record and
+     * the router itself (1). */
+    virtual void threadQuit(hkMemoryRouter &router, int flags); /* derived name */
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    /* Slots 13 and 14 (0xd080 and 0xd0a0): the collection of a thread's
+     * router and of what the threads share; slot 15 (0x6cb0) runs the
+     * calling thread's, then the shared one. derived names. */
+    virtual void garbageCollectThread(hkMemoryRouter &router);
+    virtual void garbageCollectShared();
+    virtual void garbageCollect();
+    virtual void unknownVirtual16();
+    /* Slot 17: the debug interface, null here (the shared 0x42d0); the
+     * monitor stream's reset asks for it (0xecb6). derived name. */
+    virtual void *getDebugInterface();
 
     /* The flags' bits (derived names): the main thread's router (1), the
      * buffer allocator's buffer (2). */
@@ -3224,30 +3199,31 @@ struct MemorySystem : public hkMemorySystem {
 
     AllocatorBase *baseAllocator; /* derived name */
     SizePair00006c30 frameInfo;   /* derived name */
-    MemorySystemAllocator *allocator18;
-    MemoryExtendedInterface *extended20; /* derived name */
-    u8 unknown28[0x58];
-    hkMemoryRouter mainRouter; /* derived name */
+    /* Slot 12 (0xd2b0) returns it. derived name. */
+    AllocatorBase *allocator18;
+    /* Slots 6 to 9, 14 and 20 (0xd230 to 0xd2c0) forward to it, when
+     * there is one. derived name. */
+    AllocatorInterface *extended20;
+    BlockListAllocator blockListAllocator; /* derived name */
+    hkMemoryRouter mainRouter;             /* derived name */
     /* The buffer allocator at +0x100 (slot 8, FUN_0000d270, asks it). */
     BufferAllocator bufferAllocator; /* derived name */
 
     /* One record per thread router (derived names): the thread's allocator,
      * then two pointers and the record's in-use flag, which taking the
-     * router down clears (0xc870, 0xc87c). */
+     * router down clears (0xc870, 0xc87c); the constructor clears the
+     * second pointer and the flag (0xc308, 0xc313). */
     struct ThreadData {
+        ThreadData() : pointer198(0), inUse(false) {}
+
         ThreadMemory memory;
         void *pointer190;
         void *pointer198;
         bool inUse;
     };
 
-    /* Slot 5 (0xc810): the thread's router taken down by the flags: its
-     * stack allocator and temporary allocator (2), then its record and
-     * the router itself (1). */
-    void threadQuit(hkMemoryRouter &router, int flags);
-
     ThreadData threads[64]; /* derived name */
-    u8 unknown6f50[0x10];
+    hkCriticalSection lock; /* derived name */
     /* Set by the constructor from its fifth argument; bit 2 gives each
      * thread its own allocator (FUN_0000c590). */
     s32 flags; /* derived name */
@@ -3673,6 +3649,11 @@ inline void hkxMaterialEffect::operator delete(void *object, unsigned long numBy
 }
 
 inline void hkxMaterialShaderSet::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxNodeSelectionSet::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

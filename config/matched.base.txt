@@ -236,7 +236,6 @@ FUN_00180ef0 src/libs/unknown/leaf_00180ef0.cpp
 FUN_00181bf0 src/libs/unknown/func_00181bf0.cpp
 FUN_00195fe0 src/libs/unknown/func_00195fe0.cpp
 FUN_000058a0 src/libs/unknown/leaf_000058a0.cpp
-FUN_00006c30 src/libs/unknown/leaf_00006c30.cpp
 FUN_00006d00 src/libs/unknown/leaf_00006d00.cpp
 FUN_0002b020 src/libs/unknown/leaf_0002b020.cpp
 FUN_00033d20 src/libs/unknown/leaf_00033d20.cpp
@@ -1641,8 +1640,8 @@ FUN_0000e270 src/libs/unknown/func_0000e270.cpp _GLOBAL__I_a
 FUN_00013db0 src/libs/unknown/func_00013db0.cpp _ZN10PointerMap12FUN_00013db0ER13AllocatorBase
 FUN_000680b0 src/libs/unknown/func_000680b0.cpp _ZNK30hknpVehicleDefaultTransmission12FUN_000680b0EfPK19hknpVehicleInstanceR29hknpVehicleTransmissionOutput
 FUN_0007e220 src/libs/unknown/func_0007e220.cpp _ZN24hkpRagdollConstraintData12FUN_0007e220EPv6hkBool
-FUN_0000c490 src/libs/unknown/func_0000c490.cpp _ZN12MemorySystem12FUN_0000c490ERK16SizePair00006c30i
-FUN_0000c510 src/libs/unknown/func_0000c510.cpp _ZN12MemorySystem8mainQuitEi
+FUN_0000c490 src/libs/unknown/func_0000c490.cpp _ZN14hkMemorySystem12FUN_0000c490ERK16SizePair00006c30i
+FUN_0000c510 src/libs/unknown/func_0000c510.cpp _ZN14hkMemorySystem8mainQuitEi
 FUN_00180bf0 src/libs/unknown/func_00180bf0.cpp _ZN9StringMap12FUN_00180bf0Ev
 FUN_00002670 src/libs/unknown/func_00002670.cpp _ZN16TwoBaseAllocator9resetPeakEv
 _ZN32hknpCompressedMeshShapeInternals7KeyMaskD0Ev src/libs/unknown/func_000349b0.cpp
@@ -1898,7 +1897,7 @@ FUN_00007d60 src/libs/unknown/leaf_00007d40.cpp _ZNK13hkClassMember12FUN_00007d6
 FUN_0019f270 src/libs/unknown/func_0019f270.cpp _Z12FUN_0019f270PKPK7hkClassi
 FUN_0000ed60 src/libs/unknown/func_0000ed60.cpp _ZN17Allocator0000ed4012FUN_0000ed60EP13AllocatorBaseS1_S1_i
 FUN_000ad640 src/libs/unknown/func_000ad640.cpp _ZN19hkMemoryMeshTexture12FUN_000ad640EPhiN13hkMeshTexture6FormatE
-FUN_0000c810 src/libs/unknown/func_0000c810.cpp _ZN12MemorySystem10threadQuitER14hkMemoryRouteri
+FUN_0000c810 src/libs/unknown/func_0000c810.cpp _ZN14hkMemorySystem10threadQuitER14hkMemoryRouteri
 FUN_0005b490 src/libs/unknown/func_0005b490.cpp _ZN9hknpWorld12FUN_0005b490EiPv
 FUN_00067f40 src/libs/unknown/func_00067f40.cpp _ZNK30hknpVehicleDefaultTransmission12FUN_00067f40EfPK19hknpVehicleInstanceR29hknpVehicleTransmissionOutput
 FUN_0017f330 src/libs/unknown/func_0017f330.cpp _ZN22hkMemoryResourceHandle12FUN_0017f330EPKcS1_
@@ -2248,3 +2247,13 @@ FUN_00196630 src/libs/unknown/func_00196570.cpp _ZN19ElementPool00198a2012FUN_00
 FUN_0002d790 src/libs/unknown/func_0002d790.cpp _ZN18hknpWorldObject38012FUN_0002d790EP22hknpWorldObject388NodePKP19hkBlockStreamWriter
 FUN_00014000 src/libs/unknown/func_00014220.cpp _ZN12ThreadMemory12FUN_00008d90EPviRi
 FUN_0008e5d0 src/libs/unknown/func_0008e5d0.cpp _ZN20hkRootLevelContainer12FUN_0008e5d0EPv
+_ZN16SizePair00006c30C1Eii src/libs/unknown/leaf_00006c30.cpp _ZN16SizePair00006c30C2Eii
+_ZN14hkMemorySystemC1EP13AllocatorBaseS1_P18AllocatorInterfacei src/libs/unknown/func_0000c270.cpp _ZN14hkMemorySystemC2EP13AllocatorBaseS1_P18AllocatorInterfacei
+FUN_00154ca0 src/libs/unknown/func_00154ca0.cpp
+FUN_0001ff70 src/libs/unknown/func_0001ff50.cpp _GLOBAL__I_a
+FUN_00022510 src/libs/unknown/func_000224f0.cpp _GLOBAL__I_a
+FUN_00023cf0 src/libs/unknown/func_00023cf0.cpp
+FUN_00089ee0 src/libs/unknown/func_00089ec0.cpp _GLOBAL__I_a
+FUN_0008b090 src/libs/unknown/func_0008b070.cpp _GLOBAL__I_a
+_ZN19hkxNodeSelectionSetD1Ev src/libs/unknown/func_0008af30.cpp
+_ZN19hkxNodeSelectionSetD0Ev src/libs/unknown/func_0008af30.cpp

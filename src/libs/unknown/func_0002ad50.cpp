@@ -3,13 +3,5 @@
 
 void hkMemoryMeshShape::FUN_0002ad50(const hkMeshSection &section)
 {
-    Section &own = sections[section.sectionIndex];
-    hkMeshMaterial *material = section.material;
-    if (material) {
-        material->addReference();
-    }
-    if (own.material) {
-        own.material->removeReference();
-    }
-    own.material = material;
+    sections[section.sectionIndex].material = section.material;
 }

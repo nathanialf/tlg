@@ -1,7 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-hkResult MemorySystem::mainQuit(int flags)
+hkResult hkMemorySystem::mainQuit(int flags)
 {
     if (flags & FLAG_TEMPORARY) {
         const int bufferSize = int(bufferAllocator.bufferEnd - bufferAllocator.bufferStart);
@@ -13,7 +13,7 @@ hkResult MemorySystem::mainQuit(int flags)
         threadQuit(mainRouter, flags);
         bufferAllocator.FUN_00090a10(0, 0);
         if (extended20) {
-            extended20->garbageCollect();
+            extended20->FUN_00003140();
         }
     }
     baseAllocator = 0;
