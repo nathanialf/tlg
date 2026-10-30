@@ -1163,6 +1163,38 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * insert_large_chunk; the free 0x133e0 ends with it). derived name. */
     void FUN_00012410(TreeChunk *chunk, u64 size);
 
+    /* dlmalloc's tree bins: sizes from 256 bytes, two bins a power of
+     * two. */
+    enum { TREEBIN_SHIFT = 8, NTREEBINS = 32 };
+
+    /* The tree bin of a size (dlmalloc's compute_tree_index; the free's
+     * insertion 0x12410 and the statistics 0x13530). derived name. */
+    static int treeIndex(u64 size)
+    {
+        const u64 x = size >> TREEBIN_SHIFT;
+        if (x == 0) {
+            return 0;
+        }
+        if (x > 0xffff) {
+            return NTREEBINS - 1;
+        }
+        u32 y = u32(x);
+        u32 n = ((y - 0x100) >> 16) & 8;
+        u32 k = (((y <<= n) - 0x1000) >> 16) & 4;
+        n += k;
+        n += k = (((y <<= k) - 0x4000) >> 16) & 2;
+        k = 14 - n + ((y <<= k) >> 15);
+        return int((k << 1) + ((size >> (k + (TREEBIN_SHIFT - 1))) & 1));
+    }
+
+    /* How far a size is shifted to put the bits that pick the children of
+     * its bin's tree at the top (dlmalloc's leftshift_for_tree_index, over
+     * a signed index: `sar`, 0x124c6). derived name. */
+    static int leftShiftForTreeIndex(int index)
+    {
+        return index == NTREEBINS - 1 ? 0 : 63 - ((index >> 1) + TREEBIN_SHIFT - 2);
+    }
+
     /* The head's in-use bits (dlmalloc's PINUSE_BIT and CINUSE_BIT). */
     enum { PREVIOUS_IN_USE = 1, IN_USE = 2, IN_USE_BITS = 3 };
 
@@ -2567,15 +2599,20 @@ class ThreadMemory : public AllocatorBase /* derived name */
     /* Slots 0 and 1 (0x13ea0, one body): the cached blocks given back
      * (slot 13) before AllocatorBase's destructor; the memory system's
      * destructor 0xc360 holds it for each thread's record, slot 13 called
-     * through the vtable. */
-    virtual ~ThreadMemory()
+     * through the vtable. Declared `inline`: the complete and deleting
+     * destructors hold the base one with slot 13 in it, past 225 (cookbook
+     * 300: without the hint the complete one is a jump to the base one). */
+    inline virtual ~ThreadMemory()
     {
         FUN_00014690();
     }
 
     virtual void *blockAlloc(int numBytes); /* slot 2 (0x140e0) */
 
-    virtual void FUN_00014690(); /* vtable slot 13; derived name */
+    /* Slot 13 (0x14690), declared `inline`: the destructor (0x13ea0) holds
+     * it, past -O2's threshold of 225, which needs the hint's 325 (defined
+     * in func_00014690.cpp, the class's file). derived name. */
+    inline virtual void FUN_00014690();
 
     /* Gives the thread's allocator the allocator it draws from and how many
      * blocks each free list may keep (FUN_0000c590 passes 8); a null
@@ -2647,6 +2684,15 @@ class ThreadMemory : public AllocatorBase /* derived name */
                 return block;
             }
             return HK_NULL;
+        }
+
+        /* A block put at the head (inline in slot 2's refill, 0x141c0).
+         * derived name. */
+        void push(void *block)
+        {
+            numElem++;
+            *static_cast<void **>(block) = head;
+            head = block;
         }
 
         void *head;

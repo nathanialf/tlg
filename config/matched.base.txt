@@ -2428,3 +2428,8 @@ FUN_00000ee0 src/libs/havok/Common/Base/System/Error/hkError.cpp _Z12FUN_00000ee
 FUN_00018770 src/libs/unknown/func_00018770.cpp _ZN8FreeList12FUN_00018770Ev
 FUN_000cd4c0 src/libs/unknown/func_000cd4c0.cpp _ZN9hknpWorld12FUN_000cd4c0ER10hknpMotionj
 FUN_000601e0 src/libs/unknown/func_000601e0.cpp _ZN9hknpWorld12FUN_000601e0E10hknpBodyIdji
+FUN_00012410 src/libs/unknown/func_00012410.cpp _ZN21hkLargeBlockAllocator12FUN_00012410EPNS_9TreeChunkEm
+_ZN22hkpHingeConstraintDataC1Ev src/libs/unknown/func_0007ec90.cpp _ZN22hkpHingeConstraintDataC2Ev
+FUN_0019cdf0 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019cdf0EPKvPK7hkClassPKc
+_ZN12ThreadMemoryD1Ev src/libs/unknown/func_00014690.cpp
+_ZN12ThreadMemory10blockAllocEi src/libs/unknown/func_00014690.cpp

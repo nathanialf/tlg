@@ -49,3 +49,20 @@ void hkPackfileWriter::FUN_0019d280(const hkClass &klass, const char *sectionTag
     const char *className = klass.FUN_00004200();
     classNameToSection.insert(className, sectionIndex(sectionTag));
 }
+
+int hkPackfileWriter::FUN_0019cdf0(const void *object, const hkClass *klass, const char *sectionTag)
+{
+    int index = int(objectToSectionIndex.FUN_00013b30(hkUlong(object), hkUlong(u32(-1))));
+    if (index != -1) {
+        return index;
+    }
+    const hkClass *k = klass;
+    do {
+        index = int(classNameToSection.getWithDefault(k->FUN_00004200(), u32(-1)));
+        if (index != -1) {
+            return index;
+        }
+        k = FUN_00004250(k);
+    } while (k);
+    return sectionIndex(sectionTag);
+}

@@ -22,3 +22,31 @@ void ThreadMemory::FUN_00014690()
         }
     }
 }
+
+/* Slot 2 (0x140e0), the class's first out-of-line virtual: a request of a
+ * row's size from its row's free list, refilled with up to four blocks from
+ * the allocator the thread draws from when it is empty (the first handed
+ * out, the others kept); a larger request, or any when the lists keep
+ * nothing, from that allocator directly. */
+void *ThreadMemory::blockAlloc(int numBytes)
+{
+    if (numBytes <= MAX_ROW_SIZE) {
+        const int row = getRow(numBytes);
+        FreeList &list = freeLists[row];
+        if (void *block = list.pop()) {
+            return block;
+        }
+        const int maxNumElems = maxNumElemsOnFreeList;
+        if (!maxNumElems) {
+            return memory->blockAlloc(rowToSize[row]);
+        }
+        const int numBlocks = maxNumElems < 4 ? maxNumElems : 4;
+        void *blocks[4];
+        memory->blockAllocBatch(blocks, numBlocks, rowToSize[row]);
+        for (int i = 1; i < numBlocks; i++) {
+            list.push(blocks[i]);
+        }
+        return blocks[0];
+    }
+    return memory->blockAlloc(numBytes);
+}

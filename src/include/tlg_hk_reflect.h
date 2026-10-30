@@ -10068,6 +10068,11 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * keeping its w; the buffer is returned. derived name. */
     const Vec4 *FUN_0016ae20(Vec4 *HK_RESTRICT buffer, int bufferSize) const;
 
+    /* Slot 11 (0x16a9c0, both vtables): the core convex shape's vertex
+     * farthest along the direction scaled, scaled and moved, its w kept.
+     * derived name. */
+    void FUN_0016a9c0(const Vec4 &direction, Vec4 *vertexOut) const;
+
     /* Slot 17 (0x16ad80, both vtables): the core shape's value scaled by
      * the smallest magnitude of the scale's direction. derived name. */
     float FUN_0016ad80() const;
@@ -13193,12 +13198,16 @@ class hkpHingeConstraintData : public hkpConstraintData
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
-        u8 unknownA0[0x10]; /* 2dAng */
+        hkp2dAngConstraintAtom twoDAng; /* the record's 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
     };
 
     /* The finish constructor (0x7d2a0): the atoms are left as loaded. */
     hkpHingeConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new hinge (0x7ec90): the atoms typed and set to their defaults,
+     * both frames the identity, the free axis the first. */
+    hkpHingeConstraintData();
 
     virtual ~hkpHingeConstraintData();
 
@@ -17583,6 +17592,14 @@ struct StringMapOf : public StringMap /* derived name */
     {
         FUN_00091690(key, hkUlong(value));
     }
+
+    /* A key's value, or the default when the key is not in the map
+     * (0x91900, the default widened from the value's type). derived
+     * name. */
+    V getWithDefault(const char *key, V defaultValue) const /* derived name */
+    {
+        return V(FUN_00091900(key, hkUlong(defaultValue)));
+    }
 };
 
 /* A map from pointers to pointer-sized values (derived name): 16-byte
@@ -17711,6 +17728,11 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * -O2's 225 there; defined in func_0019d0d0.cpp, cookbook 254).
      * derived name. */
     inline int sectionIndex(const char *sectionTag);
+    /* The section an object goes to (0x19cdf0; the add at 0x19c60d asks
+     * it): the one it was placed in, else the first its class or a parent
+     * class was placed in, else the tag's, the section added when new.
+     * derived name. */
+    int FUN_0019cdf0(const void *object, const hkClass *klass, const char *sectionTag);
     /* Slot 11 (0x19d190): an object placed in the section of a tag, the
      * section added when it is new (the section index of 0x19cd20 inline).
      * derived name. */
