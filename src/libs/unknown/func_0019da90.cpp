@@ -8,9 +8,61 @@ static inline bool isXmlSpace(char c) /* derived name */
     return c == ' ' || c == '\t' || c == '\n' || c == '\r';
 }
 
-// NONMATCHING: written from the bytes, not yet compared; here for the node
-// classes it builds, whose vtables and inline destructors it emits
-// (XmlStartElement's D1 and D0, 0x19d450 and 0x19d500).
+/* A start tag's attributes, from the white space after its name: each a
+ * name, '=' and a quoted value, the parse ending at the tag's end or at the
+ * first malformed one. derived name. */
+static inline void parseAttributes(const char *p, hkArray<XmlAttribute> &attributes)
+{
+    for (;;) {
+        while (isXmlSpace(*p)) {
+            p++;
+        }
+        if (*p == '\0') {
+            return;
+        }
+        XmlAttribute attribute;
+        const char *nameStart = p;
+        while (!isXmlSpace(*p) && *p != '=' && *p != '\0') {
+            p++;
+        }
+        if (*p == '\0') {
+            return;
+        }
+        FUN_0000eab0(&attribute.name, nameStart, int(p - nameStart));
+        while (isXmlSpace(*p)) {
+            p++;
+        }
+        if (*p != '=') {
+            return;
+        }
+        p++;
+        while (isXmlSpace(*p)) {
+            p++;
+        }
+        if (*p != '"') {
+            return;
+        }
+        const char *valueStart = ++p;
+        while (*p != '"' && *p != '\0') {
+            p++;
+        }
+        if (*p == '\0') {
+            return;
+        }
+        FUN_0000eab0(&attribute.value, valueStart, int(p - valueStart));
+        attributes.pushBack(attribute);
+        p++;
+    }
+}
+
+// NONMATCHING: classified (docs/NOTES.md, Round 58): the base leaves every
+// scan loop whose increment LoopRotate folds into its last exiting block
+// unrotated (the bounded scans, the attribute pointer scans), as LLVM did
+// before upstream r181230; 3.3 rotates them after the fold. With the scans
+// spelled so that the fold is not needed (a scratch lens, not this source)
+// the rest is register allocation and the block order those loops give.
+// Here also for the node classes it builds, whose vtables and inline
+// destructors it emits (XmlStartElement's D1 and D0, 0x19d450, 0x19d500).
 /* derived name: slot 5 of hkXmlParser: the next node of the stream. A node
  * handed back comes first; otherwise the stream is read 32 bytes ahead at a
  * time: processing instructions and comments are skipped, text up to the
@@ -110,11 +162,12 @@ hkResult hkXmlParser::FUN_0019da90(Node **nodeOut, StreamReader *stream)
                 continue;
             }
             text.pushBack('\0');
-            const int length = FUN_0019d710(text.data, text.data);
-            if (length == 1 && text[0] == '\0') {
+            char *const characters = text.data; /* derived name */
+            const int length = FUN_0019d710(characters, characters);
+            if (length == 1 && characters[0] == '\0') {
                 *nodeOut = new XmlCharacters(0);
             } else {
-                *nodeOut = new XmlCharacters(text.data, length);
+                *nodeOut = new XmlCharacters(characters, length);
             }
             return HK_SUCCESS;
         } else {
@@ -165,54 +218,15 @@ hkResult hkXmlParser::FUN_0019da90(Node **nodeOut, StreamReader *stream)
             }
             hkArray<XmlAttribute> attributes; /* derived name */
             if (nameEnd != tag.getSize()) {
-                const char *p = tag.data + nameEnd;
-                for (;;) {
-                    while (isXmlSpace(*p)) {
-                        p++;
-                    }
-                    if (*p == '\0') {
-                        break;
-                    }
-                    XmlAttribute attribute;
-                    const char *nameStart = p;
-                    while (!isXmlSpace(*p) && *p != '=' && *p != '\0') {
-                        p++;
-                    }
-                    if (*p == '\0') {
-                        break;
-                    }
-                    FUN_0000eab0(&attribute.name, nameStart, int(p - nameStart));
-                    while (isXmlSpace(*p)) {
-                        p++;
-                    }
-                    if (*p != '=') {
-                        break;
-                    }
-                    p++;
-                    while (isXmlSpace(*p)) {
-                        p++;
-                    }
-                    if (*p != '"') {
-                        break;
-                    }
-                    const char *valueStart = ++p;
-                    while (*p != '"' && *p != '\0') {
-                        p++;
-                    }
-                    if (*p == '\0') {
-                        break;
-                    }
-                    FUN_0000eab0(&attribute.value, valueStart, int(p - valueStart));
-                    attributes.pushBack(attribute);
-                    p++;
-                }
+                parseAttributes(tag.data + nameEnd, attributes);
                 tag[nameEnd] = '\0';
                 tag.setSizeUnchecked(nameEnd);
             }
-            XmlStartElement *start = new XmlStartElement(tag.data + 1);
+            const char *const elementName = tag.data + 1; /* derived name */
+            XmlStartElement *start = new XmlStartElement(elementName);
             start->attributes.swap(attributes);
             if (last == '/') {
-                FUN_0019e6b0(new XmlEndElement(tag.data + 1));
+                FUN_0019e6b0(new XmlEndElement(elementName));
             }
             *nodeOut = start;
             return HK_SUCCESS;

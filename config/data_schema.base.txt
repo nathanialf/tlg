@@ -9,3 +9,6 @@
 D_16dc150 hkClassMember::TypeProperties 36 src/include/tlg_hk_reflect.h
 D_14bd370 hknpWorldCinfoDefaults 1 src/include/tlg_hk_reflect.h
 D_14ba280 hknpMotionPropertiesDefaults 1 src/include/tlg_hk_reflect.h
+D_14bb668 hknpMotionCinfoDefaults 1 src/include/tlg_hk_reflect.h
+D_14b31d0 hkContactPointMaterialDefaults 1 src/include/tlg_hk_reflect.h
+D_14b97d4 hknpBodyCinfoDefaults 1 src/include/tlg_hk_reflect.h

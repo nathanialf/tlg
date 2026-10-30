@@ -657,8 +657,8 @@ FUN_0003b200 src/libs/unknown/func_0003b200.cpp _ZNK18hknpDecoratorShape12FUN_00
 FUN_00037e80 src/libs/unknown/func_00037e80.cpp _ZNK18hknpDecoratorShape12FUN_00037e80EPKjiPv
 FUN_0003b220 src/libs/unknown/func_0003b220.cpp _ZNK18hknpDecoratorShape12FUN_0003b220EPKvS1_S1_S1_Pv
 FUN_0003b230 src/libs/unknown/func_0003b230.cpp _ZNK18hknpDecoratorShape12FUN_0003b230EPKvS1_S1_S1_Pv
-FUN_0003b240 src/libs/unknown/func_0003b240.cpp _ZNK18hknpDecoratorShape12FUN_0003b240EPKvS1_S1_S1_Pv
-FUN_0003b250 src/libs/unknown/func_0003b250.cpp _ZNK18hknpDecoratorShape12FUN_0003b250EPKvS1_S1_S1_Pv
+FUN_0003b240 src/libs/unknown/func_0003b240.cpp _ZNK18hknpDecoratorShape12FUN_0003b240EPKvS1_S1_S1_S1_S1_Pv
+FUN_0003b250 src/libs/unknown/func_0003b250.cpp _ZNK18hknpDecoratorShape12FUN_0003b250EPKvS1_S1_S1_S1_S1_Pv
 FUN_0003b210 src/libs/unknown/func_0003b210.cpp _ZNK18hknpDecoratorShape12FUN_0003b210ERK18LodContext000426b0RK16LodQuery000426b0i
 FUN_0003b260 src/libs/unknown/func_0003b260.cpp _ZNK18hknpDecoratorShape12FUN_0003b260EPKvPv
 FUN_0003b270 src/libs/unknown/func_0003b270.cpp _ZNK18hknpDecoratorShape12FUN_0003b270EPKvPv
@@ -848,7 +848,7 @@ FUN_00004350 src/libs/unknown/func_00004350.cpp
 FUN_00079300 src/libs/unknown/func_00079300.cpp
 FUN_0007c3b0 src/libs/unknown/func_0007c3b0.cpp
 FUN_0007f0f0 src/libs/unknown/func_0007f0f0.cpp
-FUN_000915e0 src/libs/unknown/func_000915e0.cpp
+_ZN9StringMapD1Ev src/libs/unknown/func_000915e0.cpp
 FUN_000ae860 src/libs/unknown/func_000ae860.cpp
 FUN_00181af0 src/libs/unknown/func_00181af0.cpp
 _ZN9ClassTestC1EtPKcPFbPKvPK7hkClassE src/libs/unknown/func_0017e940.cpp _ZN9ClassTestC2EtPKcPFbPKvPK7hkClassE
@@ -1836,7 +1836,7 @@ FUN_0006e790 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hkn
 FUN_0006e970 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual14EiPDv4_fP13hknpFaceAngle
 FUN_0006eb50 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual18EPKvPv
 FUN_0006f7d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual22EPKjiPv
-FUN_0006f880 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual25EPKvS1_S1_S1_Pv
+FUN_0006f880 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual25EPKvS1_S1_S1_S1_S1_Pv
 _ZN17Crc32StreamWriter5writeEPKvi src/libs/unknown/func_00004060.cpp
 FUN_0000bd30 src/libs/unknown/func_0000bd30.cpp _ZN9hkMatrix312FUN_0000bd30ERK12hkQuaternion
 FUN_000311f0 src/libs/unknown/func_000311f0.cpp _ZN18hknpWorldObject38012FUN_000311f0EP28hknpWorldObject380MotionPairRK10hknpMotionPKvS4_
@@ -1848,7 +1848,7 @@ FUN_0006e830 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hkn
 FUN_0006e8d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual15EiPDv4_fS1_
 FUN_0006ea10 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual16EPKvS1_Pvbi
 FUN_0006eab0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual17Ev
-FUN_0006f920 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual26EPKvS1_S1_S1_Pv
+FUN_0006f920 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual26EPKvS1_S1_S1_S1_S1_Pv
 FUN_0006f9c0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual23EPKvS1_S1_S1_Pv
 FUN_0006fbd0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual20Ev
 FUN_00174050 src/libs/havok/Physics/Physics/Collide/Dispatcher/hknpCollisionDispatcher.cpp _Z12FUN_00174050v
@@ -2045,3 +2045,33 @@ FUN_00075fa0 src/libs/unknown/func_00075fa0.cpp _GLOBAL__I_a
 _ZN15hkcdPlanarSolid11NodeStorageD0Ev src/libs/unknown/func_0001d620.cpp
 FUN_0007fde0 src/libs/unknown/func_0007fde0.cpp _ZNK24hkpLinearParametricCurve12FUN_0007fde0ER7hkArrayIDv4_fE
 _ZN14hkxIndexBufferD0Ev src/libs/unknown/func_00088330.cpp
+_ZN30hkpBallAndSocketConstraintDataC1Ev src/libs/unknown/func_0007c1d0.cpp _ZN30hkpBallAndSocketConstraintDataC2Ev
+FUN_000ae6b0 src/libs/unknown/func_000ae6b0.cpp _ZNK25hkStorageSkinnedMeshShape12FUN_000ae6b0EiRN18hkSkinnedMeshShape11BoneSectionE
+FUN_0017eca0 src/libs/unknown/func_0017eca0.cpp _ZNK26hkDynamicClassNameRegistry12FUN_0017eca0ER7hkArrayIPK7hkClassE
+_ZN12hknpLodShapeD1Ev src/libs/unknown/func_00068350.cpp
+_ZN12hknpLodShapeD0Ev src/libs/unknown/func_00068350.cpp
+_ZN23hknpCollisionDispatcherC1Ev src/libs/havok/Physics/Physics/Collide/Dispatcher/hknpCollisionDispatcher.cpp _ZN23hknpCollisionDispatcherC2Ev
+FUN_00001420 src/libs/unknown/func_00001420.cpp _GLOBAL__I_a
+FUN_00008c80 src/libs/unknown/func_00008c80.cpp _GLOBAL__I_a
+FUN_0001d920 src/libs/unknown/func_0001d920.cpp _GLOBAL__I_a
+FUN_0001f260 src/libs/unknown/func_0001f260.cpp _GLOBAL__I_a
+FUN_00023c10 src/libs/unknown/func_00023c10.cpp _GLOBAL__I_a
+FUN_00038a20 src/libs/unknown/func_00038a20.cpp _GLOBAL__I_a
+FUN_0003ac80 src/libs/unknown/func_0003ac80.cpp _GLOBAL__I_a
+FUN_0003f2b0 src/libs/unknown/func_0003f2b0.cpp _GLOBAL__I_a
+FUN_00069980 src/libs/unknown/func_00069980.cpp _GLOBAL__I_a
+FUN_0019aff0 src/libs/unknown/func_0019aff0.cpp _Z12FUN_0019aff0PKPK7hkClassi
+FUN_00037e90 src/libs/unknown/func_00037e90.cpp _ZNK15hknpMaskedShape12FUN_00037e90EPKvS1_S1_S1_RK18ShapeQuery00038010S1_Pv
+FUN_00037f50 src/libs/unknown/func_00037f50.cpp _ZNK15hknpMaskedShape12FUN_00037f50EPKvS1_S1_S1_RK18ShapeQuery00038010S1_Pv
+FUN_00017d40 src/libs/unknown/func_00017d40.cpp _GLOBAL__I_a
+_ZN20BufferedStreamReaderC1EP12StreamReaderi src/libs/unknown/func_000942e0.cpp _ZN20BufferedStreamReaderC2EP12StreamReaderi
+_ZN25ClassVersionIndex0019a0b0D1Ev src/libs/unknown/func_0019a0b0.cpp _ZN25ClassVersionIndex0019a0b0D2Ev
+FUN_00008000 src/libs/unknown/func_00008000.cpp _GLOBAL__I_a
+FUN_0001e090 src/libs/unknown/func_0001e090.cpp _GLOBAL__I_a
+FUN_00038330 src/libs/unknown/func_00038330.cpp _GLOBAL__I_a
+FUN_0003cb00 src/libs/unknown/func_0003cb00.cpp _GLOBAL__I_a
+FUN_0000a7a0 src/libs/unknown/func_0000a7a0.cpp _ZN10hkOArchive12FUN_0000a7a0Ei
+_ZN18hkpHingeLimitsDataC1Ev src/libs/unknown/func_00083060.cpp _ZN18hkpHingeLimitsDataC2Ev
+FUN_00045af0 src/libs/unknown/func_00045af0.cpp _ZNK15hknpConvexShape12FUN_00045af0EiPDv4_fS1_
+FUN_00088b00 src/libs/unknown/func_00088b00.cpp _GLOBAL__I_a
+FUN_00088a00 src/libs/unknown/func_00088a00.cpp _Z12FUN_00088a00Pv

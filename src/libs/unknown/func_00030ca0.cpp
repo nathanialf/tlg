@@ -1,13 +1,15 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: 189 of 197 under D33's compiler (the centres of mass stay in
-// registers now): the info flag's store comes after the table's loads where
-// the base stores it first, and the scaled mass takes its operands the other
-// way round: Reassociate ranks the mass one above the loads' product (the
-// rcp call, then and, bitcast and extract) and the base's order needs one
-// more unmovable instruction between the rcp call and the step's two loads
-// (docs/NOTES.md, Round 54).
+// NONMATCHING: 189 of 197 under D35's compiler, the frame now the base's
+// (hknpWorldObject380Info holds no array). Left, both orders: the info
+// flag's store comes after the table's loads where the base stores it
+// right after the guard (in the selection DAG it is chained after all seven
+// lifetime starts, the loads are not); the scaled mass takes its operands
+// the other way round: Reassociate ranks the mass one above the loads'
+// product (the rcp call, then and, bitcast and extract) and the base's
+// order needs one more unmovable instruction between the rcp call and the
+// step's two loads (docs/NOTES.md, Rounds 54 and 58).
 int FUN_00030ca0(hknpWorldObject380Pair *pair, const hknpWorldObject380StepInfo *stepInfo,
                  const hknpWorldObject380Source *source, u32 flags, u16 valueB0,
                  const hknpBody *bodyA, float value0, float value1, float value2,

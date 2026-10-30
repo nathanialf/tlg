@@ -94,14 +94,16 @@ void hknpShape::unknownVirtual22(const u32 *keys, int numKeys, void *argument3) 
 
 void hknpShape::unknownVirtual25(const void *argument1, const void *argument2,
                                  const void *argument3, const void *argument4,
-                                 void *argument5) const
+                                 const void *argument5, const void *argument6,
+                                 void *argument7) const
 {
     HK_ERROR(0x698a584c, HK_NP_SHAPE_CPP, 142, "Not implemented");
 }
 
 void hknpShape::unknownVirtual26(const void *argument1, const void *argument2,
                                  const void *argument3, const void *argument4,
-                                 void *argument5) const
+                                 const void *argument5, const void *argument6,
+                                 void *argument7) const
 {
     HK_ERROR(0x249de87e, HK_NP_SHAPE_CPP, 150, "Not implemented");
 }

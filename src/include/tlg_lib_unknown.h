@@ -654,10 +654,16 @@ inline void hkArray<T>::insertAt(int index, const T *elements, int numElements)
 {
     const int numToMove = size - index;
     const int newSize = size + numElements;
-    reserve(hkContainerHeapAllocator::get(), newSize);
+    const int capacity = getCapacity();
+    if (newSize > capacity) {
+        const int doubled = 2 * capacity;
+        FUN_00000a70(hkContainerHeapAllocator::get(), this, doubled > newSize ? doubled : newSize,
+                     sizeof(T));
+    }
     FUN_00091210(data + index + numElements, data + index, numToMove * int(sizeof(T)));
+    T *const dst = data + index;
     for (int i = 0; i < numElements; i++) {
-        data[index + i] = elements[i];
+        dst[i] = elements[i];
     }
     size = newSize;
 }
@@ -1597,6 +1603,20 @@ class Object0000b330 : public hkReferencedObject /* derived name */
 void FUN_0012aa80(const hknpHeightFieldShape *self, const Mat4 &transform,
                   hkAabb &aabbOut); /* derived name */
 
+/* The 0x40-byte object hkVersionPatchManager's creator 0x199f80 builds
+ * zeroed at its +0x10 (derived name): a string map, an array of 8-byte
+ * elements and a string map whose values are strings it owns. Its
+ * destructor is out of line (0x19a0b0). */
+struct ClassVersionIndex0019a0b0 /* derived name */
+{
+    /* The owned strings freed to the thread's heap, then the members. */
+    ~ClassVersionIndex0019a0b0();
+
+    StringMap map0;          /* derived name */
+    hkArray<void *> array18; /* derived name */
+    StringMap ownedNames;    /* derived name */
+};
+
 /* A reference-counted object of 0x48 bytes (vtable 0x16a6820, stored by
  * FUN_00199f80 and the out-of-line destructor FUN_0019a230): the destructor
  * destroys the 0x40-byte object at +0x10 (FUN_0019a0b0) and frees it, then
@@ -1748,6 +1768,9 @@ struct Layout00180ef0 {
 
     LayoutRules00180ef0 rules;
 };
+
+/* The layout built with the host's rules (0x180ee0). derived name. */
+void FUN_00180ee0(Layout00180ef0 *self); /* derived name */
 
 /* The member offsets of a class and, when recurse is set, of its members'
  * classes, computed in place under the rules; each class done is added to
@@ -2382,7 +2405,14 @@ struct LoadedImage; /* derived name */
  * reference-counted image 0x1a04d0 builds copies the three. */
 struct RawImagePart /* derived name */
 {
-    u8 unknown0[0xc];
+    /* The loader's one part: 3, a value of its own, a 16-bit value, type 0
+     * and 3 (0x1889df to 0x1889f0); 0x1a0780 reads the two ints and the
+     * type. derived names. */
+    int value0;
+    int value4;
+    u16 value8;
+    u8 type; /* derived name: 0 to 3, a part of 1, 2, 4 or 4 bytes (0x1a0780) */
+    u8 valueB;
 };
 
 struct RawImage /* derived name */
@@ -2918,6 +2948,15 @@ struct MemorySystem : public hkMemorySystem {
  * -0x60, which places it at +0x10 of the template. Every reader adds that
  * slot to %fs:0. */
 extern __thread hkMemoryRouter *D_16dc070;
+
+/* A string the thread's heap holds freed, inline: the string handed in
+ * first, the heap read inside (the patch manager's index frees its names
+ * so, the value's call at 0x19a0d6 before the router's read). derived
+ * name. */
+inline void freeHeapString(char *string) /* derived name */
+{
+    FUN_0000bc80(*D_16dc070->temp58, string);
+}
 
 /* The runtime given back to the thread's heap at its recorded size when
  * there is one (a pointer of 0 or 1 holds none: `cmp 2; jb`, 0x700e1), then
@@ -3692,6 +3731,20 @@ inline void Object000ea540::operator delete(void *object, unsigned long numBytes
         D_16dc070->temp58->blockFree(object, int(numBytes));
     }
 }
+
+/* The 0x58-byte class over it (derived name; vtable 0x16a3c90, slots its
+ * destructors 0xea380 and 0xea440 and the shared empty 0xadd50), built
+ * inline in 0xea610 (0xeae0f): a SIMD tree at +0x30 and two signals. Its
+ * destructors are in the base class's file, the base's inline in them. */
+class Object000ea380 : public Object000ea540 /* derived name */
+{
+  public:
+    virtual ~Object000ea380();
+
+    hkcdSimdTree tree;       /* derived name */
+    Signal00093530 signal48; /* derived name */
+    Signal00093530 signal50; /* derived name */
+};
 
 /* Three allocators that hold nothing of their own and hand every request to
  * one of the calling thread's router allocators (vtables 0x168d430,

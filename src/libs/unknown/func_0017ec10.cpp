@@ -4,7 +4,4 @@
 /* Slot 0 of its vtable (0x16a61f0) and of hkDefaultClassNameRegistry's
  * (0x16a6170), the complete destructor: the map's destructor is out of
  * line, the name is not owned. */
-hkDynamicClassNameRegistry::~hkDynamicClassNameRegistry()
-{
-    FUN_000915e0(&map);
-}
+hkDynamicClassNameRegistry::~hkDynamicClassNameRegistry() {}

@@ -34,14 +34,22 @@ static inline void includeCentre(hkAabb16 &aabb, const BroadPhaseTree00142a40::E
     }
 }
 
+/* The sort's order: by the minimum x (derived name). */
+static inline bool lessMinX(const hkAabb16 &a, const hkAabb16 &b)
+{
+    return a.min[0] < b.min[0];
+}
+
 /* Boxes sorted by their minimum x, by insertion (the bucket's boxes and
- * their count handed over once, 0x13e3f0 reads the count before the walk). */
+ * their count handed over once, 0x13e3f0 reads the count before the walk),
+ * the order a function of the two boxes (the entry's copy reaches it by
+ * reference, so it is split only after the inliner, cookbook 191). */
 static inline void sortEntries(hkAabb16 *entries, int numEntries)
 {
     for (int i = 0; i < numEntries; i++) {
         int j = i;
         const hkAabb16 entry = entries[i];
-        while (j > 0 && entry.min[0] < entries[j - 1].min[0]) {
+        while (j > 0 && lessMinX(entry, entries[j - 1])) {
             entries[j] = entries[j - 1];
             j--;
         }
@@ -71,14 +79,15 @@ static inline void appendEntries(BroadPhaseTree00142a40::Entry *list,
 // NONMATCHING: written as the function the program has, for its callers'
 // sake (its first and fourth arguments are not read, so 3.3's
 // DeadArgumentElimination passes neither from a caller in this unit); in
-// progress (docs/NOTES.md, Rounds 56 and 57). The frame is a classified
-// compiler residual: the base lays out the objects holding arrays first
-// and the address-taken ones after them (the stack protector's layout of
-// LLVM 3.5, which 3.3's frame finalization does not have); under that
-// layout every local here lands at the base's offset. Open beside it: the
-// insertion sort's inner index (64 bits here, 32 in the base, the final
-// copy's tail addressed through the index), the two dissolve loops' block
-// order and the extent's reload after the left one, the jobs' size reload.
+// progress (docs/NOTES.md, Rounds 56 to 58). The frame is the base's under
+// D35. Classified (Round 58): the leaf jobs' gather loop is unswitched on
+// the split test in the base (two copies, the loop's guard before the
+// test), the shape D21 parks for 0x187750, which 3.3 makes only with the
+// non-trivial unswitch -O2 does not run. Open beside it: the centres box is
+// promoted across the gather loop's calls in the base, which needs
+// FUN_0013c340 defined in this unit (its centres argument then nocapture,
+// so the box does not escape); the two dissolve loops' block order and the
+// extent's reload after the left one; the jobs' size reload.
 void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree,
                   const hknpBody *bodies, int layer, bool keepAabbs, int maxAgedLeaves)
 {

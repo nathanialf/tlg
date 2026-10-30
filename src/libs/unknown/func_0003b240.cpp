@@ -5,7 +5,9 @@
  * 0x16958e0) forwards to the same slot of the wrapped shape at +0x28. */
 void hknpDecoratorShape::FUN_0003b240(const void *argument1, const void *argument2,
                                       const void *argument3, const void *argument4,
-                                      void *argument5) const /* derived name */
+                                      const void *argument5, const void *argument6,
+                                      void *argument7) const /* derived name */
 {
-    coreShape->unknownVirtual25(argument1, argument2, argument3, argument4, argument5);
+    coreShape->unknownVirtual25(argument1, argument2, argument3, argument4, argument5, argument6,
+                                argument7);
 }
