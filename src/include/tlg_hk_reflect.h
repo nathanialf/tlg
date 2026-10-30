@@ -1919,6 +1919,9 @@ int FUN_00017fe0(const char *s); /* derived name */
 /* The string library's copy (derived name; a wrapper over strcpy,
  * 0x17fc0). */
 char *FUN_00017fc0(char *destination, const char *source); /* derived name */
+/* The string library's bounded copy (derived name; a wrapper over
+ * strncpy that copies nothing for a zero count, 0x17fd0). */
+void FUN_00017fd0(char *destination, const char *source, int maxLength); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
  * 0x17f40). */
 int FUN_00017f40(const char *a, const char *b); /* derived name */
@@ -4819,6 +4822,20 @@ struct hkQuaternion {
     Vec4 vec; /* derived name */
 };
 
+/* hkQsTransform (the reflection's type name, the string at 0x14b302e among
+ * the math types'): a translation, a rotation as a quaternion and a scale
+ * (0x114f0 reads them at +0, +0x10 and +0x20). */
+struct hkQsTransform {
+    /* The transform as a matrix (0x114f0; the game's 0xea51ba): the
+     * rotation times the scale on the diagonal, the translation, through
+     * hkTransform's 0x10a10. derived name. */
+    void FUN_000114f0(struct hkMatrix4 &out) const;
+
+    Vec4 translation;      /* derived name */
+    hkQuaternion rotation; /* derived name */
+    Vec4 scale;            /* derived name */
+};
+
 /* hkSweptTransformf (hkClass 0x57b94e0, built at 0x149fd: size 0x50, no
  * parent, five member records at 0x168e4e0). */
 struct hkSweptTransformf {
@@ -6680,7 +6697,11 @@ struct hknpManifoldCollisionCache /* derived name */
      * the detector's slots look past the first two quads only from three).
      * derived name. */
     u8 sizeInQuads;
-    u8 unknownA[0xc];
+    u8 unknownA[2];
+    /* Flags; bit 2 set when the trigger modifier sees the manifold created
+     * (0x161fea). derived name. */
+    u16 flags0c;
+    u8 unknownE[8];
     u8 propertyBufferOffset; /* derived name */
     u8 propertyKeysUsed;     /* derived name */
     u32 propertyOffsets;     /* derived name */
@@ -7024,8 +7045,10 @@ struct alignas(16) hkAabb16 {
  * rotated into the body). */
 struct hknpBody {
     /* The flag bits the world's tests read (derived names): a static body
-     * and an active one (0x4d436 tests both, `test 9`). */
-    enum { IS_STATIC = 1 << 0, IS_ACTIVE = 1 << 3 };
+     * and an active one (0x4d436 tests both, `test 9`), and one that raises
+     * trigger events (the trigger modifier's slots 0x161fd0 and 0x1620c0
+     * test it on either body). */
+    enum { IS_STATIC = 1 << 0, IS_ACTIVE = 1 << 3, RAISE_TRIGGER_EVENTS = 1 << 4 };
 
     void FUN_0003a670(const Vec4 &centerOfMassLocal); /* derived name */
 
@@ -12450,6 +12473,17 @@ class hkxMeshSection : public hkReferencedObject
  * object's hkClass through the registry singleton at 0x57c8910 (slot 7), or
  * null. */
 struct hkRefVariant /* derived name */ {
+    /* The object's reference released and the pointer cleared, as a
+     * counted reference's (hkMemoryResourceHandle's destructor 0x17f180,
+     * after the name). */
+    ~hkRefVariant()
+    {
+        if (object) {
+            object->removeReference();
+        }
+        object = 0;
+    }
+
     hkReferencedObject *object; /* derived name */
 };
 
@@ -12468,13 +12502,7 @@ struct hkxAttribute {
     hkRefVariant value;
 };
 
-inline hkxAttribute::~hkxAttribute()
-{
-    if (value.object) {
-        value.object->removeReference();
-    }
-    value.object = 0;
-}
+inline hkxAttribute::~hkxAttribute() {}
 
 extern const hkClassMember D_16a23e0[]; /* derived name: hkxAttribute's records */
 extern const hkClassMember D_16a1cf0[]; /* derived name: hkxSkinBinding's records */
@@ -12606,6 +12634,14 @@ class hkMemoryResourceHandle : public hkResourceHandle
 {
   public:
     hkMemoryResourceHandle(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x17f180): the external links, the name, then the
+     * variant's reference; the deleting destructor (0x17f130, before it)
+     * calls it and frees through the class's delete. */
+    virtual ~hkMemoryResourceHandle();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const char *FUN_0017f2d0() const;              /* vtable slot 6; derived name */
     const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
@@ -15228,6 +15264,21 @@ struct CollisionCache001785a0 /* derived name */
     u16 unknownC;
     u16 unknownE;
 };
+
+/* A collision cache of type 7 (derived names): the cache's header, then a
+ * count of values twice and the values, up to 502 (0x176110 writes one;
+ * its callers 0x75652 and 0x17392d). */
+struct ValuesCache00176110 : public CollisionCache001785a0 /* derived name */
+{
+    int numValues;       /* derived name */
+    int numValuesCopied; /* derived name */
+    u32 values[1];       /* derived name */
+};
+
+/* derived name: a cache of type 7 of the values appended to the writer,
+ * returned. */
+ValuesCache00176110 *FUN_00176110(const u32 *values, int numValues,
+                                  hkBlockStreamWriter *writer); /* derived name */
 
 /* derived name: the cache of a new pair appended to the writer; the world
  * is not read. */

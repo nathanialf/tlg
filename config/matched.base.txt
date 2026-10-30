@@ -1348,7 +1348,7 @@ FUN_0016cee0 src/libs/unknown/func_0016cee0.cpp
 FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
 FUN_00176b20 src/libs/unknown/func_00176b20.cpp
 FUN_0017b700 src/libs/unknown/func_0017b700.cpp
-FUN_0017f130 src/libs/unknown/func_0017f130.cpp
+_ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
 FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
 FUN_00181ba0 src/libs/unknown/func_00181ba0.cpp
 _ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
@@ -2284,3 +2284,11 @@ FUN_000617b0 src/libs/unknown/func_000617b0.cpp _GLOBAL__I_a
 FUN_00069790 src/libs/unknown/func_00069790.cpp _GLOBAL__I_a
 FUN_00199880 src/libs/unknown/func_00199880.cpp _ZN19BitFieldMap0019977012FUN_00199880Ev
 FUN_0019d280 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019d280ERK7hkClassPKc
+FUN_0007bc00 src/libs/unknown/func_0007bc00.cpp _ZNK29hkpPointToPlaneConstraintData12FUN_0007b5a0EPKvS1_S1_RDv4_f
+FUN_00030ca0 src/libs/unknown/func_00030ca0.cpp _Z12FUN_00030ca0P22hknpWorldObject380PairPK26hknpWorldObject380StepInfoPK24hknpWorldObject380SourcejtPK8hknpBodyfffPK10hknpMotionPK12hknpMaterialS9_SC_SF_P24hknpWorldObject380Writer
+_ZN22hkMemoryResourceHandleD1Ev src/libs/unknown/func_0017f130.cpp
+FUN_00161fd0 src/libs/unknown/func_00161fd0.cpp _ZNK15Modifier16a502012FUN_00161fd0EP20CommandOwner00171180PKvPK10hknpCdBodyS6_P20ManifoldCreatedInput
+FUN_0000e450 src/libs/unknown/func_0000e450.cpp _Z12FUN_0000e450P11hkStringPtrPKci
+FUN_00176110 src/libs/unknown/func_00176110.cpp _Z12FUN_00176110PKjiP19hkBlockStreamWriter
+FUN_0001c7f0 src/libs/unknown/func_0001c7f0.cpp _GLOBAL__I_a
+FUN_000114f0 src/libs/unknown/func_000114f0.cpp _ZNK13hkQsTransform12FUN_000114f0ER9hkMatrix4

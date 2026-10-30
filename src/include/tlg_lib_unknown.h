@@ -236,6 +236,15 @@ class hknpMassChangerModifier /* derived name */
 class Modifier16a5020 /* derived name */
 {
   public:
+    /* Slot 3 (0x161fd0), when a manifold is created: the cache marked;
+     * when either body raises trigger events, a contact solver trigger
+     * (its material's type) leaves the manifold without impulse, else the
+     * modifier's bit 9 is enabled and an event of the manifold created
+     * posted with the shape keys, the cache's flags at +0x22 given bit 3;
+     * with neither body a trigger, only the bit enabled. derived name. */
+    void FUN_00161fd0(CommandOwner00171180 *context, const void *sharedData,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      ManifoldCreatedInput *input) const;
     /* Slot 5 (0x1622a0), as a cache's modifiers are fired: when the
      * cache's flags at +0x22 have bit 3, an event of the bodies' manifold
      * going posted with their shape keys; bits 3 and 4 cleared either
@@ -3589,6 +3598,11 @@ inline void hkProcessFactory::operator delete(void *object, unsigned long numByt
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkMemoryResourceHandle::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void *hkpWrappedConstraintData::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -5327,7 +5341,6 @@ void FUN_00166180(hknpExternMeshShape *self);
 void FUN_0016cf30(hknpScaledConvexShape *self);
 void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
-void FUN_0017f180(hkMemoryResourceHandle *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
 
 void FUN_0000ddd0(hkSimpleLocalFrame *self);               /* slot 1 of 0x168d8e0 */
@@ -5374,7 +5387,6 @@ void FUN_0016a640(hknpScaledConvexShapeBase *self);          /* slot 1 of 0x16a5
 void FUN_0016cee0(hknpScaledConvexShape *self);              /* slot 1 of 0x16a54a0 */
 void FUN_00176b20(hknpCharacterProxy *self);                 /* slot 1 of 0x16a5b70 */
 void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5d20 */
-void FUN_0017f130(hkMemoryResourceHandle *self);             /* slot 1 of 0x16a6270 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
 void FUN_00181ba0(hkBinaryPackfileWriter *self);             /* slot 1 of 0x16a6470 */
 void FUN_0019c100(hkPackfileWriter *self);                   /* slot 1 of 0x16a6960 */
