@@ -225,7 +225,7 @@ FUN_000ad750 src/libs/unknown/leaf_000ad750.cpp _ZNK19hkMemoryMeshTexture12FUN_0
 FUN_000ad760 src/libs/unknown/leaf_000ad760.cpp _ZN19hkMemoryMeshTexture12FUN_000ad760EN13hkMeshTexture16TextureUsageTypeE
 FUN_000ad910 src/libs/unknown/func_000ad910.cpp
 FUN_00128640 src/libs/unknown/func_00127a50.cpp _ZNK12_GLOBAL__N_117TreeQuery00127a5015unknownVirtual4Ev
-FUN_0012a850 src/libs/unknown/func_0012a850.cpp
+_ZN20hknpHeightFieldShapeD1Ev src/libs/unknown/func_00175c00.cpp
 FUN_0014e0a0 src/libs/unknown/func_0014e0a0.cpp
 FUN_0015dc50 src/libs/unknown/func_0015dc50.cpp
 _ZN18hknpMountedBallGunD1Ev src/libs/unknown/func_00166890.cpp
@@ -1338,7 +1338,7 @@ FUN_0009c910 src/libs/unknown/func_0009c910.cpp
 FUN_000aa380 src/libs/unknown/func_000aa380.cpp
 FUN_000aa680 src/libs/unknown/func_000aa680.cpp
 FUN_000ad920 src/libs/unknown/func_000ad920.cpp
-FUN_0012a860 src/libs/unknown/func_0012a860.cpp
+_ZN20hknpHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp
 FUN_00157ea0 src/libs/unknown/func_00157ea0.cpp
 FUN_00158680 src/libs/unknown/func_00158680.cpp
 FUN_00159600 src/libs/unknown/func_00159600.cpp
@@ -2012,3 +2012,6 @@ FUN_0000c1b0 src/libs/unknown/func_0000c1b0.cpp _GLOBAL__I_a
 FUN_0008e380 src/libs/unknown/func_0008e380.cpp _GLOBAL__I_a
 FUN_0008e460 src/libs/unknown/func_0008e460.cpp _GLOBAL__I_a
 FUN_00091d50 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp _Z12FUN_00091d50PKcii
+_ZN20hknpHeightFieldShapeD2Ev src/libs/unknown/func_00175c00.cpp
+_ZN30hknpCompressedHeightFieldShapeD1Ev src/libs/unknown/func_00175c00.cpp
+_ZN30hknpCompressedHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp

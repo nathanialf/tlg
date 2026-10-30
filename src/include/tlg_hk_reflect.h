@@ -11900,22 +11900,49 @@ class hknpExternMeshShapeData : public hkReferencedObject
 /* hknpExternMeshShape (hkClass 0x57c2898, parent hknpCompositeShape, 0x70
  * bytes): geometry (pointer) at +0x60 and boundingVolumeData (pointer to
  * hknpExternMeshShapeData) at +0x68 (records 0x169abc0, 0x169abe8). */
+/* hknpMinMaxQuadTree (hkClass 0x57c1000, built at 0x40f40 by its file's
+ * initializer 0x40ea0: size 0x30, no parent; member records at
+ * 0x1697800): the coarse levels, then the quantization's offset and
+ * scales. */
+struct hknpMinMaxQuadTree {
+    /* hknpMinMaxQuadTree::MinMaxLevel (hkClass 0x57c0f80, built at 0x40eef:
+     * size 0x18; member records at 0x1697780): the packed minima and maxima
+     * of one level and its resolution. */
+    struct MinMaxLevel {
+        hkArray<u32> minMaxData;
+        u16 xRes;
+        u16 zRes;
+    };
+
+    hknpMinMaxQuadTree(hkFinishLoadedObjectFlag flag) : coarseTreeData(flag) {}
+
+    hkArray<MinMaxLevel> coarseTreeData;
+    Vec4 offset;
+    float multiplier;
+    float invMultiplier;
+};
+
 /* hknpHeightFieldShape (hkClass 0x57bf540, built at 0x3993e: size 0xf0,
- * parent hknpCompositeShape's 0x57c2cf8): no type info and no vtable of its
- * own in the executable; its inline finish constructor's vptr store dies
+ * parent hknpCompositeShape's 0x57c2cf8): no type info; its vtable 0x16a3e30
+ * has a ruled row (D14). Its inline finish constructor's vptr store dies
  * under the derived one (the same block, DSE). */
 class hknpHeightFieldShape : public hknpCompositeShape
 {
   public:
-    hknpHeightFieldShape(hkFinishLoadedObjectFlag flag) : hknpCompositeShape(flag) {}
+    hknpHeightFieldShape(hkFinishLoadedObjectFlag flag) : hknpCompositeShape(flag), minMaxTree(flag)
+    {
+    }
 
-    /* Out of line: the base destructor 0x12a8c0 stores the vtable at
-     * 0x16a3e30 (address point 0x16a3e40, whose slot 0 0x12a850 jumps to it
-     * and slot 1 0x12a860 runs it and frees 0xf0 bytes; slot 7 0x12aa80 is
-     * shared with the compressed shape's vtable) and frees the min-max
-     * tree's arrays; the compressed shape's destructor ends in it. The
-     * vtable has no row (docs/NOTES.md, Round 57). */
-    virtual ~hknpHeightFieldShape();
+    /* Inline, emitted where the vtable is used (the compressed shape's
+     * destructor, func_00175c00.cpp): the base destructor 0x12a8c0 stores
+     * the vtable 0x16a3e30 (address point 0x16a3e40) and frees the min-max
+     * tree's levels, then runs the composite shape's inline; the complete
+     * destructor 0x12a850 (slot 0) is a separate jump to it, which 3.3 makes
+     * only of a linkonce destructor (CGCXX.cpp TryEmitDefinitionAsAlias),
+     * and the deleting one 0x12a860 (slot 1) frees 0xf0 bytes after it; the
+     * base's D1 before D0 is a vtable initializer's order. Slot 7 0x12aa80
+     * is shared with the compressed shape's vtable. */
+    virtual ~hknpHeightFieldShape() {}
 
     /* The members from its ten records at 0x1694c90 (the reflection
      * initializer 0x398d0 passes them). */
@@ -11926,7 +11953,7 @@ class hknpHeightFieldShape : public hknpCompositeShape
     int intSizeZ;
     int numBitsX;
     int numBitsZ;
-    u8 minMaxTree[0x30]; /* an hknpMinMaxQuadTree (hkClass 0x57c1000), not recovered */
+    hknpMinMaxQuadTree minMaxTree;
     int minMaxTreeCoarseness;
     hkBool includeShapeKeyInSdfContacts;
 };
@@ -11945,8 +11972,9 @@ class hknpCompressedHeightFieldShape : public hknpHeightFieldShape
      * 0x69593. */
     hknpCompressedHeightFieldShape(hkFinishLoadedObjectFlag flag);
 
-    /* Out of line (0x175c00, slot 0): the two arrays freed, the shape tags
-     * first, then the height field's base destructor 0x12a8c0. */
+    /* Out of line (0x175c00, slot 0; the deleting destructor 0x175cb0, slot
+     * 1): the two arrays freed, the shape tags first, then the height
+     * field's base destructor 0x12a8c0. */
     virtual ~hknpCompressedHeightFieldShape();
 
     /* The members from its five records at 0x169a620, from +0xe8 (the

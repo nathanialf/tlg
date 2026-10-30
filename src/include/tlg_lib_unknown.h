@@ -542,6 +542,14 @@ class AllocatorBase /* derived name */
         FUN_00008d80(pointer, numElements * sizeof(T));
     }
 
+    /* Slot 5 for a size in bytes the caller has computed, the pointer read
+     * before the call loads the slot as above (hkArray's storage). derived
+     * name. */
+    void freeBytes(void *pointer, int numBytes)
+    {
+        FUN_00008d80(pointer, numBytes);
+    }
+
     /* Slot 6 (the default 0x8d90): a buffer resized, from its old size to
      * the size asked for, which the allocator may round up in place (the
      * slab allocator's 0xefd0). derived name. Slot 11's signature is not
@@ -576,7 +584,13 @@ template <typename T> inline void hkArray<T>::clearAndDeallocate()
      * string's). */
     clear();
     if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
-        hkContainerHeapAllocator::get().freeElements<T>(data, getCapacity());
+        /* The storage's size in bytes first, then the pointer: an array
+         * destroyed in a loop keeps the data pointer's store behind a phi
+         * (0x40dd0, 0x12a8c0: `mov rax, rbx` after the free, the address
+         * rebuilt from the index on the other path), which a pointer read
+         * first would let SimplifyCFG hoist away (cookbook 190). */
+        const int numBytes = getCapacity() * sizeof(T);
+        hkContainerHeapAllocator::get().freeBytes(data, numBytes);
     }
     data = 0;
     capacityAndFlags = DONT_DEALLOCATE_FLAG;
@@ -1578,22 +1592,10 @@ class Object0000b330 : public hkReferencedObject /* derived name */
     hkCriticalSection criticalSection; /* derived name */
 };
 
-/* A reference-counted object of 0xf0 bytes (vtable 0x16a3e30, address
- * point 0x16a3e40): its out-of-line destructor body FUN_0012a8c0 stores the
- * vtable and frees the array of 24-byte elements at +0xb0. */
-struct Object0012a8c0 /* derived name */
-{
-    u8 unknown0[0x60];
-    hkAabb aabb;        /* derived name: the box slot 7 (0x12aa80) transforms */
-    u8 unknown80[0x70]; /* to the size its deleting destructor 0x12a860 frees */
-};
-
-/* Slot 7 of its vtable (and of 0x16a5990's): its box under a transform,
- * no radius added. derived name. */
-void FUN_0012aa80(const Object0012a8c0 *self, const Mat4 &transform,
+/* Slot 7 of hknpHeightFieldShape's vtable (and of 0x16a5990's): its box
+ * under a transform, no radius added. derived name. */
+void FUN_0012aa80(const hknpHeightFieldShape *self, const Mat4 &transform,
                   hkAabb &aabbOut); /* derived name */
-
-void FUN_0012a8c0(Object0012a8c0 *self); /* derived name */
 
 /* A reference-counted object of 0x48 bytes (vtable 0x16a6820, stored by
  * FUN_00199f80 and the out-of-line destructor FUN_0019a230): the destructor
@@ -4842,7 +4844,6 @@ void FUN_0009c910(hkcdPlanarGeometryPlanesCollection *self); /* slot 1 of 0x16a3
 void FUN_000aa380(hkSkinBinding *self);                      /* slot 1 of 0x16a3850 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);              /* slot 1 of 0x16a38b0 */
 void FUN_000ad920(hkStorageSkinnedMeshShape *self);          /* slot 1 of 0x16a3af0 */
-void FUN_0012a860(Object0012a8c0 *self);                     /* slot 1 of 0x16a3e30 */
 void FUN_00157ea0(hknpBallGun *self);                        /* slot 1 of 0x16a48d0 */
 void FUN_00158680(hknpCompressedMeshShape *self);            /* slot 1 of 0x16a4990 */
 void FUN_00159600(hknpProjectileGun *self);                  /* slot 1 of 0x16a4b30 */
