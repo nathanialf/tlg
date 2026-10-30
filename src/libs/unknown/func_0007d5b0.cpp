@@ -3,7 +3,7 @@
 
 /* derived name: slot 6 of hkpWrappedConstraintData's vtable (address point
  * 0x169cef0) forwards to the same slot of the constraint data it wraps. */
-void hkpWrappedConstraintData::FUN_0007d5b0(ConstraintInfo &infoOut) const /* derived name */
+void hkpWrappedConstraintData::unknownVirtual6(ConstraintInfo &infoOut) const
 {
     constraintData->unknownVirtual6(infoOut);
 }

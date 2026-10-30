@@ -36,8 +36,15 @@ class hkThread /* derived name */
 
     void joinThread();
 
+    /* The thread started on a function and its argument, under a name,
+     * joinable, with the stack size given when it is positive (0x10580);
+     * "Thread Error" printed and a failure when it cannot be. derived
+     * names. */
+    hkResult startThread(void *(*startFunction)(void *), void *arg, const char *name,
+                         int stackSize);
+
     void *m_thread;
-    int status; /* derived name */
+    s64 status; /* derived name: 2 before the start, 1 after (8-byte stores) */
 };
 
 /* The object at +0x18 of Class168e810: a spin lock at +0x10; FUN_00015700

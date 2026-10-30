@@ -774,6 +774,41 @@ template <typename ENUM, typename STORAGE> class hkEnum
     STORAGE m_storage;
 };
 
+/* hkFlags, the reflection's type 0x1f: bit values kept in an integer of
+ * their own size. A masked read is of the storage type, so a choice made on
+ * it is a select of the narrow value (0x7e30's `and eax, 0x100; shr eax, 5`
+ * for 16 or 8, where an int test folds the other way). */
+template <typename BITS, typename STORAGE> class hkFlags
+{
+  public:
+    STORAGE get() const
+    {
+        return m_storage;
+    }
+
+    STORAGE get(STORAGE mask) const
+    {
+        return m_storage & mask;
+    }
+
+    bool anyIsSet(STORAGE mask) const
+    {
+        return (m_storage & mask) != 0;
+    }
+
+    void orWith(STORAGE mask)
+    {
+        m_storage |= mask;
+    }
+
+    void clear(STORAGE mask)
+    {
+        m_storage &= ~mask;
+    }
+
+    STORAGE m_storage;
+};
+
 struct hkClassEnum;
 struct hkClassMember;
 
@@ -1255,6 +1290,12 @@ struct hkClassMember {
      * type's size (0x7f20). derived name. */
     int FUN_00007f20() const;
 
+    /* The member's alignment (0x7e30): an enum's or flags' storage type's,
+     * a struct's largest member's (at least one), else its type's from the
+     * table; raised to 8, 16 or 32 by the member's alignment flags.
+     * derived name. */
+    int FUN_00007e30() const;
+
     /* The member's size in bytes (0x7d60): its type's size, an enum's or
      * flags' storage size, or a struct's object size, times its C array
      * size (one when it is not an array); -1 for a type without a size of
@@ -1271,7 +1312,7 @@ struct hkClassMember {
     u8 type;
     u8 subtype;
     s16 cArraySize;
-    u16 flags;
+    hkFlags<FlagValues, u16> flags;
     u16 offset;
     /* The ninth record of hkClassMember's own member table (built at
      * 0x7c13, its name the string at 0x14b2aa0); the records are 0x28
@@ -9736,6 +9777,12 @@ class hkpConstraintData : public hkReferencedObject
      * makes into the data it wraps (FUN_0007d020). derived name. */
     virtual void buildJacobianCallback(const void *input, void *output);
 
+    /* Slots 25 and 26, by default the shared false 0x1bad0 and the empty
+     * body 0x3b640 (the vtables of hkpFixedConstraintData, 0x169c630, and
+     * of the wrapped data end their primary part there or at slot 29). */
+    virtual hkBool unknownVirtual25() const;
+    virtual void unknownVirtual26();
+
     u8 unknownC[4];
     hkUlong userData; /* the record's member (0x169d660) */
 };
@@ -11078,21 +11125,36 @@ class hkpWrappedConstraintData : public hkpConstraintData
         constraintData = 0;
     }
 
-    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+    /* The class allocator (tlg_lib_unknown.h): a new object from the
+     * thread's heap, inline (the copies 0x3c2a0 and 0x67c80); the deleting
      * destructor 0x7d480, beside the constructors, frees at the recorded
      * size, 0x20 by default. */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
-    void FUN_0007d5b0(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    hkBool FUN_00067c60() const;                      /* vtable slot 7; derived name */
+    /* Slots 6 (0x7d5b0), 7 (0x67c60) and 20 (0x67b30): the wrapped data's
+     * own slots. */
+    void unknownVirtual6(ConstraintInfo &infoOut) const;
+    hkBool unknownVirtual7() const;
     void FUN_0007d600(const void *argument1, const void *argument2, const void *argument3,
                       Vec4 &out) const; /* vtable slot 19; derived name */
-    void FUN_00067b30(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
-    void *FUN_0007d5d0(void *runtime) const;                 /* vtable slot 21; derived name */
+    void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
+    void *FUN_0007d5d0(void *runtime) const; /* vtable slot 21; derived name */
+
+    /* Slots 27 and 28 (both the shared getter 0xd2b0): the wrapped data.
+     * Slot 29 (pure here): a copy of the data over a deep copy of the
+     * wrapped data (hknpBreakableConstraintData's 0x3c2a0,
+     * hknpMalleableConstraintData's 0x67c80). derived names. */
+    virtual const hkpConstraintData *getWrappedConstraintData() const;
+    virtual hkpConstraintData *getWrappedConstraintData();
+    virtual hkpConstraintData *clone() const = 0;
 
     hkpConstraintData *constraintData;
 };
+
+/* A deep copy of a constraint data, chosen by its type (slot 5); a wrapped
+ * data's own copy for the wrapped types (0x794c0). derived name. */
+hkpConstraintData *FUN_000794c0(const hkpConstraintData *constraintData);
 
 /* Its one member record, constraintData (the reflection initializer 0x7e350
  * passes it). */
@@ -11164,6 +11226,13 @@ class hknpBreakableConstraintData : public hkpWrappedConstraintData
 
     float FUN_0003c270() const;            /* derived name */
     void FUN_0003c280(float newThreshold); /* derived name */
+
+    /* Slot 5 (0x37b70, its type code). */
+    int unknownVirtual5() const;
+
+    /* Slot 29 (0x3c2a0): over a deep copy of the wrapped data, the same
+     * threshold. */
+    virtual hkpConstraintData *clone() const;
 
     float threshold;
 };
@@ -15455,6 +15524,10 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
 
     /* Slot 10 (0x19d0d0): a section added by its tag. derived name. */
     virtual void FUN_0019d0d0(const char *sectionTag);
+    /* A section's index by its tag, the section added when it is new
+     * (0x19cd20; the binary writer's save asks it for "__data__",
+     * 0x182188). derived name. */
+    int FUN_0019cd20(const char *sectionTag);
     virtual void FUN_0019d190(); /* slot 11; derived name, arguments not read */
     /* Slot 12 (0x19d280): the objects of a class placed in the section of
      * a tag. derived name. */

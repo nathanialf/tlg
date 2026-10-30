@@ -270,6 +270,11 @@ scePthreadBarrierWait
 scePthreadBarrierDestroy
 scePthreadOnce
 pthread_create
+pthread_create_name_np
+pthread_attr_init
+pthread_attr_destroy
+pthread_attr_setdetachstate
+pthread_attr_setstacksize
 pthread_join
 pthread_self
 pthread_mutex_init

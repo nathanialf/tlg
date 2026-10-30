@@ -83,3 +83,37 @@ int hkClassMember::FUN_00007d60() const
         return -1;
     }
 }
+
+/* derived name: the member's alignment. A struct's members are walked over
+ * its parents' too, each member's alignment asked again when it is the
+ * larger. */
+int hkClassMember::FUN_00007e30() const
+{
+    int align;
+    Type memberType = static_cast<Type>(type);
+    switch (memberType) {
+    case TYPE_ENUM:
+    case TYPE_FLAGS:
+        memberType = static_cast<Type>(subtype);
+        break;
+    default:
+        break;
+    }
+    if (memberType == TYPE_STRUCT) {
+        align = 1;
+        for (int i = 0; i < structClass->FUN_00004350(); i++) {
+            if (structClass->FUN_00004370(i).FUN_00007e30() > align) {
+                align = structClass->FUN_00004370(i).FUN_00007e30();
+            }
+        }
+    } else {
+        align = FUN_00007d40(memberType).align;
+    }
+    if (flags.anyIsSet(ALIGN_8 | ALIGN_16 | ALIGN_32)) {
+        const int flagAlign = flags.get(ALIGN_32) ? 32 : (flags.get(ALIGN_16) ? 16 : 8);
+        if (flagAlign > align) {
+            align = flagAlign;
+        }
+    }
+    return align;
+}

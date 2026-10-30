@@ -13,3 +13,17 @@ void hkPackfileWriter::FUN_0019d0d0(const char *sectionTag)
         sectionTags.pushBack(tag);
     }
 }
+
+/* derived name: a section's index by its tag, as slot 10 adds it. */
+int hkPackfileWriter::FUN_0019cd20(const char *sectionTag)
+{
+    int index;
+    if (sectionTagToIndex.get(sectionTag, &index) == HK_SUCCESS) {
+        return index;
+    }
+    char *tag = FUN_000180c0(sectionTag);
+    index = sectionTags.getSize();
+    sectionTagToIndex.insert(tag, index);
+    sectionTags.pushBack(tag);
+    return index;
+}

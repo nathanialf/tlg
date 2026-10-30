@@ -774,6 +774,11 @@ struct ElementPool00198a20 /* derived name */
      * form into the growth test). derived name. */
     void FUN_00196570(u32 numElements);
 
+    /* Room for numFree free elements (0x198a70; the tree builder at
+     * 0x13c2a4 calls it): the elements grown by what the free list lacks.
+     * derived name. */
+    void FUN_00198a70(u32 numFree);
+
     /* The boxes and the leaf counts of a subtree refitted from its leaves
      * (0x197610, recursive); its number of leaves back. derived name. */
     int FUN_00197610(Element *node);
@@ -1643,6 +1648,11 @@ class Object0000b330 : public hkReferencedObject /* derived name */
 
     /* Out of line (0xb1a0, slot 0; 0xb250, slot 1). */
     virtual ~Object0000b330();
+
+    /* Slots 11 and 12 (0xb970, 0xba70): an id pushed on the array and the
+     * last one dropped, each under the critical section. derived names. */
+    void FUN_0000b970(int id);
+    void FUN_0000ba70();
 
     /* The reference-counted class delete (freeReferencedObject). */
     static void operator delete(void *object, unsigned long numBytes);
@@ -3356,6 +3366,11 @@ inline void hkDebugDisplay::operator delete(void *object, unsigned long numBytes
 inline void hkProcessFactory::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void *hkpWrappedConstraintData::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
 inline void hkpWrappedConstraintData::operator delete(void *object, unsigned long numBytes)
