@@ -804,6 +804,13 @@ beyond hkReferencedObject's. Object0019a7c0's row now cites its destructor
 into its own object, and the constructor that builds the cache does so into
 a new one; the destructor 0x19a7c0 is claimed with the correction.
 
+**Addendum, 2026-10-30 (round 63B).** A derived row may cite a constructor that builds the
+class's object in place as a member of its own: hkLargeBlockAllocator's constructor 0x12160
+stores SingleBlockAllocator's address point at `this+0x138` (0x12194). The checker's
+`vptr_stores` now counts a store at any offset of `this` (`members=True`); `vptr_of`, which
+names a finish constructor's own vtable by its last store, keeps offset 0, so a member built
+after the own store cannot be mistaken for it. 90 derived rows, 0 failing.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A

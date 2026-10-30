@@ -119,10 +119,12 @@ class Walker:
     def vptr_stores(self, fn: int) -> set[int]:
         """Every vtable address point the function stores into its `this`
         object along the fall-through path (a constructor: its bases' then
-        its own)."""
-        return set(self._walk(fn, fresh=True))
+        its own), or into a member of it built in place (`mov [this+0x138],
+        vptr`: hkLargeBlockAllocator's constructor 0x12160 builds its
+        SingleBlockAllocator member, D14's round 63B row)."""
+        return set(self._walk(fn, fresh=True, members=True))
 
-    def _walk(self, ctor: int, fresh: bool = False) -> list[int]:
+    def _walk(self, ctor: int, fresh: bool = False, members: bool = False) -> list[int]:
         """The vtable address points stored into `this` along the fall-through
         path. With `fresh`, the pointer a call returns (`rax`) is an object
         too: a create function news its object and constructs it inline
@@ -206,7 +208,10 @@ class Walker:
                 # built in place (the visitor the compressed mesh's slot 29
                 # hands to the tree walk, 0x127a7a)
                 local = base in ("rbp", "rsp")
-                if (base in this and dst.mem.disp == 0 or static or local) and not dst.mem.index \
+                # with `members`, a store at an offset of `this` is a member
+                # object built in place (vptr_stores); vptr_of keeps offset 0
+                # so a member built after the own vptr store cannot name it
+                if (base in this and (dst.mem.disp == 0 or members) or static or local) and not dst.mem.index \
                         and v is not None and self.in_relro(v) and self.is_address_point(v):
                     seq.append(v)
             elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
