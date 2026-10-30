@@ -2141,28 +2141,33 @@ with the twelve patches (tools/build_llvm.sh 3.3), 0xc360 claimed, the gate hold
 compiler, or a draft whose only residual is a direct call where the base holds a call through
 the vtable, is this decision: the key function's file, never a flag.
 
-## D38. No vzeroupper: the X86 pass that inserts it is skipped on both lines (2026-10-30)
+## D38. No vzeroupper: the X86 pass that inserts it is skipped on the library line (2026-10-30)
 
-**Decision.** Both compile lines carry `-mllvm -x86-use-vzeroupper=false`: the X86 pass that
+**Decision.** The library line carries `-mllvm -x86-use-vzeroupper=false`: 3.3's X86 pass that
 inserts `vzeroupper` before calls and returns in a function that touched a ymm register
 (X86VZeroUpper.cpp, added by X86TargetMachine::addPreEmitPass when the subtarget has AVX and
 the option holds) is skipped, so no vzeroupper is ever emitted, as the executable holds none.
+The game line needs nothing: 4.0.0 already skips the pass for btver2 by its own feature.
 
 **Evidence.** The executable holds 0 vzeroupper against 1,068 ymm uses in the library region and
-31,248 in the game region (a census of the whole text). Both LLVM 3.3 and 4.0.0 insert one in
-every function that uses a ymm register and calls or returns (3.3: X86TargetMachine.cpp:208,
-`if (getX86Subtarget().hasAVX() && UseVZeroUpper)`, the option `x86-use-vzeroupper` defaulting
-to true); round 65A's 0xd0950 is the first claimed-region function to reach a ymm use, and 3.3
-inserts a vzeroupper the base does not have. The target is Jaguar (btver2), which has no
-AVX-to-SSE transition penalty, so the insertion is useless there; upstream recognized that
-later: LLVM 7.0.0's X86.td gives btver2 FeatureFastPartialYMMorZMMWrite and X86VZeroUpper.cpp
-returns early on it (line 283, `if (!ST.hasAVX() || ST.hasFastPartialYMMorZMMWrite())`). The
-PS4 toolchain's own mechanism is not visible; the option reproduces its effect exactly: the
-pass does not run. Measured over every claimed TU of both regions at b663afc (2,076 TUs, each
-compiled by its own line with the option, scratchpad d38/run.sh): no claimed function changes (none held a vzeroupper, or it would not have matched), and the one function
+31,248 in the game region (a census of the whole text). LLVM 3.3 inserts one in every function that uses a
+ymm register and calls or returns (X86TargetMachine.cpp:208, `if (getX86Subtarget().hasAVX()
+&& UseVZeroUpper)`, the option `x86-use-vzeroupper` defaulting to true); round 65A's 0xd0950 is
+the first library function in work to reach a ymm use, and 3.3 inserts a vzeroupper the base
+does not have. The target is Jaguar (btver2), which has no AVX-to-SSE transition penalty, so the
+insertion is useless there, and upstream knows it by 4.0.0: its X86.td gives btver2
+FeatureFastPartialYMMWrite and X86VZeroUpper.cpp:260 returns early on it (`if (!ST.hasAVX() ||
+ST.hasAVX512() || ST.hasFastPartialYMMWrite())`; LLVM 7.0.0 spells the feature
+FastPartialYMMorZMMWrite), which is why the game region's 31,248 ymm uses already compile
+without one (a 64-byte copy followed by a call: 4.0.0 emits four ymm moves and no vzeroupper for
+either triple). The library compiler's own mechanism is not visible (3.3 has no such feature);
+the option reproduces its effect exactly: the pass does not run. Measured over every claimed TU of both regions at b663afc (2,076 TUs, each
+compiled by its own line with the option, scratchpad d38/run.sh; a first run had not passed the
+option at all and was discarded): no claimed function changes (none held a vzeroupper, or it would not have matched), and the one function
 that had reached a ymm use, 0xd0950, loses its vzeroupper (its other residuals stay its own).
 
-**Adopted.** config/flags.base.txt, both lines; the gate holds on every row.
+**Adopted.** config/flags.base.txt, the library line (04adafa put it on both; the game line's
+copy, a no-op by 4.0.0's feature, was dropped again); the gate holds on every row.
 
 **Trigger.** A vzeroupper in a compile is this decision; a function whose only residual is a
 vzeroupper the base lacks needs nothing else.
