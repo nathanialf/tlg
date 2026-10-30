@@ -4,7 +4,7 @@
 /* derived name: whether the archive's writer is usable (slot 5 of the
  * writer at +0x10). Slot 5 of the forwarding writer at 0x16a6410 and of
  * the class at 0x16a3860 reach the same body. */
-hkBool hkOArchive::FUN_0000abf0() const /* derived name */
+hkBool Object0000a280::FUN_0000abf0() const /* derived name */
 {
     return writer->isOk();
 }

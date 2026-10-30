@@ -13119,15 +13119,34 @@ class Crc32StreamWriter : public CrcStreamWriter /* derived name */
     virtual int write(const void *buffer, int size);
 };
 
-/* An output archive over a stream writer (derived name): a reference-counted
- * object (vtable address point 0x168d400, five slots, constructor 0xa280,
- * complete destructor 0xa3b0 releasing the writer at +0x10) with a
- * byte-swap flag at +0x18 (set and read by 0xabd0 and 0xabe0); 0xac00
- * returns the writer, FUN_0000abf0 tells whether it is usable. A caller
- * (0x1a3854) builds one on the stack, writes, then returns that test. */
-class hkOArchive : public hkReferencedObject /* derived name */
+/* An output archive over a stream writer (derived name after its
+ * constructor, the vtable's D14 row; Havok's hkOArchive by its shape, no
+ * string names it): a reference-counted object (vtable 0x168d3f0, address
+ * point 0x168d400, five slots, hkReferencedObject's 2 to 4) with the writer
+ * at +0x10, its reference kept, and a byte-swap flag at +0x18 (set and read
+ * by 0xabd0 and 0xabe0); 0xac00 returns the writer, FUN_0000abf0 tells
+ * whether it is usable. Built by seven functions from 0x4698 to 0x1a3773,
+ * on the stack at 0x4698, by hkClassEnum's write (0x14e80) and by 0x1a3854, which
+ * writes, then returns that test. */
+class Object0000a280 : public hkReferencedObject /* derived name */
 {
   public:
+    /* 0xa280: the writer's reference taken, the writer and the flag
+     * kept. */
+    Object0000a280(hkStreamWriter *writer, bool byteSwap);
+
+    /* Out of line (0xa3b0, slot 0; 0xa310, slot 1, the deleting one at the
+     * recorded size): the writer's reference released and the pointer
+     * cleared. */
+    virtual ~Object0000a280();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Raw bytes to the writer (the body folded onto hkOstream's 0x89f0).
+     * derived name. */
+    int FUN_000089f0(const void *buffer, int size);
+
     hkBool FUN_0000abf0() const; /* derived name */
     /* derived name: one byte written to the stream (0xa420). */
     void FUN_0000a420(char c);
@@ -13211,7 +13230,7 @@ class hkOArchive : public hkReferencedObject /* derived name */
 };
 
 /* Its writer (hkStreamWriter) at +0x10: FUN_000089e0 flushes it,
- * FUN_000089f0 writes to it. The caller at 0x14ec7 passes an hkOArchive
+ * FUN_000089f0 writes to it. The caller at 0x14ec7 passes the archive
  * built by 0xa280 (writer also at +0x10), and hkSkinBinding's slot 6 is
  * this body too: identical bodies folded onto this one. */
 class hkOstream : public hkReferencedObject

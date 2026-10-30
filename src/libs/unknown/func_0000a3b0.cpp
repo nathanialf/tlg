@@ -5,8 +5,8 @@
  * released. */
 Object0000a280::~Object0000a280()
 {
-    if (object) {
-        object->removeReference();
+    if (writer) {
+        writer->removeReference();
     }
-    object = 0;
+    writer = 0;
 }

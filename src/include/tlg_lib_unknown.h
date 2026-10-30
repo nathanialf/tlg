@@ -1683,32 +1683,6 @@ class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
     hkArray<Element18> unknown80; /* 0x18-byte elements */
 };
 
-/* A reference-counted object holding a reference to another and a flag
- * (vtable 0x168d3f0, D14: slots 2 to 4 hkReferencedObject's). Built by
- * seven functions from 0x4698 to 0x1a3773, on the stack at 0x4698. */
-class Object0000a280 : public hkReferencedObject /* derived name */
-{
-  public:
-    /* 0xa280: the object's reference taken, the object and the flag kept. */
-    Object0000a280(hkReferencedObject *object, bool flag);
-
-    /* Out of line (0xa3b0, slot 0; 0xa310, slot 1, the deleting one at the
-     * recorded size): the reference released and the pointer cleared. */
-    virtual ~Object0000a280();
-
-    /* The reference-counted class delete (below). */
-    static void operator delete(void *object, unsigned long numBytes);
-
-    /* The archive's writes (hkOArchive's in tlg_hk_reflect.h, the same
-     * object): raw bytes to the writer (the body folded onto hkOstream's
-     * 0x89f0) and a 32-bit value (0xa7a0). derived names. */
-    int FUN_000089f0(const void *buffer, int size);
-    void FUN_0000a7a0(int value);
-
-    hkReferencedObject *object; /* derived name */
-    bool flag;                  /* derived name */
-};
-
 /* A reference-counted object of 0x58 bytes (vtable 0x168d5b0, D14: slots 5
  * to 13 its own) that hkBaseSystem's start (0x98d0) builds from its second
  * and third arguments, a report function and the object it is called with
