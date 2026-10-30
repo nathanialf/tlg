@@ -5556,6 +5556,37 @@ struct hknpManifoldCollisionCache /* derived name */
      * names. */
     hkHalf maxImpulse;
     u8 fractionOfClippedImpulseToApply;
+    /* The count of each of the three float arrays past the properties,
+     * each padded to 16 bytes (FUN_0017a0a0 moves all three up when it
+     * reserves a property). derived name. */
+    u8 pointValueCount;
+
+    /* A property's address without the in-use test (0x156e90 reads key 2
+     * so). derived name. */
+    template <typename T> T *getProperty(int key)
+    {
+        const int offset = propertyBufferOffset * 16 + ((propertyOffsets >> (key * 4)) & 0xf) * 4;
+        return reinterpret_cast<T *>(reinterpret_cast<char *>(this) + offset);
+    }
+
+    /* The bytes the properties take: 64 once full (bit 0 of the keys byte,
+     * which FUN_0017a0a0 sets when the end reaches 64), else key 0's
+     * nibble, the end in 4-byte units, padded to 16; without a branch, as
+     * the base computes it at 0x156ec7 (a mask from the bit, not a
+     * select, which 3.3 makes a cmov). derived name. */
+    int propertyBufferSize() const
+    {
+        const int full = propertyKeysUsed & 1;
+        return full * 64 + ((((propertyOffsets & 0xf) * 4 + 15) & ~15) & -(1 - full));
+    }
+
+    /* One of the three float arrays past the properties. derived name. */
+    float *pointValues(int index)
+    {
+        return reinterpret_cast<float *>(reinterpret_cast<char *>(this) +
+                                         (propertyBufferOffset * 16 + propertyBufferSize()) +
+                                         index * ((pointValueCount + 3) & ~3) * int(sizeof(float)));
+    }
 };
 
 void *FUN_0017a0a0(hknpManifoldCollisionCache *cache, u8 propertyKey, u8 size,

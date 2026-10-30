@@ -200,9 +200,13 @@ class CollisionDetector169b230 /* derived name */
 struct hknpManifold /* derived name */
 {
     int numPoints; /* derived name */
-    u8 unknown4[0x3c];
+    u8 unknown4[0x2c];
+    /* Each point's distance, a lane each (0x156e90). derived name. */
+    float distances[4];
     Vec4 positions[4]; /* derived name */
-    u8 unknown80[0x60];
+    u8 unknown80[0x28];
+    hknpManifoldCollisionCache *collisionCache; /* derived name */
+    u8 unknownB0[0x30];
     /* The bodies' mass scales, each broadcast (the mass changer's slot 4,
      * 0x69450, writes them). derived names. */
     Vec4 massScaleA;
@@ -238,6 +242,20 @@ class Modifier16a5020 /* derived name */
                       int jacobianIndex); /* vtable slot 7; derived name */
 };
 
+/* The second argument of the modifier slot 0x156e90: a vector at +0x20 of
+ * the object at +0x18 (derived names). */
+struct ModifierVector00156e90 /* derived name */
+{
+    u8 unknown0[0x20];
+    Vec4 vector; /* derived name */
+};
+
+struct ModifierSharedData00156e90 /* derived name */
+{
+    u8 unknown0[0x18];
+    const ModifierVector00156e90 *object; /* derived name */
+};
+
 /* What the modifier of vtable 0x16a4850 keeps in a manifold's cache under
  * property key 2: two factors at +4 and +8 (derived names). */
 struct ManifoldScaleProperty /* derived name */
@@ -255,6 +273,9 @@ struct ManifoldScaleProperty /* derived name */
 class Modifier16a4860 /* derived name */
 {
   public:
+    void FUN_00156e90(const void *threadContext, const ModifierSharedData00156e90 *sharedData,
+                      const void *bodyA, const void *bodyB,
+                      hknpManifold *manifold); /* vtable slot 6; derived name */
     void FUN_001570a0(const void *threadContext, const void *sharedData, const void *bodyA,
                       const void *bodyB, hknpManifoldCollisionCache *cache,
                       const hknpManifold *manifold, Pair08Owner *jacobian,
