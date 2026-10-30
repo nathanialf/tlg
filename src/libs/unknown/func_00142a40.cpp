@@ -2,27 +2,8 @@
 #include "tlg_hk_algorithm.h"
 #include "tlg_lib_unknown.h"
 
-/* The box made empty (the minima the largest, the maxima and the keys zero)
- * and grown by another box or by a point, as the rebuild's bounds are
- * (derived names). */
-static inline void setEmpty(hkAabb16 &aabb)
-{
-    aabb.min[0] = aabb.min[1] = aabb.min[2] = 0xffff;
-    aabb.key = 0;
-    aabb.max[0] = aabb.max[1] = aabb.max[2] = 0;
-    aabb.key1 = 0;
-}
-
-static inline void includeAabb(hkAabb16 &aabb, const hkAabb16 &other)
-{
-    for (int i = 0; i < 3; i++) {
-        aabb.max[i] = hkMath::max2(aabb.max[i], other.max[i]);
-    }
-    for (int i = 0; i < 3; i++) {
-        aabb.min[i] = hkMath::min2(aabb.min[i], other.min[i]);
-    }
-}
-
+/* The box grown by a point, as the rebuild's bounds are (derived name; the
+ * box's own setEmpty and includeAabb are in the header). */
 static inline void includeCentre(hkAabb16 &aabb, const BroadPhaseTree00142a40::Entry &entry)
 {
     for (int i = 0; i < 3; i++) {
@@ -262,25 +243,25 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         const int numRight = item.numRight;
         const int firstLeaf = item.firstLeaf;
         hkAabb16 childAabbs[2];
-        setEmpty(childAabbs[0]);
+        childAabbs[0].setEmpty();
         for (int i = 0; i < numLeft; i++) {
             const int leafIndex = leaves.leafOfBucket[walk.leaves[firstLeaf + i]->children[0]];
             if (!leaves.removed[leafIndex]) {
-                includeAabb(childAabbs[0], leaves.aabbs[leafIndex]);
+                childAabbs[0].includeAabb(leaves.aabbs[leafIndex]);
             }
         }
-        setEmpty(childAabbs[1]);
+        childAabbs[1].setEmpty();
         int numRightEntries = 0;
         for (int i = 0; i < numRight; i++) {
             const int bucketIndex = walk.leaves[firstLeaf + numLeft + i]->children[0];
             const int leafIndex = leaves.leafOfBucket[bucketIndex];
             if (!leaves.removed[leafIndex]) {
                 numRightEntries += tree->buckets[bucketIndex].numEntries;
-                includeAabb(childAabbs[1], leaves.aabbs[leafIndex]);
+                childAabbs[1].includeAabb(leaves.aabbs[leafIndex]);
             }
         }
         hkAabb16 aabb = childAabbs[0];
-        includeAabb(aabb, childAabbs[1]);
+        aabb.includeAabb(childAabbs[1]);
         int numInherited = job.numInherited;
         for (int i = 0; i < numInherited; i++) {
             includeCentre(aabb, buffers[other].data[job.start + i]);
@@ -434,7 +415,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
 
         const bool split = leafJob.count > tree->maxLeafEntries;
         hkAabb16 centres;
-        setEmpty(centres);
+        centres.setEmpty();
         if (split) {
             for (int i = 0; i < leafJob.numInherited; i++) {
                 includeCentre(centres, leafJob.inherited[i]);
@@ -460,7 +441,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
                 const int leafIndex = leaves.leafOfBucket[bucketIndex];
                 if (!leaves.removed[leafIndex]) {
                     if (split) {
-                        includeAabb(centres, leaves.aabbs[leafIndex]);
+                        centres.includeAabb(leaves.aabbs[leafIndex]);
                     }
                     const Bucket &bucket = tree->buckets[bucketIndex];
                     for (int j = 0; j < bucket.numEntries; j++) {

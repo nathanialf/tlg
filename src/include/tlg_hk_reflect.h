@@ -525,9 +525,10 @@ template <typename T> struct hkArray {
      * tlg_lib_unknown.h; the thread pool's timer streams, 0x77b0). */
     T &expandOne(AllocatorBase &allocator);
 
-    /* Room for n elements at least, from the allocator given (defined in
-     * tlg_lib_unknown.h). */
-    void reserve(AllocatorBase &allocator, int n);
+    /* Room for n elements at least, from the allocator given, the
+     * allocation's result back (defined in tlg_lib_unknown.h; the
+     * union-find's group assignment fails with it, 0x8f8ed). */
+    hkResult reserve(AllocatorBase &allocator, int n);
 
     /* n more elements at the end, the storage grown from the containers'
      * allocator as reserve grows it, the first of them returned (defined in
@@ -1111,6 +1112,18 @@ struct hkMatrix3 {
      * transformed by a). */
     void FUN_0001a9f0(const hkMatrix3 &a, const hkMatrix3 &b);
 
+    /* The same products inline, as the change of basis 0x1aaa0 holds them:
+     * this set to a * b (0x1a9f0's body, the third column first) and to a
+     * times the transpose of b (0x1abb0's body). Defined after
+     * combineColumns. derived names. */
+    inline void setMul(const hkMatrix3 &a, const hkMatrix3 &b);
+    inline void setMulTransposed(const hkMatrix3 &a, const hkMatrix3 &b);
+
+    /* This matrix brought into a basis: r times this times r's transpose
+     * (0x1aaa0; the inertia's world form at 0x299fd, the geometry code at
+     * 0xb1e57). derived name. */
+    void FUN_0001aaa0(const hkMatrix3 &r);
+
     /* derived name: this set to a times the transpose of b (0x1abb0; its
      * callers 0x262a2, 0x26507 and 0x6e2a7): every column of both read
      * first, then each result column from the same lane of b's columns. */
@@ -1255,6 +1268,35 @@ inline Vec4 combineColumns(const Vec4 &c0, const Vec4 &c1, const Vec4 &c2,
     const Vec4 y = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
     const Vec4 z = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
     return _mm_add_ps(_mm_mul_ps(c2, z), _mm_add_ps(_mm_mul_ps(c0, x), _mm_mul_ps(c1, y)));
+}
+
+inline void hkMatrix3::setMul(const hkMatrix3 &a, const hkMatrix3 &b)
+{
+    const Vec4 c0 = a.col0;
+    const Vec4 c1 = a.col1;
+    const Vec4 c2 = a.col2;
+    col2 = combineColumns(c0, c1, c2, b.col2);
+    col1 = combineColumns(c0, c1, c2, b.col1);
+    col0 = combineColumns(c0, c1, c2, b.col0);
+}
+
+inline void hkMatrix3::setMulTransposed(const hkMatrix3 &a, const hkMatrix3 &b)
+{
+    const Vec4 b0 = b.col0;
+    const Vec4 b1 = b.col1;
+    const Vec4 b2 = b.col2;
+    const Vec4 a0 = a.col0;
+    const Vec4 a1 = a.col1;
+    const Vec4 a2 = a.col2;
+    col0 = _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b2, b2, _MM_SHUFFLE(0, 0, 0, 0)), a2),
+                      _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b0, b0, _MM_SHUFFLE(0, 0, 0, 0)), a0),
+                                 _mm_mul_ps(_mm_shuffle_ps(b1, b1, _MM_SHUFFLE(0, 0, 0, 0)), a1)));
+    col1 = _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b2, b2, _MM_SHUFFLE(1, 1, 1, 1)), a2),
+                      _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b0, b0, _MM_SHUFFLE(1, 1, 1, 1)), a0),
+                                 _mm_mul_ps(_mm_shuffle_ps(b1, b1, _MM_SHUFFLE(1, 1, 1, 1)), a1)));
+    col2 = _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b2, b2, _MM_SHUFFLE(2, 2, 2, 2)), a2),
+                      _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b0, b0, _MM_SHUFFLE(2, 2, 2, 2)), a0),
+                                 _mm_mul_ps(_mm_shuffle_ps(b1, b1, _MM_SHUFFLE(2, 2, 2, 2)), a1)));
 }
 
 /* derived name: the point v under t, its x, y and z broadcast and scaling
@@ -7223,6 +7265,28 @@ void FUN_0014e0b0(hknpWorldObject1d0Large *self); /* derived name */
  * key in the high eight, read and written as one aligned vector
  * (FUN_00185460). */
 struct alignas(16) hkAabb16 {
+    /* Made empty: the minima the largest, the maxima and the keys zero (the
+     * broad phase's rebuild bounds, 0x142a40's file; its slot 8, 0x143448).
+     * derived name. */
+    void setEmpty()
+    {
+        min[0] = min[1] = min[2] = 0xffff;
+        key = 0;
+        max[0] = max[1] = max[2] = 0;
+        key1 = 0;
+    }
+
+    /* Grown by another box, the maxima first. derived name. */
+    void includeAabb(const hkAabb16 &other)
+    {
+        for (int i = 0; i < 3; i++) {
+            max[i] = hkMath::max2(max[i], other.max[i]);
+        }
+        for (int i = 0; i < 3; i++) {
+            min[i] = hkMath::min2(min[i], other.min[i]);
+        }
+    }
+
     u16 min[3];
     u16 key;
     u16 max[3];
@@ -16996,18 +17060,8 @@ extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
  * nothing to destroy (its complete destructor FUN_00181bf0 runs the base's)
  * and its deleting destructor 0x181ba0 frees 0x140 bytes. */
 /* What the binary writer's save (0x183350) hands its section writers
- * (derived names): the stream at +0x28, the offset of each class's name in
- * the class names' section at +0x50 (0x181dc0's records), the byte-swap
- * flag at +0x78. */
-struct PackfileSaveContext00181dc0 /* derived name */
-{
-    u8 unknown0[0x28];
-    hkStreamWriter *writer;
-    u8 unknown30[0x20];
-    StringMap classNameOffsets;
-    u8 unknown68[0x10];
-    hkBool byteSwap;
-};
+ * (derived name; defined in tlg_lib_unknown.h, after hkPlatformObjectWriter). */
+struct PackfileSaveContext00181dc0;
 
 struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
 {

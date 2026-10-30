@@ -744,13 +744,14 @@ hkResult FUN_00000a70(AllocatorBase &allocator, void *array, int numElements,
 
 /* Room for n elements at least: the capacity doubled, or n when that is
  * more (hkArrayStreamWriter's terminator, 0x8ffa0). */
-template <typename T> inline void hkArray<T>::reserve(AllocatorBase &allocator, int n)
+template <typename T> inline hkResult hkArray<T>::reserve(AllocatorBase &allocator, int n)
 {
     const int capacity = getCapacity();
     if (capacity < n) {
         const int doubled = 2 * capacity;
-        FUN_00000a70(allocator, this, n < doubled ? doubled : n, sizeof(T));
+        return FUN_00000a70(allocator, this, n < doubled ? doubled : n, sizeof(T));
     }
+    return HK_SUCCESS;
 }
 
 template <typename T> inline T *hkArray<T>::expandBy(int n)
@@ -1626,24 +1627,36 @@ struct Object001618f0 /* derived name */
     u32 third;  /* derived name */
 };
 
-/* An object with an array of 0x90-byte entries at +0x20 (derived name):
- * FUN_0005d6b0 works on the entry of an index with a pointer and an int. */
-struct Object0005d6b0; /* derived name */
-
-void FUN_0005d6b0(Object0005d6b0 *self, int index, const void *argument3,
+/* The world's work on the body of an index with a pointer and an int
+ * (0x5d6b0; its bodies are the 0x90-byte entries at +0x20). derived
+ * name. */
+void FUN_0005d6b0(hknpWorld *self, int index, const void *argument3,
                   int argument4); /* derived name */
 
-/* The object whose FUN_00178580 the game calls (0xeb055f, 0xeb0e90): an
- * index at +0xc into the entries of the object at +0x18 (derived names). */
+/* The body of an index given new velocities, the linear one and the
+ * angular one (0x5dc50; 0x178545 passes the motion's linear velocity
+ * again). derived name. */
+void FUN_0005dc50(hknpWorld *self, int bodyId, const Vec4 &linearVelocity,
+                  const Vec4 &angularVelocity); /* derived name */
+
+/* The object whose FUN_00178580 the game calls (0xeb055f, 0xeb0e90): a
+ * body's index at +0xc into the bodies of the world at +0x18 (derived
+ * names). */
 struct Object00178580 /* derived name */
 {
     u8 unknown0[0xc];
     s32 index; /* derived name */
     u8 unknown10[8];
-    Object0005d6b0 *owner; /* derived name */
+    hknpWorld *world; /* derived name */
 };
 
 void FUN_00178580(Object00178580 *self, const void *argument); /* derived name */
+
+/* derived name: the body's angular velocity set to the one given, its
+ * linear velocity kept, unless the motion's angular velocity in the world
+ * already equals it within the constant table's tolerance (0x178460; the
+ * game calls it at 0xeb059d, 0xeb0c79 and 0xeb0ef5). */
+void FUN_00178460(Object00178580 *self, const Vec4 &angularVelocity);
 
 struct Object0003ea60 {
     u8 unknown0[0xc];
@@ -1742,6 +1755,11 @@ class Object0000b330 : public hkReferencedObject /* derived name */
      * file: the executable holds the complete destructor before the
      * deleting one (cookbook 187). */
     inline virtual ~Object0000b330() {}
+
+    /* Slot 6 (0xb390): an id enabled or disabled, under the critical
+     * section: its entry taken out of the map, or a 1 put in. derived
+     * name. */
+    void FUN_0000b390(int id, bool enabled);
 
     /* Slot 7 (0xb4a0): whether an id is enabled, under the critical
      * section: the map holds a nonzero value for an id that is not.
@@ -2052,6 +2070,40 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
     hkReferencedObject *cache;
 };
 
+/* A record of the binary writer's save, 0x48 bytes (derived names): its
+ * destructor (0x19b0b0, out of line) frees what it owns. */
+struct PackfileSaveRecord0019b0b0 /* derived name */
+{
+    ~PackfileSaveRecord0019b0b0();
+
+    u8 unknown0[0x48];
+};
+
+/* What the binary writer's save (0x183350) builds on its stack and hands
+ * its section writers (derived names): arrays of 64-byte and 8-byte
+ * entries at +8 and +0x18, the stream at +0x28, an object writer at +0x30,
+ * the offset of each class's name in the class names' section at +0x50
+ * (0x181dc0's records), the save's records at +0x68, the byte-swap flag at
+ * +0x78. Its destructor (0x1819c0, out of line, called at 0x183746)
+ * destroys the members. */
+struct PackfileSaveContext00181dc0 /* derived name */
+{
+    struct Entry40 {
+        u8 unknown0[0x40];
+    };
+
+    ~PackfileSaveContext00181dc0();
+
+    u8 unknown0[8];
+    hkArray<Entry40> entries8;        /* derived name */
+    hkArray<const void *> pointers18; /* derived name */
+    hkStreamWriter *writer;
+    hkPlatformObjectWriter objectWriter; /* derived name */
+    StringMap classNameOffsets;
+    hkArray<PackfileSaveRecord0019b0b0> records; /* derived name */
+    hkBool byteSwap;
+};
+
 /* A polymorphic pool (vtables 0x168cbb0 and 0x16d3390, the second a
  * game-region class sharing every slot from 2): slot 9 (FUN_00007880)
  * returns the count at +0x328, the number of 64-byte records that slot 6
@@ -2136,7 +2188,12 @@ class Pool00007880 : public hkReferencedObject /* derived name */
      * callbacks run (0x7280) until the pool stops. derived name. */
     virtual void FUN_000071a0(int workerIndex);
 
-    /* The worker's callbacks run (0x7280, not a slot). derived name. */
+    /* The worker's callbacks run (0x7280, not a slot): each time its start
+     * is signalled, until it is killed, the callback run on its argument
+     * (the thread's monitor stream reset first when the timers were
+     * cleared), the stream's end recorded, the thread's memory collected
+     * when the pool asks for it, and the pool told the worker is done.
+     * derived name. */
     void FUN_00007280(int workerIndex, hkWorkerThreadContext &context);
 
     /* Hands the workers a callback (0x7600, not a slot; inline in slots 5
@@ -2550,8 +2607,38 @@ struct UnionFind /* derived name */
 
     /* 0x8f7d0 (called at 0x14e94e): every node pointed straight at its
      * root and the roots counted, once; the count kept with the state set
-     * (a join clears it). derived name. */
+     * (a join clears it). Out of line over collapseTree, which the group
+     * assignment 0x8f850 holds inline. derived name. */
     int FUN_0008f7d0();
+
+    /* Each node that is not a root pointed at its root, the roots counted;
+     * the parents' storage is read again after each store (the library is
+     * built without strict aliasing). derived name. */
+    int collapseTree()
+    {
+        if (state) {
+            return numRoots;
+        }
+        int roots = numNodes;
+        int *const end = parents->data + numNodes;
+        for (int *node = parents->data; node != end; node++) {
+            if (*node >= 0) {
+                roots--;
+                while (parents->data[*node] >= 0) {
+                    *node = parents->data[*node];
+                }
+            }
+        }
+        state = 1;
+        numRoots = roots;
+        return roots;
+    }
+
+    /* 0x8f850 (called at 0x62d86): the tree collapsed, then each root
+     * given its group's index in order and its group's size appended,
+     * every other node its root's group; a failure when the sizes cannot
+     * be made room for. derived name. */
+    hkResult FUN_0008f850(hkArray<int> &groupSizes);
 
     /* 0x8f710: two nodes joined, under the root of the first. derived
      * name. */
@@ -4468,6 +4555,12 @@ struct BroadPhaseTree00142a40 /* derived name */
      * derived name. */
     BroadPhaseTree00142a40(int maxLeafEntries);
 
+    /* The root node, none when the tree is empty. derived name. */
+    const Node *getRoot() const
+    {
+        return root != Node::NO_CHILD ? &nodes.elements[root] : HK_NULL;
+    }
+
     ElementPool00198a20 nodes;
     int root; /* NO_CHILD when the tree is empty */
     int numLeaves;
@@ -4591,6 +4684,10 @@ struct BroadPhaseLayers00142a40 /* derived name */
      * layers' trees walked against each other through the world's
      * collision filter, the pairs written to the output. derived name. */
     void FUN_00142ea0(const struct BroadPhaseContext00142ea0 *context, void *pairsOut);
+    /* Slot 8 (0x143440): the box around every layer's tree, from each
+     * root's box. derived name. */
+    void FUN_00143440(hkAabb16 &aabbOut) const;
+
     /* Slot 10 (0x142fa0), timed as "TtFindNewPairs": each pair of layers
      * the list names whose trees both hold boxes searched for new pairs
      * (0x197c60) under the world's collision filter, the last two

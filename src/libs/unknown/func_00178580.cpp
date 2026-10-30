@@ -5,5 +5,5 @@
  * of the object it belongs to, with 0. */
 void FUN_00178580(Object00178580 *self, const void *argument)
 {
-    FUN_0005d6b0(self->owner, self->index, argument, 0);
+    FUN_0005d6b0(self->world, self->index, argument, 0);
 }
