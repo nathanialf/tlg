@@ -47,9 +47,38 @@ class hkThread /* derived name */
     s64 status; /* derived name: 2 before the start, 1 after (8-byte stores) */
 };
 
-/* The object at +0x18 of Class168e810: a spin lock at +0x10; FUN_00015700
- * and FUN_000158f0 take a pointer and a count under it. */
-struct Object00015700; /* derived name */
+/* The object at +0x18 of Class168e810: a list of blocks at +0, a critical
+ * section at +0x10; FUN_00015700 and FUN_000158f0 take a pointer and a
+ * count under it. */
+struct Object00015700 /* derived name */
+{
+    /* An entry of a block (derived names), 0x40 bytes: an array of 8-byte
+     * values at +0x10. */
+    struct Entry {
+        u8 unknown0[0x10];
+        hkArray<u64> values;
+        u8 unknown20[0x20];
+    };
+
+    /* A block of 63 entries and the next block (derived names), 0xfc8
+     * bytes from the thread's heap. */
+    struct Block {
+        /* Back to the thread's heap at its size unless null, as
+         * hkReferencedObject's own delete tests (0x15d71). derived name. */
+        static void operator delete(void *object, unsigned long numBytes);
+
+        Entry entries[63];
+        Block *next;
+    };
+
+    /* Out of line (0x15cd0; Class168e810's destructor deletes the object
+     * at 0x16fc6): every block deleted, then the critical section. */
+    ~Object00015700();
+
+    Block *firstBlock; /* derived name */
+    u8 unknown8[8];
+    hkCriticalSection lock; /* derived name */
+};
 
 void FUN_00015700(Object00015700 *self, void *pointer, int count); /* derived name */
 void FUN_000158f0(Object00015700 *self, void *pointer, int count); /* derived name */

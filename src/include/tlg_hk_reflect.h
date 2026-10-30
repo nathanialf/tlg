@@ -3402,10 +3402,28 @@ class hknpVehicleEngine : public hkReferencedObject
 /* Built by the reflection initializer at 0x3cc60. */
 extern const hkClass D_57bff60; /* hknpVehicleEngine's hkClass */
 
+class hknpVehicleInstance;
+struct hknpVehicleFilteredDriverInput;
+
 class hknpVehicleBrake : public hkReferencedObject
 {
   public:
+    /* What a step's braking gives (derived names): a torque per wheel,
+     * whether each wheel is blocked, and the time since the pedal was last
+     * held at its maximum. */
+    struct WheelBreakingOutput {
+        hkInplaceArray<float, 32> brakingTorque;
+        hkInplaceArray<hkBool, 32> isFixed;
+        float wheelsTimeSinceMaxPedalInput;
+    };
+
     hknpVehicleBrake(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* Slot 5: the step's braking from the filtered driver input (the
+     * default brake's is 0x16a4b0). derived name. */
+    virtual void calcBreakingInfo(float deltaTime, const hknpVehicleInstance *vehicle,
+                                  const hknpVehicleFilteredDriverInput &filteredInfoOutput,
+                                  WheelBreakingOutput &breakingInfo) = 0;
 };
 
 /* Built by the reflection initializers at 0x6b620 and 0x618b0. */
@@ -3479,6 +3497,11 @@ class hknpVehicleDefaultBrake : public hknpVehicleBrake
 
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 5 (0x16a4b0). derived name. */
+    void calcBreakingInfo(float deltaTime, const hknpVehicleInstance *vehicle,
+                          const hknpVehicleFilteredDriverInput &filteredInfoOutput,
+                          WheelBreakingOutput &breakingInfo);
 
     hkArray<WheelBrakingProperties> wheelBrakingProperties;
     float wheelsMinTimeToBlock;
@@ -10054,7 +10077,7 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
      * from the key's 64-bit hash, ids swapped (the first in the high
      * word); whether the key was new. derived names. */
     int FUN_00166dc0(AllocatorBase &allocator, Key key, u32 value);
-    void FUN_00166eb0(AllocatorBase &allocator, int newCapacity);
+    hkResult FUN_00166eb0(AllocatorBase &allocator, int newCapacity);
 
     Pair *elem;
     int numElems;
@@ -11422,6 +11445,8 @@ struct hkpConstraintAtom {
         TYPE_BALL_SOCKET = 5,
         TYPE_STIFF_SPRING = 6,
         TYPE_LIN = 7,
+        TYPE_LIN_SOFT = 8,
+        TYPE_LIN_LIMIT = 9,
         TYPE_2D_ANG = 12,
         TYPE_ANG = 13,
         TYPE_ANG_LIMIT = 14,
@@ -11503,6 +11528,18 @@ struct hkpLinConstraintAtom {
     u16 type; /* derived name */
     u8 axisIndex;
     u8 padding[0xd];
+};
+
+/* hkpLinSoftConstraintAtom: axisIndex (hkUint8) at +2, tau and damping
+ * (hkReal) at +4 and +8, 0x10 bytes (the wheel's constructor clears both,
+ * 0x17cbdc). derived field names. */
+struct hkpLinSoftConstraintAtom {
+    u16 type; /* derived name */
+    u8 axisIndex;
+    u8 padding3;
+    float tau;
+    float damping;
+    u8 paddingC[4];
 };
 
 /* hkpLinLimitConstraintAtom (records 0x169e1f0): axisIndex (hkUint8) at
@@ -11866,12 +11903,18 @@ class hkpWheelConstraintData : public hkpConstraintData
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom suspensionBase;
         hkpLinLimitConstraintAtom lin0Limit;
-        u8 lin0Soft[0x10];
+        hkpLinSoftConstraintAtom lin0Soft;
         hkpLinConstraintAtom lin1;
         hkpLinConstraintAtom lin2;
         hkpSetLocalRotationsConstraintAtom steeringBase;
-        u8 unknown140[0x10]; /* 2dAng */
+        hkp2dAngConstraintAtom ang2d; /* the record's 2dAng */
     };
+
+    /* A new wheel (0x17cb30; the copy 0x794c0 builds one at 0x7988e):
+     * the atoms typed, the suspension along the first axis between -0.5
+     * and 0.5 with no softness, the other two axes held, every frame the
+     * identity, the free rotation about the first axis. */
+    hkpWheelConstraintData();
 
     /* The finish constructor (0x7eab0): the atoms are left as loaded. */
     hkpWheelConstraintData(hkFinishLoadedObjectFlag flag);
@@ -15743,7 +15786,7 @@ class hknpVehicleInstance : public hknpUnaryAction
 {
   public:
     hknpVehicleInstance(hkFinishLoadedObjectFlag flag)
-        : hknpUnaryAction(flag), world(0), wheelsInfo(flag)
+        : hknpUnaryAction(flag), world(0), wheelsInfo(flag), isFixed(flag)
     {
     }
 
@@ -15807,16 +15850,26 @@ class hknpVehicleInstance : public hknpUnaryAction
         u8 unknownBc[4];
     };
 
+    /* The brakes applied for a step (0x163180; the vehicle's step at
+     * 0x164518): the brakes' output given the blocked wheels and the time
+     * since the pedal's maximum, the brake's slot 5 run, both taken back.
+     * derived name. */
+    void FUN_00163180(float deltaTime, const hknpVehicleFilteredDriverInput &filteredDriverInput,
+                      hknpVehicleBrake::WheelBreakingOutput &breakingInfo);
+
     hknpWorld *world;
     hknpVehicleData *data;
-    u8 unknown30[0x28];
+    u8 unknown30[0x20];
+    hknpVehicleBrake *brake; /* derived name */
     hknpVehicleSuspension *suspension;
     u8 unknown60[8];
     hknpVehicleWheelCollide *wheelCollide;
     u8 unknown70[0x10];
     hkArray<WheelInfo> wheelsInfo;
-    u8 unknown90[0x64];
-    hkBool tryingToReverse; /* record 0x1698d18 */
+    u8 unknown90[0x50];
+    hkArray<hkBool> isFixed;            /* derived name */
+    float wheelsTimeSinceMaxPedalInput; /* derived name */
+    hkBool tryingToReverse;             /* record 0x1698d18 */
     u8 unknownF5[3];
     float torque; /* record at 0x1698a70's nineteenth */
     float rpm;

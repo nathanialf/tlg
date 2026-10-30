@@ -2386,6 +2386,15 @@ struct FreeList /* derived name */
         return FUN_00019230();
     }
 
+    /* An element put back at the head of the freed ones (inline in
+     * TwoBaseAllocator's free, 0x2ce2). derived name. */
+    void free(void *element)
+    {
+        numFreeElements++;
+        *static_cast<void **>(element) = freeHead;
+        freeHead = element;
+    }
+
     /* The blocks whose elements are all free given back to the block
      * allocator, their headers to the element allocator when it keeps them
      * apart, and counted (0x19190; slots 13 and 14 of TwoBaseAllocator,
@@ -3791,6 +3800,13 @@ inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numByt
 inline void BlockCache::operator delete(void *object, unsigned long numBytes)
 {
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void Object00015700::Block::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
 }
 
 inline void UnionFindParents::operator delete(void *object, unsigned long numBytes)

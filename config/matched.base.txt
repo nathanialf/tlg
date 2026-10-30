@@ -2408,3 +2408,9 @@ FUN_00160660 src/libs/unknown/func_00160660.cpp
 FUN_00094360 src/libs/unknown/func_00094490.cpp _ZN20BufferedStreamReader4readEPvi
 _ZN34hkcdPlanarGeometryPlanesCollectionD1Ev src/libs/unknown/func_0009c910.cpp
 _ZN17hknpMotionManagerD1Ev src/libs/havok/Physics/Physics/Dynamics/Motion/hknpMotionManager.cpp _ZN17hknpMotionManagerD2Ev
+FUN_00163180 src/libs/unknown/func_00163180.cpp
+FUN_00166eb0 src/libs/unknown/func_00166eb0.cpp
+_ZN14Object00015700D1Ev src/libs/unknown/func_00015cd0.cpp _ZN14Object00015700D2Ev
+_ZN11hkAlgorithm18quickSortRecursiveIPvPFbPKvS3_EEEvPT_iiT0_ src/libs/unknown/func_00018290.cpp
+_ZN22hkpWheelConstraintDataC1Ev src/libs/unknown/func_0017cb30.cpp _ZN22hkpWheelConstraintDataC2Ev
+FUN_00002c40 src/libs/unknown/func_00002c40.cpp _ZN16TwoBaseAllocator9blockFreeEPvi
