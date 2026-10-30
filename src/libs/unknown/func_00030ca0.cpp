@@ -1,15 +1,17 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: 189 of 197 under D35's compiler, the frame now the base's
-// (hknpWorldObject380Info holds no array). Left, both orders: the info
-// flag's store comes after the table's loads where the base stores it
-// right after the guard (in the selection DAG it is chained after all seven
-// lifetime starts, the loads are not); the scaled mass takes its operands
-// the other way round: Reassociate ranks the mass one above the loads'
-// product (the rcp call, then and, bitcast and extract) and the base's
-// order needs one more unmovable instruction between the rcp call and the
-// step's two loads (docs/NOTES.md, Rounds 54 and 58).
+// NONMATCHING: 196 of 197. The info's flag is stored first because the
+// info is declared before the arrays: its store then follows two lifetime
+// starts in the selection DAG, not five, and the ILP scheduler's critical
+// path test no longer sinks it below the table's loads (the arrays are in
+// the large-array group, so their declaration after the info leaves the
+// frame as the base's). Left: the scaled mass's operands, Reassociate's
+// commute of the fmul by rank (3.3 Reassociate.cpp:1837-1852): the mass's
+// extract ranks the rcp call plus four, the step's product the second load
+// plus one, one below; the base's order needs one more unmovable
+// instruction between the rcp call and the step's loads, or the loads in a
+// later block when Reassociate runs (docs/NOTES.md, Round 59A).
 int FUN_00030ca0(hknpWorldObject380Pair *pair, const hknpWorldObject380StepInfo *stepInfo,
                  const hknpWorldObject380Source *source, u32 flags, u16 valueB0,
                  const hknpBody *bodyA, float value0, float value1, float value2,
@@ -17,16 +19,16 @@ int FUN_00030ca0(hknpWorldObject380Pair *pair, const hknpWorldObject380StepInfo 
                  const hknpMotion *motionB, const hknpMaterial *materialB,
                  hknpWorldObject380Writer *writer) /* derived name */
 {
+    hknpWorldObject380Inertias inertias;
+    hknpWorldObject380Info info;
+    info.flag = false;
     Vec4 arrayA[4];
     Vec4 arrayB[4];
     hknpWorldObject380Bodies bodies;
-    hknpWorldObject380Inertias inertias;
-    hknpWorldObject380Info info;
     hknpCdBody cdBodyA;
     hknpCdBody cdBodyB;
     Vec4 header;
 
-    info.flag = false;
     for (int i = 0; i < 4; i++) {
         arrayA[i] = D_14b2060[2];
     }

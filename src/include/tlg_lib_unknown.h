@@ -767,9 +767,12 @@ struct ElementPool00198a20 /* derived name */
     void FUN_00198a20(int index); /* derived name */
 
     /* Room for numElements (0x196570): the elements grown to that size and
-     * each new index handed to the free list, the highest first. derived
-     * name. */
-    void FUN_00196570(int numElements);
+     * each new index handed to the free list, the highest first. The count
+     * is unsigned: the first index, numElements - 1, is computed without
+     * the signed no-wrap flag, so the loop's guard compares it with the old
+     * size as the base does (InstCombineCompares.cpp:2495 folds the signed
+     * form into the growth test). derived name. */
+    void FUN_00196570(u32 numElements);
 
     /* The boxes and the leaf counts of a subtree refitted from its leaves
      * (0x197610, recursive); its number of leaves back. derived name. */
@@ -5102,5 +5105,63 @@ struct LoadedObjectRecord /* derived name */
  * its buffers with it): each recorded object cleaned up through its type
  * info, then the block freed; always 0. derived name. */
 int FUN_0019bb80(void *buffer); /* derived name */
+
+/* A convex shape's vertices as the ray cast against them reads them
+ * (derived names): the first and their count, a convex shape's
+ * hkRelArray<hkVector4> (0x435a0 passes hknpConvexShape's vertices). */
+struct VertexView000a6d60 /* derived name */
+{
+    const Vec4 *vertices;
+    int numVertices;
+};
+
+/* The support provider the ray cast 0x9fed0 asks for a shape's farthest
+ * vertex along a direction (vtable 0x16a37f0, ruled by D14 from the 16-byte
+ * object 0xa6d60 builds on its stack: an int 0 at +8, a byte 0x41 at +0xc;
+ * slot 0 the empty 0x8c0a0, slot 1 the folded 16-byte delete 0x13e50).
+ * derived names. */
+class Collector000a6d60 /* derived name */
+{
+  public:
+    Collector000a6d60() : unknown8(0), unknownC(0x41) {}
+
+    virtual ~Collector000a6d60() {}
+
+    /* Slot 2 (0xa1960): the vertex of the view whose dot product with the
+     * direction is the largest, four at a time; the two vectors at the end
+     * cleared. derived name. */
+    virtual void FUN_000a1960(const VertexView000a6d60 *view, const Vec4 &direction,
+                              const void *argument3, const void *argument4, Vec4 *vertexOut,
+                              Vec4 *argument6, Vec4 *argument7) const;
+
+    int unknown8; /* derived name */
+    u8 unknownC;  /* derived name */
+};
+
+/* The working storage of the ray cast 0x9fed0, 0xc0 bytes it writes
+ * before it reads (derived names). */
+struct RayCastStorage0009fed0 /* derived name */
+{
+    Vec4 unknown[12];
+};
+
+/* Where the ray cast leaves a hit (derived names): the normal, then the
+ * fraction along the ray, which comes in as the limit. */
+struct RayHit000a6d60 /* derived name */
+{
+    Vec4 normal;
+    Vec4 fraction;
+};
+
+/* A ray cast between two support providers and their data (0x9fed0, the
+ * second's data null when it is a point): true when it hits within the
+ * fraction, which it lowers, with the normal. derived name. */
+bool FUN_0009fed0(RayCastStorage0009fed0 *storage, const Collector000a6d60 *shapeA,
+                  const VertexView000a6d60 *dataA, const void *dataB, const void *ray,
+                  const Collector000a6d60 *shapeB, Vec4 *fractionInOut, Vec4 *normalOut);
+
+/* A ray cast against a set of vertices (0xa6d60): true when it hits with a
+ * fraction other than zero. derived name. */
+bool FUN_000a6d60(const Vec4 *vertices, int numVertices, const void *ray, RayHit000a6d60 *hit);
 
 #endif
