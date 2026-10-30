@@ -7,7 +7,10 @@
 // NONMATCHING: equal but for the copy of the record at +0xa8, whose address the base
 // materializes (`lea rcx, [rbx+0xa8]`, the loads through rcx) where this compile folds it into
 // the loads; the record at +0xc0, whose value is tested in an earlier block, comes out as the
-// base's (NOTES Round 63B, 64B).
+// base's (NOTES Round 63B, 64B). Round 64A measured: a reference to the record at +0xa8 bound
+// before the first branch gives every instruction (its GEP crosses blocks as +0xc0's does); not
+// kept, it exists only to move the address (the crutch test), and a helper taking the record by
+// reference changes nothing.
 void StepTimers::FUN_0017aeb0(ThreadBuffer &stream)
 {
     if (!enabled) {
