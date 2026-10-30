@@ -42,10 +42,6 @@ static const void *vtableOfhkxBlobMeshShape() /* derived name */
 
 /* This file's static initializer (0x85d80): hkxBlobMeshShape's reflection
  * over hkMeshShape's, its two members, then its type info. */
-// NONMATCHING (gate): the initializer's 0x109 bytes diff equal, but the
-// layout link cannot place FUN_00085d40: the linker folded the callback
-// onto the finish constructor, whose row names the address, and the table
-// has no FUN_00085d40 row (a supervisor ruling: a second name per address).
 const hkClass D_57c5e78("hkxBlobMeshShape", &D_57bd7d0, sizeof(hkxBlobMeshShape), 0, 0, 0, 0,
                         D_16a0830, 2, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c5ec8;

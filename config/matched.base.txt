@@ -460,7 +460,7 @@ FUN_000077a0 src/libs/unknown/leaf_000077a0.cpp _ZNK12Pool0000788012FUN_000077a0
 FUN_00008d70 src/libs/unknown/func_00008d70.cpp _ZN13AllocatorBase12FUN_00008d70ERi
 FUN_00018010 src/libs/unknown/func_00018010.cpp
 FUN_00024bd0 src/libs/unknown/leaf_00024bd0.cpp _ZNK22hkMultipleVertexBuffer12FUN_00024bd0Ev
-FUN_000270a0 src/libs/unknown/func_000270a0.cpp
+_ZN14hkVertexFormatC1Ev src/libs/unknown/func_000270a0.cpp _ZN14hkVertexFormatC2Ev
 FUN_00027280 src/libs/unknown/leaf_00027280.cpp _ZNK24hkMemoryMeshVertexBuffer12FUN_00027280Ev
 FUN_000430e0 src/libs/unknown/leaf_000430e0.cpp _ZNK15hknpConvexShape12FUN_000430e0Ev
 FUN_00065f10 src/libs/unknown/leaf_00065f10.cpp
@@ -2066,7 +2066,7 @@ FUN_00008000 src/libs/unknown/func_00008000.cpp _GLOBAL__I_a
 FUN_0001e090 src/libs/unknown/func_0001e090.cpp _GLOBAL__I_a
 FUN_00038330 src/libs/unknown/func_00038330.cpp _GLOBAL__I_a
 FUN_0003cb00 src/libs/unknown/func_0003cb00.cpp _GLOBAL__I_a
-FUN_0000a7a0 src/libs/unknown/func_0000a7a0.cpp _ZN10hkOArchive12FUN_0000a7a0Ei
+FUN_0000a7a0 src/libs/unknown/func_0000a480.cpp _ZN10hkOArchive12FUN_0000a7a0Ei
 _ZN18hkpHingeLimitsDataC1Ev src/libs/unknown/func_00083060.cpp _ZN18hkpHingeLimitsDataC2Ev
 FUN_00045af0 src/libs/unknown/func_00045af0.cpp _ZNK15hknpConvexShape12FUN_00045af0EiPDv4_fS1_
 FUN_00088b00 src/libs/unknown/func_00088b00.cpp _GLOBAL__I_a
@@ -2415,3 +2415,8 @@ _ZN14Object00015700D1Ev src/libs/unknown/func_00015cd0.cpp _ZN14Object00015700D2
 _ZN11hkAlgorithm18quickSortRecursiveIPvPFbPKvS3_EEEvPT_iiT0_ src/libs/unknown/func_00018290.cpp
 _ZN22hkpWheelConstraintDataC1Ev src/libs/unknown/func_0017cb30.cpp _ZN22hkpWheelConstraintDataC2Ev
 FUN_00002c40 src/libs/unknown/func_00002c40.cpp _ZN16TwoBaseAllocator9blockFreeEPvi
+FUN_00159ca0 src/libs/unknown/func_00159ca0.cpp _ZN29hknpConstraintCollisionFilter12FUN_00159ca0EP9hknpWorld
+FUN_00085d80 src/libs/unknown/func_00085d40.cpp _GLOBAL__I_a
+FUN_00087950 src/libs/unknown/func_000878f0.cpp _GLOBAL__I_a
+_ZN24hkMemoryMeshVertexBufferC1ERK14hkVertexFormati src/libs/unknown/func_000272a0.cpp _ZN24hkMemoryMeshVertexBufferC2ERK14hkVertexFormati
+FUN_001a1d60 src/libs/unknown/func_001a1d60.cpp _Z12FUN_001a1d60R10hkOArchiveiiPKm

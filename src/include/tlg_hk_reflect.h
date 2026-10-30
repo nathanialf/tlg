@@ -4396,9 +4396,16 @@ void FUN_000234f0(hkIndexedTransformSet *self);                                /
  * at 0x22c81): dataType (hkEnum of ComponentType in hkUint8) at +0,
  * numValues (hkUint8) at +1, usage (hkEnum of ComponentUsage in hkUint8) at
  * +2, subUsage (hkUint8) at +3, flags (hkFlags in hkUint8) at +4, pad (3
- * hkUint8) at +5. FUN_000270a0, called on the member of each containing
- * object's constructor, empties it. */
+ * hkUint8) at +5. */
 struct hkVertexFormat {
+    /* Empty, the elements left as they are; out of line (0x270a0), run on
+     * the member of each containing object's constructor (0x24fe7, 0x272d4,
+     * 0x27879) and on locals (0x25966, 0xae100). */
+    hkVertexFormat();
+
+    /* A loaded format is left as loaded. */
+    hkVertexFormat(hkFinishLoadedObjectFlag flag) {}
+
     /* The element hints and the sharing kinds (hkClassEnum items from the
      * executable's strings at 0x14b76e4 to 0x14b7740, values from their
      * records at 0x1691350 to 0x16913b8). */
@@ -4480,8 +4487,6 @@ struct hkVertexFormat {
     Element elements[32];
     int numElements;
 };
-
-void FUN_000270a0(hkVertexFormat *self); /* derived name */
 
 /* derived name: makes one format a copy of another, the element count first
  * and then that many elements. */
@@ -4719,9 +4724,14 @@ struct hkMeshVertexBuffer::LockedVertices /* derived name */
  * +0x1ac and +0x1ad. */
 extern const hkClass D_57bdd98; /* hkMemoryMeshVertexBuffer's hkClass, built at 0x2ae92 */
 
-class hkMemoryMeshVertexBuffer
+class hkMemoryMeshVertexBuffer : public hkMeshVertexBuffer
 {
   public:
+    /* A buffer of a format for a number of vertices (0x272a0): the format
+     * set, the vertex memory filled with a constant and sized to the
+     * vertices, little-endian. */
+    hkMemoryMeshVertexBuffer(const hkVertexFormat &format, int numVertices);
+
     /* The finish constructor (0x274e0): a big-endian image is swapped to
      * the host's order once loaded. */
     hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag);
@@ -4770,7 +4780,6 @@ class hkMemoryMeshVertexBuffer
      * derived name. */
     void FUN_000273c0(const hkVertexFormat &newFormat);
 
-    u8 unknown8[4];
     hkVertexFormat format;
     int elementOffsets[32];
     hkArray<u8> memory;
@@ -8535,7 +8544,15 @@ struct hknpWorldObject4f8 /* derived name */
 class hkSlot /* derived name */
 {
   public:
+    /* Linked at the head of a signal's list for an object (defined below,
+     * after the link helpers). */
+    hkSlot(Signal00093530 *signal, void *object);
+
     virtual ~hkSlot();
+
+    /* The class allocator: a block of the slot's size from the thread's
+     * heap (0x159d07; defined in tlg_lib_unknown.h beside the router). */
+    static void *operator new(unsigned long numBytes);
 
     /* The class allocator's delete: the thread's heap takes the block back
      * with its size (0x47cc0 frees 0x18, 0x47d10 0x28; defined in
@@ -8569,6 +8586,8 @@ template <typename P0> class hkSlot1 : public hkSlot /* derived name */
 template <typename P0, typename P1> class hkSlot2 : public hkSlot /* derived name */
 {
   public:
+    hkSlot2(Signal00093530 *signal, void *object) : hkSlot(signal, object) {}
+
     virtual void call(P0 p0, P1 p1) = 0; /* derived name */
 };
 
@@ -8581,6 +8600,16 @@ inline hkSlot *untagSlotLink(const void *link) /* derived name */
 inline hkUlong slotLinkFlags(const void *link) /* derived name */
 {
     return reinterpret_cast<hkUlong>(link) & 3;
+}
+
+/* The next slot is the signal's head without its flags, and the head becomes
+ * this slot with the flags kept (the head read again after the object is
+ * stored, 0x159d3d). */
+inline hkSlot::hkSlot(Signal00093530 *signal, void *object)
+    : next(untagSlotLink(signal->slots)), object(object)
+{
+    signal->slots =
+        reinterpret_cast<void *>(slotLinkFlags(signal->slots) | reinterpret_cast<hkUlong>(this));
 }
 
 /* The head is walked as the first link: prevLink starts at the signal
@@ -10140,10 +10169,37 @@ class hknpConstraintCollisionFilter : public hknpPairCollisionFilter
      * destructor inline. */
     ~hknpConstraintCollisionFilter();
 
+    /* The filter moved to a world (0x159ca0): unsubscribed from the old
+     * one as the destructor does, its two handlers subscribed to the new
+     * one's constraint signals, the world kept. derived name. */
+    void FUN_00159ca0(hknpWorld *world);
+
     void FUN_00159dd0(hknpWorld *world, u32 constraintId); /* derived name */
     void FUN_00159df0(hknpWorld *world, u32 constraintId); /* derived name */
 
     hknpWorld *subscribedWorld;
+};
+
+/* The member-function slot the filter subscribes with (vtable 0x16a4bf0,
+ * ruled MemberSlot00159ca0, D14): 0x28 bytes, the filter's handler at +0x18.
+ * Slot 0 is hkSlot's destructor, slot 1 the 0x28-byte slot's deleting
+ * destructor 0x47d10, slot 2 the comparison 0x47d60, slot 3 the shared call
+ * 0x47d90 (the handler called on the object with both arguments). */
+class MemberSlot00159ca0 : public hkSlot2<hknpWorld *, u32>
+{
+  public:
+    typedef void (hknpConstraintCollisionFilter::*Method)(hknpWorld *world,
+                                                          u32 constraintId); /* derived name */
+
+    MemberSlot00159ca0(Signal00093530 *signal, hknpConstraintCollisionFilter *object, Method method)
+        : hkSlot2<hknpWorld *, u32>(signal, object), method(method)
+    {
+    }
+
+    int FUN_00047d60(const void *otherMethod, int size) const; /* vtable slot 2; derived name */
+    void call(hknpWorld *world, u32 constraintId);             /* vtable slot 3 (0x47d90) */
+
+    Method method; /* derived name */
 };
 
 /* hkRelArray, the reflection's type 0x22 (the type-name table at 0x14b30e4):
@@ -14259,72 +14315,13 @@ class hkOArchive : public hkReferencedObject /* derived name */
     void FUN_0000a7a0(int value);
 
     /* An array of elements written, each element's bytes reversed first
-     * when the archive swaps (out of line at 0xa520; inline in the writes of
-     * one value): copied through a 512-byte buffer a chunk at a time, the
-     * last chunk the remainder. Declared `inline`: the 32-bit write (0xa7a0)
-     * holds it at a cost between 225 and 250, which needs the hint's 325.
-     * derived name. */
-    inline void writeArrayGeneric(const void *array, int elemSize, int arraySize)
-    {
-        if (byteSwap) {
-            char buffer[512];
-            const int elemsPerBuffer = 512 / elemSize;
-            int numBytes = arraySize * elemSize;
-            const int lastBytes = numBytes % 512;
-            const int lastElems = lastBytes / elemSize;
-            const char *src = static_cast<const char *>(array);
-            while (numBytes > 0) {
-                int chunkBytes = 512;
-                int chunkElems = elemsPerBuffer;
-                if (numBytes < 512) {
-                    chunkBytes = lastBytes;
-                    chunkElems = lastElems;
-                }
-                FUN_00017e70(buffer, src, chunkBytes);
-                char *p = buffer;
-                switch (elemSize) {
-                case 8:
-                    for (int i = 0; i < chunkElems; i++, p += 8) {
-                        char t0 = p[0];
-                        p[0] = p[7];
-                        p[7] = t0;
-                        char t1 = p[1];
-                        p[1] = p[6];
-                        p[6] = t1;
-                        char t2 = p[2];
-                        p[2] = p[5];
-                        p[5] = t2;
-                        char t3 = p[3];
-                        p[3] = p[4];
-                        p[4] = t3;
-                    }
-                    break;
-                case 4:
-                    for (int i = 0; i < chunkElems; i++, p += 4) {
-                        char t0 = p[0];
-                        p[0] = p[3];
-                        p[3] = t0;
-                        char t1 = p[1];
-                        p[1] = p[2];
-                        p[2] = t1;
-                    }
-                    break;
-                case 2:
-                    for (int i = 0; i < chunkElems; i++, p += 2) {
-                        char t0 = p[0];
-                        p[0] = p[1];
-                        p[1] = t0;
-                    }
-                    break;
-                }
-                writer->write(buffer, chunkBytes);
-                src += chunkBytes;
-                numBytes -= chunkBytes;
-            }
-        } else {
-            writer->write(array, elemSize * arraySize);
-        }
-    }
+     * when the archive swaps (0xa520): copied through a 512-byte buffer a
+     * chunk at a time, the last chunk the remainder. Defined `inline` in the
+     * archive's own file (func_0000a480.cpp), where the writes of one value
+     * (0xa480, 0xa7a0) hold it at a cost between 225 and 250, which needs
+     * the hint's 325; the other files call the copy at 0xa520 (0x1a1d60,
+     * 0x1a0b40, 0x1a2030, 0x181dc0). derived name. */
+    void writeArrayGeneric(const void *array, int elemSize, int arraySize);
 
     hkStreamWriter *writer; /* derived name */
     hkBool byteSwap;        /* derived name */

@@ -3,7 +3,8 @@
 
 /* A buffer saved big-endian is swapped to the host's order once the image
  * is finished; the members are left as loaded. */
-hkMemoryMeshVertexBuffer::hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag) : memory(flag)
+hkMemoryMeshVertexBuffer::hkMemoryMeshVertexBuffer(hkFinishLoadedObjectFlag flag)
+    : hkMeshVertexBuffer(flag), format(flag), memory(flag)
 {
     if (flag.finishing && isBigEndian) {
         FUN_00027520();

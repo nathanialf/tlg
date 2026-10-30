@@ -39,10 +39,6 @@ static const void *vtableOfhkxTextureFile() /* derived name */
     return object.vtable;
 }
 
-/* NONMATCHING (by the layout, not the bytes): quick_diff finds 0x87950 equal; the gate's
- * layout refuses the finish callback's reference (`bytes of _Z12FUN_000878f0Pvi occur 0
- * times`): the address's row is the constructor's, so the callback is placed by a search for
- * its bytes, which still hold the unrelocated GOT load of the vtable (NOTES Round 64B). */
 /* This file's static initializer (0x87950): hkxTextureFile's reflection,
  * hkReferencedObject's as the parent, its three members, version 1, then its
  * type info (its finish callback, the destructor, the vtable). */

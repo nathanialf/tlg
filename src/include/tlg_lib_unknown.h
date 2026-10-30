@@ -3838,6 +3838,11 @@ inline void hkcdDynamicTree::DefaultTree48Storage::operator delete(void *object,
     D_16dc070->temp58->blockFree(object, int(numBytes));
 }
 
+inline void *hkSlot::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(int(numBytes));
+}
+
 inline void hkSlot::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -4646,18 +4651,20 @@ inline void *stackBlockAlloc(int numBytes) /* derived name */
 
 /* Room for n elements from the thread's stack allocator, the size rounded
  * up to 128 bytes once the allocator is at hand (0x13e2b0 reads the thread's
- * router before it scales the count). derived name. */
+ * router before it scales the count). The block's end is computed before
+ * the slab test: MachineSink sinks the top's load into the second test's
+ * block, and the size's extension stays in the entry, where the free's test
+ * reuses it (0x1a1d60: `movsxd r13, r15d` before `cmp r13d, [slab]`).
+ * derived name. */
 template <typename T> inline T *stackAllocate(int n) /* derived name */
 {
     Allocator0000ed40 &stack = D_16dc070->stack;
     const int numBytes = (n * int(sizeof(T)) + 127) & ~127;
-    if (numBytes <= stack.slabSize) {
-        char *block = stack.cur;
-        char *blockEnd = block + numBytes;
-        if (blockEnd <= stack.end) {
-            stack.cur = blockEnd;
-            return reinterpret_cast<T *>(block);
-        }
+    char *block = stack.cur;
+    char *blockEnd = block + numBytes;
+    if (numBytes <= stack.slabSize && blockEnd <= stack.end) {
+        stack.cur = blockEnd;
+        return reinterpret_cast<T *>(block);
     }
     return static_cast<T *>(stack.FUN_0000f090(numBytes));
 }
