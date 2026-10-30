@@ -13449,26 +13449,26 @@ class Crc32StreamWriter : public CrcStreamWriter /* derived name */
     virtual int write(const void *buffer, int size);
 };
 
-/* An output archive over a stream writer (derived name after its
- * constructor, the vtable's D14 row; Havok's hkOArchive by its shape, no
- * string names it): a reference-counted object (vtable 0x168d3f0, address
+/* An output archive over a stream writer (derived name: Havok's hkOArchive,
+ * whose shape it has, the vtable's D14 row; no string names it; named
+ * Object0000a280 until round 62A): a reference-counted object (vtable 0x168d3f0, address
  * point 0x168d400, five slots, hkReferencedObject's 2 to 4) with the writer
  * at +0x10, its reference kept, and a byte-swap flag at +0x18 (set and read
  * by 0xabd0 and 0xabe0); 0xac00 returns the writer, FUN_0000abf0 tells
  * whether it is usable. Built by seven functions from 0x4698 to 0x1a3773,
  * on the stack at 0x4698, by hkClassEnum's write (0x14e80) and by 0x1a3854, which
  * writes, then returns that test. */
-class Object0000a280 : public hkReferencedObject /* derived name */
+class hkOArchive : public hkReferencedObject /* derived name */
 {
   public:
     /* 0xa280: the writer's reference taken, the writer and the flag
      * kept. */
-    Object0000a280(hkStreamWriter *writer, bool byteSwap);
+    hkOArchive(hkStreamWriter *writer, bool byteSwap);
 
     /* Out of line (0xa3b0, slot 0; 0xa310, slot 1, the deleting one at the
      * recorded size): the writer's reference released and the pointer
      * cleared. */
-    virtual ~Object0000a280();
+    virtual ~hkOArchive();
 
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);

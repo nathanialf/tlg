@@ -3,7 +3,7 @@
 
 void hkClassEnum::FUN_00014e80(hkStreamWriter *writer) const
 {
-    Object0000a280 archive(writer, false);
+    hkOArchive archive(writer, false);
     archive.FUN_000089f0(name, FUN_00017fe0(name));
     const int numItemsToWrite = numItems;
     for (int i = 0; i < numItemsToWrite; i++) {

@@ -4064,7 +4064,7 @@ inline void hkOstream::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
-inline void Object0000a280::operator delete(void *object, unsigned long numBytes)
+inline void hkOArchive::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

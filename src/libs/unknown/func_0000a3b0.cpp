@@ -3,7 +3,7 @@
 
 /* Slot 0 of its vtable (0x168d3f0): the reference the constructor took
  * released. */
-Object0000a280::~Object0000a280()
+hkOArchive::~hkOArchive()
 {
     if (writer) {
         writer->removeReference();
