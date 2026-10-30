@@ -4,12 +4,9 @@
 /* The signal of an event type for every body (derived names): looked up on
  * the chain the first body slot heads, else made from a free entry, or a
  * new one at the end of the entries, put first on the chain; the type is
- * kept and compared in 16 bits. */
-// NONMATCHING: the structure is the base's (the entry's address in each path, the new entry's
-// signal constructed before the count), but the base compares the free index in 64 bits
-// (`cmp r15, 0xffff`, the index a 64-bit value in both paths) and keeps this in rbx, the
-// entry in rax and the index in r15 (three saved registers); this compile compares 32 bits
-// and keeps the entry in rbx (four).
+ * kept and compared in 16 bits; the entry's index is a 64-bit value (the
+ * free index compared with 0xffff in 64 bits, the new index the count
+ * sign-extended). */
 hknpEventSignal *hknpEventDispatcher::FUN_0006bf60(int eventType)
 {
     const u16 type = u16(eventType);
@@ -19,7 +16,7 @@ hknpEventSignal *hknpEventDispatcher::FUN_0006bf60(int eventType)
             return &entry.signal;
         }
     }
-    int index = firstFreeEntry;
+    hkUlong index = firstFreeEntry;
     BodySignalEntry *entry;
     if (index == 0xffff) {
         index = entries.getSize();

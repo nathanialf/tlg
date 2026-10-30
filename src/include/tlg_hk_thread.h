@@ -708,9 +708,18 @@ class hknpSolverStageTask : public hkReferencedObject, public hknpTaskInterface 
     u8 subStage;
 };
 
+/* The two kinds of a stage's work (derived names): 0x198f30 over one
+ * index of the description, 0x198b40 over all four. */
+void FUN_00198f30(hknpWorldContextPool::Context *context, int stage, int subStage, int threadIndex,
+                  u8 index, SolverStages0018ef40 *stages); /* derived name */
+void FUN_00198b40(hknpWorldContextPool::Context *context, int stage, int subStage, int threadIndex,
+                  u8 index1, u8 index2, u8 index3, u8 index4,
+                  SolverStages0018ef40 *stages); /* derived name */
+
 /* A stage's work on a context from the pool (0x18f030): the stage's
- * calls by its type, on the thread's index. derived name. */
-void FUN_0018f030(hknpWorldContextPool::Context *context, SolverStages0018ef40 *stages, int stage,
+ * calls by its type, on the thread's index; on the last sub-stage the
+ * calls its flags ask for. Always false (`xor al, al`). derived name. */
+bool FUN_0018f030(hknpWorldContextPool::Context *context, SolverStages0018ef40 *stages, int stage,
                   int subStage, int threadIndex,
                   const SolverStageInfo0018ef40 *info); /* derived name */
 

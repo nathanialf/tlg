@@ -4649,7 +4649,7 @@ extern const Vec4 D_14b2060[58];
  * correction kept no longer than the speed; else the difference itself.
  * derived names. */
 void FUN_00156cd0(const Vec4 &from, const Vec4 &to, float speed, const Vec4 &velocity,
-                  Vec4 &out); /* derived name */
+                  hkVector4 &out); /* derived name */
 
 inline void hkcdFourAabb::setEmpty()
 {
@@ -4707,6 +4707,16 @@ inline Vec4 length3(const Vec4 &v)
                          _mm_mul_ps(lengthSquared, invLength));
 }
 
+/* A length over x, y and z at the reciprocal square root's own accuracy, without the
+ * Newton step, as Havok's getLength<3> is at HK_ACC_12_BIT (0xcf4d0's
+ * velocities). derived name. */
+inline Vec4 length3Fast(const Vec4 &v) /* derived name */
+{
+    const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
+    return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
+                         _mm_mul_ps(lengthSquared, _mm_rsqrt_ps(lengthSquared)));
+}
+
 /* A vector scaled to unit length over x, y and z by the same reciprocal
  * square root, zero where the squared length is not positive, as Havok's
  * hkVector4::normalize<3> is on this platform at its default accuracy (the
@@ -4745,6 +4755,17 @@ inline Vec4 loadHalves(const hkHalf *halves) /* derived name */
 {
     const __m128i packed = _mm_castpd_si128(_mm_load_sd(reinterpret_cast<const double *>(halves)));
     return _mm_castsi128_ps(_mm_unpacklo_epi16(_mm_setzero_si128(), packed));
+}
+
+/* Three hkHalf read as a vector, w zero: the first two as one float
+ * unpacked from zero, the third into the top of its own lane, the two
+ * joined by `movlhps` (a motion's velocity cage, 0xcf4f3). derived name. */
+inline Vec4 loadHalves3(const hkHalf *halves) /* derived name */
+{
+    const __m128i xy = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float *>(halves)));
+    const Vec4 lo = _mm_castsi128_ps(_mm_unpacklo_epi16(_mm_setzero_si128(), xy));
+    const Vec4 z = _mm_castsi128_ps(_mm_cvtsi32_si128(int(u16(halves[2].value)) << 16));
+    return _mm_movelh_ps(lo, z);
 }
 
 /* A vector stored as four hkHalf, rounded by row 47 of the constant table
@@ -7128,7 +7149,10 @@ struct hknpBody {
     /* The body's index into the body manager's active list, 0x7fffffff when
      * it has none (0x1615a0 and 0x4c720 store that). */
     u32 indexIntoActiveListOrDeactivatedIslandId;
-    u8 unknown7c[3];
+    /* The radius of the sphere about the centre of mass that bounds the
+     * body (the record's name). */
+    hkHalf radiusOfComCenteredBoundingSphere;
+    u8 unknown7e[1];
     /* A byte the world's object at +0x4f8 records with the body's id
      * (0x63956). derived name. */
     u8 byte7f;
@@ -7310,9 +7334,11 @@ struct hknpMotion {
     /* The motion's place in its cell's list of active motions, 0x7fffffff
      * when it is in none (0x47790). */
     u32 solverId;
-    u8 unknown30[6];
-    /* A speed the velocity scale scales too (0x157bfa). derived name. */
-    hkHalf half36;
+    /* The linear velocity's bounds, three hkHalf (the record's name). */
+    hkHalf linearVelocityCage[3];
+    /* A speed the velocity scale scales too (0x157bfa); the record's
+     * name. */
+    hkHalf integrationFactor;
     u16 motionPropertiesId; /* derived name: 0x476a0 clears it */
     u8 unknown3a[4];
     u8 cellIndex;
@@ -8173,10 +8199,17 @@ struct hknpSolverInfo /* derived name */
     float halfTimeStep; /* derived name */
     u8 unknown8[8];
     Vec4 numSubStepsSplat; /* derived name */
-    u8 unknown20[0x20];
+    /* The vector a motion's velocities are scaled by into a step's
+     * distances (0xcf4d0). derived name. */
+    Vec4 vector20;
+    u8 unknown30[0x10];
     Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
     float value50; /* derived name */
-    u8 unknown54[0x60];
+    u8 unknown54[0x2c];
+    /* A distance 0xcf4d0's callers hand it, halved by one (0x742cc) and
+     * as it is by the other (0x149284). derived name. */
+    Vec4 vector80;
+    u8 unknown90[0x24];
     /* The steps and the micro steps of each (the solve loop at 0x3fbab
      * counts them from the world's +0x444 and +0x44c). derived names. */
     int numSteps;
@@ -8316,6 +8349,17 @@ struct hknpBodyQualityId /* derived name */
  * bodies' walk 0x5b490 runs it on each): the body, the step's argument, its
  * quality, then the world's vector at +0x250, its solver settings and its
  * data at +0x1f0. */
+/* derived name: a body's distances over a step (0xcf4d0; the motion
+ * integration at 0x74312 and 0x14929a): the linear velocity and the
+ * velocity cage scaled by the step, the angular bound (the larger of the
+ * body's look-ahead in its translation's w and half the distance given,
+ * plus the radius times the step's angle, at most one radian) and the
+ * linear bound (the larger of the speed and the cage's length, by the
+ * step); both speeds 1% generous. derived names. */
+void FUN_000cf4d0(const hknpBody &body, const hknpMotion &motion, const Vec4 &distance,
+                  const hknpSolverInfo &solverInfo, Vec4 &linearStepOut, Vec4 &cageStepOut,
+                  Vec4 &angularBoundOut, Vec4 &linearBoundOut);
+
 void FUN_000cd040(hknpBody *body, void *argument, const hknpBodyQuality *quality,
                   const Vec4 *vector, const hknpSolverInfo *solverInfo, void *data1f0);
 
@@ -9641,6 +9685,13 @@ class hknpTriangleShape : public hknpConvexPolytopeShape
      * vertices and convex radius; the shape's default when that fails.
      * derived name. */
     void FUN_00078380(const void *argument1, void *argument2) const;
+
+    /* The triangle set from three points (0x78500; the convex builder at
+     * 0x44adf and 0x57126 call it): the vertices a, b, c and a again, each
+     * with its index in the w lane, and the faces' planes, the normal of
+     * (b - a) x (c - a) with its distance to a, normalized together, the
+     * second plane the first reversed. derived name. */
+    void FUN_00078500(const Vec4 &a, const Vec4 &b, const Vec4 &c);
 };
 
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;

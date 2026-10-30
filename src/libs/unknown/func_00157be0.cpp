@@ -3,7 +3,8 @@
 
 void FUN_00157be0(hknpMotion &motion, const Vec4 &factor, const Vec4 &deltaTime) /* derived name */
 {
-    motion.half36.setReal(_mm_mul_ps(_mm_set1_ps(motion.half36.getReal()), factor));
+    motion.integrationFactor.setReal(
+        _mm_mul_ps(_mm_set1_ps(motion.integrationFactor.getReal()), factor));
     const hkVector4 linearVelocity = motion.previousLinearVelocity;
     const hkVector4 angularVelocity = motion.previousAngularVelocity;
     const Vec4 f = factor;

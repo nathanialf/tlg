@@ -2314,3 +2314,11 @@ FUN_0005fc00 src/libs/unknown/func_0005fc00.cpp _ZN9hknpWorld12FUN_0005fc00Ei14h
 FUN_0005f9c0 src/libs/unknown/func_0005f9c0.cpp _ZN9hknpWorld12FUN_0005f9c0Eit
 FUN_0005b580 src/libs/unknown/func_0005b580.cpp _ZN9hknpWorld12FUN_0005b580Eifi
 FUN_00188560 src/libs/unknown/func_00188560.cpp
+FUN_00156cd0 src/libs/unknown/func_00156cd0.cpp
+FUN_0006bf60 src/libs/unknown/func_0006bf60.cpp
+FUN_000cf4d0 src/libs/unknown/func_000cf4d0.cpp
+FUN_000716d0 src/libs/unknown/func_00071690.cpp _GLOBAL__I_a
+FUN_00078500 src/libs/unknown/func_00078500.cpp
+FUN_0018f030 src/libs/unknown/func_0018f030.cpp
+FUN_00010910 src/libs/unknown/func_000108e0.cpp _GLOBAL__I_a
+FUN_000358d0 src/libs/unknown/func_000358b0.cpp _GLOBAL__I_a

@@ -2228,7 +2228,9 @@ struct FreeListBlock /* derived name */
 {
     FreeListBlock *next;
     void *memory;
-    u8 unknown10[8];
+    /* The first element (the list's check, 0x18980, finds a free element
+     * between it and numElements elements on). derived name. */
+    char *elements;
     u64 numElements;
 };
 
