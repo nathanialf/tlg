@@ -484,6 +484,33 @@ template <typename T> struct hkArray {
      * writer's seek pads with zero, 0x9018e). derived name. */
     void setSize(AllocatorBase &allocator, int n, const T &fill);
 
+    /* Elements copied in at an index, those after it moved up first
+     * through the overlapping move (defined in tlg_lib_unknown.h; the XML
+     * reader's text and tags, 0x19dc0e). */
+    void insertAt(int index, const T *elements, int numElements);
+
+    /* The last element dropped. */
+    void popBack()
+    {
+        size--;
+        destructElements(data + size, 1);
+    }
+
+    /* The two arrays' storage, sizes and flags exchanged (the XML
+     * reader's attributes handed to their node, 0x19e55e). */
+    void swap(hkArray &other)
+    {
+        T *const otherData = other.data;
+        other.data = data;
+        data = otherData;
+        const int otherSize = other.size;
+        other.size = size;
+        size = otherSize;
+        const int otherCapacity = other.capacityAndFlags;
+        other.capacityAndFlags = capacityAndFlags;
+        capacityAndFlags = otherCapacity;
+    }
+
     T &operator[](int index)
     {
         return data[index];
@@ -1615,6 +1642,10 @@ struct hkStringPtr {
      * null. */
     hkStringPtr(const hkStringPtr &other);
 
+    /* A copy of length characters of a string (FUN_0000e540, defined after
+     * it). */
+    inline hkStringPtr(const char *string, int length);
+
     /* Out of line (0xe620): a string other than its own, the old one given
      * back first when owned, then a copy of the new one, owned, or null. */
     hkStringPtr &operator=(const char *string);
@@ -1694,6 +1725,8 @@ void FUN_00017e70(void *dst, const void *src, unsigned int n); /* derived name *
  * reference-counted node whose kind at +0xc is 1 for an element and whose
  * name at +0x10 the caller compares with "hkpackfile". An array at +0x10
  * and a string at +0x20, both empty to begin with. */
+class StreamReader;
+
 class hkXmlParser : public hkReferencedObject /* derived name */
 {
   public:
@@ -1701,6 +1734,14 @@ class hkXmlParser : public hkReferencedObject /* derived name */
      * at +0xc (1 for an element). The parser deletes the ones handed back
      * through their deleting destructor (the call at 0x19da40). */
     struct Node : public hkReferencedObject {
+        /* A new node of a kind: 1 a start element, 2 an end element, 3
+         * character data. */
+        Node(int kind) : kind(kind) {}
+
+        /* The thread heap's block in place (0x19e07b), as hkHardwareInfo's
+         * (defined in tlg_lib_unknown.h). */
+        static void *operator new(unsigned long numBytes);
+
         int kind; /* derived name */
     };
 
@@ -1713,9 +1754,15 @@ class hkXmlParser : public hkReferencedObject /* derived name */
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* Slot 5 (0x19da90): the next node of the stream (a handed-back one
+     * first), or a failure with its message in lastError. derived name. */
+    virtual hkResult FUN_0019da90(Node **nodeOut, StreamReader *stream);
+
     /* Slot 6 (0x19e6b0): a node handed back, to be returned again by the
      * next read. derived name. */
-    void FUN_0019e6b0(Node *node);
+    virtual void FUN_0019e6b0(Node *node);
+
+    virtual void unknownVirtual7(); /* vtable slot 7 (0x19e700) */
 
     hkArray<Node *> pendingNodes; /* derived name */
     hkStringPtr lastError;        /* derived name */
@@ -1743,6 +1790,28 @@ void FUN_0008da10(void *object);                /* derived name */
  * from a null string and sets it. */
 void FUN_0000e450(hkStringPtr *self, const char *string, int length); /* derived name */
 void FUN_0000e540(hkStringPtr *self, const char *string, int length); /* derived name */
+
+inline hkStringPtr::hkStringPtr(const char *string, int length)
+{
+    FUN_0000e540(this, string, length);
+}
+
+/* The string set from (string, length), forwarded to FUN_0000e450 (0xeab0;
+ * the XML reader's attribute names and values, 0x19e3ac). derived name. */
+void FUN_0000eab0(hkStringPtr *self, const char *string, int length); /* derived name */
+
+/* The string set from a printf-style format (0xe790; the XML reader's
+ * errors, 0x19de52). derived name. */
+void FUN_0000e790(hkStringPtr *self, const char *format, ...); /* derived name */
+
+/* The string library's bounded compare (0x17f50, over strncmp). derived
+ * name. */
+int FUN_00017f50(const char *a, const char *b, unsigned int n); /* derived name */
+
+/* The XML reader's entities decoded from src into dst (0x19d710; the reader
+ * passes one buffer as both): the length written, -1 for a bad one.
+ * derived name. */
+int FUN_0019d710(char *dst, const char *src); /* derived name */
 
 /* Sets the string from (string, length): drops an owned copy, then stores a
  * new one (copied through the arena of the thread's block) or null; the
@@ -13901,22 +13970,16 @@ struct ShapeWatcher /* derived name */
     u8 changeFlags; /* derived name */
 };
 
-/* The nodes the XML reader at 0x19da90 returns (derived names: no string
- * names the reader or its nodes): reference-counted objects with the node
- * type at +0xc. The reader allocates an end element (vtable 0x16a6a20, type
- * 2, 0x18 bytes, its name at +0x10, built at 0x19e1eb from the text after
- * "</") and character data (vtable 0x16a6a60, type 3, 0x18 bytes, its text
- * at +0x10, built at 0x19e08c and 0x19e28b); a start element (vtable
- * 0x16a69e0, its name at +0x10 and an array of name and value pairs at
- * +0x18) is the third kind. */
-class XmlNode : public hkReferencedObject /* derived name */
-{
-  public:
-    int type; /* derived name */
-};
-
+/* The nodes the XML reader at 0x19da90 returns are hkXmlParser::Node's
+ * (derived names: no string names the reader or its nodes). The reader
+ * allocates an end element (vtable 0x16a6a20, kind 2, 0x18 bytes, its name
+ * at +0x10, built at 0x19e1eb from the text after "</"), character data
+ * (vtable 0x16a6a60, kind 3, 0x18 bytes, its text at +0x10, built at
+ * 0x19e08c and 0x19e28b) and a start element (vtable 0x16a69e0, kind 1,
+ * built at 0x19e52b). */
 /* A start element's attribute (derived names): its name and its value,
- * 16 bytes, destroyed value first (0x19d490). */
+ * 16 bytes, destroyed value first (0x19d490); the reader fills one on its
+ * stack (0x19e353) and copies it into the array. */
 struct XmlAttribute /* derived name */
 {
     hkStringPtr name;  /* derived name */
@@ -13925,10 +13988,19 @@ struct XmlAttribute /* derived name */
 
 /* The start element (vtable 0x16a69e0), 0x28 bytes: built in place by the
  * reader at 0x19e52b, node type 1. */
-class XmlStartElement : public XmlNode /* derived name */
+class XmlStartElement : public hkXmlParser::Node /* derived name */
 {
   public:
-    virtual ~XmlStartElement();
+    XmlStartElement(const char *name) : Node(1), name(name) {}
+
+    /* Slot 0 (0x19d450): the attributes destroyed from the last and their
+     * storage given back, then the name. Inline, with the keyword: the
+     * class has no other virtual of its own, so its vtable and destructors
+     * are emitted where it is built (the reader, func_0019da90.cpp), the D1
+     * before the D0 as the base holds them, and the deleting destructor
+     * (0x19d500, slot 1) holds this body, which the inliner admits only
+     * with the hint (cookbook 164). */
+    inline virtual ~XmlStartElement() {}
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
      * destructor 0x19d500 frees at the recorded size, 0x28 by default. */
@@ -13938,9 +14010,11 @@ class XmlStartElement : public XmlNode /* derived name */
     hkArray<XmlAttribute> attributes; /* derived name */
 };
 
-class XmlEndElement : public XmlNode /* derived name */
+class XmlEndElement : public hkXmlParser::Node /* derived name */
 {
   public:
+    XmlEndElement(const char *name) : Node(2), name(name) {}
+
     virtual ~XmlEndElement();
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
@@ -13950,9 +14024,15 @@ class XmlEndElement : public XmlNode /* derived name */
     hkStringPtr name; /* derived name */
 };
 
-class XmlCharacters : public XmlNode /* derived name */
+class XmlCharacters : public hkXmlParser::Node /* derived name */
 {
   public:
+    XmlCharacters(const char *text) : Node(3), text(text) {}
+
+    /* The text of a length (0x19e0a7, FUN_0000e540 the string's
+     * constructor of a length). */
+    XmlCharacters(const char *text, int length) : Node(3), text(text, length) {}
+
     virtual ~XmlCharacters();
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting

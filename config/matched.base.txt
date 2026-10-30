@@ -1979,4 +1979,5 @@ FUN_001997d0 src/libs/unknown/func_001997d0.cpp _ZN19BitFieldMap0019977012FUN_00
 _ZN14Object0019a7c0D1Ev src/libs/unknown/func_0019a7c0.cpp
 FUN_00142bb0 src/libs/unknown/func_00142a40.cpp _Z12FUN_00142bb0P24BroadPhaseLayers00142a40PK8hknpBodyi
 FUN_00156e90 src/libs/unknown/func_00156e90.cpp _ZN15Modifier16a486012FUN_00156e90EPKvPK26ModifierSharedData00156e90S1_S1_P12hknpManifold
-_ZN15XmlStartElementD1Ev src/libs/unknown/func_0019d450.cpp
+_ZN15XmlStartElementD1Ev src/libs/unknown/func_0019da90.cpp
+_ZN15XmlStartElementD0Ev src/libs/unknown/func_0019da90.cpp

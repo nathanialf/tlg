@@ -561,6 +561,15 @@ template <typename T> inline void hkArray<T>::clearAndDeallocate()
     capacityAndFlags = DONT_DEALLOCATE_FLAG;
 }
 
+/* The memory copies at 0x910e0 to 0x91210 (derived names), each with a
+ * signed int count: FUN_000910e0 forwards to memcpy, FUN_00091100 copies
+ * backwards in the widest unit the count and both pointers' alignment allow,
+ * and FUN_00091210 moves overlapping memory, backwards when the destination
+ * is above the source. */
+void FUN_000910e0(void *dst, const void *src, int n); /* derived name */
+void FUN_00091100(void *dst, const void *src, int n); /* derived name */
+void FUN_00091210(void *dst, const void *src, int n); /* derived name */
+
 /* The array's storage set to a capacity, through an allocator, for elements
  * of a size (0xa70: reallocated in place by the allocator's slot 6 when the
  * array owns its storage, else allocated and copied); the result is
@@ -601,6 +610,19 @@ inline void hkArray<T>::setSize(AllocatorBase &allocator, int n, const T &fill)
         added[i] = fill;
     }
     size = n;
+}
+
+template <typename T>
+inline void hkArray<T>::insertAt(int index, const T *elements, int numElements)
+{
+    const int numToMove = size - index;
+    const int newSize = size + numElements;
+    reserve(hkContainerHeapAllocator::get(), newSize);
+    FUN_00091210(data + index + numElements, data + index, numToMove * int(sizeof(T)));
+    for (int i = 0; i < numElements; i++) {
+        data[index + i] = elements[i];
+    }
+    size = newSize;
 }
 
 template <typename T> inline void hkArray<T>::append(const T *elements, int numElements)
@@ -2417,7 +2439,10 @@ class StreamReader : public hkReferencedObject /* derived name */
     /* Slot 7 (0x8f080, the readers' shared one): numBytes skipped by
      * reading them, the count skipped. derived name. */
     virtual int skip(int numBytes);
-    virtual void unknownVirtual8();
+    /* Slot 8: up to numBytes bytes copied into the buffer without being
+     * consumed, the count copied (the XML reader looks ahead 32 bytes at a
+     * time, 0x19db48). derived name. */
+    virtual int peek(void *buffer, int numBytes);
     virtual StreamReader *unknownVirtual9();
     virtual hkResult seek(int offset, int whence); /* vtable slot 10; derived name */
     virtual int tell() const;                      /* vtable slot 11; derived name */
@@ -3371,6 +3396,11 @@ inline void hkAlignSceneToNodeOptions::operator delete(void *object, unsigned lo
     freeReferencedObject(object, numBytes);
 }
 
+inline void *hkXmlParser::Node::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void XmlStartElement::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -4071,15 +4101,6 @@ int FUN_00017e80(char *buffer, int size, const char *format, ...); /* derived na
  * `size` bytes (derived name); FUN_00183350 fills a 16-byte name with it
  * when the object at +0x10 has none. */
 void FUN_0019d370(char *buffer, int size); /* derived name */
-
-/* The memory copies at 0x910e0 to 0x91210 (derived names), each with a
- * signed int count: FUN_000910e0 forwards to memcpy, FUN_00091100 copies
- * backwards in the widest unit the count and both pointers' alignment allow,
- * and FUN_00091210 moves overlapping memory, backwards when the destination
- * is above the source. */
-void FUN_000910e0(void *dst, const void *src, int n); /* derived name */
-void FUN_00091100(void *dst, const void *src, int n); /* derived name */
-void FUN_00091210(void *dst, const void *src, int n); /* derived name */
 
 /* A reference-counted object (derived name; no type info names it) whose
  * vtable 0x16997f0 (address point 0x1699800) only its constructor
