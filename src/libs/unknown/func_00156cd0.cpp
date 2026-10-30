@@ -4,7 +4,12 @@
 // NONMATCHING: the IR's operand orders are the base's; the register allocation differs (the
 // base keeps the difference in xmm9 and the half in xmm4) and the base stores in each path
 // (post-RA tail duplication over an uncoalesced phi), where this compile coalesces the stored
-// value with the difference and stores once (NOTES Round 61B).
+// value with the difference and stores once (NOTES Round 61B). Round 62B: the base's two
+// stores are two stores in the IR, not a tail-duplicated phi (post-RA tail duplication keeps
+// the phi's copy, MachineCopyPropagation forwards nothing); InstCombine's
+// SimplifyStoreAtEndOfBlock (InstCombineLoadStoreAlloca.cpp) merges them unless the two
+// stores differ in pointer value, type or alignment, or a path's store is not its last
+// instruction.
 void FUN_00156cd0(const Vec4 &from, const Vec4 &to, float speed, const Vec4 &velocity,
                   Vec4 &out) /* derived name */
 {

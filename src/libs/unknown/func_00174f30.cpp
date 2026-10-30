@@ -3,7 +3,11 @@
 
 // NONMATCHING: equal but for the clear loop's two induction variables' registers (the base's
 // count in eax and offset in rcx, swapped here); llc on this TU's own IR, reparsed, gives the
-// base's, so the use-list order LSR walks decides it (NOTES Round 61B).
+// base's, so the use-list order LSR walks decides it (NOTES Round 61B). Round 62B: IndVars'
+// SCEVExpander builds the wide increment with the wide phi, before the address users are
+// moved onto it, so in memory the stores are always LSR's first users; the same TU's
+// optimized bitcode code-generated on its own (-disable-llvm-optzns) is equal (NOTES Round
+// 62B: a pipeline question for the region, not a source shape).
 void hknpWorldStreams260::FUN_00174f30(CommandStreams00167f70 *context) /* derived name */
 {
     if (stream400.stream.numTotalElements == 0) {

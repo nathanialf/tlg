@@ -1292,7 +1292,7 @@ FUN_00010a10 src/libs/unknown/func_00010a10.cpp _ZNK11hkTransform12FUN_00010a10E
 FUN_00010a70 src/libs/unknown/func_00010a70.cpp _ZN9hkMatrix412FUN_00010a70ERK11hkTransform
 FUN_0003b990 src/libs/unknown/func_0003b990.cpp
 FUN_00007390 src/libs/unknown/func_00007390.cpp _Z12FUN_00007390P12Pool00007880
-FUN_00008fa0 src/libs/unknown/func_00008fa0.cpp _Z12FUN_00008fa0P22hkBufferedStreamWriter
+_ZN22hkBufferedStreamWriterD0Ev src/libs/unknown/func_00008ff0.cpp
 FUN_0000ddd0 src/libs/unknown/func_0000ddd0.cpp
 FUN_00016ee0 src/libs/unknown/func_00016ee0.cpp
 FUN_00019730 src/libs/unknown/func_00019730.cpp
@@ -1354,7 +1354,7 @@ FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
 FUN_00181ba0 src/libs/unknown/func_00181ba0.cpp
 _ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
 _ZN16hkProcessFactoryD0Ev src/libs/unknown/func_00183d60.cpp
-FUN_0019a1e0 src/libs/unknown/func_0019a1e0.cpp
+_ZN14Object0019a230D0Ev src/libs/unknown/func_0019a230.cpp
 _ZN14Object0019a7c0D0Ev src/libs/unknown/func_0019a7c0.cpp
 FUN_0019c100 src/libs/unknown/func_0019c100.cpp
 FUN_000083a0 src/libs/unknown/func_000083a0.cpp _ZN9hkOstream12FUN_000083a0E6hkBool
@@ -2257,3 +2257,13 @@ FUN_00089ee0 src/libs/unknown/func_00089ec0.cpp _GLOBAL__I_a
 FUN_0008b090 src/libs/unknown/func_0008b070.cpp _GLOBAL__I_a
 _ZN19hkxNodeSelectionSetD1Ev src/libs/unknown/func_0008af30.cpp
 _ZN19hkxNodeSelectionSetD0Ev src/libs/unknown/func_0008af30.cpp
+_ZN14Object0019a230D1Ev src/libs/unknown/func_0019a230.cpp
+_ZN9hkUFloat8aSERKf src/libs/unknown/func_000935b0.cpp
+FUN_00184430 src/libs/unknown/func_00184430.cpp
+FUN_001684a0 src/libs/unknown/func_001684a0.cpp
+FUN_0018ef40 src/libs/unknown/func_0018ef40.cpp
+_ZN22hkBufferedStreamWriterD1Ev src/libs/unknown/func_00008ff0.cpp
+FUN_0003e750 src/libs/unknown/func_0003e730.cpp _GLOBAL__I_a
+FUN_0006b6d0 src/libs/unknown/func_0006b6b0.cpp _GLOBAL__I_a
+FUN_00160e40 src/libs/unknown/func_00160e40.cpp
+FUN_000026f0 src/libs/unknown/func_000026f0.cpp

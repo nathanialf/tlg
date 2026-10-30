@@ -665,9 +665,54 @@ class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
  * second vtable's slots 2 and 3 are the this-adjusting thunks of primary
  * slots 5 and 6, both too large to inline; the complete destructor is the
  * shared empty body 0x17de10. */
+/* What the solver's stage tasks run over (derived names): the world's
+ * context pool at +0x10 and, at +0x28, an object whose int at +0xbc is the
+ * number of sub-stages of a stage (0x18efd5). */
+struct SolverStageConfig0018ef40 /* derived name */
+{
+    u8 unknown0[0xbc];
+    int numSubStages; /* derived name */
+};
+
+struct SolverStages0018ef40 /* derived name */
+{
+    u8 unknown0[0x10];
+    hknpWorldContextPool *contextPool; /* derived name */
+    u8 unknown18[0x10];
+    SolverStageConfig0018ef40 *config; /* derived name */
+};
+
+/* A stage's description (derived names): its type first (1 and 0 name the
+ * stage differently, 0x18f153), then three indices, the fifth byte read by
+ * the stage's run (0x18f05a), and flags (bit 0, 0x18f0d6). */
+struct SolverStageInfo0018ef40 /* derived name */
+{
+    u8 type;
+    u8 index1;
+    u8 index2;
+    u8 index3;
+    u8 index4;
+    u8 flags;
+    u8 unknown6[2]; /* to the task's +0x28 */
+};
+
 class hknpSolverStageTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
+  public:
+    SolverStages0018ef40 *stages; /* derived name */
+    SolverStageInfo0018ef40 info; /* derived name */
+    /* The stage and sub-stage the next run takes, cleared by the builder
+     * (0x18e77a); each run steps the sub-stage, wrapping into the next
+     * stage. derived names. */
+    u8 stage;
+    u8 subStage;
 };
+
+/* A stage's work on a context from the pool (0x18f030): the stage's
+ * calls by its type, on the thread's index. derived name. */
+void FUN_0018f030(hknpWorldContextPool::Context *context, SolverStages0018ef40 *stages, int stage,
+                  int subStage, int threadIndex,
+                  const SolverStageInfo0018ef40 *info); /* derived name */
 
 /* hknpPrepareExistingPairsTask (derived name): vtables 0x16a5c70 and 0x16a5cb8,
  * constructor 0x179840 (stores the two arguments at +0x18 and +0x20); slot 6

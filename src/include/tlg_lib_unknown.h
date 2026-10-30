@@ -975,6 +975,10 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual int getAllocatedSize(const void *pointer, int numBytes) const;
     /* Slot 11 (0x2670): the peak back to what is in use now. */
     virtual void resetPeak();
+    /* Slot 22 (0x26f0, at 0x168c6f0, after the interface's overriders):
+     * under the lock, every free list checked in turn (FUN_000188c0), the
+     * first failing one the answer. derived name. */
+    virtual bool FUN_000026f0();
 
     /* The lock the slots of the interface run under (0x34a0). derived
      * name. */
@@ -987,7 +991,11 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     /* The free list of each block size up to 640 bytes by 32-byte steps,
      * indexed by (size + 31) / 32 (0x27ee). derived name. */
     FreeList *sizeToFreeList[21];
-    u8 unknown160[0x9f0];
+    /* The distinct free lists and their count (slot 22, 0x26f0, walks
+     * them). derived names. */
+    FreeList *freeLists[21];
+    int numFreeLists;
+    u8 unknown20c[0x944];
     /* The byte limit slot 15 stores and slot 16 reads; slot 18 (0x2230)
      * tests a request against it. derived name. */
     u64 limitB50;
@@ -1741,22 +1749,36 @@ struct ClassVersionIndex0019a0b0 /* derived name */
     /* The owned strings freed to the thread's heap, then the members. */
     ~ClassVersionIndex0019a0b0();
 
+    /* The class allocator's delete: back to the thread's heap at the
+     * class's size (0x19a27e). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     StringMap map0;          /* derived name */
     hkArray<void *> array18; /* derived name */
     StringMap ownedNames;    /* derived name */
 };
 
-/* A reference-counted object of 0x48 bytes (vtable 0x16a6820, stored by
- * FUN_00199f80 and the out-of-line destructor FUN_0019a230): the destructor
- * destroys the 0x40-byte object at +0x10 (FUN_0019a0b0) and frees it, then
- * the critical section at +0x38, the pointer map at +0x28 and the array of
- * 8-byte elements at +0x18. */
-struct Object0019a230 /* derived name */
+/* A reference-counted object of 0x48 bytes (vtable 0x16a6820, D14, stored
+ * by FUN_00199f80 and the out-of-line destructor 0x19a230), built by
+ * hkVersionPatchManager's creator: the 0x40-byte index it owns at +0x10, an
+ * array of 8-byte elements at +0x18, a pointer map over the containers'
+ * heap at +0x28 and a critical section at +0x38. */
+class Object0019a230 : public hkReferencedObject /* derived name */
 {
-    u8 unknown0[0x48]; /* the size its deleting destructor 0x19a1e0 frees */
-};
+  public:
+    /* Out of line (0x19a230, slot 0; the deleting destructor 0x19a1e0, slot
+     * 1, before it in the executable, cookbook 187): the index destroyed and
+     * given back, then the members. */
+    virtual ~Object0019a230();
 
-void FUN_0019a230(Object0019a230 *self); /* derived name */
+    /* The reference-counted class delete (freeReferencedObject). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    ClassVersionIndex0019a0b0 *index; /* derived name */
+    hkArray<void *> array18;          /* derived name */
+    OwnedPointerMap map28;            /* derived name */
+    hkCriticalSection lock;           /* derived name */
+};
 
 /* A reference-counted object of 0x40 bytes (vtable 0x16a68d0, D14), the
  * cache hkPlatformObjectWriter's constructor builds in place (0x19aa7b):
@@ -2227,6 +2249,11 @@ struct FreeList /* derived name */
     /* A new block's first element when the current block is used up
      * (0x19230): a block of the list's own or a new one. derived name. */
     void *FUN_00019230();
+
+    /* The list's counts checked against its blocks (0x188c0, the
+     * allocator's slot 22 asks it of each list): true when they agree.
+     * derived name. */
+    bool FUN_000188c0() const;
 
     /* An element: a freed one first, else the next of the current block,
      * else the slow path (inline in the allocator's 0x14aa0). derived
@@ -3656,6 +3683,21 @@ inline void hkxMaterialShaderSet::operator delete(void *object, unsigned long nu
 inline void hkxNodeSelectionSet::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void Object0019a230::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkBufferedStreamWriter::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void ClassVersionIndex0019a0b0::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, int(numBytes));
 }
 
 inline void hknpPairCollisionFilter::operator delete(void *object, unsigned long numBytes)
@@ -5321,7 +5363,6 @@ void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5
 void FUN_0017f130(hkMemoryResourceHandle *self);             /* slot 1 of 0x16a6270 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */
 void FUN_00181ba0(hkBinaryPackfileWriter *self);             /* slot 1 of 0x16a6470 */
-void FUN_0019a1e0(Object0019a230 *self);                     /* slot 1 of 0x16a6820 */
 void FUN_0019c100(hkPackfileWriter *self);                   /* slot 1 of 0x16a6960 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived

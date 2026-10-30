@@ -10,3 +10,30 @@ void FUN_0003e730(void *object, int finishing) /* derived name */
     flag.finishing = finishing;
     new (object) hknpTriangleShape(flag);
 }
+
+/* hknpTriangleShape's cleanup callback: the virtual destructor (the shared body 0x2d0). */
+void FUN_000002d0(void *object);
+
+/* The address of hknpTriangleShape's vtable, read from an object finished in a 16-byte
+ * aligned buffer (the finish constructor is out of line, 0x78230, so the object is built on
+ * the stack, as hkcdStaticAabbTree's in func_0001ff50.cpp). */
+static const void *vtableOfhknpTriangleShape() /* derived name */
+{
+    union {
+        void *vtable;
+        alignas(16) char buffer[sizeof(hknpTriangleShape)];
+    } object;
+
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = 0;
+    new (object.buffer) hknpTriangleShape(flag);
+    return object.vtable;
+}
+
+/* This file's static initializer (0x3e750): hknpTriangleShape's reflection over
+ * hknpConvexPolytopeShape's (version 1), no members of its own, then its type info. */
+const hkClass D_57c07e8("hknpTriangleShape", &D_57bf710, sizeof(hknpTriangleShape), 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 1);
+extern const hkTypeInfo D_57c0838;
+const hkTypeInfo D_57c0838("hknpTriangleShape", "!hknpTriangleShape", FUN_0003e730, FUN_000002d0,
+                           vtableOfhknpTriangleShape(), sizeof(hknpTriangleShape));

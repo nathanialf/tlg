@@ -2941,6 +2941,8 @@ class hknpVehicleAerodynamics : public hkReferencedObject
 };
 
 extern const hkClass D_57bf880; /* hknpVehicleAerodynamics's hkClass */
+extern const hkClass D_57bf710; /* hknpConvexPolytopeShape's hkClass (built at 0x39dac) */
+extern const hkClass D_57c1908; /* hknpConvexShape's hkClass (built at 0x61812) */
 
 /* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback
  * FUN_0003a0d0. Members from its records (0x1695170 onward): airDensity,
@@ -7056,6 +7058,13 @@ struct hknpBodyManager /* derived name */
      * ones the defaults, unless the value is the default 0xffff. */
     void FUN_00160f30(u32 bodyId, u16 value);
 
+    /* derived name: a body's half set in its entry, rounded to the nearest
+     * representable value (the float scaled by 1 + 1/256 before its upper
+     * half is kept), and the value now stored returned (0x160e40, called at
+     * 0x5b59f): the entries grown to the bodies' capacity first, unless the
+     * value is negative, which returns the default -1. */
+    float FUN_00160e40(u32 bodyId, float value);
+
     u8 unknown0[8];
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
@@ -8759,6 +8768,20 @@ hkResult FUN_00028b80(const Vec4 &start, const Vec4 &end, float radius, float ma
  * by the config's factor. */
 hkResult FUN_001683d0(const MassConfig00168340 &config, const Vec4 &start, const Vec4 &end,
                       float radius, hkDiagonalizedMassProperties &propertiesOut);
+
+/* A triangle's volume, mass and inertia as a surface of a thickness, at a
+ * mass (0x280e0, the inertia computer's; the triangle's mass build calls it
+ * at 0x168507); a failure for a degenerate triangle. derived name. */
+hkResult FUN_000280e0(const Vec4 &v0, const Vec4 &v1, const Vec4 &v2, float mass, float thickness,
+                      hkMassProperties &result); /* derived name */
+
+/* derived name: a triangle's mass properties for a config (0x1684a0; the
+ * triangle shape's slot 28 at 0x783b6 falls back to hknpShape's on a
+ * failure): computed at unit mass over a thickness of at least 1e-4, the
+ * radius, a zero volume a failure; then diagonalized, the mass set as the
+ * capsule's is (0x1683d0). */
+hkResult FUN_001684a0(const MassConfig00168340 &config, const Vec4 *vertices, float radius,
+                      hkDiagonalizedMassProperties &propertiesOut);
 
 /* What 0x1570f0 makes of a shape's mass properties (derived names): the
  * centre of mass with the volume in w, the rotation to the principal axes,
@@ -13272,6 +13295,16 @@ class hkBufferedStreamWriter : public hkStreamWriter
 {
   public:
     const hkClass *getClassType() const; /* vtable slot 3, FUN_00008ea0 */
+    /* Out of line (0x8ff0, slot 0; the deleting destructor 0x8fa0, slot 1,
+     * before it in the executable, cookbook 187): the buffer written out,
+     * the stream's reference released, the buffer given back when the
+     * writer allocated it. */
+    virtual ~hkBufferedStreamWriter();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x30 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* derived names: the writer over a caller's memory (0x8f50): no stream
      * to flush to, nothing written, and when the memory is to hold a string
      * one byte kept back for its terminator and the memory zeroed. */
@@ -13337,12 +13370,6 @@ class hkBufferedStreamWriter : public hkStreamWriter
      * default. */
     u8 unknown29[7];
 };
-
-/* Its destructor (0x8ff0, which stores the vtable 0x168d210) and its
- * deleting destructor (slot 1, 0x8fa0), written as calls while the
- * destructor is not (cookbook 15, 97). derived names. */
-void FUN_00008ff0(hkBufferedStreamWriter *self); /* derived name */
-void FUN_00008fa0(hkBufferedStreamWriter *self); /* derived name */
 
 /* hkSkinnedRefMeshShape: its hkClass at 0x57bcd20 is built by the
  * reflection initializer at 0x23402; slot 3 of its vtable (0x16a38c0,
@@ -15219,7 +15246,11 @@ struct hknpWorldContextPool /* derived name */
         u8 unknown4[0x4c];
         InplaceTriangle00078160 triangle0; /* derived name */
         InplaceTriangle00078160 triangle1; /* derived name */
-        u8 unknown210[0x40];
+        u8 unknown210[0x18];
+        /* What a solver stage task runs over, set before its stage
+         * (0x18efa7). derived name. */
+        void *solverStages;
+        u8 unknown230[0x20];
         /* Two block caches (0x167ff0 hands back the first and frees it
          * unless it is the second, then the second). derived names. */
         BlockCache *cache250;
@@ -16119,6 +16150,33 @@ struct PointerMap /* derived name */
         return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
     }
 
+    /* The first used slot, or one past the hash mask (inline in
+     * hkVtableClassRegistry's slot 8, 0x184430). derived name. */
+    Iterator getIterator() const
+    {
+        int i;
+        for (i = 0; i <= hashMod; i++) {
+            const hkUlong key = entries[i].key;
+            if (key != hkUlong(-1)) {
+                break;
+            }
+        }
+        return reinterpret_cast<Iterator>(hkUlong(i));
+    }
+
+    /* The used slot after one, or one past the hash mask. derived name. */
+    Iterator getNext(Iterator it) const
+    {
+        int i = static_cast<int>(reinterpret_cast<hkUlong>(it));
+        for (i += 1; i <= hashMod; i++) {
+            const hkUlong key = entries[i].key;
+            if (key != hkUlong(-1)) {
+                break;
+            }
+        }
+        return reinterpret_cast<Iterator>(hkUlong(i));
+    }
+
     /* The value at a valid slot. derived name. */
     hkUlong getValue(Iterator it) const
     {
@@ -16556,6 +16614,9 @@ class hkVtableClassRegistry : public hkReferencedObject
     /* Slot 7: the singleton's callers reach it through the vtable
      * (0x902f0's `jmpq *%rax` after the slot load at +0x38). */
     virtual const hkClass *FUN_00184420(const void *object) const; /* vtable slot 7; derived name */
+    /* Slot 8 (0x184430): every registered class appended, in the map's
+     * order. derived name. */
+    virtual void FUN_00184430(hkArray<const hkClass *> &classesOut) const;
 
     /* Registers the vtable of each type info under the class beside it in
      * a second list, both lists ending at a null (0x184540; the builtin
