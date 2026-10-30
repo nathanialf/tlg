@@ -2,9 +2,10 @@
 #include "tlg_lib_unknown.h"
 
 /* derived name: the main steering angle, then every wheel's. */
-void hknpVehicleDefaultSteering::calcSteering(float deltaTime, const hknpVehicleInstance *vehicle,
-                                              const void *filteredInfoOutput,
-                                              SteeringAnglesOutput &steeringOutput) const
+void hknpVehicleDefaultSteering::calcSteering(
+    float deltaTime, const hknpVehicleInstance *vehicle,
+    const hknpVehicleFilteredDriverInput &filteredInfoOutput,
+    SteeringAnglesOutput &steeringOutput) const
 {
     calcMainSteeringAngle(deltaTime, vehicle, filteredInfoOutput, steeringOutput);
     for (int i = 0; i < doesWheelSteer.getSize(); i++) {

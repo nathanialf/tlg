@@ -1480,7 +1480,7 @@ FUN_00045a20 src/libs/unknown/func_00045a20.cpp _ZNK15hknpConvexShape12FUN_00045
 FUN_0006bd90 src/libs/unknown/func_0006bd90.cpp _ZN17RefArrays0005a23012FUN_0006bd90Et
 FUN_00161490 src/libs/unknown/func_00161490.cpp _ZN15hknpBodyManager12FUN_00161490Ei
 FUN_00166370 src/libs/unknown/func_00166370.cpp _ZNK19hknpExternMeshShape12FUN_00166370ERK4Mat4R6hkAabb
-FUN_0016fb70 src/libs/unknown/func_0016fb70.cpp _ZNK26hknpVehicleDefaultSteering12calcSteeringEfPK19hknpVehicleInstancePKvRN19hknpVehicleSteering20SteeringAnglesOutputE
+FUN_0016fb70 src/libs/unknown/func_0016fb70.cpp _ZNK26hknpVehicleDefaultSteering12calcSteeringEfPK19hknpVehicleInstanceRK30hknpVehicleFilteredDriverInputRN19hknpVehicleSteering20SteeringAnglesOutputE
 FUN_0000dc50 src/libs/unknown/func_0000dc50.cpp _GLOBAL__I_a
 _ZN29hkpLimitedHingeConstraintDataD1Ev src/libs/unknown/func_00078ee0.cpp
 _ZN28hkpPointToPathConstraintDataD1Ev src/libs/unknown/func_00079f10.cpp
@@ -2267,3 +2267,11 @@ FUN_0003e750 src/libs/unknown/func_0003e730.cpp _GLOBAL__I_a
 FUN_0006b6d0 src/libs/unknown/func_0006b6b0.cpp _GLOBAL__I_a
 FUN_00160e40 src/libs/unknown/func_00160e40.cpp
 FUN_000026f0 src/libs/unknown/func_000026f0.cpp
+FUN_0016fa80 src/libs/unknown/func_0016fa80.cpp _ZNK26hknpVehicleDefaultSteering21calcMainSteeringAngleEfPK19hknpVehicleInstanceRK30hknpVehicleFilteredDriverInputRN19hknpVehicleSteering20SteeringAnglesOutputE
+FUN_00019640 src/libs/unknown/func_00019640.cpp
+FUN_0019d190 src/libs/unknown/func_0019d0d0.cpp
+FUN_0001cf80 src/libs/unknown/func_0001cf60.cpp _GLOBAL__I_a
+FUN_0001d2b0 src/libs/unknown/func_0001d290.cpp _GLOBAL__I_a
+FUN_000233a0 src/libs/unknown/func_00023380.cpp _GLOBAL__I_a
+FUN_00024300 src/libs/unknown/func_000242e0.cpp _GLOBAL__I_a
+FUN_00038b10 src/libs/unknown/func_00038af0.cpp _GLOBAL__I_a

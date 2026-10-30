@@ -15,7 +15,7 @@ void hkPackfileWriter::FUN_0019d0d0(const char *sectionTag)
 }
 
 /* derived name: a section's index by its tag, as slot 10 adds it. */
-int hkPackfileWriter::FUN_0019cd20(const char *sectionTag)
+inline int hkPackfileWriter::sectionIndex(const char *sectionTag)
 {
     int index;
     if (sectionTagToIndex.get(sectionTag, &index) == HK_SUCCESS) {
@@ -26,4 +26,17 @@ int hkPackfileWriter::FUN_0019cd20(const char *sectionTag)
     sectionTagToIndex.insert(tag, index);
     sectionTags.pushBack(tag);
     return index;
+}
+
+int hkPackfileWriter::FUN_0019cd20(const char *sectionTag)
+{
+    return sectionIndex(sectionTag);
+}
+
+/* derived name: slot 11 of hkPackfileWriter's vtable: an object placed in
+ * the section of a tag, by the object's address. */
+void hkPackfileWriter::FUN_0019d190(const void *object, const char *sectionTag)
+{
+    const u32 index = sectionIndex(sectionTag);
+    objectToSectionIndex.FUN_000138a0(hkContainerHeapAllocator::get(), hkUlong(object), index);
 }

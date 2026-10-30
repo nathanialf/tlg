@@ -1192,7 +1192,16 @@ class PageAllocator : public hkReferencedObject /* derived name */
      * when a size is given. */
     PageAllocator(int initialBytes);
 
-    /* Pages for numBytes more (0x19640). derived name. */
+    /* A page's header (derived names): the allocator it came from at +0x10
+     * (0x196a9). */
+    struct Page {
+        u8 unknown0[0x10];
+        PageAllocator *allocator;
+    };
+
+    /* Pages for numBytes more (0x19640): each a 128-byte aligned block of
+     * the thread's heap, its header pointing back here, added to every
+     * page and to the free ones. derived name. */
     void FUN_00019640(int numBytes);
 
     hkCriticalSection lock;    /* derived name */
@@ -2700,6 +2709,11 @@ struct LoadedImage : public hkReferencedObject /* derived name */
 
 /* The loader's image made (0x1a0720, called at 0x1889fe). derived name. */
 LoadedImage *FUN_001a0720(const RawImage &raw); /* derived name */
+
+/* A TGA image read from a stream (0x1887a0, the file loader's at
+ * 0x1885d7). derived name. */
+class Object00185000;
+LoadedImage *FUN_001887a0(Object00185000 &stream); /* derived name */
 
 LoadedImage *FUN_00188560(const char *fileName); /* derived name */
 

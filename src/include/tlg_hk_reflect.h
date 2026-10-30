@@ -2943,6 +2943,9 @@ class hknpVehicleAerodynamics : public hkReferencedObject
 extern const hkClass D_57bf880; /* hknpVehicleAerodynamics's hkClass */
 extern const hkClass D_57bf710; /* hknpConvexPolytopeShape's hkClass (built at 0x39dac) */
 extern const hkClass D_57c1908; /* hknpConvexShape's hkClass (built at 0x61812) */
+extern const hkClass D_57ba190; /* hkcdPlanarEntity's hkClass (built at 0x1d232) */
+extern const hkClass D_57bd7d0; /* hkMeshShape's hkClass (built at 0x26e8e) */
+extern const hkClass D_57bf1c0; /* hknpShape's hkClass (built at 0x38dff) */
 
 /* hknpVehicleDefaultAerodynamics: vtable 0x1695ac0, finish callback
  * FUN_0003a0d0. Members from its records (0x1695170 onward): airDensity,
@@ -3199,6 +3202,8 @@ class hknpVehicleSteering : public hkReferencedObject
      * then one angle per wheel. */
     struct SteeringAnglesOutput {
         float mainSteeringAngle;
+        /* The main angle before the reduction at speed (0x16fab7). */
+        float mainSteeringAngleAssumingNoReduction;
         hkArray<float> wheelsSteeringAngle;
     };
 
@@ -3207,7 +3212,7 @@ class hknpVehicleSteering : public hkReferencedObject
     /* Slot 5: the step's steering from the filtered driver input. derived
      * name. */
     virtual void calcSteering(float deltaTime, const hknpVehicleInstance *vehicle,
-                              const void *filteredInfoOutput,
+                              const hknpVehicleFilteredDriverInput &filteredInfoOutput,
                               SteeringAnglesOutput &steeringOutput) const = 0;
 };
 
@@ -3288,12 +3293,14 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
     /* Slot 5 (0x16fb70): the main angle through slot 6, then each wheel
      * that steers takes it and the others none. derived name. */
     virtual void calcSteering(float deltaTime, const hknpVehicleInstance *vehicle,
-                              const void *filteredInfoOutput,
+                              const hknpVehicleFilteredDriverInput &filteredInfoOutput,
                               SteeringAnglesOutput &steeringOutput) const;
 
-    /* Slot 6 (0x16fa80): the main angle. derived name. */
+    /* Slot 6 (0x16fa80): the main angle, the wheel's input times the
+     * largest angle, reduced by the square of the full-angle speed over the
+     * chassis's forward speed above it. derived name. */
     virtual void calcMainSteeringAngle(float deltaTime, const hknpVehicleInstance *vehicle,
-                                       const void *filteredInfoOutput,
+                                       const hknpVehicleFilteredDriverInput &filteredInfoOutput,
                                        SteeringAnglesOutput &steeringOutput) const;
 
     float maxSteeringAngle;
@@ -5349,6 +5356,13 @@ struct hkcdDynamicTree {
      * word (0x22600 links them). */
     struct CodecRawUint {
         typedef u32 Index;
+
+        /* A free node's link to the next free one, kept in its first word
+         * (0x226c5). derived name. */
+        void setNextFree(Index next)
+        {
+            reinterpret_cast<Index &>(aabb) = next;
+        }
 
         hkAabb aabb;
         u32 parent;
@@ -16294,7 +16308,14 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * (0x19cd20; the binary writer's save asks it for "__data__",
      * 0x182188). derived name. */
     int FUN_0019cd20(const char *sectionTag);
-    virtual void FUN_0019d190(); /* slot 11; derived name, arguments not read */
+    /* Its body, inline in slot 11 too (with the keyword's hint: more than
+     * -O2's 225 there; defined in func_0019d0d0.cpp, cookbook 254).
+     * derived name. */
+    inline int sectionIndex(const char *sectionTag);
+    /* Slot 11 (0x19d190): an object placed in the section of a tag, the
+     * section added when it is new (the section index of 0x19cd20 inline).
+     * derived name. */
+    virtual void FUN_0019d190(const void *object, const char *sectionTag);
     /* Slot 12 (0x19d280): the objects of a class placed in the section of
      * a tag. derived name. */
     virtual void FUN_0019d280(const hkClass &klass, const char *sectionTag);
@@ -16321,7 +16342,11 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * 5, 0x19c3c0). derived names. */
     int contentsIndex;
     int contentsClassIndex;
-    u8 unknownB8[0x80]; /* to the size its deleting destructor 0x19c100 frees */
+    u8 unknownB8[8];
+    /* The section each object slot 11 placed goes to, by the object's
+     * address. derived name. */
+    PointerMap objectToSectionIndex;
+    u8 unknownD0[0x68]; /* to the size its deleting destructor 0x19c100 frees */
 };
 
 /* Its out-of-line destructor body: restores the vtable, frees the arrays and
