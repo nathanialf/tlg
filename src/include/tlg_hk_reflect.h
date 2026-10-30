@@ -171,6 +171,14 @@ inline int max2(int a, int b)
     return _mm_cvtsi128_si32(_mm_max_epi32(_mm_cvtsi32_si128(a), _mm_cvtsi32_si128(b)));
 }
 
+/* Clamped in one vector register, the maximum then the minimum (`vpmaxsd;
+ * vpminsd`, the motion velocity scale's time of impact angle, 0x5db03). */
+inline int clamp(int value, int low, int high)
+{
+    return _mm_cvtsi128_si32(_mm_min_epi32(
+        _mm_max_epi32(_mm_cvtsi32_si128(value), _mm_cvtsi32_si128(low)), _mm_cvtsi32_si128(high)));
+}
+
 /* The unsigned forms likewise (pminud, pmaxud: the broad phase's largest
  * bucket index, 0x13e20d). */
 inline u32 min2(u32 a, u32 b)
@@ -566,6 +574,20 @@ template <typename T> struct hkArray {
      * through the overlapping move (defined in tlg_lib_unknown.h; the XML
      * reader's text and tags, 0x19dc0e). */
     void insertAt(int index, const T *elements, int numElements);
+
+    /* The index of the first element equal to the one given, -1 when none
+     * is (Havok's indexOf; the size read once, the storage at each step:
+     * the resource container's slot 13, 0x1805ab). derived name. */
+    int indexOf(const T &t) const
+    {
+        const int end = size;
+        for (int i = 0; i < end; i++) {
+            if (data[i] == t) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
     /* The last element dropped. */
     void popBack()
@@ -1809,6 +1831,16 @@ template <typename T> struct hkRefPtr {
      * hknpPairCollisionFilter 0x1673f0 leave theirs). */
     hkRefPtr(hkFinishLoadedObjectFlag) {}
 
+    /* An object held, a reference taken on it (the temporary a container's
+     * search by pointer builds, 0x18057f). */
+    hkRefPtr(T *e)
+    {
+        if (e) {
+            e->addReference();
+        }
+        pntr = e;
+    }
+
     ~hkRefPtr()
     {
         if (pntr) {
@@ -1899,6 +1931,10 @@ void FUN_00006800(); /* derived name */
 /* The instance's reference released and the pointer cleared (0x68e0; the
  * base system's quit calls it at 0x9bc0). derived name. */
 void FUN_000068e0(); /* derived name */
+
+/* The lock mode set (0x6950; 1 when the thread pool starts, 0 when it stops
+ * and in the base system's quit, 0x9aed). derived name. */
+void FUN_00006950(int lockMode); /* derived name */
 
 /* hkDummySingleton, the singleton registered by that name (record 0x57b80d0
  * filled by 0x9c50 on the list at 0x57b80b8, instance pointer 0x57b80c8):
@@ -5016,6 +5052,18 @@ inline Vec4 length3(const Vec4 &v)
                          _mm_mul_ps(lengthSquared, invLength));
 }
 
+/* A vector scaled to unit length over x, y and z by the reciprocal square
+ * root and one Newton step, with no test of its length (the scaled query
+ * collectors' normals, 0xcf8d0 and 0x16d090). derived name. */
+inline Vec4 normalized3Unchecked(const Vec4 &v) /* derived name */
+{
+    const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    return _mm_mul_ps(
+        v, _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
+                      _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
+}
+
 /* A length over x, y and z at the reciprocal square root's own accuracy, without the
  * Newton step, as Havok's getLength<3> is at HK_ACC_12_BIT (0xcf4d0's
  * velocities). derived name. */
@@ -7663,11 +7711,12 @@ struct hknpBody {
     /* Its quality, an index into the world's body quality library
      * (0x5b4ef). derived name. */
     u8 qualityId;
-    /* Two values 0x161400 clears when it resets a body's flags. derived
-     * names. */
-    u8 byte73;
-    u16 word74;
-    u8 unknown76[2];
+    /* The time of impact angle and distance (the records' names), which
+     * 0x161400 clears when it resets a body's flags and the motion velocity
+     * scale (0x5da80) widens; then the contact distance. */
+    u8 timAngle;
+    u16 maxTimDistance;
+    u16 maxContactDistance;
     /* The body's index into the body manager's active list, 0x7fffffff when
      * it has none (0x1615a0 and 0x4c720 store that). */
     u32 indexIntoActiveListOrDeactivatedIslandId;
@@ -8946,7 +8995,11 @@ struct hknpSolverInfo /* derived name */
     u8 unknown30[0x10];
     Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
     float value50; /* derived name */
-    u8 unknown54[0x2c];
+    u8 unknown54[0xc];
+    /* A vector a step's distances scale (the motion velocity scale's
+     * 0x5db23 clamps its product to 16 bits). derived name. */
+    Vec4 vector60;
+    u8 unknown70[0x10];
     /* A distance 0xcf4d0's callers hand it, halved by one (0x742cc) and
      * as it is by the other (0x149284). derived name. */
     Vec4 vector80;
@@ -9289,6 +9342,14 @@ struct hknpWorld {
     /* Each body attached to a body integrated in turn, the first one
      * included (0x5b490). derived name. */
     void FUN_0005b490(int firstBodyId, void *argument);
+
+    /* A motion's velocities of the previous step scaled and the motion
+     * moved by the part of the step the scale adds (0x157be0), then each
+     * body attached to it refreshed (0xce880), its time of impact distance
+     * and angle widened by the clamped products of a zero and flagged
+     * (0x5da80; the world's 0x16eca0 and 0x170940 call it). derived name. */
+    void FUN_0005da80(int motionId, float factor);
+    void FUN_000ce880(int bodyId); /* derived name */
 
     /* Two of the step's stages, run by the solve tasks under the timer
      * "Physics" (0x50fd0 by hknpPostSolveTask, 0x509f0 by hknpPreSolveTask).
@@ -14093,10 +14154,15 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * through its slot 15. derived name. */
     void FUN_0017f9b0(void *argument);
 
+    /* Slot 13 (0x180560): a child given up, its reference released with
+     * its place in the children (the last one moved into it). derived
+     * name. */
+    void FUN_00180560(hkMemoryResourceContainer *child);
+
     hkStringPtr name;
     hkMemoryResourceContainer *parent;
     hkArray<hkMemoryResourceHandle *> resourceHandles;
-    hkArray<hkMemoryResourceContainer *> children;
+    hkArray<hkRefPtr<hkMemoryResourceContainer>> children;
 };
 
 /* hkxVertexDescription::ElementDecl (type info 0x57c7f10, size 0x18, no
@@ -16379,13 +16445,15 @@ class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* der
     /* Empty; the deleting destructor is 0x16d040. */
     virtual ~hknpScaledOffsetQueryCollector();
 
-    void FUN_0016d080();       /* vtable slot 3; derived name */
+    void FUN_0016d080(); /* vtable slot 3; derived name */
+    /* Slot 4 (0x16d090). derived name. */
+    void FUN_0016d090(const struct hknpCollisionResult &hit);
     bool FUN_0016d1d0() const; /* vtable slot 6; derived name */
 
     Vec4 positionOffset;                         /* derived name */
     Vec4 positionScale;                          /* derived name */
     Vec4 normalScale;                            /* derived name */
-    const Mat4 *transform;                       /* derived name */
+    const hkTransform *transform;                /* derived name */
     hknpCollisionQueryCollector *childCollector; /* derived name */
 };
 

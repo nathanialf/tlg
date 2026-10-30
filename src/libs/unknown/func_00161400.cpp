@@ -13,8 +13,8 @@ void hknpBodyManager::FUN_00161400() /* derived name */
             if ((body.flags & 3) && (body.flags & 1)) {
                 aabbs[change.bodyId] = body.aabb;
                 body.flags &= ~0x3c00;
-                body.word74 = 0;
-                body.byte73 = 0;
+                body.maxTimDistance = 0;
+                body.timAngle = 0;
             }
         }
     }
