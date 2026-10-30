@@ -2447,25 +2447,41 @@ struct hknpCompressedMeshShapeInternals {
  * parent hkReferencedObject's, no members). */
 class hknpVehicleVelocityDamper : public hkReferencedObject
 {
+  public:
+    hknpVehicleVelocityDamper(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 extern const hkClass D_57c2428; /* hknpVehicleVelocityDamper's hkClass */
 
-/* hknpVehicleDefaultVelocityDamper: vtable 0x1695890, finish callback FUN_00035c60. */
-class hknpVehicleDefaultVelocityDamper : public hkReferencedObject
+/* hknpVehicleDefaultVelocityDamper: vtable 0x1695890, finish callback FUN_00035c60;
+ * members from its records (0x1692ef0): three floats from +0xc. */
+class hknpVehicleDefaultVelocityDamper : public hknpVehicleVelocityDamper
 {
   public:
-    hknpVehicleDefaultVelocityDamper(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpVehicleDefaultVelocityDamper(hkFinishLoadedObjectFlag flag)
+        : hknpVehicleVelocityDamper(flag)
+    {
+    }
+
+    float normalSpinDamping;
+    float collisionSpinDamping;
+    float collisionThreshold;
 };
 
 /* hknpCharacterRigidBodyCinfo is defined after hkQuaternion, which it holds. */
 class hknpCharacterRigidBodyCinfo;
 
-/* hknpMaterialPalette: vtable 0x16937b0, finish callback FUN_000377c0. */
+/* hknpMaterialPalette: vtable 0x16937b0, finish callback FUN_000377c0;
+ * its one member from its record (0x16937f0): an array of material
+ * descriptors (hkClass 0x57c1f70) at +0x10. */
+struct hknpMaterialDescriptor;
+
 class hknpMaterialPalette : public hkReferencedObject
 {
   public:
-    hknpMaterialPalette(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpMaterialPalette(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), entries(flag) {}
+
+    hkArray<hknpMaterialDescriptor> entries;
 };
 
 /* hknpVehicleDriverInputAnalogStatus: vtable 0x16a4420, finish callback
@@ -2653,6 +2669,8 @@ extern const hkClassMember D_168d980[]; /* derived name: hkReferencedObject's re
  * parent hkReferencedObject's, no members). */
 class hknpVehicleAerodynamics : public hkReferencedObject
 {
+  public:
+    hknpVehicleAerodynamics(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 extern const hkClass D_57bf880; /* hknpVehicleAerodynamics's hkClass */
@@ -2662,10 +2680,10 @@ extern const hkClass D_57bf880; /* hknpVehicleAerodynamics's hkClass */
  * frontalArea, dragCoefficient and liftCoefficient (floats) from +0xc,
  * extraGravityws (a vector) at +0x20. Slot 6 (0x3bf20) is the drag at a
  * speed, slot 7 (FUN_0003bf60) the lift. */
-class hknpVehicleDefaultAerodynamics : public hkReferencedObject
+class hknpVehicleDefaultAerodynamics : public hknpVehicleAerodynamics
 {
   public:
-    hknpVehicleDefaultAerodynamics(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpVehicleDefaultAerodynamics(hkFinishLoadedObjectFlag flag) : hknpVehicleAerodynamics(flag) {}
 
     float FUN_0003bf20(float speed) const; /* vtable slot 6; derived name */
     float FUN_0003bf60(float speed) const; /* vtable slot 7; derived name */
@@ -2674,6 +2692,7 @@ class hknpVehicleDefaultAerodynamics : public hkReferencedObject
     float frontalArea;
     float dragCoefficient;
     float liftCoefficient;
+    Vec4 extraGravityws;
 };
 
 /* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback FUN_0003a3b0;
@@ -3191,10 +3210,18 @@ class hkxSparselyAnimatedBool : public hkReferencedObject
     hkArray<float> times;
 };
 
+/* Members from its records (0x16a0ea0): strings (an array of hkStringPtr)
+ * at +0x10, times (an array of reals) at +0x20. */
 class hkxSparselyAnimatedString : public hkReferencedObject
 {
   public:
-    hkxSparselyAnimatedString(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hkxSparselyAnimatedString(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), strings(flag), times(flag)
+    {
+    }
+
+    hkArray<hkStringPtr> strings;
+    hkArray<float> times;
 };
 
 /* From its hkClass (0x57c6850, size 0x28; records built at run time by 0x87b70): perVertexFloats (an array of reals) at +0x10, dimensions at +0x20. */
@@ -5329,14 +5356,22 @@ hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, floa
                       DiagonalizedMassProperties00168340 &propertiesOut); /* derived name */
 
 /* What slot 21's fourth argument points to (derived names): 24 bytes, a
- * key at +0 (the convex shapes' slot 21 copies it out) and a key mask at
- * +8, which the masked shape replaces with its own (0x380b0). */
+ * key at +0 (the convex shapes' slot 21 copies it out), the number of its
+ * bits in use at +4 and a key mask at +8, which the masked shape replaces
+ * with its own (0x380b0); the LOD shape reads a level of detail at +0x10
+ * and appends its own bits to the key (0x68380). */
 struct ShapeKeyQuery000380b0 /* derived name */
 {
     u32 key;
-    u8 unknown4[4];
+    int keySize;
     const hknpShapeKeyMask *mask;
-    const void *unknown10;
+    int levelOfDetail;
+    u8 unknown14[4];
+
+    /* A sub-key appended below the key's bits in use: the key's leading
+     * bits kept, the sub-key plus one in the next numBits and every bit
+     * below it set (the LOD shape's 0x68380). derived name. */
+    inline void appendSubKey(int subKey, int numBits); /* derived name */
 
     /* A copy of another with a different mask: the record copied whole,
      * then the mask set (the masked shape's 0x380b0 builds one in its
@@ -5347,6 +5382,17 @@ struct ShapeKeyQuery000380b0 /* derived name */
         mask = newMask;
     }
 };
+
+/* The masks of a key's leading bits, by the number of bits (derived name):
+ * none for 0, every bit for 32. */
+extern const u32 D_14ca040[33];
+
+inline void ShapeKeyQuery000380b0::appendSubKey(int subKey, int numBits)
+{
+    const int size = keySize; /* derived name */
+    key = (key & D_14ca040[size]) | (((subKey + 1) << (32 - numBits - size)) - 1);
+    keySize = size + numBits;
+}
 
 /* The arguments of the shapes' slot 27, a level of detail chosen for a
  * shape (derived names): a context whose vector at +0x70 scales the size,
@@ -12830,6 +12876,12 @@ struct hknpLodShape : public hknpCompositeShape {
      * shifted out (each the next key's bits set below it), at most ten.
      * derived names. */
     void FUN_00068440(const u32 *keys, int numKeys, void *argument3) const;
+    /* Slot 21 (0x68380): the query's level of detail, at most the last
+     * level, asked with the key shifted by this shape's bits and the
+     * query's key extended by the level (its bits set below it). derived
+     * name. */
+    int FUN_00068380(void *argument1, int argument2, int key,
+                     const ShapeKeyQuery000380b0 &query) const;
     /* Slot 27 (0x68500): the finest level whose distance, halved for the
      * current level so the choice does not flicker, is below the query's
      * scaled size; 0 when none is (the context is not read). derived
