@@ -171,6 +171,20 @@ inline int max2(int a, int b)
     return _mm_cvtsi128_si32(_mm_max_epi32(_mm_cvtsi32_si128(a), _mm_cvtsi32_si128(b)));
 }
 
+/* The unsigned forms likewise (pminud, pmaxud: the broad phase's largest
+ * bucket index, 0x13e20d). */
+inline u32 min2(u32 a, u32 b)
+{
+    return u32(
+        _mm_cvtsi128_si32(_mm_min_epu32(_mm_cvtsi32_si128(int(a)), _mm_cvtsi32_si128(int(b)))));
+}
+
+inline u32 max2(u32 a, u32 b)
+{
+    return u32(
+        _mm_cvtsi128_si32(_mm_max_epu32(_mm_cvtsi32_si128(int(a)), _mm_cvtsi32_si128(int(b)))));
+}
+
 /* The float forms too, on the scalars set into vectors (vmaxss, vminss):
  * the zero of a max is a vector zero, which no scalar zero of the function
  * is shared with (the transmission's 0x68030 sets it again after its call,

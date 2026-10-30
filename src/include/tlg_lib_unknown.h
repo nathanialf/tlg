@@ -3759,6 +3759,24 @@ inline void *stackBlockAlloc(int numBytes) /* derived name */
     return stack.FUN_0000f090(numBytes);
 }
 
+/* Room for n elements from the thread's stack allocator, the size rounded
+ * up to 128 bytes once the allocator is at hand (0x13e2b0 reads the thread's
+ * router before it scales the count). derived name. */
+template <typename T> inline T *stackAllocate(int n) /* derived name */
+{
+    Allocator0000ed40 &stack = D_16dc070->stack;
+    const int numBytes = (n * int(sizeof(T)) + 127) & ~127;
+    if (numBytes <= stack.slabSize) {
+        char *block = stack.cur;
+        char *blockEnd = block + numBytes;
+        if (blockEnd <= stack.end) {
+            stack.cur = blockEnd;
+            return reinterpret_cast<T *>(block);
+        }
+    }
+    return static_cast<T *>(stack.FUN_0000f090(numBytes));
+}
+
 inline void stackBlockFree(void *pointer, int numBytes) /* derived name */
 {
     Allocator0000ed40 &stack = D_16dc070->stack;
@@ -3771,7 +3789,7 @@ inline void stackBlockFree(void *pointer, int numBytes) /* derived name */
 }
 
 template <typename T> struct LocalBuffer /* derived name */ {
-    LocalBuffer(int n) : data(static_cast<T *>(stackBlockAlloc(roundedSize(n)))), size(n) {}
+    LocalBuffer(int n) : data(stackAllocate<T>(n)), size(n) {}
 
     ~LocalBuffer()
     {
@@ -3788,11 +3806,11 @@ template <typename T> struct LocalBuffer /* derived name */ {
 };
 
 template <typename T> struct LocalArray : public hkArray<T> /* derived name */ {
-    explicit LocalArray(int n)
-        : hkArray<T>(n ? static_cast<T *>(stackBlockAlloc(LocalBuffer<T>::roundedSize(n))) : 0, 0,
-                     n),
-          localMemory(this->data), initialCapacity(n)
+    explicit LocalArray(int n) : initialCapacity(n)
     {
+        this->data = n ? stackAllocate<T>(n) : 0;
+        this->capacityAndFlags = n | hkArray<T>::DONT_DEALLOCATE_FLAG;
+        localMemory = this->data;
     }
 
     ~LocalArray()
@@ -3855,6 +3873,19 @@ struct TreeWalk0013b790 /* derived name */
         int leftItem;
         int rightItem;
     };
+
+    /* The walk of a tree from its root over its leaves (0x13e0f2 in the
+     * tree update): the lists sized, then the recursion from the first
+     * item, its count a local of the walk's. */
+    inline TreeWalk0013b790(const BroadPhaseTree00142a40 *walkedTree, int numLeaves,
+                            const BroadPhaseTree00142a40::Node *root)
+    {
+        items.setSize(hkContainerTempAllocator::get(), 2 * numLeaves - 1);
+        leaves.setSize(hkContainerTempAllocator::get(), numLeaves);
+        tree = walkedTree;
+        int numItems = 0;
+        FUN_0013b790(root, numItems, 0);
+    }
 
     /* The node and its subtree from the next item on, its leaves from
      * firstLeaf on; the leaf after its last back. derived name. */

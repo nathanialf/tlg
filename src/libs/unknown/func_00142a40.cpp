@@ -15,14 +15,10 @@ static inline void setEmpty(hkAabb16 &aabb)
 static inline void includeAabb(hkAabb16 &aabb, const hkAabb16 &other)
 {
     for (int i = 0; i < 3; i++) {
-        if (aabb.max[i] <= other.max[i]) {
-            aabb.max[i] = other.max[i];
-        }
+        aabb.max[i] = hkMath::max2(aabb.max[i], other.max[i]);
     }
     for (int i = 0; i < 3; i++) {
-        if (aabb.min[i] >= other.min[i]) {
-            aabb.min[i] = other.min[i];
-        }
+        aabb.min[i] = hkMath::min2(aabb.min[i], other.min[i]);
     }
 }
 
@@ -30,26 +26,26 @@ static inline void includeCentre(hkAabb16 &aabb, const BroadPhaseTree00142a40::E
 {
     for (int i = 0; i < 3; i++) {
         const u16 centre = u16(entry.centre2[i] >> 1);
-        if (aabb.min[i] >= centre) {
-            aabb.min[i] = centre;
-        }
-        if (aabb.max[i] <= centre) {
-            aabb.max[i] = centre;
-        }
+        aabb.max[i] = aabb.max[i] <= centre ? centre : aabb.max[i];
+    }
+    for (int i = 0; i < 3; i++) {
+        const u16 centre = u16(entry.centre2[i] >> 1);
+        aabb.min[i] = aabb.min[i] >= centre ? centre : aabb.min[i];
     }
 }
 
-/* A bucket's boxes sorted by their minimum x, by insertion. */
-static inline void sortEntries(BroadPhaseTree00142a40::Bucket &bucket)
+/* Boxes sorted by their minimum x, by insertion (the bucket's boxes and
+ * their count handed over once, 0x13e3f0 reads the count before the walk). */
+static inline void sortEntries(hkAabb16 *entries, int numEntries)
 {
-    for (int i = 0; i < bucket.numEntries; i++) {
-        const hkAabb16 entry = bucket.entries[i];
+    for (int i = 0; i < numEntries; i++) {
         int j = i;
-        while (j > 0 && entry.min[0] < bucket.entries[j - 1].min[0]) {
-            bucket.entries[j] = bucket.entries[j - 1];
+        const hkAabb16 entry = entries[i];
+        while (j > 0 && entry.min[0] < entries[j - 1].min[0]) {
+            entries[j] = entries[j - 1];
             j--;
         }
-        bucket.entries[j] = entry;
+        entries[j] = entry;
     }
 }
 
@@ -74,8 +70,11 @@ static inline void appendEntries(BroadPhaseTree00142a40::Entry *list,
 
 // NONMATCHING: written as the function the program has, for its callers'
 // sake (its first and fourth arguments are not read, so 3.3's
-// DeadArgumentElimination passes neither from a caller in this unit); the
-// 0x29cf bytes are not worked yet (docs/NOTES.md, Round 55).
+// DeadArgumentElimination passes neither from a caller in this unit); in
+// progress (docs/NOTES.md, Round 56): the walk, the refresh, the ageing,
+// the bucket pass and the bounds of a job have the base's shape; the two
+// dissolve loops are laid out inline here and after the loop's latch in the
+// base, and the frame is 0x30 bytes short.
 void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree,
                   const hknpBody *bodies, int layer, bool keepAabbs, int maxAgedLeaves)
 {
@@ -89,22 +88,13 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
     tree->nodes.FUN_00196570(tree->numLeaves * 4);
 
     /* The tree walked into items and leaves. */
-    TreeWalk0013b790 walk;
-    {
-        const int numLeaves = tree->numLeaves;
-        const Node *root = &tree->nodes.elements[tree->root];
-        walk.items.setSize(hkContainerTempAllocator::get(), 2 * numLeaves - 1);
-        walk.leaves.setSize(hkContainerTempAllocator::get(), numLeaves);
-        walk.tree = tree;
-        int numItems = 0;
-        walk.FUN_0013b790(root, numItems, 0);
-    }
+    TreeWalk0013b790 walk(tree, tree->numLeaves, &tree->nodes.elements[tree->root]);
 
     /* Each bucket's leaf, and each leaf's box and whether it went. */
     u32 maxBucket = 0;
     for (int i = 0; i < walk.leaves.size; i++) {
         const u32 bucket = u32(walk.leaves[i]->children[0]);
-        maxBucket = bucket > maxBucket ? bucket : maxBucket;
+        maxBucket = hkMath::max2(maxBucket, bucket);
     }
     const int numLeaves = tree->numLeaves;
     TempInplaceArray<int, 128> leafOfBucket;
@@ -128,14 +118,18 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
             const int numPairs = numEntries & ~1;
             int j = 0;
             for (; j < numPairs; j += 2) {
-                for (int k = 0; k < 2; k++) {
-                    hkAabb16 &entry = bucket.entries[j + k];
-                    const u16 key = entry.key;
-                    const u16 key1 = entry.key1;
-                    entry = bodies[entryKey(entry)].aabb;
-                    entry.key = key;
-                    entry.key1 = key1;
-                }
+                hkAabb16 &first = bucket.entries[j];
+                hkAabb16 &second = bucket.entries[j + 1];
+                const u16 firstKey = first.key;
+                const u16 firstKey1 = first.key1;
+                const u16 secondKey = second.key;
+                const u16 secondKey1 = second.key1;
+                first = bodies[entryKey(first)].aabb;
+                second = bodies[entryKey(second)].aabb;
+                first.key = firstKey;
+                first.key1 = firstKey1;
+                second.key = secondKey;
+                second.key1 = secondKey1;
             }
             for (; j < numEntries; j++) {
                 hkAabb16 &entry = bucket.entries[j];
@@ -172,19 +166,25 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
     for (int i = 0; i < walk.leaves.size; i++) {
         Node *leaf = walk.leaves[i];
         const int bucketIndex = leaf->children[0];
-        Bucket &bucket = tree->buckets[bucketIndex];
+        Bucket *const buckets = tree->buckets;
+        Bucket &bucket = buckets[u32(bucketIndex)];
         const int leafIndex = leafOfBucket[bucketIndex];
         if (bucket.numEntries == 0) {
+            bool &leafRemoved = removed[leafIndex];
             tree->freeBuckets.pushBack(bucketIndex);
             tree->numLeaves--;
-            removed[leafIndex] = true;
+            leafRemoved = true;
         } else {
-            FUN_001854b0(&leafAabbs[leafIndex], bucket.entries, bucket.numEntries);
-            leafAabbs[leafIndex].key = 0;
+            hkAabb16 &leafAabb = leafAabbs[leafIndex];
+            FUN_001854b0(&leafAabb, bucket.entries, bucket.numEntries);
+            leafAabb.key = 0;
         }
-        if (!keepAabbs && bucket.age != 0) {
-            FUN_00185460(&leaf->aabb, bucket.entries, bucket.numEntries);
-            sortEntries(bucket);
+        if (!keepAabbs) {
+            Bucket &aged = buckets[bucketIndex];
+            if (aged.age != 0) {
+                FUN_00185460(&leaf->aabb, aged.entries, aged.numEntries);
+                sortEntries(aged.entries, aged.numEntries);
+            }
         }
     }
 
@@ -405,7 +405,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
                 Bucket &bucket = tree->buckets[node.children[0]];
                 if (bucket.age == 0) {
                     FUN_00185460(&node.aabb, bucket.entries, bucket.numEntries);
-                    sortEntries(bucket);
+                    sortEntries(bucket.entries, bucket.numEntries);
                 }
             }
             continue;
