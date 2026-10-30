@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1741 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
+# 1740 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -46,7 +46,7 @@
 #   0x168df40 stored by FUN_00010790
 #   0x168e140 stored by FUN_00011390
 #   0x168e170 stored by FUN_00011e50
-#   0x168e460 stored by FUN_00013ea0 FUN_000143a0
+#   0x168e460 stored by FUN_00013ea0 _ZN12ThreadMemoryC1Ev
 #   0x168e790 stored by FUN_000155a0
 #   0x168e800 stored by FUN_00016d40 FUN_00016f90
 #   0x168ea30 stored by FUN_0001a500
@@ -223,7 +223,6 @@
 #   0x16a5b10 stored by FUN_00176420
 #   0x16a5b40 stored by FUN_00176420
 #   0x16a5b70 stored by FUN_00176420 FUN_00176b70
-#   0x16a6110 stored by FUN_0017ef90
 #   0x16a6400 stored by FUN_00183350
 #   0x16a6660 stored by _ZN23BroadPhaseTasks0018d640C1Ev
 #   0x16a6690 stored by _ZN23BroadPhaseTasks0018d640C1Ev
