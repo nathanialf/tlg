@@ -4,7 +4,7 @@
 /* derived name: a solid sphere's volume, mass and inertia about its centre;
  * a negative mass in the configuration is a density. */
 hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, float radius,
-                      DiagonalizedMassProperties00168340 &propertiesOut)
+                      hkDiagonalizedMassProperties &propertiesOut)
 {
     if (radius > 0.0f) {
         const float radiusSquared = radius * radius;
@@ -18,7 +18,7 @@ hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, floa
         const float inertia = 0.4f * radiusSquared * mass * config.inertiaFactor;
         propertiesOut.inertiaTensor = _mm_set1_ps(inertia);
         propertiesOut.centerOfMass = setXYZ_0(center);
-        propertiesOut.majorAxisSpace = D_14b2060[32];
+        propertiesOut.majorAxisSpace.vec = D_14b2060[32];
         return HK_SUCCESS;
     }
     return HK_FAILURE;

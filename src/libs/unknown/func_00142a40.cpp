@@ -1,4 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_algorithm.h"
 #include "tlg_lib_unknown.h"
 
 /* The box made empty (the minima the largest, the maxima and the keys zero)
@@ -174,7 +175,8 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
             bucket.age++;
         }
         if (ages.size >= 2) {
-            FUN_0013b6c0(ages.data, 0, ages.size - 1);
+            hkAlgorithm::quickSortRecursive(ages.data, 0, ages.size - 1,
+                                            hkAlgorithm::less<LeafAge0013b6c0>());
         }
         for (int i = walk.leaves.size - maxAgedLeaves; i < walk.leaves.size; i++) {
             tree->buckets[walk.leaves[ages[i].leaf]->children[0]].age = 0;

@@ -5935,25 +5935,14 @@ struct MassConfig00168340 /* derived name */
     float massOrNegativeDensity;
 };
 
-/* Mass properties with the inertia diagonalized (derived names): the
- * volume and the mass at +0 and +4, the centre of mass at +0x10, the
- * inertia's diagonal at +0x20 and the rotation to its principal axes at
- * +0x30. */
-struct DiagonalizedMassProperties00168340 /* derived name */
-{
-    float volume;
-    float mass;
-    u8 unknown8[8];
-    Vec4 centerOfMass;
-    Vec4 inertiaTensor;
-    Vec4 majorAxisSpace; /* a quaternion */
-};
+/* The mass properties with the inertia diagonalized (defined below). */
+struct hkDiagonalizedMassProperties;
 
 /* A solid sphere's mass properties, a failure for a radius not above zero
  * (0x168340; the sphere shape's mass properties at 0x3c694 fall back to
  * hknpShape's on a failure). derived name. */
 hkResult FUN_00168340(const MassConfig00168340 &config, const Vec4 &center, float radius,
-                      DiagonalizedMassProperties00168340 &propertiesOut); /* derived name */
+                      hkDiagonalizedMassProperties &propertiesOut); /* derived name */
 
 /* What slot 21's fourth argument points to (derived names): 24 bytes, a
  * key at +0 (the convex shapes' slot 21 copies it out), the number of its
@@ -7469,6 +7458,9 @@ int FUN_00030ca0(hknpWorldObject380Pair *pair, const hknpWorldObject380StepInfo 
                  const hknpMotion *motionB, const hknpMaterial *materialB,
                  hknpWorldObject380Writer *writer); /* derived name */
 
+struct hknpWorldObject388Node; /* derived name; below */
+struct hkBlockStreamWriter;    /* derived name; below */
+
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
   public:
@@ -7491,6 +7483,38 @@ class hknpWorldObject380 : public hkReferencedObject /* derived name */
     void FUN_000311b0(hknpWorldObject380Record **records, void *const *pointers,
                       int count);                  /* vtable slot 10; derived name */
     void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
+    /* Slot 5 (0x2d790): each node of a run sharing the first one's key
+     * given its range of the writer's stream, its bytes counted as 4-byte
+     * elements with the headers of the blocks they spill into; the node
+     * after the run, or null. derived name. */
+    hknpWorldObject388Node *FUN_0002d790(hknpWorldObject388Node *first,
+                                         hkBlockStreamWriter *const *writer);
+};
+
+struct hkBlockStreamBlock;  /* derived name; below */
+struct hkBlockStreamWriter; /* derived name; below */
+
+/* A stretch of a block stream (derived names): the block it starts in, the
+ * byte offset of its first element in that block's data and how many of its
+ * elements are in that block, and its element count. The reader starts at
+ * one with FUN_000937f0 (seventeen callers). */
+struct hkBlockStreamRange /* derived name */
+{
+    /* Ends the range where a writer is (0x92220): its count until then
+     * (the start stored it negated), and a start at the end of a full block
+     * moved to the next block. derived name. */
+    void FUN_00092220(const hkBlockStreamWriter *HK_RESTRICT writer);
+
+    /* Starts the range where a writer is: its block, the byte offset and
+     * element count in it, and the elements counted so far, negated (the
+     * end subtracts them again). Defined after the writer (inline in
+     * 0x2d790). derived name. */
+    inline void setStartPoint(const hkBlockStreamWriter *writer);
+
+    const hkBlockStreamBlock *startBlock; /* derived name */
+    u16 startByteOffset;                  /* derived name */
+    u16 startBlockNumElements;            /* derived name */
+    int numElements;                      /* derived name */
 };
 
 /* A list node the object at +0x388 walks (derived names): a link whose
@@ -7509,9 +7533,14 @@ struct hknpWorldObject388Node : public hknpWorldObject388Link /* derived name */
 {
     u8 key; /* derived name */
     u8 unknown19[7];
-    /* What slot 6 hands the run's processing with each node, from +0x20
-     * (its extent is not known). derived name. */
-    u8 payload[8];
+    /* What slot 6 hands the run's processing with each node: the range
+     * slot 5 of the object at +0x380 sets around the bytes it reserves for
+     * the node (0x2d813 to 0x2d84b), the bytes it reserves, and the words
+     * of a header each block it spills into repeats, one less. derived
+     * names. */
+    hkBlockStreamRange range;
+    int numBytes;
+    int numHeaderWords;
 };
 
 /* What slot 6 of the object at +0x388 reads of its second argument
@@ -8194,7 +8223,10 @@ struct hknpWorld {
     /* The same for a body's collision filter info (0x60100; the qualities'
      * modifier calls it at 0x16ef49). derived name. */
     void FUN_00060100(int bodyId, u32 collisionFilterInfo, int rebuildMode);
-    void FUN_0005bf80(int bodyId);                            /* derived name */
+    void FUN_0005bf80(int bodyId); /* derived name */
+    /* Bodies removed from the world (0x4e5d0; the ball gun's reset at
+     * 0x15858c passes one with mode 0). derived names. */
+    void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
     hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
     void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
@@ -8308,6 +8340,17 @@ struct hknpWorld {
 
 /* Its hkClass (built at 0x3cfea) has hkReferencedObject's, 0x57b8640, as
  * its parent. */
+/* A gun's listener (derived name): reference-counted, its slot 6 told of a
+ * bullet's body taken out of the world (the ball gun's reset, 0x158571,
+ * passes the body and the world). */
+class hknpFirstPersonGunListener : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void unknownVirtual5();
+    virtual void bulletRemovedCallback(hknpBodyId bodyId,
+                                       hknpWorld *world); /* slot 6; derived name */
+};
+
 class hknpFirstPersonGun : public hkReferencedObject
 {
   public:
@@ -8367,7 +8410,7 @@ class hknpFirstPersonGun : public hkReferencedObject
     u8 keyboardKey; /* an enum of hkUint8; its items not read */
     /* Each one reference-counted: the destructor (0x156790) releases
      * them before the array goes. */
-    hkArray<hkReferencedObject *> listeners;
+    hkArray<hknpFirstPersonGunListener *> listeners;
     u32 collisionFilterInfo;
 };
 
@@ -8450,6 +8493,17 @@ struct hkQueue /* derived name */
 {
     hkQueue() : data(0), capacity(0), head(0), tail(0), elementsInUse(0) {}
 
+    /* The element at the head taken, the head wrapping to the start
+     * (inlined in the ball gun's reset, 0x158520 to 0x158541). */
+    void dequeue(T &out)
+    {
+        out = data[head];
+        if (++head == capacity) {
+            head = 0;
+        }
+        elementsInUse--;
+    }
+
     /* From the thread's heap (tlg_lib_unknown.h). */
     static void *operator new(unsigned long numBytes);
 
@@ -8478,6 +8532,11 @@ class hknpBallGun : public hknpFirstPersonGun
     hknpBallGun(hkFinishLoadedObjectFlag flag);
 
     virtual ~hknpBallGun();
+
+    /* Slot 10 (0x1584e0; the mounted ball gun's too): every bullet the gun
+     * added taken off its queue, the listeners told from the last, and its
+     * body removed from the world. */
+    void reset(hknpWorld *world);
 
     /* The record's members (0x1699d10), the first in hknpFirstPersonGun's
      * tail; the last five are not serialized (flags 0x400). */
@@ -8921,11 +8980,13 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
 
     /* The slot of a key as Havok's map iterators carry it, an integer as
      * wide as a pointer, the modulus plus one when the key is not in the
-     * map (Fibonacci hashing of the second id); isValid tests one. derived
+     * map (Fibonacci hashing of the key's 64 bits, the first id high: 0x166e00
+     * and 0x167b49; 0x1679a0 narrows it to the second id); isValid tests
+     * one. derived
      * names. */
     static hkUlong hash(Key key, u32 mod) /* derived name */
     {
-        return hkUlong(key.bodyIdB * 0x9e3779b1) & mod;
+        return (((u64(key.bodyIdA) << 32) | key.bodyIdB) * 0x9e3779b1) & mod;
     }
 
     hkUlong findKey(Key key) const
@@ -13081,6 +13142,22 @@ class BufferOstream : public hkOstream /* derived name */
         }                                                                                          \
     } while (0)
 
+/* Havok's warning (its HK_WARN), as hkPs4StreamWriter's write expands it
+ * (0x91f42 to 0x91f8b): the text streamed into a buffer of 512 bytes on the
+ * stack and handed to hkError's warning with the id, the file and the line;
+ * a warning does not stop. */
+#define HK_WARN(id, file, line, text)                                                              \
+    do {                                                                                           \
+        char assertBuf[512];                                                                       \
+        BufferOstream ostr(assertBuf, sizeof(assertBuf));                                          \
+        ostr.FUN_00008440(text);                                                                   \
+        hkError::FUN_00014c70(id, assertBuf, file, line);                                          \
+    } while (0)
+
+/* The file hkPs4StreamWriter.cpp's reports name (the string at 0x14c40f1). */
+#define HK_PS4_STREAM_WRITER_CPP                                                                   \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\System\\Io\\Platform\\Ps4\\hkPs4StreamWriter.cpp"
+
 /* The file hknpMotionManager.cpp's reports name (the string at 0x14bd45b). */
 #define HK_NP_MOTION_MANAGER_CPP                                                                   \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Motion\\hknpMotionManager.cpp"
@@ -15080,6 +15157,22 @@ struct hkBlockStream /* derived name */
     hkArray<hkBlockStreamBlock *> blocks; /* derived name */
 };
 
+inline void hkBlockStreamRange::setStartPoint(const hkBlockStreamWriter *writer)
+{
+    /* The writer read whole before the range is written: the two may
+     * share memory as far as the compiler knows (0x2d803 to 0x2d811 load,
+     * then 0x2d813 to 0x2d822 store). */
+    const hkBlockStream *stream = writer->blockStream;
+    hkBlockStreamBlock *block = writer->currentBlock;
+    const int byteOffset = writer->currentByteOffset;
+    const int blockNumElements = writer->currentNumElements;
+    const int numElementsBefore = stream->numTotalElements + blockNumElements;
+    startBlock = block;
+    startByteOffset = u16(byteOffset);
+    startBlockNumElements = u16(blockNumElements);
+    numElements = -numElementsBefore;
+}
+
 /* A block stream that keeps its first 24 block pointers in place (derived
  * name): the stream, the inline storage its array starts in, 0x100 bytes. */
 struct hkBlockStreamInplace /* derived name */
@@ -15234,23 +15327,6 @@ struct hkBlockStreamConsumedBlock /* derived name */
     BlockCache *cache;         /* derived name */
     hkBlockStreamBlock *block; /* derived name */
     int numElementsConsumed;   /* derived name */
-};
-
-/* A stretch of a block stream (derived names): the block it starts in, the
- * byte offset of its first element in that block's data and how many of its
- * elements are in that block, and its element count. The reader starts at
- * one with FUN_000937f0 (seventeen callers). */
-struct hkBlockStreamRange /* derived name */
-{
-    /* Ends the range where a writer is (0x92220): its count until then
-     * (the start stored it negated), and a start at the end of a full block
-     * moved to the next block. derived name. */
-    void FUN_00092220(const hkBlockStreamWriter *HK_RESTRICT writer);
-
-    const hkBlockStreamBlock *startBlock; /* derived name */
-    u16 startByteOffset;                  /* derived name */
-    u16 startBlockNumElements;            /* derived name */
-    int numElements;                      /* derived name */
 };
 
 /* hknpCollisionDispatchType (an enum the reflection names, its items'

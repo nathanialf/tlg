@@ -874,6 +874,17 @@ struct ElementPool00198a20 /* derived name */
      * form into the growth test). derived name. */
     void FUN_00196570(u32 numElements);
 
+    /* The growth itself, inline in both 0x196570 and the allocation
+     * 0x196630: declared `inline`, the hint its cost (250 to 275) needs in
+     * the allocation (defined in func_00196570.cpp). derived name. */
+    inline void growTo(u32 numElements);
+
+    /* A free element taken (0x196630; the tree's builders at 0x13cae1,
+     * 0x13cfd8, 0x196342 and 0x196f95): 128 more made first when none is
+     * free, the last free index handed out and its element returned.
+     * derived name. */
+    Element *FUN_00196630(int *indexOut);
+
     /* Room for numFree free elements (0x198a70; the tree builder at
      * 0x13c2a4 calls it): the elements grown by what the free list lacks.
      * derived name. */
@@ -4365,9 +4376,10 @@ struct TreeWalk0013b790 /* derived name */
     BroadPhaseTree00142a40 *tree;
 };
 
-/* A leaf's age and its place in the walk, sorted by age (0x13b6c0, a
- * quicksort over [first, last], hkAlgorithm's recursive sort with the
- * default order: the ages compare as unsigned words). derived names. */
+/* A leaf's age and its place in the walk, sorted by age (0x13b6c0,
+ * hkAlgorithm::quickSortRecursive over [first, last] with the default
+ * order, tlg_hk_algorithm.h: the ages compare as unsigned words). derived
+ * names. */
 struct LeafAge0013b6c0 /* derived name */
 {
     u32 age;
@@ -4378,8 +4390,6 @@ struct LeafAge0013b6c0 /* derived name */
         return age < other.age;
     }
 };
-
-void FUN_0013b6c0(LeafAge0013b6c0 *ages, int first, int last); /* derived name */
 
 /* The nodes of a subtree into the two lists, the inner ones and the leaves
  * (0x1985d0). derived name. */

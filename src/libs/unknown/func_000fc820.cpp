@@ -25,7 +25,7 @@ hknpWorldObject388::FUN_000fc820(void *argument0, const hknpWorldObject388Contex
     u8 key = first->key;
     hknpWorldObject388Node *node = first;
     do {
-        FUN_000f6ae0(argument0, context->pointer28, argument2, node, node->payload,
+        FUN_000f6ae0(argument0, context->pointer28, argument2, node, &node->range,
                      &context->entries[*indexA], argument4, &context->entries[*indexB], argument5);
         node = static_cast<hknpWorldObject388Node *>(node->next);
         if (!node) {

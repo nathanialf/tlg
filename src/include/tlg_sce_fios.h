@@ -56,6 +56,8 @@ SceFiosSize sceFiosOpGetActualCount(SceFiosOp op);
 void sceFiosOpDelete(SceFiosOp op);
 SceFiosSize sceFiosFHReadSync(const SceFiosOpAttr *attr, SceFiosFH fh, void *buffer,
                               SceFiosSize length);
+SceFiosSize sceFiosFHWriteSync(const SceFiosOpAttr *attr, SceFiosFH fh, const void *buffer,
+                               SceFiosSize length);
 int sceFiosFileDeleteSync(const SceFiosOpAttr *attr, const char *path);
 int sceFiosDirectoryCreate(const SceFiosOpAttr *attr, const char *path);
 }

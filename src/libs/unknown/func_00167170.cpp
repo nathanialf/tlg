@@ -40,3 +40,17 @@ int hknpPairCollisionFilter::FUN_001679a0(const hknpCollisionFilterContext &cont
 }
 
 void FUN_00158a30(hknpPairCollisionFilterMapPairFilterKeyOverrideType *self) {}
+
+/* derived name: slot 8, whether two bodies may collide: not when the child
+ * filter, when there is one, says no, else unless their pair (the smaller
+ * id first) is among the disabled pairs. */
+bool hknpPairCollisionFilter::FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const
+{
+    if (childFilter && !childFilter->FUN_00167af0(queryType, bodyIdA, bodyIdB)) {
+        return false;
+    }
+    hknpPairCollisionFilterMapPairFilterKeyOverrideType::Key key;
+    key.bodyIdB = bodyIdA < bodyIdB ? bodyIdB : bodyIdA;
+    key.bodyIdA = bodyIdA < bodyIdB ? bodyIdA : bodyIdB;
+    return !disabledPairs.isValid(disabledPairs.findKey(key));
+}

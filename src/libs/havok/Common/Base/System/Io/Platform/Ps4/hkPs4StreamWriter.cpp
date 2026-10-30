@@ -31,10 +31,11 @@ class hkPs4StreamWriter : public hkStreamWriter /* derived name */
         freeReferencedObject(object, numBytes);
     }
 
-    void FUN_00091fe0();                           /* vtable slot 7; derived name */
-    hkBool FUN_00091ff0() const;                   /* vtable slot 5; derived name */
-    hkResult FUN_00092010(int offset, int whence); /* vtable slot 9; derived name */
-    int FUN_00092030() const;                      /* vtable slot 10; derived name */
+    int FUN_00091ef0(const void *buffer, int numBytes); /* vtable slot 6; derived name */
+    void FUN_00091fe0();                                /* vtable slot 7; derived name */
+    hkBool FUN_00091ff0() const;                        /* vtable slot 5; derived name */
+    hkResult FUN_00092010(int offset, int whence);      /* vtable slot 9; derived name */
+    int FUN_00092030() const;                           /* vtable slot 10; derived name */
 
     SceFiosFH handle; /* derived name */
     /* Whether the writer closes the handle (the destructor 0x91eb0 tests
@@ -48,6 +49,28 @@ hkPs4StreamWriter::~hkPs4StreamWriter()
         sceFiosFHCloseSync(0, handle);
         handle = -1;
     }
+}
+
+/* Write: what the handle took, or nothing when it is closed; a failed
+ * write closes a handle the writer owns, after a warning when the file or
+ * the media is read only (Fios's 0x80820015). */
+int hkPs4StreamWriter::FUN_00091ef0(const void *buffer, int numBytes) /* derived name */
+{
+    int numWritten = 0;
+    if (handle >= 0) {
+        numWritten = int(sceFiosFHWriteSync(0, handle, buffer, numBytes));
+        if (numWritten <= 0) {
+            if (numWritten == int(0x80820015)) {
+                HK_WARN(0x312376de, HK_PS4_STREAM_WRITER_CPP, 58,
+                        "Attempting to write to a read only file or media");
+            }
+            if (handle >= 0 && ownsHandle) {
+                sceFiosFHCloseSync(0, handle);
+                handle = -1;
+            }
+        }
+    }
+    return numWritten;
 }
 
 /* Flush: wait until what was written reaches the file, when the handle is
