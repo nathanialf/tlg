@@ -2153,3 +2153,10 @@ FUN_00180ea0 src/libs/unknown/func_00180ea0.cpp _ZNK16hkPackfileHeader16getSecti
 FUN_000ea610 src/libs/unknown/func_000ea540.cpp _Z12FUN_000ea610PKN19hknpExternMeshShape8GeometryEbfP7hkArrayIiE
 FUN_00196570 src/libs/unknown/func_00196570.cpp _ZN19ElementPool00198a2012FUN_00196570Ej
 FUN_000a6d60 src/libs/unknown/func_000a6d60.cpp _Z12FUN_000a6d60PKDv4_fiPKvP14RayHit000a6d60
+FUN_0008a9d0 src/libs/unknown/func_0008a9b0.cpp _GLOBAL__I_a
+FUN_0008b3b0 src/libs/unknown/func_0008b390.cpp _GLOBAL__I_a
+FUN_0008bcf0 src/libs/unknown/func_0008bcd0.cpp _GLOBAL__I_a
+FUN_0008bde0 src/libs/unknown/func_0008bdc0.cpp _GLOBAL__I_a
+FUN_0008e020 src/libs/unknown/func_0008e000.cpp _GLOBAL__I_a
+FUN_0008e2a0 src/libs/unknown/func_0008e280.cpp _GLOBAL__I_a
+FUN_00181d00 src/libs/unknown/func_00181d00.cpp _ZNK22hkBinaryPackfileWriter12FUN_00181d00ER27PackfileSaveContext00181dc0RK7hkClassi

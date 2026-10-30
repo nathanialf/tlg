@@ -11716,8 +11716,14 @@ inline hkxAttribute::~hkxAttribute()
     value.object = 0;
 }
 
-extern const hkClassMember D_16a23e0[];         /* derived name: hkxAttribute's records */
-extern const hkClassEnum D_16a2490[];           /* derived name: hkxAttribute's enum */
+extern const hkClassMember D_16a23e0[]; /* derived name: hkxAttribute's records */
+extern const hkClassMember D_16a1cf0[]; /* derived name: hkxSkinBinding's records */
+extern const hkClassMember D_16a1f70[]; /* derived name: hkxAttributeHolder's records */
+extern const hkClassMember D_16a2540[]; /* derived name: hkxVertexSelectionChannel's records */
+extern const hkClassMember D_16a2570[]; /* derived name: hkxBlob's records */
+extern const hkClassMember D_16a2a10[]; /* derived name: hkxMeshSection's records */
+extern const hkClassMember D_16a2b70[]; /* derived name: hkxSparselyAnimatedBool's records */
+extern const hkClassEnum D_16a2490[];   /* derived name: hkxAttribute's enum */
 void FUN_0008b870(void *object, int finishing); /* derived name: its type info's finish callback */
 
 /* hkxEnvironment (hkClass 0x57c8130, parent hkReferencedObject, built at
@@ -15372,6 +15378,20 @@ extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
  * hkSerializeUtil's savePackfile builds on its stack (0x17dc2a): it adds
  * nothing to destroy (its complete destructor FUN_00181bf0 runs the base's)
  * and its deleting destructor 0x181ba0 frees 0x140 bytes. */
+/* What the binary writer's save (0x183350) hands its section writers
+ * (derived names): the stream at +0x28, the offset of each class's name in
+ * the class names' section at +0x50 (0x181dc0's records), the byte-swap
+ * flag at +0x78. */
+struct PackfileSaveContext00181dc0 /* derived name */
+{
+    u8 unknown0[0x28];
+    hkStreamWriter *writer;
+    u8 unknown30[0x20];
+    StringMap classNameOffsets;
+    u8 unknown68[0x10];
+    hkBool byteSwap;
+};
+
 struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
 {
     /* 0x181b10: the class names' section, and the reflection's own
@@ -15381,6 +15401,15 @@ struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
     virtual ~hkBinaryPackfileWriter(); /* 0x181bf0 */
 
     virtual void FUN_00183350(void *writer, const void *options); /* slot 9 */
+
+    /* A class's record in the class names' section (0x181d00; 0x181dc0
+     * writes the reflection's own classes, then the others): its
+     * signature, swapped when the save swaps, and a tab, then its name and
+     * its terminator, the name's offset from the section's start recorded.
+     * The writer itself is not read: the calls pass no object (0x181e39).
+     * derived name. */
+    void FUN_00181d00(PackfileSaveContext00181dc0 &context, const hkClass &klass,
+                      int sectionStart) const;
 
     u8 unknown138[0x8];
 };
