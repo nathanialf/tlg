@@ -30,14 +30,20 @@ inline int hkPackfileWriter::sectionIndex(const char *sectionTag)
 
 int hkPackfileWriter::FUN_0019cd20(const char *sectionTag)
 {
-inline int hkPackfileWriter::sectionIndex(const char *sectionTag)
-}
-
     return sectionIndex(sectionTag);
 }
 
-/* Slot 12: the objects of a class placed in the section of a tag, the
- * section added when it is new (0x19cd20 inline). */
+/* derived name: slot 11 of hkPackfileWriter's vtable: an object placed in
+ * the section of a tag, by the object's address. */
+void hkPackfileWriter::FUN_0019d190(const void *object, const char *sectionTag)
+{
+    const u32 index = sectionIndex(sectionTag);
+    objectToSectionIndex.FUN_000138a0(hkContainerHeapAllocator::get(), hkUlong(object), index);
+}
+
+/* Slot 12 (0x19d280): the objects of a class placed in the section of a
+ * tag, the section added when it is new (0x19cd20's body inline). derived
+ * name. */
 void hkPackfileWriter::FUN_0019d280(const hkClass &klass, const char *sectionTag)
 {
     const char *className = klass.FUN_00004200();

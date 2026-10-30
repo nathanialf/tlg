@@ -5545,10 +5545,43 @@ struct hkcdStaticMeshTreeBase {
     };
 
     /* hkcdStaticMeshTreeBase::Section (hkClass 0x57bc010, 0x60 bytes over
-     * the static tree of the dynamic storage 4); its members not typed
-     * yet. */
+     * the static tree of the dynamic storage 4, version 3; the member names
+     * and offsets from its records at 0x1690920, built at 0x20c9d). Its
+     * three runs (hkClasses 0x57bbe90, 0x57bbf10 and 0x57bbf90, one data
+     * word each) keep a start above a count in the low byte. */
     struct Section {
-        u8 unknown0[0x60];
+        struct SharedVertices {
+            u32 data;
+        };
+
+        struct Primitives {
+            /* The section's first primitive (the key mask's read, 0xa9595:
+             * `shr 8`). derived name. */
+            int getStart() const
+            {
+                return data >> 8;
+            }
+
+            u32 data;
+        };
+
+        struct DataRuns {
+            u32 data;
+        };
+
+        u8 unknown0[0x30];
+        float codecParms[6];
+        u32 firstPackedVertex;
+        SharedVertices sharedVertices;
+        Primitives primitives;
+        DataRuns dataRuns;
+        u8 numPackedVertices;
+        u8 numSharedIndices;
+        u16 leafIndex;
+        u8 page;
+        u8 flags;
+        u8 layerData;
+        u8 unusedData;
     };
 
     /* hkcdStaticMeshTreeBase::Primitive (hkClass 0x57bc090: its four vertex
@@ -9762,8 +9795,12 @@ struct hknpBodyQuality {
  * 0x61e85: size 0x220, parent hkReferencedObject's 0x57b8640, member
  * records at 0x16997a0; vtable 0x169b150): qualityModifiedSignal (not
  * serialized: record flags 0x400) at +0x10, qualities (hknpBodyQuality) from
- * +0x20. Finish constructor FUN_00071190, complete destructor 0x70f50. */
+ * +0x20. Finish constructor 0x71190, complete destructor 0x70f50. */
 struct hknpBodyQualityLibrary : public hkReferencedObject {
+    /* Out of line (0x71190): the signal left as loaded, each quality
+     * finished (0x16a370). */
+    hknpBodyQualityLibrary(hkFinishLoadedObjectFlag flag);
+
     virtual ~hknpBodyQualityLibrary();
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
@@ -9774,8 +9811,6 @@ struct hknpBodyQualityLibrary : public hkReferencedObject {
     u8 unknown18[8];
     hknpBodyQuality qualities[32];
 };
-
-void FUN_00071190(hknpBodyQualityLibrary *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* What the world's constructor sets its body quality library up with (the
  * library, 0x220 bytes, built by 0x70ff0 at 0x49362, takes it at 0x49410
@@ -14771,7 +14806,9 @@ class hknpCollisionQueryCollector /* derived name */
      * hints, the early-out value back to the largest, no hits). derived
      * name. */
     virtual void reset();
-    virtual void unknownVirtual4();
+    /* Slot 4 adds a hit (the all-hits collector's 0x70a50 appends it).
+     * derived name. */
+    virtual void addHit(const struct hknpCollisionResult &hit);
     virtual void unknownVirtual5();
     virtual bool unknownVirtual6() const;
 
@@ -14855,7 +14892,12 @@ class hknpFlippedGetClosestPointsQueryCollector
     /* Empty (the shared 0x3b640); the deleting destructor is 0x483d0. */
     virtual ~hknpFlippedGetClosestPointsQueryCollector();
 
-    void FUN_00048410();       /* vtable slot 3; derived name */
+    void FUN_00048410(); /* vtable slot 3; derived name */
+    /* Slot 4 (0x48420): the hit added to the wrapped collector flipped,
+     * its normal negated (w kept), its position moved along the normal by
+     * its distance and the two body infos swapped, then the wrapped
+     * collector's early-out value taken. derived name. */
+    void FUN_00048420(const struct hknpCollisionResult &hit);
     bool FUN_00048510() const; /* vtable slot 6; derived name */
 
     hknpCollisionQueryCollector *childCollector; /* derived name */
@@ -14911,7 +14953,10 @@ class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /*
     /* Empty (the shared 0x3b640); the deleting destructor is 0x48520. */
     virtual ~hknpFlippedShapeCastQueryCollector();
 
-    void FUN_00048560();       /* vtable slot 3; derived name */
+    void FUN_00048560(); /* vtable slot 3; derived name */
+    /* Slot 4 (0x48570): the same, the position moved along the cast's
+     * direction by the hit's fraction. derived name. */
+    void FUN_00048570(const struct hknpCollisionResult &hit);
     bool FUN_00048660() const; /* vtable slot 6; derived name */
 
     Vec4 castDirection;                          /* derived name */

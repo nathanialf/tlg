@@ -2400,13 +2400,16 @@ class BlockListAllocator : public AllocatorBase /* derived name */
     /* Slots 2 and 3 (0x8f220, 0x8f330): under the lock. */
     virtual void *blockAlloc(int numBytes);
     virtual void blockFree(void *pointer, int numBytes);
+    /* Slot 9 (0x8f470): the statistics copied under the lock. */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
 
     void FUN_0008f560(); /* vtable slot 11; derived name */
 
-    hkCriticalSection lock;      /* derived name */
-    AllocatorBase *parent;       /* derived name */
-    MemoryStatistics statistics; /* derived name */
-    void *blocks;                /* derived name */
+    /* mutable: the const statistics read takes it too. */
+    mutable hkCriticalSection lock; /* derived name */
+    AllocatorBase *parent;          /* derived name */
+    MemoryStatistics statistics;    /* derived name */
+    void *blocks;                   /* derived name */
 };
 
 /* A thread's allocator (derived name; vtable 0x168e460, address point
@@ -2984,7 +2987,12 @@ class BufferedStreamReader : public StreamReader /* derived name */
      * the buffer given back to the thread's heap. */
     virtual ~BufferedStreamReader();
 
-    hkBool isOk() const;                           /* vtable slot 5; derived name */
+    hkBool isOk() const; /* vtable slot 5; derived name */
+    /* Slot 7 (0x94490): what is buffered skipped first; past it the
+     * buffer emptied, a 512th of the rest skipped in the stream and the
+     * buffer filled again, then as much as it holds of what is left; the
+     * count skipped. derived name. */
+    int FUN_00094490(int numBytes);
     BufferedStreamReader *FUN_000946f0();          /* vtable slot 9; derived name */
     hkResult FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
     int FUN_00094720() const;                      /* vtable slot 11; derived name */
@@ -4579,8 +4587,21 @@ struct MemorySnapshot00011280 /* derived name */
      * blocks with it). derived name. */
     int FUN_00011280(int sourceId, u8 status, const void *address, int size);
 
+    /* A provider (derived names): its name, cut to 31 characters, and its
+     * parents' indices. */
+    struct Provider {
+        char name[32];
+        hkArray<int> parentIndices;
+    };
+
+    /* A provider added under a parent (-1: none), its name copied; its
+     * index returned (0x11170; the memory system's report at 0xd0e4 and
+     * the allocators' 0x365a and 0x13084). derived name. */
+    int FUN_00011170(const char *name, int parentId);
+
     AllocatorBase *allocator;
     hkArray<Allocation> allocations;
+    hkArray<Provider> providers;
 };
 
 /* What the penetration query FUN_000a6e30 asks a support point of (derived
