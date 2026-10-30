@@ -5,5 +5,5 @@
  * destroy the object in place through its out-of-line destructor. */
 void FUN_0001db00(void *object) /* derived name */
 {
-    FUN_0001d9e0(static_cast<hkcdStaticPvs *>(object));
+    static_cast<hkcdStaticPvs *>(object)->~hkcdStaticPvs();
 }

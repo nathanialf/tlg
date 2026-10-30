@@ -3834,6 +3834,17 @@ class hkxSparselyAnimatedEnum : public hkxSparselyAnimatedInt
 {
   public:
     hkxSparselyAnimatedEnum(hkFinishLoadedObjectFlag flag) : hkxSparselyAnimatedInt(flag) {}
+
+    /* The enum's reference released, then the int arrays (0x89530, slot
+     * 0; the deleting destructor 0x89610 holds the same body). Inline,
+     * emitted with the vtable in the finish callback's file: the executable
+     * holds the complete destructor before the deleting one (cookbook
+     * 187). */
+    inline virtual ~hkxSparselyAnimatedEnum() {}
+
+    /* The enum the values name (a counted pointer at +0x30; the record's
+     * "enum"). derived name. */
+    hkRefPtr<hkxEnum> enumeration;
 };
 
 /* hknpCharacterProxyCinfo: vtable 0x1696e90, finish callback FUN_00040510;
@@ -4551,11 +4562,9 @@ class hkcdPlanarGeometryPlanesCollection : public hkReferencedObject
     void *criticalAccess;
 };
 
-/* hkcdStaticPvs (type info 0x57ba5e0, size 0x70): its destructor frees the
- * arrays at +0x58 and +0x48 through the thread's heap allocator. */
+/* hkcdStaticPvs (type info 0x57ba5e0, size 0x70; defined after
+ * hkcdStaticTree). */
 struct hkcdStaticPvs;
-
-void FUN_0001d9e0(hkcdStaticPvs *self); /* derived name */
 
 /* The library's table of vector constants (derived name), extern, reached
  * through its GOT slot: row 33 (+0x210) holds the largest float less a few
@@ -5195,6 +5204,31 @@ struct hkcdStaticTree {
         hkArray<Codec3Axis6> nodes; /* derived name */
         hkAabb domain;              /* derived name */
     };
+};
+
+/* hkcdStaticPvs::BlockHeader (hkClass built at 0x1db7d: size 8, no
+ * parent): offset and length (hkUint32) at +0 and +4. */
+struct hkcdStaticPvsBlockHeader {
+    u32 offset;
+    u32 length;
+};
+
+/* hkcdStaticPvs (hkClass built at 0x1dc1e: size 0x70, no parent, its member
+ * records at 0x168fa40): cells (a static tree's 6-byte storage) at +0,
+ * bytesPerCells and cellsPerBlock (int) at +0x30 and +0x34, pvs (an array
+ * of hkUint8), map (of hkUint16) and blocks (of BlockHeader) at +0x38,
+ * +0x48 and +0x58. */
+struct hkcdStaticPvs {
+    /* Out of line (0x1d9e0; the type info's cleanup callback 0x1db00 jumps
+     * to it): the members' arrays given back, the last first. */
+    ~hkcdStaticPvs();
+
+    hkcdStaticTree::DefaultTreeStorage6 cells;
+    int bytesPerCells;
+    int cellsPerBlock;
+    hkArray<u8> pvs;
+    hkArray<u16> map;
+    hkArray<hkcdStaticPvsBlockHeader> blocks;
 };
 
 /* hkcdStaticAabbTree (hkClass 0x57bba10, built at 0x1fff2: size 0x18,
@@ -7023,6 +7057,15 @@ struct hknpMotion {
      * rotation's transpose (0x157350; called at 0x4f3cb). derived name. */
     void FUN_00157350(hkMatrix3 &inertiaOut) const;
 
+    /* Set from diagonalized mass properties under a transform (0x157420;
+     * the world's body additions at 0x4bdd1, 0x4c035 and 0x4f716): the
+     * centre of mass moved by the transform, the orientation the
+     * transform's rotation times the principal axes, the inverse inertia
+     * and mass the reciprocals of the inertia's diagonal and the mass, as
+     * halves. derived name. */
+    void FUN_00157420(const struct hkDiagonalizedMassProperties &properties,
+                      const struct hkQTransform &transform);
+
     /* The angular velocity set from a world-space one, rotated into the
      * motion's frame by the inverse of its orientation (0x157630). derived
      * name. */
@@ -7060,7 +7103,9 @@ struct hknpMotion {
     /* The inverse inertia in the first three, the w kept when 0x5f530 sets
      * them (Havok keeps the inverse mass there). derived name. */
     hkHalf inverseInertia[4];
-    u8 unknown28[4];
+    /* The first body attached to the motion, invalid (0x7fffffff) when a
+     * motion is taken from the free list (0x47657). derived name. */
+    u32 firstAttachedBodyId;
     /* The motion's place in its cell's list of active motions, 0x7fffffff
      * when it is in none (0x47790). */
     u32 solverId;
@@ -7116,6 +7161,12 @@ struct hknpMotionManager /* derived name */
         const hknpMotionManager *manager;
         u32 index;
     };
+
+    /* A motion taken from the head of the free list (0x475c0, called at
+     * 0x4cf4e): marked in use, with no attached body, the peak index raised to
+     * it, one more in use; the invalid id, after the error "Motion buffer
+     * is full.", when none is free. derived name. */
+    u32 FUN_000475c0();
 
     /* A motion given back (0x476a0, called at 0x4c5bc): reset, put at the
      * head of the free list, one fewer in use. derived name. */
@@ -12993,6 +13044,10 @@ class BufferOstream : public hkOstream /* derived name */
         }                                                                                          \
     } while (0)
 
+/* The file hknpMotionManager.cpp's reports name (the string at 0x14bd45b). */
+#define HK_NP_MOTION_MANAGER_CPP                                                                   \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Motion\\hknpMotionManager.cpp"
+
 /* The file hknpShape.cpp's reports name (the string at 0x14bf150). */
 #define HK_NP_SHAPE_CPP                                                                            \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Collide\\Shape\\hknpShape.cpp"
@@ -14215,6 +14270,21 @@ struct hknpVehicleInstanceSlot8Argument /* derived name */
     u8 unknown0[0x10];
     void *unknown10;
 };
+
+/* hknpVehicleDriverInput and hknpVehicleDriverInputStatus (hkClass
+ * 0x57be5a0 and 0x57be5f0, both built at 0x357c0: size 0x10, parent
+ * hkReferencedObject's, no members): the abstract bases of a vehicle's
+ * driver input and its status. */
+class hknpVehicleDriverInput : public hkReferencedObject
+{
+};
+
+class hknpVehicleDriverInputStatus : public hkReferencedObject
+{
+};
+
+extern const hkClass D_57be5a0; /* hknpVehicleDriverInput's hkClass */
+extern const hkClass D_57be5f0; /* hknpVehicleDriverInputStatus's hkClass */
 
 /* hknpAction (hkClass 0x57bfad0, built at 0x3adf5: size 0x18, parent
  * hkReferencedObject's 0x57b8640, one member record at 0x16956e0): userData

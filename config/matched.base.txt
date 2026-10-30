@@ -2223,3 +2223,12 @@ FUN_00060100 src/libs/unknown/func_00060100.cpp _ZN9hknpWorld12FUN_00060100Eiji
 FUN_00066140 src/libs/unknown/func_00066140.cpp _GLOBAL__I_a
 FUN_00077c70 src/libs/unknown/func_00077c70.cpp _ZN19hknpMaterialLibrary12FUN_00077c70E14hknpMaterialId
 FUN_0007b7e0 src/libs/unknown/func_0007b7e0.cpp _GLOBAL__I_a
+FUN_00157420 src/libs/unknown/func_00157420.cpp _ZN10hknpMotion12FUN_00157420ERK28hkDiagonalizedMassPropertiesRK12hkQTransform
+FUN_0000b4a0 src/libs/unknown/func_0000b4a0.cpp _ZN14Object0000b33012FUN_0000b4a0Ei
+FUN_000475c0 src/libs/havok/Physics/Physics/Dynamics/Motion/hknpMotionManager.cpp _ZN17hknpMotionManager12FUN_000475c0Ev
+_ZN23hkxSparselyAnimatedEnumD1Ev src/libs/unknown/func_00089920.cpp
+_ZN23hkxSparselyAnimatedEnumD0Ev src/libs/unknown/func_00089920.cpp
+FUN_000611a0 src/libs/unknown/func_000611a0.cpp _ZN21FlaggedPoints00060c7012FUN_000611a0EiRK6hkAabb
+_ZN23BroadPhaseTasks0018d640D1Ev src/libs/unknown/func_0018d880.cpp _ZN23BroadPhaseTasks0018d640D2Ev
+_ZN13hkcdStaticPvsD1Ev src/libs/unknown/func_0001d9e0.cpp _ZN13hkcdStaticPvsD2Ev
+FUN_000357c0 src/libs/unknown/func_000357c0.cpp _GLOBAL__I_a

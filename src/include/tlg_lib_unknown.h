@@ -1753,6 +1753,11 @@ class Object0000b330 : public hkReferencedObject /* derived name */
      * deleting one (cookbook 187). */
     inline virtual ~Object0000b330() {}
 
+    /* Slot 7 (0xb4a0): whether an id is enabled, under the critical
+     * section: the map holds a nonzero value for an id that is not.
+     * derived name. */
+    hkBool FUN_0000b4a0(int id);
+
     /* Slots 11 and 12 (0xb970, 0xba70): an id pushed on the array and the
      * last one dropped, each under the critical section. derived names. */
     void FUN_0000b970(int id);
@@ -1897,10 +1902,24 @@ class BroadPhaseTasks0018d640 /* derived name */
 
     static void *operator new(unsigned long numBytes);
 
+    /* Out of line (0x18d880, called by the owner's destructor at 0x140ef1
+     * before it frees the 0xf8 bytes): every task deleted, the three
+     * single ones first. */
+    ~BroadPhaseTasks0018d640();
+
     void FUN_0018d960(void *argument1, void *argument2, void *argument3,
                       void *argument4); /* derived names */
 
-    u8 unknown0[0xf8];
+    u8 unknown0[0x20];
+    /* The constructor's tasks (derived names): the dirty bodies' update, the
+     * update of each of eight layers (with the layer, 0 to 7), the export
+     * of new pairs, the finish, and sixteen collide tasks (with their
+     * index). */
+    hknpBroadPhaseUpdateDirtyBodiesTask *updateDirtyBodiesTask;
+    hknpBroadPhaseUpdateLayerTask *updateLayerTasks[8];
+    hknpBroadPhaseExportNewPairsTask *exportNewPairsTask;
+    hknpBroadPhaseUpdateFinishedTask *updateFinishedTask;
+    BroadPhaseCollideTask *collideTasks[16];
 };
 
 /* The object is the broad phase's trees by layer (BroadPhaseLayers00142a40,
@@ -5186,6 +5205,14 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
     FlaggedPoints00060c70(int numPoints);
 
     virtual void FUN_00061280(const Vec4 &offset); /* vtable slot 3; derived name */
+
+    /* New bodies spread over the points (0x611a0; the island activation
+     * calls it for a splitter of kind 1 at 0x63bc8): the running total
+     * raised, and as many points as the bodies' share of the points, at
+     * most one per eight bodies, moved in turn from the least used one to
+     * even steps along the box's diagonal, each given its share of the
+     * bodies. derived name. */
+    void FUN_000611a0(int numBodies, const hkAabb &aabb);
 
     int flags[16];   /* derived name */
     Vec4 points[16]; /* derived name */
