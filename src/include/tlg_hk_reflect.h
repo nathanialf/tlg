@@ -576,6 +576,29 @@ template <typename T, int N> struct hkInplaceArrayAligned16 : public hkArray<T> 
     T storage[N] __attribute__((aligned(16)));
 };
 
+/* hkFloat16Transform (hkClass 0x57af6e8, built at 0xd4d: size 0x18, no
+ * parent, one member record at 0x168c370): elements, twelve 16-bit floats
+ * (the record's struct type, the class at 0x57b9da0). */
+struct hkFloat16 {
+    u16 value; /* derived name */
+};
+
+struct hkFloat16Transform {
+    hkFloat16 elements[12];
+};
+
+/* hkSphere (hkClass 0x57af790, built at 0x10ed: size 0x10, no parent, one
+ * member record at 0x168c3e0): pos, a vector. */
+struct hkSphere {
+    Vec4 pos;
+};
+
+/* hkTraceStreamTitle (hkClass 0x57b8038, built at 0x94dd: size 0x20, no
+ * parent, flags 1, one member record at 0x168d280): value, 32 characters. */
+struct hkTraceStreamTitle {
+    char value[32];
+};
+
 /* hkBitField (type info registered at 0x9e2b, size 0x18): its member
  * storage at +0 (record 0x168d2f0), a hkBitFieldStorage of hkArray<unsigned
  * int> (the scoped type names at 0x14b332f onward) whose words are at +0
@@ -3745,10 +3768,12 @@ class hkMeshVertexBuffer : public hkReferencedObject
     };
 
     /* What a partial lock asks for besides (derived names): the number of
-     * elements and their indices into the format (0x27a40 reads them). */
+     * elements, their indices into the format (0x27a40 reads them) and each
+     * one's access flags (the multiple buffer's slot 10, 0x25e27). */
     struct PartialLockInput {
         int numLockElements;    /* derived name */
         int elementIndices[32]; /* derived name */
+        u8 lockFlags[32];       /* derived name */
     };
 
     hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
@@ -3821,6 +3846,11 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
      * element infos, then the lock proper (0x25700). derived names. */
     int FUN_00025670(const LockInput &input, LockedVertices &lockedVerticesOut);
     int FUN_00025700(const LockInput &input, LockedVertices &lockedVerticesOut);
+    /* Slot 10 (0x25dc0): the elements the partial input names locked, none
+     * when the buffer is locked already (0); a write lock when any of
+     * their flags asks for writing. derived names. */
+    int FUN_00025dc0(const LockInput &input, const PartialLockInput &partialInput,
+                     LockedVertices &lockedVerticesOut);
 
     hkVertexFormat vertexFormat;
     hkArray<LockedElement> lockedElements;
@@ -6943,6 +6973,14 @@ class hknpWorldObject1e0 /* derived name */
     virtual void
     castRay(const void *query, const hknpBody *bodies, const hknpWorld *world, const void *context,
             hknpCollisionQueryCollector *collector) const; /* vtable slot 13; derived name */
+    virtual void unknownVirtual14();
+    /* Slot 15: a shape cast over the world's bodies (the world's 0x35de0
+     * hands it the query and the shape's orientation, the bodies, the
+     * world, the world's +0x1f0 and the two collectors). derived names. */
+    virtual void castShape(const void *query, const void *queryShapeOrientation,
+                           const hknpBody *bodies, const hknpWorld *world, const void *context,
+                           hknpCollisionQueryCollector *collector,
+                           hknpCollisionQueryCollector *startPointCollector) const;
 };
 
 /* The world's streams at +0x260 (derived names; built by FUN_00174590):
@@ -6992,6 +7030,12 @@ struct hknpWorld {
      * the projectile gun's 0x158bca and the game's casts call it). derived
      * name. */
     void FUN_00035d40(const void *query, hknpCollisionQueryCollector *collector) const;
+    /* A shape cast over the bodies under the "WorldCastShape" timer
+     * (0x35de0; the shape phantom's 0x156bd2 and 0x179440 call it).
+     * derived names. */
+    void FUN_00035de0(const void *query, const void *queryShapeOrientation,
+                      hknpCollisionQueryCollector *collector,
+                      hknpCollisionQueryCollector *startPointCollector) const;
     void FUN_000509f0();
     /* The stage after the collide tasks (0x505f0, run by
      * hknpPostCollideTask under the timer "StCollide"). derived name. */
@@ -8139,15 +8183,16 @@ struct hknpBodyQualityLibraryCinfo /* derived name */
     hkBool enableContactCaching;
 };
 
-/* hkUFloat8 (the reflection's type name in the material's records): an
- * unsigned float in eight bits. */
+/* hkUFloat8 (the reflection's type name in the material's records; hkClass
+ * 0x57b7620, built at 0x156d: size 1, its one record at 0x168c600 names
+ * value): an unsigned float in eight bits. */
 struct hkUFloat8 {
     /* Out of line (0x935b0, called by the material's constructor and the
      * constraint datas' at 0x77650 to 0x17b2e2): the code of the nearest
      * value not above the float. derived name. */
     hkUFloat8 &operator=(const float &value);
 
-    u8 value; /* derived name */
+    u8 value;
 };
 
 /* hknpMaterial (type info 0x57c1f40, no vtable, cleanup 0x300) and
@@ -8650,6 +8695,10 @@ extern const hkClass D_57c45a8; /* hkpConstraintData's hkClass */
 /* Its one enum and its one member record (userData), which the
  * reflection initializer 0x7f3f0 passes. */
 extern const hkClassEnum D_169d860[];   /* derived name */
+extern const hkClassMember D_168c370[]; /* derived name: hkFloat16Transform's records */
+extern const hkClassMember D_168c3e0[]; /* derived name: hkSphere's records */
+extern const hkClassMember D_168c600[]; /* derived name: hkUFloat8's records */
+extern const hkClassMember D_168d280[]; /* derived name: hkTraceStreamTitle's records */
 extern const hkClassMember D_169d660[]; /* derived name */
 
 /* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
@@ -11808,6 +11857,14 @@ class hknpHeightFieldShape : public hknpCompositeShape
   public:
     hknpHeightFieldShape(hkFinishLoadedObjectFlag flag) : hknpCompositeShape(flag) {}
 
+    /* Out of line: the base destructor 0x12a8c0 stores the vtable at
+     * 0x16a3e30 (address point 0x16a3e40, whose slot 0 0x12a850 jumps to it
+     * and slot 1 0x12a860 runs it and frees 0xf0 bytes; slot 7 0x12aa80 is
+     * shared with the compressed shape's vtable) and frees the min-max
+     * tree's arrays; the compressed shape's destructor ends in it. The
+     * vtable has no row (docs/NOTES.md, Round 57). */
+    virtual ~hknpHeightFieldShape();
+
     /* The members from its ten records at 0x1694c90 (the reflection
      * initializer 0x398d0 passes them). */
     hkAabb aabb;
@@ -11835,6 +11892,18 @@ class hknpCompressedHeightFieldShape : public hknpHeightFieldShape
      * FUN_000694e0 jumps to it, the reflection initializer calls it at
      * 0x69593. */
     hknpCompressedHeightFieldShape(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x175c00, slot 0): the two arrays freed, the shape tags
+     * first, then the height field's base destructor 0x12a8c0. */
+    virtual ~hknpCompressedHeightFieldShape();
+
+    /* The members from its five records at 0x169a620, from +0xe8 (the
+     * height field's tail padding). */
+    hkArray<u16> storage;
+    hkArray<u16> shapeTags;
+    hkBool triangleFlip;
+    float offset;
+    float scale;
 };
 
 class hknpExternMeshShape : public hknpCompositeShape
@@ -13326,6 +13395,25 @@ struct ManifoldEvent169b1a0 : public hkCommand /* derived name */
         status = u8(manifoldStatus);
         keyA = 0xffffffff;
         keyB = 0xffffffff;
+    }
+
+    /* The same with the byte at +0x18 and the bodies' shape keys given
+     * (the modifier slot 0x1622a0 posts one when a manifold's cache goes). */
+    ManifoldEvent169b1a0(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB, u8 value18,
+                         Status manifoldStatus, u32 shapeKeyA, u32 shapeKeyB)
+    {
+        sizePaddedTo16 = 0x30;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 0;
+        byte7fA = bodyByte7fA;
+        bodyIdA = idA;
+        byte7fB = bodyByte7fB;
+        bodyIdB = idB;
+        unknown18 = value18;
+        status = u8(manifoldStatus);
+        keyA = shapeKeyA;
+        keyB = shapeKeyB;
     }
 
     u32 byte7fA;

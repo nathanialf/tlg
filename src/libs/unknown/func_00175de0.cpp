@@ -2,6 +2,6 @@
 #include "tlg_hk_reflect.h"
 
 hknpCompressedHeightFieldShape::hknpCompressedHeightFieldShape(hkFinishLoadedObjectFlag flag)
-    : hknpHeightFieldShape(flag)
+    : hknpHeightFieldShape(flag), storage(flag), shapeTags(flag)
 {
 }

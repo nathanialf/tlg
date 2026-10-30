@@ -236,6 +236,13 @@ class hknpMassChangerModifier /* derived name */
 class Modifier16a5020 /* derived name */
 {
   public:
+    /* Slot 5 (0x1622a0), as a cache's modifiers are fired: when the
+     * cache's flags at +0x22 have bit 3, an event of the bodies' manifold
+     * going posted with their shape keys; bits 3 and 4 cleared either
+     * way. derived name. */
+    void FUN_001622a0(CommandOwner00171180 *context, const void *sharedData,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      hknpManifoldCollisionCache *cache) const;
     void FUN_00162350(const void *threadContext, const void *sharedData, const void *bodyA,
                       const void *bodyB, hknpManifoldCollisionCache *cache,
                       const hknpManifold *manifold, Pair08Owner *jacobian,
@@ -1637,7 +1644,26 @@ class Elements000760c0 : public hkBaseObject /* derived name */
                      int capacity20, int capacity10);
     virtual ~Elements000760c0();
 
-    u8 unknown8[0x148];
+    /* An element (derived names): five block streams, each 0x100 bytes
+     * from the last; what follows a stream in its 0x100 is not yet read. */
+    struct Element {
+        struct Slot {
+            hkBlockStream stream;
+            u8 unknown30[0xd0];
+        };
+
+        Slot slots[5];
+    };
+
+    /* Slot 3 of both vtables (0x76910): every element's streams emptied,
+     * the second and third with the first cache, the others with the
+     * second, then the stream at +0x40 with the second. derived names. */
+    void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
+
+    u8 unknown8[0x38];
+    hkBlockStream stream40; /* derived name */
+    u8 unknown70[0xd0];
+    hkArray<Element> elements; /* derived name */
 };
 
 /* The derived class (vtable 0x169b400, the same seven slots): built once,
@@ -2657,6 +2683,10 @@ class BufferedStreamReader : public StreamReader /* derived name */
      * 0x1a7e6). */
     static void *operator new(unsigned long numBytes);
 
+    /* The reference-counted class delete: its deleting destructor 0x94230
+     * frees at the recorded size, 0x38 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* Out of line (0x942e0, slot 0): the stream's reference released and
      * the buffer given back to the thread's heap. */
     virtual ~BufferedStreamReader();
@@ -3418,6 +3448,11 @@ inline void *hkDynamicClassNameRegistry::operator new(unsigned long numBytes)
 }
 
 inline void FiosStreamReader::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void BufferedStreamReader::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
