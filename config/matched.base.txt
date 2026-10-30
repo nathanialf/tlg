@@ -1701,7 +1701,7 @@ _ZN18hknpCompositeShapeC1Ev src/libs/unknown/func_00042e00.cpp _ZN18hknpComposit
 FUN_0005b250 src/libs/unknown/func_0005b250.cpp _GLOBAL__I_a
 FUN_00069150 src/libs/unknown/func_00069150.cpp _ZNK17hknpTyremarksInfo12FUN_00069150EPK19hknpVehicleInstanceiPDv4_f
 _ZN20hknpWorldContextPool7ContextC1Ev src/libs/unknown/func_00167cd0.cpp _ZN20hknpWorldContextPool7ContextC2Ev
-FUN_00181940 src/libs/unknown/func_00181940.cpp _ZNK25hkStaticClassNameRegistry12FUN_00181940EPKc
+FUN_00181940 src/libs/unknown/func_00181940.cpp _ZNK25hkStaticClassNameRegistry12FUN_0017ec90EPKc
 FUN_00038130 src/libs/unknown/func_00038130.cpp _ZNK15hknpMaskedShape12FUN_00038130ERK18ShapeQuery00038130Pv
 FUN_0003d7d0 src/libs/unknown/func_0003d7d0.cpp _ZNK24hknpMotionWeldTOICommand12FUN_0003d7d0EPK9hknpWorldP14Output0002b3b0
 FUN_0001ad50 src/libs/unknown/func_0001ad50.cpp _ZNK9hkMatrix312FUN_0001ad50ERKS_f
@@ -1967,7 +1967,7 @@ _ZN15hkxVertexBufferD1Ev src/libs/unknown/func_00089fd0.cpp
 _ZN15hkxVertexBufferD0Ev src/libs/unknown/func_00089fd0.cpp
 _ZN15hkxVertexBuffer10VertexDataD1Ev src/libs/unknown/func_00087cf0.cpp
 FUN_00157be0 src/libs/unknown/func_00157be0.cpp _Z12FUN_00157be0R10hknpMotionRKDv4_fS3_
-FUN_0017ee60 src/libs/unknown/func_0017ee60.cpp _ZN26hkDynamicClassNameRegistry12FUN_0017ee60ERKS_
+FUN_0017ee60 src/libs/unknown/func_0017ee60.cpp _ZN26hkDynamicClassNameRegistry12FUN_0017ee60ERK19hkClassNameRegistry
 _ZN8FreeListC1EmmmP13AllocatorBaseS1_ src/libs/unknown/func_00018580.cpp
 FUN_000263e0 src/libs/unknown/func_000263e0.cpp _ZNK26hkCompressedMassProperties12FUN_000263e0ER28hkDiagonalizedMassProperties
 FUN_00090100 src/libs/unknown/func_00090100.cpp _ZN19hkArrayStreamWriter12FUN_00090100Eii
@@ -2141,7 +2141,7 @@ FUN_00184d50 src/libs/unknown/func_00184d50.cpp
 FUN_000938f0 src/libs/unknown/func_000939c0.cpp
 FUN_001570f0 src/libs/unknown/func_001570f0.cpp
 FUN_001683d0 src/libs/unknown/func_001683d0.cpp
-FUN_00181860 src/libs/unknown/func_00181860.cpp
+FUN_00181860 src/libs/unknown/func_00181860.cpp _ZNK25hkStaticClassNameRegistry12FUN_0017eca0ER7hkArrayIPK7hkClassE
 FUN_00187610 src/libs/unknown/func_00187610.cpp
 FUN_0019a880 src/libs/unknown/func_0019a880.cpp
 FUN_000071a0 src/libs/unknown/func_000071a0.cpp
@@ -2308,3 +2308,9 @@ FUN_00048570 src/libs/unknown/func_00048570.cpp _ZN34hknpFlippedShapeCastQueryCo
 FUN_0008f470 src/libs/unknown/func_0008f470.cpp _ZNK18BlockListAllocator19getMemoryStatisticsER16MemoryStatistics
 FUN_000a9550 src/libs/unknown/func_000a9550.cpp _ZNK27hknpCompressedMeshShapeTree12FUN_000a9550ERK7hkArrayIjEj
 FUN_00011170 src/libs/unknown/func_00011170.cpp _ZN22MemorySnapshot0001128012FUN_00011170EPKci
+_ZN21hkLargeBlockAllocatorC1EP13AllocatorBase src/libs/unknown/func_00012160.cpp
+FUN_0017ef90 src/libs/unknown/func_0017ef90.cpp
+FUN_0005fc00 src/libs/unknown/func_0005fc00.cpp _ZN9hknpWorld12FUN_0005fc00Ei14hknpMaterialIdi
+FUN_0005f9c0 src/libs/unknown/func_0005f9c0.cpp _ZN9hknpWorld12FUN_0005f9c0Eit
+FUN_0005b580 src/libs/unknown/func_0005b580.cpp _ZN9hknpWorld12FUN_0005b580Eifi
+FUN_00188560 src/libs/unknown/func_00188560.cpp

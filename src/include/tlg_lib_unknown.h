@@ -715,6 +715,17 @@ template <typename T> inline void hkArray<T>::clearAndDeallocate()
     capacityAndFlags = DONT_DEALLOCATE_FLAG;
 }
 
+template <typename T> inline void hkArray<T>::clearAndDeallocate(AllocatorBase &allocator)
+{
+    clear();
+    if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
+        const int numBytes = getCapacity() * sizeof(T);
+        allocator.freeBytes(data, numBytes);
+    }
+    data = 0;
+    capacityAndFlags = DONT_DEALLOCATE_FLAG;
+}
+
 /* The memory copies at 0x910e0 to 0x91210 (derived names), each with a
  * signed int count: FUN_000910e0 forwards to memcpy, FUN_00091100 copies
  * backwards in the widest unit the count and both pointers' alignment allow,
@@ -1038,6 +1049,9 @@ struct LargeBlockChunk /* derived name */
 class SingleBlockAllocator : public AllocatorBase /* derived name */
 {
   public:
+    /* Inline: no block yet (0x12194 to 0x121bc). */
+    SingleBlockAllocator() : start(HK_NULL), limit(HK_NULL), end(HK_NULL), top(HK_NULL) {}
+
     void *FUN_000120d0(int &numBytes);              /* vtable slot 4; derived name */
     void FUN_00012100(void *pointer, int numBytes); /* vtable slot 5; derived name */
     /* Slot 9 (0x12120): what is handed out is allocated, in use and the
@@ -1102,7 +1116,7 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * +8 with its size at +0x14 (the destructor 0x12370 walks the ring
      * from the sentinel at +0x178). derived names. */
     struct Page {
-        u8 unknown0[8];
+        Page *prev; /* derived name */
         Page *next;
         u8 unknown10[4];
         int size;
@@ -1127,18 +1141,29 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * cleared when the bin empties. derived name. */
     void FUN_00012550(TreeChunk *chunk);
 
-    u8 unknown10[8];
+    /* A chunk's header alone (derived name): the allocator's empty top
+     * is one (0x12211: no size, both in-use bits set). */
+    struct ChunkHeader {
+        u64 prevFoot;
+        u64 head;
+    };
+
+    /* An object the allocation asks, through its slot 2, before taking a
+     * page from the server (0x129c1); none from the constructor. derived
+     * name. */
+    void *listener;
     u32 treemap; /* derived name: a bit for each tree bin in use */
-    u8 unknown1c[0xc];
+    u8 unknown1c[4];
+    void *pointer20;                     /* derived name; none from the constructor */
     Chunk *top;                          /* derived name */
     u64 topSize;                         /* derived name */
     TreeChunk *treebins[32];             /* derived name */
     SingleBlockAllocator blockAllocator; /* derived name; the constructor builds it in place */
     AllocatorBase *server;               /* derived name */
-    u8 unknown168[0x10];
-    Page pages;            /* derived name: the ring's sentinel */
-    u64 totalBlockBytes;   /* derived name */
-    u64 totalPayloadBytes; /* derived name */
+    ChunkHeader emptyTop;                /* derived name */
+    Page pages;                          /* derived name: the ring's sentinel */
+    u64 totalBlockBytes;                 /* derived name */
+    u64 totalPayloadBytes;               /* derived name */
 };
 
 void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
@@ -3458,6 +3483,11 @@ inline void *hkVtableClassRegistry::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkBuiltinTypeRegistry::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hknpVehicleDriverInputAnalogStatus::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -3904,6 +3934,11 @@ inline void hkVtableClassRegistry::operator delete(void *object, unsigned long n
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkBuiltinTypeRegistry::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkpLimitedHingeConstraintData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -4237,12 +4272,7 @@ inline AllocatorBase &hkContainerTempAllocator::get()
 
 inline hkStringBuf::~hkStringBuf()
 {
-    string.size = 0;
-    if ((string.capacityAndFlags & hkArray<char>::DONT_DEALLOCATE_FLAG) == 0) {
-        hkContainerTempAllocator::get().freeElements<char>(string.data, string.getCapacity());
-    }
-    string.data = 0;
-    string.capacityAndFlags = hkArray<char>::DONT_DEALLOCATE_FLAG;
+    string.clearAndDeallocate(hkContainerTempAllocator::get());
 }
 
 /* An array over the temporary allocator with its first N elements in place

@@ -468,6 +468,9 @@ template <typename T> struct hkArray {
      * in the class, not from the definition outside (0x41650 inlines it).
      * derived name. */
     inline void clearAndDeallocate();
+    /* The same, the storage given back to the allocator it grew from
+     * (hkStringBuf's characters, the temporary allocator's). derived name. */
+    inline void clearAndDeallocate(AllocatorBase &allocator);
 
     /* An element appended, the storage grown through FUN_00000b40 when it
      * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
@@ -7069,6 +7072,21 @@ struct alignas(16) hkAabb16 {
     u16 key1;
 };
 
+/* hknpMaterialId, the material library's 16-bit handle (the template
+ * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
+ * passed by value as a two-byte struct, so a callee widens it itself or
+ * masks it. Field name derived. */
+struct hknpMaterialId {
+    /* Assigned by its value, as the body id is (the closest-hit collector's
+     * copy of a hit, 0x6970f, moves it on its own). */
+    void operator=(const hknpMaterialId &other)
+    {
+        value = other.value;
+    }
+
+    u16 value; /* derived name */
+};
+
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
 /* hknpBody (hkClass 0x57bfa50, 0x90 bytes, record table 0x1695350):
@@ -7098,7 +7116,7 @@ struct hknpBody {
     u32 nextAttachedBodyId;
     int motionId;
     u32 broadPhaseId; /* -1 while the body is not in the broad phase */
-    u8 unknown70[2];
+    hknpMaterialId materialId;
     /* Its quality, an index into the world's body quality library
      * (0x5b4ef). derived name. */
     u8 qualityId;
@@ -8016,21 +8034,6 @@ template <typename P0, typename P1> inline void hkSignal2<P0, P1>::fire(P0 p0, P
     slots = untagSlotLink(slots);
 }
 
-/* hknpMaterialId, the material library's 16-bit handle (the template
- * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
- * passed by value as a two-byte struct, so a callee widens it itself or
- * masks it. Field name derived. */
-struct hknpMaterialId {
-    /* Assigned by its value, as the body id is (the closest-hit collector's
-     * copy of a hit, 0x6970f, moves it on its own). */
-    void operator=(const hknpMaterialId &other)
-    {
-        value = other.value;
-    }
-
-    u16 value; /* derived name */
-};
-
 struct hknpMaterial; /* the free-list array's element; fields not typed yet */
 struct hknpMaterialFreeListArrayOperations;
 
@@ -8381,7 +8384,19 @@ struct hknpWorld {
     /* The same for a body's collision filter info (0x60100; the qualities'
      * modifier calls it at 0x16ef49). derived name. */
     void FUN_00060100(int bodyId, u32 collisionFilterInfo, int rebuildMode);
-    void FUN_0005bf80(int bodyId); /* derived name */
+    /* The same for a body's materialId (0x5fc00). derived name. */
+    void FUN_0005fc00(int bodyId, hknpMaterialId materialId, int rebuildMode);
+    /* A body's motion properties id recorded in the body manager's entry
+     * (0x5f9c0) and set on its motion unless the body is static, then the
+     * body signal fired. derived name. */
+    void FUN_0005f9c0(int bodyId, u16 motionPropertiesId);
+    /* A body's value set in the body manager's entry (0x5b580); unless the
+     * body is static or keyframed (flags 5) or the mode is 2, its motion
+     * is updated (FUN_0004bcd0), then the body signal fired. derived
+     * names. */
+    void FUN_0005b580(int bodyId, float value, int mode);
+    void FUN_0004bcd0(int motionId); /* derived name */
+    void FUN_0005bf80(int bodyId);   /* derived name */
     /* Bodies removed from the world (0x4e5d0; the ball gun's reset at
      * 0x15858c passes one with mode 0). derived names. */
     void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
@@ -16725,7 +16740,21 @@ class hkTypeInfoRegistry : public hkReferencedObject
  * which the constructor 0x184f40 stores first): a name at +0x10 (the string
  * 0x14b3b02) and the classes by name at +0x18. Slot 6 of both vtables
  * (FUN_0017ec90) looks a class up. */
-class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
+/* A class name registry, the interface of the dynamic and the static
+ * registries (derived name): slot 5 the shared 0x7f80 in both vtables, slot
+ * 6 a class by name, slot 7 every class appended; each slot is named after
+ * the dynamic registry's overrider. The builtin registry's creation hands
+ * the static one to the default registry's slot 12 through it (0x17f01e). */
+class hkClassNameRegistry : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void unknownVirtual5() = 0;
+    virtual const hkClass *FUN_0017ec90(const char *className) const = 0; /* slot 6; derived name */
+    virtual void
+    FUN_0017eca0(hkArray<const hkClass *> &classesOut) const = 0; /* slot 7; derived name */
+};
+
+class hkDynamicClassNameRegistry : public hkClassNameRegistry /* derived name */
 {
   public:
     /* Inline in the creators (0x184f40, 0x17e9a0): the name stored, the map
@@ -16759,7 +16788,7 @@ class hkDynamicClassNameRegistry : public hkReferencedObject /* derived name */
     virtual void FUN_0017edf0(const StringMap &classes);
     /* Slot 12 (0x17ee60): every class of another registry registered under
      * its own name, through slot 9. derived name. */
-    virtual void FUN_0017ee60(const hkDynamicClassNameRegistry &other);
+    virtual void FUN_0017ee60(const hkClassNameRegistry &other);
 
     const char *name; /* derived name */
     StringMap map;    /* derived name */
@@ -16800,7 +16829,7 @@ void FUN_0019f270(const hkClass *const *classes, int classVersion);
  * it after. The static instance 0x57c8870 is built at 0x17f09e over the
  * list 0x16c9060, version -1, name "hk_2014.2.0-r1", before its singleton
  * record "hkBuiltinTypeRegistry" is linked. */
-class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
+class hkStaticClassNameRegistry : public hkClassNameRegistry /* derived name */
 {
   public:
     hkStaticClassNameRegistry(const hkClass *const *classes, int classVersion, const char *name);
@@ -16815,12 +16844,13 @@ class hkStaticClassNameRegistry : public hkReferencedObject /* derived name */
         }
     }
 
+    virtual void unknownVirtual5(); /* the folded 0x7f80 */
     /* Slot 6 (0x181940): the listed class of a name, null when none is.
      * derived name. */
-    const hkClass *FUN_00181940(const char *className) const;
+    virtual const hkClass *FUN_0017ec90(const char *className) const;
 
     /* Slot 7 (0x181860): every listed class appended. derived name. */
-    void FUN_00181860(hkArray<const hkClass *> &classesOut) const;
+    virtual void FUN_0017eca0(hkArray<const hkClass *> &classesOut) const;
 
     const char *name;              /* derived name */
     const hkClass *const *classes; /* derived name */
@@ -16883,6 +16913,12 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
   public:
     virtual ~hkBuiltinTypeRegistry();
 
+    /* The class allocator inline, as hkTypeInfoRegistry's (0x17efe9). */
+    static void *operator new(unsigned long numBytes);
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     virtual hkTypeInfoRegistry *FUN_0017e970();         /* vtable slot 5; derived name */
     virtual hkDefaultClassNameRegistry *FUN_0017e980(); /* vtable slot 6; derived name */
     virtual hkVtableClassRegistry *FUN_0017e990();      /* vtable slot 7; derived name */
@@ -16900,6 +16936,9 @@ hkReferencedObject *FUN_0017ef90(); /* derived name */
 
 /* The builtin classes, a null-terminated list (derived name). */
 extern const hkClass *const D_16c9060[];
+
+/* The builtin classes' type infos, a null-terminated list (derived name). */
+extern const hkTypeInfo *const D_16c82b0[];
 
 /* The registry over them (0x57c8870), built by the builtin registry's
  * file's static initializer 0x17f080 (derived name). */

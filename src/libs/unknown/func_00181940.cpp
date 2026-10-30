@@ -3,7 +3,7 @@
 
 /* The index is advanced in the compare (cookbook 111): the loop keeps its
  * test at the top. */
-const hkClass *hkStaticClassNameRegistry::FUN_00181940(const char *className) const
+const hkClass *hkStaticClassNameRegistry::FUN_0017ec90(const char *className) const
 {
     checkIfReady();
     int i = 0;
