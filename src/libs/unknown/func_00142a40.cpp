@@ -493,11 +493,8 @@ void FUN_00142af0(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int 
     D_16dc078->timerEnd("Et");
 }
 
-// NONMATCHING: the two layer updates' timer ends are one tail here; the base
-// keeps each through its rdtsc and shares only the stores after it, the cut
-// BranchFolding makes at an inline asm (3.3 BranchFolding.cpp:340-348), so
-// the base's timer reads the counter through inline asm where the tree's
-// timers use __builtin_readcyclecounter (docs/NOTES.md, Round 55).
+/* The two layer updates' timer ends keep their own counter reads (the
+ * tail merge stops at the asm, docs/DECISIONS.md D34). */
 void FUN_00142bb0(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies, int mode)
 {
     D_16dc078->timerBegin("TtUpdateBroadPhase");

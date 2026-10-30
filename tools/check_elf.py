@@ -61,6 +61,10 @@ def load_matched() -> list[tuple[str, str, str]]:
             s = line.split("#", 1)[0].split()
             if len(s) >= 2:
                 rows.append((s[0], s[1], s[2] if len(s) > 2 else s[0]))
+    names = [r[0] for r in rows]
+    dups = sorted({n for n in names if names.count(n) > 1})
+    if dups:   # one row per function: two claims of one address would both be laid out at it
+        raise SystemExit(f"{p}: a function is claimed more than once: {', '.join(dups)}")
     return rows
 
 

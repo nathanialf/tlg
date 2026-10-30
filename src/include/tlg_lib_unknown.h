@@ -2872,13 +2872,26 @@ struct ThreadBuffer /* derived name */
      * (the "lt" marker) when the stream has room, the time read last (the
      * world's tasks, 0x48670 and 0x487c0, time their step this way, the
      * stream read once for both). derived names. */
+    /* The time-stamp counter's low word, read through inline assembly as
+     * the library's monitor does (docs/DECISIONS.md D34: the base keeps
+     * each path's rdtsc where a tail merge would have joined the machine
+     * instruction, 3.3 BranchFolding.cpp:340-346; the asm emits the read,
+     * nothing else). derived name. */
+    static u32 readTimeStampCounter()
+    {
+        unsigned int low;
+        unsigned int high;
+        __asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));
+        return low;
+    }
+
     void timerBeginList(const char *name, const char *firstSplit)
     {
         if (end < capacityMinus16) {
             TimerBeginListCommand *command = reinterpret_cast<TimerBeginListCommand *>(end);
             command->commandAndMonitor = name;
             command->nameOfFirstSplit = firstSplit;
-            command->time0 = u32(__builtin_readcyclecounter());
+            command->time0 = readTimeStampCounter();
             end = reinterpret_cast<char *>(command + 1);
         }
     }
@@ -2890,7 +2903,7 @@ struct ThreadBuffer /* derived name */
         if (end < capacityMinus16) {
             TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
             command->commandAndMonitor = name;
-            command->time0 = u32(__builtin_readcyclecounter());
+            command->time0 = readTimeStampCounter();
             end = reinterpret_cast<char *>(command + 1);
         }
     }
@@ -2900,7 +2913,7 @@ struct ThreadBuffer /* derived name */
         if (end < capacityMinus16) {
             TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
             command->commandAndMonitor = name;
-            command->time0 = u32(__builtin_readcyclecounter());
+            command->time0 = readTimeStampCounter();
             end = reinterpret_cast<char *>(command + 1);
         }
     }
@@ -2910,7 +2923,7 @@ struct ThreadBuffer /* derived name */
         if (end < capacityMinus16) {
             TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
             command->commandAndMonitor = name;
-            command->time0 = u32(__builtin_readcyclecounter());
+            command->time0 = readTimeStampCounter();
             end = reinterpret_cast<char *>(command + 1);
         }
     }

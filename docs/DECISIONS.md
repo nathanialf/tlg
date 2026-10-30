@@ -794,6 +794,16 @@ slots, nothing beyond hkReferencedObject's. The round's third request,
 0x169b190 (the manifold event modifier whose slots 2 and 3, 0x71520 and
 0x715d0, the round matched), needs no row: nothing claimed stores it.
 
+Round 55's harvest added XmlStartElement 0x16a69e0 (the parser's
+start-element node, named beside the tree's XmlEndElement and
+XmlCharacters; a derived name, no string names it): stored by its
+destructor 0x19d450 (slot 0) and deleting destructor 0x19d500 (slot 1) and
+built in place by the parser's reader at 0x19e52b; five slots, nothing
+beyond hkReferencedObject's. Object0019a7c0's row now cites its destructor
+0x19a7c0: the verifier wants the cited function to store the address point
+into its own object, and the constructor that builds the cache does so into
+a new one; the destructor 0x19a7c0 is claimed with the correction.
+
 ## D15. One name per address: a constructor row answers for both of its spellings (2026-10-26)
 
 **Decision.** `config/functions.base.txt` holds one name per address. A
@@ -1707,6 +1717,16 @@ describes.
 a named local must hold, or a matched row that fails under `-g`; either
 reopens the mechanism.
 
+**Addendum (round 55).** The region holds two spellings of the reference
+release: 437 sites fold the count's test into the compare and swap loop
+(`removeReference` in the tree) and 27 read the word once into a value
+the test keeps as its own instruction under `-g`, the named value of this
+decision (the platform object writer's release of its copier at 0x19ac0c,
+hknpTyremarksInfo's destructor at 0x68db8, the parsed node's at 0x19a570).
+The tree spells the second `releaseReference` (a derived name) on
+hkReferencedObject, and a release site is written in the spelling its
+bytes hold; neither is a crutch, both are the program's reads.
+
 ## D31. The library compiler folds a lane-0 scalar operation into its insert (2026-10-29)
 
 **Decision.** The library prefix compiles with a sixth backport patch,
@@ -1859,3 +1879,30 @@ and 0x30ca0 return to the queue.
 (an inline refused, or a dependence lost, by debug intrinsics alone); or a
 third place where 3.3's `-g` output differs from its `-g0` output by a
 count of debug intrinsics, which would be measured the same way.
+
+## D34. The library's timers read the time-stamp counter through inline assembly (2026-10-30)
+
+**Decision.** The monitor stream's timer commands (the records the tree's
+`timerBegin`, `timerEnd`, `timerBeginList` and `timerEndList` write) read
+the counter with `__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high))`
+in one helper of the stream class, as the rdtscp read of 0x184cf0 already
+does under D9's allow list. The asm emits the instruction itself and is
+the program's read, not a device that steers codegen, so the crutch test
+passes; the helper is ruled in `tools/dev_native_allow.txt`.
+
+**Evidence.** The broad phase's layer updates (0x142bb0, round 55) end a
+timer on two paths. The base keeps each path's `rdtsc` (0x142cfd, which
+jumps past the other's, and 0x142d9e) and merges only the three stores
+after it into one tail at 0x142da0. LLVM 3.3's tail merge stops a common
+tail at an inline asm (`lib/CodeGen/BranchFolding.cpp:340-346`,
+`I1->isInlineAsm()` with its own comment that people expect asm to keep
+its place), where the RDTSC machine instruction `__builtin_readcyclecounter`
+lowers to is identical on both paths and merges with the stores, which is
+what the tree's compile of the function gave (one tail holding the read).
+The region holds 391 `rdtsc` sites below 0x1a3e00; ten lie in matched
+functions, all through the stream's helpers, and the gate on the adopting
+commit holds on them under the asm spelling.
+
+**Trigger to revisit.** A library function whose base merges two counter
+reads into one tail; or a site where the asm's ordering moves a read the
+base schedules otherwise.
