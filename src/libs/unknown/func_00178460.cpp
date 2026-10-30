@@ -14,7 +14,8 @@ static inline Vec4 absLanes(const Vec4 &v) /* derived name */
 void FUN_00178460(Object00178580 *self, const Vec4 &angularVelocity) /* derived name */
 {
     hknpWorld *world = self->world;
-    const hknpMotion &motion = world->motions[world->bodyManager.bodies[self->index].motionId];
+    const hknpMotion &motion =
+        world->motionManager.motions[world->bodyManager.bodies[self->index].motionId];
     const Vec4 current = rotatedDir(motion.orientation, motion.angularVelocity);
     const __m128i all = _mm_set1_epi32(-1);
     const __m128 xyz = _mm_blend_ps(_mm_setzero_ps(), _mm_castsi128_ps(all), 7);

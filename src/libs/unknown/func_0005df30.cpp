@@ -3,6 +3,6 @@
 
 void hknpWorld::FUN_0005df30(int bodyId, Vec4 &angularVelocityOut) const
 {
-    const hknpMotion &motion = motions[bodyManager.bodies[bodyId].motionId];
+    const hknpMotion &motion = motionManager.motions[bodyManager.bodies[bodyId].motionId];
     angularVelocityOut = rotatedDir(motion.orientation, motion.angularVelocity);
 }

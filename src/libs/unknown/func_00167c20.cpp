@@ -9,7 +9,7 @@ void CollideSharedData::FUN_00167c20(const hknpWorld *world)
     object40 = world->unknown1f0;
     object0 = world->enabled278 ? world->unknown280 : 0;
     bodies = world->bodyManager.bodies.data;
-    motions = world->motions;
+    motions = world->motionManager.motions.data;
     int68 = -1;
     int6c = 0;
 }

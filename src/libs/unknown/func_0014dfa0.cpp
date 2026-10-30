@@ -9,7 +9,7 @@ void hknpVehicleDefaultSuspension::FUN_0014dfa0(const hknpVehicleInstance *vehic
 {
     const hknpWorld *world = vehicle->world;
     const hknpMotion &motion =
-        world->motions[world->bodyManager.bodies[vehicle->bodyId.value].motionId];
+        world->motionManager.motions[world->bodyManager.bodies[vehicle->bodyId.value].motionId];
     const Vec4 inverseInertia = loadHalves(motion.inverseInertia);
     const float chassisMass = _mm_cvtss_f32(simdReciprocalOrZero(
         _mm_shuffle_ps(inverseInertia, inverseInertia, _MM_SHUFFLE(3, 3, 3, 3))));

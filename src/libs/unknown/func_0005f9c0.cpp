@@ -6,7 +6,7 @@ void hknpWorld::FUN_0005f9c0(int bodyId, u16 motionPropertiesId)
     bodyManager.FUN_00160f30(bodyId, motionPropertiesId);
     const hknpBody &body = bodyManager.bodies[bodyId];
     if (!(body.flags & hknpBody::IS_STATIC)) {
-        motions[body.motionId].motionPropertiesId = motionPropertiesId;
+        motionManager.motions[body.motionId].motionPropertiesId = motionPropertiesId;
     }
     signals.bodyChangedSignal.fire(this, bodyId);
 }

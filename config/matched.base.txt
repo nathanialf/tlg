@@ -353,7 +353,7 @@ FUN_00008d80 src/libs/unknown/func_00008d80.cpp _ZN13AllocatorBase12FUN_00008d80
 FUN_0000d520 src/libs/unknown/func_0000d520.cpp
 FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK18hkSimpleLocalFrame12FUN_0000dcb0Ev
 _ZN15MersenneTwisterC1Ev src/libs/unknown/leaf_00010680.cpp
-FUN_00013190 src/libs/unknown/func_00013190.cpp
+FUN_00013190 src/libs/unknown/func_00013060.cpp _ZThn8_N21hkLargeBlockAllocator13addToSnapshotEPvi
 FUN_000133d0 src/libs/unknown/func_000133d0.cpp
 FUN_00014c40 src/libs/unknown/func_00014c40.cpp _ZNK18FixedSizeAllocator12FUN_00014c40ER16MemoryStatistics
 FUN_000170c0 src/libs/unknown/func_000170c0.cpp
@@ -1312,7 +1312,7 @@ FUN_00004b30 src/libs/unknown/func_00004b30.cpp _GLOBAL__I_a
 _ZN20hknpCharacterContextD1Ev src/libs/unknown/func_0003e960.cpp
 _ZN20hknpCharacterContextD0Ev src/libs/unknown/func_0003e960.cpp
 _ZN20hknpCharacterContextC1EPK25hknpCharacterStateManageri src/libs/unknown/func_0003e840.cpp
-FUN_000467a0 src/libs/unknown/func_000467a0.cpp
+_ZN20hknpPhysicsSceneDataD0Ev src/libs/unknown/func_000467a0.cpp
 FUN_0004aff0 src/libs/unknown/func_0004aff0.cpp
 FUN_0008f6a0 src/libs/unknown/func_0008f6a0.cpp _ZN9UnionFind14findRootOfNodeEi
 _ZN18hknpMountedBallGunD0Ev src/libs/unknown/func_00166890.cpp
@@ -2398,3 +2398,9 @@ _ZN14Object00065f20D1Ev src/libs/unknown/func_00065de0.cpp _ZN14Object00065f20D2
 _ZN17RefArrays0005a230C1EP9hknpWorld src/libs/unknown/func_0006bc50.cpp _ZN17RefArrays0005a230C2EP9hknpWorld
 FUN_00077f80 src/libs/unknown/func_00077f80.cpp _GLOBAL__I_a
 FUN_0007e950 src/libs/unknown/func_0007e950.cpp
+FUN_0017ccb0 src/libs/unknown/func_0017ccb0.cpp _ZNK22hkpWheelConstraintData15unknownVirtual7Ev
+FUN_0017cde0 src/libs/unknown/func_0017cde0.cpp
+FUN_00067c80 src/libs/unknown/func_000678e0.cpp _ZNK27hknpMalleableConstraintData5cloneEv
+_ZN20hknpPhysicsSceneDataD1Ev src/libs/unknown/func_000467a0.cpp
+FUN_00022950 src/libs/unknown/func_00022950.cpp _GLOBAL__I_a
+_ZN21hkLargeBlockAllocator13addToSnapshotEPvi src/libs/unknown/func_00013060.cpp

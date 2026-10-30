@@ -16,7 +16,7 @@ void hknpVehicleDefaultSteering::calcMainSteeringAngle(
                  vehicle->data->chassisOrientation.col1);
     const hknpWorld *world = vehicle->world;
     const hknpMotion &motion =
-        world->motions[world->bodyManager.bodies[vehicle->bodyId.value].motionId];
+        world->motionManager.motions[world->bodyManager.bodies[vehicle->bodyId.value].motionId];
     const Vec4 forwardSpeed = _mm_dp_ps(motion.linearVelocity, forward, 0x7f);
     const Vec4 fullAngleSpeed = _mm_set1_ps(maxSpeedFullSteeringAngle);
     if (_mm_ucomigt_ss(forwardSpeed, fullAngleSpeed)) {

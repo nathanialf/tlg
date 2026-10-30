@@ -9,8 +9,10 @@ const Output0002b3b0 *hknpCharacterProxySignalData::FUN_000409a0(const hknpWorld
     if (output.numEntries != -1) {
         return &output;
     }
-    const hknpMotion *motionA = &world->motions[world->bodyManager.bodies[bodyIdA].motionId];
-    const hknpMotion *motionB = &world->motions[world->bodyManager.bodies[bodyIdB].motionId];
+    const hknpMotion *motionA =
+        &world->motionManager.motions[world->bodyManager.bodies[bodyIdA].motionId];
+    const hknpMotion *motionB =
+        &world->motionManager.motions[world->bodyManager.bodies[bodyIdB].motionId];
     FUN_00034920(jacobian->record(), &world->solverInfo, motionA, motionB, buffer);
     return buffer;
 }

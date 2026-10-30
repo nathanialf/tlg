@@ -4,7 +4,7 @@
 void hknpWorld::FUN_0005f530(int motionId, const Vec4 &inertia) /* derived name */
 {
     const Vec4 inverseInertia = reciprocalOrZero(inertia);
-    hknpMotion &motion = motions[motionId];
+    hknpMotion &motion = motionManager.motions[motionId];
     const Vec4 packed = loadHalves(motion.inverseInertia);
     storeHalves(motion.inverseInertia, _mm_blend_ps(inverseInertia, packed, 8));
 }

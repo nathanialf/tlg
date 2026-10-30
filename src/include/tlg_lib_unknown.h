@@ -941,9 +941,12 @@ class AllocatorInterface /* derived name */
     virtual u64 FUN_00003580() const = 0;        /* slot 5; derived name */
     virtual bool FUN_00002230(int numBytes) = 0; /* slot 6; derived name */
     virtual int FUN_00002f10(MemoryWalkCallback callback, void *param) = 0; /* slot 7 */
-    virtual u64 allocatedBytes() const = 0;                 /* slot 8; derived name */
-    virtual void FUN_00002330(int value) = 0;               /* slot 9; derived name */
-    virtual int FUN_000035a0(void *pointer, int value) = 0; /* slot 10; derived name */
+    virtual u64 allocatedBytes() const = 0;   /* slot 8; derived name */
+    virtual void FUN_00002330(int value) = 0; /* slot 9; derived name */
+    /* Slot 10: the allocator recorded in a memory snapshot under a parent
+     * provider, its own provider's index returned (Havok's name). derived
+     * name. */
+    virtual int addToSnapshot(void *snapshot, int parentId) = 0;
 };
 
 /* An allocator (vtable address points 0x168c640 and, for the second base,
@@ -982,7 +985,7 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual bool FUN_00002230(int numBytes);
     virtual int FUN_00002f10(MemoryWalkCallback callback, void *param);
     virtual void FUN_00002330(int value);
-    virtual int FUN_000035a0(void *pointer, int value);
+    virtual int addToSnapshot(void *snapshot, int parentId); /* 0x35a0 */
 
     virtual u64 FUN_00003580() const; /* vtable slot 16; derived name */
     /* Slot 20 (0x22d0, also the second base's slot 8 through the thunk
@@ -1091,7 +1094,12 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * ends the walk. derived name. */
     virtual int FUN_00002f10(MemoryWalkCallback callback, void *param);
     virtual void FUN_00002330(int value);
-    virtual int FUN_000035a0(void *pointer, int value);
+    /* Primary slot 19 (0x13060; the interface's slot 10, its thunk
+     * 0x13190): the allocator recorded in a memory snapshot under a parent,
+     * then each page's header, every chunk's header and payload (used or
+     * not) and the footer; the allocator's provider index returned. The
+     * snapshot is MemorySnapshot00011280. */
+    virtual int addToSnapshot(void *snapshot, int parentId);
 
     /* Slot 10 (Havok's getAllocatedSize): the usable size of a block, its
      * chunk's size less the header. */
@@ -1119,7 +1127,9 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
         Page *prev; /* derived name */
         Page *next;
         u8 unknown10[4];
-        int size;
+        /* Unsigned: the page's end is its address plus the size zero
+         * extended (0x130d5). */
+        u32 size;
         /* The page's first chunk and its end; the chunk before the end is
          * the footer the walk stops at. derived names. */
         Chunk *firstChunk;
@@ -1200,10 +1210,9 @@ void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool,
                   void *param);                                     /* derived name */
 int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
 
-/* hkLargeBlockAllocator's primary slots 13 and 19 (interface slots 2 and 10),
- * reached through the second base by the thunks 0x133d0 and 0x13190. */
-void FUN_000131a0(hkLargeBlockAllocator *self);                          /* derived name */
-int FUN_00013060(hkLargeBlockAllocator *self, void *pointer, int value); /* derived name */
+/* hkLargeBlockAllocator's primary slot 13 (interface slot 2), reached
+ * through the second base by the thunk 0x133d0. */
+void FUN_000131a0(hkLargeBlockAllocator *self); /* derived name */
 
 /* A reference-counted allocator of 4096-byte pages (vtable address point
  * 0x168e8f0; constructor FUN_000195c0: a lock at +0x10, an array of every
@@ -4371,6 +4380,11 @@ inline void hkArrayStreamWriter::operator delete(void *object, unsigned long num
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpPhysicsSceneData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void *hkArrayStreamWriter::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -4920,6 +4934,10 @@ void FUN_0000bb40(hkMemoryRouter *router); /* derived name */
  * provider under a parent, 0x11280 an allocation of a provider. */
 struct MemorySnapshot00011280 /* derived name */
 {
+    /* What an allocation's bytes are (derived names): bookkeeping, in use,
+     * free (the large block allocator's slot 19 records its chunks so). */
+    enum Status { STATUS_OVERHEAD = 0, STATUS_USED = 1, STATUS_UNUSED = 2 };
+
     struct Allocation {
         const void *start;
         int size;
@@ -5748,7 +5766,6 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
 void FUN_00023200(hkMemoryMeshBody *self);
 void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
-void FUN_000467f0(hknpPhysicsSceneData *self);
 void FUN_0004b040(hknpWorld *self);
 void FUN_00087130(hkxMaterial *self);
 void FUN_0008bf00(hkxMesh *self);
@@ -5779,7 +5796,6 @@ void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d
  * classes of 0x30 bytes, named for the sphere's constructor beside it,
  * 0x3c540; D15). */
 void FUN_0003c370(hknpSphereShape *self);                    /* slot 1 of 0x1695c10 */
-void FUN_000467a0(hknpPhysicsSceneData *self);               /* slot 1 of 0x1697ea0 */
 void FUN_0004aff0(hknpWorld *self);                          /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169ab10 */
 void FUN_000870e0(hkxMaterial *self);                        /* slot 1 of 0x16a0db0 */

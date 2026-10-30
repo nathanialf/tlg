@@ -1243,6 +1243,14 @@ struct hkTransform {
      * hkMatrix3's. derived name. */
     inline void setIdentity();
 
+    /* A rotation and a translation (the wheel constraint data's slot 7
+     * builds two over its steering frames, 0x17cccf to 0x17cd40). */
+    void set(const hkMatrix3 &r, const Vec4 &t)
+    {
+        rotation = r;
+        translation = t;
+    }
+
     /* derived name: set to a * b (0x10b40; nine callers from 0x57773 to
      * 0xf3057): a's rotation read once, b's translation and columns
      * transformed by it from the last, each stored before the next is
@@ -9027,6 +9035,13 @@ struct hknpWorld {
      * whole attached group when it heads one alone (0x4c720, called at
      * 0x5b725 and 0x5baf4). derived name. */
     void FUN_0004c720(const hknpBody *body);
+    /* A body put on the active list with its motion (0x4c5f0; the body
+     * adds at 0x4da46, 0x4de11 and 0x4ee7b): the motion's record given the
+     * body's two low bits and its byte cleared, the motion into its cell's
+     * list when it is in none, the body on the body manager's list, then,
+     * when the flag at +0x4f0 is set, each enabled constraint of the body
+     * recorded with the other body at +0x4f8. derived name. */
+    void FUN_0004c5f0(u32 bodyId, int motionId);
 
     u8 unknown0[0x10];
     /* The bodies and their active list (0x4c720 passes +0x10 to the body
@@ -9034,15 +9049,26 @@ struct hknpWorld {
      * this file's range) stores a body's motionId and indexes the bodies and
      * the motions. */
     hknpBodyManager bodyManager; /* derived name */
-    u8 unknown110[8];
-    hknpMotion *motions; /* derived name */
-    u8 unknown120[0x28];
+    /* The motions (its constructor 0x46d80 runs on +0x110 at 0x48b88).
+     * derived name. */
+    hknpMotionManager motionManager;
     /* The constraints, indexed by constraint id (the constraint filter's
      * signal handlers 0x159dd0 and 0x159df0), and the highest id in use
      * (0xf6a90 passes one more as the count). derived name. */
     hknpConstraintManager constraintManager;
-    u8 unknown198[0x20];
-    hknpModifierManager *modifierManager; /* derived name */
+
+    /* A body's constraints (derived names): the first constraint's id by
+     * body id, 0x7fffffff for none, and by each constraint's id the next
+     * constraint of its first body and of its second (the walk 0x4c670 to
+     * 0x4c6fc). */
+    struct ConstraintLinks {
+        u32 nextOfBodyA;
+        u32 nextOfBodyB;
+    };
+
+    hkArray<u32> firstConstraintOfBody;       /* derived name */
+    hkArray<ConstraintLinks> constraintLinks; /* derived name */
+    hknpModifierManager *modifierManager;     /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
@@ -9587,13 +9613,21 @@ class hknpPhysicsSceneData : public hkReferencedObject
 {
   public:
     hknpPhysicsSceneData(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x467f0, slot 0; the deleting destructor 0x467a0, slot
+     * 1, before it, calls it): the world's info released and cleared when
+     * there is one (the clear skipped when there is none, 0x46813), then
+     * the systems' reference pointers from the last. */
     virtual ~hknpPhysicsSceneData();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x28 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* The record's two members: an array of reference pointers to the
-     * systems at +0x10, a reference pointer to the world's construction
-     * info at +0x20; the destructor 0x467f0 (slot 0) releases each, the
-     * array's last element first. */
-    hkArray<hknpPhysicsSystemData *> systemDatas;
+     * systems at +0x10, a pointer to the world's construction info at
+     * +0x20 whose reference the object holds. */
+    hkArray<hkRefPtr<hknpPhysicsSystemData>> systemDatas;
     hknpRefWorldCinfo *worldCinfo;
 };
 
@@ -10041,6 +10075,11 @@ class hknpConvexShape : public hknpShape
     int FUN_000430e0() const;         /* vtable slot 6; derived name */
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
+    /* Slot 11 (0x3c3c0; also the sphere's, the capsule's, the triangle's
+     * and the polytope's): the vertex farthest along a direction, four
+     * vertices at a time, the best of each lane kept, then the best of the
+     * four. derived name. */
+    void FUN_0003c3c0(const Vec4 &direction, Vec4 *vertexOut) const;
     /* Slot 15 (0x45af0; also the sphere's): a face's plane through slot 14
      * and its four vertices, the face's index a byte per vertex, the
      * highest first; four back. derived name. */
@@ -11654,10 +11693,10 @@ class hkpWheelConstraintData : public hkpConstraintData
   public:
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom suspensionBase;
-        u8 lin0Limit[0x10];
+        hkpLinLimitConstraintAtom lin0Limit;
         u8 lin0Soft[0x10];
-        u8 lin1[0x10];
-        u8 lin2[0x10];
+        hkpLinConstraintAtom lin1;
+        hkpLinConstraintAtom lin2;
         hkpSetLocalRotationsConstraintAtom steeringBase;
         u8 unknown140[0x10]; /* 2dAng */
     };
@@ -11669,6 +11708,26 @@ class hkpWheelConstraintData : public hkpConstraintData
      * (beside the class's slots) is the body the vtables of the reference-counted classes of
      * its size with empty destructors cite (D15). */
     virtual ~hkpWheelConstraintData();
+
+    /* Slot 7 (0x17ccb0): the suspension's frames orthonormal, the steering
+     * frames as transforms with no translation orthonormal too, and the
+     * limit's minimum not above its maximum. */
+    hkBool unknownVirtual7() const;
+
+    /* The solver results slot 19 reads (derived names): the limit's and
+     * the two lin atoms'. */
+    enum SolverResult {
+        SOLVER_RESULT_LIN_0_LIMIT = 2,
+        SOLVER_RESULT_LIN_1 = 3,
+        SOLVER_RESULT_LIN_2 = 4
+    };
+
+    /* Slot 19 (0x17cde0): the linear impulse, the limit's and each lin
+     * atom's axis column of the suspension's first frame under the first
+     * transform's rotation, scaled by its solver result's impulse, as the
+     * prismatic data's 0x7e950. derived name. */
+    void FUN_0017cde0(const hkTransform &transformA, const hkTransform &transformB,
+                      const hkpSolverResults *results, Vec4 &out) const;
 
     Atoms atoms;
     Vec4 initialAxleInB;
@@ -12650,6 +12709,13 @@ class hknpMalleableConstraintData : public hkpWrappedConstraintData
 
     void FUN_00067b00(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     void FUN_00067c40(float newStrength);             /* derived name */
+
+    /* Slot 5 (0x67c70, its type code). */
+    int unknownVirtual5() const;
+
+    /* Slot 29 (0x67c80): over a deep copy of the wrapped data, the same
+     * runtime wish and strength. */
+    virtual hkpConstraintData *clone() const;
     /* Slot 24 (0x67b40): the wrapped data's atoms built with the input's
      * factor at +0x24 scaled by the strength. */
     virtual void buildJacobianCallback(const void *input, void *output);
@@ -13752,6 +13818,14 @@ class hkMeshTexture : public hkReferencedObject
     enum Format { Unknown, PNG, TGA, BMP, DDS, RAW };
 
     enum FilterMode { POINT, LINEAR, ANISOTROPIC };
+
+    /* hkMeshTexture::RawBufferDescriptor (hkClass 0x57bc910, built at
+     * 0x229bd: 0x10 bytes, no parent, records 0x1690e20). */
+    struct RawBufferDescriptor {
+        s64 offset;
+        u32 stride;
+        u32 numElements;
+    };
 
     enum TextureUsageType {
         UNKNOWN,
