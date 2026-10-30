@@ -1564,6 +1564,11 @@ void FUN_00006b90(Record00006b90 *self); /* derived name */
 /* Havok's null pointer, as the checks' texts spell it (0x14b40d0). */
 #define HK_NULL 0
 
+/* Havok's member offset: the member's address in an object placed at 16,
+ * less 16 (an integer constant, for hkAddByteOffset). */
+#define HK_OFFSET_OF(CLASS, MEMBER)                                                                \
+    int(reinterpret_cast<hkUlong>(&(reinterpret_cast<CLASS *>(16)->MEMBER)) - 16)
+
 /* The file the thread's checks name (the string at 0x14b4071). */
 #define HK_POSIX_THREAD_CPP                                                                        \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\Thread\\Thread\\Posix\\hkPosixThread.cpp"

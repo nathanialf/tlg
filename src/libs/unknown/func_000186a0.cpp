@@ -11,7 +11,7 @@ void FreeList::FUN_000186a0(u64 newElementSize, u64 newAlignment, u64 newBlockSi
         newBlockAllocator = D_16dc070->temp58;
     }
     freeHead = 0;
-    unknown18 = 0;
+    activeBlocks = 0;
     freeBlocks = 0;
     blockSize = newBlockSize;
     unknown30 = newAlignment;
@@ -19,7 +19,7 @@ void FreeList::FUN_000186a0(u64 newElementSize, u64 newAlignment, u64 newBlockSi
     totalNumElements = numFreeElements = 0;
     blockAllocator = newBlockAllocator;
     elementAllocator = newElementAllocator;
-    unknown10 = 0;
+    cursor = 0;
     elementSize = newElementSize < newAlignment
                       ? newAlignment
                       : (newElementSize + newAlignment - 1) & ~(newAlignment - 1);

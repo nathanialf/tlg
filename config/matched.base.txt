@@ -2149,7 +2149,6 @@ FUN_00187610 src/libs/unknown/func_00187610.cpp
 FUN_0019a880 src/libs/unknown/func_0019a880.cpp
 FUN_000071a0 src/libs/unknown/func_000071a0.cpp
 FUN_00025590 src/libs/unknown/func_00025590.cpp
-FUN_00180ea0 src/libs/unknown/func_00180ea0.cpp _ZNK16hkPackfileHeader16getSectionHeaderEPKvi
 FUN_000ea610 src/libs/unknown/func_000ea540.cpp _Z12FUN_000ea610PKN19hknpExternMeshShape8GeometryEbfP7hkArrayIiE
 FUN_00196570 src/libs/unknown/func_00196570.cpp _ZN19ElementPool00198a2012FUN_00196570Ej
 FUN_000a6d60 src/libs/unknown/func_000a6d60.cpp _Z12FUN_000a6d60PKDv4_fiPKvP14RayHit000a6d60
@@ -2187,3 +2186,4 @@ FUN_0000b970 src/libs/unknown/func_0000b970.cpp _ZN14Object0000b33012FUN_0000b97
 FUN_0000ba70 src/libs/unknown/func_0000b970.cpp _ZN14Object0000b33012FUN_0000ba70Ev
 FUN_00010580 src/libs/unknown/func_000104c0.cpp _ZN8hkThread11startThreadEPFPvS0_ES0_PKci
 FUN_0019cd20 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019cd20EPKc
+FUN_000933e0 src/libs/unknown/func_000933e0.cpp _ZN14Signal0009353012FUN_000933e0EPKv
