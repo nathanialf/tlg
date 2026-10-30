@@ -74,3 +74,16 @@ hkResult hkClass::FUN_00004940(int memberIndex, hkStreamWriter *writer) const
     }
     return HK_FAILURE;
 }
+
+/* derived name: the member of a name, each member compared in index order,
+ * the count and the lookup above inline. */
+const hkClassMember *hkClass::FUN_00004470(const char *memberName) const
+{
+    for (int i = 0; i < FUN_00004350(); i++) {
+        const hkClassMember &member = FUN_00004370(i);
+        if (FUN_00017f40(member.name, memberName) == 0) {
+            return &member;
+        }
+    }
+    return HK_NULL;
+}

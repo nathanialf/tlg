@@ -1392,7 +1392,7 @@ _ZN15hknpMotionCinfoC1Ev src/libs/unknown/func_001590a0.cpp _ZN15hknpMotionCinfo
 FUN_00008440 src/libs/unknown/func_00008440.cpp _ZN9hkOstream12FUN_00008440EPKc
 FUN_0000bba0 src/libs/unknown/func_0000bba0.cpp
 FUN_0003c670 src/libs/unknown/func_0003c670.cpp _ZNK15hknpSphereShape12FUN_0003c670EPKvPv
-FUN_00047790 src/libs/unknown/func_00047790.cpp _ZN17hknpMotionManager12FUN_00047790ER10hknpMotion
+FUN_00047790 src/libs/unknown/func_00047790.cpp
 FUN_0007f020 src/libs/unknown/func_0007f020.cpp _ZNK22hkpHingeConstraintData15unknownVirtual7Ev
 FUN_0007fea0 src/libs/unknown/func_0007fea0.cpp _ZN24hkpLinearParametricCurve12FUN_0007fea0ERK11hkTransform
 FUN_0015e7f0 src/libs/unknown/func_0015e7f0.cpp _ZNK20hknpCollidePairsTask7getNameEP11hkStringBufS1_
@@ -2199,3 +2199,11 @@ FUN_00017970 src/libs/unknown/func_00017970.cpp
 FUN_000ad820 src/libs/unknown/func_000ad820.cpp
 FUN_00026300 src/libs/unknown/func_00026300.cpp
 FUN_000466a0 src/libs/unknown/func_000466a0.cpp
+FUN_00154bc0 src/libs/unknown/func_00154bc0.cpp
+_ZN14hkxEnvironmentD0Ev src/libs/unknown/func_0017d560.cpp
+FUN_0013b790 src/libs/unknown/func_0013b790.cpp
+FUN_00161630 src/libs/unknown/func_001615a0.cpp
+FUN_00004470 src/libs/unknown/func_00004350.cpp
+FUN_0003a1b0 src/libs/unknown/func_0003a1b0.cpp
+FUN_00006800 src/libs/unknown/func_00006800.cpp
+FUN_0000b580 src/libs/unknown/func_0000b580.cpp

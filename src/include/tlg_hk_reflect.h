@@ -885,6 +885,12 @@ struct hkClass {
      * for a zero default and a negative one otherwise for none; a failure
      * when the member has no default. derived name. */
     hkResult FUN_00004940(int memberIndex, hkStreamWriter *writer) const;
+
+    /* The member of a name over the class and its parents, the parents'
+     * first, or null (0x4470, beside them: both lookups inline; the
+     * resource container's 0x17f5d4 and the writers' 0x19f027 ask it).
+     * derived name. */
+    const hkClassMember *FUN_00004470(const char *memberName) const;
     /* The class's name, out of line (0x4200). derived name. */
     const char *FUN_00004200() const;
     /* The object's size, out of line (0x4580, one body with the other
@@ -934,6 +940,11 @@ struct hkClassEnum {
         const char *name;
     };
 
+    /* A flags value as the names of the items whose bits it holds,
+     * walked from the last item, each item's bits taken out as it is
+     * named; the bits no item names left over, a failure when there are
+     * any (0x14ce0; the XML writer asks it at 0x1a0c38). derived name. */
+    hkResult FUN_00014ce0(int flagValue, hkArray<const char *> &bitsOut, int &bitsOver) const;
     hkResult FUN_00014dc0(int value, const char **nameOut) const;     /* derived name */
     hkResult FUN_00014e00(const char *itemName, int *valueOut) const; /* derived name */
 
@@ -1537,6 +1548,9 @@ class hkReferencedObject : public hkBaseObject
  * executable writes that pointer. */
 struct Record00006b90 /* derived name */
 {
+    /* -15 and the half word's high bit (the lock's creation, 0x6849). */
+    Record00006b90() : value(-15), count(s16(0x8000)) {}
+
     int value; /* derived name */
     u8 unknown4[4];
     s16 count; /* derived name */
@@ -1701,7 +1715,19 @@ template <typename T> struct hkRefPtr {
 class hkReferencedObjectLock : public hkReferencedObject
 {
   public:
+    /* Inline in its creation (0x6800): the record and the critical section
+     * built, then the lock mode 1, the record reset and +0x10 cleared. */
+    hkReferencedObjectLock() : criticalSection(4000)
+    {
+        lockMode = 1;
+        FUN_00006b90(&record14);
+        unknown10 = 0;
+    }
+
     virtual ~hkReferencedObjectLock();
+
+    /* The class allocator, the thread's heap (tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
 
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
      * destructor 0x6740 frees at the recorded size, 0x30 by default. */
@@ -1714,6 +1740,10 @@ class hkReferencedObjectLock : public hkReferencedObject
 };
 
 extern hkReferencedObjectLock *D_57b7b50; /* hkReferencedObjectLock's instance */
+
+/* The instance created and set, the previous one's reference released
+ * (0x6800; hkBaseSystem's start calls it at 0x98fe). derived name. */
+void FUN_00006800(); /* derived name */
 
 /* The instance's reference released and the pointer cleared (0x68e0; the
  * base system's quit calls it at 0x9bc0). derived name. */
@@ -2872,6 +2902,9 @@ struct hknpQueryFilterData /* derived name */
     u32 collisionFilterInfo;
 };
 
+struct hknpCollisionFilterContext;
+struct hknpCollisionFilterBodyIdPair;
+
 /* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback FUN_0003a3d0. */
 class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
     : public hkReferencedObject
@@ -2882,6 +2915,12 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
         : hkReferencedObject(flag)
     {
     }
+
+    /* Slot 5 (0x3a1b0, the group filter's too): the pairs whose bodies'
+     * filter infos collide kept, in order, at the front; their number
+     * back. derived name. */
+    int FUN_0003a1b0(const hknpCollisionFilterContext &context,
+                     hknpCollisionFilterBodyIdPair *pairs, int numPairs) const;
 
     /* Slot 7 (0x3a290, the group filter's too): a query against a body.
      * Inside one system group other than 0 the subsystem ids decide, else
@@ -6356,7 +6395,15 @@ void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
  * the first and +0x44 of the second (7, as hknpGroupCollisionFilter's
  * 0x3a290 reads them), two body ids (8), a flag and two inputs with their
  * filter info at +4 (9, 0x3a2f0). */
-struct hknpCollisionFilterContext; /* derived name */
+struct hknpBody;
+
+struct hknpCollisionFilterContext /* derived name */
+{
+    u8 unknown0[0x20];
+    /* The bodies the pairs' ids index, an int index (the group filter's
+     * slot 5 reads them, 0x3a1e7: `movsxd` of each id). derived name. */
+    hkArray<hknpBody> bodies;
+};
 
 /* A pair of bodies a filter is asked about (derived name), copied member
  * by member (the pair filter's slot 5 keeps a pair by copying its first id
@@ -6439,7 +6486,11 @@ struct hknpManifoldCollisionCache /* derived name */
         return 0;
     }
 
-    u8 unknown0[9];
+    /* The two bodies' ids (the modifier slot 0x154ca0 posts them).
+     * derived names. */
+    u32 bodyIdA;
+    u32 bodyIdB;
+    u8 unknown8;
     /* The size in 16-byte quads (the 16-byte cache's header byte at +9;
      * the detector's slots look past the first two quads only from three).
      * derived name. */
@@ -6989,9 +7040,10 @@ struct hknpMotionManager /* derived name */
     hkArray<hkArray<u32>> activeMotionsPerCell;
 
     /* A motion out of its cell's list (0x47790; six callers): the cell's
-     * last id moves into its place, unless it was the last. derived
-     * name. */
-    void FUN_00047790(hknpMotion &motion);
+     * last id moves into its place, unless it was the last. The motion's id
+     * comes too (0xcd567 and 0x1616ec set edx), unread by the release
+     * body. derived name. */
+    void FUN_00047790(hknpMotion &motion, u32 motionId);
 
     /* A motion into its cell's list (0x47720; the cell changes at 0xcd57c
      * after the removal above): its place the list's size, then its id
@@ -11968,6 +12020,11 @@ class hkxEnvironment : public hkReferencedObject
      * its name, and their storage given back. */
     virtual ~hkxEnvironment();
 
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor (0x17d600, slot 1) frees at the recorded size, 0x20 by
+     * default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<hkxEnvironmentVariable> variables; /* the record's member (0x16a29a0) */
 };
 
@@ -15477,8 +15534,12 @@ struct PointerMap /* derived name */
      * name. */
     enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
 
+    /* The same out of line (0x13d80; the memory system's object clears its
+     * map at +0x10 with it, 0xb60d). derived name. */
+    void FUN_00013d80();
+
     /* Every entry marked empty and the count zeroed, the entries kept
-     * (inline in 0x13db0). derived name. */
+     * (inline in 0x13db0 and 0x13d80). derived name. */
     void clear()
     {
         const int capacity = hashMod + 1;

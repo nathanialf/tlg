@@ -18,3 +18,21 @@ void hknpBodyManager::FUN_001615a0(int bodyId)
     body.flags = (body.flags & ~0x1008) | 0x1000;
     body.indexIntoActiveListOrDeactivatedIslandId = 0x7fffffff;
 }
+
+/* derived name: every body of the attached group bodyId starts that is in
+ * the broad phase taken off the active list as above, then the group's
+ * motion handed to the motion manager. */
+void hknpBodyManager::FUN_00161630(int bodyId)
+{
+    int id = bodyId;
+    do {
+        const hknpBody &body = bodies[id];
+        if (body.broadPhaseId != 0xffffffff) {
+            FUN_001615a0(id);
+        }
+        id = body.nextAttachedBodyId;
+    } while (id != bodyId);
+    const int motionId = bodies[bodyId].motionId;
+    hknpMotion *motions = motionManager->motions.data;
+    motionManager->FUN_00047790(motions[motionId], motionId);
+}

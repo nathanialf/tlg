@@ -249,6 +249,71 @@ class Modifier16a5020 /* derived name */
                       int jacobianIndex); /* vtable slot 7; derived name */
 };
 
+/* An event of a manifold's status (derived names; primary type 4,
+ * secondary type 1, 0xb0 bytes padded): each body as its byte at +0x7f
+ * and its id, as the manifold events give them, the status at +0x18, the
+ * bodies' shape keys, the cache, and from +0x30 the manifold, whose point
+ * count reads -1 when there is none (the modifier slots 0x154bc0 and
+ * 0x154ca0; 0x154a60 copies a manifold there). */
+struct ManifoldStatusEvent00154bc0 : public hkCommand /* derived name */
+{
+    /* The header filled in order, then the bodies' words, the status, the
+     * cache and the keys, no manifold. */
+    ManifoldStatusEvent00154bc0(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB,
+                                u8 manifoldStatus, hknpManifoldCollisionCache *cache_,
+                                u32 shapeKeyA, u32 shapeKeyB)
+    {
+        sizePaddedTo16 = 0xb0;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = 1;
+        byte7fA = bodyByte7fA;
+        bodyIdA = idA;
+        byte7fB = bodyByte7fB;
+        bodyIdB = idB;
+        status = manifoldStatus;
+        cache = cache_;
+        keyA = shapeKeyA;
+        keyB = shapeKeyB;
+        manifoldNumPoints = -1;
+    }
+
+    u32 byte7fA;
+    u32 bodyIdA;
+    u32 byte7fB;
+    u32 bodyIdB;
+    u8 status; /* derived name */
+    u32 keyA;
+    u32 keyB;
+    hknpManifoldCollisionCache *cache; /* derived name */
+    /* The manifold's first 0x80 bytes: its point count, then from +0x40
+     * its seven vectors (0x154a60 copies them one by one). */
+    int manifoldNumPoints; /* derived name */
+    u8 unknown34[0xc];
+    Vec4 manifoldVectors[7]; /* derived name */
+};
+
+/* The modifier of vtable 0x16a4570 (address point 0x16a4580; derived name),
+ * slot 1 the shared 0xd900, slot 2 0x7c980, slot 4 0x154a60, slot 6 the
+ * shared 0x69440: slots 5 (0x154ca0) and 8 (0x154bc0), as a cache's
+ * modifiers are fired, post a manifold status event to the context's
+ * dispatcher when the cache's flags at +0x22 have bit 7, and bit 6,
+ * respectively. */
+class Modifier16a4580 /* derived name */
+{
+  public:
+    /* Slot 5 (0x154ca0): status 8, the bodies' ids from the cache, no
+     * cache in the event. derived name. */
+    void FUN_00154ca0(CommandOwner00171180 *context, const void *sharedData,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      const hknpManifoldCollisionCache *cache) const;
+    /* Slot 8 (0x154bc0): status 4, the bodies' ids from the bodies, the
+     * cache in the event. derived name. */
+    void FUN_00154bc0(CommandOwner00171180 *context, const void *sharedData,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      hknpManifoldCollisionCache *cache) const;
+};
+
 /* The modifier of vtable 0x16a4f90 (address point 0x16a4fa0; derived
  * name), slot 1 the shared 0xd900, slot 10 0x161cc0: slot 5 (0x161f10), as
  * a cache's modifiers are fired (fireCacheModifiers' arguments), posts a
@@ -1691,6 +1756,10 @@ class Object0000b330 : public hkReferencedObject /* derived name */
 
     /* The reference-counted class delete (freeReferencedObject). */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 10 (0xb580): under the lock, the int at +0x40 cleared and the
+     * map emptied, its storage kept. derived name. */
+    void FUN_0000b580();
 
     OwnedPointerMap map;  /* derived name */
     hkArray<u32> array;   /* derived name */
@@ -3270,6 +3339,11 @@ inline void *hkMultipleVertexBuffer::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkReferencedObjectLock::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *FileImageSource::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -3559,6 +3633,11 @@ inline hknpPairCollisionFilterMapPairFilterKeyOverrideType::
 }
 
 inline void hkMemoryMeshTexture::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxEnvironment::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -4201,8 +4280,8 @@ struct TreeWalk0013b790 /* derived name */
     /* The walk of a tree from its root over its leaves (0x13e0f2 in the
      * tree update): the lists sized, then the recursion from the first
      * item, its count a local of the walk's. */
-    inline TreeWalk0013b790(const BroadPhaseTree00142a40 *walkedTree, int numLeaves,
-                            const BroadPhaseTree00142a40::Node *root)
+    inline TreeWalk0013b790(BroadPhaseTree00142a40 *walkedTree, int numLeaves,
+                            BroadPhaseTree00142a40::Node *root)
     {
         items.setSize(hkContainerTempAllocator::get(), 2 * numLeaves - 1);
         leaves.setSize(hkContainerTempAllocator::get(), numLeaves);
@@ -4213,11 +4292,11 @@ struct TreeWalk0013b790 /* derived name */
 
     /* The node and its subtree from the next item on, its leaves from
      * firstLeaf on; the leaf after its last back. derived name. */
-    int FUN_0013b790(const BroadPhaseTree00142a40::Node *node, int &numItems, int firstLeaf);
+    int FUN_0013b790(BroadPhaseTree00142a40::Node *node, int &numItems, int firstLeaf);
 
     TempInplaceArray<Item, 32> items;
     TempInplaceArray<BroadPhaseTree00142a40::Node *, 128> leaves;
-    const BroadPhaseTree00142a40 *tree;
+    BroadPhaseTree00142a40 *tree;
 };
 
 /* A leaf's age and its place in the walk, sorted by age (0x13b6c0, a
@@ -4804,28 +4883,6 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
     hkBool killVelocityOnLaunch;        /* derived name */
     hkBool limitVerticalVelocity;       /* derived name */
     hkBool disableHorizontalProjection; /* derived name */
-};
-
-/* A hash map of word-sized keys and values (derived name): 16-byte pairs
- * from the pointer at +0, the count at +8 with the don't-deallocate flag in
- * its top bit, the hash mask at +0xc; an empty slot's key is -1. The memory
- * system's object holds one at +0x10 (cleared at 0xb60d). */
-struct UlongMap /* derived name */
-{
-    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
-
-    struct Pair {
-        hkUlong key;   /* derived name */
-        hkUlong value; /* derived name */
-    };
-
-    /* Every slot emptied and the count zeroed, the storage kept (0x13d80).
-     * derived name. */
-    void FUN_00013d80();
-
-    Pair *elems;  /* derived name */
-    int numElems; /* derived name */
-    int hashMod;  /* derived name */
 };
 
 /* A hash map of 16-bit keys (derived name): 16-byte pairs from the pointer

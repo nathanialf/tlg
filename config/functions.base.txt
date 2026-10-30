@@ -3115,7 +3115,7 @@
 0x0017d520 0x17 _ZN25hkAlignSceneToNodeOptionsC1E24hkFinishLoadedObjectFlag
 0x0017d550 0x9 FUN_0017d550
 0x0017d560 0x9c _ZN14hkxEnvironmentD1Ev
-0x0017d600 0xd4 FUN_0017d600
+0x0017d600 0xd4 _ZN14hkxEnvironmentD0Ev
 0x0017d6f0 0xf _ZN14hkxEnvironmentC1E24hkFinishLoadedObjectFlag
 0x0017d790 0x5 FUN_0017d790
 0x0017d7a0 0x8d FUN_0017d7a0
