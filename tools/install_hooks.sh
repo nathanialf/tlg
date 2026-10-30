@@ -33,6 +33,8 @@ cat > "$HOOK" <<'EOF2'
 #   5. tools/build.sh progress-all  refresh docs/<slug>/PROGRESS.md,
 #                                   docs/<slug>/progress.json and README.md's
 #                                   progress block, then `git add` them
+#   4a. refuse when the working tree and the index differ under src/, config/
+#       or tools/: the gate runs on the working tree, the commit is the index
 #   6. record the staged tree's hash in <gitdir>/gated-trees, so the pre-push
 #      hook knows this exact tree passed the gate and does not run it again
 #
@@ -61,6 +63,20 @@ BUILD_SENSITIVE=$(git diff --cached --name-only -z | tr '\0' '\n' |
     grep -E '^(src/|config/|tools/)' || true)
 if [[ -z "$BUILD_SENSITIVE" ]]; then
     exit 0
+fi
+
+# The gate runs on the working tree and the commit records the index. They
+# must agree in every path that can affect the build (a tracked file with
+# unstaged changes, a staged file changed again, an untracked source), or the
+# tree recorded below was never the tree that passed.
+DIVERGED=$(git status --porcelain=v1 --untracked-files=all -- src config tools |
+    grep -E '^(.[^ ]|\?\?)' || true)
+if [[ -n "$DIVERGED" ]]; then
+    echo "pre-commit: the working tree differs from the index in build-sensitive paths;" >&2
+    echo "  the gate runs on the working tree and the commit records the index, so" >&2
+    echo "  stage these (or remove them) before committing:" >&2
+    echo "$DIVERGED" >&2
+    exit 1
 fi
 
 echo "pre-commit: tools/build.sh gate-all ..."
