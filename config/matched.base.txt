@@ -2457,3 +2457,4 @@ FUN_00091100 src/libs/unknown/func_00091100.cpp
 FUN_000170d0 src/libs/unknown/func_000170d0.cpp
 FUN_00158bf0 src/libs/unknown/func_00158bf0.cpp _ZN30hknpVehicleRayCastWheelCollide13collideWheelsEfPK19hknpVehicleInstanceP18WheelCollideOutputPK9hknpWorld
 FUN_00016350 src/libs/unknown/func_00016350.cpp
+_ZNK19hknpSolverStageTask7getNameEP11hkStringBufS1_ src/libs/unknown/func_0018f140.cpp

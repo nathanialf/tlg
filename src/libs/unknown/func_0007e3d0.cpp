@@ -3,11 +3,16 @@
 
 // NONMATCHING: 33 of 44, every store the base's but one pair: the base stores
 // the motor's isEnabled and motorAxis (+0xb2, +0xb3) as one zero word, in its
-// place in the chain; 3.3's MergeConsecutiveStores (patched by D27 or not, the
-// unpatched llc measured) only walks up from the end of a store sequence
-// (DAGCombiner.cpp:7888-7891) and merges nothing here, the byte run +0xe2 to
-// +0xe5 (0, 1, 2, 3) not merged in either. For the supervisor: D27's reading
-// of the base's merge rule (docs/NOTES.md, Round 65A).
+// place in the chain. Measured (round 66A): MergeConsecutiveStores is tried
+// only from a store that ends a store sequence (its chain not used by a
+// single store, DAGCombiner.cpp:7888-7891), walks up over stores of the same
+// width only, and places the merged store at the run's earliest member. With
+// the pair written last it merges into the word but lands at the end; at any
+// of the other 25 positions nothing merges. The base's chain therefore ended
+// a sequence at motorAxis with isEnabled directly above it (a load or a
+// memory intrinsic after it at selection time, which leaves no bytes of its
+// own), or the pair was one 16-bit store from the start (docs/NOTES.md,
+// Round 66A).
 hkpPrismaticConstraintData::hkpPrismaticConstraintData()
 {
     atoms.transforms.type = hkpConstraintAtom::TYPE_SET_LOCAL_TRANSFORMS;

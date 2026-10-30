@@ -1,14 +1,17 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: 37 of 76: three residuals. The base zeroes 16 bytes of the
-// parent box before the domain's copy (`vmovaps [rsp+0x50], xmm0` of zero), and
-// keeps the nodes' pointer from the loop's head for the child's codes where this
-// compile reloads it after the child's zeroing; and the base has no `vzeroupper`
-// before the decode's call after the child's 32-byte `ymm` zero store, which
-// 3.3's VZeroUpperInserter adds (the library region holds no `vzeroupper` at
-// all against 604 `vmovaps ymm` and 356 `vxorps ymm`: a region question,
-// docs/NOTES.md, Round 65A).
+// NONMATCHING: the parent box's 16-byte zero store before the domain's copy
+// and the nodes' pointer kept for the child's codes both say the decoder
+// (FUN_000a9f10) was known not to capture its boxes: with its definition in
+// this file and not inlined, FunctionAttrs marks its parameters nocapture,
+// the boxes do not escape, `hkAabb aabb = hkAabb();` is trimmed by DSE to its
+// first 16 bytes (DeadStoreElimination.cpp:585, the end overwritten by the
+// max's store) and GVN keeps the nodes' load across the child's zeroing.
+// Measured with a throwaway noinline on an inline definition here: 63 of 76,
+// only rbx/r12/r13 permuted (tree, key, child). Without the definition the
+// decoder captures both boxes; with it and no barrier, the inliner takes it.
+// A ruling is asked (docs/NOTES.md, Round 66A).
 /* Slot 32: an instance's AABB, decoded from the tree's root down to the
  * instance's leaf, each node's box inside its parent's. */
 void hknpStaticCompoundShape::unknownVirtual32(hknpShapeInstanceId instanceId,
