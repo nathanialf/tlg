@@ -6,6 +6,6 @@ void hknpWorldObject388::FUN_000f6a90(const hknpWorldStepContextf6a90 *context, 
                                       void *argument2, void *argument3)
 {
     hknpWorld *world = context->world;
-    FUN_000c4cd0(world, &world->solverInfo, world->constraints, world->peakConstraintId + 1,
-                 argument1, argument2, argument3);
+    FUN_000c4cd0(world, &world->solverInfo, world->constraintManager.constraints,
+                 world->constraintManager.peakConstraintId + 1, argument1, argument2, argument3);
 }

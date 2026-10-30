@@ -188,7 +188,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
     for (int i = 0; i < walk.leaves.size; i++) {
         Node *leaf = walk.leaves[i];
         const int bucketIndex = leaf->children[0];
-        Bucket *const buckets = tree->buckets;
+        Bucket *const buckets = tree->buckets.data;
         Bucket &bucket = buckets[u32(bucketIndex)];
         const int leafIndex = leaves.leafOfBucket[bucketIndex];
         if (bucket.numEntries == 0) {

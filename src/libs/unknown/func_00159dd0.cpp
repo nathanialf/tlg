@@ -6,6 +6,6 @@
  * with each other. */
 void hknpConstraintCollisionFilter::FUN_00159dd0(hknpWorld *world, u32 constraintId)
 {
-    const hknpConstraint &constraint = world->constraints[constraintId];
+    const hknpConstraint &constraint = world->constraintManager.constraints[constraintId];
     FUN_00167420(world, constraint.bodyIdA, constraint.bodyIdB);
 }

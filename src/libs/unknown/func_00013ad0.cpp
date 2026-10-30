@@ -36,3 +36,42 @@ hkResult PointerMap::FUN_00013b90(hkUlong key, hkUlong &out) const /* derived na
     out = getValue(it);
     return HK_SUCCESS;
 }
+
+/* A key in use (the map operations' test, inline: its argument a named
+ * value, so the key is loaded before the compare). derived name. */
+static inline bool isValidKey(hkUlong key) /* derived name */
+{
+    return key != hkUlong(-1);
+}
+
+/* derived name: the entry emptied, then the run it sat in closed up: each
+ * later entry of the run whose home slot is not between the run's start
+ * and its own slot moves into the hole, which moves to it. */
+void PointerMap::FUN_00013c10(Iterator it) /* derived name */
+{
+    u32 i = u32(reinterpret_cast<hkUlong>(it));
+    numEntries -= 1;
+    entries[i].key = hkUlong(-1);
+
+    u32 lo = (i + hashMod) & hashMod;
+    while (isValidKey(entries[lo].key)) {
+        lo = (lo + hashMod) & hashMod;
+    }
+    lo = (lo + 1) & hashMod;
+
+    u32 empty = i;
+    for (i = (i + 1) & hashMod; isValidKey(entries[i].key); i = (i + 1) & hashMod) {
+        const u32 hash = u32(entries[i].key >> 4) * 0x9e3779b1 & hashMod;
+        if (i >= lo && hash > empty) {
+            continue;
+        } else if (i < empty && (hash > empty || hash <= i)) {
+            continue;
+        } else if (hash > empty && hash < lo) {
+            continue;
+        }
+        entries[empty].key = entries[i].key;
+        entries[empty].value = entries[i].value;
+        entries[i].key = hkUlong(-1);
+        empty = i;
+    }
+}

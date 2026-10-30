@@ -8390,6 +8390,158 @@ struct hknpWorldSignals /* derived name */
     u8 unknown48[0x28];
 };
 
+/* A map from 16-bit keys to pointer-sized values, hashed and probed as
+ * PointerMap is (derived names): an empty entry's key is 0xffff. The lookup
+ * and the insert are member templates over the value's type, as Havok's
+ * typed maps keep theirs: the lookups of 0x1659e7, 0x176ebc and 0x177394
+ * get the pointer itself back, with no integer cast for CodeGenPrepare to
+ * sink into each block that uses it (0x1659c0's critical edge to its end
+ * is split as the base holds it only when the value its phi takes is the
+ * one the grow path passes on). Their files instantiate them for the bit
+ * field map's blocks. */
+struct U16PointerMap /* derived name */
+{
+    struct Pair {
+        u16 key;
+        hkUlong value;
+    };
+
+    /* derived name: the value of a key, or the default (0x199520). */
+    template <typename V> V FUN_00199520(u16 key, V defaultValue) const;
+    /* derived name: the value of a key set, the table rebuilt first when
+     * more than half full (0x1992f0, as the pointer map's 0x138a0); nonzero
+     * when the key was new. */
+    template <typename V> int FUN_001992f0(AllocatorBase &allocator, u16 key, V value);
+    /* derived name: the table rebuilt at a new capacity (0x199390). */
+    void FUN_00199390(AllocatorBase &allocator, int newCapacity);
+
+    /* The count's top bit: the map does not own its entries. derived
+     * name. */
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
+
+    /* Every entry marked empty and the count zeroed, the entries kept
+     * (inline in 0x199880), as the pointer map's. derived name. */
+    void clear()
+    {
+        const int capacity = hashMod + 1;
+        for (int i = 0; i < capacity; i++) {
+            entries[i].key = 0xffff;
+        }
+        numEntries &= DONT_DEALLOCATE_FLAG;
+    }
+
+    Pair *entries;
+    int numEntries;
+    int hashMod;
+
+    /* A slot as an iterator, as the pointer map's (derived names): the
+     * first used slot, the next used one after a slot, one past the hash
+     * mask at the end. The first slot's walk increments before its test
+     * (its latch exits, so LoopRotate leaves it, cookbook 185); each key is
+     * read into a named value. */
+    struct IteratorTag;
+    typedef IteratorTag *Iterator;
+
+    Iterator getIterator() const
+    {
+        int i = 0;
+        while (i <= hashMod) {
+            const int index = i++;
+            const u16 key = entries[index].key;
+            if (key != 0xffff) {
+                i = index;
+                break;
+            }
+        }
+        return reinterpret_cast<Iterator>(hkUlong(i));
+    }
+
+    Iterator getNext(Iterator it) const
+    {
+        int i = static_cast<int>(reinterpret_cast<hkUlong>(it));
+        for (i += 1; i <= hashMod; i++) {
+            const u16 key = entries[i].key;
+            if (key != 0xffff) {
+                break;
+            }
+        }
+        return reinterpret_cast<Iterator>(hkUlong(i));
+    }
+
+    bool isValid(Iterator it) const
+    {
+        return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
+    }
+
+    hkUlong getValue(Iterator it) const
+    {
+        return entries[static_cast<int>(reinterpret_cast<hkUlong>(it))].value;
+    }
+};
+
+/* A map of bit fields (derived names): each value a block from the
+ * thread's heap that records its own size first (0x199770 frees one at
+ * that size, 0x199880 frees them all), the field after it; 0x199600 builds
+ * one. */
+struct BitFieldMap00199770 /* derived name */
+{
+    struct Block {
+        int numBytes;
+        int elementSize; /* derived name */
+        hkBitField bits;
+        /* One element per bit, set with it (0x1659c0). derived name. */
+        void **elements;
+    };
+
+    /* One bit cleared in every field long enough to hold it (0x1997d0; the
+     * callers at 0x1608ef and 0x16dc62). derived name. */
+    void FUN_001997d0(int bitIndex);
+
+    /* A bit set in the field of a key, its element stored beside it; the
+     * field made, or remade as large as the map's size and the old one
+     * given back, when it cannot hold the bit (0x1659c0; the world's body
+     * setup at 0x17668b). derived name. */
+    void FUN_001659c0(u32 bitIndex, u16 key, void *const &element);
+
+    /* Every field given back to the thread's heap at its size, then the
+     * map emptied (0x199880). derived name. */
+    void FUN_00199880();
+
+    int numBits; /* derived name: the size a new field is made at */
+    u8 unknown4[4];
+    U16PointerMap fields;
+};
+
+/* A field of a map made from the thread's heap: its header, the bits for
+ * numElements and the elements of elementSize bytes after them, cleared,
+ * then what an old field holds copied in (0x199600). derived names. */
+BitFieldMap00199770::Block *FUN_00199600(int elementSize, int numElements,
+                                         const BitFieldMap00199770::Block *copyFrom);
+
+/* The world's constraints (derived names after hknpConstraintManager.cpp,
+ * the file its report names; the world's at +0x148): the constraints at
+ * +8, the first free id at +0x18 (each free constraint's id slot links the
+ * next, +0xc of the 64 bytes), a map of bit fields at +0x30, the number in
+ * use and the highest id in use at +0x48 and +0x4c. */
+struct hknpConstraintManager /* derived name */
+{
+    /* A constraint taken from the free list (0x16db90; the world's
+     * constraint add at 0x4d23f): its slot cleared, its bit cleared in the
+     * map's fields, the count and the peak kept; "Constraint buffer is
+     * full." reported and an invalid id when none is free. derived
+     * name. */
+    u32 FUN_0016db90();
+
+    u8 unknown0[8];
+    hknpConstraint *constraints; /* derived name */
+    u8 unknown10[8];
+    u32 firstFreeConstraintId; /* derived name */
+    u8 unknown1c[0x14];
+    BitFieldMap00199770 fieldMap; /* derived name */
+    int numUsedConstraints;       /* derived name */
+    int peakConstraintId;
+};
+
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
      * rotated by the motion's orientation (0x5df30; the caller at
@@ -8495,14 +8647,11 @@ struct hknpWorld {
     hknpBodyManager bodyManager; /* derived name */
     u8 unknown110[8];
     hknpMotion *motions; /* derived name */
-    u8 unknown120[0x30];
-    /* The constraint array, indexed by constraint id (the constraint
-     * filter's signal handlers 0x159dd0 and 0x159df0). */
-    hknpConstraint *constraints; /* derived name */
-    u8 unknown158[0x3c];
-    /* The highest constraint id in use (0xf6a90 passes one more as the
-     * count). derived name. */
-    int peakConstraintId;
+    u8 unknown120[0x28];
+    /* The constraints, indexed by constraint id (the constraint filter's
+     * signal handlers 0x159dd0 and 0x159df0), and the highest id in use
+     * (0xf6a90 passes one more as the count). derived name. */
+    hknpConstraintManager constraintManager;
     u8 unknown198[0x20];
     hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
@@ -8684,6 +8833,11 @@ class hknpProjectileGun : public hknpFirstPersonGun
      * 0x39e30 jumps to it, the reflection initializer calls it at 0x39fc6):
      * the projectiles, not serialized, start as an empty array. */
     hknpProjectileGun(hkFinishLoadedObjectFlag flag);
+    /* Out of line (0x159650, slot 0): each projectile destroyed and
+     * released as slot 10 does, the gun's slots taken off the world's
+     * post-simulate signal, then the array and hknpFirstPersonGun's
+     * destructor. */
+    virtual ~hknpProjectileGun();
     virtual void fireGun(hknpWorld *world,
                          const hkTransform &viewTransform); /* vtable slot 6; derived name */
     virtual void onGunFired(
@@ -9150,6 +9304,13 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * index, then each of the count scaled and moved, its w kept. derived
      * name. */
     void FUN_0016ae80(const u8 *indices, int numIndices, Vec4 *verticesOut) const;
+
+    /* Slot 15 (0x16aaf0, both vtables): the core shape's face, its
+     * vertices scaled and moved, its plane scaled (its distance alone
+     * under a uniform scale, the scale's w holding the flag as an int24;
+     * else the normal by the reciprocal scale, renormalized) and moved.
+     * derived name. */
+    int FUN_0016aaf0(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut) const;
 
     /* The record's members (0x1696dc0): two vectors. */
     Vec4 scale;
@@ -9700,6 +9861,11 @@ class hknpTriangleShape : public hknpConvexPolytopeShape
      * (b - a) x (c - a) with its distance to a, normalized together, the
      * second plane the first reversed. derived name. */
     void FUN_00078500(const Vec4 &a, const Vec4 &b, const Vec4 &c);
+
+    /* A new triangle from the thread's heap (0x783f0; the convex builder
+     * at 0x44abf): the globals' prototype copied in, its convex radius
+     * set. derived name. */
+    static hknpTriangleShape *FUN_000783f0(float convexRadius);
 };
 
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
@@ -10589,7 +10755,9 @@ struct hkpConstraintAtom {
         TYPE_PULLEY = 20,
         TYPE_RACK_AND_PINION = 21,
         TYPE_COG_WHEEL = 22,
-        TYPE_SETUP_STABILIZATION = 23
+        TYPE_SETUP_STABILIZATION = 23,
+        TYPE_DEFORMABLE_3D_LIN = 25,
+        TYPE_DEFORMABLE_3D_ANG = 26
     };
 
     enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
@@ -10877,14 +11045,43 @@ class hkpPulleyConstraintData : public hkpConstraintData /* vtable address point
  * hkpDeformableFixedConstraintData::Atoms, 0x150 bytes (record table
  * 0x169be00: transforms at +0, lin, an hkpDeformableLinConstraintAtom, at
  * +0x90, ang, an hkpDeformableAngConstraintAtom, at +0xf0). */
+/* The two deformable atoms (hkClass 0x57c4c70 and 0x57c4bf0, 0x60 bytes,
+ * five members each from the records at 0x169de20 and 0x169dd50 after the
+ * atom's type): the offset (a vector, a quaternion for the angular one),
+ * then the yield and ultimate strengths, diagonal and off-diagonal. */
+struct hkpDeformableLinConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    Vec4 offset;
+    Vec4 yieldStrengthDiag;
+    Vec4 yieldStrengthOffDiag;
+    Vec4 ultimateStrengthDiag;
+    Vec4 ultimateStrengthOffDiag;
+};
+
+struct hkpDeformableAngConstraintAtom {
+    u16 type; /* derived name */
+    u8 padding[0xe];
+    hkQuaternion offset;
+    Vec4 yieldStrengthDiag;
+    Vec4 yieldStrengthOffDiag;
+    Vec4 ultimateStrengthDiag;
+    Vec4 ultimateStrengthOffDiag;
+};
+
 class hkpDeformableFixedConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
         hkpSetLocalTransformsConstraintAtom transforms;
-        u8 lin[0x60];
-        u8 ang[0x60];
+        hkpDeformableLinConstraintAtom lin;
+        hkpDeformableAngConstraintAtom ang;
     };
+
+    /* A new one (0x82ee0; the constraint builder at 0x79aa4): both frames
+     * the identity, every strength the largest value Havok uses, the
+     * off-diagonal ones zero; the angular yield's diagonal keeps its w. */
+    hkpDeformableFixedConstraintData();
 
     /* The finish constructor (0x7a830): the atoms are left as loaded. */
     hkpDeformableFixedConstraintData(hkFinishLoadedObjectFlag flag);
@@ -13475,6 +13672,11 @@ class BufferOstream : public hkOstream /* derived name */
 #define HK_NP_MOTION_MANAGER_CPP                                                                   \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Motion\\hknpMotionManager.cpp"
 
+/* The file hknpConstraintManager.cpp's reports name (the string at
+ * 0x14ca71b). */
+#define HK_NP_CONSTRAINT_MANAGER_CPP                                                               \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Constraint\\hknpConstraintManager.cpp"
+
 /* The file hknpShape.cpp's reports name (the string at 0x14bf150). */
 #define HK_NP_SHAPE_CPP                                                                            \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Collide\\Shape\\hknpShape.cpp"
@@ -15552,7 +15754,11 @@ struct hknpWorldContextPool /* derived name */
         void FUN_00167ff0(BlockCache *cacheA, BlockCache *cacheB);
 
         int index;
-        u8 unknown4[0x4c];
+        u8 unknown4[0x34];
+        /* The world's modifier manager (the composite detectors' child
+         * dispatch reads it, 0x1557be). derived name. */
+        hknpModifierManager *modifierManager;
+        u8 unknown40[0x10];
         InplaceTriangle00078160 triangle0; /* derived name */
         InplaceTriangle00078160 triangle1; /* derived name */
         u8 unknown210[0x18];
@@ -15604,6 +15810,51 @@ struct hknpWorldContextPool /* derived name */
      * cache freed by 0x16feb0. derived names. */
     hkBlockStreamInplace stream;
     BlockCache *cache;
+};
+
+/* A collision cache's header (derived names; hknpManifoldCollisionCache
+ * starts the same way): two keys (the bodies' ids, a child cache's shape
+ * key first), its type (an index of the modifier manager's collision
+ * detectors) and its size in 16-byte quads, the next cache's distance in a
+ * range. */
+struct hknpCollisionCache /* derived name */
+{
+    u32 key0; /* derived name */
+    u32 key4; /* derived name */
+    u8 type;  /* derived name */
+    u8 sizeInQuads;
+};
+
+/* A composite cache (derived name): its child caches' range at +0x20. */
+struct hknpCompositeCollisionCache : public hknpCollisionCache /* derived name */
+{
+    u8 unknownC[0x14];
+    hkBlockStreamRange childCaches; /* derived name */
+};
+
+/* A collision detector, one per cache type in the modifier manager
+ * (derived name): slot 4 collides a cache between two bodies. */
+struct hknpCollisionDetector /* derived name */
+{
+    virtual ~hknpCollisionDetector();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void collide(hknpWorldContextPool::Context *context, const void *sharedData,
+                         const hknpCollisionCache *cache, void *argument4, void *argument5,
+                         hknpCdBody *cdBodyA, hknpCdBody *cdBodyB,
+                         int argument8); /* vtable slot 4; derived name */
+};
+
+/* The base of the detectors of the composite caches (derived name; slots 1
+ * to 4 and 6 shared by the vtables 0x169b3b0, 0x16a4c80 and 0x16a58f0):
+ * slot 4 (0x155750) collides each child cache with the detector of its
+ * type, the child's key the second body's shape key for type 2 and the
+ * first's for type 3. */
+struct hknpCompositeCollisionDetector : public hknpCollisionDetector /* derived name */
+{
+    void FUN_00155750(hknpWorldContextPool::Context *context, const void *sharedData,
+                      const hknpCompositeCollisionCache *cache, void *argument4, void *argument5,
+                      hknpCdBody *cdBodyA, hknpCdBody *cdBodyB, int argument8);
 };
 
 /* The world's streams at +0x260 (derived names; built by FUN_00174590):
@@ -16302,134 +16553,6 @@ struct hkContainerTempAllocator /* derived name */ {
     /* Defined in tlg_lib_unknown.h, after the allocator's class. */
     static AllocatorBase &get(); /* derived name */
 };
-
-/* A map from 16-bit keys to pointer-sized values, hashed and probed as
- * PointerMap is (derived names): an empty entry's key is 0xffff. The lookup
- * and the insert are member templates over the value's type, as Havok's
- * typed maps keep theirs: the lookups of 0x1659e7, 0x176ebc and 0x177394
- * get the pointer itself back, with no integer cast for CodeGenPrepare to
- * sink into each block that uses it (0x1659c0's critical edge to its end
- * is split as the base holds it only when the value its phi takes is the
- * one the grow path passes on). Their files instantiate them for the bit
- * field map's blocks. */
-struct U16PointerMap /* derived name */
-{
-    struct Pair {
-        u16 key;
-        hkUlong value;
-    };
-
-    /* derived name: the value of a key, or the default (0x199520). */
-    template <typename V> V FUN_00199520(u16 key, V defaultValue) const;
-    /* derived name: the value of a key set, the table rebuilt first when
-     * more than half full (0x1992f0, as the pointer map's 0x138a0); nonzero
-     * when the key was new. */
-    template <typename V> int FUN_001992f0(AllocatorBase &allocator, u16 key, V value);
-    /* derived name: the table rebuilt at a new capacity (0x199390). */
-    void FUN_00199390(AllocatorBase &allocator, int newCapacity);
-
-    /* The count's top bit: the map does not own its entries. derived
-     * name. */
-    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
-
-    /* Every entry marked empty and the count zeroed, the entries kept
-     * (inline in 0x199880), as the pointer map's. derived name. */
-    void clear()
-    {
-        const int capacity = hashMod + 1;
-        for (int i = 0; i < capacity; i++) {
-            entries[i].key = 0xffff;
-        }
-        numEntries &= DONT_DEALLOCATE_FLAG;
-    }
-
-    Pair *entries;
-    int numEntries;
-    int hashMod;
-
-    /* A slot as an iterator, as the pointer map's (derived names): the
-     * first used slot, the next used one after a slot, one past the hash
-     * mask at the end. The first slot's walk increments before its test
-     * (its latch exits, so LoopRotate leaves it, cookbook 185); each key is
-     * read into a named value. */
-    struct IteratorTag;
-    typedef IteratorTag *Iterator;
-
-    Iterator getIterator() const
-    {
-        int i = 0;
-        while (i <= hashMod) {
-            const int index = i++;
-            const u16 key = entries[index].key;
-            if (key != 0xffff) {
-                i = index;
-                break;
-            }
-        }
-        return reinterpret_cast<Iterator>(hkUlong(i));
-    }
-
-    Iterator getNext(Iterator it) const
-    {
-        int i = static_cast<int>(reinterpret_cast<hkUlong>(it));
-        for (i += 1; i <= hashMod; i++) {
-            const u16 key = entries[i].key;
-            if (key != 0xffff) {
-                break;
-            }
-        }
-        return reinterpret_cast<Iterator>(hkUlong(i));
-    }
-
-    bool isValid(Iterator it) const
-    {
-        return static_cast<int>(reinterpret_cast<hkUlong>(it)) <= hashMod;
-    }
-
-    hkUlong getValue(Iterator it) const
-    {
-        return entries[static_cast<int>(reinterpret_cast<hkUlong>(it))].value;
-    }
-};
-
-/* A map of bit fields (derived names): each value a block from the
- * thread's heap that records its own size first (0x199770 frees one at
- * that size, 0x199880 frees them all), the field after it; 0x199600 builds
- * one. */
-struct BitFieldMap00199770 /* derived name */
-{
-    struct Block {
-        int numBytes;
-        int elementSize; /* derived name */
-        hkBitField bits;
-        /* One element per bit, set with it (0x1659c0). derived name. */
-        void **elements;
-    };
-
-    /* One bit cleared in every field long enough to hold it (0x1997d0; the
-     * callers at 0x1608ef and 0x16dc62). derived name. */
-    void FUN_001997d0(int bitIndex);
-
-    /* A bit set in the field of a key, its element stored beside it; the
-     * field made, or remade as large as the map's size and the old one
-     * given back, when it cannot hold the bit (0x1659c0; the world's body
-     * setup at 0x17668b). derived name. */
-    void FUN_001659c0(u32 bitIndex, u16 key, void *const &element);
-
-    /* Every field given back to the thread's heap at its size, then the
-     * map emptied (0x199880). derived name. */
-    void FUN_00199880();
-
-    int numBits; /* derived name: the size a new field is made at */
-    u8 unknown4[4];
-    U16PointerMap fields;
-};
-
-/* A field of a map made from the thread's heap: its header, the bits for
- * numElements and the elements of elementSize bytes after them, cleared,
- * then what an old field holds copied in (0x199600). derived names. */
-BitFieldMap00199770::Block *FUN_00199600(int elementSize, int numElements,
-                                         const BitFieldMap00199770::Block *copyFrom);
 
 struct PointerMap /* derived name */
 {

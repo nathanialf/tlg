@@ -4448,12 +4448,17 @@ struct BroadPhaseTree00142a40 /* derived name */
         u32 centre2[3];
     };
 
+    /* A tree of no nodes over the leaf size given (0x195ee0; the broad
+     * phase's setup builds each in 0x58 bytes of the thread's heap,
+     * 0x140c91): 128 buckets, each free, handed out from the lowest index.
+     * derived name. */
+    BroadPhaseTree00142a40(int maxLeafEntries);
+
     ElementPool00198a20 nodes;
     int root; /* NO_CHILD when the tree is empty */
     int numLeaves;
     int numEntries; /* the boxes in all the buckets */
-    Bucket *buckets;
-    u8 unknown38[8];
+    hkArray<Bucket> buckets;
     hkArray<int> freeBuckets;
     /* A subtree with no more boxes than this becomes one leaf (0x13f52e). */
     int maxLeafEntries;
@@ -4554,12 +4559,22 @@ struct BroadPhaseLayers00142a40 /* derived name */
     void FUN_00142e00(void *argument1, void *argument2, void *argument3,
                       void *argument4); /* derived names */
 
+    /* Slot 9 (0x142ea0): under the timer "FindAllPairs", each pair of
+     * layers' trees walked against each other through the world's
+     * collision filter, the pairs written to the output. derived name. */
+    void FUN_00142ea0(const struct BroadPhaseContext00142ea0 *context, void *pairsOut);
+
     u8 unknown0[0x10];
     BroadPhaseTree00142a40 *trees[8];
     bool flag50[8];
     bool updatePending[8]; /* cleared by both trees' updates */
     int numLayers;
-    u8 unknown64[0x14];
+    u8 unknown64[4];
+    /* The layer pairs to collide, two indices each, and the number of
+     * indices (slot 9's loop, 0x142f20). derived names. */
+    const int *layerPairs;
+    int numLayerPairIndices;
+    u8 unknown74[4];
     hkBitField markedBodies;
     /* While the first does not exceed the second, the broad phase's update
      * runs FUN_00141500 first (0x142bff). derived names. */
@@ -4567,6 +4582,20 @@ struct BroadPhaseLayers00142a40 /* derived name */
     u32 highestMarkedId;
     BroadPhaseTasks0018d640 *tasks; /* derived name */
 };
+
+/* What the broad phase's pair search runs in (derived names): the world at
+ * +8 (slot 9 reads its modifier manager's collision filter, 0x142ef8). */
+struct BroadPhaseContext00142ea0 /* derived name */
+{
+    u8 unknown0[8];
+    hknpWorld *world; /* derived name */
+};
+
+/* Two trees' boxes walked against each other, each overlapping pair the
+ * filter lets through written out (0x197c60, 0x3cc bytes). derived names. */
+void FUN_00197c60(const BroadPhaseContext00142ea0 *context, hknpCollisionFilter *filter,
+                  const BroadPhaseTree00142a40 *treeA, const BroadPhaseTree00142a40 *treeB,
+                  void *pairsOut, int argument6); /* derived name */
 
 /* The work the broad phase's update runs first (0x141500, 0x1533 bytes).
  * derived name. */
@@ -5403,7 +5432,6 @@ void FUN_0009c120(hkcdPlanarCsgOperand *self);
 void FUN_0009c960(hkcdPlanarGeometryPlanesCollection *self);
 void FUN_000aa6d0(hkSkinnedRefMeshShape *self);
 void FUN_001586d0(hknpCompressedMeshShape *self);
-void FUN_00159650(hknpProjectileGun *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);

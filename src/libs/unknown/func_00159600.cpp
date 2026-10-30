@@ -5,6 +5,6 @@
  * the destructor 0x159650, then the object back to the thread's heap at its recorded size. */
 void FUN_00159600(hknpProjectileGun *self)
 {
-    FUN_00159650(self);
+    self->hknpProjectileGun::~hknpProjectileGun();
     freeReferencedObject(self, sizeof(hknpProjectileGun));
 }

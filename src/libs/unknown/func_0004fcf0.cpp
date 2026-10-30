@@ -3,7 +3,7 @@
 
 void hknpWorld::FUN_0004fcf0(u32 constraintId)
 {
-    hknpConstraint &constraint = constraints[constraintId];
+    hknpConstraint &constraint = constraintManager.constraints[constraintId];
     if ((constraint.flags & 4) == 0) {
         constraint.flags |= 4;
         signals.constraintRemovedSignal.fire(this, constraintId);
