@@ -1998,3 +1998,11 @@ FUN_00000ce0 src/libs/unknown/func_00000ce0.cpp _GLOBAL__I_a
 FUN_00001080 src/libs/unknown/func_00001080.cpp _GLOBAL__I_a
 FUN_00001500 src/libs/unknown/func_00001500.cpp _GLOBAL__I_a
 FUN_0000be80 src/libs/unknown/func_0000be80.cpp _ZNK9hkMatrix312FUN_0000be80Ev
+FUN_0000e310 src/libs/unknown/func_0000e310.cpp _GLOBAL__I_a
+FUN_00010790 src/libs/unknown/func_00010790.cpp _GLOBAL__I_a
+FUN_00011390 src/libs/unknown/func_00011390.cpp _GLOBAL__I_a
+FUN_000136c0 src/libs/unknown/func_000136c0.cpp _GLOBAL__I_a
+FUN_00014990 src/libs/unknown/func_00014990.cpp _GLOBAL__I_a
+FUN_0001c0f0 src/libs/unknown/func_0001c0f0.cpp _GLOBAL__I_a
+FUN_00022a90 src/libs/unknown/func_00022a90.cpp _GLOBAL__I_a
+FUN_000393d0 src/libs/unknown/func_000393d0.cpp _GLOBAL__I_a

@@ -24,10 +24,13 @@ struct SceFiosStat {
     unsigned char reserved[0x2c];
 };
 
-/* A file open's parameters (derived names): the open flags at +0, 1 to
- * read, then zeros; 24 bytes on the caller's stack (0x931a0). */
+/* A file open's parameters (derived names): the open flags in the low 16
+ * bits at +0, 1 to read (the writer's opener stores its int's low 16 bits
+ * into the zeroed word, 0x91d84), then zeros; 24 bytes on the caller's
+ * stack (0x931a0). */
 struct SceFiosOpenParams {
-    unsigned int openFlags;
+    unsigned int openFlags : 16;
+    unsigned int unknown2 : 16;
     unsigned int reserved4;
     void *buffer;
     SceFiosSize bufferLength;

@@ -579,8 +579,10 @@ template <typename T, int N> struct hkInplaceArrayAligned16 : public hkArray<T> 
 /* hkFloat16Transform (hkClass 0x57af6e8, built at 0xd4d: size 0x18, no
  * parent, one member record at 0x168c370): elements, twelve 16-bit floats
  * (the record's struct type, the class at 0x57b9da0). */
+/* hkFloat16 (hkClass 0x57b9ba0, built at 0x1c15d: size 2, its one record
+ * at 0x168eb40). */
 struct hkFloat16 {
-    u16 value; /* derived name */
+    u16 value;
 };
 
 struct hkFloat16Transform {
@@ -597,6 +599,18 @@ struct hkSphere {
  * parent, flags 1, one member record at 0x168d280): value, 32 characters. */
 struct hkTraceStreamTitle {
     char value[32];
+};
+
+/* hkFourTransposedPointsf (hkClass 0x57b8488, built at 0xc21d: size 0x30,
+ * no parent, one member record at 0x168d650): vertices, three vectors. */
+struct hkFourTransposedPointsf {
+    Vec4 vertices[3];
+};
+
+/* hkAabbHalf (hkClass 0x57b9238, built at 0x113fd: size 0x10, no parent,
+ * version 1, one member record at 0x168e150): data, eight 16-bit words. */
+struct hkAabbHalf {
+    u16 data[8];
 };
 
 /* hkBitField (type info registered at 0x9e2b, size 0x18): its member
@@ -4299,6 +4313,16 @@ struct hkQuaternion {
     Vec4 vec; /* derived name */
 };
 
+/* hkSweptTransformf (hkClass 0x57b94e0, built at 0x149fd: size 0x50, no
+ * parent, five member records at 0x168e4e0). */
+struct hkSweptTransformf {
+    Vec4 centerOfMass0;
+    Vec4 centerOfMass1;
+    hkQuaternion rotation0;
+    hkQuaternion rotation1;
+    Vec4 centerOfMassLocal;
+};
+
 class hknpShape;
 struct hknpWorld;
 
@@ -5940,16 +5964,17 @@ class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
 void FUN_0014e100(hknpWorldObject1d0Large *self); /* derived name */
 void FUN_0014e0b0(hknpWorldObject1d0Large *self); /* derived name */
 
-/* hkAabb16 (the reflection's class name, the string at 0x14b826d): a
- * box in 16-bit coordinates, the three minimum coordinates and a key in the
- * low eight bytes, the three maximum coordinates and a second key in the
- * high eight, read and written as one aligned vector (FUN_00185460). The
- * field names are derived. */
+/* hkAabb16 (the reflection's class name, the string at 0x14b826d; hkClass
+ * 0x57b9460, built at 0x1372d, its four records at 0x168e3c0 name the
+ * fields): a box in 16-bit coordinates, the three minimum coordinates and a
+ * key in the low eight bytes, the three maximum coordinates and a second
+ * key in the high eight, read and written as one aligned vector
+ * (FUN_00185460). */
 struct alignas(16) hkAabb16 {
-    u16 min[3]; /* derived name */
-    u16 key;    /* derived name */
-    u16 max[3]; /* derived name */
-    u16 key1;   /* derived name */
+    u16 min[3];
+    u16 key;
+    u16 max[3];
+    u16 key1;
 };
 
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
@@ -8195,6 +8220,23 @@ struct hkUFloat8 {
     u8 value;
 };
 
+/* hkMotionState (hkClass 0x57b9138, built at 0x107fd: size 0xb0, no parent,
+ * version 3, ten member records at 0x168df50). */
+struct hkMotionState {
+    hkTransform transform;
+    Vec4 sweptTransform[5];
+    Vec4 deltaAngle;
+    float objectRadius;
+    hkHalf linearDamping;
+    hkHalf angularDamping;
+    hkHalf timeFactor;
+    hkUFloat8 maxLinearVelocity;
+    hkUFloat8 maxAngularVelocity;
+    u8 deactivationClass;
+};
+
+extern const hkClassMember D_168df50[]; /* derived name: hkMotionState's records */
+
 /* hknpMaterial (type info 0x57c1f40, no vtable, cleanup 0x300) and
  * hknpMaterialDescriptor (type info 0x57c1fc0, no vtable, cleanup 0x66e80):
  * each finish constructor (FUN_0006c6f0, FUN_0006c800) runs hkStringPtr's on
@@ -8699,6 +8741,16 @@ extern const hkClassMember D_168c370[]; /* derived name: hkFloat16Transform's re
 extern const hkClassMember D_168c3e0[]; /* derived name: hkSphere's records */
 extern const hkClassMember D_168c600[]; /* derived name: hkUFloat8's records */
 extern const hkClassMember D_168d280[]; /* derived name: hkTraceStreamTitle's records */
+extern const hkClassMember D_168d650[]; /* derived name: hkFourTransposedPointsf's records */
+extern const hkClassMember D_168d9b0[]; /* derived name: hkContactPoint's records */
+extern const hkClassMember D_168e150[]; /* derived name: hkAabbHalf's records */
+extern const hkClassMember D_168e3c0[]; /* derived name: hkAabb16's records */
+extern const hkClassMember D_168e4e0[]; /* derived name: hkSweptTransformf's records */
+extern const hkClassMember D_168eb40[]; /* derived name: hkFloat16's records */
+extern const hkClassMember D_1691090[]; /* derived name: hkCompressedMassProperties's records */
+extern const hkClassMember D_16945d0[]; /* derived name: hknpMotion's records */
+extern const hkClassMember D_16a2bc0[]; /* derived name: hkPackfileHeader's records */
+extern const hkClassMember D_16a2dd0[]; /* derived name: hkPackfileSectionHeader's records */
 extern const hkClassMember D_169d660[]; /* derived name */
 
 /* hkpSetLocalTransformsConstraintAtom (reflected): transformA and
