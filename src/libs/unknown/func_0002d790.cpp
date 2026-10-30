@@ -1,12 +1,6 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: 17 of 72, the header count's loop: the compile zeroes the
-// count again in the loop's preheader (`xor ecx, ecx` after `lea eax,
-// [rax*4+4]`), which moves the loop to the next 16 bytes and assigns the
-// per-block bytes to eax where the base keeps one zero, from before the
-// guard, and the per-block bytes in edi; the range's start and the run's
-// walk are the base's (docs/NOTES.md, Round 60A).
 hknpWorldObject388Node *hknpWorldObject380::FUN_0002d790(hknpWorldObject388Node *first,
                                                          hkBlockStreamWriter *const *writer)
 {
@@ -15,14 +9,16 @@ hknpWorldObject388Node *hknpWorldObject380::FUN_0002d790(hknpWorldObject388Node 
     hknpWorldObject388Node *node = first;
     do {
         /* A block holds 0xfe0 bytes of data; each one the bytes spill into
-         * repeats the node's header. */
+         * repeats the node's header (its size read before the loop, so the
+         * one zero of the count comes before the guard: MachineSink takes
+         * the size's lea into the split edge, 0x2d7c6). */
         int end = w->currentByteOffset + node->numBytes;
         int numHeaderBytes = 0;
+        const int blockHeaderBytes = node->numHeaderWords * 4 + 4;
         while (end >= 0xfe0) {
             const int numBlocks = end / 0xfe0;
-            end -= numBlocks * 0xfe0;
-            const int headerBytes = numBlocks * (node->numHeaderWords * 4 + 4);
-            end += headerBytes;
+            const int headerBytes = numBlocks * blockHeaderBytes;
+            end = end - numBlocks * 0xfe0 + headerBytes;
             numHeaderBytes += headerBytes;
         }
         node->range.setStartPoint(w);

@@ -1341,7 +1341,6 @@ _ZN20hknpHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp
 FUN_00157ea0 src/libs/unknown/func_00157ea0.cpp
 FUN_00158680 src/libs/unknown/func_00158680.cpp
 FUN_00159600 src/libs/unknown/func_00159600.cpp
-FUN_00159b70 src/libs/unknown/func_00159b70.cpp
 FUN_0015bf50 src/libs/unknown/func_0015bf50.cpp
 FUN_00162580 src/libs/unknown/func_00162580.cpp
 FUN_00165aa0 src/libs/unknown/func_00165aa0.cpp
@@ -2246,3 +2245,5 @@ FUN_00167af0 src/libs/unknown/func_00167170.cpp _ZNK23hknpPairCollisionFilter12F
 FUN_00091ef0 src/libs/havok/Common/Base/System/Io/Platform/Ps4/hkPs4StreamWriter.cpp _ZN17hkPs4StreamWriter12FUN_00091ef0EPKvi
 FUN_001584e0 src/libs/unknown/func_001584e0.cpp _ZN11hknpBallGun5resetEP9hknpWorld
 FUN_00196630 src/libs/unknown/func_00196570.cpp _ZN19ElementPool00198a2012FUN_00196630EPi
+FUN_0002d790 src/libs/unknown/func_0002d790.cpp _ZN18hknpWorldObject38012FUN_0002d790EP22hknpWorldObject388NodePKP19hkBlockStreamWriter
+FUN_00014000 src/libs/unknown/func_00014220.cpp _ZN12ThreadMemory12FUN_00008d90EPviRi

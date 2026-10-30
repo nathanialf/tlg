@@ -2470,6 +2470,17 @@ class ThreadMemory : public AllocatorBase /* derived name */
      * from. */
     virtual void blockFree(void *pointer, int numBytes);
 
+    /* The free itself, inline in slot 3 and in slot 6's resize (0x1404a to
+     * 0x140c6): declared `inline`, the hint its cost (225 to 250) needs in
+     * the resize (defined in func_00014220.cpp). derived name. */
+    inline void freeBlock(void *pointer, int numBytes);
+
+    /* Slot 6 (0x14000): a buffer resized as a new block of the size asked
+     * for, the old contents copied up to the smaller size and the old block
+     * freed, through this allocator's own allocation by name. derived
+     * name. */
+    virtual void *FUN_00008d90(void *pointer, int oldNumBytes, int &numBytesInOut);
+
     /* A block onto a full row's list (0x147c0), the list emptied down to
      * half its limit into the allocator first. derived name. */
     void FUN_000147c0(int row, void *pointer);
