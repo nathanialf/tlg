@@ -4,7 +4,7 @@
 /* hknpConvexShape's finish constructor, then the flags' two low bits set
  * when the object is being finished. */
 hknpConvexPolytopeShape::hknpConvexPolytopeShape(hkFinishLoadedObjectFlag flag)
-    : hknpConvexShape(flag)
+    : hknpConvexShape(flag), connectivity(flag)
 {
     if (flag.finishing) {
         flags |= IS_CONVEX_SHAPE | IS_CONVEX_POLYTOPE_SHAPE;

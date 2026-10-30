@@ -4,6 +4,6 @@
 /* hknpPairCollisionFilter's finish constructor: the vtable is set and the
  * disabled pairs, which are not serialized, start as an empty map. */
 hknpPairCollisionFilter::hknpPairCollisionFilter(hkFinishLoadedObjectFlag flag)
-    : hknpCollisionFilter(flag)
+    : hknpCollisionFilter(flag), childFilter(flag)
 {
 }

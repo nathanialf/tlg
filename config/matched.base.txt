@@ -899,7 +899,6 @@ FUN_00006b90 src/libs/unknown/func_00006b90.cpp
 _ZN23hknpStaticCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000385d0.cpp _ZN23hknpStaticCompoundShapeC2E24hkFinishLoadedObjectFlag
 FUN_00033fb0 src/libs/unknown/func_00033fb0.cpp
 _ZN18hknpDecoratorShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0003b0f0.cpp _ZN18hknpDecoratorShapeC2E24hkFinishLoadedObjectFlag
-FUN_0003c240 src/libs/unknown/func_0003c240.cpp _ZN27hknpBreakableConstraintDataC2E24hkFinishLoadedObjectFlag
 _ZN24hknpDynamicCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000469a0.cpp _ZN24hknpDynamicCompoundShapeC2E24hkFinishLoadedObjectFlag
 FUN_0004bc60 src/libs/unknown/func_0004bc60.cpp
 FUN_0004e0c0 src/libs/unknown/func_0004e0c0.cpp
@@ -2275,3 +2274,13 @@ FUN_0001d2b0 src/libs/unknown/func_0001d290.cpp _GLOBAL__I_a
 FUN_000233a0 src/libs/unknown/func_00023380.cpp _GLOBAL__I_a
 FUN_00024300 src/libs/unknown/func_000242e0.cpp _GLOBAL__I_a
 FUN_00038b10 src/libs/unknown/func_00038af0.cpp _GLOBAL__I_a
+_ZN27hknpBreakableConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0003c240.cpp
+_ZN23hknpWorldObject1d0LargeC1Ev src/libs/unknown/func_00150240.cpp
+FUN_00038c30 src/libs/unknown/func_00038c30.cpp _GLOBAL__I_a
+FUN_000394c0 src/libs/unknown/func_000394c0.cpp _GLOBAL__I_a
+FUN_0003bb20 src/libs/unknown/func_0003bb20.cpp _GLOBAL__I_a
+FUN_0003d420 src/libs/unknown/func_0003d420.cpp _GLOBAL__I_a
+FUN_000617b0 src/libs/unknown/func_000617b0.cpp _GLOBAL__I_a
+FUN_00069790 src/libs/unknown/func_00069790.cpp _GLOBAL__I_a
+FUN_00199880 src/libs/unknown/func_00199880.cpp _ZN19BitFieldMap0019977012FUN_00199880Ev
+FUN_0019d280 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019d280ERK7hkClassPKc

@@ -1719,6 +1719,15 @@ class hkCriticalSection
  * pointer (hknpConstraintCinfo's cleanup 0x369a0, after the name). The
  * target must be a reference-counted class where it is destroyed. */
 template <typename T> struct hkRefPtr {
+    /* Empty (the world's +0x1d0 object clears its eight at 0x1502c3, the
+     * dispatcher its eight at 0x9057e). */
+    hkRefPtr() : pntr(HK_NULL) {}
+
+    /* A loaded object's reference is kept as it was loaded (the finish
+     * constructors of hknpConvexPolytopeShape 0x1520b0 and
+     * hknpPairCollisionFilter 0x1673f0 leave theirs). */
+    hkRefPtr(hkFinishLoadedObjectFlag) {}
+
     ~hkRefPtr()
     {
         if (pntr) {
@@ -3882,7 +3891,10 @@ class hkxBlob : public hkReferencedObject
 class hkxSparselyAnimatedEnum : public hkxSparselyAnimatedInt
 {
   public:
-    hkxSparselyAnimatedEnum(hkFinishLoadedObjectFlag flag) : hkxSparselyAnimatedInt(flag) {}
+    hkxSparselyAnimatedEnum(hkFinishLoadedObjectFlag flag)
+        : hkxSparselyAnimatedInt(flag), enumeration(flag)
+    {
+    }
 
     /* The enum's reference released, then the int arrays (0x89530, slot
      * 0; the deleting destructor 0x89610 holds the same body). Inline,
@@ -6870,12 +6882,18 @@ class hknpEventDispatcher /* derived name */
 class hknpWorldObject1d0 /* derived name */
 {
   public:
+    /* Inline: the pointer cleared and the kind stored, 1 by the larger
+     * class's constructor (0x150251), 0 by the world for the smaller one
+     * (0x4a2c4). */
+    hknpWorldObject1d0(int simulationType) : pointer10(HK_NULL), simulationType(simulationType) {}
+
     /* Inline and empty: the smaller class's deleting destructor (0x6c810)
      * calls no base destructor. */
     virtual ~hknpWorldObject1d0() {}
 
     u8 unknown8[8];
-    void *pointer10; /* derived name */
+    void *pointer10;    /* derived name */
+    int simulationType; /* derived name: the world description's byte at +0x50 */
 };
 
 /* The 0x20-byte one (derived name; vtable 0x169aca0): its destructor is the
@@ -6890,7 +6908,7 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
     /* The class allocator's delete (defined in tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    u8 unknown18[8];
+    u8 unknown1c[4];
 };
 
 /* The 0x1a0-byte one (derived name; vtable 0x16a4380, constructor
@@ -6918,12 +6936,67 @@ struct hkIntSpaceUtil /* derived name */
 
 struct hknpWorld;
 
+/* An array of 8-byte entries (a 16-bit key and an index) and a cursor
+ * (derived name): its constructor 0xc63f0 and its clear 0xc6420 are out of
+ * line, its destructor is the array's (inline in 0x14e100). */
+struct KeyedArray000c63f0 /* derived name */
+{
+    KeyedArray000c63f0();
+
+    hkArray<u64> entries; /* derived name */
+    int cursor;           /* derived name: the first entry not yet taken */
+    int unknown14;
+};
+
+/* A 12-byte entry of the larger object's two arrays at +0x138 and +0x148
+ * (derived name; its fields are not read yet). */
+struct Entry0014e100 /* derived name */
+{
+    u32 unknown0[3];
+};
+
+class hknpCollidePairsTask;
+class hknpPrepareNewPairsTask;
+class hknpPrepareConstraintsTask;
+class hknpBuildConstraintsTask;
+class hknpCleanInactiveCachesTask;
+
 class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
 {
   public:
+    /* Out of line (0x150240; the world's at 0x4a2a6): the kind 1, the
+     * in-place array of 24, the keyed array, the two arrays and the eight
+     * tasks empty. */
+    hknpWorldObject1d0Large();
+
+    /* Out of line (0x14e100, slot 0 0x14e0a0 calls it): the tasks released
+     * from the last, then the arrays. */
+    virtual ~hknpWorldObject1d0Large();
+
     /* Slot 5 (0x151c80): the world's streams of a thread checked, the
      * checks empty in this build. derived name. */
     void FUN_00151c80(hknpWorld *world, int threadIndex);
+
+    u8 unknown1c[0x24];
+    hkInplaceArrayAligned16<u64, 24> entries40; /* derived name */
+    KeyedArray000c63f0 keyedArray;              /* derived name */
+    /* 12-byte entries (the destructor frees capacity times 12); passed to
+     * the build constraints tasks (+0x138) and the new pairs task (+0x148)
+     * by the builder 0x150330. derived names. */
+    hkArray<Entry0014e100> array138;
+    hkArray<Entry0014e100> array148;
+    /* The tasks the builder 0x150330 makes (derived names): the existing
+     * and the new pairs' collide tasks around the new pairs' preparation,
+     * the constraints' preparation and their two builds, the inactive
+     * caches' cleaning, and one more. */
+    hkRefPtr<hknpCollidePairsTask> collideExistingPairsTask;
+    hkRefPtr<hknpPrepareNewPairsTask> prepareNewPairsTask;
+    hkRefPtr<hknpCollidePairsTask> collideNewPairsTask;
+    hkRefPtr<hknpPrepareConstraintsTask> prepareConstraintsTask;
+    hkRefPtr<hknpBuildConstraintsTask> buildConstraintsTask0;
+    hkRefPtr<hknpBuildConstraintsTask> buildConstraintsTask1;
+    hkRefPtr<hknpCleanInactiveCachesTask> cleanInactiveCachesTask;
+    hkRefPtr<hkReferencedObject> task190;
 };
 
 void FUN_0014e100(hknpWorldObject1d0Large *self); /* derived name */
@@ -9943,14 +10016,8 @@ inline hknpMaterialDescriptor::~hknpMaterialDescriptor()
     material = 0;
 }
 class hknpBallGun; /* 0x57c20c0; FUN_00157e00 runs hknpFirstPersonGun's, vtable 0x16a48d0 */
-class hknpBreakableConstraintData; /* 0x57c23f8; FUN_0003c240 runs 0x7d520, vtable 0x1695b10 */
+class hknpBreakableConstraintData; /* 0x57c23f8; 0x3c240 runs 0x7d520, vtable 0x1695b10 */
 class hknpCompressedMeshShape;     /* 0x57c26c8; its finish constructor 0x158610 (below) */
-
-/* hknpBreakableConstraintData's finish constructor (0x3c240, the class's
- * constructor below), called by name from its finish callback while the
- * class has pure slots this header does not override. derived name. */
-void FUN_0003c240(hknpBreakableConstraintData *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hknpDestructionShapeProperties (type info 0x57c2648; hkClass 0x57c25f8,
  * built at 0x6b465: size 0x70, parent hkReferencedObject's, member records
@@ -11082,7 +11149,7 @@ inline void *operator new(unsigned long, void *where)
  * name. constraintData is a counted reference to the constraint data
  * (hkpConstraintData: the cleanup releases it). */
 struct hknpConstraintCinfo {
-    hknpConstraintCinfo(hkFinishLoadedObjectFlag flag) : name(flag) {}
+    hknpConstraintCinfo(hkFinishLoadedObjectFlag flag) : constraintData(flag), name(flag) {}
 
     /* The cleanup callback of its type info (0x369a0, registered by the
      * initializer at 0x36c62): the cinfo destroyed in place, the name, then
@@ -11103,7 +11170,10 @@ struct hknpConstraintCinfo {
  * motionType, position, orientation, velocities, mass and the rest up to
  * localFrame at +0x90. Its finish constructor finishes the name. */
 struct hknpBodyCinfo {
-    hknpBodyCinfo(hkFinishLoadedObjectFlag flag) : name(flag) {}
+    hknpBodyCinfo(hkFinishLoadedObjectFlag flag)
+        : name(flag), massDistribution(flag), localFrame(flag)
+    {
+    }
 
     const hknpShape *shape;
     s32 flags;
@@ -11659,8 +11729,15 @@ class hkpWrappedConstraintData : public hkpConstraintData
     /* The class allocator (tlg_lib_unknown.h): a new object from the
      * thread's heap, inline (the copies 0x3c2a0 and 0x67c80); the deleting
      * destructor 0x7d480, beside the constructors, frees at the recorded
-     * size, 0x20 by default. */
+     * size, 0x20 by default; placement stays available beside it (the
+     * reflection's vtable read, 0x69820). */
     static void *operator new(unsigned long numBytes);
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     static void operator delete(void *object, unsigned long numBytes);
 
     /* Slots 6 (0x7d5b0), 7 (0x67c60) and 20 (0x67b30): the wrapped data's
@@ -16033,6 +16110,21 @@ struct U16PointerMap /* derived name */
     /* derived name: the table rebuilt at a new capacity (0x199390). */
     void FUN_00199390(AllocatorBase &allocator, int newCapacity);
 
+    /* The count's top bit: the map does not own its entries. derived
+     * name. */
+    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
+
+    /* Every entry marked empty and the count zeroed, the entries kept
+     * (inline in 0x199880), as the pointer map's. derived name. */
+    void clear()
+    {
+        const int capacity = hashMod + 1;
+        for (int i = 0; i < capacity; i++) {
+            entries[i].key = 0xffff;
+        }
+        numEntries &= DONT_DEALLOCATE_FLAG;
+    }
+
     Pair *entries;
     int numEntries;
     int hashMod;
@@ -16105,6 +16197,10 @@ struct BitFieldMap00199770 /* derived name */
      * given back, when it cannot hold the bit (0x1659c0; the world's body
      * setup at 0x17668b). derived name. */
     void FUN_001659c0(u32 bitIndex, u16 key, void *const &element);
+
+    /* Every field given back to the thread's heap at its size, then the
+     * map emptied (0x199880). derived name. */
+    void FUN_00199880();
 
     int numBits; /* derived name: the size a new field is made at */
     u8 unknown4[4];
@@ -16346,7 +16442,11 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
     /* The section each object slot 11 placed goes to, by the object's
      * address. derived name. */
     PointerMap objectToSectionIndex;
-    u8 unknownD0[0x68]; /* to the size its deleting destructor 0x19c100 frees */
+    /* A section's index by a class's name, set by slot 12 (0x19d280; the
+     * index passed zero-extended).
+     * derived name. */
+    StringMapOf<u32> classNameToSection;
+    u8 unknownE8[0x50]; /* to the size its deleting destructor 0x19c100 frees */
 };
 
 /* Its out-of-line destructor body: restores the vtable, frees the arrays and
