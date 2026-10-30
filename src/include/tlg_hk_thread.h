@@ -9,15 +9,15 @@
  * "hkSemaphore" (0x14b4978) by its constructor 0x1a420 (initial and maximum
  * counts in its second and third arguments, attribute 1; the pool's
  * constructor at 0x6dcb passes a fourth, 0, which the kernel version does
- * not use). FUN_0001a440 deletes it (its callers then free the object),
- * FUN_0001a490 waits for one count and FUN_0001a4a0 signals the given
- * count. */
+ * not use). The destructor (0x1a440) deletes it (its callers then free the
+ * object: Class168e810's destructor at 0x17010), FUN_0001a490 waits for one
+ * count and FUN_0001a4a0 signals the given count. */
 class hkSemaphore
 {
   public:
     hkSemaphore(int initialCount, int maxCount, int numSpinIterations); /* derived names */
+    ~hkSemaphore();
 
-    void FUN_0001a440();          /* derived name: the destructor's body */
     void FUN_0001a490();          /* derived name: acquire */
     void FUN_0001a4a0(int count); /* derived name: release */
 
@@ -75,6 +75,10 @@ struct Object00015700 /* derived name */
      * at 0x16fc6): every block deleted, then the critical section. */
     ~Object00015700();
 
+    /* Back to the thread's heap at the class's size, untested (0x16fed:
+     * the delete expression has tested the pointer). derived name. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     Block *firstBlock; /* derived name */
     u8 unknown8[8];
     hkCriticalSection lock; /* derived name */
@@ -95,9 +99,12 @@ class Runner00016350 /* derived name */
     /* Empty (the shared 0xe5c0); the deleting destructor 0x13e50 frees
      * the object's 16 bytes on the thread's heap, the body ten other
      * vtables of 16-byte classes with empty destructors cite by address. */
-    virtual ~Runner00016350();
+    /* Empty and inline: Class168e810's destructor destroys its member with no
+     * call (0x16f90), so the vtable and the deleting destructor are emitted
+     * with the key function, slot 3 (func_00091af0.cpp). */
+    virtual ~Runner00016350() {}
 
-    virtual void unknownVirtual2(); /* the empty 0xe5c0 */
+    virtual void unknownVirtual2() {} /* the empty 0xe5c0 */
 
     /* Slot 3 (0x91af0): a name and attributes for the task graph's dumps
      * (FUN_00091b30's fill colours are such attributes): "Unnamed", and no
@@ -119,67 +126,111 @@ struct WorkItem00017280 /* derived name */
     Runner00016350 *runner; /* derived name */
 };
 
+struct TaskNode000172c0;
+
 /* An interface of ten slots, the second base (at +0x10, vtable address point
  * 0x168e888) of Class168e810, which overrides slots 2 to 9 in its primary
  * slots 5 to 12. */
 class Interface168e888 /* derived name */
 {
   public:
-    virtual ~Interface168e888();
+    /* Empty and inline: Class168e810's destructor destroys the base with no
+     * call (0x16f90). */
+    virtual ~Interface168e888() {}
 
     virtual void FUN_00017240(void *pointer, int count) = 0; /* slot 2; derived name */
     virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
                               u16 value) = 0; /* slot 3; derived name */
-    /* Slots 4 to 6 and 8: their thunks FUN_000173e0, FUN_00017530, the
-     * thunk of FUN_00017540 and FUN_00017a50 (signatures there). */
-    virtual void unknownVirtual4() = 0;
-    virtual void unknownVirtual5() = 0;
-    virtual void unknownVirtual6() = 0;
+    virtual void FUN_000172c0(TaskNode000172c0 *node,
+                              TaskNode000172c0 *successor) = 0;  /* slot 4; derived name */
+    virtual void FUN_000173f0(void *pointer, int count) = 0;     /* slot 5; derived name */
+    virtual void FUN_00017540(void *pointer, int count) = 0;     /* slot 6; derived name */
     virtual void FUN_00017930(const Handle00016350 *handle) = 0; /* slot 7; derived name */
-    virtual void unknownVirtual8() = 0;
+    virtual void FUN_00017970(const Handle00016350 *const *handles,
+                              int numHandles) = 0;           /* slot 8; derived name */
     virtual void FUN_00017260(void *pointer, int count) = 0; /* slot 9; derived name */
+};
+
+/* A waiting thread's semaphore of Class168e810 (derived names): built by the
+ * constructor 0x16d40 for the first four of 64 entries (0x10 bytes from the
+ * thread's heap, the count 0 of at most 1, the owner's spin count), not
+ * waiting, its index at +0xc; FUN_000170d0 signals each waiting one. */
+struct WaitingSemaphore00016d40 /* derived name */
+{
+    /* Back to the thread's heap at the class's size, untested (0x17037).
+     * derived name. */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkSemaphore semaphore; /* derived name */
+    hkBool waiting;        /* derived name */
+    int index;             /* derived name */
+};
+
+/* An entry of Class168e810's ready queue (derived names), a binary heap
+ * slot 9 (0x17540) pushes: a key of the node's priority and a sequence
+ * number, and the node. */
+struct ReadyEntry00017540 /* derived name */
+{
+    u32 key;
+    TaskNode000172c0 *node;
 };
 
 /* A reference-counted object (vtable address points 0x168e810 and, for the
  * second base, 0x168e888, both stored by its constructor 0x16d40 and its
- * complete destructor FUN_00016f90; size 0x370 by its deleting destructor)
- * with the interface above at +0x10, the object above at +0x18, a critical
- * section at +0x30 and 64 semaphores from +0x148, each released once by
- * FUN_000170d0 under the lock (flag at +0x362). Slots 5 and 12 forward to
- * the object at +0x18; slots 7, 8 and 9 (FUN_000172c0, FUN_000173f0,
- * FUN_00017540) run under the critical section, slot 11 (FUN_00017970)
- * takes no lock. */
+ * complete destructor 0x16f90; size 0x370 by its deleting destructor)
+ * with the interface above at +0x10, the object above at +0x18, a binary
+ * heap of ready nodes at +0x20, a critical section at +0x30, a free list
+ * of 64 slots at +0x40 and 64 semaphores from +0x148 (the first four
+ * built), each released once by FUN_000170d0 under the lock (flag at
+ * +0x362). Slots 5 and 12 forward to the object at +0x18; slots 7, 8 and 9
+ * (FUN_000172c0, FUN_000173f0, FUN_00017540) run under the critical
+ * section, slot 11 (FUN_00017970) takes no lock. */
 class Class168e810 : public hkReferencedObject, public Interface168e888 /* derived name */
 {
   public:
+    /* Out of line (0x16f90, slot 0, and its thunk 0x170c0; the deleting one
+     * 0x16ee0 and its thunk 0x16f30 before it): the waiting threads
+     * released, the object at +0x18 and the semaphores deleted, then the
+     * members. */
     virtual ~Class168e810();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     virtual void FUN_00017240(void *pointer, int count); /* vtable slot 5; derived name */
     virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
-                              u16 value);                    /* vtable slot 6; derived name */
+                              u16 value); /* vtable slot 6; derived name */
+    /* Slot 7 (0x172c0), under the lock: a node made to wait on another
+     * unless that one is done, its count raised (0x173f0 links pairs of
+     * them). derived names. */
+    virtual void FUN_000172c0(TaskNode000172c0 *node, TaskNode000172c0 *successor);
+    virtual void FUN_000173f0(void *pointer, int count);     /* vtable slot 8; derived name */
+    virtual void FUN_00017540(void *pointer, int count);     /* vtable slot 9; derived name */
     virtual void FUN_00017930(const Handle00016350 *handle); /* vtable slot 10; derived name */
-    virtual void FUN_00017260(void *pointer, int count);     /* vtable slot 12; derived name */
-
     /* Slot 11 (0x17970): the handles that name something gathered into a
      * temporary array and handed to the interface's run of several
      * (FUN_00092fe0). derived name. */
-    void FUN_00017970(const Handle00016350 *const *handles, int numHandles);
+    virtual void FUN_00017970(const Handle00016350 *const *handles, int numHandles);
+    virtual void FUN_00017260(void *pointer, int count); /* vtable slot 12; derived name */
 
-    Object00015700 *object18; /* derived name */
-    u8 unknown20[0x10];
-    hkCriticalSection lock; /* derived name; slots 7 to 9 run under it */
-    u8 unknown40[0x310];
+    /* 0x170d0: under the lock, once (the flag at +0x362), every waiting
+     * semaphore signalled. derived name. */
+    void FUN_000170d0();
+
+    Object00015700 *object18;                 /* derived name */
+    hkArray<ReadyEntry00017540> readyQueue;   /* derived name */
+    hkCriticalSection lock;                   /* derived name; slots 7 to 9 run under it */
+    int firstFreeSlot;                        /* derived name: 0 on construction */
+    int nextFreeSlot[64];                     /* derived name: i + 1, the last 0x7f */
+    WaitingSemaphore00016d40 *semaphores[64]; /* derived name */
+    u8 unknown348[8];
     Runner00016350 defaultRunner; /* derived name */
-    u8 unknown360[0x10];
+    u16 sequence;                 /* derived name: slot 9's counter */
+    hkBool released;              /* derived name: set by FUN_000170d0 */
+    int spinCount;                /* derived name */
+    u8 unknown368[8];
 };
-
-void FUN_00016f90(Class168e810 *self); /* derived name */
-/* Its deleting destructor (slot 1, 0x16ee0), written as calls while the
- * destructor is not (cookbook 15, 97). derived name. */
-void FUN_00016ee0(Class168e810 *self);
-/* The interface's thunk of it (slot 1 of the second vtable, 0x16f30), on
- * the object 16 bytes before the interface. derived name. */
-void FUN_00016f30(Interface168e888 *self);
 
 /* A node slot 7 links (derived names): its count at +0, -1 once the node
  * is done, and the nodes that wait on it at +0x10. */
@@ -189,13 +240,6 @@ struct TaskNode000172c0 /* derived name */
     u8 unknown4[0xc];
     hkArray<TaskNode000172c0 *> successors;
 };
-
-/* Slot 7 (0x172c0), under the lock: a node made to wait on another unless
- * that one is done, its count raised (0x173f0 links pairs of them). derived
- * names. */
-void FUN_000172c0(Class168e810 *self, TaskNode000172c0 *node, TaskNode000172c0 *successor);
-void FUN_000173f0(Class168e810 *self, void *pointer, int count); /* derived name */
-void FUN_00017540(Class168e810 *self, void *pointer, int count); /* derived name */
 
 /* Handles run through an interface (0x92fe0; Class168e810's slot 11 hands
  * it the ones that name something): one through slot 7, two or more as a

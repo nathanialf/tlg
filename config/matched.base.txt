@@ -309,7 +309,7 @@ _ZN11hkStringPtrC1Ev src/libs/unknown/leaf_0000e3d0.cpp
 FUN_0000f080 src/libs/unknown/leaf_0000f080.cpp
 FUN_00012e20 src/libs/unknown/leaf_00012e20.cpp _ZNK21hkLargeBlockAllocator14allocatedBytesEv
 FUN_00012e30 src/libs/unknown/leaf_00012e20.cpp _ZThn8_NK21hkLargeBlockAllocator14allocatedBytesEv
-FUN_0001a440 src/libs/unknown/leaf_0001a440.cpp
+_ZN11hkSemaphoreD1Ev src/libs/unknown/leaf_0001a440.cpp
 FUN_0001a4a0 src/libs/unknown/leaf_0001a4a0.cpp
 FUN_00023370 src/libs/unknown/leaf_00023370.cpp _ZNK21hkSkinnedRefMeshShape12getClassTypeEv
 FUN_000238c0 src/libs/unknown/leaf_000238c0.cpp _ZNK22hkMultipleVertexBuffer12getClassTypeEv
@@ -356,11 +356,11 @@ _ZN15MersenneTwisterC1Ev src/libs/unknown/leaf_00010680.cpp
 FUN_00013190 src/libs/unknown/func_00013060.cpp _ZThn8_N21hkLargeBlockAllocator13addToSnapshotEPvi
 FUN_000133d0 src/libs/unknown/func_000133d0.cpp
 FUN_00014c40 src/libs/unknown/func_00014c40.cpp _ZNK18FixedSizeAllocator12FUN_00014c40ER16MemoryStatistics
-FUN_000170c0 src/libs/unknown/func_000170c0.cpp
-FUN_000173e0 src/libs/unknown/func_000173e0.cpp
+FUN_000170c0 src/libs/unknown/func_00016ee0.cpp _ZThn16_N12Class168e810D1Ev
+FUN_000173e0 src/libs/unknown/func_000172c0.cpp _ZThn16_N12Class168e81012FUN_000172c0EP16TaskNode000172c0S1_
 FUN_00017530 src/libs/unknown/func_00017530.cpp
 FUN_00017910 src/libs/unknown/func_00017910.cpp
-FUN_00017a50 src/libs/unknown/func_00017a50.cpp
+FUN_00017a50 src/libs/unknown/func_00017970.cpp _ZThn16_N12Class168e81012FUN_00017970EPKPK14Handle00016350i
 FUN_00017240 src/libs/unknown/func_00017240.cpp _ZN12Class168e81012FUN_00017240EPvi
 FUN_00017250 src/libs/unknown/func_00017240.cpp _ZThn16_N12Class168e81012FUN_00017240EPvi
 FUN_00017260 src/libs/unknown/func_00017260.cpp _ZN12Class168e81012FUN_00017260EPvi
@@ -1074,7 +1074,7 @@ FUN_0017ed70 src/libs/unknown/func_0017ed70.cpp
 FUN_00199770 src/libs/unknown/func_00199770.cpp
 FUN_00006cb0 src/libs/unknown/func_00006cb0.cpp _ZN14hkMemorySystem14garbageCollectEv
 _ZN11StackTracerD0Ev src/libs/unknown/leaf_0000d940.cpp
-_ZN14Runner00016350D0Ev src/libs/unknown/func_00013e50.cpp
+_ZN14Runner00016350D0Ev src/libs/unknown/func_00091af0.cpp
 FUN_0001c550 src/libs/unknown/func_0001c550.cpp
 _ZN41hknpFlippedGetClosestPointsQueryCollectorD0Ev src/libs/unknown/func_000483d0.cpp
 _ZN34hknpFlippedShapeCastQueryCollectorD0Ev src/libs/unknown/func_00048520.cpp
@@ -1291,7 +1291,7 @@ FUN_0003b990 src/libs/unknown/func_0003b990.cpp
 FUN_00007390 src/libs/unknown/func_00007390.cpp _Z12FUN_00007390P12Pool00007880
 _ZN22hkBufferedStreamWriterD0Ev src/libs/unknown/func_00008ff0.cpp
 _ZN18hkSimpleLocalFrameD0Ev src/libs/unknown/func_0000de20.cpp
-FUN_00016ee0 src/libs/unknown/func_00016ee0.cpp
+_ZN12Class168e810D0Ev src/libs/unknown/func_00016ee0.cpp
 _ZN13PageAllocatorD0Ev src/libs/unknown/func_00019780.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
 FUN_000234a0 src/libs/unknown/func_000234a0.cpp
@@ -1397,7 +1397,7 @@ FUN_00013ad0 src/libs/unknown/func_00013ad0.cpp _ZNK10PointerMap12FUN_00013ad0Em
 FUN_00008940 src/libs/unknown/func_00008940.cpp _ZN9hkOstream12FUN_00008940ERK11hkStringPtr
 _ZN24hkpWrappedConstraintDataC1EP17hkpConstraintData src/libs/unknown/func_0007d550.cpp _ZN24hkpWrappedConstraintDataC2EP17hkpConstraintData
 FUN_000181c0 src/libs/unknown/func_000181c0.cpp
-FUN_00016f30 src/libs/unknown/func_00016f30.cpp
+FUN_00016f30 src/libs/unknown/func_00016ee0.cpp _ZThn16_N12Class168e810D0Ev
 _ZN7hkxBlobD1Ev src/libs/unknown/func_00085c40.cpp
 _ZN7hkxBlobD0Ev src/libs/unknown/func_00085c40.cpp
 _ZN26hknpVehicleDefaultSteeringD1Ev src/libs/unknown/func_0016f980.cpp
@@ -2383,7 +2383,7 @@ FUN_00090a10 src/libs/unknown/func_00090a10.cpp _ZN15BufferAllocator12FUN_00090a
 _ZN13PageAllocatorD1Ev src/libs/unknown/func_00019780.cpp
 FUN_00072fb0 src/libs/unknown/func_00072fb0.cpp _ZN16hknpCapsuleShape12FUN_00072fb0ERKDv4_fS2_f
 _ZN24hkpRagdollConstraintDataD1Ev src/libs/unknown/func_0007de50.cpp
-FUN_000172c0 src/libs/unknown/func_000172c0.cpp _Z12FUN_000172c0P12Class168e810P16TaskNode000172c0S2_
+FUN_000172c0 src/libs/unknown/func_000172c0.cpp _ZN12Class168e81012FUN_000172c0EP16TaskNode000172c0S1_
 FUN_00019b60 src/libs/unknown/func_00019b60.cpp _ZN13PageAllocator12FUN_00019b60Ev
 FUN_0007fb50 src/libs/unknown/func_0007fb50.cpp _ZNK24hkpLinearParametricCurve12FUN_0007fb50EfRDv4_f
 FUN_0008b740 src/libs/unknown/func_0008b6f0.cpp _GLOBAL__I_a
@@ -2434,3 +2434,4 @@ FUN_0019cdf0 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019c
 _ZN12ThreadMemoryD1Ev src/libs/unknown/func_00014690.cpp
 _ZN12ThreadMemory10blockAllocEi src/libs/unknown/func_00014690.cpp
 _ZN22hkFreeListMemorySystemD1Ev src/libs/unknown/func_0000c360.cpp
+_ZN12Class168e810D1Ev src/libs/unknown/func_00016ee0.cpp
