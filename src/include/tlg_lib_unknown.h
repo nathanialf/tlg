@@ -4475,6 +4475,26 @@ inline void hkGeometry::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpMaterialLibrary::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hknpVehicleDefaultTransmission::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkpLinearParametricCurve::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxSparselyAnimatedInt::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpConvexPolytopeShape::Connectivity::operator delete(void *object,
                                                                    unsigned long numBytes)
 {
@@ -4795,7 +4815,6 @@ void FUN_00019780(PageAllocator *self);
 void FUN_00023200(hkMemoryMeshBody *self);
 void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
-void FUN_0003e200(hknpDummyShape *self);
 void FUN_000467f0(hknpPhysicsSceneData *self);
 void FUN_0004b040(hknpWorld *self);
 void FUN_0007de50(hkpRagdollConstraintData *self);
@@ -4835,7 +4854,6 @@ void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d
  * classes of 0x30 bytes, named for the sphere's constructor beside it,
  * 0x3c540; D15). */
 void FUN_0003c370(hknpSphereShape *self);                    /* slot 1 of 0x1695c10 */
-void FUN_0003e1b0(hknpDummyShape *self);                     /* slot 1 of 0x16967b0 */
 void FUN_000467a0(hknpPhysicsSceneData *self);               /* slot 1 of 0x1697ea0 */
 void FUN_0004aff0(hknpWorld *self);                          /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);                  /* slot 1 of 0x169ab10 */

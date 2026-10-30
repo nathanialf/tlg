@@ -1306,7 +1306,6 @@ FUN_00034b30 src/libs/unknown/func_00034b30.cpp
 FUN_00037bf0 src/libs/unknown/func_00037bf0.cpp
 FUN_0003b050 src/libs/unknown/func_0003b050.cpp
 FUN_0003c370 src/libs/unknown/func_0003c370.cpp
-FUN_0003e1b0 src/libs/unknown/func_0003e1b0.cpp
 _ZN17hknpCompoundShapeD0Ev src/libs/unknown/func_00041650.cpp
 FUN_00037d80 src/libs/unknown/func_00037d80.cpp _ZN15hknpMaskedShape12FUN_00037d80Ev
 FUN_000271f0 src/libs/unknown/func_00027130.cpp _ZN14hkVertexFormat12FUN_000271f0ERKNS_7ElementE
@@ -1718,12 +1717,12 @@ FUN_0016e040 src/libs/unknown/func_0016e040.cpp _ZNK22WorldReference0016e04012FU
 FUN_000106e0 src/libs/unknown/func_000106e0.cpp _ZN15MersenneTwister12FUN_000106e0Ej
 _ZN10hkGeometryD1Ev src/libs/unknown/func_00093c60.cpp
 _ZN23hknpConvexPolytopeShape12ConnectivityD1Ev src/libs/unknown/func_00039ae0.cpp
-_ZN30hknpVehicleDefaultTransmissionD1Ev src/libs/unknown/func_00067da0.cpp _ZN30hknpVehicleDefaultTransmissionD2Ev
+_ZN30hknpVehicleDefaultTransmissionD1Ev src/libs/unknown/func_00067f40.cpp
 FUN_000696e0 src/libs/unknown/func_000696e0.cpp _ZN23hknpClosestHitCollector12FUN_000696e0ERK19hknpCollisionResult
 FUN_0007c100 src/libs/unknown/func_0007c100.cpp _ZNK26hkpVelocityConstraintMotor12FUN_0007c100Ev
-_ZN24hkpLinearParametricCurveD1Ev src/libs/unknown/func_0007f470.cpp _ZN24hkpLinearParametricCurveD2Ev
+_ZN24hkpLinearParametricCurveD1Ev src/libs/unknown/func_00078b00.cpp
 FUN_00083a20 src/libs/unknown/func_00083a20.cpp _ZNK32hkpLinearClearanceConstraintData15unknownVirtual7Ev
-_ZN22hkxSparselyAnimatedIntD1Ev src/libs/unknown/func_000887b0.cpp _ZN22hkxSparselyAnimatedIntD2Ev
+_ZN22hkxSparselyAnimatedIntD1Ev src/libs/unknown/func_00088900.cpp
 FUN_000925d0 src/libs/unknown/func_000925d0.cpp _ZN9RefArrays12FUN_000925d0EP18RefArraysAllocatorNS_7EntryIdE
 FUN_0017ef10 src/libs/unknown/func_0017ef10.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017ef10EPK10hkTypeInfoPK7hkClass
 FUN_0019cc80 src/libs/unknown/func_0019cc80.cpp _ZN16hkPackfileWriter12FUN_0019cc80EPKvS1_
@@ -2023,3 +2022,14 @@ FUN_00094060 src/libs/unknown/func_00094060.cpp
 _ZN10hkGeometryD0Ev src/libs/unknown/func_00093c60.cpp
 _ZN23hknpStaticCompoundShapeD0Ev src/libs/unknown/func_000386c0.cpp
 _ZN23hknpConvexPolytopeShape12ConnectivityD0Ev src/libs/unknown/func_00039ae0.cpp
+_ZN24hknpDynamicCompoundShapeD0Ev src/libs/unknown/func_00046a90.cpp
+_ZN19hknpMaterialLibraryD1Ev src/libs/unknown/func_00061480.cpp
+_ZN19hknpMaterialLibraryD0Ev src/libs/unknown/func_00061480.cpp
+_ZN30hknpVehicleDefaultTransmissionD0Ev src/libs/unknown/func_00067f40.cpp
+FUN_000731a0 src/libs/unknown/func_000731a0.cpp
+_ZN24hkpLinearParametricCurveD0Ev src/libs/unknown/func_00078b00.cpp
+_ZN22hkxSparselyAnimatedIntD0Ev src/libs/unknown/func_00088900.cpp
+FUN_0019c3c0 src/libs/unknown/func_0019c3c0.cpp _ZN16hkPackfileWriter12FUN_0019c3c0EPKvRK7hkClassPK21hkVtableClassRegistryPv
+FUN_000395e0 src/libs/unknown/func_000395e0.cpp _GLOBAL__I_a
+_ZN14hknpDummyShapeD1Ev src/libs/unknown/func_0003e170.cpp
+_ZN14hknpDummyShapeD0Ev src/libs/unknown/func_0003e170.cpp

@@ -861,6 +861,10 @@ struct hkClass {
     u32 describedVersion;                 /* derived name */
 };
 
+/* Whether a class has a vtable, which its root class tells (0x45a0).
+ * derived name. */
+bool FUN_000045a0(const hkClass *self); /* derived name */
+
 /* hkClassEnum (the reflection's enum record; its type and its item's are
  * named "hkClassEnum" and "hkClassEnumItem"): the name at +0, the items at
  * +8 and their count at +0x10, each item a value and its name (16 bytes).
@@ -2553,8 +2557,16 @@ class hknpVehicleDefaultTransmission : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x67da0, slot 0): the arrays given back. */
-    virtual ~hknpVehicleDefaultTransmission();
+    /* The arrays given back (0x67da0, slot 0; the deleting destructor
+     * 0x67e20 holds the same body). Inline: the executable holds the
+     * complete destructor before the deleting one, as the vtable's emission
+     * gives them (cookbook 187), in the translation unit of the key
+     * function, slot 5 (0x67f40). */
+    inline virtual ~hknpVehicleDefaultTransmission() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slots 5 to 10 (0x67f40, 0x67ff0, 0x68030, 0x68130, 0x680b0,
      * 0x67ef0); slot 6 asks slot 10 for the ratio through the vtable. */
@@ -3226,8 +3238,15 @@ class hkxSparselyAnimatedInt : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x887b0, slot 0): the arrays given back. */
-    virtual ~hkxSparselyAnimatedInt();
+    /* The arrays given back (0x887b0, slot 0; the deleting destructor
+     * 0x88830 holds the same body). Inline, emitted with the vtable: the
+     * executable holds the complete destructor before the deleting one
+     * (cookbook 187). */
+    inline virtual ~hkxSparselyAnimatedInt() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<s32> ints;
     hkArray<float> times;
@@ -6838,7 +6857,16 @@ struct hknpMaterialLibrary : public hkReferencedObject {
      * signals start empty, the entries are left as loaded. */
     hknpMaterialLibrary(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), entries(flag) {}
 
-    virtual ~hknpMaterialLibrary();
+    /* The entries, then the signals in reverse (0x612c0, slot 0; the
+     * deleting destructor 0x61380 holds the same body). Inline, emitted with
+     * the vtable where the object is built (the finish callback 0x61480):
+     * the executable holds the complete destructor before the deleting one
+     * (cookbook 187). */
+    inline virtual ~hknpMaterialLibrary() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     Signal00093530 materialAddedSignal;
     Signal00093530 materialModifiedSignal;
@@ -7401,6 +7429,10 @@ struct hknpMotionProperties {
     u8 spikingVelocityScaleThresholdSquared;
     u8 minimumSpikingVelocityScaleSquared;
 };
+
+extern const hkClassMember D_16948a0[];         /* derived name: hknpMotionProperties's records */
+extern const hkClassEnum D_1694c40[];           /* derived name: its two enums */
+void FUN_000395c0(void *object, int finishing); /* derived name: its type info's finish callback */
 
 /* hknpMotionPropertiesId, the motion properties library's handle (the
  * template argument of its free-list array in the scoped type names,
@@ -8000,6 +8032,11 @@ class hknpCapsuleShape : public hknpConvexPolytopeShape
     hknpCapsuleShape(hkFinishLoadedObjectFlag flag);
 
     int FUN_00073170() const; /* vtable slot 6; derived name */
+
+    /* Slot 10 (0x731a0): eight points evenly along the segment from a to b,
+     * each with its index in the w lane (the 0.5 exponent bits over it).
+     * derived name. */
+    const Vec4 *FUN_000731a0(Vec4 *buffer, int bufferSize) const;
 
     /* Slot 28 (0x73110): the capsule's own answer from its segment and
      * convex radius; the shape's default when that fails. derived name. */
@@ -12972,8 +13009,15 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     {
     }
 
-    /* Out of line (0x7f470, slot 0): the arrays given back. */
-    virtual ~hkpLinearParametricCurve();
+    /* The arrays given back (0x7f470, slot 0; the deleting destructor
+     * 0x7f4f0 holds the same body). Inline, emitted with the vtable: the
+     * executable holds the complete destructor before the deleting one
+     * (cookbook 187). */
+    inline virtual ~hkpLinearParametricCurve() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 5 (0x7f5c0): the point at a parameter, between the points
      * either side of it. derived name. */
@@ -14015,6 +14059,11 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * on to FUN_0019c480. derived names. */
     virtual void FUN_0019c3c0(const void *object, const hkClass &klass,
                               const hkVtableClassRegistry *registry, void *argument4);
+    /* An object added with what it points to, in the section of a tag
+     * (0x19c480; slot 5 adds the contents to "__data__"). derived names. */
+    void FUN_0019c480(const void *object, const hkClass &klass,
+                      const hkVtableClassRegistry *registry, void *argument4,
+                      const char *sectionTag);
     /* Slot 6 (0x19cc20): slot 5 with the built-in type registry's vtable
      * class registry. derived name. */
     virtual void FUN_0019cc20(const void *object, const hkClass &klass, void *argument3);
@@ -14054,7 +14103,12 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * index among them (slot 10, 0x19d0d0). derived names. */
     hkArray<char *> sectionTags;
     StringMapOf<int> sectionTagToIndex;
-    u8 unknownA0[0x98]; /* to the size its deleting destructor 0x19c100 frees */
+    u8 unknownA0[0x10]; /* derived name */
+    /* The contents' and their class's indices in the map at +0x20 (slot
+     * 5, 0x19c3c0). derived names. */
+    int contentsIndex;
+    int contentsClassIndex;
+    u8 unknownB8[0x80]; /* to the size its deleting destructor 0x19c100 frees */
 };
 
 /* Its out-of-line destructor body: restores the vtable, frees the arrays and
@@ -14065,6 +14119,7 @@ void FUN_0019c150(hkPackfileWriter *self); /* derived name */
  * (0x14cb9fc) and "__types__" (0x14cb791). */
 extern const char *D_16dcb70;
 extern const char *D_16dcbb8;
+extern const char *D_16dcbb0; /* "__data__" (0x14ccdc2) */
 
 /* The reflection's own classes (each built with its name, 0x11ec4 for
  * hkClassEnumItem's; the others are the classes of hkClass's members
