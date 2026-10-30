@@ -122,37 +122,18 @@ class CacheModifier0017a000 /* derived name */
                                  hknpManifoldCollisionCache *cache, int value) const;
 };
 
-/* The modifiers the context's +0x38 points to (derived names): the union
- * of their masks, their count, then each one's mask and pointer, 16 bytes
- * apart from +8. */
-struct ModifierSet0017a000 /* derived name */
-{
-    struct Entry {
-        u32 mask;
-        CacheModifier0017a000 *modifier;
-    };
-
-    u32 enabledModifiers;
-    int numModifiers;
-    Entry entries[1];
-};
-
-struct ModifierContext0017a000 /* derived name */
-{
-    u8 unknown0[0x38];
-    const ModifierSet0017a000 *modifiers; /* derived name */
-};
-
 /* Slot 5 of every modifier whose mask meets the cache's, when any does: a
  * set whose masks meet the cache's has at least one modifier. Inline in
  * the collision detectors' slot 3 (0x72d30) and out of line as 0x17a000.
  * derived name. */
 inline void fireCacheModifiers(hknpManifoldCollisionCache *cache, /* derived name */
-                               const ModifierContext0017a000 *threadContext, const void *sharedData,
-                               const void *bodyA, const void *bodyB, int value)
+                               const hknpWorldContextPool::Context *threadContext,
+                               const void *sharedData, const void *bodyA, const void *bodyB,
+                               int value)
 {
     const u32 enabled = cache->enabledModifiers;
-    const ModifierSet0017a000 *modifiers = threadContext->modifiers;
+    const hknpModifierManager::ModifierSet *modifiers =
+        &threadContext->modifierManager->modifierSets[0];
     if (modifiers->enabledModifiers & enabled) {
         int i = 0;
         do {
@@ -164,9 +145,9 @@ inline void fireCacheModifiers(hknpManifoldCollisionCache *cache, /* derived nam
     }
 }
 
-void FUN_0017a000(hknpManifoldCollisionCache *cache, const ModifierContext0017a000 *threadContext,
-                  const void *sharedData, const void *bodyA, const void *bodyB,
-                  int value); /* derived name */
+void FUN_0017a000(hknpManifoldCollisionCache *cache,
+                  const hknpWorldContextPool::Context *threadContext, const void *sharedData,
+                  const void *bodyA, const void *bodyB, int value); /* derived name */
 
 /* The collision detector of vtable 0x169b220 (address point 0x169b230,
  * 16 bytes, no type info; built in place at +0x98 of the default modifier
@@ -182,14 +163,14 @@ class CollisionDetector169b230 /* derived name */
   public:
     virtual ~CollisionDetector169b230();
     virtual void unknownVirtual2();
-    virtual void FUN_00072d30(const ModifierContext0017a000 *threadContext, const void *sharedData,
-                              hknpManifoldCollisionCache *cache, const void *argument4,
-                              const void *argument5, const void *bodyA, const void *bodyB,
-                              int value); /* derived names */
-    virtual void FUN_00072dc0(const ModifierContext0017a000 *threadContext, const void *sharedData,
-                              hknpManifoldCollisionCache *cache, const void *argument4,
-                              const void *argument5, const void *bodyA, const void *bodyB,
-                              int value); /* derived names */
+    virtual void FUN_00072d30(const hknpWorldContextPool::Context *threadContext,
+                              const void *sharedData, hknpManifoldCollisionCache *cache,
+                              const void *argument4, const void *argument5, const void *bodyA,
+                              const void *bodyB, int value); /* derived names */
+    virtual void FUN_00072dc0(const hknpWorldContextPool::Context *threadContext,
+                              const void *sharedData, hknpManifoldCollisionCache *cache,
+                              const void *argument4, const void *argument5, const void *bodyA,
+                              const void *bodyB, int value); /* derived names */
 
     int unknown8;
 };
@@ -1896,15 +1877,9 @@ class Elements000760c0 : public hkBaseObject /* derived name */
                      int capacity20, int capacity10);
     virtual ~Elements000760c0();
 
-    /* An element (derived names): five block streams, each 0x100 bytes
-     * from the last; what follows a stream in its 0x100 is not yet read. */
+    /* An element (derived names): five block streams. */
     struct Element {
-        struct Slot {
-            hkBlockStream stream;
-            u8 unknown30[0xd0];
-        };
-
-        Slot slots[5];
+        hkBlockStream slots[5];
     };
 
     /* Slot 3 of both vtables (0x76910): every element's streams emptied,
@@ -1913,8 +1888,7 @@ class Elements000760c0 : public hkBaseObject /* derived name */
     void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
 
     u8 unknown8[0x38];
-    hkBlockStream stream40; /* derived name */
-    u8 unknown70[0xd0];
+    hkBlockStream stream40;    /* derived name */
     hkArray<Element> elements; /* derived name */
 };
 

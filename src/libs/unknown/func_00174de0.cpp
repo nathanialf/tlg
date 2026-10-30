@@ -3,16 +3,16 @@
 
 void hknpWorldStreams260::FUN_00174de0(BlockCache *cache) /* derived name */
 {
-    stream000.stream.FUN_00094990(cache);
-    stream400.stream.FUN_00094990(cache);
-    stream200.stream.FUN_00094990(cache);
-    stream800.stream.FUN_00094990(cache);
-    stream600.stream.FUN_00094990(cache);
-    streamA00.stream.FUN_00094990(cache);
-    stream100.stream.FUN_00094990(cache);
-    stream500.stream.FUN_00094990(cache);
-    stream300.stream.FUN_00094990(cache);
-    stream900.stream.FUN_00094990(cache);
-    stream700.stream.FUN_00094990(cache);
-    streamB00.stream.FUN_00094990(cache);
+    stream000.FUN_00094990(cache);
+    stream400.FUN_00094990(cache);
+    stream200.FUN_00094990(cache);
+    stream800.FUN_00094990(cache);
+    stream600.FUN_00094990(cache);
+    streamA00.FUN_00094990(cache);
+    stream100.FUN_00094990(cache);
+    stream500.FUN_00094990(cache);
+    stream300.FUN_00094990(cache);
+    stream900.FUN_00094990(cache);
+    stream700.FUN_00094990(cache);
+    streamB00.FUN_00094990(cache);
 }

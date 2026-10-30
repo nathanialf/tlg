@@ -7179,6 +7179,7 @@ class Modifier16a4e60 /* derived name */
  * (its members at +0x78 to +0xd8) by collision cache type 1 to 7, and two
  * objects of the world (+0x380, +0x388) at 0 and 1 of the other. */
 struct hknpCollisionDetector; /* derived name */
+class CacheModifier0017a000;  /* derived name; tlg_lib_unknown.h */
 
 class hknpModifierManager /* derived name */
 {
@@ -7201,7 +7202,24 @@ class hknpModifierManager /* derived name */
      * before freeing the 0x570 bytes): the filter's reference released. */
     ~hknpModifierManager();
 
-    u8 unknown0[0x4e0];
+    /* The modifiers of one callback (derived names): the union of their
+     * masks, their count, then each one's mask and pointer. 0x66630 files a
+     * modifier under each bit of the mask its slot 2 returns, the sets 0x88
+     * bytes apart from +0, up to eight a set (the kept check at 0x6667d);
+     * the cache callbacks read the first (0x17a000). */
+    struct ModifierSet {
+        struct Entry {
+            u32 mask;
+            CacheModifier0017a000 *modifier;
+        };
+
+        u32 enabledModifiers;
+        int numModifiers;
+        Entry entries[8];
+    };
+
+    ModifierSet modifierSets[9]; /* derived name */
+    u8 unknown4c8[0x18];
     void *objects4e0[NUM_TYPES_4E0];                                      /* derived name */
     hknpCollisionDetector *collisionDetectors[NUM_COLLISION_CACHE_TYPES]; /* derived name */
     /* The world's collision filter, a reference kept by FUN_000667b0.
@@ -8020,31 +8038,44 @@ struct hkBlockStreamWriter;    /* derived name; below */
 class hknpWorldObject380 : public hkReferencedObject /* derived name */
 {
   public:
-    /* Slot 12 (0x311f0): the centres of mass copied and the orientations
-     * set as rotations, the third argument unread. derived name. */
-    void FUN_000311f0(hknpWorldObject380MotionPair *out, const hknpMotion &motionA,
-                      const void *argument2, const hknpMotion &motionB);
-    /* Slot 20 (0x30c10): the pair processed through FUN_0002b6c0, its
-     * output given the writer's range and the count written past it.
-     * derived name. */
-    void FUN_00030c10(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
-                      void *argument4, void *argument5, void *argument6,
-                      hknpWorldObject380Writer *writer);
-    /* Slot 8 (0x310f0): count records in one block from the allocator at
-     * 0x57b8480, their addresses stored in order. derived name. */
-    void FUN_000310f0(int count, hknpWorldObject380Record **recordsOut);
-    /* Slot 9 (0x31170): the records' block back to the allocator at
-     * 0x57b8480, the record pointers cleared. derived name. */
-    void FUN_00031170(hknpWorldObject380Record **records, int count);
-    void FUN_000311b0(hknpWorldObject380Record **records, void *const *pointers,
-                      int count);                  /* vtable slot 10; derived name */
-    void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
+    /* Slots 5 to 20 of its vtable (address point 0x16926e0), in order; the
+     * shared bodies are 0x42d0 (returns 0) and the empty 0x1c1e0, and the
+     * arguments of slots 6, 14, 18 and 19 are not yet read. */
+
     /* Slot 5 (0x2d790): each node of a run sharing the first one's key
      * given its range of the writer's stream, its bytes counted as 4-byte
      * elements with the headers of the blocks they spill into; the node
      * after the run, or null. derived name. */
-    hknpWorldObject388Node *FUN_0002d790(hknpWorldObject388Node *first,
-                                         hkBlockStreamWriter *const *writer);
+    virtual hknpWorldObject388Node *FUN_0002d790(hknpWorldObject388Node *first,
+                                                 hkBlockStreamWriter *const *writer);
+    virtual void FUN_0002d880();
+    virtual int unknownVirtual7(); /* the shared 0x42d0 */
+    /* Slot 8 (0x310f0): count records in one block from the allocator at
+     * 0x57b8480, their addresses stored in order. derived name. */
+    virtual void FUN_000310f0(int count, hknpWorldObject380Record **recordsOut);
+    /* Slot 9 (0x31170): the records' block back to the allocator at
+     * 0x57b8480, the record pointers cleared. derived name. */
+    virtual void FUN_00031170(hknpWorldObject380Record **records, int count);
+    virtual void FUN_000311b0(hknpWorldObject380Record **records, void *const *pointers,
+                              int count); /* vtable slot 10; derived name */
+    virtual void unknownVirtual11();      /* the empty 0x1c1e0 */
+    /* Slot 12 (0x311f0): the centres of mass copied and the orientations
+     * set as rotations, the third argument unread. derived name. */
+    virtual void FUN_000311f0(hknpWorldObject380MotionPair *out, const hknpMotion &motionA,
+                              const void *argument2, const hknpMotion &motionB);
+    virtual void unknownVirtual13(); /* the empty 0x1c1e0 */
+    virtual void FUN_00031320();
+    virtual void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
+    virtual void unknownVirtual16();                       /* the empty 0x1c1e0 */
+    virtual void unknownVirtual17();                       /* the empty 0x1c1e0 */
+    virtual void FUN_000317b0();
+    virtual void FUN_000331a0();
+    /* Slot 20 (0x30c10): the pair processed through FUN_0002b6c0, its
+     * output given the writer's range and the count written past it.
+     * derived name. */
+    virtual void FUN_00030c10(void *argument0, hknpWorldObject380Pair *pair, void *argument2,
+                              void *argument4, void *argument5, void *argument6,
+                              hknpWorldObject380Writer *writer);
 };
 
 struct hkBlockStreamBlock;  /* derived name; below */
@@ -9984,13 +10015,14 @@ class hknpConvexShape : public hknpShape
     hknpConvexShape(hkFinishLoadedObjectFlag flag);
 
     /* A new convex shape of dispatch type 1 under a convex radius, its
-     * vertices right after the object (inlined in the sphere's creation,
-     * 0x3c5ca to 0x3c5ed). derived name. */
-    hknpConvexShape(int numVertices, float radius, int sizeOfBaseClass = sizeof(hknpConvexShape))
+     * vertices right after an object of sizeOfClass bytes rounded up to 16
+     * (inlined in the sphere's creation, 0x3c5ca to 0x3c5ed, and the
+     * triangle's in-place constructor, 0x7828f to 0x782b1). derived name. */
+    hknpConvexShape(int numVertices, float radius, int sizeOfClass = sizeof(hknpConvexShape))
         : hknpShape(1)
     {
         convexRadius = radius;
-        vertices.offset = u16(sizeOfBaseClass - HK_OFFSET_OF(hknpConvexShape, vertices));
+        vertices.offset = u16(((sizeOfClass + 15) & ~15) - HK_OFFSET_OF(hknpConvexShape, vertices));
         vertices.size = u16(numVertices);
     }
 
@@ -10074,16 +10106,17 @@ class hknpConvexPolytopeShape : public hknpConvexShape
      * flags 3 when finishing. */
     hknpConvexPolytopeShape(hkFinishLoadedObjectFlag flag);
 
-    /* A new polytope of a class of sizeOfBaseClass bytes, its vertices,
-     * planes (one a face), faces and indices after the object in that
-     * order, each block 16-aligned as FUN_001542f0 sizes them (inlined in
-     * the capsule's creation, 0x72fb0). derived name. */
+    /* A new polytope under a convex radius, its arrays after an object of
+     * sizeOfClass bytes in the order FUN_001542f0 counts them: the vertices,
+     * a plane per face, the faces (rounded up to 16) and the indices; no
+     * connectivity (inlined in the triangle's in-place constructor, 0x78296
+     * to 0x782dd). derived name. */
     hknpConvexPolytopeShape(int numVertices, int numFaces, int numIndices, float radius,
-                            int sizeOfBaseClass)
-        : hknpConvexShape(numVertices, radius, sizeOfBaseClass)
+                            int sizeOfClass)
+        : hknpConvexShape(numVertices, radius, sizeOfClass)
     {
         flags = IS_CONVEX_SHAPE | IS_CONVEX_POLYTOPE_SHAPE | USE_SMALL_FACE_INDICES;
-        int offset = ((sizeOfBaseClass + 15) & ~15) + numVertices * int(sizeof(Vec4));
+        int offset = ((sizeOfClass + 15) & ~15) + numVertices * int(sizeof(Vec4));
         planes.offset = u16(offset - HK_OFFSET_OF(hknpConvexPolytopeShape, planes));
         planes.size = u16(numFaces);
         offset += numFaces * int(sizeof(Vec4));
@@ -10239,6 +10272,13 @@ class hknpTriangleShape : public hknpConvexPolytopeShape
 {
   public:
     hknpTriangleShape(hkFinishLoadedObjectFlag flag);
+
+    /* Built in place (0x78270; the globals' constructor builds its
+     * prototype so, 0x175fb0): four vertices left unset, four faces of
+     * four indices, the second starting at the fourth index, and the
+     * indices of the triangle and of its reverse, the fourth vertex last.
+     * The argument (1 from the globals) is not read. derived name. */
+    hknpTriangleShape(int argument1);
 
     /* The vertices as the triangle's own code reaches them: the array's
      * byte offset added to its address as a character pointer, where
@@ -16204,7 +16244,11 @@ struct hkBlockStream /* derived name */
      * (0x94805). derived name. */
     hkBool zeroNewBlocks;
     u8 unknown1a[6];
-    hkArray<hkBlockStreamBlock *> blocks; /* derived name */
+    /* The first 24 block pointers kept in place: the world context's
+     * constructor 0x167cd0 builds this array inside its stream at +0x280
+     * (data at the stream's +0x40, capacity 24 not to be freed), 0x100
+     * bytes in all. derived name. */
+    hkInplaceArrayAligned16<hkBlockStreamBlock *, 24> blocks;
 };
 
 inline void hkBlockStreamRange::setStartPoint(const hkBlockStreamWriter *writer)
@@ -16222,15 +16266,6 @@ inline void hkBlockStreamRange::setStartPoint(const hkBlockStreamWriter *writer)
     startBlockNumElements = u16(blockNumElements);
     numElements = -numElementsBefore;
 }
-
-/* A block stream that keeps its first 24 block pointers in place (derived
- * name): the stream, the inline storage its array starts in, 0x100 bytes. */
-struct hkBlockStreamInplace /* derived name */
-{
-    hkBlockStream stream;
-    hkBlockStreamBlock *inlineBlocks[24];
-    u8 unknownF0[0x10];
-};
 
 /* The pool at +0x6f0 of the world (derived names: nothing names it), 0x1f60
  * bytes from the thread's heap, built at 0x50325: eight contexts of 0x3c0
@@ -16270,9 +16305,13 @@ struct hknpWorldContextPool /* derived name */
          * unless it is the second, then the second). derived names. */
         BlockCache *cache250;
         BlockCache *cache258;
-        u8 unknown260[0x40];
-        hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
-        u8 unknown380[0x1c];
+        BlockCache *cache260;
+        /* Three records of the world's +0x380 object, given back through
+         * its slot 9 (0x1680cd). derived name. */
+        hknpWorldObject380Record *records268[3];
+        hkBlockStream stream;                      /* derived name */
+        hkBlockStreamCommandWriter *commandWriter; /* derived name */
+        u8 unknown388[0x14];
         int unknown39c;
         void *unknown3a0;
         u8 unknown3a8[8];
@@ -16308,7 +16347,7 @@ struct hknpWorldContextPool /* derived name */
     u8 unknown1e34[0x1c];
     /* A stream of the pool's own over its cache, both given back and the
      * cache freed by 0x16feb0. derived names. */
-    hkBlockStreamInplace stream;
+    hkBlockStream stream;
     BlockCache *cache;
 };
 
@@ -16402,18 +16441,18 @@ struct hknpWorldStreams260 /* derived name */
      * through the context's cache. derived name. */
     void FUN_00174f30(CommandStreams00167f70 *context);
 
-    hkBlockStreamInplace stream000;
-    hkBlockStreamInplace stream100;
-    hkBlockStreamInplace stream200;
-    hkBlockStreamInplace stream300;
-    hkBlockStreamInplace stream400;
-    hkBlockStreamInplace stream500;
-    hkBlockStreamInplace stream600;
-    hkBlockStreamInplace stream700;
-    hkBlockStreamInplace stream800;
-    hkBlockStreamInplace stream900;
-    hkBlockStreamInplace streamA00;
-    hkBlockStreamInplace streamB00;
+    hkBlockStream stream000;
+    hkBlockStream stream100;
+    hkBlockStream stream200;
+    hkBlockStream stream300;
+    hkBlockStream stream400;
+    hkBlockStream stream500;
+    hkBlockStream stream600;
+    hkBlockStream stream700;
+    hkBlockStream stream800;
+    hkBlockStream stream900;
+    hkBlockStream streamA00;
+    hkBlockStream streamB00;
     hkArray<u8> arrayC00;
     hkArray<Vec4> arrayC10;
     hkArray<EntryC20> arrayC20;
@@ -16422,8 +16461,8 @@ struct hknpWorldStreams260 /* derived name */
 /* The pair at +0x400 of the world's streams processed with the records at
  * +0xc20 (0x717d0, 0x915 bytes; the streams' 0x174fa6 passes 0 last).
  * derived names. */
-void FUN_000717d0(CommandStreams00167f70 *context, hkBlockStreamInplace *streamA,
-                  hkBlockStreamInplace *streamB, hkArray<hknpWorldStreams260::EntryC20> *entries,
+void FUN_000717d0(CommandStreams00167f70 *context, hkBlockStream *streamA, hkBlockStream *streamB,
+                  hkArray<hknpWorldStreams260::EntryC20> *entries,
                   int argument5); /* derived name */
 
 /* What a consumer keeps of the block it reads (derived names): the stream,
@@ -16564,8 +16603,7 @@ struct CommandStreams00167f70 /* derived name */
     u8 unknown0[0x258];
     BlockCache *cache; /* derived name */
     u8 unknown260[0x20];
-    hkBlockStream commands; /* derived name */
-    u8 unknown2b0[0xd0];
+    hkBlockStream commands;                    /* derived name */
     hkBlockStreamCommandWriter *commandWriter; /* derived name */
     u8 unknown388[8];
     hkBlockStreamRange commandRange; /* derived name */
@@ -16583,16 +16621,10 @@ struct StreamCaches0015e980 /* derived name */
 
 /* Seven block streams of a step (derived names; an array of them hangs off
  * +0x108 of the callers' object, each in use when its byte at +0x700 is
- * set, 0x14f58e), each 0x100 bytes from the last: what follows a stream in
- * its 0x100 is not yet read. FUN_0015e980 empties the first four, and in
+ * set, 0x14f58e), each 0x100 bytes from the last. FUN_0015e980 empties the first four, and in
  * mode 1 the other three, the last with the second cache. */
 struct StepStreams0015e980 /* derived name */
 {
-    struct Slot {
-        hkBlockStream stream;
-        u8 unknown30[0xd0];
-    };
-
     void FUN_0015e980(const StreamCaches0015e980 *caches, int mode); /* derived name */
 
     /* The streams set up over the caches and marked in use (0x15e8b0; the
@@ -16601,13 +16633,13 @@ struct StepStreams0015e980 /* derived name */
      * the last zeroing, over the second cache. derived name. */
     void FUN_0015e8b0(const StreamCaches0015e980 *caches, int mode);
 
-    Slot slot0;
-    Slot slot1;
-    Slot slot2;
-    Slot slot3;
-    Slot slot4;
-    Slot slot5;
-    Slot slot6;
+    hkBlockStream slot0;
+    hkBlockStream slot1;
+    hkBlockStream slot2;
+    hkBlockStream slot3;
+    hkBlockStream slot4;
+    hkBlockStream slot5;
+    hkBlockStream slot6;
     hkBool inUse; /* derived name */
     u8 unknown701[0xf];
 };

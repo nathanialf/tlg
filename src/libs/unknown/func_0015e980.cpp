@@ -3,13 +3,13 @@
 
 void StepStreams0015e980::FUN_0015e980(const StreamCaches0015e980 *caches, int mode)
 {
-    slot0.stream.FUN_00094990(caches->cache);
-    slot2.stream.FUN_00094990(caches->cache);
-    slot1.stream.FUN_00094990(caches->cache);
-    slot3.stream.FUN_00094990(caches->cache);
+    slot0.FUN_00094990(caches->cache);
+    slot2.FUN_00094990(caches->cache);
+    slot1.FUN_00094990(caches->cache);
+    slot3.FUN_00094990(caches->cache);
     if (mode == 1) {
-        slot4.stream.FUN_00094990(caches->cache);
-        slot5.stream.FUN_00094990(caches->cache);
-        slot6.stream.FUN_00094990(caches->secondCache);
+        slot4.FUN_00094990(caches->cache);
+        slot5.FUN_00094990(caches->cache);
+        slot6.FUN_00094990(caches->secondCache);
     }
 }

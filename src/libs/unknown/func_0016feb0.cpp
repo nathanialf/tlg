@@ -8,7 +8,7 @@ void hknpWorldContextPool::FUN_0016feb0()
         contexts[i].FUN_00167ff0(first.cache250, first.cache258);
     }
     if (cache) {
-        stream.stream.FUN_00094990(cache);
+        stream.FUN_00094990(cache);
         delete cache;
         cache = 0;
     }

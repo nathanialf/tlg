@@ -4,7 +4,7 @@
 /* derived name: slot 4 of the collision detector of vtable 0x169b220: the
  * cache's solver record let go and unbound, then slot 3 with the same
  * arguments. */
-void CollisionDetector169b230::FUN_00072dc0(const ModifierContext0017a000 *threadContext,
+void CollisionDetector169b230::FUN_00072dc0(const hknpWorldContextPool::Context *threadContext,
                                             const void *sharedData,
                                             hknpManifoldCollisionCache *cache,
                                             const void *argument4, const void *argument5,

@@ -4,7 +4,7 @@
 /* derived name: slot 3 of the collision detector of vtable 0x169b220: a
  * cache of three quads or more handed to the modifiers that asked for
  * it. */
-void CollisionDetector169b230::FUN_00072d30(const ModifierContext0017a000 *threadContext,
+void CollisionDetector169b230::FUN_00072d30(const hknpWorldContextPool::Context *threadContext,
                                             const void *sharedData,
                                             hknpManifoldCollisionCache *cache,
                                             const void *argument4, const void *argument5,

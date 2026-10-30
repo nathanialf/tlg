@@ -11,13 +11,13 @@ static void resetEntries(hkArray<hknpWorldStreams260::EntryC20> &entries) /* der
 
 void hknpWorldStreams260::FUN_00174f30(CommandStreams00167f70 *context) /* derived name */
 {
-    if (stream400.stream.numTotalElements == 0) {
+    if (stream400.numTotalElements == 0) {
         return;
     }
     resetEntries(arrayC20);
     FUN_000717d0(context, &stream400, &stream500, &arrayC20, 0);
-    stream200.stream.FUN_00094a10(context->cache, &stream400.stream);
-    stream300.stream.FUN_00094a10(context->cache, &stream500.stream);
-    stream400.stream.FUN_00094880(context->cache);
-    stream500.stream.FUN_00094880(context->cache);
+    stream200.FUN_00094a10(context->cache, &stream400);
+    stream300.FUN_00094a10(context->cache, &stream500);
+    stream400.FUN_00094880(context->cache);
+    stream500.FUN_00094880(context->cache);
 }
