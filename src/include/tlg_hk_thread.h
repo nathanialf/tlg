@@ -601,14 +601,21 @@ class hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived nam
  * for the layers 0 to 3, each with its owner at +8 and its layer at +0x10):
  * slot 2 (0x18d130) the work, slot 3 (0x18ce30) "BroadPhase/Update layer
  * %i" with the layer, described in the first state's colour. */
+struct BroadPhaseTaskData0018d050;
+
 class hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name */
 {
   public:
+    /* Slot 2 (0x18d130): under the collide stage's broad phase timer, the
+     * layer's tree updated when it holds boxes, as a volatile layer
+     * (0x142a40) or a pending one (0x142af0). derived name. */
+    void FUN_0018d130();
+
     void FUN_0018ce30(hkStringBuf *name,
                       hkStringBuf *description) const; /* vtable slot 3; derived name */
 
-    void *owner; /* derived name */
-    int layer;   /* derived name */
+    BroadPhaseTaskData0018d050 *owner; /* derived name */
+    int layer;                         /* derived name */
 };
 
 class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived name */

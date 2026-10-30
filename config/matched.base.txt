@@ -1445,7 +1445,7 @@ FUN_0012aa80 src/libs/unknown/func_0012aa80.cpp
 FUN_0017ca80 src/libs/unknown/func_0017ca80.cpp _ZNK21hkp6DofConstraintData12FUN_0017ca80EPKvS1_PK16hkpSolverResultsRDv4_f
 FUN_00007740 src/libs/unknown/func_00007740.cpp
 _ZN8hkThreadD1Ev src/libs/unknown/func_000104c0.cpp
-FUN_00010520 src/libs/unknown/func_000104c0.cpp _ZN8hkThread10joinThreadEv
+_ZN8hkThread10joinThreadEv src/libs/unknown/func_000104c0.cpp
 FUN_00013b30 src/libs/unknown/func_00013b30.cpp
 FUN_0007be40 src/libs/unknown/func_0007be40.cpp _ZN22hkpFixedConstraintData12FUN_0007be40ERK11hkTransformS2_
 FUN_00092220 src/libs/unknown/func_00092220.cpp _ZN18hkBlockStreamRange12FUN_00092220EPK19hkBlockStreamWriter
@@ -2181,7 +2181,7 @@ FUN_00040dd0 src/libs/unknown/func_00040dd0.cpp _Z12FUN_00040dd0Pv
 FUN_00007e30 src/libs/unknown/leaf_00007d40.cpp _ZNK13hkClassMember12FUN_00007e30Ev
 FUN_0000b970 src/libs/unknown/func_0000b970.cpp _ZN14Object0000b33012FUN_0000b970Ei
 FUN_0000ba70 src/libs/unknown/func_0000b970.cpp _ZN14Object0000b33012FUN_0000ba70Ev
-FUN_00010580 src/libs/unknown/func_000104c0.cpp _ZN8hkThread11startThreadEPFPvS0_ES0_PKci
+_ZN8hkThread11startThreadEPFPvS0_ES0_PKci src/libs/unknown/func_000104c0.cpp
 FUN_0019cd20 src/libs/unknown/func_0019d0d0.cpp _ZN16hkPackfileWriter12FUN_0019cd20EPKc
 FUN_000933e0 src/libs/unknown/func_000933e0.cpp _ZN14Signal0009353012FUN_000933e0EPKv
 FUN_0007d740 src/libs/unknown/func_0007d740.cpp
@@ -2322,3 +2322,12 @@ FUN_00078500 src/libs/unknown/func_00078500.cpp
 FUN_0018f030 src/libs/unknown/func_0018f030.cpp
 FUN_00010910 src/libs/unknown/func_000108e0.cpp _GLOBAL__I_a
 FUN_000358d0 src/libs/unknown/func_000358b0.cpp _GLOBAL__I_a
+FUN_00067b40 src/libs/unknown/func_00067b40.cpp _ZN27hknpMalleableConstraintData21buildJacobianCallbackEPKvPv
+FUN_0006c330 src/libs/unknown/func_0006c310.cpp _GLOBAL__I_a
+FUN_0003a820 src/libs/unknown/func_0003a820.cpp _ZN8hknpBody12FUN_0003a820ERKDv4_f
+FUN_0000ee00 src/libs/unknown/func_0000ee00.cpp _ZN17Allocator0000ed4012FUN_0000ee00EPP13AllocatorBase
+FUN_0000eb90 src/libs/unknown/func_0000eb90.cpp _ZN12ThreadBuffer12FUN_0000eb90Ei
+FUN_00007890 src/libs/unknown/func_00007890.cpp _ZN12Pool0000788012FUN_00007890Ei
+FUN_0017b5f0 src/libs/unknown/func_0017b0d0.cpp _ZN21hkp6DofConstraintDataC2E24hkFinishLoadedObjectFlag
+FUN_00181c00 src/libs/unknown/func_00181c00.cpp _ZNK22hkBinaryPackfileWriter12FUN_00181c00ER24PackfileSections00181c00
+FUN_0018d130 src/libs/unknown/func_0018d130.cpp _ZN29hknpBroadPhaseUpdateLayerTask12FUN_0018d130Ev

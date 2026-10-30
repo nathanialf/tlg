@@ -2162,6 +2162,9 @@ void FUN_0000e790(hkStringPtr *self, const char *format, ...); /* derived name *
 /* The string library's bounded compare (0x17f50, over strncmp). derived
  * name. */
 int FUN_00017f50(const char *a, const char *b, unsigned int n); /* derived name */
+/* The string library's bounded copy, nothing for a zero count (0x17fd0).
+ * derived name. */
+void FUN_00017fd0(char *dst, const char *src, unsigned int n); /* derived name */
 
 /* The XML reader's entities decoded from src into dst (0x19d710; the reader
  * passes one buffer as both): the length written, -1 for a bad one.
@@ -7123,6 +7126,11 @@ struct hknpBody {
     enum { IS_STATIC = 1 << 0, IS_ACTIVE = 1 << 3, RAISE_TRIGGER_EVENTS = 1 << 4 };
 
     void FUN_0003a670(const Vec4 &centerOfMassLocal); /* derived name */
+    /* The radius of the sphere about a centre of mass in world space that
+     * bounds the shape's box in the body's space, kept as a half (0x3a820;
+     * the world's body setup at 0x4c121 and six more call it). derived
+     * name. */
+    void FUN_0003a820(const Vec4 &centerOfMassWorld);
 
     hkTransform transform;
     int flags;
@@ -10412,6 +10420,11 @@ class hkpConstraintData : public hkReferencedObject
      * solver results (+8) and temporaries (+0xc); some atoms add to +0x1c.
      * hkpPointToPathConstraintData's override (0x7a020) adds its own. */
     struct ConstraintInfo {
+        /* Only the extra word is set by a new info (the malleable data's
+         * jacobian, 0x67be9, clears it before the wrapped data's slot 6
+         * fills the rest). */
+        ConstraintInfo() : unknown1c(0) {}
+
         void clear()
         {
             maxSizeOfSchema = 0;
@@ -11784,6 +11797,22 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
  * code at 0x79e62. */
 void FUN_0007d020(hkpConstraintData *data, const void *input, void *output); /* derived name */
 
+/* What the solver hands a constraint's jacobian builder (derived names): 0x90
+ * bytes, a factor at +0x24 the malleable data scales by its strength
+ * (0x67bdc). */
+struct alignas(16) ConstraintQueryIn /* derived name */
+{
+    u8 unknown0[0x24];
+    float factor24; /* derived name */
+    u8 unknown28[0x68];
+};
+
+/* The jacobians of a run of atoms built from a query (0xc8710; the
+ * malleable data's slot 24 and the solver's setup at 0xc525a and 0xc5afb
+ * call it). derived name. */
+void FUN_000c8710(const void *atoms, int sizeOfAtoms, const ConstraintQueryIn &input,
+                  void *output); /* derived name */
+
 struct hkpBridgeConstraintAtom;
 void FUN_0007d030(hkpBridgeConstraintAtom *self, hkpConstraintData *data); /* derived name */
 
@@ -11937,6 +11966,9 @@ class hknpMalleableConstraintData : public hkpWrappedConstraintData
 
     void FUN_00067b00(ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
     void FUN_00067c40(float newStrength);             /* derived name */
+    /* Slot 24 (0x67b40): the wrapped data's atoms built with the input's
+     * factor at +0x24 scaled by the strength. */
+    virtual void buildJacobianCallback(const void *input, void *output);
 
     hknpBridgeConstraintAtom atom;
     hkBool wantsRuntime;
@@ -12149,7 +12181,7 @@ struct hkpEllipticalLimitConstraintAtom {
  * at +0x20 (ballSocket at +0x1f0 of it), isDirty (hkBool) at +0x220. Slots
  * 10 and 13 of its vtable (address point 0x16a5d30) write and read the
  * ball-socket atom's breach impulse. */
-class hkp6DofConstraintData
+class hkp6DofConstraintData : public hkpConstraintData
 {
   public:
     /* MotorIndex, the class's first enum (records from 0x169fa70): its
@@ -12179,6 +12211,12 @@ class hkp6DofConstraintData
         hkpBallSocketConstraintAtom ballSocket;
     };
 
+    /* The finish constructor, out of line (0x17b5f0; the finish callback
+     * 0x82690 runs it by its address's name while the class has pure slots
+     * this header does not override): hkpConstraintData's, the blueprints'
+     * (inline in it), the compiled atoms empty, and dirty when finishing. */
+    hkp6DofConstraintData(hkFinishLoadedObjectFlag flag);
+
     virtual ~hkp6DofConstraintData();
 
     /* An angular motor by index; MOTOR_ALL gives the twist motor (0x17bb20;
@@ -12206,7 +12244,6 @@ class hkp6DofConstraintData
      * 256 bytes of schemas and four temporaries more. derived name. */
     void FUN_0017b960(hkpConstraintData::ConstraintInfo &infoOut) const;
 
-    u8 unknown8[0x18];
     Blueprints blueprints;
     hkBool isDirty;
     int numRuntimeElements;
@@ -16685,6 +16722,11 @@ struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
     void FUN_00181d00(PackfileSaveContext00181dc0 &context, const hkClass &klass,
                       int sectionStart) const;
 
+    /* The section headers of a save, one per section, every byte set,
+     * then each tag copied in (0x181c00; the save at 0x183488 passes its
+     * headers' holder). derived name. */
+    void FUN_00181c00(struct PackfileSections00181c00 &headers) const;
+
     u8 unknown138[0x8];
 };
 
@@ -17106,6 +17148,13 @@ class XmlCharacters : public hkXmlParser::Node /* derived name */
  * member; the versions before 11 lay their section headers out without it,
  * 0x30 bytes apart. */
 struct hkPackfileSectionHeader {
+    /* Cleared by the string library's fill (0x181c7a: one call per new
+     * header of an array grown to the writer's sections). */
+    hkPackfileSectionHeader()
+    {
+        FUN_00018160(this, 0, sizeof(*this));
+    }
+
     char sectionTag[19];
     char nullByte;
     s32 absoluteDataStart;
@@ -17116,6 +17165,14 @@ struct hkPackfileSectionHeader {
     s32 importsOffset;
     s32 endOffset;
     s32 pad[4];
+};
+
+/* What the binary writer's save fills with its section headers (derived
+ * names): the headers' array at +8. */
+struct PackfileSections00181c00 /* derived name */
+{
+    u8 unknown0[8];
+    hkArray<hkPackfileSectionHeader> sections;
 };
 
 /* hkPackfileHeader, a reflected struct (member records 0x16a2bc0 to

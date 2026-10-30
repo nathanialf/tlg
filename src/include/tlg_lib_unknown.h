@@ -2072,9 +2072,12 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     struct WorkerRecord /* derived name */
     {
         Pool00007880 *pool; /* derived name */
-        u8 unknown8[0x10];
-        int threadId; /* derived name */
-        u8 unknown1c[5];
+        hkThread thread;    /* derived name */
+        int threadId;       /* derived name */
+        int threadId1c;     /* derived name: the same index plus one (0x78fc) */
+        /* Set to stop the worker before its start is signalled (0x7951).
+         * derived name. */
+        bool killThread;
         /* Set by slot 12 when it clears the worker's timers. derived name. */
         bool timersCleared;
         u8 unknown22[6];
@@ -2103,7 +2106,10 @@ class Pool00007880 : public hkReferencedObject /* derived name */
      * derived name. */
     virtual void FUN_00007740();
     virtual int FUN_00007880() const; /* vtable slot 9; derived name */
-    virtual void unknownVirtual10();
+    /* Slot 10 (0x7890): the workers brought to a number, at most eleven:
+     * new ones started on their records, the last ones stopped, signalled
+     * and joined. derived name. */
+    virtual void FUN_00007890(int numThreads);
     /* Slot 11 (0x77b0): each worker's monitor stream appended, its start
      * and end, the array grown from the allocator given. derived name. */
     virtual void FUN_000077b0(hkArray<MonitorStreamRange> &streamsOut, AllocatorBase &allocator);
@@ -2138,9 +2144,14 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     int timerBufferSize;
     bool flag330;   /* derived name */
     hkBool running; /* derived name */
+    u8 unknown332[6];
+    /* The workers' threads' name and stack size (0x7901, 0x7909). derived
+     * names. */
+    const char *threadName;
+    int stackSize;
     /* To the 0x348 bytes the deleting destructor (0x7390) frees by
      * default. */
-    u8 unknown332[0x16];
+    u8 unknown344[4];
 };
 
 /* The pool's destructor (0x73e0, which stores the vtable 0x168cba0) and
@@ -3130,9 +3141,11 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
     void FUN_0000f1e0();
     void FUN_0000f2f0(void *pointer, int numBytes);
 
-    /* Taken down (0xee00; a thread router's taking down passes null). The
-     * argument's meaning is not recovered. derived name. */
-    void FUN_0000ee00(void *argument);
+    /* Taken down (0xee00; a thread router's taking down passes null): the
+     * current and the spare slab given back, what it keeps beside them
+     * emptied and freed, all through the internal allocator; the three
+     * allocators handed out when asked for. derived name. */
+    void FUN_0000ee00(AllocatorBase **allocatorsOut);
 
     /* Set up over its three allocators (0xed60; the thread's router setup
      * 0xc590 calls it): what it keeps beside its slabs from the internal

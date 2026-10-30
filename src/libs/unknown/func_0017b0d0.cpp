@@ -17,3 +17,14 @@ hkp6DofConstraintData::Blueprints::Blueprints(hkFinishLoadedObjectFlag flag)
         linearMotor2.previousTargetPositionOffset = 180;
     }
 }
+
+/* The data's finish constructor: the blueprints' inline in it, the compiled
+ * atoms (not serialized) made empty; the two tests of the flag jump-thread,
+ * so each path holds its own copy of the array's stores. */
+hkp6DofConstraintData::hkp6DofConstraintData(hkFinishLoadedObjectFlag flag)
+    : hkpConstraintData(flag), blueprints(flag), compiledAtoms()
+{
+    if (flag.finishing) {
+        isDirty = true;
+    }
+}
