@@ -1802,8 +1802,9 @@ struct ClassVersionIndex0019a0b0 /* derived name */
     /* The owned strings freed to the thread's heap, then the members. */
     ~ClassVersionIndex0019a0b0();
 
-    /* The class allocator's delete: back to the thread's heap at the
-     * class's size (0x19a27e). */
+    /* The class allocator: from the thread's heap (0x19a00b), and back to
+     * it at the class's size (0x19a27e). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     StringMap map0;          /* derived name */
@@ -1824,7 +1825,17 @@ class Object0019a230 : public hkReferencedObject /* derived name */
      * given back, then the members. */
     virtual ~Object0019a230();
 
-    /* The reference-counted class delete (freeReferencedObject). */
+    /* Inline in the creator FUN_00199f80: the members built, then the
+     * index allocated and built (zeroed first, its members' constructors
+     * after) and kept. */
+    Object0019a230() : lock(0)
+    {
+        index = new ClassVersionIndex0019a0b0();
+    }
+
+    /* From the thread's heap (0x199fa7); the reference-counted class
+     * delete (freeReferencedObject). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     ClassVersionIndex0019a0b0 *index; /* derived name */
@@ -3951,6 +3962,16 @@ inline void hkxNodeSelectionSet::operator delete(void *object, unsigned long num
     freeReferencedObject(object, numBytes);
 }
 
+inline void *Object0019a230::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *ClassVersionIndex0019a0b0::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void Object0019a230::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -5314,6 +5335,16 @@ inline void hkxIndexBuffer::operator delete(void *object, unsigned long numBytes
     freeReferencedObject(object, numBytes);
 }
 
+inline void StringMap::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, int(numBytes));
+}
+
+inline void hkSimpleLocalFrame::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkSkinBinding::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -5657,7 +5688,6 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
  * are not (cookbook 15, 97): the base destructor, then the object back to
  * the thread's heap at its recorded size, the class's own by default. The
  * base destructors not declared elsewhere come first. derived names. */
-void FUN_0000de20(hkSimpleLocalFrame *self);
 void FUN_00019780(PageAllocator *self);
 void FUN_00023200(hkMemoryMeshBody *self);
 void FUN_0002a9b0(hkMemoryMeshShape *self);
@@ -5683,7 +5713,6 @@ void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
 
-void FUN_0000ddd0(hkSimpleLocalFrame *self);               /* slot 1 of 0x168d8e0 */
 void FUN_00019730(PageAllocator *self);                    /* slot 1 of 0x168e8e0 */
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
 void FUN_000234a0(hkIndexedTransformSet *self);            /* slot 1 of 0x1691760 */

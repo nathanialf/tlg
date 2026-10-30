@@ -7,5 +7,6 @@ void hknpShape::FUN_0006fc70(const void *argument1, void *argument2) const
 {
     hkAabb aabb;
     unknownVirtual7(identityTransform(), aabb);
-    FUN_00168230(argument1, aabb, argument2);
+    FUN_00168230(*static_cast<const MassConfig00168340 *>(argument1), aabb,
+                 *static_cast<hkDiagonalizedMassProperties *>(argument2));
 }

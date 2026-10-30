@@ -2515,6 +2515,15 @@ class hkSimpleLocalFrame : public hkLocalFrame
     {
     }
 
+    /* Out of line (0xde20, slot 0; the deleting one 0xddd0, slot 1, before
+     * it): each child's reference and the group's released, then the
+     * members. */
+    virtual ~hkSimpleLocalFrame();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     void FUN_0000df30(Mat4 &out) const;          /* vtable slot 5; derived name */
     void FUN_0000df60(const Mat4 &newTransform); /* vtable slot 6; derived name */
     void FUN_0000df90(Vec4 &position) const;     /* vtable slot 7; derived name */
@@ -5056,11 +5065,6 @@ inline const hkMatrix3 &identityRotation() /* derived name */
 {
     return reinterpret_cast<const hkMatrix3 &>(D_14b2060[29]);
 }
-
-struct hkAabb;
-/* The bounds handed on with both of slot 28's arguments (0x168230; the
- * shapes' slot 28 default calls it). derived names. */
-void FUN_00168230(const void *argument1, const hkAabb &aabb, void *argument2); /* derived name */
 
 /* hkQuaternion (the reflection's TYPE_QUATERNION, its name a string of the
  * executable): four floats in one vector. Field name derived. */
@@ -9416,6 +9420,18 @@ hkResult FUN_00028b80(const Vec4 &start, const Vec4 &end, float radius, float ma
 hkResult FUN_001683d0(const MassConfig00168340 &config, const Vec4 &start, const Vec4 &end,
                       float radius, hkDiagonalizedMassProperties &propertiesOut);
 
+/* A solid box's diagonal inertia and volume from its half extents and a
+ * mass (0x28ac0; 0x45428 and 0x168230 call it); a mass not above zero
+ * fails. derived name. */
+hkResult FUN_00028ac0(const Vec4 &halfExtents, float mass, Vec4 &inertiaDiagonal,
+                      float &volume); /* derived name */
+
+/* derived name: a box's mass properties over bounds for a config
+ * (0x168230; hknpShape's slot 28 default 0x6fc70 hands it the shape's own
+ * bounds). */
+hkResult FUN_00168230(const MassConfig00168340 &config, const struct hkAabb &aabb,
+                      hkDiagonalizedMassProperties &propertiesOut);
+
 /* A triangle's volume, mass and inertia as a surface of a thickness, at a
  * mass (0x280e0, the inertia computer's; the triangle's mass build calls it
  * at 0x168507); a failure for a degenerate triangle. derived name. */
@@ -12678,6 +12694,11 @@ class hkp6DofConstraintData : public hkpConstraintData
      * items MOTOR_TWIST, MOTOR_SWING0, MOTOR_SWING1 and MOTOR_ALL. */
     enum MotorIndex { MOTOR_TWIST = 0, MOTOR_SWING0 = 1, MOTOR_SWING1 = 2, MOTOR_ALL = 3 };
 
+    /* An atom's index into atomToCompiledAtomOffset; NUM_ATOMS marks one
+     * whose offset is not kept (0x17c9da). The index is unsigned (zero
+     * extended at 0x17c9e0), as an enum of these values is. derived names. */
+    enum AtomIndex { NUM_ATOMS = 11 };
+
     /* Its members from the records at 0x169f730. */
     struct Blueprints {
         /* Out of line (0x17b0d0; the finish callback 0x82660 jumps to it):
@@ -12730,6 +12751,11 @@ class hkp6DofConstraintData : public hkpConstraintData
                       Vec4 &out) const; /* vtable slot 19; derived name */
     void FUN_0017b990(hkBool wantRuntime,
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* The ragdoll motor atom appended to the compiled atoms (0x17c970; the
+     * compile 0x17bbe0 calls it with the atom index 2 or 3): its offset
+     * recorded unless the index is 11, the atom copied, and its six solver
+     * results given the next runtime elements. derived name. */
+    void FUN_0017c970(const hkpRagdollMotorConstraintAtom &atom, AtomIndex atomIndex);
     /* Slot 6 (0x17b960): the compiled atoms' schemas and solver data, then
      * 256 bytes of schemas and four temporaries more. derived name. */
     void FUN_0017b960(hkpConstraintData::ConstraintInfo &infoOut) const;
@@ -13140,6 +13166,7 @@ inline hkxAttribute::~hkxAttribute() {}
 
 extern const hkClassMember D_16a23e0[]; /* derived name: hkxAttribute's records */
 extern const hkClassMember D_16a1cf0[]; /* derived name: hkxSkinBinding's records */
+extern const hkClassMember D_16a0f30[]; /* derived name: hkxTextureFile's records */
 extern const hkClassMember D_16a1f70[]; /* derived name: hkxAttributeHolder's records */
 extern const hkClassMember D_16a2540[]; /* derived name: hkxVertexSelectionChannel's records */
 extern const hkClassMember D_16a2570[]; /* derived name: hkxBlob's records */
@@ -14319,6 +14346,14 @@ class hkSkinnedMeshShape : public hkReferencedObject
      * bytes): the mesh holding the section's bone sets and the first and
      * number of them. */
     struct BoneSection {
+        /* An appended section starts with no mesh, no first bone set (the
+         * id's invalid value) and none (the slot-14 append 0xae890 stores
+         * the two as one word, 0xffff). */
+        BoneSection() : numBoneSets(0)
+        {
+            startBoneSetId.value = 0xffff;
+        }
+
         hkRefPtr<hkMeshShape> meshBuffer;
         BoneSetId startBoneSetId;
         s16 numBoneSets;
@@ -14367,6 +14402,10 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     const char *FUN_000aea20() const;       /* vtable slot 12; derived name */
     void FUN_000aea30(const char *newName); /* vtable slot 13; derived name */
     void FUN_000ae860();                    /* vtable slot 16; derived name */
+    /* Slot 14 (0xae890): a bone section appended over a mesh, a first bone
+     * set and their count. derived name. */
+    void FUN_000ae890(hkMeshShape *meshBuffer, hkSkinnedMeshShape::BoneSetId startBoneSetId,
+                      int numBoneSets);
     /* Slot 15 (0xae9a0): a part appended. derived name. */
     void FUN_000ae9a0(const hkSkinnedMeshShape::Part &part);
     /* Slot 6 (0xae6b0): a copy of a bone section. derived name. */
@@ -16892,6 +16931,10 @@ struct StringMap /* derived name */
      * emptied through 0x91ac0: the map owns copies of its keys (0x180bf0;
      * 0x19b0c6 calls it). derived name. */
     void FUN_00180bf0();
+
+    /* A map built on its own goes back to the thread's heap at its size
+     * (the relocations' pool, 0x19b0f5). */
+    static void operator delete(void *object, unsigned long numBytes);
 };
 
 /* The map over values of a type (derived names): each value kept as the
@@ -17203,6 +17246,42 @@ extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
 /* What the binary writer's save (0x183350) hands its section writers
  * (derived name; defined in tlg_lib_unknown.h, after hkPlatformObjectWriter). */
 struct PackfileSaveContext00181dc0;
+
+/* The relocations a packfile save collects (derived names, after Havok's
+ * class of this shape): four arrays of fix-up records, local (8 bytes),
+ * global (32), finish (16) and import (16), and a pool of the strings the
+ * records name, owned and built on the thread's heap. Its destructor is out
+ * of line (0x19b0b0; the save's section writers 0x1819c0, 0x181dc0, 0x182d30,
+ * 0x183350 and the writers 0x19aca0, 0x19b2b0, 0x19c480 hold one on their
+ * stacks). */
+struct hkRelocationInfo /* derived name */
+{
+    struct Local {
+        u32 fromOffset; /* derived name */
+        u32 toOffset;   /* derived name */
+    };
+
+    struct Global {
+        u8 unknown0[0x20];
+    };
+
+    struct Finish {
+        u8 unknown0[0x10];
+    };
+
+    struct Import {
+        u8 unknown0[0x10];
+    };
+
+    /* The pool's strings freed and the pool given back, then the arrays. */
+    ~hkRelocationInfo();
+
+    hkArray<Local> local;
+    hkArray<Global> global;
+    hkArray<Finish> finish;
+    hkArray<Import> imports;
+    StringMap *pool;
+};
 
 struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
 {

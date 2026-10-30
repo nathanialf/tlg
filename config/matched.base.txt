@@ -1290,7 +1290,7 @@ FUN_00010a70 src/libs/unknown/func_00010a70.cpp _ZN9hkMatrix412FUN_00010a70ERK11
 FUN_0003b990 src/libs/unknown/func_0003b990.cpp
 FUN_00007390 src/libs/unknown/func_00007390.cpp _Z12FUN_00007390P12Pool00007880
 _ZN22hkBufferedStreamWriterD0Ev src/libs/unknown/func_00008ff0.cpp
-FUN_0000ddd0 src/libs/unknown/func_0000ddd0.cpp
+_ZN18hkSimpleLocalFrameD0Ev src/libs/unknown/func_0000de20.cpp
 FUN_00016ee0 src/libs/unknown/func_00016ee0.cpp
 FUN_00019730 src/libs/unknown/func_00019730.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
@@ -2371,3 +2371,11 @@ _ZN22hkFreeListMemorySystemD0Ev src/libs/unknown/func_0000c360.cpp
 FUN_0008f220 src/libs/unknown/func_0008f220.cpp _ZN18BlockListAllocator10blockAllocEi
 _ZN14hkxSkinBindingD2Ev src/libs/unknown/func_0008a9b0.cpp
 _ZN13hkSkinBindingD2Ev src/libs/unknown/leaf_000242d0.cpp
+FUN_0017c970 src/libs/unknown/func_0017c970.cpp _ZN21hkp6DofConstraintData12FUN_0017c970ERK29hkpRagdollMotorConstraintAtomNS_9AtomIndexE
+FUN_000ae890 src/libs/unknown/func_000ae890.cpp _ZN25hkStorageSkinnedMeshShape12FUN_000ae890EP11hkMeshShapeN18hkSkinnedMeshShape9BoneSetIdEi
+FUN_00199f80 src/libs/unknown/func_00199f80.cpp _Z12FUN_00199f80v
+_ZN18hkSimpleLocalFrameD1Ev src/libs/unknown/func_0000de20.cpp
+FUN_00168230 src/libs/unknown/func_00168230.cpp _Z12FUN_00168230RK18MassConfig00168340RK6hkAabbR28hkDiagonalizedMassProperties
+_ZN16hkRelocationInfoD1Ev src/libs/unknown/func_0019b0b0.cpp _ZN16hkRelocationInfoD2Ev
+FUN_000086f0 src/libs/unknown/func_000086f0.cpp _ZN9hkOstream12FUN_000086f0EPKcz
+FUN_00090a10 src/libs/unknown/func_00090a10.cpp _ZN15BufferAllocator12FUN_00090a10EPvi
