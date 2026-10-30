@@ -1,21 +1,20 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: equal but for the clear loop's two induction variables' registers (the base's
-// count in eax and offset in rcx, swapped here); llc on this TU's own IR, reparsed, gives the
-// base's, so the use-list order LSR walks decides it (NOTES Round 61B). Round 62B: IndVars'
-// SCEVExpander builds the wide increment with the wide phi, before the address users are
-// moved onto it, so in memory the stores are always LSR's first users; the same TU's
-// optimized bitcode code-generated on its own (-disable-llvm-optzns) is equal (NOTES Round
-// 62B: a pipeline question for the region, not a source shape).
+/* Every record of the array cleared. derived name. */
+static void resetEntries(hkArray<hknpWorldStreams260::EntryC20> &entries) /* derived name */
+{
+    for (int i = 0; i < entries.size; i++) {
+        entries[i].reset();
+    }
+}
+
 void hknpWorldStreams260::FUN_00174f30(CommandStreams00167f70 *context) /* derived name */
 {
     if (stream400.stream.numTotalElements == 0) {
         return;
     }
-    for (int i = 0; i < arrayC20.size; i++) {
-        arrayC20[i].reset();
-    }
+    resetEntries(arrayC20);
     FUN_000717d0(context, &stream400, &stream500, &arrayC20, 0);
     stream200.stream.FUN_00094a10(context->cache, &stream400.stream);
     stream300.stream.FUN_00094a10(context->cache, &stream500.stream);

@@ -822,6 +822,20 @@ template <typename T> inline void hkArray<T>::append(const T *elements, int numE
     size = newSize;
 }
 
+template <typename T> inline hkArray<T> &hkArray<T>::operator=(const hkArray &other)
+{
+    const int oldSize = size;
+    const int newSize = other.size;
+    const int numAssigned = newSize > oldSize ? oldSize : newSize;
+    reserve(hkContainerHeapAllocator::get(), newSize);
+    destructElements(data + newSize, oldSize - newSize);
+    hkArrayUtil::copy(data, other.data, numAssigned);
+    hkArrayUtil::constructWithArray(data + numAssigned, newSize - numAssigned,
+                                    other.data + numAssigned);
+    size = newSize;
+    return *this;
+}
+
 /* The array's grow by one more element at least, through an allocator, for
  * elements of a size (0xb40, 470 call sites; the capacity doubled, or one
  * when empty, by the allocator's slot 6). derived name. */
@@ -2703,7 +2717,9 @@ struct RawImage /* derived name */
 /* The image (derived name): 0x38 bytes from the thread's heap, built by
  * FUN_001a0720 over the loader's raw image; its constructor 0x1a04d0 (out
  * of line) stores the vtable 0x16a7580 and copies the raw image's width,
- * height and array. */
+ * height and array into the raw image it holds at +0x20 (slot 5 hands that
+ * image out whole: its implicit assignment copies the two ints as one
+ * 8-byte run, clang's field memcpy, 0x1a0635). */
 struct LoadedImage : public hkReferencedObject /* derived name */
 {
     LoadedImage(const RawImage &raw);
@@ -2713,8 +2729,8 @@ struct LoadedImage : public hkReferencedObject /* derived name */
      * the class's delete. */
     virtual ~LoadedImage();
 
-    /* Slot 5 (0x1a0620): the width, height and parts copied out to a raw
-     * image. derived name. */
+    /* Slot 5 (0x1a0620): the image copied out to a raw image. derived
+     * name. */
     virtual void FUN_001a0620(RawImage &rawOut) const;
     /* Slot 6, the folded 0x7f80: the storage of the array at +0x10.
      * derived name. */
@@ -2727,10 +2743,8 @@ struct LoadedImage : public hkReferencedObject /* derived name */
     /* The reference-counted class delete (freeReferencedObject). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    hkArray<u8> unknown10;       /* empty from the constructor; elements not read */
-    int width;                   /* derived name */
-    int height;                  /* derived name */
-    hkArray<RawImagePart> parts; /* derived name */
+    hkArray<u8> unknown10; /* empty from the constructor; elements not read */
+    RawImage image;        /* derived name */
 };
 
 /* The loader's image made (0x1a0720, called at 0x1889fe). derived name. */

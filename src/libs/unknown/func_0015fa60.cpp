@@ -14,8 +14,8 @@ static inline Vec4 cross(Vec4 a, Vec4 b)
 /* Slot 5 of hknpCircularSurfaceVelocity's vtable (address point
  * 0x16a4f60): the angular velocity handed out, and its cross product with
  * the point's offset from the pivot. */
-void hknpCircularSurfaceVelocity::calcVelocities(const hkVector4 &position, const void *,
-                                                 const void *,
+void hknpCircularSurfaceVelocity::calcVelocities(const hkVector4 &position, const hkVector4 &,
+                                                 const hknpBody &,
                                                  hkVector4 *HK_RESTRICT linearVelocityOut,
                                                  hkVector4 *HK_RESTRICT angularVelocityOut) const
 {

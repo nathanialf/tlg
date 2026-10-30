@@ -325,12 +325,21 @@ template <typename T> inline void construct(T *t, int n)
 
 /* n elements copied by assignment. Its own function: inlined, the loop's
  * source step comes out before the destination's (the curve's points
- * copied out, 0x7fde0), where the loop written in place steps the
- * destination first. derived name. */
+ * copied out, 0x7fde0; the array's assignment, 0x1a0680), where the loop
+ * written in place steps the destination first. derived name. */
 template <typename T> inline void copy(T *dst, const T *src, int n)
 {
     for (int i = 0; i < n; i++) {
         dst[i] = src[i];
+    }
+}
+
+/* n elements copy-constructed in place from another run (the array's
+ * assignment, 0x1a06d6). derived name. */
+template <typename T> inline void constructWithArray(T *dst, int n, const T *src)
+{
+    for (int i = 0; i < n; i++) {
+        constructWithCopy(dst + i, src[i]);
     }
 }
 } // namespace hkArrayUtil
@@ -500,6 +509,12 @@ template <typename T> struct hkArray {
      * grows it (defined in tlg_lib_unknown.h; the skinned mesh's bone list,
      * 0xae780). */
     void append(const T *elements, int numElements);
+
+    /* Another array's elements copied over, as Havok's _copyFromArray
+     * does: the storage grown as reserve grows it, the elements both hold
+     * assigned, the rest copy-constructed, then the size (defined in
+     * tlg_lib_unknown.h; the loaded image's slot 5, 0x1a0620). */
+    inline hkArray &operator=(const hkArray &other);
 
     /* Room for one more element at the end, grown as pushBack grows: the
      * new element returned (defined in tlg_lib_unknown.h; the solver's
@@ -3070,15 +3085,20 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
 /* hknpSurfaceVelocity (hkClass 0x57c19d8, 0x10 bytes, parent
  * hkReferencedObject): slot 5 gives the velocities of the surface at a
  * point, the linear one and the angular one through the last two
- * arguments (the surface velocity modifier asks for them at 0x16d200; the
- * two arguments between are not read by the circular one). derived names. */
+ * arguments (the surface velocity modifier asks for them at 0x16d200 with
+ * the manifold's normal, +0x10 of the manifold, and the body its collision
+ * body points to; the circular one reads neither). derived names. */
 class hknpSurfaceVelocity : public hkReferencedObject
 {
   public:
+    /* Its one enum, Space (records at 0x1699770): whether a velocity is
+     * given in the body's space or the world's. */
+    enum Space { USE_LOCAL_SPACE = 0, USE_WORLD_SPACE = 1 };
+
     hknpSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    virtual void calcVelocities(const hkVector4 &position, const void *argument2,
-                                const void *argument3, hkVector4 *HK_RESTRICT linearVelocityOut,
+    virtual void calcVelocities(const hkVector4 &position, const hkVector4 &normal,
+                                const hknpBody &body, hkVector4 *HK_RESTRICT linearVelocityOut,
                                 hkVector4 *HK_RESTRICT angularVelocityOut) const = 0;
 };
 
@@ -3098,7 +3118,7 @@ class hknpCircularSurfaceVelocity : public hknpSurfaceVelocity
     /* Slot 5 (0x15fa60): the angular velocity everywhere, the linear one
      * that velocity's cross product with the point's offset from the
      * pivot. */
-    void calcVelocities(const hkVector4 &position, const void *argument2, const void *argument3,
+    void calcVelocities(const hkVector4 &position, const hkVector4 &normal, const hknpBody &body,
                         hkVector4 *HK_RESTRICT linearVelocityOut,
                         hkVector4 *HK_RESTRICT angularVelocityOut) const;
 
@@ -3107,11 +3127,34 @@ class hknpCircularSurfaceVelocity : public hknpSurfaceVelocity
     hkVector4 angularVelocity;
 };
 
-/* hknpLinearSurfaceVelocity: vtable 0x16a4bb0, finish callback FUN_0003d520. */
-class hknpLinearSurfaceVelocity : public hkReferencedObject
+/* hknpLinearSurfaceVelocity: vtable 0x16a4bb0, finish callback
+ * FUN_0003d520; hkClass 0x57c03a0 built at 0x3d77b (0x40 bytes, parent
+ * hknpSurfaceVelocity), records from 0x57c0420: space (hkEnum of Space, an
+ * int8) at +0xc, projectMethod (hkEnum of ProjectMethod, an int8) at +0xd,
+ * maxVelocityScale (hkReal) at +0x10, velocityMeasurePlane and velocity
+ * (vectors) at +0x20 and +0x30. */
+class hknpLinearSurfaceVelocity : public hknpSurfaceVelocity
 {
   public:
-    hknpLinearSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    /* Its own enum, ProjectMethod (records at 0x1696520). */
+    enum ProjectMethod { VELOCITY_PROJECT = 0, VELOCITY_RESCALE = 1 };
+
+    hknpLinearSurfaceVelocity(hkFinishLoadedObjectFlag flag) : hknpSurfaceVelocity(flag) {}
+
+    /* Slot 5 (0x159a30): no angular velocity; the linear one the velocity,
+     * rotated into the world when given in the body's space, and unless
+     * the method is VELOCITY_PROJECT taken into the contact plane and
+     * rescaled to its own length over its length in the measure plane, the
+     * ratio clamped to the maximum scale. */
+    void calcVelocities(const hkVector4 &position, const hkVector4 &normal, const hknpBody &body,
+                        hkVector4 *HK_RESTRICT linearVelocityOut,
+                        hkVector4 *HK_RESTRICT angularVelocityOut) const;
+
+    hkEnum<Space, s8> space;
+    hkEnum<ProjectMethod, s8> projectMethod;
+    float maxVelocityScale;
+    hkVector4 velocityMeasurePlane;
+    hkVector4 velocity;
 };
 
 /* hknpVehicleSuspension (hkClass 0x57c2f98 built at 0x78090, the string
@@ -4748,6 +4791,21 @@ inline Vec4 length3Fast(const Vec4 &v) /* derived name */
     const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
     return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
                          _mm_mul_ps(lengthSquared, _mm_rsqrt_ps(lengthSquared)));
+}
+
+/* The reciprocal of a vector's length over x, y and z, as Havok's
+ * hkVector4::lengthInverse<3> is on this platform at its default accuracy:
+ * the reciprocal square root refined by one Newton step, zero where the
+ * squared length is not positive (the linear surface velocity's rescale,
+ * 0x159a30). derived name. */
+inline Vec4 lengthInverse3(const Vec4 &v) /* derived name */
+{
+    const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    const Vec4 invLength =
+        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
+                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+    return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength);
 }
 
 /* A vector scaled to unit length over x, y and z by the same reciprocal
@@ -15983,11 +16041,12 @@ struct hknpCollisionDispatchType {
  * table of cache creators by the two shapes' dispatch types. derived
  * names but the class's. */
 struct hknpCollisionDispatcher {
-    /* A creator of a pair's collision caches; the arguments are not
-     * recovered (0x1743b0 appends to a stream writer it takes fourth).
-     * derived name. */
-    typedef void (*CacheCreatorFunc)(const void *argument1, const void *argument2,
-                                     const void *argument3, void *argument4);
+    /* A creator of a pair's collision caches: the world (0x199b00 reads
+     * its quality library), the two bodies (their ids, qualities and
+     * shapes) and the writer the caches are appended to (0x1743b0's
+     * fourth). derived name. */
+    typedef void (*CacheCreatorFunc)(const hknpWorld *world, const hknpBody *bodyA,
+                                     const hknpBody *bodyB, hkBlockStreamWriter *writer);
 
     /* Out of line (0x173f90): every pair unregistered, nothing for a shape
      * without a dispatch type, then the creators of the pairs it knows. */
@@ -16012,18 +16071,37 @@ struct hknpCollisionDispatcher {
  * shape without a dispatch type (the shared empty body 0x16a370), the
  * unregistered pair's report (0x174050), and the convex, composite and
  * distance field pairs'. */
-void FUN_0016a370(const void *argument1, const void *argument2, const void *argument3,
-                  void *argument4);
-void FUN_00174050(const void *argument1, const void *argument2, const void *argument3,
-                  void *argument4);
-void FUN_00179c80(const void *argument1, const void *argument2, const void *argument3,
-                  void *argument4);
-void FUN_00199b00(const void *argument1, const void *argument2, const void *argument3,
-                  void *argument4);
-void FUN_00199970(const void *argument1, const void *argument2, const void *argument3,
-                  void *argument4);
-void FUN_001743b0(const void *argument1, const void *argument2, const void *argument3,
-                  void *argument4);
+void FUN_0016a370(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer);
+void FUN_00174050(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer);
+void FUN_00179c80(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer);
+void FUN_00199970(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer);
+void FUN_001743b0(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer);
+
+/* A collision cache of type 4 over a convex shape against a composite one,
+ * five quads (derived names): the header's fields, an int and a byte at
+ * +0x10 and +0x14, the range of the child shapes' caches at +0x20 and an
+ * aabb at +0x30. 0x199b00 writes a new one. */
+struct ConvexCompositeCache00199b00 : public CollisionCache001785a0 /* derived name */
+{
+    int unknown10;
+    u8 unknown14;
+    u8 unknown15[11];
+    hkBlockStreamRange childCacheRange;
+    hkAabb aabb;
+};
+
+/* derived name: a new convex and composite pair's cache appended to the
+ * writer (the dispatcher's creator for that pair, 0x199b00): cleared, its
+ * header, its range emptied, its aabb emptied (0x14a1f0, out of line), the
+ * bodies' ids, and the flags of the pair's qualities, the flags the one of
+ * higher priority requests and the other supports. */
+void FUN_00199b00(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer);
 
 /* The broad phase's pair walk (0x174100, also the caller of the reader's
  * FUN_00093830 at 0x174184): the world's +0x268 object, the world (its
@@ -17571,5 +17649,67 @@ struct AccessIdLess0018e3e0 /* derived name */
 /* derived name: the box around the boxes' centres (FUN_001854b0; called at
  * 0x13e807, which then clears the result's key). */
 void FUN_001854b0(hkAabb16 *aabbOut, const hkAabb16 *aabbs, int count);
+
+/* What the constraint solver's jacobian builders read of a body (derived
+ * names; the builders from 0x85190, called by the setup at 0xc8710): the
+ * inverse masses, the inertia's diagonal with the mass in w, at +0x30, and
+ * the rotation from the world into the body's core space at +0x40, as
+ * Havok's hkpVelocityAccumulator holds them. */
+struct VelocityAccumulator00085450 /* derived name */
+{
+    u8 unknown0[0x30];
+    Vec4 invMasses;
+    hkMatrix3 coreFromWorld;
+};
+
+/* What a builder reads of its query (derived names): the factor of the
+ * right-hand side at +0x20, the virtual mass factor at +0x24 and the two
+ * bodies at +0x30 and +0x38. */
+struct ConstraintQueryIn00085450 /* derived name */
+{
+    u8 unknown0[0x20];
+    float rhsFactor;
+    float virtMassFactor;
+    u8 unknown28[8];
+    const VelocityAccumulator00085450 *bodyA;
+    const VelocityAccumulator00085450 *bodyB;
+};
+
+/* A jacobian of two angular rows (derived names): the rows in each body's
+ * core space, the inverse of the diagonal in the first row's w and the
+ * right-hand side in the second's; its schema type is the first byte (the
+ * builder writes it last). */
+struct AngularJacobian00085450 /* derived name */
+{
+    union {
+        Vec4 angular[2];
+        u8 schemaType;
+    };
+};
+
+/* Where a builder writes (derived name): the next jacobian at +0. */
+struct ConstraintQueryOut00085450 /* derived name */
+{
+    AngularJacobian00085450 *jacobians;
+};
+
+/* An angular constraint's axes (derived names): the axis of zero error
+ * in A, the constrained axis and the axis of B perpendicular to the first,
+ * in the world. */
+struct AngularConstraintInfo00085450 /* derived name */
+{
+    hkVector4 zeroErrorAxisAinW;
+    hkVector4 constrainedDofW;
+    hkVector4 perpZeroErrorAxisBinW;
+};
+
+/* derived name: an angular jacobian built about the constrained axis
+ * (0x85450; the setup calls it at 0xc955a and 0xc959b, the axis negated
+ * for the second): each body's row the axis in its core space, B's of the
+ * axis negated, the diagonal's inverse scaled by the virtual mass factor
+ * and the error between the zero axes as the right-hand side, then the
+ * schema type 12. */
+void FUN_00085450(const AngularConstraintInfo00085450 &info, const ConstraintQueryIn00085450 &in,
+                  ConstraintQueryOut00085450 &out);
 
 #endif
