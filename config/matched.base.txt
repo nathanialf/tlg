@@ -1917,7 +1917,7 @@ FUN_000715d0 src/libs/unknown/func_00071520.cpp _ZN15Modifier169b1a012FUN_000715
 FUN_00093470 src/libs/unknown/func_00093470.cpp _ZN14Signal0009353012FUN_00093470EPKvS1_i
 FUN_00155b10 src/libs/unknown/func_00155b10.cpp _ZN12ShapeWatcher12FUN_00155b10Ev
 FUN_0017b9e0 src/libs/unknown/func_0017b9e0.cpp _ZNK21hkp6DofConstraintData12FUN_0017b9e0Ev
-_ZN14Object0000b330D1Ev src/libs/unknown/func_0000b1a0.cpp
+_ZN14Object0000b330D1Ev src/libs/unknown/func_0000b330.cpp
 FUN_00010c30 src/libs/unknown/func_00010c30.cpp _ZN11hkTransform12FUN_00010c30ERKS_S1_
 FUN_000209b0 src/libs/unknown/func_000209b0.cpp _Z12FUN_000209b0Pv
 FUN_001614f0 src/libs/unknown/func_001614f0.cpp _ZN15hknpBodyManager12FUN_001614f0Ei
@@ -2215,3 +2215,7 @@ FUN_0003efb0 src/libs/unknown/func_0003efb0.cpp
 _ZN20hkMemoryMeshMaterialD1Ev src/libs/unknown/func_000accf0.cpp
 _ZN20hkMemoryMeshMaterialD0Ev src/libs/unknown/func_000accf0.cpp
 FUN_0019f110 src/libs/unknown/func_0019f110.cpp
+_ZN14Object0000b330D0Ev src/libs/unknown/func_0000b330.cpp
+FUN_001a1c80 src/libs/unknown/func_001a1c80.cpp
+FUN_000403d0 src/libs/unknown/func_000403d0.cpp _GLOBAL__I_a
+FUN_0004fc10 src/libs/unknown/func_0004fc10.cpp

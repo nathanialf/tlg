@@ -872,6 +872,9 @@ struct hkClass {
      * (0x42b0) and members (0x4350). derived names. */
     int FUN_000042b0() const; /* derived name */
     int FUN_00004350() const; /* derived name */
+    /* A member's default value written to a stream, HK_FAILURE when it
+     * has none (0x4940; the XML writer's 0x1a1c99). derived name. */
+    hkResult FUN_00004940(int memberIndex, hkStreamWriter *writer) const;
     /* The class's own counts and members, out of line (0x42f0: its
      * implemented interfaces; 0x4440: its declared members; 0x4450: a
      * declared member by index; the writers' walks call them, 0x180f50 and
@@ -936,6 +939,18 @@ struct hkClass {
  * referenced by nothing; one name per address, D15). derived names. */
 const hkClass *FUN_00004250(const hkClass *self);         /* derived name */
 const hkClass *FUN_00004250(const hkClassMember *member); /* derived name */
+
+/* A member record's C-style array size, 0 for a plain member (0x7e00).
+ * derived name. */
+int FUN_00007e00(const hkClassMember *self); /* derived name */
+
+/* A member's default written, then, for a struct member, each member of its
+ * class's as many times as the member's array holds (0x1a1c80, recursive;
+ * the XML writer's 0x1a0e6e): HK_SUCCESS when any default was written.
+ * derived name. */
+class hkStreamWriter;
+hkResult FUN_001a1c80(const hkClass *klass, const hkClassMember *member, int memberIndex,
+                      hkStreamWriter *writer); /* derived name */
 
 /* The classes a class's members hold, walked (0x19f110, recursive; the
  * writer's 0x19ef8c): each class once per mark bit, its members' classes
@@ -5619,6 +5634,12 @@ template <typename P0> struct hkSignal1 : public Signal00093530 /* derived name 
     void fire(P0 p0);
 };
 
+/* The same with two arguments (derived name): the world fires one with
+ * itself and a constraint's id when the constraint is enabled (0x4fcab). */
+template <typename P0, typename P1> struct hkSignal2 : public Signal00093530 /* derived name */ {
+    void fire(P0 p0, P1 p1);
+};
+
 struct hknpShapeSignals {
     hkSignal1<u8> shapeMutated; /* derived name */
     hkSignal0 shapeDestroyed;   /* derived name */
@@ -6500,7 +6521,15 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
                       const hknpCollisionFilterShapeInput &b) const;
 };
 
-extern const hkClass D_57c0cb0;                 /* hknpCollisionFilter's hkClass */
+extern const hkClass D_57c0cb0; /* hknpCollisionFilter's hkClass */
+/* Its one enum's record (0x1696e60), and a pointer to it the member record
+ * reads at run time (0x16dc620, hence the record's dynamic initialization
+ * at 0x403f1). The pointer is a variable, not a constant: its load is
+ * chained before the record's stores, which places the class's arguments
+ * where the initializer has them (the scheduler's depth, 0x40410).
+ * derived names. */
+extern const hkClassEnum D_1696e60[];
+extern const hkClassEnum *D_16dc620;
 void FUN_0003e340(void *object, int finishing); /* derived name: its type info's finish callback */
 
 /* A collision cache that keeps properties beside its contact data
@@ -7639,6 +7668,13 @@ template <typename P0> class hkSlot1 : public hkSlot /* derived name */
     virtual void call(P0 p0) = 0; /* derived name */
 };
 
+/* A slot of a signal with two arguments (derived name): slot 3 calls it. */
+template <typename P0, typename P1> class hkSlot2 : public hkSlot /* derived name */
+{
+  public:
+    virtual void call(P0 p0, P1 p1) = 0; /* derived name */
+};
+
 /* The two flag bits a slot link keeps low (derived names). */
 inline hkSlot *untagSlotLink(const void *link) /* derived name */
 {
@@ -7688,6 +7724,29 @@ template <typename P0> inline void hkSignal1<P0>::fire(P0 p0)
         hkSlot *next = untagSlotLink(slot->next);
         if (slotLinkFlags(slot->next) == 0) {
             static_cast<hkSlot1<P0> *>(slot)->call(p0);
+            if (slotLinkFlags(slot->next) == 0) {
+                prevLink = reinterpret_cast<hkUlong *>(&slot->next);
+                slot = next;
+                continue;
+            }
+        }
+        delete slot;
+        *prevLink = (*prevLink & 3) | reinterpret_cast<hkUlong>(next);
+        slot = next;
+    }
+    slots = untagSlotLink(slots);
+}
+
+/* The same walk, each slot called with both arguments. */
+template <typename P0, typename P1> inline void hkSignal2<P0, P1>::fire(P0 p0, P1 p1)
+{
+    hkUlong *prevLink = reinterpret_cast<hkUlong *>(this);
+    hkSlot *slot = untagSlotLink(slots);
+    slots = reinterpret_cast<void *>(reinterpret_cast<hkUlong>(slot) | 1);
+    while (slot) {
+        hkSlot *next = untagSlotLink(slot->next);
+        if (slotLinkFlags(slot->next) == 0) {
+            static_cast<hkSlot2<P0, P1> *>(slot)->call(p0, p1);
             if (slotLinkFlags(slot->next) == 0) {
                 prevLink = reinterpret_cast<hkUlong *>(&slot->next);
                 slot = next;
@@ -8024,6 +8083,10 @@ struct hknpWorld {
      * world, neither static nor active, is handed over first. derived
      * name. */
     void FUN_0004d400(const hknpConstraint *constraint, hkBool32 keepInactive);
+    /* A disabled constraint enabled (0x4fc10): its flag 4 cleared, its
+     * bodies recorded as 0x4d400 records them under the activation given,
+     * and the signal at +0x5d8 fired. derived name. */
+    void FUN_0004fc10(u32 constraintId, hkBool32 keepInactive);
     /* A body's motion's linear velocity, by reference (0x5df00). derived
      * name. */
     const Vec4 &FUN_0005df00(int bodyId) const; /* derived name */
@@ -8083,7 +8146,11 @@ struct hknpWorld {
      * only when the flag is set). */
     bool enabled4f0;               /* derived name */
     hknpWorldObject4f8 *object4f8; /* derived name */
-    u8 unknown500[0x128];
+    u8 unknown500[0xd8];
+    /* Fired with the world and a constraint's id when the constraint is
+     * enabled (0x4fc10). derived name. */
+    hkSignal2<hknpWorld *, u32> constraintEnabledSignal;
+    u8 unknown5e0[0x48];
     /* The step's current stage (hknpPostCollideTask's work sets 8 before
      * its stage, 0x489ad). derived name. */
     int simulationStage;

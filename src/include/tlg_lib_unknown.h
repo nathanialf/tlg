@@ -1746,8 +1746,12 @@ class Object0000b330 : public hkReferencedObject /* derived name */
     /* 0xb330 */
     Object0000b330(void *reportFunction, void *reportObject);
 
-    /* Out of line (0xb1a0, slot 0; 0xb250, slot 1). */
-    virtual ~Object0000b330();
+    /* The members' own destructors: the critical section, the array, the
+     * map (0xb1a0, slot 0; the deleting destructor 0xb250, slot 1, holds
+     * the same body). Inline, emitted with the vtable in the constructor's
+     * file: the executable holds the complete destructor before the
+     * deleting one (cookbook 187). */
+    inline virtual ~Object0000b330() {}
 
     /* Slots 11 and 12 (0xb970, 0xba70): an id pushed on the array and the
      * last one dropped, each under the critical section. derived names. */
