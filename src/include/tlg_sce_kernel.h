@@ -20,6 +20,9 @@ typedef pthread *pthread_t;
 
 extern "C" {
 int pthread_mutex_destroy(pthread_mutex_t *mutex);
+int pthread_mutex_lock(pthread_mutex_t *mutex);
+int pthread_mutex_trylock(pthread_mutex_t *mutex);
+int pthread_mutex_unlock(pthread_mutex_t *mutex);
 int pthread_join(pthread_t thread, void **valuePtr);
 int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr, int initCount,
                         int maxCount, const void *option);

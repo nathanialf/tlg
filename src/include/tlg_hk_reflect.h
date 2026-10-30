@@ -1080,9 +1080,26 @@ struct hkTransform {
      * hkMatrix3's. derived name. */
     inline void setIdentity();
 
+    /* derived name: set to a * b (0x10b40; nine callers from 0x57773 to
+     * 0xf3057): a's rotation read once, b's translation and columns
+     * transformed by it from the last, each stored before the next is
+     * read, then a's translation added. */
+    void FUN_00010b40(const hkTransform &a, const hkTransform &b);
+
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
+
+/* Three columns combined by the lanes of a vector, x and y summed first
+ * (hkMatrix3's product 0x1a9f0, the transform's 0x10b40). derived name. */
+inline Vec4 combineColumns(const Vec4 &c0, const Vec4 &c1, const Vec4 &c2,
+                           const Vec4 &v) /* derived name */
+{
+    const Vec4 x = _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+    const Vec4 y = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
+    const Vec4 z = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 2, 2, 2));
+    return _mm_add_ps(_mm_mul_ps(c2, z), _mm_add_ps(_mm_mul_ps(c0, x), _mm_mul_ps(c1, y)));
+}
 
 /* derived name: the point v under t, its x, y and z broadcast and scaling
  * the rotation's columns, summed y-first, the translation added (inline in
@@ -1483,6 +1500,28 @@ void FUN_00006b90(Record00006b90 *self); /* derived name */
 #define HK_POSIX_CRITICAL_SECTION_INL                                                              \
     "..\\..\\Common/Base/Thread/CriticalSection/Posix/hkPosixCriticalSection.inl"
 
+/* The file the spinning lock's check names (the string at 0x14b2881). */
+#define HK_PTHREAD_UTIL_H "..\\..\\Common/Base/Thread/Thread/Posix/hkPthreadUtil.h"
+
+namespace hkPthreadUtil
+{
+/* The mutex taken by trying it up to spinCount times, ten pauses after each
+ * failed try, then waiting for it (the check at line 61; inlined in the
+ * allocators' locked slots, 0x34a0, 0x3140, and in 0x90b70). */
+inline void lockMutexWithSpinCount(pthread_mutex_t &mutex, int spinCount)
+{
+    for (int i = spinCount; i != 0; i--) {
+        if (pthread_mutex_trylock(&mutex) == 0) {
+            return;
+        }
+        for (int j = 0; j < 10; j++) {
+            _mm_pause();
+        }
+    }
+    HK_POSIX_CHECK(HK_PTHREAD_UTIL_H, 61, pthread_mutex_lock(&mutex));
+}
+} // namespace hkPthreadUtil
+
 /* hkCriticalSection (the name from its checks' function strings), the
  * POSIX build: a recursive mutex and the spin count its constructor
  * (FUN_00001830) keeps at +8. The destructor is inline (line 28 of the
@@ -1503,6 +1542,20 @@ class hkCriticalSection
     ~hkCriticalSection()
     {
         HK_POSIX_CHECK(HK_POSIX_CRITICAL_SECTION_INL, 28, pthread_mutex_destroy(&m_mutex));
+    }
+
+    /* Both inline, as the file's definitions are: the slot that stores the
+     * allocator's limit (0x34a0) holds the spinning lock whole, which
+     * passes -O2's threshold only with the keyword's hint (cookbook 164). */
+    inline void enter()
+    {
+        hkPthreadUtil::lockMutexWithSpinCount(m_mutex, spinCount);
+    }
+
+    /* The mutex released and checked (line 38 of the file). */
+    inline void leave()
+    {
+        HK_POSIX_CHECK(HK_POSIX_CRITICAL_SECTION_INL, 38, pthread_mutex_unlock(&m_mutex));
     }
 
     pthread_mutex_t m_mutex; /* the name the check's text gives */
@@ -4258,34 +4311,6 @@ struct hkcdStaticPvs;
 
 void FUN_0001d9e0(hkcdStaticPvs *self); /* derived name */
 
-/* hkcdStaticMeshTreeBase (type info 0x57bc360, size 0x70): an empty finish
- * constructor (one shared body) and an out-of-line destructor. Its members
- * are not typed yet. */
-struct hkcdStaticMeshTreeBase {
-    /* hkcdStaticMeshTreeBase::Connectivity (type info 0x57bc2e0, size 0x30;
-     * members from the records at 0x1690b30): headers, localLinks
-     * (hkUint8) and globalLinks (hkUint32). Its type info's cleanup
-     * (0x209b0) destroys it in place, the arrays from the last. */
-    struct Connectivity {
-        /* hkcdStaticMeshTreeBase::Connectivity::SectionHeader (8 bytes);
-         * its members are not typed yet. */
-        struct SectionHeader {
-            u8 unknown0[8];
-        };
-
-        hkArray<SectionHeader> headers;
-        hkArray<u8> localLinks;
-        hkArray<u32> globalLinks;
-    };
-
-    u8 unknown0[0x70];
-};
-
-void FUN_000209b0(void *object); /* derived name */
-
-void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00020700(hkcdStaticMeshTreeBase *self);                                /* derived name */
-
 /* The library's table of vector constants (derived name), extern, reached
  * through its GOT slot: row 33 (+0x210) holds the largest float less a few
  * units in each lane (0x7f7fffee), row 34 (+0x220) a large value
@@ -4416,6 +4441,14 @@ inline void hkTransform::setIdentity()
 inline const Mat4 &identityTransform() /* derived name */
 {
     return reinterpret_cast<const Mat4 &>(D_14b2060[29]);
+}
+
+/* The identity rotation, rows 29 to 31 of the constant table read as one
+ * (the shape instance's transform compared with it, 0x3ec40). derived
+ * name. */
+inline const hkMatrix3 &identityRotation() /* derived name */
+{
+    return reinterpret_cast<const hkMatrix3 &>(D_14b2060[29]);
 }
 
 struct hkAabb;
@@ -5036,6 +5069,67 @@ class hkcdDynamicAabbTree : public hkReferencedObject
     hkcdDynamicTree::DefaultTree48Storage *treePtr; /* the record's class, 0x57bbb60 */
 };
 
+/* hkcdStaticMeshTreeBase (type info 0x57bc360, size 0x70; hkClass 0x57bc310,
+ * parent the static tree over the dynamic storage 5, 0x57bab00): an empty
+ * finish constructor (one shared body) and an out-of-line destructor. Its
+ * members are not typed yet but the domain its parent holds at +0x10. */
+struct hkcdStaticMeshTreeBase {
+    /* hkcdStaticMeshTreeBase::Connectivity (type info 0x57bc2e0, size 0x30;
+     * members from the records at 0x1690b30): headers, localLinks
+     * (hkUint8) and globalLinks (hkUint32). Its type info's cleanup
+     * (0x209b0) destroys it in place, the arrays from the last. */
+    struct Connectivity {
+        /* hkcdStaticMeshTreeBase::Connectivity::SectionHeader (8 bytes);
+         * its members are not typed yet. */
+        struct SectionHeader {
+            u8 unknown0[8];
+        };
+
+        hkArray<SectionHeader> headers;
+        hkArray<u8> localLinks;
+        hkArray<u32> globalLinks;
+    };
+
+    /* hkcdStaticMeshTreeBase::PrimitiveDataRunBase<T> (its instance's hkClass
+     * 0x57be4a0, 4 bytes for a 16-bit value: the records at 0x1692d00). */
+    template <typename T> struct PrimitiveDataRunBase {
+        T value;
+        u8 index;
+        u8 count;
+    };
+
+    /* Out of line (0x20700): its arrays given back from the last. */
+    ~hkcdStaticMeshTreeBase();
+
+    u8 unknown0[0x10];
+    hkAabb domain;
+    u8 unknown30[0x40];
+};
+
+void FUN_000209b0(void *object); /* derived name */
+
+void FUN_000a9140(hkcdStaticMeshTreeBase *self, hkFinishLoadedObjectFlag flag); /* derived name */
+
+/* hkcdStaticMeshTree<CONFIG, DATARUN> (the instance's hkClass 0x57be520,
+ * built at 0x35756: size 0xa0, parent hkcdStaticMeshTreeBase's; records at
+ * 0x1692d80): the vertices packed in 32 bits and shared in 64, and the
+ * primitives' data runs. */
+template <typename VERTEX32, typename VERTEX64, int BITS_X, int BITS_Y>
+struct hkcdStaticMeshTreeCommonConfig {};
+
+template <typename CONFIG, typename DATARUN>
+struct hkcdStaticMeshTree : public hkcdStaticMeshTreeBase {
+    /* A loaded image's arrays are left as loaded. */
+    hkcdStaticMeshTree(hkFinishLoadedObjectFlag flag)
+        : packedVertices(flag), sharedVertices(flag), primitiveDataRuns(flag)
+    {
+    }
+
+    hkArray<u32> packedVertices;
+    hkArray<u64> sharedVertices;
+    hkArray<DATARUN> primitiveDataRuns;
+};
+
 /* hknpCompressedMeshShapeTree (type info 0x57be2f0, size 0xa0) and the
  * hkcdStaticMeshTree instance it is built on (type info 0x57be570) register
  * one finish callback; the finish constructor is the shared empty body. Its
@@ -5062,9 +5156,27 @@ class MeshTreeQuery00104000 /* derived name */
     virtual const Vec4 *unknownVirtual4() const = 0;
 };
 
-struct hknpCompressedMeshShapeTree {
+/* hknpCompressedMeshShapeTreeDataRunData (hkClass 0x57be3a0: 2 bytes, its
+ * one member data) and the data run over it (0x57be320: 4 bytes, parent
+ * the run base's instance). */
+struct hknpCompressedMeshShapeTreeDataRunData {
+    u16 data;
+};
+
+struct hknpCompressedMeshShapeTreeDataRun
+    : public hkcdStaticMeshTreeBase::PrimitiveDataRunBase<hknpCompressedMeshShapeTreeDataRunData> {
+};
+
+/* Its hkClass 0x57be2a0 (size 0xa0, no members of its own) has the mesh
+ * tree's instance for parent. The destructor is the parent's, inline (the
+ * type info's cleanup 0x34e40 holds it). */
+struct hknpCompressedMeshShapeTree
+    : public hkcdStaticMeshTree<hkcdStaticMeshTreeCommonConfig<u32, u64, 11, 21>,
+                                hknpCompressedMeshShapeTreeDataRun> {
     /* The finish constructor is out of line (0xa9140). */
     hknpCompressedMeshShapeTree(hkFinishLoadedObjectFlag flag)
+        : hkcdStaticMeshTree<hkcdStaticMeshTreeCommonConfig<u32, u64, 11, 21>,
+                             hknpCompressedMeshShapeTreeDataRun>(flag)
     {
         FUN_000a9140(this, flag);
     }
@@ -5090,10 +5202,6 @@ struct hknpCompressedMeshShapeTree {
      * finished when asked. derived name. */
     void FUN_00104000(void *collector, MeshTreeQuery00104000 *query, bool keepCollector,
                       bool finishCollector, bool argument6) const;
-
-    u8 unknown0[0x10];
-    hkAabb domain;
-    u8 unknown30[0x70];
 };
 
 /* hkSkinnedMeshShape::BoneSection (type info 0x57bdc18, size 0x10): an
@@ -5270,6 +5378,8 @@ struct hknpShapeInstance {
      * with the same six bits from bit 24 set (`or 0x3f000000` at 0x3ece8
      * and 0x3ed73) and read with them masked off. derived names. */
     enum Flags {
+        HAS_TRANSLATION = 0x2,   /* derived name */
+        HAS_ROTATION = 0x4,      /* derived name */
         HAS_SCALE = 0x8,         /* derived name */
         FLIP_ORIENTATION = 0x10, /* derived name */
         SCALE_SURFACE = 0x20     /* derived name */
@@ -5284,6 +5394,33 @@ struct hknpShapeInstance {
     {
         reinterpret_cast<int *>(&transform.rotation.col0)[3] = flags | FLAGS_MASK;
     }
+
+    /* The third rotation column's w holds the shape's size, slot 6 of
+     * hknpShape, written with the same six bits set (0x3eb70). derived
+     * names. */
+    int getShapeSize() const
+    {
+        return reinterpret_cast<const int *>(&transform.rotation.col2)[3] & ~FLAGS_MASK;
+    }
+
+    void setShapeSize(int size)
+    {
+        reinterpret_cast<int *>(&transform.rotation.col2)[3] = size | FLAGS_MASK;
+    }
+
+    void setIndex(int index) /* derived name */
+    {
+        reinterpret_cast<int *>(&transform.translation)[3] = index | FLAGS_MASK;
+    }
+
+    /* The shape held, its size recorded (0x3eb70; zero with none). derived
+     * name. */
+    void FUN_0003eb70(const hknpShape *newShape);
+
+    /* The transform set, the words its w lanes hold kept, and the flags
+     * for a translation and a rotation other than the identity's (0x3ec40;
+     * the rotation compared within 0.001). derived name. */
+    void FUN_0003ec40(const hkTransform &newTransform);
 
     /* The scale set with the flags it implies, the surface flag for mode 0
      * (0x3ed10; the game calls it at 0xea5b04 and 0xea6214). derived
@@ -6444,6 +6581,11 @@ struct hknpMotion {
      * orientation (0x157510; the callers 0x4bd56, 0x4f142, 0x163cac).
      * derived name. */
     void FUN_00157510(Vec4 &angularVelocityOut) const;
+
+    /* The inertia tensor in world space: the orientation's rotation, its
+     * columns scaled by the inverse inertia's reciprocals, times the
+     * rotation's transpose (0x157350; called at 0x4f3cb). derived name. */
+    void FUN_00157350(hkMatrix3 &inertiaOut) const;
 
     /* The angular velocity set from a world-space one, rotated into the
      * motion's frame by the inverse of its orientation (0x157630). derived
@@ -8704,11 +8846,34 @@ extern const hkClassEnum D_168c5b0[];   /* derived name: its two enums */
 /* hkUFloat8 (the reflection's type name in the material's records; hkClass
  * 0x57b7620, built at 0x156d: size 1, its one record at 0x168c600 names
  * value): an unsigned float in eight bits. */
+/* The table of a code's 16-bit value (0x8f070; leaf_0008f070.cpp). derived
+ * name. */
+u16 FUN_0008f070(unsigned long code); /* derived name */
+
 struct hkUFloat8 {
     /* Out of line (0x935b0, called by the material's constructor and the
      * constraint datas' at 0x77650 to 0x17b2e2): the code of the nearest
      * value not above the float. derived name. */
     hkUFloat8 &operator=(const float &value);
+
+    /* The float a code stands for: its table value as the float's bits
+     * from bit 12 over 0x3b800000, zero for a zero value (0x156e15).
+     * derived name. */
+    float getReal() const
+    {
+        const u16 encoded = FUN_0008f070(value);
+
+        union {
+            u32 bits;
+            float real;
+        } value32;
+
+        if (encoded) {
+            value32.bits = (u32(encoded) << 12) + 0x3b800000;
+            return value32.real;
+        }
+        return 0.0f;
+    }
 
     u8 value;
 };
@@ -11417,6 +11582,27 @@ class hkResourceContainer : public hkResourceBase
 {
   public:
     hkResourceContainer(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
+
+    /* The interface's slots 5 to 15, in the vtable order of
+     * hkMemoryResourceContainer (0x16a6300); slots 10 and 15 are named after
+     * that class's overriders (0x17ff90, 0x1806b0) and are the ones called
+     * through the interface so far (0x17fa60). Slot 10 is the first
+     * resource after the previous one given whose name and class are the
+     * ones given (any for null), slot 15 the same for a child container.
+     * derived names. */
+    virtual void unknownVirtual5();
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    virtual void unknownVirtual9();
+    virtual hkResourceHandle *FUN_0017ff90(const char *name, const hkClass *klass,
+                                           const hkResourceHandle *previous);
+    virtual void unknownVirtual11();
+    virtual void unknownVirtual12();
+    virtual void unknownVirtual13();
+    virtual void unknownVirtual14();
+    virtual hkResourceContainer *FUN_001806b0(const char *name,
+                                              const hkResourceContainer *previous);
 
     /* Every resource of this container and of its children, recursively,
      * appended (0x17fa60, called directly). derived name. */
@@ -15471,6 +15657,17 @@ struct SolverArrays0003f820 /* derived name */
         u8 unknown5[3];
     };
 
+    /* The order of the arrays by their accesses' ids (0x3fa40 sorts the
+     * indices 0 to 2 with it, 0x402f0). derived name. */
+    struct AccessIdLess {
+        bool operator()(const u8 &a, const u8 &b) const
+        {
+            return accesses[a].id < accesses[b].id;
+        }
+
+        const Access *accesses;
+    };
+
     /* The three arrays described, the last first, each with its access
      * (0x3f820; the solver's setup calls it at 0x6dbb9 and 0x16e559).
      * derived name. */
@@ -15480,6 +15677,20 @@ struct SolverArrays0003f820 /* derived name */
     hkArray<Element40> arrayA; /* derived name */
     hkArray<Element40> arrayB; /* derived name */
     hkArray<Element30> arrayC; /* derived name */
+};
+
+/* The same order of the arrays by their accesses' ids in the stage
+ * builder's file (0x18e3e0 sorts the solve data task's indices with it,
+ * 0x18f360: the bytes of 0x402f0 again, a second instantiation of the sort
+ * over a comparator type of its own). derived name. */
+struct AccessIdLess0018e3e0 /* derived name */
+{
+    bool operator()(const u8 &a, const u8 &b) const
+    {
+        return accesses[a].id < accesses[b].id;
+    }
+
+    const SolverArrays0003f820::Access *accesses;
 };
 
 /* derived name: the box around the boxes' centres (FUN_001854b0; called at

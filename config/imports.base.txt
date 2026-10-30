@@ -136,7 +136,7 @@ EotR8a3ASf4 G H func pthread_self
 HF7lK46xzjY G H func ?
 JGMio+21L4c G H func ?
 Jmi+9w9u0E4 G H func ?
-K-jXhbt2gn4 G H func ?
+K-jXhbt2gn4 G H func pthread_mutex_trylock
 NN01qLRhiqU G H func ?
 c7ZnT7V1B98 G H func ?
 dQHWEsJtoE4 G H func ?

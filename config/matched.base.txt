@@ -2113,3 +2113,16 @@ FUN_000886f0 src/libs/unknown/func_000886d0.cpp _GLOBAL__I_a
 FUN_00088920 src/libs/unknown/func_00088900.cpp _GLOBAL__I_a
 FUN_00088cd0 src/libs/unknown/func_00088cb0.cpp _GLOBAL__I_a
 FUN_0008a290 src/libs/unknown/func_0008a270.cpp _GLOBAL__I_a
+FUN_00000bf0 src/libs/unknown/func_00000bf0.cpp
+FUN_00034e40 src/libs/unknown/func_00034e40.cpp
+_ZN11hkAlgorithm18quickSortRecursiveIhN20SolverArrays0003f82012AccessIdLessEEEvPT_iiT0_ src/libs/unknown/func_000402f0.cpp
+FUN_00157350 src/libs/unknown/func_00157350.cpp
+FUN_0017fa60 src/libs/unknown/func_0017fa60.cpp
+_ZN11hkAlgorithm18quickSortRecursiveIh20AccessIdLess0018e3e0EEvPT_iiT0_ src/libs/unknown/func_0018f360.cpp
+FUN_0003eb70 src/libs/unknown/func_0003eb70.cpp
+FUN_0003ec40 src/libs/unknown/func_0003ec40.cpp
+FUN_000034a0 src/libs/unknown/func_000034a0.cpp
+FUN_00010b40 src/libs/unknown/func_00010b40.cpp
+FUN_00018ba0 src/libs/unknown/func_00018ba0.cpp
+_ZN18hknpCompositeShapeD0Ev src/libs/unknown/func_00042e00.cpp
+FUN_00156dc0 src/libs/unknown/func_00156dc0.cpp

@@ -278,12 +278,15 @@ struct ModifierSharedData00156e90 /* derived name */
 };
 
 /* What the modifier of vtable 0x16a4850 keeps in a manifold's cache under
- * property key 2: two factors at +4 and +8 (derived names). */
+ * property key 2, set from the softer material when the manifold is
+ * created (0x156dc0): its soft contact separation velocity, its force
+ * factor over its damping factor at most one, and the damping factor
+ * (derived names). */
 struct ManifoldScaleProperty /* derived name */
 {
-    u8 unknown0[4];
-    float scaleB; /* derived name */
-    float scaleA; /* derived name */
+    float separationVelocity; /* derived name */
+    float scaleB;             /* derived name */
+    float scaleA;             /* derived name */
 };
 
 /* The modifier of vtable 0x16a4850 (address point 0x16a4860, 8 bytes: slot
@@ -294,6 +297,13 @@ struct ManifoldScaleProperty /* derived name */
 class Modifier16a4860 /* derived name */
 {
   public:
+    /* Slot 3 (0x156dc0), when a manifold is created: the property above
+     * reserved and set from the material of the smaller nonzero soft
+     * contact force factor (a zero one compares as the largest). derived
+     * name. */
+    void FUN_00156dc0(const void *threadContext, const void *sharedData, const hknpCdBody *bodyA,
+                      const hknpCdBody *bodyB,
+                      ManifoldCreatedInput *input); /* vtable slot 3; derived name */
     void FUN_00156e90(const void *threadContext, const ModifierSharedData00156e90 *sharedData,
                       const void *bodyA, const void *bodyB,
                       hknpManifold *manifold); /* vtable slot 6; derived name */
@@ -839,7 +849,9 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     /* Slot 11 (0x2670): the peak back to what is in use now. */
     virtual void resetPeak();
 
-    u8 unknown10[0x10];
+    /* The lock the slots of the interface run under (0x34a0). derived
+     * name. */
+    hkCriticalSection criticalSection;
     u64 baseBytes;                   /* derived name */
     u64 peakBytes;                   /* derived name; the largest count slot 18 (0x2230) has seen */
     AllocatorBase *largeAllocator;   /* derived name; the constructor's first argument */
@@ -2075,10 +2087,22 @@ struct FreeList /* derived name */
      * 0x31e3 and 0x33e2, call it). derived name. */
     int FUN_00019190();
 
+    /* Whether a block's elements are all free (0x189d0). derived name. */
+    hkBool32 FUN_000189d0(FreeListBlock *block);
+
+    /* Up to numBlocks blocks examined from where the last call stopped,
+     * each whose elements are all free moved from the blocks in use to
+     * the free blocks; the number examined out, and whether the walk came
+     * to the end (0x18ba0; TwoBaseAllocator's slot 14 runs it, 0x33c4).
+     * derived name. */
+    bool FUN_00018ba0(int numBlocks, int &numBlocksOut);
+
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
-    u64 unknown10;
-    u64 unknown18;
+    /* The last block in use the walk above examined and kept, none when it
+     * starts from the first. derived name. */
+    FreeListBlock *cursor;
+    FreeListBlock *activeBlocks;     /* derived name */
     FreeListBlock *freeBlocks;       /* derived name */
     u64 blockSize;                   /* derived name */
     u64 unknown30;                   /* the alignment (0x18580); derived name */

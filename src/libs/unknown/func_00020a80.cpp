@@ -5,5 +5,5 @@
  * destroy the object in place through its out-of-line destructor. */
 void FUN_00020a80(void *object) /* derived name */
 {
-    FUN_00020700(static_cast<hkcdStaticMeshTreeBase *>(object));
+    static_cast<hkcdStaticMeshTreeBase *>(object)->~hkcdStaticMeshTreeBase();
 }
