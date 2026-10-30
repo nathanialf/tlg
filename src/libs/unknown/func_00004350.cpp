@@ -36,3 +36,41 @@ hkClassMember &hkClass::FUN_000043d0(int index)
 {
     return const_cast<hkClassMember &>(FUN_00004370(index));
 }
+
+/* A zero default, as large as any member's (64 bytes at 0x14b2b50, after
+ * the reflection strings): the value written for a member whose default
+ * offset is -2. derived name. */
+static const Vec4 D_14b2b50[4] = {};
+
+/* derived name: a member's default written to a stream. The index is made
+ * local to the class that declares the member as the lookup above makes
+ * it; the class's defaults are an offset per member from the defaults
+ * themselves. */
+hkResult hkClass::FUN_00004940(int memberIndex, hkStreamWriter *writer) const
+{
+    int localIndex = memberIndex - FUN_00004350();
+    const hkClass *c = this;
+    if (!c) {
+        return HK_FAILURE;
+    }
+    localIndex += c->numDeclaredMembers;
+    while (localIndex < 0) {
+        c = c->parent;
+        if (!c) {
+            return HK_FAILURE;
+        }
+        localIndex += c->numDeclaredMembers;
+    }
+    const int *defaultOffsets = static_cast<const int *>(c->defaults);
+    if (defaultOffsets) {
+        const int offset = defaultOffsets[localIndex];
+        if (offset >= 0 || offset == -2) {
+            const void *value = offset == -2
+                                    ? static_cast<const void *>(D_14b2b50)
+                                    : reinterpret_cast<const char *>(defaultOffsets) + offset;
+            writer->write(value, c->declaredMembers[localIndex].FUN_00007d60());
+            return HK_SUCCESS;
+        }
+    }
+    return HK_FAILURE;
+}

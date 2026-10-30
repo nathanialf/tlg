@@ -2238,6 +2238,9 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     /* Slots 2 and 4 (0x14aa0): an element of the free list. */
     void *FUN_00014aa0(); /* derived name */
 
+    /* Slot 7 (0x14b10): the blocks taken from the free list. */
+    virtual void blockAllocBatch(void **blocksOut, int numBlocks, int blockSize);
+
     /* Slot 8 (0x14be0): the non-null blocks pushed on the free list. */
     virtual void blockFreeBatch(void **blocks, int numBlocks, int blockSize);
 
@@ -4129,11 +4132,17 @@ struct TreeWalk0013b790 /* derived name */
 };
 
 /* A leaf's age and its place in the walk, sorted by age (0x13b6c0, a
- * quicksort over [first, last]). derived names. */
+ * quicksort over [first, last], hkAlgorithm's recursive sort with the
+ * default order: the ages compare as unsigned words). derived names. */
 struct LeafAge0013b6c0 /* derived name */
 {
-    int age;
+    u32 age;
     int leaf;
+
+    bool operator<(const LeafAge0013b6c0 &other) const
+    {
+        return age < other.age;
+    }
 };
 
 void FUN_0013b6c0(LeafAge0013b6c0 *ages, int first, int last); /* derived name */

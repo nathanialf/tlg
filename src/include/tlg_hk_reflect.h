@@ -844,6 +844,12 @@ struct hkClass {
     /* The same member for a class being edited (0x43d0, beside it: the
      * const lookup inline; the caller at 0x180fb6). derived name. */
     hkClassMember &FUN_000043d0(int index);
+    /* The default of a member by its index over the class and its parents,
+     * written to a stream at the member's size (0x4940): the class's
+     * defaults hold an offset per member from the defaults themselves, -2
+     * for a zero default and a negative one otherwise for none; a failure
+     * when the member has no default. derived name. */
+    hkResult FUN_00004940(int memberIndex, hkStreamWriter *writer) const;
     /* The class's name, out of line (0x4200). derived name. */
     const char *FUN_00004200() const;
     /* The object's size, out of line (0x4580, one body with the other
@@ -7217,7 +7223,33 @@ struct hknpWorldObject388Link /* derived name */
 struct hknpWorldObject388Node : public hknpWorldObject388Link /* derived name */
 {
     u8 key; /* derived name */
+    u8 unknown19[7];
+    /* What slot 6 hands the run's processing with each node, from +0x20
+     * (its extent is not known). derived name. */
+    u8 payload[8];
 };
+
+/* What slot 6 of the object at +0x388 reads of its second argument
+ * (derived names): a pointer at +0x28 it passes on and an array of 32-byte
+ * entries at +0x88 two indices pick from. */
+struct hknpWorldObject388Entry /* derived name */
+{
+    u8 unknown0[0x20];
+};
+
+struct hknpWorldObject388Context /* derived name */
+{
+    u8 unknown0[0x28];
+    void *pointer28; /* derived name */
+    u8 unknown30[0x58];
+    hknpWorldObject388Entry *entries; /* derived name */
+};
+
+/* A node of a run processed (0xf6ae0, 0x4d1c bytes; slot 6 of the object
+ * at +0x388 calls it for each node, 0xfc8bc). derived name. */
+void FUN_000f6ae0(void *argument0, void *pointer28, void *argument2, hknpWorldObject388Node *node,
+                  void *payload, hknpWorldObject388Entry *entryA, void *argument6,
+                  hknpWorldObject388Entry *entryB, void *argument8);
 
 /* The reference-counted object at +0x388 of the world (derived names: no
  * type info names its vtable 0x16a3d40, address point 0x16a3d50), 0x10
@@ -7231,6 +7263,13 @@ class hknpWorldObject388 : public hkReferencedObject /* derived name */
   public:
     hknpWorldObject388Node *
     FUN_0006c2d0(hknpWorldObject388Node *first); /* vtable slot 5; derived name */
+    /* Slot 6 (0xfc820): each node of the run sharing the first one's key
+     * processed, behind the library's keycode check; the node after the
+     * run. derived name. */
+    hknpWorldObject388Node *FUN_000fc820(void *argument0, const hknpWorldObject388Context *context,
+                                         void *argument2, hknpWorldObject388Node *first,
+                                         void *argument4, void *argument5, const int *indexA,
+                                         const int *indexB);
 
     /* The constraint solve (0xc4cd0, in the second compiler generation's
      * stretch) over a step's world, its solver settings and its
