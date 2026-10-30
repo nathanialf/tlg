@@ -1922,9 +1922,6 @@ int FUN_00017fe0(const char *s); /* derived name */
 /* The string library's copy (derived name; a wrapper over strcpy,
  * 0x17fc0). */
 char *FUN_00017fc0(char *destination, const char *source); /* derived name */
-/* The string library's bounded copy (derived name; a wrapper over
- * strncpy that copies nothing for a zero count, 0x17fd0). */
-void FUN_00017fd0(char *destination, const char *source, int maxLength); /* derived name */
 /* The string library's comparison (derived name; a wrapper over strcmp,
  * 0x17f40). */
 int FUN_00017f40(const char *a, const char *b); /* derived name */
@@ -4182,6 +4179,32 @@ struct hkVertexFormat {
 
     enum SharingType { SHARING_ALL_SHARED, SHARING_ALL_NOT_SHARED, SHARING_MIXTURE };
 
+    /* The element data types (the item names are the executable's strings,
+     * 0x14b6df7 to 0x14bb866; their values as the memory buffer's layout
+     * reads them, 0x27410 and 0x27458: a TYPE_VECTOR4 element 16 bytes a
+     * value, a TYPE_ARGB32 one 4 bytes whatever its count). */
+    enum ComponentType {
+        TYPE_NONE,
+        TYPE_INT8,
+        TYPE_UINT8,
+        TYPE_INT16,
+        TYPE_UINT16,
+        TYPE_INT32,
+        TYPE_UINT32,
+        TYPE_UINT8_DWORD,
+        TYPE_ARGB32,
+        TYPE_FLOAT16,
+        TYPE_FLOAT32,
+        TYPE_VECTOR4,
+        TYPE_LAST
+    };
+
+    /* A data type's size in bytes, one value's (the memory buffer's
+     * layout reads a file-local table of them, 0x14b8101). derived name. */
+    struct ComponentSize {
+        u8 numBytes;
+    };
+
     /* The element usages (hkClassEnum items from the strings at 0x14b7750
      * to 0x14b781a, values from their records at 0x1691280 to 0x1691340). */
     enum ComponentUsage {
@@ -4512,6 +4535,13 @@ class hkMemoryMeshVertexBuffer
                      const hkMeshVertexBuffer::PartialLockInput &partialInput,
                      hkMeshVertexBuffer::LockedVertices &lockedVerticesOut);
     void FUN_00027b10(); /* vtable slot 15; derived name */
+
+    /* The format set (0x273c0; the constructors 0x272a0 and 0x277e0 call
+     * it): the elements laid out, the vector ones first on 16 bytes, the
+     * others after them each to 4 bytes, the stride the end rounded up to
+     * the larger alignment; no vertices; sharable when every element is.
+     * derived name. */
+    void FUN_000273c0(const hkVertexFormat &newFormat);
 
     u8 unknown8[4];
     hkVertexFormat format;
@@ -13823,8 +13853,10 @@ class hkBufferedStreamWriter : public hkStreamWriter
     hkResult FUN_000092a0(int offset, int whence);
 
     /* The buffered bytes written to the stream until it takes no more;
-     * emptied when all went (0x91f0 inline). derived name. */
-    void flushBuffer()
+     * emptied when all went (0x91f0 inline); the number written back, none
+     * without a stream (the write slot 0x90f0 compares it with what it
+     * buffered). derived name. */
+    int flushBuffer()
     {
         if (stream) {
             const int bytesLeft = bufferSize;
@@ -13834,12 +13866,19 @@ class hkBufferedStreamWriter : public hkStreamWriter
                     stream->write(buffer + bytesWritten, bytesLeft - bytesWritten);
                 bytesWritten += thisWrite;
                 if (thisWrite == 0) {
-                    return;
+                    return bytesWritten;
                 }
             }
             bufferSize = 0;
+            return bytesWritten;
         }
+        return 0;
     }
+
+    /* Slot 6 (0x90f0): the bytes copied into the buffer, the buffer written
+     * out each time it fills; the bytes taken back, fewer when the stream
+     * took less than a full buffer. */
+    virtual int write(const void *memory, int memorySize);
 
     int FUN_00009380() const; /* vtable slot 10; derived name */
 
