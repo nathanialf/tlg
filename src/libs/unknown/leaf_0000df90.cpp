@@ -5,5 +5,5 @@
  * 0x168d8f0) copies the translation row of its transform out. */
 void hkSimpleLocalFrame::FUN_0000df90(Vec4 &position) const /* derived name */
 {
-    position = transform.r[3];
+    position = transform.translation;
 }

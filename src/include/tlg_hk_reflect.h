@@ -2401,15 +2401,28 @@ class hkLocalFrameGroup;
  * implementation the executable holds is hkSimpleLocalFrame's (address
  * point 0x168d8f0), whose bodies are named there. No vtable of this class
  * is in the executable. */
+class hkLocalFrame;
+
+/* What collects the frames near a point (derived names): slot 5 is told
+ * of each, with its distance (hkSimpleLocalFrame's slot 8, 0xe02d). */
+class hkLocalFrameCollector : public hkReferencedObject /* derived name */
+{
+  public:
+    virtual void addFrame(const hkLocalFrame *frame, float distance) = 0;
+};
+
 class hkLocalFrame : public hkReferencedObject
 {
   public:
     hkLocalFrame(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    virtual void unknownVirtual5();  /* vtable slot 5 */
-    virtual void unknownVirtual6();  /* vtable slot 6 */
-    virtual void unknownVirtual7();  /* vtable slot 7 */
-    virtual void unknownVirtual8();  /* vtable slot 8 */
+    virtual void unknownVirtual5(); /* vtable slot 5 */
+    virtual void unknownVirtual6(); /* vtable slot 6 */
+    virtual void unknownVirtual7(); /* vtable slot 7 */
+    /* Slot 8 (hkSimpleLocalFrame's 0xdfa0): this frame and those below it
+     * within a distance of a point handed to a collector. derived name. */
+    virtual void FUN_0000dfa0(const Vec4 &target, float maxDistance,
+                              hkLocalFrameCollector &collector) const;
     virtual void unknownVirtual9();  /* vtable slot 9 */
     virtual void unknownVirtual10(); /* vtable slot 10 */
     virtual void unknownVirtual11(); /* vtable slot 11 */
@@ -2452,6 +2465,11 @@ class hkSimpleLocalFrame : public hkLocalFrame
     void FUN_0000df30(Mat4 &out) const;          /* vtable slot 5; derived name */
     void FUN_0000df60(const Mat4 &newTransform); /* vtable slot 6; derived name */
     void FUN_0000df90(Vec4 &position) const;     /* vtable slot 7; derived name */
+    /* Slot 8 (0xdfa0): told to the collector when the point is within the
+     * distance of the frame's position, then the point brought into the
+     * frame (0x10f90) and handed to each child. */
+    void FUN_0000dfa0(const Vec4 &target, float maxDistance,
+                      hkLocalFrameCollector &collector) const;
     const char *FUN_0000dcb0() const;            /* vtable slot 9; derived name */
     int FUN_0000e160() const;                    /* vtable slot 12; derived name */
     hkLocalFrame *FUN_0000e170(int index) const; /* vtable slot 13; derived name */
@@ -2459,7 +2477,7 @@ class hkSimpleLocalFrame : public hkLocalFrame
      * one's released. derived name. */
     void FUN_0000e0b0(hkLocalFrameGroup *newGroup);
 
-    Mat4 transform;
+    hkTransform transform;
     hkArray<hkLocalFrame *> children;
     hkLocalFrame *parentFrame;
     hkLocalFrameGroup *group;
@@ -3157,6 +3175,8 @@ class hknpLinearSurfaceVelocity : public hknpSurfaceVelocity
     hkVector4 velocity;
 };
 
+struct WheelCollideOutput; /* derived name; below */
+
 /* hknpVehicleSuspension (hkClass 0x57c2f98 built at 0x78090, the string
  * 0x14bf7d2: 0x20 bytes, parent hkReferencedObject, members at 0x169b640;
  * vtable 0x16a4000, stored only by destructors, slot 5 pure). */
@@ -3187,8 +3207,10 @@ class hknpVehicleSuspension : public hkReferencedObject
     static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 5, pure; named after the default suspension's overrider
-     * (0x14dfa0), its parameters not recovered. derived name. */
-    virtual void FUN_0014dfa0() = 0;
+     * (0x14dfa0): each wheel's suspension force from what the wheel
+     * collide reported for it. derived name. */
+    virtual void FUN_0014dfa0(const hknpVehicleInstance *vehicle, const WheelCollideOutput *cdInfo,
+                              float *suspensionForceOut) = 0;
 
     hkArray<SuspensionWheelParameters> wheelParams;
 };
@@ -3215,8 +3237,13 @@ class hknpVehicleDefaultSuspension : public hknpVehicleSuspension
      * the recorded size, 0x30 by default. */
     virtual ~hknpVehicleDefaultSuspension();
 
-    /* Slot 5 (0x14dfa0). derived name. */
-    virtual void FUN_0014dfa0();
+    /* Slot 5 (0x14dfa0): nothing for a wheel without a contact, else the
+     * spring's force over its length's change, scaled, less the damping
+     * (the compression's while the suspension closes, the relaxation's
+     * while it opens) times the closing speed, all times the chassis's
+     * mass. derived name. */
+    virtual void FUN_0014dfa0(const hknpVehicleInstance *vehicle, const WheelCollideOutput *cdInfo,
+                              float *suspensionForceOut);
 
     hkArray<WheelSpringSuspensionParameters> wheelSpringParams;
 };
@@ -4839,6 +4866,18 @@ inline Vec4 reciprocalOrZero(const Vec4 &v) /* derived name */
     return _mm_andnot_ps(_mm_cmpeq_ps(v, _mm_setzero_ps()), refined);
 }
 
+/* The same reciprocal as Havok's hkSimdReal::setReciprocal with its
+ * set-zero mode is on this platform: the estimate times the value, r(2 -
+ * rv), the lanes equal to zero masked off (the vehicle's chassis mass,
+ * 0x14dff2). derived name. */
+inline Vec4 simdReciprocalOrZero(const Vec4 &v) /* derived name */
+{
+    const Vec4 equalsZero = _mm_cmpeq_ps(v, _mm_setzero_ps());
+    const Vec4 r = _mm_rcp_ps(v);
+    const Vec4 refined = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, v)));
+    return _mm_andnot_ps(equalsZero, refined);
+}
+
 /* Four hkHalf read as a vector: each into the top 16 bits of its lane,
  * the 8 bytes loaded as one double (`vmovsd; vpunpcklwd` from zero,
  * 0x5f56a). derived name. */
@@ -6371,7 +6410,13 @@ class hknpDecoratorShape : public hknpShape
 
     hknpDecoratorShape(hkFinishLoadedObjectFlag flag); /* 0x3b0f0 */
 
-    virtual ~hknpDecoratorShape();
+    /* Inline and empty: the masked and scaled convex shapes' destructors
+     * (0x37c40, 0x16cf30) jump straight to hknpShape's. Its own copy, slot
+     * 0 (0x3b040, a jump to hknpShape's; the sphere's, convex shape's and
+     * scaled convex base's slot 0 too), is emitted with the vtable where
+     * the constructor stores it (func_0003b0a0.cpp; the class declares no
+     * virtual of its own out of line). */
+    virtual ~hknpDecoratorShape() {}
 
     void FUN_0003b120(const Mat4 &transform,
                       hkAabb &aabbOut) const;                     /* vtable slot 7; derived name */
@@ -9417,6 +9462,10 @@ class hknpScaledConvexShape : public hknpScaledConvexShapeBase
 {
   public:
     hknpScaledConvexShape(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x16cf30, slot 0; the deleting destructor 0x16cee0,
+     * slot 1, before it): the destroyed signal fired and the core shape's
+     * reference released, then the signals and hknpShape's destructor. */
     virtual ~hknpScaledConvexShape();
 
     hknpShapeSignals *FUN_0016ced0(); /* vtable slot 8; derived name */
@@ -16490,6 +16539,15 @@ class Modifier169b1a0 /* derived name */
 
 void FUN_00171180(void *self, CommandOwner00171180 *owner, const u32 &bodyId); /* derived name */
 
+/* A block stream range that links to the next range of its list (derived
+ * names), 32 bytes: the range, then the next one at +0x10 (0x168120 walks
+ * an array of lists of them). */
+struct hkBlockStreamLinkedRange : public hkBlockStreamRange /* derived name */
+{
+    const hkBlockStreamLinkedRange *next;
+    u8 unknown18[8];
+};
+
 /* The executors by primary type (derived name), eight references (the
  * constructor 0x90570 clears them; the simulation builds one on the stack
  * at 0x17008b and runs each command of a stream through it, 0x170396). */
@@ -16505,6 +16563,14 @@ class hkPrimaryCommandDispatcher /* derived name */
 
     hkSecondaryCommandDispatcher *dispatchers[8]; /* derived name */
 };
+
+/* derived name: every command of every list of ranges run through a
+ * dispatcher (0x168120; the simulation's 0x1703de and 0x17046d, after the
+ * stream's own commands): a list whose first range holds none is skipped,
+ * else each range of it read through, each command's padded size the
+ * step. */
+void FUN_00168120(const hkArray<hkBlockStreamLinkedRange> &ranges,
+                  hkPrimaryCommandDispatcher &dispatcher);
 
 /* hkDebugDisplay, the singleton registered by that name (the string at
  * 0x14cbaa4; record 0x57c88c8 filled by 0x183cd0, instance pointer

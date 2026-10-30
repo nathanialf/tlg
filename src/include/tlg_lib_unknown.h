@@ -4556,6 +4556,20 @@ struct Object00176420 /* derived name */
     hkReferencedObject *object20; /* derived name */
 };
 
+/* What the broad phase's pair search gets as its first argument (derived
+ * name): the world at +8. */
+struct SimulationContext00142fa0 /* derived name */
+{
+    u8 unknown0[8];
+    hknpWorld *world;
+};
+
+/* The new pairs between two layers' trees found and written (0x197c60,
+ * 0x3cc bytes; the broad phase's slot 10 calls it). derived name. */
+void FUN_00197c60(const SimulationContext00142fa0 *context, hknpCollisionFilter *filter,
+                  BroadPhaseTree00142a40 *treeA, BroadPhaseTree00142a40 *treeB, void *argument5,
+                  void *argument6);
+
 /* The broad phase's trees by layer (derived names): a tree per layer from
  * +0x10, two flags per layer after them, the number of layers at +0x60;
  * the bodies marked for the update in a bit field at +0x78, the lowest and
@@ -4577,6 +4591,13 @@ struct BroadPhaseLayers00142a40 /* derived name */
      * layers' trees walked against each other through the world's
      * collision filter, the pairs written to the output. derived name. */
     void FUN_00142ea0(const struct BroadPhaseContext00142ea0 *context, void *pairsOut);
+    /* Slot 10 (0x142fa0), timed as "TtFindNewPairs": each pair of layers
+     * the list names whose trees both hold boxes searched for new pairs
+     * (0x197c60) under the world's collision filter, the last two
+     * arguments handed on the other way round; the third is not read.
+     * derived name. */
+    void FUN_00142fa0(const SimulationContext00142fa0 *context, void *argument2, void *argument3,
+                      void *argument4);
 
     u8 unknown0[0x10];
     BroadPhaseTree00142a40 *trees[8];
@@ -4584,11 +4605,9 @@ struct BroadPhaseLayers00142a40 /* derived name */
     bool updatePending[8]; /* cleared by both trees' updates */
     int numLayers;
     u8 unknown64[4];
-    /* The layer pairs to collide, two indices each, and the number of
-     * indices (slot 9's loop, 0x142f20). derived names. */
-    const int *layerPairs;
-    int numLayerPairIndices;
-    u8 unknown74[4];
+    /* The layers whose trees are searched against each other, two indices
+     * a pair (0x142fa0). derived name. */
+    hkArray<int> layerPairs;
     hkBitField markedBodies;
     /* While the first does not exceed the second, the broad phase's update
      * runs FUN_00141500 first (0x142bff). derived names. */
@@ -5204,17 +5223,23 @@ struct ShortKeyMap /* derived name */
  * frees both arrays; 0x17a290 puts an edge of a 64-byte record (its second
  * node at +4, its link index at +0x18) at the head of a node's list. */
 /* The 64-byte edge record those lists index (derived names): its two nodes
- * at +4 and +0xc (the caller at 0x16dd98 links the edge at each), its link
- * index at +0x18. */
+ * at +4 and +0xc (the caller at 0x16dd98 links the edge at each), a counted
+ * reference at +0x10, its link index at +0x18, and a block of the thread's
+ * heap at +0x30 with its byte size at +0x2e (0x16df30 frees it, a pointer
+ * of 0 or 1 holding none). A free record has an invalid first node and the
+ * next free record's index in place of its second. */
 struct EdgeRecord0017a290 /* derived name */
 {
     u8 unknown0[4];
     int nodeA; /* derived name */
     u8 unknown8[4];
-    int nodeB; /* derived name */
-    u8 unknown10[8];
-    int linkIndex; /* derived name */
-    u8 unknown1c[0x24];
+    int nodeB;                           /* derived name */
+    hkRefPtr<hkReferencedObject> object; /* derived name */
+    int linkIndex;                       /* derived name */
+    u8 unknown1c[0x12];
+    u16 blockSize; /* derived name */
+    void *block;   /* derived name */
+    u8 unknown38[8];
 };
 
 struct NodeEdgeLists /* derived name */
@@ -5275,11 +5300,17 @@ class Owner0016d360 /* derived name */
      * world and this object, then the storage sized. derived names. */
     void FUN_0016d3f0(void *argument2, int argument3);
 
+    /* An edge taken out (0x16df30; the world's 0x4d620 after firing its
+     * signal): out of both its nodes' lists while the object has a world,
+     * its block given back and its reference released, then the record put
+     * at the head of the free list. derived name. */
+    void FUN_0016df30(unsigned int edgeIndex);
+
     hknpWorld *world;          /* derived name */
     EdgeRecord0017a290 *edges; /* derived name */
     int numEdges;              /* derived name */
     u8 unknown14[4];
-    int int18; /* derived name */
+    int int18; /* derived name: the first free record, 0x16df30 */
     u8 unknown1c[4];
     hkArray<Entry0016d360> entries; /* derived name */
     u8 unknown30[8];
@@ -5450,7 +5481,6 @@ void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
 void FUN_00166180(hknpExternMeshShape *self);
-void FUN_0016cf30(hknpScaledConvexShape *self);
 void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
@@ -5496,7 +5526,6 @@ void FUN_00162580(hknpVehicleInstance *self);                /* slot 1 of 0x16a5
 void FUN_00165aa0(hknpPhysicsSystemData *self);              /* slot 1 of 0x16a5130 */
 void FUN_00166130(hknpExternMeshShape *self);                /* slot 1 of 0x16a5170 */
 void FUN_0016a640(hknpScaledConvexShapeBase *self);          /* slot 1 of 0x16a5390 */
-void FUN_0016cee0(hknpScaledConvexShape *self);              /* slot 1 of 0x16a54a0 */
 void FUN_00176b20(hknpCharacterProxy *self);                 /* slot 1 of 0x16a5b70 */
 void FUN_0017b700(hkp6DofConstraintData *self);              /* slot 1 of 0x16a5d20 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self);          /* slot 1 of 0x16a6300 */

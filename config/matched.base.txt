@@ -153,7 +153,7 @@ FUN_000394a0 src/libs/unknown/func_000394a0.cpp
 FUN_000395c0 src/libs/unknown/func_000395c0.cpp
 FUN_00039b10 src/libs/unknown/func_00039b10.cpp
 FUN_00039e30 src/libs/unknown/func_00039e30.cpp
-_ZN18hknpDecoratorShapeD1Ev src/libs/unknown/func_0003b040.cpp
+_ZN18hknpDecoratorShapeD1Ev src/libs/unknown/func_0003b0a0.cpp
 FUN_0003bb00 src/libs/unknown/func_0003bb00.cpp
 FUN_0003ccf0 src/libs/unknown/func_0003ccf0.cpp
 FUN_0003d070 src/libs/unknown/func_0003d070.cpp
@@ -1344,7 +1344,7 @@ FUN_00162580 src/libs/unknown/func_00162580.cpp
 FUN_00165aa0 src/libs/unknown/func_00165aa0.cpp
 FUN_00166130 src/libs/unknown/func_00166130.cpp
 FUN_0016a640 src/libs/unknown/func_0016a640.cpp
-FUN_0016cee0 src/libs/unknown/func_0016cee0.cpp
+_ZN21hknpScaledConvexShapeD0Ev src/libs/unknown/func_0016cf30.cpp
 FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
 FUN_00176b20 src/libs/unknown/func_00176b20.cpp
 FUN_0017b700 src/libs/unknown/func_0017b700.cpp
@@ -2345,3 +2345,10 @@ FUN_00174f30 src/libs/unknown/func_00174f30.cpp _ZN19hknpWorldStreams26012FUN_00
 FUN_00159a30 src/libs/unknown/func_00159a30.cpp _ZNK25hknpLinearSurfaceVelocity14calcVelocitiesERK9hkVector4S2_RK8hknpBodyPS0_S6_
 FUN_00199b00 src/libs/unknown/func_00199b00.cpp _Z12FUN_00199b00PK9hknpWorldPK8hknpBodyS4_P19hkBlockStreamWriter
 FUN_00085450 src/libs/unknown/func_00085450.cpp _Z12FUN_00085450RK29AngularConstraintInfo00085450RK25ConstraintQueryIn00085450R26ConstraintQueryOut00085450
+FUN_0014dfa0 src/libs/unknown/func_0014dfa0.cpp _ZN28hknpVehicleDefaultSuspension12FUN_0014dfa0EPK19hknpVehicleInstancePK18WheelCollideOutputPf
+_ZN21hknpScaledConvexShapeD1Ev src/libs/unknown/func_0016cf30.cpp
+FUN_0000dfa0 src/libs/unknown/func_0000dfa0.cpp _ZNK18hkSimpleLocalFrame12FUN_0000dfa0ERKDv4_ffR21hkLocalFrameCollector
+FUN_00168120 src/libs/unknown/func_00168120.cpp _Z12FUN_00168120RK7hkArrayI24hkBlockStreamLinkedRangeER26hkPrimaryCommandDispatcher
+FUN_0016df30 src/libs/unknown/func_0016df30.cpp _ZN13Owner0016d36012FUN_0016df30Ej
+FUN_00035500 src/libs/unknown/func_000354c0.cpp _GLOBAL__I_a
+FUN_00142fa0 src/libs/unknown/func_00142fa0.cpp _ZN24BroadPhaseLayers00142a4012FUN_00142fa0EPK25SimulationContext00142fa0PvS3_S3_
