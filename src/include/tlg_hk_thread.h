@@ -87,7 +87,7 @@ struct Object00015700 /* derived name */
 void FUN_00015700(Object00015700 *self, void *pointer, int count); /* derived name */
 void FUN_000158f0(Object00015700 *self, void *pointer, int count); /* derived name */
 
-struct Handle00016350;
+struct TaskNode000172c0;
 
 /* What runs a work item (derived name): polymorphic, slot 2 the call
  * FUN_00016350 makes on the item's runner. Class168e810 keeps a default one
@@ -116,17 +116,26 @@ class Runner00016350 /* derived name */
     u8 unknown8[8];
 };
 
-/* A work item (derived names): a 16-bit value at +4 and its runner at
- * +0x38, both set by slot 6 of Class168e810 (FUN_00017280). */
-struct WorkItem00017280 /* derived name */
+/* A task node of Class168e810's graph (derived names): its count of
+ * unfinished predecessors at +0, -1 once the node is done (what FUN_00016350
+ * waits for, slot 10 and slot 11 skip); the priority at +4 and the runner at
+ * +0x38, both set by slot 6 (FUN_00017280); the threads waiting for it as
+ * one bit each by their semaphore's index at +8, and the nodes that wait on
+ * it at +0x10 (slot 7 links them, FUN_00016350 counts them down when it
+ * finishes the node). */
+struct TaskNode000172c0 /* derived name */
 {
-    u8 unknown0[4];
-    u16 value4; /* derived name */
-    u8 unknown6[0x32];
-    Runner00016350 *runner; /* derived name */
+    int counter;
+    /* The node's priority, the high half of its key in the ready queue,
+     * and the sequence number slot 9 gives it when it is counted down
+     * (0x17540). derived names. */
+    u16 priority;
+    u16 sequence;
+    u64 waitingThreads;
+    hkArray<TaskNode000172c0 *> successors;
+    u8 unknown20[0x18];
+    Runner00016350 *runner;
 };
-
-struct TaskNode000172c0;
 
 /* A node and one that is to wait on it (derived names): slot 8 (0x173f0)
  * links an array of them. */
@@ -147,17 +156,17 @@ class Interface168e888 /* derived name */
     virtual ~Interface168e888() {}
 
     virtual void FUN_00017240(void *pointer, int count) = 0; /* slot 2; derived name */
-    virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
+    virtual void FUN_00017280(TaskNode000172c0 *item, Runner00016350 *runner,
                               u16 value) = 0; /* slot 3; derived name */
     virtual void FUN_000172c0(TaskNode000172c0 *node,
                               TaskNode000172c0 *successor) = 0; /* slot 4; derived name */
     virtual void FUN_000173f0(const TaskPair000173f0 *pairs,
                               int numPairs) = 0; /* slot 5; derived name */
     virtual void FUN_00017540(TaskNode000172c0 *const *nodes,
-                              int numNodes) = 0;                 /* slot 6; derived name */
-    virtual void FUN_00017930(const Handle00016350 *handle) = 0; /* slot 7; derived name */
-    virtual void FUN_00017970(const Handle00016350 *const *handles,
-                              int numHandles) = 0;           /* slot 8; derived name */
+                              int numNodes) = 0;           /* slot 6; derived name */
+    virtual void FUN_00017930(TaskNode000172c0 *node) = 0; /* slot 7; derived name */
+    virtual void FUN_00017970(TaskNode000172c0 *const *nodes,
+                              int numNodes) = 0;             /* slot 8; derived name */
     virtual void FUN_00017260(void *pointer, int count) = 0; /* slot 9; derived name */
 };
 
@@ -167,6 +176,12 @@ class Interface168e888 /* derived name */
  * waiting, its index at +0xc; FUN_000170d0 signals each waiting one. */
 struct WaitingSemaphore00016d40 /* derived name */
 {
+    /* No count of at most one, not waiting; the index is the slot's, set by
+     * the one who builds it (0x16d40 after storing it, 0x16350 before). */
+    WaitingSemaphore00016d40(int spinCount) : semaphore(0, 1, spinCount), waiting(false) {}
+
+    /* From the thread's heap, untested (0x16410). derived name. */
+    static void *operator new(unsigned long numBytes);
     /* Back to the thread's heap at the class's size, untested (0x17037).
      * derived name. */
     static void operator delete(void *object, unsigned long numBytes);
@@ -209,7 +224,7 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     static void operator delete(void *object, unsigned long numBytes);
 
     virtual void FUN_00017240(void *pointer, int count); /* vtable slot 5; derived name */
-    virtual void FUN_00017280(WorkItem00017280 *item, Runner00016350 *runner,
+    virtual void FUN_00017280(TaskNode000172c0 *item, Runner00016350 *runner,
                               u16 value); /* vtable slot 6; derived name */
     /* Slot 7 (0x172c0), under the lock: a node made to wait on another
      * unless that one is done, its count raised (0x173f0 links pairs of
@@ -223,22 +238,27 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
      * queue by priority, as many waiting semaphores taken; then, the lock
      * left, those semaphores signalled. derived names. */
     virtual void FUN_00017540(TaskNode000172c0 *const *nodes, int numNodes);
-    virtual void FUN_00017930(const Handle00016350 *handle); /* vtable slot 10; derived name */
-    /* Slot 11 (0x17970): the handles that name something gathered into a
+    virtual void FUN_00017930(TaskNode000172c0 *node); /* vtable slot 10; derived name */
+    /* Slot 11 (0x17970): the nodes not yet done gathered into a
      * temporary array and handed to the interface's run of several
      * (FUN_00092fe0). derived name. */
-    virtual void FUN_00017970(const Handle00016350 *const *handles, int numHandles);
+    virtual void FUN_00017970(TaskNode000172c0 *const *nodes, int numNodes);
     virtual void FUN_00017260(void *pointer, int count); /* vtable slot 12; derived name */
 
     /* 0x170d0: under the lock, once (the flag at +0x362), every waiting
      * semaphore signalled. derived name. */
     void FUN_000170d0();
 
-    Object00015700 *object18;                 /* derived name */
-    hkArray<ReadyEntry00017540> readyQueue;   /* derived name */
-    hkCriticalSection lock;                   /* derived name; slots 7 to 9 run under it */
-    int firstFreeSlot;                        /* derived name: 0 on construction */
-    int nextFreeSlot[64];                     /* derived name: i + 1, the last 0x7f */
+    Object00015700 *object18;               /* derived name */
+    hkArray<ReadyEntry00017540> readyQueue; /* derived name */
+    hkCriticalSection lock;                 /* derived name; slots 7 to 9 run under it */
+    /* A lock-free list of the 64 semaphore slots (derived names): the head's
+     * low 7 bits the first free slot, the bits above a tag each take
+     * advances; each slot's next, 0x7f for none. volatile: every thread
+     * takes and gives back slots without the lock (FUN_00016350), so each
+     * read is the memory's (the base loads the next slot on its own, 0x163b9). */
+    volatile int firstFreeSlot;               /* 0 on construction */
+    volatile int nextFreeSlot[64];            /* i + 1, the last 0x7f */
     WaitingSemaphore00016d40 *semaphores[64]; /* derived name */
     u8 unknown348[8];
     Runner00016350 defaultRunner; /* derived name */
@@ -248,37 +268,19 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     u8 unknown368[8];
 };
 
-/* A node slot 7 links (derived names): its count at +0, -1 once the node
- * is done, and the nodes that wait on it at +0x10. */
-struct TaskNode000172c0 /* derived name */
-{
-    int counter;
-    /* The node's priority, the high half of its key in the ready queue,
-     * and the sequence number slot 9 gives it when it is counted down
-     * (0x17540). derived names. */
-    u16 priority;
-    u16 sequence;
-    u8 unknown8[8];
-    hkArray<TaskNode000172c0 *> successors;
-};
-
-/* Handles run through an interface (0x92fe0; Class168e810's slot 11 hands
- * it the ones that name something): one through slot 7, two or more as a
+/* Nodes run through an interface (0x92fe0; Class168e810's slot 11 hands
+ * it the ones not yet done): one through slot 7, two or more as a
  * batch. derived name. */
-void FUN_00092fe0(Interface168e888 *runner, const Handle00016350 *const *handles,
-                  int numHandles); /* derived name */
+void FUN_00092fe0(Interface168e888 *runner, TaskNode000172c0 *const *nodes,
+                  int numNodes); /* derived name */
 
-/* What FUN_00016350 runs on the object with a mode: the work of one handle,
- * or of none (derived names). A handle whose first int is -1 names
- * nothing: slot 10 (FUN_00017930) then does nothing, FUN_00017920 passes no
- * handle, and the callback FUN_00007730 runs FUN_00017920 with mode 0. */
-struct Handle00016350 /* derived name */
-{
-    s32 value; /* derived name */
-};
-
-void FUN_00016350(Class168e810 *self, int mode, const Handle00016350 *handle); /* derived name */
-void FUN_00017920(Class168e810 *self, int mode);                               /* derived name */
+/* The calling thread takes a free semaphore slot and processes ready nodes
+ * until the node it waits for is done; without one, until the queue is
+ * empty in mode 1, or until the object is released (derived names). Slot 10
+ * (FUN_00017930) waits for a node not yet done, FUN_00017920 for none, and
+ * the callback FUN_00007730 runs FUN_00017920 with mode 0. */
+void FUN_00016350(Class168e810 *self, int mode, TaskNode000172c0 *waitFor); /* derived name */
+void FUN_00017920(Class168e810 *self, int mode);                            /* derived name */
 
 /* The interface of the physics world's tasks (derived name): the second
  * base, at +0x10, of each task class below (an hkReferencedObject first).
