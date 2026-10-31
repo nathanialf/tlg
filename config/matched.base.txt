@@ -348,7 +348,7 @@ FUN_00003130 src/libs/unknown/func_00003130.cpp
 FUN_000032d0 src/libs/unknown/func_000032d0.cpp
 FUN_00003490 src/libs/unknown/func_00003490.cpp
 FUN_00003570 src/libs/unknown/func_00003570.cpp
-FUN_00003700 src/libs/unknown/func_00003700.cpp
+FUN_00003700 src/libs/unknown/func_000035a0.cpp _ZThn8_N16TwoBaseAllocator13addToSnapshotEPvi
 FUN_00008d80 src/libs/unknown/func_00008d80.cpp _ZN13AllocatorBase12FUN_00008d80EPvi
 FUN_0000d520 src/libs/unknown/func_0000d520.cpp
 FUN_0000dcb0 src/libs/unknown/leaf_0000dcb0.cpp _ZNK18hkSimpleLocalFrame12FUN_0000dcb0Ev
@@ -2508,3 +2508,8 @@ FUN_000147c0 src/libs/unknown/func_00014690.cpp _ZN12ThreadMemory12FUN_000147c0E
 _ZN21hkp6DofConstraintDataD1Ev src/libs/unknown/func_0017b700.cpp
 FUN_00155850 src/libs/unknown/func_00155850.cpp _ZN30hknpCompositeCollisionDetector12FUN_00155850EPKvP27hknpCompositeCollisionCacheP19hkBlockStreamWriter
 FUN_00008af0 src/libs/unknown/func_00008af0.cpp _GLOBAL__I_a
+FUN_000155a0 src/libs/unknown/func_000155a0.cpp _GLOBAL__I_a
+FUN_0001c5d0 src/libs/unknown/func_0001c5d0.cpp _GLOBAL__I_a
+FUN_0003c920 src/libs/unknown/func_0003c920.cpp _GLOBAL__I_a
+FUN_000012a0 src/libs/unknown/func_000012a0.cpp _GLOBAL__I_a
+_ZN16TwoBaseAllocator13addToSnapshotEPvi src/libs/unknown/func_000035a0.cpp

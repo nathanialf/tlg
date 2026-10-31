@@ -935,6 +935,26 @@ struct hkCustomAttributes {
     int numAttributes;           /* derived name */
 };
 
+/* hkSimplePropertyValue (hkClass 0x57b7520, built at 0x13b1: 8 bytes,
+ * version 1, one member record at 0x168c490, data, an hkUint64): a
+ * property's value. */
+struct hkSimplePropertyValue {
+    u64 data;
+};
+
+/* hkSimpleProperty (hkClass 0x57b74a0, built at 0x130d: 0x10 bytes,
+ * version 2, three member records at 0x168c410: key and
+ * alignmentPadding, two hkUint32, the second not serialized, then value
+ * at +8): a keyed value. */
+struct hkSimpleProperty {
+    u32 key;
+    u32 alignmentPadding;
+    hkSimplePropertyValue value;
+};
+
+extern const hkClassMember D_168c410[]; /* derived name: hkSimpleProperty's records */
+extern const hkClassMember D_168c490[]; /* derived name: hkSimplePropertyValue's record */
+
 struct hkClass {
     /* Out of line (0x41a0, called by every reflection initializer): the
      * fields in order; the implemented interfaces' list is not kept, only
@@ -5059,6 +5079,17 @@ struct alignas(8) hkPackedVector3 {
     s16 values[4];
 };
 
+extern const hkClassMember D_168e770[]; /* derived name: hkPackedVector3's record */
+
+/* hkPackedVector8_3 (hkClass 0x57b9960, built at 0x156ae: 4 bytes, one
+ * member record at 0x168e7a0, values, four hkInt8): a vector packed to
+ * one byte per component. */
+struct hkPackedVector8_3 {
+    s8 values[4];
+};
+
+extern const hkClassMember D_168e7a0[]; /* derived name: hkPackedVector8_3's record */
+
 /* Two in every lane (derived name): the Newton step of the reciprocal. */
 extern const Vec4 D_14b4380;
 
@@ -5583,6 +5614,8 @@ struct hkAabb {
     Vec4 max; /* derived name */
 };
 
+extern const hkClassMember D_168eb70[]; /* derived name: hkAabb's records */
+
 inline void hkcdFourAabb::setAll(const hkAabb &aabb)
 {
     lx.quad = broadcast<0>(aabb.min);
@@ -5650,6 +5683,8 @@ struct alignas(16) hkAabbUint32 {
     u8 expansionMax[3];
     u8 shapeKeyByte;
 };
+
+extern const hkClassMember D_168ebc0[]; /* derived name: hkAabbUint32's records */
 
 /* derived name: an AABB as integer coordinates that sort as its floats do
  * (each float's bits with the sign flipped, or every bit for a negative
@@ -17676,6 +17711,40 @@ struct hkBlockStreamConsumedBlock /* derived name */
 struct hknpCollisionDispatchType {
     enum Enum { NONE = 0, CONVEX = 1, COMPOSITE = 2, DISTANCE_FIELD = 3, USER = 4, NUM_TYPES = 5 };
 };
+
+extern const hkClassEnum D_1695f20[]; /* derived name: hknpCollisionDispatchType's one enum */
+
+/* hknpShapeType (hkClass 0x57bfe10, an enum the reflection names, its
+ * items' names and values from its records at 0x1695d20): a shape's type. */
+struct hknpShapeType {
+    enum Enum {
+        CONVEX = 0,
+        CONVEX_POLYTOPE = 1,
+        SPHERE = 2,
+        CAPSULE = 3,
+        TRIANGLE = 4,
+        COMPRESSED_MESH = 5,
+        EXTERN_MESH = 6,
+        STATIC_COMPOUND = 7,
+        DYNAMIC_COMPOUND = 8,
+        HEIGHT_FIELD = 9,
+        COMPRESSED_HEIGHT_FIELD = 10,
+        SCALED_CONVEX = 11,
+        MASKED = 12,
+        MASKED_COMPOUND = 13,
+        LOD = 14,
+        DUMMY = 15,
+        FX_PIPELINE = 16,
+        USER_0 = 17,
+        USER_1 = 18,
+        USER_2 = 19,
+        USER_3 = 20,
+        NUM_SHAPE_TYPES = 21,
+        INVALID = 22
+    };
+};
+
+extern const hkClassEnum D_1695e90[]; /* derived name: hknpShapeType's one enum */
 
 /* hknpCollisionDispatcher (its file's report names it, 0x174050): the
  * world's +0x268 object, 0xd0 bytes from the thread's heap (0x49a83), a

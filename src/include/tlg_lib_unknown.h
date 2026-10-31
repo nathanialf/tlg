@@ -1079,80 +1079,8 @@ class AllocatorInterface /* derived name */
     virtual int addToSnapshot(void *snapshot, int parentId) = 0;
 };
 
-/* An allocator (vtable address points 0x168c640 and, for the second base,
- * 0x168c708), both stored by its constructor FUN_00001960. Its complete
- * destructor is FUN_00001fb0, its deleting destructor (slot 1) FUN_00001f90;
- * slot 12 (FUN_00001620) returns the object as its second base. Slot 15
- * (0x34a0, also reached through the second base by the thunk 0x3570) stores
- * a byte limit at +0xb50 under the spinning mutex at +0x10; slot 16
- * (FUN_00003580) reads it. Primary slots 13 to 21 override the interface's
- * slots 2 to 10 in order; the second base's vtable holds their
- * this-adjusting thunks (0x32d0, 0x3490, 0x3570, 0x3590, 0x2280, 0x3130,
- * 0x2300, 0x2400, 0x3700). */
 struct FreeList;
-
-struct TwoBaseAllocatorCinfo; /* derived name: what FUN_00001ae0 takes */
-
-class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
-{
-  public:
-    /* Out of line (0x1960): the allocator below and its interface at +0x30
-     * and +0x38; the third argument goes on to FUN_00001ae0. */
-    TwoBaseAllocator(AllocatorBase *large, AllocatorInterface *largeInterface,
-                     const TwoBaseAllocatorCinfo *cinfo);
-    virtual ~TwoBaseAllocator();
-    /* Slot 2 (0x29b0): a block through slot 4, the size passed by
-     * reference. */
-    virtual void *blockAlloc(int numBytes);
-    virtual AllocatorInterface *FUN_00001620();
-
-    /* The rest of the overriders, declared so the class is complete (slot
-     * 3 0x2c40; primary slots 13 to 15, 17, 18, 20 and 21). */
-    virtual void blockFree(void *pointer, int numBytes);
-    virtual void FUN_00003140();
-    virtual void FUN_000032e0(int value);
-    virtual int FUN_000034a0(u64 limit);
-    virtual bool FUN_00002230(int numBytes);
-    virtual int FUN_00002f10(MemoryWalkCallback callback, void *param);
-    virtual void FUN_00002330(int value);
-    virtual int addToSnapshot(void *snapshot, int parentId); /* 0x35a0 */
-
-    virtual u64 FUN_00003580() const; /* vtable slot 16; derived name */
-    /* Slot 20 (0x22d0, also the second base's slot 8 through the thunk
-     * 0x2300, which has it inlined): the bytes the allocator below has
-     * handed out since the count at +0x20, none without one. */
-    virtual u64 allocatedBytes() const;
-    /* Slot 10 (0x27e0): a small block's size is its free list's element
-     * size, none for no bytes; a larger one, or one of a size no free list
-     * holds, the allocator below knows. */
-    virtual int getAllocatedSize(const void *pointer, int numBytes) const;
-    /* Slot 11 (0x2670): the peak back to what is in use now. */
-    virtual void resetPeak();
-    /* Slot 22 (0x26f0, at 0x168c6f0, after the interface's overriders):
-     * under the lock, every free list checked in turn (FUN_000188c0), the
-     * first failing one the answer. derived name. */
-    virtual bool FUN_000026f0();
-
-    /* The lock the slots of the interface run under (0x34a0). derived
-     * name. */
-    hkCriticalSection criticalSection;
-    u64 baseBytes;                   /* derived name */
-    u64 peakBytes;                   /* derived name; the largest count slot 18 (0x2230) has seen */
-    AllocatorBase *largeAllocator;   /* derived name; the constructor's first argument */
-    AllocatorInterface *allocator38; /* derived name; the constructor's second argument */
-    u8 unknown40[0x78];
-    /* The free list of each block size up to 640 bytes by 32-byte steps,
-     * indexed by (size + 31) / 32 (0x27ee). derived name. */
-    FreeList *sizeToFreeList[21];
-    /* The distinct free lists and their count (slot 22, 0x26f0, walks
-     * them). derived names. */
-    FreeList *freeLists[21];
-    int numFreeLists;
-    u8 unknown20c[0x944];
-    /* The byte limit slot 15 stores and slot 16 reads; slot 18 (0x2230)
-     * tests a request against it. derived name. */
-    u64 limitB50;
-};
+class TwoBaseAllocator;
 
 /* An allocator of blocks with a 0x20-byte header (vtable address points
  * 0x168e2a0 and, for the second base, 0x168e360), both stored by its
@@ -1383,8 +1311,7 @@ struct MemoryWalkFilter000015c0 /* derived name */
 };
 
 void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool,
-                  void *param);                                     /* derived name */
-int FUN_000035a0(TwoBaseAllocator *self, void *pointer, int value); /* derived name */
+                  void *param); /* derived name */
 
 /* hkLargeBlockAllocator's primary slot 13 (interface slot 2), reached
  * through the second base by the thunk 0x133d0. */
@@ -2538,6 +2465,8 @@ struct FreeListBlock /* derived name */
     u64 numElements;
 };
 
+struct MemorySnapshot00011280;
+
 struct FreeList /* derived name */
 {
     /* Out of line (0x18640; TwoBaseAllocator's constructor builds four at
@@ -2594,6 +2523,12 @@ struct FreeList /* derived name */
     /* A new block's first element when the current block is used up
      * (0x19230): a block of the list's own or a new one. derived name. */
     void *FUN_00019230();
+
+    /* The list's blocks recorded in a memory snapshot under a provider
+     * (0x18fc0; TwoBaseAllocator's slot 21 records its size classes' lists
+     * as in use and its fixed-size allocator's as not, 0x3683 and 0x36a3).
+     * derived name. */
+    void FUN_00018fc0(MemorySnapshot00011280 &snapshot, u8 status, int sourceId) const;
 
     /* The list's counts checked against its blocks (0x188c0, the
      * allocator's slot 22 asks it of each list): true when they agree.
@@ -2712,6 +2647,12 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     /* Slots 2 and 4 (0x14aa0): an element of the free list. */
     void *FUN_00014aa0(); /* derived name */
 
+    /* Slots 2 and 3 (0x14aa0 and 0x14af0, the bodies above and of
+     * bufFree), declared so the class is complete: TwoBaseAllocator holds
+     * one. */
+    virtual void *blockAlloc(int numBytes);
+    virtual void blockFree(void *pointer, int numBytes);
+
     /* Slot 7 (0x14b10): the blocks taken from the free list. */
     virtual void blockAllocBatch(void **blocksOut, int numBlocks, int blockSize);
 
@@ -2719,6 +2660,84 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     virtual void blockFreeBatch(void **blocks, int numBlocks, int blockSize);
 
     FreeList freeList; /* derived name */
+};
+
+/* An allocator (vtable address points 0x168c640 and, for the second base,
+ * 0x168c708), both stored by its constructor FUN_00001960. Its complete
+ * destructor is FUN_00001fb0, its deleting destructor (slot 1) FUN_00001f90;
+ * slot 12 (FUN_00001620) returns the object as its second base. Slot 15
+ * (0x34a0, also reached through the second base by the thunk 0x3570) stores
+ * a byte limit at +0xb50 under the spinning mutex at +0x10; slot 16
+ * (FUN_00003580) reads it. Primary slots 13 to 21 override the interface's
+ * slots 2 to 10 in order; the second base's vtable holds their
+ * this-adjusting thunks (0x32d0, 0x3490, 0x3570, 0x3590, 0x2280, 0x3130,
+ * 0x2300, 0x2400, 0x3700). */
+struct FreeList;
+
+struct TwoBaseAllocatorCinfo; /* derived name: what FUN_00001ae0 takes */
+
+class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
+{
+  public:
+    /* Out of line (0x1960): the allocator below and its interface at +0x30
+     * and +0x38; the third argument goes on to FUN_00001ae0. */
+    TwoBaseAllocator(AllocatorBase *large, AllocatorInterface *largeInterface,
+                     const TwoBaseAllocatorCinfo *cinfo);
+    virtual ~TwoBaseAllocator();
+    /* Slot 2 (0x29b0): a block through slot 4, the size passed by
+     * reference. */
+    virtual void *blockAlloc(int numBytes);
+    virtual AllocatorInterface *FUN_00001620();
+
+    /* The rest of the overriders, declared so the class is complete (slot
+     * 3 0x2c40; primary slots 13 to 15, 17, 18, 20 and 21). */
+    virtual void blockFree(void *pointer, int numBytes);
+    virtual void FUN_00003140();
+    virtual void FUN_000032e0(int value);
+    virtual int FUN_000034a0(u64 limit);
+    virtual bool FUN_00002230(int numBytes);
+    virtual int FUN_00002f10(MemoryWalkCallback callback, void *param);
+    virtual void FUN_00002330(int value);
+    virtual int addToSnapshot(void *snapshot, int parentId); /* 0x35a0 */
+
+    virtual u64 FUN_00003580() const; /* vtable slot 16; derived name */
+    /* Slot 20 (0x22d0, also the second base's slot 8 through the thunk
+     * 0x2300, which has it inlined): the bytes the allocator below has
+     * handed out since the count at +0x20, none without one. */
+    virtual u64 allocatedBytes() const;
+    /* Slot 10 (0x27e0): a small block's size is its free list's element
+     * size, none for no bytes; a larger one, or one of a size no free list
+     * holds, the allocator below knows. */
+    virtual int getAllocatedSize(const void *pointer, int numBytes) const;
+    /* Slot 11 (0x2670): the peak back to what is in use now. */
+    virtual void resetPeak();
+    /* Slot 22 (0x26f0, at 0x168c6f0, after the interface's overriders):
+     * under the lock, every free list checked in turn (FUN_000188c0), the
+     * first failing one the answer. derived name. */
+    virtual bool FUN_000026f0();
+
+    /* The lock the slots of the interface run under (0x34a0). derived
+     * name. */
+    hkCriticalSection criticalSection;
+    u64 baseBytes;                   /* derived name */
+    u64 peakBytes;                   /* derived name; the largest count slot 18 (0x2230) has seen */
+    AllocatorBase *largeAllocator;   /* derived name; the constructor's first argument */
+    AllocatorInterface *allocator38; /* derived name; the constructor's second argument */
+    /* The allocator of one fixed size over its free list (built in place
+     * at 0x19a9; slot 21 records its free list last, 0x3694). derived
+     * name. */
+    FixedSizeAllocator fixedAllocator;
+    /* The free list of each block size up to 640 bytes by 32-byte steps,
+     * indexed by (size + 31) / 32 (0x27ee). derived name. */
+    FreeList *sizeToFreeList[21];
+    /* The distinct free lists and their count (slot 22, 0x26f0, walks
+     * them). derived names. */
+    FreeList *freeLists[21];
+    int numFreeLists;
+    u8 unknown20c[0x944];
+    /* The byte limit slot 15 stores and slot 16 reads; slot 18 (0x2230)
+     * tests a request against it. derived name. */
+    u64 limitB50;
 };
 
 /* An allocator that draws its blocks from another allocator and keeps them
