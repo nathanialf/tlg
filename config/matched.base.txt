@@ -2529,3 +2529,6 @@ FUN_00035640 src/libs/unknown/func_00035640.cpp _GLOBAL__I_a
 FUN_00078660 src/libs/unknown/func_00078660.cpp _GLOBAL__I_a
 FUN_00161790 src/libs/havok/Physics/Physics/Dynamics/Body/hknpBodyManager.cpp
 _ZN23hknpCompressedMeshShapeD1Ev src/libs/unknown/func_001586d0.cpp
+FUN_001801f0 src/libs/unknown/func_001801f0.cpp
+FUN_0003e5b0 src/libs/unknown/func_0003e5b0.cpp _GLOBAL__I_a
+FUN_000479c0 src/libs/unknown/func_000479c0.cpp _GLOBAL__I_a

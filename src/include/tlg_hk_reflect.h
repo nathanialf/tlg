@@ -577,6 +577,21 @@ template <typename T> struct hkArray {
     /* The element at an index destroyed and the last one moved into its
      * place as raw words, without its copy constructor (hkMemoryResource
      * Handle's link removal 0x17f3e0: two 8-byte moves). derived name. */
+    /* The element at an index destroyed and those after it moved down one
+     * place, eight bytes at a time (Havok's removeAtAndCopy; the resource
+     * container's slot 8, 0x18031e). derived name. */
+    void removeAtAndCopy(int index)
+    {
+        data[index].~T();
+        size--;
+        const int numBytes = (size - index) * sizeof(T);
+        char *const dst = reinterpret_cast<char *>(data + index);
+        const char *const src = reinterpret_cast<const char *>(data + index + 1);
+        for (int i = 0; i < numBytes; i += 8) {
+            *reinterpret_cast<u64 *>(dst + i) = *reinterpret_cast<const u64 *>(src + i);
+        }
+    }
+
     void removeAt(int index)
     {
         data[index].~T();
@@ -14741,7 +14756,9 @@ class hkResourceContainer : public hkResourceBase
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void unknownVirtual7();
-    virtual void unknownVirtual8();
+    /* Slot 8: a resource given up (hkMemoryResourceContainer's 0x1801f0).
+     * derived name. */
+    virtual void FUN_001801f0(hkResourceHandle *handle);
     virtual void unknownVirtual9();
     virtual hkResourceHandle *FUN_0017ff90(const char *name, const hkClass *klass,
                                            const hkResourceHandle *previous);
@@ -14785,9 +14802,14 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * name. */
     void FUN_00180560(hkMemoryResourceContainer *child);
 
+    /* Slot 8 (0x1801f0): a resource given up, its reference released with
+     * its place in the resources (those after it moved down). derived
+     * name. */
+    void FUN_001801f0(hkResourceHandle *handle);
+
     hkStringPtr name;
     hkMemoryResourceContainer *parent;
-    hkArray<hkMemoryResourceHandle *> resourceHandles;
+    hkArray<hkRefPtr<hkMemoryResourceHandle>> resourceHandles;
     hkArray<hkRefPtr<hkMemoryResourceContainer>> children;
 };
 
