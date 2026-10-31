@@ -21,9 +21,9 @@ void hknpWorld::FUN_0004c5f0(u32 bodyId, int motionId) /* derived name */
     bodyManager.FUN_00161490(bodyId);
 
     if (enabled4f0) {
-        const int numBodies = firstConstraintOfBody.getSize();
+        const int numBodies = constraintManager.lists.firstConstraintOfBody.getSize();
         if (bodyId < u32(numBodies)) {
-            u32 constraintId = firstConstraintOfBody[bodyId];
+            u32 constraintId = constraintManager.lists.firstConstraintOfBody[bodyId];
             const hknpConstraint *constraints = constraintManager.constraints;
             while (constraintId != 0x7fffffff) {
                 const hknpConstraint &constraint = constraints[constraintId];
@@ -31,7 +31,8 @@ void hknpWorld::FUN_0004c5f0(u32 bodyId, int motionId) /* derived name */
                 if (!(constraint.flags & 4)) {
                     object4f8->FUN_000655b0(bodyId, firstBodyId ^ bodyId ^ constraint.bodyIdB);
                 }
-                const ConstraintLinks &links = constraintLinks[constraint.id];
+                const hknpConstraintManager::ConstraintLists::Links &links =
+                    constraintManager.lists.constraintLinks[constraint.id];
                 constraintId = links.next(firstBodyId, bodyId);
             }
         }

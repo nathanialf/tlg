@@ -11,17 +11,19 @@ static inline BodyKey0016e040 bodyKey(const hknpBody &body)
     return key;
 }
 
-void Owner0016d360::FUN_0016dc90(unsigned int edgeIndex, const hknpConstraintCinfo &cinfo)
+void hknpConstraintManager::FUN_0016dc90(unsigned int constraintId,
+                                         const hknpConstraintCinfo &cinfo)
 {
     const hkArray<hknpBody> &bodies = world->bodyManager.bodies;
-    FUN_001754d0(&edges[edgeIndex], bodyKey(bodies[cinfo.bodyA]), bodyKey(bodies[cinfo.bodyB]),
-                 cinfo.constraintData.pntr, edgeIndex, u8(cinfo.flags));
-    FUN_0016ddd0(edgeIndex, cinfo.name.cString());
+    FUN_001754d0(&constraints[constraintId], bodyKey(bodies[cinfo.bodyA]),
+                 bodyKey(bodies[cinfo.bodyB]), cinfo.constraintData.pntr, constraintId,
+                 u8(cinfo.flags));
+    FUN_0016ddd0(constraintId, cinfo.name.cString());
     const u32 numBodies = world->bodyManager.bodies.getCapacity();
-    if (u32(edgeLists.firstEdge.getSize()) < numBodies) {
-        edgeLists.firstEdge.setSize(hkContainerHeapAllocator::get(), numBodies, 0x7fffffff);
+    if (u32(lists.firstConstraintOfBody.getSize()) < numBodies) {
+        lists.firstConstraintOfBody.setSize(hkContainerHeapAllocator::get(), numBodies, 0x7fffffff);
     }
-    const EdgeRecord0017a290 *records = edges;
-    edgeLists.FUN_0017a290(edgeIndex, records, records[edgeIndex].nodeA);
-    edgeLists.FUN_0017a290(edgeIndex, records, records[edgeIndex].nodeB);
+    const hknpConstraint *records = constraints;
+    lists.FUN_0017a290(constraintId, records, records[constraintId].bodyIdA);
+    lists.FUN_0017a290(constraintId, records, records[constraintId].bodyIdB);
 }

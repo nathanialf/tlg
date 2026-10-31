@@ -1,20 +1,20 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-void Owner0016d360::FUN_0016df30(unsigned int edgeIndex)
+void hknpConstraintManager::FUN_0016df30(unsigned int constraintId)
 {
-    EdgeRecord0017a290 &edge = edges[edgeIndex];
-    EdgeRecord0017a290 *const records = edges;
+    hknpConstraint &constraint = constraints[constraintId];
+    hknpConstraint *const records = constraints;
     if (world) {
-        edgeLists.FUN_0017a2d0(edgeIndex, records, edge.nodeA);
-        edgeLists.FUN_0017a2d0(edgeIndex, records, edge.nodeB);
+        lists.FUN_0017a2d0(constraintId, records, constraint.bodyIdA);
+        lists.FUN_0017a2d0(constraintId, records, constraint.bodyIdB);
     }
-    if (hkUlong(edge.block) > 1) {
-        D_16dc070->temp58->blockFree(edge.block, edge.blockSize);
+    if (hkUlong(constraint.runtime) > 1) {
+        D_16dc070->temp58->blockFree(constraint.runtime, constraint.runtimeSize);
     }
-    edge.object = HK_NULL;
-    edge.nodeA = 0x7fffffff;
-    edge.nodeB = int18;
-    int18 = edgeIndex;
-    int48--;
+    constraint.data = HK_NULL;
+    constraint.bodyIdA = 0x7fffffff;
+    constraint.bodyIdB = firstFreeConstraintId;
+    firstFreeConstraintId = constraintId;
+    numUsedConstraints--;
 }

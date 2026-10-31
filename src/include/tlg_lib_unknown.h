@@ -1836,6 +1836,11 @@ class RefArrays0005a230 : public hkReferencedObject /* derived name */
      * the head of the free list. derived name. */
     void FUN_0006bd90(u16 first);
 
+    /* Slot 6 (0x6c110): an event written to a stream by its type's
+     * printer, with the world; the types without one print nothing.
+     * derived name. */
+    void FUN_0006c110(const hkCommand &command, hkOstream &stream) const;
+
     hknpWorld *world; /* derived name */
     /* Three pointers the constructor clears (0x6bcc3 to 0x6bcd3). derived
      * names. */
@@ -5746,162 +5751,10 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
     hkBool disableHorizontalProjection; /* derived name */
 };
 
-/* A hash map of 16-bit keys (derived name): 16-byte pairs from the pointer
- * at +0 (the key in the first two bytes, an empty slot's key 0xffff), the
- * count at +8 with the don't-deallocate flag in its top bit, the hash mask
- * at +0xc. The object FUN_0016d360 constructs holds one at +0x38, which its
- * destructor 0x16d8c0 frees through the containers' allocator. */
-struct ShortKeyMap /* derived name */
-{
-    enum { DONT_DEALLOCATE_FLAG = int(0x80000000) }; /* derived name */
-
-    struct Pair {
-        u16 key; /* derived name */
-        u8 unknown2[6];
-        hkUlong value; /* derived name */
-    };
-
-    /* Every slot emptied and the count zeroed, the storage kept. derived
-     * name. */
-    void clear()
-    {
-        const int capacity = hashMod + 1;
-        for (int i = 0; i < capacity; i++) {
-            elems[i].key = u16(-1);
-        }
-        numElems &= DONT_DEALLOCATE_FLAG;
-    }
-
-    /* Emptied, the storage given back to the allocator unless the map does
-     * not own it, then left with no storage (0x199580). derived name. */
-    void FUN_00199580(AllocatorBase &allocator);
-
-    /* Empty, no storage: the hash mask -1 (0x16d3bf). */
-    ShortKeyMap() : elems(0), numElems(0), hashMod(-1) {}
-
-    Pair *elems;  /* derived name */
-    int numElems; /* derived name */
-    int hashMod;  /* derived name */
-};
-
-/* Per-node lists of edges (derived names): the first edge of each node at
- * +0 and, per edge, the next edge at each of its two ends at +0x10. Built
- * empty at +0x50 of the object FUN_0016d360 constructs (0x16d3ca); 0x17a220
- * frees both arrays; 0x17a290 puts an edge of a 64-byte record (its second
- * node at +4, its link index at +0x18) at the head of a node's list. */
-/* The 64-byte edge record those lists index (derived names): its two nodes
- * at +4 and +0xc (the caller at 0x16dd98 links the edge at each), a counted
- * reference at +0x10, its link index at +0x18, and a block of the thread's
- * heap at +0x30 with its byte size at +0x2e (0x16df30 frees it, a pointer
- * of 0 or 1 holding none). A free record has an invalid first node and the
- * next free record's index in place of its second. */
-struct EdgeRecord0017a290 /* derived name */
-{
-    u8 unknown0[4];
-    int nodeA; /* derived name */
-    u8 unknown8[4];
-    int nodeB;                           /* derived name */
-    hkRefPtr<hkReferencedObject> object; /* derived name */
-    int linkIndex;                       /* derived name */
-    u8 unknown1c[0x12];
-    u16 blockSize; /* derived name */
-    void *block;   /* derived name */
-    u8 unknown38[8];
-};
-
-struct NodeEdgeLists /* derived name */
-{
-    struct EdgeLinks {
-        int next[2]; /* derived name */
-    };
-
-    NodeEdgeLists();
-
-    /* Out of line (0x17a220; the owner's destructor 0x16d8c0 calls it at
-     * 0x16dac4): both arrays' storage given back. */
-    ~NodeEdgeLists();
-
-    /* Puts an edge at the head of one of its nodes' lists (0x17a290). */
-    void FUN_0017a290(unsigned int edgeIndex, const EdgeRecord0017a290 *edges,
-                      int node); /* derived name */
-
-    /* Takes an edge out of one of its nodes' lists (0x17a2d0; the owner's
-     * edge removal 0x16df30 at each of the edge's two nodes): its
-     * predecessor's link, or the node's first edge, takes its link, which
-     * is cleared. derived name. */
-    void FUN_0017a2d0(unsigned int edgeIndex, const EdgeRecord0017a290 *edges, int node);
-
-    /* The link an edge keeps at a node: the first of its pair at its first
-     * node, the second at the other. derived name. */
-    int *linkAt(unsigned int edgeIndex, const EdgeRecord0017a290 *edges, int node)
-    {
-        const EdgeRecord0017a290 &edge = edges[edgeIndex];
-        EdgeLinks &links = nextEdge.data[edge.linkIndex];
-        const int nodeA = edge.nodeA;
-        return nodeA == node ? &links.next[0] : &links.next[1];
-    }
-
-    hkArray<int> firstEdge;      /* derived name */
-    hkArray<EdgeLinks> nextEdge; /* derived name */
-};
-
-/* The object the world's set-up builds at +0x148 of the world (derived
- * names; 0x48b9e): the world at +0 (null when built), the 64-byte edge
- * records at +8 with their count at +0x10, an array of 8-byte entries at
- * +0x20 (its destructor 0x16d8c0 destroys them from the last), a
- * ShortKeyMap at +0x38, a count and a last index (0x7fffffff: none) at
- * +0x48 and +0x4c, the node edge lists at +0x50. The constructor (0x16d360)
- * builds them empty and runs the set-up 0x16d3f0 with its last two
- * arguments. */
-struct Entry0016d360 /* derived name */
-{
-    u8 unknown0[8];
-};
-
 /* A constraint record built (0x1754d0): its two bodies' keys, its data,
  * its id and the cinfo's flags. derived name. */
-void FUN_001754d0(EdgeRecord0017a290 *edge, BodyKey0016e040 keyA, BodyKey0016e040 keyB,
+void FUN_001754d0(hknpConstraint *constraint, BodyKey0016e040 keyA, BodyKey0016e040 keyB,
                   hkpConstraintData *data, unsigned int id, u8 flags); /* derived name */
-
-class Owner0016d360 /* derived name */
-{
-  public:
-    Owner0016d360(hknpWorld *world_, void *argument2, int argument3);
-
-    /* The set-up (0x16d3f0): the world's signal at +0x5b8 fired with the
-     * world and this object, then the storage sized. derived names. */
-    void FUN_0016d3f0(void *argument2, int argument3);
-
-    /* An edge set up for a new constraint (0x16dc90; the world's
-     * constraint add at 0x4d254, after taking the record from the free
-     * list): the record built from the cinfo and its bodies' keys, its name
-     * kept, the first-edge array grown to the world's body capacity (no
-     * edge, 0x7fffffff, for the new bodies), then the edge put at the head
-     * of both its nodes' lists. derived name. */
-    void FUN_0016dc90(unsigned int edgeIndex, const hknpConstraintCinfo &cinfo);
-
-    /* The record's name kept (0x16ddd0). derived name. */
-    void FUN_0016ddd0(unsigned int edgeIndex, const char *name);
-
-    /* An edge taken out (0x16df30; the world's 0x4d620 after firing its
-     * signal): out of both its nodes' lists while the object has a world,
-     * its block given back and its reference released, then the record put
-     * at the head of the free list. derived name. */
-    void FUN_0016df30(unsigned int edgeIndex);
-
-    hknpWorld *world;          /* derived name */
-    EdgeRecord0017a290 *edges; /* derived name */
-    int numEdges;              /* derived name */
-    u8 unknown14[4];
-    int int18; /* derived name: the first free record, 0x16df30 */
-    u8 unknown1c[4];
-    hkArray<Entry0016d360> entries; /* derived name */
-    u8 unknown30[8];
-    ShortKeyMap map;         /* derived name */
-    int int48;               /* derived name */
-    int lastIndex;           /* derived name */
-    NodeEdgeLists edgeLists; /* derived name */
-};
 
 /* The world's two tables of shape functions (derived names), filled by its
  * constructor: from +0x58 (0x4a5b0 onward) and from +0x420 (0x4a850

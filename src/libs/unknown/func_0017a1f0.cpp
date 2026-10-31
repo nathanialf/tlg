@@ -2,6 +2,6 @@
 #include "tlg_lib_unknown.h"
 
 /* Both arrays start empty. */
-NodeEdgeLists::NodeEdgeLists() {}
+hknpConstraintManager::ConstraintLists::ConstraintLists() {}
 
-NodeEdgeLists::~NodeEdgeLists() {}
+hknpConstraintManager::ConstraintLists::~ConstraintLists() {}

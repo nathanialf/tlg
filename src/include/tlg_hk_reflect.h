@@ -9235,6 +9235,14 @@ struct U16PointerMap /* derived name */
     template <typename V> int FUN_001992f0(AllocatorBase &allocator, u16 key, V value);
     /* derived name: the table rebuilt at a new capacity (0x199390). */
     void FUN_00199390(AllocatorBase &allocator, int newCapacity);
+    /* Emptied, the storage given back to the allocator unless the map does
+     * not own it, then left with no storage (0x199580; the constraint
+     * manager's destructor 0x16d8c0 at +0x38). derived name. */
+    void FUN_00199580(AllocatorBase &allocator);
+
+    /* Empty, no storage: the hash mask -1 (the constraint manager's
+     * constructor, 0x16d3bf). */
+    U16PointerMap() : entries(0), numEntries(0), hashMod(-1) {}
 
     /* The count's top bit: the map does not own its entries. derived
      * name. */
@@ -9340,12 +9348,78 @@ BitFieldMap00199770::Block *FUN_00199600(int elementSize, int numElements,
                                          const BitFieldMap00199770::Block *copyFrom);
 
 /* The world's constraints (derived names after hknpConstraintManager.cpp,
- * the file its report names; the world's at +0x148): the constraints at
- * +8, the first free id at +0x18 (each free constraint's id slot links the
- * next, +0xc of the 64 bytes), a map of bit fields at +0x30, the number in
- * use and the highest id in use at +0x48 and +0x4c. */
+ * the file its report names; the world builds it at +0x148, 0x48b9e): the
+ * world at +0 (null when built), the 64-byte constraints at +8 with their
+ * capacity at +0x10, the first free id at +0x18 (a free constraint's second
+ * body id links the next), an array of 8-byte entries at +0x20 (the
+ * destructor 0x16d8c0 destroys them from the last), a map of bit fields at
+ * +0x30, the number in use and the highest id in use (0x7fffffff: none) at
+ * +0x48 and +0x4c, and each body's constraint list at +0x50. The
+ * constructor (0x16d360) builds them empty and runs the set-up 0x16d3f0
+ * with its last two arguments. */
+struct hknpConstraintCinfo;
+
 struct hknpConstraintManager /* derived name */
 {
+    struct Entry {
+        u8 unknown0[8];
+    };
+
+    /* A body's constraints (derived names): the first constraint's id by
+     * body id, 0x7fffffff for none, and by each constraint's id the next
+     * constraint of its first body and of its second (the world's walk
+     * 0x4c670 to 0x4c6fc). Built empty at +0x50 (0x16d3ca); 0x17a220 frees
+     * both arrays. */
+    struct ConstraintLists {
+        struct Links {
+            /* The next constraint of a body, by whether the body is the
+             * constraint's first (its id loaded into the parameter, the
+             * load its own instruction, 0x4c6da). derived name. */
+            u32 next(u32 firstBodyId, u32 bodyId) const
+            {
+                return firstBodyId == bodyId ? nextOfBodyA : nextOfBodyB;
+            }
+
+            u32 nextOfBodyA;
+            u32 nextOfBodyB;
+        };
+
+        ConstraintLists();
+
+        /* Out of line (0x17a220; the manager's destructor 0x16d8c0 calls it
+         * at 0x16dac4): both arrays' storage given back. */
+        ~ConstraintLists();
+
+        /* A constraint put at the head of one of its bodies' lists
+         * (0x17a290). derived name. */
+        void FUN_0017a290(unsigned int constraintId, const hknpConstraint *constraints, int bodyId);
+
+        /* A constraint taken out of one of its bodies' lists (0x17a2d0; the
+         * manager's removal 0x16df30 at each of its two bodies): its
+         * predecessor's link, or the body's first constraint, takes its
+         * link, which is cleared. derived name. */
+        void FUN_0017a2d0(unsigned int constraintId, const hknpConstraint *constraints, int bodyId);
+
+        /* The link a constraint keeps at a body: the first of its pair at
+         * its first body, the second at the other. derived name. */
+        u32 *linkAt(unsigned int constraintId, const hknpConstraint *constraints, int bodyId)
+        {
+            const hknpConstraint &constraint = constraints[constraintId];
+            Links &links = constraintLinks[constraint.id];
+            const int bodyIdA = constraint.bodyIdA;
+            return bodyIdA == bodyId ? &links.nextOfBodyA : &links.nextOfBodyB;
+        }
+
+        hkArray<u32> firstConstraintOfBody; /* derived name */
+        hkArray<Links> constraintLinks;     /* derived name */
+    };
+
+    hknpConstraintManager(hknpWorld *world_, void *argument2, int argument3);
+
+    /* The set-up (0x16d3f0): the world's signal at +0x5b8 fired with the
+     * world and this object, then the storage sized. derived names. */
+    void FUN_0016d3f0(void *argument2, int argument3);
+
     /* A constraint taken from the free list (0x16db90; the world's
      * constraint add at 0x4d23f): its slot cleared, its bit cleared in the
      * map's fields, the count and the peak kept; "Constraint buffer is
@@ -9353,14 +9427,34 @@ struct hknpConstraintManager /* derived name */
      * name. */
     u32 FUN_0016db90();
 
-    u8 unknown0[8];
+    /* A constraint set up from its cinfo (0x16dc90; the world's constraint
+     * add at 0x4d254, after taking the slot from the free list): the record
+     * built from the cinfo and its bodies' keys, its name kept, the
+     * first-constraint array grown to the world's body capacity (none,
+     * 0x7fffffff, for the new bodies), then the constraint put at the head
+     * of both its bodies' lists. derived name. */
+    void FUN_0016dc90(unsigned int constraintId, const hknpConstraintCinfo &cinfo);
+
+    /* The constraint's name kept (0x16ddd0). derived name. */
+    void FUN_0016ddd0(unsigned int constraintId, const char *name);
+
+    /* A constraint taken out (0x16df30; the world's 0x4d620 after firing
+     * its signal): out of both its bodies' lists while the manager has a
+     * world, its runtime given back and its data's reference released,
+     * then the slot put at the head of the free list. derived name. */
+    void FUN_0016df30(unsigned int constraintId);
+
+    hknpWorld *world;            /* derived name */
     hknpConstraint *constraints; /* derived name */
-    u8 unknown10[8];
+    int capacity;                /* derived name */
+    u8 unknown14[4];
     u32 firstFreeConstraintId; /* derived name */
-    u8 unknown1c[0x14];
+    u8 unknown1c[4];
+    hkArray<Entry> entries;       /* derived name */
     BitFieldMap00199770 fieldMap; /* derived name */
     int numUsedConstraints;       /* derived name */
     int peakConstraintId;
+    ConstraintLists lists; /* derived name */
 };
 
 class hknpSpaceSplitter;
@@ -9523,26 +9617,7 @@ struct hknpWorld {
      * (0xf6a90 passes one more as the count). derived name. */
     hknpConstraintManager constraintManager;
 
-    /* A body's constraints (derived names): the first constraint's id by
-     * body id, 0x7fffffff for none, and by each constraint's id the next
-     * constraint of its first body and of its second (the walk 0x4c670 to
-     * 0x4c6fc). */
-    struct ConstraintLinks {
-        /* The next constraint of a body, by whether the body is the
-         * constraint's first (its id loaded into the parameter, the load its
-         * own instruction, 0x4c6da). derived name. */
-        u32 next(u32 firstBodyId, u32 bodyId) const
-        {
-            return firstBodyId == bodyId ? nextOfBodyA : nextOfBodyB;
-        }
-
-        u32 nextOfBodyA;
-        u32 nextOfBodyB;
-    };
-
-    hkArray<u32> firstConstraintOfBody;       /* derived name */
-    hkArray<ConstraintLinks> constraintLinks; /* derived name */
-    hknpModifierManager *modifierManager;     /* derived name */
+    hknpModifierManager *modifierManager; /* derived name */
     u8 unknown1c0[0x10];
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
@@ -14899,9 +14974,39 @@ struct hknpLinearIntegrationClippedCommand /* derived name */
     Vec4 stolenVelocity; /* derived name */
 };
 
-/* The printer of the four reserved types (the dispatcher's last four
- * cases). */
+/* Three contact events, named by the texts their prints write (0x40a20,
+ * 0x3da50, 0x3dc30; the dispatcher's types 1 to 3). */
+struct hknpManifoldEvent {
+    void FUN_00040a20(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+struct hknpContactImpulseEvent {
+    void FUN_0003da50(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+struct hknpContactImpulseClippedEvent {
+    void FUN_0003dc30(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+/* The printers of the four reserved types (the dispatcher's last four
+ * cases, each its own block): four bodies printing "Reserved", which the
+ * linker folded into 0x40be0 (D15). derived names. */
 struct hknpReservedEvent /* derived name */
+{
+    void FUN_00040be0(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+struct hknpReservedEvent1 /* derived name */
+{
+    void FUN_00040be0(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+struct hknpReservedEvent2 /* derived name */
+{
+    void FUN_00040be0(hknpWorld *world, hkOstream &out) const; /* derived name */
+};
+
+struct hknpReservedEvent3 /* derived name */
 {
     void FUN_00040be0(hknpWorld *world, hkOstream &out) const; /* derived name */
 };
@@ -18902,12 +19007,15 @@ struct VelocityAccumulator00085450 /* derived name */
     Vec4 centerOfMassInWorld; /* derived name: at +0x70 (0x17d320) */
 };
 
-/* What a builder reads of its query (derived names): the factor of the
+/* What a builder reads of its query (derived names): a factor at +4 (the
+ * linear builder 0x85550 scales its extra value by it), the factor of the
  * right-hand side at +0x20, the virtual mass factor at +0x24 and the two
  * bodies at +0x30 and +0x38. */
 struct ConstraintQueryIn00085450 /* derived name */
 {
-    u8 unknown0[0x20];
+    u8 unknown0[4];
+    float factor4;
+    u8 unknown8[0x18];
     float rhsFactor;
     float virtMassFactor;
     u8 unknown28[8];
@@ -18970,5 +19078,49 @@ struct LinearJacobian0017d320 /* derived name */
 void FUN_0017d320(const hkVector4 &direction, const hkVector4 &position,
                   const ConstraintQueryIn00085450 &in, LinearJacobian0017d320 &jac,
                   float &invDiagOut);
+
+/* What the linear builder 0x85550 reads (derived names; 0x7a070 fills one
+ * on its stack at 0x7a300): the pivot, the direction, a value scaled by the
+ * query's factor at +4, and an object whose float at +4 is scaled by the
+ * right-hand side's factor. */
+struct LinearConstraintInfo00085550 /* derived name */
+{
+    struct Params {
+        u8 unknown0[4];
+        float value4;
+    };
+
+    hkVector4 position;
+    hkVector4 direction;
+    float value20;
+    const Params *params;
+};
+
+/* The jacobian 0x85550 builds (derived names): the direction with the
+ * right-hand side in w, each body's angular row (the virtual mass scaled
+ * inverse of the diagonal in A's w, the diagonal in B's), then the scaled
+ * value; schema type 9 in the first byte, written last. */
+struct LinearJacobian00085550 /* derived name */
+{
+    union {
+        Vec4 linear;
+        u8 schemaType;
+
+        struct {
+            u8 unknown0[0xc];
+            float rhs;
+        };
+    };
+
+    Vec4 angular[2];
+    float value30;
+};
+
+/* derived name: a linear jacobian along a direction through a pivot
+ * (0x85550; called at 0x7a33c): the rows as 0x17d320 builds them, the
+ * inverse of the diagonal scaled by the virtual mass factor, the jacobian
+ * appended to the output. */
+void FUN_00085550(const LinearConstraintInfo00085550 &info, const ConstraintQueryIn00085450 &in,
+                  LinearJacobian00085550 *&jacobians);
 
 #endif
