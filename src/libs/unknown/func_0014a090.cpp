@@ -1,11 +1,6 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: 79 of 84: the cache's kind cleared through the register that
-// holds the search's state argument (`mov byte [rcx], 0`, the compare's
-// address shared by GVN) where the base stores through [rbx + 4], and in
-// the else path the cached distance broadcast before the maximum is loaded
-// (the base loads the maximum first).
 /* The query's position brought into the shape's space; when the cache holds
  * a plane the point was outside of, the point still beyond that plane by
  * more than the maximum distance and the radius is no hit, and otherwise
@@ -16,26 +11,26 @@ bool FUN_0014a090(const PointQuery0014a090 *query, const hknpConvexPolytopeShape
                   ClosestPointOutput00149880 *output) /* derived name */
 {
     const Vec4 point = transformPosition(transform, query->position);
-    Vec4 maxDistance;
+    float maxDistance;
     Vec4 startDistance;
     if (cache->state.type == 3) {
         const Vec4 plane = shape->planes.begin()[cache->state.planeIndex];
         const Vec4 distance = _mm_add_ps(broadcast<3>(plane), _mm_dp_ps(plane, point, 0x7f));
-        maxDistance = _mm_set_ss(query->maxDistance);
+        maxDistance = query->maxDistance;
         const Vec4 radius = _mm_set1_ps(shape->convexRadius);
-        if (_mm_ucomigt_ss(distance, _mm_add_ps(broadcast<0>(maxDistance), radius))) {
+        if (_mm_ucomigt_ss(distance, _mm_add_ps(_mm_set1_ps(maxDistance), radius))) {
             return false;
         }
-        cache->state.type = 0;
+        cache->reset();
         startDistance = _mm_setzero_ps();
     } else {
         startDistance = _mm_set1_ps(cache->distance);
-        maxDistance = _mm_set_ss(query->maxDistance);
+        maxDistance = query->maxDistance;
     }
     ClosestPointOutput00149880 result;
     ClosestPointInput00149880 input;
     input.tolerance = D_14b2060[35];
-    input.maxDistance = broadcast<0>(maxDistance);
+    input.maxDistance = _mm_set1_ps(maxDistance);
     result.distance = startDistance;
     if (FUN_00149880(shape, &point, &input, &cache->state, &result)) {
         output->unknown20 = result.unknown20;

@@ -860,12 +860,28 @@ template <typename T>
 inline void hkArray<T>::setSize(AllocatorBase &allocator, int n, const T &fill)
 {
     reserve(allocator, n);
+    setSizeElements(n, fill, typename hkTrait::PodSelect<hkTrait::IsPodType<T>::result>::type());
+    size = n;
+}
+
+template <typename T>
+inline void hkArray<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsPod)
+{
     const int numNew = n - size;
     T *const added = data + size;
     for (int i = 0; i < numNew; i++) {
         added[i] = fill;
     }
-    size = n;
+}
+
+template <typename T>
+inline void hkArray<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsClass)
+{
+    destructElements(data + n, size - n);
+    const int numToConstruct = n - size;
+    if (numToConstruct > 0) {
+        hkArrayUtil::constructWithCopy(data + size, numToConstruct, fill);
+    }
 }
 
 template <typename T>

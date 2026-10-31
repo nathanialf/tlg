@@ -21,14 +21,8 @@ u32 hknpConstraintManager::FUN_0016db90()
     return constraintId;
 }
 
-// NONMATCHING: the base inlines a setSize with a fill that destroys the
-// names past n from the last and copy-constructs the new ones; written
-// that way (Havok's form, the inline hint on the in-class declaration) this
-// function reaches 92 of 98 (the destruct loop's n sign-extended before the
-// storage is loaded in the base), but 0x16dc90's u32 fill then loads the
-// storage after the extension where the base loads it first: the two forms
-// are not yet one source (docs/NOTES.md, Round 68A). setSize is left as it
-// was.
+/* A constraint's name kept: the names grown to the capacity first, each new
+ * one null, when the id is past them. derived name. */
 void hknpConstraintManager::FUN_0016ddd0(unsigned int constraintId, const char *name)
 {
     if (name && u32(names.getSize()) <= constraintId) {

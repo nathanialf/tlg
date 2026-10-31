@@ -62,6 +62,16 @@ begin:
     }
 }
 
+/* The numElem elements sorted, when there are two at least (the clean
+ * step 0x657b0 tests `cmp size, 2; jl` before the call, its sort block
+ * next). derived name. */
+template <typename T, typename L> inline void quickSort(T *pArr, int numElem, L cmpLess)
+{
+    if (numElem > 1) {
+        quickSortRecursive(pArr, 0, numElem - 1, cmpLess);
+    }
+}
+
 } // namespace hkAlgorithm
 
 #endif

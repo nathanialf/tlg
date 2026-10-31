@@ -2513,3 +2513,6 @@ FUN_0001c5d0 src/libs/unknown/func_0001c5d0.cpp _GLOBAL__I_a
 FUN_0003c920 src/libs/unknown/func_0003c920.cpp _GLOBAL__I_a
 FUN_000012a0 src/libs/unknown/func_000012a0.cpp _GLOBAL__I_a
 _ZN16TwoBaseAllocator13addToSnapshotEPvi src/libs/unknown/func_000035a0.cpp
+FUN_000657b0 src/libs/unknown/func_000657b0.cpp
+FUN_0014a090 src/libs/unknown/func_0014a090.cpp
+FUN_0016ddd0 src/libs/havok/Physics/Physics/Dynamics/Constraint/hknpConstraintManager.cpp _ZN21hknpConstraintManager12FUN_0016ddd0EjPKc

@@ -292,6 +292,51 @@ template <typename T> struct IsPodType {
     enum { result = sizeof(test<T>(0)) == sizeof(char) };
 };
 
+/* The built-in types are plain old data. */
+template <> struct IsPodType<char> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<signed char> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<unsigned char> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<short> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<unsigned short> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<int> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<unsigned int> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<long> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<unsigned long> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<float> {
+    enum { result = 1 };
+};
+
+template <> struct IsPodType<double> {
+    enum { result = 1 };
+};
+
 template <bool POD> struct PodSelect {
     typedef TypeIsClass type;
 };
@@ -352,6 +397,15 @@ template <typename T> inline void copy(T *dst, const T *src, int n)
 {
     for (int i = 0; i < n; i++) {
         dst[i] = src[i];
+    }
+}
+
+/* n elements copy-constructed in place from one value (Havok's construct
+ * with a copy; the constraint names' setSize, 0x16dec0). derived name. */
+template <typename T> inline void constructWithCopy(T *t, int n, const T &copy)
+{
+    for (int i = 0; i < n; i++) {
+        constructWithCopy(t + i, copy);
     }
 }
 
@@ -592,7 +646,16 @@ template <typename T> struct hkArray {
 
     /* The same, the elements it gains set to a value (an array stream
      * writer's seek pads with zero, 0x9018e). derived name. */
-    void setSize(AllocatorBase &allocator, int n, const T &fill);
+    inline void setSize(AllocatorBase &allocator, int n, const T &fill);
+
+    /* setSize's elements by their kind: plain old data gains its new
+     * elements by assignment, the run taken before the count is tested
+     * (0x16dd6d); a class's excess is destroyed from the last, then its new
+     * elements are copy-constructed when there are any, the run taken after
+     * that test (0x16dea6): the storage the destruct took is not the
+     * construct's (0x16de97). derived name. */
+    inline void setSizeElements(int n, const T &fill, hkTrait::TypeIsPod);
+    inline void setSizeElements(int n, const T &fill, hkTrait::TypeIsClass);
 
     /* Elements copied in at an index, those after it moved up first
      * through the overlapping move (defined in tlg_lib_unknown.h; the XML
@@ -8704,7 +8767,7 @@ struct hkBlockStreamReader; /* below */
 /* A 16-byte record of the array at +0xb8 of the object FUN_000657b0 sorts
  * (derived names): a pointer to an object with an int at +4, a 16-bit key
  * at +8 and a count at +0xc. FUN_00062100 is the order the sort
- * (FUN_00062130) is given: records with a count first, then by the int
+ * (0x62130) is given: records with a count first, then by the int
  * the pointer reaches, then by the key. */
 struct SortRecord00062100 /* derived name */
 {
@@ -11196,6 +11259,12 @@ struct PointCache0014a090 /* derived name */
         u8 type;       /* derived name */
         u8 planeIndex; /* derived name */
     };
+
+    /* No plane kept: the search starts over (0x14a12d). derived name. */
+    void reset()
+    {
+        state.type = 0;
+    }
 
     float distance; /* derived name */
     State state;    /* derived name */
@@ -17564,10 +17633,11 @@ struct hknpWorldContextPool /* derived name */
  * inactive caches task's two steps (0x14efe2, 0x14f068). */
 void FUN_000657b0(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *context,
                   const ModifierSharedData *shared, hkBlockStream *stream);
-/* One sorted record handled (0x65910, the clean's per-record step).
+/* One sorted record handled against the stream (0x65910, the clean's
+ * per-record step; the stream goes on to a virtual call at 0x65b09).
  * derived name. */
 void FUN_00065910(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
-                  SortRecord00062100 *record);
+                  SortRecord00062100 *record, hkBlockStream *stream);
 void FUN_00064810(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *context,
                   hkBlockStream *streamA, hkBlockStream *streamB, int argument4);
 
