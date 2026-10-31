@@ -928,6 +928,23 @@ nowhere else. `FUN_<addr>` is the address's name in
 is known, so no second name is given to the address; the row of the body
 keeps its destructor's or constructor's symbol.
 
+**Addendum, 2026-10-31 (round 68A).** When one translation unit registers
+two classes whose callbacks the linker folded onto one body, the source
+held two functions, one per class as the reflection files register them,
+and the base forms the folded address before each hkClass call. One
+shared external callback keeps its GOT load in a register across the call
+(the load is CSEd), so the bytes differ. The second callback is spelled
+under the address's own name with the registered class appended,
+`FUN_<addr>_<class>(void *)`, external linkage, and the layout places it
+as it places the first (its own bytes at the base's field, the resolver of
+6b9c2f9). The suffix names no address: the folded function's own address
+never existed in the executable, and the body's row keeps its name. 0x8af0
+(hkCustomAttributes::Attribute and hkCustomAttributes, both cleanups the
+empty body 0x6c80) is claimed so, equal at every instruction with the two
+names where one name left the load in r14 (measured 2026-10-31 through
+tools/quick_diff.sh); 0x155a0, 0x1c5d0, 0x3c920 and 0x12a0 hold the same
+shape (bodies 0xe5c0, 0x1c1e0, 0x3b640, 0x270).
+
 **Addendum, 2026-10-30 (rounds 62A and 64B).** The gate placed a folded callback by finding its
 raw bytes in the base, which fails when the callback's code holds a relocation field (a vtable's
 GOT load in hkxBlobMeshShape's and hkxTextureFile's finish callbacks, 0x85d40 and 0x878f0:

@@ -1,16 +1,18 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* The custom attributes' loaded-object cleanup: nothing to clean up (the
- * linker folded it into the empty body 0x6c80, spelled under the address's
- * own name as hkQTransformf's file spells it, D15's round 57 addendum). */
+/* The custom attributes' loaded-object cleanups: nothing to clean up in
+ * either class. Each registration passes its class's own callback, as the
+ * reflection files register them; the linker folded both into the empty
+ * body 0x6c80, so the first is spelled under the address's own name (D15's
+ * round 57 addendum) and the second under that name with its class
+ * appended (D15's round 68A addendum). One function per registration keeps
+ * the address formed before each hkClass call, as the base holds it; one
+ * shared callback would keep its load in a register across the call. */
 void FUN_00006c80(void *object) {}
 
-// NONMATCHING: the first cleanup's address is kept in r14 across the second
-// hkClass call (one GOT load CSE'd), where the base forms it twice, before and
-// after the call (`lea rdx, [rip - 0x1f0d]`, `lea rax, [rip - 0x1f8a]`): two
-// distinct external callbacks, each class's own, give every instruction
-// (diagnostic; D15 names the folded body 0x6c80 once, a ruling is asked).
+void FUN_00006c80_hkCustomAttributes(void *object) {}
+
 /* This file's static initializer (0x8af0): hkCustomAttributes::Attribute's
  * reflection (no parent, its two members) and type info, then
  * hkCustomAttributes's (its one member), neither with a finish callback or
@@ -23,5 +25,5 @@ const hkTypeInfo D_57b7eb8("hkCustomAttributesAttribute", "!hkCustomAttributes::
 const hkClass D_57b7ee8("hkCustomAttributes", 0, sizeof(hkCustomAttributes), 0, 0, 0, 0, D_168d190,
                         1, 0, 0, 0, 0);
 extern const hkTypeInfo D_57b7f38;
-const hkTypeInfo D_57b7f38("hkCustomAttributes", "!hkCustomAttributes", 0, FUN_00006c80, 0,
-                           sizeof(hkCustomAttributes));
+const hkTypeInfo D_57b7f38("hkCustomAttributes", "!hkCustomAttributes", 0,
+                           FUN_00006c80_hkCustomAttributes, 0, sizeof(hkCustomAttributes));
