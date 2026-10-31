@@ -6143,6 +6143,8 @@ class hkcdDynamicAabbTree : public hkReferencedObject
     hkcdDynamicTree::DefaultTree48Storage *treePtr; /* the record's class, 0x57bbb60 */
 };
 
+extern const hkClass D_57bc310; /* hkcdStaticMeshTreeBase's hkClass */
+
 /* hkcdStaticMeshTreeBase (type info 0x57bc360, size 0x70; hkClass 0x57bc310,
  * parent the static tree over the dynamic storage 5, 0x57bab00): an empty
  * finish constructor (one shared body) and an out-of-line destructor. Its
@@ -9455,6 +9457,13 @@ struct hknpSolverInfo /* derived name */
      * name. */
     void FUN_00061b30(float timeStep, float numSubSteps);
 
+    /* The step's settings (0x61be0; the world's constructor at 0x48f32 and
+     * the step at 0x502dd): the collision tolerance in every lane, the
+     * steps and micro steps with their inverses, the time and its inverse,
+     * a step's time, and the gravity scaled by each. derived names. */
+    void FUN_00061be0(const Vec4 &gravity, float collisionTolerance, float deltaTime, int numSteps,
+                      int numMicroSteps);
+
     float timeStep;     /* derived name */
     float halfTimeStep; /* derived name */
     u8 unknown8[8];
@@ -9462,10 +9471,12 @@ struct hknpSolverInfo /* derived name */
     /* The vector a motion's velocities are scaled by into a step's
      * distances (0xcf4d0). derived name. */
     Vec4 vector20;
-    u8 unknown30[0x10];
+    /* The step's time inverted, in every lane (0x61be0). derived name. */
+    Vec4 vector30;
     Vec4 vector40; /* derived name; 0x2b620 reads its first lane */
-    float value50; /* derived name */
-    u8 unknown54[0xc];
+    /* The inverted time times the steps (0x61be0); 0x61b30 scales by its
+     * first lane. derived name. */
+    Vec4 vector50;
     /* A vector a step's distances scale (the motion velocity scale's
      * 0x5db23 clamps its product to 16 bits). derived name. */
     Vec4 vector60;
@@ -9477,9 +9488,17 @@ struct hknpSolverInfo /* derived name */
     /* The steps and the micro steps of each (the solve loop at 0x3fbab
      * counts them from the world's +0x444 and +0x44c). derived names. */
     int numSteps;
-    u8 unknownB8[4];
+    float invNumSteps; /* derived name */
     int numMicroSteps;
-    u8 unknownC0[0x30];
+    float invNumMicroSteps; /* derived name */
+    /* The gravity's length, 9.81 for none (0x61be0). derived name. */
+    float gravityLength;
+    float deltaTime; /* derived name */
+    u8 unknownCC[4];
+    /* The gravity over a step and over the whole time, the latter's
+     * length in its w (0x61be0). derived names. */
+    Vec4 vectorD0;
+    Vec4 vectorE0;
     Vec4 vectorF0;
     Vec4 vector100;
     Vec4 vector110; /* derived name; 0x2b670 reads its first lane */
@@ -10412,6 +10431,10 @@ struct alignas(8) hkCompressedMassProperties {
      * and the quaternion back from its 16 bits a lane, normalized. derived
      * name. */
     void FUN_000263e0(hkDiagonalizedMassProperties &properties) const;
+
+    /* Unpacked into full mass properties (0x261a0; the two steps 0x263e0
+     * and 0x26490 inline). derived name. */
+    void FUN_000261a0(hkMassProperties &out) const;
 
     s16 centerOfMass[4];
     s16 inertia[4];
@@ -12254,6 +12277,8 @@ struct hkpSetLocalTranslationsConstraintAtom {
     Vec4 translationB;
 };
 
+extern const hkClass D_57c4650; /* hkpConstraintAtom's hkClass */
+
 /* hkpConstraintAtom (hkClass 0x57c4650, size 2): the atoms' base. Of its
  * three enums (records from 0x169ed60) the third is SolvingMethod, items
  * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
@@ -13638,7 +13663,9 @@ void FUN_000c8710(const void *atoms, int sizeOfAtoms, const ConstraintQueryIn &i
 struct hkpBridgeConstraintAtom;
 void FUN_0007d030(hkpBridgeConstraintAtom *self, hkpConstraintData *data); /* derived name */
 
-struct hkpBridgeConstraintAtom {
+/* 16-byte aligned as the constraint atoms are: 0x20 bytes (its hkClass and
+ * type info, 0x786cd and 0x78776). */
+struct alignas(16) hkpBridgeConstraintAtom {
     /* A bridge atom (type 1) with no data yet; the owner's constructor
      * initializes it (0x79dc0). */
     hkpBridgeConstraintAtom() : type(1), constraintData(0) {}

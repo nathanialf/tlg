@@ -5229,10 +5229,24 @@ struct BodyPairEntry000717d0 /* derived name */
         return getKey() < other.getKey();
     }
 
-    u32 value0;
+    int value0; /* compared signed (0x72b43) */
     hknpBodyId bodyA;
     hknpBodyId bodyB;
     u64 value10;
+};
+
+/* The other order the pair processing sorts its entries by (0x72ab0, its
+ * quickSortRecursive; 0x717d0 at 0x71aa5 and 0x72400 at 0x7246b): the
+ * first int, then the two ids' key. derived name. */
+struct Value0ThenKeyLess000717d0 /* derived name */
+{
+    bool operator()(const BodyPairEntry000717d0 &a, const BodyPairEntry000717d0 &b) const
+    {
+        if (a.value0 == b.value0) {
+            return a.getKey() < b.getKey();
+        }
+        return a.value0 < b.value0;
+    }
 };
 
 /* A leaf's age and its place in the walk, sorted by age (0x13b6c0,

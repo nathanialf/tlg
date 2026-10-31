@@ -16,6 +16,6 @@ void hknpSolverInfo::FUN_00061b30(float timeStep, float numSubSteps)
     value13c = halfSubStep;
     vectorF0 = _mm_blend_ps(_mm_set1_ps(subStep), _mm_setzero_ps(), 8);
     vector100 = _mm_blend_ps(_mm_set1_ps(invSubStep), _mm_setzero_ps(), 8);
-    vector110 = _mm_set1_ps(subStep * value50);
-    vector120 = _mm_set1_ps(-(halfSubStep * value50));
+    vector110 = _mm_set1_ps(subStep * lane(vector50, 0));
+    vector120 = _mm_set1_ps(-(halfSubStep * lane(vector50, 0)));
 }
