@@ -2517,3 +2517,9 @@ FUN_000657b0 src/libs/unknown/func_000657b0.cpp
 FUN_0014a090 src/libs/unknown/func_0014a090.cpp
 FUN_0016ddd0 src/libs/havok/Physics/Physics/Dynamics/Constraint/hknpConstraintManager.cpp _ZN21hknpConstraintManager12FUN_0016ddd0EjPKc
 FUN_00062490 src/libs/unknown/func_00062490.cpp
+FUN_00040ea0 src/libs/unknown/func_00040ea0.cpp _GLOBAL__I_a
+FUN_0008e6b0 src/libs/unknown/func_0008e6b0.cpp _GLOBAL__I_a
+FUN_00156f40 src/libs/unknown/func_00156f40.cpp
+FUN_001607c0 src/libs/havok/Physics/Physics/Dynamics/Body/hknpBodyManager.cpp
+FUN_0015c490 src/libs/unknown/func_0015c490.cpp _ZN24hknpVehicleDefaultEngine14calcEngineInfoEfPK19hknpVehicleInstanceRK30hknpVehicleFilteredDriverInputRK29hknpVehicleTransmissionOutputRN17hknpVehicleEngine12EngineOutputE
+FUN_0003ed80 src/libs/unknown/func_0003ed80.cpp _ZNK17hknpShapeInstance12FUN_0003ed80ER6hkAabb

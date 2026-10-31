@@ -411,6 +411,14 @@ class Modifier16a4860 /* derived name */
                       const void *bodyB, hknpManifoldCollisionCache *cache,
                       const hknpManifold *manifold, Pair08Owner *jacobian,
                       int jacobianIndex); /* vtable slot 7; derived name */
+    /* Slot 8 (0x156f40), after the contacts are solved: each point's value
+     * of the cache's second array clipped by the point's impulse and the
+     * separation velocity, the rest of the impulse handed back to the
+     * jacobian. derived names. */
+    void FUN_00156f40(const void *threadContext, const hknpSolverInfo *solverInfo,
+                      const void *argument3, const void *argument4,
+                      hknpManifoldCollisionCache *cache,
+                      Pair08Owner *jacobian); /* vtable slot 8; derived name */
 };
 
 float *FUN_00034810(Pair08Owner *self, int index); /* derived name */

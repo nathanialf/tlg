@@ -22,7 +22,7 @@ void hknpShapeInstance::FUN_0003ed10(const Vec4 &newScale, int scaleMode)
     default:
         break;
     }
-    scale = _mm_blend_ps(newScale, one, 8);
+    scale.quad = _mm_blend_ps(newScale, one, 8);
     if (scaleMode == 0) {
         flags |= SCALE_SURFACE;
     }

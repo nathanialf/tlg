@@ -7,8 +7,8 @@
  * where their loads sit, cookbook 127; GVN then forwards the stores). */
 void hknpShapeInstance::FUN_0003ead0(hkTransform &inverseOut) const
 {
-    const Vec4 r = _mm_rcp_ps(scale);
-    const Vec4 inverseScale = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(scale, r)));
+    const Vec4 r = _mm_rcp_ps(scale.quad);
+    const Vec4 inverseScale = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(scale.quad, r)));
     const Vec4 c0 = transform.rotation.col0;
     const Vec4 c1 = transform.rotation.col1;
     const Vec4 c2 = transform.rotation.col2;
