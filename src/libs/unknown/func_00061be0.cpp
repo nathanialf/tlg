@@ -1,11 +1,13 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: 12 of 67, every store, conversion, division and vector
-// operation the base's but their schedule: the base's list-ilp order puts
-// the time's reciprocal last of the three divisions (micro steps, steps,
-// time, the steps' store between), this compile first; the registers
-// follow (docs/NOTES.md, Round 69A).
+// NONMATCHING: 52 of 66, every instruction from the last division on the
+// base's (the length's test through _mm_ucomineq_ss shares the vector zero);
+// left: the head's order. list-ilp (ScheduleDAGRRList, ilp_ls_rr_sort) picks
+// among the three divisions and the steps' store with a comparator that is
+// not transitive (the height window against closestSucc), so the pick
+// follows the queue's order; every IR order, operand order and splat form
+// tried gives the time's reciprocal first (docs/NOTES.md, Round 70A).
 void hknpSolverInfo::FUN_00061be0(const Vec4 &gravity, float collisionTolerance, float deltaTime,
                                   int numSteps, int numMicroSteps) /* derived name */
 {
@@ -29,6 +31,6 @@ void hknpSolverInfo::FUN_00061be0(const Vec4 &gravity, float collisionTolerance,
     vectorE0 = _mm_blend_ps(stepGravity, length3(stepGravity), 8);
     vector110 = _mm_set1_ps(subStepDeltaTime * value134);
     vector120 = _mm_set1_ps(-(subStepDeltaTime * value13c));
-    const float length = lane(length3(gravity), 0);
-    gravityLength = length != 0.0f ? length : 9.81f;
+    const Vec4 length = length3(gravity);
+    gravityLength = _mm_ucomineq_ss(length, _mm_setzero_ps()) ? _mm_cvtss_f32(length) : 9.81f;
 }

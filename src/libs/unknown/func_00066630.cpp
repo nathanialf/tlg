@@ -1,11 +1,6 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: 85 of 90, same size: the front insertion's shift loop is
-// based at the set less 8 in the base (`lea r9, [r13 - 8]`, the moves at
-// +0 and +0x10 of it), here at the entries (`lea r9, [r13 + 8]`, -0x10 and
-// +0): LSR's choice of the outer induction's offset (docs/NOTES.md, Round
-// 64A).
 void hknpModifierManager::FUN_00066630(u32 flags, CacheModifier0017a000 *modifier, int append)
 {
     u32 functions = modifier->unknownVirtual2();
@@ -32,8 +27,9 @@ void hknpModifierManager::FUN_00066630(u32 flags, CacheModifier0017a000 *modifie
                     HK_BREAKPOINT(0);
                 }
                 int j = set.numModifiers++;
-                for (; j > 0; j--) {
-                    set.entries[j] = set.entries[j - 1];
+                ModifierSet::Entry *e = set.entries + j;
+                for (; j > 0; j--, e--) {
+                    e[0] = e[-1];
                 }
                 set.enabledModifiers |= flags;
                 set.entries[j].mask = flags;

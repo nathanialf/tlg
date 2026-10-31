@@ -3,19 +3,14 @@
 
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: every instruction equal but two registers: the base keeps
-// the fourth best vertex in xmm11 and the loop's saved copy of the third in
-// xmm12, here the other way round (the greedy allocator's choice; the
-// loop's body order, the declarations' order and the dots' placement change
-// nothing or worse; docs/NOTES.md, Round 63A).
 void hknpConvexShape::FUN_0003c3c0(const Vec4 &direction, Vec4 *vertexOut) const
 {
     const Vec4 *v =
         reinterpret_cast<const Vec4 *>(reinterpret_cast<const char *>(&vertices) + vertices.offset);
-    Vec4 best0 = v[0];
-    Vec4 best1 = v[1];
-    Vec4 best2 = v[2];
     Vec4 best3 = v[3];
+    Vec4 best2 = v[2];
+    Vec4 best1 = v[1];
+    Vec4 best0 = v[0];
     const Vec4 dir = direction;
     Vec4 dot0 = _mm_dp_ps(dir, best0, 0x7f);
     Vec4 dot1 = _mm_dp_ps(dir, best1, 0x7f);

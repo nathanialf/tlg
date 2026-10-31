@@ -1,10 +1,13 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: every instruction equal but two registers, the residual of
-// 0x3c3c0's same loop (docs/NOTES.md, Round 64A): the base keeps the fourth
-// best vertex in xmm11 and the loop's copy of the third in xmm12, this
-// compile the other way round.
+// NONMATCHING: every instruction equal but the loop pointer's base: the
+// base starts it at the vertices + 0x40 and loads at +0, +0x10, +0x20, +0x30
+// of it, this compile at + 0x70 and -0x30 to +0 (LSR keeps the first of its
+// address fixups, here the fourth vertex: InstCombine has folded the two
+// `v += 4` into a phi of the unincremented pointer, so the four loads are
+// fixups of their own rather than one IV chain as in 0x3c3c0; docs/NOTES.md,
+// Round 70A).
 void Collector000a6d60::FUN_000a1960(const VertexView000a6d60 *view, const Vec4 &direction,
                                      const void *argument3, const void *argument4, Vec4 *vertexOut,
                                      Vec4 *argument6, Vec4 *argument7) const
@@ -12,10 +15,10 @@ void Collector000a6d60::FUN_000a1960(const VertexView000a6d60 *view, const Vec4 
     *argument6 = _mm_setzero_ps();
     *argument7 = _mm_setzero_ps();
     const Vec4 *v = view->vertices;
-    Vec4 best0 = v[0];
-    Vec4 best1 = v[1];
-    Vec4 best2 = v[2];
     Vec4 best3 = v[3];
+    Vec4 best2 = v[2];
+    Vec4 best1 = v[1];
+    Vec4 best0 = v[0];
     const Vec4 dir = direction;
     Vec4 dot0 = _mm_dp_ps(dir, best0, 0x7f);
     Vec4 dot1 = _mm_dp_ps(dir, best1, 0x7f);

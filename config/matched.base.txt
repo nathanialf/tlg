@@ -2532,3 +2532,6 @@ _ZN23hknpCompressedMeshShapeD1Ev src/libs/unknown/func_001586d0.cpp
 FUN_001801f0 src/libs/unknown/func_001801f0.cpp
 FUN_0003e5b0 src/libs/unknown/func_0003e5b0.cpp _GLOBAL__I_a
 FUN_000479c0 src/libs/unknown/func_000479c0.cpp _GLOBAL__I_a
+FUN_00066630 src/libs/unknown/func_00066630.cpp _ZN19hknpModifierManager12FUN_00066630EjP21CacheModifier0017a000i
+FUN_0003c3c0 src/libs/unknown/func_0003c3c0.cpp _ZNK15hknpConvexShape12FUN_0003c3c0ERKDv4_fPS0_
+FUN_0016a9c0 src/libs/unknown/func_0016a9c0.cpp _ZNK25hknpScaledConvexShapeBase12FUN_0016a9c0ERKDv4_fPS0_
