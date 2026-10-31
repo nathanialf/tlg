@@ -2,9 +2,6 @@
  * the file its report names (config/homes.base.txt, FUN_0016db90). */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: one byte short of equal: the base adds the slot's address (`add rdi, rax`) right
-// after the free link's load, so the peak's test takes eax (`cmp eax, imm32`); this compile adds
-// it before the clear's call and the test takes ecx (NOTES Round 63B).
 u32 hknpConstraintManager::FUN_0016db90()
 {
     const u32 constraintId = firstFreeConstraintId;

@@ -1347,7 +1347,7 @@ FUN_00166130 src/libs/unknown/func_00166130.cpp
 FUN_0016a640 src/libs/unknown/func_0016a640.cpp
 _ZN21hknpScaledConvexShapeD0Ev src/libs/unknown/func_0016cf30.cpp
 FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
-FUN_00176b20 src/libs/unknown/func_00176b20.cpp
+_ZN18hknpCharacterProxyD0Ev src/libs/unknown/func_00176b70.cpp
 FUN_0017b700 src/libs/unknown/func_0017b700.cpp
 _ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
 FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
@@ -2473,3 +2473,6 @@ FUN_0007fc70 src/libs/unknown/func_0007fc70.cpp _ZN24hkpLinearParametricCurve8ad
 FUN_0005fab0 src/libs/unknown/func_0005fab0.cpp _ZN9hknpWorld12FUN_0005fab0Ei
 FUN_0006c110 src/libs/unknown/func_0006c110.cpp _ZNK17RefArrays0005a23012FUN_0006c110ERK9hkCommandR9hkOstream
 FUN_00085550 src/libs/unknown/func_00085550.cpp
+_ZN18hknpCharacterProxyD1Ev src/libs/unknown/func_00176b70.cpp
+FUN_0016db90 src/libs/havok/Physics/Physics/Dynamics/Constraint/hknpConstraintManager.cpp _ZN21hknpConstraintManager12FUN_0016db90Ev
+FUN_000cf140 src/libs/unknown/func_000cf140.cpp

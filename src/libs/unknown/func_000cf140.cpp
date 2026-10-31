@@ -18,13 +18,6 @@ void FUN_000cd5f0(void *argument1, hknpWorld *world, const u32 *motionIds, int n
  * at 0x6db5c): both arrays sized to the motions rounded up to four, the
  * first motion's (the static one's) and the padding's zero, the others'
  * built by 0xcd5f0. derived name. */
-// NONMATCHING: 84 of 86, same size: the padding loop's two pointer
-// induction variables, whose preheader adds the base orders velocity first
-// and whose latch increments it orders sums first; LSR builds both in one
-// order (phi order), which the scheduler follows in both blocks: here sums
-// first in the preheader (this form) or velocity first in the latch (the
-// loop over two pointers set before it). The padding counts computed before
-// the arrays are sized give the entry's order (docs/NOTES.md, Round 65A).
 void FUN_000cf140(void *argument1, hknpWorld *world, const hkArray<u32> *motionIds,
                   hkArray<SolverVelocity000cf140> &velocities,
                   hkArray<SolverVelocity000cf140> &sums)
@@ -43,10 +36,14 @@ void FUN_000cf140(void *argument1, hknpWorld *world, const hkArray<u32> *motionI
     sum[0].angular = zero;
     sum[0].linear = zero;
     FUN_000cd5f0(argument1, world, motionIds->data + 1, numOthers, velocity + 1, sum + 1);
+    SolverVelocity000cf140 *paddingVelocity = velocity + numMotions;
+    SolverVelocity000cf140 *paddingSum = sum + numMotions;
     for (int i = 0; i < numPadding; i++) {
-        velocity[numMotions + i].angular = zero;
-        velocity[numMotions + i].linear = zero;
-        sum[numMotions + i].angular = zero;
-        sum[numMotions + i].linear = zero;
+        paddingVelocity->angular = zero;
+        paddingVelocity->linear = zero;
+        paddingSum->angular = zero;
+        paddingSum->linear = zero;
+        paddingVelocity++;
+        paddingSum++;
     }
 }

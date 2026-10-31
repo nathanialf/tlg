@@ -5725,6 +5725,21 @@ struct hkcdStaticTree {
 
         static void FUN_0001e270(void *object);
 
+        /* The domain by value: a zeroed box whose corners are then copied.
+         * Inlined, it leaves its callers' 16-byte zero store before the
+         * domain's copy (0xd0950; the trees walked by 0x127b20, 0xfc8f0,
+         * 0xff260, 0x110070 the same): optimized as its own function, its
+         * result (the noalias return slot) escapes nowhere, so dead store
+         * elimination trims the zeroing to the half the copy of the minimum
+         * overwrites last. derived name. */
+        hkAabb getDomain() const
+        {
+            hkAabb aabb = hkAabb();
+            aabb.min = domain.min;
+            aabb.max = domain.max;
+            return aabb;
+        }
+
         hkArray<Codec3Axis6> nodes; /* derived name */
         hkAabb domain;              /* derived name */
     };
@@ -8199,7 +8214,12 @@ struct hknpConstraint {
      * tlg_lib_unknown.h, after the thread's memory router). */
     inline ~hknpConstraint();
 
-    u8 unknown0[4];
+    /* Four bytes, not a byte array: the manager's allocation 0x16db90 forms
+     * the record's address for its clear in the block that loads the free
+     * link, which InstCombine leaves as a cast only when the first member
+     * is not an i8 (a char first member turns the cast into a field address
+     * at the call). */
+    u32 unknown0;
     u32 bodyIdA; /* derived name */
     u8 unknown8[4];
     u32 bodyIdB; /* derived name */
@@ -16417,6 +16437,15 @@ struct hknpCharacterSurfaceInfo /* derived name */
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
 {
   public:
+    /* 0x176b70: unsubscribes the proxy from the world's three signals and
+     * its body's, removes its body and releases its shape; out of line, so
+     * the deleting destructor 0x176b20 is emitted before it. */
+    virtual ~hknpCharacterProxy();
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* The listener set, a reference taken on the new one before the old
      * one's is released (0x177130; the game passes its +0x60 at 0xea9048).
      * derived name. */

@@ -5718,6 +5718,11 @@ inline void hkxSparselyAnimatedInt::operator delete(void *object, unsigned long 
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpCharacterProxy::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpConvexPolytopeShape::Connectivity::operator delete(void *object,
                                                                    unsigned long numBytes)
 {
@@ -5915,7 +5920,6 @@ void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
 void FUN_00166180(hknpExternMeshShape *self);
-void FUN_00176b70(hknpCharacterProxy *self);
 void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
 
@@ -5950,7 +5954,6 @@ void FUN_0015bf50(hknpWorldSnapshot *self);         /* slot 1 of 0x16a4d50 */
 void FUN_00162580(hknpVehicleInstance *self);       /* slot 1 of 0x16a5090 */
 void FUN_00165aa0(hknpPhysicsSystemData *self);     /* slot 1 of 0x16a5130 */
 void FUN_00166130(hknpExternMeshShape *self);       /* slot 1 of 0x16a5170 */
-void FUN_00176b20(hknpCharacterProxy *self);        /* slot 1 of 0x16a5b70 */
 void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
 void FUN_0017b700(hkp6DofConstraintData *self);     /* slot 1 of 0x16a5d20 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self); /* slot 1 of 0x16a6300 */
