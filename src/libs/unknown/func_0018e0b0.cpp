@@ -25,8 +25,8 @@ struct PairKeyGreater0018d960 /* derived name */
 // NONMATCHING: the first scan's key load kept apart from its compare (`mov
 // ebx; cmp ebx, r8d`, the base folds it), so one register fewer: the stack
 // guard's address is loaded again at the end where the base keeps it in
-// r12; and the second scan's two induction increments in the other order,
-// as in 0x72980 (docs/NOTES.md, Round 63A).
+// r12 (docs/NOTES.md, Round 63A; the second scan's two increments are the
+// base's since the template tests j != i, Round 70A).
 /* The entries' sort (0x18e0b0, called at 0x18dcf8). */
 template void hkAlgorithm::quickSortRecursive(PairSortEntry0018d960 *pArr, int d, int h,
                                               PairKeyGreater0018d960 cmpLess);

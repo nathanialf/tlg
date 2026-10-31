@@ -27,7 +27,9 @@ template <typename T> inline void swap(T &x, T &y)
  * lower part sorted by a recursive call and the upper by going round again.
  * The bytes test the scans' meeting as j against i and store the element at
  * j first (both instantiations hold `cmp j, i; jl` and the store to [j]
- * before the store to [i]). derived name. */
+ * before the store to [i]); the two are told apart as j against i too, which
+ * orders LSR's two counters of the second scan as the base has them (0x72980).
+ * derived name. */
 template <typename T, typename L> void quickSortRecursive(T *pArr, int d, int h, L cmpLess)
 {
     int i, j;
@@ -45,7 +47,7 @@ begin:
             j--;
         }
         if (j >= i) {
-            if (i != j) {
+            if (j != i) {
                 swap(pArr[j], pArr[i]);
             }
             i++;
