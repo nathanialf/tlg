@@ -84,6 +84,19 @@ template <typename T> inline T *hkAddByteOffset(T *base, long offset)
  * quads a matrix, a count the copy tests again). */
 namespace hkString /* derived name */
 {
+/* The same for a count known not to be zero: no test before the first
+ * quad (the composite caches' move, 0x155910). derived name. */
+inline void memCpy16NonEmpty(void *dst, const void *src, int numQuads) /* derived name */
+{
+    Vec4 *d = static_cast<Vec4 *>(dst);
+    const Vec4 *s = static_cast<const Vec4 *>(src);
+    do {
+        *d = *s;
+        s++;
+        d++;
+    } while (--numQuads > 0);
+}
+
 inline void memCpy16(void *dst, const void *src, int numQuads) /* derived name */
 {
     Vec4 *d = static_cast<Vec4 *>(dst);
@@ -8653,6 +8666,35 @@ class hknpWorldObject388 : public hkReferencedObject /* derived name */
 
 struct hkBlockStreamReader; /* below */
 
+/* A 16-byte record of the array at +0xb8 of the object FUN_000657b0 sorts
+ * (derived names): a pointer to an object with an int at +4, a 16-bit key
+ * at +8 and a count at +0xc. FUN_00062100 is the order the sort
+ * (FUN_00062130) is given: records with a count first, then by the int
+ * the pointer reaches, then by the key. */
+struct SortRecord00062100 /* derived name */
+{
+    struct Target {
+        u8 unknown0[4];
+        int order; /* derived name */
+    };
+
+    /* The same record: the counts, the targets and both keys equal (the
+     * duplicates 0x657b0 drops after the sort, compared in this order).
+     * derived name. */
+    bool operator==(const SortRecord00062100 &other) const
+    {
+        return count == other.count && target == other.target && keyA == other.keyA &&
+               key == other.key;
+    }
+
+    const Target *target __attribute__((aligned(16))); /* derived name */
+    u16 key;                                           /* derived name */
+    u16 keyA;                                          /* derived name */
+    int count;                                         /* derived name */
+};
+
+bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b); /* derived name */
+
 struct hknpWorldObject4f8 /* derived name */
 {
     void FUN_00062b20(int bodyId, bool flag); /* derived name */
@@ -8800,7 +8842,9 @@ struct hknpWorldObject4f8 /* derived name */
     hkArray<BodyRecord> activatedBodies; /* derived name */
     hkArray<u8> unknown98;               /* element type not read yet */
     hkArray<u8> unknownA8;               /* element type not read yet */
-    hkArray<u8> unknownB8;               /* element type not read yet */
+    /* Records sorted, their duplicates dropped and each handled when the
+     * inactive caches are cleaned (0x657b0), then emptied. derived name. */
+    hkArray<SortRecord00062100> sortRecords;
 };
 
 /* A slot of a member-function signal (vtable 0x1698ee0, ruled hkSlot, D14):
@@ -11097,6 +11141,58 @@ class hknpTriangleShape : public hknpConvexPolytopeShape
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
  * vtable 0x1694e20, finish callback FUN_00039ae0): the shape's
  * connectivity pointer at +0x38 refers to one. */
+/* A point's closest point on a convex polytope, with a cache of the plane it
+ * was last outside of (derived names; 0x14a090, the queries 0x55b05,
+ * 0x1080ba and 0x10a8bb): the query's position at +0x20 and its maximum
+ * distance at +0x30. */
+struct PointQuery0014a090 /* derived name */
+{
+    u8 unknown0[0x20];
+    Vec4 position;     /* derived name */
+    float maxDistance; /* derived name */
+};
+
+/* The cache (derived names): the last distance, its kind (3: outside a
+ * plane) and the plane's index. */
+struct PointCache0014a090 /* derived name */
+{
+    /* What the search keeps and updates (its fourth argument). */
+    struct State {
+        u8 type;       /* derived name */
+        u8 planeIndex; /* derived name */
+    };
+
+    float distance; /* derived name */
+    State state;    /* derived name */
+};
+
+/* What the closest point search takes and gives (derived names): a
+ * tolerance and the maximum distance in every lane; four vectors out, the
+ * last holding the distance (in, the cached one). */
+struct ClosestPointInput00149880 /* derived name */
+{
+    Vec4 tolerance;   /* derived name */
+    Vec4 maxDistance; /* derived name */
+};
+
+struct ClosestPointOutput00149880 /* derived name */
+{
+    Vec4 unknown0;
+    Vec4 unknown10;
+    Vec4 unknown20;
+    Vec4 distance; /* derived name */
+};
+
+/* The search itself (0x149880): whether a closest point lies within the
+ * maximum distance, the cache's kind and plane updated. derived name. */
+bool FUN_00149880(const hknpConvexPolytopeShape *shape, const Vec4 *point,
+                  const ClosestPointInput00149880 *input, PointCache0014a090::State *state,
+                  ClosestPointOutput00149880 *output);
+
+bool FUN_0014a090(const PointQuery0014a090 *query, const hknpConvexPolytopeShape *shape,
+                  const hkTransform &transform, PointCache0014a090 *cache,
+                  ClosestPointOutput00149880 *output); /* derived name */
+
 class hknpConvexPolytopeShape::Connectivity : public hkReferencedObject
 {
   public:
@@ -17433,6 +17529,10 @@ struct hknpWorldContextPool /* derived name */
  * inactive caches task's two steps (0x14efe2, 0x14f068). */
 void FUN_000657b0(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *context,
                   const ModifierSharedData *shared, hkBlockStream *stream);
+/* One sorted record handled (0x65910, the clean's per-record step).
+ * derived name. */
+void FUN_00065910(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
+                  SortRecord00062100 *record);
 void FUN_00064810(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *context,
                   hkBlockStream *streamA, hkBlockStream *streamB, int argument4);
 
@@ -17484,6 +17584,11 @@ struct hknpCompositeCollisionDetector : public hknpCollisionDetector /* derived 
     void FUN_00155750(hknpWorldContextPool::Context *context, const void *sharedData,
                       const hknpCompositeCollisionCache *cache, void *argument4, void *argument5,
                       hknpCdBody *cdBodyA, hknpCdBody *cdBodyB, int argument8);
+    /* Slot 7 (0x155850): the composite's child caches copied to the end
+     * of a writer's stream, one by one, and its range moved there. derived
+     * name. */
+    void FUN_00155850(const void *argument1, hknpCompositeCollisionCache *cache,
+                      hkBlockStreamWriter *writer);
     /* Slot 3 (0x1559b0): the child dispatch over the composite's caches. derived name. */
     void unknownVirtual3(hknpWorldContextPool::Context *context, const void *sharedData,
                          const hknpCollisionCache *cache, hkBlockStream *childCacheStream,
