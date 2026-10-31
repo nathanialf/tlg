@@ -6108,7 +6108,6 @@ void FUN_0008d2c0(hkxScene *self);
 void FUN_0009b1c0(hkcdPlanarGeometry *self);
 void FUN_0009c120(hkcdPlanarCsgOperand *self);
 void FUN_000aa6d0(hkSkinnedRefMeshShape *self);
-void FUN_001586d0(hknpCompressedMeshShape *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
@@ -6140,7 +6139,6 @@ void FUN_0009c0d0(hkcdPlanarCsgOperand *self);      /* slot 1 of 0x16a3730 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);     /* slot 1 of 0x16a38b0 */
 void FUN_000ad920(hkStorageSkinnedMeshShape *self); /* slot 1 of 0x16a3af0 */
 void FUN_00157ea0(hknpBallGun *self);               /* slot 1 of 0x16a48d0 */
-void FUN_00158680(hknpCompressedMeshShape *self);   /* slot 1 of 0x16a4990 */
 void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */
 void FUN_0015bf50(hknpWorldSnapshot *self);         /* slot 1 of 0x16a4d50 */
 void FUN_00162580(hknpVehicleInstance *self);       /* slot 1 of 0x16a5090 */

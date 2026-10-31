@@ -738,7 +738,7 @@ FUN_000834e0 src/libs/unknown/func_000834e0.cpp
 FUN_000839f0 src/libs/unknown/func_000839f0.cpp
 FUN_000a9690 src/libs/unknown/func_000a9690.cpp _GLOBAL__I_a
 FUN_000eafb0 src/libs/unknown/func_000eafb0.cpp
-_ZN15hknpBodyManager19ScheduledBodyChangeC1Ev src/libs/unknown/func_001618f0.cpp _ZN15hknpBodyManager19ScheduledBodyChangeC2Ev
+_ZN15hknpBodyManager19ScheduledBodyChangeC1Ev src/libs/havok/Physics/Physics/Dynamics/Body/hknpBodyManager.cpp _ZN15hknpBodyManager19ScheduledBodyChangeC2Ev
 FUN_00178580 src/libs/unknown/func_00178580.cpp
 FUN_0017f2d0 src/libs/unknown/func_0017f2d0.cpp
 FUN_00181ad0 src/libs/unknown/func_00181ad0.cpp
@@ -1338,7 +1338,7 @@ FUN_000aa680 src/libs/unknown/func_000aa680.cpp
 FUN_000ad920 src/libs/unknown/func_000ad920.cpp
 _ZN20hknpHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp
 FUN_00157ea0 src/libs/unknown/func_00157ea0.cpp
-FUN_00158680 src/libs/unknown/func_00158680.cpp
+_ZN23hknpCompressedMeshShapeD0Ev src/libs/unknown/func_001586d0.cpp
 FUN_00159600 src/libs/unknown/func_00159600.cpp
 FUN_0015bf50 src/libs/unknown/func_0015bf50.cpp
 FUN_00162580 src/libs/unknown/func_00162580.cpp
@@ -2527,3 +2527,5 @@ FUN_0000d390 src/libs/unknown/func_0000d390.cpp _GLOBAL__I_a
 FUN_000261a0 src/libs/unknown/func_000261a0.cpp _ZNK26hkCompressedMassProperties12FUN_000261a0ER16hkMassProperties
 FUN_00035640 src/libs/unknown/func_00035640.cpp _GLOBAL__I_a
 FUN_00078660 src/libs/unknown/func_00078660.cpp _GLOBAL__I_a
+FUN_00161790 src/libs/havok/Physics/Physics/Dynamics/Body/hknpBodyManager.cpp
+_ZN23hknpCompressedMeshShapeD1Ev src/libs/unknown/func_001586d0.cpp

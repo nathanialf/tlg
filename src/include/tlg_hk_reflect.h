@@ -8328,6 +8328,12 @@ struct hknpBodyManager /* derived name */
      * the free list through its first word. derived name. */
     void FUN_00160660(u32 bodyId);
 
+    /* Bodies scheduled for a change of a kind (0x161790; the world's
+     * 0x4d6d7 and 0x4db50 pass kinds 2 and 1): each body's record made
+     * when it has none, its flags given the kind and its place in that
+     * kind's list, the body appended to the list. derived name. */
+    void FUN_00161790(const hknpBodyId *bodyIds, int numBodyIds, u16 kind);
+
     /* A body taken from the free list (0x1607c0; the world's body
      * creation): its id, or 0x7fffffff with an error when there is none;
      * the body cleared but for its generation byte, which counts one more,
@@ -19738,6 +19744,27 @@ struct LinearJacobian00085820 /* derived name */
  * the right-hand side's factor. */
 void FUN_00085820(const LinearConstraintInfo00085820 &info, const ConstraintQueryIn00085450 &in,
                   LinearJacobian00085820 *&jacobians);
+
+/* The jacobian 0x856a0 builds (derived names): the direction with the
+ * right-hand side in w and each body's angular row (the inverse of the
+ * diagonal scaled by the virtual mass factor in A's w, the diagonal in
+ * B's); schema type 5 in the first byte, written last. */
+struct LinearJacobian000856a0 /* derived name */
+{
+    union {
+        Vec4 linear;
+        u8 schemaType;
+    };
+
+    Vec4 angular[2];
+};
+
+/* derived name: a linear jacobian along a direction through the first pivot
+ * (0x856a0): the rows as 0x85820 builds them with that pivot for both
+ * bodies, then the right-hand side from the pivots' distance along the
+ * direction. */
+void FUN_000856a0(const LinearConstraintInfo00085820 &info, const ConstraintQueryIn00085450 &in,
+                  LinearJacobian000856a0 *&jacobians);
 
 /* What the linear builder 0x85550 reads (derived names; 0x7a070 fills one
  * on its stack at 0x7a300): the pivot, the direction, a value scaled by the

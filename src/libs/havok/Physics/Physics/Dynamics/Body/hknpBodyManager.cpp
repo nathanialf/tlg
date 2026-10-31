@@ -20,3 +20,30 @@ u32 hknpBodyManager::FUN_001607c0()
     fieldMap.FUN_001997d0(bodyId);
     return bodyId;
 }
+
+/* The record's constructor: no body, on no list, no flags (0x1618f0). */
+hknpBodyManager::ScheduledBodyChange::ScheduledBodyChange()
+    : bodyId(0x7fffffff), listIndex(0x7fffffff)
+{
+    flags = 0;
+}
+
+void hknpBodyManager::FUN_00161790(const hknpBodyId *bodyIds, int numBodyIds, u16 kind)
+{
+    hkArray<u32> *list = kind == 1 ? &bodiesOfChange1 : kind == 2 ? &bodiesOfChange2 : HK_NULL;
+    for (int i = 0; i < numBodyIds; i++) {
+        const u32 bodyId = bodyIds[i].value;
+        int &index = scheduledBodyChangeIndices[bodyId];
+        ScheduledBodyChange *change;
+        if (index == 0x7fffffff) {
+            index = scheduledBodyChanges.getSize();
+            change = new (&scheduledBodyChanges.expandOneUnconstructed()) ScheduledBodyChange();
+            change->bodyId = bodyId;
+        } else {
+            change = &scheduledBodyChanges[index];
+        }
+        change->listIndex = list->getSize();
+        change->flags |= kind;
+        list->pushBack(bodyId);
+    }
+}

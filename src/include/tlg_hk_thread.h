@@ -810,12 +810,22 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
   public:
     /* An element of the array at +0xd8, 0x20 bytes (derived names): the
      * range the batch writes, then the two grid cells it belongs to. */
-    struct Entry20 {
+    struct alignas(16) Entry20 {
         hkBlockStreamRange range;
-        u8 unknown10[4];
+        /* The batch's weight; the cells are sorted heaviest first
+         * (0x15e0c0). derived name. */
+        int weight;
         u8 cellB; /* derived name */
         u8 cellA; /* derived name: 0xff for none */
-        u8 unknown16[0xa];
+    };
+
+    /* The order the cells are sorted in (0x15e0c0): the heavier first.
+     * derived name. */
+    struct HeavierFirst {
+        bool operator()(const Entry20 &a, const Entry20 &b) const
+        {
+            return a.weight > b.weight;
+        }
     };
 
     /* An element of the array at +0xe8, 0x70 bytes (derived names): the
