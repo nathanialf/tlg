@@ -411,12 +411,12 @@ FUN_000b6d10 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpCo
 FUN_000b6d20 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp
 FUN_0010bf40 src/libs/unknown/leaf_0010bf40.cpp
 FUN_0014e840 src/libs/unknown/func_0014e840.cpp
-FUN_0014ea10 src/libs/unknown/func_0014ea10.cpp
+FUN_0014ea10 src/libs/unknown/func_0014e850.cpp _ZThn16_N26hknpAddActiveBodyPairsTask7processEv
 FUN_0014eed0 src/libs/unknown/func_0014eed0.cpp
-FUN_0014f180 src/libs/unknown/func_0014f180.cpp
+FUN_0014f180 src/libs/unknown/func_0014eee0.cpp _ZThn16_N27hknpCleanInactiveCachesTask7processEv
 FUN_0014fa40 src/libs/unknown/func_0014fa40.cpp
 FUN_00150230 src/libs/unknown/func_00150230.cpp
-FUN_001550b0 src/libs/unknown/func_001550b0.cpp
+FUN_001550b0 src/libs/unknown/func_00154f50.cpp _ZThn16_N26hknpPrepareConstraintsTask7processEv
 FUN_00155420 src/libs/unknown/func_00155420.cpp
 FUN_00156870 src/libs/unknown/func_00156870.cpp
 FUN_0015bf10 src/libs/unknown/func_0015b7a0.cpp _ZThn16_N23hknpPrepareNewPairsTask7processEv
@@ -2501,3 +2501,6 @@ FUN_0001db10 src/libs/unknown/func_0001db10.cpp _GLOBAL__I_a
 FUN_00078f50 src/libs/unknown/func_00078f50.cpp _ZN29hkpLimitedHingeConstraintData12FUN_00078f50ERKDv4_fS2_S2_S2_S2_S2_
 FUN_0007e660 src/libs/unknown/func_0007e660.cpp _ZN26hkpPrismaticConstraintData12FUN_0007e660ERKDv4_fS2_S2_S2_S2_S2_
 FUN_0000b680 src/libs/unknown/func_0000b680.cpp _ZN14Object0000b33012FUN_0000b680EPKciS1_S1_i6hkBool
+FUN_00154f50 src/libs/unknown/func_00154f50.cpp _ZN26hknpPrepareConstraintsTask7processEv
+FUN_0014e850 src/libs/unknown/func_0014e850.cpp _ZN26hknpAddActiveBodyPairsTask7processEv
+FUN_0014eee0 src/libs/unknown/func_0014eee0.cpp _ZN27hknpCleanInactiveCachesTask7processEv

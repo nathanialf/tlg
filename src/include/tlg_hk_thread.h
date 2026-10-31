@@ -452,12 +452,28 @@ class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterfac
 };
 
 /* hknpAddActiveBodyPairsTask: vtables 0x16a4110 and 0x16a4158; slot 6 opens the timer "Deactivation/AddActiveBodyPairs". */
+struct CollideShared0015ea30;
+
+/* What the deactivation tasks reach the collide stage's shared data
+ * through (derived names): it at +0x10. */
+struct TaskOwner0014e850 /* derived name */
+{
+    u8 unknown0[0x10];
+    CollideShared0015ea30 *shared; /* derived name */
+};
+
 class hknpAddActiveBodyPairsTask : public hkReferencedObject,
                                    public hknpTaskInterface /* derived name */
 {
   public:
+    /* Slot 5 (0x14e850; the interface's thunk 0x14ea10): the class's key
+     * function. */
+    virtual void process();
     /* slot 6 (0x14e9c0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    TaskOwner0014e850 *owner;          /* derived name */
+    hknpWorldContextPool *contextPool; /* derived name */
 };
 
 /* hknpSolveFinalizeTask: vtables 0x16a4190 and 0x16a41d8; slot 6 opens the timer "Solve/Finalize". */
@@ -488,12 +504,12 @@ class hknpCleanInactiveCachesTask : public hkReferencedObject,
     /* slot 6 (0x14f0e0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    void *unknown18;    /* derived name */
-    void *unknown20;    /* derived name */
-    u8 unknown28[0x14]; /* derived name */
-    int unknown3c;      /* derived name */
-    void *unknown40;    /* derived name */
-    u8 unknown48[8];    /* derived name */
+    void *unknown18;                   /* derived name */
+    hknpWorldContextPool *contextPool; /* derived name */
+    u8 unknown28[8];
+    /* The commands slot 5 wrote, the context's command range copied whole
+     * (the builder 0x150f68 clears its count and link). derived name. */
+    LinkedRange0015ea30 commands;
 };
 
 /* hknpProcessSecondRoundResultsTask: vtables 0x16a4290 and 0x16a42d8; slot 6 opens the timer "Collide/Process Second Round Results". */
@@ -514,6 +530,26 @@ class hknpProcessFirstRoundResultsTask : public hkReferencedObject,
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 };
 
+/* What the constraints' preparation fills (derived names): the
+ * constraints gathered (0xc5e30, from the world's constraints up to the
+ * highest id in use), their count at +8, then their groups (0xc6630, over
+ * the gathered ones from the first to the last of +0x10). */
+struct ConstraintGather000c5e30 /* derived name */
+{
+    void FUN_000c5e30(hknpWorld *world, hknpConstraint *constraints, int numConstraints);
+
+    u8 unknown0[8];
+    int numConstraints; /* derived name */
+    u8 unknownC[4];
+    int numEntries10; /* derived name */
+};
+
+struct ConstraintGroups000c6630 /* derived name */
+{
+    void FUN_000c6630(hknpWorld *world, const ConstraintGather000c5e30 *gather, int first, int last,
+                      hknpConstraint *constraints);
+};
+
 /* hknpPrepareConstraintsTask: vtables 0x16a4650 and 0x16a4698; slot 6 opens the timer "Constraints/Prepare". */
 class hknpPrepareConstraintsTask : public hkReferencedObject,
                                    public hknpTaskInterface /* derived name */
@@ -528,7 +564,19 @@ class hknpPrepareConstraintsTask : public hkReferencedObject,
     /* slot 6 (0x154f00, also the interface's slot 3) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    void *unknown18; /* derived name */
+    /* The objects slot 5 fills, read from the task at each use (0x155011
+     * reads +0x20 again after the gather). derived names. */
+    ConstraintGather000c5e30 *gather() const
+    {
+        return static_cast<ConstraintGather000c5e30 *>(unknown20);
+    }
+
+    ConstraintGroups000c6630 *groups() const
+    {
+        return static_cast<ConstraintGroups000c6630 *>(unknown28);
+    }
+
+    void *unknown18; /* derived name: the world */
     void *unknown20; /* derived name */
     void *unknown28; /* derived name */
 };
@@ -676,17 +724,6 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
     u8 unknown478[8];
 };
 
-/* A block stream range that links to the next range of its list (derived
- * names), 0x18 bytes on a 16-byte boundary (0x20 a slot; an assignment
- * copies the 0x18, clang's data size): a list's first range kept in place,
- * every later one written into a stream and linked in after the first (the
- * collide task's command ranges, 0x15f480). */
-struct LinkedRange0015ea30 /* derived name */
-{
-    hkBlockStreamRange range __attribute__((aligned(16)));
-    LinkedRange0015ea30 *next;
-};
-
 /* The command ranges of a context by grid cell (derived name). */
 struct CommandRanges0015ea30 /* derived name */
 {
@@ -744,6 +781,7 @@ struct CollideShared0015ea30 /* derived name */
     CollideRange0015ea30 *rangesB; /* derived name */
     u8 unknown28[0x118];
     hkBlockStream (*contextStreams)[5]; /* derived name */
+    int numContexts;                    /* derived name */
 };
 
 /* The pairs of a batch through the collision detectors (0x15c5f0; the
@@ -1060,12 +1098,9 @@ class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /*
 };
 
 void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */
-void FUN_0014e850(hknpAddActiveBodyPairsTask *self);        /* vtable slot 5; derived name */
 void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; derived name */
-void FUN_0014eee0(hknpCleanInactiveCachesTask *self);       /* vtable slot 5; derived name */
 void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; derived name */
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
-void FUN_00154f50(hknpPrepareConstraintsTask *self);        /* vtable slot 5; derived name */
 void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
 void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
 void FUN_0016e9f0(hknpSolveDataTask *self); /* vtable slot 1 (0x16a5680); derived name */

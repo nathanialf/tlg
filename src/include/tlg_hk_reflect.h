@@ -8555,6 +8555,27 @@ struct hkBlockStreamRange /* derived name */
     int numElements;                      /* derived name */
 };
 
+/* A block stream range that links to the next range of its list (derived
+ * names), 0x18 bytes on a 16-byte boundary (0x20 a slot; an assignment
+ * copies the 0x18, clang's data size): a list's first range kept in place,
+ * every later one written into a stream and linked in after the first (the
+ * collide task's command ranges, 0x15f480). */
+struct LinkedRange0015ea30 /* derived name */
+{
+    /* Empty, unlinked (the context's constructor 0x167cd0). The
+     * constructor makes the class non-POD, so an assignment copies its
+     * 0x18 bytes of data, not the slot's 0x20 (clang's data size for a
+     * non-POD class: 0x14f005, a word and a vector). */
+    LinkedRange0015ea30()
+    {
+        range.numElements = 0;
+        next = 0;
+    }
+
+    hkBlockStreamRange range __attribute__((aligned(16)));
+    LinkedRange0015ea30 *next;
+};
+
 /* A list node the object at +0x388 walks (derived names): a link whose
  * next pointer (+0x10) is typed as the link, and a key byte at +0x18 the
  * node adds; consecutive nodes with the same key form a run. The walk
@@ -17306,6 +17327,9 @@ inline void hkBlockStreamRange::setStartPoint(const hkBlockStreamWriter *writer)
  * them, which every take advances (0x16ff90); next[] holds each free
  * context's successor, 0xf ending the list (the world's setup at 0x5038c
  * links 0 to 7). */
+struct Object00065f20; /* derived name; tlg_lib_unknown.h */
+struct UnionFindRange; /* derived name; tlg_lib_unknown.h */
+
 struct hknpWorldContextPool /* derived name */
 {
     struct Context {
@@ -17341,7 +17365,11 @@ struct hknpWorldContextPool /* derived name */
         /* What a solver stage task runs over, set before its stage
          * (0x18efa7). derived name. */
         void *solverStages;
-        u8 unknown230[0x20];
+        /* The union-find of the active bodies and its node ranges (the
+         * add-active-body-pairs task, 0x14e8e3). derived names. */
+        Object00065f20 *unionFind;
+        const hkArray<UnionFindRange> *unionFindRanges;
+        u8 unknown240[0x10];
         /* Two block caches (0x167ff0 hands back the first and frees it
          * unless it is the second, then the second). derived names. */
         BlockCache *cache250;
@@ -17355,11 +17383,10 @@ struct hknpWorldContextPool /* derived name */
         /* Where the collide task's slot 5 links each batch's command range,
          * by the batch's grid cell (0x15f480). derived name. */
         struct CommandRanges0015ea30 *commandRanges;
-        /* Where the writer's commands start (0x167f70); its count cleared by
-         * the constructor. derived name. */
-        hkBlockStreamRange commandRange;
-        void *unknown3a0;
-        u8 unknown3a8[8];
+        /* Where the writer's commands start (0x167f70), a linked range the
+         * tasks copy whole (0x14f005: the link, then the range); its count
+         * and link cleared by the constructor. derived name. */
+        LinkedRange0015ea30 commandRange;
         int unknown3b0;
         u8 unknown3b4[0xc];
     };
@@ -17395,6 +17422,15 @@ struct hknpWorldContextPool /* derived name */
     hkBlockStream stream;
     BlockCache *cache;
 };
+
+/* The world object at +0x4f8's inactive caches cleaned (derived names):
+ * the records gathered at +0xb8 sorted and walked against a stream
+ * (0x657b0), and the caches of two streams cleaned (0x64810), the clean
+ * inactive caches task's two steps (0x14efe2, 0x14f068). */
+void FUN_000657b0(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *context,
+                  const ModifierSharedData *shared, hkBlockStream *stream);
+void FUN_00064810(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *context,
+                  hkBlockStream *streamA, hkBlockStream *streamB, int argument4);
 
 /* A collision cache's header (derived names; hknpManifoldCollisionCache
  * starts the same way): two keys (the bodies' ids, a child cache's shape

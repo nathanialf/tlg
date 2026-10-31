@@ -11,9 +11,9 @@ void hknpWorldContextPool::Context::FUN_00167f70(void *argument1, BlockCache *st
         const int byteOffset = writer.currentByteOffset;
         const int numElementsInBlock = writer.currentNumElements;
         const int numWritten = writer.blockStream->numTotalElements + numElementsInBlock;
-        commandRange.startBlock = block;
-        commandRange.startByteOffset = u16(byteOffset);
-        commandRange.startBlockNumElements = u16(numElementsInBlock);
-        commandRange.numElements = -numWritten;
+        commandRange.range.startBlock = block;
+        commandRange.range.startByteOffset = u16(byteOffset);
+        commandRange.range.startBlockNumElements = u16(numElementsInBlock);
+        commandRange.range.numElements = -numWritten;
     }
 }

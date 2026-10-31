@@ -3,7 +3,5 @@
 
 hknpWorldContextPool::Context::Context() : index(-1), triangle0(0.01f), triangle1(0.01f)
 {
-    commandRange.numElements = 0;
-    unknown3a0 = 0;
     unknown3b0 = 0;
 }

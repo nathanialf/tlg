@@ -78,20 +78,18 @@ void hknpCollidePairsTask::process()
             range0.setStartPoint(&writers.writer0);
             hkBlockStreamRange range50;
             range50.setStartPoint(&writers.writer50);
-            context->commandRange.setStartPoint(&commandWriter);
+            context->commandRange.range.setStartPoint(&commandWriter);
             FUN_0015c5f0(context, shared20, cellB, &consumer, unknown128, unknown78, &newPairs,
                          unknown150, unknown80, &writers.writer0, &writers.writer28,
                          &writers.writer50, &writers.writer78, &writers.writer128,
                          &writers.writer150, &writers.writer100, context->records268[0],
                          context->records268[1], context->records268[2], output);
-            context->commandRange.FUN_00092220(&commandWriter);
-            if (context->commandRange.numElements != 0) {
-                LinkedRange0015ea30 commands;
-                commands.range = context->commandRange;
-                commands.next = static_cast<LinkedRange0015ea30 *>(context->unknown3a0);
-                appendLinkedRange(context->commandRanges->ranges[cellB], commands, commandWriter);
+            context->commandRange.range.FUN_00092220(&commandWriter);
+            if (context->commandRange.range.numElements != 0) {
+                appendLinkedRange(context->commandRanges->ranges[cellB], context->commandRange,
+                                  commandWriter);
             }
-            context->commandRange.setStartPoint(&commandWriter);
+            context->commandRange.range.setStartPoint(&commandWriter);
             range0.FUN_00092220(&writers.writer0);
             range50.FUN_00092220(&writers.writer50);
             rangesOut158[cellB] = range0;
@@ -127,15 +125,14 @@ void hknpCollidePairsTask::process()
                                   static_cast<hkBlockStream *>(unknown68), &batch.range);
             hkBlockStreamConsumer noPairs;
             noPairs.currentByteLocation = HK_NULL;
-            context->commandRange.setStartPoint(&commandWriter);
+            context->commandRange.range.setStartPoint(&commandWriter);
             FUN_0015c5f0(context, shared20, 0, &consumer, unknown128, unknown78, &noPairs, HK_NULL,
                          HK_NULL, &writers.writer0, &writers.writer28, &writers.writer50,
                          &writers.writer78, HK_NULL, HK_NULL, &writers.writer100,
                          context->records268[0], context->records268[1], HK_NULL, output);
-            context->commandRange.FUN_00092220(&commandWriter);
-            batch.commands.range = context->commandRange;
-            batch.commands.next = static_cast<LinkedRange0015ea30 *>(context->unknown3a0);
-            context->commandRange.setStartPoint(&commandWriter);
+            context->commandRange.range.FUN_00092220(&commandWriter);
+            batch.commands = context->commandRange;
+            context->commandRange.range.setStartPoint(&commandWriter);
             object380->unknownVirtual11(context->records268, 2);
             rangeA.range.FUN_00092220(&writers.writerA0);
             rangeA.writerCounts[0] = writers.countsC8[0];
