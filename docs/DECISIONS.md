@@ -1353,6 +1353,18 @@ is reported, not worked. Two further details of 0x605b0 (a 64-bit `a - 1`, a u16
 `shl 16; add 0x10000; shr 16`, the mask shape also at 0x18e820) are source questions of their
 own and go with it.
 
+**Addendum, 2026-10-31 (round 67A).** A fourth witness of the unswitch shape: 0x72c10,
+hkAlgorithm::quickSortRecursive over Keyed00072c10, whose base holds two copies of the j scan
+split on the invariant `str == null`. In 3.3 the test reaches LoopUnswitch inside the header's
+`or i1` (SimplifyCFG's FoldBranchToCommonDest); FindLIVLoopCondition takes the invariant out of
+the `or` (LoopUnswitch.cpp:373), the condition is not a trivial unswitch, and UnswitchIfProfitable
+refuses the non-trivial one in a pass built for size (LoopUnswitch.cpp:651;
+PassManagerBuilder.cpp:189 builds it so below -O3). Unlike 0x605b0, -O3 does not reproduce the
+base either: the fixed line and -O3 both first diverge at 0x72c32 (the draft compiled through
+tools/compile_cpp.sh with -O3 appended, 2026-10-31). The shape is a source question in every
+case. Parked under (b) with 0x13e090, 0x187750 and 0x605b0; a fifth witness is reported, not
+worked.
+
 ## D22. The library region holds a second compiler generation in two stretches; its functions are not claimable under the 3.3 prefix (2026-10-26)
 
 **Finding.** Two instruction-selection habits separate LLVM 3.3 from 3.4 and
