@@ -3855,6 +3855,15 @@ class hknpVehicleData : public hkReferencedObject
 
 void FUN_00069250(void *object, int finishing); /* derived name */
 
+/* Its members' defaults (the hkClass's, at 0x14bebb8): each member's offset
+ * into the values, -1 for one without a default, then the one value, the
+ * friction solver's mass ratio. derived name. */
+struct hknpVehicleDataDefaults /* derived name */
+{
+    int defaultOffsets[19];
+    float maxFrictionSolverMassRatio;
+};
+
 /* hkxSpline::ControlPoint (hkClass 0x57c5f00, size 0x40; its five member
  * records are built at run time by 0x85fc0). */
 struct hkxSplineControlPoint {
@@ -5982,6 +5991,34 @@ struct hknpStaticCompoundShapeTree : public hkcdStaticTree::DefaultTreeStorage6 
         : hkcdStaticTree::DefaultTreeStorage6(flag)
     {
     }
+
+    /* A place in the tree as its walk carries it (derived names): a node's
+     * box, its index, the node. */
+    struct TreeSlot {
+        hkAabb aabb;
+        int index;
+        const hkcdStaticTree::Codec3Axis6 *node;
+    };
+
+    /* The walk under a slot (0x33d70): whether any leaf below it has its
+     * instance's bit set in the filter. derived name. */
+    bool FUN_00033d70(const TreeSlot &slot, const u32 *filter) const;
+
+    /* Whether any leaf has its instance's bit set in the filter: false
+     * without nodes, else the walk from the root (inline in 0x33b30).
+     * derived name. */
+    bool anyLeafEnabled(const u32 *filter) const /* derived name */
+    {
+        if (nodes.size == 0) {
+            return false;
+        }
+        TreeSlot root;
+        root.aabb.min = domain.min;
+        root.aabb.max = domain.max;
+        root.node = nodes.data;
+        root.index = 0;
+        return FUN_00033d70(root, filter);
+    }
 };
 
 /* hknpStaticCompoundShapeData (vtable 0x1692950, finish callback
@@ -7148,6 +7185,10 @@ class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
     bool isInstanceEnabled(hknpShapeInstanceId instanceId) const;
     void setInstanceEnabled(hknpShapeInstanceId instanceId, bool enabled);
 
+    /* The instance's index in the filter (inline in the static compound's
+     * slot 4, 0x33b30). derived name. */
+    int instanceIndex(hknpShapeInstanceId instanceId) const; /* derived name */
+
     const hknpCompoundShape *shape;
     hkArray<hknpShapeKeyMask *> instanceMasks;
     hkArray<u32> filter;
@@ -7170,7 +7211,10 @@ class hknpStaticCompoundShapeKeyMask : public hknpCompoundShapeInternalsKeyMask
     {
     }
 
-    bool FUN_000381d0(); /* vtable slot 4 (0x33b30); derived name */
+    /* Vtable slot 4 (0x33b30, func_00033b30.cpp): each instance with a mask
+     * of its own has the mask's answer as its bit in the filter, then the
+     * shape's tree is walked over the filter. derived name. */
+    bool FUN_000381d0();
 };
 
 /* hknpCompressedMeshShapeInternals::KeyMask (hkClass 0x57be220, size 0x20,
@@ -10677,6 +10721,12 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
     /* The finish constructor (0x16a810): the decorator's, then the
      * vtable. */
     hknpScaledConvexShapeBase(hkFinishLoadedObjectFlag flag);
+
+    /* A new one (0x16a6a0) over a convex shape: its single point manifold
+     * and small face indices flags and its convex radius taken, the scale
+     * and the radius adjusted for the scale mode (0x169c90), the scale's w
+     * the uniform scale flag as an int24; the mutation signals fired. */
+    hknpScaledConvexShapeBase(const hknpConvexShape *childShape, const Vec4 &scale_, int scaleMode);
 
     /* Slot 7 (0x16a850, both vtables): the core convex shape's vertices
      * bounded, the box scaled and moved, then transformed and pushed out by

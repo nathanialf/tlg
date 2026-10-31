@@ -13,3 +13,4 @@ D_14b31d0 src/libs/unknown/func_00008000.cpp
 D_14b97d4 src/libs/unknown/func_00038330.cpp
 D_14b8101 src/libs/unknown/func_000273c0.cpp
 D_14c3474 src/libs/unknown/func_0008b6f0.cpp
+D_14bebb8 src/libs/unknown/func_00069290.cpp

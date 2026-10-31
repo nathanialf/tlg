@@ -14,3 +14,4 @@ D_14b31d0 hkContactPointMaterialDefaults 1 src/include/tlg_hk_reflect.h
 D_14b97d4 hknpBodyCinfoDefaults 1 src/include/tlg_hk_reflect.h
 D_14b8101 hkVertexFormat::ComponentSize 12 src/include/tlg_hk_reflect.h
 D_14c3474 hkxSceneDefaults 1 src/include/tlg_hk_reflect.h
+D_14bebb8 hknpVehicleDataDefaults 1 src/include/tlg_hk_reflect.h
