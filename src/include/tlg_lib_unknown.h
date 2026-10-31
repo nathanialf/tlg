@@ -4566,6 +4566,11 @@ inline void hkpLimitedHingeConstraintData::operator delete(void *object, unsigne
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkp6DofConstraintData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkpPointToPathConstraintData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -6071,7 +6076,6 @@ void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
 void FUN_00166180(hknpExternMeshShape *self);
-void FUN_0017b750(hkp6DofConstraintData *self);
 void FUN_0017fc20(hkMemoryResourceContainer *self);
 
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
@@ -6106,7 +6110,6 @@ void FUN_00162580(hknpVehicleInstance *self);       /* slot 1 of 0x16a5090 */
 void FUN_00165aa0(hknpPhysicsSystemData *self);     /* slot 1 of 0x16a5130 */
 void FUN_00166130(hknpExternMeshShape *self);       /* slot 1 of 0x16a5170 */
 void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
-void FUN_0017b700(hkp6DofConstraintData *self);     /* slot 1 of 0x16a5d20 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self); /* slot 1 of 0x16a6300 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived

@@ -9469,10 +9469,6 @@ struct hknpConstraintCinfo;
 
 struct hknpConstraintManager /* derived name */
 {
-    struct Entry {
-        u8 unknown0[8];
-    };
-
     /* A body's constraints (derived names): the first constraint's id by
      * body id, 0x7fffffff for none, and by each constraint's id the next
      * constraint of its first body and of its second (the world's walk
@@ -9558,7 +9554,9 @@ struct hknpConstraintManager /* derived name */
     u8 unknown14[4];
     u32 firstFreeConstraintId; /* derived name */
     u8 unknown1c[4];
-    hkArray<Entry> entries;       /* derived name */
+    /* Each constraint's name by its id, kept only for constraints given
+     * one (0x16ddd0). derived name. */
+    hkArray<hkStringPtr> names;
     BitFieldMap00199770 fieldMap; /* derived name */
     int numUsedConstraints;       /* derived name */
     int peakConstraintId;
@@ -13775,7 +13773,13 @@ class hkp6DofConstraintData : public hkpConstraintData
      * (inline in it), the compiled atoms empty, and dirty when finishing. */
     hkp6DofConstraintData(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x17b750; its deleting destructor 0x17b700 before it):
+     * the three ragdoll motors' references given back, then the compiled
+     * atoms' storage. */
     virtual ~hkp6DofConstraintData();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* An angular motor by index; MOTOR_ALL gives the twist motor (0x17bb20;
      * the constraint's builder at 0x79bd5 asks for each). derived name. */

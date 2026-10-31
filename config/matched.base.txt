@@ -1348,7 +1348,7 @@ FUN_0016a640 src/libs/unknown/func_0016a640.cpp
 _ZN21hknpScaledConvexShapeD0Ev src/libs/unknown/func_0016cf30.cpp
 FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
 _ZN18hknpCharacterProxyD0Ev src/libs/unknown/func_00176b70.cpp
-FUN_0017b700 src/libs/unknown/func_0017b700.cpp
+_ZN21hkp6DofConstraintDataD0Ev src/libs/unknown/func_0017b700.cpp
 _ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
 FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
 _ZN22hkBinaryPackfileWriterD0Ev src/libs/unknown/func_00181b10.cpp
@@ -2504,3 +2504,5 @@ FUN_0000b680 src/libs/unknown/func_0000b680.cpp _ZN14Object0000b33012FUN_0000b68
 FUN_00154f50 src/libs/unknown/func_00154f50.cpp _ZN26hknpPrepareConstraintsTask7processEv
 FUN_0014e850 src/libs/unknown/func_0014e850.cpp _ZN26hknpAddActiveBodyPairsTask7processEv
 FUN_0014eee0 src/libs/unknown/func_0014eee0.cpp _ZN27hknpCleanInactiveCachesTask7processEv
+FUN_000147c0 src/libs/unknown/func_00014690.cpp _ZN12ThreadMemory12FUN_000147c0EiPv
+_ZN21hkp6DofConstraintDataD1Ev src/libs/unknown/func_0017b700.cpp

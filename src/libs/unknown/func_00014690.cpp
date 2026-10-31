@@ -50,3 +50,31 @@ void *ThreadMemory::blockAlloc(int numBytes)
     }
     return memory->blockAlloc(numBytes);
 }
+
+/* A block onto a full row's list (0x147c0, called by slot 3's free): when
+ * the lists keep blocks, the list first emptied down to half its limit, up
+ * to four blocks a batch back to the allocator the thread draws from, then
+ * the block pushed; when they keep none, the block straight back to that
+ * allocator at the row's size. */
+void ThreadMemory::FUN_000147c0(int row, void *pointer)
+{
+    const int blockSize = rowToSize[row];
+    if (maxNumElemsOnFreeList) {
+        FreeList &list = freeLists[row];
+        const int maxNumElems = maxNumElemsOnFreeList / 2;
+        int numElem = list.numElem;
+        while (numElem > maxNumElems) {
+            const int numExcess = numElem - maxNumElems;
+            const int numBlocks = numExcess > 4 ? 4 : numExcess;
+            void *blocks[4];
+            for (int i = 0; i < numBlocks; i++) {
+                blocks[i] = list.pop();
+            }
+            memory->blockFreeBatch(blocks, numBlocks, blockSize);
+            numElem -= numBlocks;
+        }
+        list.push(pointer);
+    } else {
+        memory->blockFree(pointer, blockSize);
+    }
+}
