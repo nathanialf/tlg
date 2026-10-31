@@ -185,8 +185,10 @@ inline int max2(int a, int b)
 }
 
 /* Clamped in one vector register, the maximum then the minimum (`vpmaxsd;
- * vpminsd`, the motion velocity scale's time of impact angle, 0x5db03). */
-inline int clamp(int value, int low, int high)
+ * vpminsd`, the motion velocity scale's time of impact angle, 0x5db03). The
+ * bounds by reference: the upper one is read after the maximum (the
+ * compressed height field's samples, 0x175ab6). */
+inline int clamp(const int &value, const int &low, const int &high)
 {
     return _mm_cvtsi128_si32(_mm_min_epi32(
         _mm_max_epi32(_mm_cvtsi32_si128(value), _mm_cvtsi32_si128(low)), _mm_cvtsi32_si128(high)));
@@ -676,6 +678,13 @@ template <typename T> struct hkArray {
      * through the overlapping move (defined in tlg_lib_unknown.h; the XML
      * reader's text and tags, 0x19dc0e). */
     void insertAt(int index, const T *elements, int numElements);
+
+    /* Room for elements opened at an index, the storage grown from the
+     * allocator given, those after it moved up through the overlapping
+     * move, the size counted; the first of them returned to be filled
+     * (defined in tlg_lib_unknown.h; the stack allocator's freed blocks,
+     * 0xf3df). derived name. */
+    T *expandAt(AllocatorBase &allocator, int index, int numToInsert);
 
     /* The index of the first element equal to the one given, -1 when none
      * is (Havok's indexOf; the size read once, the storage at each step:
@@ -7761,6 +7770,11 @@ class hknpWorldObject1d0 /* derived name */
      * calls no base destructor. */
     virtual ~hknpWorldObject1d0() {}
 
+    /* Slot 2: the collide tasks added to the arrays (the world's collide
+     * stage, 0x50503; the two classes' 0x6c850 and 0x150330). Pure here, so
+     * not the class's key function. derived name. */
+    virtual void unknownVirtual2(void *argument, class RefArrays *arrays) = 0;
+
     u8 unknown8[8];
     void *pointer10;    /* derived name */
     int simulationType; /* derived name: the world description's byte at +0x50 */
@@ -7774,6 +7788,9 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
 {
   public:
     virtual ~hknpWorldObject1d0Small();
+
+    /* Slot 2 (0x6c850). derived name. */
+    void unknownVirtual2(void *argument, class RefArrays *arrays);
 
     /* The class allocator's delete (defined in tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
@@ -7842,6 +7859,9 @@ class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
     /* Out of line (0x14e100, slot 0 0x14e0a0 calls it): the tasks released
      * from the last, then the arrays. */
     virtual ~hknpWorldObject1d0Large();
+
+    /* Slot 2 (0x150330): the collide tasks built. derived name. */
+    void unknownVirtual2(void *argument, class RefArrays *arrays);
 
     /* Slot 5 (0x151c80): the world's streams of a thread checked, the
      * checks empty in this build. derived name. */
@@ -8415,7 +8435,9 @@ struct hknpBodyManager /* derived name */
     PointerMap recordIndices48;
     hkArray<Record48> records58;
     int firstFreeRecord68;
-    u8 unknown6c[0x14];
+    u8 unknown6c[4];
+    /* The bodies' names by body id (0x160cd0 sets one). derived name. */
+    hkArray<hkStringPtr> bodyNames;
     /* A bit per body in each field (0x1608ef clears a new body's).
      * derived name. */
     BitFieldMap00199770 fieldMap;
@@ -9906,6 +9928,21 @@ struct hknpWorld {
                       hknpCollisionQueryCollector *collector,
                       hknpCollisionQueryCollector *startPointCollector) const;
     void FUN_000509f0();
+    /* A step stage that fills the arrays (0x50dc0; 0x50880 and 0x514a0 call
+     * it with a null second argument). derived names. */
+    void FUN_00050dc0(class RefArrays &arrays, void *argument);
+    /* The collide tasks built into the arrays under the timer
+     * "BuildCollideTasks" (0x50480; called at 0x50916): the arrays given
+     * room, 0x4fe00 run, the object at +0x1d0 adding the tasks; the
+     * post-collide task added after them when there are any, else its
+     * stage run here. derived name. */
+    void FUN_00050480(void *argument, class RefArrays1698f80 &arrays);
+    void FUN_0004fe00(void *argument); /* derived name */
+    /* The arrays filled by 0x50dc0 on the stack and, when they hold
+     * entries, built (0x92650) and handed to the owner's slot 7 under the
+     * timer "Physics", then given back to it (0x514a0; the game calls it
+     * from 0xe99ecc and 0xe99fcf). derived name. */
+    void FUN_000514a0(class RefArraysOwner *owner);
     /* The stage after the collide tasks (0x505f0, run by
      * hknpPostCollideTask under the timer "StCollide"). derived name. */
     void FUN_000505f0();
@@ -10095,8 +10132,16 @@ struct hknpWorld {
     hkRefPtr<hknpWorldObject6c0> object6b8; /* derived name */
     hknpWorldObject6c0 *object6c0;          /* derived name */
     hknpEventDispatcher *eventDispatcher;   /* derived name */
+    u8 unknown6d0[8];
+    /* The task the collide stage adds after the collide tasks, given the
+     * world and the object at +0x1d0 first (0x50518). derived name. */
+    class hknpPostCollideTask *postCollideTask;
+    u8 unknown6e0[0x10];
+    /* What the object at +0x1d0 builds the collide tasks from (its slot 2,
+     * 0x50503). derived name. */
+    void *pointer6f0;
     /* To the 0x720 bytes its deleting destructor (0x4aff0) frees. */
-    u8 unknown6d0[0x50];
+    u8 unknown6f8[0x28];
 };
 
 /* Its hkClass (built at 0x3cfea) has hkReferencedObject's, 0x57b8640, as
@@ -10585,6 +10630,15 @@ struct ShapeMass001570f0 /* derived name */
  * unpacked, or else those its slot 28 builds for the default config. */
 void FUN_001570f0(ShapeMass001570f0 &out, const hknpShape *shape);
 
+/* derived name: a shape's mass properties for a mass (0x161b40; called at
+ * 0x15b2ca, and by the game at 0xeafc2c; 0x161960 holds the same body):
+ * from a summary as 0x1570f0 makes it when one is given, at unit mass, a
+ * negative mass then the one the shape keeps under key 0xf100 or 1; else
+ * the shape's own, as 0x1570f0 reads them; then a mass not below zero set,
+ * the inertia scaled by it over the old one when it is above zero. */
+void FUN_00161b40(const hknpShape *shape, const ShapeMass001570f0 *summary,
+                  hkDiagonalizedMassProperties &out, float mass);
+
 /* hknpPhysicsSceneData (hkClass 0x57bf310, 0x28 bytes, parent
  * hkReferencedObject, two members in its record table at 0x1694550; type
  * info 0x57bf360, vtable 0x1697ea0): its finish constructor 0x46790 is out of
@@ -11030,13 +11084,33 @@ template <typename T> class hkRelArray
  * stores the shape at +0x170, clears bit 3 of the flags at +0x150 and sets
  * the int at +0x154 to 1; hknpShape's default (0x6f7d0) reports that it is
  * not implemented, the decorator's (0x37e80) forwards to its child. */
+class hknpTriangleShape;
+
 struct hknpShapeSlot22Output /* derived name */
 {
-    u8 unknown0[0x150];
+    /* A triangle shape made from one of the quads (0x40c10; the shapes'
+     * slot 18 at 0x6f14c and the leaf queries at 0x74cdc, 0x759f6,
+     * 0x14a7b1, 0x171c39 and 0x171e01): the quad's four vertices with
+     * their indices in w, the plane of the first three as every face's,
+     * the second reversed; the quad's flags, the convex radius and the
+     * shape's user data; a quad without flag 0x1000 a triangle, its
+     * fourth vertex the first. derived name. */
+    hknpTriangleShape *FUN_00040c10(int quadIndex, hknpTriangleShape *shapeOut) const;
+
+    u8 unknown0[0x40];
+    const hknpShape *leafShape; /* derived name: its user data is the triangle's */
+    u8 unknown48[0x108];
     u8 flags;  /* derived name */
     int value; /* derived name */
     u8 unknown158[0x18];
     const hknpShape *shape; /* derived name */
+    u8 unknown178[0x808];
+    /* Four vertices for each quad, and each quad's shape flags (derived
+     * names). */
+    Vec4 quadVertices[40];
+    u16 quadFlags[10];
+    u8 unknownc14[0x14];
+    float convexRadius; /* derived name */
 };
 
 /* What slot 29 of the convex shapes reads (derived names): an int at +0
@@ -15707,8 +15781,11 @@ class hkSkinnedRefMeshShape : public hkMeshShape
 
     /* From its record table at 0x16916c0: skinnedMeshShape (pointer) at
      * +0x10, bones and localFromRootTransforms (arrays) at +0x18 and +0x28,
-     * name (hkStringPtr) at +0x38. */
-    u8 unknownC[0x2c];
+     * name (hkStringPtr) at +0x38; the elements' sizes from the destructor
+     * (0xaa6d0: two bytes, sixteen). */
+    hkRefPtr<class hkSkinnedMeshShape> skinnedMeshShape;
+    hkArray<s16> bones;
+    hkArray<Vec4> localFromRootTransforms;
     hkStringPtr name;
 };
 
@@ -16153,6 +16230,13 @@ class hknpHeightFieldShape : public hknpCompositeShape
      * the first four and the maxima from the last four. derived name. */
     void FUN_0012b670(int level, int x, int z, Vec4 *minOut, Vec4 *maxOut) const;
 
+    /* Slot 31: a quad's four heights, its shape tag and whether its
+     * triangles are flipped (the compressed shape's 0x175a90); pure here,
+     * the slot an import in the vtable 0x16a3e30, so not the class's key
+     * function. derived name. */
+    virtual void getQuadInfoAt(int x, int z, Vec4 *heightsOut, u16 *shapeTagOut,
+                               int *triangleFlipOut) const = 0;
+
     /* The members from its ten records at 0x1694c90 (the reflection
      * initializer 0x398d0 passes them). */
     hkAabb aabb;
@@ -16185,6 +16269,25 @@ class hknpCompressedHeightFieldShape : public hknpHeightFieldShape
      * 1): the two arrays freed, the shape tags first, then the height
      * field's base destructor 0x12a8c0. */
     virtual ~hknpCompressedHeightFieldShape();
+
+    /* Slot 31 (0x175a90): the four samples at x and z and one past each,
+     * clamped to the field, as heights (the offset plus the scaled 16-bit
+     * value); the quad's shape tag when there are tags, else 0xffff; the
+     * flip flag. */
+    void getQuadInfoAt(int x, int z, Vec4 *heightsOut, u16 *shapeTagOut,
+                       int *triangleFlipOut) const;
+
+    /* A sample's index, x and z clamped to the field (derived name). */
+    int sampleIndex(int x, int z) const
+    {
+        return hkMath::clamp(z, 0, intSizeZ) * (intSizeX + 1) + hkMath::clamp(x, 0, intSizeX);
+    }
+
+    /* A sample's height (derived name). */
+    float heightAt(int x, int z) const
+    {
+        return offset + scale * float(storage[sampleIndex(x, z)]);
+    }
 
     /* The members from its five records at 0x169a620, from +0xe8 (the
      * height field's tail padding). */

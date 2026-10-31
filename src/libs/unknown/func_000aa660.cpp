@@ -3,6 +3,7 @@
 
 /* The bone arrays are left as loaded. */
 hkSkinnedRefMeshShape::hkSkinnedRefMeshShape(hkFinishLoadedObjectFlag flag)
-    : hkMeshShape(flag), name(flag)
+    : hkMeshShape(flag), skinnedMeshShape(flag), bones(flag), localFromRootTransforms(flag),
+      name(flag)
 {
 }

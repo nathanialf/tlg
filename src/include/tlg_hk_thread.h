@@ -397,8 +397,19 @@ class RefArrays /* derived name */ : public hkReferencedObject
      * 0x14e68e). derived name. */
     void FUN_00092510(int numEntries, int numInts);
 
+    /* What the owner's slot 7 takes, built from the arrays (0x92650; the
+     * world's 0x51550 passes 12). derived names. */
+    void *FUN_00092650(RefArraysOwner *owner, int value);
+
+    /* A pair of entries' indices, the first to run before the second (the
+     * collide stage appends one, 0x5059e). derived names. */
+    struct Dependency {
+        u16 before;
+        u16 after;
+    };
+
     hkArray<Entry10> array10;                 /* derived name */
-    hkArray<int> array20;                     /* derived name */
+    hkArray<Dependency> array20;              /* derived name */
     hkArray<void *> array30;                  /* derived name */
     hkArray<hkReferencedObject *> references; /* derived name */
 };
@@ -409,7 +420,7 @@ class RefArrays /* derived name */ : public hkReferencedObject
  * (cookbook 15). derived name. */
 void FUN_000481c0(RefArrays *self); /* derived name */
 
-/* A RefArrays with two 64-bit values after it, both -1 when built (vtable
+/* A RefArrays with eight entry indices after it, all 0xffff when built (vtable
  * 0x1698f80, no type info; built on the stack at 0x508eb and 0x51506 over
  * RefArrays's constructor FUN_00092280; slot 0 the shared 0x481b0, slot 1
  * its deleting destructor 0x48210, which frees 0x60 bytes). derived
@@ -417,8 +428,23 @@ void FUN_000481c0(RefArrays *self); /* derived name */
 class RefArrays1698f80 : public RefArrays /* derived name */
 {
   public:
-    s64 value50; /* derived name */
-    s64 value58; /* derived name */
+    RefArrays1698f80()
+        : entry50(0xffff), entry52(0xffff), entry54(0xffff), entry56(0xffff), entry58(0xffff),
+          entry5a(0xffff), entry5c(0xffff), entry5e(0xffff)
+    {
+    }
+
+    /* Entry indices, none at first (derived names): the collide stage sets
+     * the first to none again, reads the fourth and keeps the post-collide
+     * task's in the fifth (0x504e8, 0x5056a, 0x5055c). */
+    u16 entry50;
+    u16 entry52;
+    u16 entry54;
+    u16 entry56;
+    u16 entry58;
+    u16 entry5a;
+    u16 entry5c;
+    u16 entry5e;
 };
 
 void FUN_00048210(RefArrays1698f80 *self); /* derived name */

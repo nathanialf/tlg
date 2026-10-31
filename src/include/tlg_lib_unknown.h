@@ -842,6 +842,21 @@ template <typename T> inline hkResult hkArray<T>::reserve(AllocatorBase &allocat
     return HK_SUCCESS;
 }
 
+template <typename T>
+inline T *hkArray<T>::expandAt(AllocatorBase &allocator, int index, int numToInsert)
+{
+    const int numToMove = size - index;
+    const int newSize = size + numToInsert;
+    const int capacity = getCapacity();
+    if (newSize > capacity) {
+        const int doubled = 2 * capacity;
+        FUN_00000a70(allocator, this, doubled > newSize ? doubled : newSize, sizeof(T));
+    }
+    FUN_00091210(data + index + numToInsert, data + index, numToMove * int(sizeof(T)));
+    size = newSize;
+    return data + index;
+}
+
 template <typename T> inline T *hkArray<T>::expandBy(int n)
 {
     const int oldSize = size;
@@ -5469,9 +5484,23 @@ class SupportShape000a8ef0 /* derived name */
  * +0x20 with the index of the vertex in its w. */
 struct SupportPoint000a8ef0 /* derived name */
 {
+    /* Copied member by member (0xa8e92: the difference stored from the
+     * register the choice's distance read it into). */
+    SupportPoint000a8ef0 &operator=(const SupportPoint000a8ef0 &other)
+    {
+        difference = other.difference;
+        vertexB = other.vertexB;
+        vertexA = other.vertexA;
+        unknown30 = other.unknown30;
+        return *this;
+    }
+
     Vec4 difference; /* derived name */
     Vec4 vertexB;    /* derived name */
     Vec4 vertexA;    /* derived name */
+    /* Eight bytes the pair's choice copies with the rest (0xa8eb3) and the
+     * support never writes. */
+    u64 unknown30;
 };
 
 inline void SupportShape000a8ef0::getSupportPoint(const void *shapeA, const Vec4 &direction,
@@ -5510,6 +5539,13 @@ struct SupportQuery000a8ef0 /* derived name */
     /* The support point for a direction (0xa8ef0; the query's caller at
      * 0xa7153 and twice after). derived name. */
     void FUN_000a8ef0(const Vec4 &direction, SupportPoint000a8ef0 &pointOut) const;
+
+    /* The support points for a direction and for its opposite, the one
+     * whose difference lies farther along its direction from a point kept;
+     * that distance returned in every lane (0xa8d80; the query at 0xa7409,
+     * 0xa742e and 0xa756e). derived name. */
+    Vec4 FUN_000a8d80(const Vec4 &direction, const Vec4 &point,
+                      SupportPoint000a8ef0 &pointOut) const;
 
     u8 unknown0[0x50];
     const SupportShape000a8ef0 *support; /* derived name */
@@ -6107,7 +6143,6 @@ void FUN_0008c110(hkxNode *self);
 void FUN_0008d2c0(hkxScene *self);
 void FUN_0009b1c0(hkcdPlanarGeometry *self);
 void FUN_0009c120(hkcdPlanarCsgOperand *self);
-void FUN_000aa6d0(hkSkinnedRefMeshShape *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
@@ -6273,5 +6308,38 @@ bool FUN_0009fed0(RayCastStorage0009fed0 *storage, const Collector000a6d60 *shap
 /* A ray cast against a set of vertices (0xa6d60): true when it hits with a
  * fraction other than zero. derived name. */
 bool FUN_000a6d60(const Vec4 *vertices, int numVertices, const void *ray, RayHit000a6d60 *hit);
+
+/* Lists of indices and their packed copy (derived names): a list is its
+ * indices and their count, 16 bytes; a range is where a list's copy starts
+ * among the packed indices and its count, zero for a list of fewer than two
+ * (the solve data task 0x16e0e0 sets every range to -1 and 0 first). */
+struct IndexList000477f0 /* derived name */
+{
+    const int *indices;
+    int numIndices;
+};
+
+struct IndexRange000477f0 /* derived name */
+{
+    IndexRange000477f0(int start_, int count_) : start(start_), count(count_) {}
+
+    int start;
+    int count;
+};
+
+/* The lists at +0x28 of the solve data task's object at +0x110 (derived
+ * names). */
+struct IndexLists000477f0 /* derived name */
+{
+    /* 0x477f0 (called at 0x16e270): each list of two or more indices
+     * copied into the packed indices, its first index written as zero and
+     * the copy padded with zeros to a multiple of four, its range recorded;
+     * the packed indices reserved for all of them first. derived name. */
+    void FUN_000477f0(hkArray<IndexRange000477f0> &ranges, hkArray<int> &indices) const;
+
+    u8 unknown0[0x28];
+    IndexList000477f0 *lists;
+    int numLists;
+};
 
 #endif
