@@ -70,3 +70,30 @@ int BufferedStreamReader::FUN_00094490(int numBytes)
     position += n;
     return numSkipped + n;
 }
+
+// NONMATCHING: 0x945a0, 71 of 98: the fill's guard. The base keeps the free
+// space's subtraction in the guard's block after the readability test (`xor
+// r13d, r13d; sub ebx, r15d; je`, the compare folded into the sub), where
+// here InstCombine turns the rotated guard `size != 0` into `bufferSize !=
+// numBuffered` and the subtraction sinks into the loop's preheader (`cmp ebx,
+// r15d; je; sub ebx, r15d`). Lead: a guard that keeps reading the
+// difference (docs/NOTES.md, Round 66A).
+int BufferedStreamReader::peek(void *dst, int numBytes)
+{
+    if (bufferSize - 512 < numBytes) {
+        return -1;
+    }
+    if (position + numBytes > numBuffered) {
+        const int numLeft = numBuffered - position;
+        const int newPosition = 512 - numLeft % 512;
+        if (newPosition != position && numBuffered != position) {
+            FUN_00091210(buffer + newPosition, buffer + position, numLeft);
+        }
+        position = newPosition;
+        numBuffered = newPosition + numLeft;
+        numBuffered += readAll(stream, buffer + numBuffered, bufferSize - numBuffered);
+    }
+    const int n = hkMath::min2(numBytes, numBuffered - position);
+    FUN_000910e0(dst, buffer + position, n);
+    return n;
+}

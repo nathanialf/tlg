@@ -902,6 +902,14 @@ template <typename T> inline void hkArray<T>::pushBack(const T &element)
     size++;
 }
 
+template <typename T> inline T &hkArray<T>::expandOneUnconstructed()
+{
+    if (size == getCapacity()) {
+        FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
+    }
+    return data[size++];
+}
+
 template <typename T> inline T &hkArray<T>::expandOne()
 {
     if (size == getCapacity()) {
@@ -909,6 +917,20 @@ template <typename T> inline T &hkArray<T>::expandOne()
     }
     hkArrayUtil::construct(data + size);
     return data[size++];
+}
+
+template <typename T> inline hkArray<T>::hkArray(int n)
+{
+    int capacity = n;
+    T *storage = HK_NULL;
+    if (capacity) {
+        int numBytes = capacity * int(sizeof(T));
+        storage = static_cast<T *>(hkContainerHeapAllocator::get().FUN_00008d70(numBytes));
+        capacity = numBytes / int(sizeof(T));
+    }
+    data = storage;
+    size = n;
+    capacityAndFlags = capacity ? capacity : DONT_DEALLOCATE_FLAG;
 }
 
 template <typename T> inline void hkArray<T>::pushBack(AllocatorBase &allocator, const T &element)
@@ -1728,19 +1750,6 @@ class PlainPolymorphic
  * int argument at +0x18 and +0x1c, clears the int at +0xc and the vector at
  * +0x30). The game code at 0xeaa625 sets +0xc to 1 through FUN_0003ea60;
  * FUN_0003ea80 returns the address of the vector. */
-/* A 12-byte record (derived name) kept in an array at +0xd0 (count at
- * +0xd8) of the objects FUN_0004d650 and FUN_0005b680 grow, each new one
- * built by the out-of-line constructor FUN_001618f0: the ids at +0 and +8
- * start invalid (0x7fffffff), the u16 at +4 at zero; the caller then stores
- * the first id. */
-struct Object001618f0 /* derived name */
-{
-    Object001618f0();
-
-    u32 first;  /* derived name */
-    u16 second; /* derived name */
-    u32 third;  /* derived name */
-};
 
 /* The world's work on the body of an index with a pointer and an int
  * (0x5d6b0; its bodies are the 0x90-byte entries at +0x20). derived
@@ -2014,6 +2023,11 @@ class Elements000760c0 : public hkBaseObject /* derived name */
 
     /* An element (derived names): five block streams. */
     struct Element {
+        /* Out of line (0x76250; the class's destructor and constructor
+         * call it): each stream's in-place blocks given back, the last
+         * stream first. */
+        ~Element();
+
         hkBlockStream slots[5];
     };
 
@@ -3012,8 +3026,8 @@ struct RawImage /* derived name */
     {
     }
 
-    int width;  /* derived name */
-    int height; /* derived name */
+    u32 width;  /* derived name */
+    u32 height; /* derived name */
     /* 12-byte records (the loader fills one at 0x1889df: an int 3, an
      * int, two 16-bit values), which the image copies as such (0x1a0570).
      * derived name. */
@@ -3060,6 +3074,16 @@ LoadedImage *FUN_001a0720(const RawImage &raw); /* derived name */
  * 0x1885d7). derived name. */
 class Object00185000;
 LoadedImage *FUN_001887a0(Object00185000 &stream); /* derived name */
+
+/* The bits of one pixel of a raw image, from its parts (0x1a0780). derived
+ * name. */
+int FUN_001a0780(const RawImage *image); /* derived name */
+
+/* An image's rows turned upside down in place, through a row of temporary
+ * storage (0x188650; the TGA loader at 0x188e13 when the descriptor's bit
+ * 5 says the image starts at the top). The last row taken is the one two
+ * from the bottom. derived name. */
+void FUN_00188650(u8 **pixels, const RawImage &image); /* derived name */
 
 LoadedImage *FUN_00188560(const char *fileName); /* derived name */
 
@@ -3332,6 +3356,11 @@ class BufferedStreamReader : public StreamReader /* derived name */
      * buffer filled again, then as much as it holds of what is left; the
      * count skipped. derived name. */
     int FUN_00094490(int numBytes);
+    /* Slot 8 (0x945a0): none when more is asked than the buffer holds past
+     * its first 512 bytes; when the bytes are not all buffered, the rest
+     * moved to end on a 512-byte boundary and the buffer filled behind it;
+     * then as many as are buffered copied out, the position kept. */
+    int peek(void *buffer, int numBytes);
     BufferedStreamReader *FUN_000946f0();          /* vtable slot 9; derived name */
     hkResult FUN_00094700(int offset, int whence); /* vtable slot 10; derived name */
     int FUN_00094720() const;                      /* vtable slot 11; derived name */
@@ -3947,6 +3976,18 @@ template <typename T> inline void *hkQueue<T>::operator new(unsigned long numByt
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+template <typename T> inline void hkQueue<T>::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+template <typename T> inline hkQueue<T>::~hkQueue()
+{
+    if (capacity) {
+        D_16dc070->temp58->blockFree(data, capacity * int(sizeof(T)));
+    }
+}
+
 inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numBytes)
 {
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
@@ -4122,6 +4163,11 @@ inline void hknpExternMeshShapeData::operator delete(void *object, unsigned long
 }
 
 inline void hkxVertexBuffer::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxVertexAnimation::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -5012,20 +5058,6 @@ void FUN_0013c340(BroadPhaseTree00142a40 *tree, int nodeIndex, const hkAabb16 *c
                   const hknpBody *bodies, const int *keys, int numKeys); /* derived name */
 void FUN_0013de80(BroadPhaseTree00142a40 *tree, int nodeIndex, const hknpBody *bodies,
                   const int *keys, int numKeys); /* derived name */
-
-/* A reference-counted object of the vtable 0x16a5b70 (no row yet: its
- * constructor 0x176420 builds it from a construction info and stores the
- * vtable at 0x176450; the game builds one at 0xea901a). The object at +0x20
- * starts null; 0x177130 sets it, a reference taken on the new one before the
- * old one's is released (the game passes its +0x60 at 0xea9048). derived
- * names. */
-struct Object00176420 /* derived name */
-{
-    void FUN_00177130(hkReferencedObject *object); /* derived name */
-
-    u8 unknown0[0x20];
-    hkReferencedObject *object20; /* derived name */
-};
 
 /* What the broad phase's pair search gets as its first argument (derived
  * name): the world at +8. */
@@ -6052,7 +6084,6 @@ void FUN_000870e0(hkxMaterial *self);               /* slot 1 of 0x16a0db0 */
 void FUN_00089330(hkxAttributeHolder *self);        /* slot 1 of 0x16a1670 */
 void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
 void FUN_0008c0c0(hkxNode *self);                   /* slot 1 of 0x16a25e0 */
-void FUN_0008c940(hkxVertexAnimation *self);        /* slot 1 of 0x16a26c0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
 void FUN_0009b170(hkcdPlanarGeometry *self);        /* slot 1 of 0x16a36f0 */
@@ -6066,8 +6097,8 @@ void FUN_0015bf50(hknpWorldSnapshot *self);         /* slot 1 of 0x16a4d50 */
 void FUN_00162580(hknpVehicleInstance *self);       /* slot 1 of 0x16a5090 */
 void FUN_00165aa0(hknpPhysicsSystemData *self);     /* slot 1 of 0x16a5130 */
 void FUN_00166130(hknpExternMeshShape *self);       /* slot 1 of 0x16a5170 */
-void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
 void FUN_00176b20(hknpCharacterProxy *self);        /* slot 1 of 0x16a5b70 */
+void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
 void FUN_0017b700(hkp6DofConstraintData *self);     /* slot 1 of 0x16a5d20 */
 void FUN_0017fbd0(hkMemoryResourceContainer *self); /* slot 1 of 0x16a6300 */
 

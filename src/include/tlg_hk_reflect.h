@@ -398,6 +398,11 @@ template <typename T> struct hkArray {
     /* A loaded image's array is left as loaded. */
     hkArray(hkFinishLoadedObjectFlag) {}
 
+    /* n elements, their storage from the containers' allocator's slot 4,
+     * which may round it up (defined in tlg_lib_unknown.h; the image's row
+     * swap, 0x188650). */
+    explicit inline hkArray(int n);
+
     /* A copy of another array: empty, then its elements appended (defined
      * in tlg_lib_unknown.h; the loaded image's constructor 0x1a04d0, the
      * storage taken at the other's size when it has any). */
@@ -545,6 +550,12 @@ template <typename T> struct hkArray {
     /* The same, the storage grown from the allocator given (defined in
      * tlg_lib_unknown.h; the thread pool's timer streams, 0x77b0). */
     T &expandOne(AllocatorBase &allocator);
+
+    /* Room for one more element as expandOne makes it, counted before the
+     * caller builds it (defined in tlg_lib_unknown.h; the world's scheduled
+     * body change, 0x5fb8f: the size stored, then the constructor called).
+     * derived name. */
+    T &expandOneUnconstructed();
 
     /* Room for n elements at least, from the allocator given, the
      * allocation's result back (defined in tlg_lib_unknown.h; the
@@ -7850,8 +7861,12 @@ struct hknpMotionManager;
 struct hknpBodyManager /* derived name */
 {
     /* A body change scheduled for the next step (derived name): the body's
-     * id at +0, 12 bytes. */
+     * id at +0, 12 bytes. Its constructor is out of line (0x1618f0; the
+     * world's 0x4d650, 0x5b680 and 0x5fab0 build each new one with it, then
+     * store the id): no body, no flags, on no list. */
     struct ScheduledBodyChange {
+        ScheduledBodyChange();
+
         int bodyId;    /* derived name */
         u16 flags;     /* derived name; bits 0 and 1: on the lists at +0xe0 and +0xf0 */
         int listIndex; /* derived name; 0x7fffffff when on neither */
@@ -8678,19 +8693,28 @@ struct hknpWorldObject4f8 /* derived name */
      * world's +0x1e0 object (its slot 4). derived name. */
     void FUN_00063da0(int bodyId);
 
-    hknpWorld *world;            /* derived name */
-    MotionRecord *motionRecords; /* derived name */
-    u8 unknown10[8];
+    /* Its constructor (0x62630; the world's at 0x49ab1 builds it in 0xc8
+     * bytes from the thread's heap and sets the world after): the eleven
+     * arrays empty, then the ints at +0x84 (100), +0x78, +0x7c (-1) and
+     * +0x80, the world cleared. */
+    hknpWorldObject4f8();
+
+    hknpWorld *world;                    /* derived name */
+    hkArray<MotionRecord> motionRecords; /* derived name */
     hkArray<Entry18 *> unknown18;
-    u8 unknown28[0x10];
+    hkArray<u8> unknown28;           /* element type not read yet */
     hkArray<BodyRecord> bodyRecords; /* derived name */
-    u8 unknown48[0x10];
+    hkArray<u8> unknown48;           /* element type not read yet */
     hkArray<Entry18 *> unknown58;
-    hkArray<int> ids68; /* derived name */
-    u8 unknown78[8];
-    int int80; /* derived name */
-    u8 unknown84[4];
+    hkArray<int> ids68;                  /* derived name */
+    int int78;                           /* derived name */
+    int int7c;                           /* derived name */
+    int int80;                           /* derived name */
+    int int84;                           /* derived name */
     hkArray<BodyRecord> activatedBodies; /* derived name */
+    hkArray<u8> unknown98;               /* element type not read yet */
+    hkArray<u8> unknownA8;               /* element type not read yet */
+    hkArray<u8> unknownB8;               /* element type not read yet */
 };
 
 /* A slot of a member-function signal (vtable 0x1698ee0, ruled hkSlot, D14):
@@ -9176,7 +9200,15 @@ struct hknpWorldSignals /* derived name */
     u8 unknown8[0x30];
     hkSignal2<hknpWorld *, u32> constraintAddedSignal;   /* 0x4fc10 enables, 0x4d32e */
     hkSignal2<hknpWorld *, u32> constraintRemovedSignal; /* 0x4fcf0 disables, 0x4d4de */
-    u8 unknown48[0x28];
+    u8 unknown48[8];
+    /* Two signals the character proxy subscribes to (its handler of the
+     * first, 0x1782f0, takes the world), then the post-solve signal (fired
+     * with the world at 0x512d8 under "TtPostSolveSignal"; the proxy's
+     * 0x177640). derived names. */
+    hkSignal1<hknpWorld *> signal50;
+    hkSignal1<hknpWorld *> signal58;
+    u8 unknown60[8];
+    hkSignal1<hknpWorld *> postSolveSignal;
 };
 
 /* A map from 16-bit keys to pointer-sized values, hashed and probed as
@@ -9392,6 +9424,10 @@ struct hknpWorld {
      * body handed to the +0x1e0 object (slot 4), rebuilt unless asked not
      * to, then the body signal fired. derived name. */
     void FUN_000601e0(hknpBodyId bodyId, u32 flags, int rebuildMode);
+    /* Flags cleared on a body (0x60310; the qualities' modifier at
+     * 0x16f083 and the game): those beyond the low four, when any is set,
+     * then as 0x601e0 does. derived name. */
+    void FUN_00060310(hknpBodyId bodyId, u32 flags, int rebuildMode);
     /* The same for a body's materialId (0x5fc00). derived name. */
     void FUN_0005fc00(int bodyId, hknpMaterialId materialId, int rebuildMode);
     /* A body's motion properties id recorded in the body manager's entry
@@ -9409,14 +9445,25 @@ struct hknpWorld {
      * 0x15858c passes one with mode 0). derived names. */
     void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
-    hknpEventSignal *FUN_0004fbe0(int eventType);             /* derived name */
-    void FUN_0004bcb0(const Vec4 &newGravity);                /* derived name */
-    void FUN_0004bc90(u8 id);                                 /* derived name */
-    void FUN_0004bc40(hknpMaterialId id);                     /* derived name */
-    void FUN_0004bc60(hknpMaterialId id);                     /* derived name */
+    /* Bodies destroyed (0x4e980; the character proxy's destructor passes
+     * its one with mode 0, 0x176be7). derived names. */
+    void FUN_0004e980(const int *bodyIds, int numBodyIds, int mode);
+    hknpEventSignal *FUN_0004fbe0(int eventType); /* derived name */
+    void FUN_0004bcb0(const Vec4 &newGravity);    /* derived name */
+    void FUN_0004bc90(u8 id);                     /* derived name */
+    void FUN_0004bc40(hknpMaterialId id);         /* derived name */
+    void FUN_0004bc60(hknpMaterialId id);         /* derived name */
     /* Hands a body to the object at +0x4f8 when it is in the broad phase
      * (22 callers, 0x5b711 to 0x178399). derived name. */
     void FUN_0004e0c0(int bodyId); /* derived name */
+    /* The broad phase told of a box (0x4e0f0). derived name. */
+    void FUN_0004e0f0(const hkAabb16 *aabb); /* derived name */
+    /* A body's collision state reset (0x5fab0; the world's 0x1562a0 and
+     * 0x16eca0 call it): a dynamic body handed on or its motion's record
+     * byte cleared, another one's box handed to the broad phase; a static
+     * body's change scheduled with flag 4; the time of impact maxed and
+     * flag 0x1000 set. derived name. */
+    void FUN_0005fab0(int bodyId); /* derived name */
     /* A constraint's bodies recorded with the object at +0x4f8 when the
      * flag at +0x4f0 is set (0x4d400, called at 0x4d329 and 0x4fc4f); unless
      * the third argument says not to, each of the two bodies that is in the
@@ -9739,8 +9786,13 @@ struct hkQueue /* derived name */
         elementsInUse--;
     }
 
-    /* From the thread's heap (tlg_lib_unknown.h). */
+    /* The storage given back when there is any (inline in the ball gun's
+     * destructor, 0x157f82; defined in tlg_lib_unknown.h). */
+    inline ~hkQueue();
+
+    /* From the thread's heap and back to it (tlg_lib_unknown.h). */
     static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Room for n elements (0x157ca0 for body ids): a larger block, the
      * elements copied over in order from the head, the old block freed.
@@ -9766,6 +9818,9 @@ class hknpBallGun : public hknpFirstPersonGun
     /* The finish constructor, out of line (0x157e00). */
     hknpBallGun(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x157ef0): the bullets still queued taken off, the
+     * listeners told from the last with no world, the queue deleted, the
+     * bullet shape released, then hknpFirstPersonGun's destructor. */
     virtual ~hknpBallGun();
 
     /* Slot 10 (0x1584e0; the mounted ball gun's too): every bullet the gun
@@ -9784,7 +9839,7 @@ class hknpBallGun : public hknpFirstPersonGun
     hkQueue<hknpBodyId> *addedBodyIds;
     u16 materialId;
     u16 motionPropertiesId;
-    void *bulletShape;
+    hkRefPtr<hknpShape> bulletShape;
     u32 raiseContactEvents;
 };
 
@@ -10533,7 +10588,11 @@ class hknpConvexShape : public hknpShape
         vertices.size = u16(numVertices);
     }
 
-    int FUN_000430e0() const;         /* vtable slot 6; derived name */
+    int FUN_000430e0() const; /* vtable slot 6; derived name */
+    /* Slot 7 (0x42fa0; also the sphere's, capsule's, triangle's and convex
+     * polytope's): the vertices rotated four at a time, the box of them
+     * moved by the translation and grown by the convex radius. */
+    void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const;
     int FUN_00045ac0() const;         /* vtable slot 9; derived name */
     const Vec4 *FUN_00045ad0() const; /* vtable slot 10; derived name */
     /* Slot 11 (0x3c3c0; also the sphere's, the capsule's, the triangle's
@@ -13548,8 +13607,8 @@ void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /
  * hkxVertexDescription (type info 0x57c7f90, size 0x10, no vtable).
  * hkxVertexAnimation, polymorphic (type info 0x57c7e10, size 0xb8, vtable
  * 0x16a26d0 stored by its finish constructor 0x8cb10, which runs
- * hkxVertexBuffer's on the member at +0x10): slot 0, the complete
- * destructor FUN_0008c930, runs the out-of-line FUN_0008c990.
+ * hkxVertexBuffer's on the member at +0x10): its inline destructor's three
+ * variants 0x8c930, 0x8c940 and 0x8c990.
  * hkxMeshSection, polymorphic (type info 0x57c8200, size 0x70, vtable
  * 0x16a29e0 stored by its finish constructor 0x8e000): slot 0, the complete
  * destructor FUN_0008dbf0, runs the out-of-line FUN_0008dc50.
@@ -13621,9 +13680,13 @@ class hkxVertexBuffer : public hkReferencedObject
 
     hkxVertexBuffer(hkFinishLoadedObjectFlag flag);
 
-    /* Out of line (0x89fd0, slot 0; the deleting destructor 0x8a080, slot
-     * 1): the description's elements, then the vertex data. */
-    virtual ~hkxVertexBuffer();
+    /* Inline, with the keyword (defined after the element's class below):
+     * hkxVertexAnimation's destructor (0x8c990) holds its body, and its own
+     * complete variant 0x89fd0 holds the whole body too (cookbook 333): the
+     * description's elements, then the vertex data. The vtable, 0x89fd0 and
+     * the deleting 0x8a080 are emitted where the vtable is used, the
+     * finish constructor's file. */
+    inline virtual ~hkxVertexBuffer();
 
     /* The reference-counted class delete (freeReferencedObject). */
     static void operator delete(void *object, unsigned long numBytes);
@@ -13650,6 +13713,17 @@ class hkxVertexAnimation : public hkReferencedObject
         : hkReferencedObject(flag), vertData(flag), vertexIndexMap(flag), componentMap(flag)
     {
     }
+
+    /* Inline, emitted with the vtable where the finish constructor uses it
+     * (func_0008cb10.cpp): the base variant 0x8c990 frees the maps and runs
+     * the vertex buffer's destructor inline; the complete one 0x8c930 is a
+     * jump to it and the deleting one 0x8c940 frees 0xb8 after it (cookbook
+     * 300). */
+    virtual ~hkxVertexAnimation() {}
+
+    /* The reference-counted class delete (freeReferencedObject in
+     * tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     float time;
     hkxVertexBuffer vertData;
@@ -14176,7 +14250,8 @@ struct hkxVertexDescriptionElementDecl {
     hkStringPtr channelID;
 };
 
-void FUN_0008c990(hkxVertexAnimation *self);                                  /* derived name */
+inline hkxVertexBuffer::~hkxVertexBuffer() {}
+
 void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
 void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
@@ -16237,6 +16312,11 @@ struct hknpCharacterSurfaceInfo /* derived name */
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
 {
   public:
+    /* The listener set, a reference taken on the new one before the old
+     * one's is released (0x177130; the game passes its +0x60 at 0xea9048).
+     * derived name. */
+    void FUN_00177130(hknpCharacterProxyListener *newListener);
+
     virtual void FUN_00176cc0(hknpCharacterProxySignalSource *source,
                               hknpCharacterProxySignalData *data); /* vtable slot 5; derived name */
 
@@ -16264,10 +16344,10 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
 
     /* The proxy's body (the constructor stores the id the world's body
      * creation 0x4e270 returns, 0x176675). */
-    int bodyId; /* derived name */
-    u8 unknown10[8];
-    hknpWorld *world;                     /* copied from the cinfo's +0x18; derived name */
-    hknpCharacterProxyListener *listener; /* derived name */
+    int bodyId;                                    /* derived name */
+    const hknpShape *shape;                        /* derived name: released by the destructor */
+    hknpWorld *world;                              /* copied from the cinfo's +0x18; derived name */
+    hkRefPtr<hknpCharacterProxyListener> listener; /* derived name */
     u8 unknown28[0x40];
     /* 48-byte records the signal handler 0x176cc0 appends (growing through
      * 0xb40 with the size 0x30). */
@@ -16595,6 +16675,11 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     /* Slot 14 (0x7fea0): every point moved under the transform. derived
      * name. */
     void FUN_0007fea0(const hkTransform &transform);
+
+    /* A point appended, with its distance along the curve: the last one's
+     * plus the length of the step to it, zero for the first (0x7fc70; the
+     * curve's 0x7ffda). */
+    void addPoint(const Vec4 &point);
 
     float smoothingFactor;
     hkBool closedLoop;

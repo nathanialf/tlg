@@ -203,7 +203,7 @@ FUN_00089ec0 src/libs/unknown/func_00089ec0.cpp
 _ZN14hkxSkinBindingD1Ev src/libs/unknown/func_0008a9b0.cpp
 FUN_0008b070 src/libs/unknown/func_0008b070.cpp
 FUN_0008b870 src/libs/unknown/func_0008b870.cpp
-FUN_0008c930 src/libs/unknown/func_0008c930.cpp
+_ZN18hkxVertexAnimationD1Ev src/libs/unknown/func_0008cb10.cpp
 FUN_0008ce40 src/libs/unknown/func_0008ce40.cpp
 FUN_0008da40 src/libs/unknown/func_0008da40.cpp
 FUN_0008dbf0 src/libs/unknown/func_0008dbf0.cpp
@@ -738,7 +738,7 @@ FUN_000834e0 src/libs/unknown/func_000834e0.cpp
 FUN_000839f0 src/libs/unknown/func_000839f0.cpp
 FUN_000a9690 src/libs/unknown/func_000a9690.cpp _GLOBAL__I_a
 FUN_000eafb0 src/libs/unknown/func_000eafb0.cpp
-FUN_001618f0 src/libs/unknown/func_001618f0.cpp _ZN14Object001618f0C2Ev
+_ZN15hknpBodyManager19ScheduledBodyChangeC1Ev src/libs/unknown/func_001618f0.cpp _ZN15hknpBodyManager19ScheduledBodyChangeC2Ev
 FUN_00178580 src/libs/unknown/func_00178580.cpp
 FUN_0017f2d0 src/libs/unknown/func_0017f2d0.cpp
 FUN_00181ad0 src/libs/unknown/func_00181ad0.cpp
@@ -1326,7 +1326,7 @@ FUN_00089330 src/libs/unknown/func_00089330.cpp
 _ZN14hkxSkinBindingD0Ev src/libs/unknown/func_0008a9b0.cpp
 FUN_0008beb0 src/libs/unknown/func_0008beb0.cpp
 FUN_0008c0c0 src/libs/unknown/func_0008c0c0.cpp
-FUN_0008c940 src/libs/unknown/func_0008c940.cpp
+_ZN18hkxVertexAnimationD0Ev src/libs/unknown/func_0008cb10.cpp
 FUN_0008d270 src/libs/unknown/func_0008d270.cpp
 FUN_0008dc00 src/libs/unknown/func_0008dc00.cpp
 _ZN15hkcdPlanarSolidD0Ev src/libs/unknown/func_00095870.cpp
@@ -1944,7 +1944,7 @@ FUN_00142af0 src/libs/unknown/func_00142a40.cpp _Z12FUN_00142af0P24BroadPhaseLay
 FUN_00093b10 src/libs/unknown/func_00093830.cpp _ZN21hkBlockStreamConsumer12FUN_00093b10Ev
 _ZN15hknpConvexShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00042e90.cpp
 FUN_00079f70 src/libs/unknown/func_00079f70.cpp _ZN28hkpPointToPathConstraintData7setPathEP18hkpParametricCurve
-FUN_00177130 src/libs/unknown/func_00177130.cpp _ZN14Object0017642012FUN_00177130EP18hkReferencedObject
+FUN_00177130 src/libs/unknown/func_00177130.cpp _ZN18hknpCharacterProxy12FUN_00177130EP26hknpCharacterProxyListener
 FUN_00037dd0 src/libs/unknown/func_00037d80.cpp _ZN15hknpMaskedShape12FUN_00037dd0Ev
 FUN_0004d400 src/libs/unknown/func_0004d400.cpp _ZN9hknpWorld12FUN_0004d400EPK14hknpConstrainti
 FUN_00000b40 src/libs/unknown/func_00000b40.cpp _Z12FUN_00000b40R13AllocatorBasePvi
@@ -1965,8 +1965,8 @@ FUN_0007e170 src/libs/unknown/func_0007e170.cpp _ZN24hkpRagdollConstraintData12F
 FUN_0007e0b0 src/libs/unknown/func_0007e0b0.cpp _ZN24hkpRagdollConstraintData12FUN_0007e0b0EP18hkpConstraintMotor
 FUN_00092510 src/libs/unknown/func_00092510.cpp _ZN9RefArrays12FUN_00092510Eii
 FUN_0007dd30 src/libs/unknown/func_0007dd30.cpp _ZNK24hkpRagdollConstraintData15unknownVirtual7Ev
-_ZN15hkxVertexBufferD1Ev src/libs/unknown/func_00089fd0.cpp
-_ZN15hkxVertexBufferD0Ev src/libs/unknown/func_00089fd0.cpp
+_ZN15hkxVertexBufferD1Ev src/libs/unknown/func_0008a1a0.cpp
+_ZN15hkxVertexBufferD0Ev src/libs/unknown/func_0008a1a0.cpp
 _ZN15hkxVertexBuffer10VertexDataD1Ev src/libs/unknown/func_00087cf0.cpp
 FUN_00157be0 src/libs/unknown/func_00157be0.cpp _Z12FUN_00157be0R10hknpMotionRKDv4_fS3_
 FUN_0017ee60 src/libs/unknown/func_0017ee60.cpp _ZN26hkDynamicClassNameRegistry12FUN_0017ee60ERK19hkClassNameRegistry
@@ -2462,3 +2462,12 @@ FUN_0005da80 src/libs/unknown/func_0005da80.cpp _ZN9hknpWorld12FUN_0005da80Eif
 FUN_00180560 src/libs/unknown/func_00180560.cpp _ZN25hkMemoryResourceContainer12FUN_00180560EPS_
 FUN_0016d090 src/libs/unknown/func_0016d090.cpp _ZN30hknpScaledOffsetQueryCollector12FUN_0016d090ERK19hknpCollisionResult
 FUN_00009ad0 src/libs/unknown/func_00009ad0.cpp
+FUN_00042fa0 src/libs/unknown/func_00042fa0.cpp _ZNK15hknpConvexShape15unknownVirtual7ERK4Mat4R6hkAabb
+FUN_00060310 src/libs/unknown/func_00060310.cpp _ZN9hknpWorld12FUN_00060310E10hknpBodyIdji
+_ZN18hknpWorldObject4f8C1Ev src/libs/unknown/func_00062630.cpp _ZN18hknpWorldObject4f8C2Ev
+_ZN16Elements000760c07ElementD1Ev src/libs/unknown/func_00076250.cpp _ZN16Elements000760c07ElementD2Ev
+_ZN11hknpBallGunD2Ev src/libs/unknown/func_00157ef0.cpp
+_ZN18hkxVertexAnimationD2Ev src/libs/unknown/func_0008cb10.cpp
+FUN_00188650 src/libs/unknown/func_00188650.cpp _Z12FUN_00188650PPhRK8RawImage
+FUN_0007fc70 src/libs/unknown/func_0007fc70.cpp _ZN24hkpLinearParametricCurve8addPointERKDv4_f
+FUN_0005fab0 src/libs/unknown/func_0005fab0.cpp _ZN9hknpWorld12FUN_0005fab0Ei

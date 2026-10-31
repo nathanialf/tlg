@@ -6,7 +6,6 @@
  * keeps in the world. */
 hknpBallGun::hknpBallGun(hkFinishLoadedObjectFlag flag) : hknpFirstPersonGun(flag)
 {
-    bulletShape = 0;
     if (flag.finishing) {
         type = WEAPON_TYPE_BALLGUN;
         addedBodyIds = new hkQueue<hknpBodyId>();
