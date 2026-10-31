@@ -7774,6 +7774,14 @@ struct alignas(16) hkAabb16 {
         key1 = 0;
     }
 
+    /* Empty as setEmpty leaves it: every minimum the largest, every
+     * maximum zero, tested as one 16-bit or of the inverted minima and the
+     * maxima (0x62564). derived name. */
+    bool isEmpty() const
+    {
+        return (u16(~min[0]) | max[0] | u16(~min[1]) | max[1] | u16(~min[2]) | max[2]) == 0;
+    }
+
     /* Grown by another box, the maxima first. derived name. */
     void includeAabb(const hkAabb16 &other)
     {
@@ -8918,6 +8926,14 @@ struct hknpWorldObject4f8 /* derived name */
      * to it again recorded at +0x88 and the new records' ids handed to the
      * world's +0x1e0 object (its slot 4). derived name. */
     void FUN_00063da0(int bodyId);
+
+    /* Bodies put to sleep in an island (0x62490; 0x63565 passes an
+     * island's bodies and id, 0x65394 too): each active body taken off the
+     * active list with its attached group, its motion's record byte cleared
+     * and its velocities zeroed; every body given the island's id and its
+     * previous box back unless that box is empty; then the bodies handed to
+     * the world's +0x1e0 object (its slot 4). derived name. */
+    void FUN_00062490(const hknpBodyId *bodyIds, int numBodyIds, int islandId);
 
     /* Its constructor (0x62630; the world's at 0x49ab1 builds it in 0xc8
      * bytes from the thread's heap and sets the world after): the eleven
