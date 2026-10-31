@@ -2431,6 +2431,12 @@ void *FUN_00007180(void *argument); /* derived name */
 struct FreeListBlock;
 int FUN_000188a0(const FreeListBlock *block); /* derived name */
 
+/* A list of blocks, or of free elements, sorted by address, each linked
+ * through its first word (0x183c0 and 0x92040, the free list's collection
+ * sorts both; a bottom-up merge sort). derived names. */
+FreeListBlock *FUN_000183c0(FreeListBlock *blocks);
+void *FUN_00092040(void *elements);
+
 /* A Mersenne twister (MT19937): 624 words of state in a block of 2496 bytes
  * the seeding (FUN_000106e0, multiplier 1812433253) allocates on first use
  * and FUN_00010690 frees, the index at +0. The constructor (FUN_00010680)
@@ -2598,6 +2604,13 @@ struct FreeList /* derived name */
 
     /* Whether a block's elements are all free (0x189d0). derived name. */
     hkBool32 FUN_000189d0(FreeListBlock *block);
+
+    /* The blocks in use whose elements are all free moved to the free
+     * blocks (0x18c90; the allocator's slot 2, 0x3140, runs it on each
+     * list): the blocks and the freed elements sorted by address, the rest
+     * of the current block freed first, the walk restarted; the number of
+     * blocks moved. derived name. */
+    int FUN_00018c90();
 
     /* Up to numBlocks blocks examined from where the last call stopped,
      * each whose elements are all free moved from the blocks in use to
@@ -3569,7 +3582,10 @@ class Allocator0000ed40 : public AllocatorBase /* derived name */
         struct FreeBlock {
             char *start;
             char *end;
-            u8 unknown10[8];
+            /* The slab it sits in, by index into the slabs at +0x10 (0xf16f
+             * stores the count less one). derived name. */
+            int slabIndex;
+            u8 unknown14[4];
         };
 
         Impl() : numExternalAllocations(0) {}

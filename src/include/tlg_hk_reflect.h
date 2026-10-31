@@ -15014,9 +15014,31 @@ struct hknpLinearIntegrationClippedCommand /* derived name */
 
 /* Three contact events, named by the texts their prints write (0x40a20,
  * 0x3da50, 0x3dc30; the dispatcher's types 1 to 3). */
+/* A manifold's event as the dispatcher prints it (0x40a20; the layout of
+ * ManifoldStatusEvent00154bc0): the bodies' ids at +0xc and +0x14, the
+ * status at +0x18, a bit of which names the event, and from +0x30 the
+ * manifold's point count, normal, distances and positions. derived
+ * names. */
 struct hknpManifoldEvent {
     void FUN_00040a20(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyIdA;
+    u8 unknown10[4];
+    u32 bodyIdB;
+    u8 status;
+    u8 unknown19[0x17];
+    int numPoints;
+    u8 unknown34[0xc];
+    Vec4 normal;
+    u8 unknown50[0x10];
+    float distances[4];
+    Vec4 positions[4];
 };
+
+/* The names of a manifold event's status bits, by the lowest one set
+ * (0x1697760, read by 0x40a20). derived name. */
+extern const char *const D_1697760[];
 
 struct hknpContactImpulseEvent {
     void FUN_0003da50(hknpWorld *world, hkOstream &out) const; /* derived name */
@@ -17053,6 +17075,27 @@ struct hkBlockStreamBlock /* derived name */
     u8 unknown18[8];
     u8 data[0xfe0]; /* derived name */
 };
+
+/* A pair of bodies as the world's caller of 0x175010 keeps them (derived
+ * names), 16 bytes: each body as its byte at +0x7f and its id, the two
+ * compared as one 64-bit word with the body's own. */
+struct BodyKeyPair00175010 /* derived name */
+{
+    struct Key {
+        u32 byte7f;
+        int id;
+    };
+
+    Key a;
+    Key b;
+};
+
+/* derived name: of the pairs, those whose two bodies are still added, in
+ * the broad phase and the same bodies (their keys unchanged), written to the
+ * end of the stream as their two ids (0x175010; the world's 0x64110 calls it
+ * with the cache at +0x250 of its object). */
+void FUN_00175010(hknpWorld *world, BlockCache *cache, const hkArray<BodyKeyPair00175010> &pairs,
+                  hkBlockStream *stream);
 
 inline void *hkBlockStreamWriter::reserve(int numBytes)
 {
@@ -19125,6 +19168,41 @@ struct LinearJacobian0017d320 /* derived name */
 void FUN_0017d320(const hkVector4 &direction, const hkVector4 &position,
                   const ConstraintQueryIn00085450 &in, LinearJacobian0017d320 &jac,
                   float &invDiagOut);
+
+/* What the point-to-point builder 0x85820 reads (derived names): the two
+ * pivots in the world, the direction between them, and two values the
+ * jacobian keeps as they are. */
+struct LinearConstraintInfo00085820 /* derived name */
+{
+    hkVector4 pivotA;
+    hkVector4 pivotB;
+    hkVector4 direction;
+    float value30;
+    float value34;
+};
+
+/* The jacobian 0x85820 builds (derived names): the direction with the
+ * right-hand side in w, each body's angular row (the inverse of the
+ * diagonal in A's w, the diagonal in B's), the two values; schema type 7 in
+ * the first byte, written last. */
+struct LinearJacobian00085820 /* derived name */
+{
+    union {
+        Vec4 linear;
+        u8 schemaType;
+    };
+
+    Vec4 angular[2];
+    float value30;
+    float value34;
+};
+
+/* derived name: a linear jacobian between two pivots along a direction
+ * (0x85820; called at 0xc92ad): the rows as 0x17d320 builds them, each body
+ * from its own pivot, and the pivots' distance along the direction scaled by
+ * the right-hand side's factor. */
+void FUN_00085820(const LinearConstraintInfo00085820 &info, const ConstraintQueryIn00085450 &in,
+                  LinearJacobian00085820 *&jacobians);
 
 /* What the linear builder 0x85550 reads (derived names; 0x7a070 fills one
  * on its stack at 0x7a300): the pivot, the direction, a value scaled by the

@@ -74,6 +74,29 @@ inline Vec4 setFromScalars(const Vec4 &a, const Vec4 &b, const Vec4 &c, const Ve
     return _mm_movelh_ps(_mm_unpacklo_ps(a, b), _mm_unpacklo_ps(c, d));
 }
 
+/* The bits set in a word, counted a nibble at a time through a table in a
+ * vector register (SSSE3's byte shuffle) and summed by the byte sum of
+ * absolute differences, as Havok's bit count is on this platform (the same
+ * sequence in 0x40a20, 0x92650, 0xb4e50 and 0x141500). derived name. */
+inline int countBitsSet(unsigned int x) /* derived name */
+{
+    const __m128i v = _mm_cvtsi32_si128(int(x));
+    const __m128i mask = _mm_set1_epi8(0xf);
+    const __m128i table = _mm_setr_epi8(0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+    const __m128i low = _mm_shuffle_epi8(table, _mm_and_si128(v, mask));
+    const __m128i high = _mm_shuffle_epi8(table, _mm_and_si128(_mm_srli_epi16(v, 4), mask));
+    const __m128i sum = _mm_sad_epu8(_mm_add_epi8(low, high), _mm_setzero_si128());
+    const Vec4 halves = _mm_castsi128_ps(sum);
+    return _mm_cvtsi128_si32(_mm_add_epi32(_mm_castps_si128(_mm_movehl_ps(halves, halves)), sum));
+}
+
+/* The index of the lowest bit set: the bits below it counted (derived
+ * name). */
+inline int countTrailingZeros(unsigned int x) /* derived name */
+{
+    return countBitsSet((x & (0 - x)) - 1);
+}
+
 /* hkVector4 (the reflection's name for TYPE_VECTOR4) as a class over its
  * vector: copying one is an aggregate copy, a 16-byte memcpy that the back
  * end lowers to an integer-typed load and store, so a copy is reloaded from
