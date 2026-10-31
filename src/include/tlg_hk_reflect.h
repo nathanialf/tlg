@@ -3179,11 +3179,13 @@ class hknpGroupCollisionFilter : public hkReferencedObject
 struct hknpBody;
 
 /* What a query is filtered with (derived names): the collision filter
- * info at +4, user data at +8; a new one has no material and no user data
- * (the ray cast wheel collide's query, 0x158afc). */
+ * info at +4, user data at +8; a new one has no material, no collision
+ * filter info and no user data (the broad phase's box query, 0x4e13f to
+ * 0x4e152; the ray cast wheel collide's query, 0x158afc, sets its own
+ * filter info after, so the zero is dead there). */
 struct hknpQueryFilterData /* derived name */
 {
-    hknpQueryFilterData() : materialId(0xffff), userData(0) {}
+    hknpQueryFilterData() : materialId(0xffff), collisionFilterInfo(0), userData(0) {}
 
     u16 materialId;
     u32 collisionFilterInfo;
@@ -6099,7 +6101,15 @@ struct hkcdStaticMeshTreeBase {
     /* Out of line (0x20700): its arrays given back from the last. */
     ~hkcdStaticMeshTreeBase();
 
-    u8 unknown0[0x10];
+    /* The static tree's nodes over the sections (4 bytes each, the walk
+     * 0xa8f80 reads a node's byte at +3), as an array's first two words.
+     * derived names. */
+    struct Nodes {
+        const u8 *data;
+        int size;
+        int capacityAndFlags;
+    } nodes;
+
     hkAabb domain;
     /* The members from the records at 0x1690bb0. */
     int numPrimitiveKeys;
@@ -6188,9 +6198,22 @@ struct hknpCompressedMeshShapeTree
         FUN_000a9140(this, flag);
     }
 
-    /* Clears the bits of the filter's keys the tree does not hold and
-     * reports the change (0xa92c0); true when the filter changed anything.
-     * derived name. */
+    /* A place in the static tree as its walk carries it (derived names): a
+     * node's box, its index, the node. */
+    struct TreeSlot {
+        hkAabb aabb;
+        int index;
+        const u8 *node;
+    };
+
+    /* The walk under a slot (0xa8f80): whether any leaf below it has its
+     * section's bit set in the section bits. derived name. */
+    bool FUN_000a8f80(const TreeSlot &slot, const u32 *sectionBits) const;
+
+    /* After the keys' bits, a bit for each section's leaf, set when any of
+     * the section's eight words of key bits is (0xa92c0); then the tree
+     * walked from the root over those bits, its answer returned (false
+     * without nodes). derived name. */
     bool FUN_000a92c0(hkArray<u32> &filter) const;
 
     /* The filter rebuilt for the tree (0xa9150): its storage given back,
@@ -9143,6 +9166,26 @@ struct hknpWorldStepContextf6a90 /* derived name */
  * bodies, the world, the world's +0x1f0 and the collector). */
 class hknpCollisionQueryCollector;
 
+/* A query of the bodies in a box as the broad phase takes it (derived names;
+ * the world's 0x4e0f0 and 0x35fe0 build one): the box in the broad phase's
+ * 16-bit space, a filter, the filter data and the bodies. A new one has an
+ * empty box, no filter and the filter data's defaults; the box's zeros and
+ * the filter's are one memset (MemCpyOpt), which the copy of a box over
+ * the first 16 bytes leaves in place. */
+struct BroadPhaseAabbQuery /* derived name */
+{
+    BroadPhaseAabbQuery()
+    {
+        aabb.setEmpty();
+        filter = HK_NULL;
+    }
+
+    hkAabb16 aabb;
+    const hknpCollisionFilter *filter;
+    hknpQueryFilterData filterData;
+    const hknpBody *bodies;
+};
+
 class hknpWorldObject1e0 /* derived name */
 {
   public:
@@ -9160,7 +9203,9 @@ class hknpWorldObject1e0 /* derived name */
     virtual void unknownVirtual8();
     virtual void unknownVirtual9();
     virtual void unknownVirtual10();
-    virtual void unknownVirtual11();
+    /* Slot 11: the ids of the bodies whose boxes overlap the query's (the
+     * world's 0x4e0f0). derived name. */
+    virtual void queryAabb(const BroadPhaseAabbQuery &query, hkArray<int> &bodyIdsOut) const;
     virtual void unknownVirtual12();
     virtual void
     castRay(const void *query, const hknpBody *bodies, const hknpWorld *world, const void *context,
@@ -9588,7 +9633,9 @@ struct hknpWorld {
     /* Hands a body to the object at +0x4f8 when it is in the broad phase
      * (22 callers, 0x5b711 to 0x178399). derived name. */
     void FUN_0004e0c0(int bodyId); /* derived name */
-    /* The broad phase told of a box (0x4e0f0). derived name. */
+    /* The bodies in a box (0x4e0f0) that are neither static nor
+     * keyframed (flags 9) and are on the active list or an island handed
+     * to the object at +0x4f8. derived name. */
     void FUN_0004e0f0(const hkAabb16 *aabb); /* derived name */
     /* A body's collision state reset (0x5fab0; the world's 0x1562a0 and
      * 0x16eca0 call it): a dynamic body handed on or its motion's record
@@ -11901,6 +11948,8 @@ struct hkpConstraintAtom {
         TYPE_2D_ANG = 12,
         TYPE_ANG = 13,
         TYPE_ANG_LIMIT = 14,
+        TYPE_TWIST_LIMIT = 15,
+        TYPE_CONE_LIMIT = 16,
         TYPE_ANG_FRICTION = 17,
         TYPE_PULLEY = 20,
         TYPE_RACK_AND_PINION = 21,
@@ -12457,17 +12506,24 @@ struct hkpConeLimitConstraintAtom {
     float minAngle;
     float maxAngle;
     float angularLimitsTauFactor;
-    u8 unknown14[0xc];
+    float angularLimitsDampFactor; /* derived name: 1 from the ragdoll limits' constructor */
+    u8 unknown18[8];
 };
 
 /* hkpTwistLimitConstraintAtom (its name a string of the executable,
  * 0x14c1212): minAngle and maxAngle at +8 and +0xc (the ragdoll limits'
  * validity test 0x7c937), 0x20 bytes in the atoms that hold it. */
 struct hkpTwistLimitConstraintAtom {
-    u8 unknown0[8];
+    u16 type; /* derived name */
+    u8 isEnabled;
+    u8 twistAxis;
+    u8 refAxis;
+    u8 unknown5[3];
     float minAngle;
     float maxAngle;
-    u8 unknown10[0x10];
+    float angularLimitsTauFactor;
+    float angularLimitsDampFactor; /* derived name: 1 from the ragdoll limits' constructor */
+    u8 unknown18[8];
 };
 
 /* hkpRagdollLimitsData (parent hkpConstraintData, 0xf0 bytes): atoms at
@@ -12485,6 +12541,11 @@ class hkpRagdollLimitsData : public hkpConstraintData
         /* A cone limit atom too (its angles at +0xd8 and +0xdc). */
         hkpConeLimitConstraintAtom planesLimit;
     };
+
+    /* Out of line (0x7c710): the atoms' types, the rotations the
+     * identity, a twist of a 0.5236 radian either way, a cone of one radian
+     * with its stabilization on, the planes 0.025 either way. */
+    hkpRagdollLimitsData();
 
     hkpRagdollLimitsData(hkFinishLoadedObjectFlag flag) : hkpConstraintData(flag)
     {
@@ -14760,6 +14821,10 @@ class hkOArchive : public hkReferencedObject /* derived name */
      * packfile writer's save at 0x18361d), each swapped when the archive
      * swaps. */
     void FUN_0000a8d0(const u16 *array, int numElements);
+    /* derived name: an array of 32-bit values written (0xaa00; the binary
+     * packfile writer's save at 0x182f88 and 0x18310a), each swapped when
+     * the archive swaps. */
+    void FUN_0000aa00(const u32 *array, int numElements);
 
     /* An array of elements written, each element's bytes reversed first
      * when the archive swaps (0xa520): copied through a 512-byte buffer a
@@ -15924,6 +15989,16 @@ struct hknpLodShape : public hknpCompositeShape {
      * key mask. derived name. */
     void FUN_00068810(const void *argument1, const Slot23Argument *argument2, const void *argument3,
                       const ShapeQuery00038010 &argument4, void *argument5) const;
+    /* Slots 25 and 26 (0x68570, 0x686c0): as slot 23, the level the second
+     * argument asks for, at most the last, asked with the query (the fifth
+     * argument) copied around the key extended by the level and no key
+     * mask. derived names. */
+    void FUN_00068570(const void *argument1, const Slot23Argument *argument2, const void *argument3,
+                      const void *argument4, const ShapeQuery00038010 &argument5,
+                      const void *argument6, void *argument7) const;
+    void FUN_000686c0(const void *argument1, const Slot23Argument *argument2, const void *argument3,
+                      const void *argument4, const ShapeQuery00038010 &argument5,
+                      const void *argument6, void *argument7) const;
     /* Slot 21 (0x68380): the query's level of detail, at most the last
      * level, asked with the key shifted by this shape's bits and the
      * query's key extended by the level (its bits set below it). derived

@@ -2484,3 +2484,11 @@ FUN_00085820 src/libs/unknown/func_00085820.cpp
 FUN_00175010 src/libs/unknown/func_00175010.cpp
 FUN_000198a0 src/libs/unknown/func_000198a0.cpp
 FUN_00040a20 src/libs/unknown/func_00040a20.cpp
+FUN_0004e0f0 src/libs/unknown/func_0004e0f0.cpp
+_ZN20hkpRagdollLimitsDataC1Ev src/libs/unknown/leaf_0007c860.cpp _ZN20hkpRagdollLimitsDataC2Ev
+FUN_00068570 src/libs/unknown/func_00068570.cpp
+FUN_000686c0 src/libs/unknown/func_000686c0.cpp
+FUN_000a92c0 src/libs/unknown/func_000a92c0.cpp
+_ZN7hkQueueIN10hkJobQueue13JobQueueEntryEE11setCapacityEi src/libs/unknown/func_00004ec0.cpp
+FUN_0000a8d0 src/libs/unknown/func_0000a480.cpp _ZN10hkOArchive12FUN_0000a8d0EPKti
+FUN_0000aa00 src/libs/unknown/func_0000a480.cpp _ZN10hkOArchive12FUN_0000aa00EPKji
