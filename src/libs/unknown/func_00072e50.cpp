@@ -34,12 +34,11 @@ hknpTriangleShape::hknpTriangleShape(hkFinishLoadedObjectFlag flag) : hknpConvex
 
 /* The capsule's slot 18 (0x73950), its first out-of-line virtual: the file
  * emits the capsule's vtable and its deleting destructor (0x72ec0). */
-// NONMATCHING: 48 of 64, same size: every operation the base's, in its
-// order but for two pairs the scheduler swaps (the IV increments, `add r9,
-// 0x10` before `lea r8, [rdx + 0x50]`; the radii's broadcasts, the capsule's
-// first) and the operand order of three commutative products, which moves
-// xmm2 and xmm3 in the clamp and the reciprocal square root (docs/NOTES.md,
-// Round 64A).
+// NONMATCHING: 62 of 64, same size: every operation and operand order the
+// base's (the projection's dot taken before the reciprocal and the sphere's
+// radius read before the capsule's, Reassociate's ranks); left: the
+// latch's two steps, `add r9, 0x10` before `lea r8, [rdx + 0x50]` in the
+// base (docs/NOTES.md, Round 70A).
 void hknpCapsuleShape::unknownVirtual18(const SignedDistanceQuery &query,
                                         SignedDistanceContact *contactsOut) const
 {
@@ -48,19 +47,21 @@ void hknpCapsuleShape::unknownVirtual18(const SignedDistanceQuery &query,
          * the segment, the parameter clamped to the ends and kept in w. */
         const Vec4 ab = _mm_sub_ps(a, b);
         const Vec4 lengthSquared = _mm_dp_ps(ab, ab, 0x7f);
+        const Vec4 center = query.sphereCenters[i];
+        const Vec4 toA = _mm_sub_ps(a, center);
+        const Vec4 projection = _mm_dp_ps(ab, toA, 0x7f);
         const Vec4 r = _mm_rcp_ps(lengthSquared);
         const Vec4 invLengthSquared =
             _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(lengthSquared, r)));
-        const Vec4 center = query.sphereCenters[i];
-        const Vec4 toA = _mm_sub_ps(a, center);
-        Vec4 t = _mm_mul_ps(_mm_dp_ps(ab, toA, 0x7f), invLengthSquared);
+        Vec4 t = _mm_mul_ps(projection, invLengthSquared);
         t = _mm_blendv_ps(D_14b2060[3], t, _mm_cmplt_ps(t, D_14b2060[3]));
         t = _mm_max_ps(_mm_setzero_ps(), t);
         Vec4 closest = _mm_add_ps(center, _mm_sub_ps(toA, _mm_mul_ps(ab, t)));
         closest = _mm_blend_ps(closest, t, 8);
 
+        const Vec4 sphereRadius = simdFromFloat(query.sphereRadius);
         const Vec4 radius = simdFromFloat(convexRadius);
-        const Vec4 radiusSum = _mm_add_ps(simdFromFloat(query.sphereRadius), radius);
+        const Vec4 radiusSum = _mm_add_ps(sphereRadius, radius);
         const Vec4 d = _mm_sub_ps(center, closest);
         const Vec4 dSquared = _mm_dp_ps(d, d, 0x7f);
         const Vec4 invLength = lengthInverse3(d);

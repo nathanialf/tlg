@@ -4,10 +4,13 @@
 /* The free count is the freed elements, the rest of the current block and
  * the free blocks' elements; the total is every block's elements; each
  * freed element is aligned and on an element boundary of a block in use. */
-// NONMATCHING: equal up to the free-element loop (NOTES Round 63B, 64B): the base enters it at
-// one test block shared by the entry and the latch (`mov al, 1; test r11, r11; je ret`), every
-// failure in one `xor al, al` block; here SimplifyCFG folds the loop guard into the count's
-// compare (FoldBranchToCommonDest, sete) and the returns are duplicated.
+// NONMATCHING: 76 of 80, the base's loop shapes: each free element's next
+// pointer read before its offset is tested, so the loop's latch is empty and
+// LoopRotate folds it into the offset test (simplifyLoopLatch) and leaves the
+// walk unrotated, one failure block (docs/NOTES.md, Round 70A). Left: the
+// active blocks' sum, whose rotated phis LoopRotate orders pointer first (the
+// count's zero copied second, the base the other way), and the totals'
+// compare branching to the walk where the base branches to the failure.
 bool FreeList::FUN_000188c0() const
 {
     u64 numFree = 0;
@@ -34,7 +37,7 @@ bool FreeList::FUN_000188c0() const
         return false;
     }
 
-    for (void *element = freeHead; element; element = *static_cast<void **>(element)) {
+    for (void *element = freeHead; element;) {
         if (hkUlong(element) & (unknown30 - 1)) {
             return false;
         }
@@ -48,7 +51,9 @@ bool FreeList::FUN_000188c0() const
         if (!block) {
             return false;
         }
-        if (u64(e - block->elements) % elementSize != 0) {
+        const u64 offset = u64(e - block->elements);
+        element = *static_cast<void **>(element);
+        if (offset % elementSize != 0) {
             return false;
         }
     }
