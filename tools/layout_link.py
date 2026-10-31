@@ -134,6 +134,29 @@ def _object_functions(obj: Path) -> dict:
     return _OBJ_FUNCS[obj]
 
 
+_ROW_BY_SYMBOL: dict[tuple[Path, str], int] = {}  # (object, symbol) -> a claimed row's address
+
+
+def _function_at_hint(base: BaseElf, obj: Path, name: str, hint: int) -> bool:
+    """Whether the object's function `name` sits at `hint` in the base:
+    instruction by instruction with its relocations masked and their targets
+    checked, as the gate compares a claimed row (match_check.compare); a raw
+    byte search cannot find it when the code holds an unrelocated field (a
+    vtable load, 0x87950's and 0x85d80's initializers)."""
+    funcs = _object_functions(obj)
+    if name not in funcs:
+        return False
+    code, relocs = funcs[name]
+    try:
+        base_bytes = base.read(hint, len(code))
+    except Exception:  # noqa: BLE001
+        return False
+    if len(base_bytes) != len(code):
+        return False
+    res = mc.compare(code, relocs, base_bytes, hint, base)
+    return res["obj_insns"] == res["base_insns"] and res["equal"] == res["obj_insns"] and res["targets_ok"]
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                            hint: int | None = None) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why).
@@ -144,6 +167,22 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     s = base.address_of(r.symbol)
     if s is not None:
         return s, ""
+    # a function in its own section (-ffunction-sections, docs/DECISIONS.md
+    # D39): the assembler rewrites a reference to the unit's own local function
+    # as its section plus an offset, and the section carries the function's
+    # name; the function is where its claimed row puts it, or, unclaimed (a
+    # callback the linker folded, D15), where the base's own field points when
+    # its code sits there
+    if r.symbol.startswith(".text.") and r.sym_size == 0:
+        name = r.symbol[len(".text."):]
+        s = base.address_of(name)
+        if s is None:
+            s = _ROW_BY_SYMBOL.get((obj, name))
+        if s is not None:
+            return s, ""
+        if hint is not None and _function_at_hint(base, obj, name, hint):
+            return hint, ""
+        return None, f"{r.symbol}: the unit's own function {name} is not claimed and its code is not at the base's field"
     if r.symbol.startswith("_ZGVZ"):
         # the guard of a function-local static (docs/DECISIONS.md D17): the
         # compiler lays the guard out beside the object in the unit's .bss and
@@ -164,19 +203,8 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     # checked, as the gate compares a claimed row (match_check.compare); a raw
     # byte search cannot find it when the code holds an unrelocated field (a
     # vtable load, 0x87950's and 0x85d80's initializers)
-    if hint is not None and not r.symbol.startswith("."):
-        funcs = _object_functions(obj)
-        if r.symbol in funcs:
-            code, relocs = funcs[r.symbol]
-            try:
-                base_bytes = base.read(hint, len(code))
-            except Exception:  # noqa: BLE001
-                base_bytes = b""
-            if len(base_bytes) == len(code):
-                res = mc.compare(code, relocs, base_bytes, hint, base)
-                if res["obj_insns"] == res["base_insns"] and res["equal"] == res["obj_insns"] \
-                        and res["targets_ok"]:
-                    return hint, ""
+    if hint is not None and not r.symbol.startswith(".") and _function_at_hint(base, obj, r.symbol, hint):
+        return hint, ""
     # a symbol the object itself defines in a data section: a string literal
     # or a local constant; find its bytes in the base
     if isinstance(r.sym_section, int) and r.sym_section > 0:
@@ -366,6 +394,7 @@ def build_image(ver: str, log=print) -> dict:
                 report["errors"][fn] = f"{tu} does not define {sym}"
                 continue
             addr, size = base.func_by_name[fn]
+            _ROW_BY_SYMBOL[(obj, sym)] = addr
             code, relocs = objfuncs[sym]
             resolved, errs = apply_relocs(base, obj, code, relocs, addr)
             if errs:

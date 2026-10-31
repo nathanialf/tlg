@@ -954,6 +954,10 @@ by instruction with its relocations masked and their targets verified (match_che
 gate's own comparison); the raw search stays for literals. The spelling rule is unchanged:
 `FUN_<addr>(...)` with external linkage, the body byte-equal to the folded one.
 
+**Round 70A addendum (D39).** The external spellings above stay valid where claimed; a new
+registration writes its callbacks as the registering file's own static functions (D39), and the
+files carrying the external form are rewritten to it as they are revisited.
+
 ## D16. A statement the bytes prove but do not spell: the release-null assert (2026-10-26)
 
 **Decision.** Where the base keeps a destructor's vptr store and emits
@@ -2200,3 +2204,57 @@ copy, a no-op by 4.0.0's feature, was dropped again); the gate holds on every ro
 
 **Trigger.** A vzeroupper in a compile is this decision; a function whose only residual is a
 vzeroupper the base lacks needs nothing else.
+
+## D39. The library objects keep one section per function; a file's reflection callbacks are its own static functions (2026-10-31)
+
+**Question.** Round 69A's 0x6c470 (hknpExternMeshShape's static initializer) is 3 of 67 with its
+two type-info callbacks spelled as D15 ruled, external functions: under -fPIC their addresses are
+GOT loads, which greedy keeps in callee-saved registers across the hkClass calls (a third push, the
+guard's address in r15), where the base forms each address with a `lea` right before its use. With
+the callbacks `static` in the file the function is 63 of 65 and the two left are the displacements
+to the file's own copies, which the assembler resolves inside one `.text` and the gate cannot place:
+the base's finish callback is kept at 0x6c440, directly before the initializer, and its cleanup is
+the folded body 0x2d0 (`mov rax, [rdi]; jmp [rax]`, the virtual destructor called through the
+vtable), which many files share.
+
+**Evidence.** The executable folds single functions across translation units (D15's folded
+destructors and callbacks; 0x2d0, 0x6c80, 0xe5c0, 0x270 each stand for bodies of many files). A
+linker folds sections, so each folded function was its own section in its object: the library
+objects were compiled with one section per function (`-ffunction-sections`). With that flag a
+reference to the file's own static function is a relocation against the function's section
+(`R_X86_64_PC32 .text.<function> - 4`), which the gate can place.
+
+**Measurement (2026-10-31, scratchpad expwt at c6bfe8d, 2,528 rows).** With
+`-ffunction-sections` added to the library line: every row equal and every loaded segment equal to
+the base (tools/build.sh gate-all, 06:26:53 to 06:28:38); no claimed function changed a byte (the
+flag changes sections and relocations, never instructions). With the layout resolving a
+`.text.<function>` section symbol to that function (its claimed row's address, else the base's own
+field when the function's code sits there, instruction by instruction with its relocations checked,
+the resolver of 6b9c2f9) and 0x6c470 written with its two static callbacks: 0x6c470 equal (65
+instructions) and 0x6c440 equal as the local symbol `_ZL37finishLoadedObjecthknpExternMeshShapePvi`
+of the initializer's file, the folded cleanup placed at 0x2d0 by its bytes, every other row equal
+(06:31:12 to 06:31:44).
+
+**Ruling.** The library line carries `-ffunction-sections`. A type info's finish and cleanup
+callbacks are the registering file's own `static` functions, named after hkTypeInfo's typedefs
+(`finishLoadedObject<Class>`, `cleanupLoadedObject<Class>`, derived names: no string spells them);
+a callback the linker kept (0x6c440) is claimed from the registering file under its local symbol, a
+callback the linker folded is placed where the base's field points. The external spellings of D15's
+round 50, 57 and 68A addenda stay valid for the rows that carry them (the bytes are equal through
+the linker's relaxation of the GOT load) and are rewritten to the static form as their files are
+revisited; a new registration uses the static form. The game line is unchanged: the same linker
+folded the game region's bodies too, but no game witness has been measured yet (a game initializer
+whose callback's register allocation differs is the test).
+
+**Adopted (2026-10-31).** config/flags.base.txt, the library line; tools/layout_link.py resolves a
+`.text.<function>` section symbol to the function (its claimed row, else the base's field when the
+function's code sits there); src/libs/unknown/func_0006c470.cpp carries the two static callbacks and
+the rows FUN_0006c440 (the local symbol) and FUN_0006c470 (the initializer); the gate holds on every
+row. Round 70A's rows (2,547) were gated under the flag at adoption.
+
+**Trigger.** A static initializer whose only residual is the callbacks' addresses held in
+callee-saved registers (GOT loads where the base has `lea`) is this decision: write the callbacks
+static in the registering file. A folded callback that the gate cannot place at the base's field
+(its bytes differ from the body the base's field names) is a question for the supervisor, not a
+reason to spell the callback external.
+

@@ -73,7 +73,7 @@ The full survey, program header by program header and library by library, is
 
   | region | prefix | compiler | tuning | probe |
   | --- | --- | --- | --- | --- |
-  | libraries, below 0x1a3e00 | `src/libs/` | LLVM 3.3 (`-target x86_64-pc-freebsd9`; 3.3 knows no PS4 triple) | `-march=btver2 -mllvm -x86-use-vzeroupper=false` (D38), default schedulers | batch 1 and 2: 10 of 10 with the right source forms |
+  | libraries, below 0x1a3e00 | `src/libs/` | LLVM 3.3 (`-target x86_64-pc-freebsd9`; 3.3 knows no PS4 triple) | `-march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections` (D38, D39), default schedulers | batch 1 and 2: 10 of 10 with the right source forms |
   | game, from 0x1a3e00 | `src/game/` | LLVM 4.0.0 (`--target=x86_64-scei-ps4`) | `-march=btver2 -mllvm -pre-RA-sched=list-ilp` (no vzeroupper by 4.0.0's own btver2 feature, D38) | batch 3: 12 of 12 |
 
   The probe table that led here (`tools/compiler_probe.sh`, every prebuilt

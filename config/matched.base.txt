@@ -184,7 +184,7 @@ FUN_0006b4f0 src/libs/unknown/func_0006b4f0.cpp
 FUN_0006b6b0 src/libs/unknown/func_0006b6b0.cpp
 FUN_0006b7c0 src/libs/unknown/func_0006b7c0.cpp
 FUN_0006c310 src/libs/unknown/func_0006c310.cpp
-FUN_0006c440 src/libs/unknown/func_0006c440.cpp
+FUN_0006c440 src/libs/unknown/func_0006c470.cpp _ZL37finishLoadedObjecthknpExternMeshShapePvi
 FUN_0006c6f0 src/libs/unknown/func_0006c6f0.cpp
 FUN_0006c800 src/libs/unknown/func_0006c800.cpp
 FUN_00072f70 src/libs/unknown/func_00072f70.cpp _ZNK23hknpConvexPolytopeShape12FUN_00072f70Ev
@@ -2551,3 +2551,4 @@ FUN_0000f2f0 src/libs/unknown/func_0000f2f0.cpp _ZN17Allocator0000ed4012FUN_0000
 FUN_00161b40 src/libs/unknown/func_00161b40.cpp
 FUN_000a8d80 src/libs/unknown/func_000a8d80.cpp _ZNK20SupportQuery000a8ef012FUN_000a8d80ERKDv4_fS2_R20SupportPoint000a8ef0
 FUN_00040c10 src/libs/unknown/func_00040c10.cpp _ZNK21hknpShapeSlot22Output12FUN_00040c10EiP17hknpTriangleShape
+FUN_0006c470 src/libs/unknown/func_0006c470.cpp _GLOBAL__I_a
