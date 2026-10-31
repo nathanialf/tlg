@@ -676,19 +676,162 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
     u8 unknown478[8];
 };
 
+/* A block stream range that links to the next range of its list (derived
+ * names), 0x18 bytes on a 16-byte boundary (0x20 a slot; an assignment
+ * copies the 0x18, clang's data size): a list's first range kept in place,
+ * every later one written into a stream and linked in after the first (the
+ * collide task's command ranges, 0x15f480). */
+struct LinkedRange0015ea30 /* derived name */
+{
+    hkBlockStreamRange range __attribute__((aligned(16)));
+    LinkedRange0015ea30 *next;
+};
+
+/* The command ranges of a context by grid cell (derived name). */
+struct CommandRanges0015ea30 /* derived name */
+{
+    LinkedRange0015ea30 *ranges;
+};
+
+/* A collide task's output range (derived names), 0x38 bytes on a 16-byte
+ * boundary (0x40 a slot), a stack object of 0x15ea30 built empty: a linked
+ * range, a flag, and the counts of the writer it was taken from. */
+struct CollideRange0015ea30 /* derived name */
+{
+    CollideRange0015ea30() : next(0), flag(false), unknown2c(0)
+    {
+        range.numElements = 0;
+        writerCounts[0] = 0;
+        writerCounts[1] = 0;
+    }
+
+    hkBlockStreamRange range __attribute__((aligned(16)));
+    CollideRange0015ea30 *next;
+    hkBool flag; /* derived name */
+    u8 unknown19[0x13];
+    int unknown2c;
+    int writerCounts[2]; /* derived name */
+};
+
+/* A range appended to a list whose first range is kept in place: copied
+ * into the list's first when that is empty, else written into the stream
+ * and linked in after it (derived name; the collide task's slot 5). */
+template <typename T>
+inline void appendLinkedRange(T &list, const T &range, hkBlockStreamWriter &writer)
+{
+    if (list.range.numElements == 0) {
+        list = range;
+        return;
+    }
+    T *added = static_cast<T *>(writer.reserve(int(sizeof(T))));
+    *added = range;
+    if (list.range.numElements == 0) {
+        list = *added;
+    } else {
+        added->next = list.next;
+        list.next = added;
+    }
+    writer.advance(int(sizeof(T)));
+}
+
+/* What the collide tasks share (derived names): the output lists by grid
+ * cell at +0x10 and +0x20, and five streams a context at +0x140. */
+struct CollideShared0015ea30 /* derived name */
+{
+    u8 unknown0[0x10];
+    CollideRange0015ea30 *rangesA; /* derived name */
+    u8 unknown18[8];
+    CollideRange0015ea30 *rangesB; /* derived name */
+    u8 unknown28[0x118];
+    hkBlockStream (*contextStreams)[5]; /* derived name */
+};
+
+/* The pairs of a batch through the collision detectors (0x15c5f0; the
+ * collide task's slot 5 calls it once a batch, the second consumer null
+ * when there are no new pairs to read). derived names. */
+void FUN_0015c5f0(hknpWorldContextPool::Context *context, void *shared, int cellIndex,
+                  hkBlockStreamConsumer *consumer, void *argument4, void *argument5,
+                  hkBlockStreamConsumer *consumer2, void *argument7, void *argument8,
+                  hkBlockStreamWriter *writer0, hkBlockStreamWriter *writer28,
+                  hkBlockStreamWriter *writer50, hkBlockStreamWriter *writer78,
+                  hkBlockStreamWriter *writer128, hkBlockStreamWriter *writer150,
+                  hkBlockStreamWriter *writer100, hknpWorldObject380Record *record0,
+                  hknpWorldObject380Record *record1, hknpWorldObject380Record *record2,
+                  void *output);
+
 /* The narrow phase's pairs task (derived name; vtables 0x16a4ee0 and
- * 0x16a4f28): slot 6 opens "Collide/Existing Pairs" or "Collide/New Pairs";
- * its complete destructor FUN_0015dc50 jumps to FUN_0015dee0, which
- * restores both vtables and destroys the 0x710-byte records of the array
- * at +0x108. */
+ * 0x16a4f28), 0x170 bytes, built inline by FUN_00150330: slot 6 opens
+ * "Collide/Existing Pairs" or "Collide/New Pairs". The destructor is the
+ * implicit one, emitted with the vtable in the file of the key function,
+ * slot 5: the base destructor 0x15dee0 restores both vtables and destroys
+ * the arrays from the last member; the complete destructor 0x15dc50 jumps
+ * to it and the deleting one 0x15dc60 calls it (a linkonce destructor is
+ * not aliased by clang 3.3, CGCXX.cpp:124-127). */
 class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
   public:
+    /* An element of the array at +0xd8, 0x20 bytes (derived names): the
+     * range the batch writes, then the two grid cells it belongs to. */
+    struct Entry20 {
+        hkBlockStreamRange range;
+        u8 unknown10[4];
+        u8 cellB; /* derived name */
+        u8 cellA; /* derived name: 0xff for none */
+        u8 unknown16[0xa];
+    };
+
+    /* An element of the array at +0xe8, 0x70 bytes (derived names): the
+     * range the batch reads, its output and its command range. */
+    struct Entry70 {
+        hkBlockStreamRange range;
+        CollideRange0015ea30 output;
+        LinkedRange0015ea30 commands;
+    };
+
+    /* The heap's block given back at the class's size when the object is
+     * not null (tlg_lib_unknown.h; the deleting destructor 0x15dc60 frees
+     * 0x170 bytes, not the object's recorded size). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 5 (0x15ea30; the interface's thunk 0x15fa40): the work, the
+     * class's key function. Its functions.base.txt row carries the mangled
+     * name so that the thunk's jump resolves while it is unmatched. */
+    virtual void process();
     /* slot 6 (0x15e7f0; the interface's thunk 0x15e850) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    u8 unknown18[0xb8];
-    int pairsKind; /* derived name: 1 for the existing pairs */
+    u8 unknown18[8];
+    u8 shared20[0x48]; /* derived name: handed to 0x15c5f0 */
+    void *unknown68;   /* derived name */
+    void *unknown70;   /* derived name */
+    void *unknown78;   /* derived name */
+    void *unknown80;   /* derived name */
+    u8 unknown88[0x38];
+    hknpWorldContextPool *contextPool; /* derived name */
+    u8 unknownC8[8];
+    int pairsKind;            /* derived name: 1 for the existing pairs */
+    hkArray<Entry20> cells;   /* derived name: the existing pairs' batches */
+    hkArray<Entry70> batches; /* derived name: the new pairs' batches */
+    u8 unknownF8[8];
+    int *nextBatch; /* derived name: taken atomically by each worker */
+    /* The step's stream sets, one in use per context (slot 5 picks the
+     * set by the context's index). derived name. */
+    hkArray<StepStreams0015e980> streamSets;
+    CollideShared0015ea30 *shared; /* derived name */
+    hkBlockStream *stream120;      /* derived name */
+    void *unknown128;              /* derived name */
+    u8 firstContextIndex;          /* derived name */
+    u8 unknown131;
+    hkBool flag132; /* derived name */
+    hkBool flag133; /* derived name */
+    u8 unknown134[4];
+    const hkBlockStreamRange *ranges138; /* derived name */
+    const hkBlockStreamRange *ranges140; /* derived name */
+    hkBlockStream *stream148;            /* derived name */
+    void *unknown150;                    /* derived name */
+    hkBlockStreamRange *rangesOut158;    /* derived name */
+    hkBlockStreamRange *rangesOut160;    /* derived name */
+    u8 unknown168[8];
 };
 
 /* A 16-byte task of the broad phase (derived name from its timer name;
@@ -924,9 +1067,6 @@ void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; de
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
 void FUN_00154f50(hknpPrepareConstraintsTask *self);        /* vtable slot 5; derived name */
 void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
-void FUN_0015dc60(hknpCollidePairsTask *self);              /* vtable slot 1; derived name */
-void FUN_0015dee0(hknpCollidePairsTask *self);              /* derived name */
-void FUN_0015ea30(hknpCollidePairsTask *self);              /* vtable slot 5; derived name */
 void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
 void FUN_0016e9f0(hknpSolveDataTask *self); /* vtable slot 1 (0x16a5680); derived name */
 /* The interface's thunk of it (slot 1 of the second vtable, 0x16ea40), on

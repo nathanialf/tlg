@@ -3856,6 +3856,18 @@ struct ThreadBuffer /* derived name */
         }
     }
 
+    /* The next split of a timer list ("St" and its name), as the collide
+     * task's batches time themselves (0x15ecf4). derived name. */
+    void timerSplitList(const char *name)
+    {
+        if (end < capacityMinus16) {
+            TimerCommand *command = reinterpret_cast<TimerCommand *>(end);
+            command->commandAndMonitor = name;
+            command->time0 = readTimeStampCounter();
+            end = reinterpret_cast<char *>(command + 1);
+        }
+    }
+
     void timerEnd(const char *name)
     {
         if (end < capacityMinus16) {
@@ -4663,6 +4675,13 @@ inline void hknpPrepareNewPairsTask::operator delete(void *object, unsigned long
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpCollidePairsTask::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
+}
+
 inline void hknpSolverFactoryTask::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -4994,12 +5013,16 @@ template <typename T> struct LocalBuffer /* derived name */ {
     int size;
 };
 
+/* The storage and its local copy are stored before the capacity: a
+ * setSize that follows reads the capacity back right after its store, where
+ * InstCombine's store-to-load forwarding folds the reserve away before GVN,
+ * so the array leaves memory (0x1707d0). */
 template <typename T> struct LocalArray : public hkArray<T> /* derived name */ {
     explicit LocalArray(int n) : initialCapacity(n)
     {
         this->data = n ? stackAllocate<T>(n) : 0;
-        this->capacityAndFlags = n | hkArray<T>::DONT_DEALLOCATE_FLAG;
         localMemory = this->data;
+        this->capacityAndFlags = n | hkArray<T>::DONT_DEALLOCATE_FLAG;
     }
 
     ~LocalArray()

@@ -8500,7 +8500,10 @@ class hknpWorldObject380 : public hkReferencedObject /* derived name */
     virtual void FUN_00031170(hknpWorldObject380Record **records, int count);
     virtual void FUN_000311b0(hknpWorldObject380Record **records, void *const *pointers,
                               int count); /* vtable slot 10; derived name */
-    virtual void unknownVirtual11();      /* the empty 0x1c1e0 */
+    /* Slot 11, the empty 0x1c1e0: told the records are done with a stage
+     * (the collide task's slot 5 passes 2 or 3, 0x15f208, 0x15f6a6).
+     * derived name. */
+    virtual void unknownVirtual11(hknpWorldObject380Record **records, int stage);
     /* Slot 12 (0x311f0): the centres of mass copied and the orientations
      * set as rotations, the third argument unread. derived name. */
     virtual void FUN_000311f0(hknpWorldObject380MotionPair *out, const hknpMotion &motionA,
@@ -17010,29 +17013,6 @@ struct hkBlockStreamWriter /* derived name */
     u8 unknown20[8];
 };
 
-/* The writers of the narrow phase's pairs task (derived names): a stack
- * object of its work (0x15ea30, at -0x808), every writer finalized at its
- * end in its "StFinalizeWriters" timer (0x15e030), the three from +0x128
- * only when the first of them was bound. */
-struct CollideWriters0015e030 /* derived name */
-{
-    /* derived name */
-    void FUN_0015e030();
-
-    hkBlockStreamWriter writer0;
-    hkBlockStreamWriter writer28;
-    hkBlockStreamWriter writer50;
-    hkBlockStreamWriter writer78;
-    hkBlockStreamWriter writerA0;
-    u8 unknownC8[8];
-    hkBlockStreamWriter writerD0;
-    u8 unknownF8[8];
-    hkBlockStreamWriter writer100;
-    hkBlockStreamWriter writer128;
-    hkBlockStreamWriter writer150;
-    hkBlockStreamWriter writer178;
-};
-
 /* A command stream writer (vtable 0x16a3370, ruled hkBlockStreamCommandWriter,
  * D14), 0x38 bytes: constructor 0x904c0 (called at 0x167f1b on a 0x38-byte
  * block, stores 0xffff0001 at +8 and clears the writer's stream), deleting
@@ -17347,7 +17327,9 @@ struct hknpWorldContextPool /* derived name */
         hknpWorldObject380Record *records268[3];
         hkBlockStream stream;                      /* derived name */
         hkBlockStreamCommandWriter *commandWriter; /* derived name */
-        u8 unknown388[8];
+        /* Where the collide task's slot 5 links each batch's command range,
+         * by the batch's grid cell (0x15f480). derived name. */
+        struct CommandRanges0015ea30 *commandRanges;
         /* Where the writer's commands start (0x167f70); its count cleared by
          * the constructor. derived name. */
         hkBlockStreamRange commandRange;
@@ -17648,6 +17630,52 @@ struct StepStreams0015e980 /* derived name */
     hkBlockStream slot6;
     hkBool inUse; /* derived name */
     u8 unknown701[0xf];
+};
+
+/* The writers of the narrow phase's pairs task (derived names): a stack
+ * object of its work (0x15ea30, at -0x808), every writer finalized at its
+ * end in its "StFinalizeWriters" timer (0x15e030), the three from +0x128
+ * only when the first of them was bound. */
+struct CollideWriters0015e030 /* derived name */
+{
+    /* Every writer unbound, the three counted ones' counts cleared (the
+     * stores before 0x15ec08). */
+    CollideWriters0015e030()
+    {
+        countsC8[0] = 0;
+        countsC8[1] = 0;
+        countsF8[0] = 0;
+        countsF8[1] = 0;
+        counts1A0[0] = 0;
+        counts1A0[1] = 0;
+    }
+
+    /* derived name */
+    void FUN_0015e030();
+
+    /* The writers bound to a context's streams and a set's (0x14aff90):
+     * +0x100 over the context's first cache to the first of the shared
+     * streams, +0xa0 and +0xd0 over its third to the second and third,
+     * the four from +0 over its second to the set's first four streams,
+     * and in mode 1 +0x178 (third cache, the set's seventh) and +0x128
+     * and +0x150 (second cache, the set's fifth and sixth). derived
+     * name. */
+    void FUN_014aff90(const hknpWorldContextPool::Context *context, hkBlockStream *sharedStreams,
+                      StepStreams0015e980 *set, int mode);
+
+    hkBlockStreamWriter writer0;
+    hkBlockStreamWriter writer28;
+    hkBlockStreamWriter writer50;
+    hkBlockStreamWriter writer78;
+    hkBlockStreamWriter writerA0;
+    int countsC8[2]; /* derived name */
+    hkBlockStreamWriter writerD0;
+    int countsF8[2]; /* derived name */
+    hkBlockStreamWriter writer100;
+    hkBlockStreamWriter writer128;
+    hkBlockStreamWriter writer150;
+    hkBlockStreamWriter writer178;
+    int counts1A0[2]; /* derived name */
 };
 
 /* A block stream's reader (derived names), 0x18 bytes: the current block,

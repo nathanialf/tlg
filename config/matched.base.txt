@@ -225,7 +225,7 @@ FUN_000ad910 src/libs/unknown/func_000ad910.cpp
 FUN_00128640 src/libs/unknown/func_00127a50.cpp _ZNK12_GLOBAL__N_117TreeQuery00127a5015unknownVirtual4Ev
 _ZN20hknpHeightFieldShapeD1Ev src/libs/unknown/func_00175c00.cpp
 FUN_0014e0a0 src/libs/unknown/func_0014e0a0.cpp
-FUN_0015dc50 src/libs/unknown/func_0015dc50.cpp
+_ZN20hknpCollidePairsTaskD1Ev src/libs/unknown/func_0015e7f0.cpp
 _ZN18hknpMountedBallGunD1Ev src/libs/unknown/func_00166890.cpp
 FUN_0016ced0 src/libs/unknown/func_0016ced0.cpp _ZN21hknpScaledConvexShape12FUN_0016ced0Ev
 FUN_0017d790 src/libs/unknown/func_0017d790.cpp
@@ -421,8 +421,8 @@ FUN_00155420 src/libs/unknown/func_00155420.cpp
 FUN_00156870 src/libs/unknown/func_00156870.cpp
 FUN_0015bf10 src/libs/unknown/func_0015b7a0.cpp _ZThn16_N23hknpPrepareNewPairsTask7processEv
 FUN_0015b7a0 src/libs/unknown/func_0015b7a0.cpp _ZN23hknpPrepareNewPairsTask7processEv
-FUN_0015dcb0 src/libs/unknown/func_0015dcb0.cpp
-FUN_0015fa40 src/libs/unknown/func_0015fa40.cpp
+FUN_0015dcb0 src/libs/unknown/func_0015e7f0.cpp _ZThn16_N20hknpCollidePairsTaskD1Ev
+FUN_0015fa40 src/libs/unknown/func_0015e7f0.cpp _ZThn16_N20hknpCollidePairsTask7processEv
 FUN_00165880 src/libs/unknown/leaf_00165880.cpp _ZNK19hknpVehicleInstance12FUN_00165880Ev
 FUN_0016ec20 src/libs/unknown/func_0016ec20.cpp
 FUN_00176b10 src/libs/unknown/func_00176b10.cpp _ZN18hknpCharacterProxy12FUN_00176b10EP30hknpCharacterProxySignalSourceP28hknpCharacterProxySignalData
@@ -1209,7 +1209,7 @@ _ZN7hkxNodeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008b4b0.cpp
 FUN_000aa570 src/libs/unknown/func_000aa570.cpp _Z12FUN_000aa570N13hkMeshSection13PrimitiveTypeEi
 FUN_00009c50 src/libs/unknown/func_00009c50.cpp _GLOBAL__I_a
 FUN_0008ef10 src/libs/unknown/func_0008ef10.cpp _ZN10BlockCache12FUN_0008ef10EP18hkBlockStreamBlock
-FUN_0015dcc0 src/libs/unknown/func_0015dcc0.cpp _Z12FUN_0015dcc0P17hknpTaskInterface
+FUN_0015dcc0 src/libs/unknown/func_0015e7f0.cpp _ZThn16_N20hknpCollidePairsTaskD0Ev
 FUN_00185460 src/libs/unknown/func_00185460.cpp _Z12FUN_00185460P8hkAabb16PKS_i
 _ZN12hkUuidObjectD0Ev src/libs/unknown/func_0000d990.cpp
 _ZN17Crc32StreamWriterD0Ev src/libs/unknown/func_00004060.cpp
@@ -1278,7 +1278,7 @@ FUN_0014e0b0 src/libs/unknown/func_0014e0b0.cpp _Z12FUN_0014e0b0P23hknpWorldObje
 FUN_00093340 src/libs/unknown/func_00093340.cpp _ZN16FiosStreamReader12FUN_00093340EPvi
 _ZN18hknpFirstPersonGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00156620.cpp _ZN18hknpFirstPersonGunC2E24hkFinishLoadedObjectFlag
 FUN_00151d90 src/libs/unknown/func_00151d90.cpp
-FUN_0015dc60 src/libs/unknown/func_0015dc60.cpp _Z12FUN_0015dc60P20hknpCollidePairsTask
+_ZN20hknpCollidePairsTaskD0Ev src/libs/unknown/func_0015e7f0.cpp
 FUN_0017d8d0 src/libs/unknown/func_0017d8d0.cpp
 FUN_00002230 src/libs/unknown/func_00002230.cpp
 FUN_00002280 src/libs/unknown/func_00002230.cpp _ZThn8_N16TwoBaseAllocator12FUN_00002230Ei
@@ -2492,3 +2492,6 @@ FUN_000a92c0 src/libs/unknown/func_000a92c0.cpp
 _ZN7hkQueueIN10hkJobQueue13JobQueueEntryEE11setCapacityEi src/libs/unknown/func_00004ec0.cpp
 FUN_0000a8d0 src/libs/unknown/func_0000a480.cpp _ZN10hkOArchive12FUN_0000a8d0EPKti
 FUN_0000aa00 src/libs/unknown/func_0000a480.cpp _ZN10hkOArchive12FUN_0000aa00EPKji
+FUN_001707d0 src/libs/unknown/func_001707d0.cpp
+_ZN20hknpCollidePairsTaskD2Ev src/libs/unknown/func_0015e7f0.cpp
+_ZN19StepStreams0015e980D2Ev src/libs/unknown/func_0015e7f0.cpp

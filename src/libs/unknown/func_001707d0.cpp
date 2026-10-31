@@ -1,34 +1,25 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: 31 of 96, 321 bytes against 335 (docs/NOTES.md, Round 67A):
-// the clear is hkString::memSet4 (its memset sized 4 * (n + smax(-n, -1)) + 4
-// as the base's); the base tests the count again after the allocation's
-// join, where here the fill's guard, canonicalized by InstCombine to the
-// allocation's own `n == 0`, is folded by GVN on the allocated path, and the
-// free's rounded size is masked with 0x3fffff80 in the base (0x1fffff80
-// here, as the allocation's in both).
-
 /* The number of distinct vertex ids (the low half of each vertex's w), one
- * bit per id in a local array of words cleared first. derived name. */
+ * bit per id in a local array of words sized and cleared first. derived
+ * name. */
 int FUN_001707d0(const hknpConvexShape *shape)
 {
-    const u16 numVertices = shape->vertices.size;
+    const int numVertices = shape->vertices.size;
     const Vec4 *vertices = reinterpret_cast<const Vec4 *>(
         reinterpret_cast<const char *>(&shape->vertices) + shape->vertices.offset);
     const int numWords = (numVertices + 31) >> 5;
-    u32 *seen = numWords ? stackAllocate<u32>(numWords) : HK_NULL;
-    hkString::memSet4(seen, 0, numWords);
+    LocalArray<u32> seen(numWords);
+    seen.setSize(numWords);
+    hkString::memSet4(seen.data, 0, seen.getSize());
     int numIds = 0;
     for (int i = 0; i < numVertices; i++) {
         const int id = reinterpret_cast<const u16 *>(&vertices[i])[6];
-        const u32 bit = 1u << (id & 31);
-        u32 &word = seen[id >> 5];
-        if (!(word & bit)) {
-            word |= bit;
+        if (!((seen[id >> 5] >> (id & 31)) & 1)) {
+            seen[id >> 5] |= 1 << (id & 31);
             numIds++;
         }
     }
-    stackBlockFree(seen, LocalBuffer<u32>::roundedSize(numWords));
     return numIds;
 }
