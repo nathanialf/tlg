@@ -180,18 +180,30 @@ class CollisionDetector169b230 /* derived name */
 /* A new manifold's points (derived names): their count at +0 and their
  * positions from +0x40 (hknpSurfaceVelocityModifier's slot 7, 0x16d22a,
  * averages them). */
-struct hknpManifold /* derived name */
+/* A manifold's first 0x80 bytes (derived names): the manifold status
+ * event carries a copy of them, assigned member by member, the vectors one
+ * at a time and the two ints before the first as one word (0x154a60: `mov
+ * rax, [r9]`, the eight bytes before the normal not copied). */
+struct hknpManifoldBase /* derived name */
 {
     int numPoints; /* derived name */
-    u8 unknown4[0xc];
+    int unknown4;
     /* The contact normal (the surface velocity modifier's slot 7 hands it
      * to each surface velocity, 0x16d29c). derived name. */
     hkVector4 normal;
-    u8 unknown20[0x10];
+    hkVector4 unknown20;
     /* Each point's distance, a lane each (0x156e90). derived name. */
     float distances[4];
     hkVector4 positions[4]; /* derived name */
-    u8 unknown80[0x28];
+};
+
+struct hknpManifold : public hknpManifoldBase /* derived name */
+{
+    u8 unknown80[0x13];
+    /* Set for a manifold the status event reports as status 1, else 2
+     * (0x154a60). derived name. */
+    u8 flag93;
+    u8 unknown94[0x14];
     hknpManifoldCollisionCache *collisionCache; /* derived name */
     u8 unknownB0[0x30];
     /* The bodies' mass scales, each broadcast (the mass changer's slot 4,
@@ -273,10 +285,11 @@ class Modifier16a5020 /* derived name */
 struct ManifoldStatusEvent00154bc0 : public hkCommand /* derived name */
 {
     /* The header filled in order, then the bodies' words, the status, the
-     * cache and the keys, no manifold. */
+     * cache and the keys, then the manifold's copy when there is one, else
+     * its point count -1. */
     ManifoldStatusEvent00154bc0(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB,
                                 u8 manifoldStatus, hknpManifoldCollisionCache *cache_,
-                                u32 shapeKeyA, u32 shapeKeyB)
+                                u32 shapeKeyA, u32 shapeKeyB, const hknpManifoldBase *manifold_)
     {
         sizePaddedTo16 = 0xb0;
         unknown2 = 0;
@@ -290,7 +303,11 @@ struct ManifoldStatusEvent00154bc0 : public hkCommand /* derived name */
         cache = cache_;
         keyA = shapeKeyA;
         keyB = shapeKeyB;
-        manifoldNumPoints = -1;
+        if (manifold_) {
+            manifold = *manifold_;
+        } else {
+            manifold.numPoints = -1;
+        }
     }
 
     u32 byte7fA;
@@ -301,11 +318,7 @@ struct ManifoldStatusEvent00154bc0 : public hkCommand /* derived name */
     u32 keyA;
     u32 keyB;
     hknpManifoldCollisionCache *cache; /* derived name */
-    /* The manifold's first 0x80 bytes: its point count, then from +0x40
-     * its seven vectors (0x154a60 copies them one by one). */
-    int manifoldNumPoints; /* derived name */
-    u8 unknown34[0xc];
-    Vec4 manifoldVectors[7]; /* derived name */
+    hknpManifoldBase manifold;         /* derived name */
 };
 
 /* The modifier of vtable 0x16a4570 (address point 0x16a4580; derived name),
@@ -317,6 +330,13 @@ struct ManifoldStatusEvent00154bc0 : public hkCommand /* derived name */
 class Modifier16a4580 /* derived name */
 {
   public:
+    /* Slot 4 (0x154a60), when a manifold is processed: an event of status 1
+     * for a manifold flagged at +0x93, else of status 2 when the cache's
+     * flags at +0x22 have bit 5, with the cache and a copy of the
+     * manifold. derived name. */
+    void FUN_00154a60(CommandOwner00171180 *context, const void *sharedData,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      const hknpManifold *manifold) const;
     /* Slot 5 (0x154ca0): status 8, the bodies' ids from the cache, no
      * cache in the event. derived name. */
     void FUN_00154ca0(CommandOwner00171180 *context, const void *sharedData,
@@ -1931,11 +1951,15 @@ class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
  * by shape: a pointer map at +0x10 and an array of 4-byte elements at
  * +0x20, both given back by the destructors, and a critical section at
  * +0x48. */
+/* What an error report is handed to: the message and the object given
+ * with the function (derived name). */
+typedef void (*ReportFunction0000b330)(const char *message, void *reportObject);
+
 class Object0000b330 : public hkReferencedObject /* derived name */
 {
   public:
     /* 0xb330 */
-    Object0000b330(void *reportFunction, void *reportObject);
+    Object0000b330(ReportFunction0000b330 reportFunction, void *reportObject);
 
     /* The members' own destructors: the critical section, the array, the
      * map (0xb1a0, slot 0; the deleting destructor 0xb250, slot 1, holds
@@ -1966,10 +1990,18 @@ class Object0000b330 : public hkReferencedObject /* derived name */
      * map emptied, its storage kept. derived name. */
     void FUN_0000b580();
 
-    OwnedPointerMap map;  /* derived name */
-    hkArray<u32> array;   /* derived name */
-    void *reportFunction; /* derived name */
-    void *reportObject;   /* derived name */
+    /* Slot 13 (0xb680): a message formatted into a local 8 KB buffer, the
+     * text alone when it has neither id nor file, the file, line, what and
+     * text when its id is 0 or -1, else with the id in hexadecimal too;
+     * the buffer reported, then, when asked, the stack trace after a
+     * heading, its two innermost frames left out. derived name. */
+    void FUN_0000b680(const char *what, int id, const char *description, const char *file, int line,
+                      hkBool stackTrace);
+
+    OwnedPointerMap map;                   /* derived name */
+    hkArray<u32> array;                    /* derived name */
+    ReportFunction0000b330 reportFunction; /* derived name */
+    void *reportObject;                    /* derived name */
     int unknown40;
     hkCriticalSection criticalSection; /* derived name */
 };
@@ -3049,6 +3081,11 @@ class StackTracer /* derived name */
      * slot 1, which fifteen other classes' vtables of an empty destructor
      * cite by address). */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* The trace collected into a buffer of a size, frames skipped first:
+     * none on this platform (the shared FUN_000042d0 returns 0; the error
+     * report 0xb768 calls it). derived name. */
+    int FUN_000042d0(hkUlong *trace, int maxTrace, int skip);
 
     void FUN_0000d890(const hkUlong *trace, int numTrace, PrintFunction print,
                       void *context) const; /* derived name */

@@ -902,12 +902,15 @@ struct hkVariant {
     const hkClass *klass; /* derived name */
 };
 
-/* hkCustomAttributes: an array of named variants (24 bytes each) and its
- * count. derived field names. */
+/* hkCustomAttributes (hkClass 0x57b7ee8, built at 0x8b8d: size 0x10, no
+ * parent, one member record at 0x168d190, "attributes"): an array of named
+ * variants and its count. Its Attribute (hkClass 0x57b7e68,
+ * "hkCustomAttributesAttribute", built at 0x8b3f: size 0x18, the records
+ * "name" and "value" at 0x168d140). */
 struct hkCustomAttributes {
     struct Attribute {
-        const char *name; /* derived name */
-        hkVariant value;  /* derived name */
+        const char *name;
+        hkVariant value;
     };
 
     /* The value of the attribute of a name, null when none has it (inline
@@ -5767,6 +5770,9 @@ struct hkcdStaticPvsBlockHeader {
     u32 length;
 };
 
+extern const hkClassMember D_168f9f0[]; /* derived name: hkcdStaticPvs::BlockHeader's records */
+extern const hkClassMember D_168fa40[]; /* derived name: hkcdStaticPvs's records */
+
 /* hkcdStaticPvs (hkClass built at 0x1dc1e: size 0x70, no parent, its member
  * records at 0x168fa40): cells (a static tree's 6-byte storage) at +0,
  * bytesPerCells and cellsPerBlock (int) at +0x30 and +0x34, pvs (an array
@@ -10385,6 +10391,11 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * vtable. */
     hknpScaledConvexShapeBase(hkFinishLoadedObjectFlag flag);
 
+    /* Slot 7 (0x16a850, both vtables): the core convex shape's vertices
+     * bounded, the box scaled and moved, then transformed and pushed out by
+     * the convex radius. derived name. */
+    void FUN_0016a850(const Mat4 &transform, hkAabb &aabbOut) const;
+
     /* Slot 10 (0x16ae20, the vtables 0x16a5390 and 0x16a54a0): the core
      * convex shape's vertices scaled and moved into the buffer, each
      * keeping its w; the buffer is returned. derived name. */
@@ -11263,6 +11274,8 @@ struct hknpBodyQualityLibraryCinfo /* derived name */
     hkBool enableContactCaching;
 };
 
+extern const hkClassMember D_168d140[]; /* derived name: hkCustomAttributes::Attribute's records */
+extern const hkClassMember D_168d190[]; /* derived name: hkCustomAttributes's record */
 extern const hkClassMember D_168d1c0[]; /* derived name: hkQTransformf's records */
 extern const hkClass D_57b7f68;         /* hkQTransformf's hkClass */
 
@@ -12112,6 +12125,12 @@ class hkpPrismaticConstraintData : public hkpConstraintData
 
     /* Slot 7 (0x7e8a0): valid when both frames are orthonormal and the
      * limit's minimum is not above its maximum. */
+    /* The frames set in the bodies' spaces (0x7e660; the game at 0xea7833
+     * and 0xea80c2): the pivots first, then each axis and its perpendicular
+     * normalized as the first two columns, their cross product the third.
+     * derived name. */
+    void FUN_0007e660(const Vec4 &pivotA, const Vec4 &pivotB, const Vec4 &axisA, const Vec4 &axisB,
+                      const Vec4 &axisAPerp, const Vec4 &axisBPerp);
     /* The motor set (0x7e7c0; the game at 0xeb15fa), the references
      * swapped. derived name. */
     void FUN_0007e7c0(hkpConstraintMotor *motor);
@@ -13251,6 +13270,12 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     /* Slot 7 (0x79220): valid when the stabilized method has its setup
      * enabled, both frames are orthonormal and an enabled motor has its
      * limit enabled. */
+    /* The frames set in the bodies' spaces (0x78f50; the game at 0xea76d9
+     * and 0xea7f77): each axis and its perpendicular normalized as the
+     * first two columns, their cross product the third, the pivot the
+     * translation. derived name. */
+    void FUN_00078f50(const Vec4 &pivotA, const Vec4 &pivotB, const Vec4 &axisA, const Vec4 &axisB,
+                      const Vec4 &axisAPerp, const Vec4 &axisBPerp);
     /* The motor set (0x79140; the game at 0xeb159e), the references
      * swapped. derived name. */
     void FUN_00079140(hkpConstraintMotor *motor);

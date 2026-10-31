@@ -11,7 +11,7 @@ void Modifier16a4580::FUN_00154ca0(CommandOwner00171180 *context, const void *sh
         const u32 byteB = cdBodyB->body->byte7f;
         const u32 idB = cache->bodyIdB;
         ManifoldStatusEvent00154bc0 event(byteA, idA, byteB, idB, 8, HK_NULL, cdBodyA->shapeKey,
-                                          cdBodyB->shapeKey);
+                                          cdBodyB->shapeKey, HK_NULL);
         event.unknown2 = 1;
         context->dispatcher->exec(event);
     }
