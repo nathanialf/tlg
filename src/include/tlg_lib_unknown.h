@@ -183,10 +183,14 @@ class CollisionDetector169b230 /* derived name */
 struct hknpManifold /* derived name */
 {
     int numPoints; /* derived name */
-    u8 unknown4[0x2c];
+    u8 unknown4[0xc];
+    /* The contact normal (the surface velocity modifier's slot 7 hands it
+     * to each surface velocity, 0x16d29c). derived name. */
+    hkVector4 normal;
+    u8 unknown20[0x10];
     /* Each point's distance, a lane each (0x156e90). derived name. */
     float distances[4];
-    Vec4 positions[4]; /* derived name */
+    hkVector4 positions[4]; /* derived name */
     u8 unknown80[0x28];
     hknpManifoldCollisionCache *collisionCache; /* derived name */
     u8 unknownB0[0x30];
@@ -194,6 +198,25 @@ struct hknpManifold /* derived name */
      * 0x69450, writes them). derived names. */
     Vec4 massScaleA;
     Vec4 massScaleB;
+};
+
+/* A surface velocity modifier (derived name; vtable 0x16a5600, its row in
+ * config/vtables.derived.base.txt; constructor 0x16d1f0): built by the world
+ * at +0x68 of its modifier set. Of the modifier interface's callbacks it
+ * implements only slot 7 (mask bit 3). */
+class hknpSurfaceVelocityModifier /* derived name */
+{
+  public:
+    hknpSurfaceVelocityModifier();
+    virtual ~hknpSurfaceVelocityModifier();
+
+    /* Slot 7 (0x16d200): the manifold's points averaged, each body's
+     * material asked for its surface velocity there, and the first body's
+     * minus the second's applied to the contact jacobian. derived name. */
+    void FUN_0016d200(const void *threadContext, const hknpSolverInfo *solverInfo,
+                      const hknpCdBody &cdBodyA, const hknpCdBody &cdBodyB,
+                      hknpManifoldCollisionCache *cache, const hknpManifold *manifold,
+                      Pair08Owner *jacobian, int jacobianIndex);
 };
 
 /* The modifier of vtable 0x169a5a0 (address point 0x169a5b0, no type info,
@@ -457,6 +480,9 @@ struct Output0002b3b0 /* derived name */
 };
 
 void FUN_0002b180(const Info0002b180 *info, Pair08Owner *self, const Vec4 &a,
+                  const Vec4 &b); /* derived name */
+/* The same from another file, the record first (0x348e0). derived name. */
+void FUN_000348e0(Pair08Owner *self, const Info0002b180 *info, const Vec4 &a,
                   const Vec4 &b); /* derived name */
 void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion *motionA,
                   const hknpMotion *motionB, Output0002b3b0 *out); /* derived name */
@@ -1448,15 +1474,30 @@ class hknpGlobals : public hkReferencedObject
      * slot 1). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    /* The triangle shape the constructor builds in place (0x78270), the
-     * prototype each in-place triangle copies (0x78160). derived name. */
-    Vec4 triangleShapeStorage[14];
+    /* The triangle shape built in place in its own storage (0x78270, the
+     * globals' first member, before the directions), the prototype each
+     * in-place triangle copies (0x78160); nothing destroys it. derived
+     * names. */
+    struct TriangleShapePrototype {
+        TriangleShapePrototype()
+        {
+            new (buffer) hknpTriangleShape(1);
+        }
+
+        Vec4 buffer[14];
+    } triangleShapeStorage;
+
     /* 49 unit directions, the 7 by 7 grid the constructor maps through
      * 0xc05b0 (16-byte elements, grown by 0xb40). derived name. */
     hkArray<hkVector4> directions;
 };
 
 extern hknpGlobals *D_57c8818; /* hknpGlobals's singleton instance */
+
+/* A unit direction from two coordinates in [0, 1] (0xc05b0, in the later
+ * generation's stretch, D22; the globals' constructor maps a 7 by 7 grid of
+ * them). derived name. */
+void FUN_000c05b0(const hkVector4 &coordinates, hkVector4 &directionOut); /* derived name */
 
 /* A triangle shape built in a buffer of its own (derived names): the
  * globals' prototype copied in, its convex radius set (0x78160, out of
@@ -3990,6 +4031,40 @@ template <typename T> inline hkQueue<T>::~hkQueue()
 {
     if (capacity) {
         D_16dc070->temp58->blockFree(data, capacity * int(sizeof(T)));
+    }
+}
+
+/* Room for n elements: twice the capacity, or n when that is more, from the
+ * thread's heap; the elements copied over from the head in order (in one
+ * piece, or the run to the end and then the run from the start), the head
+ * at 0 and the tail after the last; the old block given back. */
+template <typename T> void hkQueue<T>::setCapacity(int n)
+{
+    if (capacity < n) {
+        int newCapacity = capacity * 2;
+        if (newCapacity < n) {
+            newCapacity = n;
+        }
+        T *newData = static_cast<T *>(D_16dc070->temp58->blockAlloc(newCapacity * int(sizeof(T))));
+        if (newData && data) {
+            if (elementsInUse) {
+                if (tail <= head) {
+                    const int numToEnd = capacity - head;
+                    const int numFromStart = tail;
+                    FUN_00017e70(newData, data + head, numToEnd * sizeof(T));
+                    FUN_00017e70(newData + numToEnd, data, numFromStart * sizeof(T));
+                } else {
+                    FUN_00017e70(newData, data + head, elementsInUse * sizeof(T));
+                }
+            }
+            head = 0;
+            tail = elementsInUse;
+        }
+        if (capacity) {
+            D_16dc070->temp58->blockFree(data, capacity * int(sizeof(T)));
+        }
+        data = newData;
+        capacity = newCapacity;
     }
 }
 

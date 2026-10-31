@@ -1,5 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include "tlg_types.h"
+#include "tlg_lib_unknown.h"
 
 /* derived names (config/vtables.derived.base.txt): the out-of-line
  * constructor of a modifier (vtable 0x16a5600) built at +0x68 of the object the function at 0x49d8b creates
@@ -15,11 +15,4 @@
  * the difference of the two bodies' and applies it to the contact jacobian
  * (0x348e0): a surface velocity modifier. Slot 4 is the empty 0x158a30, slot
  * 6 the shared 0x69440, the rest the empty 0x3b640. */
-class hknpSurfaceVelocityModifier /* derived name */
-{
-  public:
-    hknpSurfaceVelocityModifier();
-    virtual ~hknpSurfaceVelocityModifier();
-};
-
 hknpSurfaceVelocityModifier::hknpSurfaceVelocityModifier() {}

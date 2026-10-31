@@ -4998,6 +4998,19 @@ struct hkcdStaticPvs;
  * (hknpLodShape's 0x68500 keeps the half in a register). */
 extern const Vec4 D_14b2060[58];
 
+/* Rows of that table by meaning (derived names, from the rows' values): row
+ * 16 holds zero and the rows after it the reciprocals 1, 1/2, 1/3 and on, the
+ * reciprocal of a count n at row 16 + n. The enumeration has no negative
+ * value, so clang gives it an unsigned type and a row picked at run time is
+ * zero-extended (the surface velocity modifier's 0x16d263: `add eax, 0x10;
+ * shl rax, 4`). */
+enum VectorConstant { VECTOR_CONSTANT_INV_0 = 16 }; /* derived name */
+
+inline const Vec4 &getVectorConstant(VectorConstant row) /* derived name */
+{
+    return D_14b2060[row];
+}
+
 /* derived name: the step from one point toward another at a speed (0x156cd0;
  * the callers at 0x158292 and 0x166b88): when the two are more than
  * epsilon (row 35) apart, the speed along the way plus a correction from a
@@ -9553,6 +9566,11 @@ struct hknpWorld {
      * is updated (FUN_0004bcd0), then the body signal fired. derived
      * names. */
     void FUN_0005b580(int bodyId, float value, int mode);
+    /* A body's record of the body manager's map at +0x48 freed when it has
+     * one (0x5f240, called by 0x16eca0); unless the body is static or the
+     * mode is 2, a body neither static nor keyframed (flags 9) handed on and
+     * its motion updated; then the body signal fired. derived names. */
+    void FUN_0005f240(u32 bodyId, int mode);
     void FUN_0004bcd0(int motionId); /* derived name */
     void FUN_0005bf80(int bodyId);   /* derived name */
     /* Bodies removed from the world (0x4e5d0; the ball gun's reset at

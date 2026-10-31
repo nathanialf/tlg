@@ -2476,3 +2476,6 @@ FUN_00085550 src/libs/unknown/func_00085550.cpp
 _ZN18hknpCharacterProxyD1Ev src/libs/unknown/func_00176b70.cpp
 FUN_0016db90 src/libs/havok/Physics/Physics/Dynamics/Constraint/hknpConstraintManager.cpp _ZN21hknpConstraintManager12FUN_0016db90Ev
 FUN_000cf140 src/libs/unknown/func_000cf140.cpp
+FUN_0016d200 src/libs/unknown/func_0016d200.cpp
+_ZN7hkQueueI10hknpBodyIdE11setCapacityEi src/libs/unknown/func_00157e00.cpp
+_ZN11hknpGlobalsC1Ev src/libs/unknown/func_00175f70.cpp _ZN11hknpGlobalsC2Ev

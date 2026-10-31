@@ -4,7 +4,7 @@
 hknpTriangleShape *hknpTriangleShape::FUN_000783f0(float convexRadius)
 {
     void *storage = D_16dc070->temp58->blockAlloc(sizeof(InplaceTriangleShape00078160));
-    hkString::memCpy16(storage, D_57c8818->triangleShapeStorage,
+    hkString::memCpy16(storage, D_57c8818->triangleShapeStorage.buffer,
                        sizeof(InplaceTriangleShape00078160) / 16);
     hknpTriangleShape *shape = static_cast<hknpTriangleShape *>(storage);
     shape->convexRadius = convexRadius;
