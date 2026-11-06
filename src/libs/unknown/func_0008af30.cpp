@@ -3,15 +3,21 @@
 
 /* derived name: the finish callback of hkxNodeSelectionSet's type info
  * (registered at 0x8b00e): construct the object in place from a loaded image. */
-void FUN_0008af30(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxNodeSelectionSet(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxNodeSelectionSet(flag);
 }
 
-/* hkxNodeSelectionSet's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxNodeSelectionSet(void *object) /* derived name */
+{
+    static_cast<hkxNodeSelectionSet *>(object)->~hkxNodeSelectionSet();
+}
+
 extern const hkClass D_57c76b0;         /* hkxAttributeHolder's hkClass */
 extern const hkClassMember D_16a1eb0[]; /* derived name: hkxNodeSelectionSet's records */
 
@@ -36,6 +42,7 @@ static const void *vtableOfhkxNodeSelectionSet() /* derived name */
 const hkClass D_57c75b0("hkxNodeSelectionSet", &D_57c76b0, sizeof(hkxNodeSelectionSet), 0, 0, 0, 0,
                         D_16a1eb0, 2, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c7600;
-const hkTypeInfo D_57c7600("hkxNodeSelectionSet", "!hkxNodeSelectionSet", FUN_0008af30,
-                           FUN_000002d0, vtableOfhkxNodeSelectionSet(),
+const hkTypeInfo D_57c7600("hkxNodeSelectionSet", "!hkxNodeSelectionSet",
+                           finishLoadedObjecthkxNodeSelectionSet,
+                           cleanupLoadedObjecthkxNodeSelectionSet, vtableOfhkxNodeSelectionSet(),
                            sizeof(hkxNodeSelectionSet));

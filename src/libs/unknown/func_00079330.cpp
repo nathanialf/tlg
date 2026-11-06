@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hkpVelocityConstraintMotor's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_00079330(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkpVelocityConstraintMotor(void *object,
+                                                         int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkpVelocityConstraintMotor(flag);
 }
 
-/* hkpVelocityConstraintMotor's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkpVelocityConstraintMotor(void *object) /* derived name */
+{
+    static_cast<hkpVelocityConstraintMotor *>(object)->~hkpVelocityConstraintMotor();
+}
+
 extern const hkClassMember D_169bbc0[]; /* derived name: hkpVelocityConstraintMotor's records */
 extern const hkClass D_57c59a8;         /* hkpLimitedForceConstraintMotor's hkClass */
 
@@ -35,5 +42,7 @@ const hkClass D_57c32e8("hkpVelocityConstraintMotor", &D_57c59a8,
                         sizeof(hkpVelocityConstraintMotor), 0, 0, 0, 0, D_169bbc0, 3, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c3338;
 const hkTypeInfo D_57c3338("hkpVelocityConstraintMotor", "!hkpVelocityConstraintMotor",
-                           FUN_00079330, FUN_000002d0, vtableOfhkpVelocityConstraintMotor(),
+                           finishLoadedObjecthkpVelocityConstraintMotor,
+                           cleanupLoadedObjecthkpVelocityConstraintMotor,
+                           vtableOfhkpVelocityConstraintMotor(),
                            sizeof(hkpVelocityConstraintMotor));

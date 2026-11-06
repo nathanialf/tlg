@@ -1,6 +1,23 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
+/* derived names: the finish callback of hknpWorldCinfo's type info (0x57c13e0):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+static void finishLoadedObjecthknpWorldCinfo(void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    FUN_0003b640(static_cast<hknpWorldCinfo *>(object), flag);
+}
+
+/* derived names: the cleanup callback of hknpWorldCinfo's type info (0x57c13e0):
+ * destroy the object in place through its out-of-line destructor. */
+static void cleanupLoadedObjecthknpWorldCinfo(void *object) /* derived name */
+{
+    FUN_0003b650(static_cast<hknpWorldCinfo *>(object));
+}
+
 /* hknpWorldCinfo's members' defaults, file-local (D17); the rows are written
  * at build time from the user's executable (D18, config/data_schema.base.txt). */
 static const hknpWorldCinfoDefaults D_14bd370[1] = {
@@ -13,5 +30,5 @@ static const hknpWorldCinfoDefaults D_14bd370[1] = {
 const hkClass D_57c1390("hknpWorldCinfo", 0, sizeof(hknpWorldCinfo), 0, 0, D_1698770, 1, D_1698190,
                         33, D_14bd370, 0, 0, 6);
 extern const hkTypeInfo D_57c13e0;
-const hkTypeInfo D_57c13e0("hknpWorldCinfo", "!hknpWorldCinfo", FUN_00046c60, FUN_00046c70, 0,
-                           sizeof(hknpWorldCinfo));
+const hkTypeInfo D_57c13e0("hknpWorldCinfo", "!hknpWorldCinfo", finishLoadedObjecthknpWorldCinfo,
+                           cleanupLoadedObjecthknpWorldCinfo, 0, sizeof(hknpWorldCinfo));

@@ -4,15 +4,21 @@
 /* derived name: the finish callback of hknpMaterialPalette's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_000377c0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpMaterialPalette(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpMaterialPalette(flag);
 }
 
-/* hknpMaterialPalette's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpMaterialPalette(void *object) /* derived name */
+{
+    static_cast<hknpMaterialPalette *>(object)->~hknpMaterialPalette();
+}
+
 extern const hkClassMember D_16937f0[]; /* derived name: hknpMaterialPalette's records */
 
 /* The address of hknpMaterialPalette's vtable, read from an object finished in a buffer
@@ -33,6 +39,7 @@ static const void *vtableOfhknpMaterialPalette() /* derived name */
 const hkClass D_57beba8("hknpMaterialPalette", &D_57b8640, sizeof(hknpMaterialPalette), 0, 0, 0, 0,
                         D_16937f0, 1, 0, 0, 0, 0);
 extern const hkTypeInfo D_57bebf8;
-const hkTypeInfo D_57bebf8("hknpMaterialPalette", "!hknpMaterialPalette", FUN_000377c0,
-                           FUN_000002d0, vtableOfhknpMaterialPalette(),
+const hkTypeInfo D_57bebf8("hknpMaterialPalette", "!hknpMaterialPalette",
+                           finishLoadedObjecthknpMaterialPalette,
+                           cleanupLoadedObjecthknpMaterialPalette, vtableOfhknpMaterialPalette(),
                            sizeof(hknpMaterialPalette));

@@ -1132,6 +1132,10 @@ struct hkSimplePropertyValue {
  * alignmentPadding, two hkUint32, the second not serialized, then value
  * at +8): a keyed value. */
 struct hkSimpleProperty {
+    /* Nothing to finish (its type info's finish callback is the empty
+     * body). */
+    hkSimpleProperty(hkFinishLoadedObjectFlag flag) {}
+
     u32 key;
     u32 alignmentPadding;
     hkSimplePropertyValue value;
@@ -1429,6 +1433,10 @@ struct hkMatrix3 {
  * records at 0x1691b50): volume and mass (hkReal) at +0 and +4,
  * centerOfMass at +0x10, inertiaTensor (hkMatrix3) at +0x20. */
 struct hkMassProperties {
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body). */
+    hkMassProperties(hkFinishLoadedObjectFlag flag) {}
+
     /* Everything zero (the capsule's mass build, 0x1683f1). */
     hkMassProperties() : volume(0.0f), mass(0.0f)
     {
@@ -2670,11 +2678,9 @@ struct hkRefCountedProperties {
     /* 16 bytes: the referenced object at +0 (the destructor 0x1c1f0 drops a reference
      * on each) and the key at +8 that FUN_0001c2c0 searches by. */
     struct Entry {
-        /* The cleanup callback of its type info (0xd300, registered by
-         * 0xd390; the type infos of hkMultipleVertexBuffer::VertexBufferInfo
-         * and two others, whose first member is also a counted reference,
-         * cite the same body). derived name. */
-        static void FUN_0000d300(void *object);
+        /* The finish constructor: the reference kept as loaded (its type
+         * info's finish callback is the empty body). */
+        Entry(hkFinishLoadedObjectFlag flag) : object(flag) {}
 
         /* A counted reference: released and cleared when the entry is
          * destroyed (the destructor 0x1c1f0, the cleanup callback 0xd300).
@@ -3962,8 +3968,6 @@ class hknpVehicleData : public hkReferencedObject
     hkBool alreadyInitialised;
 };
 
-void FUN_00069250(void *object, int finishing); /* derived name */
-
 /* Its members' defaults (the hkClass's, at 0x14bebb8): each member's offset
  * into the values, -1 for one without a default, then the one value, the
  * friction solver's mass ratio. derived name. */
@@ -4302,10 +4306,6 @@ struct hkxAttributeGroup {
 
 extern const hkClassMember D_16a1490[]; /* derived name: hkxAttributeGroup's records */
 
-/* Its type info's cleanup (0x88a00): the group destroyed in place. derived
- * name. */
-void FUN_00088a00(void *object); /* derived name */
-
 class hkxAttributeHolder : public hkReferencedObject
 {
   public:
@@ -4563,6 +4563,12 @@ class hknpTyremarksWheel : public hkReferencedObject
  * member records at 0x168fc60): four boxes as six vectors of their
  * bounds, lx, hx, ly, hy, lz and hz. */
 struct hkcdFourAabb {
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body). */
+    hkcdFourAabb() {}
+
+    hkcdFourAabb(hkFinishLoadedObjectFlag flag) {}
+
     /* All four boxes empty: the minima the largest value, the maxima its
      * negation (rows 33 and 38 of the vector constants; the simd tree's
      * finish constructor, 0x21a7f). derived name. */
@@ -5201,9 +5207,6 @@ extern const hkClassMember D_168f9a0[]; /* derived name: the plane's records */
 
 void FUN_00095ab0(hkcdPlanarGeometryPrimitivesPlane *self); /* derived name */
 
-/* The finish callback of the plane's type info (0x1d900). */
-void FUN_0001d900(void *object, int finishing); /* derived name */
-
 void FUN_00095aa0(hkcdPlanarGeometryPrimitivesPlane *self,
                   hkFinishLoadedObjectFlag flag); /* derived name */
 
@@ -5762,6 +5765,12 @@ inline Vec4 rotatedInverseDir(const hkQuaternion &q, const Vec4 &v) /* derived n
  * its two members from the records at 0x168d1c0): a rotation as a
  * quaternion and a translation. */
 struct hkQTransformf {
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body). */
+    hkQTransformf() {}
+
+    hkQTransformf(hkFinishLoadedObjectFlag flag) {}
+
     hkQuaternion rotation;
     Vec4 translation;
 };
@@ -5769,6 +5778,10 @@ struct hkQTransformf {
 /* hkQTransform (hkClass 0x57b99f0, built at 0x17daf: size 0x20, parent
  * hkQTransformf's, no members of its own). */
 struct hkQTransform : public hkQTransformf {
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body). */
+    hkQTransform(hkFinishLoadedObjectFlag flag) : hkQTransformf(flag) {}
+
     /* Whether two transforms are within epsilon of each other: the
      * quaternions in every lane, the second's sign flipped to the first's
      * side, and the translations in x, y and z (0x903d0; the world asks it
@@ -5786,6 +5799,10 @@ void FUN_00010fe0(Vec4 &out, const hkQTransform &t, const Vec4 &v);
  * (hkVector4) at +0, majorAxisSpace (hkQuaternion) at +0x10, inertiaTensor
  * (hkVector4) at +0x20. */
 struct hknpMassDistribution {
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body). */
+    hknpMassDistribution(hkFinishLoadedObjectFlag flag) {}
+
     hkVector4 centerOfMassAndVolume;
     hkQuaternion majorAxisSpace;
     hkVector4 inertiaTensor;
@@ -5797,7 +5814,10 @@ struct hknpMassDistribution {
 class hknpRefMassDistribution : public hkReferencedObject
 {
   public:
-    hknpRefMassDistribution(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+    hknpRefMassDistribution(hkFinishLoadedObjectFlag flag)
+        : hkReferencedObject(flag), massDistribution(flag)
+    {
+    }
 
     /* Empty; the deleting destructor is 0x1ba80, the body every vtable of a
      * 0x40-byte reference-counted class with an empty destructor cites
@@ -5859,9 +5879,9 @@ inline void hkcdFourAabb::setAll(const hkAabb &aabb)
  * its nodes and its 16-bit voxels in two arrays. FUN_0001f1e0 is its type
  * info's cleanup callback. */
 struct hkcdAdf {
-    /* The cleanup callback (0x1f1e0): the field destroyed in place, its
-     * voxels' storage given back, then its nodes'. derived name. */
-    static void FUN_0001f1e0(void *object);
+    /* The finish constructor: the arrays kept as loaded (its type info's
+     * finish callback is the empty body). */
+    hkcdAdf(hkFinishLoadedObjectFlag flag) : nodes(flag), voxels(flag) {}
 
     float accuracy;
     hkAabb domain;
@@ -6064,6 +6084,12 @@ struct hkcdStaticPvs {
     /* Out of line (0x1d9e0; the type info's cleanup callback 0x1db00 jumps
      * to it): the members' arrays given back, the last first. */
     ~hkcdStaticPvs();
+
+    /* The finish constructor: the members' storage kept as loaded (its
+     * type info's finish callback is the empty body). */
+    hkcdStaticPvs(hkFinishLoadedObjectFlag flag) : cells(flag), pvs(flag), map(flag), blocks(flag)
+    {
+    }
 
     hkcdStaticTree::DefaultTreeStorage6 cells;
     int bytesPerCells;
@@ -6647,9 +6673,7 @@ struct hknpShapeSignals {
 };
 
 /* hknpShapeSignals's type info (0x57c24c8, built with its hkClass by
- * 0x69980): no finish callback, the cleanup callback FUN_00069960, size
- * 0x10. */
-void FUN_00069960(void *object); /* derived name */
+ * 0x69980): no finish callback, the cleanup callback 0x69960, size 0x10. */
 
 extern const hkClassMember D_169a770[]; /* derived name: hknpShapeSignals's records */
 extern const hkClassEnum D_169a7f0[];   /* derived name: its one enum */
@@ -6710,9 +6734,9 @@ class hknpShape;
  * 30 bytes of padding. The compound shapes keep arrays of them (the caller
  * at 0x42494 walks one). */
 struct hknpShapeInstance {
-    /* The cleanup callback of its type info (0x3caa0, registered at
-     * 0x3cb95): the shape's reference released. derived name. */
-    static void FUN_0003caa0(void *object);
+    /* The finish constructor: the shape's reference kept as loaded (its
+     * type info's finish callback is the empty body). */
+    hknpShapeInstance(hkFinishLoadedObjectFlag flag) : shape(flag) {}
 
     /* The transform with the scale applied to its rotation, column by
      * column (0x3ea90). derived name. */
@@ -7600,7 +7624,6 @@ extern const hkClass D_57c0cb0; /* hknpCollisionFilter's hkClass */
  * derived names. */
 extern const hkClassEnum D_1696e60[];
 extern const hkClassEnum *D_16dc620;
-void FUN_0003e340(void *object, int finishing); /* derived name: its type info's finish callback */
 
 /* A collision cache that keeps properties beside its contact data
  * (derived names): FUN_0017a0a0 reserves a property under a key (a bit of
@@ -10599,9 +10622,8 @@ struct hknpMotionPropertiesDefaults /* derived name */
     float solverStabilizationSpeedThreshold;
 };
 
-extern const hkClassMember D_16948a0[];         /* derived name: hknpMotionProperties's records */
-extern const hkClassEnum D_1694c40[];           /* derived name: its two enums */
-void FUN_000395c0(void *object, int finishing); /* derived name: its type info's finish callback */
+extern const hkClassMember D_16948a0[]; /* derived name: hknpMotionProperties's records */
+extern const hkClassEnum D_1694c40[];   /* derived name: its two enums */
 
 /* hknpMotionPropertiesId, the motion properties library's handle (the
  * template argument of its free-list array in the scoped type names,
@@ -11782,11 +11804,6 @@ struct hknpWorldCinfo {
 void FUN_0003b640(hknpWorldCinfo *self, hkFinishLoadedObjectFlag flag); /* derived name */
 void FUN_0003b650(hknpWorldCinfo *self);                                /* derived name */
 
-/* Its type info's callbacks (0x46c60, 0x46c70): the finish constructor and
- * the destructor above. derived names. */
-void FUN_00046c60(void *object, int finishing); /* derived name */
-void FUN_00046c70(void *object);                /* derived name */
-
 /* The defaults its hkClass carries (0x14bd370): an offset into the block per
  * member, -1 for none and -2 for zero (derived reading), then the values,
  * each under its member's record name; the booleans one byte each, the
@@ -12245,10 +12262,6 @@ template <typename T> struct hknpSparseCompactMap {
     hkArray<u16> primaryKeyToIndex;
     hkArray<u16> valueAndSecondaryKeys;
 };
-
-/* The cleanup callback of its type info (0x57befa0): the map destroyed in
- * place (0x389a0). derived name. */
-void FUN_000389a0(void *object); /* derived name */
 
 extern const hkClassMember D_16941a0[]; /* derived name: the map's records */
 
@@ -13504,11 +13517,6 @@ struct hknpBodyCinfoDefaults /* derived name */
 };
 
 extern const hkClassMember D_1693bf0[]; /* derived name: hknpBodyCinfo's records */
-
-/* Its type info's callbacks: the finish (0x38250) and the cleanup
- * (0x38260), the cinfo destroyed in place. derived names. */
-void FUN_00038250(void *object, int finishing); /* derived name */
-void FUN_00038260(void *object);                /* derived name */
 
 /* hkpLinMotorConstraintAtom (type info 0x57c4f40, record table 0x169ef70):
  * isEnabled at +2, motorAxis at +3, initializedOffset and
@@ -14891,7 +14899,6 @@ extern const hkClassMember D_16a2570[]; /* derived name: hkxBlob's records */
 extern const hkClassMember D_16a2a10[]; /* derived name: hkxMeshSection's records */
 extern const hkClassMember D_16a2b70[]; /* derived name: hkxSparselyAnimatedBool's records */
 extern const hkClassEnum D_16a2490[];   /* derived name: hkxAttribute's enum */
-void FUN_0008b870(void *object, int finishing); /* derived name: its type info's finish callback */
 
 /* hkxEnvironment (hkClass 0x57c8130, parent hkReferencedObject, built at
  * 0x8db07): its finish constructor 0x17d6f0 is out of line, jumped to by the
@@ -14922,11 +14929,6 @@ class hkRootLevelContainer
   public:
     struct NamedVariant;
 
-    /* The cleanup callback of its type info (0x8e5d0, registered at
-     * 0x8e7c6): the object destroyed in place, its entries from the last,
-     * then their storage. derived name. */
-    static void FUN_0008e5d0(void *object);
-
     hkArray<NamedVariant> namedVariants;
 };
 
@@ -14948,10 +14950,6 @@ struct hkRootLevelContainer::NamedVariant {
         }
         variant = 0;
     }
-
-    /* The cleanup callback of its type info (0x8e540, registered at
-     * 0x8e75e): the entry destroyed in place. derived name. */
-    static void FUN_0008e540(void *object);
 
     hkStringPtr name;
     hkStringPtr className;
@@ -15298,6 +15296,10 @@ class hkMeshTexture : public hkReferencedObject
     /* hkMeshTexture::RawBufferDescriptor (hkClass 0x57bc910, built at
      * 0x229bd: 0x10 bytes, no parent, records 0x1690e20). */
     struct RawBufferDescriptor {
+        /* The finish constructor: nothing to fix up (its type info's finish
+         * callback is the empty body). */
+        RawBufferDescriptor(hkFinishLoadedObjectFlag flag) {}
+
         s64 offset;
         u32 stride;
         u32 numElements;
@@ -16366,6 +16368,10 @@ struct hknpMinMaxQuadTree {
      * size 0x18; member records at 0x1697780): the packed minima and maxima
      * of one level and its resolution. */
     struct MinMaxLevel {
+        /* The finish constructor: the data kept as loaded (its type
+         * info's finish callback is the empty body). */
+        MinMaxLevel(hkFinishLoadedObjectFlag flag) : minMaxData(flag) {}
+
         hkArray<u32> minMaxData;
         u16 xRes;
         u16 zRes;
@@ -17007,8 +17013,6 @@ extern const hkClassMember D_16992b0[]; /* derived name */
 /* hknpVehicleRayCastWheelCollide (type info at 0x7604a, vtable 0x16a4aa0)
  * and hknpVehicleLinearCastWheelCollide (0x38 bytes, type info at 0x708de,
  * vtable 0x16a5bd0). */
-
-void FUN_00075f60(void *object, int finishing); /* derived name: its type info's finish callback */
 
 class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
 {

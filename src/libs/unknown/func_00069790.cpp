@@ -1,11 +1,27 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
+/* derived names: the finish callback of hknpBreakableConstraintData's type info (0x57c23f8):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+static void finishLoadedObjecthknpBreakableConstraintData(void *object,
+                                                          int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hknpBreakableConstraintData(flag);
+}
+
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpBreakableConstraintData(void *object) /* derived name */
+{
+    static_cast<hknpBreakableConstraintData *>(object)->~hknpBreakableConstraintData();
+}
+
 extern const hkClass D_57c4308;         /* hkpWrappedConstraintData's hkClass */
 extern const hkClassMember D_169a740[]; /* derived name: hknpBreakableConstraintData's records */
-
-void FUN_00069770(void *object, int finishing); /* derived name */
-void FUN_000002d0(void *object);                /* derived name */
 
 /* The class's vtable, read from an object its out-of-line finish
  * constructor builds on the stack. derived name. */
@@ -29,5 +45,7 @@ const hkClass D_57c23a8("hknpBreakableConstraintData", &D_57c4308,
                         sizeof(hknpBreakableConstraintData), 0, 0, 0, 0, D_169a740, 1, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c23f8;
 const hkTypeInfo D_57c23f8("hknpBreakableConstraintData", "!hknpBreakableConstraintData",
-                           FUN_00069770, FUN_000002d0, vtableOfhknpBreakableConstraintData(),
+                           finishLoadedObjecthknpBreakableConstraintData,
+                           cleanupLoadedObjecthknpBreakableConstraintData,
+                           vtableOfhknpBreakableConstraintData(),
                            sizeof(hknpBreakableConstraintData));

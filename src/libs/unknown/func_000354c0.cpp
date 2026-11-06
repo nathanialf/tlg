@@ -4,16 +4,22 @@
 /* derived names: the finish callback of hknpExternMeshShapeData's type info
  * (registered at 0x355ab): the object constructed in place from a loaded
  * image, its inline finish constructor running the simd tree's. */
-void FUN_000354c0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpExternMeshShapeData(void *object,
+                                                      int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpExternMeshShapeData(flag);
 }
 
-/* hknpExternMeshShapeData's cleanup callback: the virtual destructor (the
- * shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpExternMeshShapeData(void *object) /* derived name */
+{
+    static_cast<hknpExternMeshShapeData *>(object)->~hknpExternMeshShapeData();
+}
+
 extern const hkClassMember D_1692c80[]; /* derived name: hknpExternMeshShapeData's records */
 
 /* The address of hknpExternMeshShapeData's vtable, read from an object
@@ -39,6 +45,7 @@ static const void *vtableOfhknpExternMeshShapeData() /* derived name */
 const hkClass D_57be420("hknpExternMeshShapeData", &D_57b8640, sizeof(hknpExternMeshShapeData), 0,
                         0, 0, 0, D_1692c80, 3, 0, 0, 0, 0);
 extern const hkTypeInfo D_57be470;
-const hkTypeInfo D_57be470("hknpExternMeshShapeData", "!hknpExternMeshShapeData", FUN_000354c0,
-                           FUN_000002d0, vtableOfhknpExternMeshShapeData(),
-                           sizeof(hknpExternMeshShapeData));
+const hkTypeInfo D_57be470("hknpExternMeshShapeData", "!hknpExternMeshShapeData",
+                           finishLoadedObjecthknpExternMeshShapeData,
+                           cleanupLoadedObjecthknpExternMeshShapeData,
+                           vtableOfhknpExternMeshShapeData(), sizeof(hknpExternMeshShapeData));

@@ -4,16 +4,22 @@
 /* derived names: the finish callback of hkAlignSceneToNodeOptions's type info (0x57c7288):
  * construct the object in place from a loaded image through its
  * out-of-line finish constructor. */
-void FUN_00089ec0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkAlignSceneToNodeOptions(void *object,
+                                                        int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkAlignSceneToNodeOptions(flag);
 }
 
-/* hkAlignSceneToNodeOptions's cleanup callback: the virtual destructor (the shared body
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
  * 0x2d0). */
-void FUN_000002d0(void *object);
+static void cleanupLoadedObjecthkAlignSceneToNodeOptions(void *object) /* derived name */
+{
+    static_cast<hkAlignSceneToNodeOptions *>(object)->~hkAlignSceneToNodeOptions();
+}
+
 extern const hkClassMember D_16a18c0[]; /* derived name: hkAlignSceneToNodeOptions's records */
 
 /* The address of hkAlignSceneToNodeOptions's vtable, read from an object finished in a
@@ -37,6 +43,7 @@ static const void *vtableOfhkAlignSceneToNodeOptions() /* derived name */
 const hkClass D_57c7238("hkAlignSceneToNodeOptions", &D_57b8640, sizeof(hkAlignSceneToNodeOptions),
                         0, 0, 0, 0, D_16a18c0, 9, 0, 0, 0, 2);
 extern const hkTypeInfo D_57c7288;
-const hkTypeInfo D_57c7288("hkAlignSceneToNodeOptions", "!hkAlignSceneToNodeOptions", FUN_00089ec0,
-                           FUN_000002d0, vtableOfhkAlignSceneToNodeOptions(),
-                           sizeof(hkAlignSceneToNodeOptions));
+const hkTypeInfo D_57c7288("hkAlignSceneToNodeOptions", "!hkAlignSceneToNodeOptions",
+                           finishLoadedObjecthkAlignSceneToNodeOptions,
+                           cleanupLoadedObjecthkAlignSceneToNodeOptions,
+                           vtableOfhkAlignSceneToNodeOptions(), sizeof(hkAlignSceneToNodeOptions));

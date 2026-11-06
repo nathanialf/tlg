@@ -3,15 +3,21 @@
 
 /* derived name: the finish callback of hkcdPlanarEntity's type info
  * (registered at 0x1d253): construct the object in place from a loaded image. */
-void FUN_0001d190(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkcdPlanarEntity(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkcdPlanarEntity(flag);
 }
 
-/* hkcdPlanarEntity's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkcdPlanarEntity(void *object) /* derived name */
+{
+    static_cast<hkcdPlanarEntity *>(object)->~hkcdPlanarEntity();
+}
+
 extern const hkClassMember D_168f3f0[]; /* derived name: hkcdPlanarEntity's records */
 
 /* The address of hkcdPlanarEntity's vtable, read from an object finished in a buffer
@@ -32,5 +38,6 @@ static const void *vtableOfhkcdPlanarEntity() /* derived name */
 const hkClass D_57ba190("hkcdPlanarEntity", &D_57b8640, sizeof(hkcdPlanarEntity), 0, 0, 0, 0,
                         D_168f3f0, 1, 0, 0, 0, 0);
 extern const hkTypeInfo D_57ba1e0;
-const hkTypeInfo D_57ba1e0("hkcdPlanarEntity", "!hkcdPlanarEntity", FUN_0001d190, FUN_000002d0,
+const hkTypeInfo D_57ba1e0("hkcdPlanarEntity", "!hkcdPlanarEntity",
+                           finishLoadedObjecthkcdPlanarEntity, cleanupLoadedObjecthkcdPlanarEntity,
                            vtableOfhkcdPlanarEntity(), sizeof(hkcdPlanarEntity));

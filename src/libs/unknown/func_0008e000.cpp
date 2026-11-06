@@ -4,16 +4,17 @@
 /* derived name: the finish callback of hkxMeshSection's type info (0x57c8200):
  * construct the object in place from a loaded image through its inline
  * finish constructor, which has nothing to fix up but the vtable. */
-void FUN_0008e000(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxMeshSection(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxMeshSection(flag);
 }
 
-/* hkxMeshSection's loaded-object cleanup: the virtual destructor (the linker
- * folded it with the other classes' identical body, 0x2d0, FUN_000002d0). */
-void FUN_000002d0(void *object)
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxMeshSection(void *object) /* derived name */
 {
     static_cast<hkxMeshSection *>(object)->~hkxMeshSection();
 }
@@ -39,5 +40,6 @@ static const void *vtableOfhkxMeshSection() /* derived name */
 const hkClass D_57c81b0("hkxMeshSection", &D_57b8640, sizeof(hkxMeshSection), 0, 0, 0, 0, D_16a2a10,
                         7, 0, 0, 0, 5);
 extern const hkTypeInfo D_57c8200;
-const hkTypeInfo D_57c8200("hkxMeshSection", "!hkxMeshSection", FUN_0008e000, FUN_000002d0,
-                           vtableOfhkxMeshSection(), sizeof(hkxMeshSection));
+const hkTypeInfo D_57c8200("hkxMeshSection", "!hkxMeshSection", finishLoadedObjecthkxMeshSection,
+                           cleanupLoadedObjecthkxMeshSection, vtableOfhkxMeshSection(),
+                           sizeof(hkxMeshSection));

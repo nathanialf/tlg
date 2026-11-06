@@ -4,15 +4,21 @@
 /* derived names: the finish callback of hkcdStaticAabbTree's type info (0x57bba60):
  * construct the object in place from a loaded image through its out-of-line
  * finish constructor. */
-void FUN_0001ff50(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkcdStaticAabbTree(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkcdStaticAabbTree(flag);
 }
 
-/* hkcdStaticAabbTree's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkcdStaticAabbTree(void *object) /* derived name */
+{
+    static_cast<hkcdStaticAabbTree *>(object)->~hkcdStaticAabbTree();
+}
+
 extern const hkClassMember D_16903e0[]; /* derived name: hkcdStaticAabbTree's records */
 
 /* The address of hkcdStaticAabbTree's vtable, read from an object finished in a 16-byte
@@ -36,5 +42,7 @@ static const void *vtableOfhkcdStaticAabbTree() /* derived name */
 const hkClass D_57bba10("hkcdStaticAabbTree", &D_57b8640, sizeof(hkcdStaticAabbTree), 0, 0, 0, 0,
                         D_16903e0, 2, 0, 0, 0, 1);
 extern const hkTypeInfo D_57bba60;
-const hkTypeInfo D_57bba60("hkcdStaticAabbTree", "!hkcdStaticAabbTree", FUN_0001ff50, FUN_000002d0,
-                           vtableOfhkcdStaticAabbTree(), sizeof(hkcdStaticAabbTree));
+const hkTypeInfo D_57bba60("hkcdStaticAabbTree", "!hkcdStaticAabbTree",
+                           finishLoadedObjecthkcdStaticAabbTree,
+                           cleanupLoadedObjecthkcdStaticAabbTree, vtableOfhkcdStaticAabbTree(),
+                           sizeof(hkcdStaticAabbTree));

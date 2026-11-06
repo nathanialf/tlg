@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hknpVehicleDefaultVelocityDamper's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_00035c60(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpVehicleDefaultVelocityDamper(void *object,
+                                                               int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpVehicleDefaultVelocityDamper(flag);
 }
 
-/* hknpVehicleDefaultVelocityDamper's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpVehicleDefaultVelocityDamper(void *object) /* derived name */
+{
+    static_cast<hknpVehicleDefaultVelocityDamper *>(object)->~hknpVehicleDefaultVelocityDamper();
+}
+
 extern const hkClassMember
     D_1692ef0[]; /* derived name: hknpVehicleDefaultVelocityDamper's records */
 
@@ -36,5 +43,7 @@ const hkClass D_57be6c0("hknpVehicleDefaultVelocityDamper", &D_57c2428,
                         0);
 extern const hkTypeInfo D_57be710;
 const hkTypeInfo D_57be710("hknpVehicleDefaultVelocityDamper", "!hknpVehicleDefaultVelocityDamper",
-                           FUN_00035c60, FUN_000002d0, vtableOfhknpVehicleDefaultVelocityDamper(),
+                           finishLoadedObjecthknpVehicleDefaultVelocityDamper,
+                           cleanupLoadedObjecthknpVehicleDefaultVelocityDamper,
+                           vtableOfhknpVehicleDefaultVelocityDamper(),
                            sizeof(hknpVehicleDefaultVelocityDamper));

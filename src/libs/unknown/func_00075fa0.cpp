@@ -1,10 +1,21 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* hknpVehicleRayCastWheelCollide's loaded-object cleanup: the virtual
- * destructor (the linker folded it with the other classes' identical body,
- * 0x2d0, FUN_000002d0). */
-void FUN_000002d0(void *object)
+/* derived name: the finish callback of hknpVehicleRayCastWheelCollide's type info (registered at
+ * 0x7604a): construct the object in place from a loaded image through its
+ * inline finish constructor. */
+static void finishLoadedObjecthknpVehicleRayCastWheelCollide(void *object,
+                                                             int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hknpVehicleRayCastWheelCollide(flag);
+}
+
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpVehicleRayCastWheelCollide(void *object) /* derived name */
 {
     static_cast<hknpVehicleRayCastWheelCollide *>(object)->~hknpVehicleRayCastWheelCollide();
 }
@@ -32,5 +43,7 @@ const hkClass D_57c2d78("hknpVehicleRayCastWheelCollide", &D_57c1510,
                         sizeof(hknpVehicleRayCastWheelCollide), 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
 extern const hkTypeInfo D_57c2dc8;
 const hkTypeInfo D_57c2dc8("hknpVehicleRayCastWheelCollide", "!hknpVehicleRayCastWheelCollide",
-                           FUN_00075f60, FUN_000002d0, vtableOfhknpVehicleRayCastWheelCollide(),
+                           finishLoadedObjecthknpVehicleRayCastWheelCollide,
+                           cleanupLoadedObjecthknpVehicleRayCastWheelCollide,
+                           vtableOfhknpVehicleRayCastWheelCollide(),
                            sizeof(hknpVehicleRayCastWheelCollide));

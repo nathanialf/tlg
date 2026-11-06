@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hkxTriangleSelectionChannel's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_00087000(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxTriangleSelectionChannel(void *object,
+                                                          int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxTriangleSelectionChannel(flag);
 }
 
-/* hkxTriangleSelectionChannel's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxTriangleSelectionChannel(void *object) /* derived name */
+{
+    static_cast<hkxTriangleSelectionChannel *>(object)->~hkxTriangleSelectionChannel();
+}
+
 extern const hkClassMember D_16a0d80[]; /* derived name: hkxTriangleSelectionChannel's records */
 
 /* The address of hkxTriangleSelectionChannel's vtable, read from an object finished in a buffer
@@ -34,5 +41,7 @@ const hkClass D_57c6650("hkxTriangleSelectionChannel", &D_57b8640,
                         sizeof(hkxTriangleSelectionChannel), 0, 0, 0, 0, D_16a0d80, 1, 0, 0, 0, 1);
 extern const hkTypeInfo D_57c66a0;
 const hkTypeInfo D_57c66a0("hkxTriangleSelectionChannel", "!hkxTriangleSelectionChannel",
-                           FUN_00087000, FUN_000002d0, vtableOfhkxTriangleSelectionChannel(),
+                           finishLoadedObjecthkxTriangleSelectionChannel,
+                           cleanupLoadedObjecthkxTriangleSelectionChannel,
+                           vtableOfhkxTriangleSelectionChannel(),
                            sizeof(hkxTriangleSelectionChannel));

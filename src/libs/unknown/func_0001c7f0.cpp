@@ -1,8 +1,25 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-void FUN_0001c7d0(void *object, int finishing); /* derived name */
-void FUN_000002d0(void *object);                /* derived name */
+/* derived names: the finish callback of hkcdPlanarGeometryPolygonCollection's type info (0x57b9dd0):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+static void finishLoadedObjecthkcdPlanarGeometryPolygonCollection(void *object,
+                                                                  int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hkcdPlanarGeometryPolygonCollection(flag);
+}
+
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkcdPlanarGeometryPolygonCollection(void *object) /* derived name */
+{
+    static_cast<hkcdPlanarGeometryPolygonCollection *>(object)
+        ->~hkcdPlanarGeometryPolygonCollection();
+}
 
 /* The class's vtable, read from an object its out-of-line finish
  * constructor builds on the stack. derived name. */
@@ -26,6 +43,8 @@ const hkClass D_57b9d70("hkcdPlanarGeometryPolygonCollection", &D_57b9df0,
                         sizeof(hkcdPlanarGeometryPolygonCollection), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 extern const hkTypeInfo D_57b9dc0;
 const hkTypeInfo D_57b9dc0("hkcdPlanarGeometryPolygonCollection",
-                           "!hkcdPlanarGeometryPolygonCollection", FUN_0001c7d0, FUN_000002d0,
+                           "!hkcdPlanarGeometryPolygonCollection",
+                           finishLoadedObjecthkcdPlanarGeometryPolygonCollection,
+                           cleanupLoadedObjecthkcdPlanarGeometryPolygonCollection,
                            vtableOfhkcdPlanarGeometryPolygonCollection(),
                            sizeof(hkcdPlanarGeometryPolygonCollection));

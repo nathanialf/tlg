@@ -4,15 +4,21 @@
 /* derived names: the finish callback of hknpCompositeShape's type info
  * (stored at 0x71777): construct the shape in place from a loaded image
  * through its inline finish constructor. */
-void FUN_00071690(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpCompositeShape(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpCompositeShape(flag);
 }
 
-/* hknpCompositeShape's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpCompositeShape(void *object) /* derived name */
+{
+    static_cast<hknpCompositeShape *>(object)->~hknpCompositeShape();
+}
+
 extern const hkClassMember D_169b1d0[]; /* derived name: hknpCompositeShape's records */
 
 /* The address of hknpCompositeShape's vtable, read from an object finished in a 16-byte
@@ -36,5 +42,7 @@ static const void *vtableOfhknpCompositeShape() /* derived name */
 const hkClass D_57c2cf8("hknpCompositeShape", &D_57bf1c0, sizeof(hknpCompositeShape), 0, 0, 0, 0,
                         D_169b1d0, 2, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c2d48;
-const hkTypeInfo D_57c2d48("hknpCompositeShape", "!hknpCompositeShape", FUN_00071690, FUN_000002d0,
-                           vtableOfhknpCompositeShape(), sizeof(hknpCompositeShape));
+const hkTypeInfo D_57c2d48("hknpCompositeShape", "!hknpCompositeShape",
+                           finishLoadedObjecthknpCompositeShape,
+                           cleanupLoadedObjecthknpCompositeShape, vtableOfhknpCompositeShape(),
+                           sizeof(hknpCompositeShape));

@@ -1,14 +1,18 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* The two enumerations' loaded-object cleanups: nothing to clean up in
- * either class. Each registration passes its class's own callback; the
- * linker folded both into the empty body 0x3b640, so the first is spelled
- * under the address's own name (D15's round 57 addendum) and the second
- * under that name with its class appended (D15's round 68A addendum). */
-void FUN_0003b640(void *object) {}
+/* The type infos' own callbacks, this file's (static, docs/DECISIONS.md
+ * D39): nothing to clean up in either class; the linker folded both into
+ * the empty body 0x3b640. */
+static void cleanupLoadedObjecthknpCollisionDispatchType(void *object)
+{
+    static_cast<hknpCollisionDispatchType *>(object)->~hknpCollisionDispatchType();
+}
 
-void FUN_0003b640_hknpShapeType(void *object) {}
+static void cleanupLoadedObjecthknpShapeType(void *object)
+{
+    static_cast<hknpShapeType *>(object)->~hknpShapeType();
+}
 
 /* This file's static initializer (0x3c920): hknpCollisionDispatchType's
  * reflection (no parent, its one enum, no members) and type info, then
@@ -18,9 +22,10 @@ const hkClass D_57bfd90("hknpCollisionDispatchType", 0, sizeof(hknpCollisionDisp
                         D_1695f20, 1, 0, 0, 0, 0, 0, 0);
 extern const hkTypeInfo D_57bfde0;
 const hkTypeInfo D_57bfde0("hknpCollisionDispatchType", "!hknpCollisionDispatchType", 0,
-                           FUN_0003b640, 0, sizeof(hknpCollisionDispatchType));
+                           cleanupLoadedObjecthknpCollisionDispatchType, 0,
+                           sizeof(hknpCollisionDispatchType));
 const hkClass D_57bfe10("hknpShapeType", 0, sizeof(hknpShapeType), 0, 0, D_1695e90, 1, 0, 0, 0, 0,
                         0, 0);
 extern const hkTypeInfo D_57bfe60;
-const hkTypeInfo D_57bfe60("hknpShapeType", "!hknpShapeType", 0, FUN_0003b640_hknpShapeType, 0,
-                           sizeof(hknpShapeType));
+const hkTypeInfo D_57bfe60("hknpShapeType", "!hknpShapeType", 0, cleanupLoadedObjecthknpShapeType,
+                           0, sizeof(hknpShapeType));

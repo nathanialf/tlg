@@ -4,16 +4,21 @@
 /* derived name: the finish callback of hkxTextureInplace's type info (the
  * reflection initializer passes it at 0x8acb6): construct the object in place
  * from a loaded image. */
-void FUN_0008abb0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxTextureInplace(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxTextureInplace(flag);
 }
 
-/* hkxTextureInplace's cleanup callback: the virtual destructor (the shared
- * body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxTextureInplace(void *object) /* derived name */
+{
+    static_cast<hkxTextureInplace *>(object)->~hkxTextureInplace();
+}
+
 extern const hkClassMember D_16a1dd0[]; /* derived name: hkxTextureInplace's records */
 
 /* The address of hkxTextureInplace's vtable, read from an object finished
@@ -39,5 +44,7 @@ static const void *vtableOfhkxTextureInplace() /* derived name */
 const hkClass D_57c7530("hkxTextureInplace", &D_57b8640, sizeof(hkxTextureInplace), 0, 0, 0, 0,
                         D_16a1dd0, 4, 0, 0, 0, 1);
 extern const hkTypeInfo D_57c7580;
-const hkTypeInfo D_57c7580("hkxTextureInplace", "!hkxTextureInplace", FUN_0008abb0, FUN_000002d0,
-                           vtableOfhkxTextureInplace(), sizeof(hkxTextureInplace));
+const hkTypeInfo D_57c7580("hkxTextureInplace", "!hkxTextureInplace",
+                           finishLoadedObjecthkxTextureInplace,
+                           cleanupLoadedObjecthkxTextureInplace, vtableOfhkxTextureInplace(),
+                           sizeof(hkxTextureInplace));

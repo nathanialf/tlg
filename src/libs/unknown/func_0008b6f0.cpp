@@ -4,16 +4,17 @@
 /* derived name: the finish callback of hkxScene's type info (the
  * reflection initializer passes it at 0x8b802): construct the object in place
  * from a loaded image. */
-void FUN_0008b6f0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxScene(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxScene(flag);
 }
 
-/* hkxScene's loaded-object cleanup: the virtual destructor (the linker
- * folded it with the other classes' identical body, 0x2d0, FUN_000002d0). */
-void FUN_000002d0(void *object)
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxScene(void *object) /* derived name */
 {
     static_cast<hkxScene *>(object)->~hkxScene();
 }
@@ -46,5 +47,5 @@ static const hkxSceneDefaults D_14c3474[1] = {
 const hkClass D_57c7830("hkxScene", &D_57b8640, sizeof(hkxScene), 0, 0, 0, 0, D_16a2180, 15,
                         D_14c3474, 0, 0, 2);
 extern const hkTypeInfo D_57c7880;
-const hkTypeInfo D_57c7880("hkxScene", "!hkxScene", FUN_0008b6f0, FUN_000002d0, vtableOfhkxScene(),
-                           sizeof(hkxScene));
+const hkTypeInfo D_57c7880("hkxScene", "!hkxScene", finishLoadedObjecthkxScene,
+                           cleanupLoadedObjecthkxScene, vtableOfhkxScene(), sizeof(hkxScene));

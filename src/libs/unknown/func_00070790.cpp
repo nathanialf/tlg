@@ -1,13 +1,32 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* The wheel state's cleanup callback: the empty body the linker folded
- * (func_0003e5b0.cpp). hknpVehicleLinearCastWheelCollide's finish callback
- * (func_00070750.cpp) and cleanup callback (the virtual destructor, the
- * shared body 0x2d0). */
-void FUN_0003b640(void *object);
-void FUN_00070750(void *object, int finishing);
-void FUN_000002d0(void *object);
+/* derived name: the finish callback of hknpVehicleLinearCastWheelCollide's type info (registered at
+ * 0x708de): construct the object in place from a loaded image through its
+ * inline finish constructor. */
+static void finishLoadedObjecthknpVehicleLinearCastWheelCollide(void *object,
+                                                                int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hknpVehicleLinearCastWheelCollide(flag);
+}
+
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpVehicleLinearCastWheelCollide(void *object) /* derived name */
+{
+    static_cast<hknpVehicleLinearCastWheelCollide *>(object)->~hknpVehicleLinearCastWheelCollide();
+}
+
+/* The type info's own callbacks, this file's (static, docs/DECISIONS.md
+ * D39), each folded by the linker into the shared body 0x3b640. */
+static void
+cleanupLoadedObjecthknpVehicleLinearCastWheelCollideWheelState(void *object) /* derived name */
+{
+    static_cast<hknpVehicleLinearCastWheelCollide::WheelState *>(object)->~WheelState();
+}
 
 extern const hkClassMember D_169afc0[]; /* derived name: the wheel state's records */
 extern const hkClassMember D_169b060[]; /* derived name: the linear cast's records */
@@ -36,13 +55,16 @@ const hkClass D_57c2bf8("hknpVehicleLinearCastWheelCollideWheelState", 0,
                         D_169afc0, 4, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c2c48;
 const hkTypeInfo D_57c2c48("hknpVehicleLinearCastWheelCollideWheelState",
-                           "!hknpVehicleLinearCastWheelCollide::WheelState", 0, FUN_0003b640, 0,
+                           "!hknpVehicleLinearCastWheelCollide::WheelState", 0,
+                           cleanupLoadedObjecthknpVehicleLinearCastWheelCollideWheelState, 0,
                            sizeof(hknpVehicleLinearCastWheelCollide::WheelState));
 const hkClass D_57c2c78("hknpVehicleLinearCastWheelCollide", &D_57c1510,
                         sizeof(hknpVehicleLinearCastWheelCollide), 0, 0, 0, 0, D_169b060, 4, 0, 0,
                         0, 0);
 extern const hkTypeInfo D_57c2cc8;
 const hkTypeInfo D_57c2cc8("hknpVehicleLinearCastWheelCollide",
-                           "!hknpVehicleLinearCastWheelCollide", FUN_00070750, FUN_000002d0,
+                           "!hknpVehicleLinearCastWheelCollide",
+                           finishLoadedObjecthknpVehicleLinearCastWheelCollide,
+                           cleanupLoadedObjecthknpVehicleLinearCastWheelCollide,
                            vtableOfhknpVehicleLinearCastWheelCollide(),
                            sizeof(hknpVehicleLinearCastWheelCollide));

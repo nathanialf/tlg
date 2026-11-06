@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hknpVehicleDefaultTransmission's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_00037a90(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpVehicleDefaultTransmission(void *object,
+                                                             int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpVehicleDefaultTransmission(flag);
 }
 
-/* hknpVehicleDefaultTransmission's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpVehicleDefaultTransmission(void *object) /* derived name */
+{
+    static_cast<hknpVehicleDefaultTransmission *>(object)->~hknpVehicleDefaultTransmission();
+}
+
 extern const hkClassMember D_1693960[]; /* derived name: hknpVehicleDefaultTransmission's records */
 
 /* The address of hknpVehicleDefaultTransmission's vtable, read from an object finished in a buffer
@@ -35,5 +42,7 @@ const hkClass D_57bed28("hknpVehicleDefaultTransmission", &D_57bff10,
                         0);
 extern const hkTypeInfo D_57bed78;
 const hkTypeInfo D_57bed78("hknpVehicleDefaultTransmission", "!hknpVehicleDefaultTransmission",
-                           FUN_00037a90, FUN_000002d0, vtableOfhknpVehicleDefaultTransmission(),
+                           finishLoadedObjecthknpVehicleDefaultTransmission,
+                           cleanupLoadedObjecthknpVehicleDefaultTransmission,
+                           vtableOfhknpVehicleDefaultTransmission(),
                            sizeof(hknpVehicleDefaultTransmission));

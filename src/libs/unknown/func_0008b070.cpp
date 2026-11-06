@@ -4,15 +4,21 @@
 /* derived names: the finish callback of hkxMaterialShaderSet's type info (0x57c7680):
  * construct the object in place from a loaded image through its
  * out-of-line finish constructor. */
-void FUN_0008b070(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxMaterialShaderSet(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxMaterialShaderSet(flag);
 }
 
-/* hkxMaterialShaderSet's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxMaterialShaderSet(void *object) /* derived name */
+{
+    static_cast<hkxMaterialShaderSet *>(object)->~hkxMaterialShaderSet();
+}
+
 extern const hkClassMember D_16a1f00[]; /* derived name: hkxMaterialShaderSet's records */
 
 /* The address of hkxMaterialShaderSet's vtable, read from an object finished in a 16-byte
@@ -36,6 +42,7 @@ static const void *vtableOfhkxMaterialShaderSet() /* derived name */
 const hkClass D_57c7630("hkxMaterialShaderSet", &D_57b8640, sizeof(hkxMaterialShaderSet), 0, 0, 0,
                         0, D_16a1f00, 1, 0, 0, 0, 1);
 extern const hkTypeInfo D_57c7680;
-const hkTypeInfo D_57c7680("hkxMaterialShaderSet", "!hkxMaterialShaderSet", FUN_0008b070,
-                           FUN_000002d0, vtableOfhkxMaterialShaderSet(),
+const hkTypeInfo D_57c7680("hkxMaterialShaderSet", "!hkxMaterialShaderSet",
+                           finishLoadedObjecthkxMaterialShaderSet,
+                           cleanupLoadedObjecthkxMaterialShaderSet, vtableOfhkxMaterialShaderSet(),
                            sizeof(hkxMaterialShaderSet));

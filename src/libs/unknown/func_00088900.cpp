@@ -4,15 +4,21 @@
 /* derived name: the finish callback of hkxSparselyAnimatedInt's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_00088900(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxSparselyAnimatedInt(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxSparselyAnimatedInt(flag);
 }
 
-/* hkxSparselyAnimatedInt's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxSparselyAnimatedInt(void *object) /* derived name */
+{
+    static_cast<hkxSparselyAnimatedInt *>(object)->~hkxSparselyAnimatedInt();
+}
+
 extern const hkClassMember D_16a1440[]; /* derived name: hkxSparselyAnimatedInt's records */
 
 /* The address of hkxSparselyAnimatedInt's vtable, read from an object finished in a buffer
@@ -33,6 +39,7 @@ static const void *vtableOfhkxSparselyAnimatedInt() /* derived name */
 const hkClass D_57c6c68("hkxSparselyAnimatedInt", &D_57b8640, sizeof(hkxSparselyAnimatedInt), 0, 0,
                         0, 0, D_16a1440, 2, 0, 0, 0, 1);
 extern const hkTypeInfo D_57c6cb8;
-const hkTypeInfo D_57c6cb8("hkxSparselyAnimatedInt", "!hkxSparselyAnimatedInt", FUN_00088900,
-                           FUN_000002d0, vtableOfhkxSparselyAnimatedInt(),
-                           sizeof(hkxSparselyAnimatedInt));
+const hkTypeInfo D_57c6cb8("hkxSparselyAnimatedInt", "!hkxSparselyAnimatedInt",
+                           finishLoadedObjecthkxSparselyAnimatedInt,
+                           cleanupLoadedObjecthkxSparselyAnimatedInt,
+                           vtableOfhkxSparselyAnimatedInt(), sizeof(hkxSparselyAnimatedInt));

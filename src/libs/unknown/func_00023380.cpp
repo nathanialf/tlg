@@ -4,15 +4,21 @@
 /* derived names: the finish callback of hkSkinnedRefMeshShape's type info (0x57bcd70):
  * construct the object in place from a loaded image through its out-of-line
  * finish constructor. */
-void FUN_00023380(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkSkinnedRefMeshShape(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkSkinnedRefMeshShape(flag);
 }
 
-/* hkSkinnedRefMeshShape's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkSkinnedRefMeshShape(void *object) /* derived name */
+{
+    static_cast<hkSkinnedRefMeshShape *>(object)->~hkSkinnedRefMeshShape();
+}
+
 extern const hkClassMember D_16916c0[]; /* derived name: hkSkinnedRefMeshShape's records */
 
 /* The address of hkSkinnedRefMeshShape's vtable, read from an object finished in a 16-byte
@@ -36,6 +42,7 @@ static const void *vtableOfhkSkinnedRefMeshShape() /* derived name */
 const hkClass D_57bcd20("hkSkinnedRefMeshShape", &D_57bd7d0, sizeof(hkSkinnedRefMeshShape), 0, 0, 0,
                         0, D_16916c0, 4, 0, 0, 0, 1);
 extern const hkTypeInfo D_57bcd70;
-const hkTypeInfo D_57bcd70("hkSkinnedRefMeshShape", "!hkSkinnedRefMeshShape", FUN_00023380,
-                           FUN_000002d0, vtableOfhkSkinnedRefMeshShape(),
-                           sizeof(hkSkinnedRefMeshShape));
+const hkTypeInfo D_57bcd70("hkSkinnedRefMeshShape", "!hkSkinnedRefMeshShape",
+                           finishLoadedObjecthkSkinnedRefMeshShape,
+                           cleanupLoadedObjecthkSkinnedRefMeshShape,
+                           vtableOfhkSkinnedRefMeshShape(), sizeof(hkSkinnedRefMeshShape));

@@ -4,16 +4,22 @@
 /* derived names: the finish callback of hknpDynamicCompoundShape's type info (0x57be690):
  * construct the object in place from a loaded image through its out-of-line
  * finish constructor. */
-void FUN_000358b0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpDynamicCompoundShape(void *object,
+                                                       int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpDynamicCompoundShape(flag);
 }
 
-/* hknpDynamicCompoundShape's cleanup callback: the virtual destructor (the shared body
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
  * 0x2d0). */
-void FUN_000002d0(void *object);
+static void cleanupLoadedObjecthknpDynamicCompoundShape(void *object) /* derived name */
+{
+    static_cast<hknpDynamicCompoundShape *>(object)->~hknpDynamicCompoundShape();
+}
+
 extern const hkClassMember D_1692e50[];    /* derived name: hknpDynamicCompoundShape's record */
 extern const hkCustomAttributes D_1692ea0; /* derived name: its class's attributes */
 
@@ -38,6 +44,7 @@ static const void *vtableOfhknpDynamicCompoundShape() /* derived name */
 const hkClass D_57be640("hknpDynamicCompoundShape", &D_57c2e78, sizeof(hknpDynamicCompoundShape), 0,
                         0, 0, 0, D_1692e50, 1, 0, &D_1692ea0, 0, 1);
 extern const hkTypeInfo D_57be690;
-const hkTypeInfo D_57be690("hknpDynamicCompoundShape", "!hknpDynamicCompoundShape", FUN_000358b0,
-                           FUN_000002d0, vtableOfhknpDynamicCompoundShape(),
-                           sizeof(hknpDynamicCompoundShape));
+const hkTypeInfo D_57be690("hknpDynamicCompoundShape", "!hknpDynamicCompoundShape",
+                           finishLoadedObjecthknpDynamicCompoundShape,
+                           cleanupLoadedObjecthknpDynamicCompoundShape,
+                           vtableOfhknpDynamicCompoundShape(), sizeof(hknpDynamicCompoundShape));

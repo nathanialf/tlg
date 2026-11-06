@@ -6,16 +6,24 @@
  * image through its inline finish constructor, which has nothing to fix up
  * but the vtable. The collection's destructors (0x1c8e0, 0x1c930), inline
  * in its class, are emitted here with its vtable. */
-void FUN_0001c990(void *object, int finishing) /* derived name */
+static void
+finishLoadedObjecthkcdPlanarGeometryPrimitivesCollection28(void *object,
+                                                           int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkcdPlanarGeometryPrimitivesCollection28(flag);
 }
 
-/* The collection's cleanup callback: the virtual destructor (the shared
- * body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void
+cleanupLoadedObjecthkcdPlanarGeometryPrimitivesCollection28(void *object) /* derived name */
+{
+    static_cast<hkcdPlanarGeometryPrimitivesCollection28 *>(object)
+        ->~hkcdPlanarGeometryPrimitivesCollection28();
+}
 
 /* The address of the collection's vtable, read from an object finished in
  * a buffer (folded to the address point). */
@@ -38,6 +46,7 @@ const hkClass D_57b9df0("hkcdPlanarGeometryPrimitivesCollection28", &D_57b8640,
                         0, 0, 0, 0);
 extern const hkTypeInfo D_57b9e40;
 const hkTypeInfo D_57b9e40("hkcdPlanarGeometryPrimitivesCollection28",
-                           "!hkcdPlanarGeometryPrimitivesCollection28_typename", FUN_0001c990,
-                           FUN_000002d0, vtableOfCollection(),
-                           sizeof(hkcdPlanarGeometryPrimitivesCollection28));
+                           "!hkcdPlanarGeometryPrimitivesCollection28_typename",
+                           finishLoadedObjecthkcdPlanarGeometryPrimitivesCollection28,
+                           cleanupLoadedObjecthkcdPlanarGeometryPrimitivesCollection28,
+                           vtableOfCollection(), sizeof(hkcdPlanarGeometryPrimitivesCollection28));

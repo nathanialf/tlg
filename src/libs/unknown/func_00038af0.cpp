@@ -4,15 +4,21 @@
 /* derived names: the finish callback of hknpDecoratorShape's type info (0x57bf020):
  * construct the object in place from a loaded image through its out-of-line
  * finish constructor. */
-void FUN_00038af0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpDecoratorShape(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpDecoratorShape(flag);
 }
 
-/* hknpDecoratorShape's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpDecoratorShape(void *object) /* derived name */
+{
+    static_cast<hknpDecoratorShape *>(object)->~hknpDecoratorShape();
+}
+
 extern const hkClassMember D_1694240[]; /* derived name: hknpDecoratorShape's records */
 
 /* The address of hknpDecoratorShape's vtable, read from an object finished in a 16-byte
@@ -36,5 +42,7 @@ static const void *vtableOfhknpDecoratorShape() /* derived name */
 const hkClass D_57befd0("hknpDecoratorShape", &D_57bf1c0, sizeof(hknpDecoratorShape), 0, 0, 0, 0,
                         D_1694240, 2, 0, 0, 0, 0);
 extern const hkTypeInfo D_57bf020;
-const hkTypeInfo D_57bf020("hknpDecoratorShape", "!hknpDecoratorShape", FUN_00038af0, FUN_000002d0,
-                           vtableOfhknpDecoratorShape(), sizeof(hknpDecoratorShape));
+const hkTypeInfo D_57bf020("hknpDecoratorShape", "!hknpDecoratorShape",
+                           finishLoadedObjecthknpDecoratorShape,
+                           cleanupLoadedObjecthknpDecoratorShape, vtableOfhknpDecoratorShape(),
+                           sizeof(hknpDecoratorShape));

@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hkxVertexIntDataChannel's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_000880f0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxVertexIntDataChannel(void *object,
+                                                      int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxVertexIntDataChannel(flag);
 }
 
-/* hkxVertexIntDataChannel's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxVertexIntDataChannel(void *object) /* derived name */
+{
+    static_cast<hkxVertexIntDataChannel *>(object)->~hkxVertexIntDataChannel();
+}
+
 extern const hkClassMember D_16a12a0[]; /* derived name: hkxVertexIntDataChannel's records */
 
 /* The address of hkxVertexIntDataChannel's vtable, read from an object finished in a buffer
@@ -33,6 +40,7 @@ static const void *vtableOfhkxVertexIntDataChannel() /* derived name */
 const hkClass D_57c6a20("hkxVertexIntDataChannel", &D_57b8640, sizeof(hkxVertexIntDataChannel), 0,
                         0, 0, 0, D_16a12a0, 1, 0, 0, 0, 1);
 extern const hkTypeInfo D_57c6a70;
-const hkTypeInfo D_57c6a70("hkxVertexIntDataChannel", "!hkxVertexIntDataChannel", FUN_000880f0,
-                           FUN_000002d0, vtableOfhkxVertexIntDataChannel(),
-                           sizeof(hkxVertexIntDataChannel));
+const hkTypeInfo D_57c6a70("hkxVertexIntDataChannel", "!hkxVertexIntDataChannel",
+                           finishLoadedObjecthkxVertexIntDataChannel,
+                           cleanupLoadedObjecthkxVertexIntDataChannel,
+                           vtableOfhkxVertexIntDataChannel(), sizeof(hkxVertexIntDataChannel));

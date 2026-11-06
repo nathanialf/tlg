@@ -1,5 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include "tlg_hk_reflect.h"
+#include "tlg_lib_unknown.h"
 
 typedef hkcdStaticMeshTreeBase::PrimitiveDataRunBase<hknpCompressedMeshShapeTreeDataRunData>
     DataRunBase00035640; /* derived name */
@@ -7,15 +7,38 @@ typedef hkcdStaticMeshTree<hkcdStaticMeshTreeCommonConfig<u32, u64, 11, 21>,
                            hknpCompressedMeshShapeTreeDataRun>
     MeshTree00035640; /* derived name */
 
-/* The run base's cleanup callback: nothing to clean up (the linker folded
- * it into the empty body 0x1c1e0; D15's round 57 addendum). */
-void FUN_0001c1e0(void *object) {}
+/* derived names: the finish callback of hknpCompressedMeshShapeTree's type info (0x57be2f0, and of the hkcdStaticMeshTree type info 0x57be570):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+static void
+finishLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun(
+    void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    FUN_000a9140(static_cast<hknpCompressedMeshShapeTree *>(object), flag);
+}
 
-/* The mesh tree instance's callbacks, folded by the linker onto
- * hknpCompressedMeshShapeTree's (func_00034e30.cpp, func_00034e40.cpp; the
- * same bodies, D15's addenda). */
-void FUN_00034e30(void *object, int finishing);
-void FUN_00034e40(void *object);
+/* The run base's cleanup callback, this file's (static, docs/DECISIONS.md
+ * D39): nothing to clean up; the linker folded it into the empty body
+ * 0x1c1e0. */
+static void
+cleanupLoadedObjecthkcdStaticMeshTreeBasePrimitiveDataRunBasehknpCompressedMeshShapeTreeDataRunData(
+    void *object) /* derived name */
+{
+    static_cast<DataRunBase00035640 *>(object)->~DataRunBase00035640();
+}
+
+/* derived name: the cleanup callback of hknpCompressedMeshShapeTree's type
+ * info (registered at 0x35163; the mesh tree instance's type info, at
+ * 0x3575b, cites the same body): the tree destroyed in place, its data runs,
+ * shared and packed vertices given back, then the base's destructor. */
+static void
+cleanupLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun(
+    void *object) /* derived name */
+{
+    static_cast<hknpCompressedMeshShapeTree *>(object)->~hknpCompressedMeshShapeTree();
+}
 
 extern const hkClassMember D_1692d00[]; /* derived name: the run base's records */
 extern const hkClassMember D_1692d80[]; /* derived name: the mesh tree instance's records */
@@ -33,7 +56,8 @@ extern const hkTypeInfo D_57be4f0;
 const hkTypeInfo D_57be4f0(
     "hkcdStaticMeshTreeBasePrimitiveDataRunBasehknpCompressedMeshShapeTreeDataRunData",
     "!hkcdStaticMeshTreeBasePrimitiveDataRunBasehknpCompressedMeshShapeTreeDataRunData_typename", 0,
-    FUN_0001c1e0, 0, sizeof(DataRunBase00035640));
+    cleanupLoadedObjecthkcdStaticMeshTreeBasePrimitiveDataRunBasehknpCompressedMeshShapeTreeDataRunData,
+    0, sizeof(DataRunBase00035640));
 const hkClass D_57be520(
     "hkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun",
     &D_57bc310, sizeof(MeshTree00035640), 0, 0, D_1692e20, 1, D_1692d80, 3, 0, 0, 0, 0);
@@ -41,4 +65,6 @@ extern const hkTypeInfo D_57be570;
 const hkTypeInfo D_57be570(
     "hkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun",
     "!hkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun_typename",
-    FUN_00034e30, FUN_00034e40, 0, sizeof(MeshTree00035640));
+    finishLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun,
+    cleanupLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun,
+    0, sizeof(MeshTree00035640));

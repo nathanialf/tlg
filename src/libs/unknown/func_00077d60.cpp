@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hknpVehicleDefaultSteering's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_00077d60(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpVehicleDefaultSteering(void *object,
+                                                         int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpVehicleDefaultSteering(flag);
 }
 
-/* hknpVehicleDefaultSteering's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpVehicleDefaultSteering(void *object) /* derived name */
+{
+    static_cast<hknpVehicleDefaultSteering *>(object)->~hknpVehicleDefaultSteering();
+}
+
 extern const hkClassMember D_169b4a0[]; /* derived name: hknpVehicleDefaultSteering's records */
 
 /* The address of hknpVehicleDefaultSteering's vtable, read from an object finished in a buffer
@@ -34,5 +41,7 @@ const hkClass D_57c2df8("hknpVehicleDefaultSteering", &D_57c1988,
                         sizeof(hknpVehicleDefaultSteering), 0, 0, 0, 0, D_169b4a0, 3, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c2e48;
 const hkTypeInfo D_57c2e48("hknpVehicleDefaultSteering", "!hknpVehicleDefaultSteering",
-                           FUN_00077d60, FUN_000002d0, vtableOfhknpVehicleDefaultSteering(),
+                           finishLoadedObjecthknpVehicleDefaultSteering,
+                           cleanupLoadedObjecthknpVehicleDefaultSteering,
+                           vtableOfhknpVehicleDefaultSteering(),
                            sizeof(hknpVehicleDefaultSteering));

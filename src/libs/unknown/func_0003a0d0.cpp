@@ -4,15 +4,22 @@
 /* derived name: the finish callback of hknpVehicleDefaultAerodynamics's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_0003a0d0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpVehicleDefaultAerodynamics(void *object,
+                                                             int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpVehicleDefaultAerodynamics(flag);
 }
 
-/* hknpVehicleDefaultAerodynamics's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpVehicleDefaultAerodynamics(void *object) /* derived name */
+{
+    static_cast<hknpVehicleDefaultAerodynamics *>(object)->~hknpVehicleDefaultAerodynamics();
+}
+
 extern const hkClassMember D_1695170[]; /* derived name: hknpVehicleDefaultAerodynamics's records */
 
 /* The address of hknpVehicleDefaultAerodynamics's vtable, read from an object finished in a buffer
@@ -35,5 +42,7 @@ const hkClass D_57bf8d0("hknpVehicleDefaultAerodynamics", &D_57bf880,
                         0);
 extern const hkTypeInfo D_57bf920;
 const hkTypeInfo D_57bf920("hknpVehicleDefaultAerodynamics", "!hknpVehicleDefaultAerodynamics",
-                           FUN_0003a0d0, FUN_000002d0, vtableOfhknpVehicleDefaultAerodynamics(),
+                           finishLoadedObjecthknpVehicleDefaultAerodynamics,
+                           cleanupLoadedObjecthknpVehicleDefaultAerodynamics,
+                           vtableOfhknpVehicleDefaultAerodynamics(),
                            sizeof(hknpVehicleDefaultAerodynamics));

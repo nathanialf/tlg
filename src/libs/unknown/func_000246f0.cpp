@@ -1,11 +1,26 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
+/* derived names: the finish callback of hkMemoryMeshMaterial's type info (0x57bd4a8):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+static void finishLoadedObjecthkMemoryMeshMaterial(void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hkMemoryMeshMaterial(flag);
+}
+
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkMemoryMeshMaterial(void *object) /* derived name */
+{
+    static_cast<hkMemoryMeshMaterial *>(object)->~hkMemoryMeshMaterial();
+}
+
 extern const hkClass D_57bd680;         /* hkMeshMaterial's hkClass */
 extern const hkClassMember D_1691e80[]; /* derived name: hkMemoryMeshMaterial's records */
-
-void FUN_000246d0(void *object, int finishing); /* derived name */
-void FUN_000002d0(void *object);                /* derived name */
 
 /* The class's vtable, read from an object its out-of-line finish
  * constructor builds on the stack. derived name. */
@@ -28,6 +43,7 @@ static const void *vtableOfhkMemoryMeshMaterial() /* derived name */
 const hkClass D_57bd458("hkMemoryMeshMaterial", &D_57bd680, sizeof(hkMemoryMeshMaterial), 0, 0, 0,
                         0, D_1691e80, 9, 0, 0, 0, 2);
 extern const hkTypeInfo D_57bd4a8;
-const hkTypeInfo D_57bd4a8("hkMemoryMeshMaterial", "!hkMemoryMeshMaterial", FUN_000246d0,
-                           FUN_000002d0, vtableOfhkMemoryMeshMaterial(),
+const hkTypeInfo D_57bd4a8("hkMemoryMeshMaterial", "!hkMemoryMeshMaterial",
+                           finishLoadedObjecthkMemoryMeshMaterial,
+                           cleanupLoadedObjecthkMemoryMeshMaterial, vtableOfhkMemoryMeshMaterial(),
                            sizeof(hkMemoryMeshMaterial));

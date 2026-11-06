@@ -4,16 +4,17 @@
 /* derived name: the finish callback of hkxSkinBinding's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_0008a9b0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkxSkinBinding(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxSkinBinding(flag);
 }
 
-/* hkxSkinBinding's loaded-object cleanup: the virtual destructor (the linker
- * folded it with the other classes' identical body, 0x2d0, FUN_000002d0). */
-void FUN_000002d0(void *object)
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxSkinBinding(void *object) /* derived name */
 {
     static_cast<hkxSkinBinding *>(object)->~hkxSkinBinding();
 }
@@ -39,5 +40,6 @@ static const void *vtableOfhkxSkinBinding() /* derived name */
 const hkClass D_57c74b0("hkxSkinBinding", &D_57b8640, sizeof(hkxSkinBinding), 0, 0, 0, 0, D_16a1cf0,
                         4, 0, 0, 0, 2);
 extern const hkTypeInfo D_57c7500;
-const hkTypeInfo D_57c7500("hkxSkinBinding", "!hkxSkinBinding", FUN_0008a9b0, FUN_000002d0,
-                           vtableOfhkxSkinBinding(), sizeof(hkxSkinBinding));
+const hkTypeInfo D_57c7500("hkxSkinBinding", "!hkxSkinBinding", finishLoadedObjecthkxSkinBinding,
+                           cleanupLoadedObjecthkxSkinBinding, vtableOfhkxSkinBinding(),
+                           sizeof(hkxSkinBinding));

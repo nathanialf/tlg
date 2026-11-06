@@ -4,15 +4,20 @@
 /* derived names: the finish callback of hknpSphereShape's type info (0x57c2798):
  * construct the object in place from a loaded image through its out-of-line
  * finish constructor. */
-void FUN_0006b6b0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpSphereShape(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpSphereShape(flag);
 }
 
-/* hknpSphereShape's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpSphereShape(void *object) /* derived name */
+{
+    static_cast<hknpSphereShape *>(object)->~hknpSphereShape();
+}
 
 /* The address of hknpSphereShape's vtable, read from an object finished in a 16-byte aligned
  * buffer (the finish constructor is out of line, 0x3c540, so the object is built on the stack,
@@ -35,5 +40,6 @@ static const void *vtableOfhknpSphereShape() /* derived name */
 const hkClass D_57c2748("hknpSphereShape", &D_57c1908, sizeof(hknpSphereShape), 0, 0, 0, 0, 0, 0, 0,
                         0, 0, 0);
 extern const hkTypeInfo D_57c2798;
-const hkTypeInfo D_57c2798("hknpSphereShape", "!hknpSphereShape", FUN_0006b6b0, FUN_000002d0,
-                           vtableOfhknpSphereShape(), sizeof(hknpSphereShape));
+const hkTypeInfo D_57c2798("hknpSphereShape", "!hknpSphereShape", finishLoadedObjecthknpSphereShape,
+                           cleanupLoadedObjecthknpSphereShape, vtableOfhknpSphereShape(),
+                           sizeof(hknpSphereShape));

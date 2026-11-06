@@ -4,15 +4,21 @@
 /* derived names: the finish callback of hkcdPlanarGeometry's type info (0x57ba160):
  * construct the object in place from a loaded image through its out-of-line
  * finish constructor. */
-void FUN_0001cf60(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkcdPlanarGeometry(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkcdPlanarGeometry(flag);
 }
 
-/* hkcdPlanarGeometry's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkcdPlanarGeometry(void *object) /* derived name */
+{
+    static_cast<hkcdPlanarGeometry *>(object)->~hkcdPlanarGeometry();
+}
+
 extern const hkClassMember D_168f330[]; /* derived name: hkcdPlanarGeometry's records */
 
 /* The address of hkcdPlanarGeometry's vtable, read from an object finished in a 16-byte
@@ -36,5 +42,7 @@ static const void *vtableOfhkcdPlanarGeometry() /* derived name */
 const hkClass D_57ba110("hkcdPlanarGeometry", &D_57ba190, sizeof(hkcdPlanarGeometry), 0, 0, 0, 0,
                         D_168f330, 3, 0, 0, 0, 0);
 extern const hkTypeInfo D_57ba160;
-const hkTypeInfo D_57ba160("hkcdPlanarGeometry", "!hkcdPlanarGeometry", FUN_0001cf60, FUN_000002d0,
-                           vtableOfhkcdPlanarGeometry(), sizeof(hkcdPlanarGeometry));
+const hkTypeInfo D_57ba160("hkcdPlanarGeometry", "!hkcdPlanarGeometry",
+                           finishLoadedObjecthkcdPlanarGeometry,
+                           cleanupLoadedObjecthkcdPlanarGeometry, vtableOfhkcdPlanarGeometry(),
+                           sizeof(hkcdPlanarGeometry));

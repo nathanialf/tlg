@@ -3,15 +3,21 @@
 
 /* derived name: the finish callback of hkStringObject's type info
  * (0x109bb): construct the object in place from a loaded image. */
-void FUN_000108e0(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthkStringObject(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkStringObject(flag);
 }
 
-/* hkStringObject's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkStringObject(void *object) /* derived name */
+{
+    static_cast<hkStringObject *>(object)->~hkStringObject();
+}
+
 extern const hkClassMember D_168e120[]; /* derived name: hkStringObject's record */
 
 /* The address of hkStringObject's vtable, read from an object finished in a 16-byte aligned
@@ -35,5 +41,6 @@ static const void *vtableOfhkStringObject() /* derived name */
 const hkClass D_57b91b8("hkStringObject", &D_57b8640, sizeof(hkStringObject), 0, 0, 0, 0, D_168e120,
                         1, 0, 0, 0, 0);
 extern const hkTypeInfo D_57b9208;
-const hkTypeInfo D_57b9208("hkStringObject", "!hkStringObject", FUN_000108e0, FUN_000002d0,
-                           vtableOfhkStringObject(), sizeof(hkStringObject));
+const hkTypeInfo D_57b9208("hkStringObject", "!hkStringObject", finishLoadedObjecthkStringObject,
+                           cleanupLoadedObjecthkStringObject, vtableOfhkStringObject(),
+                           sizeof(hkStringObject));

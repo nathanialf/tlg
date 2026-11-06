@@ -4,15 +4,23 @@
 /* derived name: the finish callback of hknpDefaultExternMeshShapeGeometry's type info: construct the
  * object in place from a loaded image through its inline finish
  * constructor, which has nothing to fix up but the vtable. */
-void FUN_0003ba10(void *object, int finishing) /* derived name */
+static void finishLoadedObjecthknpDefaultExternMeshShapeGeometry(void *object,
+                                                                 int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hknpDefaultExternMeshShapeGeometry(flag);
 }
 
-/* hknpDefaultExternMeshShapeGeometry's cleanup callback: the virtual destructor (the shared body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpDefaultExternMeshShapeGeometry(void *object) /* derived name */
+{
+    static_cast<hknpDefaultExternMeshShapeGeometry *>(object)
+        ->~hknpDefaultExternMeshShapeGeometry();
+}
+
 extern const hkClassMember
     D_1695a40[];                /* derived name: hknpDefaultExternMeshShapeGeometry's records */
 extern const hkClass D_57c2848; /* its parent's hkClass */
@@ -37,6 +45,8 @@ const hkClass D_57bfc90("hknpDefaultExternMeshShapeGeometry", &D_57c2848,
                         0, 0);
 extern const hkTypeInfo D_57bfce0;
 const hkTypeInfo D_57bfce0("hknpDefaultExternMeshShapeGeometry",
-                           "!hknpDefaultExternMeshShapeGeometry", FUN_0003ba10, FUN_000002d0,
+                           "!hknpDefaultExternMeshShapeGeometry",
+                           finishLoadedObjecthknpDefaultExternMeshShapeGeometry,
+                           cleanupLoadedObjecthknpDefaultExternMeshShapeGeometry,
                            vtableOfhknpDefaultExternMeshShapeGeometry(),
                            sizeof(hknpDefaultExternMeshShapeGeometry));

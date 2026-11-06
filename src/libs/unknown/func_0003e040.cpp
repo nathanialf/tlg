@@ -1,10 +1,25 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-extern const hkClassMember D_16966e0[]; /* derived name: hknpWorldSnapshot's records */
+/* derived names: the finish callback of hknpWorldSnapshot's type info (0x57c0638):
+ * construct the object in place from a loaded image through its out-of-line
+ * finish constructor. */
+static void finishLoadedObjecthknpWorldSnapshot(void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hknpWorldSnapshot(flag);
+}
 
-void FUN_0003e020(void *object, int finishing); /* derived name */
-void FUN_000002d0(void *object);                /* derived name */
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpWorldSnapshot(void *object) /* derived name */
+{
+    static_cast<hknpWorldSnapshot *>(object)->~hknpWorldSnapshot();
+}
+
+extern const hkClassMember D_16966e0[]; /* derived name: hknpWorldSnapshot's records */
 
 /* The class's vtable, read from an object its out-of-line finish
  * constructor builds on the stack. derived name. */
@@ -27,5 +42,7 @@ static const void *vtableOfhknpWorldSnapshot() /* derived name */
 const hkClass D_57c05e8("hknpWorldSnapshot", &D_57b8640, sizeof(hknpWorldSnapshot), 0, 0, 0, 0,
                         D_16966e0, 5, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c0638;
-const hkTypeInfo D_57c0638("hknpWorldSnapshot", "!hknpWorldSnapshot", FUN_0003e020, FUN_000002d0,
-                           vtableOfhknpWorldSnapshot(), sizeof(hknpWorldSnapshot));
+const hkTypeInfo D_57c0638("hknpWorldSnapshot", "!hknpWorldSnapshot",
+                           finishLoadedObjecthknpWorldSnapshot,
+                           cleanupLoadedObjecthknpWorldSnapshot, vtableOfhknpWorldSnapshot(),
+                           sizeof(hknpWorldSnapshot));

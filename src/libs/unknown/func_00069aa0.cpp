@@ -1,14 +1,38 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* The mass distribution's finish and cleanup callbacks: the empty body the
- * linker folded (func_0003cb00.cpp, func_0003e5b0.cpp). hknpRefMassDistribution's finish callback
- * (func_00069a80.cpp) and cleanup callback (the virtual destructor, the
- * shared body 0x2d0). */
-void FUN_0003b640(void *object, int finishing);
-void FUN_0003b640(void *object);
-void FUN_00069a80(void *object, int finishing);
-void FUN_000002d0(void *object);
+/* derived name: the finish callback of hknpRefMassDistribution's type info: construct the
+ * object in place from a loaded image through its inline finish
+ * constructor, which has nothing to fix up but the vtable. */
+static void finishLoadedObjecthknpRefMassDistribution(void *object,
+                                                      int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hknpRefMassDistribution(flag);
+}
+
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthknpRefMassDistribution(void *object) /* derived name */
+{
+    static_cast<hknpRefMassDistribution *>(object)->~hknpRefMassDistribution();
+}
+
+/* The type info's own callbacks, this file's (static, docs/DECISIONS.md
+ * D39), each folded by the linker into the shared body 0x3b640. */
+static void finishLoadedObjecthknpMassDistribution(void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hknpMassDistribution(flag);
+}
+
+static void cleanupLoadedObjecthknpMassDistribution(void *object) /* derived name */
+{
+    static_cast<hknpMassDistribution *>(object)->~hknpMassDistribution();
+}
 
 extern const hkClassMember D_169a860[]; /* derived name: the mass distribution's records */
 extern const hkClassMember D_169a8e0[]; /* derived name: the counted one's record */
@@ -35,11 +59,14 @@ static const void *vtableOfhknpRefMassDistribution() /* derived name */
 const hkClass D_57c24f8("hknpMassDistribution", 0, sizeof(hknpMassDistribution), 0, 0, 0, 0,
                         D_169a860, 3, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c2548;
-const hkTypeInfo D_57c2548("hknpMassDistribution", "!hknpMassDistribution", FUN_0003b640,
-                           FUN_0003b640, 0, sizeof(hknpMassDistribution));
+const hkTypeInfo D_57c2548("hknpMassDistribution", "!hknpMassDistribution",
+                           finishLoadedObjecthknpMassDistribution,
+                           cleanupLoadedObjecthknpMassDistribution, 0,
+                           sizeof(hknpMassDistribution));
 const hkClass D_57c2578("hknpRefMassDistribution", &D_57b8640, sizeof(hknpRefMassDistribution), 0,
                         0, 0, 0, D_169a8e0, 1, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c25c8;
-const hkTypeInfo D_57c25c8("hknpRefMassDistribution", "!hknpRefMassDistribution", FUN_00069a80,
-                           FUN_000002d0, vtableOfhknpRefMassDistribution(),
-                           sizeof(hknpRefMassDistribution));
+const hkTypeInfo D_57c25c8("hknpRefMassDistribution", "!hknpRefMassDistribution",
+                           finishLoadedObjecthknpRefMassDistribution,
+                           cleanupLoadedObjecthknpRefMassDistribution,
+                           vtableOfhknpRefMassDistribution(), sizeof(hknpRefMassDistribution));

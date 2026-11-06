@@ -10,17 +10,22 @@ hkxBlobMeshShape::hkxBlobMeshShape(hkFinishLoadedObjectFlag flag)
 
 /* The finish callback of hkxBlobMeshShape's type info: the object finished
  * in place. The linker folded it onto the finish constructor, whose row
- * it shares (0x85d40, D15's addendum: spelled by the address). */
-void FUN_00085d40(void *object, int finishing) /* derived name */
+ * it shares (0x85d40), and the gate places it there by its bytes. */
+static void finishLoadedObjecthkxBlobMeshShape(void *object, int finishing) /* derived name */
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
     new (object) hkxBlobMeshShape(flag);
 }
 
-/* hkxBlobMeshShape's cleanup callback: the virtual destructor (the shared
- * body 0x2d0). */
-void FUN_000002d0(void *object);
+/* Its cleanup callback: the object destroyed through its virtual
+ * destructor (the linker folded the body with the other classes',
+ * 0x2d0). */
+static void cleanupLoadedObjecthkxBlobMeshShape(void *object) /* derived name */
+{
+    static_cast<hkxBlobMeshShape *>(object)->~hkxBlobMeshShape();
+}
+
 extern const hkClassMember D_16a0830[]; /* derived name: hkxBlobMeshShape's records */
 
 /* The address of hkxBlobMeshShape's vtable, read from an object finished
@@ -45,5 +50,6 @@ static const void *vtableOfhkxBlobMeshShape() /* derived name */
 const hkClass D_57c5e78("hkxBlobMeshShape", &D_57bd7d0, sizeof(hkxBlobMeshShape), 0, 0, 0, 0,
                         D_16a0830, 2, 0, 0, 0, 0);
 extern const hkTypeInfo D_57c5ec8;
-const hkTypeInfo D_57c5ec8("hkxBlobMeshShape", "!hkxBlobMeshShape", FUN_00085d40, FUN_000002d0,
+const hkTypeInfo D_57c5ec8("hkxBlobMeshShape", "!hkxBlobMeshShape",
+                           finishLoadedObjecthkxBlobMeshShape, cleanupLoadedObjecthkxBlobMeshShape,
                            vtableOfhkxBlobMeshShape(), sizeof(hkxBlobMeshShape));

@@ -1,14 +1,26 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* The block header's cleanup and the PVS's finish: nothing to do (the
- * linker folded both into the empty body 0x1c1e0). */
-void FUN_0001c1e0(void *object, int finishing) {}
+/* The type info's own callbacks, this file's (static, docs/DECISIONS.md
+ * D39), each folded by the linker into the shared body 0x1c1e0. */
+static void cleanupLoadedObjecthkcdStaticPvsBlockHeader(void *object) /* derived name */
+{
+    static_cast<hkcdStaticPvsBlockHeader *>(object)->~hkcdStaticPvsBlockHeader();
+}
 
-void FUN_0001c1e0(void *object) {}
+static void finishLoadedObjecthkcdStaticPvs(void *object, int finishing) /* derived name */
+{
+    hkFinishLoadedObjectFlag flag;
+    flag.finishing = finishing;
+    new (object) hkcdStaticPvs(flag);
+}
 
-/* hkcdStaticPvs's cleanup callback (func_0001db00.cpp): its destructor. */
-void FUN_0001db00(void *object); /* derived name */
+/* derived names: the cleanup callback of hkcdStaticPvs's type info (0x57ba5e0):
+ * destroy the object in place through its out-of-line destructor. */
+static void cleanupLoadedObjecthkcdStaticPvs(void *object) /* derived name */
+{
+    static_cast<hkcdStaticPvs *>(object)->~hkcdStaticPvs();
+}
 
 /* This file's static initializer (0x1db10): hkcdStaticPvs::BlockHeader's
  * reflection (no parent, its two members) and type info, then
@@ -18,9 +30,10 @@ const hkClass D_57ba510("hkcdStaticPvsBlockHeader", 0, sizeof(hkcdStaticPvsBlock
                         D_168f9f0, 2, 0, 0, 0, 0);
 extern const hkTypeInfo D_57ba560;
 const hkTypeInfo D_57ba560("hkcdStaticPvsBlockHeader", "!hkcdStaticPvs::BlockHeader", 0,
-                           FUN_0001c1e0, 0, sizeof(hkcdStaticPvsBlockHeader));
+                           cleanupLoadedObjecthkcdStaticPvsBlockHeader, 0,
+                           sizeof(hkcdStaticPvsBlockHeader));
 const hkClass D_57ba590("hkcdStaticPvs", 0, sizeof(hkcdStaticPvs), 0, 0, 0, 0, D_168fa40, 6, 0, 0,
                         0, 0);
 extern const hkTypeInfo D_57ba5e0;
-const hkTypeInfo D_57ba5e0("hkcdStaticPvs", "!hkcdStaticPvs", FUN_0001c1e0, FUN_0001db00, 0,
-                           sizeof(hkcdStaticPvs));
+const hkTypeInfo D_57ba5e0("hkcdStaticPvs", "!hkcdStaticPvs", finishLoadedObjecthkcdStaticPvs,
+                           cleanupLoadedObjecthkcdStaticPvs, 0, sizeof(hkcdStaticPvs));
