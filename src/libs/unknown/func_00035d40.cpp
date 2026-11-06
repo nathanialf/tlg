@@ -6,6 +6,6 @@ void hknpWorld::FUN_00035d40(const void *query, hknpCollisionQueryCollector *col
 {
     ThreadBuffer &stream = *D_16dc078;
     stream.timerBegin("TtWorldCastRay");
-    object1e0->castRay(query, bodyManager.bodies.data, this, unknown1f0, collector);
+    object1e0->castRay(query, bodyManager.bodies.data, this, &intSpaceUtil, collector);
     stream.timerEnd("Et");
 }

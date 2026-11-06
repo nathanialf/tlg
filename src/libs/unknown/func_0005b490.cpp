@@ -8,7 +8,7 @@ void hknpWorld::FUN_0005b490(int firstBodyId, void *argument)
     do {
         hknpBody &body = bodyManager.bodies[bodyId];
         FUN_000cd040(&body, argument, &qualities->qualities[body.qualityId], &vector250,
-                     &solverInfo, unknown1f0);
+                     &solverInfo, &intSpaceUtil);
         bodyId = body.nextAttachedBodyId;
     } while (bodyId != firstBodyId);
 }

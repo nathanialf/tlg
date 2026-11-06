@@ -3363,6 +3363,18 @@ class hknpVehicleAerodynamics : public hkReferencedObject
 {
   public:
     hknpVehicleAerodynamics(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
+
+    /* What slot 5 fills (derived names after Havok's): the force on the
+     * chassis and its torque. */
+    struct AerodynamicsDragOutput {
+        Vec4 aerodynamicsForce;
+        Vec4 aerodynamicsTorque;
+    };
+
+    /* Slot 5: the aerodynamic force on the vehicle for a step (the default
+     * aerodynamics' 0x3bf80). derived name. */
+    virtual void calcAerodynamics(float deltaTime, const class hknpVehicleInstance *vehicle,
+                                  AerodynamicsDragOutput &dragInfoOut) = 0;
 };
 
 extern const hkClass D_57bf880; /* hknpVehicleAerodynamics's hkClass */
@@ -3382,8 +3394,15 @@ class hknpVehicleDefaultAerodynamics : public hknpVehicleAerodynamics
   public:
     hknpVehicleDefaultAerodynamics(hkFinishLoadedObjectFlag flag) : hknpVehicleAerodynamics(flag) {}
 
-    float FUN_0003bf20(float speed) const; /* vtable slot 6; derived name */
-    float FUN_0003bf60(float speed) const; /* vtable slot 7; derived name */
+    /* Slot 5 (0x3bf80): the drag along the chassis's forward axis and the
+     * lift along its up axis, each from the speed along the forward axis
+     * (slots 6 and 7, through the vtable), then the extra gravity times the
+     * chassis's mass; no torque. derived name. */
+    virtual void calcAerodynamics(float deltaTime, const class hknpVehicleInstance *vehicle,
+                                  AerodynamicsDragOutput &dragInfoOut);
+
+    virtual float FUN_0003bf20(float speed) const; /* vtable slot 6; derived name */
+    virtual float FUN_0003bf60(float speed) const; /* vtable slot 7; derived name */
 
     float airDensity;
     float frontalArea;
@@ -3412,6 +3431,25 @@ class hknpGroupCollisionFilter : public hkReferencedObject
 
 struct hknpBody;
 
+/* hknpMaterialId, the material library's 16-bit handle (the template
+ * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
+ * passed by value as a two-byte struct, so a callee widens it itself or
+ * masks it. Field name derived. */
+struct hknpMaterialId {
+    hknpMaterialId() {}
+
+    explicit hknpMaterialId(u16 v) : value(v) {}
+
+    /* Assigned by its value, as the body id is (the closest-hit collector's
+     * copy of a hit, 0x6970f, moves it on its own). */
+    void operator=(const hknpMaterialId &other)
+    {
+        value = other.value;
+    }
+
+    u16 value; /* derived name */
+};
+
 /* What a query is filtered with (derived names): the collision filter
  * info at +4, user data at +8; a new one has no material, no collision
  * filter info and no user data (the broad phase's box query, 0x4e13f to
@@ -3421,7 +3459,11 @@ struct hknpQueryFilterData /* derived name */
 {
     hknpQueryFilterData() : materialId(0xffff), collisionFilterInfo(0), userData(0) {}
 
-    u16 materialId;
+    /* A handle with its own assignment: a copy of the data assigns it, then
+     * copies the two fields after it as one run of 12 bytes (0x360e2 to
+     * 0x360f4, clang's member-wise copy of a class with a non-trivial
+     * member). */
+    hknpMaterialId materialId;
     u32 collisionFilterInfo;
     u64 userData;
 };
@@ -3896,7 +3938,7 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
  * (0x57c6aa0, 0x16a12d0, FUN_00088330), hkxAnimatedQuaternion (0x16a1390,
  * FUN_000886d0), hkxSparselyAnimatedInt (0x57c6c68, 0x16a1400,
  * FUN_00088900), hkxEdgeSelectionChannel (0x16a14e0, FUN_00088cb0),
- * hkxAnimatedMatrix (0x57c6df0, 0x16a1550, FUN_00088e80), hkxEnum
+ * hkxAnimatedMatrix (0x57c6df0, 0x16a1550, 0x88e80), hkxEnum
  * (0x16a16f0, FUN_000898f0), hkxCamera (0x16a1a70, FUN_0008a270),
  * hkxAttributeHolder (0x16a1670, FUN_0008b390), hkxVertexSelectionChannel
  * (0x16a2500, FUN_0008bcd0) and hkxBlob (0x16a07f0, FUN_0008bdc0);
@@ -5356,6 +5398,68 @@ extern const Vec4 D_14b42f0;
 extern const Vec4 D_14b4300;
 extern const Vec4 D_14b4320;
 
+/* The accurate sine and cosine's constants (derived names, after the
+ * Cephes coefficients, 0x19cf0): pi/4 split in three and negated, the
+ * sine's and the cosine's polynomial coefficients from the highest, and the
+ * integer 1 in each lane. */
+extern const Vec4 D_14b4330;
+extern const Vec4 D_14b4340;
+extern const Vec4 D_14b4350;
+extern const Vec4 D_14b4290;
+extern const Vec4 D_14b42a0;
+extern const Vec4 D_14b42b0;
+extern const Vec4 D_14b42c0;
+extern const Vec4 D_14b42d0;
+extern const Vec4 D_14b42e0;
+extern const Vec4 D_14b43a0;
+extern const Vec4 D_14b41d0;
+extern const Vec4 D_14b4370;
+
+/* The sine and cosine of four angles, the Cephes reduction and polynomials
+ * as Havok's vector sine and cosine are on this platform (inline in the
+ * accurate axis-angle rotations, 0x19cf0 and 0x19e70). derived name. */
+inline void quadSinCos(const Vec4 &angle, Vec4 &sinOut, Vec4 &cosOut)
+{
+    const __m128i one = _mm_castps_si128(D_14b43a0);
+    const __m128i two = _mm_add_epi32(one, one);
+    const __m128i four = _mm_add_epi32(two, two);
+
+    Vec4 x = _mm_andnot_ps(D_14b41d0, angle);
+    Vec4 signBitSin = _mm_and_ps(D_14b41d0, angle);
+    __m128i j = _mm_cvttps_epi32(_mm_mul_ps(x, D_14b4320));
+    j = _mm_andnot_si128(one, _mm_add_epi32(j, one));
+    const Vec4 y = _mm_cvtepi32_ps(j);
+
+    const Vec4 swapSignBitSin = _mm_castsi128_ps(_mm_slli_epi32(_mm_and_si128(j, four), 29));
+    const Vec4 polyMask =
+        _mm_castsi128_ps(_mm_cmpeq_epi32(_mm_and_si128(j, two), _mm_setzero_si128()));
+
+    x = _mm_add_ps(x, _mm_mul_ps(y, D_14b4330));
+    x = _mm_add_ps(x, _mm_mul_ps(y, D_14b4340));
+    x = _mm_add_ps(x, _mm_mul_ps(y, D_14b4350));
+
+    const Vec4 signBitCos =
+        _mm_castsi128_ps(_mm_slli_epi32(_mm_andnot_si128(_mm_sub_epi32(j, two), four), 29));
+    signBitSin = _mm_xor_ps(signBitSin, swapSignBitSin);
+
+    const Vec4 z = _mm_mul_ps(x, x);
+    Vec4 c = _mm_add_ps(_mm_mul_ps(z, D_14b42c0), D_14b42d0);
+    c = _mm_add_ps(_mm_mul_ps(z, c), D_14b42e0);
+    c = _mm_mul_ps(_mm_mul_ps(z, z), c);
+    c = _mm_add_ps(D_14b4370, _mm_sub_ps(c, _mm_mul_ps(z, D_14b4360)));
+
+    Vec4 s = _mm_add_ps(_mm_mul_ps(z, D_14b4290), D_14b42a0);
+    s = _mm_add_ps(_mm_mul_ps(z, s), D_14b42b0);
+    s = _mm_add_ps(x, _mm_mul_ps(x, _mm_mul_ps(z, s)));
+
+    const Vec4 sinPart = _mm_and_ps(polyMask, s);
+    const Vec4 cosPart = _mm_andnot_ps(polyMask, c);
+    const Vec4 sinResult = _mm_blendv_ps(c, s, polyMask);
+    const Vec4 cosResult = _mm_add_ps(_mm_sub_ps(c, cosPart), _mm_sub_ps(s, sinPart));
+    sinOut = _mm_xor_ps(_mm_min_ps(sinResult, D_14b4370), signBitSin);
+    cosOut = _mm_xor_ps(_mm_min_ps(cosResult, D_14b4370), signBitCos);
+}
+
 /* A vector's length over x, y and z, as Havok's hkVector4::length<3> is on
  * this platform at its default accuracy: the square root of the squared
  * length taken as the squared length times its reciprocal square root (an
@@ -5557,6 +5661,16 @@ struct hkQuaternion {
      * the sine and cosine approximated (0x19ff0; the caller at 0x17885b).
      * derived name. */
     void FUN_00019ff0(const Vec4 &axis, const Vec4 &angle);
+
+    /* The same with the sine and cosine evaluated accurately (0x19cf0;
+     * the callers at 0x28dcf, 0x177fee and five in 0x189d70): the half
+     * angle reduced by quarter turns, the Cephes polynomials, each result
+     * clamped to one. derived name. */
+    void FUN_00019cf0(const Vec4 &axis, const Vec4 &angle);
+
+    /* The same for an angle given as a float (0x19e70; called at
+     * 0x1656bf). derived name. */
+    void FUN_00019e70(const Vec4 &axis, float angle);
 
     /* The quaternion of a rotation (inline in 0xbf40; out of line at
      * 0x1a1c0): from the trace when it is positive, otherwise from the
@@ -7973,6 +8087,8 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
  * hkIntSpaceUtil): the broad phase's box and the offsets and scales that
  * map it to 15 bits; the world's constructor sets it from its description
  * at 0x4995b. */
+struct hkAabb16;
+
 struct hkIntSpaceUtil /* derived name */
 {
     /* Set from a box (0x936a0): the scale 32767 over the span (its
@@ -7980,6 +8096,13 @@ struct hkIntSpaceUtil /* derived name */
      * offsets the box's minimum negated and that plus a step's span, the
      * scale's reciprocal; every w zero. derived name. */
     void FUN_000936a0(const hkAabb &newAabb);
+
+    /* A box into the 16-bit space (inline in the world's box query,
+     * 0x3604c): each corner moved by its offset and scaled, clamped to 0
+     * and 32767, truncated to an integer (a lane of 2^31 or more flipped
+     * from the conversion's result), its low 16 bits kept, the two
+     * corners packed. derived name. */
+    void convertAabb(const hkAabb &aabbIn, hkAabb16 &aabbOut) const;
 
     Vec4 bitOffsetLow;
     Vec4 bitOffsetHigh;
@@ -8116,6 +8239,31 @@ struct alignas(16) hkAabb16 {
     u16 key1;
 };
 
+/* The 16-bit space's largest coordinate in each lane (32767.0f), a
+ * constant another file defines. derived name. */
+extern const Vec4 D_14be470;
+
+/* An unsigned truncation of four floats as Havok's integer conversion is on
+ * this platform: the signed one, a lane of 2^31 or more flipped by its
+ * compare mask. derived name. */
+inline __m128i convertToUint32(const Vec4 &v)
+{
+    const Vec4 tooLarge = _mm_cmple_ps(_mm_set1_ps(2147483648.0f), v);
+    return _mm_xor_si128(_mm_cvttps_epi32(v), _mm_castps_si128(tooLarge));
+}
+
+inline void hkIntSpaceUtil::convertAabb(const hkAabb &aabbIn, hkAabb16 &aabbOut) const
+{
+    const Vec4 zero = _mm_setzero_ps();
+    Vec4 lo = _mm_mul_ps(_mm_add_ps(bitOffsetLow, aabbIn.min), bitScale);
+    Vec4 hi = _mm_mul_ps(_mm_add_ps(bitOffsetHigh, aabbIn.max), bitScale);
+    lo = _mm_min_ps(D_14be470, _mm_max_ps(zero, lo));
+    hi = _mm_min_ps(D_14be470, _mm_max_ps(zero, hi));
+    const __m128i lo16 = _mm_srai_epi32(_mm_slli_epi32(convertToUint32(lo), 16), 16);
+    const __m128i hi16 = _mm_srai_epi32(_mm_slli_epi32(convertToUint32(hi), 16), 16);
+    _mm_store_si128(reinterpret_cast<__m128i *>(&aabbOut), _mm_packs_epi32(lo16, hi16));
+}
+
 /* A pair of keys (derived names): two boxes found overlapping. */
 struct hkKeyPair /* derived name */
 {
@@ -8131,21 +8279,6 @@ struct hkKeyPair /* derived name */
  * skipped. The pairs written back. derived name. */
 int FUN_0019f550(const hkAabb16 *boxes, int numBoxes, hkKeyPair *pairsOut, int maxNumPairs,
                  int &numPairsSkippedOut); /* derived name */
-
-/* hknpMaterialId, the material library's 16-bit handle (the template
- * argument of hknpMaterialFreeListArray in the scoped type names, 0x14bf3cf):
- * passed by value as a two-byte struct, so a callee widens it itself or
- * masks it. Field name derived. */
-struct hknpMaterialId {
-    /* Assigned by its value, as the body id is (the closest-hit collector's
-     * copy of a hit, 0x6970f, moves it on its own). */
-    void operator=(const hknpMaterialId &other)
-    {
-        value = other.value;
-    }
-
-    u16 value; /* derived name */
-};
 
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
@@ -9860,6 +9993,13 @@ class hknpCollisionQueryCollector;
  * empty box, no filter and the filter data's defaults; the box's zeros and
  * the filter's are one memset (MemCpyOpt), which the copy of a box over
  * the first 16 bytes leaves in place. */
+/* A query of the bodies in a box (derived names after Havok's
+ * hknpAabbQuery): a collision query and the box, at +0x20. */
+struct hknpAabbQuery : public hknpCollisionQuery /* derived name */
+{
+    hkAabb aabb;
+};
+
 struct BroadPhaseAabbQuery /* derived name */
 {
     BroadPhaseAabbQuery()
@@ -10234,6 +10374,13 @@ struct hknpWorld {
      * keyframed (flags 9) and are on the active list or an island handed
      * to the object at +0x4f8. derived name. */
     void FUN_0004e0f0(const hkAabb16 *aabb); /* derived name */
+
+    /* The ids of the bodies whose boxes overlap a query's box (0x35fe0,
+     * under the timer "WorldQueryAabb"; the game calls it at 0xe9bc90 and
+     * 0xe9f05c): the box taken into the broad phase's 16-bit space, the
+     * query's filter and filter data with the bodies handed to the broad
+     * phase. derived name. */
+    void FUN_00035fe0(const hknpAabbQuery &query, hkArray<int> &bodyIdsOut) const;
     /* A body's collision state reset (0x5fab0; the world's 0x1562a0 and
      * 0x16eca0 call it): a dynamic body handed on or its motion's record
      * byte cleared, another one's box handed to the broad phase; a static
@@ -10307,7 +10454,10 @@ struct hknpWorld {
     hknpSpaceSplitter *spaceSplitter;
     hknpWorldObject1e0 *object1e0; /* derived name */
     u8 unknown1e8[8];
-    u8 unknown1f0[0x60]; /* CollideSharedData's object40 points here */
+    /* The broad phase's integer space: its box and the offsets and scales
+     * to 15 bits (set at 0x4995b; CollideSharedData's object40 points
+     * here, and the queries hand it on). */
+    hkIntSpaceUtil intSpaceUtil;
     Vec4 vector250;
     /* Built by FUN_00174590 at 0x49ca9. derived name. */
     struct hknpWorldStreams260 *streams260;
@@ -16903,7 +17053,7 @@ extern const hkClass D_57c7930; /* hkxAnimatedFloat's hkClass */
 class hkxAnimatedFloat : public hkReferencedObject
 {
   public:
-    /* Its finish constructor, run by the finish callback FUN_0008ba40, has
+    /* Its finish constructor, run by the finish callback 0x8ba40, has
      * nothing to fix up but the vtable (0x16a24c0); hkReferencedObject is
      * the hkClass's parent. */
     hkxAnimatedFloat(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), floats(flag) {}

@@ -8,7 +8,7 @@ void hknpWorld::FUN_00035de0(const void *query, const void *queryShapeOrientatio
 {
     ThreadBuffer &stream = *D_16dc078;
     stream.timerBegin("TtWorldCastShape");
-    object1e0->castShape(query, queryShapeOrientation, bodyManager.bodies.data, this, unknown1f0,
+    object1e0->castShape(query, queryShapeOrientation, bodyManager.bodies.data, this, &intSpaceUtil,
                          collector, startPointCollector);
     stream.timerEnd("Et");
 }
