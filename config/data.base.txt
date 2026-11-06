@@ -32,3 +32,5 @@ D_1696570 src/libs/unknown/func_0003de70.cpp
 D_16965c0 src/libs/unknown/func_0003de70.cpp
 D_1699620 src/libs/unknown/func_000615e0.cpp
 D_16996a0 src/libs/unknown/func_000615e0.cpp
+D_1691d10 src/libs/unknown/func_00024490.cpp
+D_1691e00 src/libs/unknown/func_00024490.cpp

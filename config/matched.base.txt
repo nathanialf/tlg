@@ -117,7 +117,7 @@ FUN_00023490 src/libs/unknown/func_00023490.cpp
 FUN_000238d0 src/libs/unknown/func_000238d0.cpp
 FUN_00023df0 src/libs/unknown/func_00023df0.cpp
 FUN_000242e0 src/libs/unknown/func_000242e0.cpp _ZL31finishLoadedObjecthkSkinBindingPvi
-FUN_00024400 src/libs/unknown/func_00024400.cpp
+FUN_00024400 src/libs/unknown/func_00024490.cpp _ZL39finishLoadedObjecthkIndexedTransformSetPvi
 FUN_000246d0 src/libs/unknown/func_000246f0.cpp _ZL38finishLoadedObjecthkMemoryMeshMaterialPvi
 FUN_00024b70 src/libs/unknown/func_00024b70.cpp
 FUN_00027b80 src/libs/unknown/func_00027b80.cpp
@@ -196,8 +196,8 @@ FUN_00081fd0 src/libs/unknown/func_00081fd0.cpp
 FUN_00082660 src/libs/unknown/func_00082660.cpp
 FUN_00082690 src/libs/unknown/func_00082690.cpp
 FUN_00082c40 src/libs/unknown/func_00082c40.cpp
-FUN_00087e20 src/libs/unknown/func_00087e20.cpp
-FUN_00087e40 src/libs/unknown/func_00087e40.cpp
+FUN_00087e20 src/libs/unknown/func_00087e60.cpp _ZL44cleanupLoadedObjecthkxVertexBufferVertexDataPv
+FUN_00087e40 src/libs/unknown/func_00087e60.cpp _ZL33finishLoadedObjecthkxVertexBufferPvi
 FUN_00089140 src/libs/unknown/func_00089140.cpp
 FUN_00089ec0 src/libs/unknown/func_00089ec0.cpp _ZL43finishLoadedObjecthkAlignSceneToNodeOptionsPvi
 _ZN14hkxSkinBindingD1Ev src/libs/unknown/func_0008a9b0.cpp
@@ -559,7 +559,7 @@ FUN_0001a490 src/libs/unknown/leaf_0001a490.cpp _ZN11hkSemaphore12FUN_0001a490Ev
 FUN_0001c990 src/libs/unknown/func_0001c8e0.cpp _ZL58finishLoadedObjecthkcdPlanarGeometryPrimitivesCollection28Pvi
 FUN_0001cf40 src/libs/unknown/func_0001cf40.cpp _ZN9hkcdShapeC2E24hkFinishLoadedObjectFlag
 FUN_0001d620 src/libs/unknown/func_0001d620.cpp
-FUN_000236e0 src/libs/unknown/func_000236e0.cpp _ZN21hkIndexedTransformSetC2E24hkFinishLoadedObjectFlag
+_ZN21hkIndexedTransformSetC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000236e0.cpp _ZN21hkIndexedTransformSetC2E24hkFinishLoadedObjectFlag
 FUN_00024be0 src/libs/unknown/leaf_00024be0.cpp _ZNK22hkMultipleVertexBuffer12FUN_00024be0ER14hkVertexFormat
 FUN_00024fa0 src/libs/unknown/func_00024fa0.cpp _ZN22hkMultipleVertexBufferC2E24hkFinishLoadedObjectFlag
 FUN_0002b010 src/libs/unknown/leaf_0002b010.cpp
@@ -1219,7 +1219,7 @@ _ZN23hknpRefMassDistributionD0Ev src/libs/unknown/func_0001ba80.cpp
 FUN_0001e200 src/libs/unknown/func_0001e200.cpp _ZN14hkcdStaticTree19DefaultTreeStorage512FUN_0001e200EPv
 FUN_0001e270 src/libs/unknown/func_0001e270.cpp _ZN14hkcdStaticTree19DefaultTreeStorage612FUN_0001e270EPv
 FUN_0001f5f0 src/libs/unknown/func_0001f5f0.cpp _ZN15hkcdDynamicTree21DefaultDynamicStorageINS_12CodecRawUintEE12FUN_0001f5f0EPv
-FUN_00024440 src/libs/unknown/func_00024440.cpp _ZN22hkMeshBoneIndexMapping12FUN_00024440EPv
+FUN_00024440 src/libs/unknown/func_00024490.cpp _ZL41cleanupLoadedObjecthkMeshBoneIndexMappingPv
 FUN_00027180 src/libs/unknown/func_000271d0.cpp _ZN14hkVertexFormat12FUN_00027180Ev
 _ZN27hknpCharacterRigidBodyCinfoD0Ev src/libs/unknown/func_00036160.cpp
 _ZN23hknpShapeMassPropertiesD0Ev src/libs/unknown/func_000383f0.cpp
@@ -2629,3 +2629,5 @@ FUN_00175a90 src/libs/unknown/func_00175a90.cpp _ZNK30hknpCompressedHeightFieldS
 FUN_0003de70 src/libs/unknown/func_0003de70.cpp _GLOBAL__I_a
 FUN_00157a20 src/libs/unknown/func_00157a20.cpp _ZN10hknpMotion12FUN_00157a20ERKDv4_fS2_
 FUN_000615e0 src/libs/unknown/func_000615e0.cpp _GLOBAL__I_a
+FUN_00024490 src/libs/unknown/func_00024490.cpp _GLOBAL__I_a
+FUN_00087e60 src/libs/unknown/func_00087e60.cpp _GLOBAL__I_a

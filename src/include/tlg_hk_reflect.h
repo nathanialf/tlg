@@ -4827,9 +4827,12 @@ void FUN_00034b80(hknpCompressedMeshShapeData *self); /* derived name */
  * (hkStringPtr) and below. */
 /* hkMeshBoneIndexMapping (type info "!hkMeshBoneIndexMapping", hkClass
  * 0x57bd388 built by 0x24490): an array of 16-bit indices at +0. The
- * cleanup callback of its type info (0x24440) frees it. */
+ * cleanup callback of its type info (0x24440) frees it; its finish
+ * callback is the shared empty body 0x1c1e0. */
 struct hkMeshBoneIndexMapping {
-    static void FUN_00024440(void *object); /* derived name */
+    hkMeshBoneIndexMapping() {}
+
+    hkMeshBoneIndexMapping(hkFinishLoadedObjectFlag flag) : mapping(flag) {}
 
     hkArray<s16> mapping; /* derived name */
 };
@@ -4882,8 +4885,7 @@ void FUN_00023770(const hkIndexedTransformSet *self, int startIndex, Mat4 *matri
 void FUN_000237b0(const hkIndexedTransformSet *self, int startIndex, Mat4 *matrices,
                   int numMatrices); /* derived name */
 
-void FUN_000236e0(hkIndexedTransformSet *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_000234f0(hkIndexedTransformSet *self);                                /* derived name */
+void FUN_000234f0(hkIndexedTransformSet *self); /* derived name */
 
 /* hkVertexFormat (hkClass 0x57bcb30, size 0x104, records 0x1691160, built
  * at 0x22f48): elements (32 hkVertexFormat::Element) at +0, numElements
@@ -9153,6 +9155,13 @@ struct hknpConstraint {
      * stored as two words, each half taken where it is stored (0x1757bd).
      * derived name. */
     void FUN_00175710(u64 bodyUidA, u64 bodyUidB, hkpConstraintData *constraintData);
+    /* Set up over two bodies and a constraint data (0x1758a0; the
+     * elements' slot 6, 0x772e8, for an immediate id other than 0xffff):
+     * the data held, its info's atoms and sizes taken, its type (the
+     * wrapped data's for a breakable or malleable one), no id, flags 3 and
+     * a runtime still to be made. derived names. */
+    void FUN_001758a0(u64 bodyUidA, u64 bodyUidB, hkpConstraintData *constraintData,
+                      u16 constraintImmediateId);
 
     /* Four bytes, not a byte array: the manager's allocation 0x16db90 forms
      * the record's address for its clear in the block that loads the free
@@ -9160,9 +9169,9 @@ struct hknpConstraint {
      * is not an i8 (a char first member turns the cast into a field address
      * at the call). */
     u32 unknown0;
-    u32 bodyIdA; /* derived name */
-    u8 unknown8[4];
-    u32 bodyIdB; /* derived name */
+    u32 bodyIdA;  /* derived name */
+    u32 unknown8; /* the second body uid's low word (0x175968 stores it) */
+    u32 bodyIdB;  /* derived name */
     hkRefPtr<hkpConstraintData> data;
     u32 id;
     u16 immediateId;
@@ -12962,6 +12971,13 @@ class hkpConstraintData : public hkReferencedObject
      * atoms' size and the argument (0x82890). */
     static void FUN_00082890(const void *atoms, int sizeOfAtoms, ConstraintInfo &infoOut);
 
+    /* Slot 5's types, by the enum's items at 0x169d690 (two of its 29 so
+     * far). */
+    enum ConstraintType {
+        CONSTRAINT_TYPE_BREAKABLE = 12,
+        CONSTRAINT_TYPE_MALLEABLE = 13,
+    };
+
     virtual int unknownVirtual5() const = 0;
     virtual void unknownVirtual6(ConstraintInfo &infoOut) const = 0;
     /* Slot 7 (pure): whether the data is usable; an hkBool, which the
@@ -15044,6 +15060,8 @@ void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /
  * hkxSkinBinding, polymorphic (type info 0x57c7500, size 0x80, vtable
  * 0x16a1cc0 stored by its finish constructor FUN_0008a9b0): its inline
  * destructor's three variants 0x8a830, 0x8a840 and 0x8a890. */
+extern const hkClass D_57c7f40; /* hkxVertexDescription's hkClass */
+
 /* hkxVertexDescription (hkClass 0x57c7f40, built at 0x8d20a: size 0x10,
  * one member record at 0x16a27a0): decls (an array of its ElementDecl, class
  * 0x57c7ec0) at +0. Its finish constructor is out of line, the empty body at
