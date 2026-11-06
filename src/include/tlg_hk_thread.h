@@ -318,8 +318,9 @@ const char *FUN_00091b30(int state); /* derived name */
  * restores the vtable, releases the references from the last and frees
  * the four arrays. The complete destructor 0x481b0 is a lone jump to that
  * base destructor, the shape of a destructor the compiler could not alias
- * (cookbook 9): the destructor is the class's implicit, inline one. Here it
- * is declared, as the tasks reach it through a call. */
+ * (cookbook 9): the destructor is the class's implicit, inline one, emitted
+ * with the vtable and its deleting destructor 0x481c0 in the world's file,
+ * which builds the derived class below on its stack (0x514a0's file here). */
 /* What a RefArrays hands its pointers back to (derived name; the third
  * argument of 0x50880 and 0x514a0): slot 7 takes what 0x92650 builds from
  * the arrays, slot 9 a list of pointers. */
@@ -373,7 +374,10 @@ class RefArrays /* derived name */ : public hkReferencedObject
      * the four arrays empty. */
     RefArrays();
 
-    ~RefArrays();
+    /* Back to the thread's heap at the object's size, the deleting
+     * destructors' (0x481e3: 0x50 bytes; the derived class's 0x48210: 0x60;
+     * defined in tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* The pointers handed back to the owner's slot 9 and dropped, and every
      * entry of the first array reset (0x92e70, after the arrays' use at
@@ -419,17 +423,12 @@ class RefArrays /* derived name */ : public hkReferencedObject
         dependency.after = after;
     }
 
-    hkArray<Entry10> array10;                 /* derived name */
-    hkArray<Dependency> array20;              /* derived name */
-    hkArray<void *> array30;                  /* derived name */
-    hkArray<hkReferencedObject *> references; /* derived name */
+    hkArray<Entry10> array10;    /* derived name */
+    hkArray<Dependency> array20; /* derived name */
+    hkArray<void *> array30;     /* derived name */
+    /* Released from the last when the arrays go (0x48070). derived name. */
+    hkArray<hkRefPtr<hkReferencedObject>> references;
 };
-
-/* The deleting destructor of RefArrays (0x481c0, slot 1 of its vtable): the
- * base destructor, then its 0x50 bytes back to the thread's heap unless
- * null. Written as calls while the inline destructor's body is not written
- * (cookbook 15). derived name. */
-void FUN_000481c0(RefArrays *self); /* derived name */
 
 /* A RefArrays with eight entry indices after it, all 0xffff when built (vtable
  * 0x1698f80, no type info; built on the stack at 0x508eb and 0x51506 over
@@ -457,8 +456,6 @@ class RefArrays1698f80 : public RefArrays /* derived name */
     u16 entry5c;
     u16 entry5e;
 };
-
-void FUN_00048210(RefArrays1698f80 *self); /* derived name */
 
 /* hknpSolverFactoryTask: vtables 0x16a4090 and 0x16a40d8; slot 6 opens the
  * timer "Solve/SolverFactory". 0x90 bytes, built by FUN_00151250 at

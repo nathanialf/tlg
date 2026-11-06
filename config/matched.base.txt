@@ -168,7 +168,7 @@ FUN_00042750 src/libs/unknown/func_00042750.cpp
 FUN_00045ac0 src/libs/unknown/func_00045ac0.cpp _ZNK15hknpConvexShape12FUN_00045ac0Ev
 FUN_00046c60 src/libs/unknown/func_00046c60.cpp
 FUN_00046c70 src/libs/unknown/func_00046c70.cpp
-FUN_000481b0 src/libs/unknown/func_000481b0.cpp
+_ZN9RefArraysD1Ev src/libs/unknown/func_000514a0.cpp
 FUN_000615c0 src/libs/unknown/func_000615c0.cpp
 FUN_00061790 src/libs/unknown/func_00061790.cpp
 FUN_00061de0 src/libs/unknown/func_00061de0.cpp
@@ -1270,8 +1270,8 @@ FUN_00184660 src/libs/unknown/func_00184660.cpp _ZNK6hkAabb12FUN_00184660Ev
 FUN_00198a20 src/libs/unknown/func_00198a20.cpp _ZN19ElementPool00198a2012FUN_00198a20Ei
 FUN_0019e6b0 src/libs/unknown/func_0019e6b0.cpp _ZN11hkXmlParser12FUN_0019e6b0EPNS_4NodeE
 _ZN17RouterAllocator50D0Ev src/libs/unknown/func_0000ac10.cpp
-FUN_000481c0 src/libs/unknown/func_000481c0.cpp _Z12FUN_000481c0P9RefArrays
-FUN_00048210 src/libs/unknown/func_00048210.cpp _Z12FUN_00048210P16RefArrays1698f80
+_ZN9RefArraysD0Ev src/libs/unknown/func_000514a0.cpp
+_ZN16RefArrays1698f80D0Ev src/libs/unknown/func_000514a0.cpp
 FUN_00076070 src/libs/unknown/func_00076070.cpp _Z12FUN_00076070P16Elements000760c0
 FUN_00140e20 src/libs/unknown/func_00140e20.cpp _Z12FUN_00140e20P24BroadPhaseLayers00142a40
 FUN_0014e0b0 src/libs/unknown/func_0014e0b0.cpp _Z12FUN_0014e0b0P23hknpWorldObject1d0Large
@@ -2556,3 +2556,4 @@ FUN_000514a0 src/libs/unknown/func_000514a0.cpp _ZN9hknpWorld12FUN_000514a0EP14R
 FUN_0008f980 src/libs/unknown/func_0008f980.cpp _ZNK9UnionFind12FUN_0008f980ERK7hkArrayIi24hkContainerHeapAllocatorERS2_
 FUN_00160cd0 src/libs/unknown/func_00160cd0.cpp _ZN15hknpBodyManager12FUN_00160cd0EjPKc
 _ZN11hkAlgorithm18quickSortRecursiveIN14hkVertexFormat7ElementEPFbRKS2_S4_EEEvPT_iiT0_ src/libs/unknown/func_000271d0.cpp
+_ZN9RefArraysD2Ev src/libs/unknown/func_000514a0.cpp

@@ -4219,6 +4219,13 @@ inline void BlockCache::operator delete(void *object, unsigned long numBytes)
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
+inline void RefArrays::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
+}
+
 inline void Object00015700::Block::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
