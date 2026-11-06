@@ -9191,6 +9191,10 @@ struct hkBlockStreamReader; /* below */
  * the pointer reaches, then by the key. */
 struct SortRecord00062100 /* derived name */
 {
+    /* No count yet (the sort's pivot is built once, its count zeroed at
+     * the sort's entry, 0x6215d). */
+    SortRecord00062100() : count(0) {}
+
     struct Target {
         u8 unknown0[4];
         int order; /* derived name */

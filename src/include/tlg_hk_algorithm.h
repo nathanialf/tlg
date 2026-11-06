@@ -16,9 +16,15 @@ template <typename T> struct less {
     }
 };
 
+/* The temporary built, then assigned: a record whose constructor sets a
+ * field keeps that field apart from the rest of the copy (the record sort
+ * 0x62130 moves its first twelve bytes through the stack and the count
+ * through a register); the same for every type with a trivial constructor.
+ * derived name. */
 template <typename T> inline void swap(T &x, T &y)
 {
-    T t = x;
+    T t;
+    t = x;
     x = y;
     y = t;
 }
