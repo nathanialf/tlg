@@ -9494,7 +9494,9 @@ struct hknpWorldObject4f8 /* derived name */
 
     /* What the array at +0x18 points to (derived names): the id of the
      * next one at +0x54, an id at +0x58 the walk of a body's entry starts
-     * from, and a flag at +0x61 set once 0x63a40 has run for it. */
+     * from, and a flag at +0x61 set once 0x63a40 has run for it (an
+     * hkBool: read through its conversion, the group's flag in 0x64db0 is
+     * the select of 1 the byte's test picks, not of the old value). */
     struct Entry18 {
         u8 unknown0[0x50];
         int id50;    /* derived name; appended to the array at +0x68 by 0x63620 */
@@ -9504,7 +9506,7 @@ struct hknpWorldObject4f8 /* derived name */
          * (0x63620). derived name. */
         int index5c;
         u8 unknown60;
-        bool flag61;
+        hkBool flag61;
     };
 
     /* An entry's group walked from its first id, each entry not yet
@@ -9552,6 +9554,14 @@ struct hknpWorldObject4f8 /* derived name */
      * group, whose entries take the first group's first id, and the joined
      * group activated when either entry was. derived name. */
     void FUN_000656e0(int indexA, int indexB);
+
+    /* The groups of a set of bodies joined (0x64db0; the world's 0x4cdf4
+     * calls it): groupOut the first group's first id, each other inactive
+     * body's group linked to it as 0x656e0 links two; static bodies and
+     * those without an entry left out. The joined group is activated when an
+     * active body or an activated group was among them; whether nothing was.
+     * derived name. */
+    bool FUN_00064db0(const hknpBodyId *bodyIds, int numBodyIds, int &groupOut);
 
     /* Each pending entry of the array at +0x58 given its place and its id
      * appended to the array at +0x68, then the pending array emptied
