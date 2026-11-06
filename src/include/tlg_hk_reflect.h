@@ -1057,7 +1057,10 @@ class hkStreamWriter;
 /* hkVariant (the reflection's TYPE_VARIANT): an object and its class.
  * derived field names. */
 struct hkVariant {
-    void *object;         /* derived name */
+    /* Read only through the variant: an attribute's object can be constant
+     * data (hknpMaskedShape's post-finish attribute at 0x1693768 in
+     * .data.rel.ro). */
+    const void *object;   /* derived name */
     const hkClass *klass; /* derived name */
 };
 
@@ -1066,6 +1069,13 @@ struct hkVariant {
  * variants and its count. Its Attribute (hkClass 0x57b7e68,
  * "hkCustomAttributesAttribute", built at 0x8b3f: size 0x18, the records
  * "name" and "value" at 0x168d140). */
+/* hkPostFinishAttribute (its name and its member's, postFinishFunction,
+ * strings of the executable): the "hk.PostFinish" attribute of a class, a
+ * function run on an object after it is finished. */
+struct hkPostFinishAttribute {
+    void (*postFinishFunction)(void *object);
+};
+
 struct hkCustomAttributes {
     struct Attribute {
         const char *name;
@@ -3884,7 +3894,7 @@ class hknpVehicleSteering : public hkReferencedObject
         float mainSteeringAngle;
         /* The main angle before the reduction at speed (0x16fab7). */
         float mainSteeringAngleAssumingNoReduction;
-        hkArray<float> wheelsSteeringAngle;
+        hkInplaceArray<float, 32> wheelsSteeringAngle;
     };
 
     hknpVehicleSteering(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
@@ -8418,6 +8428,12 @@ struct hkKeyPair /* derived name */
 int FUN_0019f550(const hkAabb16 *boxes, int numBoxes, hkKeyPair *pairsOut, int maxNumPairs,
                  int &numPairsSkippedOut); /* derived name */
 
+/* The same for two runs (0x19f310; 0x198030 calls it at 0x19818d): every
+ * pair of a box of the first and a box of the second that overlap. derived
+ * name. */
+int FUN_0019f310(const hkAabb16 *boxesA, int numBoxesA, const hkAabb16 *boxesB, int numBoxesB,
+                 hkKeyPair *pairsOut, int maxNumPairs, int &numPairsSkippedOut); /* derived name */
+
 /* hknpBody (reflected, record table at 0x1695350): 0x90 bytes as the
  * world's body array is indexed; motionId at +0x68. */
 /* hknpBody (hkClass 0x57bfa50, 0x90 bytes, record table 0x1695350):
@@ -9492,7 +9508,10 @@ struct LinkedRange0015ea30 /* derived name */
  * return). */
 struct hknpWorldObject388Link /* derived name */
 {
-    u8 unknown0[0x10];
+    u8 unknown0[0xc];
+    /* Nonzero on a list's first node that has work: 0x3f890 walks the runs
+     * only from such a node. derived name. */
+    int count;
     hknpWorldObject388Link *next; /* derived name */
 };
 
@@ -9615,6 +9634,8 @@ struct hknpWorldObject4f8 /* derived name */
     /* The ids a reader's stream names gathered (0x63ec0; the prepare-new-
      * pairs task at 0x15b844). derived name. */
     void FUN_00063ec0(hkBlockStreamReader &reader, hkArray<int> &ids);
+    /* One body's part of it (inline there, twice). derived name. */
+    void addGroupIds(const hknpBody &body, hkArray<int> &ids);
 
     /* A body's byte at +0x7f and its id, recorded at +0x38. derived names. */
     struct BodyRecord {
@@ -17957,7 +17978,8 @@ class hknpVehicleInstance : public hknpUnaryAction
 {
   public:
     hknpVehicleInstance(hkFinishLoadedObjectFlag flag)
-        : hknpUnaryAction(flag), world(0), wheelsInfo(flag), isFixed(flag)
+        : hknpUnaryAction(flag), world(0), wheelsInfo(flag), isFixed(flag),
+          wheelsSteeringAngle(flag)
     {
     }
 
@@ -18036,9 +18058,16 @@ class hknpVehicleInstance : public hknpUnaryAction
      * derived name. */
     void FUN_00162e10();
 
+    /* The steering's step (0x162fb0; the step at 0x16440d calls it after
+     * the driver input's): the angles handed to the steering component and
+     * taken back. derived name. */
+    void FUN_00162fb0(float deltaTime, const hknpVehicleFilteredDriverInput &filteredDriverInput);
+
     hknpWorld *world;
     hknpVehicleData *data;
-    u8 unknown30[0x20];
+    u8 unknown30[8];
+    hknpVehicleSteering *steering;
+    u8 unknown40[0x10];
     hknpVehicleBrake *brake; /* derived name */
     hknpVehicleSuspension *suspension;
     u8 unknown60[8];
@@ -18052,8 +18081,9 @@ class hknpVehicleInstance : public hknpUnaryAction
     u8 unknownF5[3];
     float torque; /* record at 0x1698a70's nineteenth */
     float rpm;
-    u8 unknown100
-        [0x18]; /* mainSteeringAngle, mainSteeringAngleAssumingNoReduction, wheelsSteeringAngle */
+    float mainSteeringAngle;
+    float mainSteeringAngleAssumingNoReduction;
+    hkArray<float> wheelsSteeringAngle;
     hkBool isReversing; /* record 0x1698e08 */
 };
 
@@ -18594,8 +18624,10 @@ struct hkBlockStreamWriter /* derived name */
     BlockCache *cache;
     /* To the 0x28 bytes the writers keep apart (the command writer's 0x38
      * bytes end 0x28 after its writer at +0x10; the pairs task's writers
-     * sit 0x28 apart), not read by the writer's functions. */
-    u8 unknown20[8];
+     * sit 0x28 apart), not read by the writer's functions. Not an array: a
+     * writer on the stack is placed with the address-taken objects, after
+     * the arrays (0x3f890's frame, D35). */
+    u64 unknown20;
 };
 
 /* A command stream writer (vtable 0x16a3370, ruled hkBlockStreamCommandWriter,

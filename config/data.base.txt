@@ -55,3 +55,7 @@ D_169ca30 src/libs/unknown/func_0007ca10.cpp
 D_169ca80 src/libs/unknown/func_0007ca10.cpp
 D_169cab0 src/libs/unknown/func_0007cc30.cpp
 D_169cb30 src/libs/unknown/func_0007cc30.cpp
+D_1693670 src/libs/unknown/func_000367d0.cpp
+D_1693768 src/libs/unknown/func_000367d0.cpp
+D_1693750 src/libs/unknown/func_000367d0.cpp
+D_1693698 src/libs/unknown/func_000367d0.cpp

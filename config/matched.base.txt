@@ -138,8 +138,8 @@ FUN_00034970 src/libs/unknown/func_00034970.cpp
 FUN_00034b20 src/libs/unknown/func_00034b20.cpp
 FUN_00034e30 src/libs/unknown/func_00035640.cpp _ZL131finishLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRunPvi
 FUN_000358b0 src/libs/unknown/func_000358b0.cpp _ZL42finishLoadedObjecthknpDynamicCompoundShapePvi
-FUN_00036780 src/libs/unknown/func_00036780.cpp
-FUN_000367b0 src/libs/unknown/func_000367b0.cpp
+FUN_00036780 src/libs/unknown/func_000367d0.cpp _ZL44finishLoadedObjecthknpMaskedShapeMaskWrapperPvi
+FUN_000367b0 src/libs/unknown/func_000367d0.cpp _ZL33finishLoadedObjecthknpMaskedShapePvi
 _ZN32hknpStaticCompoundShapeInternalsD1Ev src/libs/unknown/func_00033f30.cpp
 FUN_00038120 src/libs/unknown/func_00038120.cpp _ZN15hknpMaskedShape12FUN_00038120Ev
 FUN_00038af0 src/libs/unknown/func_00038af0.cpp _ZL36finishLoadedObjecthknpDecoratorShapePvi
@@ -2642,3 +2642,7 @@ FUN_0007b630 src/libs/unknown/func_0007b630.cpp _GLOBAL__I_a
 FUN_0007b940 src/libs/unknown/func_0007b940.cpp _GLOBAL__I_a
 FUN_0007ca10 src/libs/unknown/func_0007ca10.cpp _GLOBAL__I_a
 FUN_0007cc30 src/libs/unknown/func_0007cc30.cpp _GLOBAL__I_a
+FUN_0003f890 src/libs/unknown/func_0003f890.cpp
+FUN_00063ec0 src/libs/unknown/func_00063ec0.cpp _ZN18hknpWorldObject4f812FUN_00063ec0ER19hkBlockStreamReaderR7hkArrayIi24hkContainerHeapAllocatorE
+FUN_00162fb0 src/libs/unknown/func_00162fb0.cpp _ZN19hknpVehicleInstance12FUN_00162fb0EfRK30hknpVehicleFilteredDriverInput
+FUN_000367d0 src/libs/unknown/func_000367d0.cpp _GLOBAL__I_a
