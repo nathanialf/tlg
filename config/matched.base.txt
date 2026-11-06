@@ -205,7 +205,7 @@ FUN_0008b070 src/libs/unknown/func_0008b070.cpp _ZL38finishLoadedObjecthkxMateri
 FUN_0008b870 src/libs/unknown/func_0008b890.cpp _ZL30finishLoadedObjecthkxAttributePvi
 _ZN18hkxVertexAnimationD1Ev src/libs/unknown/func_0008cb10.cpp
 FUN_0008ce40 src/libs/unknown/func_0008ce40.cpp
-FUN_0008da40 src/libs/unknown/func_0008da40.cpp
+FUN_0008da40 src/libs/unknown/func_0008da60.cpp _ZL32finishLoadedObjecthkxEnvironmentPvi
 FUN_0008dbf0 src/libs/unknown/func_0008dbf0.cpp
 FUN_0008e530 src/libs/unknown/func_0008e6b0.cpp _ZL50finishLoadedObjecthkRootLevelContainerNamedVariantPvi
 FUN_0008e5c0 src/libs/unknown/func_0008e6b0.cpp _ZL38finishLoadedObjecthkRootLevelContainerPvi
@@ -264,7 +264,7 @@ FUN_0007c980 src/libs/unknown/leaf_0007c980.cpp
 FUN_0007e900 src/libs/unknown/leaf_0007e900.cpp
 FUN_00082bc0 src/libs/unknown/leaf_00082bc0.cpp
 FUN_00083050 src/libs/unknown/leaf_00083050.cpp _ZNK32hkpDeformableFixedConstraintData15unknownVirtual5Ev
-FUN_00083190 src/libs/unknown/leaf_00083190.cpp
+FUN_00083190 src/libs/unknown/leaf_00083190.cpp _ZNK18hkpHingeLimitsData15unknownVirtual5Ev
 FUN_00083330 src/libs/unknown/leaf_00083330.cpp
 FUN_000836a0 src/libs/unknown/leaf_000836a0.cpp _ZNK30hkpRackAndPinionConstraintData15unknownVirtual5Ev
 FUN_00083aa0 src/libs/unknown/leaf_00083aa0.cpp
@@ -882,7 +882,7 @@ FUN_00014cb0 src/libs/unknown/func_00014cb0.cpp
 FUN_0002af30 src/libs/unknown/func_0002af30.cpp
 FUN_0003bf60 src/libs/unknown/func_0003bf60.cpp
 FUN_00069960 src/libs/unknown/func_00069980.cpp _ZL35cleanupLoadedObjecthknpShapeSignalsPv
-FUN_0008da10 src/libs/unknown/func_0008da10.cpp
+FUN_0008da10 src/libs/unknown/func_0008da60.cpp _ZL41cleanupLoadedObjecthkxEnvironmentVariablePv
 FUN_00159df0 src/libs/unknown/func_00159df0.cpp
 FUN_0000bc80 src/libs/unknown/func_0000bc80.cpp
 FUN_00011690 src/libs/unknown/func_00011690.cpp _ZN11hkStringBufC2ERK11hkStringPtr
@@ -914,8 +914,8 @@ _ZN27hkpRotationalConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/f
 _ZN29hkpPointToPlaneConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007b940.cpp _ZN29hkpPointToPlaneConstraintDataC2E24hkFinishLoadedObjectFlag
 _ZN25hkpCogWheelConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007ca10.cpp _ZN25hkpCogWheelConstraintDataC2E24hkFinishLoadedObjectFlag
 _ZN30hkpBallAndSocketConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007cc30.cpp _ZN30hkpBallAndSocketConstraintDataC2E24hkFinishLoadedObjectFlag
-_ZN30hkpRackAndPinionConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007d080.cpp _ZN30hkpRackAndPinionConstraintDataC2E24hkFinishLoadedObjectFlag
-_ZN22hkpHingeConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007d2a0.cpp _ZN22hkpHingeConstraintDataC2E24hkFinishLoadedObjectFlag
+_ZN30hkpRackAndPinionConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007d0c0.cpp _ZN30hkpRackAndPinionConstraintDataC2E24hkFinishLoadedObjectFlag
+_ZN22hkpHingeConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007d2e0.cpp _ZN22hkpHingeConstraintDataC2E24hkFinishLoadedObjectFlag
 FUN_0007e310 src/libs/unknown/func_0007e310.cpp
 _ZN22hkpWheelConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0007eaf0.cpp _ZN22hkpWheelConstraintDataC2E24hkFinishLoadedObjectFlag
 _ZN18hkpHingeLimitsDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00082290.cpp _ZN18hkpHingeLimitsDataC2E24hkFinishLoadedObjectFlag
@@ -931,7 +931,7 @@ FUN_0000ef00 src/libs/unknown/func_0000ef00.cpp _ZN17Allocator0000ed4010blockAll
 FUN_00010ce0 src/libs/unknown/func_00010ce0.cpp
 FUN_00010f20 src/libs/unknown/func_00010f20.cpp
 FUN_0005df00 src/libs/unknown/func_0005df00.cpp
-FUN_0008d9e0 src/libs/unknown/func_0008d9e0.cpp
+FUN_0008d9e0 src/libs/unknown/func_0008da60.cpp _ZL40finishLoadedObjecthkxEnvironmentVariablePvi
 _ZN20hkRootLevelContainer12NamedVariantC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017dde0.cpp
 FUN_0017de70 src/libs/unknown/func_0017de40.cpp _GLOBAL__I_a
 FUN_0015d7c0 src/libs/unknown/func_0015d7c0.cpp
@@ -2667,3 +2667,4 @@ _ZN11hkAlgorithm18quickSortRecursiveIN22hkMultipleVertexBuffer13LockedElementEPF
 FUN_001555a0 src/libs/unknown/func_001555a0.cpp
 FUN_000418c0 src/libs/unknown/func_000418c0.cpp
 FUN_00169c90 src/libs/unknown/func_00169c90.cpp
+FUN_0008da60 src/libs/unknown/func_0008da60.cpp _GLOBAL__I_a

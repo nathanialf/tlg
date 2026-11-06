@@ -80,3 +80,5 @@ D_169f4a0 hkClassMember 3 src/include/tlg_hk_reflect.h
 D_169f520 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_169f550 hkClassEnum::Item 3 src/include/tlg_hk_reflect.h
 D_169f580 hkClassEnum 1 src/include/tlg_hk_reflect.h
+D_14c9e50 hknpConvexPolytopeShape::IndexMask 32 src/include/tlg_hk_reflect.h
+D_16a2950 hkClassMember 2 src/include/tlg_hk_reflect.h

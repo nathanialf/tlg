@@ -2593,18 +2593,15 @@ class hkXmlParser : public hkReferencedObject /* derived name */
 /* hkxEnvironment::Variable (type info "hkxEnvironmentVariable" 0x57c8100,
  * hkClass 0x57c80b0, both built by 0x8da60: size 0x10, no vtable; member
  * records at 0x16a2950): name and value, string
- * pointers at +0 and +8. Its finish callback is FUN_0008d9e0, its cleanup
- * callback FUN_0008da10 (hkMemoryResourceHandle::ExternalLink's type info,
- * 0x57c8620, cites the same two). */
+ * pointers at +0 and +8. Its finish and cleanup callbacks are the
+ * reflection file's own, 0x8d9e0 and 0x8da10 (hkMemoryResourceHandle::
+ * ExternalLink's type info, 0x57c8620, cites the same two). */
 struct hkxEnvironmentVariable {
     hkxEnvironmentVariable(hkFinishLoadedObjectFlag flag) : name(flag), value(flag) {}
 
     hkStringPtr name;
     hkStringPtr value;
 };
-
-void FUN_0008d9e0(void *object, int finishing); /* derived name */
-void FUN_0008da10(void *object);                /* derived name */
 
 /* derived names: the string set from a C string of a given length (-1: up
  * to its terminator), copied into owned storage and the old one freed when
@@ -15719,7 +15716,7 @@ extern const hkClassEnum *D_16dc6d0;
 
 /* hkxEnvironment (hkClass 0x57c8130, parent hkReferencedObject, built at
  * 0x8db07): its finish constructor 0x17d6f0 is out of line, jumped to by the
- * finish callback FUN_0008da40 and called by the reflection initializer at
+ * finish callback 0x8da40 and called by the reflection initializer at
  * 0x8db93. */
 class hkxEnvironment : public hkReferencedObject
 {
