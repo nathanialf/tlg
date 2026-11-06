@@ -15,3 +15,7 @@ D_14b97d4 hknpBodyCinfoDefaults 1 src/include/tlg_hk_reflect.h
 D_14b8101 hkVertexFormat::ComponentSize 12 src/include/tlg_hk_reflect.h
 D_14c3474 hkxSceneDefaults 1 src/include/tlg_hk_reflect.h
 D_14bebb8 hknpVehicleDataDefaults 1 src/include/tlg_hk_reflect.h
+D_168c920 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_168c950 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1697a20 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_1697aa0 hkClassMember 2 src/include/tlg_hk_reflect.h

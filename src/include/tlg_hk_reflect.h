@@ -2693,7 +2693,7 @@ struct hkUuid {
 };
 
 /* hkUuidObject, 32 bytes and polymorphic: uuid (an hkUuid) at +0xc. Its
- * finish constructor is out of line (FUN_0000dc40: stores the vtable
+ * finish constructor is out of line (0xdc40: stores the vtable
  * 0x168d870 and leaves the uuid as loaded); the finish callback 0x3eb0
  * calls it by its address. */
 class hkUuidObject : public hkReferencedObject
@@ -2709,8 +2709,6 @@ class hkUuidObject : public hkReferencedObject
 
     hkUuid uuid;
 };
-
-void FUN_0000dc40(hkUuidObject *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkRefCountedProperties, 16 bytes: entries, an array (type 0x16) of
  * hkRefCountedProperties::Entry, at +0 (type info at 0x57b85d8, registered
@@ -2750,6 +2748,15 @@ struct hkRefCountedProperties {
      * for key 0xf100 at 0x384be and 0x157118); null when none has it.
      * derived name. */
     hkReferencedObject *FUN_0001c550(u16 key) const;
+
+    /* The class allocator: 16 bytes from the thread's heap (the callers at
+     * 0x38548 and 0x44c93; tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+
+    /* An object kept under a key (0x1c2c0): the entry with the key, the
+     * last first, gets it, else a new entry; the last argument 0 takes a
+     * reference on it. derived name. */
+    void FUN_0001c2c0(u16 key, hkReferencedObject *object, int referenceHandling);
 
     hkArray<Entry> entries;
 };
@@ -7224,6 +7231,14 @@ class alignas(16) hknpShape : public hkReferencedObject
      * hknpConvexShape). */
     inline const hknpConvexShape *asConvexShape() const;
 
+    /* The object the shape keeps under a key, none without properties
+     * (inline at 0x384b5; tlg_lib_unknown.h). derived name. */
+    inline hkReferencedObject *getProperty(u16 key) const;
+
+    /* An object kept under a key, the properties made on first use (inline
+     * at 0x38520). derived name. */
+    inline void setProperty(u16 key, hkReferencedObject *object);
+
     /* A new shape of a dispatch type: no properties, key bits, user data,
      * radius or flags, stored in this order (inlined in hknpDecoratorShape's
      * 0x3b0a0, 0x3b0aa to 0x3b0d3). */
@@ -11070,6 +11085,21 @@ class hknpShapeMassProperties : public hkReferencedObject
   public:
     hknpShapeMassProperties(hkFinishLoadedObjectFlag flag);
 
+    /* A new object, inline (the static compound shape's mass, 0x384fa):
+     * the count and the vtable only. */
+    hknpShapeMassProperties() {}
+
+    /* The class allocator: 0x30 bytes from the thread's heap
+     * (tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+
+    /* Its placement form, which the finish callback constructs in place
+     * with (0x38d60). */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     /* Empty; the deleting destructor is 0x383f0, the body every vtable of a
      * 0x30-byte reference-counted class with an empty destructor cites
      * (D15: no citing class has other members beside it, and this vtable is
@@ -11298,6 +11328,13 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
     /* Slot 17 (0x16ad80, both vtables): the core shape's value scaled by
      * the smallest magnitude of the scale's direction. derived name. */
     float FUN_0016ad80() const;
+
+    /* Slot 14 (0x16abf0, both vtables): the core shape's face plane and
+     * minimum half angle, the plane scaled as slot 15 scales it and moved;
+     * under a non-uniform scale the angle narrowed by the smallest
+     * magnitude of the scale's direction, rounded back to its byte. derived
+     * name. */
+    void FUN_0016abf0(int faceIndex, Vec4 *planeOut, hknpFaceAngle *angleOut) const;
 
     /* Slot 12 (0x16ae80, both vtables): the core convex shape's vertices by
      * index, then each of the count scaled and moved, its w kept. derived
@@ -11843,6 +11880,18 @@ class hknpConvexPolytopeShape : public hknpConvexShape
      * name. */
     int FUN_001520f0() const;
     int FUN_00072f70() const; /* vtable slot 13; derived name */
+
+    /* A byte of the mask table slot 15 reads its indices through (0x14c9e50,
+     * 16 bytes of 0xff then 16 of 0): read from 16 less the face's count,
+     * the lanes past the face's last index keep the first. derived names. */
+    struct IndexMask {
+        u8 value;
+    };
+
+    /* Slot 15 (0x154160): a face's plane and its vertices, four at a time,
+     * the lanes past its last vertex the first one again; the number of
+     * its vertices returned. derived name. */
+    int FUN_00154160(int faceIndex, Vec4 *planeOut, Vec4 *verticesOut) const;
     /* Slot 14 (0x72f80, kept by the capsule and triangle shapes): a face's
      * plane and its minimum half angle. derived name. */
     void FUN_00072f80(int faceIndex, Vec4 &planeOut, hknpFaceAngle &minAngleOut) const;
@@ -13873,6 +13922,37 @@ extern const hkClassMember D_1693bf0[]; /* derived name: hknpBodyCinfo's records
  * hkpConstraintMotor) at +8, targetPosition at +0x10. Its finish
  * constructor resets both offsets. */
 
+/* What the motors' solver step reads and fills (derived names; the
+ * callers 0xcb6bc, 0xcc994 and 0xccbc5 build both on their stacks). The
+ * step's data: a time at +0, two factors at +0xc and +0x10. */
+struct MotorStepInfo0017d190 /* derived name */
+{
+    float unknown0;
+    u8 unknown4[8];
+    float unknownC;
+    float unknown10;
+};
+
+struct MotorInput0017d190 /* derived name */
+{
+    float unknown0; /* the spring damper divides by it */
+    const MotorStepInfo0017d190 *stepInfo;
+    float unknown10;
+    float unknown14;
+    float unknown18;
+    float unknown1c; /* the position motor's error */
+};
+
+struct MotorOutput0017d190 /* derived name */
+{
+    float unknown0;
+    float targetVelocity;
+    float maxForce;
+    float minForce;
+    float unknown10; /* the position and velocity motors' tau */
+    float unknown14; /* the position motor's damping */
+};
+
 /* hkpConstraintMotor (hkClass 0x57c3af0, parent hkReferencedObject) and
  * hkpLimitedForceConstraintMotor (hkClass 0x57c59a8, parent
  * hkpConstraintMotor): the abstract bases of the constraint motors. */
@@ -13993,9 +14073,12 @@ class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
         CALLBACK_MOTOR_TYPE_USER_3
     };
 
-    /* The function that fills the motor's solver data (signature not
-     * recovered). derived name. */
-    typedef void (*CalcMotorDataCallbackFunc)();
+    /* The function that fills the motor's solver data, handed the motor
+     * and the solver step's input and output (0x17d2cd jumps to it).
+     * derived name. */
+    typedef void (*CalcMotorDataCallbackFunc)(const hkpCallbackConstraintMotor *motor,
+                                              const MotorInput0017d190 *input,
+                                              MotorOutput0017d190 *output);
 
     /* 0x17d0c0 (the game builds one at 0xeb1204): a limited-force motor of
      * the callback type with a force range of a million each way. */
@@ -14041,6 +14124,15 @@ class hkpSpringDamperConstraintMotor : public hkpLimitedForceConstraintMotor
     float springConstant; /* name from the strings; offset derived */
     float springDamping;  /* name from the strings; offset derived */
 };
+
+/* A motor's solver data by its type (0x17d190): the position motor's
+ * velocity toward its target, recovering at most the constant rate beyond
+ * the proportional one, its force symmetric; the velocity motor's target
+ * velocity, from the constraint's targets when it asks; the spring
+ * damper's factors from the step; the callback motor's own function, its
+ * arguments handed on. derived name. */
+void FUN_0017d190(const hkpConstraintMotor *motor, const MotorInput0017d190 *input,
+                  MotorOutput0017d190 *output); /* derived name */
 
 /* hkpAngMotorConstraintAtom (type info 0x57c4920, size 0x20, record table
  * 0x169ee30): isEnabled at +2, motorAxis at +3, initializedOffset and
@@ -17065,6 +17157,10 @@ class hknpCompoundShape : public hknpCompositeShape
      * cleared. */
     hknpCompoundShape(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x412a0): over a description (the static compound
+     * shape's constructor runs it first, 0x38466). */
+    hknpCompoundShape(const hknpCompoundShapeCinfo &cinfo);
+
     /* Out of line (0x41650, slot 0): the destroyed signal fired, then the
      * members; the deleting destructor (0x41600, slot 1) runs it and frees
      * through the class's delete. */
@@ -17109,6 +17205,15 @@ class hknpStaticCompoundShape : public hknpCompoundShape
 {
   public:
     hknpStaticCompoundShape(hkFinishLoadedObjectFlag flag); /* 0x385d0 */
+
+    /* Out of line (0x38440): the compound over the description, no bounding
+     * volume data, the tree built (0xcfca0) and the AABB updated; with a
+     * mass configuration (+0x18) the mass properties built through slot 28
+     * and kept under key 0xf100. */
+    hknpStaticCompoundShape(const hknpCompoundShapeCinfo &cinfo);
+
+    /* The tree built over the instances (0xcfca0). derived name. */
+    void FUN_000cfca0();
 
     virtual ~hknpStaticCompoundShape();
 

@@ -4831,6 +4831,29 @@ inline void hkRefCountedProperties::operator delete(void *object, unsigned long 
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
+inline void *hkRefCountedProperties::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *hknpShapeMassProperties::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline hkReferencedObject *hknpShape::getProperty(u16 key) const
+{
+    return properties ? properties->FUN_0001c550(key) : HK_NULL;
+}
+
+inline void hknpShape::setProperty(u16 key, hkReferencedObject *object)
+{
+    if (!properties) {
+        properties = new hkRefCountedProperties();
+    }
+    properties->FUN_0001c2c0(key, object, 0);
+}
+
 inline void BufferOstream::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
