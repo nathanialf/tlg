@@ -2614,3 +2614,7 @@ FUN_0001a500 src/libs/unknown/func_0001a500.cpp _GLOBAL__I_a
 FUN_0016cce0 src/libs/unknown/func_0016cce0.cpp
 FUN_0019cf40 src/libs/unknown/func_0019cf40.cpp
 _ZN18hkxAttributeHolderD1Ev src/libs/unknown/func_00089330.cpp _ZN18hkxAttributeHolderD2Ev
+FUN_0016a4b0 src/libs/unknown/func_0016a4b0.cpp _ZN23hknpVehicleDefaultBrake16calcBreakingInfoEfPK19hknpVehicleInstanceRK30hknpVehicleFilteredDriverInputRN16hknpVehicleBrake19WheelBreakingOutputE
+FUN_00181360 src/libs/unknown/func_00181360.cpp
+FUN_00092fe0 src/libs/unknown/func_00092fe0.cpp
+FUN_0004d4b0 src/libs/unknown/func_0004d4b0.cpp

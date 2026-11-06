@@ -24,6 +24,20 @@ struct SceFiosStat {
     unsigned char reserved[0x2c];
 };
 
+/* A directory's entry as the listing reads it (derived names): its size and
+ * flags, then the offset of its name in its full path, the path from +0x18
+ * (the listing's slot 5 reads the offset at +0x10, 0x1beea); 0x418 bytes on
+ * the caller's stack. */
+struct SceFiosDirEntry {
+    SceFiosOffset fileSize;
+    unsigned int statFlags;
+    unsigned short nameLength;
+    unsigned short fullPathLength;
+    unsigned short offsetToName;
+    unsigned short reserved[3];
+    char fullPath[1024];
+};
+
 /* A file open's parameters (derived names): the open flags in the low 16
  * bits at +0, 1 to read (the writer's opener stores its int's low 16 bits
  * into the zeroed word, 0x91d84), then zeros; 24 bytes on the caller's
@@ -45,6 +59,7 @@ SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
 int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);
 int sceFiosFHCloseSync(const SceFiosOpAttr *attr, SceFiosFH fh);
 int sceFiosDHCloseSync(const SceFiosOpAttr *attr, SceFiosDH dh);
+int sceFiosDHReadSync(const SceFiosOpAttr *attr, SceFiosDH dh, SceFiosDirEntry *entry);
 /* A directory opened into a buffer of length bytes for its entries; with no
  * buffer the operation's actual count is the size the listing needs (0x1bd31). */
 SceFiosOp sceFiosDHOpen(const SceFiosOpAttr *attr, SceFiosDH *dh, const char *path, void *buffer,

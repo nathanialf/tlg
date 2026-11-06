@@ -6335,7 +6335,7 @@ void FUN_0003c370(hknpSphereShape *self);           /* slot 1 of 0x1695c10 */
 void FUN_0004aff0(hknpWorld *self);                 /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);         /* slot 1 of 0x169ab10 */
 void FUN_000870e0(hkxMaterial *self);               /* slot 1 of 0x16a0db0 */
-void FUN_00089330(hkxAttributeHolder *self);        /* slot 1 of 0x16a1670 */
+void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
 void FUN_0008c0c0(hkxNode *self);                   /* slot 1 of 0x16a25e0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */

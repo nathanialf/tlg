@@ -1758,6 +1758,14 @@ struct hkClassMember {
     const hkCustomAttributes *attributes;
 };
 
+/* A member's alignment as a structure layout computes it (0x181360;
+ * recursive, and called from 0x18117d and 0x18122b): a plain type's own
+ * (0x7e30), a zero member's subtype's, a pointer-sized type's the pointer
+ * alignment given, a struct's the largest of its members' (at least one),
+ * an inplace array's or an unknown type's -1; raised to 8, 16 or 32 by the
+ * member's alignment flags. derived name. */
+int FUN_00181360(const hkClassMember &member, hkClassMember::Type type, int pointerAlignment);
+
 /* derived name: a member record brought up to date (0x19f210, the
  * callback the versioning walk at 0x19ef97 runs on every declared member
  * of a version 4 or older): a TYPE_ZERO member becomes its subtype and is
@@ -2448,6 +2456,17 @@ struct hkStringBuf /* derived name */
     {
         return string.size - 1;
     }
+
+    /* The characters, terminated. */
+    const char *cString() const
+    {
+        return string.data;
+    }
+
+    /* Path parts appended, each after a separator (0x11bc0; the directory
+     * listing's slot 5 joins its path and an entry's name, 0x1bf2c). The
+     * buffer returned. derived name. */
+    hkStringBuf &FUN_00011bc0(const char *part0, const char *part1, const char *part2);
 
     /* Every letter A to Z made lower case, in place (0x11db0; the image
      * loader lowers a file's extension with it at 0x1885b5). derived
@@ -10266,7 +10285,10 @@ struct hknpWorldSignals /* derived name */
     Signal00093530 signalB0;
     Signal00093530 signalB8;
     Signal00093530 signalC0;
-    Signal00093530 signalC8;
+    /* Fired with the world and a constraint's id as the constraint is
+     * destroyed, after the removed signal for an enabled one (0x4d5b5).
+     * derived name. */
+    hkSignal2<hknpWorld *, u32> constraintDestroyedSignal;
     hkSignal2<hknpWorld *, u32> constraintAddedSignal;   /* 0x4fc10 enables, 0x4d32e */
     hkSignal2<hknpWorld *, u32> constraintRemovedSignal; /* 0x4fcf0 disables, 0x4d4de */
     Signal00093530 signalE0;
@@ -10466,6 +10488,10 @@ struct hknpWorld {
      * signal at +0x5e0 fired with the world and its id (0x4fcf0; the game
      * calls it from 0xeadb24). derived name. */
     void FUN_0004fcf0(u32 constraintId);
+    /* Constraints destroyed by id (0x4d4b0): for each, the removed signal
+     * fired when it is enabled, then the destroyed signal, then its
+     * removal from the manager (0x16df30). derived name. */
+    void FUN_0004d4b0(const u32 *constraintIds, int numConstraintIds);
     /* A body's quality set when it changes (0x5fcf0; the qualities'
      * modifier 0x16ef20 and the game call it): the body's collision caches
      * rebuilt unless asked not to (FUN_0005bf80, mode 0), then the body
@@ -13729,6 +13755,12 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
     /* The finish constructor (0x7ac70; hkClass built at 0x7ad45, parent
      * hkpConstraintData's 0x57c45a8): the atoms finish themselves. */
     hkpLinearClearanceConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A new constraint (0x836d0): the atoms typed, the frictions enabled,
+     * both frames the identity, the limits and frictions one an axis with
+     * no range or force, the motor off with its runtime offsets, the
+     * angular atom over all three axes. */
+    hkpLinearClearanceConstraintData();
 
     virtual ~hkpLinearClearanceConstraintData();
 
