@@ -108,14 +108,14 @@ int FUN_00030ca0(hknpWorldObject380Pair *pair, const hknpWorldObject380StepInfo 
     cdBodyA.motion = motionA;
     cdBodyA.material = materialA;
     cdBodyA.leafShape = bodyA->shape;
-    cdBodyA.rootShape = 0;
+    cdBodyA.quality = 0;
     cdBodyA.shapeKey = 0xffffffff;
 
     cdBodyB.body = bodyB;
     cdBodyB.motion = motionB;
     cdBodyB.material = materialB;
     cdBodyB.leafShape = bodyB->shape;
-    cdBodyB.rootShape = 0;
+    cdBodyB.quality = 0;
     cdBodyB.shapeKey = 0xffffffff;
 
     bodies.pointerC0 = source;

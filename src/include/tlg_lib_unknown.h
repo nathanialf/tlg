@@ -4492,6 +4492,11 @@ inline void hkxMesh::operator delete(void *object, unsigned long numBytes)
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkStorageSkinnedMeshShape::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxMaterialShaderSet::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -6236,7 +6241,6 @@ void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
 void FUN_0009b170(hkcdPlanarGeometry *self);        /* slot 1 of 0x16a36f0 */
 void FUN_0009c0d0(hkcdPlanarCsgOperand *self);      /* slot 1 of 0x16a3730 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);     /* slot 1 of 0x16a38b0 */
-void FUN_000ad920(hkStorageSkinnedMeshShape *self); /* slot 1 of 0x16a3af0 */
 void FUN_00157ea0(hknpBallGun *self);               /* slot 1 of 0x16a48d0 */
 void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */
 void FUN_0015bf50(hknpWorldSnapshot *self);         /* slot 1 of 0x16a4d50 */

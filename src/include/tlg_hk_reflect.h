@@ -7912,15 +7912,28 @@ struct hknpMaterial;
 
 struct hknpMotion;
 
+struct hknpBodyQuality;
+
 struct hknpCdBody /* derived name */
 {
-    const hknpBody *body;       /* derived name */
-    const hknpShape *rootShape; /* derived name: null where 0x30ca0 builds one */
-    const hknpMotion *motion;   /* derived name */
+    const hknpBody *body; /* derived name */
+    /* The body's quality in the world's library (0x176200), null where
+     * 0x30ca0 builds one. derived name. */
+    const hknpBodyQuality *quality;
+    const hknpMotion *motion; /* derived name */
     /* The shape collided, the body's own (0x31026 reads it at +0x48). */
     const hknpShape *leafShape;   /* derived name */
     const hknpMaterial *material; /* derived name */
     u32 shapeKey;                 /* derived name: -1 for the whole shape */
+};
+
+/* The bodies a collision detector is handed with their cache (derived
+ * name): 0x40 bytes, the fields past the shape key not set where the cache's
+ * collision builds two (0x176200, 0x40 apart on its stack; 0x30ca0's are
+ * 0x30 bytes, the plain body). derived names. */
+struct hknpCdBodyForCollide /* derived name */ : public hknpCdBody {
+    const void *unknown30;
+    const void *unknown38;
 };
 
 /* The modifier of vtable 0x16a4e50 (address point 0x16a4e60, no type info,
@@ -9985,7 +9998,10 @@ struct ModifierSharedData /* derived name */
 
     const void *object0;
     void *pointer8;
-    u8 unknown10[8];
+    /* Not set by 0x167c90; not an array (the collision of a cache, 0x176200,
+     * lays its frame out with this object after its two hknpCdBody, as the
+     * stack protector does objects without arrays). derived name. */
+    void *pointer10;
     const hknpSolverInfo *solverInfo;
     Vec4 vector20;
 };
@@ -15375,10 +15391,8 @@ void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /*
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 
 /* hkSkinBinding (vtable 0x16a3860): its inline destructor's variants are
- * 0xaa370, 0xaa380 and 0xaa3d0. hkStorageSkinnedMeshShape (vtable 0x16a3b00): slot 0, the
- * complete destructor FUN_000ad910, runs the out-of-line FUN_000adba0. */
+ * 0xaa370, 0xaa380 and 0xaa3d0. */
 class hkSkinBinding;
-void FUN_000adba0(hkStorageSkinnedMeshShape *self); /* derived name */
 
 /* hkpPointToPathConstraintData's members, from the records its reflection
  * initializer builds (0x7f1b2 to 0x7f30c, the names in order at 0x14c4707
@@ -16396,6 +16410,23 @@ class hkSkinnedMeshShape : public hkReferencedObject
         MeshSectionIndex meshSectionIndex;
         hkVector4 boundingSphere;
     };
+
+    /* Its interface, slots 5 to 17 (hkStorageSkinnedMeshShape's overriders
+     * name them). derived names. */
+    virtual int FUN_000ae6a0() const = 0;
+    virtual void FUN_000ae6b0(int sectionIndex, BoneSection &sectionOut) const = 0;
+    virtual void FUN_000ae770(BoneSetId boneSetId, BoneSet &boneSetOut) const = 0;
+    virtual void FUN_000ae780(BoneSetId boneSetId, hkArray<s16> &bonesOut) const = 0;
+    virtual int FUN_000ae810() const = 0;
+    virtual void FUN_000ae820(int partIndex, Part &partOut) const = 0;
+    virtual void FUN_000add80() = 0;
+    virtual const char *FUN_000aea20() const = 0;
+    virtual void FUN_000aea30(const char *newName) = 0;
+    virtual void FUN_000ae890(hkMeshShape *meshBuffer, BoneSetId startBoneSetId,
+                              int numBoneSets) = 0;
+    virtual void FUN_000ae9a0(const Part &part) = 0;
+    virtual void FUN_000ae860() = 0;
+    virtual int FUN_000aea40(const s16 *bones, int numBones) = 0;
 };
 
 bool FUN_000ad900(const hkSkinnedMeshShape::Part &a,
@@ -16419,33 +16450,63 @@ class hkStorageSkinnedMeshShape : public hkSkinnedMeshShape
     /* Out of line (0xae680): the finish callback 0x27be0 jumps to it, the
      * reflection initializer at 0x27ee6 runs it on a temporary. */
     hkStorageSkinnedMeshShape(hkFinishLoadedObjectFlag flag);
-    virtual ~hkStorageSkinnedMeshShape();
 
-    const hkClass *getClassType() const; /* vtable slot 3, FUN_00027bd0 */
-    void
+    /* Implicit in effect, inline: its variants are emitted with the vtable
+     * in the key function's file (func_000ae6b0.cpp): the complete
+     * destructor 0xad910 jumps to the base one 0xadba0 (a linkonce
+     * destructor is not aliased), the deleting 0xad920 calls it and frees
+     * through the class's delete. */
+    virtual ~hkStorageSkinnedMeshShape() {}
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* The overriders in their slots' order; slot 6 is the class's key
+     * function, so the vtable and the inline virtuals are emitted in its
+     * file. */
+    /* Slot 5: the number of bone sections (inline, emitted with the vtable;
+     * 0xae6a0, the body the linker kept). derived name. */
+    virtual int FUN_000ae6a0() const
+    {
+        return boneSections.getSize();
+    }
+
+    /* Slot 6 (0xae6b0): a copy of a bone section. derived name. */
+    virtual void FUN_000ae6b0(int sectionIndex, hkSkinnedMeshShape::BoneSection &sectionOut) const;
+    virtual void
     FUN_000ae770(hkSkinnedMeshShape::BoneSetId boneSetId,
                  hkSkinnedMeshShape::BoneSet &boneSetOut) const; /* vtable slot 7; derived name */
     /* Slot 8 (0xae780): a bone set's bones copied out. derived name. */
-    void FUN_000ae780(hkSkinnedMeshShape::BoneSetId boneSetId, hkArray<s16> &bonesOut) const;
-    const char *FUN_000aea20() const;       /* vtable slot 12; derived name */
-    void FUN_000aea30(const char *newName); /* vtable slot 13; derived name */
-    void FUN_000ae860();                    /* vtable slot 16; derived name */
+    virtual void FUN_000ae780(hkSkinnedMeshShape::BoneSetId boneSetId,
+                              hkArray<s16> &bonesOut) const;
+
+    /* Slot 9: the number of parts (inline; 0xae810). derived name. */
+    virtual int FUN_000ae810() const
+    {
+        return parts.getSize();
+    }
+
+    /* Slot 10 (0xae820): a copy of a part. derived name. */
+    virtual void FUN_000ae820(int partIndex, hkSkinnedMeshShape::Part &partOut) const;
+    /* Slot 11 (0xadd80). derived name. */
+    virtual void FUN_000add80();
+    virtual const char *FUN_000aea20() const;       /* vtable slot 12; derived name */
+    virtual void FUN_000aea30(const char *newName); /* vtable slot 13; derived name */
     /* Slot 14 (0xae890): a bone section appended over a mesh, a first bone
      * set and their count. derived name. */
-    void FUN_000ae890(hkMeshShape *meshBuffer, hkSkinnedMeshShape::BoneSetId startBoneSetId,
-                      int numBoneSets);
+    virtual void FUN_000ae890(hkMeshShape *meshBuffer, hkSkinnedMeshShape::BoneSetId startBoneSetId,
+                              int numBoneSets);
     /* Slot 15 (0xae9a0): a part appended. derived name. */
-    void FUN_000ae9a0(const hkSkinnedMeshShape::Part &part);
-    /* Slot 6 (0xae6b0): a copy of a bone section. derived name. */
-    void FUN_000ae6b0(int sectionIndex, hkSkinnedMeshShape::BoneSection &sectionOut) const;
-    /* Slot 10 (0xae820): a copy of a part. derived name. */
-    void FUN_000ae820(int partIndex, hkSkinnedMeshShape::Part &partOut) const;
+    virtual void FUN_000ae9a0(const hkSkinnedMeshShape::Part &part);
+    virtual void FUN_000ae860(); /* vtable slot 16; derived name */
     /* Slot 17 (0xaea40): a bone set added over a copy of the bones at the
      * bone buffer's end; its index back. The bones are restrict (D9): the
      * append's copy loop became a memcpy of (n - 1) * 2 + 2 bytes
      * (0xaeaf3), LoopIdiom's form, which it forms only when the source
      * cannot alias the buffer. derived name. */
-    int FUN_000aea40(const s16 *HK_RESTRICT bones, int numBones);
+    virtual int FUN_000aea40(const s16 *HK_RESTRICT bones, int numBones);
+
+    const hkClass *getClassType() const; /* vtable slot 3, FUN_00027bd0 */
 
     /* From its record table at 0x1692420: bonesBuffer, boneSets,
      * boneSections and parts (arrays) from +0x10, name (hkStringPtr) at

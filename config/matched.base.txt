@@ -221,7 +221,7 @@ FUN_000ad730 src/libs/unknown/leaf_000ad730.cpp _ZNK19hkMemoryMeshTexture12FUN_0
 FUN_000ad740 src/libs/unknown/leaf_000ad740.cpp _ZN19hkMemoryMeshTexture12FUN_000ad740EN13hkMeshTexture10FilterModeE
 FUN_000ad750 src/libs/unknown/leaf_000ad750.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad750Ev
 FUN_000ad760 src/libs/unknown/leaf_000ad760.cpp _ZN19hkMemoryMeshTexture12FUN_000ad760EN13hkMeshTexture16TextureUsageTypeE
-FUN_000ad910 src/libs/unknown/func_000ad910.cpp
+_ZN25hkStorageSkinnedMeshShapeD1Ev src/libs/unknown/func_000ae6b0.cpp
 FUN_00128640 src/libs/unknown/func_00127a50.cpp _ZNK12_GLOBAL__N_117TreeQuery00127a5015unknownVirtual4Ev
 _ZN20hknpHeightFieldShapeD1Ev src/libs/unknown/func_00175c00.cpp
 FUN_0014e0a0 src/libs/unknown/func_0014e0a0.cpp
@@ -1335,7 +1335,7 @@ FUN_0009c0d0 src/libs/unknown/func_0009c0d0.cpp
 _ZN34hkcdPlanarGeometryPlanesCollectionD0Ev src/libs/unknown/func_0009c910.cpp
 _ZN13hkSkinBindingD0Ev src/libs/unknown/leaf_000242d0.cpp
 FUN_000aa680 src/libs/unknown/func_000aa680.cpp
-FUN_000ad920 src/libs/unknown/func_000ad920.cpp
+_ZN25hkStorageSkinnedMeshShapeD0Ev src/libs/unknown/func_000ae6b0.cpp
 _ZN20hknpHeightFieldShapeD0Ev src/libs/unknown/func_00175c00.cpp
 FUN_00157ea0 src/libs/unknown/func_00157ea0.cpp
 _ZN23hknpCompressedMeshShapeD0Ev src/libs/unknown/func_001586d0.cpp
@@ -2590,3 +2590,5 @@ FUN_00199600 src/libs/unknown/func_00199600.cpp
 _ZN7hkxMeshD1Ev src/libs/unknown/func_0008bf00.cpp
 FUN_0017dec0 src/libs/unknown/func_0017dec0.cpp
 FUN_0000d0b0 src/libs/unknown/func_0000d0b0.cpp _ZNK22hkFreeListMemorySystem17getMemorySnapshotER22MemorySnapshot00011280
+_ZN25hkStorageSkinnedMeshShapeD2Ev src/libs/unknown/func_000ae6b0.cpp
+FUN_00176200 src/libs/unknown/func_00176200.cpp
