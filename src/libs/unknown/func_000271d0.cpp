@@ -1,4 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_algorithm.h"
 #include "tlg_hk_reflect.h"
 
 /* derived name: whether element a comes before element b in a vertex
@@ -17,7 +18,7 @@ void hkVertexFormat::FUN_00027180()
         const Element &prev = elements[i - 1];
         const Element &cur = elements[i];
         if (prev.usage > cur.usage || (prev.usage >= cur.usage && prev.subUsage >= cur.subUsage)) {
-            FUN_00026f20(elements, 0, numElements - 1, FUN_000271d0);
+            hkAlgorithm::quickSortRecursive(elements, 0, numElements - 1, FUN_000271d0);
             return;
         }
     }

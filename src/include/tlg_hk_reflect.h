@@ -4765,11 +4765,6 @@ void FUN_000270b0(hkVertexFormat *self, const hkVertexFormat *other); /* derived
  * that 0x27180 runs takes it by address): by usage, then by sub-usage. */
 bool FUN_000271d0(const hkVertexFormat::Element &a, const hkVertexFormat::Element &b);
 
-/* derived name: the sort of a range of elements under an order (0x26f20,
- * recursive: a quick sort from the middle element). */
-void FUN_00026f20(hkVertexFormat::Element *elements, int low, int high,
-                  bool (*less)(const hkVertexFormat::Element &a, const hkVertexFormat::Element &b));
-
 /* hkMeshVertexBuffer (hkClass 0x57bca60, built at 0x22c21, parent
  * hkReferencedObject, 0x10 bytes). Slots 11 to 14, kept by both
  * hkMultipleVertexBuffer (0x1692000) and hkMemoryMeshVertexBuffer
@@ -8459,6 +8454,12 @@ struct hknpBodyManager /* derived name */
      * its id set, no cell, and its bit cleared in every field. derived
      * name. */
     u32 FUN_001607c0();
+
+    /* A body's name set (0x160cd0): the names grown to the bodies'
+     * capacity with null names when the body has none yet and a name is
+     * given, then the name copied in when the body has a place. derived
+     * name. */
+    void FUN_00160cd0(u32 bodyId, const char *name);
 
     u8 unknown0[8];
     hknpMotionManager *motionManager; /* derived name */

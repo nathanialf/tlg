@@ -408,6 +408,17 @@ class RefArrays /* derived name */ : public hkReferencedObject
         u16 after;
     };
 
+    /* A dependency appended, the entry given first to run before the
+     * second (the world's stages at 0x5056a, 0x50e8c and 0x50f58: the
+     * entries read before the grow, the size counted before the two
+     * stores). derived name. */
+    void addDependency(u16 before, u16 after)
+    {
+        Dependency &dependency = array20.expandOne();
+        dependency.before = before;
+        dependency.after = after;
+    }
+
     hkArray<Entry10> array10;                 /* derived name */
     hkArray<Dependency> array20;              /* derived name */
     hkArray<void *> array30;                  /* derived name */

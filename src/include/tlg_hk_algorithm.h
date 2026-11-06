@@ -33,7 +33,10 @@ template <typename T> inline void swap(T &x, T &y)
 template <typename T, typename L> void quickSortRecursive(T *pArr, int d, int h, L cmpLess)
 {
     int i, j;
-    T str;
+    /* The pivot on a 16-byte boundary, as Havok aligns it: the vertex
+     * format's 8-byte elements (0x26f20) keep it at rbp-0x40 under the guard
+     * at -0x30, the eight bytes between unused. */
+    T str __attribute__((aligned(16)));
 
 begin:
     i = d;
