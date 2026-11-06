@@ -1063,6 +1063,63 @@ struct hkCustomAttributes {
     int numAttributes;           /* derived name */
 };
 
+/* The reflection's attributes a member's records point to (their class
+ * names and members are strings of the executable, 0x14b3df9 to 0x14b3f42),
+ * built by the reflection initializers that use them (hknpMountedBallGun's
+ * position, 0x3f3bc to 0x3f454). */
+struct hkRangeRealAttribute {
+    hkRangeRealAttribute(float absmin, float absmax, float softmin, float softmax)
+        : absmin(absmin), absmax(absmax), softmin(softmin), softmax(softmax)
+    {
+    }
+
+    float absmin;
+    float absmax;
+    float softmin;
+    float softmax;
+};
+
+struct hkUiAttribute {
+    /* The values are not named here. */
+    enum HideCriteria {};
+
+    hkUiAttribute(hkBool visible, hkBool editable, HideCriteria hideCriteria, const char *label,
+                  const char *group, const char *hideBaseClassMembers, hkBool endGroup,
+                  hkBool endGroup2, hkBool advanced)
+    {
+        this->visible = visible;
+        this->editable = editable;
+        this->hideCriteria = hideCriteria;
+        this->label = label;
+        this->group = group;
+        this->hideBaseClassMembers = hideBaseClassMembers;
+        this->endGroup = endGroup;
+        this->endGroup2 = endGroup2;
+        this->advanced = advanced;
+    }
+
+    hkBool visible;
+    hkBool editable;
+    hkEnum<HideCriteria, s8> hideCriteria;
+    const char *label;
+    const char *group; /* derived name */
+    const char *hideBaseClassMembers;
+    hkBool endGroup;
+    hkBool endGroup2;
+    hkBool advanced;
+};
+
+struct hkSemanticsAttribute {
+    enum Semantics { UNKNOWN, DISTANCE, ANGLE, NORMAL, POSITION, COSINE_ANGLE };
+
+    hkSemanticsAttribute(Semantics type)
+    {
+        this->type = type;
+    }
+
+    hkEnum<Semantics, s8> type;
+};
+
 /* hkSimplePropertyValue (hkClass 0x57b7520, built at 0x13b1: 8 bytes,
  * version 1, one member record at 0x168c490, data, an hkUint64): a
  * property's value. */
@@ -10478,6 +10535,14 @@ class hknpBallGun : public hknpFirstPersonGun
     u16 motionPropertiesId;
     hkRefPtr<hknpShape> bulletShape;
     u32 raiseContactEvents;
+};
+
+/* Its members' defaults (the hkClass's, at 0x14bb724): the member's offset
+ * into the values, then the position's four floats. derived name. */
+struct hknpMountedBallGunDefaults /* derived name */
+{
+    int defaultOffsets[1];
+    float position[4];
 };
 
 class hknpMountedBallGun : public hknpBallGun
