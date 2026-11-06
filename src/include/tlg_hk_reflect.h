@@ -583,10 +583,21 @@ template <typename T> struct hkArrayBase /* derived name */ {
         data[index].~T();
         size--;
         if (size != index) {
-            u64 *dst = reinterpret_cast<u64 *>(data + index);
-            const u64 *src = reinterpret_cast<const u64 *>(data + size);
-            for (int i = 0; i < int(sizeof(T) / sizeof(u64)); i++) {
-                dst[i] = src[i];
+            /* In the element's own words (Havok's memCpyOneAligned): eight
+             * bytes at a time, four for an element of four (the shape
+             * watcher's body ids, 0x1561a0). */
+            if (sizeof(T) % sizeof(u64) == 0) {
+                u64 *dst = reinterpret_cast<u64 *>(data + index);
+                const u64 *src = reinterpret_cast<const u64 *>(data + size);
+                for (int i = 0; i < int(sizeof(T) / sizeof(u64)); i++) {
+                    dst[i] = src[i];
+                }
+            } else {
+                u32 *dst = reinterpret_cast<u32 *>(data + index);
+                const u32 *src = reinterpret_cast<const u32 *>(data + size);
+                for (int i = 0; i < int(sizeof(T) / sizeof(u32)); i++) {
+                    dst[i] = src[i];
+                }
             }
         }
     }
@@ -8526,9 +8537,15 @@ struct U16PointerMap /* derived name */
     /* derived name: the value of a key set, the table rebuilt first when
      * more than half full (0x1992f0, as the pointer map's 0x138a0); nonzero
      * when the key was new. */
-    template <typename V> int FUN_001992f0(AllocatorBase &allocator, u16 key, V value);
-    /* derived name: the table rebuilt at a new capacity (0x199390). */
-    void FUN_00199390(AllocatorBase &allocator, int newCapacity);
+    /* Declared inline: the rebuild (0x199390) holds its instance for the
+     * stored values, past the threshold a function without the keyword
+     * gets (cookbook 164). */
+    template <typename V> inline int FUN_001992f0(AllocatorBase &allocator, u16 key, V value);
+    /* derived name: the table rebuilt at a new capacity (at least 8) from
+     * the allocator given, every used entry inserted again, the old table
+     * given back unless the map did not own it; a failure when the
+     * allocator gives nothing (0x199390). */
+    hkResult FUN_00199390(AllocatorBase &allocator, int newCapacity);
     /* Emptied, the storage given back to the allocator unless the map does
      * not own it, then left with no storage (0x199580; the constraint
      * manager's destructor 0x16d8c0 at +0x38). derived name. */
@@ -11299,6 +11316,16 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
      * slot is empty when either is 0x7fffffff (0x167b64 stops its probe at
      * one). Copied whole, as one 8-byte load (the probe at 0x167a3b). */
     struct Key {
+        /* Its own assignment, member by member as the body ids' is
+         * (cookbook 85): the removal's shuffle (0x1670f8) copies the two
+         * ids as two words through one pair of addresses, the value after
+         * the entries are read again. */
+        void operator=(const Key &other)
+        {
+            bodyIdA = other.bodyIdA;
+            bodyIdB = other.bodyIdB;
+        }
+
         u32 bodyIdA;
         u32 bodyIdB;
     };
@@ -11316,6 +11343,14 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
      * the body it runs, 0x167170, is out of line in the pair filter's
      * file, where the filter's destructor holds it, 0x1671f0). */
     inline ~hknpPairCollisionFilterMapPairFilterKeyOverrideType();
+
+    /* A key marked empty, both ids (the removal, 0x166fef, through the
+     * one address). derived name. */
+    static void invalidateKey(Key &key) /* derived name */
+    {
+        key.bodyIdA = 0x7fffffff;
+        key.bodyIdB = 0x7fffffff;
+    }
 
     static bool isEmptyKey(Key key) /* derived name */
     {
@@ -11381,6 +11416,10 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
      * word); whether the key was new. derived names. */
     int FUN_00166dc0(AllocatorBase &allocator, Key key, u32 value);
     hkResult FUN_00166eb0(AllocatorBase &allocator, int newCapacity);
+    /* The entry at a slot removed (0x166fe0; the pair filter's enabling of
+     * a pair, 0x16788c): emptied, then the run it sat in closed up, as the
+     * pointer map's removal does (0x13c10). derived name. */
+    void FUN_00166fe0(hkUlong it);
 
     Pair *elem;
     int numElems;
@@ -15488,7 +15527,8 @@ class hkMeshMaterial : public hkReferencedObject
     virtual hkResult unknownVirtual5(const hkVertexFormat &format, hkVertexFormat &formatOut);
     virtual hkMeshVertexBuffer *unknownVirtual6(hkMeshVertexBuffer *buffer);
     virtual hkBool unknownVirtual7(hkMeshVertexBuffer *buffer);
-    virtual void unknownVirtual8();
+    /* Slot 8: whether another material is the same. */
+    virtual hkBool unknownVirtual8(const hkMeshMaterial *other);
     virtual void unknownVirtual9(const char *newName);
     virtual const char *unknownVirtual10() const;
     virtual int unknownVirtual11() const;
@@ -15496,6 +15536,18 @@ class hkMeshMaterial : public hkReferencedObject
     /* Slot 13 adds a texture, slot 14 puts one at an index. */
     virtual void unknownVirtual13(hkMeshTexture *texture);
     virtual void unknownVirtual14(int index, hkMeshTexture *texture);
+    /* Slots 15 to 22: the four colours read and set, the user data, the
+     * tesselation factor and the displacement amount read and set. */
+    virtual void unknownVirtual15(Vec4 &diffuse, Vec4 &ambient, Vec4 &specular,
+                                  Vec4 &emissive) const;
+    virtual void unknownVirtual16(const Vec4 &diffuse, const Vec4 &ambient, const Vec4 &specular,
+                                  const Vec4 &emissive);
+    virtual hkUlong unknownVirtual17() const;
+    virtual void unknownVirtual18(hkUlong newUserData);
+    virtual float unknownVirtual19() const;
+    virtual void unknownVirtual20(float factor);
+    virtual float unknownVirtual21() const;
+    virtual void unknownVirtual22(float amount);
 };
 
 class hkMemoryMeshMaterial : public hkMeshMaterial
@@ -15514,6 +15566,15 @@ class hkMemoryMeshMaterial : public hkMeshMaterial
     static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const; /* vtable slot 3, FUN_000246c0 */
+    /* The reflected class as a static member (no object): the comparison
+     * at 0xad314 calls it; its body is slot 3's, one address
+     * (FUN_000246c0). derived name. */
+    static const hkClass *FUN_000246c0();
+    /* Slot 8 (0xad300): whether another material is a memory material with
+     * the same displacement amount, tesselation factor and name, the same
+     * number of textures, each the same as the other's at its index but
+     * for a dominants texture, and the same colours. derived name. */
+    hkBool FUN_000ad300(const hkMeshMaterial *other);
     hkResult FUN_000acf00(const hkVertexFormat &format,
                           hkVertexFormat &formatOut);             /* vtable slot 5; derived name */
     hkMeshVertexBuffer *FUN_000acf10(hkMeshVertexBuffer *buffer); /* vtable slot 6; derived name */
@@ -15597,6 +15658,27 @@ class hkMeshTexture : public hkReferencedObject
     /* Empty and inline: hkMemoryMeshTexture's destructor (0xad490) calls
      * nothing after its members'. */
     virtual ~hkMeshTexture() {}
+
+    /* The texture interface's slots, typed from hkMemoryMeshTexture's
+     * overriders (vtable 0x16a39e0); derived names. */
+    virtual void unknownVirtual5(u8 *&dataOut, int &sizeOut, Format &formatOut);
+    virtual void unknownVirtual6(u8 *newData, int numBytes, Format newFormat);
+    virtual class ImageSource *unknownVirtual7() const;
+    virtual Format unknownVirtual8() const;
+    virtual const char *unknownVirtual9() const;
+    virtual void unknownVirtual10(const char *newName);
+    virtual bool unknownVirtual11() const;
+    virtual void unknownVirtual12(bool newHasMipMaps);
+    virtual FilterMode unknownVirtual13() const;
+    virtual void unknownVirtual14(FilterMode newFilterMode);
+    /* Slot 15: the usage hint. */
+    virtual TextureUsageType unknownVirtual15() const;
+    virtual void unknownVirtual16(TextureUsageType newUsageHint);
+    virtual int unknownVirtual17() const;
+    virtual void unknownVirtual18(int newTextureCoordChannel);
+    virtual void unknownVirtual19();
+    /* Slot 20: whether another texture is the same. */
+    virtual hkBool unknownVirtual20(const hkMeshTexture *other) const;
 };
 
 /* hkMemoryMeshTexture, 0x30 bytes (type info 0x57bd648, parent
@@ -17383,10 +17465,25 @@ class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
      * tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* Slot 6 (0x178e40): each wheel's shape cast into a result cleared for
+     * it (slot 12), its output from the hit (slot 13) or without one (slot
+     * 14), then the callback (slot 11). derived name. */
+    void collideWheels(float deltaTime, const class hknpVehicleInstance *vehicle,
+                       WheelCollideOutput *outputs, const hknpWorld *world);
+
+    /* Slot 12 (0x179210): a wheel cast in the world into a result; whether
+     * it hit. derived name. */
+    virtual hkBool FUN_00179210(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                                const hknpWorld *world, struct hknpCollisionResult &result) const;
+    /* Slot 13 (0x1794e0): a wheel's output from its cast's hit. derived
+     * name. */
+    virtual void FUN_001794e0(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                              const struct hknpCollisionResult &result, const hknpWorld *world,
+                              WheelCollideOutput &output) const;
     /* Slot 14 (0x179700): the same body as the ray cast's slot 15, for a
      * cast that hits nothing. derived name. */
-    void FUN_00179700(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
-                      WheelCollideOutput &output) const;
+    virtual void FUN_00179700(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
+                              WheelCollideOutput &output) const;
 
     /* Slot 11 (0x1797b0): a point moved onto the plane of the wheel's cast,
      * taken into the wheel's space, its z cleared, and brought back. derived
@@ -19985,6 +20082,11 @@ struct ShapeWatcherOwner /* derived name */
      * changed. */
     ShapeWatcherOwner();
 
+    /* A body's id taken off its shape's watcher (0x156110); a watcher left
+     * with none unsubscribed from its shape, which it drops, and moved to
+     * the second list. derived name. */
+    void FUN_00156110(const hknpBody *body);
+
     /* Two lists of watchers, each unsubscribed and freed by 0x155bf0. */
     hkArray<ShapeWatcher *> watchers;      /* derived name */
     hkArray<ShapeWatcher *> otherWatchers; /* derived name */
@@ -20000,7 +20102,9 @@ struct ShapeWatcher /* derived name */
 
     ShapeWatcherOwner *owner; /* derived name */
     const hknpShape *shape;   /* derived name */
-    u8 unknown10[0x10];
+    /* The ids of the bodies over the shape (the owner's removal of one,
+     * 0x156110). derived name. */
+    hkArray<u32> bodyIds;
     u8 changeFlags; /* derived name */
 };
 
