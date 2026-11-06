@@ -22,14 +22,14 @@ void hknpWorld::FUN_0004bcc0(hknpCollisionFilter *filter) /* derived name */
  * event dispatcher at +0x6c8. */
 hknpEventSignal *hknpWorld::FUN_0004fbd0(int eventType, int bodyId) /* derived name */
 {
-    return eventDispatcher->FUN_0006bdf0(eventType, bodyId);
+    return eventDispatcher->FUN_0006bdf0(hknpEventType::Enum(eventType), bodyId);
 }
 
 /* derived name: the signal of a world event type, from the event dispatcher
  * at +0x6c8. */
 hknpEventSignal *hknpWorld::FUN_0004fbe0(int eventType) /* derived name */
 {
-    return eventDispatcher->FUN_0006bf60(eventType);
+    return eventDispatcher->FUN_0006bf60(hknpEventType::Enum(eventType));
 }
 
 /* derived name: the pointer at +0x10 of the world's object at +0x1d0

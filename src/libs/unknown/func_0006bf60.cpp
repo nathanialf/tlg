@@ -4,15 +4,14 @@
 /* The signal of an event type for every body (derived names): looked up on
  * the chain the first body slot heads, else made from a free entry, or a
  * new one at the end of the entries, put first on the chain; the type is
- * kept and compared in 16 bits; the entry's index is a 64-bit value (the
+ * kept and compared in 16 bits (an hkEnum); the entry's index is a 64-bit value (the
  * free index compared with 0xffff in 64 bits, the new index the count
  * sign-extended). */
-hknpEventSignal *hknpEventDispatcher::FUN_0006bf60(int eventType)
+hknpEventSignal *hknpEventDispatcher::FUN_0006bf60(hknpEventType::Enum eventType)
 {
-    const u16 type = u16(eventType);
     for (u16 *link = &bodyFirstEntry[0]; *link != 0xffff; link = &entries[*link].next) {
         BodySignalEntry &entry = entries[*link];
-        if (entry.eventType == type) {
+        if (entry.eventType == eventType) {
             return &entry.signal;
         }
     }
@@ -30,6 +29,6 @@ hknpEventSignal *hknpEventDispatcher::FUN_0006bf60(int eventType)
     }
     entry->next = bodyFirstEntry[0];
     bodyFirstEntry[0] = u16(index);
-    entry->eventType = type;
+    entry->eventType = eventType;
     return &entry->signal;
 }

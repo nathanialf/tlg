@@ -578,8 +578,8 @@ FUN_00037a90 src/libs/unknown/func_00037a90.cpp
 FUN_00038230 src/libs/unknown/func_00037b90.cpp _ZN15hknpMaskedShape11MaskWrapperC2E24hkFinishLoadedObjectFlag
 FUN_00039ae0 src/libs/unknown/func_00039ae0.cpp
 FUN_0003a0d0 src/libs/unknown/func_0003a0d0.cpp
-FUN_0003a3b0 src/libs/unknown/func_0003a3b0.cpp
-FUN_0003a3d0 src/libs/unknown/func_0003a3d0.cpp
+FUN_0003a3b0 src/libs/unknown/func_0003a3f0.cpp _ZL42finishLoadedObjecthknpGroupCollisionFilterPvi
+FUN_0003a3d0 src/libs/unknown/func_0003a3f0.cpp _ZL46finishLoadedObjecthknpGroupCollisionFilterBasePvi
 FUN_0003af50 src/libs/unknown/func_0003af50.cpp
 FUN_0003ba10 src/libs/unknown/func_0003ba10.cpp
 FUN_0003d520 src/libs/unknown/func_0003d520.cpp
@@ -2560,3 +2560,8 @@ _ZN9RefArraysD2Ev src/libs/unknown/func_000514a0.cpp
 _ZN16hknpWorldSignalsD1Ev src/libs/unknown/func_00048260.cpp
 FUN_0007db20 src/libs/unknown/func_0007db20.cpp _ZN24hkpRagdollConstraintData12FUN_0007db20ERKDv4_fS2_S2_S2_S2_S2_
 _ZN16hkMemoryMeshBodyD1Ev src/libs/unknown/func_00023200.cpp _ZN16hkMemoryMeshBodyD2Ev
+FUN_00050880 src/libs/unknown/func_00050880.cpp _ZN9hknpWorld12FUN_00050880EPvP14RefArraysOwner
+FUN_0006bdf0 src/libs/unknown/func_0006bdf0.cpp _ZN19hknpEventDispatcher12FUN_0006bdf0EN13hknpEventType4EnumEi
+FUN_0002a7a0 src/libs/unknown/func_0002a7a0.cpp _Z12FUN_0002a7a0R9hkMatrix3S0_
+FUN_000a9da0 src/libs/unknown/func_000a9f10.cpp _Z12FUN_000a9da0RK6hkAabbS1_Ph
+FUN_0003a3f0 src/libs/unknown/func_0003a3f0.cpp _GLOBAL__I_a

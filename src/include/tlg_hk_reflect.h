@@ -756,8 +756,9 @@ struct hkArray : public hkArrayBase<T> {
     T &expandOneUnconstructed();
 
     /* n more elements at the end, the storage grown from the containers'
-     * allocator as reserve grows it, the first of them returned (defined in
-     * tlg_lib_unknown.h; the static class registry's slot 7, 0x181860). */
+     * allocator as reserve grows it, built, then counted; the first of them
+     * returned (defined in tlg_lib_unknown.h; the static class registry's
+     * slot 7, 0x181860; the event dispatcher's new signal entry, 0x6bf03). */
     T *expandBy(int n);
 
     /* n elements, the storage grown from the containers' allocator when it
@@ -3321,7 +3322,7 @@ class hknpVehicleDefaultAerodynamics : public hknpVehicleAerodynamics
     Vec4 extraGravityws;
 };
 
-/* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback FUN_0003a3b0;
+/* hknpGroupCollisionFilter: vtable 0x16952a0, finish callback 0x3a3b0 (its file's, func_0003a3f0.cpp);
  * 0xa0 bytes (its deleting destructor's size). */
 class hknpGroupCollisionFilter : public hkReferencedObject
 {
@@ -3405,7 +3406,7 @@ struct hknpRayCastQuery : public hknpCollisionQuery /* derived name */
 struct hknpCollisionFilterContext;
 struct hknpCollisionFilterBodyIdPair;
 
-/* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback FUN_0003a3d0. */
+/* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback 0x3a3d0 (the same file's). */
 class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
     : public hkReferencedObject
 {
@@ -3457,6 +3458,8 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
 
     u8 unknownC[8];
     u32 collisionLookupTable[32]; /* derived name */
+    /* To the 0xa0 bytes its hkClass records (0x3a505). */
+    u8 unknown94[0xc];
 };
 
 /* hknpSurfaceVelocity (hkClass 0x57c19d8, 0x10 bytes, parent
@@ -5824,6 +5827,12 @@ extern Vec4 D_57c87c0;
  * code's 0xcf7af encodes with 0xa9da0 and decodes with it). */
 void FUN_000a9f10(const hkAabb &parent, const u8 *codes, hkAabb &aabbOut); /* derived name */
 
+/* derived name: the code of a box inside a parent (0xa9da0, beside its
+ * decoder, which it inlines): for each axis the minimum's nibble raised
+ * while the decoded minimum stays at or below the box's, then the
+ * maximum's while the decoded maximum stays at or above it. */
+void FUN_000a9da0(const hkAabb &parent, const hkAabb &aabb, u8 *codes); /* derived name */
+
 /* derived name: the box around count points, their w lanes cleared when
  * there is one at least (0x93f30; the geometry processing calls it at
  * 0xb8628 and 0xba156). */
@@ -7760,6 +7769,13 @@ class hknpModifierManager /* derived name */
 struct hknpEventSignal : public Signal00093530 /* derived name */
 {};
 
+/* The world's event types (Havok's hknpEventType::Enum; the character proxy
+ * asks for type 1 of its body, the constraint filter for type 2). The
+ * values are not named here. */
+struct hknpEventType {
+    enum Enum {};
+};
+
 class hknpEventDispatcher /* derived name */
 {
   public:
@@ -7769,12 +7785,13 @@ class hknpEventDispatcher /* derived name */
      * derived names. */
     struct BodySignalEntry {
         u16 next;
-        u16 eventType;
+        /* Compared in its storage type (0x6bea8's `cmp word, r15w`). */
+        hkEnum<hknpEventType::Enum, u16> eventType;
         hknpEventSignal signal;
     };
 
-    hknpEventSignal *FUN_0006bdf0(int eventType, int bodyId); /* derived name */
-    hknpEventSignal *FUN_0006bf60(int eventType);             /* derived name */
+    hknpEventSignal *FUN_0006bdf0(hknpEventType::Enum eventType, int bodyId); /* derived name */
+    hknpEventSignal *FUN_0006bf60(hknpEventType::Enum eventType);             /* derived name */
 
     /* A removed body's signals (0x6c050; the world's body removal calls it
      * at 0x4e9fe): the body's first entry kept for later while removals
@@ -7782,7 +7799,11 @@ class hknpEventDispatcher /* derived name */
      * entries put back on the free list. derived name. */
     void FUN_0006c050(hknpBodyId bodyId);
 
-    u8 unknown0[0x30];
+    u8 unknown0[0x10];
+    /* The world, whose bodies' capacity a body's first entries are grown to
+     * (0x6be0e). derived name. */
+    hknpWorld *world;
+    u8 unknown18[0x18];
     u16 firstFreeEntry;               /* derived name */
     hkArray<BodySignalEntry> entries; /* derived name */
     hkArray<u16> bodyFirstEntry;      /* derived name */
@@ -10015,6 +10036,9 @@ struct hknpWorld {
      * timer "Physics", then given back to it (0x514a0; the game calls it
      * from 0xe99ecc and 0xe99fcf). derived name. */
     void FUN_000514a0(class RefArraysOwner *owner);
+    /* The same with the collide tasks built into the arrays (0x50880, its
+     * call of 0x50480 at 0x50916). derived name. */
+    void FUN_00050880(void *argument, class RefArraysOwner *owner);
     /* The stage after the collide tasks (0x505f0, run by
      * hknpPostCollideTask under the timer "StCollide"). derived name. */
     void FUN_000505f0();
@@ -10593,6 +10617,11 @@ struct hkDiagonalizedMassProperties /* derived name */
  * iteration of ten steps (0x1b540), kept above a floor, the axes
  * normalized. derived name. */
 void FUN_0002a7a0(hkMatrix3 &inertia, hkMatrix3 &axesOut); /* derived name */
+
+/* A symmetric matrix's eigenvalues and eigenvectors by at most a number of
+ * Jacobi steps (0x1b540; 0x2a7a0 asks for ten). derived name. */
+void FUN_0001b540(const hkMatrix3 &matrix, hkMatrix3 &eigenVectorsOut, Vec4 &eigenValuesOut,
+                  int maxIterations); /* derived name */
 
 /* Every lane's sign bit (derived name), shared by the library's vector code. */
 extern const Vec4 D_14b41d0;

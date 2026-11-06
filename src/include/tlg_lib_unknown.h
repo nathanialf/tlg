@@ -872,6 +872,7 @@ template <typename T, typename Allocator> inline T *hkArray<T, Allocator>::expan
 {
     const int oldSize = this->size;
     this->reserve(Allocator::get(), oldSize + n);
+    hkArrayUtil::construct(this->data + this->size, n);
     this->size += n;
     return this->data + oldSize;
 }
