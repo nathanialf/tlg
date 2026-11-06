@@ -14855,13 +14855,19 @@ class hkxMesh : public hkReferencedObject
     class UserChannelInfo;
 
     hkxMesh(hkFinishLoadedObjectFlag flag);
-    /* 0x8bf00 (slot 0; the deleting destructor 0x8beb0 frees 0x30). */
+    /* Out of line (0x8bf00, slot 0; func_0008bf00.cpp, with the deleting
+     * destructor 0x8beb0, slot 1): the members' references released from
+     * the last. */
     virtual ~hkxMesh();
 
-    /* The record's members (0x16a1620): arrays of pointers to its sections
-     * and its user channels' descriptions. */
-    hkArray<hkxMeshSection *> sections;
-    hkArray<UserChannelInfo *> userChannelInfos;
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x30 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* The record's members (0x16a1620): arrays of references to its
+     * sections and its user channels' descriptions. */
+    hkArray<hkRefPtr<hkxMeshSection>> sections;
+    hkArray<hkRefPtr<UserChannelInfo>> userChannelInfos;
 };
 
 /* hkxMesh::UserChannelInfo (hkClass 0x57c6ec0, "hkxMeshUserChannelInfo",
@@ -20039,6 +20045,18 @@ struct PackfileSections00181c00 /* derived name */
  * 0x16a2da0), 0x40 bytes; the section headers follow it, after the
  * predicate array in file versions 10 and 11. */
 struct hkPackfileHeader {
+    /* A header to compare a loaded one with (inline where the loader's check
+     * builds one on the stack, 0x17deea): every byte 0xff but the magic, an
+     * empty contents version and no flags. */
+    hkPackfileHeader()
+    {
+        FUN_00018160(this, -1, sizeof(hkPackfileHeader));
+        magic[0] = 0x57e0e057;
+        magic[1] = 0x10c0c010;
+        contentsVersion[0] = 0;
+        flags = 0;
+    }
+
     /* 0x180ea0 (called at 0x17e488 and 0x17e889 with the header as both
      * arguments): the header of section i of the packfile whose header
      * packfileData points to, null when it has no sections. derived name. */

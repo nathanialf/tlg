@@ -2193,6 +2193,14 @@ struct Layout00180ef0 {
     LayoutRules00180ef0 rules;
 };
 
+/* The host's rules (0x14cb8f6), which the loader's check (0x17dec0)
+ * compares a packfile's with. derived name. */
+extern const LayoutRules00180ef0 D_14cb8f6;
+
+/* The Havok version string the packfiles' contents are written for
+ * (0x19afc0). derived name. */
+const char *FUN_0019afc0(); /* derived name */
+
 /* The layout built with the host's rules (0x180ee0). derived name. */
 void FUN_00180ee0(Layout00180ef0 *self); /* derived name */
 
@@ -3836,6 +3844,9 @@ class hkMemorySystem
     /* Slot 17: the debug interface, null here (the shared 0x42d0); the
      * monitor stream's reset asks for it (0xecb6). derived name. */
     virtual void *getDebugInterface() = 0;
+    /* Slot 18 (0xd0b0): the memory in use recorded in a snapshot. derived
+     * name. */
+    virtual hkResult getMemorySnapshot(MemorySnapshot00011280 &snapshot) const = 0;
 };
 
 /* The free-list memory system (D14's row for vtable 0x168d680, stored by
@@ -3870,6 +3881,11 @@ class hkFreeListMemorySystem : public hkMemorySystem
     virtual void garbageCollectShared();
     virtual void unknownVirtual16();
     virtual void *getDebugInterface();
+    /* Slot 18 (0xd0b0): the system's provider, the buffer as the solver's,
+     * the heap's own record under it, and the blocks drawn for the debug
+     * allocator with their headers and slack; failure without an allocator
+     * interface or when it records nothing. derived name. */
+    virtual hkResult getMemorySnapshot(MemorySnapshot00011280 &snapshot) const;
 
     /* The flags' bits (derived names): the main thread's router (1), the
      * buffer allocator's buffer (2). */
@@ -4467,6 +4483,11 @@ inline void hkxEnum::operator delete(void *object, unsigned long numBytes)
 }
 
 inline void hkxMaterialEffect::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxMesh::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -5480,9 +5501,20 @@ struct MemorySnapshot00011280 /* derived name */
      * the allocators' 0x365a and 0x13084). derived name. */
     int FUN_00011170(const char *name, int parentId);
 
+    /* The providers the router's allocators are (0x11320; the memory
+     * system's snapshot, 0xd215, gives its heap's for the first three).
+     * derived name. */
+    void FUN_00011320(int stackId, int tempId, int heapId, int debugId, int solverId);
+
     AllocatorBase *allocator;
     hkArray<Allocation> allocations;
     hkArray<Provider> providers;
+    /* derived names: the routers' allocators' providers. */
+    int stackId;
+    int tempId;
+    int heapId;
+    int debugId;
+    int solverId;
 };
 
 /* What the penetration query FUN_000a6e30 asks a support point of (derived
@@ -6172,7 +6204,6 @@ void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0004b040(hknpWorld *self);
 void FUN_00087130(hkxMaterial *self);
-void FUN_0008bf00(hkxMesh *self);
 void FUN_0008c110(hkxNode *self);
 void FUN_0008d2c0(hkxScene *self);
 void FUN_0009b1c0(hkcdPlanarGeometry *self);
@@ -6199,7 +6230,6 @@ void FUN_0004aff0(hknpWorld *self);                 /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);         /* slot 1 of 0x169ab10 */
 void FUN_000870e0(hkxMaterial *self);               /* slot 1 of 0x16a0db0 */
 void FUN_00089330(hkxAttributeHolder *self);        /* slot 1 of 0x16a1670 */
-void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
 void FUN_0008c0c0(hkxNode *self);                   /* slot 1 of 0x16a25e0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
