@@ -2260,6 +2260,17 @@ class hkError : public hkReferencedObject
 
     virtual int message(Message kind, int id, const char *description, const char *file,
                         int line); /* vtable slot 5; derived name */
+    /* Slots 6 to 12, named after the default error's overriders (0xb390 to
+     * 0xba70): an id enabled or disabled, whether one is, the minimum
+     * level set and read, every id enabled again, a section begun and
+     * ended. derived names. */
+    virtual void FUN_0000b390(int id, bool enabled) = 0;
+    virtual hkBool FUN_0000b4a0(int id) = 0;
+    virtual void FUN_0000b660(Message level) = 0;
+    virtual Message FUN_0000b670() = 0;
+    virtual void FUN_0000b580() = 0;
+    virtual void FUN_0000b970(int id) = 0;
+    virtual void FUN_0000ba70() = 0;
 
     static int FUN_00014c50(int id, const char *description, const char *file,
                             int line); /* derived name */

@@ -4,7 +4,7 @@
 void Object0000b330::FUN_0000b580() /* derived name */
 {
     criticalSection.enter();
-    unknown40 = 0;
+    minimumLevel = MESSAGE_REPORT;
     map.FUN_00013d80();
     criticalSection.leave();
 }

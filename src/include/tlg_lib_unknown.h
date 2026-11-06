@@ -1934,7 +1934,7 @@ class RefArrays0005a340 : public RefArrays0005a230 /* derived name */
  * with the function (derived name). */
 typedef void (*ReportFunction0000b330)(const char *message, void *reportObject);
 
-class Object0000b330 : public hkReferencedObject /* derived name */
+class Object0000b330 : public hkError /* derived name */
 {
   public:
     /* 0xb330 */
@@ -1942,47 +1942,60 @@ class Object0000b330 : public hkReferencedObject /* derived name */
 
     /* The members' own destructors: the critical section, the array, the
      * map (0xb1a0, slot 0; the deleting destructor 0xb250, slot 1, holds
-     * the same body). Inline, emitted with the vtable in the constructor's
-     * file: the executable holds the complete destructor before the
-     * deleting one (cookbook 187). */
+     * the same body). Inline, emitted with the vtable in the key
+     * function's file, the constructor's: the executable holds the
+     * complete destructor before the deleting one (cookbook 187). */
     inline virtual ~Object0000b330() {}
+
+    /* Slot 5 (0xb7e0), the class's key function (func_0000b330.cpp): under
+     * the critical section, a message of an id (the innermost section's
+     * when -1) at or above the minimum level and enabled shown with the
+     * name of its kind, a stack trace for an assert or an error; nonzero
+     * for those two whether shown or not. derived name. */
+    virtual int message(Message kind, int id, const char *description, const char *file, int line);
 
     /* Slot 6 (0xb390): an id enabled or disabled, under the critical
      * section: its entry taken out of the map, or a 1 put in. derived
      * name. */
-    void FUN_0000b390(int id, bool enabled);
+    virtual void FUN_0000b390(int id, bool enabled);
 
     /* Slot 7 (0xb4a0): whether an id is enabled, under the critical
      * section: the map holds a nonzero value for an id that is not.
      * derived name. */
-    hkBool FUN_0000b4a0(int id);
+    virtual hkBool FUN_0000b4a0(int id);
+
+    /* Slots 8 and 9: the minimum level set and read (the int at +0x40;
+     * the bodies the linker kept, 0xb660 and 0xb670, are shared with
+     * other classes' setter and getter of an int there). derived names. */
+    virtual void FUN_0000b660(Message level);
+    virtual Message FUN_0000b670();
 
     /* Slots 11 and 12 (0xb970, 0xba70): an id pushed on the array and the
      * last one dropped, each under the critical section. derived names. */
-    void FUN_0000b970(int id);
-    void FUN_0000ba70();
+    virtual void FUN_0000b970(int id);
+    virtual void FUN_0000ba70();
 
     /* The reference-counted class delete (freeReferencedObject). */
     static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 10 (0xb580): under the lock, the int at +0x40 cleared and the
      * map emptied, its storage kept. derived name. */
-    void FUN_0000b580();
+    virtual void FUN_0000b580();
 
     /* Slot 13 (0xb680): a message formatted into a local 8 KB buffer, the
      * text alone when it has neither id nor file, the file, line, what and
      * text when its id is 0 or -1, else with the id in hexadecimal too;
      * the buffer reported, then, when asked, the stack trace after a
      * heading, its two innermost frames left out. derived name. */
-    void FUN_0000b680(const char *what, int id, const char *description, const char *file, int line,
-                      hkBool stackTrace);
+    virtual void FUN_0000b680(const char *what, int id, const char *description, const char *file,
+                              int line, hkBool stackTrace);
 
     OwnedPointerMap map;                   /* derived name */
     hkArray<u32> array;                    /* derived name */
     ReportFunction0000b330 reportFunction; /* derived name */
     void *reportObject;                    /* derived name */
-    int unknown40;
-    hkCriticalSection criticalSection; /* derived name */
+    Message minimumLevel;                  /* derived name */
+    hkCriticalSection criticalSection;     /* derived name */
 };
 
 /* Slot 7 of hknpHeightFieldShape's vtable (and of 0x16a5990's): its box
