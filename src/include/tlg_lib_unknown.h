@@ -1032,6 +1032,22 @@ inline void hkArray<T, Allocator>::append(const T *elements, int numElements)
     this->size = newSize;
 }
 
+template <typename T>
+inline void hkArrayBase<T>::append(AllocatorBase &allocator, const T *elements, int numElements)
+{
+    const int newSize = size + numElements;
+    const int capacity = getCapacity();
+    if (newSize > capacity) {
+        const int doubled = 2 * capacity;
+        FUN_00000a70(allocator, this, doubled > newSize ? doubled : newSize, sizeof(T));
+    }
+    T *dst = data + size;
+    for (int i = 0; i < numElements; i++) {
+        dst[i] = elements[i];
+    }
+    size = newSize;
+}
+
 template <typename T, typename Allocator>
 inline hkArray<T, Allocator> &hkArray<T, Allocator>::operator=(const hkArray &other)
 {
@@ -2701,11 +2717,18 @@ struct FreeList /* derived name */
      * (0x19230): a block of the list's own or a new one. derived name. */
     void *FUN_00019230();
 
-    /* The list's blocks recorded in a memory snapshot under a provider
+    /* The list's elements recorded in a memory snapshot under a provider
      * (0x18fc0; TwoBaseAllocator's slot 21 records its size classes' lists
-     * as in use and its fixed-size allocator's as not, 0x3683 and 0x36a3).
-     * derived name. */
-    void FUN_00018fc0(MemorySnapshot00011280 &snapshot, u8 status, int sourceId) const;
+     * as in use and its fixed-size allocator's as not, 0x3683 and 0x36a3):
+     * the free blocks' elements as free, then, the blocks in use and the
+     * free elements sorted and the current block's rest freed, each element
+     * of a block in use as free or as the status given. derived name. */
+    hkResult FUN_00018fc0(MemorySnapshot00011280 &snapshot, u8 status, int sourceId);
+
+    /* Every element handed to a memory walk's callback (0x18df0), in the
+     * snapshot's order: the free blocks' as free, then each of the blocks
+     * in use as free or allocated. derived name. */
+    void FUN_00018df0(MemoryWalkCallback callback, int pool, void *param);
 
     /* The list's counts checked against its blocks (0x188c0, the
      * allocator's slot 22 asks it of each list): true when they agree.

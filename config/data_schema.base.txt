@@ -111,3 +111,7 @@ D_169fbb0 hkClassMember 8 src/include/tlg_hk_reflect.h
 D_169fd80 hkClassEnum::Item 4 src/include/tlg_hk_reflect.h
 D_169fdc0 hkClassEnum 1 src/include/tlg_hk_reflect.h
 D_169fcf0 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1694550 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_16945a0 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_16a1fa0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_16a1ff0 hkClassMember 10 src/include/tlg_hk_reflect.h

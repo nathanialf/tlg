@@ -146,7 +146,7 @@ FUN_00038af0 src/libs/unknown/func_00038af0.cpp _ZL36finishLoadedObjecthknpDecor
 FUN_00038c10 src/libs/unknown/func_00038c30.cpp _ZL45finishLoadedObjecthknpMotionPropertiesLibraryPvi
 FUN_00038d30 src/libs/unknown/func_00038d30.cpp
 FUN_00038d60 src/libs/unknown/func_00038d60.cpp
-FUN_00039190 src/libs/unknown/func_00039190.cpp
+FUN_00039190 src/libs/unknown/func_000391f0.cpp _ZL38finishLoadedObjecthknpPhysicsSceneDataPvi
 FUN_000394a0 src/libs/unknown/func_000394c0.cpp _ZL34finishLoadedObjecthknpCapsuleShapePvi
 FUN_000395c0 src/libs/unknown/func_000395e0.cpp _ZL38finishLoadedObjecthknpMotionPropertiesPvi
 FUN_00039b10 src/libs/unknown/func_00039b10.cpp
@@ -769,7 +769,7 @@ _ZN16hkMemoryMeshBodyC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0002319
 FUN_00024800 src/libs/unknown/func_00024800.cpp
 _ZN17hkMemoryMeshShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0002a940.cpp
 _ZN17hknpRefWorldCinfoD1Ev src/libs/unknown/func_00039100.cpp
-FUN_000391c0 src/libs/unknown/func_000391c0.cpp
+FUN_000391c0 src/libs/unknown/func_000391f0.cpp _ZL35finishLoadedObjecthknpRefWorldCinfoPvi
 FUN_00047990 src/libs/unknown/func_000479c0.cpp _ZL37finishLoadedObjecthknpVehicleInstancePvi
 _ZN15hknpRefMaterialD1Ev src/libs/unknown/func_0006c5d0.cpp
 _ZN15hknpRefMaterialC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0006c7e0.cpp
@@ -1205,7 +1205,7 @@ FUN_00001010 src/libs/unknown/func_00001010.cpp _GLOBAL__I_a
 FUN_0001a8f0 src/libs/unknown/func_0001a8f0.cpp _GLOBAL__I_a
 FUN_0002b120 src/libs/unknown/func_0002b120.cpp
 _ZN14hkxTextureFileC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000878f0.cpp
-_ZN7hkxNodeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008b4b0.cpp
+_ZN7hkxNodeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0008b510.cpp
 FUN_000aa570 src/libs/unknown/func_000aa570.cpp _Z12FUN_000aa570N13hkMeshSection13PrimitiveTypeEi
 FUN_00009c50 src/libs/unknown/func_00009c50.cpp _GLOBAL__I_a
 FUN_0008ef10 src/libs/unknown/func_0008ef10.cpp _ZN10BlockCache12FUN_0008ef10EP18hkBlockStreamBlock
@@ -1845,7 +1845,7 @@ FUN_0006e5b0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hkn
 FUN_0006e650 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual10EPDv4_fi
 FUN_0006e830 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual13Ev
 FUN_0006e8d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual15EiPDv4_fS1_
-FUN_0006ea10 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual16EPKvS1_Pvbi
+FUN_0006ea10 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual16ERKDv4_fS2_PvbiPS0_P13hknpFaceAngle
 FUN_0006eab0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual17Ev
 FUN_0006f920 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual26EPKvS1_S1_S1_S1_S1_Pv
 FUN_0006f9c0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual23EPKvS1_S1_S1_Pv
@@ -2685,3 +2685,10 @@ FUN_00082cd0 src/libs/unknown/func_00082cd0.cpp _GLOBAL__I_a
 FUN_00033d70 src/libs/unknown/func_00033d70.cpp _ZNK27hknpStaticCompoundShapeTree12FUN_00033d70ERKNS_8TreeSlotEPj
 FUN_000a8f80 src/libs/unknown/func_000a8f80.cpp _ZNK27hknpCompressedMeshShapeTree12FUN_000a8f80ERKNS_8TreeSlotEPj
 FUN_001646f0 src/libs/unknown/func_001646f0.cpp _ZN19hknpVehicleInstance12FUN_001646f0EPKiPNS_9BodyEntryEPDv4_fS5_f
+FUN_000391f0 src/libs/unknown/func_000391f0.cpp _GLOBAL__I_a
+FUN_0008b510 src/libs/unknown/func_0008b510.cpp _GLOBAL__I_a
+FUN_00009550 src/libs/unknown/func_00009550.cpp
+FUN_00011bc0 src/libs/unknown/func_00011bc0.cpp _ZN11hkStringBuf12FUN_00011bc0EPKcS1_S1_
+FUN_0016cb00 src/libs/unknown/func_0016cb00.cpp _ZNK25hknpScaledConvexShapeBase12FUN_0016cb00ERKDv4_fS2_PvbiPS0_P13hknpFaceAngle
+FUN_0019d710 src/libs/unknown/func_0019d710.cpp
+FUN_00043110 src/libs/unknown/func_00043110.cpp _ZNK15hknpConvexShape12FUN_00043110EPKvRK13hknpAabbQueryRK18ShapeQuery00038010RK19hknpQueryFilterDataS7_P7hkArrayIj24hkContainerHeapAllocatorEP6hkAabb

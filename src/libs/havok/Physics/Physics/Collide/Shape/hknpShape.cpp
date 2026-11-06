@@ -62,8 +62,9 @@ void hknpShape::unknownVirtual14(int faceIndex, Vec4 *planeOut, hknpFaceAngle *a
     HK_ERROR(0x7d77da16, HK_NP_SHAPE_CPP, 83, "Not implemented");
 }
 
-int hknpShape::unknownVirtual16(const void *argument1, const void *argument2, void *argument3,
-                                bool argument4, int argument5) const
+int hknpShape::unknownVirtual16(const Vec4 &direction, const Vec4 &point, void *argument3,
+                                bool argument4, int argument5, Vec4 *planeOut,
+                                hknpFaceAngle *angleOut) const
 {
     HK_ERROR(0x0a03840a, HK_NP_SHAPE_CPP, 90, "Not implemented");
     return 0;

@@ -634,6 +634,11 @@ template <typename T> struct hkArrayBase /* derived name */ {
      * tlg_lib_unknown.h; the string buffer's, 0x115f0). */
     void setSize(AllocatorBase &allocator, int n);
 
+    /* Elements copied onto the end, the storage grown from the allocator
+     * given as setSize grows it (defined in tlg_lib_unknown.h; the string
+     * buffer's path parts, 0x11cb4). derived name. */
+    inline void append(AllocatorBase &allocator, const T *elements, int numElements);
+
     /* The same, the elements it gains set to a value (an array stream
      * writer's seek pads with zero, 0x9018e). derived name. */
     inline void setSize(AllocatorBase &allocator, int n, const T &fill);
@@ -808,6 +813,7 @@ struct hkArray : public hkArrayBase<T> {
 
     using hkArrayBase<T>::clearAndDeallocate;
     using hkArrayBase<T>::pushBack;
+    using hkArrayBase<T>::append;
     using hkArrayBase<T>::expandOne;
     using hkArrayBase<T>::setSize;
 };
@@ -2634,6 +2640,10 @@ int FUN_00017f50(const char *a, const char *b, unsigned int n); /* derived name 
 /* The string library's bounded copy, nothing for a zero count (0x17fd0).
  * derived name. */
 void FUN_00017fd0(char *dst, const char *src, unsigned int n); /* derived name */
+/* The string library's integer parse in a base, over strtol with no end
+ * pointer (0x18010; the XML reader's numbered entities, 0x19d7d9). derived
+ * name. */
+int FUN_00018010(const char *s, int base); /* derived name */
 
 /* The XML reader's entities decoded from src into dst (0x19d710; the reader
  * passes one buffer as both): the length written, -1 for a bad one.
@@ -4514,12 +4524,19 @@ class hkxNode : public hkxAttributeHolder
 {
   public:
     struct AnnotationData {
+        /* The description finished (the type info's finish callback, folded
+         * by the linker into hkMonitorStreamStringMap::StringMap's 0xd520,
+         * the same layout). */
+        AnnotationData(hkFinishLoadedObjectFlag flag) : description(flag) {}
+
         float time;
         hkStringPtr description;
     };
 
-    /* The finish constructor, out of line (0x8b4b0): the two strings and
-     * the uuid finished, the arrays left as loaded. */
+    /* The finish constructor (0x8b4b0, defined in the reflection
+     * initializer's file, func_0008b510.cpp, whose finish callback and
+     * vtable read inline it): the two strings and the uuid finished, the
+     * arrays left as loaded. */
     hkxNode(hkFinishLoadedObjectFlag flag);
 
     hkStringPtr name;
@@ -7213,6 +7230,13 @@ extern const u32 D_14ca040[33];
  * the head of the shapes' queries (slots 21 and 23). */
 struct hknpShapeKeyPath /* derived name */
 {
+    /* The key (the convex shape's box query pushes it, 0x43267). derived
+     * name. */
+    u32 getKey() const
+    {
+        return key;
+    }
+
     u32 key;
     int keySize;
 
@@ -7389,9 +7413,13 @@ class alignas(16) hknpShape : public hkReferencedObject
     /* Slot 16: the default (0x6ea10) reports "Not implemented" and
      * returns 0; hknpConvexShape's (0x45bb0) reads a vector through the
      * first argument and compares the fifth with -1; the decorator's
-     * forward (FUN_0003b1a0) widens the fourth, a bool. */
-    virtual int unknownVirtual16(const void *argument1, const void *argument2, void *argument3,
-                                 bool argument4, int argument5) const;
+     * forward (FUN_0003b1a0) widens the fourth, a bool; the scaled convex
+     * shape's (0x16cb00) takes a direction and a point into the core
+     * shape's space and the plane it gets back out of it, the sixth
+     * argument, clearing the seventh's angle under a non-uniform scale. */
+    virtual int unknownVirtual16(const Vec4 &direction, const Vec4 &point, void *argument3,
+                                 bool argument4, int argument5, Vec4 *planeOut,
+                                 hknpFaceAngle *angleOut) const;
     virtual float unknownVirtual17() const;
     /* Slots 18 to 29: the arguments as their implementations read them
      * (hknpShape's 0x6eb50 and 0x6ebf0, hknpConvexShape's from 0x45a80,
@@ -7502,9 +7530,10 @@ class hknpDecoratorShape : public hknpShape
                       hknpFaceAngle *angleOut) const; /* vtable slot 14; derived name */
     int FUN_0003b190(int faceIndex, Vec4 *planeOut,
                      Vec4 *verticesOut) const; /* vtable slot 15; derived name */
-    int FUN_0003b1a0(const void *argument1, const void *argument2, void *argument3, bool argument4,
-                     int argument5) const; /* vtable slot 16; derived name */
-    float FUN_0003b1c0() const;            /* vtable slot 17; derived name */
+    int FUN_0003b1a0(const Vec4 &direction, const Vec4 &point, void *argument3, bool argument4,
+                     int argument5, Vec4 *planeOut,
+                     hknpFaceAngle *angleOut) const; /* vtable slot 16; derived name */
+    float FUN_0003b1c0() const;                      /* vtable slot 17; derived name */
     void FUN_0003b1d0(const SignedDistanceQuery &query,
                       SignedDistanceContact *contactsOut) const; /* vtable slot 18; derived name */
     void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
@@ -7891,7 +7920,21 @@ struct hknpCollisionFilterBodyIdPair /* derived name */
 };
 struct hknpCollisionFilterQueryInput;  /* derived name */
 struct hknpCollisionFilterTargetInput; /* derived name */
-struct hknpCollisionFilterShapeInput;  /* derived name */
+
+/* What slot 9 asks about each side of a shape query (derived names, 0x38
+ * bytes; the convex shape's box query builds two on its stack, 0x4319c):
+ * the side's filter data, three pointers and the key of its shape query
+ * record (ShapeQuery00038010's first 0x1c bytes), and the shape, none for
+ * the query's side. */
+struct hknpCollisionFilterShapeInput /* derived name */
+{
+    hknpQueryFilterData filterData;
+    const void *unknown10;
+    const void *unknown18;
+    const void *unknown20;
+    u32 shapeKey;
+    const hknpShape *shape;
+};
 
 class hknpCollisionFilter : public hkReferencedObject
 {
@@ -11410,7 +11453,7 @@ void FUN_00161b40(const hknpShape *shape, const hknpMassDistribution *summary,
 /* hknpPhysicsSceneData (hkClass 0x57bf310, 0x28 bytes, parent
  * hkReferencedObject, two members in its record table at 0x1694550; type
  * info 0x57bf360, vtable 0x1697ea0): its finish constructor 0x46790 is out of
- * line, jumped to by the finish callback FUN_00039190 and called by the
+ * line, jumped to by the finish callback 0x39190 and called by the
  * reflection initializer at 0x39288; it stores only the vtable. */
 class hknpPhysicsSystemData;
 class hknpRefWorldCinfo;
@@ -11564,6 +11607,15 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * farthest along the direction scaled, scaled and moved, its w kept.
      * derived name. */
     void FUN_0016a9c0(const Vec4 &direction, Vec4 *vertexOut) const;
+
+    /* Slot 16 (0x16cb00, both vtables): the direction and the point taken
+     * into the core shape's space (the direction scaled by the scale and
+     * renormalized, by the reciprocal scale under a uniform one; the point
+     * moved and scaled back), the core shape's slot 16 asked, its plane
+     * brought back as slot 15 brings a face's, the angle cleared under a
+     * non-uniform scale; the core shape's answer returned. derived name. */
+    int FUN_0016cb00(const Vec4 &direction, const Vec4 &point, void *argument3, bool argument4,
+                     int argument5, Vec4 *planeOut, hknpFaceAngle *angleOut) const;
 
     /* Slot 17 (0x16ad80, both vtables): the core shape's value scaled by
      * the smallest magnitude of the scale's direction. derived name. */
@@ -11973,6 +12025,11 @@ inline void verticesByIndex(const Vec4 *v, const u8 *indices, int position,
 void FUN_00169330(const hknpConvexShape *shape, int mode, const Vec4 &scale, const Vec4 &offset,
                   void *output, int maxCount);
 
+/* Whether a and b overlap in x, y and z; where they do not, the range
+ * pushed out to b in the lanes that miss (0x14a250; the convex shape's box
+ * query, 0x432ab). derived name. */
+hkBool32 FUN_0014a250(const hkAabb &a, const hkAabb &b, hkAabb &range);
+
 class hknpConvexShape : public hknpShape
 {
   public:
@@ -12029,6 +12086,16 @@ class hknpConvexShape : public hknpShape
      * convex shapes' vtables. */
     void FUN_000430f0(const hknpShapeSlot29Input &input,
                       void *output) const; /* vtable slot 29; derived name */
+    /* Slot 25 (0x43110, kept by the scaled convex shapes' vtables too): the
+     * shape's bounds in its own space against the query's box; on overlap
+     * the target's key added to the hits unless the query's filter (slot 9,
+     * a box query) refuses the pair; else the range pushed out of the
+     * bounds when one is given (0x14a250). derived name. */
+    void FUN_00043110(const void *context, const hknpAabbQuery &query,
+                      const ShapeQuery00038010 &queryInfo,
+                      const hknpQueryFilterData &targetFilterData,
+                      const ShapeQuery00038010 &targetInfo, hkArray<u32> *hits,
+                      hkAabb *rangeOut) const;
 
     hkRelArray<Vec4> vertices;
 };

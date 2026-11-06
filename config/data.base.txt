@@ -110,3 +110,7 @@ D_169fbb0 src/libs/unknown/func_00082cd0.cpp
 D_169fd80 src/libs/unknown/func_00082cd0.cpp
 D_169fdc0 src/libs/unknown/func_00082cd0.cpp
 D_169fcf0 src/libs/unknown/func_00082cd0.cpp
+D_1694550 src/libs/unknown/func_000391f0.cpp
+D_16945a0 src/libs/unknown/func_000391f0.cpp
+D_16a1fa0 src/libs/unknown/func_0008b510.cpp
+D_16a1ff0 src/libs/unknown/func_0008b510.cpp

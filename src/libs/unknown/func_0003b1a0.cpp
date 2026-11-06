@@ -4,8 +4,10 @@
 /* derived name: slot 16 of hknpDecoratorShape's vtable (address point
  * 0x16958e0, kept by hknpMaskedShape) forwards to the same slot of the
  * shape it wraps. */
-int hknpDecoratorShape::FUN_0003b1a0(const void *argument1, const void *argument2, void *argument3,
-                                     bool argument4, int argument5) const
+int hknpDecoratorShape::FUN_0003b1a0(const Vec4 &direction, const Vec4 &point, void *argument3,
+                                     bool argument4, int argument5, Vec4 *planeOut,
+                                     hknpFaceAngle *angleOut) const
 {
-    return coreShape->unknownVirtual16(argument1, argument2, argument3, argument4, argument5);
+    return coreShape->unknownVirtual16(direction, point, argument3, argument4, argument5, planeOut,
+                                       angleOut);
 }
