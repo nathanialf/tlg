@@ -230,7 +230,7 @@ _ZN18hknpMountedBallGunD1Ev src/libs/unknown/func_00166890.cpp
 FUN_0016ced0 src/libs/unknown/func_0016ced0.cpp _ZN21hknpScaledConvexShape12FUN_0016ced0Ev
 FUN_0017d790 src/libs/unknown/func_0017d790.cpp
 FUN_0017ed60 src/libs/unknown/leaf_0017ed60.cpp
-FUN_00180ef0 src/libs/unknown/leaf_00180ef0.cpp
+_ZN14Layout00180ef0C1ERK19LayoutRules00180ef0 src/libs/unknown/leaf_00180ef0.cpp _ZN14Layout00180ef0C2ERK19LayoutRules00180ef0
 _ZN22hkBinaryPackfileWriterD1Ev src/libs/unknown/func_00181b10.cpp
 _ZN22BroadPhaseTree00142a40D1Ev src/libs/unknown/func_00195fe0.cpp _Z12FUN_00195fe0P14Object00195ff0
 FUN_000058a0 src/libs/unknown/leaf_000058a0.cpp
@@ -299,7 +299,7 @@ FUN_00027290 src/libs/unknown/leaf_00027290.cpp _ZNK24hkMemoryMeshVertexBuffer12
 FUN_00069400 src/libs/unknown/leaf_00069400.cpp
 FUN_00090db0 src/libs/unknown/func_00090db0.cpp _ZN17Allocator00090db012FUN_00090db0ERi
 FUN_000c0af0 src/libs/unknown/func_000c0af0.cpp
-FUN_00180ee0 src/libs/unknown/leaf_00180ee0.cpp
+_ZN14Layout00180ef0C1Ev src/libs/unknown/leaf_00180ee0.cpp _ZN14Layout00180ef0C2Ev
 FUN_00003580 src/libs/unknown/leaf_00003580.cpp _ZNK16TwoBaseAllocator12FUN_00003580Ev
 FUN_00003590 src/libs/unknown/leaf_00003580.cpp _ZThn8_NK16TwoBaseAllocator12FUN_00003580Ev
 FUN_000075d0 src/libs/unknown/leaf_000075d0.cpp _ZN12Pool0000788012FUN_000075d0Ev
@@ -564,7 +564,7 @@ FUN_00024be0 src/libs/unknown/leaf_00024be0.cpp _ZNK22hkMultipleVertexBuffer12FU
 FUN_00024fa0 src/libs/unknown/func_00024fa0.cpp _ZN22hkMultipleVertexBufferC2E24hkFinishLoadedObjectFlag
 FUN_0002b010 src/libs/unknown/leaf_0002b010.cpp
 FUN_0002b030 src/libs/unknown/leaf_0002b030.cpp
-FUN_00034000 src/libs/unknown/func_00034000.cpp
+FUN_00034000 src/libs/unknown/func_00034020.cpp _ZL48finishLoadedObjecthknpStaticCompoundShapeKeyMaskPvi
 FUN_000343b0 src/libs/unknown/func_000343b0.cpp
 FUN_000343e0 src/libs/unknown/func_000343e0.cpp
 FUN_00034440 src/libs/unknown/func_00034440.cpp
@@ -898,7 +898,7 @@ FUN_0006c2d0 src/libs/unknown/func_0006c2d0.cpp
 FUN_0017de40 src/libs/unknown/func_0017de40.cpp
 FUN_00006b90 src/libs/unknown/func_00006b90.cpp
 _ZN23hknpStaticCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000385d0.cpp _ZN23hknpStaticCompoundShapeC2E24hkFinishLoadedObjectFlag
-FUN_00033fb0 src/libs/unknown/func_00033fb0.cpp
+FUN_00033fb0 src/libs/unknown/func_00034020.cpp _ZL50finishLoadedObjecthknpStaticCompoundShapeInternalsPvi
 _ZN18hknpDecoratorShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0003b0f0.cpp _ZN18hknpDecoratorShapeC2E24hkFinishLoadedObjectFlag
 _ZN24hknpDynamicCompoundShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_000469a0.cpp _ZN24hknpDynamicCompoundShapeC2E24hkFinishLoadedObjectFlag
 FUN_0004bc60 src/libs/unknown/func_0004bc60.cpp
@@ -1061,7 +1061,7 @@ FUN_00011db0 src/libs/unknown/func_00011db0.cpp _ZN11hkStringBuf12FUN_00011db0Ev
 FUN_00012120 src/libs/unknown/func_00012120.cpp _ZNK20SingleBlockAllocator19getMemoryStatisticsER16MemoryStatistics
 FUN_0001bb80 src/libs/unknown/func_0001bb80.cpp _ZN14FiosFileSystem12FUN_0001bb80EPKci
 FUN_00006bf0 src/libs/unknown/func_00006bf0.cpp _GLOBAL__I_a
-FUN_001a0840 src/libs/unknown/func_001a0840.cpp _ZN14hkObjectCopierC2ERK14Layout00180ef0S2_i
+_ZN14hkObjectCopierC1ERK14Layout00180ef0S2_i src/libs/unknown/func_001a0840.cpp _ZN14hkObjectCopierC2ERK14Layout00180ef0S2_i
 _ZN21hkWorkerThreadContextD1Ev src/libs/unknown/func_0008f600.cpp
 FUN_0002af50 src/libs/unknown/func_0002af50.cpp
 FUN_000270b0 src/libs/unknown/func_000270b0.cpp
@@ -2656,3 +2656,10 @@ FUN_0007d0c0 src/libs/unknown/func_0007d0c0.cpp _GLOBAL__I_a
 FUN_0007d2e0 src/libs/unknown/func_0007d2e0.cpp _GLOBAL__I_a
 FUN_0007eaf0 src/libs/unknown/func_0007eaf0.cpp _GLOBAL__I_a
 FUN_00082290 src/libs/unknown/func_00082290.cpp _GLOBAL__I_a
+FUN_00009720 src/libs/unknown/func_00009720.cpp
+FUN_000032e0 src/libs/unknown/func_000032e0.cpp
+_ZN22hkPlatformObjectWriterC1ERK14Layout00180ef0P14Object0019a7c0i src/libs/unknown/func_0019a950.cpp _ZN22hkPlatformObjectWriterC2ERK14Layout00180ef0P14Object0019a7c0i
+FUN_00091690 src/libs/unknown/func_00091840.cpp
+_ZN11hkArrayBaseI8hkRefPtrI13hkMeshTextureEE10spliceIntoER13AllocatorBaseiiPKS2_i src/libs/unknown/func_000acb40.cpp
+FUN_00034020 src/libs/unknown/func_00034020.cpp _GLOBAL__I_a
+FUN_001666e0 src/libs/unknown/func_001666e0.cpp

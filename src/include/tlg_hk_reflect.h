@@ -651,6 +651,14 @@ template <typename T> struct hkArrayBase /* derived name */ {
      * 0xf3df). derived name. */
     T *expandAt(AllocatorBase &allocator, int index, int numToInsert);
 
+    /* Elements replaced at an index (defined in tlg_lib_unknown.h; Havok's
+     * splice, out of line for the mesh material's textures, 0xacb40): the
+     * storage grown to the new size, the removed ones destroyed from the
+     * last, the rest moved over them, the new ones copy-constructed, then
+     * the size. derived name. */
+    void spliceInto(AllocatorBase &allocator, int index, int numToDel, const T *elements,
+                    int numToInsert);
+
     /* The index of the first element equal to the one given, -1 when none
      * is (Havok's indexOf; the size read once, the storage at each step:
      * the resource container's slot 13, 0x1805ab). derived name. */
@@ -2290,6 +2298,12 @@ struct SingletonRecord /* derived name */
     SingletonRecord *next; /* derived name */
     void **instance;       /* derived name */
 };
+
+/* The singletons destroyed (0x9720; hkBaseSystem's quit calls it at
+ * 0x9af2): every record with a create function whose instance is set
+ * gathered in list order, then each instance released from the last and
+ * its pointer cleared. derived name. */
+void FUN_00009720(); /* derived name */
 
 /* hkUuidPseudoRandomGenerator's create function (0xdaf0, the record's at
  * 0x57b8610: a 0x30-byte object from the thread's heap, vtable 0x168d8a0,
@@ -7610,7 +7624,7 @@ class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
 
 /* hknpStaticCompoundShapeKeyMask (hkClass 0x57bdea0, built at 0x34162: size
  * 0x30, parent hknpCompoundShapeInternalsKeyMask's 0x57bdf20, no members):
- * vtable 0x1692790, finish callback FUN_00034000. */
+ * vtable 0x1692790, finish callback 0x34000, the reflection file's own. */
 class hknpStaticCompoundShape;
 
 class hknpStaticCompoundShapeKeyMask : public hknpCompoundShapeInternalsKeyMask
@@ -17440,6 +17454,12 @@ class hknpExternMeshShape : public hknpCompositeShape
      * name. */
     void FUN_00166370(const Mat4 &transform, hkAabb &aabbOut) const;
 
+    /* Slot 29 (0x1666e0): every triangle of the geometry appended to the
+     * one given, its three vertices scaled and offset by the input, its
+     * indices the new vertices', its material the geometry's; success.
+     * derived name. */
+    int FUN_001666e0(const hknpShapeSlot29Input &input, hkGeometry *geometryOut) const;
+
     /* Aligned to 16 bytes (the record's flag 0x100, ALIGN_16), at +0x60. */
     alignas(16) const Geometry *geometry;
     hknpExternMeshShapeData *boundingVolumeData;
@@ -17591,10 +17611,6 @@ class hknpStaticCompoundShapeInternals : public hknpStaticCompoundShape
 
     virtual ~hknpStaticCompoundShapeInternals();
 };
-
-/* The finish callback of hknpStaticCompoundShapeInternals' type info
- * (0x57bde70, set at 0x340cc). derived name. */
-void FUN_00033fb0(void *object, int finishing); /* derived name */
 
 /* hknpDynamicCompoundShape: its hkClass at 0x57be640 is built by the
  * reflection initializer at 0x35935; slot 3 of its vtable (0x1697ef0,

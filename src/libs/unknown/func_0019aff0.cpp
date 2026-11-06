@@ -8,7 +8,6 @@ void FUN_0019aff0(const hkClass *const *classes, int classVersion)
 {
     FUN_0019f270(classes, classVersion);
     Layout00180ef0 layout;
-    FUN_00180ee0(&layout);
     OwnedPointerMap classesDone; /* derived name */
     for (const hkClass *const *klass = classes; *klass; klass++) {
         layout.FUN_00180f00(const_cast<hkClass &>(**klass), classesDone, 1);

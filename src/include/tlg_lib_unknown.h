@@ -918,6 +918,22 @@ inline T *hkArrayBase<T>::expandAt(AllocatorBase &allocator, int index, int numT
     return data + index;
 }
 
+template <typename T>
+void hkArrayBase<T>::spliceInto(AllocatorBase &allocator, int index, int numToDel,
+                                const T *elements, int numToInsert)
+{
+    const int numToMove = size - (index + numToDel);
+    const int newSize = size + numToInsert - numToDel;
+    if (newSize > getCapacity()) {
+        const int doubled = 2 * getCapacity();
+        FUN_00000a70(allocator, this, doubled > newSize ? doubled : newSize, sizeof(T));
+    }
+    destructElements(data + index, numToDel);
+    FUN_00091210(data + index + numToInsert, data + index + numToDel, numToMove * int(sizeof(T)));
+    hkArrayUtil::constructWithArray(data + index, numToInsert, elements);
+    size = newSize;
+}
+
 template <typename T, typename Allocator> inline T *hkArray<T, Allocator>::expandBy(int n)
 {
     const int oldSize = this->size;
@@ -2113,12 +2129,17 @@ class Object0019a230 : public hkReferencedObject /* derived name */
 class Object0019a7c0 : public hkReferencedObject /* derived name */
 {
   public:
+    /* Inline (0x19aa74 to 0x19aac4): both maps and the array empty. */
+    Object0019a7c0() {}
+
     /* Out of line (0x19a7c0, slot 0; the deleting destructor 0x19a770,
      * slot 1): every buffer given back through FUN_0019bb80, then the
      * members' own destructors. */
     virtual ~Object0019a7c0();
 
-    /* The reference-counted class delete (freeReferencedObject). */
+    /* From the thread's heap (0x19aa71); the reference-counted class
+     * delete (freeReferencedObject). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     OwnedPointerMap map10;   /* derived name */
@@ -2251,7 +2272,7 @@ u64 FUN_00184cf0(); /* derived name */
 /* The tick counter (0x92200, a jump to FUN_00184cf0). derived name. */
 u64 FUN_00092200(); /* derived name */
 
-/* A four-byte structure layout description (FUN_00180ee0, FUN_00180ef0):
+/* A four-byte structure layout description (its constructors 0x180ee0 and 0x180ef0):
  * the rules {8, 1, 1, 1} and {8, 1, 0, 1} sit in rodata at 0x14cb8f6 and
  * 0x14cb8fa, just before the assert string of hkStructureLayout.cpp; the
  * class is likely hkStructureLayout (the file of FUN_001814f0), not
@@ -2264,6 +2285,11 @@ struct LayoutRules00180ef0 {
 };
 
 struct Layout00180ef0 {
+    /* Out of line: the host's rules (0x180ee0), the rules given
+     * (0x180ef0). */
+    Layout00180ef0();
+    Layout00180ef0(const LayoutRules00180ef0 &rules_);
+
     /* A class's member offsets computed under the rules unless the map
      * already holds the class (0x180f00, called at 0x19a91e and 0x19b05b
      * with recurse 1). derived name. */
@@ -2279,9 +2305,6 @@ extern const LayoutRules00180ef0 D_14cb8f6;
 /* The Havok version string the packfiles' contents are written for
  * (0x19afc0). derived name. */
 const char *FUN_0019afc0(); /* derived name */
-
-/* The layout built with the host's rules (0x180ee0). derived name. */
-void FUN_00180ee0(Layout00180ef0 *self); /* derived name */
 
 /* An object graph deep-copied under its class (0x19b2b0, Havok's deep
  * copier: the copies already made by original, the vtable and type-info
@@ -2327,6 +2350,9 @@ class hkObjectCopier : public hkReferencedObject /* derived name */
      * packfile writer at 0x19b49e). */
     hkObjectCopier(const Layout00180ef0 &layoutIn, const Layout00180ef0 &layoutOut, int flags);
 
+    /* From the thread's heap (0x19a9b3). */
+    static void *operator new(unsigned long numBytes);
+
     int FUN_001a0b20(const hkClassMember &src,
                      const hkClassMember &dst); /* vtable slot 6; derived name */
 
@@ -2344,6 +2370,11 @@ class hkObjectCopier : public hkReferencedObject /* derived name */
 class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
 {
   public:
+    /* 0x19a950: a copier from the host's layout to the one given; no
+     * cache when the copier's target is the host's own rules, else the
+     * cache given with a reference taken, or a new one. */
+    hkPlatformObjectWriter(const Layout00180ef0 &layout, Object0019a7c0 *cache_, int flags);
+
     /* Out of line (0x19abf0, slot 0; the deleting destructor 0x19ab10,
      * slot 1): the copier's reference released, then the cache's when
      * there is one. */
@@ -2362,7 +2393,7 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
     /* Null when the layouts are the host's, else the constructor's argument
      * with a reference taken, or a new 0x40-byte object of the vtable
      * 0x16a68d0 (0x19aa7b). derived name. */
-    hkReferencedObject *cache;
+    Object0019a7c0 *cache;
 };
 
 /* What the binary writer's save (0x183350) builds on its stack and hands
@@ -2938,6 +2969,8 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     /* The byte limit slot 15 stores and slot 16 reads; slot 18 (0x2230)
      * tests a request against it. derived name. */
     u64 limitB50;
+    /* The free list slot 14 (0x32e0) collects from next. derived name. */
+    int incrementalFreeListIndex;
 };
 
 /* An allocator that draws its blocks from another allocator and keeps them
@@ -4251,6 +4284,16 @@ inline void *hkReferencedObjectLock::operator new(unsigned long numBytes)
 }
 
 inline void *FileImageSource::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *hkObjectCopier::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *Object0019a7c0::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }

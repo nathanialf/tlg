@@ -1,5 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include "tlg_hk_reflect.h"
+#include "tlg_lib_unknown.h"
 
 /* A key's hash: h * 31 + c over its characters, the top bit cleared. Its
  * own function, inlined into the lookup already rotated, so the character
@@ -45,4 +45,43 @@ hkResult StringMap::FUN_000919e0(const char *key, hkUlong *valueOut) const
         return HK_SUCCESS;
     }
     return HK_FAILURE;
+}
+
+/* derived name: a key's value set: the table doubled first when it is half
+ * full (every used entry inserted again into the new slots, the old ones
+ * given back), then the slots probed from the hash's own; a new key takes
+ * the first free one and is counted. */
+void StringMap::FUN_00091690(const char *key, hkUlong value)
+{
+    const hkUlong hash = hashKey(key);
+    if (numEntries + numEntries > hashMod) {
+        Entry *oldEntries = entries;
+        const int oldCapacity = hashMod + 1;
+        const int newCapacity = hashMod + hashMod + 2;
+        entries = static_cast<Entry *>(
+            hkContainerHeapAllocator::get().blockAlloc(newCapacity * int(sizeof(Entry))));
+        FUN_00018160(entries, 0xff, newCapacity * sizeof(Entry));
+        numEntries = 0;
+        hashMod = newCapacity - 1;
+        for (int i = 0; i < oldCapacity; i++) {
+            if (oldEntries[i].hash != hkUlong(-1)) {
+                FUN_00091690(oldEntries[i].key, oldEntries[i].value);
+            }
+        }
+        hkContainerHeapAllocator::get().blockFree(oldEntries, oldCapacity * int(sizeof(Entry)));
+    }
+    hkUlong i = hash & hashMod;
+    for (;;) {
+        if (entries[i].hash == hkUlong(-1)) {
+            numEntries++;
+            break;
+        }
+        if (entries[i].hash == hash && FUN_00017f40(key, entries[i].key) == 0) {
+            break;
+        }
+        i = (i + 1) & hashMod;
+    }
+    entries[i].hash = hash;
+    entries[i].key = key;
+    entries[i].value = value;
 }
