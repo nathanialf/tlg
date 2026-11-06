@@ -9,7 +9,7 @@
 # 0 names registered with two vtables (below, not written);
 # 0 registrations whose constructor's vptr store the walk cannot find (below);
 # 0 vtables registered by more than one class;
-# 1888 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
+# 1885 vtables stored by a function (its object, a static instance or a local) that no type info names (below, with
 # the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).
 #
 # Vtables registered by more than one class (the derived class keeps the base's):
@@ -28,7 +28,6 @@
 #   0x168c480 stored by FUN_000012a0
 #   0x168c4b0 stored by FUN_00001420
 #   0x168c5f0 stored by FUN_00001500
-#   0x168c630 stored by FUN_00001fb0 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo
 #   0x168c7c0 stored by FUN_00003820
 #   0x168c910 stored by FUN_00003ed0
 #   0x168c940 stored by FUN_00003ed0
@@ -211,7 +210,6 @@
 #   0x16a3d40 stored by FUN_00048b20
 #   0x16a3d90 stored by FUN_0010dbc0
 #   0x16a3dc0 stored by FUN_0010bf50
-#   0x16a3f50 stored by FUN_00140a60 FUN_00140e70
 #   0x16a4100 stored by FUN_00151250
 #   0x16a4180 stored by FUN_00151250
 #   0x16a4200 stored by FUN_00150330
@@ -226,7 +224,6 @@
 #   0x16a4f90 stored by FUN_00048b20
 #   0x16a5010 stored by FUN_00048b20
 #   0x16a55b0 stored by FUN_0016af40
-#   0x16a5680 stored by FUN_0016e0e0 FUN_0016eaa0
 #   0x16a5700 stored by FUN_00048b20
 #   0x16a57a0 stored by FUN_00048b20
 #   0x16a5820 stored by FUN_00048b20
