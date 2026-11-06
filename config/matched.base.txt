@@ -2586,3 +2586,4 @@ FUN_00060a10 src/libs/unknown/func_00060a10.cpp _ZN17hknpSpaceSplitter12FUN_0006
 FUN_00090570 src/libs/unknown/func_00090570.cpp _ZN26hkPrimaryCommandDispatcherC1Ev
 FUN_000aafd0 src/libs/unknown/func_000aafd0.cpp
 FUN_00064db0 src/libs/unknown/func_00064db0.cpp _ZN18hknpWorldObject4f812FUN_00064db0EPK10hknpBodyIdiRi
+FUN_00199600 src/libs/unknown/func_00199600.cpp
