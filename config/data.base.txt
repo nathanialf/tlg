@@ -34,3 +34,10 @@ D_1699620 src/libs/unknown/func_000615e0.cpp
 D_16996a0 src/libs/unknown/func_000615e0.cpp
 D_1691d10 src/libs/unknown/func_00024490.cpp
 D_1691e00 src/libs/unknown/func_00024490.cpp
+D_169f730 src/libs/unknown/func_000826b0.cpp
+D_169f910 src/libs/unknown/func_000826b0.cpp
+D_169fa00 src/libs/unknown/func_000826b0.cpp
+D_169fa40 src/libs/unknown/func_000826b0.cpp
+D_169fa70 src/libs/unknown/func_000826b0.cpp
+D_169bd30 src/libs/unknown/func_0007a650.cpp
+D_169bdd0 src/libs/unknown/func_0007a650.cpp

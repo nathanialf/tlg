@@ -5,7 +5,7 @@
  * 0x169c630): whether the ball-socket atom has a solving method set or the
  * stabilization atom is enabled, written as hkpBallAndSocketConstraintData's
  * slot 7 is (FUN_0007c380, cookbook 30). */
-hkBool hkpFixedConstraintData::FUN_0007bf70() const /* derived name */
+hkBool hkpFixedConstraintData::unknownVirtual7() const
 {
     bool stabilized = false;
     if (atoms.ballSocket.solvingMethod != 0 || atoms.setupStabilization.enabled) {

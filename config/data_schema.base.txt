@@ -35,3 +35,10 @@ D_1699620 hkClassMember 3 src/include/tlg_hk_reflect.h
 D_16996a0 hkClassMember 3 src/include/tlg_hk_reflect.h
 D_1691d10 hkClassMember 6 src/include/tlg_hk_reflect.h
 D_1691e00 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169f730 hkClassMember 12 src/include/tlg_hk_reflect.h
+D_169f910 hkClassMember 6 src/include/tlg_hk_reflect.h
+D_169fa00 hkClassEnum::Item 4 src/include/tlg_hk_reflect.h
+D_169fa40 hkClassEnum::Item 3 src/include/tlg_hk_reflect.h
+D_169fa70 hkClassEnum 2 src/include/tlg_hk_reflect.h
+D_169bd30 hkClassMember 4 src/include/tlg_hk_reflect.h
+D_169bdd0 hkClassMember 1 src/include/tlg_hk_reflect.h

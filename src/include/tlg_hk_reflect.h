@@ -1313,9 +1313,10 @@ struct hkClassEnum {
     const char *name;
     const Item *items;
     int numItems;
-    /* The record's 0x28 bytes end with an attributes pointer and flags,
-     * zero in the records read so far (hkGeometry's enum, 0x168ea10).
-     * derived names. */
+    /* The record's 0x28 bytes end with an attributes pointer and flags:
+     * hkp6DofConstraintData's two enums at 0x169fa70 are 0x28 apart, each
+     * with its attributes (null) at +0x18 and its flags at +0x20; zero too
+     * in hkGeometry's enum 0x168ea10. derived names. */
     const hkCustomAttributes *attributes;
     u32 flags;
 };
@@ -12971,11 +12972,12 @@ class hkpConstraintData : public hkReferencedObject
      * atoms' size and the argument (0x82890). */
     static void FUN_00082890(const void *atoms, int sizeOfAtoms, ConstraintInfo &infoOut);
 
-    /* Slot 5's types, by the enum's items at 0x169d690 (two of its 29 so
-     * far). */
+    /* Slot 5's types, by the enum's items at 0x169d690 (three of its 29
+     * so far). */
     enum ConstraintType {
         CONSTRAINT_TYPE_BREAKABLE = 12,
         CONSTRAINT_TYPE_MALLEABLE = 13,
+        CONSTRAINT_TYPE_FIXED = 23,
     };
 
     virtual int unknownVirtual5() const = 0;
@@ -14750,6 +14752,12 @@ class hkpFixedConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkpBallSocketConstraintAtom ballSocket;
@@ -14761,7 +14769,9 @@ class hkpFixedConstraintData : public hkpConstraintData
         } ang;
     };
 
-    /* The finish constructor (0x7a610): the atoms are left as loaded. */
+    /* The finish constructor (0x7a610, beside the reflection initializer
+     * 0x7a650, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpFixedConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new one (0x7bcf0): the atoms typed and set to their defaults, both
@@ -14774,9 +14784,15 @@ class hkpFixedConstraintData : public hkpConstraintData
     /* The pivot frames in each body's space (0x7be40). derived name. */
     void FUN_0007be40(const hkTransform &pivotA, const hkTransform &pivotB);
 
-    void FUN_0007bf20(
-        hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
-    hkBool FUN_0007bf70() const;                                /* vtable slot 7; derived name */
+    /* Slot 5 (the shared 0x7bf90): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_FIXED;
+    }
+
+    /* Slots 6 (0x7bf20, also hkpHingeConstraintData's) and 7 (0x7bf70). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual hkBool unknownVirtual7() const;
     void FUN_0007bea0(float newMaxImpulse);                     /* vtable slot 8; derived name */
     void FUN_0007bec0(float newMaxAngImpulse);                  /* vtable slot 9; derived name */
     float FUN_0007bed0() const;                                 /* vtable slot 11; derived name */
@@ -14788,8 +14804,8 @@ class hkpFixedConstraintData : public hkpConstraintData
     hkResult FUN_0007bfd0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007c000(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
-    void FUN_0007bf40(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 20 (0x7bf40). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };

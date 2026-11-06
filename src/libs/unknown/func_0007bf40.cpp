@@ -4,7 +4,8 @@
 /* derived name: slot 20 of hkpFixedConstraintData's vtable (address point
  * 0x169c630): 48 bytes of runtime and six solver results when a runtime is
  * wanted or the ball socket can breach, else none. */
-void hkpFixedConstraintData::FUN_0007bf40(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const
+void hkpFixedConstraintData::unknownVirtual20(hkBool wantRuntime,
+                                              ConstraintRuntimeInfo &infoOut) const
 {
     if (wantRuntime || atoms.ballSocket.breachImpulse != HK_REAL_MAX) {
         infoOut.sizeOfExternalRuntime = 48;
