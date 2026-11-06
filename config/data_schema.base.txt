@@ -22,3 +22,6 @@ D_1697aa0 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_168e950 hkClassMember 4 src/include/tlg_hk_reflect.h
 D_168ea40 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_168ea10 hkClassEnum 1 src/include/tlg_hk_reflect.h
+D_16901e0 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1690270 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1690240 hkClassEnum 1 src/include/tlg_hk_reflect.h

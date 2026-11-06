@@ -1620,6 +1620,18 @@ inline Vec4 transformPosition(const hkTransform &t, const Vec4 &v)
     return _mm_add_ps(rotated, t.translation);
 }
 
+/* derived name: the point v in t's frame, the difference from the
+ * translation dotted with each of the rotation's columns into its lane,
+ * the columns by index (inline in the motion's centre of mass setter
+ * 0x5f390, which reads them off the body's pointer). */
+inline Vec4 transformInversePosition(const hkTransform &t, const Vec4 &v)
+{
+    const Vec4 d = _mm_sub_ps(v, t.translation);
+    return _mm_or_ps(_mm_or_ps(_mm_dp_ps(d, t.rotation.getColumn(0), 0x71),
+                               _mm_dp_ps(d, t.rotation.getColumn(1), 0x72)),
+                     _mm_dp_ps(d, t.rotation.getColumn(2), 0x74));
+}
+
 /* hkMatrix4 (the reflection's type name): four columns of four floats. */
 struct hkMatrix4 {
     /* derived name: the matrix of a transform, the rotation's columns with
@@ -4740,6 +4752,12 @@ class hkcdSimdTree
      * hkcdSimdTreeNode: 0x70 bytes over hkcdFourAabb, one member record at
      * 0x16901e0): four hkUint32 of data at +0x60. */
     struct Node : public hkcdFourAabb {
+        Node() {}
+
+        /* Nothing to fix up (its type info's finish callback is the empty
+         * body 0x1c1e0). */
+        Node(hkFinishLoadedObjectFlag flag) : hkcdFourAabb(flag) {}
+
         /* Empty boxes and no data (derived name). */
         void clear()
         {
@@ -10579,6 +10597,12 @@ struct hknpWorld {
      * the command dispatcher at 0x16efc4 passes the command's id and
      * vector). derived name. */
     void FUN_0005f530(int motionId, const Vec4 &inertia); /* derived name */
+    /* A motion's centre of mass set in world space (0x5f390): each body
+     * attached to it, from the first, handed on when neither static nor
+     * active, its centre of mass in its own space and its bounding radius
+     * about the new centre updated, then the body signal fired. derived
+     * name. */
+    void FUN_0005f390(int motionId, const Vec4 &centerOfMass); /* derived name */
 
     /* Takes a body off the active list when it is active (flags bit 3), its
      * whole attached group when it heads one alone (0x4c720, called at

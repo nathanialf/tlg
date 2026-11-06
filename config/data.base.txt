@@ -21,3 +21,6 @@ D_1697aa0 src/libs/unknown/func_00042770.cpp
 D_168e950 src/libs/unknown/func_0001a500.cpp
 D_168ea40 src/libs/unknown/func_0001a500.cpp
 D_168ea10 src/libs/unknown/func_0001a500.cpp
+D_16901e0 src/libs/unknown/func_0001f380.cpp
+D_1690270 src/libs/unknown/func_0001f380.cpp
+D_1690240 src/libs/unknown/func_0001f380.cpp
