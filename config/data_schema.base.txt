@@ -42,3 +42,17 @@ D_169fa40 hkClassEnum::Item 3 src/include/tlg_hk_reflect.h
 D_169fa70 hkClassEnum 2 src/include/tlg_hk_reflect.h
 D_169bd30 hkClassMember 4 src/include/tlg_hk_reflect.h
 D_169bdd0 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169be00 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_169be80 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169beb0 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_169bf30 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169c1b0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_169c200 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169c3a0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_169c3f0 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169c4b0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_169c500 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169ca30 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_169ca80 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_169cab0 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_169cb30 hkClassMember 1 src/include/tlg_hk_reflect.h

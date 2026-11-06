@@ -12972,12 +12972,19 @@ class hkpConstraintData : public hkReferencedObject
      * atoms' size and the argument (0x82890). */
     static void FUN_00082890(const void *atoms, int sizeOfAtoms, ConstraintInfo &infoOut);
 
-    /* Slot 5's types, by the enum's items at 0x169d690 (three of its 29
-     * so far). */
+    /* Slot 5's types, by the enum's items at 0x169d690 (ten of its 29 so
+     * far). */
     enum ConstraintType {
+        CONSTRAINT_TYPE_BALLANDSOCKET = 0,
+        CONSTRAINT_TYPE_STIFFSPRING = 8,
         CONSTRAINT_TYPE_BREAKABLE = 12,
         CONSTRAINT_TYPE_MALLEABLE = 13,
+        CONSTRAINT_TYPE_POINTTOPLANE = 14,
+        CONSTRAINT_TYPE_PULLEY = 15,
+        CONSTRAINT_TYPE_ROTATIONAL = 16,
+        CONSTRAINT_TYPE_COG_WHEEL = 22,
         CONSTRAINT_TYPE_FIXED = 23,
+        CONSTRAINT_TYPE_DEFORMABLE_FIXED = 24,
     };
 
     virtual int unknownVirtual5() const = 0;
@@ -13330,11 +13337,19 @@ class hkpCogWheelConstraintData : public hkpConstraintData
   public:
     /* 0xa0 bytes at +0x20 (what slot 6 hands on). */
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpCogWheelConstraintAtom cogWheels;
     };
 
-    /* The finish constructor (0x7c9d0): the atoms are left as loaded. */
+    /* The finish constructor (0x7c9d0, beside the reflection initializer
+     * 0x7ca10, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpCogWheelConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new one (0x7b400): both frames the identity, both wheels of radius
@@ -13351,10 +13366,15 @@ class hkpCogWheelConstraintData : public hkpConstraintData
      * zero. */
     hkBool unknownVirtual7() const;
 
-    void FUN_0007b570(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    void FUN_0007b590(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 5 (the shared 0x7b560): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_COG_WHEEL;
+    }
+
+    /* Slots 6 (0x7b570), 7 (0x7b4c0) and 20 (0x7b590). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -13385,12 +13405,20 @@ class hkpStiffSpringConstraintData : public hkpConstraintData /* vtable address 
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTranslationsConstraintAtom pivots;
         hkpSetupStabilizationAtom setupStabilization;
         hkpStiffSpringConstraintAtom spring;
     };
 
-    /* The finish constructor (0x7aa50): the atoms are left as loaded. */
+    /* The finish constructor (0x7aa50, beside the reflection initializer
+     * 0x7aa90, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpStiffSpringConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new spring (0x7d660, called at 0x79847): the atoms typed, the
@@ -13403,9 +13431,16 @@ class hkpStiffSpringConstraintData : public hkpConstraintData /* vtable address 
      * its size with empty destructors cite (D15). */
     virtual ~hkpStiffSpringConstraintData();
 
-    void FUN_0007d6e0(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    hkBool FUN_0007d710() const;                           /* vtable slot 7; derived name */
+    /* Slot 5 (the shared 0x46980): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_STIFFSPRING;
+    }
+
+    /* Slots 6 (0x7d6e0), 7 (0x7d710) and 20 (the shared 0x7bb90). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual hkBool unknownVirtual7() const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
     void FUN_0007d740(const hkTransform &transformA, const hkTransform &transformB,
                       const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
@@ -13435,11 +13470,19 @@ class hkpPulleyConstraintData : public hkpConstraintData /* vtable address point
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTranslationsConstraintAtom translations;
         hkpPulleyConstraintAtom pulley;
     };
 
-    /* The finish constructor (0x7aec0): the atoms are left as loaded. */
+    /* The finish constructor (0x7aec0, beside the reflection initializer
+     * 0x7af00, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpPulleyConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new pulley (0x82510, called at 0x798f2): both atoms typed, the
@@ -13448,9 +13491,16 @@ class hkpPulleyConstraintData : public hkpConstraintData /* vtable address point
 
     virtual ~hkpPulleyConstraintData();
 
-    void FUN_00082570(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    hkBool FUN_000825a0() const;                           /* vtable slot 7; derived name */
+    /* Slot 5 (the shared 0x3e140): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_PULLEY;
+    }
+
+    /* Slots 6 (0x82570), 7 (0x825a0) and 20 (the shared 0x7bb90). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual hkBool unknownVirtual7() const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -13491,6 +13541,12 @@ class hkpDeformableFixedConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpDeformableLinConstraintAtom lin;
         hkpDeformableAngConstraintAtom ang;
@@ -13501,7 +13557,9 @@ class hkpDeformableFixedConstraintData : public hkpConstraintData
      * off-diagonal ones zero; the angular yield's diagonal keeps its w. */
     hkpDeformableFixedConstraintData();
 
-    /* The finish constructor (0x7a830): the atoms are left as loaded. */
+    /* The finish constructor (0x7a830, beside the reflection initializer
+     * 0x7a870, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpDeformableFixedConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* Empty (the shared 0x3b640); the deleting destructor 0x82e90
@@ -13509,10 +13567,13 @@ class hkpDeformableFixedConstraintData : public hkpConstraintData
      * its size with empty destructors cite (D15). */
     virtual ~hkpDeformableFixedConstraintData();
 
-    void FUN_00083000(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    void FUN_00083020(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 5 (0x83050): its type. */
+    virtual int unknownVirtual5() const;
+    /* Slots 6 (0x83000, also hkpWheelConstraintData's), 7 (the shared
+     * 0x40b0) and 20 (0x83020). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual hkBool unknownVirtual7() const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -13637,11 +13698,19 @@ class hkpRotationalConstraintData : public hkpConstraintData /* vtable address p
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalRotationsConstraintAtom rotations;
         hkpAngConstraintAtom ang;
     };
 
-    /* The finish constructor (0x7b5f0): the atoms are left as loaded. */
+    /* The finish constructor (0x7b5f0, beside the reflection initializer
+     * 0x7b630, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpRotationalConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new rotational constraint (0x83440, called at 0x79939): both
@@ -13653,10 +13722,15 @@ class hkpRotationalConstraintData : public hkpConstraintData /* vtable address p
     /* Slot 7 (0x83520): both rotations orthonormal. */
     hkBool unknownVirtual7() const;
 
-    void FUN_000834e0(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    void FUN_00083500(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 5 (the shared 0x38210): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_ROTATIONAL;
+    }
+
+    /* Slots 6 (0x834e0), 7 (0x83520) and 20 (0x83500). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -13754,11 +13828,19 @@ class hkpPointToPlaneConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpLinConstraintAtom lin;
     };
 
-    /* The finish constructor (0x7b900): the atoms are left as loaded. */
+    /* The finish constructor (0x7b900, beside the reflection initializer
+     * 0x7b940, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpPointToPlaneConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new constraint (0x7bae0, called at 0x798c0): both frames the
@@ -13776,8 +13858,15 @@ class hkpPointToPlaneConstraintData : public hkpConstraintData
     void FUN_0007b5a0(const void *argument1, const void *argument2, const void *argument3,
                       Vec4 &out) const;
 
-    void FUN_0007bb90(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 5 (the shared 0x68950): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_POINTTOPLANE;
+    }
+
+    /* Slots 6 (the shared 0x7b570), 7 (0x7bbb0) and 20 (0x7bb90). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -14398,12 +14487,20 @@ class hkpBallAndSocketConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTranslationsConstraintAtom pivots;
         hkpSetupStabilizationAtom setupStabilization;
         hkpBallSocketConstraintAtom ballSocket;
     };
 
-    /* The finish constructor (0x7cbf0): the atoms are left as loaded. */
+    /* The finish constructor (0x7cbf0, beside the reflection initializer
+     * 0x7cc30, which inlines it; its type info's finish callback is this
+     * body): the atoms are left as loaded. */
     hkpBallAndSocketConstraintData(hkFinishLoadedObjectFlag flag);
 
     /* A new one (0x7c1d0): the stabilization off with no limits, the ball
@@ -14419,10 +14516,6 @@ class hkpBallAndSocketConstraintData : public hkpConstraintData
      * after the constructor FUN_0007c1d0, 0xea746a). */
     void FUN_0007c2a0(const Vec4 &pivotA, const Vec4 &pivotB);
 
-    void FUN_0007c330(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
-    hkBool FUN_0007c380() const;                           /* vtable slot 7; derived name */
-
     void FUN_0007c2e0(float newMaxImpulse);                     /* vtable slot 8; derived name */
     void FUN_0007c2c0(float newBreachImpulse);                  /* vtable slot 10; derived name */
     float FUN_0007c300() const;                                 /* vtable slot 11; derived name */
@@ -14432,8 +14525,17 @@ class hkpBallAndSocketConstraintData : public hkpConstraintData
     void FUN_0007c3b0(hkpConstraintAtom::SolvingMethod method); /* vtable slot 16; derived name */
     hkResult FUN_0007c3e0(float factor);                        /* vtable slot 17; derived name */
     hkResult FUN_0007c3d0(float &factorOut) const;              /* vtable slot 18; derived name */
-    void FUN_0007c350(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+
+    /* Slot 5 (the shared 0x42d0): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_BALLANDSOCKET;
+    }
+
+    /* Slots 6 (0x7c330), 7 (0x7c380) and 20 (0x7c350). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual hkBool unknownVirtual7() const;
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };

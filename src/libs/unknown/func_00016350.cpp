@@ -66,12 +66,12 @@ void FUN_00016350(Class168e810 *self, int mode, TaskNode000172c0 *waitFor) /* de
     int slot;
     int oldHead, newHead;
     do {
-        oldHead = self->firstFreeSlot;
+        oldHead = self->freeSlots.first;
         slot = oldHead & 0x7f;
-        const int next = self->nextFreeSlot[slot];
+        const int next = self->freeSlots.next[slot];
         newHead = ((oldHead + 0x80) & ~0x7f) | next;
-    } while (__sync_val_compare_and_swap(&self->firstFreeSlot, oldHead, newHead) != oldHead);
-    self->nextFreeSlot[slot] = 0x7f;
+    } while (__sync_val_compare_and_swap(&self->freeSlots.first, oldHead, newHead) != oldHead);
+    self->freeSlots.next[slot] = 0x7f;
 
     WaitingSemaphore00016d40 *semaphore = self->semaphores[slot];
     if (!semaphore) {
@@ -160,8 +160,8 @@ void FUN_00016350(Class168e810 *self, int mode, TaskNode000172c0 *waitFor) /* de
 
     /* The slot back at the head of the free list, the tag kept. */
     do {
-        oldHead = self->firstFreeSlot;
-        self->nextFreeSlot[slot] = oldHead & 0x7f;
+        oldHead = self->freeSlots.first;
+        self->freeSlots.next[slot] = oldHead & 0x7f;
         newHead = (oldHead & ~0x7f) | slot;
-    } while (__sync_val_compare_and_swap(&self->firstFreeSlot, oldHead, newHead) != oldHead);
+    } while (__sync_val_compare_and_swap(&self->freeSlots.first, oldHead, newHead) != oldHead);
 }

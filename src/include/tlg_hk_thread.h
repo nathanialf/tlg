@@ -71,9 +71,17 @@ struct Object00015700 /* derived name */
         Block *next;
     };
 
+    /* Out of line (0x15e00; Class168e810's constructor builds one at
+     * 0x16e16): the critical section with the spin count, then the first
+     * block. */
+    Object00015700(int spinCount);
+
     /* Out of line (0x15cd0; Class168e810's destructor deletes the object
      * at 0x16fc6): every block deleted, then the critical section. */
     ~Object00015700();
+
+    /* From the thread's heap, untested (0x16dfe). derived name. */
+    static void *operator new(unsigned long numBytes);
 
     /* Back to the thread's heap at the class's size, untested (0x16fed:
      * the delete expression has tested the pointer). derived name. */
@@ -213,6 +221,11 @@ struct ReadyEntry00017540 /* derived name */
 class Class168e810 : public hkReferencedObject, public Interface168e888 /* derived name */
 {
   public:
+    /* 0x16d40: the semaphore slots linked, the ready queue's room for 256
+     * nodes, the first four semaphores built with the spin count, which the
+     * locks take too. */
+    Class168e810(int spinCount);
+
     /* Out of line (0x16f90, slot 0, and its thunk 0x170c0; the deleting one
      * 0x16ee0 and its thunk 0x16f30 before it): the waiting threads
      * released, the object at +0x18 and the semaphores deleted, then the
@@ -252,13 +265,29 @@ class Class168e810 : public hkReferencedObject, public Interface168e888 /* deriv
     Object00015700 *object18;               /* derived name */
     hkArray<ReadyEntry00017540> readyQueue; /* derived name */
     hkCriticalSection lock;                 /* derived name; slots 7 to 9 run under it */
+
     /* A lock-free list of the 64 semaphore slots (derived names): the head's
      * low 7 bits the first free slot, the bits above a tag each take
-     * advances; each slot's next, 0x7f for none. volatile: every thread
-     * takes and gives back slots without the lock (FUN_00016350), so each
-     * read is the memory's (the base loads the next slot on its own, 0x163b9). */
-    volatile int firstFreeSlot;               /* 0 on construction */
-    volatile int nextFreeSlot[64];            /* i + 1, the last 0x7f */
+     * advances; each slot's next, 0x7f for none. Built as a member, before
+     * the default runner (0x16da0 links the slots, an unsigned index
+     * compared below 63 with `cmovb`, then the head is 0). */
+    struct FreeSlotList {
+        FreeSlotList()
+        {
+            for (unsigned int i = 0; i < 64; i++) {
+                next[i] = i < 63 ? i + 1 : 0x7f;
+            }
+            first = 0;
+        }
+
+        /* volatile: every thread takes and gives back slots without the
+         * lock (FUN_00016350), so each read is the memory's (the base loads
+         * the next slot on its own, 0x163b9). */
+        volatile int first;
+        volatile int next[64]; /* volatile: as first */
+    };
+
+    FreeSlotList freeSlots;
     WaitingSemaphore00016d40 *semaphores[64]; /* derived name */
     u8 unknown348[8];
     Runner00016350 defaultRunner; /* derived name */
