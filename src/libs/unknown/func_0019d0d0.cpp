@@ -38,7 +38,8 @@ int hkPackfileWriter::FUN_0019cd20(const char *sectionTag)
 void hkPackfileWriter::FUN_0019d190(const void *object, const char *sectionTag)
 {
     const u32 index = sectionIndex(sectionTag);
-    objectToSectionIndex.FUN_000138a0(hkContainerHeapAllocator::get(), hkUlong(object), index);
+    objectToSectionIndex.FUN_000138a0(hkContainerHeapAllocator::get(), hkUlong(object),
+                                      hkUlong(index));
 }
 
 /* Slot 12 (0x19d280): the objects of a class placed in the section of a

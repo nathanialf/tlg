@@ -8,7 +8,7 @@ void FUN_0019f110(const hkClass *klass, PointerMap *visited, int mark,
     if (marks & mark) {
         return;
     }
-    visited->FUN_000138a0(hkContainerHeapAllocator::get(), hkUlong(klass), marks | mark);
+    visited->FUN_000138a0(hkContainerHeapAllocator::get(), hkUlong(klass), hkUlong(marks | mark));
     for (int i = 0; i < klass->FUN_00004440(); i++) {
         const hkClassMember &member = klass->FUN_00004450(i);
         const hkClass *memberClass = FUN_00004250(&member);

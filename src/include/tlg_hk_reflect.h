@@ -8503,11 +8503,16 @@ struct PointerMap /* derived name */
     hkResult FUN_00013d10(hkUlong key);
     /* Sets the value of a key, growing the entries from the allocator given
      * when the map is more than half full (0x138a0); nonzero when the key
-     * was new. */
-    int FUN_000138a0(AllocatorBase &allocator, hkUlong key, hkUlong value); /* derived name */
+     * was new. A member template over the value's word, as the 16-bit
+     * map's insert (0x1992f0) is, declared inline: the rebuild (0x13940)
+     * holds it, past the threshold a function without the keyword gets
+     * (cookbook 164); its file instantiates it for the word. */
+    template <typename V>
+    inline int FUN_000138a0(AllocatorBase &allocator, hkUlong key, V value); /* derived name */
     /* Rebuilds the entries at a new capacity (at least 8) from the
-     * allocator given, reinserting every used one (0x13940). */
-    void FUN_00013940(AllocatorBase &allocator, int newCapacity); /* derived name */
+     * allocator given, reinserting every used one (0x13940); a failure
+     * when the allocator gives nothing. */
+    hkResult FUN_00013940(AllocatorBase &allocator, int newCapacity); /* derived name */
     /* Makes room for a number of entries without a rebuild: the capacity
      * doubled from 8 until it is twice the number (0x13e30). */
     void FUN_00013e30(AllocatorBase &allocator, int numElements); /* derived name */
