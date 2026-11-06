@@ -6,6 +6,6 @@
  * heap at its recorded size. */
 void FUN_000231b0(hkMemoryMeshBody *self)
 {
-    FUN_00023200(self);
+    self->hkMemoryMeshBody::~hkMemoryMeshBody();
     freeReferencedObject(self, sizeof(hkMemoryMeshBody));
 }

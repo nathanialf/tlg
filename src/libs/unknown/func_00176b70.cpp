@@ -7,8 +7,8 @@
  * (slot 1, 0x176b20) is the compiler's, emitted before this one. */
 hknpCharacterProxy::~hknpCharacterProxy()
 {
-    world->signals.signal50.FUN_000933e0(this);
-    world->signals.signal58.FUN_000933e0(this);
+    world->signals.signalE8.FUN_000933e0(this);
+    world->signals.signalF0.FUN_000933e0(this);
     world->signals.postSolveSignal.FUN_000933e0(this);
     world->FUN_0004fbd0(1, bodyId)->FUN_000933e0(this);
     world->FUN_0004e980(&bodyId, 1, 0);

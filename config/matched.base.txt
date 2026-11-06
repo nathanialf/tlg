@@ -2557,3 +2557,6 @@ FUN_0008f980 src/libs/unknown/func_0008f980.cpp _ZNK9UnionFind12FUN_0008f980ERK7
 FUN_00160cd0 src/libs/unknown/func_00160cd0.cpp _ZN15hknpBodyManager12FUN_00160cd0EjPKc
 _ZN11hkAlgorithm18quickSortRecursiveIN14hkVertexFormat7ElementEPFbRKS2_S4_EEEvPT_iiT0_ src/libs/unknown/func_000271d0.cpp
 _ZN9RefArraysD2Ev src/libs/unknown/func_000514a0.cpp
+_ZN16hknpWorldSignalsD1Ev src/libs/unknown/func_00048260.cpp
+FUN_0007db20 src/libs/unknown/func_0007db20.cpp _ZN24hkpRagdollConstraintData12FUN_0007db20ERKDv4_fS2_S2_S2_S2_S2_
+_ZN16hkMemoryMeshBodyD1Ev src/libs/unknown/func_00023200.cpp _ZN16hkMemoryMeshBodyD2Ev

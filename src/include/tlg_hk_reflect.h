@@ -5097,6 +5097,7 @@ class hkMemoryMeshBody : public hkMeshBody
 {
   public:
     hkMemoryMeshBody(hkFinishLoadedObjectFlag flag);
+    /* Out of line (0x23200; its deleting destructor 0x231b0 before it). */
     virtual ~hkMemoryMeshBody();
 
     hkMeshShape *FUN_000230d0() const; /* vtable slot 5; derived name */
@@ -5115,8 +5116,9 @@ class hkMemoryMeshBody : public hkMeshBody
     hkMeshVertexBuffer *FUN_000230e0(int index) const;  /* vtable slot 8; derived name */
 
     Mat4 transform;
-    hkIndexedTransformSet *transformSet;
-    hkMeshShape *shape;
+    hkRefPtr<hkIndexedTransformSet> transformSet;
+    hkRefPtr<hkMeshShape> shape;
+    /* Each released by the destructor (0x23200), the first first. */
     hkArray<hkMeshVertexBuffer *> vertexBuffers;
     hkStringPtr name;
 };
@@ -9799,30 +9801,59 @@ void FUN_000cf4d0(const hknpBody &body, const hknpMotion &motion, const Vec4 &di
 void FUN_000cd040(hknpBody *body, void *argument, const hknpBodyQuality *quality,
                   const Vec4 *vector, const hknpSolverInfo *solverInfo, void *data1f0);
 
-/* The world's signals, a member of their own (derived names): the constraint
- * filter's unsubscribe from the one at +0x5e0 (0x159bf0) and the character
- * proxy's from those at +0x5f0, +0x5f8 and +0x608 (0x176b88 to 0x176baa)
- * fold the world's load into the address, the add of two offsets the
- * selection DAG combines (a field of a field). Where the group starts is
- * not known; at +0x5a0 it holds every signal typed so far. The constraint
- * filter subscribes 0x159dd0 to the constraint signal at +0x5d8 (which
- * disables the collisions between the constraint's bodies) and 0x159df0 to
- * the one at +0x5e0 (which hands the pair back), 0x159ca0, and
- * unsubscribes from both in its destructor (0x159bc0). */
+/* The world's signals, a member of their own at +0x508 (derived names):
+ * thirty-three of them, which the world's destructor destroys through
+ * 0x48260 (called at 0x4bad7 with the world plus 0x508), each from the
+ * last. The constraint filter's unsubscribe from the one at +0x5e0 (0x159bf0)
+ * and the character proxy's from those at +0x5f0, +0x5f8 and +0x608
+ * (0x176b88 to 0x176baa) fold the world's load into the address, the add of
+ * two offsets the selection DAG combines (a field of a field). The
+ * constraint filter subscribes 0x159dd0 to the constraint signal at +0x5d8
+ * (which disables the collisions between the constraint's bodies) and
+ * 0x159df0 to the one at +0x5e0 (which hands the pair back), 0x159ca0, and
+ * unsubscribes from both in its destructor (0x159bc0). Members named by
+ * their offset in the group where their use is not known. */
 struct hknpWorldSignals /* derived name */
 {
+    /* Out of line (0x48260): every signal destroyed, from the last. */
+    ~hknpWorldSignals();
+
+    Signal00093530 signal00;
+    Signal00093530 signal08;
+    Signal00093530 signal10;
+    Signal00093530 signal18;
+    Signal00093530 signal20;
+    Signal00093530 signal28;
+    Signal00093530 signal30;
+    Signal00093530 signal38;
+    Signal00093530 signal40;
+    Signal00093530 signal48;
+    Signal00093530 signal50;
+    Signal00093530 signal58;
+    Signal00093530 signal60;
+    Signal00093530 signal68;
+    Signal00093530 signal70;
+    Signal00093530 signal78;
+    Signal00093530 signal80;
+    Signal00093530 signal88;
+    Signal00093530 signal90;
     hkSignal2<hknpWorld *, int> bodyChangedSignal; /* 0x5fcf0 (quality), 0x60100 (filter info) */
-    u8 unknown8[0x30];
+    Signal00093530 signalA0;
+    Signal00093530 signalA8;
+    Signal00093530 signalB0;
+    Signal00093530 signalB8;
+    Signal00093530 signalC0;
+    Signal00093530 signalC8;
     hkSignal2<hknpWorld *, u32> constraintAddedSignal;   /* 0x4fc10 enables, 0x4d32e */
     hkSignal2<hknpWorld *, u32> constraintRemovedSignal; /* 0x4fcf0 disables, 0x4d4de */
-    u8 unknown48[8];
+    Signal00093530 signalE0;
     /* Two signals the character proxy subscribes to (its handler of the
      * first, 0x1782f0, takes the world), then the post-solve signal (fired
      * with the world at 0x512d8 under "TtPostSolveSignal"; the proxy's
      * 0x177640). derived names. */
-    hkSignal1<hknpWorld *> signal50;
-    hkSignal1<hknpWorld *> signal58;
-    u8 unknown60[8];
+    hkSignal1<hknpWorld *> signalE8;
+    hkSignal1<hknpWorld *> signalF0;
+    Signal00093530 signalF8;
     hkSignal1<hknpWorld *> postSolveSignal;
 };
 
@@ -10143,7 +10174,7 @@ struct hknpWorld {
      * only when the flag is set). */
     bool enabled4f0;               /* derived name */
     hknpWorldObject4f8 *object4f8; /* derived name */
-    u8 unknown500[0xa0];
+    u8 unknown500[8];
     hknpWorldSignals signals; /* derived name */
     u8 unknown610[0x18];
     /* The step's current stage (hknpPostCollideTask's work sets 8 before
@@ -13665,6 +13696,13 @@ class hkpRagdollConstraintData : public hkpConstraintData
                       ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
 
     void FUN_0007dad0(hkBool enable); /* derived name */
+
+    /* The frames in the bodies' spaces (0x7db20): each body's twist and
+     * plane axes normalized as its frame's first two columns, their cross
+     * product the third, the pivot its translation; the motors' target
+     * the second body's frame. derived name (Havok's setInBodySpace). */
+    void FUN_0007db20(const Vec4 &pivotA, const Vec4 &pivotB, const Vec4 &planeAxisA,
+                      const Vec4 &planeAxisB, const Vec4 &twistAxisA, const Vec4 &twistAxisB);
 
     /* The three motors set (0x7dff0, 0x7e170, 0x7e0b0; the game at 0xeb16a0
      * to 0xeb16d3): a reference taken on the new one before the old one's

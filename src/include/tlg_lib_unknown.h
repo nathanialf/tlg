@@ -6128,7 +6128,6 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
  * are not (cookbook 15, 97): the base destructor, then the object back to
  * the thread's heap at its recorded size, the class's own by default. The
  * base destructors not declared elsewhere come first. derived names. */
-void FUN_00023200(hkMemoryMeshBody *self);
 void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0004b040(hknpWorld *self);
