@@ -25,8 +25,11 @@ The record type is a struct in the header the schema row names (a path under
 src/include/, or a header it includes), spelled as the source spells it
 (`hkClassMember::TypeProperties` for a struct nested in a class). Its fields
 are integers (u8 .. s64 and the C++ integer types), bool, float, double,
-enums, pointers (data or function) and arrays of those, laid out by the
-x86-64 System V rules. Each value is written by its field's type:
+enums, pointers (data or function), arrays of those and instances of a
+class template whose fields are of its parameters (hkFlags<BITS, STORAGE>,
+read with the parameters bound to the arguments), laid out by the x86-64
+System V rules; a pointer may point at a record that holds the pointer's
+own record (hkClassMember's hkClass). Each value is written by its field's type:
 
     integer      decimal
     bool         true or false
@@ -150,6 +153,7 @@ class Scope:
     def __init__(self, name: str, parent: "Scope | None", kind: str, body=None, bases=False, path=""):
         self.name, self.parent, self.kind, self.body, self.bases = name, parent, kind, body, bases
         self.path = path
+        self.tparams: list[str] = []   # a class template's parameter names
         self.records: dict[str, Scope] = {}
         self.enums: dict[str, T] = {}
         self.typedefs: dict[str, list[str]] = {}
@@ -214,6 +218,24 @@ class Headers:
                     walk(i + 3, close, ns)
                     i = stmt_start = close + 1
                     continue
+                tparams: list[str] = []
+                if t == "template" and i + 1 < end and toks[i + 1] == "<":
+                    # a class template: its parameter names, each the last
+                    # identifier of a comma-separated parameter
+                    close = self._match(toks, i + 1, "<", ">")
+                    part: list[str] = []
+                    for tok in toks[i + 2:close] + [","]:
+                        if tok == ",":
+                            names = [x for x in part if re.fullmatch(r"[A-Za-z_]\w*", x)]
+                            if names:
+                                tparams.append(names[-1])
+                            part = []
+                        else:
+                            part.append(tok)
+                    i = close + 1
+                    if i >= end or toks[i] not in ("struct", "class", "union"):
+                        continue   # a function template, or a declaration
+                    t = toks[i]
                 if t in ("struct", "class", "union") and i + 1 < end and re.fullmatch(r"[A-Za-z_]\w*", toks[i + 1]):
                     j = i + 2
                     bases = False
@@ -224,6 +246,7 @@ class Headers:
                     if j < end and toks[j] == "{":
                         close = self._match(toks, j, "{", "}")
                         rec = Scope(toks[i + 1], scope, t, body=(j + 1, close), bases=bases, path=path)
+                        rec.tparams = tparams
                         scope.records[toks[i + 1]] = rec
                         walk(j + 1, close, rec)
                         i = close + 1
@@ -324,10 +347,38 @@ class Headers:
             return ("typedef", (s.typedefs[last], s))
         return None
 
-    def base(self, toks: list[str], scope: Scope) -> T:
-        """The type a run of type tokens names (no declarator)."""
+    def base(self, toks: list[str], scope: Scope, subst: dict[str, T] | None = None) -> T:
+        """The type a run of type tokens names (no declarator); subst maps a
+        class template's parameter names to the instance's argument types."""
         toks = [t for t in toks if t not in QUALIFIERS]
         key = " ".join(toks)
+        if subst and key in subst:
+            return subst[key]
+        if "<" in toks:
+            # an instance of a class template: the record read with its
+            # parameters bound to the argument types (hkFlags<BITS, STORAGE>)
+            lt = toks.index("<")
+            if ">" not in toks[lt:]:
+                fail(f"cannot read type '{key}'")
+            gt = self._match(toks, lt, "<", ">")
+            if gt != len(toks) - 1:
+                fail(f"cannot read type '{key}'")
+            args, part, depth = [], [], 0
+            for tok in toks[lt + 1:gt] + [","]:
+                if tok == "," and depth == 0:
+                    args.append(self.base(part, scope, subst))
+                    part = []
+                    continue
+                depth += tok == "<"
+                depth -= tok == ">"
+                part.append(tok)
+            hit = self.find([x for x in toks[:lt] if x != "::"], scope)
+            if hit is None or hit[0] != "record":
+                fail(f"no class template '{' '.join(toks[:lt])}' in {', '.join(self.read)}")
+            rec = hit[1]
+            if len(rec.tparams) != len(args):
+                fail(f"{rec.qualified()}: {len(args)} template argument(s) for {len(rec.tparams)} parameter(s)")
+            return self.record(rec, dict(zip(rec.tparams, args)))
         if key in BUILTINS:
             n, sg = BUILTINS[key]
             return T("int", n, n, signed=sg, name=key)
@@ -340,7 +391,7 @@ class Headers:
         if key == "void":
             return T("void", 0, 1, name=key)
         if toks and toks[-1] == "*":
-            return T("ptr", 8, 8, target=self.base(toks[:-1], scope))
+            return T("ptr", 8, 8, target=self.base(toks[:-1], scope, subst))
         q = [t for t in toks if t != "::"]
         if not q or "::" in toks and any(t != "::" and not re.fullmatch(r"[A-Za-z_]\w*", t) for t in toks):
             fail(f"cannot read type '{key}'")
@@ -354,14 +405,24 @@ class Headers:
             return self.base(v[0], v[1])
         return self.record(v)
 
-    def record(self, rec: Scope) -> T:
+    def record(self, rec: Scope, subst: dict[str, T] | None = None) -> T:
         q = rec.qualified()
+        if subst:
+            q += "<" + ", ".join(subst[p].name or subst[p].kind for p in rec.tparams) + ">"
         if q in self.cache:
             return self.cache[q]
         if rec.kind == "namespace":
             fail(f"{q} is a namespace")
         if rec.bases:
             fail(f"{q}: a record with a base class is not read (a schema extension)")
+        if rec.tparams and not subst:
+            fail(f"{q} is a class template: name its arguments")
+        # the record is in the cache before its fields are read, so a field
+        # that points back at it (hkClassMember's hkClass, whose members are
+        # hkClassMembers) finds it instead of reading it again without end;
+        # only a pointer can refer to a record inside itself
+        rec_ty = T("record", 0, 1, fields=[], union=rec.kind == "union", name=q)
+        self.cache[q] = rec_ty
         toks = self.toks_of(rec)
         fields = []
         k = 0
@@ -397,7 +458,7 @@ class Headers:
                 continue
             if t == ";" and depth == 0:
                 if stmt:
-                    fields.extend(self._field(stmt, rec))
+                    fields.extend(self._field(stmt, rec, subst))
                 stmt = []
                 k += 1
                 continue
@@ -410,9 +471,8 @@ class Headers:
             laid.append((name, ty, off))
             size = max(size, off + ty.size)
         size = -(-size // align) * align
-        ty = T("record", size, align, fields=laid, union=is_union, name=q)
-        self.cache[q] = ty
-        return ty
+        rec_ty.size, rec_ty.align, rec_ty.fields = size, align, laid
+        return rec_ty
 
     def toks_of(self, rec: Scope) -> list[str]:
         text = (REPO_ROOT / rec.path).read_text(encoding="latin-1")
@@ -420,7 +480,7 @@ class Headers:
         lo, hi = rec.body
         return toks[lo:hi]
 
-    def _field(self, stmt: list[str], rec: Scope) -> list[tuple[str, T]]:
+    def _field(self, stmt: list[str], rec: Scope, subst: dict[str, T] | None = None) -> list[tuple[str, T]]:
         """The data members one member declaration declares ([] for a static,
         a typedef, a using, a friend, a member function)."""
         if stmt[0] in ("static", "typedef", "using", "friend", "template", "enum"):
@@ -437,7 +497,14 @@ class Headers:
             fail(f"{rec.qualified()}: cannot read '{' '.join(stmt)}' (a default or a bit-field)")
         # the base type is what precedes the first declarator's stars and name
         # (the last identifier before its first '[' or ',')
-        first = stmt.index(",") if "," in stmt else len(stmt)
+        # (a comma inside a template argument list separates no declarator)
+        first, depth = len(stmt), 0
+        for i, t in enumerate(stmt):
+            depth += t == "<"
+            depth -= t == ">"
+            if t == "," and depth == 0:
+                first = i
+                break
         head = stmt[:first]
         stop = head.index("[") if "[" in head else len(head)
         n = max((i for i in range(stop) if re.fullmatch(r"[A-Za-z_]\w*", head[i])
@@ -447,7 +514,7 @@ class Headers:
             b -= 1
         if b <= 0:
             fail(f"{rec.qualified()}: cannot read '{' '.join(stmt)}'")
-        base = self.base(stmt[:b], rec)
+        base = self.base(stmt[:b], rec, subst)
         out = []
         decls, cur = [], []
         for t in stmt[b:]:
