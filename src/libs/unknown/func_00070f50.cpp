@@ -4,16 +4,11 @@
 /* The signal's destructor is the one call. */
 hknpBodyQualityLibrary::~hknpBodyQualityLibrary() {}
 
-/* The two constructors are equal at quick_diff but for their calls' target:
- * each quality's constructor is out of line, the default and the finish one
- * both folded by the linker into the empty body 0x16a370, whose row the
- * collision dispatcher names FUN_0016a370 by symbol (one name per address,
- * D15): a ruling for the supervisor (docs/NOTES.md, Round 73A). */
-// NONMATCHING: the 32 calls to hknpBodyQuality's constructor resolve to no row
+/* One reference, no slots, each quality constructed (0x16a370). */
 hknpBodyQualityLibrary::hknpBodyQualityLibrary() {}
 
-/* The signal cleared (not serialized), each quality finished. */
-// NONMATCHING: the 32 calls to hknpBodyQuality's finish constructor resolve to no row
+/* The signal cleared (not serialized); the qualities' array takes no flag,
+ * so each quality is default-constructed, the same callee as above. */
 hknpBodyQualityLibrary::hknpBodyQualityLibrary(hkFinishLoadedObjectFlag flag)
     : hkReferencedObject(flag)
 {

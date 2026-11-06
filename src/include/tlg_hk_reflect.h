@@ -12383,11 +12383,11 @@ class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs 0x7d520, vtab
  * cinfo's setup (0x71330) sets the int at +0 to ten times the quality's
  * index and edits the flags at +4. */
 struct hknpBodyQuality {
-    /* Out of line and empty, both folded by the linker into the shared
-     * empty body 0x16a370: the library's constructors call them on each
-     * quality (0x7101a, 0x711b3). */
+    /* Out of line and empty (0x16a370, the body the linker kept for it and
+     * for other empty functions): both of the library's constructors call
+     * it on each quality (0x7101a, 0x711b3), the finish constructor having
+     * no form that passes its flag to a member array. */
     hknpBodyQuality();
-    hknpBodyQuality(hkFinishLoadedObjectFlag flag);
 
     /* 0x16a380, run by 0x71330 on each of the library's qualities with the
      * cinfo's unit scale, which it does not read: all cleared, every flag
@@ -12406,8 +12406,8 @@ struct hknpBodyQuality {
  * serialized: record flags 0x400) at +0x10, qualities (hknpBodyQuality) from
  * +0x20. Finish constructor 0x71190, complete destructor 0x70f50. */
 struct hknpBodyQualityLibrary : public hkReferencedObject {
-    /* Out of line (0x71190): the signal left as loaded, each quality
-     * finished (0x16a370). */
+    /* Out of line (0x71190): the signal cleared (not serialized), each
+     * quality default-constructed (0x16a370). */
     hknpBodyQualityLibrary(hkFinishLoadedObjectFlag flag);
     /* 0x70ff0: one reference, no slots, each quality built (0x16a370). */
     hknpBodyQualityLibrary();

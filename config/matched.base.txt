@@ -40,7 +40,7 @@ FUN_000a9140 src/libs/unknown/leaf_000a9140.cpp
 FUN_000add50 src/libs/unknown/leaf_000add50.cpp
 FUN_000add70 src/libs/unknown/leaf_000add70.cpp
 FUN_00158a30 src/libs/unknown/leaf_00158a30.cpp
-FUN_0016a370 src/libs/unknown/leaf_0016a370.cpp
+_ZN15hknpBodyQualityC1Ev src/libs/unknown/leaf_0016a370.cpp
 FUN_00175a80 src/libs/unknown/leaf_00175a80.cpp
 FUN_0017de10 src/libs/unknown/leaf_0017de10.cpp
 FUN_001a0880 src/libs/unknown/leaf_001a0880.cpp
@@ -2646,3 +2646,5 @@ FUN_0003f890 src/libs/unknown/func_0003f890.cpp
 FUN_00063ec0 src/libs/unknown/func_00063ec0.cpp _ZN18hknpWorldObject4f812FUN_00063ec0ER19hkBlockStreamReaderR7hkArrayIi24hkContainerHeapAllocatorE
 FUN_00162fb0 src/libs/unknown/func_00162fb0.cpp _ZN19hknpVehicleInstance12FUN_00162fb0EfRK30hknpVehicleFilteredDriverInput
 FUN_000367d0 src/libs/unknown/func_000367d0.cpp _GLOBAL__I_a
+_ZN22hknpBodyQualityLibraryC1Ev src/libs/unknown/func_00070f50.cpp
+_ZN22hknpBodyQualityLibraryC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00070f50.cpp

@@ -15,6 +15,18 @@ void FUN_00174050()
     HK_ERROR(0x30ff763a, HK_NP_COLLISION_DISPATCHER_CPP, 27, "Unregistered cache creator dispatch");
 }
 
+/* derived name: the creator of no cache, registered for every pair with a
+ * shape of no dispatch type. Nothing to build, so its body is empty, and
+ * the linker kept one copy for it, for hknpBodyQuality's default
+ * constructor (that body's row, 0x16a370) and for 9 empty vtable slots:
+ * spelled under the address's own name with external linkage and placed by
+ * its bytes at the base's field (docs/DECISIONS.md D15, round 50's and
+ * round 57's addenda). */
+void FUN_0016a370(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
+                  hkBlockStreamWriter *writer)
+{
+}
+
 hknpCollisionDispatcher::hknpCollisionDispatcher()
 {
     maxCacheSize = 0x50;
