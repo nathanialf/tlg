@@ -3933,7 +3933,7 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
  * hkxTriangleSelectionChannel (0x57c6650, 0x16a0d40, FUN_00087000),
  * hkxVertexVectorDataChannel (0x57c66d0, 0x16a0df0, FUN_00087490) and
  * hkxSparselyAnimatedString (0x57c6750, 0x16a0e60, FUN_00087750),
- * hkxVertexFloatDataChannel (0x57c6850, 0x16a0fb0, FUN_00087b50),
+ * hkxVertexFloatDataChannel (0x57c6850, 0x16a0fb0, 0x87b50),
  * hkxVertexIntDataChannel (0x16a1260, FUN_000880f0), hkxIndexBuffer
  * (0x57c6aa0, 0x16a12d0, FUN_00088330), hkxAnimatedQuaternion (0x16a1390,
  * FUN_000886d0), hkxSparselyAnimatedInt (0x57c6c68, 0x16a1400,
@@ -4163,6 +4163,12 @@ class hkxSparselyAnimatedString : public hkReferencedObject
     hkArray<hkStringPtr> strings;
     hkArray<float> times;
 };
+
+/* hkxVertexFloatDataChannel's one enum (VertexFloatDimensions, its record
+ * at 0x16a1020), and the pointer to it the dimensions' record reads at run
+ * time (0x87c14). derived names. */
+extern const hkClassEnum D_16a1020[];
+extern const hkClassEnum *D_16dc6b0;
 
 /* From its hkClass (0x57c6850, size 0x28; records built at run time by 0x87b70): perVertexFloats (an array of reals) at +0x10, dimensions at +0x20. */
 class hkxVertexFloatDataChannel : public hkReferencedObject
@@ -5047,11 +5053,23 @@ void FUN_00024db0(hkMultipleVertexBuffer *self);                                
  * hkMeshSection (a reflected class; hkMemoryMeshShape's override 0x2ad50
  * reads a pointer at +0x28 and an int at +0x38 of it). */
 struct hkMeshSection {
-    u8 unknown0[0x28];
+    /* What a section lock hands out (the memory mesh shape's 0x2abd0 fills
+     * it; Havok's member names, derived here): the primitives, the index
+     * count, the first vertex and the transform, the index type and the
+     * indices, the vertex buffer, the material, the bone matrix map and the
+     * section's index. */
+    u8 primitiveType;
+    int numPrimitives;
+    int numIndices;
+    int vertexStartIndex;
+    int transformIndex;
+    u8 indexType;
+    const void *indices;
+    class hkMeshVertexBuffer *vertexBuffer;
     /* The section's material (hkMemoryMeshShape's slot 7 keeps a reference
      * to it). derived name. */
     class hkMeshMaterial *material;
-    u8 unknown30[8];
+    const struct hkMeshBoneIndexMapping *boneMatrixMap;
     int sectionIndex; /* derived name */
 
     /* The enum PrimitiveType (its hkClassEnum 0x1692178 beside
@@ -8767,6 +8785,10 @@ class hknpSpaceSplitter;
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
  * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
 struct hknpMotion {
+    /* An impulse at a point applied to the velocities (0x157a20; the
+     * world's 0x5eda3). derived name. */
+    void FUN_00157a20(const Vec4 &impulse, const Vec4 &position);
+
     /* Set up from its construction info (0x1571c0; the world's motion
      * creation at 0x4cf77, on a motion just taken from the free list):
      * the centre of mass and orientation, the inverse inertia and mass as
@@ -10265,6 +10287,13 @@ struct hknpWorld {
     /* Each body attached to a body integrated in turn, the first one
      * included (0x5b490). derived name. */
     void FUN_0005b490(int firstBodyId, void *argument);
+
+    /* An impulse applied to a dynamic body at a point (0x5ed40; called by
+     * 0x16ee5d): the body activated unless it is static or keyframed or
+     * active (flags 9), its motion given the impulse, each body attached to
+     * it refreshed (0x5b490, inline in the file), then the body-changed
+     * signal fired. derived name. */
+    void FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &position);
 
     /* A motion's velocities of the previous step scaled and the motion
      * moved by the part of the step the scale adds (0x157be0), then each
@@ -16214,15 +16243,29 @@ class hkMemoryMeshShape : public hkMeshShape
         hkRefPtr<hkMeshVertexBuffer> vertexBuffer;
         hkRefPtr<hkMeshMaterial> material;
         hkMeshBoneIndexMapping boneMatrixMap;
-        u8 unknown20[0x18];
+        /* The rest from the lock (0x2abd0). derived names. */
+        u8 primitiveType;
+        int numPrimitives;
+        u8 indexType;
+        int vertexStartIndex;
+        int transformIndex;
+        int indexBufferOffset;
     };
 
     /* From its record table at 0x1691bf0: sections (array) at +0x10,
      * indices16 and indices32 (arrays) at +0x20 and +0x30, name
      * (hkStringPtr, finished by its finish constructor 0x2a940) at +0x40. */
+    /* A section handed out (0x2abd0, slot 6): its counts, first vertex,
+     * transform and index type, its indices when asked for (the 16-bit or
+     * 32-bit index array from the section's offset), its vertex buffer when
+     * asked for (through a counted reference that is let go again), its
+     * material and bone matrix map, and its index. derived name. */
+    void FUN_0002abd0(int sectionIndex, u8 accessFlags, hkMeshSection &sectionOut) const;
+
     u8 unknownC[4];
     hkArray<Section> sections;
-    u8 unknown20[0x20];
+    hkArray<u16> indices16; /* derived name: the record's name */
+    hkArray<u32> indices32; /* derived name: the record's name */
     hkStringPtr name;
 };
 
@@ -19988,6 +20031,18 @@ struct hkPackfileHeader {
 /* The space splitters' base (derived name; vtable 0x16994b0, D14): 0x28
  * bytes; its constructor 0x605b0 stores the kind. The derived splitters'
  * vtables 0x16994e0 and 0x1699510 keep its destructors. */
+/* A pair of cells as the pair build 0x60a10 makes it: two bytes, read one
+ * by one and whole by 0x606d0. derived name. */
+struct CellPair00060a10 {
+    u8 offset; /* derived name: the second cell less the first */
+    u8 cell;   /* derived name: the second cell */
+};
+
+/* The cell pairs put in the splitter's order (0x606d0; the pair build
+ * 0x60a10 hands it the pairs it made and the array to fill). derived
+ * name. */
+void FUN_000606d0(int numCells, int numPairs, const CellPair00060a10 *pairs, u16 *pairsOut);
+
 class hknpSpaceSplitter : public hkBaseObject /* derived name */
 {
   public:
