@@ -2638,6 +2638,31 @@ struct FreeList /* derived name */
      * derived name. */
     bool FUN_00018ba0(int numBlocks, int &numBlocksOut);
 
+    /* The list's statistics (0x19440; the fixed-size allocator's slot 9,
+     * 0x14c40, reports them): the bytes its blocks take from the
+     * allocators, the free and used elements' bytes, an element the
+     * largest block; the peak left as it was. derived name. */
+    void FUN_00019440(MemoryStatistics &statistics) const;
+
+    /* The bytes a chain of blocks takes: each block from the block
+     * allocator, and its header from the element allocator when that one
+     * keeps the headers apart (twice inline in 0x19440). derived name. */
+    s64 blocksAllocatedSize(const FreeListBlock *block) const
+    {
+        s64 size = 0;
+        if (elementAllocator) {
+            for (; block; block = block->next) {
+                size += elementAllocator->getAllocatedSize(block, sizeof(FreeListBlock));
+                size += blockAllocator->getAllocatedSize(block->memory, int(blockSize));
+            }
+        } else {
+            for (; block; block = block->next) {
+                size += blockAllocator->getAllocatedSize(block, int(blockSize));
+            }
+        }
+        return size;
+    }
+
     void *freeHead;  /* derived name */
     u64 elementSize; /* derived name */
     /* The last block in use the walk above examined and kept, none when it
@@ -2676,8 +2701,6 @@ struct MemoryStatistics /* derived name */
     s64 totalAvailable; /* derived name */
     s64 largestBlock;   /* derived name */
 };
-
-void FUN_00019440(const FreeList *self, MemoryStatistics &statistics); /* derived name */
 
 /* An allocator of fixed-size blocks over the free list at +8 (vtable address
  * point 0x168e5c0, slots 0 and 1 the one destructor 0x14a50): blockAlloc and
@@ -2736,6 +2759,10 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     TwoBaseAllocator(AllocatorBase *large, AllocatorInterface *largeInterface,
                      const TwoBaseAllocatorCinfo *cinfo);
     virtual ~TwoBaseAllocator();
+
+    /* The free lists set up from the construction info (0x1ae0; the
+     * constructor ends in a jump to it). derived name. */
+    void FUN_00001ae0(const TwoBaseAllocatorCinfo *cinfo);
     /* Slot 2 (0x29b0): a block through slot 4, the size passed by
      * reference. */
     virtual void *blockAlloc(int numBytes);
@@ -2786,7 +2813,10 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * them). derived names. */
     FreeList *freeLists[21];
     int numFreeLists;
-    u8 unknown20c[0x944];
+    u8 unknown20c[0x14];
+    /* The free lists themselves, built in place by the constructor
+     * (0x19bd to 0x1abe) and set up by FUN_00001ae0. derived name. */
+    FreeList freeListStorage[21];
     /* The byte limit slot 15 stores and slot 16 reads; slot 18 (0x2230)
      * tests a request against it. derived name. */
     u64 limitB50;
@@ -6124,6 +6154,26 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
     int flags[16];   /* derived name */
     Vec4 points[16]; /* derived name */
 };
+
+/* The cell of a position by the splitter's kind: one cell, the nearest
+ * point, or the grid's (inline in the world's motion update, 0xcd4f6, and
+ * in a motion's set-up, 0x1572c4). derived name. */
+inline int cellOf(const hknpSpaceSplitter *splitter, const Vec4 &position)
+{
+    int cell = 0;
+    switch (splitter->type) {
+    case 0:
+        cell = 0;
+        break;
+    case 1:
+        static_cast<const FlaggedPoints00060c70 *>(splitter)->FUN_00061060(position, &cell);
+        break;
+    case 2:
+        static_cast<const hknpGridSpaceSplitter *>(splitter)->FUN_00060c10(position, &cell);
+        break;
+    }
+    return cell;
+}
 
 /* Deleting destructors written as calls while their classes' destructors
  * are not (cookbook 15, 97): the base destructor, then the object back to

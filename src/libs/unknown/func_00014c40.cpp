@@ -5,5 +5,5 @@
  * its statistics are its free list's. */
 void FixedSizeAllocator::FUN_00014c40(MemoryStatistics &statistics) const /* derived name */
 {
-    FUN_00019440(&freeList, statistics);
+    freeList.FUN_00019440(statistics);
 }

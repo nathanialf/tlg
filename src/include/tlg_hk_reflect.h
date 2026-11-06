@@ -265,6 +265,13 @@ struct hkHalf {
         value = s16(value32.bits >> 16);
     }
 
+    /* Rounded to the nearest: scaled by 1 + 1/256 before the truncation,
+     * as storeHalves scales a vector (0x157232). derived name. */
+    void setRealRounded(float r)
+    {
+        setReal(r * (1.0f + 1.0f / 256.0f));
+    }
+
     void setReal(__m128 r)
     {
         __m128i bits = _mm_srai_epi32(_mm_castps_si128(r), 16);
@@ -3159,7 +3166,7 @@ class hknpMaterialPalette : public hkReferencedObject
 };
 
 /* hknpVehicleDriverInputAnalogStatus: vtable 0x16a4420, finish callback
- * FUN_000378e0; members (records from 0x16938c0) positionX and positionY
+ * 0x378e0; members (records from 0x16938c0) positionX and positionY
  * (floats) at +0xc and +0x10, handbrakeButtonPressed and
  * reverseButtonPressed (hkBool) at +0x14 and +0x15. */
 class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
@@ -3190,7 +3197,7 @@ class hknpVehicleDriverInputAnalogStatus : public hkReferencedObject
 class hknpVehicleInstance;
 
 /* hknpVehicleDefaultAnalogDriverInput: vtable 0x16a43c0, finish callback
- * FUN_000378b0; members (records from 0x1693820) slopeChangePointX,
+ * 0x378b0; members (records from 0x1693820) slopeChangePointX,
  * initialSlope and deadZone (floats) at +0xc to +0x14, autoReverse (hkBool)
  * at +0x18. Slot 6 (FUN_00151d90) is the accelerator input, slot 7
  * (FUN_00151de0) the brake input. */
@@ -3880,7 +3887,7 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
  * constructors have nothing to fix up but the vtable (hkClass, vtable,
  * finish callback): hkpVehicleFrictionDescription (0x57c5cf8, 0x169a0d0,
  * FUN_00085110), hkxSpline (0x57c5f80, 0x16a0880, FUN_00085fa0),
- * hkxAnimatedVector (0x57c6580, 0x16a0d00, FUN_00086d70),
+ * hkxAnimatedVector (0x57c6580, 0x16a0d00, 0x86d70),
  * hkxTriangleSelectionChannel (0x57c6650, 0x16a0d40, FUN_00087000),
  * hkxVertexVectorDataChannel (0x57c66d0, 0x16a0df0, FUN_00087490) and
  * hkxSparselyAnimatedString (0x57c6750, 0x16a0e60, FUN_00087750),
@@ -3927,7 +3934,17 @@ class hkpVehicleFrictionDescription : public hkReferencedObject
 /* hknpVehicleData::WheelComponentParams (the string at 0x14be995; its
  * hkClass built at 0x692fd, size 0x28): members not typed yet. */
 struct hknpVehicleDataWheelComponentParams {
-    u8 unknown0[0x28];
+    /* The members from the records at 0x169a110. */
+    float radius;
+    float mass;
+    float width;
+    float friction;
+    float viscosityFriction;
+    float maxFriction;
+    float slipAngle;
+    float forceFeedbackMultiplier;
+    float maxContactBodyAcceleration;
+    s8 axle;
 };
 
 class hknpVehicleData : public hkReferencedObject
@@ -5761,14 +5778,18 @@ inline Vec4 rotatedInverseDir(const hkQuaternion &q, const Vec4 &v) /* derived n
     return _mm_add_ps(result, result);
 }
 
+/* The inverse rotation out of line (0x110c0; called by a motion's set-up at
+ * 0x15725f and by 0x1656a0). derived name. */
+void FUN_000110c0(Vec4 &out, const hkQuaternion &q, const Vec4 &v);
+
 /* hkQTransformf (hkClass 0x57b7f68, built at 0x8ced: size 0x20, no parent,
  * its two members from the records at 0x168d1c0): a rotation as a
  * quaternion and a translation. */
 struct hkQTransformf {
-    /* The finish constructor: nothing to fix up (its type info's finish
-     * callback is the empty body). */
     hkQTransformf() {}
 
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body). */
     hkQTransformf(hkFinishLoadedObjectFlag flag) {}
 
     hkQuaternion rotation;
@@ -5781,6 +5802,8 @@ struct hkQTransform : public hkQTransformf {
     /* The finish constructor: nothing to fix up (its type info's finish
      * callback is the empty body). */
     hkQTransform(hkFinishLoadedObjectFlag flag) : hkQTransformf(flag) {}
+
+    hkQTransform() {}
 
     /* Whether two transforms are within epsilon of each other: the
      * quaternions in every lane, the second's sign flipped to the first's
@@ -6006,9 +6029,14 @@ struct hkcdStaticTree {
         hkAabb domain;       /* derived name */
     };
 
-    /* The 5-byte and 6-byte node codecs (type info "!hkcdStaticTree::
+    /* The 4-, 5- and 6-byte node codecs (type info "!hkcdStaticTree::
      * Codec3Axis5" and "...Codec3Axis6"; the sizes are the cleanup
-     * callbacks' element sizes). */
+     * callbacks' element sizes; a mesh tree section's nodes are 4 bytes,
+     * the mesh tree's destructor 0x20700 frees them at four bytes each). */
+    struct Codec3Axis4 {
+        u8 unknown0[4];
+    };
+
     struct Codec3Axis5 {
         u8 unknown0[5];
     };
@@ -6389,7 +6417,11 @@ struct hkcdStaticMeshTreeBase {
             u32 data;
         };
 
-        u8 unknown0[0x30];
+        /* The section's static tree over the dynamic storage 4: its nodes
+         * and domain (the mesh tree's destructor frees the nodes, four bytes
+         * each). derived names. */
+        hkArray<hkcdStaticTree::Codec3Axis4> nodes;
+        hkAabb domain;
         float codecParms[6];
         u32 firstPackedVertex;
         SharedVertices sharedVertices;
@@ -6438,22 +6470,19 @@ struct hkcdStaticMeshTreeBase {
 
     /* A loaded image's arrays are left as loaded. */
     hkcdStaticMeshTreeBase(hkFinishLoadedObjectFlag flag)
-        : sections(flag), primitives(flag), sharedVerticesIndex(flag)
+        : nodes(flag), sections(flag), primitives(flag), sharedVerticesIndex(flag)
     {
     }
 
-    /* Out of line (0x20700): its arrays given back from the last. */
+    /* Out of line (0x20700): its arrays given back from the last, each
+     * section's nodes first. */
     ~hkcdStaticMeshTreeBase();
 
-    /* The static tree's nodes over the sections (4 bytes each, the walk
-     * 0xa8f80 reads a node's byte at +3), as an array's first two words.
-     * derived names. */
-    struct Nodes {
-        const u8 *data;
-        int size;
-        int capacityAndFlags;
-    } nodes;
-
+    /* The static tree over the sections (its parent's, over the dynamic
+     * storage 5): the nodes, five bytes each (the destructor frees them at
+     * five bytes each; the walk 0xa8f80 reads a node's byte at +3), and the
+     * domain. derived names. */
+    hkArray<hkcdStaticTree::Codec3Axis5> nodes;
     hkAabb domain;
     /* The members from the records at 0x1690bb0. */
     int numPrimitiveKeys;
@@ -6547,7 +6576,7 @@ struct hknpCompressedMeshShapeTree
     struct TreeSlot {
         hkAabb aabb;
         int index;
-        const u8 *node;
+        const hkcdStaticTree::Codec3Axis5 *node;
     };
 
     /* The walk under a slot (0xa8f80): whether any leaf below it has its
@@ -8599,9 +8628,21 @@ struct hknpBodyManager /* derived name */
     hkArray<u32> bodiesOfChange2; /* derived name */
 };
 
+struct hknpMotionCinfo;
+class hknpSpaceSplitter;
+
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
  * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
 struct hknpMotion {
+    /* Set up from its construction info (0x1571c0; the world's motion
+     * creation at 0x4cf77, on a motion just taken from the free list):
+     * the centre of mass and orientation, the inverse inertia and mass as
+     * halves, the step limits, the motion properties (the invalid id taken
+     * as 1), the velocities with a zero w (the angular one into the
+     * motion's frame), the previous ones zero, no attached body, the cell
+     * of the centre of mass, no solver id, and in use. derived name. */
+    void FUN_001571c0(const hknpMotionCinfo &cinfo, const hknpSpaceSplitter *splitter);
+
     /* The angular velocity in world space: the local one rotated by the
      * orientation (0x157510; the callers 0x4bd56, 0x4f142, 0x163cac).
      * derived name. */
@@ -8670,7 +8711,10 @@ struct hknpMotion {
      * name. */
     hkHalf integrationFactor;
     u16 motionPropertiesId; /* derived name: 0x476a0 clears it */
-    u8 unknown3a[4];
+    /* The cinfo's step limits, rounded to halves (0x1571c0). derived
+     * names. */
+    hkHalf maxLinearAccelerationDistancePerStep;
+    hkHalf maxRotationPerStep;
     u8 cellIndex;
     u8 unknown3f;
     /* The vector FUN_0005df00 hands out for a body: its linear velocity,
@@ -10807,20 +10851,12 @@ hkResult FUN_000280e0(const Vec4 &v0, const Vec4 &v1, const Vec4 &v2, float mass
 hkResult FUN_001684a0(const MassConfig00168340 &config, const Vec4 *vertices, float radius,
                       hkDiagonalizedMassProperties &propertiesOut);
 
-/* What 0x1570f0 makes of a shape's mass properties (derived names): the
- * centre of mass with the volume in w, the rotation to the principal axes,
- * and the inertia's diagonal over the mass. */
-struct ShapeMass001570f0 /* derived name */
-{
-    Vec4 centerOfMassAndVolume;
-    Vec4 majorAxisSpace;
-    Vec4 inertiaOverMass;
-};
-
-/* derived name: a shape's mass properties summarized (0x1570f0, called at
- * 0x17662a): the compressed ones the shape keeps under property key 0xf100
- * unpacked, or else those its slot 28 builds for the default config. */
-void FUN_001570f0(ShapeMass001570f0 &out, const hknpShape *shape);
+/* derived name: a shape's mass properties summarized as a mass distribution
+ * (0x1570f0, called at 0x17662a): the compressed ones the shape keeps under
+ * property key 0xf100 unpacked, or else those its slot 28 builds for the
+ * default config; the centre of mass with the volume in w, the rotation to
+ * the principal axes, and the inertia's diagonal over the mass. */
+void FUN_001570f0(hknpMassDistribution &out, const hknpShape *shape);
 
 /* derived name: a shape's mass properties for a mass (0x161b40; called at
  * 0x15b2ca, and by the game at 0xeafc2c; 0x161960 holds the same body):
@@ -10828,7 +10864,7 @@ void FUN_001570f0(ShapeMass001570f0 &out, const hknpShape *shape);
  * negative mass then the one the shape keeps under key 0xf100 or 1; else
  * the shape's own, as 0x1570f0 reads them; then a mass not below zero set,
  * the inertia scaled by it over the old one when it is above zero. */
-void FUN_00161b40(const hknpShape *shape, const ShapeMass001570f0 *summary,
+void FUN_00161b40(const hknpShape *shape, const hknpMassDistribution *summary,
                   hkDiagonalizedMassProperties &out, float mass);
 
 /* hknpPhysicsSceneData (hkClass 0x57bf310, 0x28 bytes, parent
@@ -13467,6 +13503,17 @@ struct hknpConstraintCinfo {
  * +0x12, userData (hkUint64) at +0x18, name (hkStringPtr) at +0x20, then
  * motionType, position, orientation, velocities, mass and the rest up to
  * localFrame at +0x90. Its finish constructor finishes the name. */
+struct hknpBodyCinfo;
+
+/* A motion's construction info from a body's (0x15b290; the world's body
+ * creation at 0x4e3ba): the shape's mass properties for the body's mass
+ * (from its mass distribution when it has one), the centre of mass moved
+ * into the world by the body's transform, the orientation the body's
+ * rotation times the principal axes, the inverse mass and inertia (zero
+ * for a keyframed body), the motion properties and the velocities. derived
+ * name. */
+void FUN_0015b290(const hknpBodyCinfo &bodyCinfo, hknpMotionCinfo &motionCinfo);
+
 struct hknpBodyCinfo {
     /* Out of line (0x3a560; the game builds them at 0xea8801 on): no shape,
      * flags or filter info, material 0, the quality and the reserved ids
@@ -14899,6 +14946,9 @@ extern const hkClassMember D_16a2570[]; /* derived name: hkxBlob's records */
 extern const hkClassMember D_16a2a10[]; /* derived name: hkxMeshSection's records */
 extern const hkClassMember D_16a2b70[]; /* derived name: hkxSparselyAnimatedBool's records */
 extern const hkClassEnum D_16a2490[];   /* derived name: hkxAttribute's enum */
+/* The same enum through a pointer another file defines (the animated
+ * vector's hint record reads it at run time, 0x86e2d). derived name. */
+extern const hkClassEnum *D_16dc6d0;
 
 /* hkxEnvironment (hkClass 0x57c8130, parent hkReferencedObject, built at
  * 0x8db07): its finish constructor 0x17d6f0 is out of line, jumped to by the
@@ -15816,8 +15866,23 @@ struct hknpContactImpulseEvent {
     void FUN_0003da50(hknpWorld *world, hkOstream &out) const; /* derived name */
 };
 
+/* The clipped impulse event (the name its print, 0x3dc30, writes): the
+ * bodies' ids at +0xc and +0x14 and the contact's jacobian record at
+ * +0x18, as hknpMotionWeldTOICommand's. Field names derived. */
+struct Pair08Owner;
+
 struct hknpContactImpulseClippedEvent {
+    /* The event written to a stream (0x3dc30; the dispatcher's type 3):
+     * the bodies' ids, then the record's normal and four positions,
+     * computed from the two bodies' motions (inline, where the weld
+     * command's print calls 0x3d7d0). derived name. */
     void FUN_0003dc30(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyIdA; /* derived name */
+    u8 unknown10[4];
+    u32 bodyIdB;         /* derived name */
+    Pair08Owner *record; /* derived name */
 };
 
 /* The printers of the four reserved types (the dispatcher's last four
@@ -16987,7 +17052,10 @@ class hknpVehicleWheelCollide : public hkReferencedObject
      * cast's 0x178e40), filling one output per wheel. derived name. */
     virtual void collideWheels(float deltaTime, const class hknpVehicleInstance *vehicle,
                                WheelCollideOutput *outputs, const hknpWorld *world);
-    virtual void unknownVirtual7();
+    /* Slot 7: told before the step's collision detection, once the wheels'
+     * hard points and rays are in the world (the vehicle's 0x162f3e).
+     * derived name. */
+    virtual void updateBeforeCollisionDetection(const class hknpVehicleInstance *vehicle);
     /* Slot 8: empty in both wheel collides (0x175a80, 0xadd50); the vehicle's
      * slot 8 hands it the pointer at +0x10 of its own argument. */
     virtual void unknownVirtual8(void *argument);
@@ -17185,6 +17253,14 @@ class hknpVehicleInstance : public hknpUnaryAction
      * derived name. */
     void FUN_00163180(float deltaTime, const hknpVehicleFilteredDriverInput &filteredDriverInput,
                       hknpVehicleBrake::WheelBreakingOutput &breakingInfo);
+
+    /* The wheels made ready for the step's collision detection (0x162e10,
+     * under the timer "UpdateBeforeCD"; called by 0x165432): each wheel's
+     * suspension direction and hard point taken into the world by the
+     * chassis's transform, its ray's end the suspension's length and the
+     * wheel's radius along the direction; then the wheel collide told.
+     * derived name. */
+    void FUN_00162e10();
 
     hknpWorld *world;
     hknpVehicleData *data;

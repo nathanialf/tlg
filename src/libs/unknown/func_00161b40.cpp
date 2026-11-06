@@ -10,15 +10,15 @@ static inline const hknpShapeMassProperties *shapeMassOf(const hknpShape *shape)
                              : HK_NULL;
 }
 
-void FUN_00161b40(const hknpShape *shape, const ShapeMass001570f0 *summary,
+void FUN_00161b40(const hknpShape *shape, const hknpMassDistribution *summary,
                   hkDiagonalizedMassProperties &out, float mass)
 {
     if (summary) {
-        out.volume = lane(summary->centerOfMassAndVolume, 3);
+        out.volume = lane(summary->centerOfMassAndVolume.quad, 3);
         out.mass = 1.0f;
-        out.centerOfMass = setXYZ_0(summary->centerOfMassAndVolume);
-        out.inertiaTensor = setXYZ_0(summary->inertiaOverMass);
-        out.majorAxisSpace.vec = summary->majorAxisSpace;
+        out.centerOfMass = setXYZ_0(summary->centerOfMassAndVolume.quad);
+        out.inertiaTensor = setXYZ_0(summary->inertiaTensor.quad);
+        out.majorAxisSpace.vec = summary->majorAxisSpace.vec;
         if (mass < 0.0f) {
             const hknpShapeMassProperties *shapeMass = shapeMassOf(shape);
             mass = shapeMass ? shapeMass->compressedMassProperties.mass : 1.0f;

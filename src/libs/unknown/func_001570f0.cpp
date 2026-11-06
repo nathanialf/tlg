@@ -3,7 +3,7 @@
 
 #include "tlg_hk_reflect.h"
 
-void FUN_001570f0(ShapeMass001570f0 &out, const hknpShape *shape)
+void FUN_001570f0(hknpMassDistribution &out, const hknpShape *shape)
 {
     hkDiagonalizedMassProperties properties;
     const hknpShapeMassProperties *shapeMass =
@@ -16,8 +16,9 @@ void FUN_001570f0(ShapeMass001570f0 &out, const hknpShape *shape)
         MassConfig00168340 config;
         shape->unknownVirtual28(&config, &properties);
     }
-    out.centerOfMassAndVolume =
+    out.centerOfMassAndVolume.quad =
         _mm_blend_ps(properties.centerOfMass, _mm_set1_ps(properties.volume), 8);
-    out.inertiaOverMass = _mm_mul_ps(_mm_set1_ps(1.0f / properties.mass), properties.inertiaTensor);
-    out.majorAxisSpace = properties.majorAxisSpace.vec;
+    out.inertiaTensor.quad =
+        _mm_mul_ps(_mm_set1_ps(1.0f / properties.mass), properties.inertiaTensor);
+    out.majorAxisSpace.vec = properties.majorAxisSpace.vec;
 }
