@@ -6113,6 +6113,7 @@ struct hkAabb {
 };
 
 extern const hkClassMember D_168eb70[]; /* derived name: hkAabb's records */
+extern const hkClass D_57b9c20;         /* hkAabb's hkClass (func_0001c5d0.cpp) */
 
 inline void hkcdFourAabb::setAll(const hkAabb &aabb)
 {
@@ -8912,9 +8913,16 @@ class hknpSpaceSplitter;
 /* hknpMotion (reflected, record table at 0x16945d0): 0x80 bytes as the
  * world's motion array is indexed; cellIndex (one byte) at +0x3e. */
 struct hknpMotion {
-    /* An impulse at a point applied to the velocities (0x157a20; the
-     * world's 0x5eda3). derived name. */
-    void FUN_00157a20(const Vec4 &impulse, const Vec4 &position);
+    /* The velocity at a point brought to the one given (0x157a20; the
+     * world's 0x5eda3): the impulse that does it, the point's mass matrix
+     * (0x157690) times the velocity's change, applied at the point.
+     * derived name. */
+    void FUN_00157a20(const Vec4 &velocity, const Vec4 &position);
+
+    /* The mass matrix of a point of the motion (0x157690, 0x390 bytes: the
+     * point's offset from the centre of mass, the inverse inertia in world
+     * space, inverted). derived name. */
+    void FUN_00157690(const Vec4 &position, hkMatrix3 &matrixOut) const;
 
     /* Set up from its construction info (0x1571c0; the world's motion
      * creation at 0x4cf77, on a motion just taken from the free list):
@@ -12338,19 +12346,18 @@ class hknpWorldSnapshot : public hkReferencedObject
 
 class hknpMalleableConstraintData; /* 0x57c18d8; FUN_00067960 runs 0x7d520, vtable 0x1699a90 */
 
-/* hknpMalleableConstraintData's finish constructor (0x67960, the class's
- * constructor below), called by name from its finish callback while the
- * class has pure slots this header does not override (as the breakable
- * data's). derived name. */
-void FUN_00067960(hknpMalleableConstraintData *self,
-                  hkFinishLoadedObjectFlag flag); /* derived name */
-
 /* hknpBodyQuality (hkClass 0x57bee30, built at 0x3894a), 16 bytes: the
  * member strings supportedFlags, requestedFlags and
  * contactCachingRelativeMovementThreshold (0x14bd85e onward); the library
  * cinfo's setup (0x71330) sets the int at +0 to ten times the quality's
  * index and edits the flags at +4. */
 struct hknpBodyQuality {
+    /* Out of line and empty, both folded by the linker into the shared
+     * empty body 0x16a370: the library's constructors call them on each
+     * quality (0x7101a, 0x711b3). */
+    hknpBodyQuality();
+    hknpBodyQuality(hkFinishLoadedObjectFlag flag);
+
     /* 0x16a380, run by 0x71330 on each of the library's qualities with the
      * cinfo's unit scale, which it does not read: all cleared, every flag
      * supported, the threshold 0.1. derived name. */
@@ -12371,6 +12378,8 @@ struct hknpBodyQualityLibrary : public hkReferencedObject {
     /* Out of line (0x71190): the signal left as loaded, each quality
      * finished (0x16a370). */
     hknpBodyQualityLibrary(hkFinishLoadedObjectFlag flag);
+    /* 0x70ff0: one reference, no slots, each quality built (0x16a370). */
+    hknpBodyQualityLibrary();
 
     virtual ~hknpBodyQualityLibrary();
 
@@ -14543,6 +14552,8 @@ struct alignas(16) hkpBridgeAtoms {
     hkpBridgeConstraintAtom bridgeAtom;
 };
 
+extern const hkClass D_57c4308; /* hkpWrappedConstraintData's hkClass */
+
 /* hkpWrappedConstraintData (hkClass 0x57c4308, built at 0x7e39e, 0x20 bytes,
  * parent hkpConstraintData; finish constructor 0x7d520 stores its
  * vtable 0x169cee0, address point 0x169cef0, slot 5 pure): one reflected
@@ -14623,6 +14634,12 @@ extern const hkClassMember D_169d1c0[]; /* derived name */
  * numSolverResults at +4, constraintData at +8 (not owned, flags 0x200),
  * padding (four bytes, not serialized) at +0x10. */
 struct hknpBridgeConstraintAtom {
+    hknpBridgeConstraintAtom() {}
+
+    /* Nothing to finish: its type info's finish callback is the shared
+     * empty body 0x3b640. */
+    hknpBridgeConstraintAtom(hkFinishLoadedObjectFlag) {}
+
     u16 type; /* derived name */
     u8 unknown2[2];
     int numSolverResults;

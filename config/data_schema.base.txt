@@ -29,3 +29,7 @@ D_1696cd0 hkCustomAttributes::Attribute 3 src/include/tlg_hk_reflect.h
 D_1696cb8 hkCustomAttributes 1 src/include/tlg_hk_reflect.h
 D_1696c90 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_14bb724 hknpMountedBallGunDefaults 1 src/include/tlg_hk_reflect.h
+D_1696570 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_16965c0 hkClassMember 7 src/include/tlg_hk_reflect.h
+D_1699620 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_16996a0 hkClassMember 3 src/include/tlg_hk_reflect.h

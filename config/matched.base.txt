@@ -157,7 +157,7 @@ FUN_0003ccf0 src/libs/unknown/func_0003ccf0.cpp
 FUN_0003d070 src/libs/unknown/func_0003d090.cpp _ZL39finishLoadedObjecthknpPhysicsSystemDataPvi
 FUN_0003d1d0 src/libs/unknown/func_0003d1d0.cpp
 FUN_0003d400 src/libs/unknown/func_0003d420.cpp _ZL47finishLoadedObjecthknpConstraintCollisionFilterPvi
-FUN_0003de50 src/libs/unknown/func_0003de50.cpp
+FUN_0003de50 src/libs/unknown/func_0003de70.cpp _ZL30finishLoadedObjecthknpLodShapePvi
 FUN_0003e020 src/libs/unknown/func_0003e040.cpp _ZL35finishLoadedObjecthknpWorldSnapshotPvi
 FUN_0003e730 src/libs/unknown/func_0003e730.cpp _ZL35finishLoadedObjecthknpTriangleShapePvi
 FUN_0003ea80 src/libs/unknown/leaf_0003ea80.cpp
@@ -169,7 +169,7 @@ FUN_00045ac0 src/libs/unknown/func_00045ac0.cpp _ZNK15hknpConvexShape12FUN_00045
 FUN_00046c60 src/libs/unknown/func_00046c80.cpp _ZL32finishLoadedObjecthknpWorldCinfoPvi
 FUN_00046c70 src/libs/unknown/func_00046c80.cpp _ZL33cleanupLoadedObjecthknpWorldCinfoPv
 _ZN9RefArraysD1Ev src/libs/unknown/func_000514a0.cpp
-FUN_000615c0 src/libs/unknown/func_000615c0.cpp
+FUN_000615c0 src/libs/unknown/func_000615e0.cpp _ZL45finishLoadedObjecthknpMalleableConstraintDataPvi
 FUN_00061790 src/libs/unknown/func_000617b0.cpp _ZL33finishLoadedObjecthknpConvexShapePvi
 FUN_00061de0 src/libs/unknown/func_00061e00.cpp _ZL40finishLoadedObjecthknpBodyQualityLibraryPvi
 FUN_00066e40 src/libs/unknown/func_00066e40.cpp
@@ -1698,7 +1698,7 @@ _ZN21hkLargeBlockAllocatorD0Ev src/libs/unknown/func_00012370.cpp
 _ZThn8_N21hkLargeBlockAllocatorD1Ev src/libs/unknown/func_00012370.cpp
 _ZN13PageAllocatorC1Ei src/libs/unknown/func_000195c0.cpp
 FUN_0017b030 src/libs/unknown/func_0017b030.cpp _ZNK30hkpSpringDamperConstraintMotor12FUN_0017b030Ev
-FUN_00067960 src/libs/unknown/func_00067960.cpp _ZN27hknpMalleableConstraintDataC2E24hkFinishLoadedObjectFlag
+_ZN27hknpMalleableConstraintDataC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00067960.cpp _ZN27hknpMalleableConstraintDataC2E24hkFinishLoadedObjectFlag
 FUN_000310f0 src/libs/unknown/func_000310f0.cpp _ZN18hknpWorldObject38012FUN_000310f0EiPP24hknpWorldObject380Record
 FUN_000389a0 src/libs/unknown/func_00038a20.cpp _ZL52cleanupLoadedObjecthknpSparseCompactMapunsignedshortPv
 _ZN18hknpCompositeShapeC1Ev src/libs/unknown/func_00042e00.cpp _ZN18hknpCompositeShapeC2Ev
@@ -2626,3 +2626,6 @@ FUN_0003f3a0 src/libs/unknown/func_0003f3a0.cpp _GLOBAL__I_a
 FUN_000098d0 src/libs/unknown/func_000098d0.cpp
 _ZN16Elements000760c0D2Ev src/libs/unknown/func_00076910.cpp
 FUN_00175a90 src/libs/unknown/func_00175a90.cpp _ZNK30hknpCompressedHeightFieldShape13getQuadInfoAtEiiPDv4_fPtPi
+FUN_0003de70 src/libs/unknown/func_0003de70.cpp _GLOBAL__I_a
+FUN_00157a20 src/libs/unknown/func_00157a20.cpp _ZN10hknpMotion12FUN_00157a20ERKDv4_fS2_
+FUN_000615e0 src/libs/unknown/func_000615e0.cpp _GLOBAL__I_a

@@ -28,3 +28,7 @@ D_1696cd0 src/libs/unknown/func_0003f3a0.cpp
 D_1696cb8 src/libs/unknown/func_0003f3a0.cpp
 D_1696c90 src/libs/unknown/func_0003f3a0.cpp
 D_14bb724 src/libs/unknown/func_0003f3a0.cpp
+D_1696570 src/libs/unknown/func_0003de70.cpp
+D_16965c0 src/libs/unknown/func_0003de70.cpp
+D_1699620 src/libs/unknown/func_000615e0.cpp
+D_16996a0 src/libs/unknown/func_000615e0.cpp
