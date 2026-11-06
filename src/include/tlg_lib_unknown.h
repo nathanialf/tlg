@@ -4229,6 +4229,50 @@ struct ThreadBuffer /* derived name */
 
 extern __thread ThreadBuffer *D_16dc078;
 
+/* A queue of jobs (derived names; Havok's job queue by its use: a pool's
+ * worker runs 0x5fc0 on it through FUN_000076c0): a job's type and subtype
+ * in its first two bytes, each type's functions by subtype at +0x130, an
+ * object told when each job starts and ends at +0x328. */
+struct Object00005fc0 /* derived name */
+{
+    struct Job {
+        u8 jobSubType;
+        u8 jobType;
+        u8 unknown2[0xfe];
+    } __attribute__((aligned(16)));
+
+    /* What runs a job of a type and subtype: its status back, 0 when there
+     * is a next job. */
+    typedef int (*ProcessJobFunc)(Object00005fc0 &queue, Job &job);
+
+    struct JobFuncs {
+        ProcessJobFunc *funcs;
+        u8 unknown8[0x18];
+    };
+
+    /* Told of each job (slots 2 and 3). */
+    class JobProfiler
+    {
+      public:
+        virtual ~JobProfiler();
+        virtual void onStartJob(int jobType, int jobSubType) = 0;
+        virtual void onEndJob(int jobType) = 0;
+    };
+
+    /* The next job taken after an old one is finished (0x61a0; no old job,
+     * the wait status 0 to wait for one). derived name. */
+    int FUN_000061a0(const Job *oldJob, Job &jobOut, int waitStatus);
+
+    /* Every job run until the queue has none, each timed under its type's
+     * name when asked (0x5fc0). derived name. */
+    int FUN_00005fc0(bool addTimers);
+
+    u8 unknown0[0x130];
+    JobFuncs jobFuncs[15];
+    u8 unknown310[0x18];
+    JobProfiler *profiler;
+};
+
 /* A timer kept by its owner between steps and written to the stream whole
  * under a new name (0x17aeb0 copies 20 bytes, the record's data size: the
  * value at +0x10 after the two counters). derived names. */
@@ -4442,6 +4486,13 @@ template <typename T> void hkQueue<T>::setCapacity(int n)
 inline void hknpShapeKeyMask::operator delete(void *object, unsigned long numBytes)
 {
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void hknpWorldObject4f8::Entry18::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
 }
 
 inline void BlockCache::operator delete(void *object, unsigned long numBytes)

@@ -81,3 +81,12 @@ D_169f550 src/libs/unknown/func_00082290.cpp
 D_169f580 src/libs/unknown/func_00082290.cpp
 D_14c9e50 src/libs/unknown/func_00154160.cpp
 D_16a2950 src/libs/unknown/func_0008da60.cpp
+D_1696d90 src/libs/unknown/func_0003f660.cpp
+D_16957c0 src/libs/unknown/func_0003ad80.cpp
+D_16957e0 src/libs/unknown/func_0003ad80.cpp
+D_16956e0 src/libs/unknown/func_0003ad80.cpp
+D_1695710 src/libs/unknown/func_0003ad80.cpp
+D_1695740 src/libs/unknown/func_0003ad80.cpp
+D_1695790 src/libs/unknown/func_0003ad80.cpp
+D_16a15d0 src/libs/unknown/func_00089160.cpp
+D_16a1620 src/libs/unknown/func_00089160.cpp

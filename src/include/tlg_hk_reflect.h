@@ -9651,6 +9651,11 @@ struct hknpWorldObject4f8 /* derived name */
      * 0x6ca67 call it). derived names. */
     void FUN_00063a40(int id);
     void FUN_00064070(const hkArray<int> &ids);
+    /* An entry of the array at +0x18 taken (0x622d0; 0x63a40 calls it,
+     * 0x653b0 tail-calls it): its weight counted at +0x78 when it was
+     * pending at +0x58 or listed at +0x68, its place there cleared, the
+     * entry deleted and its id put on the free list. derived name. */
+    void FUN_000622d0(int id);
     /* Whether any of the ids' entries of the array at +0x18 is one of the
      * pointers of the array at +0x58 (0x640b0; the prepare-new-pairs task
      * asks it over its ids at 0x15b84f). derived name. */
@@ -9698,7 +9703,32 @@ struct hknpWorldObject4f8 /* derived name */
      * hkBool: read through its conversion, the group's flag in 0x64db0 is
      * the select of 1 the byte's test picks, not of the old value). */
     struct Entry18 {
-        u8 unknown0[0x50];
+        /* Freed with its arrays at its size, 0x70 (0x622d0, 0x62770), from
+         * the thread's heap; a null pointer is let through (the test the
+         * delete expression's own makes redundant only after GVN, so the
+         * slot's reload after the delete stays in the join, cookbook 540). */
+        static void operator delete(void *object, unsigned long numBytes);
+
+        /* Its first 16 bytes, copied whole (0x63c13) to the array at +0xa8;
+         * the int at +0xc, plus 2, is what 0x622d0 adds to the int at +0x78
+         * when it takes the entry. derived names. */
+        struct Head {
+            u8 unknown0[0xc];
+            int int0c;
+        } __attribute__((aligned(16)));
+
+        /* A 16-byte element of the array at +0x30: an object whose slot 2
+         * 0x63d53 calls with the owner and the second word. derived name. */
+        struct Element30 {
+            void *object;
+            void *data;
+        };
+
+        Head head;
+        u8 unknown10[0x10];
+        hkArray<int> bodyIds; /* derived name: indexes of the world's bodies (0x63af8) */
+        hkArray<Element30> unknown30;
+        hkArray<void *> unknown40;
         int id50;    /* derived name; appended to the array at +0x68 by 0x63620 */
         int nextId;  /* 0x7fffffff ends the walk */
         int firstId; /* derived name */
@@ -9792,7 +9822,7 @@ struct hknpWorldObject4f8 /* derived name */
     hknpWorld *world;                    /* derived name */
     hkArray<MotionRecord> motionRecords; /* derived name */
     hkArray<Entry18 *> unknown18;
-    hkArray<u8> unknown28;           /* element type not read yet */
+    hkArray<int> freeIds;            /* derived name: the ids 0x622d0 frees */
     hkArray<BodyRecord> bodyRecords; /* derived name */
     hkArray<u8> unknown48;           /* element type not read yet */
     hkArray<Entry18 *> unknown58;
@@ -15072,6 +15102,12 @@ class hkpHingeConstraintData : public hkpConstraintData
      * the info from the atoms. */
     virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
 
+    /* The frames set in the bodies' spaces (0x7ede0; the game at 0xea75b9
+     * and 0xea7e63): the pivots first, then each axis normalized as the
+     * first column, a perpendicular to it normalized as the second, their
+     * cross product the third. derived name. */
+    void FUN_0007ede0(const Vec4 &pivotA, const Vec4 &pivotB, const Vec4 &axisA, const Vec4 &axisB);
+
     /* Slot 7 (0x7f020): valid when a stabilized ball and socket has its
      * stabilization set up and both frames are orthonormal. */
     virtual hkBool unknownVirtual7() const;
@@ -18077,6 +18113,24 @@ class hknpAction : public hkReferencedObject
     hknpAction(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
     hkUlong userData;
+};
+
+/* hknpArrayAction (hkClass 0x57bfb20, built at 0x3ae5c: size 0x28, parent
+ * hknpAction's), one member, bodyIds at +0x18 (record 0x1695710). */
+class hknpArrayAction : public hknpAction
+{
+  public:
+    hkArray<hknpBodyId> bodyIds;
+};
+
+/* hknpBinaryAction (hkClass 0x57bfb70, built at 0x3aec3: size 0x20, parent
+ * hknpAction's, version 1), two members, bodyIdA at +0x18 and bodyIdB at
+ * +0x1c (records from 0x1695740). */
+class hknpBinaryAction : public hknpAction
+{
+  public:
+    hknpBodyId bodyIdA;
+    hknpBodyId bodyIdB;
 };
 
 /* hknpUnaryAction (hkClass 0x57bfbc0, built at 0x3af2a: size 0x20, parent
