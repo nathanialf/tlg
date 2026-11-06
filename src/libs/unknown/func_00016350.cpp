@@ -18,7 +18,7 @@ void FUN_00016190(hkArray<ReadyEntry00017540> *readyQueue, int index);
 static int finishTask(Class168e810 *self, TaskNode000172c0 *task, ThreadBuffer &stream)
 {
     task->counter = -1;
-    TempArray<TaskNode000172c0 *> nowReady;
+    hkArray<TaskNode000172c0 *>::Temp nowReady;
     const int numSuccessors = task->successors.getSize();
     for (int i = 0; i < numSuccessors; i++) {
         TaskNode000172c0 *successor = task->successors[i];

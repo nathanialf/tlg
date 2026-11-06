@@ -6,7 +6,7 @@
  * with it. */
 void Class168e810::FUN_00017970(TaskNode000172c0 *const *nodes, int numNodes) /* derived name */
 {
-    TempArray<TaskNode000172c0 *> notDone;
+    hkArray<TaskNode000172c0 *>::Temp notDone;
     notDone.reserve(hkContainerTempAllocator::get(), numNodes);
     for (int i = 0; i < numNodes; i++) {
         if (nodes[i]->counter != -1) {

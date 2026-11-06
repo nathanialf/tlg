@@ -784,26 +784,26 @@ class AllocatorBase /* derived name */
     virtual AllocatorInterface *FUN_00001620();
 };
 
-template <typename T> inline void hkArray<T>::clearAndDeallocate()
+template <typename T, typename Allocator> inline void hkArray<T, Allocator>::clearAndDeallocate()
 {
     /* The elements destroyed first, from the last (nothing for an element
      * with no destructor; the string map's cleanup 0x360 runs each
      * string's). */
-    clear();
-    if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
+    this->clear();
+    if ((this->capacityAndFlags & hkArrayBase<T>::DONT_DEALLOCATE_FLAG) == 0) {
         /* The storage's size in bytes first, then the pointer: an array
          * destroyed in a loop keeps the data pointer's store behind a phi
          * (0x40dd0, 0x12a8c0: `mov rax, rbx` after the free, the address
          * rebuilt from the index on the other path), which a pointer read
          * first would let SimplifyCFG hoist away (cookbook 190). */
-        const int numBytes = getCapacity() * sizeof(T);
-        hkContainerHeapAllocator::get().freeBytes(data, numBytes);
+        const int numBytes = this->getCapacity() * sizeof(T);
+        Allocator::get().freeBytes(this->data, numBytes);
     }
-    data = 0;
-    capacityAndFlags = DONT_DEALLOCATE_FLAG;
+    this->data = 0;
+    this->capacityAndFlags = hkArrayBase<T>::DONT_DEALLOCATE_FLAG;
 }
 
-template <typename T> inline void hkArray<T>::clearAndDeallocate(AllocatorBase &allocator)
+template <typename T> inline void hkArrayBase<T>::clearAndDeallocate(AllocatorBase &allocator)
 {
     clear();
     if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
@@ -832,7 +832,7 @@ hkResult FUN_00000a70(AllocatorBase &allocator, void *array, int numElements,
 
 /* Room for n elements at least: the capacity doubled, or n when that is
  * more (hkArrayStreamWriter's terminator, 0x8ffa0). */
-template <typename T> inline hkResult hkArray<T>::reserve(AllocatorBase &allocator, int n)
+template <typename T> inline hkResult hkArrayBase<T>::reserve(AllocatorBase &allocator, int n)
 {
     const int capacity = getCapacity();
     if (capacity < n) {
@@ -842,8 +842,19 @@ template <typename T> inline hkResult hkArray<T>::reserve(AllocatorBase &allocat
     return HK_SUCCESS;
 }
 
+template <typename T> inline hkResult hkArrayBase<T>::trySetSize(AllocatorBase &allocator, int n)
+{
+    if (getCapacity() < n) {
+        if (reserve(allocator, n) != HK_SUCCESS) {
+            return HK_FAILURE;
+        }
+    }
+    size = n;
+    return HK_SUCCESS;
+}
+
 template <typename T>
-inline T *hkArray<T>::expandAt(AllocatorBase &allocator, int index, int numToInsert)
+inline T *hkArrayBase<T>::expandAt(AllocatorBase &allocator, int index, int numToInsert)
 {
     const int numToMove = size - index;
     const int newSize = size + numToInsert;
@@ -857,22 +868,22 @@ inline T *hkArray<T>::expandAt(AllocatorBase &allocator, int index, int numToIns
     return data + index;
 }
 
-template <typename T> inline T *hkArray<T>::expandBy(int n)
+template <typename T, typename Allocator> inline T *hkArray<T, Allocator>::expandBy(int n)
 {
-    const int oldSize = size;
-    reserve(hkContainerHeapAllocator::get(), oldSize + n);
-    size += n;
-    return data + oldSize;
+    const int oldSize = this->size;
+    this->reserve(Allocator::get(), oldSize + n);
+    this->size += n;
+    return this->data + oldSize;
 }
 
-template <typename T> inline void hkArray<T>::setSize(int n)
+template <typename T, typename Allocator> inline void hkArray<T, Allocator>::setSize(int n)
 {
-    reserve(hkContainerHeapAllocator::get(), n);
-    hkArrayUtil::construct(data + size, n - size);
-    size = n;
+    this->reserve(Allocator::get(), n);
+    hkArrayUtil::construct(this->data + this->size, n - this->size);
+    this->size = n;
 }
 
-template <typename T> inline void hkArray<T>::setSize(AllocatorBase &allocator, int n)
+template <typename T> inline void hkArrayBase<T>::setSize(AllocatorBase &allocator, int n)
 {
     reserve(allocator, n);
     hkArrayUtil::construct(data + size, n - size);
@@ -880,7 +891,7 @@ template <typename T> inline void hkArray<T>::setSize(AllocatorBase &allocator, 
 }
 
 template <typename T>
-inline void hkArray<T>::setSize(AllocatorBase &allocator, int n, const T &fill)
+inline void hkArrayBase<T>::setSize(AllocatorBase &allocator, int n, const T &fill)
 {
     reserve(allocator, n);
     setSizeElements(n, fill, typename hkTrait::PodSelect<hkTrait::IsPodType<T>::result>::type());
@@ -888,7 +899,7 @@ inline void hkArray<T>::setSize(AllocatorBase &allocator, int n, const T &fill)
 }
 
 template <typename T>
-inline void hkArray<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsPod)
+inline void hkArrayBase<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsPod)
 {
     const int numNew = n - size;
     T *const added = data + size;
@@ -898,7 +909,7 @@ inline void hkArray<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsPod
 }
 
 template <typename T>
-inline void hkArray<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsClass)
+inline void hkArrayBase<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsClass)
 {
     destructElements(data + n, size - n);
     const int numToConstruct = n - size;
@@ -907,56 +918,55 @@ inline void hkArray<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsCla
     }
 }
 
-template <typename T>
-inline void hkArray<T>::insertAt(int index, const T *elements, int numElements)
+template <typename T, typename Allocator>
+inline void hkArray<T, Allocator>::insertAt(int index, const T *elements, int numElements)
 {
-    const int numToMove = size - index;
-    const int newSize = size + numElements;
-    const int capacity = getCapacity();
+    const int numToMove = this->size - index;
+    const int newSize = this->size + numElements;
+    const int capacity = this->getCapacity();
     if (newSize > capacity) {
         const int doubled = 2 * capacity;
-        FUN_00000a70(hkContainerHeapAllocator::get(), this, doubled > newSize ? doubled : newSize,
-                     sizeof(T));
+        FUN_00000a70(Allocator::get(), this, doubled > newSize ? doubled : newSize, sizeof(T));
     }
-    FUN_00091210(data + index + numElements, data + index, numToMove * int(sizeof(T)));
-    T *const dst = data + index;
+    FUN_00091210(this->data + index + numElements, this->data + index, numToMove * int(sizeof(T)));
+    T *const dst = this->data + index;
     for (int i = 0; i < numElements; i++) {
         dst[i] = elements[i];
     }
-    size = newSize;
+    this->size = newSize;
 }
 
-template <typename T>
-inline hkArray<T>::hkArray(const hkArray &other)
-    : data(0), size(0), capacityAndFlags(DONT_DEALLOCATE_FLAG)
+template <typename T, typename Allocator>
+inline hkArray<T, Allocator>::hkArray(const hkArray &other)
 {
     append(other.data, other.size);
 }
 
-template <typename T> inline void hkArray<T>::append(const T *elements, int numElements)
+template <typename T, typename Allocator>
+inline void hkArray<T, Allocator>::append(const T *elements, int numElements)
 {
-    const int newSize = size + numElements;
-    const int capacity = getCapacity();
+    const int newSize = this->size + numElements;
+    const int capacity = this->getCapacity();
     if (newSize > capacity) {
         const int doubled = 2 * capacity;
-        FUN_00000a70(hkContainerHeapAllocator::get(), this, doubled > newSize ? doubled : newSize,
-                     sizeof(T));
+        FUN_00000a70(Allocator::get(), this, doubled > newSize ? doubled : newSize, sizeof(T));
     }
-    T *dst = data + size;
+    T *dst = this->data + this->size;
     for (int i = 0; i < numElements; i++) {
         dst[i] = elements[i];
     }
-    size = newSize;
+    this->size = newSize;
 }
 
-template <typename T> inline hkArray<T> &hkArray<T>::operator=(const hkArray &other)
+template <typename T, typename Allocator>
+inline hkArray<T, Allocator> &hkArray<T, Allocator>::operator=(const hkArray &other)
 {
-    _copyFromArray(hkContainerHeapAllocator::get(), other);
+    this->_copyFromArray(Allocator::get(), other);
     return *this;
 }
 
 template <typename T>
-inline void hkArray<T>::_copyFromArray(AllocatorBase &allocator, const hkArray &other)
+inline void hkArrayBase<T>::_copyFromArray(AllocatorBase &allocator, const hkArrayBase &other)
 {
     const int oldSize = size;
     const int newSize = other.size;
@@ -974,51 +984,53 @@ inline void hkArray<T>::_copyFromArray(AllocatorBase &allocator, const hkArray &
  * when empty, by the allocator's slot 6). derived name. */
 void FUN_00000b40(AllocatorBase &allocator, void *array, int elementSize); /* derived name */
 
-template <typename T> inline void hkArray<T>::pushBack(const T &element)
+template <typename T, typename Allocator>
+inline void hkArray<T, Allocator>::pushBack(const T &element)
 {
-    if (size == getCapacity()) {
-        FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
+    if (this->size == this->getCapacity()) {
+        FUN_00000b40(Allocator::get(), this, sizeof(T));
     }
     /* Copy-constructed in place, or assigned when the type is plain old
      * data (a skinned mesh part goes over whole, 0xae9a0, where its
      * assignment copies the handles one by one; a body's record goes member
      * by member, 0x63930). */
-    hkArrayUtil::constructWithCopy(data + size, element);
-    size++;
+    hkArrayUtil::constructWithCopy(this->data + this->size, element);
+    this->size++;
 }
 
-template <typename T> inline T &hkArray<T>::expandOneUnconstructed()
+template <typename T, typename Allocator> inline T &hkArray<T, Allocator>::expandOneUnconstructed()
 {
-    if (size == getCapacity()) {
-        FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
+    if (this->size == this->getCapacity()) {
+        FUN_00000b40(Allocator::get(), this, sizeof(T));
     }
-    return data[size++];
+    return this->data[this->size++];
 }
 
-template <typename T> inline T &hkArray<T>::expandOne()
+template <typename T, typename Allocator> inline T &hkArray<T, Allocator>::expandOne()
 {
-    if (size == getCapacity()) {
-        FUN_00000b40(hkContainerHeapAllocator::get(), this, sizeof(T));
+    if (this->size == this->getCapacity()) {
+        FUN_00000b40(Allocator::get(), this, sizeof(T));
     }
-    hkArrayUtil::construct(data + size);
-    return data[size++];
+    hkArrayUtil::construct(this->data + this->size);
+    return this->data[this->size++];
 }
 
-template <typename T> inline hkArray<T>::hkArray(int n)
+template <typename T, typename Allocator> inline hkArray<T, Allocator>::hkArray(int n)
 {
     int capacity = n;
     T *storage = HK_NULL;
     if (capacity) {
         int numBytes = capacity * int(sizeof(T));
-        storage = static_cast<T *>(hkContainerHeapAllocator::get().FUN_00008d70(numBytes));
+        storage = static_cast<T *>(Allocator::get().FUN_00008d70(numBytes));
         capacity = numBytes / int(sizeof(T));
     }
-    data = storage;
-    size = n;
-    capacityAndFlags = capacity ? capacity : DONT_DEALLOCATE_FLAG;
+    this->data = storage;
+    this->size = n;
+    this->capacityAndFlags = capacity ? capacity : hkArrayBase<T>::DONT_DEALLOCATE_FLAG;
 }
 
-template <typename T> inline void hkArray<T>::pushBack(AllocatorBase &allocator, const T &element)
+template <typename T>
+inline void hkArrayBase<T>::pushBack(AllocatorBase &allocator, const T &element)
 {
     if (size == getCapacity()) {
         FUN_00000b40(allocator, this, sizeof(T));
@@ -1027,7 +1039,7 @@ template <typename T> inline void hkArray<T>::pushBack(AllocatorBase &allocator,
     size++;
 }
 
-template <typename T> inline T &hkArray<T>::expandOne(AllocatorBase &allocator)
+template <typename T> inline T &hkArrayBase<T>::expandOne(AllocatorBase &allocator)
 {
     if (size == getCapacity()) {
         FUN_00000b40(allocator, this, sizeof(T));
@@ -3010,6 +3022,12 @@ struct UnionFind /* derived name */
      * every other node its root's group; a failure when the sizes cannot
      * be made room for. derived name. */
     hkResult FUN_0008f850(hkArray<int> &groupSizes);
+
+    /* 0x8f980: the nodes ordered by group, each group's nodes after the
+     * groups before it (the sizes 0x8f850 gave), each node at its group's
+     * next place; a failure when the order or the groups' starts cannot be
+     * given room. derived name. */
+    hkResult FUN_0008f980(const hkArray<int> &groupSizes, hkArray<int> &order) const;
 
     /* 0x8f710: two nodes joined, under the root of the first. derived
      * name. */
@@ -5015,36 +5033,6 @@ template <typename T, int N> struct TempInplaceArray : public hkArray<T> /* deri
     }
 
     T storage[N];
-};
-
-/* The same without storage in place (derived name), sized at construction
- * through the temporary allocator's slot 4, which may round the size up. */
-template <typename T> struct TempArray : public hkArray<T> /* derived name */ {
-    TempArray() {}
-
-    explicit TempArray(int n)
-    {
-        int numBytes = n * int(sizeof(T));
-        int capacity = 0;
-        this->data = 0;
-        if (n != 0) {
-            this->data = static_cast<T *>(hkContainerTempAllocator::get().FUN_00008d70(numBytes));
-            capacity = numBytes / int(sizeof(T));
-        }
-        this->size = n;
-        this->capacityAndFlags = capacity ? capacity : hkArray<T>::DONT_DEALLOCATE_FLAG;
-    }
-
-    ~TempArray()
-    {
-        this->size = 0;
-        if ((this->capacityAndFlags & hkArray<T>::DONT_DEALLOCATE_FLAG) == 0) {
-            hkContainerTempAllocator::get().template freeElements<T>(this->data,
-                                                                     this->getCapacity());
-        }
-        this->data = 0;
-        this->capacityAndFlags = hkArray<T>::DONT_DEALLOCATE_FLAG;
-    }
 };
 
 /* A block of the thread's stack allocator, rounded up to 128 bytes

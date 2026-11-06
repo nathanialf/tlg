@@ -453,45 +453,33 @@ struct hkFinishLoadedObjectFlag {
  * (the group filter's 0x3a290 tests the value once, after both paths). */
 typedef int hkBool32;
 
-class AllocatorBase; /* tlg_lib_unknown.h */
+class AllocatorBase;             /* tlg_lib_unknown.h */
+struct hkContainerHeapAllocator; /* below */
+struct hkContainerTempAllocator; /* below */
 
-template <typename T> struct hkArray {
+/* The members and the operations that take their allocator (derived name,
+ * after Havok's hkArrayBase): hkArray below adds the allocator itself. The
+ * split is the base's: an operation of this class called on an hkArray
+ * reaches its fields through the base subobject, so the constructor's
+ * stores reach a capacity test there only once InstCombine has made the
+ * two addresses one (0x8f980's temporary array: its data pointer loaded
+ * by GVN's PRE before the size store, 0x8fa31). */
+template <typename T> struct hkArrayBase /* derived name */ {
     enum {
         CAPACITY_MASK = 0x3fffffff,            /* derived name */
         DONT_DEALLOCATE_FLAG = int(0x80000000) /* derived name */
     };
 
     /* An empty array that owns no storage (the constructors' stores). */
-    hkArray() : data(0), size(0), capacityAndFlags(DONT_DEALLOCATE_FLAG) {}
+    hkArrayBase() : data(0), size(0), capacityAndFlags(DONT_DEALLOCATE_FLAG) {}
 
     /* A loaded image's array is left as loaded. */
-    hkArray(hkFinishLoadedObjectFlag) {}
-
-    /* n elements, their storage from the containers' allocator's slot 4,
-     * which may round it up (defined in tlg_lib_unknown.h; the image's row
-     * swap, 0x188650). */
-    explicit inline hkArray(int n);
-
-    /* A copy of another array: empty, then its elements appended (defined
-     * in tlg_lib_unknown.h; the loaded image's constructor 0x1a04d0, the
-     * storage taken at the other's size when it has any). */
-    inline hkArray(const hkArray &other);
+    hkArrayBase(hkFinishLoadedObjectFlag) {}
 
     /* An array over storage it does not own (hkInplaceArray's). */
-    hkArray(T *buffer, int initialSize, int capacity)
+    hkArrayBase(T *buffer, int initialSize, int capacity)
         : data(buffer), size(initialSize), capacityAndFlags(capacity | DONT_DEALLOCATE_FLAG)
     {
-    }
-
-    /* The storage given back (the vertex storage's destructor 0x9a760).
-     * Declared inline: clang 3.3 gives the inliner's hint (threshold 325
-     * for 225) only to a function written with the keyword
-     * (CodeGenFunction.cpp:497-504), and hknpCompoundShape's destructor
-     * (0x41650) holds this one, clearAndDeallocate inside it, within the
-     * free-list array's destructor, which fits only with the hint. */
-    inline ~hkArray()
-    {
-        clearAndDeallocate();
     }
 
     /* The capacity without its flags (the cleanup callbacks of 0x1e200,
@@ -557,20 +545,9 @@ template <typename T> struct hkArray {
         size++;
     }
 
-    /* Drop the elements and give the storage back to the containers'
-     * allocator unless the array does not own it (defined in
-     * tlg_lib_unknown.h, after AllocatorBase). The keyword is on this
-     * declaration: a class template's member takes it from the declaration
-     * in the class, not from the definition outside (0x41650 inlines it).
-     * derived name. */
-    inline void clearAndDeallocate();
     /* The same, the storage given back to the allocator it grew from
      * (hkStringBuf's characters, the temporary allocator's). derived name. */
     inline void clearAndDeallocate(AllocatorBase &allocator);
-
-    /* An element appended, the storage grown through FUN_00000b40 when it
-     * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
-    void pushBack(const T &element);
 
     /* The same, the storage grown from the allocator given (defined in
      * tlg_lib_unknown.h; a local frame's descendants, 0xdd83). */
@@ -607,16 +584,6 @@ template <typename T> struct hkArray {
         }
     }
 
-    /* Elements copied onto the end, the storage grown first as setSize
-     * grows it (defined in tlg_lib_unknown.h; the skinned mesh's bone list,
-     * 0xae780). */
-    void append(const T *elements, int numElements);
-
-    /* Another array's elements copied over through the helper below, from
-     * the heap allocator (defined in tlg_lib_unknown.h; the loaded image's
-     * slot 5, 0x1a0620). */
-    inline hkArray &operator=(const hkArray &other);
-
     /* The copy itself, a level of its own as Havok's _copyFromArray is: the
      * storage grown as reserve grows it, the elements both hold assigned,
      * the rest copy-constructed, then the size (defined in
@@ -624,38 +591,23 @@ template <typename T> struct hkArray {
      * the copy loop, whose minimum's operands come out in the other order at
      * each level: 0x1a0620's count is expanded new-first, the order of four
      * levels (cookbook 340). */
-    inline void _copyFromArray(AllocatorBase &allocator, const hkArray &other); /* derived name */
-
-    /* Room for one more element at the end, grown as pushBack grows: the
-     * new element returned (defined in tlg_lib_unknown.h; the solver's
-     * arrays at 0x92600). */
-    T &expandOne();
+    inline void _copyFromArray(AllocatorBase &allocator,
+                               const hkArrayBase &other); /* derived name */
 
     /* The same, the storage grown from the allocator given (defined in
      * tlg_lib_unknown.h; the thread pool's timer streams, 0x77b0). */
     T &expandOne(AllocatorBase &allocator);
-
-    /* Room for one more element as expandOne makes it, counted before the
-     * caller builds it (defined in tlg_lib_unknown.h; the world's scheduled
-     * body change, 0x5fb8f: the size stored, then the constructor called).
-     * derived name. */
-    T &expandOneUnconstructed();
 
     /* Room for n elements at least, from the allocator given, the
      * allocation's result back (defined in tlg_lib_unknown.h; the
      * union-find's group assignment fails with it, 0x8f8ed). */
     hkResult reserve(AllocatorBase &allocator, int n);
 
-    /* n more elements at the end, the storage grown from the containers'
-     * allocator as reserve grows it, the first of them returned (defined in
-     * tlg_lib_unknown.h; the static class registry's slot 7, 0x181860). */
-    T *expandBy(int n);
-
-    /* n elements, the storage grown from the containers' allocator when it
-     * is too small and the elements it gains default-constructed, nothing
-     * for plain old data or a trivial constructor (defined in
-     * tlg_lib_unknown.h). */
-    void setSize(int n);
+    /* n elements, the storage grown from the allocator given only when it
+     * is too small, the allocation's result back (Havok's trySetSize;
+     * defined in tlg_lib_unknown.h; the union-find's group order, 0x8f9b1
+     * reads the count once). */
+    inline hkResult trySetSize(AllocatorBase &allocator, int n);
 
     /* n elements, the storage grown from the allocator given (defined in
      * tlg_lib_unknown.h; the string buffer's, 0x115f0). */
@@ -673,11 +625,6 @@ template <typename T> struct hkArray {
      * construct's (0x16de97). derived name. */
     inline void setSizeElements(int n, const T &fill, hkTrait::TypeIsPod);
     inline void setSizeElements(int n, const T &fill, hkTrait::TypeIsClass);
-
-    /* Elements copied in at an index, those after it moved up first
-     * through the overlapping move (defined in tlg_lib_unknown.h; the XML
-     * reader's text and tags, 0x19dc0e). */
-    void insertAt(int index, const T *elements, int numElements);
 
     /* Room for elements opened at an index, the storage grown from the
      * allocator given, those after it moved up through the overlapping
@@ -709,7 +656,7 @@ template <typename T> struct hkArray {
 
     /* The two arrays' storage, sizes and flags exchanged (the XML
      * reader's attributes handed to their node, 0x19e55e). */
-    void swap(hkArray &other)
+    void swap(hkArrayBase &other)
     {
         T *const otherData = other.data;
         other.data = data;
@@ -735,6 +682,99 @@ template <typename T> struct hkArray {
     T *data;              /* derived name */
     int size;             /* derived name */
     int capacityAndFlags; /* derived name */
+};
+
+/* The array over an allocator, the heap's by default (Havok's form): the
+ * storage it grows to comes from that allocator and goes back to it, once,
+ * when the array goes (hkArray<T>::Temp, the temporary allocator's: the
+ * union-find's group order frees its starts once, 0x8fa8b). */
+template <typename T, typename Allocator = hkContainerHeapAllocator>
+struct hkArray : public hkArrayBase<T> {
+    typedef hkArray<T, hkContainerTempAllocator> Temp;
+
+    hkArray() {}
+
+    hkArray(hkFinishLoadedObjectFlag flag) : hkArrayBase<T>(flag) {}
+
+    hkArray(T *buffer, int initialSize, int capacity)
+        : hkArrayBase<T>(buffer, initialSize, capacity)
+    {
+    }
+
+    /* n elements, their storage from the containers' allocator's slot 4,
+     * which may round it up (defined in tlg_lib_unknown.h; the image's row
+     * swap, 0x188650). */
+    explicit inline hkArray(int n);
+
+    /* A copy of another array: empty, then its elements appended (defined
+     * in tlg_lib_unknown.h; the loaded image's constructor 0x1a04d0, the
+     * storage taken at the other's size when it has any). */
+    inline hkArray(const hkArray &other);
+
+    /* The storage given back (the vertex storage's destructor 0x9a760).
+     * Declared inline: clang 3.3 gives the inliner's hint (threshold 325
+     * for 225) only to a function written with the keyword
+     * (CodeGenFunction.cpp:497-504), and hknpCompoundShape's destructor
+     * (0x41650) holds this one, clearAndDeallocate inside it, within the
+     * free-list array's destructor, which fits only with the hint. */
+    inline ~hkArray()
+    {
+        clearAndDeallocate();
+    }
+
+    /* Drop the elements and give the storage back to the containers'
+     * allocator unless the array does not own it (defined in
+     * tlg_lib_unknown.h, after AllocatorBase). The keyword is on this
+     * declaration: a class template's member takes it from the declaration
+     * in the class, not from the definition outside (0x41650 inlines it).
+     * derived name. */
+    inline void clearAndDeallocate();
+
+    /* An element appended, the storage grown through FUN_00000b40 when it
+     * is full (defined in tlg_lib_unknown.h, after AllocatorBase). */
+    void pushBack(const T &element);
+
+    /* Elements copied onto the end, the storage grown first as setSize
+     * grows it (defined in tlg_lib_unknown.h; the skinned mesh's bone list,
+     * 0xae780). */
+    void append(const T *elements, int numElements);
+
+    /* Another array's elements copied over through the helper below, from
+     * the heap allocator (defined in tlg_lib_unknown.h; the loaded image's
+     * slot 5, 0x1a0620). */
+    inline hkArray &operator=(const hkArray &other);
+
+    /* Room for one more element at the end, grown as pushBack grows: the
+     * new element returned (defined in tlg_lib_unknown.h; the solver's
+     * arrays at 0x92600). */
+    T &expandOne();
+
+    /* Room for one more element as expandOne makes it, counted before the
+     * caller builds it (defined in tlg_lib_unknown.h; the world's scheduled
+     * body change, 0x5fb8f: the size stored, then the constructor called).
+     * derived name. */
+    T &expandOneUnconstructed();
+
+    /* n more elements at the end, the storage grown from the containers'
+     * allocator as reserve grows it, the first of them returned (defined in
+     * tlg_lib_unknown.h; the static class registry's slot 7, 0x181860). */
+    T *expandBy(int n);
+
+    /* n elements, the storage grown from the containers' allocator when it
+     * is too small and the elements it gains default-constructed, nothing
+     * for plain old data or a trivial constructor (defined in
+     * tlg_lib_unknown.h). */
+    void setSize(int n);
+
+    /* Elements copied in at an index, those after it moved up first
+     * through the overlapping move (defined in tlg_lib_unknown.h; the XML
+     * reader's text and tags, 0x19dc0e). */
+    void insertAt(int index, const T *elements, int numElements);
+
+    using hkArrayBase<T>::clearAndDeallocate;
+    using hkArrayBase<T>::pushBack;
+    using hkArrayBase<T>::expandOne;
+    using hkArrayBase<T>::setSize;
 };
 
 /* hkInplaceArray (the reflection's TYPE_INPLACEARRAY, its name a string of

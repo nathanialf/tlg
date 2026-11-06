@@ -209,7 +209,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         int count;
     };
 
-    TempArray<LeafJob> leafJobs;
+    hkArray<LeafJob>::Temp leafJobs;
     leafJobs.reserve(hkContainerTempAllocator::get(), tree->numLeaves);
     LocalBuffer<Entry> buffers[2] = {tree->numEntries, tree->numEntries};
     TempInplaceArray<Job, 64> jobs;
@@ -426,7 +426,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         if (node.children[1] == Node::NO_CHILD) {
             leafNodes.pushBackUnchecked(leafJob.node);
         }
-        TempArray<int> keys(leafJob.numInherited);
+        hkArray<int>::Temp keys(leafJob.numInherited);
         keys.reserve(hkContainerTempAllocator::get(), leafJob.count);
         for (int i = 0; i < leafJob.numInherited; i++) {
             keys[i] = leafJob.inherited[i].key;
