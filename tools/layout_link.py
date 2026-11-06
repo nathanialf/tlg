@@ -157,6 +157,43 @@ def _function_at_hint(base: BaseElf, obj: Path, name: str, hint: int) -> bool:
     return res["obj_insns"] == res["base_insns"] and res["equal"] == res["obj_insns"] and res["targets_ok"]
 
 
+def _relocated_data(base: BaseElf, obj: Path, r: mc.Reloc, hint: int | None):
+    """A data object of the unit that holds pointers (SimplifyCFG's lookup
+    table of the kinds' names in 0xb7e0's file, four relocated pointers in
+    .data.rel.ro.local): its bytes are zero before the link, so it is found
+    by the bytes the linker gives it, each entry filled with its target as the
+    base's own table (the field's hint) points at it. None when the symbol's
+    data holds no relocation (a string literal); else (bytes, "") or
+    (None, why); `off` is the table's offset in the section, the symbol's
+    address plus `off` being the table's."""
+    # a PC-relative field's addend carries the field's own width (the field
+    # is the last of its instruction, a lea or a load with no immediate)
+    off = r.addend + (r.width if r.type in mc.PCREL_TYPES else 0)
+    if off < 0:
+        return None
+    start = r.sym_value + off
+    drl, size, strings = mc.object_data_relocs(obj, r.sym_section, start, 0)
+    if strings or not drl:
+        return None
+    raw = mc.object_bytes_of(obj, r.sym_section, start, size)
+    filled = bytearray(raw)
+    for d in drl:
+        if d.type != R_X86_64_64 or d.width != 8:
+            return (None, f"{r.symbol}: a relocation of type {d.type} at +{d.offset:#x} of a data object (a layout extension)"), off
+        entry_hint = None
+        if hint is not None:
+            try:
+                word = struct.unpack("<Q", base.read(hint + off + d.offset, 8))[0]
+                entry_hint = word - d.addend
+            except Exception:  # noqa: BLE001
+                entry_hint = None
+        s, why = resolve_symbol_address(base, obj, d, entry_hint)
+        if s is None:
+            return (None, f"{r.symbol}: entry at +{d.offset:#x}: {why}"), off
+        struct.pack_into("<Q", filled, d.offset, (s + d.addend) & 0xFFFFFFFFFFFFFFFF)
+    return (bytes(filled), ""), off
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                            hint: int | None = None) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why).
@@ -209,6 +246,18 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     # or a local constant; find its bytes in the base
     if isinstance(r.sym_section, int) and r.sym_section > 0:
         try:
+            if r.sym_size == 0 and r.symbol.startswith("."):
+                filled = _relocated_data(base, obj, r, hint)
+                if filled is not None:
+                    (blob, why), off = filled
+                    if blob is None:
+                        return None, why
+                    if hint is not None and bytes_at(base, hint + off, blob):
+                        return hint, ""
+                    hits = base.find_bytes(blob)
+                    if len(hits) == 1:
+                        return hits[0] - off, ""
+                    return None, f"{r.symbol}: the relocated table ({len(blob)} bytes) occurs {len(hits)} times in the base"
             if r.sym_size == 0 and r.addend >= 0 and r.symbol.startswith("."):
                 blob = mc.object_bytes_of(obj, r.sym_section, r.sym_value + r.addend, 0)
                 # the base's own field is tried first: when the entry's bytes

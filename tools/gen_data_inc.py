@@ -40,7 +40,8 @@ own record (hkClassMember's hkClass). Each value is written by its field's type:
                  target: a char pointer to a NUL-terminated printable string
                  is that string literal; a function of the table is its name
                  (FUN_<hex>, or the row's mangled name demangled); any other
-                 data address is &D_<hex> (D_<hex> for a char pointer). A
+                 data address is &D_<hex> (D_<hex> for a char pointer, and
+                 for a table of the schema, declared as an array). A
                  vtable's address point, an import, or a target the tool cannot
                  name stops the tool with the slot's address: a schema
                  extension or a ruling, never a guess.
@@ -612,7 +613,9 @@ def demangled(sym: str) -> str:
 
 
 class Writer:
-    def __init__(self, base, dyn: dict, vtable_points: set[int], funcs: dict[int, str], ident: str):
+    def __init__(self, base, dyn: dict, vtable_points: set[int], funcs: dict[int, str], ident: str,
+                 tables: set[int] = frozenset()):
+        self.tables = tables   # the addresses of every schema row: tables declared as arrays
         self.base, self.dyn, self.vtable_points, self.funcs = base, dyn, vtable_points, funcs
         self.ident = ident
 
@@ -699,6 +702,8 @@ class Writer:
             return demangled(self.funcs[target])
         if self.base.segment_of(target) is None:
             fail(f"{self.where(va, path)}: target 0x{target:x} is outside the loaded segments")
+        if target in self.tables:
+            return f"D_{target:x}"   # a table is declared as an array: its name decays to the pointer
         return f"D_{target:x}" if is_char else f"&D_{target:x}"
 
 
@@ -715,7 +720,8 @@ def generate(ident: str, row: dict, ver: str) -> tuple[str, list[str]]:
     for sym, addr in list(base.vtables.items()) + [(s, v[0]) for s, v in base._derived.items()]:
         points.add(addr + 0x10)
     funcs = {a: n for a, _s, n in base.functions}
-    w = Writer(base, dyn, points, funcs, ident)
+    tables = {int(k[2:], 16) for k in schema_rows(ver)}
+    w = Writer(base, dyn, points, funcs, ident, tables)
     va0 = int(ident[2:], 16)
     if base.off(va0) is None or base.off(va0 + ty.size * row["count"] - 1) is None:
         fail(f"{ident}: {row['count']} x {ty.size} bytes from 0x{va0:x} are not file-backed bytes of one segment")

@@ -7,7 +7,9 @@ Object0000b330::Object0000b330(ReportFunction0000b330 reportFunction, void *repo
 {
 }
 
-// NONMATCHING: equal at quick_diff (117 instructions); the layout cannot place the compiler's lookup table of the kinds' names (a private .data.rel.ro.local object of four relocated pointers, all zero before relocation, which the layout looks for in the base by its bytes; the base's copy is at 0x168d630), docs/NOTES.md Round 72A
+/* The kinds' names are the compiler's lookup table (SimplifyCFG's, four
+ * pointers in .data.rel.ro.local, the base's copy at 0x168d630), which the
+ * layout places by the bytes the linker gives it. */
 int Object0000b330::message(Message kind, int id, const char *description, const char *file,
                             int line)
 {

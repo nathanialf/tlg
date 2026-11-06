@@ -229,6 +229,37 @@ def object_bytes_of(obj: Path, section_index: int, value: int, size: int) -> byt
         return d[value:value + size]
 
 
+def object_data_relocs(obj: Path, section_index: int, value: int, size: int) -> tuple[list, int, bool]:
+    """The relocations inside a data object of the object file (a lookup table
+    of pointers), as object_functions lists a function's: ([Reloc] with offsets
+    from `value`, the size read (to the section's end when `size` is 0), whether
+    the section is a merged-strings section)."""
+    from elftools.elf.elffile import ELFFile
+    from elftools.elf.relocation import RelocationSection
+    out = []
+    with obj.open("rb") as f:
+        elf = ELFFile(f)
+        sec = elf.get_section(section_index)
+        strings = bool(sec["sh_flags"] & 0x30 == 0x30)   # SHF_MERGE | SHF_STRINGS
+        if size == 0:
+            size = sec["sh_size"] - value
+        symtab = elf.get_section_by_name(".symtab")
+        syms = list(symtab.iter_symbols())
+        locs = named_locals(syms)
+        for rs in elf.iter_sections():
+            if not isinstance(rs, RelocationSection) or rs["sh_info"] != section_index:
+                continue
+            for r in rs.iter_relocations():
+                off = r["r_offset"]
+                if not (value <= off < value + size):
+                    continue
+                rsym, ty = syms[r["r_info_sym"]], r["r_info_type"]
+                addend = r["r_addend"] if "r_addend" in r.entry else 0
+                name, addend, v, ssize = reloc_symbol(elf, locs, rsym, addend, 0)
+                out.append(Reloc(off - value, RELOC_WIDTH.get(ty, 4), ty, name, addend, rsym["st_shndx"], v, ssize))
+    return sorted(out, key=lambda r: r.offset), size, strings
+
+
 def resolve_symbol(objfuncs: dict, fn: str, sym: str) -> str | None:
     """The object's symbol for a row: `sym` itself, or, failing that, the one
     Itanium-mangled symbol whose base identifier is `fn` (a free function or
