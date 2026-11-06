@@ -20,10 +20,12 @@ template <typename T> struct less {
  * field keeps that field apart from the rest of the copy (the record sort
  * 0x62130 moves its first twelve bytes through the stack and the count
  * through a register); the same for every type with a trivial constructor.
- * derived name. */
+ * The temporary on a 16-byte boundary, as the pivot (the locked elements'
+ * sort, 0x24c00, keeps its 7-byte one at rbp-0x40 under the guard at -0x30,
+ * the pivot at -0x50). derived name. */
 template <typename T> inline void swap(T &x, T &y)
 {
-    T t;
+    T t __attribute__((aligned(16)));
     t = x;
     x = y;
     y = t;

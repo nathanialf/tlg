@@ -2663,3 +2663,7 @@ FUN_00091690 src/libs/unknown/func_00091840.cpp
 _ZN11hkArrayBaseI8hkRefPtrI13hkMeshTextureEE10spliceIntoER13AllocatorBaseiiPKS2_i src/libs/unknown/func_000acb40.cpp
 FUN_00034020 src/libs/unknown/func_00034020.cpp _GLOBAL__I_a
 FUN_001666e0 src/libs/unknown/func_001666e0.cpp
+_ZN11hkAlgorithm18quickSortRecursiveIN22hkMultipleVertexBuffer13LockedElementEPFbRKS2_S4_EEEvPT_iiT0_ src/libs/unknown/func_00024c00.cpp
+FUN_001555a0 src/libs/unknown/func_001555a0.cpp
+FUN_000418c0 src/libs/unknown/func_000418c0.cpp
+FUN_00169c90 src/libs/unknown/func_00169c90.cpp

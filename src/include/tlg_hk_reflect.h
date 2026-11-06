@@ -85,11 +85,14 @@ template <typename T> inline T *hkAddByteOffset(T *base, long offset)
 namespace hkString /* derived name */
 {
 /* The same for a count known not to be zero: no test before the first
- * quad (the composite caches' move, 0x155910). derived name. */
+ * quad (the composite caches' move, 0x155910). The source's pointer
+ * declared first: where the destination stays live past the loop (the
+ * composite caches' consuming move 0x1555a0 tests the copy's type after
+ * it), the source takes rdx and the destination rsi. derived name. */
 inline void memCpy16NonEmpty(void *dst, const void *src, int numQuads) /* derived name */
 {
-    Vec4 *d = static_cast<Vec4 *>(dst);
     const Vec4 *s = static_cast<const Vec4 *>(src);
+    Vec4 *d = static_cast<Vec4 *>(dst);
     do {
         *d = *s;
         s++;
@@ -7051,7 +7054,8 @@ struct hknpShapeInstance {
         HAS_ROTATION = 0x4,      /* derived name */
         HAS_SCALE = 0x8,         /* derived name */
         FLIP_ORIENTATION = 0x10, /* derived name */
-        SCALE_SURFACE = 0x20     /* derived name */
+        SCALE_SURFACE = 0x20,    /* derived name */
+        IS_ENABLED = 0x40 /* derived name: the compound's key walk skips one without it (0x4196b) */
     };
 
     int getFlags() const /* derived name */
@@ -9980,6 +9984,14 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
 
     /* A loaded image's array is left as loaded. */
     hkFreeListArray(hkFinishLoadedObjectFlag flag) : elements(flag) {}
+
+    /* The element of an id, the id taken by value (the compound shape's
+     * key walk, 0x41957: the index widened at each use, no counter of its
+     * own). */
+    const T &operator[](Id id) const
+    {
+        return elements[id.value];
+    }
 
     /* The elements in use destroyed, the free ones left alone; the array
      * then gives its storage back with none left to destroy (the material
@@ -17547,6 +17559,14 @@ class hknpCompoundShape : public hknpCompositeShape
     int FUN_000426b0(const LodContext000426b0 &context, const LodQuery000426b0 &query,
                      int currentLod) const;
 
+    /* Slot 21 (0x418c0): the keys of every enabled instance the query's
+     * mask passes, from the instance the key given starts in, each
+     * instance's shape asked with the query's path extended by the
+     * instance's index and no mask; the number written, at most the room
+     * given. derived name. */
+    int FUN_000418c0(void *keysOut, int maxNumKeys, int key,
+                     const ShapeKeyQuery000380b0 &query) const;
+
     /* Aligned to 16 bytes (the record's flag 0x100, ALIGN_16), at +0x60. */
     alignas(16)
         hkFreeListArray<hknpShapeInstance, hknpShapeInstanceId, 8, hknpShapeInstance> instances;
@@ -19145,7 +19165,29 @@ struct hknpCollisionCache /* derived name */
 /* A composite cache (derived name): its child caches' range at +0x20. */
 struct hknpCompositeCollisionCache : public hknpCollisionCache /* derived name */
 {
-    u8 unknownC[0x14];
+    /* The composite's state the move of its child caches resets (slot 6,
+     * 0x1555a0: the word at +0x16, then the byte at +0x15). derived
+     * names. */
+    void resetState()
+    {
+        value16 = 0;
+        byte15 = 0;
+    }
+
+    /* A composite child's state reset when it is moved (0x15568e: the byte
+     * at +0x1a, then the word at +0x18). derived names. */
+    void resetChildState()
+    {
+        byte1A = 0;
+        value18 = 0;
+    }
+
+    u8 unknownC[9];
+    u8 byte15;   /* derived name */
+    u16 value16; /* derived name */
+    u16 value18; /* derived name */
+    u8 byte1A;   /* derived name */
+    u8 unknown1b[5];
     hkBlockStreamRange childCaches; /* derived name */
 };
 
@@ -19177,6 +19219,14 @@ struct hknpCompositeCollisionDetector : public hknpCollisionDetector /* derived 
     void FUN_00155750(hknpWorldContextPool::Context *context, const void *sharedData,
                       const hknpCompositeCollisionCache *cache, void *argument4, void *argument5,
                       hknpCdBody *cdBodyA, hknpCdBody *cdBodyB, int argument8);
+    /* Slot 6 (0x1555a0): the composite's child caches moved to the end
+     * of a writer's stream, one by one, consumed from the context's child
+     * cache stream as they are read; each copy's state reset (a composite
+     * child's, a manifold's solver record), its range moved there, then
+     * the composite's own state reset. derived name. */
+    void FUN_001555a0(hknpWorldContextPool::Context *context, hknpCompositeCollisionCache *cache,
+                      hkBlockStream *childCacheStream, hkBlockStream *childCacheStreamPpu,
+                      hkBlockStreamWriter *writer);
     /* Slot 7 (0x155850): the composite's child caches copied to the end
      * of a writer's stream, one by one, and its range moved there. derived
      * name. */
