@@ -161,7 +161,7 @@ FUN_0003de50 src/libs/unknown/func_0003de50.cpp
 FUN_0003e020 src/libs/unknown/func_0003e040.cpp _ZL35finishLoadedObjecthknpWorldSnapshotPvi
 FUN_0003e730 src/libs/unknown/func_0003e730.cpp _ZL35finishLoadedObjecthknpTriangleShapePvi
 FUN_0003ea80 src/libs/unknown/leaf_0003ea80.cpp
-FUN_0003f380 src/libs/unknown/func_0003f380.cpp
+FUN_0003f380 src/libs/unknown/func_0003f3a0.cpp _ZL36finishLoadedObjecthknpMountedBallGunPvi
 FUN_0003f610 src/libs/unknown/func_0003f610.cpp
 FUN_0003f640 src/libs/unknown/func_0003f640.cpp
 FUN_00042750 src/libs/unknown/func_00042770.cpp _ZL41finishLoadedObjecthknpPairCollisionFilterPvi
@@ -188,7 +188,7 @@ FUN_0006c440 src/libs/unknown/func_0006c470.cpp _ZL37finishLoadedObjecthknpExter
 FUN_0006c6f0 src/libs/unknown/func_0006c6f0.cpp
 FUN_0006c800 src/libs/unknown/func_00088b00.cpp _ZL35finishLoadedObjecthkxAttributeGroupPvi
 FUN_00072f70 src/libs/unknown/func_00072f70.cpp _ZNK23hknpConvexPolytopeShape12FUN_00072f70Ev
-FUN_00076060 src/libs/unknown/func_00076060.cpp
+_ZN16Elements000760c0D1Ev src/libs/unknown/func_00076910.cpp
 FUN_0007ac40 src/libs/unknown/func_0007ac40.cpp
 FUN_0007cde0 src/libs/unknown/func_0007cde0.cpp
 FUN_0007fac0 src/libs/unknown/leaf_0007fac0.cpp
@@ -696,7 +696,7 @@ FUN_00092f90 src/libs/unknown/func_00092f90.cpp
 FUN_00165990 src/libs/unknown/func_00165990.cpp
 FUN_00005680 src/libs/unknown/func_00005680.cpp
 FUN_000056a0 src/libs/unknown/func_000056a0.cpp
-FUN_00009a60 src/libs/unknown/func_00009a60.cpp
+FUN_00009a60 src/libs/unknown/func_000098d0.cpp
 FUN_00009280 src/libs/unknown/func_00009280.cpp
 FUN_0000d270 src/libs/unknown/func_0000d270.cpp
 FUN_00041870 src/libs/unknown/func_00041870.cpp _ZNK17hknpCompoundShape15unknownVirtual7ERK4Mat4R6hkAabb
@@ -1274,6 +1274,8 @@ _ZN9RefArraysD0Ev src/libs/unknown/func_000514a0.cpp
 _ZN16RefArrays1698f80D0Ev src/libs/unknown/func_000514a0.cpp
 FUN_00076070 src/libs/unknown/func_00076070.cpp _Z12FUN_00076070P16Elements000760c0
 _ZN24BroadPhaseLayers00142a40D0Ev src/libs/unknown/func_00140e20.cpp
+_ZN16Elements000760c0D0Ev src/libs/unknown/func_00076910.cpp
+FUN_00140e20 src/libs/unknown/func_00140e20.cpp _Z12FUN_00140e20P24BroadPhaseLayers00142a40
 FUN_0014e0b0 src/libs/unknown/func_0014e0b0.cpp _Z12FUN_0014e0b0P23hknpWorldObject1d0Large
 FUN_00093340 src/libs/unknown/func_00093340.cpp _ZN16FiosStreamReader12FUN_00093340EPvi
 _ZN18hknpFirstPersonGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00156620.cpp _ZN18hknpFirstPersonGunC2E24hkFinishLoadedObjectFlag
@@ -2620,3 +2622,6 @@ FUN_00092fe0 src/libs/unknown/func_00092fe0.cpp
 FUN_0004d4b0 src/libs/unknown/func_0004d4b0.cpp
 FUN_0001f380 src/libs/unknown/func_0001f380.cpp _GLOBAL__I_a
 FUN_0005f390 src/libs/unknown/func_0005f390.cpp _ZN9hknpWorld12FUN_0005f390EiRKDv4_f
+FUN_0003f3a0 src/libs/unknown/func_0003f3a0.cpp _GLOBAL__I_a
+FUN_000098d0 src/libs/unknown/func_000098d0.cpp
+_ZN16Elements000760c0D2Ev src/libs/unknown/func_00076910.cpp

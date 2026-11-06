@@ -1975,6 +1975,9 @@ class Object0000b330 : public hkError /* derived name */
     virtual void FUN_0000b970(int id);
     virtual void FUN_0000ba70();
 
+    /* The class allocator: a block of the thread's heap (0x99b7; defined
+     * beside the router). */
+    static void *operator new(unsigned long numBytes);
     /* The reference-counted class delete (freeReferencedObject). */
     static void operator delete(void *object, unsigned long numBytes);
 
@@ -2073,13 +2076,13 @@ class Object0019a7c0 : public hkReferencedObject /* derived name */
     hkArray<void *> buffers; /* derived name */
 };
 
-/* An object of 0x160 bytes with its own class allocator (vtable 0x169b460,
- * constructor FUN_000763a0) holding an array of 0x500-byte elements at
- * +0x140 (count at +0x148). Its out-of-line destructor FUN_000760c0
- * restores the vtable and destroys the elements. A derived class
- * (vtable 0x169b410, constructor FUN_000768c0: a pointer at +0x150) adds
- * nothing to destroy, so both vtables share the complete destructor
- * FUN_00076060 and the deleting destructor FUN_00076070. */
+/* An object of 0x160 bytes with its own class allocator (vtable 0x169b450,
+ * address point 0x169b460, D14; constructor FUN_000763a0) holding three
+ * arrays at +0x10, +0x20 and +0x30, a block stream at +0x40 and an array
+ * of 0x500-byte elements at +0x140 (count at +0x148), the pointer at
+ * +0x150 set by its creators. A derived class (vtable 0x169b400,
+ * constructor FUN_000768c0) adds nothing to destroy, so the linker folded
+ * its destructors into these and both vtables share them. */
 class Elements000760c0 : public hkBaseObject /* derived name */
 {
   public:
@@ -2089,7 +2092,27 @@ class Elements000760c0 : public hkBaseObject /* derived name */
      * comes first and the body does not read it. derived names. */
     Elements000760c0(void *context, void *allocator260, void *allocator250, int numElements,
                      int capacity20, int capacity10);
-    virtual ~Elements000760c0();
+
+    /* The members' own destructors, the last first (0x760c0, after the
+     * vtable is stored). Inline, emitted with the vtable in the key
+     * function's file, slot 3's: the complete destructor 0x76060 is a
+     * jump to it and the deleting one 0x76070 calls it (cookbook 441). */
+    inline virtual ~Elements000760c0() {}
+
+    /* From the thread's heap and back at the class's size, a null object
+     * left alone (0x76081). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* An entry of the arrays at +0x10 and +0x20 (0x40 bytes) and of the
+     * array at +0x30 (0x30 bytes), by the constructor's reserves and the
+     * destructor's frees (derived names). */
+    struct Entry40 {
+        u8 unknown0[0x40];
+    };
+
+    struct Entry30 {
+        u8 unknown0[0x30];
+    };
 
     /* An element (derived names): five block streams. */
     struct Element {
@@ -2101,14 +2124,23 @@ class Elements000760c0 : public hkBaseObject /* derived name */
         hkBlockStream slots[5];
     };
 
-    /* Slot 3 of both vtables (0x76910): every element's streams emptied,
-     * the second and third with the first cache, the others with the
-     * second, then the stream at +0x40 with the second. derived names. */
-    void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
+    /* Slot 3 of both vtables (0x76910), the class's key function: every
+     * element's streams emptied, the second and third with the first
+     * cache, the others with the second, then the stream at +0x40 with the
+     * second. Slots 4 to 6 (0x769c0, 0x76ed0, 0x77250) are not declared
+     * yet. derived names. */
+    virtual void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
 
-    u8 unknown8[0x38];
+    u8 unknown8[8];
+    hkArray<Entry40> array10;  /* derived name */
+    hkArray<Entry40> array20;  /* derived name */
+    hkArray<Entry30> array30;  /* derived name */
     hkBlockStream stream40;    /* derived name */
     hkArray<Element> elements; /* derived name */
+    /* The simulation context the object works for, set by its creators
+     * after the constructor (0x1799ee; the derived class's constructor,
+     * 0x768c0). derived name. */
+    void *simulationContext;
 };
 
 /* The derived class (vtable 0x169b400, the same seven slots): built once,
@@ -2121,11 +2153,7 @@ class Elements000768c0 : public Elements000760c0 /* derived name */
     Elements000768c0(void *simulationContext, void *threadContext, void *allocator260,
                      void *allocator250);
     virtual ~Elements000768c0();
-
-    void *simulationContext; /* derived name */
 };
-
-void FUN_000760c0(Elements000760c0 *self); /* derived name */
 
 /* What the object keeps at +0x98, made on first use by its slot 7 (derived
  * name): 0xf8 bytes from the thread's heap, built by the out-of-line
@@ -2165,11 +2193,6 @@ class BroadPhaseTasks0018d640 /* derived name */
  * below: its slot 4 marks bodies, slot 5 is the update 0x142bb0). */
 class BroadPhaseLayers00142a40;
 
-/* Its deleting destructor (0x76070, beside 0x760c0; both vtables' slot
- * 1): the destructor, then the 0x160 bytes back to the thread's heap
- * unless null. Written as calls while the class is opaque (cookbook 15).
- * derived name. */
-void FUN_00076070(Elements000760c0 *self); /* derived name */
 /* Reads the processor's time-stamp counter (rdtscp, edx:eax joined into 64
  * bits); its only caller is FUN_00092200, whose caller (0xdb64) mixes the
  * low half into a random seed with the time and a process value. */
@@ -3448,17 +3471,27 @@ class FiosStreamReader : public StreamReader /* derived name */
  * derived name. */
 StreamReader *FUN_00093180(const char *path);
 
-/* The file system the library installs (derived name; vtable 0x168ea90,
- * address point 0x168eaa0, built as a bare reference-counted object by
- * FUN_000098d0 and stored in the slot at 0x57b9b70, the singleton the
- * string "hkFileSystem" names): slot 7 removes a file and slot 8 creates a
- * directory through Fios. */
+struct FileSystemEntry;
+
+/* The file system interface, the singleton the string "hkFileSystem" names
+ * (its instance in the slot at 0x57b9b70): the library installs the Fios
+ * file system (vtable 0x168ea90, address point 0x168eaa0), built by
+ * FUN_000098d0. */
 class hkFileSystem : public hkReferencedObject
 {
   public:
     /* Slot 5: a reader of the named file, through the flags (bit 0
      * buffered; the Fios file system's 0x1bb50). derived name. */
     virtual StreamReader *FUN_0001bb50(const char *name, int flags) = 0;
+    /* Slots 6 to 10, the Fios file system's 0x1bb80, 0x1bbc0, 0x1bbe0,
+     * 0x1bc00 and 0x1bc80: a writer of the named file, a file removed, a
+     * directory created, the entry of a path and a listing of a directory.
+     * derived names. */
+    virtual hkStreamWriter *FUN_0001bb80(const char *name, int flags) = 0;
+    virtual hkResult FUN_0001bbc0(const char *path) = 0;
+    virtual hkResult FUN_0001bbe0(const char *path) = 0;
+    virtual hkResult FUN_0001bc00(const char *path, FileSystemEntry &entry) = 0;
+    virtual hkReferencedObject *FUN_0001bc80(const char *path, const char *pattern) = 0;
 };
 
 extern hkFileSystem *D_57b9b70; /* hkFileSystem's instance */
@@ -3489,9 +3522,15 @@ struct FileSystemEntry /* derived name */
     int flags;
 };
 
-class FiosFileSystem : public hkReferencedObject /* derived name */
+/* The Fios file system (vtable 0x168ea90, D14): slots 0 and 1 its implicit
+ * destructors, slots 5 to 10 the interface over the sceFios imports. */
+class FiosFileSystem : public hkFileSystem /* derived name */
 {
   public:
+    /* The class allocator: a block of the thread's heap (0x991d; defined
+     * beside the router). */
+    static void *operator new(unsigned long numBytes);
+
     /* Slot 5: a reader of the named file, through the flags. derived name. */
     StreamReader *FUN_0001bb50(const char *name, int flags);
     /* The reader handed back as the flags ask (0x1a7b0): with bit 0 the
@@ -4167,6 +4206,16 @@ inline void *hkBuiltinTypeRegistry::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *FiosFileSystem::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *Object0000b330::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hknpVehicleDriverInputAnalogStatus::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -4299,6 +4348,13 @@ inline void BroadPhaseTasks0018d640::operator delete(void *object, unsigned long
 }
 
 inline void RefArrays::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
+}
+
+inline void Elements000760c0::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
         D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
@@ -5733,6 +5789,15 @@ hkResult FUN_00009a80(); /* derived name */
 
 /* The thread's setup with its router (0x9a60). derived name. */
 hkResult FUN_00009a60(hkMemoryRouter *router); /* derived name */
+
+/* The singletons' list created, each record's instance made by its create
+ * function in dependency order (0x9550; hkBaseSystem's start calls it).
+ * derived name. */
+void FUN_00009550(); /* derived name */
+
+/* An empty function of the game region the base system's start calls last
+ * (0xe98be0, a lone `ret`). derived name. */
+void FUN_00e98be0(); /* derived name */
 
 /* The calling thread's number (derived name), stored by the worker's
  * context (0x8f5e1). */

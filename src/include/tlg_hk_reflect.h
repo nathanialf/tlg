@@ -2243,6 +2243,10 @@ class hkDummySingleton : public hkReferencedObject
     hkDummySingleton() {}
 
     virtual ~hkDummySingleton();
+
+    /* Slot 5, the empty 0x8d60: hkBaseSystem's start calls it on the
+     * instance (0x9a2e). derived name. */
+    virtual void FUN_00008d60();
 };
 
 /* Its create function, the record's (0x9c20). derived name. */
