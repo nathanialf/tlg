@@ -799,7 +799,7 @@ struct hkArray : public hkArrayBase<T> {
 /* hkInplaceArray (the reflection's TYPE_INPLACEARRAY, its name a string of
  * the executable): an array whose first N elements live in the object. */
 template <typename T, int N> struct hkInplaceArray : public hkArray<T> {
-    hkInplaceArray() : hkArray<T>(storage, 0, N) {}
+    hkInplaceArray(int size = 0) : hkArray<T>(storage, size, N) {}
 
     T storage[N];
 };
@@ -7952,6 +7952,15 @@ struct hknpManifoldCollisionCache /* derived name */
      * names. */
     u8 *solverBlock;
     u16 solverOffset;
+
+    /* The solver record let go (0x1623a0 through the input's pointer).
+     * derived name. */
+    void resetSolverRecord()
+    {
+        solverBlock = 0;
+        solverOffset = 0;
+    }
+
     /* The friction and restitution combined from the bodies' materials
      * (0x179ed0): the friction, the static friction above it, the
      * restitution. derived names. */
@@ -10587,7 +10596,13 @@ struct hknpWorld {
      * its motion updated; then the body signal fired. derived names. */
     void FUN_0005f240(u32 bodyId, int mode);
     void FUN_0004bcd0(int motionId); /* derived name */
-    void FUN_0005bf80(int bodyId);   /* derived name */
+    /* A body's collision caches rebuilt (0x5bf80, as 0x5fab0 does): the
+     * body's pairs looked up again (an added body's through 0x4e0c0 or its
+     * motion record's byte, else its box's through 0x4e0f0); its previous
+     * box emptied when it is not, a static body in the broad phase then
+     * given a scheduled change with bit 2; the body's flag 0x400 set.
+     * derived name. */
+    void FUN_0005bf80(int bodyId);
     /* Bodies removed from the world (0x4e5d0; the ball gun's reset at
      * 0x15858c passes one with mode 0). derived names. */
     void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
@@ -12997,12 +13012,16 @@ class hkpConstraintData : public hkReferencedObject
      * far). */
     enum ConstraintType {
         CONSTRAINT_TYPE_BALLANDSOCKET = 0,
+        CONSTRAINT_TYPE_HINGE = 1,
         CONSTRAINT_TYPE_STIFFSPRING = 8,
+        CONSTRAINT_TYPE_WHEEL = 9,
         CONSTRAINT_TYPE_BREAKABLE = 12,
         CONSTRAINT_TYPE_MALLEABLE = 13,
         CONSTRAINT_TYPE_POINTTOPLANE = 14,
         CONSTRAINT_TYPE_PULLEY = 15,
         CONSTRAINT_TYPE_ROTATIONAL = 16,
+        CONSTRAINT_TYPE_HINGE_LIMITS = 18,
+        CONSTRAINT_TYPE_RACK_AND_PINION = 21,
         CONSTRAINT_TYPE_COG_WHEEL = 22,
         CONSTRAINT_TYPE_FIXED = 23,
         CONSTRAINT_TYPE_DEFORMABLE_FIXED = 24,
@@ -13633,6 +13652,12 @@ class hkpHingeLimitsData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalRotationsConstraintAtom rotations;
         hkpAngLimitConstraintAtom angLimit;
         hkp2dAngConstraintAtom twoDAng; /* the record's 2dAng */
@@ -13647,8 +13672,18 @@ class hkpHingeLimitsData : public hkpConstraintData
 
     virtual ~hkpHingeLimitsData();
 
+    /* Slot 5 (0x83190): its type. */
+    virtual int unknownVirtual5() const;
+
+    /* Slot 6 (the shared 0x7b570, spelled as hkpCogWheelConstraintData's):
+     * the info from the atoms. */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+
     /* Slot 7 (0x83150): both rotations orthonormal. */
-    hkBool unknownVirtual7() const;
+    virtual hkBool unknownVirtual7() const;
+
+    /* Slot 20 (0x7c8b0, spelled as hkpRagdollLimitsData's). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -13666,6 +13701,12 @@ class hkpWheelConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom suspensionBase;
         hkpLinLimitConstraintAtom lin0Limit;
         hkpLinSoftConstraintAtom lin0Soft;
@@ -13689,10 +13730,20 @@ class hkpWheelConstraintData : public hkpConstraintData
      * its size with empty destructors cite (D15). */
     virtual ~hkpWheelConstraintData();
 
+    /* Slot 5 (the shared 0x12a8b0): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_WHEEL;
+    }
+
+    /* Slot 6 (0x83000, spelled as hkpDeformableFixedConstraintData's): the
+     * info from the atoms. */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+
     /* Slot 7 (0x17ccb0): the suspension's frames orthonormal, the steering
      * frames as transforms with no translation orthonormal too, and the
      * limit's minimum not above its maximum. */
-    hkBool unknownVirtual7() const;
+    virtual hkBool unknownVirtual7() const;
 
     /* The solver results slot 19 reads (derived names): the limit's and
      * the two lin atoms'. */
@@ -13708,6 +13759,9 @@ class hkpWheelConstraintData : public hkpConstraintData
      * prismatic data's 0x7e950. derived name. */
     void FUN_0017cde0(const hkTransform &transformA, const hkTransform &transformB,
                       const hkpSolverResults *results, Vec4 &out) const;
+
+    /* Slot 20 (0x83020, spelled as hkpDeformableFixedConstraintData's). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
     Vec4 initialAxleInB;
@@ -13802,6 +13856,12 @@ class hkpRagdollLimitsData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalRotationsConstraintAtom rotations;
         hkpTwistLimitConstraintAtom twistLimit;
         hkpConeLimitConstraintAtom coneLimit;
@@ -13963,6 +14023,12 @@ class hkpRackAndPinionConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpRackAndPinionConstraintAtom rackAndPinion;
     };
@@ -13977,12 +14043,19 @@ class hkpRackAndPinionConstraintData : public hkpConstraintData
 
     virtual ~hkpRackAndPinionConstraintData();
 
+    /* Slot 5 (0x836a0): its type. */
+    virtual int unknownVirtual5() const;
+
+    /* Slot 6 (the shared 0x7b570, spelled as hkpCogWheelConstraintData's):
+     * the info from the atoms. */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+
     /* Slot 7 (0x83630): both frames orthonormal and the pinion's radius or
      * the screw's pitch not zero. */
-    hkBool unknownVirtual7() const;
+    virtual hkBool unknownVirtual7() const;
 
-    void FUN_000836c0(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 20 (0x836c0). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -14945,6 +15018,12 @@ class hkpHingeConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
+        /* Nothing to finish: its type info's finish callback is the shared
+         * empty body 0x3b640. */
+        Atoms(hkFinishLoadedObjectFlag) {}
+
         hkpSetLocalTransformsConstraintAtom transforms;
         hkpSetupStabilizationAtom setupStabilization;
         hkp2dAngConstraintAtom twoDAng; /* the record's 2dAng */
@@ -14960,9 +15039,19 @@ class hkpHingeConstraintData : public hkpConstraintData
 
     virtual ~hkpHingeConstraintData();
 
+    /* Slot 5 (the shared 0x58a0): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_HINGE;
+    }
+
+    /* Slot 6 (the shared 0x7bf20, spelled as hkpFixedConstraintData's):
+     * the info from the atoms. */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+
     /* Slot 7 (0x7f020): valid when a stabilized ball and socket has its
      * stabilization set up and both frames are orthonormal. */
-    hkBool unknownVirtual7() const;
+    virtual hkBool unknownVirtual7() const;
 
     void FUN_0007efa0(float newBreachImpulse);                  /* vtable slot 10; derived name */
     float FUN_0007efb0() const;                                 /* vtable slot 13; derived name */
@@ -14973,8 +15062,8 @@ class hkpHingeConstraintData : public hkpConstraintData
     hkResult FUN_0007f0c0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007f0f0(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
-    void FUN_0007eff0(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 20 (0x7eff0). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -18062,6 +18151,22 @@ class hknpVehicleInstance : public hknpUnaryAction
      * the driver input's): the angles handed to the steering component and
      * taken back. derived name. */
     void FUN_00162fb0(float deltaTime, const hknpVehicleFilteredDriverInput &filteredDriverInput);
+    /* The vehicle stepped (0x165210, under the timer "DoVehicle"; called by
+     * 0x1654bb with the wheels' collide outputs): the aerodynamic drag and
+     * each wheel's suspension and linear force (two arrays of up to 16 in
+     * place, sized to the wheels) worked out by 0x1640f0, then the vehicle
+     * simulated from them into the results by 0x1648c0. derived names. */
+    void FUN_00165210(float deltaTime, const WheelCollideOutput *collideOutputs,
+                      struct hknpVehicleJobResults &vehicleResults);
+    void FUN_001640f0(float deltaTime, const WheelCollideOutput *collideOutputs,
+                      hknpVehicleAerodynamics::AerodynamicsDragOutput &aerodynamicsDragInfo,
+                      hkArray<float> &suspensionForceAtWheel,
+                      hkArray<float> &totalLinearForceAtWheel);
+    void FUN_001648c0(float deltaTime,
+                      const hknpVehicleAerodynamics::AerodynamicsDragOutput &aerodynamicsDragInfo,
+                      const hkArray<float> &suspensionForceAtWheel,
+                      const hkArray<float> &totalLinearForceAtWheel,
+                      struct hknpVehicleJobResults &vehicleResults);
 
     hknpWorld *world;
     hknpVehicleData *data;

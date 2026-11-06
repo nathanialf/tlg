@@ -1,7 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-void CommandPrinter00171040::FUN_00171040(const hknpCommand &command,
+void CommandPrinter00171040::FUN_00171040(const hkCommand &command,
                                           hkOstream &out) const /* derived name */
 {
     switch (command.secondaryType) {
@@ -27,9 +27,9 @@ void CommandPrinter00171040::FUN_00171040(const hknpCommand &command,
         const hknpValidateTriggerEventCommand &c =
             static_cast<const hknpValidateTriggerEventCommand &>(command);
         out.FUN_00008440("hknpValidateTriggerEventCommand id[0]=")
-            .FUN_00008550(c.id0)
+            .FUN_00008550(c.bodyIdA)
             .FUN_00008440(" id[1]=")
-            .FUN_00008550(c.id1);
+            .FUN_00008550(c.bodyIdB);
         break;
     }
     case 3:

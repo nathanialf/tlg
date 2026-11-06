@@ -245,6 +245,17 @@ class hknpMassChangerModifier /* derived name */
                       hknpManifold *manifold); /* vtable slot 4; derived name */
 };
 
+/* What slot 10 of the modifier interface receives second (0x161cc0,
+ * 0x1623a0; derived names): the contact's jacobian record, the manifold's
+ * collision cache at +0x10 and a value at +0x18. */
+struct SolverCallbackInput001623a0 /* derived name */
+{
+    Pair08Owner *record;
+    u8 unknown8[8];
+    hknpManifoldCollisionCache *collisionCache;
+    int value18;
+};
+
 /* The modifier of vtable 0x16a5010 (address point 0x16a5020; derived name),
  * one of the twenty FUN_00048b20 builds for the world: slots 2 to 5
  * 0x161fc0, 0x161fd0, 0x1620c0 and 0x1622a0, slot 7 (0x162350) sets valueA
@@ -274,6 +285,14 @@ class Modifier16a5020 /* derived name */
                       const void *bodyB, hknpManifoldCollisionCache *cache,
                       const hknpManifold *manifold, Pair08Owner *jacobian,
                       int jacobianIndex); /* vtable slot 7; derived name */
+    /* Slot 10 (0x1623a0), after the contact solve (0x161cc0's arguments):
+     * the record's bodies and keys read first; while the cache's flags at
+     * +0x22 lack bit 3, a nonzero value posts a validate command of the
+     * bodies and the record; with bit 3, a zero value and no bit 4, the
+     * trigger's exit is posted with the keys and bits 3 and 4 cleared. The
+     * cache's solver record is let go either way. derived name. */
+    void FUN_001623a0(CommandOwner00171180 *context, const SolverCallbackInput001623a0 *input,
+                      const Vec4 *contactImpulses, float frictionFactor) const;
 };
 
 /* An event of a manifold's status (derived names; primary type 4,
@@ -614,12 +633,11 @@ struct WorldReference0016e040 /* derived name */
     const hknpWorld *world;
 };
 
-/* The physics' commands (derived names): their kind at +4, which the
- * world's command printer switches on (0x171040). */
-struct hknpCommand /* derived name */
+/* The physics' commands (derived names): an hkCommand of primary type 3,
+ * their kind its secondary type, which the world's command printer
+ * switches on (0x171040). */
+struct hknpCommand : public hkCommand /* derived name */
 {
-    u8 unknown0[4];
-    u16 secondaryType; /* derived name */
     u8 unknown6[2];
 };
 
@@ -637,11 +655,43 @@ struct hknpAtomSolverForceClippedCommand : public hknpCommand {
     float factor;
 };
 
-struct hknpValidateTriggerEventCommand : public hknpCommand {
-    u8 unknown8[4];
-    u32 id0;
-    u8 unknown10[4];
-    u32 id1;
+/* An event of two bodies (derived names; primary type 4): each body as its
+ * byte at +0x7f and its id after the header, as the manifold events give
+ * them. */
+struct hknpBinaryBodyEvent : public hkCommand /* derived name */
+{
+    /* The header filled in order, then the bodies' words. */
+    hknpBinaryBodyEvent(u16 type, u16 sizeInBytes, u32 bodyByte7fA, u32 idA, u32 bodyByte7fB,
+                        u32 idB)
+    {
+        sizePaddedTo16 = sizeInBytes;
+        unknown2 = 0;
+        primaryType = 4;
+        secondaryType = type;
+        byte7fA = bodyByte7fA;
+        bodyIdA = idA;
+        byte7fB = bodyByte7fB;
+        bodyIdB = idB;
+    }
+
+    u32 byte7fA;
+    u32 bodyIdA;
+    u32 byte7fB;
+    u32 bodyIdB;
+};
+
+/* Posted by the trigger modifier's slot 10 (0x1623a0) with the contact's
+ * jacobian record, 0x20 bytes padded: built as an event of the two bodies,
+ * then given the physics' own commands' primary type 3 (the event's type
+ * store is dead: 0x1624ee stores the 3 after the bodies' words). */
+struct hknpValidateTriggerEventCommand : public hknpBinaryBodyEvent {
+    hknpValidateTriggerEventCommand(u32 bodyByte7fA, u32 idA, u32 bodyByte7fB, u32 idB)
+        : hknpBinaryBodyEvent(2, 0x20, bodyByte7fA, idA, bodyByte7fB, idB)
+    {
+        primaryType = 3;
+    }
+
+    Pair08Owner *record; /* derived name */
 };
 
 struct hknpAddContactConstraintRangeCommand : public hknpCommand {
@@ -676,7 +726,7 @@ class CommandPrinter00171040 : public hkReferencedObject /* derived name */
     /* Slot 6 (0x171040): a command of the physics' own kinds written to a
      * stream, by its kind; the weld command through its own print. derived
      * name. */
-    void FUN_00171040(const hknpCommand &command, hkOstream &out) const;
+    void FUN_00171040(const hkCommand &command, hkOstream &out) const;
 
     const hknpWorld *world; /* derived name */
 };
