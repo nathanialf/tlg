@@ -1350,7 +1350,7 @@ _ZN17hknpSolveDataTaskD0Ev src/libs/unknown/func_0016e9f0.cpp
 _ZN18hknpCharacterProxyD0Ev src/libs/unknown/func_00176b70.cpp
 _ZN21hkp6DofConstraintDataD0Ev src/libs/unknown/func_0017b700.cpp
 _ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
-FUN_0017fbd0 src/libs/unknown/func_0017fbd0.cpp
+_ZN25hkMemoryResourceContainerD0Ev src/libs/unknown/func_0017fbd0.cpp
 _ZN22hkBinaryPackfileWriterD0Ev src/libs/unknown/func_00181b10.cpp
 _ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
 _ZN16hkProcessFactoryD0Ev src/libs/unknown/func_00183d60.cpp
@@ -2602,3 +2602,7 @@ FUN_0000b7e0 src/libs/unknown/func_0000b330.cpp _ZN14Object0000b3307messageEN7hk
 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo src/libs/unknown/func_00001960.cpp
 _ZN17hknpSolveDataTaskD1Ev src/libs/unknown/func_0016e9f0.cpp
 _ZN24BroadPhaseLayers00142a40D1Ev src/libs/unknown/func_00140e20.cpp _ZN24BroadPhaseLayers00142a40D2Ev
+FUN_000aab10 src/libs/unknown/func_000aab10.cpp
+_ZN25hkMemoryResourceContainerD1Ev src/libs/unknown/func_0017fbd0.cpp _ZN25hkMemoryResourceContainerD2Ev
+FUN_0005e780 src/libs/unknown/func_0005ed40.cpp
+FUN_00092380 src/libs/unknown/func_000922f0.cpp _ZN9RefArrays12FUN_00092380EP8hknpTaskii

@@ -15,6 +15,23 @@ void hknpWorld::FUN_0005b490(int firstBodyId, void *argument)
     } while (bodyId != firstBodyId);
 }
 
+void hknpWorld::FUN_0005e780(int bodyId, const Vec4 &impulse)
+{
+    const hknpBody &body = bodyManager.bodies[bodyId];
+    if (body.flags & 2) {
+        if (!(body.flags & 9)) {
+            FUN_0004e0c0(bodyId);
+        }
+        hknpMotion &motion = motionManager.motions[body.motionId];
+        const Vec4 inverseInertia = loadHalves(motion.inverseInertia);
+        const Vec4 inverseMass =
+            _mm_shuffle_ps(inverseInertia, inverseInertia, _MM_SHUFFLE(3, 3, 3, 3));
+        motion.linearVelocity = _mm_add_ps(_mm_mul_ps(inverseMass, impulse), motion.linearVelocity);
+        FUN_0005b490(bodyId, &motion);
+        signals.bodyChangedSignal.fire(this, bodyId);
+    }
+}
+
 void hknpWorld::FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &position)
 {
     const hknpBody &body = bodyManager.bodies[bodyId];

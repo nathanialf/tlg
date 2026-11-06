@@ -1845,20 +1845,23 @@ class hkReferencedObject : public hkBaseObject
 
     /* One more reference, counted only on an object with a known size (a
      * loaded object's size is zero and it is never freed): the low 16 bits
-     * incremented by compare-and-swap, the size kept (0xacf10). derived
-     * name. */
+     * incremented by compare-and-swap, the size kept (0xacf10). The
+     * uncounted object leaves first: where the caller's next block has no
+     * other way in, that path falls through (the mesh section's vertex
+     * buffer, 0x2ac6d). derived name. */
     void addReference() const
     {
-        if ((memSizeAndRefCount & 0xffff0000) != 0) {
-            /* volatile: other threads change the count between the reads,
-             * so each attempt reads it again (0xacf20 reloads it). */
-            volatile u32 *count = &memSizeAndRefCount;
-            u32 oldValue, newValue;
-            do {
-                oldValue = *count;
-                newValue = (oldValue & 0xffff0000) | u16(oldValue + 1);
-            } while (__sync_val_compare_and_swap(count, oldValue, newValue) != oldValue);
+        if ((memSizeAndRefCount & 0xffff0000) == 0) {
+            return;
         }
+        /* volatile: other threads change the count between the reads, so
+         * each attempt reads it again (0xacf20 reloads it). */
+        volatile u32 *count = &memSizeAndRefCount;
+        u32 oldValue, newValue;
+        do {
+            oldValue = *count;
+            newValue = (oldValue & 0xffff0000) | u16(oldValue + 1);
+        } while (__sync_val_compare_and_swap(count, oldValue, newValue) != oldValue);
     }
 
     /* The allocation size recorded in the top 16 bits by compare-and-swap,
@@ -2097,6 +2100,17 @@ template <typename T> struct hkRefPtr {
             e->addReference();
         }
         pntr = e;
+    }
+
+    /* Another's object held, a reference taken on it, the pointer read
+     * again after the count's change (the mesh section's vertex buffer,
+     * 0x2acab). */
+    hkRefPtr(const hkRefPtr &other)
+    {
+        if (other.pntr) {
+            other.pntr->addReference();
+        }
+        pntr = other.pntr;
     }
 
     ~hkRefPtr()
@@ -9055,6 +9069,16 @@ struct hknpConstraint {
      * tlg_lib_unknown.h, after the thread's memory router). */
     inline ~hknpConstraint();
 
+    /* Set up between two bodies over a constraint data (0x175710; the
+     * caller at 0x772e1, 0x1758a0 the same with an id): the data's
+     * reference taken, the bodies' uids kept, the atoms and their sizes
+     * from the data's info, the type the wrapped data's for the breakable
+     * and malleable types (12 and 13), no id, no immediate id, flags 2, no
+     * runtime. The bodies' 64-bit uids come in one register each and are
+     * stored as two words, each half taken where it is stored (0x1757bd).
+     * derived name. */
+    void FUN_00175710(u64 bodyUidA, u64 bodyUidB, hkpConstraintData *constraintData);
+
     /* Four bytes, not a byte array: the manager's allocation 0x16db90 forms
      * the record's address for its clear in the block that loads the free
      * link, which InstCombine leaves as a cast only when the first member
@@ -10083,10 +10107,13 @@ struct hknpAabbQuery : public hknpCollisionQuery /* derived name */
 
 struct BroadPhaseAabbQuery /* derived name */
 {
+    /* The bodies cleared too: the sites whose bodies' read may alias the
+     * query keep that store before the box's zeros (0x5b89f, 0x5d02d). */
     BroadPhaseAabbQuery()
     {
         aabb.setEmpty();
         filter = HK_NULL;
+        bodies = HK_NULL;
     }
 
     hkAabb16 aabb;
@@ -10353,6 +10380,11 @@ struct hknpWorld {
      * it refreshed (0x5b490, inline in the file), then the body-changed
      * signal fired. derived name. */
     void FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &position);
+
+    /* A linear impulse applied to a dynamic body (0x5e780): as 0x5ed40,
+     * the motion's linear velocity given the impulse times its inverse
+     * mass. derived name. */
+    void FUN_0005e780(int bodyId, const Vec4 &impulse);
 
     /* A motion's velocities of the previous step scaled and the motion
      * moved by the part of the step the scale adds (0x157be0), then each
@@ -11462,6 +11494,16 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
     /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
      * destructor frees at the recorded size, 0x28 by default. */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* The map's layout as the reflection describes it (its type info
+     * "!hknpPairCollisionFilter::MapPairFilterKeyOverrideType", 0x57c10e0,
+     * size 0x10, three records at 0x1697a20): plain data, no finish
+     * constructor, its cleanup the empty body 0x3b640. */
+    struct MapPairFilterKeyOverrideType {
+        void *elem;
+        int numElems;
+        int hashMod;
+    };
 
     hknpPairCollisionFilterMapPairFilterKeyOverrideType disabledPairs;
     hkRefPtr<hknpCollisionFilter> childFilter;
@@ -15400,6 +15442,15 @@ class hkMemoryResourceContainer : public hkResourceContainer
     /* Out of line (0x17fb60): the members finished, and when finishing
      * each child pointed back at this container. */
     hkMemoryResourceContainer(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x17fc20, slot 0; the deleting destructor 0x17fbd0
+     * before it): the children's and the resources' references released
+     * from the last, then the name. */
+    virtual ~hkMemoryResourceContainer();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0x40 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slot 15 (0x1806b0): the first child after the previous one given
      * (from the first when none) whose name is the one given, or the next

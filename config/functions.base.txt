@@ -3166,8 +3166,8 @@
 0x0017f9b0 0xaa FUN_0017f9b0
 0x0017fa60 0xc8 FUN_0017fa60
 0x0017fb60 0x59 _ZN25hkMemoryResourceContainerC1E24hkFinishLoadedObjectFlag
-0x0017fbd0 0x4c FUN_0017fbd0
-0x0017fc20 0x189 FUN_0017fc20
+0x0017fbd0 0x4c _ZN25hkMemoryResourceContainerD0Ev
+0x0017fc20 0x189 _ZN25hkMemoryResourceContainerD1Ev
 0x0017fdb0 0x1dc FUN_0017fdb0
 0x0017ff90 0x259 FUN_0017ff90
 0x001801f0 0x160 FUN_001801f0

@@ -304,6 +304,13 @@ class hknpTaskInterface /* derived name */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const = 0;
 };
 
+/* A reference-counted task: the object, its task interface at +0x10 (what
+ * the task arrays hand out, RefArrays::FUN_00092380 converting it with its
+ * null test). derived name. */
+class hknpTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+{
+};
+
 /* derived name: the Graphviz fill colour of a node in one of three states
  * (0x91b30), the attributes the tasks' names come with. */
 const char *FUN_00091b30(int state); /* derived name */
@@ -394,6 +401,11 @@ class RefArrays /* derived name */ : public hkReferencedObject
      * world's step stages at 0x50554, 0x50e76 and 0x50f42, the solver
      * factory task at 0x14e69f, 0x18d960 six times). derived name. */
     EntryId FUN_000922f0(hknpTaskInterface *task, int value8, int valueA);
+
+    /* A task appended as 0x922f0 appends it, a reference to it kept first
+     * in the references (0x92380; the world's and the solver's task
+     * builders, seventeen calls from 0x1503a4 to 0x18eba1). derived name. */
+    EntryId FUN_00092380(hknpTask *task, int value8, int valueA);
 
     /* Room reserved for a number of entries in the first array and the
      * references, and for a number of ints in the second (0x92510; the

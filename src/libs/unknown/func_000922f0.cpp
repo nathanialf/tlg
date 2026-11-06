@@ -13,3 +13,9 @@ RefArrays::EntryId RefArrays::FUN_000922f0(hknpTaskInterface *task, int value8, 
     entry.unknownE = 0;
     return entryId;
 }
+
+RefArrays::EntryId RefArrays::FUN_00092380(hknpTask *task, int value8, int valueA)
+{
+    references.pushBack(task);
+    return FUN_000922f0(task, value8, valueA);
+}
