@@ -1313,6 +1313,11 @@ struct hkClassEnum {
     const char *name;
     const Item *items;
     int numItems;
+    /* The record's 0x28 bytes end with an attributes pointer and flags,
+     * zero in the records read so far (hkGeometry's enum, 0x168ea10).
+     * derived names. */
+    const hkCustomAttributes *attributes;
+    u32 flags;
 };
 
 /* derived name: tells whether two classes are the same, by address or by
@@ -4422,8 +4427,14 @@ class hkxAttributeHolder : public hkReferencedObject
     {
     }
 
-    /* Out of line (0x89380): the groups destroyed and freed. */
+    /* Out of line (0x89380, slot 0; the deleting destructor 0x89330 before
+     * it): the groups destroyed from the last, each group's attributes
+     * from the last, and freed. */
     virtual ~hkxAttributeHolder();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0x20 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     hkArray<hkxAttributeGroup> attributeGroups;
 };
@@ -11329,6 +11340,12 @@ class hknpScaledConvexShapeBase : public hknpDecoratorShape
      * the smallest magnitude of the scale's direction. derived name. */
     float FUN_0016ad80() const;
 
+    /* Slot 28 (0x16cce0, both vtables): the shape's vertices in a block of
+     * the thread's stack, the mass properties built over them with the
+     * convex radius for a configuration of quality 2, else over their box
+     * grown by the radius. derived name. */
+    void FUN_0016cce0(const void *argument1, void *argument2) const;
+
     /* Slot 14 (0x16abf0, both vtables): the core shape's face plane and
      * minimum half angle, the plane scaled as slot 15 scales it and moved;
      * under a non-uniform scale the angle narrowed by the smallest
@@ -16182,6 +16199,10 @@ class BufferOstream : public hkOstream /* derived name */
         hkError::FUN_00014c70(id, assertBuf, file, line);                                          \
     } while (0)
 
+/* The file hkPackfileWriter.cpp's reports name (the string at 0x14cce52). */
+#define HK_PACKFILE_WRITER_CPP                                                                     \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Serialize\\Packfile\\hkPackfileWriter.cpp"
+
 /* The file hkPs4StreamWriter.cpp's reports name (the string at 0x14c40f1). */
 #define HK_PS4_STREAM_WRITER_CPP                                                                   \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\System\\Io\\Platform\\Ps4\\hkPs4StreamWriter.cpp"
@@ -18975,6 +18996,21 @@ struct ConvexCompositeCache00199b00 : public CollisionCache001785a0 /* derived n
     hkAabb aabb;
 };
 
+/* A collision cache of type 5 over two composite shapes (derived names):
+ * the header's fields, an int and a byte at +0x10 and +0x14, a byte at
+ * +0x18, the range of the child shapes' caches at +0x20 and an aabb at
+ * +0x30. 0x199970 writes a new one. */
+struct CompositeCompositeCache00199970 : public CollisionCache001785a0 /* derived name */
+{
+    int unknown10;
+    u8 unknown14;
+    u8 unknown15[3];
+    u8 unknown18;
+    u8 unknown19[7];
+    hkBlockStreamRange childCacheRange;
+    hkAabb aabb;
+};
+
 /* derived name: a new convex and composite pair's cache appended to the
  * writer (the dispatcher's creator for that pair, 0x199b00): cleared, its
  * header, its range emptied, its aabb emptied (0x14a1f0, out of line), the
@@ -19773,6 +19809,15 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * class was placed in, else the tag's, the section added when new.
      * derived name. */
     int FUN_0019cdf0(const void *object, const hkClass *klass, const char *sectionTag);
+
+    /* Whether an object is still to be written (0x19cf40; the add at
+     * 0x19c568 asks it of each object it reaches): an object that is not
+     * itself a class is; a class is when no class of its name is known
+     * yet, and becomes the one known by its name; a class of a known name
+     * is not, a report raised when its signature is not the known one's,
+     * and the known one's index and the known one itself recorded for it
+     * (the maps at +0x20 and +0x68). derived name. */
+    int FUN_0019cf40(const void *object, const hkClass *objectClass);
     /* Slot 11 (0x19d190): an object placed in the section of a tag, the
      * section added when it is new (the section index of 0x19cd20 inline).
      * derived name. */

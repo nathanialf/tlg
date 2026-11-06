@@ -2782,6 +2782,13 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual void *blockAlloc(int numBytes);
     virtual AllocatorInterface *FUN_00001620();
 
+    /* Slot 4 (0x2820): under the lock, a small block from its size's free
+     * list, the size handed back the list's element size, or a larger one
+     * from the allocator below; then the bytes in use checked against the
+     * limit at +0xb50, the peak kept, FUN_00006640(1) past the limit.
+     * derived name. */
+    virtual void *FUN_00008d70(int &numBytes);
+
     /* The rest of the overriders, declared so the class is complete (slot
      * 3 0x2c40; primary slots 13 to 15, 17, 18, 20 and 21). */
     virtual void blockFree(void *pointer, int numBytes);
@@ -4918,6 +4925,11 @@ inline void hknpSolverFactoryTask::operator delete(void *object, unsigned long n
 }
 
 inline void hkMemoryResourceContainer::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkxAttributeHolder::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }

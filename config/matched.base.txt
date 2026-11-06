@@ -95,7 +95,7 @@ FUN_00017f40 src/libs/unknown/func_00017f40.cpp
 FUN_00017fc0 src/libs/unknown/func_00017fc0.cpp
 FUN_00017fe0 src/libs/unknown/func_00017fe0.cpp
 FUN_00018060 src/libs/unknown/func_00018060.cpp
-FUN_0001a4e0 src/libs/unknown/func_0001a4e0.cpp
+FUN_0001a4e0 src/libs/unknown/func_0001a500.cpp _ZL28finishLoadedObjecthkGeometryPvi
 FUN_0001c7d0 src/libs/unknown/func_0001c7f0.cpp _ZL53finishLoadedObjecthkcdPlanarGeometryPolygonCollectionPvi
 FUN_0001ca80 src/libs/unknown/func_0001ca80.cpp
 FUN_0001cf60 src/libs/unknown/func_0001cf60.cpp _ZL36finishLoadedObjecthkcdPlanarGeometryPvi
@@ -1322,7 +1322,7 @@ _ZN18hknpMountedBallGunD0Ev src/libs/unknown/func_00166890.cpp
 FUN_0006b7d0 src/libs/unknown/func_0006b7d0.cpp
 _ZN24hkpRagdollConstraintDataD0Ev src/libs/unknown/func_0007de50.cpp
 FUN_000870e0 src/libs/unknown/func_000870e0.cpp
-FUN_00089330 src/libs/unknown/func_00089330.cpp
+_ZN18hkxAttributeHolderD0Ev src/libs/unknown/func_00089330.cpp
 _ZN14hkxSkinBindingD0Ev src/libs/unknown/func_0008a9b0.cpp
 _ZN7hkxMeshD0Ev src/libs/unknown/func_0008bf00.cpp
 FUN_0008c0c0 src/libs/unknown/func_0008c0c0.cpp
@@ -2610,3 +2610,7 @@ _ZN23hknpStaticCompoundShapeC1ERK22hknpCompoundShapeCinfo src/libs/unknown/func_
 FUN_0016abf0 src/libs/unknown/func_0016abf0.cpp
 FUN_00003ed0 src/libs/unknown/func_00003ed0.cpp _GLOBAL__I_a
 FUN_00042770 src/libs/unknown/func_00042770.cpp _GLOBAL__I_a
+FUN_0001a500 src/libs/unknown/func_0001a500.cpp _GLOBAL__I_a
+FUN_0016cce0 src/libs/unknown/func_0016cce0.cpp
+FUN_0019cf40 src/libs/unknown/func_0019cf40.cpp
+_ZN18hkxAttributeHolderD1Ev src/libs/unknown/func_00089330.cpp _ZN18hkxAttributeHolderD2Ev
