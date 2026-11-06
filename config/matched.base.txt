@@ -2625,3 +2625,4 @@ FUN_0005f390 src/libs/unknown/func_0005f390.cpp _ZN9hknpWorld12FUN_0005f390EiRKD
 FUN_0003f3a0 src/libs/unknown/func_0003f3a0.cpp _GLOBAL__I_a
 FUN_000098d0 src/libs/unknown/func_000098d0.cpp
 _ZN16Elements000760c0D2Ev src/libs/unknown/func_00076910.cpp
+FUN_00175a90 src/libs/unknown/func_00175a90.cpp _ZNK30hknpCompressedHeightFieldShape13getQuadInfoAtEiiPDv4_fPtPi
