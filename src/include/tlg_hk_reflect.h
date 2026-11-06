@@ -13364,11 +13364,12 @@ class hkpCogWheelConstraintData : public hkpConstraintData
  * what slot 6 hands to FUN_00082890). */
 /* hkpStiffSpringConstraintAtom (hkClass 0x57c53f0, size 0x20, record
  * table 0x169e6d0): length, maxLength, springConstant and springDamping
- * (floats) from +0x10, after the atom's type and padding. */
+ * (floats) from +0x10, after the atom's type: the length is 16-aligned (the
+ * padding after the type; 0x7d660's two zero stores at +0x10 and +0x14 stay
+ * apart, the alignment differing, while the -1 pair after them merges). */
 struct hkpStiffSpringConstraintAtom {
     u16 type; /* derived name */
-    u8 padding[0xe];
-    float length;
+    alignas(16) float length;
     float maxLength;
     float springConstant;
     float springDamping;

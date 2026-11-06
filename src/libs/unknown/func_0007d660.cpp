@@ -1,10 +1,10 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: 19 of 20 instructions in the base's order; the last two
-// stores (length and maxLength, 0 at +0x70 and +0x74) merge into one
-// `mov qword [rdi+0x70], 0` where the base keeps two 4-byte stores, while
-// the -1 pair at +0x78 merges as in the base (docs/NOTES.md Round 46).
+/* The atoms' constructors' stores first (types, the stabilization's limits,
+ * the spring's -1 pair), then the constructor's own: the pivots cleared, the
+ * stabilization enabled, no length. The length is 16-aligned, so its zero
+ * store does not merge with the maximum's. */
 hkpStiffSpringConstraintData::hkpStiffSpringConstraintData()
 {
     atoms.pivots.type = hkpConstraintAtom::TYPE_SET_LOCAL_TRANSLATIONS;

@@ -2631,3 +2631,6 @@ FUN_00024490 src/libs/unknown/func_00024490.cpp _GLOBAL__I_a
 FUN_00087e60 src/libs/unknown/func_00087e60.cpp _GLOBAL__I_a
 FUN_000826b0 src/libs/unknown/func_000826b0.cpp _GLOBAL__I_a
 FUN_0007a650 src/libs/unknown/func_0007a650.cpp _GLOBAL__I_a
+_ZN28hkpStiffSpringConstraintDataC1Ev src/libs/unknown/func_0007d660.cpp _ZN28hkpStiffSpringConstraintDataC2Ev
+FUN_00002d70 src/libs/unknown/func_00002d70.cpp _ZN16TwoBaseAllocator14blockFreeBatchEPPvii
+FUN_00185520 src/libs/unknown/func_00185520.cpp

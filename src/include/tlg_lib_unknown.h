@@ -2652,6 +2652,26 @@ struct FreeList /* derived name */
         freeHead = element;
     }
 
+    /* Elements put back at the head of the freed ones, a null one
+     * uncounted (inline in TwoBaseAllocator's batch free, 0x2e15). derived
+     * name. */
+    void freeBatch(void **elements, int numElements)
+    {
+        numFreeElements += numElements;
+        void *head = freeHead;
+        while (numElements > 0) {
+            void *element = *elements++;
+            numElements--;
+            if (element) {
+                *static_cast<void **>(element) = head;
+                head = element;
+            } else {
+                numFreeElements--;
+            }
+        }
+        freeHead = head;
+    }
+
     /* The blocks whose elements are all free given back to the block
      * allocator, their headers to the element allocator when it keeps them
      * apart, and counted (0x19190; slots 13 and 14 of TwoBaseAllocator,
@@ -2815,6 +2835,10 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     /* The rest of the overriders, declared so the class is complete (slot
      * 3 0x2c40; primary slots 13 to 15, 17, 18, 20 and 21). */
     virtual void blockFree(void *pointer, int numBytes);
+    /* Slot 8 (0x2d70): under the lock, small blocks back on their size's
+     * free list as one batch, counted as slot 3 counts one; larger ones
+     * each to the allocator below. */
+    virtual void blockFreeBatch(void **blocks, int numBlocks, int blockSize);
     virtual void FUN_00003140();
     virtual void FUN_000032e0(int value);
     virtual int FUN_000034a0(u64 limit);
