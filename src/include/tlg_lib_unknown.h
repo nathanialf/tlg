@@ -5580,17 +5580,6 @@ struct SupportQuery000a8ef0 /* derived name */
     const void *shapeB; /* derived name */
 };
 
-/* Eight references (derived name): the world keeps one at +0x610, which
- * its destructor destroys and frees as 0x40 bytes (0x4b65c), and 0x170020
- * builds two on its stack. The destructor (0x906f0) releases them from the
- * last. */
-struct RefPtrArray000906f0 /* derived name */
-{
-    ~RefPtrArray000906f0();
-
-    hkRefPtr<hkReferencedObject> references[8]; /* derived name */
-};
-
 /* A field of a bit field map holds its own size (BitFieldMap00199770::
  * Block): FUN_00199600 takes one from the thread's temporary allocator, a
  * 0x28-byte header (its byte size at +0, an element size at +4, a bit

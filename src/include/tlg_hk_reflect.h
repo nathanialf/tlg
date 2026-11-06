@@ -19055,12 +19055,40 @@ struct hkBlockStreamLinkedRange : public hkBlockStreamRange /* derived name */
     u8 unknown18[8];
 };
 
+/* The executors that do nothing (derived names), the two classes of the
+ * primary dispatcher's defaults (its constructor's file, 0x90570, holds
+ * their objects); their vtables (0x16a3410 and 0x16a33c0, no type info)
+ * hold the same empty bodies (0x8c0a0). */
+class CommandDispatcher16a3410 : public hkSecondaryCommandDispatcher /* derived name */
+{
+  public:
+    virtual void exec(const hkCommand &) {}
+
+    virtual void print(const hkCommand &, hkOstream &) const {}
+};
+
+class CommandDispatcher16a33c0 : public hkSecondaryCommandDispatcher /* derived name */
+{
+  public:
+    virtual void exec(const hkCommand &) {}
+
+    virtual void print(const hkCommand &, hkOstream &) const {}
+};
+
 /* The executors by primary type (derived name), eight references (the
- * constructor 0x90570 clears them; the simulation builds one on the stack
- * at 0x17008b and runs each command of a stream through it, 0x170396). */
+ * simulation builds one on the stack at 0x17008b and runs each command of a
+ * stream through it, 0x170396; the world keeps one at +0x610, which its
+ * destructor destroys and frees as 0x40 bytes, 0x4b65c). */
 class hkPrimaryCommandDispatcher /* derived name */
 {
   public:
+    /* Out of line (0x90570): every type's executor the one that does
+     * nothing, type 0's its own. */
+    hkPrimaryCommandDispatcher();
+
+    /* Out of line (0x906f0): the references released from the last. */
+    ~hkPrimaryCommandDispatcher();
+
     void FUN_00090830(const hkCommand &command); /* derived name */
 
     /* The executor of a primary type set, its reference taken and the
@@ -19068,7 +19096,7 @@ class hkPrimaryCommandDispatcher /* derived name */
      * three, 0x49771 to 0x497a7). derived name. */
     void FUN_00090780(u32 primaryType, hkSecondaryCommandDispatcher *dispatcher);
 
-    hkSecondaryCommandDispatcher *dispatchers[8]; /* derived name */
+    hkRefPtr<hkSecondaryCommandDispatcher> dispatchers[8]; /* derived name */
 };
 
 /* derived name: every command of every list of ranges run through a

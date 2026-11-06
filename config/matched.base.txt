@@ -1786,7 +1786,7 @@ FUN_00161400 src/libs/unknown/func_00161400.cpp _ZN15hknpBodyManager12FUN_001614
 FUN_001797b0 src/libs/unknown/func_001797b0.cpp _ZNK33hknpVehicleLinearCastWheelCollide12FUN_001797b0EPK19hknpVehicleInstancehRDv4_f
 FUN_0005dbc0 src/libs/unknown/func_0005dbc0.cpp _ZNK9hknpWorld12FUN_0005dbc0EiRDv4_fS1_
 FUN_000279a0 src/libs/unknown/func_000279a0.cpp _ZN24hkMemoryMeshVertexBuffer12FUN_000279a0ERKN18hkMeshVertexBuffer9LockInputERNS0_14LockedVerticesE
-_ZN19RefPtrArray000906f0D1Ev src/libs/unknown/func_000906f0.cpp
+_ZN26hkPrimaryCommandDispatcherD1Ev src/libs/unknown/func_000906f0.cpp
 FUN_00069640 src/libs/unknown/func_00069640.cpp _ZN23hknpClosestHitCollector5resetEv
 _ZN18hkcdStaticAabbTreeD1Ev src/libs/unknown/func_00022700.cpp
 _ZN18hkcdStaticAabbTreeD0Ev src/libs/unknown/func_00022700.cpp
@@ -2583,3 +2583,4 @@ FUN_0003bf80 src/libs/unknown/func_0003bf80.cpp _ZN30hknpVehicleDefaultAerodynam
 FUN_00087b70 src/libs/unknown/func_00087b70.cpp _GLOBAL__I_a
 FUN_0005ed40 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005ed40EiRKDv4_fS2_
 FUN_00060a10 src/libs/unknown/func_00060a10.cpp _ZN17hknpSpaceSplitter12FUN_00060a10Ei
+FUN_00090570 src/libs/unknown/func_00090570.cpp _ZN26hkPrimaryCommandDispatcherC1Ev
