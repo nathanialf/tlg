@@ -2127,12 +2127,6 @@ class Elements000768c0 : public Elements000760c0 /* derived name */
 
 void FUN_000760c0(Elements000760c0 *self); /* derived name */
 
-/* An object of 0xa0 bytes (vtable 0x16a3f50, no type info; constructor
- * FUN_00140a60, out-of-line destructor FUN_00140e70, which restores the
- * vtable and releases the pointers from +0x10 up to the count at +0x60);
- * its deleting destructor 0x140e20 runs the destructor and frees the 0xa0
- * bytes unless null (written as calls while the class is opaque, cookbook
- * 15). derived names. */
 /* What the object keeps at +0x98, made on first use by its slot 7 (derived
  * name): 0xf8 bytes from the thread's heap, built by the out-of-line
  * constructor 0x18d640, which gives it the broad phase's tasks (the
@@ -2144,6 +2138,8 @@ class BroadPhaseTasks0018d640 /* derived name */
     BroadPhaseTasks0018d640();
 
     static void *operator new(unsigned long numBytes);
+    /* The thread's heap (the owner's destructor, 0x140f13). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Out of line (0x18d880, called by the owner's destructor at 0x140ef1
      * before it frees the 0xf8 bytes): every task deleted, the three
@@ -2167,10 +2163,7 @@ class BroadPhaseTasks0018d640 /* derived name */
 
 /* The object is the broad phase's trees by layer (BroadPhaseLayers00142a40,
  * below: its slot 4 marks bodies, slot 5 is the update 0x142bb0). */
-struct BroadPhaseLayers00142a40;
-
-void FUN_00140e70(BroadPhaseLayers00142a40 *self); /* derived name */
-void FUN_00140e20(BroadPhaseLayers00142a40 *self); /* derived name */
+class BroadPhaseLayers00142a40;
 
 /* Its deleting destructor (0x76070, beside 0x760c0; both vtables' slot
  * 1): the destructor, then the 0x160 bytes back to the thread's heap
@@ -3114,6 +3107,10 @@ struct Object00065f20 /* derived name */
      * parents' storage given back at the node count's size, then the
      * records' bit fields. */
     ~Object00065f20();
+
+    /* The thread's heap: the solve data task deletes its own at 0x1a0
+     * bytes (0x16eb4d). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     UnionFind *unionFind;       /* derived name */
     UnionFindParents *parents;  /* derived name */
@@ -4279,6 +4276,21 @@ inline void BlockCache::operator delete(void *object, unsigned long numBytes)
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
+inline void Object00065f20::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void SolveData0016e0e0::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void BroadPhaseTasks0018d640::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
 inline void RefArrays::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -4882,6 +4894,11 @@ inline void hknpSolverFactoryTask::operator delete(void *object, unsigned long n
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpSolveDataTask::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpVehicleSuspension::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -5232,6 +5249,14 @@ struct BroadPhaseTree00142a40 /* derived name */
      * derived name. */
     BroadPhaseTree00142a40(int maxLeafEntries);
 
+    /* The tree reset and its arrays given back (0x195fe0, which runs the
+     * body 0x195ff0; the layers' destructor calls it at 0x140ead before it
+     * frees the 0x58 bytes). */
+    ~BroadPhaseTree00142a40();
+
+    /* The thread's heap. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* The root node, none when the tree is empty. derived name. */
     const Node *getRoot() const
     {
@@ -5371,13 +5396,25 @@ void FUN_00197c60(const SimulationContext00142fa0 *context, hknpCollisionFilter 
                   BroadPhaseTree00142a40 *treeA, BroadPhaseTree00142a40 *treeB, void *argument5,
                   void *argument6);
 
-/* The broad phase's trees by layer (derived names): a tree per layer from
- * +0x10, two flags per layer after them, the number of layers at +0x60;
- * the bodies marked for the update in a bit field at +0x78, the lowest and
- * highest marked ids at +0x90 and +0x94 (slot 4 of the vtable at address
- * point 0x16a3f60, 0x143390, marks them; slot 5 is the update 0x142bb0). */
-struct BroadPhaseLayers00142a40 /* derived name */
+/* The broad phase's trees by layer (derived names; vtable 0x16a3f50, no
+ * type info, constructor 0x140a60, 0xa0 bytes): the world's broad phase
+ * configuration held at +8, a tree per layer from +0x10, two flags per
+ * layer after them, the number of layers at +0x60; the bodies marked for
+ * the update in a bit field at +0x78, the lowest and highest marked ids at
+ * +0x90 and +0x94 (slot 4 of the vtable at address point 0x16a3f60,
+ * 0x143390, marks them; slot 5 is the update 0x142bb0). */
+class BroadPhaseLayers00142a40 /* derived name */
 {
+  public:
+    /* Out of line (0x140e70, slot 0; the deleting destructor 0x140e20
+     * before it): each layer's tree deleted, then the tasks, then the
+     * members. */
+    virtual ~BroadPhaseLayers00142a40();
+
+    /* The thread's heap, nothing for null (the deleting destructor's test
+     * after the destructor, 0x140e2e). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* Slot 4 (0x143390): each of the ids, striding bytes apart, marked,
      * the field grown to a multiple of 32 bits that holds it, and the
      * lowest and highest marked ids kept. derived name. */
@@ -5404,7 +5441,7 @@ struct BroadPhaseLayers00142a40 /* derived name */
     void FUN_00142fa0(const SimulationContext00142fa0 *context, void *argument2, void *argument3,
                       void *argument4);
 
-    u8 unknown0[0x10];
+    hkRefPtr<hknpBroadPhaseConfig> config; /* derived name: the world's (0x4999d) */
     BroadPhaseTree00142a40 *trees[8];
     bool flag50[8];
     bool updatePending[8]; /* cleared by both trees' updates */
@@ -5420,6 +5457,18 @@ struct BroadPhaseLayers00142a40 /* derived name */
     u32 highestMarkedId;
     BroadPhaseTasks0018d640 *tasks; /* derived name */
 };
+
+inline void BroadPhaseTree00142a40::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void BroadPhaseLayers00142a40::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
+}
 
 /* What the broad phase's pair search runs in (derived names): the world at
  * +8 (slot 9 reads its modifier manager's collision filter, 0x142ef8). */

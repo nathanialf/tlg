@@ -1128,17 +1128,64 @@ class hknpPrepareExistingPairsTask : public hkReferencedObject,
 /* The solver's data task (derived name; vtables 0x16a5690 and 0x16a56d8,
  * constructor 0x16e0e0): slot 5 (0x16ec30, before the work at slot 6,
  * 0x16a370) gives the name "Solve/Data";
- * its complete destructor FUN_0016eaa0 restores both vtables and frees the
+ * its complete destructor 0x16eaa0 restores both vtables and frees the
  * arrays at +0x20 and +0xc0 (48-byte polymorphic elements) and the blocks at
  * +0x30, +0x38 and +0xb8; the deleting destructor frees 0xe0 bytes by
  * default. */
+struct IndexRange000477f0; /* derived name; tlg_lib_unknown.h */
+
+/* The block the constructor builds for the solver from the world's and the
+ * step's pointers (0x16e5fc, 0xd0 bytes, a pointer at +0xb8 to its own
+ * +0xc0); nothing in it is destroyed. derived name. */
+struct SolveData0016e0e0 /* derived name */
+{
+    /* The thread's heap (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    u8 unknown0[0xd0];
+};
+
+/* The 48-byte elements of the task's array at +0xc0, each destroyed through
+ * slot 0 of its vtable (0x16eb86). derived name. */
+class Element0016eaa0 /* derived name */
+{
+  public:
+    virtual ~Element0016eaa0();
+
+    u8 unknown8[0x28];
+};
+
 class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
   public:
+    /* Out of line (0x16eaa0, slot 0; the deleting destructor 0x16e9f0
+     * before it, each followed by its thunk from the task interface at
+     * +0x10, 0x16ea40 and 0x16ec20): the solve data, the threads' blocks
+     * and the union-find given back, then the arrays. */
+    virtual ~hknpSolveDataTask();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0xe0 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     /* slot 5 (0x16ec30), declared before the work */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+    /* slot 6 (the empty body 0x16a370, also the interface's slot 2) */
+    virtual void process();
 
-    u8 unknown18[0xc8]; /* to the 0xe0 bytes */
+    /* The threads the step's info counts (its first two ints summed,
+     * 0x16e77f), one 512-byte block each at +0x38. derived names. */
+    int numThreads;
+    /* One range per list of the motion manager's lists, each -1 and 0
+     * first (0x16e240), filled by FUN_000477f0. derived name. */
+    hkArray<IndexRange000477f0> ranges;
+    Object00065f20 *unionFind; /* derived name: built when the world asks for it (0x16e394) */
+    u8 *threadBlocks;          /* derived name: numThreads blocks of 512 bytes, zeroed */
+    u8 unknown40[0x78];
+    SolveData0016e0e0 *solveData;      /* derived name */
+    hkArray<Element0016eaa0> elements; /* derived name */
+    void *unknownD0;                   /* derived name: the world's +0x1d0 */
+    u8 unknownD8[8];
 };
 
 void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */
@@ -1146,12 +1193,7 @@ void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; de
 void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; derived name */
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
 void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
-void FUN_0016eaa0(hknpSolveDataTask *self);                 /* derived name */
-void FUN_0016e9f0(hknpSolveDataTask *self); /* vtable slot 1 (0x16a5680); derived name */
-/* The interface's thunk of it (slot 1 of the second vtable, 0x16ea40), on
- * the object 16 bytes before the interface. derived name. */
-void FUN_0016ea40(hknpTaskInterface *self);
-void FUN_001798c0(hknpPrepareExistingPairsTask *self); /* vtable slot 5; derived name */
-void FUN_0018ef40(hknpSolverStageTask *self);          /* vtable slot 5; derived name */
+void FUN_001798c0(hknpPrepareExistingPairsTask *self);      /* vtable slot 5; derived name */
+void FUN_0018ef40(hknpSolverStageTask *self);               /* vtable slot 5; derived name */
 
 #endif

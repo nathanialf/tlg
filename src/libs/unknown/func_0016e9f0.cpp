@@ -2,10 +2,13 @@
 #include "tlg_hk_thread.h"
 #include "tlg_lib_unknown.h"
 
-/* derived name: slot 1 of hknpSolveDataTask's vtable (0x16a5680), its deleting destructor:
- * the destructor 0x16eaa0, then the object back to the thread's heap at its recorded size. */
-void FUN_0016e9f0(hknpSolveDataTask *self)
+/* The solve data task's destructor (the compiler's D0 at 0x16e9f0 and D1 at
+ * 0x16eaa0, each followed by its thunk from the task interface at +0x10,
+ * 0x16ea40 and 0x16ec20): the solve data, the threads' blocks and the
+ * union-find given back to the thread's heap, then the arrays. */
+hknpSolveDataTask::~hknpSolveDataTask()
 {
-    FUN_0016eaa0(self);
-    freeReferencedObject(self, sizeof(hknpSolveDataTask));
+    delete solveData;
+    D_16dc070->temp58->blockFree(threadBlocks, numThreads * 512);
+    delete unionFind;
 }

@@ -232,7 +232,7 @@ FUN_0017d790 src/libs/unknown/func_0017d790.cpp
 FUN_0017ed60 src/libs/unknown/leaf_0017ed60.cpp
 FUN_00180ef0 src/libs/unknown/leaf_00180ef0.cpp
 _ZN22hkBinaryPackfileWriterD1Ev src/libs/unknown/func_00181b10.cpp
-FUN_00195fe0 src/libs/unknown/func_00195fe0.cpp
+_ZN22BroadPhaseTree00142a40D1Ev src/libs/unknown/func_00195fe0.cpp _Z12FUN_00195fe0P14Object00195ff0
 FUN_000058a0 src/libs/unknown/leaf_000058a0.cpp
 FUN_00006d00 src/libs/unknown/leaf_00006d00.cpp
 FUN_0002b020 src/libs/unknown/leaf_0002b020.cpp
@@ -424,7 +424,7 @@ FUN_0015b7a0 src/libs/unknown/func_0015b7a0.cpp _ZN23hknpPrepareNewPairsTask7pro
 FUN_0015dcb0 src/libs/unknown/func_0015e7f0.cpp _ZThn16_N20hknpCollidePairsTaskD1Ev
 FUN_0015fa40 src/libs/unknown/func_0015e7f0.cpp _ZThn16_N20hknpCollidePairsTask7processEv
 FUN_00165880 src/libs/unknown/leaf_00165880.cpp _ZNK19hknpVehicleInstance12FUN_00165880Ev
-FUN_0016ec20 src/libs/unknown/func_0016ec20.cpp
+FUN_0016ec20 src/libs/unknown/func_0016e9f0.cpp _ZThn16_N17hknpSolveDataTaskD1Ev
 FUN_00176b10 src/libs/unknown/func_00176b10.cpp _ZN18hknpCharacterProxy12FUN_00176b10EP30hknpCharacterProxySignalSourceP28hknpCharacterProxySignalData
 FUN_00179c70 src/libs/unknown/func_00179c70.cpp
 FUN_0017b910 src/libs/unknown/leaf_0017b910.cpp _ZN21hkp6DofConstraintData12FUN_0017b910Ef
@@ -1273,7 +1273,7 @@ _ZN17RouterAllocator50D0Ev src/libs/unknown/func_0000ac10.cpp
 _ZN9RefArraysD0Ev src/libs/unknown/func_000514a0.cpp
 _ZN16RefArrays1698f80D0Ev src/libs/unknown/func_000514a0.cpp
 FUN_00076070 src/libs/unknown/func_00076070.cpp _Z12FUN_00076070P16Elements000760c0
-FUN_00140e20 src/libs/unknown/func_00140e20.cpp _Z12FUN_00140e20P24BroadPhaseLayers00142a40
+_ZN24BroadPhaseLayers00142a40D0Ev src/libs/unknown/func_00140e20.cpp
 FUN_0014e0b0 src/libs/unknown/func_0014e0b0.cpp _Z12FUN_0014e0b0P23hknpWorldObject1d0Large
 FUN_00093340 src/libs/unknown/func_00093340.cpp _ZN16FiosStreamReader12FUN_00093340EPvi
 _ZN18hknpFirstPersonGunC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00156620.cpp _ZN18hknpFirstPersonGunC2E24hkFinishLoadedObjectFlag
@@ -1346,7 +1346,7 @@ FUN_00165aa0 src/libs/unknown/func_00165aa0.cpp
 FUN_00166130 src/libs/unknown/func_00166130.cpp
 FUN_0016a640 src/libs/unknown/func_0016a640.cpp
 _ZN21hknpScaledConvexShapeD0Ev src/libs/unknown/func_0016cf30.cpp
-FUN_0016e9f0 src/libs/unknown/func_0016e9f0.cpp
+_ZN17hknpSolveDataTaskD0Ev src/libs/unknown/func_0016e9f0.cpp
 _ZN18hknpCharacterProxyD0Ev src/libs/unknown/func_00176b70.cpp
 _ZN21hkp6DofConstraintDataD0Ev src/libs/unknown/func_0017b700.cpp
 _ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
@@ -1406,7 +1406,7 @@ _ZN7hkxBlobD0Ev src/libs/unknown/func_00085c40.cpp
 _ZN26hknpVehicleDefaultSteeringD1Ev src/libs/unknown/func_0016f980.cpp
 _ZN26hknpVehicleDefaultSteeringD0Ev src/libs/unknown/func_0016f980.cpp
 _ZN26hkBlockStreamCommandWriterD0Ev src/libs/unknown/func_00090450.cpp
-FUN_0016ea40 src/libs/unknown/func_0016ea40.cpp
+FUN_0016ea40 src/libs/unknown/func_0016e9f0.cpp _ZThn16_N17hknpSolveDataTaskD0Ev
 _ZN7hkClassC1EPKcPKS_iPS3_iPK11hkClassEnumiPK13hkClassMemberiPKvPK18hkCustomAttributesjj src/libs/unknown/func_000041a0.cpp _ZN7hkClassC2EPKcPKS_iPS3_iPK11hkClassEnumiPK13hkClassMemberiPKvPK18hkCustomAttributesjj
 FUN_000180c0 src/libs/unknown/func_000180c0.cpp
 FUN_0001aca0 src/libs/unknown/func_0001aca0.cpp _ZN9hkMatrix312FUN_0001aca0ERKDv4_f
@@ -2599,3 +2599,6 @@ FUN_00156110 src/libs/unknown/func_00156110.cpp _ZN17ShapeWatcherOwner12FUN_0015
 FUN_00178e40 src/libs/unknown/func_00178e40.cpp _ZN33hknpVehicleLinearCastWheelCollide13collideWheelsEfPK19hknpVehicleInstanceP18WheelCollideOutputPK9hknpWorld
 FUN_00013940 src/libs/unknown/func_000138a0.cpp _ZN10PointerMap12FUN_00013940ER13AllocatorBasei
 FUN_0000b7e0 src/libs/unknown/func_0000b330.cpp _ZN14Object0000b3307messageEN7hkError7MessageEiPKcS3_i
+_ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo src/libs/unknown/func_00001960.cpp
+_ZN17hknpSolveDataTaskD1Ev src/libs/unknown/func_0016e9f0.cpp
+_ZN24BroadPhaseLayers00142a40D1Ev src/libs/unknown/func_00140e20.cpp _ZN24BroadPhaseLayers00142a40D2Ev
