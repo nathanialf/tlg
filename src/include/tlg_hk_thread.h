@@ -1035,7 +1035,7 @@ class hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived nam
  * for the layers 0 to 3, each with its owner at +8 and its layer at +0x10):
  * slot 2 (0x18d130) the work, slot 3 (0x18ce30) "BroadPhase/Update layer
  * %i" with the layer, described in the first state's colour. */
-struct BroadPhaseTaskData0018d050;
+class BroadPhaseTasks0018d640; /* tlg_lib_unknown.h */
 
 class hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name */
 {
@@ -1048,8 +1048,8 @@ class hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name *
     void FUN_0018ce30(hkStringBuf *name,
                       hkStringBuf *description) const; /* vtable slot 3; derived name */
 
-    BroadPhaseTaskData0018d050 *owner; /* derived name */
-    int layer;                         /* derived name */
+    BroadPhaseTasks0018d640 *owner; /* derived name */
+    int layer;                      /* derived name */
 };
 
 class BroadPhaseTasks0018d640;
@@ -1073,23 +1073,9 @@ class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived nam
 /* The broad phase's collide task (derived name after its slot 3's format
  * "BroadPhase/Collide %i vs %i"; vtable 0x16a66f0): 0x120 bytes from the
  * thread's heap, sixteen built inline by FUN_0018d640 (from 0x18d820) with
- * the owner at +8, the index at +0x10 and an empty inplace array of 24
- * eight-byte entries at +0x40. Slot 2 (0x18d230) is the work. */
-/* What the broad phase's collide tasks name themselves from (derived
- * names): the layer pairs at +0x68 of the object at +8 of the owner, two
- * ints a pair. */
-struct BroadPhaseLayers0018cf50 /* derived name */
-{
-    u8 unknown0[0x68];
-    const int *layerPairs; /* derived name */
-};
-
-struct BroadPhaseOwner0018cf50 /* derived name */
-{
-    u8 unknown0[8];
-    BroadPhaseLayers0018cf50 *layers; /* derived name */
-};
-
+ * the owner at +8, the index at +0x10 and its pair stream at +0x20 (the
+ * stream's empty inplace array of 24 block pointers at +0x40). Slot 2
+ * (0x18d230) is the work. */
 class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
 {
   public:
@@ -1104,7 +1090,7 @@ class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
     /* slot 3 (0x18cf50) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    BroadPhaseOwner0018cf50 *owner; /* derived name */
+    BroadPhaseTasks0018d640 *owner; /* derived name */
     int index;                      /* derived name: the pair it collides */
     u8 unknown14[0xc];
     /* The pairs it finds (the export task appends them to the owner's,

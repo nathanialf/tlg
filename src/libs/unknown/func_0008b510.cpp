@@ -4,8 +4,8 @@
 /* hkxNode's finish constructor (0x8b4b0): the two strings and the uuid
  * finished, the arrays left as loaded, and the vtable set. */
 hkxNode::hkxNode(hkFinishLoadedObjectFlag flag)
-    : hkxAttributeHolder(flag), name(flag), uuid(flag), keyFrames(flag), children(flag),
-      annotations(flag), linearKeyFrameHints(flag), userProperties(flag)
+    : hkxAttributeHolder(flag), name(flag), uuid(flag), object(flag), keyFrames(flag),
+      children(flag), annotations(flag), linearKeyFrameHints(flag), userProperties(flag)
 {
 }
 

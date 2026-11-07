@@ -5,7 +5,7 @@
  * cleared), the unserialized vertices null, and a finished geometry runs
  * FUN_0009a8a0. */
 hkcdPlanarGeometry::hkcdPlanarGeometry(hkFinishLoadedObjectFlag flag)
-    : hkcdPlanarEntity(flag), vertices(0)
+    : hkcdPlanarEntity(flag), planes(flag), polys(flag), vertices(0)
 {
     if (flag.finishing) {
         FUN_0009a8a0(0);

@@ -4,7 +4,7 @@
 /* derived name: slot 6 of hknpFlippedGetClosestPointsQueryCollector's vtable
  * (0x1698fd0) forwards to the same slot of the collector it wraps (at
  * +0x20). */
-bool hknpFlippedGetClosestPointsQueryCollector::FUN_00048510() const /* derived name */
+bool hknpFlippedGetClosestPointsQueryCollector::unknownVirtual6() const
 {
     return childCollector->unknownVirtual6();
 }

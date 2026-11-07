@@ -8,7 +8,7 @@ static Vec4 negateXyz(const Vec4 &v) /* derived name */
         v, _mm_castsi128_ps(_mm_setr_epi32(int(0x80000000), int(0x80000000), int(0x80000000), 0)));
 }
 
-void hknpFlippedGetClosestPointsQueryCollector::FUN_00048420(const hknpCollisionResult &hit)
+void hknpFlippedGetClosestPointsQueryCollector::addHit(const hknpCollisionResult &hit)
 {
     const Vec4 distance = _mm_set1_ps(hit.fraction);
     hknpCollisionResult flipped = hit;

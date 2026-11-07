@@ -253,6 +253,15 @@ inline float fabs(float r)
  * truncation, `vpsrad $16; vpackssdw; vmovd` (0x15db42). Field name
  * derived. */
 struct hkHalf {
+    /* Assigned by its value (Havok's hkHalf declares its own assignment):
+     * a struct holding halves is assigned member by member, each half on
+     * its own (the material library's update, 0x77b1c to 0x77b9d), where
+     * the trivial assignment joins them into one copy. */
+    void operator=(const hkHalf &other)
+    {
+        value = other.value;
+    }
+
     /* The float whose upper half the value is (0x69461: `movzx; shl 16`).
      * derived name. */
     float getReal() const
@@ -1616,6 +1625,11 @@ struct hkTransform {
      * called at 0x4f52a and from the geometry code at 0xda921). */
     void FUN_00010ad0(const hkTransform &t);
 
+    /* The same inline (Havok's _setInverse; the closest points queries'
+     * flips hold it, 0x57c57): the rotation transposed, the translation
+     * negated and carried back through it. Defined below. derived name. */
+    inline void setInverse(const hkTransform &t);
+
     /* derived name: set to a's inverse times b, a being rigid: b's columns
      * and its translation less a's taken into a's frame (0x10c30; called
      * at 0x74fb2 and 0x159f0b). */
@@ -1659,6 +1673,25 @@ struct hkTransform {
     hkMatrix3 rotation; /* derived name */
     Vec4 translation;   /* derived name */
 };
+
+inline void hkTransform::setInverse(const hkTransform &t)
+{
+    const Vec4 lo = _mm_unpacklo_ps(t.rotation.col0, t.rotation.col1);
+    const Vec4 hi = _mm_unpackhi_ps(t.rotation.col0, t.rotation.col1);
+    const Vec4 c = t.rotation.col2;
+    const Vec4 col0 = _mm_movelh_ps(lo, c);
+    rotation.col0 = col0;
+    const Vec4 col1 = _mm_shuffle_ps(_mm_movehl_ps(lo, lo), c, _MM_SHUFFLE(3, 1, 1, 0));
+    rotation.col1 = col1;
+    const Vec4 col2 = _mm_shuffle_ps(hi, c, _MM_SHUFFLE(3, 2, 1, 0));
+    rotation.col2 = col2;
+    const Vec4 negated = _mm_xor_ps(t.translation, _mm_set1_ps(-0.0f));
+    const Vec4 x = _mm_shuffle_ps(negated, negated, _MM_SHUFFLE(0, 0, 0, 0));
+    const Vec4 y = _mm_shuffle_ps(negated, negated, _MM_SHUFFLE(1, 1, 1, 1));
+    const Vec4 z = _mm_shuffle_ps(negated, negated, _MM_SHUFFLE(2, 2, 2, 2));
+    translation =
+        _mm_add_ps(_mm_mul_ps(col2, z), _mm_add_ps(_mm_mul_ps(col0, x), _mm_mul_ps(col1, y)));
+}
 
 /* Three columns combined by the lanes of a vector, x and y summed first
  * (hkMatrix3's product 0x1a9f0, the transform's 0x10b40). derived name. */
@@ -2279,6 +2312,29 @@ template <typename T> struct hkRefPtr {
     }
 
     T *pntr; /* derived name */
+};
+
+/* A counted reference to any reflected object (hkRefVariant; its class
+ * pointer is not kept here). */
+struct hkRefVariant /* derived name */ {
+    /* No object (a new resource handle's, 0x17fe07). */
+    hkRefVariant() : object(HK_NULL) {}
+
+    /* A loaded object's reference is kept as it was loaded. */
+    hkRefVariant(hkFinishLoadedObjectFlag) {}
+
+    /* The object's reference released and the pointer cleared, as a
+     * counted reference's (hkMemoryResourceHandle's destructor 0x17f180,
+     * after the name). */
+    ~hkRefVariant()
+    {
+        if (object) {
+            object->removeReference();
+        }
+        object = 0;
+    }
+
+    hkReferencedObject *object; /* derived name */
 };
 
 /* hkReferencedObjectLock, the singleton registered by that name (record
@@ -3236,14 +3292,20 @@ class hkcdPlanarGeometryVertexStorage /* derived name */
 
 struct hkcdPlanarGeometry : public hkcdPlanarEntity {
     hkcdPlanarGeometry(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x9b1c0, slot 0; the deleting one 0x9b170, slot 1,
+     * before it): the three references released and cleared, then the
+     * members', then hkcdPlanarEntity's, inline. */
     virtual ~hkcdPlanarGeometry();
 
     /* 0x9a8a0, a large member (derived name). */
     void FUN_0009a8a0(int argument);
 
-    hkcdPlanarGeometryPlanesCollection *planes;
-    hkcdPlanarGeometryPolygonCollection *polys;
-    void *vertices;
+    hkRefPtr<hkcdPlanarGeometryPlanesCollection> planes;
+    hkRefPtr<hkcdPlanarGeometryPolygonCollection> polys;
+    /* Not serialized and not a reference pointer: the destructor releases
+     * it itself, no member destructor follows (0x9b2b9). */
+    hkcdPlanarGeometryVertexStorage *vertices;
 };
 
 /* Its members from the records at 0x168f620: storage (the nodes) at +0x10,
@@ -4614,11 +4676,16 @@ class hkxNode : public hkxAttributeHolder
      * arrays left as loaded. */
     hkxNode(hkFinishLoadedObjectFlag flag);
 
+    /* Out of line (0x8c110, slot 0; the deleting one 0x8c0c0, slot 1,
+     * before it): the members from the last, then hkxAttributeHolder's
+     * (a tail jump to 0x89380). */
+    virtual ~hkxNode();
+
     hkStringPtr name;
     hkUuid uuid;
-    void *object;
+    hkRefVariant object;
     hkArray<Mat4> keyFrames;
-    hkArray<hkxNode *> children;
+    hkArray<hkRefPtr<hkxNode>> children;
     hkArray<AnnotationData> annotations;
     hkArray<float> linearKeyFrameHints;
     hkStringPtr userProperties;
@@ -4662,9 +4729,13 @@ class hkxMaterialEffect : public hkReferencedObject
     static void operator delete(void *object, unsigned long numBytes);
 
     hkStringPtr name;
-    u8 unknown18[8];
+    u8 type; /* an enum of hkUint8, the class's one enum (records 0x16a1890) */
     hkArray<u8> data;
 };
+
+/* hkxMaterialEffect's enum through a pointer another file defines (its type
+ * record reads it at run time, 0x89d5e). derived name. */
+extern const hkClassEnum *D_16dc6c0;
 
 /* hkxNodeSelectionSet (hkClass 0x57c75b0, built at 0x8afe5: size 0x38,
  * parent hkxAttributeHolder's, member records at 0x16a1eb0): selectedNodes
@@ -10342,6 +10413,11 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
         return elements[id.value];
     }
 
+    T &operator[](Id id)
+    {
+        return elements[id.value];
+    }
+
     /* The elements in use destroyed, the free ones left alone; the array
      * then gives its storage back with none left to destroy (the material
      * library's 0x612f0 and hknpCompoundShape's 0x41720: one walk, then
@@ -10423,8 +10499,14 @@ struct hknpMaterialLibrary : public hkReferencedObject {
      * free list. derived name. */
     void FUN_00077c70(hknpMaterialId id);
 
+    /* A material replaced (0x77a60; the world's 0x16f061 and the game call
+     * it): a copy of the new one with its automatic flags set, written over
+     * the entry and the modified signal fired with its id only when the
+     * name or the values differ. derived name. */
+    void FUN_00077a60(hknpMaterialId id, const hknpMaterial &material);
+
     Signal00093530 materialAddedSignal;
-    Signal00093530 materialModifiedSignal;
+    hkSignal1<hknpMaterialId> materialModifiedSignal;
     hkSignal1<hknpMaterialId> materialRemovedSignal;
     hkFreeListArray<hknpMaterial, hknpMaterialId, 8, hknpMaterialFreeListArrayOperations> entries;
 };
@@ -12633,6 +12715,10 @@ class hknpSphereShape : public hknpConvexShape
      * vertex, and its convex radius; the shape's default when that fails.
      * derived name. */
     void FUN_0003c670(const void *argument1, void *argument2) const;
+
+    /* Slot 29 (0x3c6d0): the sphere's surface as the convex hull of 16 by
+     * 16 points on it. derived name. */
+    hkResult FUN_0003c6d0(const hknpShapeSlot29Input &input, hkGeometry *geometryOut) const;
 };
 
 /* The triangle's and the quad's counterparts of FUN_00168340 (0x1684a0 over
@@ -13120,19 +13206,17 @@ struct hknpMaterial {
      * records 0x66f10 builds (0x673ad, 0x6740b). */
     enum MassChangerCategory { MASS_CHANGER_IGNORE, MASS_CHANGER_DEBRIS, MASS_CHANGER_HEAVY };
 
+    /* The bytes between the members are padding: the library's update
+     * copies the members, not them (0x77a60). */
     u8 massChangerCategory;
-    u8 unknown25;
     hkHalf massChangerHeavyObjectFactor;
     hkHalf softContactForceFactor;
     hkHalf softContactDampFactor;
     hkUFloat8 softContactSeperationVelocity; /* the record's spelling */
-    u8 unknown2d[3];
     hknpSurfaceVelocity *surfaceVelocity;
     hkHalf disablingCollisionsBetweenCvxCvxDynamicObjectsDistance;
-    u8 unknown3a[6];
     u64 userData;
     hkBool isShared;
-    u8 unknown49[7];
 };
 
 /* The material library's free-list operations (the name the scoped type
@@ -16213,26 +16297,6 @@ class hkxMeshSection : public hkReferencedObject
  * reference to it and removing one from the old; FUN_000902f0 returns the
  * object's hkClass through the registry singleton at 0x57c8910 (slot 7), or
  * null. */
-struct hkRefVariant /* derived name */ {
-    /* No object (a new resource handle's, 0x17fe07). */
-    hkRefVariant() : object(HK_NULL) {}
-
-    /* A loaded object's reference is kept as it was loaded. */
-    hkRefVariant(hkFinishLoadedObjectFlag) {}
-
-    /* The object's reference released and the pointer cleared, as a
-     * counted reference's (hkMemoryResourceHandle's destructor 0x17f180,
-     * after the name). */
-    ~hkRefVariant()
-    {
-        if (object) {
-            object->removeReference();
-        }
-        object = 0;
-    }
-
-    hkReferencedObject *object; /* derived name */
-};
 
 void FUN_00090250(hkRefVariant *self, hkReferencedObject *object); /* derived name */
 const hkClass *FUN_000902f0(const hkRefVariant *self);             /* derived name */
@@ -19162,8 +19226,10 @@ class hknpCollisionQueryCollector /* derived name */
         earlyOut = D_14b2060[34];
     }
 
-    int hints; /* derived name */
-    u8 unknownC[4];
+    /* The four bytes after the hints are padding: a collector holds no
+     * array (the flips' collector sits below the query on their stacks,
+     * an address-taken object, 0x57d61). */
+    int hints;     /* derived name */
     Vec4 earlyOut; /* derived name */
 };
 
@@ -19239,19 +19305,77 @@ class hknpFlippedGetClosestPointsQueryCollector
     : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    /* Empty (the shared 0x3b640); the deleting destructor is 0x483d0. */
-    virtual ~hknpFlippedGetClosestPointsQueryCollector();
+    /* Over another collector, its hints and early-out value taken (built on
+     * the stack by the closest points queries' flips, 0x57d61). */
+    hknpFlippedGetClosestPointsQueryCollector(hknpCollisionQueryCollector *child)
+        : childCollector(child)
+    {
+        hints = child->hints;
+        earlyOut = child->earlyOut;
+    }
 
-    void FUN_00048410(); /* vtable slot 3; derived name */
+    /* Empty and inline (the shared 0x3b640; the closest points queries'
+     * flips build one on the stack and call no destructor, 0x57dca); the
+     * deleting destructor 0x483d0 is emitted with the vtable in the file of
+     * slot 3, the class's key function. */
+    virtual ~hknpFlippedGetClosestPointsQueryCollector() {}
+
+    /* Slot 3 (0x48410): the wrapped collector's reset. */
+    virtual void reset();
     /* Slot 4 (0x48420): the hit added to the wrapped collector flipped,
      * its normal negated (w kept), its position moved along the normal by
      * its distance and the two body infos swapped, then the wrapped
-     * collector's early-out value taken. derived name. */
-    void FUN_00048420(const struct hknpCollisionResult &hit);
-    bool FUN_00048510() const; /* vtable slot 6; derived name */
+     * collector's early-out value taken. */
+    virtual void addHit(const struct hknpCollisionResult &hit);
+    /* Slot 6 (0x48510): the wrapped collector's. */
+    virtual bool unknownVirtual6() const;
 
     hknpCollisionQueryCollector *childCollector; /* derived name */
 };
+
+/* A closest points query (derived names after Havok's): the collision
+ * query and the query's shape at +0x20, 0x38 bytes (the flips copy it
+ * whole, 0x57ce4 to 0x57d2d). */
+struct hknpClosestPointsQuery : public hknpCollisionQuery /* derived name */
+{
+    const hknpShape *shape;
+    /* Two words 0x57530 reads (0x578b7); no array, the query an
+     * address-taken object below the flips' transform. derived names. */
+    const void *unknown28;
+    const void *unknown30;
+};
+
+/* What the collision queries run in (derived names): the query's and the
+ * target's triangles at +0x10 and +0x18, swapped while a query runs
+ * flipped (0x57d84, 0x57dba). */
+struct hknpCollisionQueryContext /* derived name */
+{
+    u8 unknown0[0x10];
+    hknpTriangleShape *queryTriangle;
+    hknpTriangleShape *targetTriangle;
+};
+
+/* What a query hands on about each of its two shapes (derived name; not
+ * read by the flips). */
+struct hknpShapeQueryInfo;
+
+/* The closest points between a query's shape and a target shape (0x57530,
+ * 0x4d4 bytes), with the shapes' filter data and infos, the query's shape
+ * in the target's space and whether the two were swapped; the hits to the
+ * collector. derived name. */
+void FUN_00057530(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+
+/* The same, the two swapped first when the query's shape has more key bits
+ * than the target (0x57c00; 0x57530 calls it). derived name. */
+void FUN_00057c00(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
 
 /* A collector that wraps another at +0x48 (derived name), built on the
  * stack at 0xd7324 and 0xd746c (vtable 0x16a3c50) and at 0xf0590 (vtable

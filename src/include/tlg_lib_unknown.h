@@ -34,7 +34,15 @@ struct Mode40Owner {
  * the pointer at +0x38 through FUN_00034950, and FUN_0002b180 adds into the
  * object it points to. The forwarders at 0x34810 to 0x34970 call the
  * 0x2b0xx functions from another file. */
-struct Pair08Target; /* a u16 at +0x20 and a 16-byte sum at +0x40 */
+/* What the record's pointer at +0x38 points at (derived names): FUN_0002b180
+ * adds a velocity scaled by the half at +0x20 into the vector at +0x40. */
+struct Pair08Target /* derived name */
+{
+    u8 unknown0[0x20];
+    hkHalf scale; /* derived name */
+    u8 unknown22[0x1e];
+    Vec4 sum; /* derived name */
+};
 
 struct Pair08Owner {
     /* Bit 3 cleared and bit 5 set by FUN_0002b0c0. derived name. */
@@ -1625,6 +1633,104 @@ extern hknpGlobals *D_57c8818; /* hknpGlobals's singleton instance */
  * generation's stretch, D22; the globals' constructor maps a 7 by 7 grid of
  * them). derived name. */
 void FUN_000c05b0(const hkVector4 &coordinates, hkVector4 &directionOut); /* derived name */
+
+/* A run of vertices for the convex hull's build (derived names, after
+ * Havok's hkStridedVertices): the first vertex, the count and the bytes
+ * from one to the next, set from an array of vectors (the sphere's slot 29
+ * stores the three on its stack, 0x3c81a). */
+struct hkStridedVertices /* derived name */
+{
+    hkStridedVertices(const hkArrayBase<hkVector4> &vertices)
+    {
+        set(vertices.data, vertices.getSize());
+    }
+
+    void set(const hkVector4 *newVertices, int newNumVertices)
+    {
+        vertices = reinterpret_cast<const float *>(newVertices);
+        numVertices = newNumVertices;
+        striding = sizeof(hkVector4);
+    }
+
+    const float *vertices; /* derived name */
+    int numVertices;       /* derived name */
+    int striding;          /* derived name */
+};
+
+/* A reference-counted convex hull (derived names; the class takes its name
+ * from the file hkgpConvexHull.cpp, whose assert FUN_000b8d50 cites, in the
+ * later generation's stretch, D22): built and destroyed out of line (the
+ * constructor 0xb3490 stores the vtable address point 0x16a3be0 and
+ * allocates its 0x1f0-byte data, the destructor 0xb3670 frees it and
+ * releases the object at +0x20), the data behind the pointer at +0x10 (the
+ * homed FUN_000b8d50 reads the data's flags at +0x1ec and +0x1ee and its
+ * dimension at +0x1e0, which FUN_000b8a80 returns). hknpConvexPolytopeShape's
+ * builder (0x152593, 0x1527f8, 0x152866) compares the count at +0x38 against
+ * its vertex limit (at most 252) and reduces the hull with FUN_000b4e50 when
+ * it is over; it walks the triangles from the first (FUN_000b6d10, the
+ * pointer at +0x48 of the data) and reads each one's three vertices
+ * (FUN_000b6d20, the pointers from +0x10 of the triangle) into positions
+ * (0xbc840). */
+struct hkgpConvexHullVertex; /* derived name */
+
+struct hkgpConvexHullTriangle /* derived name */
+{
+    u8 unknown0[0x10];
+    hkgpConvexHullVertex *vertices[3]; /* derived name */
+};
+
+struct hkgpConvexHullData /* derived name */
+{
+    u8 unknown0[0x38];
+    s32 numVertices; /* derived name */
+    u8 unknown3c[0xc];
+    hkgpConvexHullTriangle *firstTriangle; /* derived name */
+    u8 unknown50[0x190];
+    s32 dimension; /* derived name */
+};
+
+class hkgpConvexHull /* derived name */ : public hkReferencedObject
+{
+  public:
+    /* The build's settings (0xb3440: two flags clear, 0.99999 at +4, the
+     * flags from +8 clear but for +9 and +0xb). derived names. */
+    struct BuildConfig {
+        BuildConfig();
+
+        hkBool flag0;
+        hkBool flag1;
+        float value4;
+        hkBool flag8;
+        hkBool flag9;
+        hkBool flagA;
+        hkBool flagB;
+        hkBool flagC;
+        hkBool flagD;
+        hkBool flagE;
+    };
+
+    hkgpConvexHull();
+    virtual ~hkgpConvexHull();
+
+    /* The hull of the vertices (0xb3950): its dimension, 3 for a solid.
+     * derived name. */
+    int FUN_000b3950(const hkStridedVertices &vertices, const BuildConfig &config);
+
+    /* The hull's triangles into a geometry (0xbcee0): the source, the
+     * geometry, the material and a flag. derived name. */
+    hkResult FUN_000bcee0(int source, hkGeometry &geometryOut, int material, bool flag);
+
+    int FUN_000b6bf0() const;                     /* derived name */
+    int FUN_000b8a80() const;                     /* derived name */
+    hkgpConvexHullTriangle *FUN_000b6d10() const; /* derived name */
+    hkgpConvexHullVertex *FUN_000b6d20(const hkgpConvexHullTriangle *triangle,
+                                       int index) const; /* derived name */
+
+    hkgpConvexHullData *data; /* derived name */
+    void *unknown18;
+    /* Released through its slot 1 by the destructor. derived name. */
+    hkReferencedObject *userObject;
+};
 
 /* A triangle shape built in a buffer of its own (derived names): the
  * globals' prototype copied in, its convex radius set (0x78160, out of
@@ -5921,6 +6027,12 @@ void FUN_0013c340(BroadPhaseTree00142a40 *tree, int nodeIndex, const hkAabb16 *c
                   const hknpBody *bodies, const int *keys, int numKeys); /* derived name */
 void FUN_0013de80(BroadPhaseTree00142a40 *tree, int nodeIndex, const hknpBody *bodies,
                   const int *keys, int numKeys); /* derived name */
+/* The leaf's own types (0x13de80): the bodies written (each body's
+ * broad phase id takes the leaf's node), the keys unsigned (a key's
+ * 32-bit load is its widening). The tree update's draft (0x13e090, parked)
+ * still passes the spelling above. derived names. */
+void FUN_0013de80(BroadPhaseTree00142a40 *tree, int nodeIndex, hknpBody *bodies, const u32 *keys,
+                  int numKeys); /* derived name */
 
 /* What the broad phase's pair search gets as its first argument (derived
  * name): the world at +8. */
@@ -6066,6 +6178,13 @@ void FUN_00197c60(const BroadPhaseContext00142ea0 *context, hknpCollisionFilter 
                   const BroadPhaseTree00142a40 *treeA, const BroadPhaseTree00142a40 *treeB,
                   void *pairsOut, int argument6); /* derived name */
 
+/* The same, as the collide task calls it (0x18d397): over a thread's
+ * context, the pairs into a writer, the body manager's previous boxes last.
+ * derived names. */
+void FUN_00197c60(const hknpWorldContextPool::Context *context, hknpCollisionFilter *filter,
+                  const BroadPhaseTree00142a40 *treeA, const BroadPhaseTree00142a40 *treeB,
+                  hkBlockStreamWriter *pairsOut, const hkAabb16 *previousAabbs); /* derived name */
+
 /* The work the broad phase's update runs first (0x141500, 0x1533 bytes).
  * derived name. */
 void FUN_00141500(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies);
@@ -6082,7 +6201,7 @@ class BroadPhaseUpdateTask0018d050 /* derived name */
 
     void FUN_0018d050(); /* vtable slot 2; derived name */
 
-    BroadPhaseTaskData0018d050 *data; /* derived name */
+    BroadPhaseTasks0018d640 *data; /* derived name */
 };
 
 /* A tree's update (0x13e090): its boxes refreshed from the bodies unless
@@ -6853,9 +6972,7 @@ void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0004b040(hknpWorld *self);
 void FUN_00087130(hkxMaterial *self);
-void FUN_0008c110(hkxNode *self);
 void FUN_0008d2c0(hkxScene *self);
-void FUN_0009b1c0(hkcdPlanarGeometry *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
@@ -6873,10 +6990,8 @@ void FUN_0004aff0(hknpWorld *self);                 /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);         /* slot 1 of 0x169ab10 */
 void FUN_000870e0(hkxMaterial *self);               /* slot 1 of 0x16a0db0 */
 void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
-void FUN_0008c0c0(hkxNode *self);                   /* slot 1 of 0x16a25e0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
-void FUN_0009b170(hkcdPlanarGeometry *self);        /* slot 1 of 0x16a36f0 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);     /* slot 1 of 0x16a38b0 */
 void FUN_00157ea0(hknpBallGun *self);               /* slot 1 of 0x16a48d0 */
 void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */
