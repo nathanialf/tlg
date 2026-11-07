@@ -2258,3 +2258,53 @@ static in the registering file. A folded callback that the gate cannot place at 
 (its bytes differ from the body the base's field names) is a question for the supervisor, not a
 reason to spell the callback external.
 
+
+## D40. The library line allows unsafe floating-point algebra (2026-11-07)
+
+**Question.** Round 76A's 0x158e20 (hknpVehicleRayCastWheelCollide's wheel output from its hit,
+482 bytes) is equal through its clipping test and then negates the reciprocal's factor as the base
+does not under the line: the base holds `vsubps (d*r) - [2.0]; vmulps r; vxorps zero; vaddps zero +
+x` where the line keeps `2 - d*r` and `vsubps zero - x` (85 of 113 instructions). The shape is
+DAGCombiner's: visitFSUB's `(fsub A, (fneg B)) -> (fadd A, B)` negates the factor through
+isNegatibleForFree, whose ISD::FSUB case returns 0 unless the target options allow unsafe
+floating-point math (tools/cc/src/llvm-3.3.src/lib/CodeGen/SelectionDAG/DAGCombiner.cpp:432-434,
+"We can't turn -(A-B) into B-A when we honor signed zeros"). No source form gives the shape: a
+double negation written on the factor yields the subtraction and InstCombine then drops the zero
+add (round 76A, NOTES "Round 76A").
+
+**Evidence.** D24 adopted `-fno-honor-nans` as the narrowest flag for its witnesses and left
+`-ffinite-math-only` and `-ffast-math` waiting "for a function that needs what they add
+(infinities folded, reassociation, reciprocals)". 0x158e20 is the first function that needs the
+unsafe-algebra part and nothing else. The driver flag `-funsafe-math-optimizations` maps, in
+clang 3.3, to the single cc1 option `-menable-unsafe-fp-math` (the `-###` line of the library
+flags with it; no `-fno-signed-zeros`, `-freciprocal-math` or `-ffast-math` is passed), the
+option the worker's diagnostic used. A census of the executable (scratchpad all.dis against the
+base's constants): the library region holds 130 divisions (`vdivss`, `vdivsd`, `vdivps`, `vdivpd`)
+and none by a RIP-relative constant, the game region 4,013 and 30 by a constant; 3.3's
+DAGCombiner folds `fdiv X, C` into `fmul X, 1/C` only under UnsafeFPMath (visitFDIV), so a
+library division by a constant would have been a witness against the flag, and there is none
+(the count is small, so this is consistent, not decisive; the game region, LLVM 4.0.0, keeps its
+constant divisions and stays as it is).
+
+**Measurement (2026-11-07, main tree at 01fcfea, 2,711 rows).** With
+`-funsafe-math-optimizations` added to the library line after `-fno-honor-nans` and every object
+rebuilt under it (tools/build.sh gate-all, 02:57:29 to 03:02:40): every row equal and every loaded
+segment identical to the base; no claimed function changed a byte. 0x158e20's draft compiled
+under the flag through the line's own script is equal at every instruction (and equal again
+with `-Xclang -menable-unsafe-fp-math`, with `-ffast-math` and at -O3); compiled under the line
+without the flag it is 85 of 113, the first difference at instruction 58.
+
+**Ruling.** The library line carries `-funsafe-math-optimizations`, the narrowest driver flag that
+yields the cc1 option the shape needs. `-ffast-math` and `-ffinite-math-only` remain unadopted:
+nothing has needed infinities folded, and the game line keeps honouring everything. The game line
+is unchanged (30 divisions by a constant stand in its region).
+
+**Adopted (2026-11-07).** config/flags.base.txt, the library line; 0x158e20 claimed from
+src/libs/unknown/func_00158e20.cpp (its NONMATCHING note removed); the gate holds on every row.
+
+**Trigger.** A library function equal but for a negation moved across a subtraction, a
+reassociated constant, or a division by a constant compiled as a multiplication is this decision's
+flag at work, not a source question; a GAME function showing one of those shapes is a new
+question for the game line (measure, never assume). A library function whose residual needs
+`-ffinite-math-only` (an infinity test folded) or a reciprocal estimate is the next decision, with
+the same whole-gate measurement.

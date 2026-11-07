@@ -1,14 +1,9 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: D24's trigger (docs/NOTES.md, Round 76A). Equal through the
-// clipping test; the base negates the reciprocal as `vsubps (d*r) - 2;
-// vmulps r; vxorps zero; vaddps zero + x`, where this line keeps `2 - d*r`
-// and `vsubps zero - x`: DAGCombiner::visitFSUB's `(fsub A, (fneg B)) ->
-// (fadd A, B)` needs isNegatibleForFree to negate the FSUB factor, which
-// 3.3 allows only under UnsafeFPMath (DAGCombiner.cpp, isNegatibleForFree's
-// ISD::FSUB case). A diagnostic compile of this file with the codegen option
-// (cc1 -menable-unsafe-fp-math, not adopted) is equal at every instruction.
+/* The reciprocal's factor negated across the subtraction (`vsubps (d*r) -
+ * 2; vmulps r`): DAGCombiner under the library line's unsafe algebra
+ * (docs/DECISIONS.md D40). */
 
 /* derived name: the hit's normal and point (the hard point moved down the
  * suspension by the hit's share of the ray), the body and shape key, the
