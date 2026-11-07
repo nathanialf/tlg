@@ -18,7 +18,7 @@ executable says about its own build.
 <!-- progress:begin -->
 | Target | Matched |
 | --- | --- |
-| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![functions progress](https://img.shields.io/badge/functions-13.94%20%25-orange.svg) ![text progress](https://img.shields.io/badge/text-1.50%20%25-orange.svg) ![relro progress](https://img.shields.io/badge/relro-2.90%20%25-orange.svg) ![data progress](https://img.shields.io/badge/data-0.00%20%25-orange.svg) ![bss progress](https://img.shields.io/badge/bss-0.00%20%25-red.svg) |
+| [EU retail base game 1.00 (CUSA03745)](https://nathanialf.github.io/tlg/#base) | ![functions progress](https://img.shields.io/badge/functions-14.03%20%25-orange.svg) ![text progress](https://img.shields.io/badge/text-1.54%20%25-orange.svg) ![relro progress](https://img.shields.io/badge/relro-3.06%20%25-orange.svg) ![data progress](https://img.shields.io/badge/data-0.00%20%25-orange.svg) ![bss progress](https://img.shields.io/badge/bss-0.00%20%25-red.svg) |
 <!-- progress:end -->
 
 **[Progress dashboard](https://nathanialf.github.io/tlg/)**: every function

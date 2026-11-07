@@ -39,8 +39,8 @@ void hknpCharacterProxy::FUN_001771e0(const hknpCharacterProxyContact &contact,
     ContactParams001771e0 params;
     params.restitution = contact.flag28 == 1 ? 0.0f : 1.0f;
     Pair08Owner *record = HK_NULL;
-    sink->unknownVirtual4(bodyId, contact.bodyId.value, &manifold, material, material, &params,
-                          &record);
+    sink->unknownVirtual4(bodyId.value, contact.bodyId.value, &manifold, material, material,
+                          &params, &record);
 
     const hknpWorld *const proxyWorld = world;
     const int bodyIndex = contact.bodyId.value;

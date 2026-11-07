@@ -8,7 +8,7 @@ void hknpCharacterProxy::FUN_00177410(hknpWorld *signalWorld)
     if (listener.pntr) {
         listener.pntr->unknownVirtual6(this, sink, newContacts);
     }
-    if (world->bodyManager.bodies[bodyId].flags & 8) {
+    if (world->bodyManager.bodies[bodyId.value].flags & 8) {
         {
             hknpMaterial material;
             material.staticFriction.setReal(0.0f);

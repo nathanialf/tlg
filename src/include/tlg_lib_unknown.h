@@ -5839,15 +5839,20 @@ template <typename T, int N> struct TempInplaceArray : public hkArray<T> /* deri
     T storage[N];
 };
 
-/* A block of the thread's stack allocator, rounded up to 128 bytes
- * (derived names; Havok's hkLocalBuffer and hkLocalArray): the fast paths of
- * Allocator0000ed40's slots 2 and 3 inline, a block that does not fit in
- * the slab or is not the top one through FUN_0000f090 and FUN_0000f460. */
-inline void *stackBlockAlloc(int numBytes) /* derived name */
+/* A block of the thread's stack allocator, rounded up to 128 bytes once the
+ * allocator is at hand (0x1653b0 reads the router before it scales the
+ * wheel count) (derived names; Havok's hkLocalBuffer and hkLocalArray): the
+ * fast paths of Allocator0000ed40's slots 2 and 3 inline, a block that does
+ * not fit in the slab or is not the top one through FUN_0000f090 and
+ * FUN_0000f460. The top is read before the slab test: MachineSink moves the
+ * load to the head of the second test's block, ahead of the size's
+ * extension (0x1653b0: `mov r12, [rdi+0x18]; movsxd rax, esi`). */
+inline void *stackBlockAlloc(int numBytesIn) /* derived name */
 {
     Allocator0000ed40 &stack = D_16dc070->stack;
+    const int numBytes = (numBytesIn + 127) & ~127;
+    char *block = stack.cur;
     if (numBytes <= stack.slabSize) {
-        char *block = stack.cur;
         char *blockEnd = block + numBytes;
         if (blockEnd <= stack.end) {
             stack.cur = blockEnd;

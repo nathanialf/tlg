@@ -1301,6 +1301,11 @@ struct hkClass {
     /* Whether the class's name is on a list of names (0x4270; FUN_00017f40
      * compares them). derived name. */
     bool FUN_00004270(const NameList00004270 *list) const;
+    /* The same over a class and its parents, a class starting with its
+     * name and its parent as a list entry does (the link resolver asks it
+     * whether a found object's class derives from the link's, 0x17f8df).
+     * derived name. */
+    bool FUN_00004270(const hkClass *other) const;
 
     /* The counts over the class and its parents: implemented interfaces
      * (0x42b0) and members (0x4350). derived names. */
@@ -1724,6 +1729,20 @@ inline void hkTransform::setInverse(const hkTransform &t)
         _mm_add_ps(_mm_mul_ps(col2, z), _mm_add_ps(_mm_mul_ps(col0, x), _mm_mul_ps(col1, y)));
 }
 
+/* A body's mass properties placed by a transform, the unit the inertia
+ * computer's combination 0x298a0 sums (0x90 bytes; the quad's mass build
+ * keeps two in place, 0x168590): zero properties at the identity when
+ * default built. derived name. */
+struct hkMassElement /* derived name */ {
+    hkMassElement()
+    {
+        transform.setIdentity();
+    }
+
+    hkMassProperties properties; /* derived name */
+    hkTransform transform;       /* derived name */
+};
+
 /* Three columns combined by the lanes of a vector, x and y summed first
  * (hkMatrix3's product 0x1a9f0, the transform's 0x10b40). derived name. */
 inline Vec4 combineColumns(const Vec4 &c0, const Vec4 &c1, const Vec4 &c2,
@@ -1958,6 +1977,9 @@ struct hkClassMemberAccessor /* derived name */
 {
     hkClassMemberAccessor(void *object, const hkClassMember *member);
     void *&FUN_001841d0(int index) const; /* derived name */
+    /* The record, through the shared +8 load (0x4250; the link resolver at
+     * 0x17f8be). derived name. */
+    const hkClassMember &FUN_00004250() const;
 
     void *address;               /* derived name */
     const hkClassMember *member; /* derived name */
@@ -6150,6 +6172,12 @@ struct hkQuaternion {
     /* The same, out of line (0x1a1c0). derived name. */
     void FUN_0001a1c0(const hkMatrix3 &r);
 
+    /* The product of two quaternions (inline in the linear cast wheel's
+     * update, 0x178fd0, twice): the vector part the cross product plus each
+     * vector scaled by the other's real part, the real part the reals'
+     * product less the vectors' dot product. */
+    inline void setMul(const hkQuaternion &q0, const hkQuaternion &q1);
+
     /* Scaled to unit length by the reciprocal square root refined by one
      * Newton step, over all four lanes (0xc0b2). derived name. */
     void normalize();
@@ -6308,6 +6336,19 @@ inline Vec4 cross3(const Vec4 &a, const Vec4 &b) /* derived name */
     const Vec4 t = _mm_sub_ps(_mm_mul_ps(a, _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1))),
                               _mm_mul_ps(b, _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1))));
     return _mm_shuffle_ps(t, t, _MM_SHUFFLE(3, 0, 2, 1));
+}
+
+inline void hkQuaternion::setMul(const hkQuaternion &q0, const hkQuaternion &q1)
+{
+    const Vec4 a = q0.vec;
+    const Vec4 b = q1.vec;
+    const Vec4 realA = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 3, 3, 3));
+    const Vec4 realB = _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 3, 3, 3));
+    Vec4 imag = cross3(a, b);
+    imag = _mm_add_ps(imag, _mm_mul_ps(realA, b));
+    imag = _mm_add_ps(imag, _mm_mul_ps(a, realB));
+    const Vec4 real = _mm_sub_ps(_mm_mul_ps(realA, realB), _mm_dp_ps(a, b, 0x7f));
+    vec = _mm_blend_ps(imag, real, 8);
 }
 
 /* A vector scaled to unit length over x, y and z where its squared length
@@ -8275,6 +8316,79 @@ struct hknpCollisionFilterShapeInput /* derived name */
     const hknpShape *shape;
 };
 
+/* A query of a shape against a shape (derived names): the collision
+ * query, then the query's own shape at +0x20 (the dispatcher's queries
+ * filter it as the query side's shape, 0x70b2e and 0x70d6c). */
+struct hknpShapeQuery /* derived name */ : public hknpCollisionQuery {
+    const hknpShape *shape; /* derived name */
+};
+
+class hknpCollisionQueryDispatcher;
+
+class hknpTriangleShape;
+
+/* What the collision queries run in (derived names): the dispatcher first,
+ * which each dispatch stores before it calls a shape function (0x70ae0,
+ * 0x70d20); the query's and the target's triangles at +0x10 and +0x18,
+ * swapped while a query runs flipped (0x57d84, 0x57dba). */
+struct hknpCollisionQueryContext /* derived name */
+{
+    const hknpCollisionQueryDispatcher *dispatcher;
+    u8 unknown8[8];
+    hknpTriangleShape *queryTriangle;
+    hknpTriangleShape *targetTriangle;
+};
+
+/* The shape functions by shape type (derived names; 0x7e8 bytes from the
+ * thread's heap, built by the world's constructor at 0x4a56b): each shape
+ * type's row, the rows of 11 functions of the closest points (+0x58, nine
+ * arguments) and of the shape casts (+0x420, ten), every one the empty
+ * 0x3b640 until the world sets its own (0x4a60c on). */
+class hknpCollisionQueryDispatcher /* derived name */
+{
+  public:
+    typedef void (*ClosestPointsFunction)(hknpCollisionQueryContext *context,
+                                          const hknpShapeQuery &query,
+                                          const ShapeQuery00038010 &queryInfo,
+                                          const hknpShape &targetShape,
+                                          const hknpQueryFilterData &targetFilterData,
+                                          const ShapeQuery00038010 &targetInfo, void *argument7,
+                                          bool flipped, void *collector); /* derived names */
+    typedef void (*ShapeCastFunction)(
+        hknpCollisionQueryContext *context, const hknpShapeQuery &query,
+        const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
+        const hknpQueryFilterData &targetFilterData, const ShapeQuery00038010 &targetInfo,
+        void *argument7, bool flipped, void *argument9, void *collector); /* derived names */
+
+    /* The closest points between the query's shape and a target shape
+     * (0x70ae0): unless the query's filter refuses the pair (query type
+     * 4, the target as B unless flipped), the function of the two shapes'
+     * rows. derived name. */
+    void FUN_00070ae0(hknpCollisionQueryContext *context, const hknpShapeQuery &query,
+                      const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
+                      const hknpQueryFilterData &targetFilterData,
+                      const ShapeQuery00038010 &targetInfo, void *argument7, bool flipped,
+                      void *collector) const;
+    /* The query's shape cast against a target shape (0x70d20), filtered as
+     * query type 2. derived name. */
+    void FUN_00070d20(hknpCollisionQueryContext *context, const hknpShapeQuery &query,
+                      const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
+                      const hknpQueryFilterData &targetFilterData,
+                      const ShapeQuery00038010 &targetInfo, void *argument7, bool flipped,
+                      void *argument9, void *collector) const;
+
+    /* The row of a shape type (inline in both dispatches: the dispatcher
+     * read before the shape is asked its type, 0x70e9e). derived name. */
+    u32 getShapeTypeRow(u32 shapeType) const
+    {
+        return shapeTypeRow[shapeType];
+    }
+
+    u32 shapeTypeRow[22]; /* derived name: by shape type, copied from 0x14bd990 */
+    ClosestPointsFunction closestPoints[11][11];
+    ShapeCastFunction shapeCast[11][11];
+};
+
 class hknpCollisionFilter : public hkReferencedObject
 {
   public:
@@ -9977,7 +10091,17 @@ class hknpWorldObject380 : public hkReferencedObject /* derived name */
     virtual void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
     virtual void unknownVirtual16();                       /* the empty 0x1c1e0 */
     virtual void unknownVirtual17();                       /* the empty 0x1c1e0 */
-    virtual void FUN_000317b0();
+    /* Slot 18 (0x317b0): each range of jacobians filed by the cells of its
+     * first jacobian's two motions: a range with a body outside every cell
+     * into the single grid at the other's cell, the rest into the pair grid
+     * at the cells' pair index; a cell already holding a range gets a copy
+     * written by the grid's writer and linked in after it. derived name. */
+    virtual void FUN_000317b0(const struct SolverContext000317b0 *context,
+                              const hkArray<struct JacobianRange000317b0 *> &ranges,
+                              hkBlockStreamWriter *writer,
+                              hkArray<struct JacobianRange000317b0> &grid,
+                              hkBlockStreamWriter *pairWriter,
+                              hkArray<struct JacobianRange000317b0> &pairGrid);
     virtual void FUN_000331a0();
     /* Slot 20 (0x30c10): the pair processed through FUN_0002b6c0, its
      * output given the writer's range and the count written past it.
@@ -12050,6 +12174,20 @@ hkResult FUN_000280e0(const Vec4 &v0, const Vec4 &v1, const Vec4 &v2, float mass
  * radius, a zero volume a failure; then diagonalized, the mass set as the
  * capsule's is (0x1683d0). */
 hkResult FUN_001684a0(const MassConfig00168340 &config, const Vec4 *vertices, float radius,
+                      hkDiagonalizedMassProperties &propertiesOut);
+
+/* The mass properties of the elements combined about their common centre
+ * (0x298a0; the compound shape's mass build at 0x4222d and the quad's at
+ * 0x168740 call it). derived name. */
+hkResult FUN_000298a0(const hkArray<hkMassElement> &elements,
+                      hkMassProperties &result); /* derived name */
+
+/* derived name: a quad's mass properties (0x168590; the triangle shape's
+ * slot 28 at 0x783ad asks it of a quad): its two triangles, the second from
+ * the third vertex round to the first, each at unit mass over the radius,
+ * combined and diagonalized; a failure of either triangle or a zero volume
+ * a failure. The config is not read. */
+hkResult FUN_00168590(const MassConfig00168340 &config, const Vec4 *vertices, float radius,
                       hkDiagonalizedMassProperties &propertiesOut);
 
 /* derived name: a shape's mass properties summarized as a mass distribution
@@ -16649,6 +16787,16 @@ struct hkRootLevelContainer::NamedVariant {
 };
 struct hkMemoryResourceContainer;
 
+/* What a handle's links are resolved against (derived names; slot 0 of its
+ * vtable is the only one called, by the link resolver 0x17f770): an object
+ * of a name, its class handed out. */
+class hkResourceMap /* derived name */
+{
+  public:
+    virtual void *findObjectByName(const char *objectName,
+                                   const hkClass **klassOut) const = 0; /* derived name */
+};
+
 /* hkResourceBase (hkClass 0x57c86d0, built at 0x8eb5c: size 0x10, parent
  * hkReferencedObject's, one enum and no members) and hkResourceHandle
  * (hkClass 0x57c8650, built at 0x8ec1c: size 0x10, parent hkResourceBase,
@@ -16668,24 +16816,43 @@ class hkResourceHandle : public hkResourceBase
 
     hkResourceHandle(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
 
+    /* An external link as slot 13 hands it out (0x20 bytes; derived
+     * names): the member's name, the id of the object it links to, and an
+     * accessor of the member in the object. */
+    struct Link {
+        const char *memberName;
+        const char *externalId;
+        hkClassMemberAccessor memberAccessor;
+    };
+
     /* The interface's slots 5 to 15, in the vtable order of
      * hkMemoryResourceHandle (0x16a6280), whose overriders the tree names
-     * on that class; slots 7, 10 and 15 are named after their overriders
-     * (0x17d550, the body the linker folded with hkAlignSceneToNodeOptions's
-     * name setter; 0x17f320; 0x17f770). Slot 15 is called through the
-     * interface by the container's 0x17fa0e, slots 7 and 10 by its 0x17fdb0
-     * (the name, then the object and its class). derived names. */
+     * on that class; slots 7, 8, 10, 12, 13 and 15 are named after their
+     * overriders (0x17d550, the body the linker folded with
+     * hkAlignSceneToNodeOptions's name setter; 0x7f80, the shared getter of
+     * +0x10; 0x17f320; 0x17f3e0; 0x17f480; 0x17f770). Slot 15 is called
+     * through the interface by the container's 0x17fa0e, slots 7 and 10 by
+     * its 0x17fdb0 (the name, then the object and its class). derived
+     * names. */
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
     virtual void FUN_0017d550(const char *newName);
-    virtual void unknownVirtual8();
+    /* Slot 8: the object held. */
+    virtual void *FUN_00007f80() const;
     virtual void unknownVirtual9();
     virtual void FUN_0017f320(hkReferencedObject *object, const hkClass *klass);
     virtual void unknownVirtual11();
-    virtual void unknownVirtual12();
-    virtual void unknownVirtual13();
+    /* Slot 12: the external link of a member name removed. */
+    virtual void FUN_0017f3e0(const char *memberName);
+    /* Slot 13: the external links handed out. */
+    virtual void FUN_0017f480(hkArray<Link> &linksOut) const;
     virtual void unknownVirtual14();
-    virtual void FUN_0017f770(void *argument);
+    /* Slot 15 (0x17f770, hkResourceHandle.cpp's): the links resolved from
+     * the last, each through the map, the found object stored into the
+     * member and the link removed; a class that is neither the member's
+     * nor derived from it warned of and skipped, the handle's own object
+     * ending the walk. */
+    virtual void FUN_0017f770(const class hkResourceMap *map);
 };
 
 /* hkMemoryResourceHandle::ExternalLink (hkClass 0x57c85d0, built at
@@ -16842,9 +17009,9 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * reference released once the children hold it). derived name. */
     hkResourceContainer *FUN_00180360(const char *containerName);
 
-    /* Slot 17 (0x17f9b0): every resource, recursively, handed the argument
-     * through its slot 15. derived name. */
-    void FUN_0017f9b0(void *argument);
+    /* Slot 17 (0x17f9b0): every resource, recursively, has its links
+     * resolved against a map (its slot 15). derived name. */
+    void FUN_0017f9b0(const hkResourceMap *map);
 
     /* Slot 13 (0x180560): a child given up, its reference released with
      * its place in the children (the last one moved into it). derived
@@ -18986,6 +19153,16 @@ class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
     void collideWheels(float deltaTime, const class hknpVehicleInstance *vehicle,
                        WheelCollideOutput *outputs, const hknpWorld *world);
 
+    /* Slot 7 (0x178fd0): each wheel state's transform set from the chassis's
+     * orientation, the wheel's steering and the chassis frame, at the hard
+     * point, and its cast's end at the suspension's length along the
+     * suspension direction. derived name. */
+    void updateBeforeCollisionDetection(const class hknpVehicleInstance *vehicle);
+
+    /* One wheel's state for the step, inline in slot 7 (its definition in
+     * that function's file). derived name. */
+    inline void updateWheelState(const class hknpVehicleInstance *vehicle, u8 wheelIndex);
+
     /* Slot 12 (0x179210): a wheel cast in the world into a result; whether
      * it hit. derived name. */
     virtual hkBool FUN_00179210(const class hknpVehicleInstance *vehicle, u8 wheelIndex,
@@ -19133,6 +19310,17 @@ struct hknpVehicleFrictionSolverParams /* derived name */
     hknpVehicleVelocityAccumulator chassis;
 };
 
+/* What the vehicle's step hands back for its chassis (derived names; 0x270
+ * bytes on the stack of slot 7, 0x1653b0): the chassis's linear velocity,
+ * which slot 7 stores into its motion, and its angular velocity, which it
+ * sets through the motion (0x157630); the rest is not read there. */
+struct hknpVehicleJobResults /* derived name */
+{
+    Vec4 chassisLinearVelocity;  /* derived name */
+    Vec4 chassisAngularVelocity; /* derived name */
+    u8 unknown20[0x250];
+};
+
 class hknpVehicleInstance : public hknpUnaryAction
 {
   public:
@@ -19146,6 +19334,14 @@ class hknpVehicleInstance : public hknpUnaryAction
 
     void FUN_00162540(hknpBodyId *&bodiesOut, int &numBodiesOut); /* vtable slot 5; derived name */
     void FUN_00162550(hknpBodyId removedId);                      /* vtable slot 6; derived name */
+    /* Slot 7 (0x1653b0): the vehicle's step as the world's action, 1 when
+     * the chassis is no longer a body of the world (its id invalid, past
+     * the bodies' capacity, or its body free), nothing when the chassis is
+     * out of the broad phase or inactive; otherwise the wheels made ready
+     * and collided into outputs on the thread's stack, the vehicle stepped
+     * into results, and the chassis's motion given the results' velocities
+     * under the timer "ApplyVehicleForces". derived name. */
+    int FUN_001653b0(float deltaTime, const struct hknpWorld *world); /* vtable slot 7 */
     void FUN_00165990(
         const hknpVehicleInstanceSlot8Argument *argument); /* vtable slot 8; derived name */
     void FUN_001659b0();                                   /* vtable slot 9; derived name */
@@ -19676,16 +19872,6 @@ struct hknpClosestPointsQuery : public hknpCollisionQuery /* derived name */
      * address-taken object below the flips' transform. derived names. */
     const void *unknown28;
     const void *unknown30;
-};
-
-/* What the collision queries run in (derived names): the query's and the
- * target's triangles at +0x10 and +0x18, swapped while a query runs
- * flipped (0x57d84, 0x57dba). */
-struct hknpCollisionQueryContext /* derived name */
-{
-    u8 unknown0[0x10];
-    hknpTriangleShape *queryTriangle;
-    hknpTriangleShape *targetTriangle;
 };
 
 /* What a query hands on about each of its two shapes (derived name; not
@@ -21179,6 +21365,27 @@ struct hkBlockStreamLinkedRange : public hkBlockStreamRange /* derived name */
 {
     const hkBlockStreamLinkedRange *next;
     u8 unknown18[8];
+};
+
+/* A range of jacobians as slot 18 of the object at +0x380 files it (derived
+ * names): a linked range with three words after it, on a 16-byte boundary
+ * (0x40 a slot). Its constructor makes it non-POD, so an assignment copies
+ * its 0x38 bytes of data (0x318c9 to 0x318f1). */
+struct JacobianRange000317b0 : public hkBlockStreamLinkedRange /* derived name */
+{
+    JacobianRange000317b0() {}
+
+    u64 unknown20;
+    u64 unknown28;
+    u64 unknown30;
+} __attribute__((aligned(16)));
+
+/* What slot 18 of the object at +0x380 reads of its first argument: the
+ * world at +8. derived name. */
+struct SolverContext000317b0 /* derived name */
+{
+    u8 unknown0[8];
+    const hknpWorld *world; /* derived name */
 };
 
 /* The executors that do nothing (derived names), the two classes of the
