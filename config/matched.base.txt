@@ -409,7 +409,7 @@ FUN_000aea30 src/libs/unknown/func_000aea30.cpp
 FUN_000b6d10 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp
 FUN_000b6d20 src/libs/havok/Common/Internal/GeometryProcessing/ConvexHull/hkgpConvexHull.cpp
 FUN_0010bf40 src/libs/unknown/leaf_0010bf40.cpp
-FUN_0014e840 src/libs/unknown/func_0014e840.cpp
+FUN_0014e840 src/libs/unknown/func_0014e540.cpp _ZThn16_N21hknpSolverFactoryTask7processEv
 FUN_0014ea10 src/libs/unknown/func_0014e850.cpp _ZThn16_N26hknpAddActiveBodyPairsTask7processEv
 FUN_0014eed0 src/libs/unknown/func_0014eed0.cpp
 FUN_0014f180 src/libs/unknown/func_0014eee0.cpp _ZThn16_N27hknpCleanInactiveCachesTask7processEv
@@ -1437,7 +1437,7 @@ FUN_00011870 src/libs/unknown/func_00011870.cpp
 FUN_00093a10 src/libs/unknown/func_00093a10.cpp _ZN19hkBlockStreamWriter12FUN_00093a10Ev
 FUN_00093ab0 src/libs/unknown/func_000937f0.cpp _ZN21hkBlockStreamConsumer12FUN_00093ab0EP10BlockCacheP13hkBlockStreamS3_PK18hkBlockStreamRange
 FUN_00184540 src/libs/unknown/func_00184540.cpp _ZN21hkVtableClassRegistry12FUN_00184540EPKPK10hkTypeInfoPKPK7hkClass
-FUN_0018e380 src/libs/unknown/func_0018e380.cpp _ZNK21hknpGridSpaceSplitter12FUN_0018e380EPK22SplitterRecord0018e380i
+FUN_0018e380 src/libs/unknown/func_0018e380.cpp _ZNK17hknpSpaceSplitter12FUN_0018e380EPK22SplitterRecord0018e380i
 FUN_00014be0 src/libs/unknown/func_00014be0.cpp _ZN18FixedSizeAllocator14blockFreeBatchEPPvii
 FUN_0003caa0 src/libs/unknown/func_0003cb00.cpp _ZL36cleanupLoadedObjecthknpShapeInstancePv
 _ZN23hkpPulleyConstraintDataC1Ev src/libs/unknown/func_00082510.cpp _ZN23hkpPulleyConstraintDataC2Ev
@@ -1721,7 +1721,7 @@ FUN_0007c100 src/libs/unknown/func_0007c100.cpp _ZNK26hkpVelocityConstraintMotor
 _ZN24hkpLinearParametricCurveD1Ev src/libs/unknown/func_0007f5c0.cpp
 FUN_00083a20 src/libs/unknown/func_00083a20.cpp _ZNK32hkpLinearClearanceConstraintData15unknownVirtual7Ev
 _ZN22hkxSparselyAnimatedIntD1Ev src/libs/unknown/func_00088900.cpp
-FUN_000925d0 src/libs/unknown/func_000925d0.cpp _ZN9RefArrays12FUN_000925d0EP18RefArraysAllocatorNS_7EntryIdE
+FUN_000925d0 src/libs/unknown/func_000925d0.cpp _ZN9RefArrays12FUN_000925d0EP14RefArraysOwnerNS_7EntryIdE
 FUN_0017ef10 src/libs/unknown/func_0017ef10.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017ef10EPK10hkTypeInfoPK7hkClass
 FUN_0019cc80 src/libs/unknown/func_0019cc80.cpp _ZN16hkPackfileWriter12FUN_0019cc80EPKvS1_
 FUN_00000360 src/libs/unknown/func_00000360.cpp _Z12FUN_00000360Pv
@@ -2744,3 +2744,8 @@ FUN_0004ce80 src/libs/unknown/func_0004ce80.cpp
 FUN_0007f650 src/libs/unknown/func_0007f650.cpp
 FUN_00167d50 src/libs/unknown/func_00167d50.cpp
 FUN_00036e10 src/libs/unknown/func_00036e10.cpp
+FUN_0016e7d0 src/libs/unknown/func_0016e7d0.cpp
+FUN_00001d70 src/libs/unknown/func_00001d70.cpp
+FUN_00002450 src/libs/unknown/func_00002450.cpp _ZNK16TwoBaseAllocator19getMemoryStatisticsER16MemoryStatistics
+FUN_0004e980 src/libs/unknown/func_0004e980.cpp
+_ZN21hknpSolverFactoryTask7processEv src/libs/unknown/func_0014e540.cpp

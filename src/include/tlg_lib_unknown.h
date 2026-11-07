@@ -3136,7 +3136,54 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
  * 0x2300, 0x2400, 0x3700). */
 struct FreeList;
 
-struct TwoBaseAllocatorCinfo; /* derived name: what FUN_00001ae0 takes */
+/* What FUN_00001ae0 takes (derived names, after Havok's free-list
+ * allocator's construction info): a preferred block size, then up to 21
+ * free lists, each an element size, an alignment and a block size; 0x1ae0
+ * builds the default one on its stack when given none. */
+struct TwoBaseAllocatorCinfo /* derived name */
+{
+    struct Info {
+        u64 elementSize; /* derived name */
+        u64 alignment;   /* derived name */
+        u64 blockSize;   /* derived name */
+    };
+
+    /* The index of the free list of an element size, -1 when none has it.
+     * derived name. */
+    int findInfo(u64 elementSize) const
+    {
+        for (int i = 0; i < numInfos; i++) {
+            if (infos[i].elementSize == elementSize) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /* A free list set, appended unless one of its element size is there.
+     * derived name. */
+    void addInfo(u64 elementSize, u64 alignment, u64 blockSize)
+    {
+        int i = findInfo(elementSize);
+        if (i < 0) {
+            i = numInfos++;
+        }
+        infos[i].elementSize = elementSize;
+        infos[i].alignment = alignment;
+        infos[i].blockSize = blockSize;
+    }
+
+    u64 preferredBlockSize; /* derived name */
+    int numInfos;           /* derived name */
+    Info infos[21];         /* derived name */
+};
+
+/* The default free lists over a block size (0x1d70; 0x1ae0 passes 0x2000):
+ * 512 bytes aligned 128, 256 aligned 32, none aligned 8 and 640 aligned
+ * 128, then every size from 512 down to 32 in 32-byte steps, rounded down
+ * to 128 bytes from 256 and to 64 above 128, then up to 32, that no list
+ * has yet, aligned 32. derived name. */
+void FUN_00001d70(u64 blockSize, TwoBaseAllocatorCinfo &cinfo); /* derived name */
 
 class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
 {
@@ -3186,6 +3233,9 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * size, none for no bytes; a larger one, or one of a size no free list
      * holds, the allocator below knows. */
     virtual int getAllocatedSize(const void *pointer, int numBytes) const;
+    /* Slot 9 (0x2450): under the lock, the allocator below's statistics
+     * with the free lists' folded in. */
+    virtual void getMemoryStatistics(MemoryStatistics &statistics) const;
     /* Slot 11 (0x2670): the peak back to what is in use now. */
     virtual void resetPeak();
     /* Slot 22 (0x26f0, at 0x168c6f0, after the interface's overriders):
@@ -3193,9 +3243,9 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * first failing one the answer. derived name. */
     virtual bool FUN_000026f0();
 
-    /* The lock the slots of the interface run under (0x34a0). derived
-     * name. */
-    hkCriticalSection criticalSection;
+    /* The lock the slots of the interface run under (0x34a0), taken by the
+     * const ones too (slot 9, 0x2450). derived name. */
+    mutable hkCriticalSection criticalSection;
     u64 baseBytes;                   /* derived name */
     u64 peakBytes;                   /* derived name; the largest count slot 18 (0x2230) has seen */
     AllocatorBase *largeAllocator;   /* derived name; the constructor's first argument */
@@ -5484,6 +5534,11 @@ inline void *hkMemoryResourceContainer::operator new(unsigned long numBytes)
 inline void hkxAttributeHolder::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void *hknpSolveDataTask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
 inline void hknpSolveDataTask::operator delete(void *object, unsigned long numBytes)

@@ -403,32 +403,24 @@ const char *FUN_00091b30(int state); /* derived name */
  * (cookbook 9): the destructor is the class's implicit, inline one, emitted
  * with the vtable and its deleting destructor 0x481c0 in the world's file,
  * which builds the derived class below on its stack (0x514a0's file here). */
-/* What a RefArrays hands its pointers back to (derived name; the third
- * argument of 0x50880 and 0x514a0): slot 7 takes what 0x92650 builds from
- * the arrays, slot 9 a list of pointers. */
+/* What a RefArrays hands its pointers back to and takes them from (derived
+ * name; the third argument of 0x50880 and 0x514a0, the solver factory
+ * task's +0x18): slot 2 fills a count of pointers (the builder and 0x925d0
+ * call it), slot 4 takes a pointer with another, slot 6 a list of pointers
+ * (the factory task's slot 5), slot 7 what 0x92650 builds from the arrays,
+ * slot 9 a list of pointers. */
 class RefArraysOwner /* derived name */
 {
   public:
     virtual ~RefArraysOwner();
-    virtual void unknownVirtual2();
+    virtual void allocate(void **pointersOut, int numPointers); /* slot 2; derived name */
     virtual void unknownVirtual3();
-    virtual void unknownVirtual4();
+    virtual void unknownVirtual4(void *pointer, void *argument);
     virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    virtual void unknownVirtual6(void *const *pointers, int numPointers);
     virtual void unknownVirtual7(void *built);
     virtual void unknownVirtual8();
     virtual void unknownVirtual9(void *const *pointers, int numPointers);
-};
-
-/* What hands the solver's arrays their objects (derived name; the factory
- * task's +0x18, whose slots 2 and 3 the builder calls): slot 2 fills a
- * count of pointers. */
-class RefArraysAllocator /* derived name */
-{
-  public:
-    virtual void unknownVirtual0();
-    virtual void unknownVirtual1();
-    virtual void allocate(void **pointersOut, int numPointers); /* slot 2; derived name */
 };
 
 class RefArrays /* derived name */ : public hkReferencedObject
@@ -469,7 +461,7 @@ class RefArrays /* derived name */ : public hkReferencedObject
     /* A new pointer from the allocator appended to the third array, the
      * entry at an index marked (+0xe) and given its position there (+0xc)
      * (0x925d0; the factory task's slot 5 at 0x14e6da). derived name. */
-    void *FUN_000925d0(RefArraysAllocator *allocator, EntryId entryId);
+    void *FUN_000925d0(RefArraysOwner *allocator, EntryId entryId);
 
     /* A task appended to the first array with its two values, its fields
      * at +0xc and +0xe reset; the new entry's index returned (0x922f0; the
@@ -564,11 +556,14 @@ class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterfac
     /* slot 6 (0x14e760, also the interface's slot 3) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    void *unknown18;  /* derived name; its slots 2 and 3 called by the builder, 4 and 6 by slot 5 */
-    void *unknown20;  /* derived name; the object whose +0x190 holds the solve data task */
-    void *unknown28;  /* derived name */
-    void *unknown30;  /* derived name; written by unknown18's slot 2 */
-    RefArrays arrays; /* derived name */
+    /* Its slots 2 and 3 called by the builder, 4 and 6 by slot 5. derived
+     * name. */
+    RefArraysOwner *queue;
+    /* The object whose +0x190 holds the solve data task. derived name. */
+    class hknpWorldObject1d0Large *owner;
+    hknpWorldContextPool *contextPool; /* derived name */
+    void *unknown30;                   /* derived name; written by the queue's slot 2 */
+    RefArrays arrays;                  /* derived name */
     u8 unknown88[8];
 };
 
@@ -1222,7 +1217,15 @@ struct SolveData0016e0e0 /* derived name */
     /* The thread's heap (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    u8 unknown0[0xd0];
+    u8 unknown0[0x20];
+    /* Set once the solve data task has added its tasks (0x16e8fe). derived
+     * name. */
+    int tasksAdded;
+    u8 unknown24[0x4c];
+    /* Three records the world's splitter counts entries over (0x14e66f).
+     * derived name. */
+    const struct SplitterRecord0018e380 *records;
+    u8 unknown78[0x58];
 };
 
 /* The 48-byte elements of the task's array at +0xc0, each destroyed through
@@ -1235,9 +1238,39 @@ class Element0016eaa0 /* derived name */
     u8 unknown8[0x28];
 };
 
-class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
+/* The solver's stage tasks built into an array and added to the arrays
+ * (0x18e3e0): over the world's steps and micro steps and its space
+ * splitter, the solve data task's two blocks, a byte, its ranges and its
+ * solve data, after the entry before and before the entry after. derived
+ * names. */
+void FUN_0018e3e0(hkArray<Element0016eaa0> *stageTasks, int numSteps, int numMicroSteps,
+                  const hknpSpaceSplitter *splitter, void *argument5, void *argument6, u8 argument7,
+                  hkArray<IndexRange000477f0> *ranges, SolveData0016e0e0 *solveData,
+                  RefArrays::EntryId before, RefArrays::EntryId after, RefArrays *arrays);
+
+class hknpSolveDataTask : public hknpTask /* derived name */
 {
   public:
+    /* Out of line (0x16e0e0; the solver factory task's slot 5 builds one,
+     * 0x14e5e9): over the pool, a context and the owner's pointer at +0x10.
+     * derived names. */
+    hknpSolveDataTask(hknpWorldContextPool *pool, hknpWorldContextPool::Context *context,
+                      void *argument3);
+
+    /* The thread's heap (tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+
+    /* Its tasks added to the arrays under the timers "CreateSolverTask" and "BuildGraph" (0x16e7d0;
+     * the solver factory task's slot 5 at 0x14e6cb with no entry before it,
+     * and the factory at 0x151541): room for 256 stage tasks, itself added,
+     * the stage tasks built over the world's steps (0x18e3e0), the solve
+     * data's flag set, then itself after the entry given before and before
+     * the one given after. The pool and the fourth argument are not read.
+     * derived name. */
+    void FUN_0016e7d0(hknpWorldContextPool *pool, hknpWorldContextPool::Context *context,
+                      void *argument3, RefArrays *arrays, RefArrays::EntryId before,
+                      RefArrays::EntryId after);
+
     /* Out of line (0x16eaa0, slot 0; the deleting destructor 0x16e9f0
      * before it, each followed by its thunk from the task interface at
      * +0x10, 0x16ea40 and 0x16ec20): the solve data, the threads' blocks
@@ -1261,14 +1294,16 @@ class hknpSolveDataTask : public hkReferencedObject, public hknpTaskInterface /*
     hkArray<IndexRange000477f0> ranges;
     Object00065f20 *unionFind; /* derived name: built when the world asks for it (0x16e394) */
     u8 *threadBlocks;          /* derived name: numThreads blocks of 512 bytes, zeroed */
-    u8 unknown40[0x78];
+    /* Handed to the stage tasks' build (0x16e8df, 0x16e8d8). derived
+     * names. */
+    u8 unknown40[0x60];
+    u8 unknownA0[0x18];
     SolveData0016e0e0 *solveData;      /* derived name */
     hkArray<Element0016eaa0> elements; /* derived name */
     void *unknownD0;                   /* derived name: the world's +0x1d0 */
     u8 unknownD8[8];
 };
 
-void FUN_0014e540(hknpSolverFactoryTask *self);             /* vtable slot 5; derived name */
 void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; derived name */
 void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; derived name */
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */

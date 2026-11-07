@@ -3,7 +3,7 @@
 
 /* derived name: every entry of every record whose word at +0xc is set,
  * counted, with the splitter's own count added. */
-int hknpGridSpaceSplitter::FUN_0018e380(const SplitterRecord0018e380 *records, int numRecords) const
+int hknpSpaceSplitter::FUN_0018e380(const SplitterRecord0018e380 *records, int numRecords) const
 {
     int count = 0;
     for (int i = 0; i < numRecords; i++) {

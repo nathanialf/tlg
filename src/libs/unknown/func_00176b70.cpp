@@ -10,7 +10,7 @@ hknpCharacterProxy::~hknpCharacterProxy()
     world->signals.signalE8.FUN_000933e0(this);
     world->signals.signalF0.FUN_000933e0(this);
     world->signals.postSolveSignal.FUN_000933e0(this);
-    world->FUN_0004fbd0(1, bodyId)->FUN_000933e0(this);
+    world->FUN_0004fbd0(1, bodyId.value)->FUN_000933e0(this);
     world->FUN_0004e980(&bodyId, 1, 0);
     shape->removeReference();
 }

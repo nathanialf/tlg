@@ -2274,6 +2274,17 @@ template <typename T> struct hkRefPtr {
         pntr = 0;
     }
 
+    /* A new object held without a reference taken on it, the old one's
+     * released unless it is the same one (the solver factory task's solve
+     * data task, 0x14e5ee). */
+    void setAndDontIncrementRefCount(T *e)
+    {
+        if (pntr && pntr != e) {
+            pntr->removeReference();
+        }
+        pntr = e;
+    }
+
     /* A new object held: a reference taken on it before the old one's is
      * released (the modifier manager's filter, 0x667b0). */
     void operator=(T *e)
@@ -10871,7 +10882,9 @@ struct hknpWorldSignals /* derived name */
     Signal00093530 signal28;
     Signal00093530 signal30;
     Signal00093530 signal38;
-    Signal00093530 signal40;
+    /* Fired with each body's id as it is destroyed, under the timer
+     * "FireBodyDestroyed" when anything listens (0x4ea32). derived name. */
+    hkSignal2<hknpWorld *, int> bodyDestroyedSignal;
     /* Fired when no motion is free, before one is taken (0x4cebe). derived
      * name. */
     hkSignal2<hknpWorld *, hknpMotionManager *> motionBufferFullSignal;
@@ -11024,6 +11037,32 @@ struct hknpConstraintManager /* derived name */
 };
 
 class hknpSpaceSplitter;
+
+/* A shape's watcher (derived names): the owner at +0 (whose bool at +0x20
+ * says some watched shape changed), the shape at +8, whose vtable slot 8
+ * returns its two signals (at +0 one passing a byte of change flags, at +8
+ * one passing the shape as it is destroyed); the change flags gathered at
+ * +0x20. FUN_00155b00 is the handler of the first signal, subscribed at
+ * 0x156026 through a member function pointer and unsubscribed at 0x155b3f,
+ * 0x155c52 and 0x155d53; 0x155b10 handles the second. */
+struct ShapeWatcher;
+
+struct ShapeWatcherOwner /* derived name */
+{
+    /* 0x155bc0 (the world builds one at 0x48ce1): no watchers, nothing
+     * changed. */
+    ShapeWatcherOwner();
+
+    /* A body's id taken off its shape's watcher (0x156110); a watcher left
+     * with none unsubscribed from its shape, which it drops, and moved to
+     * the second list. derived name. */
+    void FUN_00156110(const hknpBody *body);
+
+    /* Two lists of watchers, each unsubscribed and freed by 0x155bf0. */
+    hkArray<ShapeWatcher *> watchers;      /* derived name */
+    hkArray<ShapeWatcher *> otherWatchers; /* derived name */
+    bool anyShapeChanged;                  /* derived name */
+};
 
 struct hknpWorld {
     /* A body's angular velocity in world space: its motion's local one
@@ -11188,7 +11227,7 @@ struct hknpWorld {
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
     /* Bodies destroyed (0x4e980; the character proxy's destructor passes
      * its one with mode 0, 0x176be7). derived names. */
-    void FUN_0004e980(const int *bodyIds, int numBodyIds, int mode);
+    void FUN_0004e980(const hknpBodyId *bodyIds, int numBodyIds, int mode);
     hknpEventSignal *FUN_0004fbe0(int eventType); /* derived name */
     void FUN_0004bcb0(const Vec4 &newGravity);    /* derived name */
     void FUN_0004bc90(u8 id);                     /* derived name */
@@ -11351,7 +11390,9 @@ struct hknpWorld {
      * world subscribes to the signal at +0x10 of its object at +0x658
      * (0x4b0d2), sets the id's bit. */
     hkBitField bits678; /* derived name */
-    u8 unknown690[0x28];
+    /* The bodies' shapes' watchers (the body destruction takes each body
+     * off its shape's, 0x4ea29). derived name. */
+    ShapeWatcherOwner shapeWatchers;
     hkRefPtr<hknpWorldObject6c0> object6b8; /* derived name */
     hknpWorldObject6c0 *object6c0;          /* derived name */
     hknpEventDispatcher *eventDispatcher;   /* derived name */
@@ -19298,7 +19339,7 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
 
     /* The proxy's body (the constructor stores the id the world's body
      * creation 0x4e270 returns, 0x176675). */
-    int bodyId;                                    /* derived name */
+    hknpBodyId bodyId;                             /* derived name */
     const hknpShape *shape;                        /* derived name: released by the destructor */
     hknpWorld *world;                              /* copied from the cinfo's +0x18; derived name */
     hkRefPtr<hknpCharacterProxyListener> listener; /* derived name */
@@ -21805,32 +21846,6 @@ extern const hkTypeInfo *const D_16c82b0[];
  * file's static initializer 0x17f080 (derived name). */
 extern hkStaticClassNameRegistry D_57c8870;
 
-/* A shape's watcher (derived names): the owner at +0 (whose bool at +0x20
- * says some watched shape changed), the shape at +8, whose vtable slot 8
- * returns its two signals (at +0 one passing a byte of change flags, at +8
- * one passing the shape as it is destroyed); the change flags gathered at
- * +0x20. FUN_00155b00 is the handler of the first signal, subscribed at
- * 0x156026 through a member function pointer and unsubscribed at 0x155b3f,
- * 0x155c52 and 0x155d53; 0x155b10 handles the second. */
-struct ShapeWatcher;
-
-struct ShapeWatcherOwner /* derived name */
-{
-    /* 0x155bc0 (the world builds one at 0x48ce1): no watchers, nothing
-     * changed. */
-    ShapeWatcherOwner();
-
-    /* A body's id taken off its shape's watcher (0x156110); a watcher left
-     * with none unsubscribed from its shape, which it drops, and moved to
-     * the second list. derived name. */
-    void FUN_00156110(const hknpBody *body);
-
-    /* Two lists of watchers, each unsubscribed and freed by 0x155bf0. */
-    hkArray<ShapeWatcher *> watchers;      /* derived name */
-    hkArray<ShapeWatcher *> otherWatchers; /* derived name */
-    bool anyShapeChanged;                  /* derived name */
-};
-
 struct ShapeWatcher /* derived name */
 {
     void FUN_00155b00(u8 changeFlags); /* derived name */
@@ -22039,7 +22054,12 @@ class hknpSpaceSplitter : public hkBaseObject /* derived name */
      * high byte (FUN_00060a10 fills them for the cells it is given).
      * derived name. */
     hkArray<u16> cellPairs;
-    int type;         /* derived name */
+    int type; /* derived name */
+    /* The number of the records' entries whose word at +0xc is set, over
+     * every record, plus the cells (0x18e380; the solver's setup asks it of
+     * the world's splitter over three records at 0x14e678). derived name. */
+    int FUN_0018e380(const struct SplitterRecord0018e380 *records, int numRecords) const;
+
     int numCells;     /* derived name */
     int numCellPairs; /* derived name: numCells * (numCells + 1) / 2 */
     int unknown24;
@@ -22074,12 +22094,6 @@ struct hknpGridSpaceSplitter : public hknpSpaceSplitter /* derived name */
      * and masked, rows of numCellsPerRow (0x60c10; called at 0xcd518,
      * 0x148d40 and 0x1572ed). derived name. */
     void FUN_00060c10(const Vec4 &position, int *cellOut) const;
-
-    /* The number of the records' entries whose word at +0xc is set, over
-     * every record, plus the count at +0x1c (0x18e380; the solver's setup
-     * asks it of the world's splitter over three records at 0x14e678).
-     * derived name. */
-    int FUN_0018e380(const struct SplitterRecord0018e380 *records, int numRecords) const;
 
     u8 unknown28[0x18];
     Vec4 offsetX;       /* derived name */
