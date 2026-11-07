@@ -10793,6 +10793,13 @@ struct hknpWorld {
      * motion's frame times its inverse inertia. derived name. */
     void FUN_0005e910(int bodyId, const Vec4 &impulse);
 
+    /* A motion by its id (inline; the body's detach from its motion,
+     * 0x4c420, reads it through the world). derived name. */
+    hknpMotion &getMotion(int motionId)
+    {
+        return motionManager.motions[motionId];
+    }
+
     /* A motion's velocities of the previous step scaled and the motion
      * moved by the part of the step the scale adds (0x157be0), then each
      * body attached to it refreshed (0xce880), its time of impact distance

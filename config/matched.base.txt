@@ -1297,7 +1297,6 @@ _ZN12Class168e810D0Ev src/libs/unknown/func_00016ee0.cpp
 _ZN13PageAllocatorD0Ev src/libs/unknown/func_00019780.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
 _ZN22hkMultipleVertexBufferD0Ev src/libs/unknown/func_00025590.cpp
-FUN_000234a0 src/libs/unknown/func_000234a0.cpp
 FUN_0002a960 src/libs/unknown/func_0002a960.cpp
 FUN_00033f40 src/libs/unknown/func_00033f40.cpp
 FUN_00034b30 src/libs/unknown/func_00034b30.cpp
