@@ -225,15 +225,26 @@ inline float max2(float a, float b)
     return _mm_cvtss_f32(_mm_max_ss(_mm_set_ss(a), _mm_set_ss(b)));
 }
 
-/* The magnitude of a float in a vector register: the bits doubled, which
- * shifts the sign out, then shifted back down with a zero in its place
- * (`vpaddd; vpsrld $1`, the aerodynamics' drag at 0x3bf3f; every such pair
- * in the library region doubles with vpaddd, none shifts with vpslld).
+/* The magnitude of each lane: the bits doubled, which shifts the sign out,
+ * then shifted back down with a zero in its place (`vpaddd; vpsrld $1`, the
+ * aerodynamics' drag at 0x3bf3f; every such pair in the library region
+ * doubles with vpaddd, none shifts with vpslld). The shift is the vector
+ * extension's on unsigned lanes, an IR lshr that Reassociate ranks with its
+ * operands, as the products of the scaled mass properties (0x2a5c0) and of
+ * the axis-angle rotation (0x19ff0) are ordered in the base. derived name. */
+inline Vec4 quadFabs(const Vec4 &v)
+{
+    typedef unsigned int u32x4 __attribute__((vector_size(16)));
+    const u32x4 bits = (u32x4)v;
+    const u32x4 one = {1, 1, 1, 1};
+    return (Vec4)((bits + bits) >> one);
+}
+
+/* The magnitude of a float in a vector register (the lane's above).
  * derived name. */
 inline float fabs(float r)
 {
-    __m128i bits = _mm_castps_si128(_mm_set_ss(r));
-    return _mm_cvtss_f32(_mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1)));
+    return _mm_cvtss_f32(quadFabs(_mm_set_ss(r)));
 }
 } // namespace hkMath
 

@@ -1,28 +1,13 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-// NONMATCHING: 107 of 108, D32's class (the second witness after 0x19ff0):
-// the uniform branch's product `vmulps xmm0, xmm1, xmm0` takes the squared
-// scale first, the compile the volume scale. Reassociate (3.3
-// Reassociate.cpp:1837-1852) puts the lower rank first; the magnitude is the
-// psrli call, ranked at its position (second unmovable of the entry, after
-// the scale's first load), so its rank is below the square's, which comes
-// from the scale read again after the centre's store (seventh unmovable).
-// No intrinsic order of these statements reaches the base's: the squared
-// scale must come from that reload (the base squares the reload's x). With
-// the magnitude's shift an IR lshr (a scratch compile with GCC vector
-// extension shifts, `(bits + bits) >> one` on unsigned lanes) the call is
-// gone, the two ranks tie and the source order stands: equal at every
-// instruction (NOTES, round 74B). For the supervisor: which source spelling
-// the developer's magnitude had.
 void hkMassProperties::FUN_0002a5c0(const Vec4 &scale)
 {
     /* The volume and the mass grow with the magnitude of the scales'
      * product, the centre moves with the scale. */
     const Vec4 product =
         _mm_mul_ps(_mm_mul_ps(broadcast<1>(scale), broadcast<0>(scale)), broadcast<2>(scale));
-    const __m128i bits = _mm_castps_si128(product);
-    const Vec4 volumeScale = _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
+    const Vec4 volumeScale = hkMath::quadFabs(product);
     mass *= _mm_cvtss_f32(volumeScale);
     volume *= _mm_cvtss_f32(volumeScale);
     centerOfMass = _mm_mul_ps(centerOfMass, scale);
