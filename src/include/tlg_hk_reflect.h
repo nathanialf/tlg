@@ -987,6 +987,12 @@ struct hkBitField {
         storage.words.data[index >> 5] |= 1 << (index & 31);
     }
 
+    /* Whether one bit is set (derived name). */
+    bool get(int index) const
+    {
+        return (storage.words.data[index >> 5] >> (index & 31)) & 1;
+    }
+
     /* Clears one bit (derived name). */
     void clear(int index)
     {
@@ -5325,14 +5331,27 @@ class hkMeshVertexBuffer : public hkReferencedObject
         u8 lockFlags[32];       /* derived name */
     };
 
-    hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
-                          float *values); /* vtable slot 11; derived name */
-    hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
-                          const float *values); /* vtable slot 12; derived name */
-    hkResult FUN_000260c0(const LockedVertices &lockedVertices, int elementIndex,
-                          int *values); /* vtable slot 13; derived name */
-    hkResult FUN_000260d0(const LockedVertices &lockedVertices, int elementIndex,
-                          const int *values); /* vtable slot 14; derived name */
+    /* Slots 7 to 10, the format, the vertex count (+0x40, which the
+     * multiple buffer's unlock asks of its locked buffer, 0x25eb9), the
+     * lock and the partial lock: each derived class names its own. */
+    virtual void unknownVirtual7();
+    virtual int unknownVirtual8() const;
+    virtual void unknownVirtual9();
+    virtual void unknownVirtual10();
+
+    virtual hkResult FUN_000260a0(const LockedVertices &lockedVertices, int elementIndex,
+                                  float *values); /* vtable slot 11; derived name */
+    virtual hkResult FUN_000260b0(const LockedVertices &lockedVertices, int elementIndex,
+                                  const float *values); /* vtable slot 12; derived name */
+    virtual hkResult FUN_000260c0(const LockedVertices &lockedVertices, int elementIndex,
+                                  int *values); /* vtable slot 13; derived name */
+    virtual hkResult FUN_000260d0(const LockedVertices &lockedVertices, int elementIndex,
+                                  const int *values); /* vtable slot 14; derived name */
+
+    /* Slot 15 (+0x78): the buffer unlocked, the record its lock filled
+     * handed back (the multiple buffer's unlock unlocks each of its locked
+     * buffers so, 0x25fec). derived name. */
+    virtual void unknownVirtual15(LockedVertices *lockedVertices);
 };
 
 /* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
@@ -5381,7 +5400,7 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
      * at 0x23975: 0x18 bytes, records from 0x16917a0). */
     struct VertexBufferInfo {
         hkRefPtr<hkMeshVertexBuffer> vertexBuffer;
-        void *lockedVertices; /* not serialized */
+        LockedVertices *lockedVertices; /* not serialized */
         hkBool isLocked;
     };
 
@@ -5417,6 +5436,12 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
      * their flags asks for writing. derived names. */
     int FUN_00025dc0(const LockInput &input, const PartialLockInput &partialInput,
                      LockedVertices &lockedVerticesOut);
+    /* Slot 15 (0x25e70): when locked, each element locked through the
+     * emulated buffer and written copied back to its own buffer's lock,
+     * the emulated buffer let go; every locked buffer unlocked and its
+     * record given back to the thread's heap; a write lock counted in the
+     * update count (never 0). derived name. */
+    void FUN_00025e70(LockedVertices *lockedVertices);
 
     hkVertexFormat vertexFormat;
     hkArray<LockedElement> lockedElements;
@@ -5622,6 +5647,13 @@ class hkMeshVertexBufferUtil /* derived name */
      * buffers hold the same number of values (0xac810; the conversion
      * 0xab8d0 calls it). derived name. */
     static void FUN_000ac810(const hkMeshVertexBuffer::LockedVertices::Buffer &src,
+                             const hkMeshVertexBuffer::LockedVertices::Buffer &dst,
+                             int numVertices);
+    /* An element's values copied from one buffer description to another
+     * for a number of vertices, converted between their types (0xab8d0;
+     * the multiple buffer's unlock writes its emulated elements back with
+     * it, 0x25f34). derived name. */
+    static void FUN_000ab8d0(const hkMeshVertexBuffer::LockedVertices::Buffer &src,
                              const hkMeshVertexBuffer::LockedVertices::Buffer &dst,
                              int numVertices);
 };
@@ -8457,7 +8489,9 @@ struct hknpCdBody /* derived name */
  * collision builds two (0x176200, 0x40 apart on its stack; 0x30ca0's are
  * 0x30 bytes, the plain body). derived names. */
 struct hknpCdBodyForCollide /* derived name */ : public hknpCdBody {
-    const void *unknown30;
+    /* The body's whole shape (the triangle welding reads its convex
+     * radius, 0x69d33). derived name. */
+    const hknpShape *rootShape;
     const void *unknown38;
 };
 
@@ -9671,6 +9705,14 @@ struct hknpConstraint {
      * a runtime still to be made. derived names. */
     void FUN_001758a0(u64 bodyUidA, u64 bodyUidB, hkpConstraintData *constraintData,
                       hknpImmediateConstraintId constraintImmediateId);
+    /* Set up as a constraint of the manager (0x1754d0; its addition
+     * 0x16dc90): the two bodies' keys, the data held, its info's atoms and
+     * sizes, its type (the wrapped data's for the breakable and malleable
+     * types), the id, no immediate id, the cinfo's flags without bit 1 (0x81
+     * added for a breakable data), and the runtime the data asks for made
+     * zeroed from the thread's heap. derived name. */
+    void FUN_001754d0(union BodyKey0016e040 keyA, union BodyKey0016e040 keyB,
+                      hkpConstraintData *constraintData, u32 constraintId, u8 constraintFlags);
 
     /* Four bytes, not a byte array: the manager's allocation 0x16db90 forms
      * the record's address for its clear in the block that loads the free
@@ -13405,6 +13447,10 @@ struct hknpMaterial {
     hkHalf softContactForceFactor;
     hkHalf softContactDampFactor;
     hkUFloat8 softContactSeperationVelocity; /* the record's spelling */
+    /* The padding after this byte and after the next hkHalf and hkBool is
+     * the compiler's, no member: a material on the stack holds no array,
+     * so the stack protector does not place it beside the guard (0x177410:
+     * its array of contacts at -0x40, the material at -0x90). */
     hknpSurfaceVelocity *surfaceVelocity;
     hkHalf disablingCollisionsBetweenCvxCvxDynamicObjectsDistance;
     u64 userData;
@@ -17872,7 +17918,8 @@ class hkSkinBinding : public hkMeshShape
  * meshSectionIndex (hkUint16) at +0x10 and +0x12, boundingSphere
  * (hkVector4) at +0x20. hkStorageSkinnedMeshShape keeps its parts in an
  * array at +0x40 (count at +0x48); its slot 16 (0xae860) sorts them with the
- * quick sort FUN_000ad970 and the order FUN_000ad900. */
+ * quick sort through an order function (0xad970, tlg_hk_algorithm.h) and
+ * the order FUN_000ad900. */
 /* hkSkinnedMeshShape::BoneSet (records 0x1692230): boneBufferOffset and
  * numBones (hkUint16) at +0 and +2. hkSkinnedMeshShape's hkClass 0x57bdcc8
  * (built at 0x27de4) has hkReferencedObject's 0x57b8640 as parent. */
@@ -17961,12 +18008,6 @@ class hkSkinnedMeshShape : public hkReferencedObject
 
 bool FUN_000ad900(const hkSkinnedMeshShape::Part &a,
                   const hkSkinnedMeshShape::Part &b); /* derived name */
-
-/* The quick sort of parts between two indices, inclusive, by an order
- * (0xad970; derived name). */
-void FUN_000ad970(hkSkinnedMeshShape::Part *parts, int low, int high,
-                  bool (*less)(const hkSkinnedMeshShape::Part &a,
-                               const hkSkinnedMeshShape::Part &b)); /* derived name */
 
 /* hkStorageSkinnedMeshShape: its hkClass at 0x57bdd18 is built by the
  * reflection initializer at 0x27e79; slot 3 of its vtable (0x16a3b00,
@@ -19333,17 +19374,64 @@ struct hknpCharacterProxySignalData;   /* derived name: the second, a pointer at
  * told through its slot 7 of each of the world's post-solve signals. */
 class hknpCharacterProxy;
 
+struct hknpCharacterProxyContact;
+class ContactSink001771e0;
+
 class hknpCharacterProxyListener : public hkReferencedObject /* derived name */
 {
   public:
-    virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    /* Slot 5 (+0x28): whether the proxy keeps a new contact (0x17754a).
+     * derived name. */
+    virtual int unknownVirtual5(hknpCharacterProxy *proxy,
+                                const hknpCharacterProxyContact *contact);
+    /* Slot 6 (+0x30): the new contacts gathered for the proxy (0x177469).
+     * derived name. */
+    virtual void unknownVirtual6(hknpCharacterProxy *proxy, ContactSink001771e0 *sink,
+                                 hkArray<hknpCharacterProxyContact> &contactsOut);
     virtual void unknownVirtual7(hknpCharacterProxy *proxy);
 };
 
 struct hknpCharacterProxyContact /* derived name */
 {
-    u8 unknown0[0x30];
+    /* The contact's point and separating normal, the distance in the
+     * normal's w (0x1771e0 reads it at +0x1c). */
+    hkContactPoint contactPoint; /* derived name */
+    hknpBodyId bodyId;           /* derived name: the body touched */
+    u8 unknown24[4];
+    /* 1 for a contact the proxy keeps from before (0x1774da, 0x177301).
+     * derived name. */
+    u8 flag28;
+    u8 unknown29[7];
+};
+
+/* What the world's object at +0x1d0 holds at +0x10 (derived name): slot 4
+ * (+0x20) takes a manifold between two bodies, a material for each and
+ * the contact's parameters, and gives back a solver record (0x177353; the
+ * character proxy passes its contact's material for both). */
+class ContactSink001771e0 /* derived name */
+{
+  public:
+    virtual ~ContactSink001771e0();
+    virtual void unknownVirtual2();
+    virtual void unknownVirtual3();
+    virtual void unknownVirtual4(int bodyIdA, int bodyIdB, const struct hknpManifold *manifold,
+                                 const struct hknpMaterial *materialA,
+                                 const struct hknpMaterial *materialB,
+                                 const struct ContactParams001771e0 *params,
+                                 struct Pair08Owner **recordOut);
+};
+
+/* A contact's parameters for the sink (derived names): a restitution, 0
+ * for a contact kept from before, else 1 (0x177301); the largest impulse;
+ * a factor. */
+struct ContactParams001771e0 /* derived name */
+{
+    /* No limit to the impulse, a factor of one (0x1772ed). */
+    ContactParams001771e0() : maxImpulse(HK_REAL_MAX), factor(1.0f) {}
+
+    float restitution;
+    float maxImpulse;
+    float factor;
 };
 
 /* What the proxy's support check fills (derived names; vtable slot 6 of the
@@ -19391,6 +19479,21 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
      * which the constructor subscribes at 0x176858. derived name. */
     void FUN_00177640(hknpWorld *world);
 
+    /* A contact handed to the world's contact sink as a manifold of one
+     * point at the contact, four times over (0x1771e0; 0x177410 calls it
+     * for the contacts kept and the new ones): the record the sink gives
+     * back takes mode 3 with the proxy's share of the step when the body
+     * touched is dynamic and has no 0xf002 property. derived name. */
+    void FUN_001771e0(const hknpCharacterProxyContact &contact, const hknpMaterial *material,
+                      ContactSink001771e0 *sink);
+
+    /* The handler of the world's signal at +0x5f8, which the constructor
+     * subscribes at 0x1767dd (0x177410): the listener gathers new contacts;
+     * when the proxy's body has flag 8 set, each contact kept from before
+     * is handed on under a frictionless default material, then each new one
+     * the listener accepts is kept and handed on. derived name. */
+    void FUN_00177410(hknpWorld *world);
+
     /* The handler of the world's signal at +0x5f0, which the constructor
      * subscribes at 0x17677b: drops the contacts when the proxy's body has
      * flag 8 set. derived name. */
@@ -19402,7 +19505,11 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
     const hknpShape *shape;                        /* derived name: released by the destructor */
     hknpWorld *world;                              /* copied from the cinfo's +0x18; derived name */
     hkRefPtr<hknpCharacterProxyListener> listener; /* derived name */
-    u8 unknown28[0x40];
+    u8 unknown28[0x38];
+    /* The share of a dynamic body's step a contact's record is given
+     * (0x177371). derived name. */
+    float contactShare;
+    u8 unknown64[4];
     /* 48-byte records the signal handler 0x176cc0 appends (growing through
      * 0xb40 with the size 0x30). */
     hkArray<hknpCharacterProxyContact> contacts; /* derived name */

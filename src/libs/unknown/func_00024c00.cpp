@@ -5,9 +5,6 @@
 /* The locked elements' sort (0x24c00), by the order 0x24b60 gives: the
  * lock (0x25700) sorts its elements with it at 0x257f2. */
 template void
-hkAlgorithm::quickSortRecursive<hkMultipleVertexBuffer::LockedElement,
-                                bool (*)(const hkMultipleVertexBuffer::LockedElement &,
-                                         const hkMultipleVertexBuffer::LockedElement &)>(
-    hkMultipleVertexBuffer::LockedElement *pArr, int d, int h,
-    bool (*cmpLess)(const hkMultipleVertexBuffer::LockedElement &,
-                    const hkMultipleVertexBuffer::LockedElement &));
+hkAlgorithm::quickSortRecursive(hkMultipleVertexBuffer::LockedElement *pArr, int d, int h,
+                                bool (*cmpLess)(const hkMultipleVertexBuffer::LockedElement &,
+                                                const hkMultipleVertexBuffer::LockedElement &));

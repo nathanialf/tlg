@@ -103,8 +103,11 @@ float *FUN_0002b030(Pair08Owner *self, int index);                /* derived nam
 void FUN_0002b040(Pair08Owner *self, float scaleA, float scaleB); /* derived name */
 void FUN_0002b0b0(Pair08Owner *self);                             /* derived name */
 void FUN_0002b0c0(Pair08Owner *self, int mode, float value);      /* derived name */
-void FUN_0002b0f0(Pair08Owner *self, float scale);                /* derived name */
-void FUN_0002b120(Pair08Owner *self, float scale);                /* derived name */
+/* The same through a forward of its own (0x34970; the character proxy's
+ * contact, 0x1773dc). derived name. */
+void FUN_00034970(Pair08Owner *self, int mode, float value); /* derived name */
+void FUN_0002b0f0(Pair08Owner *self, float scale);           /* derived name */
+void FUN_0002b120(Pair08Owner *self, float scale);           /* derived name */
 /* Out-of-line forwarders to the two scales (0x34900, 0x34910). derived
  * names. */
 void FUN_00034900(Pair08Owner *self, float scale); /* derived name */
@@ -209,15 +212,36 @@ struct hknpManifoldBase /* derived name */
 
 struct hknpManifold : public hknpManifoldBase /* derived name */
 {
+    /* Every quad cleared from the constants' zero, then the two flags at
+     * +0x92 and +0x93 set, both shape keys invalid and the mass scales one
+     * (inline in the character proxy's contact, 0x1771e0: the clears the
+     * contact's values overwrite whole are gone). derived name. */
+    void init()
+    {
+        hkString::memSet16(this, &D_14b2060[2], sizeof(*this) / 16);
+        flag92 = 1;
+        flag93 = 1;
+        shapeKeyA = 0xffffffff;
+        shapeKeyB = 0xffffffff;
+        massScaleA = D_14b2060[3];
+        massScaleB = D_14b2060[3];
+    }
+
     u8 unknown80[0x10];
     /* Set by the trigger modifier's slot 4 (0x162270) once it has looked
      * at the manifold. derived name. */
     u8 byte90;
-    u8 unknown91[2];
+    u8 unknown91;
+    u8 flag92; /* derived name */
     /* Set for a manifold the status event reports as status 1, else 2
      * (0x154a60). derived name. */
     u8 flag93;
-    u8 unknown94[0x14];
+    /* Nonzero for a manifold the triangle welding looks at (0x69cb7).
+     * derived name. */
+    int weldingType;
+    const struct hknpMaterial *material;        /* derived name (0x1771e0 sets it) */
+    u32 shapeKeyA;                              /* derived name */
+    u32 shapeKeyB;                              /* derived name */
     hknpManifoldCollisionCache *collisionCache; /* derived name */
     u8 unknownB0[0x30];
     /* The bodies' mass scales, each broadcast (the mass changer's slot 4,
@@ -243,6 +267,28 @@ class hknpSurfaceVelocityModifier /* derived name */
                       const hknpCdBody &cdBodyA, const hknpCdBody &cdBodyB,
                       hknpManifoldCollisionCache *cache, const hknpManifold *manifold,
                       Pair08Owner *jacobian, int jacobianIndex);
+};
+
+/* The welding of a mesh's triangles (derived name, from its timer
+ * "TtTriangleWelding"; vtable 0x169a910, address point 0x169a920, no type
+ * info, built by the world's constructor 0x48b20 with two others of the
+ * same shape at 0x169a940 and 0x169a970): slot 0 the shared empty 0x3b640,
+ * slot 1 the shared 0xd900. */
+class hknpTriangleWeldingModifier /* derived name */
+{
+  public:
+    /* Slot 2 (0x69c10), timed: each manifold the welding looks at whose
+     * normal leans off the triangle's by more than the cosine 0.99, while
+     * the bodies close along it faster than 1/255 and drift along the
+     * triangle's normal less than the relative speed's half: the points
+     * moved by the difference of the normals scaled by each point's
+     * distance plus the convex radius, the distances measured along the
+     * triangle's normal, the smallest kept, and the triangle's normal
+     * taken as the manifold's. The third argument is not read. derived
+     * name. */
+    void FUN_00069c10(const void *threadContext, const void *sharedData, const void *argument3,
+                      const hknpCdBodyForCollide &cdBodyA, const hknpCdBodyForCollide &cdBodyB,
+                      hknpManifold *HK_RESTRICT manifolds, int numManifolds);
 };
 
 /* The modifier of vtable 0x169a5a0 (address point 0x169a5b0, no type info,
@@ -1326,9 +1372,16 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
     virtual ~hkLargeBlockAllocator();
 
     /* The overriders not read yet, declared so the class is complete (slots
-     * 2 and 3, 0x12910 and 0x133e0; primary slots 13 to 16, 18, 19 and 21). */
+     * 2 and 3, 0x12910 and 0x133e0; primary slots 14 to 16, 18, 19 and 21). */
     virtual void *blockAlloc(int numBytes);
     virtual void blockFree(void *pointer, int numBytes);
+    /* Primary slot 13 (0x131a0; the interface's slot 2, its thunk 0x133d0
+     * a jump to the body): the top made a valid free chunk, every page
+     * holding one free chunk only given back to the server; then, with the
+     * block allocator's block at the first page, that page cut back to what
+     * the block needs (once the top is 32 KiB or more), or without it the
+     * top put back in its bin and the largest free chunk ending a page made
+     * the top. derived name. */
     virtual void FUN_00003140();
     virtual void FUN_000032e0(int value);
     virtual int FUN_000034a0(u64 limit);
@@ -1506,10 +1559,6 @@ extern AllocatorBase *D_16dc138;
 
 void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool,
                   void *param); /* derived name */
-
-/* hkLargeBlockAllocator's primary slot 13 (interface slot 2), reached
- * through the second base by the thunk 0x133d0. */
-void FUN_000131a0(hkLargeBlockAllocator *self); /* derived name */
 
 /* A reference-counted allocator of 4096-byte pages (vtable address point
  * 0x168e8f0; constructor FUN_000195c0: a lock at +0x10, an array of every
@@ -6919,11 +6968,6 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
     hkBool limitVerticalVelocity;       /* derived name */
     hkBool disableHorizontalProjection; /* derived name */
 };
-
-/* A constraint record built (0x1754d0): its two bodies' keys, its data,
- * its id and the cinfo's flags. derived name. */
-void FUN_001754d0(hknpConstraint *constraint, BodyKey0016e040 keyA, BodyKey0016e040 keyB,
-                  hkpConstraintData *data, unsigned int id, u8 flags); /* derived name */
 
 /* The world's two tables of shape functions (derived names), filled by its
  * constructor: from +0x58 (0x4a5b0 onward) and from +0x420 (0x4a850

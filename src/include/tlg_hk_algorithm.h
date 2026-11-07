@@ -18,11 +18,12 @@ template <typename T> struct less {
 
 /* The temporary built, then assigned: a record whose constructor sets a
  * field keeps that field apart from the rest of the copy (the record sort
- * 0x62130 moves its first twelve bytes through the stack and the count
- * through a register); the same for every type with a trivial constructor.
- * The temporary on a 16-byte boundary, as the pivot (the locked elements'
- * sort, 0x24c00, keeps its 7-byte one at rbp-0x40 under the guard at -0x30,
- * the pivot at -0x50). derived name. */
+ * 0x62130, whose exchange is written the same way, moves its first twelve
+ * bytes through the stack and the count through a register); the same for
+ * every type with a trivial constructor. The temporary on a 16-byte
+ * boundary, as the pivot (the locked elements' sort, 0x24c00, keeps its
+ * 7-byte one at rbp-0x40 under the guard at -0x30, the pivot at -0x50).
+ * derived name. */
 template <typename T> inline void swap(T &x, T &y)
 {
     T t __attribute__((aligned(16)));
@@ -60,6 +61,53 @@ begin:
         if (j >= i) {
             if (j != i) {
                 swap(pArr[j], pArr[i]);
+            }
+            i++;
+            j--;
+        }
+    } while (i <= j);
+
+    if (d < j) {
+        quickSortRecursive(pArr, d, j, cmpLess);
+    }
+    if (i < h) {
+        d = i;
+        goto begin;
+    }
+}
+
+/* The same sort through an order function (Havok's overload for a
+ * comparison function): the exchange written in the loop, its temporary a
+ * local of the sort declared after the pivot, so the pivot, passed to the
+ * function, takes the stack protector's first address-taken slot under the
+ * guard (the skinned mesh's parts, 0xad970: the pivot at rbp-0x60 under the
+ * guard at -0x30, the temporary's counts below it; through hkAlgorithm::swap
+ * the inlined temporary comes first). The executable's four sorts through a
+ * function (0x24c00, 0x26f20, 0x62130, 0xad970) are each this one. derived
+ * name. */
+template <typename T>
+void quickSortRecursive(T *pArr, int d, int h, bool (*cmpLess)(const T &, const T &))
+{
+    int i, j;
+    T str __attribute__((aligned(16)));
+
+begin:
+    i = d;
+    j = h;
+    str = pArr[(d + h) >> 1];
+    do {
+        while (cmpLess(pArr[i], str)) {
+            i++;
+        }
+        while (cmpLess(str, pArr[j])) {
+            j--;
+        }
+        if (j >= i) {
+            if (j != i) {
+                T t __attribute__((aligned(16)));
+                t = pArr[j];
+                pArr[j] = pArr[i];
+                pArr[i] = t;
             }
             i++;
             j--;

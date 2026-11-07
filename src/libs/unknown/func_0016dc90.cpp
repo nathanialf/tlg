@@ -15,9 +15,9 @@ void hknpConstraintManager::FUN_0016dc90(unsigned int constraintId,
                                          const hknpConstraintCinfo &cinfo)
 {
     const hkArray<hknpBody> &bodies = world->bodyManager.bodies;
-    FUN_001754d0(&constraints[constraintId], bodyKey(bodies[cinfo.bodyA]),
-                 bodyKey(bodies[cinfo.bodyB]), cinfo.constraintData.pntr, constraintId,
-                 u8(cinfo.flags));
+    constraints[constraintId].FUN_001754d0(bodyKey(bodies[cinfo.bodyA]),
+                                           bodyKey(bodies[cinfo.bodyB]), cinfo.constraintData.pntr,
+                                           constraintId, u8(cinfo.flags));
     FUN_0016ddd0(constraintId, cinfo.name.cString());
     const u32 numBodies = world->bodyManager.bodies.getCapacity();
     if (u32(lists.firstConstraintOfBody.getSize()) < numBodies) {
