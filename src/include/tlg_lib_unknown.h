@@ -5114,6 +5114,11 @@ inline void hkcdPlanarCsgOperand::operator delete(void *object, unsigned long nu
     freeReferencedObject(object, numBytes);
 }
 
+inline void hknpCompressedMeshShapeData::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpDynamicCompoundShapeData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -6858,7 +6863,6 @@ void FUN_00165af0(hknpPhysicsSystemData *self);
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
 void FUN_0002a960(hkMemoryMeshShape *self);                /* slot 1 of 0x1692530 */
 void FUN_00033f40(hknpStaticCompoundShapeInternals *self); /* slot 1 of 0x1692830 */
-void FUN_00034b30(hknpCompressedMeshShapeData *self);      /* slot 1 of 0x1692b00 */
 void FUN_00037bf0(hknpMaskedShape *self);                  /* slot 1 of 0x1693a80 */
 void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d0 */
 /* Also slot 1 of hknpConvexShape's vtable 0x1697d90 (one body for the

@@ -134,7 +134,7 @@ FUN_00034930 src/libs/unknown/func_00034930.cpp
 FUN_00034940 src/libs/unknown/leaf_00034940.cpp
 FUN_00034950 src/libs/unknown/leaf_00034950.cpp
 FUN_00034970 src/libs/unknown/func_00034970.cpp
-FUN_00034b20 src/libs/unknown/func_00034b20.cpp
+_ZN27hknpCompressedMeshShapeDataD1Ev src/libs/unknown/func_00034da0.cpp
 FUN_00034e30 src/libs/unknown/func_00035640.cpp _ZL131finishLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRunPvi
 FUN_000358b0 src/libs/unknown/func_000358b0.cpp _ZL42finishLoadedObjecthknpDynamicCompoundShapePvi
 FUN_00036780 src/libs/unknown/func_000367d0.cpp _ZL44finishLoadedObjecthknpMaskedShapeMaskWrapperPvi
@@ -1299,7 +1299,8 @@ FUN_000231b0 src/libs/unknown/func_000231b0.cpp
 _ZN22hkMultipleVertexBufferD0Ev src/libs/unknown/func_00025590.cpp
 FUN_0002a960 src/libs/unknown/func_0002a960.cpp
 FUN_00033f40 src/libs/unknown/func_00033f40.cpp
-FUN_00034b30 src/libs/unknown/func_00034b30.cpp
+_ZN27hknpCompressedMeshShapeDataD0Ev src/libs/unknown/func_00034da0.cpp
+_ZN27hknpCompressedMeshShapeDataD2Ev src/libs/unknown/func_00034da0.cpp
 FUN_00037bf0 src/libs/unknown/func_00037bf0.cpp
 FUN_0003b050 src/libs/unknown/func_0003b050.cpp
 FUN_0003c370 src/libs/unknown/func_0003c370.cpp

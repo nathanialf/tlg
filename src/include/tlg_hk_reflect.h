@@ -4939,7 +4939,9 @@ class hkcdSimdTree
      * destructor (0x35310) holds it; 0x21920 (slot 0) is the copy kept
      * beside the finish constructor, and the deleting destructor (0x21980,
      * slot 1) frees the 0x18 bytes on the thread's heap. */
-    virtual ~hkcdSimdTree() {}
+    /* Inline by keyword: the compressed mesh data's base destructor holds
+     * it (0x34c5a). */
+    inline virtual ~hkcdSimdTree() {}
 
     static void operator delete(void *object, unsigned long numBytes);
 
@@ -4957,13 +4959,6 @@ class hknpDynamicCompoundShape;  /* 0x469a0, vtable 0x1697ef0 */
 class hknpMaskedShape;           /* 0x37b90, vtable 0x1693a90 */
 
 void FUN_0001cf40(hkcdShape *self, hkFinishLoadedObjectFlag flag); /* derived name */
-
-/* hknpCompressedMeshShapeData, polymorphic (type info 0x57be1f0, vtable
- * 0x1692b10): slot 0, the complete destructor FUN_00034b20, runs the
- * out-of-line FUN_00034b80, which restores the vtable. */
-struct hknpCompressedMeshShapeData;
-
-void FUN_00034b80(hknpCompressedMeshShapeData *self); /* derived name */
 
 /* hkIndexedTransformSet, polymorphic (type info 0x57bd358, vtable 0x1691770
  * stored by its finish constructor FUN_000236e0): slot 0, the complete
@@ -6953,6 +6948,11 @@ struct hkcdStaticMeshTree : public hkcdStaticMeshTreeBase {
           primitiveDataRuns(flag)
     {
     }
+
+    /* Inline by keyword (a class template member takes the hint only so):
+     * the compressed mesh data's base destructor holds the arrays' frees
+     * (0x34cb1 to 0x34d67). */
+    inline ~hkcdStaticMeshTree() {}
 
     hkArray<u32> packedVertices;
     hkArray<u64> sharedVertices;
@@ -11146,7 +11146,8 @@ struct hknpWorld {
     hknpConstraintManager constraintManager;
 
     hknpModifierManager *modifierManager; /* derived name */
-    u8 unknown1c0[0x10];
+    u8 unknown1c0[8];
+    void *object1c8;               /* derived name: handed to each context's setup (0x50428) */
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
     /* The space splitter (derived name; 0xcd4e8 reads its kind). */
@@ -11164,7 +11165,7 @@ struct hknpWorld {
      * name. */
     void *pointer268;
     u8 unknown270[8];
-    bool enabled278;
+    hkBool enabled278;
     u8 unknown279[7];
     u8 unknown280[0x108];
     hknpWorldObject388 *object388; /* derived name */
@@ -13236,12 +13237,30 @@ struct hknpCompressedMeshShapeData : public hkReferencedObject {
     /* Inline where its type info's finish callback (0x34da0) runs it: the
      * mesh tree's finish (0xa9140), then the SIMD tree's. */
     hknpCompressedMeshShapeData(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag), meshTree(flag), simdTree(flag)
+        : hkReferencedObject(flag), meshTree(flag), simdTree(flag), arrayC8(flag), arrayD8(flag),
+          arrayE8(flag)
     {
     }
 
+    /* Inline, emitted with the vtable where the finish callback builds one
+     * (func_00034da0.cpp): the base destructor 0x34b80 restores the vtable
+     * and frees the trees' arrays from the last, the complete one 0x34b20 a
+     * jump to it, the deleting one 0x34b30 between them (cookbook 441). */
+    inline virtual ~hknpCompressedMeshShapeData() {}
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0x100 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hknpCompressedMeshShapeTree meshTree;
     hkcdSimdTree simdTree;
+    /* Three arrays after the trees, freed first by the destructor
+     * (0x34b97 to 0x34c45; elements of 8, 1 and 4 bytes from the last).
+     * derived names. */
+    hkArray<u64> arrayC8;
+    hkArray<u8> arrayD8;
+    hkArray<u32> arrayE8;
+    u8 unknownF8[8];
 };
 
 /* hknpCompositeShape: its hkClass at 0x57c2cf8 (parent 0x57bf1c0) is built by
@@ -19826,6 +19845,11 @@ struct hknpWorldContextPool /* derived name */
          * every context of the pool). derived name. */
         void FUN_00167f70(void *argument1, BlockCache *streamCache);
 
+        /* Set up over the world for a step (0x167d50, 0x212 bytes). derived
+         * names. */
+        void FUN_00167d50(hknpWorld *world, void *cellPairEntries, void *object1c8, bool first,
+                          bool flag);
+
         int index;
         u8 unknown4[4];
         hknpWorld *world; /* derived name: the prepare-new-pairs task reads it (0x15b814) */
@@ -19866,6 +19890,22 @@ struct hknpWorldContextPool /* derived name */
         u8 unknown3b4[0xc];
     };
 
+    /* How many contexts a step uses (derived names): the counts the pool
+     * keeps at +0 and +4, at +0x10 and +0x14 of the world's step argument
+     * (0x16fcce). */
+    struct Counts {
+        u8 unknown0[0x10];
+        int numUsed0;
+        int numUsed4;
+    };
+
+    /* Set up for a step (0x16fcb0; the world's 0x50439): the counts kept,
+     * an entry for each pair of the splitter's cells cleared, each context
+     * in use set up over the world (0x167d50; the first ones of the first
+     * count marked) and given its index, every context on the free list in
+     * order, and no cache. derived name. */
+    void FUN_0016fcb0(hknpWorld *world, const Counts &counts, void *object1c8);
+
     /* A free context taken from the head of the list (0x16ff90): the head
      * moves to its successor with the tag advanced, and the taken one's
      * link is marked 0xf. */
@@ -19891,7 +19931,29 @@ struct hknpWorldContextPool /* derived name */
      * back, so a take reads its successor afresh on every attempt (0x16ffad,
      * a load of its own, not folded into the `or`). */
     volatile int next[8];
-    u8 unknown1e34[0x1c];
+    u8 unknown1e34[0xc];
+
+    /* One entry for each pair of the space splitter's cells, cleared before
+     * a step (0x16fcb0). derived names. */
+    struct CellPairEntry {
+        CellPairEntry() : valueC(0), value10(0) {}
+
+        /* Cleared for a step (inline in 0x16fcb0). derived name. */
+        void clear()
+        {
+            value0 = 0;
+            valueC = 0;
+            value10 = 0;
+        }
+
+        u64 value0;
+        u8 unknown8[4];
+        int valueC;
+        u64 value10;
+        u8 unknown18[8];
+    };
+
+    hkArray<CellPairEntry> cellPairEntries;
     /* A stream of the pool's own over its cache, both given back and the
      * cache freed by 0x16feb0. derived names. */
     hkBlockStream stream;
