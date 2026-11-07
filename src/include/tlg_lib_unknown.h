@@ -2670,7 +2670,7 @@ struct PackfileSaveContext00181dc0 /* derived name */
  * (FUN_000077a0) as a test against zero (hkBool). */
 /* It is reference-counted: its constructor 0x6d70 stores 0xffff0001 at +8
  * and slots 2 to 4 are hkReferencedObject's (0x270, 0x42d0, 0x69a0). From
- * +0x10, up to eleven 64-byte worker records (0x7890 starts at most 11
+ * +0x10, twelve 64-byte worker records (0x7890 starts at most 11
  * threads): the pool at +0, the thread at +8 (constructed by 0x104b0 and
  * started by 0x10580 on FUN_00007180 with the record as its argument), the
  * worker's index plus one at +0x18. Slot 14 (0x71a0) is a worker's loop,
@@ -2714,7 +2714,15 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     /* What a worker runs on the argument stored beside it. derived name. */
     typedef void (*WorkCallback)(void *argument);
 
+    /* Out of line (0x73e0, slot 0; the deleting one 0x7390, slot 1,
+     * before it): a running callback waited out, every worker killed and
+     * signalled, then joined, the reference lock's mode back to 0, then the
+     * members from the last. */
     virtual ~Pool00007880();
+
+    /* The reference-counted class delete (freeReferencedObject below):
+     * 0x348 bytes by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* Slots 5 (0x7660) and 6 (0x76d0): FUN_00007600 with the callbacks
      * FUN_000076c0 and FUN_00007730. derived names. */
@@ -2756,8 +2764,9 @@ class Pool00007880 : public hkReferencedObject /* derived name */
     void FUN_00007600(WorkCallback newCallback, void *argument);
 
     u8 unknownC[4];
-    WorkerRecord workers[11]; /* derived name */
-    u8 unknown2d0[0x40];
+    /* Twelve records, the destructor runs the members of each (0x73e0),
+     * though at most eleven workers are started. derived name. */
+    WorkerRecord workers[12];
     WorkCallback callback;  /* derived name */
     void *callbackArgument; /* derived name */
     /* What a worker signals when it is done with a callback (the waits at
@@ -2778,12 +2787,6 @@ class Pool00007880 : public hkReferencedObject /* derived name */
      * default. */
     u8 unknown344[4];
 };
-
-/* The pool's destructor (0x73e0, which stores the vtable 0x168cba0) and
- * its deleting destructor (slot 1, 0x7390), written as calls while the
- * destructor is not (cookbook 15, 97). derived names. */
-void FUN_000073e0(Pool00007880 *self); /* derived name */
-void FUN_00007390(Pool00007880 *self); /* derived name */
 
 /* derived name: the start function of a pool's worker thread (0x7890
  * passes it to 0x10580 with the worker's record): runs the pool's worker
@@ -5478,6 +5481,11 @@ inline void hkMemoryMeshShape::operator delete(void *object, unsigned long numBy
     freeReferencedObject(object, numBytes);
 }
 
+inline void Pool00007880::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpDefaultExternMeshShapeGeometry::operator delete(void *object,
                                                                 unsigned long numBytes)
 {
@@ -6902,7 +6910,9 @@ void FUN_001754d0(hknpConstraint *constraint, BodyKey0016e040 keyA, BodyKey0016e
  * register argument and re-widening the bool on the stack (cookbook 17):
  * the +0x420 table's adaptors (0x52380 to 0x52d80) take ten arguments and
  * drop the seventh, the +0x58 table's (0x56360 to 0x57050) take nine and
- * pass all of them. The argument types are not recovered. */
+ * pass all of them. The argument types are not recovered, except for the
+ * closest points functions (0x56360 to 0x56be0, each adaptor followed by
+ * the flipped entry for its function, func_00056390.cpp's template). */
 void FUN_000da720(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, bool argument7, void *argument8,
                   void *argument9); /* derived name */
@@ -6918,30 +6928,45 @@ void FUN_00117280(void *argument1, void *argument2, void *argument3, void *argum
 void FUN_0012e7f0(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, bool argument7, void *argument8,
                   void *argument9); /* derived name */
-void FUN_000dcae0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
-void FUN_000f2d80(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
+void FUN_000dcae0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
+void FUN_000f2d80(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
 void FUN_0011c290(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9); /* derived name */
-void FUN_001219f0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
+void FUN_001219f0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
 void FUN_00123760(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9); /* derived name */
-void FUN_0012eda0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
+void FUN_0012eda0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
 void FUN_00136000(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9); /* derived name */
-void FUN_0014cd80(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
+void FUN_0014cd80(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
 void FUN_00052380(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9, void *argument10); /* derived name */
@@ -6957,21 +6982,36 @@ void FUN_00052b00(void *argument1, void *argument2, void *argument3, void *argum
 void FUN_00052d80(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9, void *argument10); /* derived name */
-void FUN_00056360(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
-void FUN_00056580(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
-void FUN_000567a0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
-void FUN_000569c0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
-void FUN_00056be0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
+void FUN_00056360(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
+void FUN_00056580(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
+void FUN_000567a0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
+void FUN_000569c0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
+void FUN_00056be0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
 void FUN_00056e00(void *argument1, void *argument2, void *argument3, void *argument4,
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9); /* derived name */

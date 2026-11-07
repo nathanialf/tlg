@@ -57,7 +57,17 @@ static inline Vec4 signsOf(const Vec4 &mask)
 // minors; the minors' spills and every register below follow from that
 // (docs/NOTES.md, Round 76A). The three placements of the masks in the
 // source compile the same (InstCombine sinks the YW mask into the inverting
-// block).
+// block). Round 77A: neither the order of the loads, of the minors'
+// products and differences nor of b's rotations moves it (every
+// permutation compiles the same); b's cofactors through cofactors() (its
+// rotations chained, depths 2 to 4) puts the blend after the minors and
+// spills the base's two minors (m0 at -0x28, m1 at -0x18, m2 kept), so the
+// rule is fed by the depth of b's rotations against the mask chain's, where
+// the base has b's rotations direct from the load; and an IR edit placing
+// the YW mask's blend in the entry block (MachineSink takes it to the
+// inverting block) also puts the XZ blend after the minors, the base's
+// all-ones live into that block (a second use of V_SETALLONES in the entry
+// DAG makes the blend's operand live when it becomes available).
 
 /* derived name: the 4x4 matrix m inverted into out by cofactors, a failure
  * (out untouched) when the determinant's magnitude is below the tolerance's
