@@ -1505,6 +1505,14 @@ struct hkMassProperties {
      * each child's properties). derived name. */
     void FUN_0002a560(const Vec4 &density);
 
+    /* The properties under a scale (0x2a5c0; the compound shape's mass
+     * build at 0x4213f scales each child's): the volume and the mass by the
+     * magnitude of the scales' product, the centre by the scale; the
+     * inertia by that and the square of a uniform scale, else rebuilt from
+     * the diagonal's second moments and the products' two scales. derived
+     * name. */
+    void FUN_0002a5c0(const Vec4 &scale);
+
     /* The mass set, the inertia scaled by the new mass over the old: inline,
      * so its scale is a local of the inlined body and the inliner brackets it
      * with lifetime markers (docs/COOKBOOK.md). */
@@ -4869,8 +4877,8 @@ void FUN_00034b80(hknpCompressedMeshShapeData *self); /* derived name */
 
 /* hkIndexedTransformSet, polymorphic (type info 0x57bd358, vtable 0x1691770
  * stored by its finish constructor FUN_000236e0): slot 0, the complete
- * destructor FUN_00023490, runs the out-of-line FUN_000234f0, which restores
- * the vtable and frees the arrays at +0x50 (16-byte elements), +0x40
+ * destructor 0x23490, jumps to the base one 0x234f0, which restores the
+ * vtable and frees the arrays at +0x50 (16-byte elements), +0x40
  * (hkStringPtr) and below. */
 /* hkMeshBoneIndexMapping (type info "!hkMeshBoneIndexMapping", hkClass
  * 0x57bd388 built by 0x24490): an array of 16-bit indices at +0. The
@@ -4917,6 +4925,16 @@ struct hkMeshSectionCinfo {
 struct hkIndexedTransformSet : public hkReferencedObject {
     hkIndexedTransformSet(hkFinishLoadedObjectFlag flag);
 
+    /* Inline, emitted with the vtable in the finish constructor's file
+     * (the complete destructor 0x23490 a jump to the base one 0x234f0, the
+     * deleting one 0x234a0 between them, cookbook 441): the members
+     * destroyed from the last, the mappings' own arrays first. */
+    inline virtual ~hkIndexedTransformSet() {}
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x68 by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
     hkArray<Mat4> matrices;
     hkArray<Mat4> inverseMatrices;
     hkArray<s16> matricesOrder;
@@ -4931,8 +4949,6 @@ void FUN_00023770(const hkIndexedTransformSet *self, int startIndex, Mat4 *matri
                   int numMatrices); /* derived name */
 void FUN_000237b0(const hkIndexedTransformSet *self, int startIndex, Mat4 *matrices,
                   int numMatrices); /* derived name */
-
-void FUN_000234f0(hkIndexedTransformSet *self); /* derived name */
 
 /* hkVertexFormat (hkClass 0x57bcb30, size 0x104, records 0x1691160, built
  * at 0x22f48): elements (32 hkVertexFormat::Element) at +0, numElements
@@ -8025,7 +8041,10 @@ struct hknpManifoldCollisionCache /* derived name */
     /* Flags; bit 2 set when the trigger modifier sees the manifold created
      * (0x161fea). derived name. */
     u16 flags0c;
-    u8 unknownE[8];
+    /* The distance the manifold's points are looked for within, clamped to
+     * 16 bits (the trigger modifier's slot 4, 0x16226b). derived name. */
+    u16 unknownE;
+    u8 unknown10[6];
     u8 propertyBufferOffset; /* derived name */
     u8 propertyKeysUsed;     /* derived name */
     u32 propertyOffsets;     /* derived name */
@@ -10657,6 +10676,13 @@ struct hknpWorld {
      * mass. derived name. */
     void FUN_0005e780(int bodyId, const Vec4 &impulse);
 
+    /* A dynamic body's linear velocity set (0x5dfc0): nothing when it is
+     * within row 35 of the constant table of the motion's in x, y and z;
+     * else as 0x5e780, the body activated, the velocity stored, each body
+     * attached to it refreshed and the body-changed signal fired. derived
+     * name. */
+    void FUN_0005dfc0(int bodyId, const Vec4 &velocity);
+
     /* A motion's velocities of the previous step scaled and the motion
      * moved by the part of the step the scale adds (0x157be0), then each
      * body attached to it refreshed (0xce880), its time of impact distance
@@ -11200,6 +11226,17 @@ class hknpMountedBallGun : public hknpBallGun
  * body FUN_000396a0 finishes it): 0x40 bytes, its hkClass's size (0x57bf4c0,
  * built at 0x39653), the members from its twenty records at 0x16948a0. */
 struct hknpMotionProperties {
+    /* The presets (hknpMotionPropertiesId's, derived names after the
+     * library's five entries 0x36e10 builds). */
+    enum Preset { STATIC, DYNAMIC, KEYFRAMED, FROZEN, DEBRIS };
+
+    /* The values of a preset under a gravity's magnitude and a unit scale
+     * (0x396b0; the library's constructor 0x36e10 builds its entries
+     * with it): everything after isExclusive cleared, the preset's factors,
+     * speeds, damping and stabilization, then the deactivation's
+     * thresholds. derived name. */
+    void FUN_000396b0(Preset preset, float gravity, float unitScale);
+
     u32 isExclusive;
     u32 flags;
     float gravityFactor;
@@ -16890,8 +16927,31 @@ struct hknpManifoldEvent {
  * (0x1697760, read by 0x40a20). derived name. */
 extern const char *const D_1697760[];
 
+/* The names of the contact impulse event's status (0x1696550, read by
+ * 0x3da50): none, started, finished, continued. derived name. */
+extern const char *const D_1696550[];
+
+struct Pair08Owner;
+
+/* The contact impulse event (the name its print writes): the bodies' ids at
+ * +0xc and +0x14, the contact's jacobian record at +0x18 (none once the
+ * manifold is destroyed), the status at +0x20 and the impulses at +0x30.
+ * Field names derived. */
 struct hknpContactImpulseEvent {
+    /* The event written to a stream (0x3da50): its status and the bodies'
+     * ids, then, while the record lives, the record's normal and four
+     * positions from the two bodies' motions and the impulses. derived
+     * name. */
     void FUN_0003da50(hknpWorld *world, hkOstream &out) const; /* derived name */
+
+    u8 unknown0[0xc];
+    u32 bodyIdA; /* derived name */
+    u8 unknown10[4];
+    u32 bodyIdB;         /* derived name */
+    Pair08Owner *record; /* derived name */
+    u8 status;           /* derived name */
+    u8 unknown21[0xf];
+    Vec4 impulses; /* derived name */
 };
 
 /* The clipped impulse event (the name its print, 0x3dc30, writes): the
@@ -17662,6 +17722,12 @@ class hknpExternMeshShape : public hknpCompositeShape
      * taken on each (0x166010): the key bits enough for the geometry's
      * triangle count, and the shape not for the SPU. */
     hknpExternMeshShape(const Geometry *geometry_, hknpExternMeshShapeData *data);
+
+    /* Out of line (0x166180, slot 0; the deleting destructor 0x166130
+     * before it): the destroyed signal fired when the shape has signals,
+     * then the geometry's and the bounding volume's references let go and
+     * cleared. */
+    virtual ~hknpExternMeshShape();
 
     hknpShapeSignals *FUN_000eafb0(); /* vtable slot 8; derived name */
 
@@ -18875,6 +18941,8 @@ class hknpClosestHitCollector : public hknpCollisionQueryCollector /* derived na
 class hkpParametricCurve : public hkReferencedObject
 {
   public:
+    hkpParametricCurve() {}
+
     hkpParametricCurve(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
     /* The curve's slots from 5 (derived names, after the linear curve's
@@ -18900,6 +18968,14 @@ extern const hkClass D_57c3c68; /* hkpParametricCurve's hkClass */
 class hkpLinearParametricCurve : public hkpParametricCurve
 {
   public:
+    /* A new curve (inline in its clone, 0x7ff47): no points, a smoothing
+     * factor of 0.01, open, the direction kept not parallel to the tangent
+     * row 30 of the vector constant table. */
+    hkpLinearParametricCurve() : smoothingFactor(0.01f), closedLoop(false)
+    {
+        dirNotParallelToTangentAlongWholePath = D_14b2060[30];
+    }
+
     hkpLinearParametricCurve(hkFinishLoadedObjectFlag flag)
         : hkpParametricCurve(flag), points(flag), distance(flag)
     {
@@ -18911,9 +18987,25 @@ class hkpLinearParametricCurve : public hkpParametricCurve
      * (cookbook 187). */
     inline virtual ~hkpLinearParametricCurve() {}
 
+    /* The class allocator, inline: the thread's heap (the clone, 0x7ff41). */
+    static void *operator new(unsigned long numBytes);
+
+    /* The placement form the type info's finish callback builds a loaded
+     * curve with. */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     /* The reference-counted class delete (freeReferencedObject in
      * tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 15 (0x7ff00): a new curve over the same points (each appended,
+     * so its distances computed again), loop flag and direction (its w
+     * cleared), then the distances and the smoothing factor copied over.
+     * derived name. */
+    hkpParametricCurve *FUN_0007ff00() const;
 
     /* Slot 5 (0x7f5c0): the point at a parameter, between the points
      * either side of it. derived name. */
@@ -19652,6 +19744,17 @@ void FUN_00199970(const hknpWorld *world, const hknpBody *bodyA, const hknpBody 
                   hkBlockStreamWriter *writer);
 void FUN_001743b0(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
                   hkBlockStreamWriter *writer);
+
+/* A collision cache of type 6 over a shape against a distance field, five
+ * quads (derived names): the header's fields and the range of the child
+ * caches at +0x20; the time of impact distance in the header's last word.
+ * 0x1743b0 writes a new one. */
+struct DistanceFieldCache001743b0 : public CollisionCache001785a0 /* derived name */
+{
+    u8 unknown10[0x10];
+    hkBlockStreamRange childCacheRange;
+    u8 unknown30[0x20];
+};
 
 /* A collision cache of type 4 over a convex shape against a composite one,
  * five quads (derived names): the header's fields, an int and a byte at

@@ -113,7 +113,6 @@ FUN_000224f0 src/libs/unknown/func_000224f0.cpp _ZL37finishLoadedObjecthkcdDynam
 FUN_00022fb0 src/libs/unknown/func_00022fd0.cpp _ZL34finishLoadedObjecthkMemoryMeshBodyPvi
 FUN_000230d0 src/libs/unknown/func_000230d0.cpp _ZNK16hkMemoryMeshBody12FUN_000230d0Ev
 FUN_00023380 src/libs/unknown/func_00023380.cpp _ZL39finishLoadedObjecthkSkinnedRefMeshShapePvi
-FUN_00023490 src/libs/unknown/func_00023490.cpp
 FUN_000238d0 src/libs/unknown/func_000238d0.cpp
 FUN_00023df0 src/libs/unknown/func_00023df0.cpp
 FUN_000242e0 src/libs/unknown/func_000242e0.cpp _ZL31finishLoadedObjecthkSkinBindingPvi
@@ -233,7 +232,7 @@ FUN_0017ed60 src/libs/unknown/leaf_0017ed60.cpp
 _ZN14Layout00180ef0C1ERK19LayoutRules00180ef0 src/libs/unknown/leaf_00180ef0.cpp _ZN14Layout00180ef0C2ERK19LayoutRules00180ef0
 _ZN22hkBinaryPackfileWriterD1Ev src/libs/unknown/func_00181b10.cpp
 _ZN22BroadPhaseTree00142a40D1Ev src/libs/unknown/func_00195fe0.cpp _Z12FUN_00195fe0P14Object00195ff0
-FUN_000058a0 src/libs/unknown/leaf_000058a0.cpp
+FUN_000058a0 src/libs/unknown/func_000056c0.cpp _ZL16defaultFinishJobR10hkJobQueuePvRK13hkJobQueueJobS1_
 FUN_00006d00 src/libs/unknown/leaf_00006d00.cpp
 FUN_0002b020 src/libs/unknown/leaf_0002b020.cpp
 FUN_00033d20 src/libs/unknown/leaf_00033d20.cpp
@@ -1297,7 +1296,6 @@ _ZN18hkSimpleLocalFrameD0Ev src/libs/unknown/func_0000de20.cpp
 _ZN12Class168e810D0Ev src/libs/unknown/func_00016ee0.cpp
 _ZN13PageAllocatorD0Ev src/libs/unknown/func_00019780.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
-FUN_000234a0 src/libs/unknown/func_000234a0.cpp
 FUN_00024b80 src/libs/unknown/func_00024b80.cpp
 FUN_0002a960 src/libs/unknown/func_0002a960.cpp
 FUN_00033f40 src/libs/unknown/func_00033f40.cpp
@@ -1343,7 +1341,6 @@ FUN_00159600 src/libs/unknown/func_00159600.cpp
 FUN_0015bf50 src/libs/unknown/func_0015bf50.cpp
 FUN_00162580 src/libs/unknown/func_00162580.cpp
 FUN_00165aa0 src/libs/unknown/func_00165aa0.cpp
-FUN_00166130 src/libs/unknown/func_00166130.cpp
 FUN_0016a640 src/libs/unknown/func_0016a640.cpp
 _ZN21hknpScaledConvexShapeD0Ev src/libs/unknown/func_0016cf30.cpp
 _ZN17hknpSolveDataTaskD0Ev src/libs/unknown/func_0016e9f0.cpp
@@ -2469,7 +2466,7 @@ _ZN16Elements000760c07ElementD1Ev src/libs/unknown/func_00076250.cpp _ZN16Elemen
 _ZN11hknpBallGunD2Ev src/libs/unknown/func_00157ef0.cpp
 _ZN18hkxVertexAnimationD2Ev src/libs/unknown/func_0008cb10.cpp
 FUN_00188650 src/libs/unknown/func_00188650.cpp _Z12FUN_00188650PPhRK8RawImage
-FUN_0007fc70 src/libs/unknown/func_0007fc70.cpp _ZN24hkpLinearParametricCurve8addPointERKDv4_f
+_ZN24hkpLinearParametricCurve8addPointERKDv4_f src/libs/unknown/func_0007fc70.cpp
 FUN_0005fab0 src/libs/unknown/func_0005fab0.cpp _ZN9hknpWorld12FUN_0005fab0Ei
 FUN_0006c110 src/libs/unknown/func_0006c110.cpp _ZNK17RefArrays0005a23012FUN_0006c110ERK9hkCommandR9hkOstream
 FUN_00085550 src/libs/unknown/func_00085550.cpp
@@ -2692,3 +2689,14 @@ FUN_00011bc0 src/libs/unknown/func_00011bc0.cpp _ZN11hkStringBuf12FUN_00011bc0EP
 FUN_0016cb00 src/libs/unknown/func_0016cb00.cpp _ZNK25hknpScaledConvexShapeBase12FUN_0016cb00ERKDv4_fS2_PvbiPS0_P13hknpFaceAngle
 FUN_0019d710 src/libs/unknown/func_0019d710.cpp
 FUN_00043110 src/libs/unknown/func_00043110.cpp _ZNK15hknpConvexShape12FUN_00043110EPKvRK13hknpAabbQueryRK18ShapeQuery00038010RK19hknpQueryFilterDataS7_P7hkArrayIj24hkContainerHeapAllocatorEP6hkAabb
+FUN_000056c0 src/libs/unknown/func_000056c0.cpp _ZN10hkJobQueueC2ERK13JobQueueCinfo
+FUN_0007ff00 src/libs/unknown/func_0007ff00.cpp _ZNK24hkpLinearParametricCurve12FUN_0007ff00Ev
+FUN_001743b0 src/libs/unknown/func_001743b0.cpp
+FUN_0003da50 src/libs/unknown/func_0003da50.cpp _ZNK23hknpContactImpulseEvent12FUN_0003da50EP9hknpWorldR9hkOstream
+_ZN19hknpExternMeshShapeD0Ev src/libs/unknown/func_00166180.cpp
+_ZN19hknpExternMeshShapeD1Ev src/libs/unknown/func_00166180.cpp
+_ZN21hkIndexedTransformSetD1Ev src/libs/unknown/func_000236e0.cpp
+_ZN21hkIndexedTransformSetD0Ev src/libs/unknown/func_000236e0.cpp
+_ZN21hkIndexedTransformSetD2Ev src/libs/unknown/func_000236e0.cpp
+FUN_0005dfc0 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005dfc0EiRKDv4_f
+FUN_000396b0 src/libs/unknown/func_000396b0.cpp _ZN20hknpMotionProperties12FUN_000396b0ENS_6PresetEff

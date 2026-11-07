@@ -187,7 +187,9 @@ class CollisionDetector169b230 /* derived name */
 struct hknpManifoldBase /* derived name */
 {
     int numPoints; /* derived name */
-    int unknown4;
+    /* The manifold's smallest distance, below zero once the shapes
+     * overlap (the trigger modifier's slot 4, 0x162175). derived name. */
+    float minDistance;
     /* The contact normal (the surface velocity modifier's slot 7 hands it
      * to each surface velocity, 0x16d29c). derived name. */
     hkVector4 normal;
@@ -199,7 +201,11 @@ struct hknpManifoldBase /* derived name */
 
 struct hknpManifold : public hknpManifoldBase /* derived name */
 {
-    u8 unknown80[0x13];
+    u8 unknown80[0x10];
+    /* Set by the trigger modifier's slot 4 (0x162270) once it has looked
+     * at the manifold. derived name. */
+    u8 byte90;
+    u8 unknown91[2];
     /* Set for a manifold the status event reports as status 1, else 2
      * (0x154a60). derived name. */
     u8 flag93;
@@ -281,6 +287,16 @@ class Modifier16a5020 /* derived name */
     void FUN_001622a0(CommandOwner00171180 *context, const void *sharedData,
                       const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
                       hknpManifoldCollisionCache *cache) const;
+    /* Slot 4 (0x1620c0), as a manifold is processed: with either body
+     * raising trigger events, the cache's flags at +0x22 given bit 4 while
+     * the shapes overlap (an event of the manifold entered posted, once,
+     * bit 3 kept), else bit 4 cleared; the distance the cache looks within
+     * the smaller trigger tolerance plus the overlap's depth, else row 33
+     * of the constant table, scaled by the solver's vector and clamped to
+     * 16 bits; the manifold marked. derived name. */
+    void FUN_001620c0(CommandOwner00171180 *context, const ModifierSharedData *sharedData,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      hknpManifold *manifold) const;
     void FUN_00162350(const void *threadContext, const void *sharedData, const void *bodyA,
                       const void *bodyB, hknpManifoldCollisionCache *cache,
                       const hknpManifold *manifold, Pair08Owner *jacobian,
@@ -1649,20 +1665,42 @@ hkReferencedObject *FUN_00199f80();      /* hkVersionPatchManager's; derived nam
 extern hkSerializeDeprecated *D_57c89e0; /* hkSerializeDeprecated's instance */
 hkReferencedObject *FUN_0019a5f0();      /* hkSerializeDeprecated's; derived name */
 
-/* A job queue's construction info (derived names: no string names the
- * struct), built by its constructor (0x5640) on the game's stack at 0xe997c8
- * and handed to the queue's constructor 0x56c0 after the game sets the
- * count at +0x20 (15). The thread ids at +0x10 are an empty array. */
-struct JobQueueCinfo /* derived name */
+/* A job queue's hardware setup (derived names: no string names the
+ * struct): the thread count from the hardware info, an empty list of the
+ * thread id lists at +0x10 (16-byte elements, arrays of their own: the
+ * assignment 0x4b80 grows the list by 16 and frees each dropped element's
+ * storage). The queue keeps one at +0x60, built inline (0x56df). */
+struct hkJobQueueHwSetup /* derived name */
 {
-    JobQueueCinfo();
+    hkJobQueueHwSetup()
+    {
+        unknown0 = 1;
+        numCpuThreads = D_57c8728->numThreads;
+        unknown8 = 0;
+        unknown4 = true;
+    }
+
+    /* Out of line (0x4b80; the queue's constructor assigns the info's,
+     * 0x57b1): the first 16 bytes, then the lists one by one. */
+    hkJobQueueHwSetup &operator=(const hkJobQueueHwSetup &other);
 
     int unknown0;
     hkBool unknown4;
     int unknown8;
-    int numCpuThreads;      /* derived name */
-    hkArray<int> threadIds; /* derived name */
-    int maxNumJobTypes;     /* derived name */
+    int numCpuThreads;               /* derived name */
+    hkArray<hkArray<int>> threadIds; /* derived name */
+};
+
+/* A job queue's construction info (derived names), built by its
+ * constructor (0x5640, the setup's inline) on the game's stack at 0xe997c8
+ * and handed to the queue's constructor 0x56c0 after the game sets the
+ * count at +0x20 (15). */
+struct JobQueueCinfo /* derived name */
+{
+    JobQueueCinfo();
+
+    hkJobQueueHwSetup hwSetup; /* derived name */
+    int maxNumJobTypes;        /* derived name */
 };
 
 /* A worker thread pool's construction info (derived names: no string names
@@ -3836,20 +3874,37 @@ struct hkJobQueue /* derived name */
      * holds a job, the first waiting thread from the first CPU queue on. */
     void FUN_00006480(DynamicData *data); /* derived name */
 
-    u8 unknown0[0x10];
-    DynamicData *data;           /* derived name */
-    JobPopFunc popJobFunc;       /* derived name */
-    FinishJobFunc finishJobFunc; /* derived name */
-    u8 unknown28[0x10];
+    /* Out of line (0x56c0): the lock without spinning, the job types the
+     * info asks for and the setup's defaults, the thread's number cleared,
+     * the shared state from the thread's heap zeroed, the info's setup
+     * assigned, each job type in use given the default functions and its
+     * bit in the mask, the queue's dispatchers, no waiting threads' semaphores;
+     * then FUN_000058b0 sets the rest up. derived name. */
+    hkJobQueue(const JobQueueCinfo &cinfo);
+
+    /* Run last by the constructor (0x58b0, a tail call). derived name. */
+    void FUN_000058b0();
+
+    hkCriticalSection criticalSection; /* derived name */
+    DynamicData *data;                 /* derived name */
+    JobPopFunc popJobFunc;             /* derived name */
+    FinishJobFunc finishJobFunc;       /* derived name */
+    int numCustomJobTypes;             /* derived name: the info's count */
+    u8 unknown2c[0xc];
     int numJobQueues; /* derived name */
     u8 unknown3c[0x14];
     int cpuQueuesBegin; /* derived name */
     int cpuQueuesEnd;   /* derived name */
-    u8 unknown58[0x30];
+    u8 unknown58[8];
+    hkJobQueueHwSetup hwSetup; /* derived name */
+    hkBool unknown80;
     hkSemaphore *waitingThreadSemaphores[5]; /* derived name */
     int numWaitingThreadSemaphores;          /* derived name */
     u8 unknownb4[0x7c];
     CustomJobType customJobs[15]; /* derived name */
+    u64 unknown310;
+    hkArray<void *> unknown318;
+    void *unknown328;
 };
 
 int FUN_00005680(hkJobQueue &queue, void *data, hkJobQueueJob &jobIn,
@@ -4377,6 +4432,11 @@ inline void *hkHardwareInfo::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkpLinearParametricCurve::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hknpGlobals::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -4659,6 +4719,11 @@ inline void hkDebugDisplay::operator delete(void *object, unsigned long numBytes
 }
 
 inline void hkProcessFactory::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkIndexedTransformSet::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -6640,10 +6705,8 @@ void FUN_0009c120(hkcdPlanarCsgOperand *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
-void FUN_00166180(hknpExternMeshShape *self);
 
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
-void FUN_000234a0(hkIndexedTransformSet *self);            /* slot 1 of 0x1691760 */
 void FUN_00024b80(hkMultipleVertexBuffer *self);           /* slot 1 of 0x1691ff0 */
 void FUN_0002a960(hkMemoryMeshShape *self);                /* slot 1 of 0x1692530 */
 void FUN_00033f40(hknpStaticCompoundShapeInternals *self); /* slot 1 of 0x1692830 */
@@ -6669,7 +6732,6 @@ void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */
 void FUN_0015bf50(hknpWorldSnapshot *self);         /* slot 1 of 0x16a4d50 */
 void FUN_00162580(hknpVehicleInstance *self);       /* slot 1 of 0x16a5090 */
 void FUN_00165aa0(hknpPhysicsSystemData *self);     /* slot 1 of 0x16a5130 */
-void FUN_00166130(hknpExternMeshShape *self);       /* slot 1 of 0x16a5170 */
 void FUN_0016a640(hknpScaledConvexShapeBase *self); /* slot 1 of 0x16a5390 */
 
 /* An object the collide step 0x15c5f0 resets before its work (derived
