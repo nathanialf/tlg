@@ -1,13 +1,6 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* Every lane's magnitude: the sign bit shifted out and back as zero. */
-static inline Vec4 absolute(const Vec4 &v)
-{
-    const __m128i bits = _mm_castps_si128(v);
-    return _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
-}
-
 void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut) /* derived name */
 {
     const Vec4 sum = _mm_add_ps(aabb.min, aabb.max);
@@ -24,9 +17,9 @@ void FUN_00094060(const Mat4 &transform, const hkAabb &aabb, hkAabb &aabbOut) /*
     const Vec4 worldCenter = _mm_add_ps(rotated, transform.r[3]);
 
     const Vec4 extent =
-        _mm_add_ps(_mm_add_ps(absolute(_mm_mul_ps(col0, broadcast<0>(halfExtents))),
-                              absolute(_mm_mul_ps(broadcast<1>(halfExtents), col1))),
-                   absolute(_mm_mul_ps(broadcast<2>(halfExtents), col2)));
+        _mm_add_ps(_mm_add_ps(hkMath::quadFabs(_mm_mul_ps(col0, broadcast<0>(halfExtents))),
+                              hkMath::quadFabs(_mm_mul_ps(broadcast<1>(halfExtents), col1))),
+                   hkMath::quadFabs(_mm_mul_ps(broadcast<2>(halfExtents), col2)));
 
     aabbOut.max = _mm_add_ps(worldCenter, extent);
     aabbOut.min = _mm_add_ps(worldCenter, _mm_xor_ps(extent, _mm_set1_ps(-0.0f)));

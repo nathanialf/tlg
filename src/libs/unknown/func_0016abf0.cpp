@@ -28,8 +28,7 @@ void hknpScaledConvexShapeBase::FUN_0016abf0(int faceIndex, Vec4 *planeOut,
         *planeOut, _mm_sub_ps(broadcast<3>(*planeOut), _mm_dp_ps(*planeOut, translation, 0x7F)), 8);
 
     const float angle = float(angleOut->value) * (HK_REAL_PI * 0.5f / 255.0f);
-    const __m128i bits = _mm_castps_si128(normalized3(scale));
-    const Vec4 direction = _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
+    const Vec4 direction = hkMath::quadFabs(normalized3(scale));
     const Vec4 smallest = _mm_min_ps(broadcast<2>(direction),
                                      _mm_min_ps(broadcast<1>(direction), broadcast<0>(direction)));
     angleOut->value = u8(hkMath::clamp(

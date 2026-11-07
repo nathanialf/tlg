@@ -41,9 +41,7 @@ void Modifier16a5020::FUN_001620c0(CommandOwner00171180 *context,
             const u16 flags = cache->flags22;
             cache->flags22 = flags & ~0x10;
         }
-        const __m128i bits = _mm_castps_si128(minDistance);
-        distance =
-            _mm_add_ps(tolerance, _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1)));
+        distance = _mm_add_ps(tolerance, hkMath::quadFabs(minDistance));
     } else {
         distance = D_14b2060[33];
         cache = manifold->collisionCache;

@@ -3,14 +3,6 @@
 
 #include "tlg_hk_reflect.h"
 
-/* The magnitude of each lane (hkMath::fabs's form, cookbook 70). derived
- * name. */
-static inline Vec4 absLanes(const Vec4 &v) /* derived name */
-{
-    const __m128i bits = _mm_castps_si128(v);
-    return _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
-}
-
 /* Whether a comparison holds in x, y and z (hkVector4Comparison's
  * allAreSet on the three lanes). derived name. */
 static inline bool allXYZ(const Vec4 &comparison) /* derived name */
@@ -37,8 +29,10 @@ void FUN_00169c90(int shapeType, const Vec4 *vertices, int numVertices, int scal
         scale = _mm_shuffle_ps(scale, scale, _MM_SHUFFLE(0, 0, 0, 0));
     } else {
         const float radius = radiusInOut;
-        if (scaleMode == 0 && _mm_ucomigt_ss(absLanes(_mm_set_ss(radius)), _mm_set1_ps(1e-5f)) &&
-            !allXYZ(_mm_cmple_ps(absLanes(_mm_sub_ps(scale, D_14b2060[3])), D_14b2060[35]))) {
+        if (scaleMode == 0 &&
+            _mm_ucomigt_ss(hkMath::quadFabs(_mm_set_ss(radius)), _mm_set1_ps(1e-5f)) &&
+            !allXYZ(
+                _mm_cmple_ps(hkMath::quadFabs(_mm_sub_ps(scale, D_14b2060[3])), D_14b2060[35]))) {
             hkAabb bounds;
             bounds.setEmpty();
             const Vec4 *v = vertices;
@@ -56,7 +50,7 @@ void FUN_00169c90(int shapeType, const Vec4 *vertices, int numVertices, int scal
              * and the scale first in the sum and the product (0x169dac,
              * 0x169de8). */
             const Vec4 radiusV = simdFromFloat(radiusInOut);
-            const Vec4 absScale = absLanes(scale);
+            const Vec4 absScale = hkMath::quadFabs(scale);
             const Vec4 scaledExtents = _mm_mul_ps(absScale, _mm_add_ps(halfExtents, radiusV));
             Vec4 newRadius = radiusV;
             if (!allXYZ(_mm_cmplt_ps(radiusV, scaledExtents))) {

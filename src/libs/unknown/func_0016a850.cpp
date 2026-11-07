@@ -1,13 +1,6 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
-/* Every lane's magnitude: the sign bit shifted out and back as zero. */
-static inline Vec4 absolute(const Vec4 &v)
-{
-    const __m128i bits = _mm_castps_si128(v);
-    return _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
-}
-
 /* The core's vertices bounded in a local box (its minimum's merge phi
  * ahead of its maximum's, so Reassociate keeps the minimum on the left of
  * their sum, `vaddps xmm0, xmm1, xmm0`), the box scaled and moved, then
@@ -44,9 +37,9 @@ void hknpScaledConvexShapeBase::FUN_0016a850(const Mat4 &transform, hkAabb &aabb
         _mm_add_ps(_mm_mul_ps(col0, broadcast<0>(center)), _mm_mul_ps(col1, broadcast<1>(center))));
     const Vec4 worldCenter = _mm_add_ps(rotated, transform.r[3]);
     const Vec4 extent =
-        _mm_add_ps(_mm_add_ps(absolute(_mm_mul_ps(broadcast<0>(halfExtents), col0)),
-                              absolute(_mm_mul_ps(broadcast<1>(halfExtents), col1))),
-                   absolute(_mm_mul_ps(broadcast<2>(halfExtents), col2)));
+        _mm_add_ps(_mm_add_ps(hkMath::quadFabs(_mm_mul_ps(broadcast<0>(halfExtents), col0)),
+                              hkMath::quadFabs(_mm_mul_ps(broadcast<1>(halfExtents), col1))),
+                   hkMath::quadFabs(_mm_mul_ps(broadcast<2>(halfExtents), col2)));
     aabbOut.max = _mm_add_ps(worldCenter, extent);
     aabbOut.min = _mm_add_ps(worldCenter, _mm_xor_ps(extent, _mm_set1_ps(-0.0f)));
 

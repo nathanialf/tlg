@@ -3,14 +3,6 @@
 
 #include "tlg_hk_reflect.h"
 
-/* Every lane's magnitude, the bits doubled and shifted back (as hkMath::fabs
- * does in one lane). derived name. */
-static inline Vec4 absolute(const Vec4 &v) /* derived name */
-{
-    const __m128i bits = _mm_castps_si128(v);
-    return _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
-}
-
 /* The inverse from the columns' cross products over the determinant, which
  * must exceed the product of the columns' summed magnitudes scaled by the
  * epsilon: the rows the cross products, transposed into columns and scaled
@@ -27,12 +19,12 @@ hkResult hkMatrix3::FUN_0001ae40(const hkMatrix3 &m)
     const Vec4 c2 = m.col2;
     const Vec4 r0 = cross3(c1, c2);
     const Vec4 one = D_14b2060[3];
-    const Vec4 size2 = _mm_dp_ps(absolute(c2), one, 0x7f);
-    const Vec4 size1 = _mm_dp_ps(absolute(c1), one, 0x7f);
-    const Vec4 size0 = _mm_dp_ps(absolute(c0), one, 0x7f);
+    const Vec4 size2 = _mm_dp_ps(hkMath::quadFabs(c2), one, 0x7f);
+    const Vec4 size1 = _mm_dp_ps(hkMath::quadFabs(c1), one, 0x7f);
+    const Vec4 size0 = _mm_dp_ps(hkMath::quadFabs(c0), one, 0x7f);
     const Vec4 tolerance = _mm_mul_ps(_mm_mul_ps(size0, D_14b2060[35]), _mm_mul_ps(size1, size2));
     const Vec4 determinant = _mm_dp_ps(c0, r0, 0x7f);
-    if (_mm_ucomigt_ss(absolute(determinant), tolerance)) {
+    if (_mm_ucomigt_ss(hkMath::quadFabs(determinant), tolerance)) {
         const Vec4 r1 = cross3(c2, c0);
         const Vec4 r2 = cross3(c0, c1);
         const Vec4 r = _mm_rcp_ps(determinant);

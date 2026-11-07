@@ -3,14 +3,6 @@
 
 #include "tlg_hk_reflect.h"
 
-/* The magnitude of each lane (hkMath::fabs's form, cookbook 70). derived
- * name. */
-static inline Vec4 absLanes(const Vec4 &v) /* derived name */
-{
-    const __m128i bits = _mm_castps_si128(v);
-    return _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
-}
-
 /* The squared length of x, y and z, in every lane. derived name. */
 static inline Vec4 lengthSquared3(const Vec4 &v) /* derived name */
 {
@@ -44,7 +36,7 @@ bool hkMatrix3::FUN_0000be80() const
         return false;
     }
 
-    const Vec4 difference = absLanes(_mm_sub_ps(cross(col0, col1), col2));
+    const Vec4 difference = hkMath::quadFabs(_mm_sub_ps(cross(col0, col1), col2));
     const __m128 xyz = _mm_blend_ps(_mm_setzero_ps(), _mm_castsi128_ps(_mm_set1_epi32(-1)), 7);
     if (!_mm_testc_si128(_mm_castps_si128(_mm_and_ps(_mm_cmple_ps(difference, e), xyz)),
                          _mm_castps_si128(xyz))) {

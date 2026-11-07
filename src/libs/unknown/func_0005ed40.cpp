@@ -62,14 +62,6 @@ void hknpWorld::FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &positi
     }
 }
 
-/* The magnitude of each lane (hkMath::fabs's form, cookbook 70). derived
- * name. */
-static inline Vec4 absLanes(const Vec4 &v) /* derived name */
-{
-    const __m128i bits = _mm_castps_si128(v);
-    return _mm_castsi128_ps(_mm_srli_epi32(_mm_add_epi32(bits, bits), 1));
-}
-
 /* Whether a comparison holds in x, y and z (hkVector4Comparison's
  * allAreSet on the three lanes). derived name. */
 static inline bool allXYZ(const Vec4 &comparison) /* derived name */
@@ -83,7 +75,7 @@ void hknpWorld::FUN_0005dfc0(int bodyId, const Vec4 &velocity)
     const hknpBody &body = bodyManager.bodies[bodyId];
     if (body.flags & 2) {
         hknpMotion &motion = motionManager.motions[body.motionId];
-        if (!allXYZ(_mm_cmple_ps(absLanes(_mm_sub_ps(velocity, motion.linearVelocity)),
+        if (!allXYZ(_mm_cmple_ps(hkMath::quadFabs(_mm_sub_ps(velocity, motion.linearVelocity)),
                                  D_14b2060[35]))) {
             if (!(body.flags & 9)) {
                 FUN_0004e0c0(bodyId);
