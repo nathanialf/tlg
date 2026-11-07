@@ -845,12 +845,6 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
     u8 unknown478[8];
 };
 
-/* The command ranges of a context by grid cell (derived name). */
-struct CommandRanges0015ea30 /* derived name */
-{
-    LinkedRange0015ea30 *ranges;
-};
-
 /* A collide task's output range (derived names), 0x38 bytes on a 16-byte
  * boundary (0x40 a slot), a stack object of 0x15ea30 built empty: a linked
  * range, a flag, and the counts of the writer it was taken from. */

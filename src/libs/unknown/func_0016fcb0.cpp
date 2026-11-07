@@ -6,7 +6,8 @@
 // the other way here (the loop's two induction values, IVUsers' order); the
 // entry's own references and direct indexing compile the same or worse
 // (docs/NOTES.md, Round 75B).
-void hknpWorldContextPool::FUN_0016fcb0(hknpWorld *world, const Counts &counts, void *object1c8)
+void hknpWorldContextPool::FUN_0016fcb0(hknpWorld *world, const Counts &counts,
+                                        BlockStreamAllocator *allocator)
 {
     const int numFirst = counts.numUsed0; /* derived name */
     int numContexts = counts.numUsed4;    /* derived name */
@@ -15,12 +16,14 @@ void hknpWorldContextPool::FUN_0016fcb0(hknpWorld *world, const Counts &counts, 
 
     cellPairEntries.setSize(world->spaceSplitter->numCellPairs);
     for (int i = 0; i < cellPairEntries.getSize(); i++) {
-        cellPairEntries[i].clear();
+        cellPairEntries[i].range.startBlock = 0;
+        cellPairEntries[i].range.numElements = 0;
+        cellPairEntries[i].next = 0;
     }
 
     numContexts += numFirst;
     for (int i = 0; i < numContexts; i++) {
-        contexts[i].FUN_00167d50(world, &cellPairEntries, object1c8, i < counts.numUsed0,
+        contexts[i].FUN_00167d50(world, &cellPairEntries, allocator, i < counts.numUsed0,
                                  world->enabled278);
         contexts[i].index = i;
     }

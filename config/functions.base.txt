@@ -793,8 +793,8 @@
 0x0002a910 0x9 FUN_0002a910
 0x0002a920 0x9 FUN_0002a920
 0x0002a940 0x17 _ZN17hkMemoryMeshShapeC1E24hkFinishLoadedObjectFlag
-0x0002a960 0x4c FUN_0002a960
-0x0002a9b0 0x210 FUN_0002a9b0
+0x0002a960 0x4c _ZN17hkMemoryMeshShapeD0Ev
+0x0002a9b0 0x210 _ZN17hkMemoryMeshShapeD1Ev
 0x0002abc0 0x4 FUN_0002abc0
 0x0002abd0 0x17b FUN_0002abd0
 0x0002ad50 0xaa FUN_0002ad50
@@ -1682,7 +1682,7 @@
 0x00078950 0x1a0 FUN_00078950
 0x00078b00 0xf FUN_00078b00
 0x00078b20 0xc0 FUN_00078b20
-0x00078be0 0x210 FUN_00078be0
+0x00078be0 0x210 _ZN29hkpLimitedHingeConstraintDataC1Ev
 0x00078df0 0x2b _ZN29hkpLimitedHingeConstraintData5AtomsC1E24hkFinishLoadedObjectFlag
 0x00078e30 0xa6 _ZN29hkpLimitedHingeConstraintDataD0Ev
 0x00078ee0 0x5c _ZN29hkpLimitedHingeConstraintDataD1Ev

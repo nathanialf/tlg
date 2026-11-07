@@ -1297,7 +1297,7 @@ _ZN12Class168e810D0Ev src/libs/unknown/func_00016ee0.cpp
 _ZN13PageAllocatorD0Ev src/libs/unknown/func_00019780.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
 _ZN22hkMultipleVertexBufferD0Ev src/libs/unknown/func_00025590.cpp
-FUN_0002a960 src/libs/unknown/func_0002a960.cpp
+_ZN17hkMemoryMeshShapeD0Ev src/libs/unknown/func_0002a9b0.cpp
 FUN_00033f40 src/libs/unknown/func_00033f40.cpp
 _ZN27hknpCompressedMeshShapeDataD0Ev src/libs/unknown/func_00034da0.cpp
 _ZN27hknpCompressedMeshShapeDataD2Ev src/libs/unknown/func_00034da0.cpp
@@ -2737,3 +2737,10 @@ _ZN7hkxNodeD1Ev src/libs/unknown/func_0008c110.cpp
 FUN_0013de80 src/libs/unknown/func_0013de80.cpp
 FUN_00089ca0 src/libs/unknown/func_00089ca0.cpp _GLOBAL__I_a
 FUN_00057c00 src/libs/unknown/func_00057c00.cpp
+FUN_00038780 src/libs/unknown/func_00038780.cpp _GLOBAL__I_a
+_ZN17hkMemoryMeshShapeD1Ev src/libs/unknown/func_0002a9b0.cpp
+_ZN29hkpLimitedHingeConstraintDataC1Ev src/libs/unknown/func_00078be0.cpp
+FUN_0004ce80 src/libs/unknown/func_0004ce80.cpp
+FUN_0007f650 src/libs/unknown/func_0007f650.cpp
+FUN_00167d50 src/libs/unknown/func_00167d50.cpp
+FUN_00036e10 src/libs/unknown/func_00036e10.cpp

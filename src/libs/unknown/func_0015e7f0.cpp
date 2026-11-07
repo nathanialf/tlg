@@ -86,7 +86,7 @@ void hknpCollidePairsTask::process()
                          context->records268[1], context->records268[2], output);
             context->commandRange.range.FUN_00092220(&commandWriter);
             if (context->commandRange.range.numElements != 0) {
-                appendLinkedRange(context->commandRanges->ranges[cellB], context->commandRange,
+                appendLinkedRange((*context->commandRanges)[cellB], context->commandRange,
                                   commandWriter);
             }
             context->commandRange.range.setStartPoint(&commandWriter);

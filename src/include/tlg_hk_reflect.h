@@ -7209,6 +7209,15 @@ template <typename P0, typename P1> struct hkSignal2 : public Signal00093530 /* 
     void fire(P0 p0, P1 p1);
 };
 
+/* A signal whose slots take three arguments (derived name): fire calls slot
+ * 3 of each slot with the three (the world's motion creation passes the
+ * world, the motion's construction info and its id, 0x4d04f); defined after
+ * hkSlot. */
+template <typename P0, typename P1, typename P2>
+struct hkSignal3 : public Signal00093530 /* derived name */ {
+    void fire(P0 p0, P1 p1, P2 p2);
+};
+
 struct hknpShapeSignals {
     hkSignal1<u8> shapeMutated; /* derived name */
     hkSignal0 shapeDestroyed;   /* derived name */
@@ -8533,6 +8542,11 @@ class hknpWorldObject1d0 /* derived name */
      * not the class's key function. derived name. */
     virtual void unknownVirtual2(void *argument, class RefArrays *arrays) = 0;
 
+    /* Slot 3: the solve tasks added to the arrays (the world's solve
+     * stage, 0x50ef3, with its argument, null unless the simulation is of
+     * kind 1; the smaller class's 0x6d690). derived name. */
+    virtual void unknownVirtual3(void *argument, class RefArrays *arrays, void *argument3) = 0;
+
     u8 unknown8[8];
     void *pointer10;    /* derived name */
     int simulationType; /* derived name: the world description's byte at +0x50 */
@@ -8549,6 +8563,8 @@ class hknpWorldObject1d0Small : public hknpWorldObject1d0 /* derived name */
 
     /* Slot 2 (0x6c850). derived name. */
     void unknownVirtual2(void *argument, class RefArrays *arrays);
+    /* Slot 3 (0x6d690). derived name. */
+    void unknownVirtual3(void *argument, class RefArrays *arrays, void *argument3);
 
     /* The class allocator's delete (defined in tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
@@ -8629,6 +8645,8 @@ class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
 
     /* Slot 2 (0x150330): the collide tasks built. derived name. */
     void unknownVirtual2(void *argument, class RefArrays *arrays);
+    /* Slot 3: the solve tasks built. derived name. */
+    void unknownVirtual3(void *argument, class RefArrays *arrays, void *argument3);
 
     /* Slot 5 (0x151c80): the world's streams of a thread checked, the
      * checks empty in this build. derived name. */
@@ -10294,6 +10312,13 @@ template <typename P0, typename P1> class hkSlot2 : public hkSlot /* derived nam
     virtual void call(P0 p0, P1 p1) = 0; /* derived name */
 };
 
+/* A slot of a signal with three arguments (derived name): slot 3 calls it. */
+template <typename P0, typename P1, typename P2> class hkSlot3 : public hkSlot /* derived name */
+{
+  public:
+    virtual void call(P0 p0, P1 p1, P2 p2) = 0; /* derived name */
+};
+
 /* The two flag bits a slot link keeps low (derived names). */
 inline hkSlot *untagSlotLink(const void *link) /* derived name */
 {
@@ -10376,6 +10401,30 @@ template <typename P0, typename P1> inline void hkSignal2<P0, P1>::fire(P0 p0, P
         hkSlot *next = untagSlotLink(slot->next);
         if (slotLinkFlags(slot->next) == 0) {
             static_cast<hkSlot2<P0, P1> *>(slot)->call(p0, p1);
+            if (slotLinkFlags(slot->next) == 0) {
+                prevLink = reinterpret_cast<hkUlong *>(&slot->next);
+                slot = next;
+                continue;
+            }
+        }
+        delete slot;
+        *prevLink = (*prevLink & 3) | reinterpret_cast<hkUlong>(next);
+        slot = next;
+    }
+    slots = untagSlotLink(slots);
+}
+
+/* The same walk, each slot called with the three arguments. */
+template <typename P0, typename P1, typename P2>
+inline void hkSignal3<P0, P1, P2>::fire(P0 p0, P1 p1, P2 p2)
+{
+    hkUlong *prevLink = reinterpret_cast<hkUlong *>(this);
+    hkSlot *slot = untagSlotLink(slots);
+    slots = reinterpret_cast<void *>(reinterpret_cast<hkUlong>(slot) | 1);
+    while (slot) {
+        hkSlot *next = untagSlotLink(slot->next);
+        if (slotLinkFlags(slot->next) == 0) {
+            static_cast<hkSlot3<P0, P1, P2> *>(slot)->call(p0, p1, p2);
             if (slotLinkFlags(slot->next) == 0) {
                 prevLink = reinterpret_cast<hkUlong *>(&slot->next);
                 slot = next;
@@ -10594,7 +10643,10 @@ struct hknpSolverInfo /* derived name */
     /* A distance 0xcf4d0's callers hand it, halved by one (0x742cc) and
      * as it is by the other (0x149284). derived name. */
     Vec4 vector80;
-    u8 unknown90[0x24];
+    /* A float the motion properties library's presets take as their
+     * unit scale (0x36e36). derived name. */
+    float unitScale;
+    u8 unknown94[0x20];
     /* The steps and the micro steps of each (the solve loop at 0x3fbab
      * counts them from the world's +0x444 and +0x44c). derived names. */
     int numSteps;
@@ -10820,10 +10872,14 @@ struct hknpWorldSignals /* derived name */
     Signal00093530 signal30;
     Signal00093530 signal38;
     Signal00093530 signal40;
-    Signal00093530 signal48;
+    /* Fired when no motion is free, before one is taken (0x4cebe). derived
+     * name. */
+    hkSignal2<hknpWorld *, hknpMotionManager *> motionBufferFullSignal;
     Signal00093530 signal50;
     Signal00093530 signal58;
-    Signal00093530 signal60;
+    /* Fired with a new motion's construction info and id (0x4cff0).
+     * derived name. */
+    hkSignal3<hknpWorld *, const hknpMotionCinfo &, int> motionCreatedSignal;
     /* Fired with the world and a motion's id as its last body leaves it
      * (0x4c46c), before the motion is given back. derived name. */
     hkSignal2<hknpWorld *, int> motionDestroyedSignal;
@@ -11026,6 +11082,11 @@ struct hknpWorld {
      * the ray cast wheel collide's slot 13, 0x158bca, and the game's casts
      * call it). derived name. */
     void FUN_00035d40(const void *query, hknpCollisionQueryCollector *collector) const;
+    /* A motion created from its construction info (0x4ce80; the body
+     * creation at 0x4e3c5 and the game call it): the full signal fired
+     * when none is free, one taken and set up, its record grown into and
+     * set, the created signal fired; its id back. derived name. */
+    int FUN_0004ce80(const hknpMotionCinfo &cinfo);
     /* A shape cast over the bodies under the "WorldCastShape" timer
      * (0x35de0; the shape phantom's 0x156bd2 and 0x179440 call it).
      * derived names. */
@@ -11035,7 +11096,7 @@ struct hknpWorld {
     void FUN_000509f0();
     /* A step stage that fills the arrays (0x50dc0; 0x50880 and 0x514a0 call
      * it with a null second argument). derived names. */
-    void FUN_00050dc0(class RefArrays &arrays, void *argument);
+    void FUN_00050dc0(class RefArrays1698f80 &arrays, void *argument);
     /* The collide tasks built into the arrays under the timer
      * "BuildCollideTasks" (0x50480; called at 0x50916): the arrays given
      * room, 0x4fe00 run, the object at +0x1d0 adding the tasks; the
@@ -11228,8 +11289,12 @@ struct hknpWorld {
     hknpConstraintManager constraintManager;
 
     hknpModifierManager *modifierManager; /* derived name */
-    u8 unknown1c0[8];
-    void *object1c8;               /* derived name: handed to each context's setup (0x50428) */
+    /* The cinfo's persistent stream allocator, a reference taken (0x48dce).
+     * derived name. */
+    class BlockStreamAllocator *persistentStreamAllocator;
+    /* derived name: the allocator handed to each context's setup (0x50428),
+     * its caches over it unless it is the persistent one. */
+    class BlockStreamAllocator *object1c8;
     hknpWorldObject1d0 *object1d0; /* derived name */
     /* Read by FUN_00167c90 with +0x250, +0x278 and +0x280. derived names. */
     /* The space splitter (derived name; 0xcd4e8 reads its kind). */
@@ -11294,7 +11359,10 @@ struct hknpWorld {
     /* The task the collide stage adds after the collide tasks, given the
      * world and the object at +0x1d0 first (0x50518). derived name. */
     class hknpPostCollideTask *postCollideTask;
-    u8 unknown6e0[0x10];
+    /* The tasks the solve stage adds around the solver's, given the world
+     * and the object at +0x1d0 first (0x50e36, 0x50f06). derived names. */
+    class hknpPreSolveTask *preSolveTask;
+    class hknpPostSolveTask *postSolveTask;
     /* What the object at +0x1d0 builds the collide tasks from (its slot 2,
      * 0x50503). derived name. */
     void *pointer6f0;
@@ -11588,6 +11656,14 @@ struct hknpMotionProperties {
      * thresholds. derived name. */
     void FUN_000396b0(Preset preset, float gravity, float unitScale);
 
+    /* Not exclusive, the dynamic preset under Earth's gravity at unit
+     * scale (inline in the library's presets, 0x36e50). */
+    hknpMotionProperties()
+    {
+        isExclusive = 0;
+        FUN_000396b0(DYNAMIC, 9.81f, 1.0f);
+    }
+
     u32 isExclusive;
     u32 flags;
     float gravityFactor;
@@ -11627,8 +11703,10 @@ extern const hkClassEnum D_1694c40[];   /* derived name: its two enums */
 
 /* hknpMotionPropertiesId, the motion properties library's handle (the
  * template argument of its free-list array in the scoped type names,
- * 0x14bf45a); fields not typed yet. */
-struct hknpMotionPropertiesId;
+ * 0x14bf45a): 16 bits (the library's add returns it in ax, 0x37274). */
+struct hknpMotionPropertiesId {
+    u16 value; /* derived name */
+};
 
 /* The library's free-list operations (the name the scoped type names
  * spell): a free entry holds the next free index in its first word and
@@ -11653,6 +11731,16 @@ struct hknpMotionPropertiesLibrary : public hkReferencedObject {
     hknpMotionPropertiesLibrary();
 
     hknpMotionPropertiesLibrary(hkFinishLoadedObjectFlag flag);
+
+    /* An entry added (0x37030): a shared one equal to an entry already
+     * there is that entry; otherwise a new one, the added signal fired. Its
+     * id back. derived name. */
+    hknpMotionPropertiesId FUN_00037030(const hknpMotionProperties &properties);
+
+    /* The five presets added as exclusive entries, ids 0 to 4, under the
+     * world's gravity's magnitude and unit scale (0x36e10; the world's
+     * constructor at 0x49297, and the game). derived name. */
+    void FUN_00036e10(const struct hknpWorld *world);
 
     /* Out of line (0x36c80, slot 0): the entries' storage, then the
      * signals; the deleting destructor (0x36cf0, slot 1) runs it and frees
@@ -12995,6 +13083,10 @@ struct hknpBodyQuality {
     float contactCachingRelativeMovementThreshold;
 };
 
+/* hknpBodyQuality's flags enum through a pointer another file defines (its
+ * two flags records read it at run time, 0x38823). derived name. */
+extern const hkClassEnum *D_16dc5e8;
+
 /* hknpBodyQualityLibrary (type info 0x57c1a78; hkClass 0x57c1a28, built at
  * 0x61e85: size 0x220, parent hkReferencedObject's 0x57b8640, member
  * records at 0x16997a0; vtable 0x169b150): qualityModifiedSignal (not
@@ -13784,6 +13876,7 @@ struct hkpConstraintAtom {
         TYPE_TWIST_LIMIT = 15,
         TYPE_CONE_LIMIT = 16,
         TYPE_ANG_FRICTION = 17,
+        TYPE_ANG_MOTOR = 18,
         TYPE_PULLEY = 20,
         TYPE_RACK_AND_PINION = 21,
         TYPE_COG_WHEEL = 22,
@@ -15062,6 +15155,8 @@ void FUN_0017d190(const hkpConstraintMotor *motor, const MotorInput0017d190 *inp
  * at +0x14, padding at +0x16. Its finish constructor resets the three
  * offsets. */
 struct hkpAngMotorConstraintAtom {
+    hkpAngMotorConstraintAtom() {}
+
     hkpAngMotorConstraintAtom(hkFinishLoadedObjectFlag)
     {
         initializedOffset = -1;
@@ -15285,6 +15380,8 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        Atoms() {}
+
         /* Out of line (0x78df0): when finishing, the motor's offsets into
          * the runtime are set. */
         Atoms(hkFinishLoadedObjectFlag flag);
@@ -15294,18 +15391,39 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
         hkpAngMotorConstraintAtom angMotor;
         hkpAngFrictionConstraintAtom angFriction;
         hkpAngLimitConstraintAtom angLimit;
-        u8 unknownF0[0x10]; /* 2dAng */
+        hkp2dAngConstraintAtom twoDAng; /* the record's 2dAng */
         hkpBallSocketConstraintAtom ballSocket;
     };
 
-    /* What the solver keeps for the constraint (derived names): its first
-     * four solver results are the motor's and the friction's. */
+    /* The solver results by their use (derived names): the motor's and the
+     * friction's first, each with its internal one, then the limit's (its
+     * offset the motor's corresponding one, 0x78dac), ten in all (slot 20). */
+    enum SolverResult {
+        SOLVER_RESULT_MOTOR = 0,
+        SOLVER_RESULT_MOTOR_INTERNAL = 1,
+        SOLVER_RESULT_FRICTION = 2,
+        SOLVER_RESULT_FRICTION_INTERNAL = 3,
+        SOLVER_RESULT_LIMIT = 4,
+        SOLVER_RESULT_MAX = 10
+    };
+
+    /* What the solver keeps for the constraint (derived names): its ten
+     * solver results, then the motor's initialized flag and previous target
+     * angle (their offsets the motor atom's, 0x78d9a). */
     struct Runtime {
-        hkpSolverResults solverResults[4];
+        hkpSolverResults solverResults[SOLVER_RESULT_MAX];
+        u8 initialized;
+        float previousTargetAngle;
     };
 
     /* The finish constructor (0x82000): the atoms finish themselves. */
     hkpLimitedHingeConstraintData(hkFinishLoadedObjectFlag flag);
+
+    /* A hinge with limits (0x78be0; the game builds them at 0xea75eb): the
+     * atoms typed and given their defaults, both frames the identity, the
+     * limit from -pi to pi, the friction on the first axis, the motor off
+     * with its runtime offsets. */
+    hkpLimitedHingeConstraintData();
 
     virtual ~hkpLimitedHingeConstraintData();
 
@@ -17555,7 +17673,15 @@ class hkMemoryMeshShape : public hkMeshShape
 {
   public:
     hkMemoryMeshShape(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x2a9b0, slot 0; the deleting one 0x2a960, slot 1,
+     * before it): the members from the last, each section's references
+     * released after its bone map; hkMeshShape's adds nothing. */
     virtual ~hkMemoryMeshShape();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0x48 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     const hkClass *getClassType() const;    /* vtable slot 3, FUN_00023de0 */
     const char *FUN_0002a910() const;       /* vtable slot 8; derived name */
@@ -19510,7 +19636,9 @@ class hkpParametricCurve : public hkReferencedObject
      * overriders): the point at a parameter, slot 6, and the tangent at a
      * parameter (the binormal 0x7fb50 asks slot 7 for it). */
     virtual void FUN_0007f5c0(float t, Vec4 &pointOnCurve) const = 0;
-    virtual void unknownVirtual6() = 0;
+    /* Slot 6: the parameter of the point of the curve nearest a point,
+     * searched from a parameter, and that point. derived name. */
+    virtual float FUN_0007f650(float t, const Vec4 &nearPoint, Vec4 &pointOnCurve) const = 0;
     virtual void FUN_0007f870(float t, Vec4 &tangent) const = 0;
 };
 
@@ -19571,7 +19699,14 @@ class hkpLinearParametricCurve : public hkpParametricCurve
     /* Slot 5 (0x7f5c0): the point at a parameter, between the points
      * either side of it. derived name. */
     void FUN_0007f5c0(float t, Vec4 &pointOnCurve) const;
-    void unknownVirtual6();                          /* vtable slot 6 (0x7f650) */
+    /* Slot 6 (0x7f650): the nearest point found segment by segment from
+     * the parameter's, stepping back while it lies before a segment's start
+     * and on while it lies past the next one's; in a corner between two
+     * segments, just inside the one it is nearer to by its normalized
+     * distances; past either end, extrapolated. A closed loop's parameter
+     * within a quarter of an end is moved across the join and searched
+     * again. derived name. */
+    float FUN_0007f650(float t, const Vec4 &nearPoint, Vec4 &pointOnCurve) const;
     void FUN_0007f870(float t, Vec4 &tangent) const; /* vtable slot 7; derived name */
     float FUN_0007fad0() const;                      /* vtable slot 9; derived name */
     /* Slot 10 (0x7fae0): the distance along the curve at a parameter,
@@ -19690,6 +19825,9 @@ class hkBlockStreamCommandWriter : public hkReferencedObject /* derived name */
     hkBlockStreamCommandWriter();
     virtual ~hkBlockStreamCommandWriter();
 
+    /* The thread's heap (the context's set-up, 0x167f12). */
+    static void *operator new(unsigned long numBytes);
+
     /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
      * destructor (0x90460) frees at the recorded size, 0x38 by default. */
     static void operator delete(void *object, unsigned long numBytes);
@@ -19725,6 +19863,12 @@ class BlockStreamAllocator : public hkReferencedObject /* derived name */
 
 struct BlockCache /* derived name */
 {
+    /* Over an allocator, empty (inline in the context's set-up, 0x167e19). */
+    BlockCache(BlockStreamAllocator *newAllocator)
+        : allocator(newAllocator), numBlocks(0), unknown4c(0)
+    {
+    }
+
     /* Every cached block handed back (0x8ef60 run inline, then the 0x50
      * bytes freed when the cache is deleted: 0x16ff31, 0x168047). */
     ~BlockCache()
@@ -19732,8 +19876,9 @@ struct BlockCache /* derived name */
         FUN_0008ef60();
     }
 
-    /* Back to the thread's heap at its size (defined in
+    /* From the thread's heap and back at its size (defined in
      * tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     hkBlockStreamBlock *FUN_0008eec0();           /* derived name */
@@ -19747,6 +19892,7 @@ struct BlockCache /* derived name */
     BlockStreamAllocator *allocator; /* derived name */
     hkBlockStreamBlock *blocks[8];   /* derived name */
     int numBlocks;                   /* derived name */
+    int unknown4c;
 };
 
 /* A block stream (derived names): the count of every element written at +8
@@ -19969,22 +20115,41 @@ struct hknpWorldContextPool /* derived name */
          * every context of the pool). derived name. */
         void FUN_00167f70(void *argument1, BlockCache *streamCache);
 
-        /* Set up over the world for a step (0x167d50, 0x212 bytes). derived
-         * names. */
-        void FUN_00167d50(hknpWorld *world, void *cellPairEntries, void *object1c8, bool first,
-                          bool flag);
+        /* Set up for a world (0x167d50; the pool's 0x16fe17 sets up each
+         * context it hands out): the world's libraries' qualities,
+         * materials and motion properties, its modifier manager, a block
+         * cache over its persistent stream allocator (and another over the
+         * allocator given unless it is that one), the cache the context
+         * writes through by the flag, three records from the world's +0x380
+         * object, the stream over the own cache, the command ranges, a
+         * command writer when asked, and the two triangles' shapes. derived
+         * name. */
+        void FUN_00167d50(hknpWorld *newWorld, hkArray<LinkedRange0015ea30> *newCommandRanges,
+                          BlockStreamAllocator *allocator, bool withCommandWriter,
+                          bool writeToOwnCache);
 
         int index;
         u8 unknown4[4];
         hknpWorld *world; /* derived name: the prepare-new-pairs task reads it (0x15b814) */
-        u8 unknown10[0x28];
+        /* The world's libraries' entries (0x167d75 to 0x167ddc). derived
+         * names. */
+        const hknpBodyQuality *qualities;
+        int numQualities;
+        const hknpMaterial *materials;
+        int numMaterials;
+        const void *motionProperties;
         /* The world's modifier manager (the composite detectors' child
          * dispatch reads it, 0x1557be). derived name. */
         hknpModifierManager *modifierManager;
-        u8 unknown40[0x10];
+        /* The world's object at +0x6b8. derived name. */
+        hknpWorldObject6c0 *object40;
+        u8 unknown48[8];
         InplaceTriangle00078160 triangle0; /* derived name */
         InplaceTriangle00078160 triangle1; /* derived name */
-        u8 unknown210[0x18];
+        /* The two triangles' shapes (0x167f3e). derived names. */
+        InplaceTriangle00078160 *triangleShape0;
+        InplaceTriangle00078160 *triangleShape1;
+        void *pointer220; /* derived name: cleared by the set-up */
         /* What a solver stage task runs over, set before its stage
          * (0x18efa7). derived name. */
         void *solverStages;
@@ -19992,7 +20157,11 @@ struct hknpWorldContextPool /* derived name */
          * add-active-body-pairs task, 0x14e8e3). derived names. */
         Object00065f20 *unionFind;
         const hkArray<UnionFindRange> *unionFindRanges;
-        u8 unknown240[0x10];
+        void *pointer240; /* derived name: cleared by the set-up */
+        /* Whether the context writes through its own cache (0x167e88).
+         * derived name. */
+        int writesToOwnCache;
+        u8 unknown24c[4];
         /* Two block caches (0x167ff0 hands back the first and frees it
          * unless it is the second, then the second). derived names. */
         BlockCache *cache250;
@@ -20005,7 +20174,7 @@ struct hknpWorldContextPool /* derived name */
         hkBlockStreamCommandWriter *commandWriter; /* derived name */
         /* Where the collide task's slot 5 links each batch's command range,
          * by the batch's grid cell (0x15f480). derived name. */
-        struct CommandRanges0015ea30 *commandRanges;
+        hkArray<LinkedRange0015ea30> *commandRanges; /* the pool's cellPairEntries */
         /* Where the writer's commands start (0x167f70), a linked range the
          * tasks copy whole (0x14f005: the link, then the range); its count
          * and link cleared by the constructor. derived name. */
@@ -20057,27 +20226,11 @@ struct hknpWorldContextPool /* derived name */
     volatile int next[8];
     u8 unknown1e34[0xc];
 
-    /* One entry for each pair of the space splitter's cells, cleared before
-     * a step (0x16fcb0). derived names. */
-    struct CellPairEntry {
-        CellPairEntry() : valueC(0), value10(0) {}
-
-        /* Cleared for a step (inline in 0x16fcb0). derived name. */
-        void clear()
-        {
-            value0 = 0;
-            valueC = 0;
-            value10 = 0;
-        }
-
-        u64 value0;
-        u8 unknown8[4];
-        int valueC;
-        u64 value10;
-        u8 unknown18[8];
-    };
-
-    hkArray<CellPairEntry> cellPairEntries;
+    /* One linked range for each pair of the space splitter's cells, the
+     * contexts' command ranges (0x167d50 hands each context the array; the
+     * collide task 0x15ea30 appends to the pair's range), cleared before a
+     * step (0x16fcb0). derived name. */
+    hkArray<LinkedRange0015ea30> cellPairEntries;
     /* A stream of the pool's own over its cache, both given back and the
      * cache freed by 0x16feb0. derived names. */
     hkBlockStream stream;

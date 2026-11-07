@@ -4771,6 +4771,11 @@ inline void hknpWorldObject4f8::Entry18::operator delete(void *object, unsigned 
     }
 }
 
+inline void *BlockCache::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void BlockCache::operator delete(void *object, unsigned long numBytes)
 {
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
@@ -5418,6 +5423,11 @@ inline void hkcdPlanarEntity::operator delete(void *object, unsigned long numByt
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkMemoryMeshShape::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpDefaultExternMeshShapeGeometry::operator delete(void *object,
                                                                 unsigned long numBytes)
 {
@@ -5499,6 +5509,11 @@ inline void hknpStaticCompoundShapeData::operator delete(void *object, unsigned 
 inline void hknpVehicleDefaultSteering::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void *hkBlockStreamCommandWriter::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
 inline void hkBlockStreamCommandWriter::operator delete(void *object, unsigned long numBytes)
@@ -6968,7 +6983,6 @@ inline int cellOf(const hknpSpaceSplitter *splitter, const Vec4 &position)
  * are not (cookbook 15, 97): the base destructor, then the object back to
  * the thread's heap at its recorded size, the class's own by default. The
  * base destructors not declared elsewhere come first. derived names. */
-void FUN_0002a9b0(hkMemoryMeshShape *self);
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0004b040(hknpWorld *self);
 void FUN_00087130(hkxMaterial *self);
@@ -6978,7 +6992,6 @@ void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
 
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
-void FUN_0002a960(hkMemoryMeshShape *self);                /* slot 1 of 0x1692530 */
 void FUN_00033f40(hknpStaticCompoundShapeInternals *self); /* slot 1 of 0x1692830 */
 void FUN_00037bf0(hknpMaskedShape *self);                  /* slot 1 of 0x1693a80 */
 void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d0 */
