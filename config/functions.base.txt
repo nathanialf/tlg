@@ -3369,9 +3369,9 @@
 0x0019f270 0x9f FUN_0019f270
 0x0019f310 0x23c FUN_0019f310
 0x0019f550 0x111 FUN_0019f550
-0x0019f670 0x1e FUN_0019f670
+0x0019f670 0x1e _ZN22OffsetOnlyStreamWriterC1Ev
 0x0019f6a0 0x16 FUN_0019f6a0
-0x0019f6d0 0x38 FUN_0019f6d0
+0x0019f6d0 0x38 _ZN22OffsetOnlyStreamWriter4seekEii
 0x0019f710 0xb57 FUN_0019f710  # no unwind entry; pointed to 1x (relocated pointer at 0x57ae808)
 0x001a0310 0x88 _ZN11LoadedImageD1Ev
 0x001a03a0 0xc1 _ZN11LoadedImageD0Ev

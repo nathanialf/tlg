@@ -5425,6 +5425,14 @@ class hkMeshVertexBufferUtil /* derived name */
                                  int elementIndex, int *values); /* derived name */
     static hkResult FUN_000ab4f0(const hkMeshVertexBuffer::LockedVertices &lockedVertices,
                                  int elementIndex, const int *values); /* derived name */
+
+    /* Values packed four to a word (TYPE_UINT8_DWORD or TYPE_ARGB32)
+     * copied out as bytes (TYPE_UINT8) for a number of vertices when both
+     * buffers hold the same number of values (0xac810; the conversion
+     * 0xab8d0 calls it). derived name. */
+    static void FUN_000ac810(const hkMeshVertexBuffer::LockedVertices::Buffer &src,
+                             const hkMeshVertexBuffer::LockedVertices::Buffer &dst,
+                             int numVertices);
 };
 
 /* hkMeshBody's one enum, PickDataIdentifier (its records at 0x1691e50). */
@@ -10779,6 +10787,11 @@ struct hknpWorld {
      * attached to it refreshed and the body-changed signal fired. derived
      * name. */
     void FUN_0005dfc0(int bodyId, const Vec4 &velocity);
+
+    /* An angular impulse applied to a dynamic body (0x5e910): as 0x5ed40,
+     * the motion's angular velocity given the impulse taken into the
+     * motion's frame times its inverse inertia. derived name. */
+    void FUN_0005e910(int bodyId, const Vec4 &impulse);
 
     /* A motion's velocities of the previous step scaled and the motion
      * moved by the part of the step the scale adds (0x157be0), then each
@@ -16685,7 +16698,7 @@ class hkStreamWriter : public hkReferencedObject /* derived name */
 void FUN_001a1e80(hkStreamWriter *writer, int alignment);
 
 /* A stream writer that only counts (derived name; vtable 0x16a6af0, address
- * point 0x16a6b00, no type info; constructor FUN_0019f670, built on the stack
+ * point 0x16a6b00, no type info; constructor 0x19f670, built on the stack
  * at 0x19ad01 and 0x19c76d): the write position at +0xc and the end of what
  * was written at +0x10. Slot 6 (0x19f6a0) advances the position by the byte
  * count and keeps the end at least there, returning the count; slot 9
@@ -16695,7 +16708,10 @@ class OffsetOnlyStreamWriter : public hkStreamWriter /* derived name */
 {
   public:
     OffsetOnlyStreamWriter();
-    virtual ~OffsetOnlyStreamWriter();
+
+    /* Empty and inline: the object write 0x19aca0 destroys its counter on
+     * the stack without a call. */
+    virtual ~OffsetOnlyStreamWriter() {}
 
     int write(const void *buffer, int size); /* vtable slot 6 */
     hkResult seek(int offset, int whence);   /* vtable slot 9 */
@@ -20679,6 +20695,23 @@ struct OwnedPointerMap : public PointerMap /* derived name */
     }
 };
 
+/* The owned map typed by its key and value (derived name; as PointerMapOf
+ * over the untyped map, the platform object writer's cache of class copies,
+ * 0x19a880). */
+template <typename K, typename V>
+struct OwnedPointerMapOf : public OwnedPointerMap /* derived name */
+{
+    hkResult get(K key, V *valueOut) const /* derived name */
+    {
+        hkUlong value;
+        if (FUN_00013b90(hkUlong(key), value) == HK_SUCCESS) {
+            *valueOut = V(value);
+            return HK_SUCCESS;
+        }
+        return HK_FAILURE;
+    }
+};
+
 /* hkPackfileWriter (derived name: the file of its strings is
  * hkPackfileWriter.cpp, 0x14cce52; vtable 0x16a6960, constructor
  * FUN_0019be50, destructor 0x19c150; slot 9 pure), the reference-counted
@@ -20864,6 +20897,9 @@ struct hkRelocationInfo /* derived name */
     struct Import {
         u8 unknown0[0x10];
     };
+
+    /* Every array empty, no pool (inline in the object write, 0x19ad9d). */
+    hkRelocationInfo() : pool(HK_NULL) {}
 
     /* The pool's strings freed and the pool given back, then the arrays. */
     ~hkRelocationInfo();

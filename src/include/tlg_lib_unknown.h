@@ -1170,6 +1170,13 @@ struct ElementPool00198a20 /* derived name */
     struct Element {
         enum { NO_CHILD = 0x7fffffff };
 
+        /* A child's index by value (the leaves' walk 0x198830 pushes each
+         * one read before the push). derived name. */
+        int getChild(int i) const
+        {
+            return children[i];
+        }
+
         hkAabb16 aabb;
         int children[2];
         int numLeaves;
@@ -2192,6 +2199,8 @@ class Object0019a230 : public hkReferencedObject /* derived name */
 /* A reference-counted object of 0x40 bytes (vtable 0x16a68d0, D14), the
  * cache hkPlatformObjectWriter's constructor builds in place (0x19aa7b):
  * two pointer maps and an array of loaded buffers. */
+struct Layout00180ef0;
+
 class Object0019a7c0 : public hkReferencedObject /* derived name */
 {
   public:
@@ -2208,9 +2217,17 @@ class Object0019a7c0 : public hkReferencedObject /* derived name */
     static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
-    OwnedPointerMap map10;   /* derived name */
-    OwnedPointerMap map20;   /* derived name */
-    hkArray<void *> buffers; /* derived name */
+    /* A class's copy, made the first time (0x19a880, three calls from
+     * the writer's object write 0x19aca0): deep-copied as an hkClass, kept,
+     * and its member offsets computed under the layout given. derived
+     * name. */
+    hkClass *FUN_0019a880(const hkClass *klass, const Layout00180ef0 &layout);
+
+    /* The classes copied, by original; the classes whose layout is done;
+     * every copy made, each given back by the destructor. derived names. */
+    OwnedPointerMapOf<const hkClass *, hkClass *> copies;
+    OwnedPointerMap classesDone;
+    hkArray<hkClass *> allCopies;
 };
 
 /* An object of 0x160 bytes with its own class allocator (vtable 0x169b450,
@@ -2380,22 +2397,6 @@ void *FUN_0019b2b0(const void *data, const hkClass &klass, PointerMap *previousC
                    const void *vtableRegistry, const void *typeInfoRegistry,
                    int flags); /* derived name */
 
-/* What 0x19aca0 keeps at +0x18 of its object (derived names): the classes
- * it has copied, by original, the classes whose layout is done, and every
- * copy made. */
-struct ClassCopies0019a880 /* derived name */
-{
-    /* A class's copy, made the first time (0x19a880, three calls from
-     * 0x19aca0): deep-copied as an hkClass, kept, and its member offsets
-     * computed under the layout given. derived name. */
-    hkClass *FUN_0019a880(const hkClass *klass, const Layout00180ef0 &layout);
-
-    u8 unknown0[0x10];
-    PointerMapOf<const hkClass *, hkClass *> copies;
-    PointerMap classesDone;
-    hkArray<hkClass *> allCopies;
-};
-
 /* The member offsets of a class and, when recurse is set, of its members'
  * classes, computed in place under the rules; each class done is added to
  * the map (0x180f50). derived name. */
@@ -2419,8 +2420,14 @@ class hkObjectCopier : public hkReferencedObject /* derived name */
     /* From the thread's heap (0x19a9b3). */
     static void *operator new(unsigned long numBytes);
 
-    int FUN_001a0b20(const hkClassMember &src,
-                     const hkClassMember &dst); /* vtable slot 6; derived name */
+    /* Slot 5 (0x1a35c0): an object of a class copied into a stream as an
+     * object of the other layout's class, its relocations recorded (the
+     * platform object writer's 0x19aca0). derived name. */
+    virtual hkResult FUN_001a35c0(const void *dataIn, const hkClass &classIn,
+                                  hkStreamWriter *dataOut, const hkClass &classOut,
+                                  hkRelocationInfo &reloc);
+    virtual int FUN_001a0b20(const hkClassMember &src,
+                             const hkClassMember &dst); /* vtable slot 6; derived name */
 
     Layout00180ef0 layoutIn;  /* derived name */
     Layout00180ef0 layoutOut; /* derived name */
@@ -2450,6 +2457,12 @@ class hkPlatformObjectWriter : public hkReferencedObject /* derived name */
     static void operator delete(void *object, unsigned long numBytes);
 
     const Layout00180ef0 &FUN_0019ab00() const; /* derived name */
+    /* Slot 5 (0x19aca0): an object written in the target layout through
+     * the copier, its class taken from the cache; an hkClass object's own
+     * class written first, the object itself then only counted. A failure
+     * when the stream it ends in is not usable. derived name. */
+    hkResult FUN_0019aca0(hkStreamWriter *writer, const void *data, const hkClass &klass,
+                          hkRelocationInfo &reloc);
     /* Slot 6 (0x19ae90): raw bytes to a stream, failing unless all of them
      * were written. derived name. */
     hkResult FUN_0019ae90(hkStreamWriter *writer, const void *data,
@@ -4641,6 +4654,11 @@ template <typename T, int N> inline void hkInplaceArray<T, N>::optimizeCapacity(
     }
 }
 
+inline void *Object00015700::Block::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void Object00015700::Block::operator delete(void *object, unsigned long numBytes)
 {
     if (object) {
@@ -5692,6 +5710,11 @@ struct BroadPhaseTree00142a40 /* derived name */
  * (0x1981e0; -1 for the root's parent): its index back. derived name. */
 int FUN_001981e0(BroadPhaseTree00142a40::Node *node, BroadPhaseTree00142a40 *tree,
                  const u32 (&centre2)[3], int parentIndex);
+
+/* The leaves under a node of a tree, their node indices appended in the
+ * order a walk on a stack of 128 in place finds them (0x198830; the tree
+ * updates at 0x13bac3 and 0x14319c start from the root). derived name. */
+void FUN_00198830(int nodeIndex, const BroadPhaseTree00142a40 *tree, hkArray<int> &leavesOut);
 
 /* Entries put in a leaf's bucket (0x13bc20), the bodies' boxes read.
  * derived name. */

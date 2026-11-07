@@ -867,7 +867,7 @@ FUN_0017bb20 src/libs/unknown/func_0017bb20.cpp
 FUN_001a0470 src/libs/unknown/func_001a0470.cpp _ZN8RawImageC2Ev
 FUN_0002d770 src/libs/unknown/func_0002d770.cpp
 FUN_00061f00 src/libs/unknown/func_00061f00.cpp _ZN14Object00061f00C2Ev
-FUN_0019f670 src/libs/unknown/func_0019f670.cpp _ZN22OffsetOnlyStreamWriterC2Ev
+_ZN22OffsetOnlyStreamWriterC1Ev src/libs/unknown/func_0019f670.cpp _ZN22OffsetOnlyStreamWriterC2Ev
 FUN_0004bc40 src/libs/unknown/func_0004bc40.cpp
 FUN_00094580 src/libs/unknown/func_00094580.cpp _ZNK20BufferedStreamReader4isOkEv
 FUN_001598a0 src/libs/unknown/func_001598a0.cpp _ZN17hknpProjectileGun7fireGunEP9hknpWorldRK11hkTransform
@@ -1119,7 +1119,7 @@ FUN_0000ad40 src/libs/unknown/func_0000ad40.cpp _ZN17RouterAllocator5012FUN_0000
 FUN_0000aed0 src/libs/unknown/func_0000aed0.cpp _ZN17RouterAllocator6012FUN_00008d90EPviRi
 FUN_0000b060 src/libs/unknown/func_0000b060.cpp _ZN17RouterAllocator5812FUN_00008d90EPviRi
 FUN_00014aa0 src/libs/unknown/func_00014aa0.cpp _ZN18FixedSizeAllocator12FUN_00014aa0Ev
-FUN_0019f6d0 src/libs/unknown/func_0019f6d0.cpp _ZN22OffsetOnlyStreamWriter4seekEii
+_ZN22OffsetOnlyStreamWriter4seekEii src/libs/unknown/func_0019f6d0.cpp
 FUN_0001a770 src/libs/unknown/func_0001a770.cpp
 FUN_0003ea90 src/libs/unknown/func_0003ea90.cpp _ZNK17hknpShapeInstance12FUN_0003ea90ER11hkTransform
 _ZN12hknpMaterialC1ERKS_ src/libs/unknown/func_0006c700.cpp
@@ -2712,3 +2712,7 @@ FUN_00019230 src/libs/unknown/func_00019230.cpp _ZN8FreeList12FUN_00019230Ev
 FUN_00071330 src/libs/unknown/func_00071330.cpp _ZN22hknpBodyQualityLibrary12FUN_00071330ERK27hknpBodyQualityLibraryCinfo
 FUN_001814f0 src/libs/havok/Common/Serialize/Util/hkStructureLayout.cpp
 FUN_00015ae0 src/libs/unknown/func_00015ae0.cpp _ZN14Object0001570012FUN_00015ae0Ev
+FUN_000ac810 src/libs/unknown/func_000ac810.cpp _ZN22hkMeshVertexBufferUtil12FUN_000ac810ERKN18hkMeshVertexBuffer14LockedVertices6BufferES4_i
+FUN_0005e910 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005e910EiRKDv4_f
+FUN_00198830 src/libs/unknown/func_00198830.cpp _Z12FUN_00198830iPK22BroadPhaseTree00142a40R7hkArrayIi24hkContainerHeapAllocatorE
+FUN_0019aca0 src/libs/unknown/func_0019aca0.cpp _ZN22hkPlatformObjectWriter12FUN_0019aca0EP14hkStreamWriterPKvRK7hkClassR16hkRelocationInfo

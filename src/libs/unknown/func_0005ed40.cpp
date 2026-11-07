@@ -32,6 +32,22 @@ void hknpWorld::FUN_0005e780(int bodyId, const Vec4 &impulse)
     }
 }
 
+void hknpWorld::FUN_0005e910(int bodyId, const Vec4 &impulse)
+{
+    const hknpBody &body = bodyManager.bodies[bodyId];
+    if (body.flags & 2) {
+        if (!(body.flags & 9)) {
+            FUN_0004e0c0(bodyId);
+        }
+        hknpMotion &motion = motionManager.motions[body.motionId];
+        const Vec4 localImpulse = rotatedInverseDir(motion.orientation, impulse);
+        motion.angularVelocity = _mm_add_ps(
+            _mm_mul_ps(loadHalves(motion.inverseInertia), localImpulse), motion.angularVelocity);
+        FUN_0005b490(bodyId, &motion);
+        signals.bodyChangedSignal.fire(this, bodyId);
+    }
+}
+
 void hknpWorld::FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &position)
 {
     const hknpBody &body = bodyManager.bodies[bodyId];

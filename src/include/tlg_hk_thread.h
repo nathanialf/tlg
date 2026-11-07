@@ -60,7 +60,9 @@ struct Object00015700 /* derived name */
         Entry() {}
 
         int state;
-        u8 unknown4[0xc];
+        u16 unknown4;
+        u16 unknown6;
+        u64 unknown8;
         hkInplaceArray<u64, 3> values;
         Entry *next;
     };
@@ -80,6 +82,9 @@ struct Object00015700 /* derived name */
             entries[62].next = HK_NULL;
             next = HK_NULL;
         }
+
+        /* From the thread's heap, untested (0x15808). derived name. */
+        static void *operator new(unsigned long numBytes);
 
         /* Back to the thread's heap at its size unless null, as
          * hkReferencedObject's own delete tests (0x15d71). derived name. */
@@ -116,6 +121,17 @@ struct Object00015700 /* derived name */
      * again in place, and the blocks' entries linked into one free list
      * from the first (0x15ae0; Class168e810's 0x17a60). derived name. */
     void FUN_00015ae0();
+
+    /* A new block's entries put at the head of the free ones, the block at
+     * the head of the blocks (inline in 0x15700). derived name. */
+    void addBlock()
+    {
+        Block *block = new Block();
+        block->next = firstBlock;
+        firstBlock = block;
+        block->entries[62].next = freeEntries;
+        freeEntries = &block->entries[0];
+    }
 
     Block *firstBlock;      /* derived name */
     Entry *freeEntries;     /* derived name */

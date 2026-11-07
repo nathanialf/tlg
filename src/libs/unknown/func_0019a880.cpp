@@ -1,7 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-hkClass *ClassCopies0019a880::FUN_0019a880(const hkClass *klass, const Layout00180ef0 &layout)
+hkClass *Object0019a7c0::FUN_0019a880(const hkClass *klass, const Layout00180ef0 &layout)
 {
     hkClass *copy;
     if (copies.get(klass, &copy) == HK_SUCCESS) {
