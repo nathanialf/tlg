@@ -2295,8 +2295,8 @@
 0x0009b1c0 0x206 FUN_0009b1c0
 0x0009b500 0xb40 FUN_0009b500
 0x0009c0a0 0x17 _ZN20hkcdPlanarCsgOperandC1E24hkFinishLoadedObjectFlag
-0x0009c0d0 0x4c FUN_0009c0d0
-0x0009c120 0x1f6 FUN_0009c120
+0x0009c0d0 0x4c _ZN20hkcdPlanarCsgOperandD0Ev
+0x0009c120 0x1f6 _ZN20hkcdPlanarCsgOperandD1Ev
 0x0009c400 0x28 _ZN34hkcdPlanarGeometryPlanesCollectionC1E24hkFinishLoadedObjectFlag
 0x0009c430 0x4de FUN_0009c430
 0x0009c910 0x4c _ZN34hkcdPlanarGeometryPlanesCollectionD0Ev

@@ -2,6 +2,6 @@
 #include "tlg_hk_reflect.h"
 
 hkcdPlanarCsgOperand::hkcdPlanarCsgOperand(hkFinishLoadedObjectFlag flag)
-    : hkReferencedObject(flag), regions(0)
+    : hkReferencedObject(flag), solid(flag), danglingGeometry(flag), regions(HK_NULL)
 {
 }

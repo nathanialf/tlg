@@ -972,6 +972,7 @@ template <typename T, typename Allocator> inline T *hkArray<T, Allocator>::expan
 template <typename T, typename Allocator> inline void hkArray<T, Allocator>::setSize(int n)
 {
     this->reserve(Allocator::get(), n);
+    hkArrayUtil::destruct(this->data + n, this->size - n);
     hkArrayUtil::construct(this->data + this->size, n - this->size);
     this->size = n;
 }
@@ -5081,6 +5082,11 @@ inline void hknpTyremarksWheel::operator delete(void *object, unsigned long numB
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkcdPlanarCsgOperand::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hknpDynamicCompoundShapeData::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -6813,7 +6819,6 @@ void FUN_00087130(hkxMaterial *self);
 void FUN_0008c110(hkxNode *self);
 void FUN_0008d2c0(hkxScene *self);
 void FUN_0009b1c0(hkcdPlanarGeometry *self);
-void FUN_0009c120(hkcdPlanarCsgOperand *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
@@ -6836,7 +6841,6 @@ void FUN_0008c0c0(hkxNode *self);                   /* slot 1 of 0x16a25e0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
 void FUN_0009b170(hkcdPlanarGeometry *self);        /* slot 1 of 0x16a36f0 */
-void FUN_0009c0d0(hkcdPlanarCsgOperand *self);      /* slot 1 of 0x16a3730 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);     /* slot 1 of 0x16a38b0 */
 void FUN_00157ea0(hknpBallGun *self);               /* slot 1 of 0x16a48d0 */
 void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */

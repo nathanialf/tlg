@@ -16,14 +16,7 @@ void hknpBody::FUN_0003aa60(u32 bodyId, const hknpBodyCinfo &cinfo)
     hkTransform t;
     t.rotation.FUN_0000bd30(cinfo.orientation);
     t.translation = cinfo.position;
-    const Vec4 col0 = _mm_blend_ps(t.rotation.col0, transform.rotation.col0, 8);
-    const Vec4 col1 = _mm_blend_ps(t.rotation.col1, transform.rotation.col1, 8);
-    const Vec4 col2 = _mm_blend_ps(t.rotation.col2, transform.rotation.col2, 8);
-    const Vec4 translation = _mm_blend_ps(t.translation, transform.translation, 8);
-    transform.rotation.col0 = col0;
-    transform.rotation.col1 = col1;
-    transform.rotation.col2 = col2;
-    transform.translation = translation;
+    setTransformKeepingW(t);
     lane(transform.translation, 3) = cinfo.collisionLookAheadDistance;
 
     const hknpShape *oldShape = shape;

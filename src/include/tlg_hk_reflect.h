@@ -412,6 +412,16 @@ template <typename T> inline void construct(T *t, int n)
     }
 }
 
+/* n elements destroyed in place, from the last: nothing for a trivial
+ * destructor (the mesh material's textures, counted references released
+ * from the last as the array shrinks, 0xad0f0). derived name. */
+template <typename T> inline void destruct(T *t, int n)
+{
+    for (int i = n - 1; i >= 0; i--) {
+        t[i].~T();
+    }
+}
+
 /* n elements copied by assignment. Its own function: inlined, the loop's
  * source step comes out before the destination's (the curve's points
  * copied out, 0x7fde0; the array's assignment, 0x1a0680), where the loop
@@ -813,9 +823,11 @@ struct hkArray : public hkArrayBase<T> {
 
     /* n elements, the storage grown from the containers' allocator when it
      * is too small and the elements it gains default-constructed, nothing
-     * for plain old data or a trivial constructor (defined in
-     * tlg_lib_unknown.h). */
-    void setSize(int n);
+     * for plain old data or a trivial constructor, those it loses
+     * destroyed from the last (defined in tlg_lib_unknown.h). Inline by
+     * keyword: the mesh material's counted textures inline it beyond the
+     * plain threshold (0xad096). */
+    inline void setSize(int n);
 
     /* Elements copied in at an index, those after it moved up first
      * through the overlapping move (defined in tlg_lib_unknown.h; the XML
@@ -3176,9 +3188,18 @@ class hkcdPlanarCsgOperand : public hkReferencedObject
   public:
     hkcdPlanarCsgOperand(hkFinishLoadedObjectFlag flag);
 
-    hkcdPlanarSolid *solid;
-    hkcdPlanarGeometry *danglingGeometry;
-    void *regions;
+    /* Out of line (0x9c120, slot 0; the deleting destructor 0x9c0d0 before
+     * it): the regions, the solid and the dangling geometry released and
+     * cleared, then the members' own releases. */
+    virtual ~hkcdPlanarCsgOperand();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    hkRefPtr<hkcdPlanarSolid> solid;
+    hkRefPtr<hkcdPlanarGeometry> danglingGeometry;
+    /* A counted object the record leaves untyped. derived name. */
+    hkRefPtr<hkReferencedObject> regions;
 };
 
 /* hkcdPlanarGeometry (hkClass 0x57ba110, built at 0x1d005: parent
@@ -6618,6 +6639,22 @@ class hknpStaticCompoundShapeData : public hkReferencedObject
  * at 0x14b5e99, hkClass built by 0x1f750: size 0x18): the nodes, 64 bytes
  * each, at +0 (derived names). */
 struct hkcdDynamicTree {
+    /* The tree builders' metrics, reflected without members (type infos
+     * "!hkcdDynamicTree::AnisotropicMetric", "::BalanceMetric" and
+     * "::CentroidMetric", hkClasses of size 1 built at 0x1efc0); finishing
+     * one does nothing. */
+    struct AnisotropicMetric {
+        AnisotropicMetric(hkFinishLoadedObjectFlag) {}
+    };
+
+    struct BalanceMetric {
+        BalanceMetric(hkFinishLoadedObjectFlag) {}
+    };
+
+    struct CentroidMetric {
+        CentroidMetric(hkFinishLoadedObjectFlag) {}
+    };
+
     /* The 64-byte codec, over CodecRaw<unsigned long> (records 0x1690040:
      * aabb, parent at +0x20 and children at +0x28, each an hkUlong). */
     struct CodecRawUlong {
@@ -7359,6 +7396,13 @@ struct hknpShapeKeyPath /* derived name */
     /* A sub-key appended below the key's bits in use: the key's leading
      * bits kept, the sub-key plus one in the next numBits and every bit
      * below it set (the LOD shape's 0x68380 and 0x68810). derived name. */
+    /* The key with a sub-key appended the same way, the path left as it
+     * is (the height field's slot 21, 0x12b28c). derived name. */
+    u32 makeKey(int subKey, int numBits) const
+    {
+        return (key & D_14ca040[keySize]) | (((subKey + 1) << (32 - numBits - keySize)) - 1);
+    }
+
     void appendSubKey(int subKey, int numBits)
     {
         const int size = keySize; /* derived name */
@@ -8701,6 +8745,21 @@ struct hknpBody {
      * the SPU; then its material, quality, filter info, its flags (the low
      * four and 0x400 replaced by 0x400) and its user data. derived name. */
     void FUN_0003aa60(u32 bodyId, const struct hknpBodyCinfo &cinfo);
+
+    /* A transform taken, each column's w lane (the centre of mass) and the
+     * translation's (the look-ahead distance) kept (inline in 0x3aa60 and
+     * the world's 0x5d130). derived name. */
+    void setTransformKeepingW(const hkTransform &t)
+    {
+        const Vec4 col0 = _mm_blend_ps(t.rotation.col0, transform.rotation.col0, 8);
+        const Vec4 col1 = _mm_blend_ps(t.rotation.col1, transform.rotation.col1, 8);
+        const Vec4 col2 = _mm_blend_ps(t.rotation.col2, transform.rotation.col2, 8);
+        const Vec4 translation = _mm_blend_ps(t.translation, transform.translation, 8);
+        transform.rotation.col0 = col0;
+        transform.rotation.col1 = col1;
+        transform.rotation.col2 = col2;
+        transform.translation = translation;
+    }
 
     hkTransform transform;
     int flags;
@@ -10681,7 +10740,9 @@ struct hknpWorldSignals /* derived name */
     /* Fired with the world and a motion's id as its last body leaves it
      * (0x4c46c), before the motion is given back. derived name. */
     hkSignal2<hknpWorld *, int> motionDestroyedSignal;
-    Signal00093530 signal70;
+    /* Fired with the world and a static body's id when the body is moved
+     * (0x5d1fb). derived name. */
+    hkSignal2<hknpWorld *, int> staticBodyMovedSignal;
     Signal00093530 signal78;
     Signal00093530 signal80;
     Signal00093530 signal88;
@@ -10946,6 +11007,18 @@ struct hknpWorld {
      * is updated (FUN_0004bcd0), then the body signal fired. derived
      * names. */
     void FUN_0005b580(int bodyId, float value, int mode);
+
+    /* The body's transform updated after a change (0x5c900, 0x824 bytes;
+     * 0x5d130 calls it with a null third argument and zero). derived
+     * names. */
+    void FUN_0005c900(int bodyId, const void *argument3, int argument4, int activation);
+
+    /* A body moved to a position (0x5d130; the body manager's 0x16eda3 and
+     * the game call it): nothing when every coordinate is within epsilon of
+     * the body's, else the translation taken, the rotation kept, the
+     * transform's update run, the static body moved signal fired for a body
+     * without a motion and the body changed signal for any. derived name. */
+    void FUN_0005d130(int bodyId, const Vec4 &position, int activation);
     /* A body's record of the body manager's map at +0x48 freed when it has
      * one (0x5f240, called by 0x16eca0); unless the body is static or the
      * mode is 2, a body neither static nor keyframed (flags 9) handed on and
@@ -17864,6 +17937,14 @@ class hknpHeightFieldShape : public hknpCompositeShape
      * and scaled by the tree's multiplier from its offset, the minima from
      * the first four and the maxima from the last four. derived name. */
     void FUN_0012b670(int level, int x, int z, Vec4 *minOut, Vec4 *maxOut) const;
+
+    /* Slot 21 (0x12b140): the keys of the quads' triangles after a key
+     * (from the first for -1), row by row, two a quad, each the query's
+     * path with the triangle's sub-key appended, those the query's mask
+     * refuses left out; the number written, at most the room. derived
+     * name. */
+    int FUN_0012b140(void *keysOut, int maxNumKeys, int key,
+                     const ShapeKeyQuery000380b0 &query) const;
 
     /* Slot 31: a quad's four heights, its shape tag and whether its
      * triangles are flipped (the compressed shape's 0x175a90); pure here,

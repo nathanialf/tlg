@@ -1329,7 +1329,8 @@ FUN_0008d270 src/libs/unknown/func_0008d270.cpp
 FUN_0008dc00 src/libs/unknown/func_0008dc00.cpp
 _ZN15hkcdPlanarSolidD0Ev src/libs/unknown/func_00095870.cpp
 FUN_0009b170 src/libs/unknown/func_0009b170.cpp
-FUN_0009c0d0 src/libs/unknown/func_0009c0d0.cpp
+_ZN20hkcdPlanarCsgOperandD0Ev src/libs/unknown/func_0009c120.cpp
+_ZN20hkcdPlanarCsgOperandD1Ev src/libs/unknown/func_0009c120.cpp
 _ZN34hkcdPlanarGeometryPlanesCollectionD0Ev src/libs/unknown/func_0009c910.cpp
 _ZN13hkSkinBindingD0Ev src/libs/unknown/leaf_000242d0.cpp
 FUN_000aa680 src/libs/unknown/func_000aa680.cpp
@@ -2723,3 +2724,4 @@ FUN_00019ff0 src/libs/unknown/func_00019ff0.cpp _ZN12hkQuaternion12FUN_00019ff0E
 FUN_0003d1f0 src/libs/unknown/func_0003d1f0.cpp _GLOBAL__I_a
 FUN_0003aa60 src/libs/unknown/func_0003aa60.cpp _ZN8hknpBody12FUN_0003aa60EjRK13hknpBodyCinfo
 FUN_0018d440 src/libs/unknown/func_0018d440.cpp _ZN32hknpBroadPhaseExportNewPairsTask12FUN_0018d440Ev
+FUN_0001efc0 src/libs/unknown/func_0001efc0.cpp _GLOBAL__I_a
