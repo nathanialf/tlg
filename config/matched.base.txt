@@ -2721,3 +2721,5 @@ FUN_00018df0 src/libs/unknown/func_00018df0.cpp _ZN8FreeList12FUN_00018df0EPFvPv
 FUN_0002a5c0 src/libs/unknown/func_0002a5c0.cpp _ZN16hkMassProperties12FUN_0002a5c0ERKDv4_f
 FUN_00019ff0 src/libs/unknown/func_00019ff0.cpp _ZN12hkQuaternion12FUN_00019ff0ERKDv4_fS2_
 FUN_0003d1f0 src/libs/unknown/func_0003d1f0.cpp _GLOBAL__I_a
+FUN_0003aa60 src/libs/unknown/func_0003aa60.cpp _ZN8hknpBody12FUN_0003aa60EjRK13hknpBodyCinfo
+FUN_0018d440 src/libs/unknown/func_0018d440.cpp _ZN32hknpBroadPhaseExportNewPairsTask12FUN_0018d440Ev

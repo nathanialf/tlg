@@ -1052,11 +1052,22 @@ class hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name *
     int layer;                         /* derived name */
 };
 
+class BroadPhaseTasks0018d640;
+
 class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived name */
 {
   public:
+    /* Slot 2 (0x18d440): under the collide stage's broad phase timer, a
+     * context taken from the pool appends each layer pair's collide task's
+     * stream of new pairs to the owner's (half as many tasks as the layer
+     * pairs' ints) and frees the task's blocks, then the active bodies'
+     * previous boxes are updated (0x161350). derived name. */
+    void FUN_0018d440();
+
     void FUN_0018cfb0(hkStringBuf *name,
                       hkStringBuf *description) const; /* vtable slot 3; derived name */
+
+    BroadPhaseTasks0018d640 *owner; /* derived name */
 };
 
 /* The broad phase's collide task (derived name after its slot 3's format
@@ -1095,8 +1106,10 @@ class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
 
     BroadPhaseOwner0018cf50 *owner; /* derived name */
     int index;                      /* derived name: the pair it collides */
-    u8 unknown14[0x2c];
-    hkInplaceArrayAligned16<u64, 24> entries; /* derived name */
+    u8 unknown14[0xc];
+    /* The pairs it finds (the export task appends them to the owner's,
+     * 0x18d52f). derived name. */
+    hkBlockStream newPairs;
 };
 
 /* The solver's stage tasks (derived name): 0x30-byte objects built in an

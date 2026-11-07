@@ -2324,7 +2324,21 @@ class Elements000768c0 : public Elements000760c0 /* derived name */
  * constructor 0x18d640, which gives it the broad phase's tasks (the
  * per-layer update tasks, the collide tasks); 0x18d960 sets it up for a
  * step from its four arguments (the second's +0x1e0 and +0x10 read). */
-class BroadPhaseTasks0018d640 /* derived name */
+class BroadPhaseLayers00142a40;
+
+/* What the broad phase's tasks work on (derived names), the head of
+ * BroadPhaseTasks0018d640: the world's context pool, the trees by layer at
+ * +8 and the body manager at +0x10 (0x18d0c9), the stream the new pairs
+ * are appended to at +0x18 (0x18d53b). */
+struct BroadPhaseTaskData0018d050 /* derived name */
+{
+    hknpWorldContextPool *contextPool; /* derived name */
+    BroadPhaseLayers00142a40 *layers;  /* derived name */
+    hknpBodyManager *bodyManager;      /* derived name */
+    hkBlockStream *newPairs;           /* derived name */
+};
+
+class BroadPhaseTasks0018d640 : public BroadPhaseTaskData0018d050 /* derived name */
 {
   public:
     BroadPhaseTasks0018d640();
@@ -2341,7 +2355,6 @@ class BroadPhaseTasks0018d640 /* derived name */
     void FUN_0018d960(void *argument1, void *argument2, void *argument3,
                       void *argument4); /* derived names */
 
-    u8 unknown0[0x20];
     /* The constructor's tasks (derived names): the dirty bodies' update, the
      * update of each of eight layers (with the layer, 0 to 7), the export
      * of new pairs, the finish, and sixteen collide tasks (with their
@@ -6013,15 +6026,6 @@ void FUN_00197c60(const BroadPhaseContext00142ea0 *context, hknpCollisionFilter 
 /* The work the broad phase's update runs first (0x141500, 0x1533 bytes).
  * derived name. */
 void FUN_00141500(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies);
-
-/* What the broad phase's update task works on (derived names): the trees
- * by layer at +8 and the body manager at +0x10 (0x18d0c9). */
-struct BroadPhaseTaskData0018d050 /* derived name */
-{
-    u8 unknown0[8];
-    BroadPhaseLayers00142a40 *layers; /* derived name */
-    hknpBodyManager *bodyManager;     /* derived name */
-};
 
 /* One of the three 16-byte tasks BroadPhaseTasks0018d640's constructor
  * builds (vtable 0x16a6690, address point 0x16a66a0, no type info; slot 1

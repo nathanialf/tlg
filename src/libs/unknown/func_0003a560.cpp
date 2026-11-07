@@ -11,7 +11,7 @@ hknpBodyCinfo::hknpBodyCinfo() : shape(HK_NULL)
     userData = 0;
     motionType = 0;
     position = _mm_setzero_ps();
-    orientation = D_14b2060[32];
+    orientation.vec = D_14b2060[32];
     angularVelocity = _mm_setzero_ps();
     linearVelocity = _mm_setzero_ps();
     mass = -1.0f;

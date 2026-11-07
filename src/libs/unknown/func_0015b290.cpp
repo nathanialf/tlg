@@ -9,7 +9,7 @@ void FUN_0015b290(const hknpBodyCinfo &bodyCinfo, hknpMotionCinfo &motionCinfo)
     FUN_00161b40(bodyCinfo.shape, distribution, properties, bodyCinfo.mass);
 
     hkQTransform transform;
-    transform.rotation.vec = bodyCinfo.orientation;
+    transform.rotation.vec = bodyCinfo.orientation.vec;
     transform.translation = bodyCinfo.position;
     FUN_00010fe0(motionCinfo.centerOfMassWorld, transform, properties.centerOfMass);
 

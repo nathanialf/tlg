@@ -4772,6 +4772,12 @@ class hknpTyremarksInfo : public hkReferencedObject
      * point in turn, from the oldest. derived name. */
     virtual void FUN_00069150(const hknpVehicleInstance *vehicle, int wheel, Vec4 *stripsOut) const;
 
+    /* Each wheel's new point (0x68f50): its contact point lifted along the
+     * normal by 0.05, a half width either side along the chassis's right
+     * axis in the world, both moved by the chassis's step; the strength 255
+     * when the skid energy is above the minimum, else zero. derived name. */
+    void FUN_00068f50(const hknpVehicleInstance *vehicle, float deltaTime);
+
     float minTyremarkEnergy;
     float maxTyremarkEnergy;
     hkArray<hknpTyremarksWheel *> tyremarksWheel;
@@ -4807,6 +4813,23 @@ class hknpTyremarksWheel : public hkReferencedObject
     const hknpTyremarkPoint &getTyremarkPoint(int point) const
     {
         return tyremarkPoints.data[(currentPosition + point) % numPoints];
+    }
+
+    /* A point written over the oldest, unless it and the newest both have
+     * no strength (inline in 0x68f50). derived name. */
+    void addTyremarkPoint(const Vec4 &pointLeft, const Vec4 &pointRight)
+    {
+        if (_mm_cvtss_f32(broadcast<3>(pointRight)) == 0.0f) {
+            const hknpTyremarkPoint &newest =
+                tyremarkPoints.data[(numPoints + currentPosition - 1) % numPoints];
+            if (_mm_cvtss_f32(broadcast<3>(newest.pointRight)) == 0.0f) {
+                return;
+            }
+        }
+        hknpTyremarkPoint &point = tyremarkPoints.data[currentPosition];
+        point.pointLeft = pointLeft;
+        point.pointRight = pointRight;
+        currentPosition = (currentPosition + 1) % numPoints;
     }
 
     int currentPosition;
@@ -8668,6 +8691,17 @@ struct hknpBody {
      * inverse's translation into the rotation's w lanes. derived name. */
     void FUN_0003a920();
 
+    /* The body set up from a construction info (0x3aa60; the body
+     * manager's 0x160959): no box, no attached body, motion, broad phase
+     * entry or active-list index, a bounding radius of one; the info's
+     * rotation and position taken with the columns' w lanes kept and its
+     * look-ahead distance in the translation's; its shape referenced (the
+     * old one released), the shape's slot 6 over 16 kept as a byte and the
+     * flag 0x10000000 set for a shape above 0x800 or one not supported on
+     * the SPU; then its material, quality, filter info, its flags (the low
+     * four and 0x400 replaced by 0x400) and its user data. derived name. */
+    void FUN_0003aa60(u32 bodyId, const struct hknpBodyCinfo &cinfo);
+
     hkTransform transform;
     int flags;
     u32 collisionFilterInfo; /* derived name */
@@ -8697,14 +8731,16 @@ struct hknpBody {
     /* The radius of the sphere about the centre of mass that bounds the
      * body (the record's name). */
     hkHalf radiusOfComCenteredBoundingSphere;
-    u8 unknown7e[1];
+    /* The shape's slot 6 value over 16, kept as a byte (0x3aa60). derived
+     * name. */
+    u8 shapeSlot6Div16;
     /* A byte the world's object at +0x4f8 records with the body's id
      * (0x63956). derived name. */
     u8 byte7f;
     /* A quaternion, 16 bits a lane, 30000 for one (0x3a920 packs it).
      * derived name. */
     s16 motionToBodyRotation[4];
-    u8 unknown88[8];
+    u64 userData; /* derived name: the info's (0x3aa60) */
 };
 
 extern const hkClassMember D_1695350[]; /* derived name: hknpBody's records */
@@ -9918,13 +9954,13 @@ struct hknpWorldObject4f8 /* derived name */
          * slot's reload after the delete stays in the join, cookbook 540). */
         static void operator delete(void *object, unsigned long numBytes);
 
-        /* Its first 16 bytes, copied whole (0x63c13) to the array at +0xa8;
-         * the int at +0xc, plus 2, is what 0x622d0 adds to the int at +0x78
-         * when it takes the entry. derived names. */
-        struct Head {
-            u8 unknown0[0xc];
-            int int0c;
-        } __attribute__((aligned(16)));
+        /* A pair of the group's bodies (two ids, copied one by one when
+         * 0x653b0 moves the last into a removed one's place). derived
+         * name. */
+        struct BodyPair {
+            hknpBodyId bodyIdA;
+            hknpBodyId bodyIdB;
+        };
 
         /* A 16-byte element of the array at +0x30: an object whose slot 2
          * 0x63d53 calls with the owner and the second word. derived name. */
@@ -9933,14 +9969,18 @@ struct hknpWorldObject4f8 /* derived name */
             void *data;
         };
 
-        Head head;
+        /* Its first 16 bytes, a sort record: copied whole (0x63c13) to the
+         * array at +0xa8 and by 0x653b0 to the records at +0xb8; its count
+         * plus 2 is what 0x622d0 adds to the int at +0x78 when it takes the
+         * entry. derived name. */
+        SortRecord00062100 head;
         u8 unknown10[0x10];
         hkArray<int> bodyIds; /* derived name: indexes of the world's bodies (0x63af8) */
         hkArray<Element30> unknown30;
-        hkArray<void *> unknown40;
-        int id50;    /* derived name; appended to the array at +0x68 by 0x63620 */
-        int nextId;  /* 0x7fffffff ends the walk */
-        int firstId; /* derived name */
+        hkArray<BodyPair> bodyPairs; /* derived name */
+        int id50;                    /* derived name; appended to the array at +0x68 by 0x63620 */
+        int nextId;                  /* 0x7fffffff ends the walk */
+        int firstId;                 /* derived name */
         /* Where its id went in the array at +0x68, less the int at +0x80
          * (0x63620). derived name. */
         int index5c;
@@ -10013,6 +10053,15 @@ struct hknpWorldObject4f8 /* derived name */
      * to it again recorded at +0x88 and the new records' ids handed to the
      * world's +0x1e0 object (its slot 4). derived name. */
     void FUN_00063da0(int bodyId);
+
+    /* A body taken out of its inactive group (0x653b0; the world's
+     * 0x4c916 and 0x4e835 call it): nothing when the group is activated,
+     * else the body's id dropped from the entry's bodies, its flag 0x400
+     * set, the entry's record kept at +0xb8 and the body's index cleared;
+     * the entry's pairs that name the body dropped, or, the entry left
+     * with no bodies, the entry unlinked from its group and taken
+     * (0x622d0). derived name. */
+    void FUN_000653b0(int bodyId);
 
     /* Bodies put to sleep in an island (0x62490; 0x63565 passes an
      * island's bodies and id, 0x65394 too): each active body taken off the
@@ -14577,7 +14626,7 @@ struct hknpBodyCinfo {
     u8 motionType;
     u8 unknown29[7];
     Vec4 position;
-    Vec4 orientation;
+    hkQuaternion orientation;
     Vec4 linearVelocity;
     Vec4 angularVelocity;
     float mass;
