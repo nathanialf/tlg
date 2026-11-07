@@ -2,8 +2,7 @@
 #include "tlg_hk_reflect.h"
 
 hkMemoryResourceContainer *
-hkMemoryResourceContainer::FUN_001806b0(const char *childName,
-                                        const hkMemoryResourceContainer *previous)
+hkMemoryResourceContainer::FUN_001806b0(const char *childName, const hkResourceContainer *previous)
 {
     int i = 0;
     if (previous) {

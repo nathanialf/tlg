@@ -5,7 +5,7 @@
 // address for slot 6 formed after its word's clear (the base forms it first), and the stack
 // guard's GOT reload placed before the tail stores in the base, after them here.
 void hknpConstraint::FUN_001758a0(u64 bodyUidA, u64 bodyUidB, hkpConstraintData *constraintData,
-                                  u16 constraintImmediateId)
+                                  hknpImmediateConstraintId constraintImmediateId)
 {
     data = constraintData;
     unknown0 = u32(bodyUidA);
@@ -28,7 +28,7 @@ void hknpConstraint::FUN_001758a0(u64 bodyUidA, u64 bodyUidB, hkpConstraintData 
     sizeOfSchemas = u16(info.sizeOfSchemas + info.unknown1c);
     numSolverElemTemps = u8(info.numSolverElemTemps);
     id = 0x7fffffff;
-    immediateId = constraintImmediateId;
+    immediateId = constraintImmediateId.value;
     flags = 3;
     numSolverResults = 0;
     runtimeSize = 0;

@@ -2248,6 +2248,26 @@ class Object0019a7c0 : public hkReferencedObject /* derived name */
  * +0x150 set by its creators. A derived class (vtable 0x169b400,
  * constructor FUN_000768c0) adds nothing to destroy, so the linker folded
  * its destructors into these and both vtables share them. */
+/* What the constraint elements work for (derived names): an object at
+ * +0x10 their immediate constraints are added through, the world at
+ * +0x18 (0x77292). */
+struct ElementsContext00077250 /* derived name */
+{
+    u8 unknown0[0x10];
+    u8 unknown10[8];
+    hknpWorld *world;
+};
+
+struct hknpConstraint;
+
+/* An immediate constraint's solver data added (0xc5d40; the elements'
+ * slot 6 calls it): the first argument the context's object at +0x10, then
+ * the world, the constraint, the elements' array at +0x30, two of the first
+ * element's streams and, when the world's flag at +0x4f0 is set, the
+ * elements. derived names. */
+void FUN_000c5d40(void *argument1, hknpWorld *world, const hknpConstraint *constraint,
+                  void *argument4, hkBlockStream *streamA, hkBlockStream *streamB, void *argument7);
+
 class Elements000760c0 : public hkBaseObject /* derived name */
 {
   public:
@@ -2296,6 +2316,13 @@ class Elements000760c0 : public hkBaseObject /* derived name */
      * yet. derived names. */
     virtual void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
 
+    /* Slot 6 (0x77250): an immediate constraint between two bodies over a
+     * constraint data built on the stack (with its immediate id when it has
+     * one), its flags or'ed in, its solver data added (0xc5d40) and the
+     * world's constraint signal fired with it. derived name. */
+    void FUN_00077250(int bodyIdA, int bodyIdB, hkpConstraintData *constraintData,
+                      hknpImmediateConstraintId immediateId, u8 extraFlags);
+
     u8 unknown8[8];
     hkArray<Entry40> array10;  /* derived name */
     hkArray<Entry40> array20;  /* derived name */
@@ -2305,7 +2332,7 @@ class Elements000760c0 : public hkBaseObject /* derived name */
     /* The simulation context the object works for, set by its creators
      * after the constructor (0x1799ee; the derived class's constructor,
      * 0x768c0). derived name. */
-    void *simulationContext;
+    ElementsContext00077250 *simulationContext;
 };
 
 /* The derived class (vtable 0x169b400, the same seven slots): built once,
@@ -5326,6 +5353,11 @@ inline void hknpSolverFactoryTask::operator delete(void *object, unsigned long n
 inline void hkMemoryResourceContainer::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+inline void *hkMemoryResourceContainer::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
 inline void hkxAttributeHolder::operator delete(void *object, unsigned long numBytes)

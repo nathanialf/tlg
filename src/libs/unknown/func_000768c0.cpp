@@ -5,5 +5,5 @@ Elements000768c0::Elements000768c0(void *simulationContext, void *threadContext,
                                    void *allocator250)
     : Elements000760c0(simulationContext, allocator260, allocator250, 1, 1, 1)
 {
-    this->simulationContext = simulationContext;
+    this->simulationContext = static_cast<ElementsContext00077250 *>(simulationContext);
 }

@@ -7780,12 +7780,6 @@ template <typename TYPE, TYPE INVALID_VALUE, typename DISCRIMINANT> struct hkHan
 struct hknpShapeInstanceIdDiscriminant;
 typedef hkHandle<short, 32767, hknpShapeInstanceIdDiscriminant> hknpShapeInstanceId;
 
-/* The cleanup callback of the instances' free-list array's type info
- * (0x3efb0, registered by 0x3f090 under the scoped name at 0x14bb594): the
- * array destroyed in place. The free-list array is defined below. derived
- * name. */
-void FUN_0003efb0(void *object); /* derived name */
-
 /* hknpCompoundShapeKeyMask (hkClass 0x57c2ec8, built at 0x77f36: size 8,
  * parent hknpShapeKeyMask's 0x57c1aa8, no members): the interface adds slot
  * 7, whether an instance's keys pass the mask. */
@@ -9486,10 +9480,21 @@ struct hknpWorld;
  * names after the bodies' are the records'. */
 class hkpConstraintData;
 
+/* An immediate constraint's id (derived name): a 16-bit value passed by
+ * value, 0xffff for none (the elements' slot 6 tests it with `cmp r8w`
+ * and hands it on unextended, 0x772c6). */
+struct hknpImmediateConstraintId /* derived name */
+{
+    u16 value;
+};
+
 struct hknpConstraint {
     /* Inline where its type info's cleanup (0x700d0) runs it (defined in
      * tlg_lib_unknown.h, after the thread's memory router). */
     inline ~hknpConstraint();
+
+    /* No data and no user data before a setup (0x772cb). */
+    hknpConstraint() : userData(0) {}
 
     /* Set up between two bodies over a constraint data (0x175710; the
      * caller at 0x772e1, 0x1758a0 the same with an id): the data's
@@ -9506,7 +9511,7 @@ struct hknpConstraint {
      * wrapped data's for a breakable or malleable one), no id, flags 3 and
      * a runtime still to be made. derived names. */
     void FUN_001758a0(u64 bodyUidA, u64 bodyUidB, hkpConstraintData *constraintData,
-                      u16 constraintImmediateId);
+                      hknpImmediateConstraintId constraintImmediateId);
 
     /* Four bytes, not a byte array: the manager's allocation 0x16db90 forms
      * the record's address for its clear in the block that loads the free
@@ -10759,7 +10764,9 @@ struct hknpWorldSignals /* derived name */
     hkSignal2<hknpWorld *, u32> constraintDestroyedSignal;
     hkSignal2<hknpWorld *, u32> constraintAddedSignal;   /* 0x4fc10 enables, 0x4d32e */
     hkSignal2<hknpWorld *, u32> constraintRemovedSignal; /* 0x4fcf0 disables, 0x4d4de */
-    Signal00093530 signalE0;
+    /* Fired with the world and an immediate constraint when the constraint
+     * elements add one (0x77325). derived name. */
+    hkSignal2<hknpWorld *, const hknpConstraint *> immediateConstraintAddedSignal;
     /* Two signals the character proxy subscribes to (its handler of the
      * first, 0x1782f0, takes the world), then the post-solve signal (fired
      * with the world at 0x512d8 under "TtPostSolveSignal"; the proxy's
@@ -16403,6 +16410,8 @@ class hkMemoryResourceHandle : public hkResourceHandle
 class hkResourceContainer : public hkResourceBase
 {
   public:
+    hkResourceContainer() {}
+
     hkResourceContainer(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
 
     /* The interface's slots 5 to 15, in the vtable order of
@@ -16425,7 +16434,9 @@ class hkResourceContainer : public hkResourceBase
     virtual hkResourceHandle *FUN_0017ff90(const char *name, const hkClass *klass,
                                            const hkResourceHandle *previous);
     virtual void unknownVirtual11();
-    virtual void unknownVirtual12();
+    /* Slot 12: the child container of a name, made when there is none
+     * (hkMemoryResourceContainer's 0x180360). derived name. */
+    virtual hkResourceContainer *FUN_00180360(const char *name);
     virtual void unknownVirtual13();
     virtual void unknownVirtual14();
     virtual hkResourceContainer *FUN_001806b0(const char *name,
@@ -16448,6 +16459,21 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * each child pointed back at this container. */
     hkMemoryResourceContainer(hkFinishLoadedObjectFlag flag);
 
+    /* A new one of a name, no parent, resources or children (inline in
+     * 0x180360). */
+    hkMemoryResourceContainer(const char *containerName) : name(containerName), parent(HK_NULL) {}
+
+    /* The class allocator: a block of the thread's heap (0x1803a7; defined
+     * in tlg_lib_unknown.h beside the router). */
+    static void *operator new(unsigned long numBytes);
+
+    /* Its placement form, which the finish callbacks construct in place
+     * with. */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     /* Out of line (0x17fc20, slot 0; the deleting destructor 0x17fbd0
      * before it): the children's and the resources' references released
      * from the last, then the name. */
@@ -16462,7 +16488,12 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * child at all when no name is given; null when none is left. derived
      * name. */
     hkMemoryResourceContainer *FUN_001806b0(const char *childName,
-                                            const hkMemoryResourceContainer *previous);
+                                            const hkResourceContainer *previous);
+
+    /* Slot 12 (0x180360): the child of the name, or a new one appended to
+     * the children with this container as its parent (its creation's
+     * reference released once the children hold it). derived name. */
+    hkResourceContainer *FUN_00180360(const char *containerName);
 
     /* Slot 17 (0x17f9b0): every resource, recursively, handed the argument
      * through its slot 15. derived name. */
@@ -18709,6 +18740,18 @@ class hknpUnaryAction : public hknpAction
  * finish callback 0x47990), then data, driverInput, steering, engine,
  * transmission, brake, suspension, aerodynamics, wheelCollide, tyreMarks
  * and velocityDamper (pointers) from +0x28 to +0x78. */
+/* A velocity accumulator of the vehicle's step (derived names): the
+ * linear and angular velocities at +0x10 and +0x20, a rotation's columns
+ * from +0x40 that the angular one is taken through. */
+struct hknpVehicleVelocityAccumulator /* derived name */
+{
+    u8 unknown0[0x10];
+    Vec4 linearVelocity;
+    Vec4 angularVelocity;
+    u8 unknown30[0x10];
+    Vec4 rotation[3];
+};
+
 /* An axle's parameters for the vehicle's friction solver (derived names,
  * after Havok's hkpVehicleFrictionSolverAxleParams): sums over the axle's
  * wheels (0x163640 adds each wheel's). */
@@ -18717,7 +18760,10 @@ struct hknpVehicleFrictionSolverAxleParams /* derived name */
     Vec4 contactPointWs;
     Vec4 constraintNormalWs;
     Vec4 forwardDirWs;
-    u8 unknown30[0x10];
+    /* The ground body's accumulator, when the axle stands on one (0x164040
+     * reads its linear velocity). derived name. */
+    const hknpVehicleVelocityAccumulator *groundObject;
+    u8 unknown38[8];
     float frictionCoefficient;
     float viscosityFrictionCoefficient;
     float maxFrictionCoefficient;
@@ -18725,6 +18771,16 @@ struct hknpVehicleFrictionSolverAxleParams /* derived name */
     float forwardForce;
     float slipVelocityFactor;
     hkBool wheelFixed;
+};
+
+/* The vehicle's friction solver parameters (derived names, after Havok's
+ * hkpVehicleFrictionSolverParams): the two axles', then the chassis's
+ * accumulator from +0xd0 (0x164020 reads its linear velocity). */
+struct hknpVehicleFrictionSolverParams /* derived name */
+{
+    hknpVehicleFrictionSolverAxleParams axleParams[2];
+    u8 unknownC0[0x10];
+    hknpVehicleVelocityAccumulator chassis;
 };
 
 class hknpVehicleInstance : public hknpUnaryAction
@@ -18835,22 +18891,21 @@ class hknpVehicleInstance : public hknpUnaryAction
      * derived name. */
     void FUN_00163640(int wheelIndex, struct hknpVehicleFrictionSolverAxleParams &axle,
                       float forwardForce, float wheelDownForce, float slipFactor) const;
+    /* The wheels' state after the friction step (0x163ef0; 0x1648c0 calls
+     * it with the axles' ground body ids and the solver's parameters): each
+     * wheel's axle status handed to it (the skid energy only on a ground
+     * whose motion has no solver id), then, unless the wheel is fixed, its
+     * spin from the chassis's forward velocity less the ground's, over the
+     * radius, the slip added, and the angle advanced. derived name. */
+    void FUN_00163ef0(float deltaTime, const u32 *groundBodyIds,
+                      const struct hknpVehicleFrictionSolverParams &params);
     void FUN_001648c0(float deltaTime,
                       const hknpVehicleAerodynamics::AerodynamicsDragOutput &aerodynamicsDragInfo,
                       const hkArray<float> &suspensionForceAtWheel,
                       const hkArray<float> &totalLinearForceAtWheel,
                       struct hknpVehicleJobResults &vehicleResults);
 
-    /* A velocity accumulator of the vehicle's step (derived names): the
-     * linear and angular velocities at +0x10 and +0x20, a rotation's
-     * columns from +0x40 that the angular one is taken through. */
-    struct VelocityAccumulator {
-        u8 unknown0[0x10];
-        Vec4 linearVelocity;
-        Vec4 angularVelocity;
-        u8 unknown30[0x10];
-        Vec4 rotation[3];
-    };
+    typedef hknpVehicleVelocityAccumulator VelocityAccumulator;
 
     /* One of the two bodies' entries the step builds (0x1632d0) and damps
      * (0x1646f0), 0x60 bytes, its accumulator at +0x30. derived names. */
@@ -18880,7 +18935,24 @@ class hknpVehicleInstance : public hknpUnaryAction
     hknpVehicleWheelCollide *wheelCollide;
     u8 unknown70[0x10];
     hkArray<WheelInfo> wheelsInfo;
-    u8 unknown90[0x50];
+
+    /* Each axle's friction status (Havok's hkpVehicleFrictionStatus,
+     * nine floats an axle; 0x163ef0 hands four of them to the axle's
+     * wheels). derived names. */
+    struct AxisStatus {
+        float forwardSlipVelocity;
+        float sideSlipVelocity;
+        float skidEnergyDensity;
+        float sideForce;
+        float delayedForwardImpulse;
+        float sideRhs;
+        float forwardRhs;
+        float relativeSideForce;
+        float relativeForwardForce;
+    };
+
+    AxisStatus frictionStatus[2];
+    u8 unknownD8[8];
     hkArray<hkBool> isFixed;            /* derived name */
     float wheelsTimeSinceMaxPedalInput; /* derived name */
     hkBool tryingToReverse;             /* record 0x1698d18 */

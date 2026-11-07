@@ -123,3 +123,6 @@ D_1695110 hkCustomAttributes::Attribute 2 src/include/tlg_hk_reflect.h
 D_14ba58c hknpProjectileGunDefaults 1 src/include/tlg_hk_reflect.h
 D_1696450 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_16964a0 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1696a10 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_1696a60 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_1696ab0 hkClassMember 2 src/include/tlg_hk_reflect.h
