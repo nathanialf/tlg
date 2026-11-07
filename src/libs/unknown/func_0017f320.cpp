@@ -3,7 +3,8 @@
 
 /* derived name: slot 10 of hkMemoryResourceHandle's vtable (address point
  * 0x16a6280) sets the object it holds. */
-void hkMemoryResourceHandle::FUN_0017f320(hkReferencedObject *object) /* derived name */
+void hkMemoryResourceHandle::FUN_0017f320(hkReferencedObject *object,
+                                          const hkClass *klass) /* derived name */
 {
     FUN_00090250(&variant, object);
 }

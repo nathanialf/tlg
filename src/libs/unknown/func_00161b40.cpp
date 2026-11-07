@@ -39,3 +39,11 @@ void FUN_00161b40(const hknpShape *shape, const hknpMassDistribution *summary,
         out.mass = mass;
     }
 }
+
+void hknpBodyManager::FUN_00161960(u32 bodyId, hkDiagonalizedMassProperties &out) const
+{
+    const hknpShape *shape = bodies[bodyId].shape;
+    const int numEntries = bodyEntries.getSize();
+    const float mass = bodyId < u32(numEntries) ? bodyEntries[bodyId].half.getReal() : -1.0f;
+    FUN_00161b40(shape, getMassDistribution(bodyId), out, mass);
+}

@@ -47,25 +47,50 @@ class hkThread /* derived name */
     s64 status; /* derived name: 2 before the start, 1 after (8-byte stores) */
 };
 
-/* The object at +0x18 of Class168e810: a list of blocks at +0, a critical
- * section at +0x10; FUN_00015700 and FUN_000158f0 take a pointer and a
- * count under it. */
+/* The object at +0x18 of Class168e810: a list of blocks at +0, the free
+ * entries at +8, a critical section at +0x10; FUN_00015700 and FUN_000158f0
+ * take a pointer and a count under it. */
 struct Object00015700 /* derived name */
 {
-    /* An entry of a block (derived names), 0x40 bytes: an array of 8-byte
-     * values at +0x10. */
+    /* An entry of a block (derived names), 0x40 bytes: -2 at +0 while it is
+     * free, an array of 8-byte values at +0x10 with room for three in the
+     * entry, and the next free entry at +0x38. */
     struct Entry {
-        u8 unknown0[0x10];
-        hkArray<u64> values;
-        u8 unknown20[0x20];
+        /* The values' array over its own room (0x15810, 0x15c20). */
+        Entry() {}
+
+        int state;
+        u8 unknown4[0xc];
+        hkInplaceArray<u64, 3> values;
+        Entry *next;
     };
 
     /* A block of 63 entries and the next block (derived names), 0xfc8
      * bytes from the thread's heap. */
     struct Block {
+        /* Every entry free, each linked to the one after it, the last to
+         * none, and no next block (inline where a block is added, 0x15800,
+         * and where every block is reset, 0x15c13). */
+        Block()
+        {
+            for (int i = 0; i < 63; i++) {
+                entries[i].state = -2;
+                entries[i].next = &entries[i + 1];
+            }
+            entries[62].next = HK_NULL;
+            next = HK_NULL;
+        }
+
         /* Back to the thread's heap at its size unless null, as
          * hkReferencedObject's own delete tests (0x15d71). derived name. */
         static void operator delete(void *object, unsigned long numBytes);
+
+        /* Its placement form, with which a block is built again in place
+         * (0x15ae0). */
+        static void *operator new(unsigned long, void *where)
+        {
+            return where;
+        }
 
         Entry entries[63];
         Block *next;
@@ -87,8 +112,13 @@ struct Object00015700 /* derived name */
      * the delete expression has tested the pointer). derived name. */
     static void operator delete(void *object, unsigned long numBytes);
 
-    Block *firstBlock; /* derived name */
-    u8 unknown8[8];
+    /* Every entry freed: each block's values given back, the block built
+     * again in place, and the blocks' entries linked into one free list
+     * from the first (0x15ae0; Class168e810's 0x17a60). derived name. */
+    void FUN_00015ae0();
+
+    Block *firstBlock;      /* derived name */
+    Entry *freeEntries;     /* derived name */
     hkCriticalSection lock; /* derived name */
 };
 

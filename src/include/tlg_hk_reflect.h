@@ -823,8 +823,27 @@ struct hkArray : public hkArrayBase<T> {
 template <typename T, int N> struct hkInplaceArray : public hkArray<T> {
     hkInplaceArray(int size = 0) : hkArray<T>(storage, size, N) {}
 
+    /* The storage shrunk to what the elements need, rounded up to a power
+     * of two, when the array has its own heap storage: back into the
+     * object's room when that is enough (defined in tlg_lib_unknown.h;
+     * 0x158f0). */
+    inline void optimizeCapacity();
+
     T storage[N];
 };
+
+/* The smallest power of two not below a count (the bits below the highest
+ * smeared, then one added). derived name. */
+inline int hkNextPowerOf2(int value)
+{
+    u32 bits = u32(value) - 1;
+    bits |= bits >> 16;
+    bits |= bits >> 8;
+    bits |= bits >> 4;
+    bits |= bits >> 2;
+    bits |= bits >> 1;
+    return int(bits + 1);
+}
 
 /* An array whose first N elements live in the object on a 16-byte
  * boundary: an int of padding after the array, then the storage (the
@@ -5126,8 +5145,10 @@ class hkMeshVertexBuffer : public hkReferencedObject
 };
 
 /* hkMultipleVertexBuffer, polymorphic (type info 0x57bcf70, size 0x158,
- * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): slot 0,
- * the complete destructor FUN_00024b70, runs the out-of-line FUN_00024db0.
+ * vtable 0x1692000 stored by its finish constructor FUN_00024fa0): its
+ * destructor is inline, emitted with the vtable in the key function's file
+ * (slot 5's, func_00025590.cpp): the complete one 0x24b70 a jump to the base
+ * one 0x24db0, the deleting one 0x24b80.
  * Members from its record table at 0x1691820: vertexFormat (struct) at +0xc,
  * lockedElements (array) at +0x110, lockedBuffer (pointer) at +0x120,
  * elementInfos and vertexBufferInfos (arrays) at +0x128 and +0x138,
@@ -5168,7 +5189,7 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
     /* hkMultipleVertexBuffer::VertexBufferInfo (hkClass 0x57bcda0, built
      * at 0x23975: 0x18 bytes, records from 0x16917a0). */
     struct VertexBufferInfo {
-        hkMeshVertexBuffer *vertexBuffer;
+        hkRefPtr<hkMeshVertexBuffer> vertexBuffer;
         void *lockedVertices; /* not serialized */
         hkBool isLocked;
     };
@@ -5176,7 +5197,12 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
     hkMultipleVertexBuffer(hkFinishLoadedObjectFlag flag);
     /* The copy, out of line (0x24fb0; slot 5 makes one). */
     hkMultipleVertexBuffer(const hkMultipleVertexBuffer &other);
-    virtual ~hkMultipleVertexBuffer();
+
+    /* The members released and freed from the last (0x24db0). */
+    virtual ~hkMultipleVertexBuffer() {}
+
+    /* The reference-counted class delete (tlg_lib_unknown.h). */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* From the thread's heap (tlg_lib_unknown.h; slot 5's copy). */
     static void *operator new(unsigned long numBytes);
@@ -5203,7 +5229,7 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
 
     hkVertexFormat vertexFormat;
     hkArray<LockedElement> lockedElements;
-    hkMeshVertexBuffer *lockedBuffer;
+    hkRefPtr<hkMeshVertexBuffer> lockedBuffer;
     hkArray<ElementInfo> elementInfos;
     hkArray<VertexBufferInfo> vertexBufferInfos;
     int numVertices;
@@ -5215,7 +5241,6 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
 };
 
 void FUN_00024fa0(hkMultipleVertexBuffer *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_00024db0(hkMultipleVertexBuffer *self);                                /* derived name */
 
 /* hkMemoryMeshBody, polymorphic, 0x80 bytes (type info 0x57bccf0, vtable
  * 0x1691610 stored by its finish constructor 0x23190): members from
@@ -7140,7 +7165,8 @@ struct hknpShapeInstance {
         HAS_SCALE = 0x8,         /* derived name */
         FLIP_ORIENTATION = 0x10, /* derived name */
         SCALE_SURFACE = 0x20,    /* derived name */
-        IS_ENABLED = 0x40 /* derived name: a new instance's (0x4120b); the compound's key walk skips one without it (0x4196b) */
+        IS_ENABLED =
+            0x40 /* derived name: a new instance's (0x4120b); the compound's key walk skips one without it (0x4196b) */
     };
 
     int getFlags() const /* derived name */
@@ -7510,7 +7536,10 @@ class alignas(16) hknpShape : public hkReferencedObject
                                   void *argument7) const;
     virtual int unknownVirtual27(const LodContext000426b0 &context, const LodQuery000426b0 &query,
                                  int currentLod) const;
-    virtual void unknownVirtual28(const void *argument1, void *argument2) const;
+    /* Slot 28: the shape's mass properties built for a configuration (the
+     * shapes' mass builds, 0x1570f0, 0x161b40). */
+    virtual void unknownVirtual28(const MassConfig00168340 *config,
+                                  hkDiagonalizedMassProperties *propertiesOut) const;
     /* Slot 28's default (0x6fc70, kept by nine shape vtables): the shape's
      * slot 7 bounds under a fixed transform, handed with both arguments to
      * FUN_00168230; the sphere's slot 28 falls back to it. derived name. */
@@ -7606,8 +7635,8 @@ class hknpDecoratorShape : public hknpShape
                       void *argument7) const; /* vtable slot 26; derived name */
     int FUN_0003b210(const LodContext000426b0 &context, const LodQuery000426b0 &query,
                      int currentLod) const; /* vtable slot 27; derived name */
-    void FUN_0003b260(const void *argument1,
-                      void *argument2) const; /* vtable slot 28; derived name */
+    void FUN_0003b260(const MassConfig00168340 *config, hkDiagonalizedMassProperties *propertiesOut)
+        const; /* vtable slot 28; derived name */
     int FUN_0003b270(const void *argument1,
                      void *argument2) const; /* vtable slot 29; derived name */
 
@@ -8771,6 +8800,24 @@ struct PointerMap /* derived name */
     void FUN_00013db0(AllocatorBase &allocator); /* derived name */
 };
 
+/* The map typed by its key and value (derived name; Havok's hkPointerMap
+ * over the untyped one): a lookup through a value of its own, as the
+ * string map's typed form does (cookbook 196: the class copies' lookup
+ * 0x19a8b1 keeps the guard's address apart). */
+template <typename K, typename V>
+struct PointerMapOf : public PointerMap /* derived name */
+{
+    hkResult get(K key, V *valueOut) const /* derived name */
+    {
+        hkUlong value;
+        if (FUN_00013b90(hkUlong(key), value) == HK_SUCCESS) {
+            *valueOut = V(value);
+            return HK_SUCCESS;
+        }
+        return HK_FAILURE;
+    }
+};
+
 /* A map from 16-bit keys to pointer-sized values, hashed and probed as
  * PointerMap is (derived names): an empty entry's key is 0xffff. The lookup
  * and the insert are member templates over the value's type, as Havok's
@@ -9040,6 +9087,24 @@ struct hknpBodyManager /* derived name */
      * name. */
     void FUN_00160cd0(u32 bodyId, const char *name);
 
+    /* A body's mass properties (0x161960; the world's 0x4bd9c, 0x4be88,
+     * 0x4f166 and 0x5c62b): its shape's, from the body's mass distribution
+     * when it has one, at the mass its entry holds (0x161b40 inline).
+     * derived name. */
+    void FUN_00161960(u32 bodyId, hkDiagonalizedMassProperties &out) const;
+
+    /* A body's mass distribution, the record the map at +0x48 holds for its
+     * id (a free record keeps -1 in its first w), null when it has none
+     * (inline in 0x161960). derived name. */
+    const hknpMassDistribution *getMassDistribution(u32 bodyId) const
+    {
+        int index;
+        if (recordIndices48.get(bodyId, &index) == HK_SUCCESS) {
+            return reinterpret_cast<const hknpMassDistribution *>(&records58[index]);
+        }
+        return HK_NULL;
+    }
+
     u8 unknown0[8];
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
@@ -9052,7 +9117,7 @@ struct hknpBodyManager /* derived name */
     hkArray<BodyEntry> bodyEntries; /* derived name: by body id */
     /* Records by body id: the record's index by the body's id, the
      * records, the first free one. derived names. */
-    PointerMap recordIndices48;
+    PointerMapOf<u32, int> recordIndices48;
     hkArray<Record48> records58;
     int firstFreeRecord68;
     u8 unknown6c[4];
@@ -12697,6 +12762,12 @@ struct hknpBodyQualityLibrary : public hkReferencedObject {
 
     virtual ~hknpBodyQualityLibrary();
 
+    /* Set up from the cinfo (0x71330; the world's constructor at 0x49410):
+     * every quality reset, its priority ten times its index and contact
+     * caching supported as the cinfo asks, then the presets' flags and
+     * thresholds. derived name. */
+    void FUN_00071330(const struct hknpBodyQualityLibraryCinfo &cinfo);
+
     /* The reference-counted class delete (tlg_lib_unknown.h): its deleting
      * destructor 0x70f70 frees at the recorded size, 0x220 by default. */
     static void operator delete(void *object, unsigned long numBytes);
@@ -12716,9 +12787,12 @@ struct hknpBodyQualityLibraryCinfo /* derived name */
     hknpBodyQualityLibraryCinfo();
 
     float unitScale;
-    hkBool enableWeldingForDefaultObjects;
-    hkBool enableWeldingForCriticalObjects;
-    hkBool enableContactCaching;
+    /* Plain bools: the cinfo has no hkClass of its own, and 0x71330's
+     * choice on the first is the branch InstCombine canonicalizes for a
+     * bool (cookbook 423's converse). */
+    bool enableWeldingForDefaultObjects;
+    bool enableWeldingForCriticalObjects;
+    bool enableContactCaching;
 };
 
 extern const hkClassMember D_168d140[]; /* derived name: hkCustomAttributes::Attribute's records */
@@ -15960,6 +16034,12 @@ class hkxMeshSection : public hkReferencedObject
  * object's hkClass through the registry singleton at 0x57c8910 (slot 7), or
  * null. */
 struct hkRefVariant /* derived name */ {
+    /* No object (a new resource handle's, 0x17fe07). */
+    hkRefVariant() : object(HK_NULL) {}
+
+    /* A loaded object's reference is kept as it was loaded. */
+    hkRefVariant(hkFinishLoadedObjectFlag) {}
+
     /* The object's reference released and the pointer cleared, as a
      * counted reference's (hkMemoryResourceHandle's destructor 0x17f180,
      * after the name). */
@@ -16068,25 +16148,31 @@ struct hkMemoryResourceContainer;
 class hkResourceBase : public hkReferencedObject
 {
   public:
+    hkResourceBase() {}
+
     hkResourceBase(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 };
 
 class hkResourceHandle : public hkResourceBase
 {
   public:
+    hkResourceHandle() {}
+
     hkResourceHandle(hkFinishLoadedObjectFlag flag) : hkResourceBase(flag) {}
 
     /* The interface's slots 5 to 15, in the vtable order of
      * hkMemoryResourceHandle (0x16a6280), whose overriders the tree names
-     * on that class; slot 15 is named after its overrider (0x17f770). Only
-     * slot 15 is called through the interface so far (the container's
-     * 0x17fa0e). derived names. */
+     * on that class; slots 7, 10 and 15 are named after their overriders
+     * (0x17d550, the body the linker folded with hkAlignSceneToNodeOptions's
+     * name setter; 0x17f320; 0x17f770). Slot 15 is called through the
+     * interface by the container's 0x17fa0e, slots 7 and 10 by its 0x17fdb0
+     * (the name, then the object and its class). derived names. */
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
+    virtual void FUN_0017d550(const char *newName);
     virtual void unknownVirtual8();
     virtual void unknownVirtual9();
-    virtual void unknownVirtual10();
+    virtual void FUN_0017f320(hkReferencedObject *object, const hkClass *klass);
     virtual void unknownVirtual11();
     virtual void unknownVirtual12();
     virtual void unknownVirtual13();
@@ -16116,6 +16202,20 @@ class hkMemoryResourceHandle : public hkResourceHandle
   public:
     hkMemoryResourceHandle(hkFinishLoadedObjectFlag flag);
 
+    /* A new handle, inline (the container's 0x17fdb0): no object, no name,
+     * no external links. */
+    hkMemoryResourceHandle() {}
+
+    /* From the thread's heap (tlg_lib_unknown.h; the container's 0x17fdb0). */
+    static void *operator new(unsigned long numBytes);
+
+    /* Its placement form, which the finish callback constructs in place
+     * with (0x8e870). */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
     /* Out of line (0x17f180): the external links, the name, then the
      * variant's reference; the deleting destructor (0x17f130, before it)
      * calls it and frees through the class's delete. */
@@ -16124,9 +16224,11 @@ class hkMemoryResourceHandle : public hkResourceHandle
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    const char *FUN_0017f2d0() const;              /* vtable slot 6; derived name */
-    const hkClass *FUN_0017f310() const;           /* vtable slot 9; derived name */
-    void FUN_0017f320(hkReferencedObject *object); /* vtable slot 10; derived name */
+    const char *FUN_0017f2d0() const;    /* vtable slot 6; derived name */
+    const hkClass *FUN_0017f310() const; /* vtable slot 9; derived name */
+    /* Slot 10: the object held, its class not kept (0x90250 takes the
+     * object only). derived name. */
+    void FUN_0017f320(hkReferencedObject *object, const hkClass *klass);
     /* Slot 11 (0x17f330): an external link appended, its member name and
      * id copied. derived name. */
     void FUN_0017f330(const char *memberName, const char *externalId);
@@ -16158,7 +16260,10 @@ class hkResourceContainer : public hkResourceBase
      * derived names. */
     virtual void unknownVirtual5();
     virtual void unknownVirtual6();
-    virtual void unknownVirtual7();
+    /* Slot 7: a resource made for an object (hkMemoryResourceContainer's
+     * 0x17fdb0). derived name. */
+    virtual hkResourceHandle *FUN_0017fdb0(const char *handleName, hkReferencedObject *object,
+                                           const hkClass *klass);
     /* Slot 8: a resource given up (hkMemoryResourceContainer's 0x1801f0).
      * derived name. */
     virtual void FUN_001801f0(hkResourceHandle *handle);
@@ -16213,6 +16318,12 @@ class hkMemoryResourceContainer : public hkResourceContainer
      * its place in the children (the last one moved into it). derived
      * name. */
     void FUN_00180560(hkMemoryResourceContainer *child);
+
+    /* Slot 7 (0x17fdb0): a new handle named and given the object and its
+     * class, held by the resources, the creation's own reference released;
+     * the handle returned. derived name. */
+    hkResourceHandle *FUN_0017fdb0(const char *handleName, hkReferencedObject *object,
+                                   const hkClass *klass);
 
     /* Slot 8 (0x1801f0): a resource given up, its reference released with
      * its place in the resources (those after it moved down). derived
@@ -17823,7 +17934,7 @@ struct hknpCompoundShapeCinfo /* derived name */
     int unknown8;
     int unknownC;
     bool unknown10;
-    const void *unknown18;
+    const MassConfig00168340 *unknown18; /* the mass configuration, or null */
     void *unknown20;
 };
 
@@ -20540,24 +20651,6 @@ struct hkContainerHeapAllocator {
 struct hkContainerTempAllocator /* derived name */ {
     /* Defined in tlg_lib_unknown.h, after the allocator's class. */
     static AllocatorBase &get(); /* derived name */
-};
-
-/* The map typed by its key and value (derived name; Havok's hkPointerMap
- * over the untyped one): a lookup through a value of its own, as the
- * string map's typed form does (cookbook 196: the class copies' lookup
- * 0x19a8b1 keeps the guard's address apart). */
-template <typename K, typename V>
-struct PointerMapOf : public PointerMap /* derived name */
-{
-    hkResult get(K key, V *valueOut) const /* derived name */
-    {
-        hkUlong value;
-        if (FUN_00013b90(hkUlong(key), value) == HK_SUCCESS) {
-            *valueOut = V(value);
-            return HK_SUCCESS;
-        }
-        return HK_FAILURE;
-    }
 };
 
 /* The map's own destructor, out of line and empty: the linker folded it

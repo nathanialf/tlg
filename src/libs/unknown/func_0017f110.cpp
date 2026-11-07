@@ -4,6 +4,6 @@
 /* The object pointer and the links are left as loaded; the name's finish
  * constructor is out of line. */
 hkMemoryResourceHandle::hkMemoryResourceHandle(hkFinishLoadedObjectFlag flag)
-    : hkResourceHandle(flag), references(flag), name(flag)
+    : hkResourceHandle(flag), variant(flag), name(flag), references(flag)
 {
 }

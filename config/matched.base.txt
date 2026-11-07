@@ -118,7 +118,7 @@ FUN_00023df0 src/libs/unknown/func_00023df0.cpp
 FUN_000242e0 src/libs/unknown/func_000242e0.cpp _ZL31finishLoadedObjecthkSkinBindingPvi
 FUN_00024400 src/libs/unknown/func_00024490.cpp _ZL39finishLoadedObjecthkIndexedTransformSetPvi
 FUN_000246d0 src/libs/unknown/func_000246f0.cpp _ZL38finishLoadedObjecthkMemoryMeshMaterialPvi
-FUN_00024b70 src/libs/unknown/func_00024b70.cpp
+_ZN22hkMultipleVertexBufferD1Ev src/libs/unknown/func_00025590.cpp
 FUN_00027b80 src/libs/unknown/func_00027b80.cpp
 FUN_00027be0 src/libs/unknown/func_00027be0.cpp
 FUN_0002ae10 src/libs/unknown/func_0002ae30.cpp _ZL42finishLoadedObjecthkMemoryMeshVertexBufferPvi
@@ -430,7 +430,7 @@ FUN_0017b910 src/libs/unknown/leaf_0017b910.cpp _ZN21hkp6DofConstraintData12FUN_
 FUN_0017b920 src/libs/unknown/leaf_0017b920.cpp _ZNK21hkp6DofConstraintData12FUN_0017b920Ev
 FUN_0017d550 src/libs/unknown/func_0017d550.cpp _ZN25hkAlignSceneToNodeOptions12FUN_0017d550EPKc
 FUN_0017f310 src/libs/unknown/func_0017f310.cpp _ZNK22hkMemoryResourceHandle12FUN_0017f310Ev
-FUN_0017f320 src/libs/unknown/func_0017f320.cpp _ZN22hkMemoryResourceHandle12FUN_0017f320EP18hkReferencedObject
+FUN_0017f320 src/libs/unknown/func_0017f320.cpp _ZN22hkMemoryResourceHandle12FUN_0017f320EP18hkReferencedObjectPK7hkClass
 FUN_0018f130 src/libs/unknown/func_0018f130.cpp
 FUN_0018f280 src/libs/unknown/func_0018f140.cpp _ZThn16_NK19hknpSolverStageTask7getNameEP11hkStringBufS1_
 FUN_0019ab00 src/libs/unknown/leaf_0019ab00.cpp _ZNK22hkPlatformObjectWriter12FUN_0019ab00Ev
@@ -659,7 +659,7 @@ FUN_0003b230 src/libs/unknown/func_0003b230.cpp _ZNK18hknpDecoratorShape12FUN_00
 FUN_0003b240 src/libs/unknown/func_0003b240.cpp _ZNK18hknpDecoratorShape12FUN_0003b240EPKvS1_S1_S1_S1_S1_Pv
 FUN_0003b250 src/libs/unknown/func_0003b250.cpp _ZNK18hknpDecoratorShape12FUN_0003b250EPKvS1_S1_S1_S1_S1_Pv
 FUN_0003b210 src/libs/unknown/func_0003b210.cpp _ZNK18hknpDecoratorShape12FUN_0003b210ERK18LodContext000426b0RK16LodQuery000426b0i
-FUN_0003b260 src/libs/unknown/func_0003b260.cpp _ZNK18hknpDecoratorShape12FUN_0003b260EPKvPv
+FUN_0003b260 src/libs/unknown/func_0003b260.cpp _ZNK18hknpDecoratorShape12FUN_0003b260EPK18MassConfig00168340P28hkDiagonalizedMassProperties
 FUN_0003b270 src/libs/unknown/func_0003b270.cpp _ZNK18hknpDecoratorShape12FUN_0003b270EPKvPv
 FUN_00048510 src/libs/unknown/func_00048510.cpp _ZNK41hknpFlippedGetClosestPointsQueryCollector12FUN_00048510Ev
 FUN_00048660 src/libs/unknown/func_00048660.cpp _ZNK34hknpFlippedShapeCastQueryCollector12FUN_00048660Ev
@@ -1296,7 +1296,8 @@ _ZN18hkSimpleLocalFrameD0Ev src/libs/unknown/func_0000de20.cpp
 _ZN12Class168e810D0Ev src/libs/unknown/func_00016ee0.cpp
 _ZN13PageAllocatorD0Ev src/libs/unknown/func_00019780.cpp
 FUN_000231b0 src/libs/unknown/func_000231b0.cpp
-FUN_00024b80 src/libs/unknown/func_00024b80.cpp
+_ZN22hkMultipleVertexBufferD0Ev src/libs/unknown/func_00025590.cpp
+FUN_000234a0 src/libs/unknown/func_000234a0.cpp
 FUN_0002a960 src/libs/unknown/func_0002a960.cpp
 FUN_00033f40 src/libs/unknown/func_00033f40.cpp
 FUN_00034b30 src/libs/unknown/func_00034b30.cpp
@@ -2703,3 +2704,11 @@ FUN_000396b0 src/libs/unknown/func_000396b0.cpp _ZN20hknpMotionProperties12FUN_0
 FUN_00039e50 src/libs/unknown/func_00039e50.cpp _GLOBAL__I_a
 FUN_00163640 src/libs/unknown/func_00163640.cpp _ZNK19hknpVehicleInstance12FUN_00163640EiR35hknpVehicleFrictionSolverAxleParamsfff
 FUN_00144a60 src/libs/unknown/func_00144a60.cpp _ZNK24BroadPhaseLayers00142a4012FUN_00144a60EPKvRK16hknpRayCastQueryPvS1_RK14hkIntSpaceUtilP27hknpCollisionQueryCollector
+_ZN22hkMultipleVertexBufferD2Ev src/libs/unknown/func_00025590.cpp
+FUN_00011900 src/libs/unknown/func_00011900.cpp
+FUN_00161960 src/libs/unknown/func_00161b40.cpp _ZNK15hknpBodyManager12FUN_00161960EjR28hkDiagonalizedMassProperties
+FUN_0017fdb0 src/libs/unknown/func_0017fdb0.cpp _ZN25hkMemoryResourceContainer12FUN_0017fdb0EPKcP18hkReferencedObjectPK7hkClass
+FUN_00019230 src/libs/unknown/func_00019230.cpp _ZN8FreeList12FUN_00019230Ev
+FUN_00071330 src/libs/unknown/func_00071330.cpp _ZN22hknpBodyQualityLibrary12FUN_00071330ERK27hknpBodyQualityLibraryCinfo
+FUN_001814f0 src/libs/havok/Common/Serialize/Util/hkStructureLayout.cpp
+FUN_00015ae0 src/libs/unknown/func_00015ae0.cpp _ZN14Object0001570012FUN_00015ae0Ev

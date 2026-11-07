@@ -1089,6 +1089,11 @@ inline void hkArrayBase<T>::_copyFromArray(AllocatorBase &allocator, const hkArr
  * elements of a size (0xb40, 470 call sites; the capacity doubled, or one
  * when empty, by the allocator's slot 6). derived name. */
 void FUN_00000b40(AllocatorBase &allocator, void *array, int elementSize); /* derived name */
+/* An array's storage reduced to a number of elements, into the buffer given
+ * when there is one and they fit (0xbf0; hkInplaceArray's optimizeCapacity).
+ * derived name. */
+void FUN_00000bf0(AllocatorBase &allocator, void *array, int elementSize, void *buffer,
+                  int numElements);
 
 template <typename T, typename Allocator>
 inline void hkArray<T, Allocator>::pushBack(const T &element)
@@ -4407,6 +4412,11 @@ inline void *hkMultipleVertexBuffer::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+inline void *hkMemoryResourceHandle::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void *hkReferencedObjectLock::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -4616,6 +4626,18 @@ inline void Elements000760c0::operator delete(void *object, unsigned long numByt
 {
     if (object) {
         D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+    }
+}
+
+template <typename T, int N> inline void hkInplaceArray<T, N>::optimizeCapacity()
+{
+    if (this->data != storage && (this->capacityAndFlags & hkArray<T>::DONT_DEALLOCATE_FLAG) == 0) {
+        const int newCapacity = hkNextPowerOf2(this->size);
+        if (newCapacity < N) {
+            FUN_00000bf0(hkContainerHeapAllocator::get(), this, sizeof(T), storage, N);
+        } else if (newCapacity < this->getCapacity()) {
+            FUN_00000bf0(hkContainerHeapAllocator::get(), this, sizeof(T), HK_NULL, newCapacity);
+        }
     }
 }
 
@@ -4839,6 +4861,11 @@ inline void hkxMaterialEffect::operator delete(void *object, unsigned long numBy
 }
 
 inline void hkxMesh::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
+inline void hkMultipleVertexBuffer::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
 }
@@ -6749,7 +6776,6 @@ void FUN_001625d0(hknpVehicleInstance *self);
 void FUN_00165af0(hknpPhysicsSystemData *self);
 
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
-void FUN_00024b80(hkMultipleVertexBuffer *self);           /* slot 1 of 0x1691ff0 */
 void FUN_0002a960(hkMemoryMeshShape *self);                /* slot 1 of 0x1692530 */
 void FUN_00033f40(hknpStaticCompoundShapeInternals *self); /* slot 1 of 0x1692830 */
 void FUN_00034b30(hknpCompressedMeshShapeData *self);      /* slot 1 of 0x1692b00 */
