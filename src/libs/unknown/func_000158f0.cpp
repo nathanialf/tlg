@@ -7,7 +7,14 @@
 // -1`), where InstCombine's FoldOpIntoSelect pushes the sext into this
 // select's arms before IndVarSimplify, which then widens i + 1 to 64 bits
 // (one counter from 1); the inner shrink and the lock are the base's
-// (docs/NOTES.md, Round 76A).
+// (docs/NOTES.md, Round 76A). Round 77A: the base's `sar` from a counter
+// stepped by 1 << 32 is InstCombine's ashr(shl) for a sext of a trunc, so
+// at IndVarSimplify the sext still sat on the select (the widened i + 1
+// reaching the select as a trunc); FoldOpIntoSelect folds a cast only into
+// a select of one use with a constant arm, so the base's select had a
+// second use or no constant arm at the InstCombine before IndVarSimplify.
+// The arms as two loads (`i + 1 == count ? entries[0] : entries[i + 1]`)
+// give a select of the two addresses instead (42 of 140).
 
 /* derived name: entries given back under the lock: each marked free and
  * linked to the next one given (the last to the first), its values' storage

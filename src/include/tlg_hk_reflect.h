@@ -20238,7 +20238,7 @@ struct hknpWorldContextPool /* derived name */
      * in use set up over the world (0x167d50; the first ones of the first
      * count marked) and given its index, every context on the free list in
      * order, and no cache. derived name. */
-    void FUN_0016fcb0(hknpWorld *world, const Counts &counts, void *object1c8);
+    void FUN_0016fcb0(hknpWorld *world, const Counts &counts, BlockStreamAllocator *allocator);
 
     /* A free context taken from the head of the list (0x16ff90): the head
      * moves to its successor with the tag advanced, and the taken one's
