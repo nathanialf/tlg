@@ -7,12 +7,12 @@
 void FixedSizeAllocator::blockFreeBatch(void **blocks, int numBlocks, int blockSize)
 {
     freeList.numFreeElements += numBlocks;
-    void *head = freeList.freeHead;
+    FreeList::Element *head = freeList.freeHead;
     while (numBlocks > 0) {
-        void **block = static_cast<void **>(*blocks++);
+        FreeList::Element *block = static_cast<FreeList::Element *>(*blocks++);
         numBlocks--;
         if (block) {
-            *block = head;
+            block->next = head;
             head = block;
         } else {
             freeList.numFreeElements--;

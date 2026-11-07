@@ -12,21 +12,21 @@ bool FUN_00018280(const void *a, const void *b); /* derived name */
 hkBool32 FreeList::FUN_000189d0(FreeListBlock *block)
 {
     LocalBuffer<void *> inBlock(int(block->numElements));
-    void *element = freeHead;
+    Element *element = freeHead;
     char *const start = block->elements;
     char *const end = start + block->numElements * elementSize;
 
-    void **prev = &freeHead;
+    Element **prev = &freeHead;
     int numFound = 0;
     while (element) {
-        if (element < start || element >= end) {
-            prev = static_cast<void **>(element);
+        if (reinterpret_cast<char *>(element) < start || reinterpret_cast<char *>(element) >= end) {
+            prev = &element->next;
             element = *prev;
             continue;
         }
         inBlock.data[numFound++] = element;
-        *prev = *static_cast<void **>(element);
-        element = *static_cast<void **>(element);
+        *prev = element->next;
+        element = element->next;
     }
 
     if (top >= start && top < end) {
@@ -42,14 +42,14 @@ hkBool32 FreeList::FUN_000189d0(FreeListBlock *block)
 
     if (numFound > 0) {
         hkAlgorithm::quickSort(inBlock.data, numFound, FUN_00018280);
-        void *link = inBlock.data[0];
+        Element *link = static_cast<Element *>(inBlock.data[0]);
         for (int i = 1; i < numFound; i++) {
-            void *next = inBlock.data[i];
-            *static_cast<void **>(link) = next;
+            Element *next = static_cast<Element *>(inBlock.data[i]);
+            link->next = next;
             link = next;
         }
-        *static_cast<void **>(inBlock.data[numFound - 1]) = freeHead;
-        freeHead = inBlock.data[0];
+        static_cast<Element *>(inBlock.data[numFound - 1])->next = freeHead;
+        freeHead = static_cast<Element *>(inBlock.data[0]);
     }
     return false;
 }

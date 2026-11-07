@@ -2796,9 +2796,9 @@ struct FreeList /* derived name */
      * name. */
     void *alloc()
     {
-        if (void **element = static_cast<void **>(freeHead)) {
+        if (Element *element = freeHead) {
             numFreeElements--;
-            freeHead = *element;
+            freeHead = element->next;
             return element;
         }
         if (top < blockEnd) {
@@ -2815,8 +2815,8 @@ struct FreeList /* derived name */
     void free(void *element)
     {
         numFreeElements++;
-        *static_cast<void **>(element) = freeHead;
-        freeHead = element;
+        static_cast<Element *>(element)->next = freeHead;
+        freeHead = static_cast<Element *>(element);
     }
 
     /* Elements put back at the head of the freed ones, a null one
@@ -2825,13 +2825,13 @@ struct FreeList /* derived name */
     void freeBatch(void **elements, int numElements)
     {
         numFreeElements += numElements;
-        void *head = freeHead;
+        Element *head = freeHead;
         while (numElements > 0) {
             void *element = *elements++;
             numElements--;
             if (element) {
-                *static_cast<void **>(element) = head;
-                head = element;
+                static_cast<Element *>(element)->next = head;
+                head = static_cast<Element *>(element);
             } else {
                 numFreeElements--;
             }
@@ -2887,8 +2887,14 @@ struct FreeList /* derived name */
         return size;
     }
 
-    void *freeHead;  /* derived name */
-    u64 elementSize; /* derived name */
+    /* A free element links to the next through its first word (Havok's
+     * hkFreeList::Element). */
+    struct Element {
+        Element *next;
+    };
+
+    Element *freeHead; /* derived name */
+    u64 elementSize;   /* derived name */
     /* The last block in use the walk above examined and kept, none when it
      * starts from the first. derived name. */
     FreeListBlock *cursor;

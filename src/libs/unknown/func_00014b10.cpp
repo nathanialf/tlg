@@ -9,10 +9,10 @@ void FixedSizeAllocator::blockAllocBatch(void **blocksOut, int numBlocks, int bl
 {
     void **out = blocksOut;
     void **end = blocksOut + numBlocks;
-    void **element = static_cast<void **>(freeList.freeHead);
+    FreeList::Element *element = freeList.freeHead;
     for (; out < end && element; out++) {
         *out = element;
-        element = static_cast<void **>(*element);
+        element = element->next;
     }
     freeList.freeHead = element;
     freeList.numFreeElements -= out - blocksOut;
