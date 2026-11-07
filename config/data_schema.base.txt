@@ -115,3 +115,9 @@ D_1694550 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_16945a0 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_16a1fa0 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_16a1ff0 hkClassMember 10 src/include/tlg_hk_reflect.h
+D_1695020 hkClassMember 5 src/include/tlg_hk_reflect.h
+D_16950f8 hkCustomAttributes 1 src/include/tlg_hk_reflect.h
+D_16950e8 hkCustomAttributes 1 src/include/tlg_hk_reflect.h
+D_1695140 hkCustomAttributes::Attribute 2 src/include/tlg_hk_reflect.h
+D_1695110 hkCustomAttributes::Attribute 2 src/include/tlg_hk_reflect.h
+D_14ba58c hknpProjectileGunDefaults 1 src/include/tlg_hk_reflect.h

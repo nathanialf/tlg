@@ -1117,6 +1117,18 @@ struct hkCustomAttributes {
  * names and members are strings of the executable, 0x14b3df9 to 0x14b3f42),
  * built by the reflection initializers that use them (hknpMountedBallGun's
  * position, 0x3f3bc to 0x3f454). */
+struct hkRangeInt32Attribute {
+    hkRangeInt32Attribute(int absmin, int absmax, int softmin, int softmax)
+        : absmin(absmin), absmax(absmax), softmin(softmin), softmax(softmax)
+    {
+    }
+
+    int absmin;
+    int absmax;
+    int softmin;
+    int softmax;
+};
+
 struct hkRangeRealAttribute {
     hkRangeRealAttribute(float absmin, float absmax, float softmin, float softmax)
         : absmin(absmin), absmax(absmax), softmin(softmin), softmax(softmax)
@@ -3627,6 +3639,10 @@ struct hkcdRay /* derived name */
     /* From a start to an end (inline in 0x158ae0). derived name. */
     void setEndPoints(const Vec4 &start, const Vec4 &end);
 
+    /* From an origin and a direction, the direction's w zero (inline in
+     * the broad phase's ray cast, 0x144a60). derived name. */
+    void setOriginDirection(const Vec4 &newOrigin, const Vec4 &newDirection);
+
     Vec4 origin;
     Vec4 direction;
     Vec4 invDirection;
@@ -5769,6 +5785,22 @@ inline void hkcdRay::setEndPoints(const Vec4 &start, const Vec4 &end)
     direction = dir;
     invDirection = _mm_insert_ps(safeInv, _mm_castsi128_ps(_mm_cvtsi32_si128(signs)), 0x30);
     origin = start;
+}
+
+inline void hkcdRay::setOriginDirection(const Vec4 &newOrigin, const Vec4 &newDirection)
+{
+    Vec4 dir = _mm_blend_ps(newDirection, D_14b2060[2], 8);
+    dir = _mm_andnot_ps(_mm_cmpeq_ps(dir, _mm_setzero_ps()), dir);
+    const Vec4 r = _mm_rcp_ps(dir);
+    const Vec4 inv = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, dir)));
+    const __m128i sign = _mm_slli_epi32(_mm_srli_epi32(_mm_castps_si128(dir), 31), 31);
+    const Vec4 signedMax =
+        _mm_castsi128_ps(_mm_xor_si128(sign, _mm_castps_si128(_mm_set1_ps(HK_REAL_MAX))));
+    const Vec4 safeInv = _mm_blendv_ps(inv, signedMax, _mm_cmpeq_ps(dir, _mm_setzero_ps()));
+    const int signs = (_mm_movemask_ps(_mm_cmple_ps(_mm_setzero_ps(), dir)) & 7) | 0x3f000000;
+    direction = dir;
+    invDirection = _mm_insert_ps(safeInv, _mm_castsi128_ps(_mm_cvtsi32_si128(signs)), 0x30);
+    origin = newOrigin;
 }
 
 /* Four hkHalf read as a vector: each into the top 16 bits of its lane,
@@ -7961,8 +7993,8 @@ class hknpCollisionFilter : public hkReferencedObject
 
     virtual int FUN_001679a0(const hknpCollisionFilterContext &context,
                              hknpCollisionFilterBodyIdPair *pairs,
-                             int numPairs) const = 0;              /* derived name */
-    virtual bool FUN_00167ad0(int queryType, bool flag) const = 0; /* derived name */
+                             int numPairs) const = 0;                  /* derived name */
+    virtual bool FUN_00167ad0(int queryType, u8 layerIndex) const = 0; /* derived name */
     virtual bool
     FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
                  const hknpCollisionFilterTargetInput &target) const = 0;         /* derived name */
@@ -7990,7 +8022,7 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
 
     int FUN_001679a0(const hknpCollisionFilterContext &context,
                      hknpCollisionFilterBodyIdPair *pairs, int numPairs) const;
-    bool FUN_00167ad0(int queryType, bool flag) const;
+    bool FUN_00167ad0(int queryType, u8 layerIndex) const;
     bool FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
                       const hknpCollisionFilterTargetInput &target) const;
     bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const;
@@ -11204,6 +11236,17 @@ class hknpBallGun : public hknpFirstPersonGun
 
 /* Its members' defaults (the hkClass's, at 0x14bb724): the member's offset
  * into the values, then the position's four floats. derived name. */
+/* hknpProjectileGun's defaults (its hkClass's, at 0x14ba58c): the offsets
+ * of its five members' values, -1 for none, then maxProjectiles and
+ * reloadTime. The rows are generated from the executable (D18). derived
+ * name. */
+struct hknpProjectileGunDefaults /* derived name */
+{
+    int defaultOffsets[5];
+    int maxProjectiles;
+    float reloadTime;
+};
+
 struct hknpMountedBallGunDefaults /* derived name */
 {
     int defaultOffsets[1];
@@ -11844,7 +11887,7 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
 
     int FUN_001679a0(const hknpCollisionFilterContext &context,
                      hknpCollisionFilterBodyIdPair *pairs, int numPairs) const; /* derived name */
-    bool FUN_00167ad0(int queryType, bool flag) const;                          /* derived name */
+    bool FUN_00167ad0(int queryType, u8 layerIndex) const;                      /* derived name */
     bool FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
                       const hknpCollisionFilterTargetInput &target) const; /* derived name */
     bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const;      /* derived name */
@@ -18390,6 +18433,24 @@ class hknpUnaryAction : public hknpAction
  * finish callback 0x47990), then data, driverInput, steering, engine,
  * transmission, brake, suspension, aerodynamics, wheelCollide, tyreMarks
  * and velocityDamper (pointers) from +0x28 to +0x78. */
+/* An axle's parameters for the vehicle's friction solver (derived names,
+ * after Havok's hkpVehicleFrictionSolverAxleParams): sums over the axle's
+ * wheels (0x163640 adds each wheel's). */
+struct hknpVehicleFrictionSolverAxleParams /* derived name */
+{
+    Vec4 contactPointWs;
+    Vec4 constraintNormalWs;
+    Vec4 forwardDirWs;
+    u8 unknown30[0x10];
+    float frictionCoefficient;
+    float viscosityFrictionCoefficient;
+    float maxFrictionCoefficient;
+    float wheelDownForce;
+    float forwardForce;
+    float slipVelocityFactor;
+    hkBool wheelFixed;
+};
+
 class hknpVehicleInstance : public hknpUnaryAction
 {
   public:
@@ -18489,6 +18550,15 @@ class hknpVehicleInstance : public hknpUnaryAction
                       hknpVehicleAerodynamics::AerodynamicsDragOutput &aerodynamicsDragInfo,
                       hkArray<float> &suspensionForceAtWheel,
                       hkArray<float> &totalLinearForceAtWheel);
+    /* One wheel's share of its axle's friction solver parameters (0x163640;
+     * the friction step 0x163820 runs it on each wheel): the forward
+     * direction the contact normal and the spin axis give (the suspension's
+     * direction where they are parallel), normalized; the contact point, a
+     * share of the friction coefficients by the contact's friction, the
+     * forces and the slip added in; the axle fixed when the wheel is.
+     * derived name. */
+    void FUN_00163640(int wheelIndex, struct hknpVehicleFrictionSolverAxleParams &axle,
+                      float forwardForce, float wheelDownForce, float slipFactor) const;
     void FUN_001648c0(float deltaTime,
                       const hknpVehicleAerodynamics::AerodynamicsDragOutput &aerodynamicsDragInfo,
                       const hkArray<float> &suspensionForceAtWheel,

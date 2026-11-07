@@ -5821,6 +5821,40 @@ void FUN_00197c60(const SimulationContext00142fa0 *context, hknpCollisionFilter 
  * the update in a bit field at +0x78, the lowest and highest marked ids at
  * +0x90 and +0x94 (slot 4 of the vtable at address point 0x16a3f60,
  * 0x143390, marks them; slot 5 is the update 0x142bb0). */
+/* What the broad phase's ray cast hands its trees' walk (derived names):
+ * the query's ray in world space, a fraction the walk sets (0x144170), the
+ * collector's early-out hint, the caller's first argument, a copy of the
+ * query, the ray in the broad phase's space, the caller's third argument
+ * and the collector. */
+struct RayCastContext00144a60 /* derived name */
+{
+    RayCastContext00144a60(const void *argument1_, const hknpRayCastQuery &query_,
+                           const hkcdRay *ray_, void *argument3_,
+                           hknpCollisionQueryCollector *collector_)
+        : argument1(argument1_), query(query_), ray(ray_), argument3(argument3_),
+          collector(collector_)
+    {
+        earlyOutHint = collector_->hints & 1;
+        origin = query_.ray.origin;
+        direction = query_.ray.direction;
+    }
+
+    Vec4 origin;
+    Vec4 direction;
+    Vec4 fraction;
+    int earlyOutHint;
+    const void *argument1;
+    hknpRayCastQuery query;
+    const hkcdRay *ray;
+    void *argument3;
+    hknpCollisionQueryCollector *collector;
+};
+
+/* A tree's ray cast (0x144170, 0x8ed bytes). derived name. */
+void FUN_00144170(const BroadPhaseTree00142a40 *tree, int root, const hknpRayCastQuery *query,
+                  const hkcdRay *ray, RayCastContext00144a60 *context,
+                  hknpCollisionQueryCollector *collector);
+
 class BroadPhaseLayers00142a40 /* derived name */
 {
   public:
@@ -5858,6 +5892,14 @@ class BroadPhaseLayers00142a40 /* derived name */
      * derived name. */
     void FUN_00142fa0(const SimulationContext00142fa0 *context, void *argument2, void *argument3,
                       void *argument4);
+
+    /* Slot 14 (0x144a60): a ray cast against each layer's tree the query's
+     * filter lets through (0x144170), the ray brought into the broad
+     * phase's 16-bit space; the fourth argument is not read. derived
+     * name. */
+    void FUN_00144a60(const void *argument1, const hknpRayCastQuery &query, void *argument3,
+                      const void *argument4, const hkIntSpaceUtil &intSpace,
+                      hknpCollisionQueryCollector *collector) const;
 
     hkRefPtr<hknpBroadPhaseConfig> config; /* derived name: the world's (0x4999d) */
     BroadPhaseTree00142a40 *trees[8];

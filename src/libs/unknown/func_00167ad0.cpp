@@ -3,10 +3,10 @@
 
 /* Slot 6: enabled unless the child filter, when there is one, says no; the
  * bool is widened again on its way (cookbook 17). */
-bool hknpPairCollisionFilter::FUN_00167ad0(int queryType, bool flag) const
+bool hknpPairCollisionFilter::FUN_00167ad0(int queryType, u8 layerIndex) const
 {
     if (childFilter) {
-        return childFilter->FUN_00167ad0(queryType, flag);
+        return childFilter->FUN_00167ad0(queryType, layerIndex);
     }
     return true;
 }

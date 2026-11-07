@@ -149,7 +149,7 @@ FUN_00039190 src/libs/unknown/func_000391f0.cpp _ZL38finishLoadedObjecthknpPhysi
 FUN_000394a0 src/libs/unknown/func_000394c0.cpp _ZL34finishLoadedObjecthknpCapsuleShapePvi
 FUN_000395c0 src/libs/unknown/func_000395e0.cpp _ZL38finishLoadedObjecthknpMotionPropertiesPvi
 FUN_00039b10 src/libs/unknown/func_00039b10.cpp
-FUN_00039e30 src/libs/unknown/func_00039e30.cpp
+FUN_00039e30 src/libs/unknown/func_00039e50.cpp _ZL35finishLoadedObjecthknpProjectileGunPvi
 _ZN18hknpDecoratorShapeD1Ev src/libs/unknown/func_0003b0a0.cpp
 FUN_0003bb00 src/libs/unknown/func_0003bb20.cpp _ZL32finishLoadedObjecthknpDummyShapePvi
 FUN_0003ccf0 src/libs/unknown/func_0003ccf0.cpp
@@ -2700,3 +2700,6 @@ _ZN21hkIndexedTransformSetD0Ev src/libs/unknown/func_000236e0.cpp
 _ZN21hkIndexedTransformSetD2Ev src/libs/unknown/func_000236e0.cpp
 FUN_0005dfc0 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005dfc0EiRKDv4_f
 FUN_000396b0 src/libs/unknown/func_000396b0.cpp _ZN20hknpMotionProperties12FUN_000396b0ENS_6PresetEff
+FUN_00039e50 src/libs/unknown/func_00039e50.cpp _GLOBAL__I_a
+FUN_00163640 src/libs/unknown/func_00163640.cpp _ZNK19hknpVehicleInstance12FUN_00163640EiR35hknpVehicleFrictionSolverAxleParamsfff
+FUN_00144a60 src/libs/unknown/func_00144a60.cpp _ZNK24BroadPhaseLayers00142a4012FUN_00144a60EPKvRK16hknpRayCastQueryPvS1_RK14hkIntSpaceUtilP27hknpCollisionQueryCollector
