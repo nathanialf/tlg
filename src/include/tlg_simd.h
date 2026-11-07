@@ -74,6 +74,35 @@ inline Vec4 setFromScalars(const Vec4 &a, const Vec4 &b, const Vec4 &c, const Ve
     return _mm_movelh_ps(_mm_unpacklo_ps(a, b), _mm_unpacklo_ps(c, d));
 }
 
+/* The smallest of a vector's first N lanes, in every lane, as Havok's
+ * hkVector4::horizontalMin<N>() is on this platform: lane against lane for
+ * two and three, the halves swapped and then the pairs for four (the weld
+ * command's step fraction, 0x3d9b6 to 0x3da12). derived names. */
+template <int N> inline Vec4 horizontalMin(const Vec4 &v);
+
+template <> inline Vec4 horizontalMin<1>(const Vec4 &v)
+{
+    return broadcast<0>(v);
+}
+
+template <> inline Vec4 horizontalMin<2>(const Vec4 &v)
+{
+    return _mm_min_ps(broadcast<1>(v), broadcast<0>(v));
+}
+
+template <> inline Vec4 horizontalMin<3>(const Vec4 &v)
+{
+    const Vec4 xy = _mm_min_ps(broadcast<1>(v), broadcast<0>(v));
+    return _mm_min_ps(broadcast<2>(v), xy);
+}
+
+template <> inline Vec4 horizontalMin<4>(const Vec4 &v)
+{
+    const Vec4 sum0 = _mm_min_ps(_mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 0, 3, 2)), v);
+    const Vec4 sum1 = _mm_shuffle_ps(sum0, sum0, _MM_SHUFFLE(2, 3, 0, 1));
+    return broadcast<0>(_mm_min_ps(sum0, sum1));
+}
+
 /* The bits set in a word, counted a nibble at a time through a table in a
  * vector register (SSSE3's byte shuffle) and summed by the byte sum of
  * absolute differences, as Havok's bit count is on this platform (the same

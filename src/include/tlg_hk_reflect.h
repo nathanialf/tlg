@@ -13243,7 +13243,8 @@ class hknpExternMeshShape;
  * fills the four layers. hknpBroadPhaseConfig's hkClass parent is
  * hkReferencedObject (built at 0x3d297). hknpDefaultBroadPhaseConfig's finish
  * constructor 0x154d90 is out of line, jumped to by the finish callback
- * FUN_0003d1d0 and called by the reflection initializer at 0x3d387. */
+ * 0x3d1d0 (the initializer's file's own) and called by the reflection
+ * initializer at 0x3d387. */
 class hknpBroadPhaseConfig : public hkReferencedObject
 {
   public:

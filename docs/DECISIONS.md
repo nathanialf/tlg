@@ -1954,6 +1954,31 @@ established. The bracket stays as the bound on upstream changes considered
 for a backport; D36 is a reversion inside it, taken on the region's
 measurement alone.
 
+**Addendum, 2026-11-07 (round 75B): the magnitude's spelling.** D32 fixes
+the compiler and leaves the magnitude's source a question; two witnesses
+answer it. 0x19ff0 (the quaternion from an axis and an angle, 26 of 28 with
+the intrinsic) and 0x2a5c0 (the mass properties under a scale, 107 of 108:
+the uniform branch's `x * x * f` needs the square's rank at most the
+magnitude's, where the `psrli` call is the entry's second unmovable and the
+square comes from the scale read again after the centre's store, the
+seventh) each order a product the way Reassociate orders it when the shift
+is an IR `lshr`, and no order of their statements reaches the base with the
+call. Written with the GCC vector extension's shift on unsigned lanes,
+`(bits + bits) >> one`, the shift is an `lshr <4 x i32>` that 3.3's
+InstCombine leaves as it is (no sign-mask `and`, as the base), selected as
+`vpaddd; vpsrld $1`, and ranked from its operands; both functions compile
+equal. The spelling is one helper, `hkMath::quadFabs` in
+`src/include/tlg_hk_reflect.h`, with `hkMath::fabs` over it, and the
+measurement is every claimed user: the commit that claims 0x2a5c0 and
+0x19ff0 (fdf25e3) passed the gate over 2,703 rows with hkMath::fabs
+respelled (its four claimed users, 0x396b0, 0x3bf20, 0x151e10, 0x16a4b0,
+still equal), and the next (b841053) moved the 22 files whose own helper
+or inline pair spelled the intrinsic (24 claimed functions) onto the one
+helper, every row still equal. No claimed function needs the call's rank,
+so the developer's magnitude is the lshr form. Trigger to revisit: a
+library function whose base order needs the magnitude ranked at the call's
+position.
+
 ## D33. The library compiler counts no debug intrinsic in the inline cost's vector bonus nor in the memory dependence scan limit (2026-10-29)
 
 **Decision.** The library prefix compiles with a seventh and an eighth

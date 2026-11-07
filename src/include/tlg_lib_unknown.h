@@ -538,7 +538,7 @@ struct Output0002b3b0 /* derived name */
     u8 unknown8[8];
     Vec4 vector10;
     u8 unknown20[0x10];
-    float values[4];
+    Vec4 distances; /* derived name: the points' (0x3d860 reads them as one vector) */
     Vec4 vectors[4];
 };
 
@@ -551,6 +551,10 @@ void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion 
                   const hknpMotion *motionB, Output0002b3b0 *out); /* derived name */
 void FUN_00034920(Pair08Owner *self, const Info0002b180 *info, const hknpMotion *motionA,
                   const hknpMotion *motionB, Output0002b3b0 *out); /* derived name */
+/* The velocity of each of the output's points relative to the two motions,
+ * along its normal (0x40070). derived name. */
+void FUN_00040070(const Output0002b3b0 *output, const hknpMotion *motionA,
+                  const hknpMotion *motionB, Vec4 *velocities); /* derived name */
 
 /* What the character proxy's signal hands over second (derived names;
  * hknpCharacterProxy's slot 5, 0x176cc0, reads it): the two bodies' ids at
@@ -726,6 +730,12 @@ struct hknpMotionWeldTOICommand : public hknpCommand {
      * 0x171040 jumps to it): the bodies' ids, then the record's normal and
      * four positions. derived name. */
     void FUN_00170f20(const hknpWorld *world, hkOstream &out) const;
+    /* The fraction of the step at which the record's closest point would
+     * reach the allowed distance (0x3d860; the command printer's slot 5,
+     * 0x170aef, tests it against one): each point's distance against its
+     * distance after the step's relative velocity, the smallest over the
+     * record's points, one with none. derived name. */
+    Vec4 FUN_0003d860(const hknpWorld *world, const Vec4 &allowedDistance) const;
 
     u8 unknown8[4];
     u32 bodyIdA; /* derived name */
