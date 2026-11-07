@@ -10863,7 +10863,9 @@ struct hknpWorld {
     /* The material library: the constructor subscribes 0x4bc60 to its
      * materialAddedSignal and 0x4bc40 to its materialModifiedSignal. */
     hknpMaterialLibrary *materialLibrary; /* derived name */
-    u8 unknown650[8];
+    /* The motion properties (0x1646f0 reads a motion's damping from its
+     * entry). derived name. */
+    struct hknpMotionPropertiesLibrary *motionPropertiesLibrary;
     hknpBodyQualityLibrary *qualityLibrary; /* derived name */
     /* A bit per material id: FUN_0004bc40, the handler of the library's
      * materialModifiedSignal, sets the id's bit; FUN_0004bc60, the handler
@@ -18359,6 +18361,34 @@ class hknpVehicleInstance : public hknpUnaryAction
                       const hkArray<float> &suspensionForceAtWheel,
                       const hkArray<float> &totalLinearForceAtWheel,
                       struct hknpVehicleJobResults &vehicleResults);
+
+    /* A velocity accumulator of the vehicle's step (derived names): the
+     * linear and angular velocities at +0x10 and +0x20, a rotation's
+     * columns from +0x40 that the angular one is taken through. */
+    struct VelocityAccumulator {
+        u8 unknown0[0x10];
+        Vec4 linearVelocity;
+        Vec4 angularVelocity;
+        u8 unknown30[0x10];
+        Vec4 rotation[3];
+    };
+
+    /* One of the two bodies' entries the step builds (0x1632d0) and damps
+     * (0x1646f0), 0x60 bytes, its accumulator at +0x30. derived names. */
+    struct BodyEntry {
+        u8 unknown0[0x30];
+        VelocityAccumulator *accumulator;
+        u8 unknown38[0x28];
+    };
+
+    /* The two bodies' velocities damped for a step (0x1646f0; the step at
+     * 0x164d72): the chassis's when its motion has a solver id, the other
+     * body's when it is not static and not the chassis; each velocity
+     * scaled by one less the time times its motion's damping (at least
+     * zero), handed out, and the angular one taken through the
+     * accumulator's rotation. derived name. */
+    void FUN_001646f0(const int *bodyIds, BodyEntry *entries, Vec4 *linearVelocitiesOut,
+                      Vec4 *angularVelocitiesOut, float deltaTime);
 
     hknpWorld *world;
     hknpVehicleData *data;

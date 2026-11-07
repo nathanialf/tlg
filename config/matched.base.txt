@@ -2684,3 +2684,4 @@ FUN_0007acc0 src/libs/unknown/func_0007acc0.cpp _GLOBAL__I_a
 FUN_00082cd0 src/libs/unknown/func_00082cd0.cpp _GLOBAL__I_a
 FUN_00033d70 src/libs/unknown/func_00033d70.cpp _ZNK27hknpStaticCompoundShapeTree12FUN_00033d70ERKNS_8TreeSlotEPj
 FUN_000a8f80 src/libs/unknown/func_000a8f80.cpp _ZNK27hknpCompressedMeshShapeTree12FUN_000a8f80ERKNS_8TreeSlotEPj
+FUN_001646f0 src/libs/unknown/func_001646f0.cpp _ZN19hknpVehicleInstance12FUN_001646f0EPKiPNS_9BodyEntryEPDv4_fS5_f
