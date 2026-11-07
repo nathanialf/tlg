@@ -127,3 +127,9 @@ D_1696a60 src/libs/unknown/func_0003f090.cpp
 D_1696ab0 src/libs/unknown/func_0003f090.cpp
 D_16a1890 src/libs/unknown/func_00089ca0.cpp
 D_1694170 src/libs/unknown/func_00038780.cpp
+D_1697b30 src/libs/unknown/func_00042a70.cpp
+D_1697b80 src/libs/unknown/func_00042a70.cpp
+D_1697c00 src/libs/unknown/func_00042a70.cpp
+D_16a1730 src/libs/unknown/func_00089940.cpp
+D_16a1780 src/libs/unknown/func_00089940.cpp
+D_16a17b0 src/libs/unknown/func_00089940.cpp

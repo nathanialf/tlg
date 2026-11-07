@@ -369,6 +369,14 @@ template <> struct IsPodType<double> {
     enum { result = 1 };
 };
 
+/* hkVector4 is plain old data (Havok's declares itself so): pushed onto an
+ * array through its own assignment, a vector load the walk before it has
+ * already made (the unique positions' add, 0xaa9db's load reused at
+ * 0xaaa76). */
+template <> struct IsPodType<hkVector4> {
+    enum { result = 1 };
+};
+
 template <bool POD> struct PodSelect {
     typedef TypeIsClass type;
 };
@@ -611,6 +619,21 @@ template <typename T> struct hkArrayBase /* derived name */ {
         }
     }
 
+    /* numToRemove elements from an index removed, those after them moved
+     * down in place eight bytes at a time, as the one-element form (the
+     * block stream's blocks, 0x94f80). derived name. */
+    void removeAtAndCopy(int index, int numToRemove)
+    {
+        destructElements(data + index, numToRemove);
+        size -= numToRemove;
+        const int numBytes = (size - index) * sizeof(T);
+        char *const dst = reinterpret_cast<char *>(data + index);
+        const char *const src = reinterpret_cast<const char *>(data + index + numToRemove);
+        for (int i = 0; i < numBytes; i += 8) {
+            *reinterpret_cast<u64 *>(dst + i) = *reinterpret_cast<const u64 *>(src + i);
+        }
+    }
+
     void removeAt(int index)
     {
         data[index].~T();
@@ -840,8 +863,10 @@ struct hkArray : public hkArrayBase<T> {
 
     /* Elements copied in at an index, those after it moved up first
      * through the overlapping move (defined in tlg_lib_unknown.h; the XML
-     * reader's text and tags, 0x19dc0e). */
-    void insertAt(int index, const T *elements, int numElements);
+     * reader's text and tags, 0x19dc0e). Inline by keyword: the block
+     * stream's move of a range's blocks holds it whole, past the plain
+     * threshold (0x94e10). */
+    inline void insertAt(int index, const T *elements, int numElements);
 
     using hkArrayBase<T>::clearAndDeallocate;
     using hkArrayBase<T>::pushBack;
@@ -2229,6 +2254,29 @@ class hkCriticalSection
 
     pthread_mutex_t m_mutex; /* the name the check's text gives */
     int spinCount;           /* derived name */
+};
+
+/* The section held for a scope (derived name, after Havok's): entered by the
+ * constructor, left by the destructor, after every object the scope built
+ * later is destroyed (the free-list allocator's walk 0x2f10 frees its
+ * filter's blocks before the leave on both of its returns). */
+class hkCriticalSectionLock /* derived name */
+{
+  public:
+    /* Both inline by keyword, as Havok forces them: the walk holds the
+     * spinning enter whole (cookbook 164). */
+    inline hkCriticalSectionLock(hkCriticalSection *section) : m_section(section)
+    {
+        m_section->enter();
+    }
+
+    inline ~hkCriticalSectionLock()
+    {
+        m_section->leave();
+    }
+
+  private:
+    hkCriticalSection *m_section;
 };
 
 /* hkRefPtr, a counted reference (the reflection's TYPE_POINTER members a
@@ -4586,6 +4634,11 @@ class hkxAnimatedMatrix : public hkReferencedObject
 /* hkxEnum::Item (hkClass 0x57c6fc0, built at 0x899b1: size 0x10): value
  * (INT32) at +0, name (STRINGPTR) at +8. */
 struct hkxEnumItem {
+    /* The name finished (the type info's finish callback, folded by the
+     * linker into hkMonitorStreamStringMap::StringMap's 0xd520, the same
+     * layout). */
+    hkxEnumItem(hkFinishLoadedObjectFlag flag) : name(flag) {}
+
     int value;
     hkStringPtr name;
 };
@@ -4890,6 +4943,12 @@ class hknpTyremarksInfo : public hkReferencedObject
 /* hknpTyremarkPoint (hkClass 0x57c1190, size 0x20, record table at
  * 0x1697b30): pointLeft and pointRight. */
 struct hknpTyremarkPoint {
+    hknpTyremarkPoint() {}
+
+    /* The finish constructor: nothing to fix up (its type info's finish
+     * callback is the empty body 0x3b640). */
+    hknpTyremarkPoint(hkFinishLoadedObjectFlag flag) {}
+
     Vec4 pointLeft;
     Vec4 pointRight;
 };
@@ -20085,6 +20144,13 @@ struct hkBlockStream /* derived name */
      * (0x94a10; the world's streams move their pairs on with it, 0x174fbc).
      * derived name. */
     void FUN_00094a10(BlockCache *cache, hkBlockStream *other);
+
+    /* The blocks a range of the stream spans moved to the stream's end, in
+     * their order: copied onto the end, removed from their place, the
+     * blocks from there renumbered and the links mended (0x94e10; the
+     * collide step moves its ranges with it, 0x64a7d). The cache is not
+     * used. derived name. */
+    void FUN_00094e10(BlockCache *cache, const hkBlockStreamRange *range);
 
     /* The stream set up over a cache (0x94750): the cache's allocator
      * kept, nothing counted or freed, the zeroing chosen, and its first

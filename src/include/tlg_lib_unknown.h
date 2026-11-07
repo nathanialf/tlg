@@ -1471,12 +1471,13 @@ void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
 
 /* Primary slots 13, 14, 15, 18 and 21 (interface slots 2, 3, 4, 7 and 10),
  * each run under the spinning mutex at +0x10; reached through the second
- * base by the thunks 0x32d0, 0x3490, 0x3570, 0x3130 and 0x3700. Slot 15
+ * base by the thunks 0x32d0, 0x3490, 0x3570, 0x3130 and 0x3700 (slot 18,
+ * 0x2f10, and slot 21 are the class's members, their thunks emitted with
+ * them). Slot 15
  * stores its limit at +0xb50 and returns 0. */
-void FUN_00003140(TwoBaseAllocator *self);                  /* derived name */
-void FUN_000032e0(TwoBaseAllocator *self, int value);       /* derived name */
-int FUN_000034a0(TwoBaseAllocator *self, u64 limit);        /* derived name */
-int FUN_00002f10(TwoBaseAllocator *self, void *a, void *b); /* derived name */
+void FUN_00003140(TwoBaseAllocator *self);            /* derived name */
+void FUN_000032e0(TwoBaseAllocator *self, int value); /* derived name */
+int FUN_000034a0(TwoBaseAllocator *self, u64 limit);  /* derived name */
 
 /* The filter TwoBaseAllocator's slot 7 (0x2f10) walks its base allocator
  * through (0x301d): the large blocks the allocator itself holds, sorted
@@ -1497,6 +1498,11 @@ struct MemoryWalkFilter000015c0 /* derived name */
     MemoryWalkCallback callback;
     void *callbackParam;
 };
+
+/* The default allocator over the system heap (derived name; Havok's
+ * hkMallocAllocator keeps one): a pointer to the static instance 0x57b7b00
+ * (func_00004b30.cpp), read by the walk 0x2f10 for its filter's blocks. */
+extern AllocatorBase *D_16dc138;
 
 void FUN_000015c0(void *start, unsigned long size, bool allocated, int pool,
                   void *param); /* derived name */
@@ -1986,17 +1992,12 @@ class BufferAllocator : public AllocatorBase /* derived name */
     };
 
     /* The freed blocks, an array over 64 entries of its own storage that
-     * the destructor does not give back. derived name. */
-    struct FreeBlockList {
-        FreeBlockList()
-            : data(storage), size(0),
-              capacityAndFlags(64 | hkArray<FreeBlock>::DONT_DEALLOCATE_FLAG)
-        {
-        }
+     * the destructor does not give back (the array's members without its
+     * destructor; the allocation removes a block with removeAtAndCopy,
+     * 0x90cea). derived name. */
+    struct FreeBlockList : public hkArrayBase<FreeBlock> {
+        FreeBlockList() : hkArrayBase<FreeBlock>(storage, 0, 64) {}
 
-        FreeBlock *data;
-        int size;
-        int capacityAndFlags;
         FreeBlock storage[64];
     };
 
@@ -5925,6 +5926,11 @@ struct BroadPhaseTree00142a40 /* derived name */
      * name. */
     void FUN_0013cf50(u32 bodyIndex, const struct hknpBody *bodies);
 
+    /* Bodies' boxes removed from the tree, each from the leaf its broad
+     * phase id names (0x13db00; the layers' removal at 0x14146e). derived
+     * name. */
+    void FUN_0013db00(const u32 *bodyIndices, int numBodies, const struct hknpBody *bodies);
+
     /* A bucket taken, the last free one when there is one, else a new one
      * at the end, its count and its age cleared; its index back. derived
      * name. */
@@ -6184,6 +6190,12 @@ class BroadPhaseLayers00142a40 /* derived name */
      * lowest and highest marked ids kept. derived name. */
     void FUN_00143390(const u32 *ids, int numIds, int striding);
 
+    /* Bodies taken out of the layers' trees (0x1412e0): one body straight
+     * from its leaf, several gathered layer by layer in a stack buffer and
+     * removed from each layer's tree; each removed body's mark cleared and
+     * its layer flagged for the update. derived name. */
+    void FUN_001412e0(const hknpBodyId *bodyIds, int numBodies, const hknpBody *bodies);
+
     /* Slot 7 (0x142e00): the tasks made on first use, then set up from the
      * arguments as they came. derived name. */
     void FUN_00142e00(void *argument1, void *argument2, void *argument3,
@@ -6266,6 +6278,16 @@ void FUN_00197c60(const hknpWorldContextPool::Context *context, hknpCollisionFil
 /* The work the broad phase's update runs first (0x141500, 0x1533 bytes).
  * derived name. */
 void FUN_00141500(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies);
+
+/* Boxes removed from one leaf of a tree (0x13d110, defined with the
+ * layers' removal 0x1412e0, whose single body it takes, and called by the
+ * tree's removal 0x13db00): each key's entry taken out of the leaf's
+ * bucket, the entries after it moved down, the freed slot reset, and the
+ * leaf's box rebuilt from the rest when the removed box reached its edge; a
+ * bucket left with nothing makes the leaf's box empty. The bodies are not
+ * read. derived name. */
+void FUN_0013d110(const u32 *keys, int numKeys, const hknpBody *bodies,
+                  BroadPhaseTree00142a40 *tree, int nodeIndex);
 
 /* One of the three 16-byte tasks BroadPhaseTasks0018d640's constructor
  * builds (vtable 0x16a6690, address point 0x16a66a0, no type info; slot 1
@@ -7266,6 +7288,27 @@ struct IndexLists000477f0 /* derived name */
     u8 unknown0[0x28];
     IndexList000477f0 *lists;
     int numLists;
+};
+
+/* Positions kept once each (derived names; the mesh builder 0x9b500 keeps
+ * one on its stack, its arrays and map freed at its end): the positions, a
+ * map from a position's hash to the first entry of its chain, and the
+ * chains' entries, each a position's index and the next entry's (-1 ends
+ * the chain). */
+struct UniquePositions000aa8b0 /* derived name */
+{
+    struct Entry {
+        int positionIndex;  /* derived name */
+        int nextEntryIndex; /* derived name */
+    };
+
+    /* The index of a position equal in x, y and z, the position added when
+     * there is none (0xaa8b0). derived name. */
+    int FUN_000aa8b0(const hkVector4 &position);
+
+    hkArray<hkVector4> positions; /* derived name */
+    OwnedPointerMap hashMap;      /* derived name */
+    hkArray<Entry> entries;       /* derived name */
 };
 
 #endif
