@@ -3,7 +3,7 @@
 
 /* derived name: slot 6 of hkpRagdollConstraintData's vtable (address point 0x169d0e0):
  * the constraint's info from its atoms, by the shared FUN_00082890. */
-void hkpRagdollConstraintData::FUN_0007dce0(hkpConstraintData::ConstraintInfo &infoOut) const
+void hkpRagdollConstraintData::unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const
 {
     hkpConstraintData::FUN_00082890(&atoms, sizeof(Atoms), infoOut);
 }

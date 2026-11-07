@@ -985,6 +985,13 @@ inline void hkArrayBase<T>::setSizeElements(int n, const T &fill, hkTrait::TypeI
     }
 }
 
+template <typename T, typename Allocator> inline void hkArray<T, Allocator>::reserveExactly(int n)
+{
+    if (this->getCapacity() < n) {
+        FUN_00000a70(Allocator::get(), this, n, sizeof(T));
+    }
+}
+
 template <typename T, typename Allocator>
 inline void hkArray<T, Allocator>::insertAt(int index, const T *elements, int numElements)
 {
@@ -5521,6 +5528,35 @@ struct BroadPhaseTree00142a40 /* derived name */
     /* The thread's heap. */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* A body's box added (0x13cf50; the layer's additions at 0x13d59e and
+     * 0x141116): its entry keyed by the body's index, its centre doubled;
+     * an empty tree first given a root leaf over a new bucket, else the leaf
+     * the entry goes to found from the root (0x1981e0); the entry put in
+     * that leaf (0x13bc20) and the tree refitted (0x197610). derived
+     * name. */
+    void FUN_0013cf50(u32 bodyIndex, const struct hknpBody *bodies);
+
+    /* A bucket taken, the last free one when there is one, else a new one
+     * at the end, its count and its age cleared; its index back. derived
+     * name. */
+    int allocateBucket()
+    {
+        if (freeBuckets.getSize()) {
+            const int index = freeBuckets[freeBuckets.getSize() - 1];
+            freeBuckets.popBack();
+            Bucket &bucket = buckets[index];
+            bucket.numEntries = 0;
+            bucket.age = 0;
+            return index;
+        }
+        const int index = buckets.getSize();
+        buckets.expandOne();
+        Bucket &bucket = buckets[index];
+        bucket.numEntries = 0;
+        bucket.age = 0;
+        return index;
+    }
+
     /* The root node, none when the tree is empty. derived name. */
     const Node *getRoot() const
     {
@@ -5535,6 +5571,36 @@ struct BroadPhaseTree00142a40 /* derived name */
     hkArray<int> freeBuckets;
     /* A subtree with no more boxes than this becomes one leaf (0x13f52e). */
     int maxLeafEntries;
+};
+
+/* The leaf a new entry goes to by its doubled centre, from a node down
+ * (0x1981e0; -1 for the root's parent): its index back. derived name. */
+int FUN_001981e0(BroadPhaseTree00142a40::Node *node, BroadPhaseTree00142a40 *tree,
+                 const u32 (&centre2)[3], int parentIndex);
+
+/* Entries put in a leaf's bucket (0x13bc20), the bodies' boxes read.
+ * derived name. */
+void FUN_0013bc20(const BroadPhaseTree00142a40::Entry *entries, int numEntries,
+                  const hknpBody *bodies, BroadPhaseTree00142a40 *tree, int nodeIndex);
+
+/* A record 0x14a990 fills and sorts (derived names), 0x50 bytes: three
+ * vectors; a key at +0x30, a float's bits made to sort as unsigned (the
+ * sign bit set, every bit flipped when it was set), zero when the byte at
+ * +0x34 is 3; a pointer at +0x38; the record's index with its top bit set
+ * at +0x40. Ordered by the key as unsigned (0x14a3b5's `jb`); a copy is
+ * the vectors one by one, then the rest as one block (0x14a3f9). */
+struct SortRecord0014a340 /* derived name */
+{
+    bool operator<(const SortRecord0014a340 &other) const
+    {
+        return key < other.key;
+    }
+
+    hkVector4 vectors[3];
+    u32 key;
+    u8 type;
+    void *pointer;
+    u16 index;
 };
 
 /* The walk of a tree into a flat list (0x13b790, recursive): an item per

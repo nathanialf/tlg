@@ -3,7 +3,7 @@
 
 /* derived name: slot 20 of hkpLinearClearanceConstraintData's vtable (address point 0x16a0300): 120 bytes of runtime and
  * 14 solver results. */
-void hkpLinearClearanceConstraintData::FUN_00083a10(
+void hkpLinearClearanceConstraintData::unknownVirtual20(
     hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const /* derived name */
 {
     infoOut.sizeOfExternalRuntime = 120;

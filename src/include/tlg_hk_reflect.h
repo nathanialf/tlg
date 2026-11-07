@@ -735,6 +735,11 @@ struct hkArray : public hkArrayBase<T> {
      * swap, 0x188650). */
     explicit inline hkArray(int n);
 
+    /* Storage for n elements exactly, grown from the allocator only when
+     * smaller (defined in tlg_lib_unknown.h; the free-list array's growth,
+     * 0x41109). */
+    inline void reserveExactly(int n);
+
     /* A copy of another array: empty, then its elements appended (defined
      * in tlg_lib_unknown.h; the loaded image's constructor 0x1a04d0, the
      * storage taken at the other's size when it has any). */
@@ -5287,6 +5292,10 @@ class hkMemoryMeshVertexBuffer : public hkMeshVertexBuffer
      * name. */
     void FUN_00027ae0(int elementIndex, hkMeshVertexBuffer::LockedVertices::Buffer &buffer);
 
+    /* Slot 5 (0x277e0): the buffer itself, referenced again, when it can
+     * be shared; else a new buffer of its format and vertex count with the
+     * vertex memory copied. */
+    hkMeshVertexBuffer *FUN_00025590();
     bool FUN_00027280() const; /* vtable slot 6; derived name */
     int FUN_00027290() const;  /* vtable slot 8; derived name */
     /* Slot 9 (0x279a0): every element locked over the vertex memory from
@@ -6130,6 +6139,13 @@ struct hkAabb {
 
     void FUN_0014a1f0(); /* derived name */
     void FUN_0014a220(); /* derived name */
+
+    /* The extent on each axis (Havok's getExtents). */
+    Vec4 getExtents() const
+    {
+        return _mm_sub_ps(max, min);
+    }
+
     /* Whether the box is valid: min at most max in x, y and z, and both
      * corners ordered numbers there (0x184660; the geometry processing's
      * 0xb86e0 asks it). derived name. */
@@ -6421,14 +6437,15 @@ struct hknpStaticCompoundShapeTree : public hkcdStaticTree::DefaultTreeStorage6 
         const hkcdStaticTree::Codec3Axis6 *node;
     };
 
-    /* The walk under a slot (0x33d70): whether any leaf below it has its
-     * instance's bit set in the filter. derived name. */
-    bool FUN_00033d70(const TreeSlot &slot, const u32 *filter) const;
+    /* The walk under a slot (0x33d70, recursive): whether any leaf below
+     * it has its instance's bit set in the filter; an inner node's own bit
+     * set to the answer on the way back. derived name. */
+    bool FUN_00033d70(const TreeSlot &slot, u32 *filter) const;
 
     /* Whether any leaf has its instance's bit set in the filter: false
      * without nodes, else the walk from the root (inline in 0x33b30).
      * derived name. */
-    bool anyLeafEnabled(const u32 *filter) const /* derived name */
+    bool anyLeafEnabled(u32 *filter) const /* derived name */
     {
         if (nodes.size == 0) {
             return false;
@@ -6834,9 +6851,10 @@ struct hknpCompressedMeshShapeTree
         const hkcdStaticTree::Codec3Axis5 *node;
     };
 
-    /* The walk under a slot (0xa8f80): whether any leaf below it has its
-     * section's bit set in the section bits. derived name. */
-    bool FUN_000a8f80(const TreeSlot &slot, const u32 *sectionBits) const;
+    /* The walk under a slot (0xa8f80, recursive): whether any leaf below
+     * it has its section's bit set in the section bits; an inner node's own
+     * bit set to the answer on the way back. derived name. */
+    bool FUN_000a8f80(const TreeSlot &slot, u32 *sectionBits) const;
 
     /* After the keys' bits, a bit for each section's leaf, set when any of
      * the section's eight words of key bits is (0xa92c0); then the tree
@@ -7022,6 +7040,11 @@ struct hknpShapeInstance {
      * type info's finish callback is the empty body). */
     hknpShapeInstance(hkFinishLoadedObjectFlag flag) : shape(flag) {}
 
+    /* A new instance (inline in the free-list array's growth, 0x410a0): the
+     * identity transform, a unit scale, no shape, both tags invalid, enabled,
+     * the padding cleared. Defined after the vector constants. */
+    inline hknpShapeInstance();
+
     /* The transform with the scale applied to its rotation, column by
      * column (0x3ea90). derived name. */
     void FUN_0003ea90(hkTransform &transformOut) const;
@@ -7052,7 +7075,7 @@ struct hknpShapeInstance {
         HAS_SCALE = 0x8,         /* derived name */
         FLIP_ORIENTATION = 0x10, /* derived name */
         SCALE_SURFACE = 0x20,    /* derived name */
-        IS_ENABLED = 0x40 /* derived name: the compound's key walk skips one without it (0x4196b) */
+        IS_ENABLED = 0x40 /* derived name: a new instance's (0x4120b); the compound's key walk skips one without it (0x4196b) */
     };
 
     int getFlags() const /* derived name */
@@ -7116,6 +7139,14 @@ struct hknpShapeInstance {
     static hkBool32 isEmpty(const hknpShapeInstance &instance)
     {
         return instance.padding[4] != 0;
+    }
+
+    /* A free instance: the marker set, the next free index in the first
+     * word of its padding (0x41223, 0x41229). */
+    static void setEmpty(hknpShapeInstance &instance, int next)
+    {
+        instance.padding[4] = 0xff;
+        *reinterpret_cast<int *>(instance.padding) = next;
     }
 
     hkTransform transform;
@@ -10036,6 +10067,30 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
         elements.setSizeUnchecked(0);
     }
 
+    /* Room for at least growBy more elements, the storage at least
+     * doubled, each new element built and put on the free list in order
+     * ahead of the old free ones (0x410a0 for the compound shapes'
+     * instances, which their constructor calls twice). */
+    void grow(int growBy)
+    {
+        const int oldCapacity = elements.getSize();
+        const int newCapacity =
+            hkMath::max2(oldCapacity + growBy, oldCapacity ? 2 * oldCapacity : 1);
+        const int numNew = newCapacity - oldCapacity;
+        elements.reserveExactly(newCapacity);
+        elements.expandByUnchecked(numNew);
+        const int last = newCapacity - 1;
+        for (int i = oldCapacity; i <= last; i++) {
+            Id id;
+            id.value = i;
+            T &element = elements[id.value];
+            const int next = i < last ? i + 1 : firstFree;
+            new (&element) T();
+            Ops::setEmpty(element, next);
+        }
+        firstFree = oldCapacity;
+    }
+
     /* An element given back: destroyed, made the free list's head (its
      * operations mark it empty over the old head), the id the head (the
      * material library's removal, 0x77cf6). */
@@ -10396,7 +10451,9 @@ struct hknpWorldSignals /* derived name */
     Signal00093530 signal50;
     Signal00093530 signal58;
     Signal00093530 signal60;
-    Signal00093530 signal68;
+    /* Fired with the world and a motion's id as its last body leaves it
+     * (0x4c46c), before the motion is given back. derived name. */
+    hkSignal2<hknpWorld *, int> motionDestroyedSignal;
     Signal00093530 signal70;
     Signal00093530 signal78;
     Signal00093530 signal80;
@@ -10719,6 +10776,15 @@ struct hknpWorld {
      * whole attached group when it heads one alone (0x4c720, called at
      * 0x5b725 and 0x5baf4). derived name. */
     void FUN_0004c720(const hknpBody *body);
+
+    /* A body detached from its motion (0x4c420; the body removals at
+     * 0x4eb67 and 0x4ee57, the motion changes at 0x5b734 and 0x5baff): the
+     * last body of a motion destroys it (the signal fired, the motion given
+     * back); otherwise the body leaves the motion's ring of attached bodies
+     * and a motion still with a solver id whose bodies are all out of the
+     * broad phase leaves its cell's list. The body keeps no motion.
+     * derived name. */
+    void FUN_0004c420(hknpBody *body);
     /* A body put on the active list with its motion (0x4c5f0; the body
      * adds at 0x4da46, 0x4de11 and 0x4ee7b): the motion's record given the
      * body's two low bits and its byte cleared, the motion into its cell's
@@ -13001,6 +13067,17 @@ struct hkpSolverResults /* derived name */
 /* The string library's memory fill (derived name; a wrapper over memset). */
 void FUN_00018160(void *dst, int value, unsigned int n); /* derived name */
 
+/* The transform and the scale copied whole from the constant table (one
+ * 64-byte and one 16-byte copy, lowered as such, 0x41136 to 0x411e6). */
+inline hknpShapeInstance::hknpShapeInstance()
+    : transform(reinterpret_cast<const hkTransform &>(identityTransform())),
+      scale(reinterpret_cast<const hkVector4 &>(D_14b2060[3])), shapeTag(0xffff),
+      destructionTag(0xffff)
+{
+    setFlags(IS_ENABLED);
+    FUN_00018160(padding, 0, sizeof(padding));
+}
+
 class hkpConstraintData : public hkReferencedObject
 {
   public:
@@ -13066,6 +13143,9 @@ class hkpConstraintData : public hkReferencedObject
     enum ConstraintType {
         CONSTRAINT_TYPE_BALLANDSOCKET = 0,
         CONSTRAINT_TYPE_HINGE = 1,
+        CONSTRAINT_TYPE_LIMITEDHINGE = 2,
+        CONSTRAINT_TYPE_PRISMATIC = 6,
+        CONSTRAINT_TYPE_RAGDOLL = 7,
         CONSTRAINT_TYPE_STIFFSPRING = 8,
         CONSTRAINT_TYPE_WHEEL = 9,
         CONSTRAINT_TYPE_BREAKABLE = 12,
@@ -13078,6 +13158,7 @@ class hkpConstraintData : public hkReferencedObject
         CONSTRAINT_TYPE_COG_WHEEL = 22,
         CONSTRAINT_TYPE_FIXED = 23,
         CONSTRAINT_TYPE_DEFORMABLE_FIXED = 24,
+        CONSTRAINT_TYPE_LINEAR_SLACK = 25,
     };
 
     virtual int unknownVirtual5() const = 0;
@@ -13383,16 +13464,22 @@ class hkpPrismaticConstraintData : public hkpConstraintData
     /* The motor set (0x7e7c0; the game at 0xeb15fa), the references
      * swapped. derived name. */
     void FUN_0007e7c0(hkpConstraintMotor *motor);
-    hkBool unknownVirtual7() const;
 
-    void FUN_0007e870(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* Slot 5 (the shared 0x7e900): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_PRISMATIC;
+    }
+
+    /* Slots 6 (0x7e870) and 7 (0x7e8a0). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
+    virtual hkBool unknownVirtual7() const;
     /* The motor on or off, the friction the other way, and the runtime's
      * motor and friction results cleared when there is one (0x7e910,
      * called by the game at 0xeb1966). derived name. */
     void FUN_0007e910(void *runtime, hkBool isEnabled);
-    void FUN_0007e890(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 20 (0x7e890). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     /* Slot 19 (0x7e950): the linear impulse, each lin atom's and the
      * limit's axis column of the first frame's rotation under the first
@@ -14046,13 +14133,19 @@ class hkpLinearClearanceConstraintData : public hkpConstraintData
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    void FUN_000839f0(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* Slot 5 (the shared 0x83aa0): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_LINEAR_SLACK;
+    }
+
+    /* Slot 6 (0x839f0). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
     /* Slot 7 (0x83a20): both frames' rotations orthonormal, each linear
      * limit's range in order and fewer than four angular axes. */
-    hkBool unknownVirtual7() const;
-    void FUN_00083a10(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    virtual hkBool unknownVirtual7() const;
+    /* Slot 20 (0x83a10). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };
@@ -14564,13 +14657,19 @@ class hkpRagdollConstraintData : public hkpConstraintData
      * before it): each motor's reference released, the first first. */
     virtual ~hkpRagdollConstraintData();
 
+    /* Slot 5 (the shared 0x33f90): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_RAGDOLL;
+    }
+
     /* Slot 7 (0x7dd30): as the ragdoll limits' test, after the ball and
      * socket's stabilized method asks for the stabilization atom, the
      * cone's maximum allowed up to pi itself. */
-    hkBool unknownVirtual7() const;
+    virtual hkBool unknownVirtual7() const;
 
-    void FUN_0007dce0(
-        hkpConstraintData::ConstraintInfo &infoOut) const;      /* vtable slot 6; derived name */
+    /* Slot 6 (0x7dce0). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
     void FUN_0007dc90(float newBreachImpulse);                  /* vtable slot 10; derived name */
     float FUN_0007dca0() const;                                 /* vtable slot 13; derived name */
     void FUN_0007dcb0(int bodyIndex);                           /* vtable slot 14; derived name */
@@ -14580,8 +14679,8 @@ class hkpRagdollConstraintData : public hkpConstraintData
     hkResult FUN_0007e2e0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_0007e310(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
-    void FUN_0007dd00(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 20 (0x7dd00). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     void FUN_0007dad0(hkBool enable); /* derived name */
 
@@ -14726,8 +14825,14 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    void FUN_000791f0(
-        hkpConstraintData::ConstraintInfo &infoOut) const; /* vtable slot 6; derived name */
+    /* Slot 5 (the shared 0x365d0): its type. */
+    virtual int unknownVirtual5() const
+    {
+        return CONSTRAINT_TYPE_LIMITEDHINGE;
+    }
+
+    /* Slot 6 (0x791f0). */
+    virtual void unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const;
     /* Slot 7 (0x79220): valid when the stabilized method has its setup
      * enabled, both frames are orthonormal and an enabled motor has its
      * limit enabled. */
@@ -14740,7 +14845,7 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     /* The motor set (0x79140; the game at 0xeb159e), the references
      * swapped. derived name. */
     void FUN_00079140(hkpConstraintMotor *motor);
-    hkBool unknownVirtual7() const;
+    virtual hkBool unknownVirtual7() const;
     /* The motor on or off, the friction the other way, and the runtime's
      * motor and friction results cleared when there is one (0x79100,
      * called by the game at 0xeb19d9). derived name. */
@@ -14754,8 +14859,8 @@ class hkpLimitedHingeConstraintData : public hkpConstraintData
     hkResult FUN_000792d0(float &factorOut) const;              /* vtable slot 18; derived name */
     void FUN_00079300(const void *argument1, const void *argument2, const hkpSolverResults *results,
                       Vec4 &out) const; /* vtable slot 19; derived name */
-    void FUN_00079210(hkBool wantRuntime,
-                      ConstraintRuntimeInfo &infoOut) const; /* vtable slot 20; derived name */
+    /* Slot 20 (0x79210). */
+    virtual void unknownVirtual20(hkBool wantRuntime, ConstraintRuntimeInfo &infoOut) const;
 
     Atoms atoms;
 };

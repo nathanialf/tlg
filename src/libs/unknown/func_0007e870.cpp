@@ -3,7 +3,7 @@
 
 /* derived name: slot 6 of hkpPrismaticConstraintData's vtable (address point 0x169d200):
  * the constraint's info from its atoms, by the shared FUN_00082890. */
-void hkpPrismaticConstraintData::FUN_0007e870(hkpConstraintData::ConstraintInfo &infoOut) const
+void hkpPrismaticConstraintData::unknownVirtual6(hkpConstraintData::ConstraintInfo &infoOut) const
 {
     hkpConstraintData::FUN_00082890(&atoms, sizeof(Atoms), infoOut);
 }

@@ -3,7 +3,7 @@
 
 /* derived name: slot 6 of hkpLinearClearanceConstraintData's vtable (address point 0x16a0300):
  * the constraint's info from its atoms, by the shared FUN_00082890. */
-void hkpLinearClearanceConstraintData::FUN_000839f0(
+void hkpLinearClearanceConstraintData::unknownVirtual6(
     hkpConstraintData::ConstraintInfo &infoOut) const
 {
     hkpConstraintData::FUN_00082890(&atoms, sizeof(Atoms), infoOut);
