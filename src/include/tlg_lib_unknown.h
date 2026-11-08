@@ -622,6 +622,15 @@ class Modifier16a4860 /* derived name */
 };
 
 float *FUN_00034810(Pair08Owner *self, int index); /* derived name */
+/* A point's target velocity in the record, by index (0x34820; the
+ * restitution modifier's slot 7 sets it, 0x15da35). derived name. */
+float *FUN_00034820(Pair08Owner *self, int index); /* derived name */
+/* Called first by the restitution modifier's slot 7 (0x15d87c, with 0).
+ * derived name. */
+void FUN_000348d0(Pair08Owner *self, int value); /* derived name */
+/* Two values of the record set (0x348f0; the restitution modifier's slot
+ * 7 sets a quarter and zero, 0x15dadd). derived name. */
+void FUN_000348f0(Pair08Owner *self, float value0, float value1); /* derived name */
 
 /* What follows the record's entries (derived names): FUN_0002af30 returns
  * its address (past the 32-byte entries from +0x40 and a size the table at

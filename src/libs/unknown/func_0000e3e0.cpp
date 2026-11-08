@@ -56,3 +56,31 @@ hkStringPtr &hkStringPtr::operator=(const hkStringPtr &other)
     assignString(*this, other.cString());
     return *this;
 }
+
+/* The string set from a printf-style format: formatted into a buffer of
+ * 255 characters in place, the buffer doubled while the formatter reports
+ * failure and grown to the length it reports when that is too long. */
+void FUN_0000e790(hkStringPtr *self, const char *format, ...)
+{
+    hkInplaceArray<char, 255> buffer;
+    va_list args;
+    for (;;) {
+        va_start(args, format);
+        const int capacity = buffer.getCapacity();
+        const int numChars = FUN_00017e20(buffer.data, capacity, format, args);
+        va_end(args);
+        if (numChars >= 0 && numChars < capacity) {
+            break;
+        }
+        if (numChars < 0) {
+            buffer.reserve(buffer.getCapacity() * 2);
+        } else {
+            buffer.reserve(numChars + 1);
+        }
+    }
+    /* The buffer's characters assigned twice over, the second time to the
+     * copy the first made (0xe949 and 0xe9d3: the same assignment, the
+     * buffer's data read again after the first's calls). */
+    assignString(*self, buffer.data);
+    assignString(*self, buffer.data);
+}

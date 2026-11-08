@@ -275,6 +275,13 @@ struct hkHalf {
         return value32.real;
     }
 
+    /* Zero or minus zero: the bits but the sign clear (0x15d827: `test
+     * ax, 0x7fff`). derived name. */
+    bool isZero() const
+    {
+        return (value & 0x7fff) == 0;
+    }
+
     /* The upper half of the float's bits (0x30e6b: `vmovd; shr 16`).
      * derived name. */
     void setReal(float r)
@@ -4510,9 +4517,15 @@ struct hknpVehicleDataDefaults /* derived name */
 };
 
 /* hkxSpline::ControlPoint (hkClass 0x57c5f00, size 0x40; its five member
- * records are built at run time by 0x85fc0). */
+ * records are built at run time by 0x85fc0, their names the record
+ * strings): three vectors, then the two ends' types, bytes of the spline's
+ * one enum. */
 struct hkxSplineControlPoint {
-    u8 unknown0[0x40];
+    Vec4 position;
+    Vec4 tangentIn;
+    Vec4 tangentOut;
+    u8 inType;
+    u8 outType;
 };
 
 /* From its record table at 0x16a08c0: controlPoints (an array of
@@ -8798,7 +8811,10 @@ struct hknpManifoldCollisionCache /* derived name */
     /* The second body's material for the cache's shape key, an index of
      * the context's materials (0x172de1). derived name. */
     u16 materialIdB;
-    u8 unknown1e[4];
+    u8 unknown1e[2];
+    /* Cleared by the restitution modifier's slot 7 when it changes a
+     * point's target velocity (0x15dae2). derived name. */
+    u16 value20;
     /* Flags; bits 0 and 2 together ask the modifier slot 0x161f10 for its
      * event. derived name. */
     u16 flags22;
@@ -8887,12 +8903,30 @@ struct ManifoldCreatedInput /* derived name */
  * (0x12a8b0) returns its mask 9; slot 3 (0x15d7c0), called when a manifold
  * is created, gives the cache a zeroed vector under property key 1, which
  * slot 7 (0x15d7f0) reads back. */
+struct hknpSolverInfo;
+struct hknpCdBody;
+struct hknpManifold;
+struct Pair08Owner;
+
 class Modifier16a4de0 /* derived name */
 {
   public:
     void FUN_0015d7c0(const void *threadContext, const void *sharedData, const void *bodyA,
                       const void *bodyB,
                       ManifoldCreatedInput *input); /* vtable slot 3; derived name */
+
+    /* Slot 7 (0x15d7f0), when the manifold's jacobian is built, for a cache
+     * with a restitution: each point whose velocity the property keeps from
+     * the last step approached fast enough, and faster than a quarter of it
+     * still does, given a target velocity of the restitution times that
+     * velocity, over the sub steps and through the point's effective mass;
+     * the kept velocities then the current ones plus a step's distance,
+     * clipped to the manifold's points, and cleared again when a target was
+     * set. derived names. */
+    void FUN_0015d7f0(const void *threadContext, const hknpSolverInfo *solverInfo,
+                      const hknpCdBody *cdBodyA, const hknpCdBody *cdBodyB,
+                      hknpManifoldCollisionCache *cache, const hknpManifold *manifold,
+                      Pair08Owner *jacobian, int jacobianIndex); /* vtable slot 7 */
 };
 
 /* A body as the modifiers receive it (derived names): its material at
