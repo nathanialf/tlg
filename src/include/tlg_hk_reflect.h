@@ -4379,6 +4379,25 @@ class hknpVehicleDefaultSteering : public hknpVehicleSteering
 class hkpVehicleFrictionDescription : public hkReferencedObject
 {
   public:
+    /* What the description is computed from (Havok's
+     * hkpVehicleFrictionDescription::Cinfo; the vehicle data's set-up builds
+     * it on its stack, 0x6e2ac to 0x6e389): the two axles' wheel positions,
+     * the chassis's centre of mass, its three directions, its inverse
+     * inertia and mass, per axle a sum over the axle's wheels and its wheel
+     * radius, the friction equalizer. derived names. */
+    struct Cinfo {
+        Vec4 wheelPosition[2];
+        Vec4 chassisCenterOfMass;
+        Vec4 direction30;
+        Vec4 direction40;
+        Vec4 direction50;
+        hkMatrix3 chassisFrictionInertiaInv;
+        float chassisMassInv;
+        float wheelMassRadiusSum[2];
+        float wheelRadius[2];
+        float frictionEqualizer;
+    };
+
     hkpVehicleFrictionDescription(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
     /* Empty and inline (the shared 0x3b640; hknpVehicleData's destructor
@@ -4505,7 +4524,22 @@ class hknpVehicleData : public hkReferencedObject
     /* The last two of its records (built at 0x6939b: size 0x1b0). */
     Vec4 chassisFrictionInertiaInvDiag;
     hkBool alreadyInitialised;
+
+    /* Set up for a chassis (0x6e0a0, Havok's hknpVehicleData::init): the
+     * wheels counted per axle; the chassis's friction inertia, the
+     * orientation's columns' magnitudes weighted by each torque factor over
+     * its unit inertia, under the motion's inverse mass; the friction
+     * description computed from the chassis and the axles' wheels
+     * (FUN_00083ab0). derived name. */
+    void FUN_0006e0a0(
+        const hkArray<hknpVehicleSuspension::SuspensionWheelParameters> &suspensionWheelParams,
+        const hkTransform &chassisTransform, const struct hknpMotion &chassisMotion);
 };
+
+/* The friction description computed from its construction info (0x83ab0;
+ * the vehicle data's set-up, 0x6e3a2). derived name. */
+void FUN_00083ab0(const hkpVehicleFrictionDescription::Cinfo &cinfo,
+                  hkpVehicleFrictionDescription &descriptionOut);
 
 /* Its members' defaults (the hkClass's, at 0x14bebb8): each member's offset
  * into the values, -1 for one without a default, then the one value, the
@@ -9176,6 +9210,11 @@ struct hkIntSpaceUtil /* derived name */
      * scale's reciprocal; every w zero. derived name. */
     void FUN_000936a0(const hkAabb &newAabb);
 
+    /* A box out of the 16-bit space: each corner's words widened over
+     * zero, the maxima first, scaled back and moved by the low offset
+     * (inline in the world's 0x5fdd0). derived name. */
+    void restoreAabb(const hkAabb16 &aabbIn, hkAabb &aabbOut) const;
+
     /* A box into the 16-bit space (inline in the world's box query,
      * 0x3604c): each corner moved by its offset and scaled, clamped to 0
      * and 32767, truncated to an integer (a lane of 2^31 or more flipped
@@ -9351,6 +9390,16 @@ inline __m128i convertToUint32(const Vec4 &v)
     return _mm_xor_si128(_mm_cvttps_epi32(v), _mm_castps_si128(tooLarge));
 }
 
+inline void hkIntSpaceUtil::restoreAabb(const hkAabb16 &aabbIn, hkAabb &aabbOut) const
+{
+    const __m128i packed = _mm_load_si128(reinterpret_cast<const __m128i *>(&aabbIn));
+    const __m128i zero = _mm_setzero_si128();
+    aabbOut.max = _mm_sub_ps(
+        _mm_mul_ps(_mm_cvtepi32_ps(_mm_unpackhi_epi16(packed, zero)), bitScaleInv), bitOffsetLow);
+    aabbOut.min = _mm_sub_ps(
+        _mm_mul_ps(_mm_cvtepi32_ps(_mm_unpacklo_epi16(packed, zero)), bitScaleInv), bitOffsetLow);
+}
+
 inline void hkIntSpaceUtil::convertAabb(const hkAabb &aabbIn, hkAabb16 &aabbOut) const
 {
     const Vec4 zero = _mm_setzero_ps();
@@ -9458,6 +9507,14 @@ struct hknpBody {
         transform.rotation.col1 = col1;
         transform.rotation.col2 = col2;
         transform.translation = translation;
+    }
+
+    /* The collision look-ahead distance, kept in the translation's w and
+     * read and written as a float there (the world's 0x5fdd0). derived
+     * name. */
+    float *lookAheadDistance()
+    {
+        return reinterpret_cast<float *>(&transform.translation) + 3;
     }
 
     hkTransform transform;
@@ -11999,6 +12056,16 @@ struct hknpWorld {
      * rebuilt unless asked not to (FUN_0005bf80, mode 0), then the body
      * signal fired with the world and the body. derived names. */
     void FUN_0005fcf0(int bodyId, hknpBodyQualityId qualityId, int rebuildMode);
+    /* A body's collision look-ahead distance set, with a velocity its box
+     * is to be swept by (0x5fdd0, Havok's setBodyCollisionLookAheadDistance):
+     * nothing for the same distance and no velocity, nothing for a static
+     * body; the body woken; a positive distance kept in the body's
+     * translation's w and as its motion's largest step (the half's largest
+     * otherwise), the velocity as the motion's cage, and the motion's
+     * bodies updated (FUN_0005b490 inline); otherwise each attached body's
+     * box swept by the velocity over the step. The bodies' changed signal
+     * fired. derived name. */
+    void FUN_0005fdd0(int bodyId, float distance, const Vec4 &tempExpansionVelocity);
     /* The same for a body's collision filter info (0x60100; the qualities'
      * modifier calls it at 0x16ef49). derived name. */
     void FUN_00060100(int bodyId, u32 collisionFilterInfo, int rebuildMode);

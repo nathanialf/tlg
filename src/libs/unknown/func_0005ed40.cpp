@@ -150,3 +150,64 @@ void hknpWorld::FUN_0005dc50(int bodyId, const Vec4 &linearVelocity, const Vec4 
         }
     }
 }
+
+// NONMATCHING: 153 of 192 (810 bytes, the size equal; 38 lines of the side by side differ),
+// the blocks the base's. Left: the registers of the body array and its index (r13, r15 here,
+// r15, rbx in the base, greedy's order); the look-ahead's store addressed from the
+// translation, `lea rax, [r15+rbx+0x30]; vmovss [rax+0xc]` (0x5fe63), where this folds the
+// whole offset; the cage's two shifts and the update's three addresses scheduled the other
+// way (0x5feba to 0x5ff05); and in the sweep the box conversion's multiplies take the scale
+// second (0x5ffee, 0x5fff6), Reassociate's rank order of the two operands (lower first) over
+// this IR putting the scale's load below the sum.
+void hknpWorld::FUN_0005fdd0(int bodyId, float distance, const Vec4 &tempExpansionVelocity)
+{
+    hknpBody &body = bodyManager.bodies[bodyId];
+    if (distance == *body.lookAheadDistance()) {
+        const Vec4 xyz = _mm_blend_ps(_mm_setzero_ps(), _mm_castsi128_ps(_mm_set1_epi32(-1)), 7);
+        if (_mm_testc_si128(_mm_castps_si128(_mm_and_ps(
+                                _mm_cmpeq_ps(tempExpansionVelocity, _mm_setzero_ps()), xyz)),
+                            _mm_castps_si128(xyz))) {
+            return;
+        }
+    }
+    if (body.flags & hknpBody::IS_STATIC) {
+        return;
+    }
+    if (!(body.flags & (hknpBody::IS_STATIC | hknpBody::IS_ACTIVE))) {
+        FUN_0004e0c0(bodyId);
+    }
+
+    if (distance > 0.0f) {
+        *body.lookAheadDistance() = distance;
+        hknpMotion &motion = motionManager.motions[body.motionId];
+        const float maxDistance = *bodyManager.bodies[bodyId].lookAheadDistance();
+        hkHalf maxStep;
+        if (maxDistance > 0.0f) {
+            maxStep.setReal(hkMath::min2(maxDistance, 1.84467265e19f));
+        } else {
+            maxStep.value = 0x5f7f; /* the largest half */
+        }
+        motion.maxLinearAccelerationDistancePerStep = maxStep;
+        const __m128i halves =
+            _mm_packs_epi32(_mm_srai_epi32(_mm_castps_si128(tempExpansionVelocity), 16),
+                            _mm_srai_epi32(_mm_castps_si128(tempExpansionVelocity), 16));
+        const u64 cage = _mm_cvtsi128_si64(halves);
+        motion.linearVelocityCage[0].value = s16(cage);
+        motion.linearVelocityCage[1].value = s16(cage >> 16);
+        motion.linearVelocityCage[2].value = s16(cage >> 32);
+        FUN_0005b490(bodyId, &motion);
+    } else {
+        const Vec4 sweep = _mm_mul_ps(solverInfo.vector20, tempExpansionVelocity);
+        int id = bodyId;
+        do {
+            hknpBody &attached = bodyManager.bodies[id];
+            hkAabb aabb;
+            intSpaceUtil.restoreAabb(attached.aabb, aabb);
+            aabb.max = _mm_max_ps(_mm_add_ps(sweep, aabb.max), aabb.max);
+            aabb.min = _mm_min_ps(_mm_add_ps(sweep, aabb.min), aabb.min);
+            intSpaceUtil.convertAabb(aabb, attached.aabb);
+            id = attached.nextAttachedBodyId;
+        } while (id != bodyId);
+    }
+    signals.bodyChangedSignal.fire(this, bodyId);
+}
