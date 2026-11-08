@@ -3357,6 +3357,14 @@ struct MemoryStatistics /* derived name */
     s64 largestBlock;   /* derived name */
 };
 
+/* An allocator's statistics under its name (derived names; the memory
+ * system's slot 11, 0xc8c0, appends one per allocator): 0x38 bytes. */
+struct MemoryStatisticsEntry /* derived name */
+{
+    hkStringPtr allocatorName;
+    MemoryStatistics allocatorStatistics;
+};
+
 /* An allocator of fixed-size blocks over the free list at +8 (vtable address
  * point 0x168e5c0, slots 0 and 1 the one destructor 0x14a50): blockAlloc and
  * bufAlloc are one body (0x14aa0), blockFree and bufFree another (0x14af0);
@@ -4670,7 +4678,8 @@ class hkMemorySystem
     virtual void unknownVirtual8() = 0;
     virtual void unknownVirtual9() = 0;
     virtual void unknownVirtual10() = 0;
-    virtual void unknownVirtual11() = 0;
+    virtual void
+    getMemoryStatistics(hkArray<struct MemoryStatisticsEntry> &entries) = 0; /* slot 11 */
     virtual void unknownVirtual12() = 0;
     /* Slots 13 and 14 (0xd080 and 0xd0a0): the collection of a thread's
      * router and of what the threads share; slot 15 (0x6cb0), the
@@ -4714,7 +4723,9 @@ class hkFreeListMemorySystem : public hkMemorySystem
     virtual void unknownVirtual8();
     virtual void unknownVirtual9();
     virtual void unknownVirtual10();
-    virtual void unknownVirtual11();
+    /* Slot 11 (0xc8c0): the statistics of the system's allocators,
+     * one named entry each. */
+    virtual void getMemoryStatistics(hkArray<MemoryStatisticsEntry> &entries);
     virtual void unknownVirtual12();
     virtual void garbageCollectThread(hkMemoryRouter &router);
     virtual void garbageCollectShared();
