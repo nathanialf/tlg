@@ -39,11 +39,11 @@ void hknpWorld::FUN_0004c170(int bodyId, int motionId, const hkQuaternion *motio
                        _mm_set1_ps(lookAhead)));
     }
     if (motionOrientation) {
-        body.FUN_0003a690(motion.centerOfMass, motionOrientation);
+        body.FUN_0003a690(motion, motionOrientation);
     } else {
         hkQuaternion orientation;
         orientation.FUN_0001a1c0(body.transform.rotation);
-        body.FUN_0003a690(motion.centerOfMass, &orientation);
+        body.FUN_0003a690(motion, &orientation);
     }
     if (body.broadPhaseId != 0xffffffff) {
         FUN_000cd040(&body, &motion, &quality, &vector250, &solverInfo, &intSpaceUtil);

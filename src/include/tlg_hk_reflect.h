@@ -6263,6 +6263,13 @@ inline const hkMatrix3 &identityRotation() /* derived name */
 /* hkQuaternion (the reflection's TYPE_QUATERNION, its name a string of the
  * executable): four floats in one vector. Field name derived. */
 struct hkQuaternion {
+    /* The first's inverse times the second (derived name; the body's
+     * motion-to-body rotation, 0x3a6ff and 0x3a752): the vector part the
+     * first's real times the second's vector, plus the second's cross the
+     * first's, less the second's real times the first's vector; the real
+     * part the four lanes' dot product. */
+    inline void setInverseMul(const hkQuaternion &a, const hkQuaternion &b);
+
     /* Whether the four lanes are ordered numbers and the length's square
      * is within epsilon of one (0x1a180; the game asks it at 0xeaeda1 and
      * 0xeaf9f0 and tests the int). Row 3 of the constant table is one in
@@ -6521,6 +6528,15 @@ inline Vec4 rotatedInverseDir(const hkQuaternion &q, const Vec4 &v) /* derived n
     const Vec4 imagCrossDir = cross3(v, q.vec);
     result = _mm_add_ps(result, _mm_mul_ps(imagCrossDir, real));
     return _mm_add_ps(result, result);
+}
+
+inline void hkQuaternion::setInverseMul(const hkQuaternion &a, const hkQuaternion &b)
+{
+    const Vec4 xyz = _mm_sub_ps(
+        _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(a.vec, a.vec, _MM_SHUFFLE(3, 3, 3, 3)), b.vec),
+                   cross3(b.vec, a.vec)),
+        _mm_mul_ps(a.vec, _mm_shuffle_ps(b.vec, b.vec, _MM_SHUFFLE(3, 3, 3, 3))));
+    vec = _mm_blend_ps(xyz, _mm_dp_ps(a.vec, b.vec, 0xff), 8);
 }
 
 /* The inverse rotation out of line (0x110c0; called by a motion's set-up at
@@ -9202,10 +9218,11 @@ struct hknpBody {
      * name. */
     void FUN_0003a820(const Vec4 &centerOfMassWorld);
 
-    /* The body placed in its motion's frame: its offset from the centre of
-     * mass in its own space, under the motion's orientation (0x3a690; the
-     * world's attach 0x4c353). derived name. */
-    void FUN_0003a690(const Vec4 &centerOfMassWorld, const hkQuaternion *motionOrientation);
+    /* The body placed in its motion's frame (0x3a690; the world's attach
+     * 0x4c353): the motion's centre of mass in the body's space kept by
+     * FUN_0003a670, and the rotation from the body's orientation (the one
+     * given, else its rotation's) to the motion's packed. derived name. */
+    void FUN_0003a690(const hknpMotion &motion, const hkQuaternion *bodyOrientation);
 
     /* The motion's frame taken from the body's transform (0x3a920; the
      * world's calls at 0x4e485, 0x5bb14 and 0x5cc4d): the inverse of the

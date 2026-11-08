@@ -2827,3 +2827,4 @@ FUN_0004c170 src/libs/unknown/func_0004c170.cpp _ZN9hknpWorld12FUN_0004c170EiiPK
 FUN_0005dc50 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005dc50EiRKDv4_fS2_
 _ZN26hkpPrismaticConstraintDataC1Ev src/libs/unknown/func_0007e3d0.cpp
 _ZN32hkpLinearClearanceConstraintDataC1Ev src/libs/unknown/func_000836d0.cpp
+FUN_0003a690 src/libs/unknown/func_0003a670.cpp _ZN8hknpBody12FUN_0003a690ERK10hknpMotionPK12hkQuaternion
