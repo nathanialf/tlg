@@ -12881,12 +12881,17 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
         key.bodyIdB = 0x7fffffff;
     }
 
-    static bool isEmptyKey(Key key) /* derived name */
+    /* The key tests answer in Havok's hkBool32: each call's result is
+     * tested against zero, which keeps the insert's price at the resize
+     * unit's call 330 against the hint's 325 (not inlined there, as the
+     * base's 0x166f93 calls it) and 270 in the pair filter's 0x167420,
+     * where the base holds it inline. */
+    static hkBool32 isEmptyKey(Key key) /* derived name */
     {
         return key.bodyIdA == 0x7fffffff || key.bodyIdB == 0x7fffffff;
     }
 
-    static bool equalKeys(Key a, Key b) /* derived name */
+    static hkBool32 equalKeys(Key a, Key b) /* derived name */
     {
         return a.bodyIdA == b.bodyIdA && a.bodyIdB == b.bodyIdB;
     }
@@ -12919,6 +12924,21 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
         return int(it) <= hashMod;
     }
 
+    /* A key's value, or the default when the key is not in the map: its
+     * own probe, the value read where the key is found (the pair filter's
+     * count of a pair, 0x167459 and 0x16764d). derived name. */
+    u32 getWithDefault(Key key, u32 defaultValue) const
+    {
+        if (hashMod > 0) {
+            for (u32 i = hash(key, hashMod); !isEmptyKey(elem[i].key); i = (i + 1) & hashMod) {
+                if (equalKeys(elem[i].key, key)) {
+                    return elem[i].value;
+                }
+            }
+        }
+        return defaultValue;
+    }
+
     /* Every slot emptied and the count zeroed, the storage kept; each entry
      * read once for both halves of its key (0x167193). derived name. */
     void clear()
@@ -12942,8 +12962,11 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
      * the map grown to twice its slots first once it is half full
      * (FUN_00166eb0, which inserts the old entries again), the slot found
      * from the key's 64-bit hash, ids swapped (the first in the high
-     * word); whether the key was new. derived names. */
-    int FUN_00166dc0(AllocatorBase &allocator, Key key, u32 value);
+     * word); whether the key was new. Inline, defined below the class: the
+     * base inlines it into the pair filter's 0x167420 at both sites, and
+     * its one out-of-line copy is the resize unit's (0x166f93). derived
+     * names. */
+    inline int FUN_00166dc0(AllocatorBase &allocator, Key key, u32 value);
     hkResult FUN_00166eb0(AllocatorBase &allocator, int newCapacity);
     /* The entry at a slot removed (0x166fe0; the pair filter's enabling of
      * a pair, 0x16788c): emptied, then the run it sat in closed up, as the
@@ -12954,6 +12977,28 @@ struct hknpPairCollisionFilterMapPairFilterKeyOverrideType {
     int numElems;
     int hashMod;
 };
+
+inline int
+hknpPairCollisionFilterMapPairFilterKeyOverrideType::FUN_00166dc0(AllocatorBase &allocator, Key key,
+                                                                  u32 value)
+{
+    if (numElems * 2 > hashMod) {
+        FUN_00166eb0(allocator, hashMod * 2 + 2);
+    }
+    const u64 hashValue = ((u64(key.bodyIdA) << 32) | key.bodyIdB) * 0x9e3779b1;
+    u32 i = u32(hashValue & u32(hashMod));
+    int isNew = 1;
+    for (; !isEmptyKey(elem[i].key); i = (i + 1) & hashMod) {
+        if (equalKeys(elem[i].key, key)) {
+            isNew = 0;
+            break;
+        }
+    }
+    numElems += isNew;
+    elem[i].key = key;
+    elem[i].value = value;
+    return isNew;
+}
 
 class hknpPairCollisionFilter : public hknpCollisionFilter
 {
@@ -12973,7 +13018,7 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
 
     /* Disables the collisions between two bodies of a world (the pair is
      * ordered by id first, 0x167420). derived name. */
-    void FUN_00167420(hknpWorld *world, u32 bodyIdA, u32 bodyIdB); /* derived name */
+    int FUN_00167420(hknpWorld *world, u32 bodyIdA, u32 bodyIdB); /* derived name */
     /* The reverse for a pair (0x167660, ordered the same way): the int is
      * handed to the world's FUN_0005c120 with the pair. derived name. */
     int FUN_00167660(hknpWorld *world, u32 bodyIdA, u32 bodyIdB, int mode); /* derived name */
