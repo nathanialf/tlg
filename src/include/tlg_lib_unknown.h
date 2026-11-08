@@ -1062,8 +1062,8 @@ inline void hkArrayBase<T>::setSize(AllocatorBase &allocator, int n, const T &fi
 template <typename T>
 inline void hkArrayBase<T>::setSizeElements(int n, const T &fill, hkTrait::TypeIsPod)
 {
-    const int numNew = n - size;
     T *const added = data + size;
+    const int numNew = n - size;
     for (int i = 0; i < numNew; i++) {
         added[i] = fill;
     }
@@ -4825,6 +4825,28 @@ struct TimerRecord : public TimerRecordBase /* derived name */
     u32 value;
 };
 
+/* The convex against composite collision's timers (derived names, after
+ * the markers 0x17a970 writes): the whole of it, the box query with its
+ * sort and hit count, the contact cache's reuse with the caches reused, its
+ * check with the two limits exceeded, then the timers at +0x90 that 0x17a680
+ * writes. */
+struct CompositeTimers0017a970 /* derived name */
+{
+    TimerRecord total;
+    TimerRecord queryAabb;
+    TimerRecord sort;
+    u32 numHits;
+    TimerRecord reuseContactCache;
+    u32 numCachesReused;
+    TimerRecord checkContactCache;
+    u32 numMaxRotationExceeded;
+    u32 numMaxPositionExceeded;
+    u8 unknown90[0x100];
+};
+
+/* The timers at +0x90 of the group written (0x17a680). derived name. */
+void FUN_0017a680(void *timers, ThreadBuffer &stream); /* derived name */
+
 /* An owner of step timers (derived name): two records at +0xa8 and +0xc0,
  * the second written only when its value is set, two groups at +0xd8 and
  * +0x268 that write their own (FUN_0017a970, FUN_0017abe0), and the flag at
@@ -4836,17 +4858,17 @@ struct StepTimers /* derived name */
     void FUN_0017aeb0(ThreadBuffer &stream);
 
     u8 unknown0[0xa8];
-    TimerRecord timerA8; /* derived name */
-    TimerRecord timerC0; /* derived name */
-    u8 groupD8[0x190];   /* derived name */
-    u8 group268[0x1a8];  /* derived name */
-    bool enabled;        /* derived name */
+    TimerRecord timerA8;             /* derived name */
+    TimerRecord timerC0;             /* derived name */
+    CompositeTimers0017a970 groupD8; /* derived name */
+    u8 group268[0x1a8];              /* derived name */
+    bool enabled;                    /* derived name */
 };
 
-void FUN_0017a3c0(StepTimers *self, ThreadBuffer &stream); /* derived name */
-void FUN_0017a970(void *group, ThreadBuffer &stream);      /* derived name */
-void FUN_0017abe0(void *group, ThreadBuffer &stream);      /* derived name */
-void FUN_0000ead0(ThreadBuffer *buffer);                   /* derived name */
+void FUN_0017a3c0(StepTimers *self, ThreadBuffer &stream);                      /* derived name */
+void FUN_0017a970(const CompositeTimers0017a970 &timers, ThreadBuffer &stream); /* derived name */
+void FUN_0017abe0(void *group, ThreadBuffer &stream);                           /* derived name */
+void FUN_0000ead0(ThreadBuffer *buffer);                                        /* derived name */
 
 inline void *hkMultipleVertexBuffer::operator new(unsigned long numBytes)
 {

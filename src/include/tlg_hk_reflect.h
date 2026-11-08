@@ -2311,6 +2311,14 @@ class hkCriticalSectionLock /* derived name */
  * class holds this way): its destructor releases the object and clears the
  * pointer (hknpConstraintCinfo's cleanup 0x369a0, after the name). The
  * target must be a reference-counted class where it is destroyed. */
+/* A new object handed over with the reference its creation holds (Havok's
+ * hkRefNew): a counted reference takes it without a reference of its own. */
+template <typename T> struct hkRefNew {
+    explicit hkRefNew(T *object) : pntr(object) {}
+
+    T *pntr;
+};
+
 template <typename T> struct hkRefPtr {
     /* Empty (the world's +0x1d0 object clears its eight at 0x1502c3, the
      * dispatcher its eight at 0x9057e). */
@@ -2372,6 +2380,17 @@ template <typename T> struct hkRefPtr {
             pntr->removeReference();
         }
         pntr = e;
+    }
+
+    /* A handed-over object held: the old one's reference released, none
+     * taken on the new one (the properties' replacement of an object under
+     * a key, 0x1c30e). */
+    void operator=(hkRefNew<T> object)
+    {
+        if (pntr) {
+            pntr->removeReference();
+        }
+        pntr = object.pntr;
     }
 
     /* Another counted reference's object held the same way, its pointer
@@ -3016,12 +3035,17 @@ struct hkRefCountedProperties {
          * info's finish callback is the empty body). */
         Entry(hkFinishLoadedObjectFlag flag) : object(flag) {}
 
+        /* No object, the invalid key, no flags (a new entry, 0x1c396: the
+         * key and the flags one 32-bit store). */
+        Entry() : key(0xffff), flags(0) {}
+
         /* A counted reference: released and cleared when the entry is
          * destroyed (the destructor 0x1c1f0, the cleanup callback 0xd300).
          * derived name. */
         hkRefPtr<hkReferencedObject> object;
-        u16 key; /* derived name */
-        u8 unknownA[6];
+        u16 key;   /* derived name */
+        u16 flags; /* derived name */
+        u8 unknownC[4];
     };
 
     /* Out of line at 0x1c1b0: the callers at 0x38551 and 0x44c93
@@ -8091,6 +8115,9 @@ class hknpCompoundShapeKeyMask : public hknpShapeKeyMask
   public:
     hknpCompoundShapeKeyMask(hkFinishLoadedObjectFlag flag) : hknpShapeKeyMask(flag) {}
 
+    /* A new mask (the static compound's key mask, 0xcfa20). */
+    hknpCompoundShapeKeyMask() {}
+
     virtual int FUN_00033d30(hknpShapeInstanceId instanceId) const = 0; /* derived name */
 };
 
@@ -8109,6 +8136,11 @@ class hknpCompoundShapeInternalsKeyMask : public hknpCompoundShapeKeyMask
         : hknpCompoundShapeKeyMask(flag), instanceMasks(flag), filter(flag)
     {
     }
+
+    /* A mask of no shape, its arrays empty (the static compound's key
+     * mask, 0xcfa20, sets the shape after: the null store stays, ahead of
+     * the vtable's). */
+    hknpCompoundShapeInternalsKeyMask() : shape(HK_NULL) {}
 
     /* Slots 0 and 1, 0x338d0 and 0x33990 (func_00033d30.cpp). Declared
      * inline: the deleting destructor holds the whole body, which only the
@@ -10976,6 +11008,12 @@ class hknpWorldQualitySlot : public hkSlot /* derived name */
  * +0x40 and +0x120, floats at +0x110 and +0x130. */
 struct hknpSolverInfo /* derived name */
 {
+    /* The default settings (0x61930; the world's constructor at 0x48bf2):
+     * the sub steps' times, then the step's settings for a sixtieth of a
+     * second (0.016) in four steps of one micro step under the earth's
+     * gravity, the velocity scale and its reciprocal. derived name. */
+    hknpSolverInfo();
+
     /* The step's times from a time step and a number of sub steps
      * (0x61b30, called at 0x48f07): the time step and its half, the count
      * in every lane, each divided by the count and the count by each, the
@@ -11007,14 +11045,15 @@ struct hknpSolverInfo /* derived name */
     /* A vector a step's distances scale (the motion velocity scale's
      * 0x5db23 clamps its product to 16 bits). derived name. */
     Vec4 vector60;
-    u8 unknown70[0x10];
+    Vec4 invVector60; /* derived name: vector60's reciprocal */
     /* A distance 0xcf4d0's callers hand it, halved by one (0x742cc) and
      * as it is by the other (0x149284). derived name. */
     Vec4 vector80;
     /* A float the motion properties library's presets take as their
      * unit scale (0x36e36). derived name. */
     float unitScale;
-    u8 unknown94[0x20];
+    u8 unknown94[0x1c];
+    float valueB0; /* derived name */
     /* The steps and the micro steps of each (the solve loop at 0x3fbab
      * counts them from the world's +0x444 and +0x44c). derived names. */
     int numSteps;
@@ -11024,7 +11063,7 @@ struct hknpSolverInfo /* derived name */
     /* The gravity's length, 9.81 for none (0x61be0). derived name. */
     float gravityLength;
     float deltaTime; /* derived name */
-    u8 unknownCC[4];
+    int valueCC;     /* derived name */
     /* The gravity over a step and over the whole time, the latter's
      * length in its w (0x61be0). derived names. */
     Vec4 vectorD0;

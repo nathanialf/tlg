@@ -1921,7 +1921,7 @@ FUN_000209b0 src/libs/unknown/func_000209b0.cpp _Z12FUN_000209b0Pv
 FUN_001614f0 src/libs/unknown/func_001614f0.cpp _ZN15hknpBodyManager12FUN_001614f0Ei
 FUN_0017d010 src/libs/unknown/func_0017d010.cpp _ZNK30hkpWheelFrictionConstraintData12FUN_0017d010EPK9hkMatrix3PKvPK16hkpSolverResultsRDv4_f
 FUN_000116c0 src/libs/unknown/func_000116c0.cpp _Z12FUN_000116c0P11hkStringBufPKc
-FUN_00061b30 src/libs/unknown/func_00061b30.cpp _ZN14hknpSolverInfo12FUN_00061b30Eff
+FUN_00061b30 src/libs/unknown/func_00061930.cpp _ZN14hknpSolverInfo12FUN_00061b30Eff
 _ZN16hknpCapsuleShapeD0Ev src/libs/unknown/func_00072e50.cpp
 _ZN15hknpVehicleDataD1Ev src/libs/unknown/func_0006df00.cpp
 _ZN9hknpShapeD0Ev src/libs/unknown/func_0006fb50.cpp
@@ -2805,3 +2805,4 @@ FUN_0017e9a0 src/libs/unknown/func_0017e9a0.cpp _ZN21hkBuiltinTypeRegistry12FUN_
 FUN_00011e50 src/libs/unknown/func_00011e50.cpp _GLOBAL__I_a
 FUN_0007f170 src/libs/unknown/func_0007f170.cpp _GLOBAL__I_a
 FUN_00036a10 src/libs/unknown/func_00036a10.cpp _GLOBAL__I_a
+FUN_0001c2c0 src/libs/unknown/func_0001c2c0.cpp _ZN22hkRefCountedProperties12FUN_0001c2c0EtP18hkReferencedObjecti
