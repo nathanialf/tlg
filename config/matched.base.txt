@@ -2788,3 +2788,4 @@ _ZN11hkxMaterialD1Ev src/libs/unknown/func_000870e0.cpp
 FUN_00179c80 src/libs/unknown/func_00179c80.cpp _Z12FUN_00179c80PK9hknpWorldPK8hknpBodyS4_P19hkBlockStreamWriter
 FUN_0007f870 src/libs/unknown/func_0007f5c0.cpp _ZNK24hkpLinearParametricCurve12FUN_0007f870EfRDv4_f
 _ZN19hknpMaterialLibraryC1Ei src/libs/unknown/func_00077450.cpp
+_ZN14hknpWorldCinfoD1Ev src/libs/unknown/func_0003b650.cpp

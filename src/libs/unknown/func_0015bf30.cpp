@@ -4,7 +4,7 @@
 /* The arrays are left as loaded; the world info's finish constructor is
  * out of line. */
 hknpWorldSnapshot::hknpWorldSnapshot(hkFinishLoadedObjectFlag flag)
-    : hkReferencedObject(flag), bodies(flag), bodyNames(flag), motions(flag), constraints(flag)
+    : hkReferencedObject(flag), worldCinfo(flag), bodies(flag), bodyNames(flag), motions(flag),
+      constraints(flag)
 {
-    FUN_0003b640(&worldCinfo, flag);
 }

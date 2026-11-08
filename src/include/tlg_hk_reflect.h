@@ -13368,20 +13368,63 @@ class hknpConvexPolytopeShape::Connectivity : public hkReferencedObject
  * and 0xea8280. */
 
 /* hknpWorldCinfo (type info 0x57c13e0, hkClass 0x57c1390, no vtable; 0xf0
- * bytes, as hknpRefWorldCinfo's size gives it): an empty finish
- * constructor (the shared body FUN_0003b640) and an out-of-line destructor
- * FUN_0003b650, which releases the references from +0xb0 down. */
-struct hknpWorldCinfo {
-    u8 unknown0[0xa8];
-    /* Two of the references the destructor releases (it goes on below
-     * +0xa8). */
-    hkReferencedObject *referenceA8; /* derived name */
-    hkReferencedObject *referenceB0; /* derived name */
-    u8 unknownB8[0x38];
-};
+ * bytes, as hknpRefWorldCinfo's size gives it; its members from the
+ * records at 0x1698190). */
+struct hknpMotionPropertiesLibrary;
+struct hknpBodyQualityLibrary;
+class hknpBroadPhaseConfig;
 
-void FUN_0003b640(hknpWorldCinfo *self, hkFinishLoadedObjectFlag flag); /* derived name */
-void FUN_0003b650(hknpWorldCinfo *self);                                /* derived name */
+struct hknpWorldCinfo {
+    /* Out of line and empty (the members' finish constructors are empty);
+     * the linker kept one empty body for it and 305 vtable slots, 0x3b640,
+     * the row FUN_0003b640. Defined in the destructor's file (D15's round
+     * 50 and 74A form). */
+    hknpWorldCinfo(hkFinishLoadedObjectFlag flag);
+
+    /* Out of line (0x3b650): the references released from the last. */
+    ~hknpWorldCinfo();
+
+    /* The placement form the finish callback constructs it in place with
+     * (0x46c80's file). */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
+
+    int bodyBufferCapacity;
+    struct hknpBody *userBodyBuffer;
+    int motionBufferCapacity;
+    struct hknpMotion *userMotionBuffer;
+    int constraintBufferCapacity;
+    struct hknpConstraint *userConstraintBuffer;
+    void *persistentStreamAllocator;
+    hkRefPtr<hknpMaterialLibrary> materialLibrary;
+    hkRefPtr<hknpMotionPropertiesLibrary> motionPropertiesLibrary;
+    hkRefPtr<hknpBodyQualityLibrary> qualityLibrary;
+    u8 simulationType;
+    int numSplitterCells;
+    hkVector4 gravity;
+    hkBool enableContactCaching;
+    hkBool mergeEventsBeforeDispatch;
+    hkAabb broadPhaseAabb;
+    hkRefPtr<hknpBroadPhaseConfig> broadPhaseConfig;
+    hkRefPtr<hknpCollisionFilter> collisionFilter;
+    hkRefPtr<hknpShapeTagCodec> shapeTagCodec;
+    float collisionTolerance;
+    float relativeCollisionAccuracy;
+    hkBool enableWeldingForDefaultObjects;
+    hkBool enableWeldingForCriticalObjects;
+    float solverTau;
+    float solverDamp;
+    int solverIterations;
+    int solverMicrosteps;
+    float defaultSolverTimestep;
+    float maxApproachSpeedForHighQualitySolver;
+    hkBool enableDeactivation;
+    hkBool deleteCachesOnDeactivation;
+    float unitScale;
+    hkBool applyUnitScaleToStaticConstants;
+};
 
 /* The defaults its hkClass carries (0x14bd370): an offset into the block per
  * member, -1 for none and -2 for zero (derived reading), then the values,
@@ -13421,10 +13464,7 @@ extern const hkClassEnum D_1698770[];   /* derived name: its enum */
 class hknpRefWorldCinfo : public hkReferencedObject
 {
   public:
-    hknpRefWorldCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag)
-    {
-        FUN_0003b640(&info, flag);
-    }
+    hknpRefWorldCinfo(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag), info(flag) {}
 
     virtual ~hknpRefWorldCinfo();
 

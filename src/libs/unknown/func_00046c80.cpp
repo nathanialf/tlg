@@ -8,14 +8,14 @@ static void finishLoadedObjecthknpWorldCinfo(void *object, int finishing) /* der
 {
     hkFinishLoadedObjectFlag flag;
     flag.finishing = finishing;
-    FUN_0003b640(static_cast<hknpWorldCinfo *>(object), flag);
+    new (object) hknpWorldCinfo(flag);
 }
 
 /* derived names: the cleanup callback of hknpWorldCinfo's type info (0x57c13e0):
  * destroy the object in place through its out-of-line destructor. */
 static void cleanupLoadedObjecthknpWorldCinfo(void *object) /* derived name */
 {
-    FUN_0003b650(static_cast<hknpWorldCinfo *>(object));
+    static_cast<hknpWorldCinfo *>(object)->~hknpWorldCinfo();
 }
 
 /* hknpWorldCinfo's members' defaults, file-local (D17); the rows are written

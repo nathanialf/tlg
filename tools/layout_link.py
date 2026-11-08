@@ -135,6 +135,16 @@ def _object_functions(obj: Path) -> dict:
 
 
 _ROW_BY_SYMBOL: dict[tuple[Path, str], int] = {}  # (object, symbol) -> a claimed row's address
+_CLAIMED_OBJECTS: list[Path] = []     # every claimed unit's object (build_image fills it)
+_DEFINERS: dict[str, list[Path]] = {}  # function name -> the claimed objects defining it
+
+
+def _objects_defining(name: str) -> list[Path]:
+    """The claimed units' objects that define the function `name`, each
+    object parsed once."""
+    if name not in _DEFINERS:
+        _DEFINERS[name] = [o for o in _CLAIMED_OBJECTS if name in _object_functions(o)]
+    return _DEFINERS[name]
 
 
 def _function_at_hint(base: BaseElf, obj: Path, name: str, hint: int) -> bool:
@@ -242,6 +252,16 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     # vtable load, 0x87950's and 0x85d80's initializers)
     if hint is not None and not r.symbol.startswith(".") and _function_at_hint(base, obj, r.symbol, hint):
         return hint, ""
+    # the same for a function ANOTHER claimed unit defines out of line under a
+    # name no row carries (hknpWorldCinfo's finish constructor, defined in the
+    # destructor's unit with an empty body and called from four other units:
+    # the linker folded it onto the shared empty body 0x3b640, whose row keeps
+    # its own name): placed where the base's field points when that unit's
+    # code for it sits there, compared the same way (round 78A's harvest)
+    if hint is not None and not r.symbol.startswith("."):
+        for other in _objects_defining(r.symbol):
+            if other != obj and _function_at_hint(base, other, r.symbol, hint):
+                return hint, ""
     # a symbol the object itself defines in a data section: a string literal
     # or a local constant; find its bytes in the base
     if isinstance(r.sym_section, int) and r.sym_section > 0:
@@ -427,6 +447,10 @@ def build_image(ver: str, log=print) -> dict:
                 objcache[tu] = None
         return objcache[tu]
 
+    # every claimed unit's object first, so a symbol one unit defines and
+    # another references resolves whatever the units' order
+    _CLAIMED_OBJECTS[:] = [o for o in (compiled(tu) for tu in sorted(by_tu)) if o is not None]
+    _DEFINERS.clear()
     for tu, pairs in sorted(by_tu.items()):
         obj = compiled(tu)
         if obj is None:
