@@ -291,6 +291,22 @@ prove the promise (a reload omitted across a store through another
 pointer) and refused where it only moves bytes around. The cookbook entry
 carries the proof for each use.
 
+**Addendum, 2026-11-08 (round 80A's harvest).** A member written twice in a
+constructor passes the test when the bytes prove the second write.
+hkpPrismaticConstraintData's constructor 0x7e3d0 and
+hkpLinearClearanceConstraintData's 0x836d0 write the motor atom's isEnabled
+false before and again after its target position and motor pointer. The
+base clears isEnabled and motorAxis with one memset, and MemCpyOpt forms a
+memset from adjacent byte stores only from three of them
+(`lib/Transforms/Scalar/MemCpyOptimizer.cpp:149-172`,
+`isProfitableToUseMemset`: two stores are left to the code generator, three
+byte stores over two bytes exceed the pointer-and-byte store count); the two
+bytes hold no third member, and a single write compiles to 47 of 53
+instructions (round 80A's control). The second write is the developer's
+statement recovered from the optimizer's rule, not a steer, and the same
+pair in both constraint datas (Havok's constructors copy each other) is its
+second witness. A duplicate store is refused where no such rule needs it.
+
 ## D10. The linker's GOT-load relaxation is reproduced in the gate (2026-10-25)
 
 **Decision.** A `mov r64, [rip+sym@GOTPCREL]` in a compiled object whose
