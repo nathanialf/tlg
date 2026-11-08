@@ -29,18 +29,18 @@ void shapeCastFlipped(hknpCollisionQueryContext *context, const hknpShapeCastQue
 {
     const hkMatrix3 &rotation = queryToTarget.rotation;
     const Vec4 direction =
-        _mm_or_ps(_mm_or_ps(_mm_dp_ps(query.castDirection, rotation.getColumn(0), 0x71),
-                            _mm_dp_ps(query.castDirection, rotation.getColumn(1), 0x72)),
-                  _mm_dp_ps(query.castDirection, rotation.getColumn(2), 0x74));
+        _mm_or_ps(_mm_or_ps(_mm_dp_ps(query.ray.direction, rotation.getColumn(0), 0x71),
+                            _mm_dp_ps(query.ray.direction, rotation.getColumn(1), 0x72)),
+                  _mm_dp_ps(query.ray.direction, rotation.getColumn(2), 0x74));
     hknpShapeCastQuery flippedQuery = query;
     flippedQuery.filterData = targetShapeFilterData;
-    flippedQuery.castDirection = _mm_xor_ps(direction, _mm_set1_ps(-0.0f));
+    flippedQuery.ray.direction = _mm_xor_ps(direction, _mm_set1_ps(-0.0f));
     flippedQuery.body = targetShapeInfo.body;
     flippedQuery.shape = &targetShape;
     const hknpQueryFilterData queryFilterData = query.filterData;
     hkAlgorithm::swap(context->queryTriangle, context->targetTriangle);
     Vec4 worldDirection = _mm_setzero_ps();
-    FUN_00010ef0(worldDirection, targetShapeInfo.shapeToWorld->rotation, query.castDirection);
+    FUN_00010ef0(worldDirection, targetShapeInfo.shapeToWorld->rotation, query.ray.direction);
     hknpFlippedShapeCastQueryCollector flippedHitCollector(hitCollector, worldDirection);
     if (startPointCollector) {
         hknpFlippedGetClosestPointsQueryCollector flippedStartPointCollector(startPointCollector);

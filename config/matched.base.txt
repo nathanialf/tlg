@@ -113,7 +113,7 @@ FUN_000224f0 src/libs/unknown/func_000224f0.cpp _ZL37finishLoadedObjecthkcdDynam
 FUN_00022fb0 src/libs/unknown/func_00022fd0.cpp _ZL34finishLoadedObjecthkMemoryMeshBodyPvi
 FUN_000230d0 src/libs/unknown/func_000230d0.cpp _ZNK16hkMemoryMeshBody12FUN_000230d0Ev
 FUN_00023380 src/libs/unknown/func_00023380.cpp _ZL39finishLoadedObjecthkSkinnedRefMeshShapePvi
-FUN_000238d0 src/libs/unknown/func_000238d0.cpp
+FUN_000238d0 src/libs/unknown/func_000238d0.cpp _ZL40finishLoadedObjecthkMultipleVertexBufferPvi
 FUN_00023df0 src/libs/unknown/func_00023df0.cpp
 FUN_000242e0 src/libs/unknown/func_000242e0.cpp _ZL31finishLoadedObjecthkSkinBindingPvi
 FUN_00024400 src/libs/unknown/func_00024490.cpp _ZL39finishLoadedObjecthkIndexedTransformSetPvi
@@ -2838,3 +2838,4 @@ FUN_00057080 src/libs/unknown/func_00057080.cpp
 FUN_000432e0 src/libs/unknown/func_000432e0.cpp _ZNK15hknpConvexShape12FUN_000432e0EPKvRK13hknpAabbQueryRK18hknpShapeQueryInfoRK19hknpQueryFilterDataS7_P27hknpCollisionQueryCollectorP6hkAabb
 FUN_00090dc0 src/libs/unknown/func_00090dc0.cpp _ZN15BufferAllocator12FUN_00008d80EPvi
 FUN_001789a0 src/libs/unknown/func_001789a0.cpp _ZN33hknpVehicleLinearCastWheelCollide4initEPK19hknpVehicleInstance
+FUN_000238f0 src/libs/unknown/func_000238d0.cpp _GLOBAL__I_a

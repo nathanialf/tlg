@@ -5588,6 +5588,10 @@ class hkMultipleVertexBuffer : public hkMeshVertexBuffer
     /* hkMultipleVertexBuffer::VertexBufferInfo (hkClass 0x57bcda0, built
      * at 0x23975: 0x18 bytes, records from 0x16917a0). */
     struct VertexBufferInfo {
+        /* Nothing to fix up on a load (its type info's finish callback is
+         * the shared empty body). */
+        VertexBufferInfo(hkFinishLoadedObjectFlag flag) : vertexBuffer(flag) {}
+
         hkRefPtr<hkMeshVertexBuffer> vertexBuffer;
         LockedVertices *lockedVertices; /* not serialized */
         hkBool isLocked;
@@ -8578,6 +8582,10 @@ struct hknpCollisionFilterShapeInput /* derived name */
  * query, then the query's own shape at +0x20 (the dispatcher's queries
  * filter it as the query side's shape, 0x70b2e and 0x70d6c). */
 struct hknpShapeQuery /* derived name */ : public hknpCollisionQuery {
+    hknpShapeQuery() {}
+
+    explicit hknpShapeQuery(const hknpShape *queryShape) : shape(queryShape) {}
+
     const hknpShape *shape; /* derived name */
 };
 
@@ -20610,10 +20618,21 @@ struct hknpClosestPointsQuery : public hknpShapeQuery /* derived name */
  * whole (0x523fe to 0x52456). */
 struct hknpShapeCastQuery : public hknpShapeQuery /* derived name */
 {
-    Vec4 unknown30;
-    Vec4 castDirection;
-    Vec4 unknown50;
-    u32 unknown60;
+    /* A cast of a shape from a start to an end (the linear cast wheels'
+     * 0x179210): no body yet, an accuracy of 0.001 at +0x60, the ray set
+     * from the end points. derived names. */
+    hknpShapeCastQuery(const hknpShape &queryShape, const Vec4 &start, const Vec4 &end)
+        : hknpShapeQuery(&queryShape), body(HK_NULL)
+    {
+        accuracy = 0.001f;
+        unknown64 = 0;
+        ray.setEndPoints(start, end);
+    }
+
+    /* The cast's ray: its start, its direction (the flips turn it into the
+     * target's space, 0x523e5) and the direction's inverse. */
+    hkcdRay ray;
+    float accuracy;
     float unknown64;
     const void *body;
 };
