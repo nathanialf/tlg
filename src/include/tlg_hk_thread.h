@@ -18,6 +18,10 @@ class hkSemaphore
     hkSemaphore(int initialCount, int maxCount, int numSpinIterations); /* derived names */
     ~hkSemaphore();
 
+    /* Back to the thread's heap at its size (the job queue's destructor,
+     * 0x5d43; defined in tlg_lib_unknown.h, after the router). */
+    static void operator delete(void *object, unsigned long numBytes);
+
     void FUN_0001a490();          /* derived name: acquire */
     void FUN_0001a4a0(int count); /* derived name: release */
 

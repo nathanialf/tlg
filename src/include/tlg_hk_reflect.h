@@ -798,6 +798,11 @@ struct hkArray : public hkArrayBase<T> {
      * 0x41109). */
     inline void reserveExactly(int n);
 
+    /* Storage for at least n elements, the capacity at least doubled when
+     * it grows (defined in tlg_lib_unknown.h; the resource handle's links,
+     * 0x17f4b3). */
+    inline void reserve(int n);
+
     /* A copy of another array: empty, then its elements appended (defined
      * in tlg_lib_unknown.h; the loaded image's constructor 0x1a04d0, the
      * storage taken at the other's size when it has any). */
@@ -869,6 +874,7 @@ struct hkArray : public hkArrayBase<T> {
     inline void insertAt(int index, const T *elements, int numElements);
 
     using hkArrayBase<T>::clearAndDeallocate;
+    using hkArrayBase<T>::reserve;
     using hkArrayBase<T>::pushBack;
     using hkArrayBase<T>::append;
     using hkArrayBase<T>::expandOne;
@@ -2780,6 +2786,10 @@ void FUN_00011900(hkStringBuf *self, const char *format, ...); /* derived name *
 
 /* The string library's byte copy, a wrapper over memcpy (0x17e70). */
 void FUN_00017e70(void *dst, const void *src, unsigned int n); /* derived name */
+
+/* The string library's character search, a wrapper over strchr (0x18060).
+ * derived name. */
+char *FUN_00018060(const char *s, int c);
 
 /* An XML reader (derived name; vtable 0x16a6aa0, address point 0x16a6ab0,
  * no type info), 0x28 bytes: hkSerializeDeprecated's slot 10 (0x19a4d0)
@@ -14499,6 +14509,14 @@ class hknpBroadPhaseConfig : public hkReferencedObject
     hknpBroadPhaseConfig(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
     virtual ~hknpBroadPhaseConfig();
+
+    /* Slots 5 to 7 (the default configuration's 0x78150, which returns 4,
+     * 0x154e00 and 0x154e10; the layers' additions call slot 7, 0x1410d8).
+     * derived names. */
+    virtual int getNumLayers() const = 0;
+    virtual Layer *FUN_00154e00(hkUlong layerIndex) = 0;
+    virtual void FUN_00154e10(const struct hknpBodyId *bodyIds, int numBodyIds,
+                              const hknpBody *bodies, u8 *layersOut) const = 0;
 };
 
 class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
@@ -14510,6 +14528,7 @@ class hknpDefaultBroadPhaseConfig : public hknpBroadPhaseConfig
 
     hknpDefaultBroadPhaseConfig(hkFinishLoadedObjectFlag flag);
 
+    int getNumLayers() const;                /* vtable slot 5, the shared 0x78150 */
     Layer *FUN_00154e00(hkUlong layerIndex); /* vtable slot 6; derived name */
     /* Slot 7 (0x154e10): each body's layer from its flags, by the first
      * of bits 8, 3 and 0 it has: 1, 0, 3, and 2 for none. derived name. */
@@ -17608,6 +17627,10 @@ class hkMemoryResourceHandle : public hkResourceHandle
     /* Slot 12 (0x17f3e0): the first external link of a member name
      * removed. derived name. */
     void FUN_0017f3e0(const char *memberName);
+    /* Slot 13 (0x17f480): each external link handed out with an accessor
+     * of its member, a dotted name followed through the structs it names;
+     * a member not found warned of and left out. derived name. */
+    void FUN_0017f480(hkArray<Link> &linksOut) const;
 
     hkRefVariant variant;
     hkStringPtr name;

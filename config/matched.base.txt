@@ -2843,3 +2843,5 @@ FUN_0000c8c0 src/libs/unknown/func_0000c8c0.cpp _ZN22hkFreeListMemorySystem19get
 FUN_00039b30 src/libs/unknown/func_00039ae0.cpp _GLOBAL__I_a
 _ZN17hknpCompoundShapeC1ERK22hknpCompoundShapeCinfo src/libs/unknown/func_000412a0.cpp _ZN17hknpCompoundShapeC2ERK22hknpCompoundShapeCinfo
 FUN_00172c70 src/libs/unknown/func_00172f60.cpp
+FUN_0017f480 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp
+_ZN10hkJobQueueD1Ev src/libs/unknown/func_00005c80.cpp _ZN10hkJobQueueD2Ev

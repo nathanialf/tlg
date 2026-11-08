@@ -61,6 +61,42 @@ static inline void removeBodyFromLeaf(BroadPhaseTree00142a40 *tree, hknpBodyId b
  * gathered layer by layer (the layers counted in a byte) into a buffer of
  * the thread's stack and removed from each layer's tree that holds some of
  * them; each removed body's mark cleared. */
+// NONMATCHING: 203 of 207, size equal: equal under LocalArray's SDK order (data, capacity, local
+// copy: 0x14107a, 0x141087, 0x14108a, the fourth function that stores them, D41); the tree's
+// order stores the local copy before the capacity. The header waits for 0x1707d0 (D41). The
+// destructor's conditional size clear is the base's (0x141240 to 0x14124a), then the local
+// block's free, then hkArray's.
+void BroadPhaseLayers00142a40::FUN_00140ff0(const hknpBodyId *bodyIds, int numBodies,
+                                            hknpBody *bodies)
+{
+    LocalArray<u8> bodyLayers(numBodies);
+    bodyLayers.setSize(numBodies);
+    config->FUN_00154e10(bodyIds, numBodies, bodies, bodyLayers.data);
+
+    if (numBodies == 1) {
+        const u8 layer = bodyLayers.data[0];
+        hknpBody &body = bodies[bodyIds[0].value];
+        body.broadPhaseId = (u32(layer) << 29) | (body.broadPhaseId & 0x1fffffff);
+        trees[layer]->FUN_0013cf50(bodyIds[0].value, bodies);
+        updatePending[layer] = true;
+        return;
+    }
+
+    LocalArray<u32> indices(numBodies);
+    for (u8 layer = 0; layer < numLayers; layer++) {
+        int numInLayer = 0;
+        for (int i = 0; i < numBodies; i++) {
+            if (bodyLayers.data[i] == layer) {
+                indices.data[numInLayer++] = bodyIds[i].value;
+            }
+        }
+        if (numInLayer) {
+            trees[layer]->FUN_0013d530(layer, indices.data, numInLayer, bodies);
+            updatePending[layer] = true;
+        }
+    }
+}
+
 void BroadPhaseLayers00142a40::FUN_001412e0(const hknpBodyId *bodyIds, int numBodies,
                                             const hknpBody *bodies)
 {

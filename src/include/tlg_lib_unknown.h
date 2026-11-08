@@ -1139,6 +1139,11 @@ template <typename T, typename Allocator> inline void hkArray<T, Allocator>::res
     }
 }
 
+template <typename T, typename Allocator> inline void hkArray<T, Allocator>::reserve(int n)
+{
+    hkArrayBase<T>::reserve(Allocator::get(), n);
+}
+
 template <typename T, typename Allocator>
 inline void hkArray<T, Allocator>::insertAt(int index, const T *elements, int numElements)
 {
@@ -4462,9 +4467,18 @@ struct hkJobQueue /* derived name */
         u32 jobTypesMask; /* derived name */
         int unknown24;
         hkBool unknown28;
+        /* From the thread's heap at its size (the destructor 0x5c80 gives
+         * it back after the queues). */
+        static void operator delete(void *object, unsigned long numBytes);
+
         s16 numThreadsWaiting[7];             /* derived name */
         hkQueue<JobQueueEntry> jobQueues[20]; /* derived name */
         u8 unknown218[8];
+    };
+
+    /* A 12-byte record of the array at +0x318 (derived name). */
+    struct Entry318 {
+        u32 values[3]; /* derived name */
     };
 
     /* derived name: when a job is queued and a thread waits for one,
@@ -4484,6 +4498,11 @@ struct hkJobQueue /* derived name */
     /* Run last by the constructor (0x58b0, a tail call). derived name. */
     void FUN_000058b0();
 
+    /* Out of line (0x5c80): the shared state and its queues given back,
+     * the waiting threads' semaphores deleted when the queue made them,
+     * then the members. */
+    ~hkJobQueue();
+
     hkCriticalSection criticalSection; /* derived name */
     DynamicData *data;                 /* derived name */
     JobPopFunc popJobFunc;             /* derived name */
@@ -4502,7 +4521,7 @@ struct hkJobQueue /* derived name */
     u8 unknownb4[0x7c];
     CustomJobType customJobs[15]; /* derived name */
     u64 unknown310;
-    hkArray<void *> unknown318;
+    hkArray<Entry318> unknown318;
     void *unknown328;
 };
 
@@ -5277,6 +5296,16 @@ inline void BroadPhaseCollideTask::operator delete(void *object, unsigned long n
     if (object) {
         D_16dc070->temp58->blockFree(object, int(numBytes));
     }
+}
+
+inline void hkJobQueue::DynamicData::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
+}
+
+inline void hkSemaphore::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
 }
 
 template <typename T> inline void *hkQueue<T>::operator new(unsigned long numBytes)
@@ -6473,6 +6502,11 @@ struct BroadPhaseTree00142a40 /* derived name */
      * name. */
     void FUN_0013cf50(u32 bodyIndex, const struct hknpBody *bodies);
 
+    /* Several bodies' boxes added (0x13d530; the layers' additions at
+     * 0x1411d9), the layer they go to first. derived name. */
+    void FUN_0013d530(u8 layer, const u32 *bodyIndices, int numBodies,
+                      const struct hknpBody *bodies);
+
     /* The tree rebuilt over bodies' boxes (0x13b940): the boxes gathered
      * in the thread's stack, the tree built over them and the bodies' ids
      * (0x196190), then each body's broad phase id set to the node of the
@@ -6778,6 +6812,12 @@ class BroadPhaseLayers00142a40 /* derived name */
      * the field grown to a multiple of 32 bits that holds it, and the
      * lowest and highest marked ids kept. derived name. */
     void FUN_00143390(const u32 *ids, int numIds, int striding);
+
+    /* Bodies added to the layers' trees (0x140ff0): each body's layer
+     * from the configuration, one body straight into its tree, several
+     * gathered layer by layer in a stack buffer and added to each layer's
+     * tree; each such layer flagged for the update. derived name. */
+    void FUN_00140ff0(const hknpBodyId *bodyIds, int numBodies, hknpBody *bodies);
 
     /* Bodies taken out of the layers' trees (0x1412e0): one body straight
      * from its leaf, several gathered layer by layer in a stack buffer and

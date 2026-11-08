@@ -6,6 +6,53 @@
 #define HK_RESOURCE_HANDLE_CPP                                                                     \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Serialize\\ResourceDatabase\\hkResourceHandle.cpp"
 
+void hkMemoryResourceHandle::FUN_0017f480(hkArray<Link> &linksOut) const
+{
+    linksOut.size = 0;
+    linksOut.reserve(references.getSize());
+    for (int i = 0; i < references.getSize(); i++) {
+        Link &link = *linksOut.expandByUnchecked(1);
+        void *object = variant.object;
+        const char *memberName = references[i].memberName.cString();
+        const hkClass *klass = FUN_000902f0(&variant);
+        const hkClassMember *member;
+        const char *dot;
+        while ((dot = FUN_00018060(memberName, '.')) != HK_NULL) {
+            char buffer[512];
+            const int length = int(dot - memberName);
+            FUN_00017e70(buffer, memberName, length);
+            buffer[length] = 0;
+            memberName += length + 1;
+            member = klass->FUN_00004470(buffer);
+            if (!member) {
+                goto memberNotFound;
+            }
+            if (member->type != hkClassMember::TYPE_STRUCT) {
+                char assertBuf[512];
+                BufferOstream ostr(assertBuf, sizeof(assertBuf));
+                ostr.FUN_00008440("Member is not of type struct : ").FUN_00008440(buffer);
+                hkError::FUN_00014c70(0xf032edfe, assertBuf, HK_RESOURCE_HANDLE_CPP, 128);
+                goto memberNotFound;
+            }
+            klass = FUN_00004250(member);
+            object = hkAddByteOffset(object, member->offset);
+        }
+        member = klass->FUN_00004470(memberName);
+        if (member) {
+            link.memberName = memberName;
+            link.memberAccessor = hkClassMemberAccessor(object, member);
+            link.externalId = references[i].externalId.cString();
+            continue;
+        }
+    memberNotFound:
+        linksOut.popBack();
+        char assertBuf[512];
+        BufferOstream ostr(assertBuf, sizeof(assertBuf));
+        ostr.FUN_00008440("Cannot find member : ").FUN_00008440(memberName);
+        hkError::FUN_00014c70(0xf032edf1, assertBuf, HK_RESOURCE_HANDLE_CPP, 146);
+    }
+}
+
 void hkResourceHandle::FUN_0017f770(const hkResourceMap *map)
 {
     hkArray<Link> links;
