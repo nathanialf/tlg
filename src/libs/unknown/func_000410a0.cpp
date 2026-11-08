@@ -1,4 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_freelist.h"
 #include "tlg_lib_unknown.h"
 
 /* The compound shapes' instance array's growth (0x410a0; their constructor

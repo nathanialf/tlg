@@ -1836,7 +1836,7 @@ FUN_0006f7d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hkn
 FUN_0006f880 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape16unknownVirtual25EPKvS1_S1_S1_S1_S1_Pv
 _ZN17Crc32StreamWriter5writeEPKvi src/libs/unknown/func_00004060.cpp
 FUN_0000bd30 src/libs/unknown/func_0000bd30.cpp _ZN9hkMatrix312FUN_0000bd30ERK12hkQuaternion
-FUN_000311f0 src/libs/unknown/func_000311f0.cpp _ZN18hknpWorldObject38012FUN_000311f0EP28hknpWorldObject380MotionPairRK10hknpMotionPKvS4_
+FUN_000311f0 src/libs/unknown/func_000311f0.cpp _ZN18hknpWorldObject38012FUN_000311f0EP28hknpWorldObject380MotionPairRK10hknpMotionPK8hknpBodyS4_S7_
 FUN_0006e3d0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual5Ev
 FUN_0006e510 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual6Ev
 FUN_0006e5b0 src/libs/havok/Physics/Physics/Collide/Shape/hknpShape.cpp _ZNK9hknpShape15unknownVirtual9Ev
@@ -2841,3 +2841,5 @@ FUN_001789a0 src/libs/unknown/func_001789a0.cpp _ZN33hknpVehicleLinearCastWheelC
 FUN_000238f0 src/libs/unknown/func_000238d0.cpp _GLOBAL__I_a
 FUN_0000c8c0 src/libs/unknown/func_0000c8c0.cpp _ZN22hkFreeListMemorySystem19getMemoryStatisticsER7hkArrayI21MemoryStatisticsEntry24hkContainerHeapAllocatorE
 FUN_00039b30 src/libs/unknown/func_00039ae0.cpp _GLOBAL__I_a
+_ZN17hknpCompoundShapeC1ERK22hknpCompoundShapeCinfo src/libs/unknown/func_000412a0.cpp _ZN17hknpCompoundShapeC2ERK22hknpCompoundShapeCinfo
+FUN_00172c70 src/libs/unknown/func_00172f60.cpp

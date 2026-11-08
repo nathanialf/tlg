@@ -1,4 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_freelist.h"
 #include "tlg_lib_unknown.h"
 
 /* derived name: whether two properties hold the same sixteen words. */

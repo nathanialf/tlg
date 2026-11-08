@@ -2,7 +2,8 @@
 #include "tlg_hk_reflect.h"
 
 void hknpWorldObject380::FUN_000311f0(hknpWorldObject380MotionPair *out, const hknpMotion &motionA,
-                                      const void *argument2, const hknpMotion &motionB)
+                                      const hknpBody *bodyA, const hknpMotion &motionB,
+                                      const hknpBody *bodyB)
 {
     out->bodies.centerOfMassA = motionA.centerOfMass;
     out->bodies.centerOfMassB = motionB.centerOfMass;

@@ -8761,7 +8761,10 @@ struct hknpManifoldCollisionCache /* derived name */
     u8 propertyBufferOffset; /* derived name */
     u8 propertyKeysUsed;     /* derived name */
     u32 propertyOffsets;     /* derived name */
-    u8 unknown1c[6];
+    /* The second body's material for the cache's shape key, an index of
+     * the context's materials (0x172de1). derived name. */
+    u16 materialIdB;
+    u8 unknown1e[4];
     /* Flags; bits 0 and 2 together ask the modifier slot 0x161f10 for its
      * event. derived name. */
     u16 flags22;
@@ -8798,6 +8801,11 @@ struct hknpManifoldCollisionCache /* derived name */
      * each padded to 16 bytes (FUN_0017a0a0 moves all three up when it
      * reserves a property). derived name. */
     u8 pointValueCount;
+    u8 unknown3c[0x20];
+    /* Lowered each step by the two bodies' TIM angles, not below zero,
+     * while the cache keeps a solver record (0x172e5c); unknownE by their
+     * TIM distances for every cache (0x172ec5). derived name. */
+    u8 angularTim;
 
     /* A property's address without the in-use test (0x156e90 reads key 2
      * so). derived name. */
@@ -10454,9 +10462,11 @@ class hknpWorldObject380 : public hkReferencedObject /* derived name */
      * derived name. */
     virtual void unknownVirtual11(hknpWorldObject380Record **records, int stage);
     /* Slot 12 (0x311f0): the centres of mass copied and the orientations
-     * set as rotations, the third argument unread. derived name. */
+     * set as rotations; the bodies (the third and fifth arguments, 0x172e0e
+     * passes them) unread. derived name. */
     virtual void FUN_000311f0(hknpWorldObject380MotionPair *out, const hknpMotion &motionA,
-                              const void *argument2, const hknpMotion &motionB);
+                              const hknpBody *bodyA, const hknpMotion &motionB,
+                              const hknpBody *bodyB);
     virtual void unknownVirtual13(); /* the empty 0x1c1e0 */
     virtual void FUN_00031320();
     virtual void FUN_0002d770(float value0, float value1); /* vtable slot 15; derived name */
@@ -11088,34 +11098,24 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
         elements.setSizeUnchecked(0);
     }
 
-    /* Room for at least growBy more elements, the storage at least
-     * doubled, each new element built and put on the free list in order
-     * ahead of the old free ones (0x410a0 for the compound shapes'
-     * instances, which their constructor calls twice; the material
-     * library's constructor 0x77450): each made free by the operations'
-     * setEmpty, which builds the element. */
-    void grow(int growBy)
-    {
-        const int oldCapacity = elements.getSize();
-        const int newCapacity =
-            hkMath::max2(oldCapacity + growBy, oldCapacity ? 2 * oldCapacity : 1);
-        const int numNew = newCapacity - oldCapacity;
-        elements.reserveExactly(newCapacity);
-        elements.expandByUnchecked(numNew);
-        const int last = newCapacity - 1;
-        for (int i = oldCapacity; i <= last; i++) {
-            Id id;
-            id.value = i;
-            T &element = elements[id.value];
-            const int next = i < last ? i + 1 : firstFree;
-            Ops::setEmpty(element, next);
-        }
-        firstFree = oldCapacity;
-    }
+    /* Room for at least growBy more elements, defined out of the class in
+     * tlg_hk_freelist.h (Havok's .cxx for a container's template members):
+     * a unit that grows its own array includes it and inlines the growth
+     * (the material library's constructor 0x77450, the motion properties
+     * library's add 0x37030); the compound shapes' unit does not, and its
+     * constructor calls the growth at both sites (0x4134d, 0x413f0) where
+     * the inliner would take it (priced 360 against 393): the instances'
+     * growth is instantiated in a unit of its own, 0x410a0, after the
+     * previous unit's initializer 0x41070 and before the compound shape's
+     * first function. */
+    void grow(int growBy);
 
     /* A free element taken, the array grown by N first when none is free,
      * and the element copied into it (the motion properties library's add,
-     * 0x3708c to 0x371ee): its id. */
+     * 0x3708c to 0x371ee): its id. The element is reached through the
+     * array's own subscript, so its 16-bit index is widened once (0x413fd's
+     * `movsx rdi, r8w`; through hkArray's directly the index is widened to
+     * int and then to 64 bits, two instructions). */
     Id allocate(const T &element)
     {
         if (firstFree < 0) {
@@ -11123,8 +11123,8 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
         }
         Id id;
         id.value = firstFree;
-        firstFree = Ops::getNext(elements[id.value]);
-        new (&elements[id.value]) T(element);
+        firstFree = Ops::getNext((*this)[id]);
+        new (&(*this)[id]) T(element);
         return id;
     }
 
@@ -20994,14 +20994,18 @@ struct hkBlockStreamWriter /* derived name */
      * do not fit (0x1785a0 inline). derived name. */
     void *reserve(int numBytes);
 
-    /* The bytes reserved counted as one element written: the count read
-     * before the offset is written (every writer's advance in the region,
-     * 0x31994, 0x6f64c, 0x904f0's 0x90550, keeps `mov eax, [count]; add
-     * [offset], n; inc eax; mov [count], eax`). derived name. */
+    /* The bytes reserved counted as one element written: the offset read,
+     * then the count, the offset written before the count. Where the new
+     * offset is not read again the update folds into `add [offset], n`
+     * after the count's read (0x31994, 0x6f64c, 0x904f0's 0x90550); where the
+     * next reserve reads it, both reads come first and the sum keeps the
+     * size as its first operand (0x172ece to 0x172edf: Reassociate ranks the
+     * size's load just before the offset's). derived name. */
     void advance(int numBytes)
     {
+        const int byteOffset = currentByteOffset + numBytes;
         const int numElements = currentNumElements + 1;
-        currentByteOffset += numBytes;
+        currentByteOffset = byteOffset;
         currentNumElements = numElements;
     }
 
@@ -21644,7 +21648,10 @@ struct hkBlockStreamConsumedBlock /* derived name */
     void FUN_00093bc0(); /* derived name */
 
     hkBlockStream *stream; /* derived name */
-    u8 unknown8[8];
+    /* The byte offset of the last element consumed (0x172e9a). derived
+     * name. */
+    int byteOffset;
+    u8 unknownC[4];
     BlockCache *cache;         /* derived name */
     hkBlockStreamBlock *block; /* derived name */
     int numElementsConsumed;   /* derived name */
