@@ -175,3 +175,8 @@ D_168fb60 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_168fb90 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_168fbe0 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_168fc30 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1692230 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_16923a0 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_1692280 hkClassMember 7 src/include/tlg_hk_reflect.h
+D_1692420 hkClassMember 5 src/include/tlg_hk_reflect.h
+D_14be8b8 hknpBallGunDefaults 1 src/include/tlg_hk_reflect.h

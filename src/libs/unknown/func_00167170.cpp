@@ -16,16 +16,16 @@ void hknpPairCollisionFilterMapPairFilterKeyOverrideType::FUN_00167170(Allocator
  * class's key function: the pairs the child filter keeps, when there is
  * one, then those not among the disabled pairs (each looked up smaller id
  * first) kept in place; how many are left. */
-int hknpPairCollisionFilter::FUN_001679a0(const hknpCollisionFilterContext &context,
-                                          hknpCollisionFilterBodyIdPair *pairs, int numPairs) const
+int hknpPairCollisionFilter::FUN_001679a0(const hknpWorld &world, hknpBodyIdPair *pairs,
+                                          int numPairs) const
 {
     if (childFilter) {
-        numPairs = childFilter->FUN_001679a0(context, pairs, numPairs);
+        numPairs = childFilter->FUN_001679a0(world, pairs, numPairs);
     }
-    hknpCollisionFilterBodyIdPair *out = pairs;
-    const hknpCollisionFilterBodyIdPair *in = pairs;
+    hknpBodyIdPair *out = pairs;
+    const hknpBodyIdPair *in = pairs;
     for (int i = 0; i < numPairs; i++, in++) {
-        const hknpCollisionFilterBodyIdPair &pair = *in;
+        const hknpBodyIdPair &pair = *in;
         hknpPairCollisionFilterMapPairFilterKeyOverrideType::Key key;
         const u32 a = pair.bodyIdA.value;
         const u32 b = pair.bodyIdB.value;

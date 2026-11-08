@@ -3941,8 +3941,8 @@ struct hknpRayCastQuery : public hknpCollisionQuery /* derived name */
     u32 flags;
 };
 
-struct hknpCollisionFilterContext;
-struct hknpCollisionFilterBodyIdPair;
+struct hknpWorld;
+struct hknpBodyIdPair;
 
 /* hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516: vtable 0x1695240, finish callback 0x3a3d0 (the same file's). */
 class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
@@ -3958,8 +3958,7 @@ class hknpGroupCollisionFilterBasehknpGroupCollisionFilterTypesConfig55516
     /* Slot 5 (0x3a1b0, the group filter's too): the pairs whose bodies'
      * filter infos collide kept, in order, at the front; their number
      * back. derived name. */
-    int FUN_0003a1b0(const hknpCollisionFilterContext &context,
-                     hknpCollisionFilterBodyIdPair *pairs, int numPairs) const;
+    int FUN_0003a1b0(const hknpWorld &world, hknpBodyIdPair *pairs, int numPairs) const;
 
     /* Slot 7 (0x3a290, the group filter's too): a query against a body.
      * Inside one system group other than 0 the subsystem ids decide, else
@@ -8640,18 +8639,12 @@ void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
  * filter info at +4 (9, 0x3a2f0). */
 struct hknpBody;
 
-struct hknpCollisionFilterContext /* derived name */
-{
-    u8 unknown0[0x20];
-    /* The bodies the pairs' ids index, an int index (the group filter's
-     * slot 5 reads them, 0x3a1e7: `movsxd` of each id). derived name. */
-    hkArray<hknpBody> bodies;
-};
-
-/* A pair of bodies a filter is asked about (derived name), copied member
- * by member (the pair filter's slot 5 keeps a pair by copying its first id
- * from the register it compared, its second read again). */
-struct hknpCollisionFilterBodyIdPair /* derived name */
+/* Two bodies' ids (derived name after Havok's hknpBodyIdPair): a pair a
+ * filter is asked about, copied member by member (the pair filter's slot 5
+ * keeps a pair by copying its first id from the register it compared, its
+ * second read again); the pairs whose caches 0x636c0 drops; the pairs the
+ * world's 0x5c120 filters and records. */
+struct hknpBodyIdPair /* derived name */
 {
     hknpBodyId bodyIdA;
     hknpBodyId bodyIdB;
@@ -8761,8 +8754,7 @@ class hknpCollisionFilter : public hkReferencedObject
 
     hknpCollisionFilter(hkFinishLoadedObjectFlag flag) : hkReferencedObject(flag) {}
 
-    virtual int FUN_001679a0(const hknpCollisionFilterContext &context,
-                             hknpCollisionFilterBodyIdPair *pairs,
+    virtual int FUN_001679a0(const hknpWorld &world, hknpBodyIdPair *pairs,
                              int numPairs) const = 0;                  /* derived name */
     virtual bool FUN_00167ad0(int queryType, u8 layerIndex) const = 0; /* derived name */
     virtual bool
@@ -8790,8 +8782,7 @@ class hknpDisableCollisionFilter : public hknpCollisionFilter
 
     hknpDisableCollisionFilter(hkFinishLoadedObjectFlag flag) : hknpCollisionFilter(flag) {}
 
-    int FUN_001679a0(const hknpCollisionFilterContext &context,
-                     hknpCollisionFilterBodyIdPair *pairs, int numPairs) const;
+    int FUN_001679a0(const hknpWorld &world, hknpBodyIdPair *pairs, int numPairs) const;
     bool FUN_00167ad0(int queryType, u8 layerIndex) const;
     bool FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
                       const hknpCollisionFilterTargetInput &target) const;
@@ -10794,6 +10785,35 @@ class hknpWorldObject388 : public hkReferencedObject /* derived name */
 
 struct hkBlockStreamReader; /* below */
 
+/* A body as its byte at +0x7f and its id (derived names), taken whole
+ * from the body: 0x5c120 and 0x63a40 read both words before they store
+ * either. */
+struct BodyKey0005c120 /* derived name */
+{
+    BodyKey0005c120() {}
+
+    BodyKey0005c120(const hknpBody &body) : byte7f(body.byte7f), bodyId(body.id) {}
+
+    void operator=(const BodyKey0005c120 &other)
+    {
+        byte7f = other.byte7f;
+        bodyId = other.bodyId;
+    }
+
+    u32 byte7f;
+    u32 bodyId;
+};
+
+/* Two bodies' keys, a 16-byte record (derived name): the world streams'
+ * array at +0xc00 (0x5c120 appends one for each pair it keeps) and the
+ * array at +0x98 of the world's object at +0x4f8 (0x63a40, an activated
+ * group's pairs). */
+struct BodyKeyPair0005c120 /* derived name */
+{
+    BodyKey0005c120 bodyA;
+    BodyKey0005c120 bodyB;
+};
+
 /* A 16-byte record of the array at +0xb8 of the object FUN_000657b0 sorts
  * (derived names): a range of a block stream on a 16-byte boundary (the
  * clean's per-record step 0x65910 reads the caches it spans). FUN_00062100
@@ -10820,6 +10840,14 @@ struct alignas(16) SortRecord00062100 : public hkBlockStreamRange /* derived nam
 };
 
 bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b); /* derived name */
+
+/* A pair of ids the world's 0x4cad0 gathers and 0x64f30 joins over, two
+ * words (derived names; what they name not read yet). */
+struct IdPair0004cad0 /* derived name */
+{
+    u32 idA;
+    u32 idB;
+};
 
 struct hknpWorldObject4f8 /* derived name */
 {
@@ -10893,18 +10921,21 @@ struct hknpWorldObject4f8 /* derived name */
          * slot's reload after the delete stays in the join, cookbook 540). */
         static void operator delete(void *object, unsigned long numBytes);
 
-        /* A pair of the group's bodies (two ids, copied one by one when
-         * 0x653b0 moves the last into a removed one's place). derived
-         * name. */
-        struct BodyPair {
-            hknpBodyId bodyIdA;
-            hknpBodyId bodyIdB;
+        /* An object an element of the array at +0x30 names (derived names):
+         * its slot 2 is called with the entry and the element's second word
+         * when the entry's group is activated (0x63d53). */
+        class Callback
+        {
+          public:
+            virtual void unknownVirtual0();
+            virtual void unknownVirtual1();
+            virtual void unknownVirtual2(Entry18 *entry, void *data);
         };
 
         /* A 16-byte element of the array at +0x30: an object whose slot 2
          * 0x63d53 calls with the owner and the second word. derived name. */
         struct Element30 {
-            void *object;
+            Callback *object;
             void *data;
         };
 
@@ -10916,10 +10947,13 @@ struct hknpWorldObject4f8 /* derived name */
         u8 unknown10[0x10];
         hkArray<int> bodyIds; /* derived name: indexes of the world's bodies (0x63af8) */
         hkArray<Element30> unknown30;
-        hkArray<BodyPair> bodyPairs; /* derived name */
-        int id50;                    /* derived name; appended to the array at +0x68 by 0x63620 */
-        int nextId;                  /* 0x7fffffff ends the walk */
-        int firstId;                 /* derived name */
+        /* The group's pairs of bodies (copied id by id when 0x653b0 moves
+         * the last into a removed one's place; 0x63a40 hands them to the
+         * world's filter). derived name. */
+        hkArray<hknpBodyIdPair> bodyPairs;
+        int id50;    /* derived name; appended to the array at +0x68 by 0x63620 */
+        int nextId;  /* 0x7fffffff ends the walk */
+        int firstId; /* derived name */
         /* Where its id went in the array at +0x68, less the int at +0x80
          * (0x63620). derived name. */
         int index5c;
@@ -11001,6 +11035,11 @@ struct hknpWorldObject4f8 /* derived name */
      * with no bodies, the entry unlinked from its group and taken
      * (0x622d0). derived name. */
     void FUN_000653b0(int bodyId);
+    /* A group of bodies joined over pairs (0x64f30; the world's 0x4c770
+     * after 0x4cad0 found them): the bodies, the pairs and the group they
+     * were in; the group they are in now. derived names. */
+    int FUN_00064f30(const int *bodyIds, int numBodyIds, const struct IdPair0004cad0 *pairs,
+                     int numPairs, int group);
 
     /* Bodies put to sleep in an island (0x62490; 0x63565 passes an
      * island's bodies and id, 0x65394 too): each active body taken off the
@@ -11029,8 +11068,10 @@ struct hknpWorldObject4f8 /* derived name */
     int int80;                           /* derived name */
     int int84;                           /* derived name */
     hkArray<BodyRecord> activatedBodies; /* derived name */
-    hkArray<u8> unknown98;               /* element type not read yet */
-    hkArray<u8> unknownA8;               /* element type not read yet */
+    /* The activated groups' pairs and their entries' heads (0x63a40).
+     * derived names. */
+    hkArray<BodyKeyPair0005c120> activatedPairs;
+    hkArray<SortRecord00062100> activatedRanges;
     /* Records sorted, their duplicates dropped and each handled when the
      * inactive caches are cleaned (0x657b0), then emptied. derived name. */
     hkArray<SortRecord00062100> sortRecords;
@@ -12009,6 +12050,14 @@ struct hknpWorld {
      * motion's frame times its inverse inertia. derived name. */
     void FUN_0005e910(int bodyId, const Vec4 &impulse);
 
+    /* Whether an id names a body (inline in 0x63a40): a valid id inside
+     * the bodies' storage whose body is static or dynamic. derived name. */
+    bool isBodyValid(int bodyId) const
+    {
+        return bodyId != 0x7fffffff && u32(bodyId) < u32(bodyManager.bodies.getCapacity()) &&
+               (bodyManager.bodies[bodyId].flags & (hknpBody::IS_STATIC | hknpBody::IS_DYNAMIC));
+    }
+
     /* A motion by its id (inline; the body's detach from its motion,
      * 0x4c420, reads it through the world). derived name. */
     hknpMotion &getMotion(int motionId)
@@ -12145,7 +12194,7 @@ struct hknpWorld {
     /* The collision caches of pairs of bodies rebuilt (0x5c120; the pair
      * filter's enabling of a pair, 0x167953, with one pair). derived
      * name. */
-    void FUN_0005c120(const struct hknpBodyIdPair *pairs, int numPairs, int mode);
+    void FUN_0005c120(const hknpBodyIdPair *pairs, int numPairs, int mode);
     /* Bodies removed from the world (0x4e5d0; the ball gun's reset at
      * 0x15858c passes one with mode 0). derived names. */
     void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
@@ -12235,6 +12284,46 @@ struct hknpWorld {
      * when the flag at +0x4f0 is set, each enabled constraint of the body
      * recorded with the other body at +0x4f8. derived name. */
     void FUN_0004c5f0(u32 bodyId, int motionId);
+
+    /* When the flag at +0x4f0 is set, each enabled constraint of a body
+     * recorded with the other body at +0x4f8 (inline in 0x4c5f0 and
+     * 0x4c770, by keyword: without the hint 0x4c5f0 tail-calls it): the
+     * first body's id read through a reference bound at the loop's head,
+     * before the call and again after it. derived name. */
+    inline void recordConstraintPairs(u32 bodyId)
+    {
+        if (enabled4f0) {
+            const int numBodies = constraintManager.lists.firstConstraintOfBody.getSize();
+            if (bodyId < u32(numBodies)) {
+                u32 constraintId = constraintManager.lists.firstConstraintOfBody[bodyId];
+                const hknpConstraint *constraints = constraintManager.constraints;
+                while (constraintId != 0x7fffffff) {
+                    const hknpConstraint &constraint = constraints[constraintId];
+                    const u32 &firstBodyId = constraint.bodyIdA;
+                    if (!(constraint.flags & 4)) {
+                        object4f8->FUN_000655b0(bodyId, firstBodyId ^ bodyId ^ constraint.bodyIdB);
+                    }
+                    const hknpConstraintManager::ConstraintLists::Links &links =
+                        constraintManager.lists.constraintLinks[constraint.id];
+                    constraintId = links.next(firstBodyId, bodyId);
+                }
+            }
+        }
+    }
+
+    /* Whether the bodies' pairs make a group (0x4cad0): the bodies, the
+     * group found and the pairs. derived names. */
+    bool FUN_0004cad0(const int *bodyIds, int numBodyIds, int &groupOut,
+                      hkArray<struct IdPair0004cad0, hkContainerTempAllocator> &pairsOut);
+    /* A body's group rebuilt (0x4c770; 0x5c900 calls it): nothing unless
+     * the flag at +0x4f0 is set and the body is in the broad phase; with no
+     * mode the body is only activated (0x639b0). Otherwise the attached
+     * bodies in a group gathered, the group found over them (0x4cad0); an
+     * inactive body's attached bodies taken out of theirs first (0x653b0);
+     * the group joined (0x64f30) or the body activated (0x639b0, 0x63da0);
+     * when the group changed, every attached body's constraints recorded.
+     * derived names. */
+    void FUN_0004c770(int bodyId, int mode);
 
     /* The object at +0x6b8 replaced (0x35eb0; the constructor at 0x4a26e,
      * the game at 0xea98db): the world's own at +0x6c0 when none is given,
@@ -12614,6 +12703,21 @@ struct hknpFirstPersonGunDefaults /* derived name */
     int defaultOffsets[5];
     const char *name;
     u8 keyboardKey;
+};
+
+/* hknpBallGun's member defaults (its hkClass's, at 0x14be8b8): the
+ * offsets of its eleven members' values, -1 for none, then the values of
+ * the first six. The rows are generated from the executable (D18). derived
+ * name. */
+struct hknpBallGunDefaults /* derived name */
+{
+    int defaultOffsets[11];
+    float bulletRadius;
+    float bulletVelocity;
+    float bulletMass;
+    float damageMultiplier;
+    int maxBulletsInWorld;
+    float bulletOffsetFromCenter[4];
 };
 
 struct hknpProjectileGunDefaults /* derived name */
@@ -13369,9 +13473,9 @@ class hknpPairCollisionFilter : public hknpCollisionFilter
      * starts empty; the child filter is left as loaded. */
     hknpPairCollisionFilter(hkFinishLoadedObjectFlag flag);
 
-    int FUN_001679a0(const hknpCollisionFilterContext &context,
-                     hknpCollisionFilterBodyIdPair *pairs, int numPairs) const; /* derived name */
-    bool FUN_00167ad0(int queryType, u8 layerIndex) const;                      /* derived name */
+    int FUN_001679a0(const hknpWorld &world, hknpBodyIdPair *pairs,
+                     int numPairs) const;                  /* derived name */
+    bool FUN_00167ad0(int queryType, u8 layerIndex) const; /* derived name */
     bool FUN_00167be0(int queryType, const hknpCollisionFilterQueryInput &query,
                       const hknpCollisionFilterTargetInput &target) const; /* derived name */
     bool FUN_00167af0(int queryType, u32 bodyIdA, u32 bodyIdB) const;      /* derived name */
@@ -19261,6 +19365,26 @@ class hkGeometry : public hkReferencedObject
  * it at no tolerance). derived name. */
 void FUN_001891e0(hkGeometry *geometry, float tolerance);
 
+/* The records the weld's worker (0x189540) is given arrays of, 32 and 8
+ * bytes (derived names; their fields not read yet). */
+struct WeldRecord00189540 /* derived name */
+{
+    u8 unknown0[0x20];
+};
+
+struct WeldLink00189540 /* derived name */
+{
+    u8 unknown0[8];
+};
+
+/* The weld's worker (0x189540): the tolerance, a flag (read as a byte at
+ * 0x189872) and the caller's six arrays, the last three sized to the
+ * vertices and four more. The tolerance comes before the flag: the caller
+ * reloads it before it sets the flag (0x1893d1). derived names. */
+void FUN_00189540(hkGeometry *geometry, float tolerance, bool flag, hkArray<int> &arrayA,
+                  hkArray<int> &arrayB, hkArray<Vec4> &arrayC, hkArray<WeldRecord00189540> &arrayD,
+                  hkArray<WeldLink00189540> &arrayE, hkArray<WeldRecord00189540> &arrayF);
+
 /* hkGeometry::Triangle: the vertex indices a, b and c and the material, four
  * hkInt32 (member records 0x168e950 to 0x168e9c8). */
 struct hkGeometry::Triangle {
@@ -21893,7 +22017,7 @@ struct hknpWorldStreams260 /* derived name */
     hkBlockStream stream900;
     hkBlockStream streamA00;
     hkBlockStream streamB00;
-    hkArray<u8> arrayC00;
+    hkArray<BodyKeyPair0005c120> arrayC00;
     hkArray<Vec4> arrayC10;
     hkArray<EntryC20> arrayC20;
 };

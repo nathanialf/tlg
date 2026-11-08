@@ -1354,14 +1354,27 @@ template <typename T, typename Allocator> inline T &hkArray<T, Allocator>::expan
     return this->data[this->size++];
 }
 
+/* Storage for a number of elements from an allocator's slot 4, which may
+ * round the bytes up: the elements they hold given back through the count
+ * (the shape of Havok's hkMemHeapBufAlloc). Its own function: inlined into
+ * hkArray(int n) first, the byte count's lifetime is the allocation's
+ * block alone, so the array's member stores around it are scheduled
+ * freely (0x1891e0's second and third arrays, cookbook 770). derived
+ * name. */
+template <typename T> inline T *allocateElements(AllocatorBase &allocator, int &numElements)
+{
+    int numBytes = numElements * int(sizeof(T));
+    T *storage = static_cast<T *>(allocator.FUN_00008d70(numBytes));
+    numElements = numBytes / int(sizeof(T));
+    return storage;
+}
+
 template <typename T, typename Allocator> inline hkArray<T, Allocator>::hkArray(int n)
 {
     int capacity = n;
     T *storage = HK_NULL;
     if (capacity) {
-        int numBytes = capacity * int(sizeof(T));
-        storage = static_cast<T *>(Allocator::get().FUN_00008d70(numBytes));
-        capacity = numBytes / int(sizeof(T));
+        storage = allocateElements<T>(Allocator::get(), capacity);
     }
     this->data = storage;
     this->size = n;
@@ -6780,14 +6793,6 @@ struct BodyPairEntry000717d0 /* derived name */
     hknpBodyId bodyB;
     /* The collision cache the pair came from (0x72833). derived name. */
     const struct hknpCollisionCache *cache;
-};
-
-/* Two bodies' ids (derived name after Havok's hknpBodyIdPair): the pairs
- * whose caches 0x636c0 drops. */
-struct hknpBodyIdPair /* derived name */
-{
-    hknpBodyId bodyIdA;
-    hknpBodyId bodyIdB;
 };
 
 /* A cache of a pair either dropped (its bodies' pair recorded and its type's
