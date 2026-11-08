@@ -1,18 +1,11 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-// NONMATCHING: 33 of 44, every store the base's but one pair: the base stores
-// the motor's isEnabled and motorAxis (+0xb2, +0xb3) as one zero word, in its
-// place in the chain. Measured (round 66A): MergeConsecutiveStores is tried
-// only from a store that ends a store sequence (its chain not used by a
-// single store, DAGCombiner.cpp:7888-7891), walks up over stores of the same
-// width only, and places the merged store at the run's earliest member. With
-// the pair written last it merges into the word but lands at the end; at any
-// of the other 25 positions nothing merges. The base's chain therefore ended
-// a sequence at motorAxis with isEnabled directly above it (a load or a
-// memory intrinsic after it at selection time, which leaves no bytes of its
-// own), or the pair was one 16-bit store from the start (docs/NOTES.md,
-// Round 66A).
+/* The motor's off state is written twice, before its target and again with
+ * its axis, as in the linear clearance data's constructor (0x836d0): the
+ * three zero stores into the motor's flag and axis make MemCpyOpt's
+ * two-byte memset, one 16-bit store at the end of the zero run (0x7e4c5);
+ * written once, the flag and the axis stay two byte stores. */
 hkpPrismaticConstraintData::hkpPrismaticConstraintData()
 {
     atoms.transforms.type = hkpConstraintAtom::TYPE_SET_LOCAL_TRANSFORMS;
@@ -30,6 +23,7 @@ hkpPrismaticConstraintData::hkpPrismaticConstraintData()
     atoms.linLimit.axisIndex = 0;
     atoms.friction.maxFrictionForce = 0.0f;
     atoms.friction.frictionAxis = 0;
+    atoms.motor.isEnabled = false;
     atoms.motor.targetPosition = 0.0f;
     atoms.motor.motor = HK_NULL;
     atoms.motor.isEnabled = false;

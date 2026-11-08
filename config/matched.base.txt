@@ -2825,3 +2825,5 @@ FUN_001a0890 src/libs/havok/Common/Serialize/Copier/hkObjectCopier.cpp _ZNK14hkO
 FUN_001655f0 src/libs/unknown/func_001655f0.cpp _ZNK19hknpVehicleInstance12FUN_001655f0ERK11hkTransformPK21hknpVehicleSuspensioniRDv4_fR12hkQuaternion
 FUN_0004c170 src/libs/unknown/func_0004c170.cpp _ZN9hknpWorld12FUN_0004c170EiiPK12hkQuaternion
 FUN_0005dc50 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005dc50EiRKDv4_fS2_
+_ZN26hkpPrismaticConstraintDataC1Ev src/libs/unknown/func_0007e3d0.cpp
+_ZN32hkpLinearClearanceConstraintDataC1Ev src/libs/unknown/func_000836d0.cpp

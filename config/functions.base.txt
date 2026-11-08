@@ -1928,7 +1928,7 @@
 0x00083630 0x70 FUN_00083630
 0x000836a0 0x6 FUN_000836a0
 0x000836c0 0xe FUN_000836c0
-0x000836d0 0x193 FUN_000836d0
+0x000836d0 0x193 _ZN32hkpLinearClearanceConstraintDataC1Ev
 0x00083880 0x19 _ZN32hkpLinearClearanceConstraintData5AtomsC1E24hkFinishLoadedObjectFlag
 0x000838b0 0xa6 _ZN32hkpLinearClearanceConstraintDataD0Ev
 0x00083960 0x5c _ZN32hkpLinearClearanceConstraintDataD1Ev
