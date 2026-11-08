@@ -14758,9 +14758,10 @@ extern const hkClass D_57c4650; /* hkpConstraintAtom's hkClass */
  * three enums (records from 0x169ed60) the third is SolvingMethod, items
  * METHOD_STABILIZED 0 and METHOD_OLD 1 (0x169ed48, 0x169ed58). */
 struct hkpConstraintAtom {
-    /* AtomType (its items from 0x169ea70), the ones the constructors
-     * store. */
+    /* AtomType (its items from 0x169ea70, every one named there; the
+     * constraint info walk 0x82890 switches over them). */
     enum AtomType {
+        TYPE_INVALID = 0,
         TYPE_BRIDGE = 1,
         TYPE_SET_LOCAL_TRANSFORMS = 2,
         TYPE_SET_LOCAL_TRANSLATIONS = 3,
@@ -14786,10 +14787,27 @@ struct hkpConstraintAtom {
         TYPE_SETUP_STABILIZATION = 23,
         TYPE_3D_ANG = 24,
         TYPE_DEFORMABLE_3D_LIN = 25,
-        TYPE_DEFORMABLE_3D_ANG = 26
+        TYPE_DEFORMABLE_3D_ANG = 26,
+        TYPE_OVERWRITE_PIVOT = 27,
+        TYPE_WHEEL_FRICTION = 28,
+        TYPE_ELLIPTICAL_LIMIT = 29,
+        TYPE_CONTACT = 30,
+        FIRST_MODIFIER_TYPE = 31,
+        TYPE_MODIFIER_SOFT_CONTACT = 31,
+        TYPE_MODIFIER_MASS_CHANGER = 32,
+        TYPE_MODIFIER_VISCOUS_SURFACE = 33,
+        TYPE_MODIFIER_MOVING_SURFACE = 34,
+        TYPE_MODIFIER_IGNORE_CONSTRAINT = 35,
+        TYPE_MODIFIER_CENTER_OF_MASS_CHANGER = 36,
+        LAST_MODIFIER_TYPE = 36,
+        TYPE_MAX = 37
     };
 
     enum SolvingMethod { METHOD_STABILIZED = 0, METHOD_OLD = 1 };
+
+    /* Every atom starts with its type (the info walk 0x82890 switches on
+     * it). */
+    u16 type;
 };
 
 /* hkpAngConstraintAtom (hkClass 0x57c4750, built at 0x807b0: 0x10 bytes,
@@ -19847,6 +19865,16 @@ class hknpVehicleLinearCastWheelCollide : public hknpVehicleWheelCollide
      * 14), then the callback (slot 11). derived name. */
     void collideWheels(float deltaTime, const class hknpVehicleInstance *vehicle,
                        WheelCollideOutput *outputs, const hknpWorld *world);
+
+    /* Slot 5 (0x1789a0): the wheel states made on the first call, each
+     * with a new shape for its wheel's width and radius (0x178620), then
+     * every wheel's state set as slot 7 sets it and the chassis's body
+     * kept. derived name. */
+    void init(const class hknpVehicleInstance *vehicle);
+
+    /* A wheel's cast shape for its width and radius (0x178620). derived
+     * name. */
+    static const hknpShape *FUN_00178620(float width, float radius);
 
     /* Slot 7 (0x178fd0): each wheel state's transform set from the chassis's
      * orientation, the wheel's steering and the chassis frame, at the hard

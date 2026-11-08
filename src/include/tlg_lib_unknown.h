@@ -2192,7 +2192,13 @@ class BufferAllocator : public AllocatorBase /* derived name */
      * differ. derived names. */
     void *FUN_00090b70(int &numBytesInOut, bool exactSize);
     void blockFree(void *pointer, int numBytes); /* slot 3 (0x90d90); derived name */
-    bool FUN_00091090(int numBytes) const;       /* derived name */
+    /* Slot 5 (0x90dc0): a block given back under the lock: the buffer's
+     * end pulled back over it, and over the freed blocks that then end
+     * there, when it ends where the buffer's use does; else merged into
+     * the freed block before it or after it, or put among them in address
+     * order. derived name. */
+    void FUN_00008d80(void *pointer, int numBytes);
+    bool FUN_00091090(int numBytes) const; /* derived name */
     /* The buffer handed over under the lock (0x90a10; the memory system's
      * slots 2 and 3 set it and clear it). derived name. */
     void FUN_00090a10(void *buffer, int numBytes);
@@ -6456,6 +6462,16 @@ struct BroadPhaseTree00142a40 /* derived name */
      * name. */
     void FUN_0013cf50(u32 bodyIndex, const struct hknpBody *bodies);
 
+    /* The tree rebuilt over bodies' boxes (0x13b940): the boxes gathered
+     * in the thread's stack, the tree built over them and the bodies' ids
+     * (0x196190), then each body's broad phase id set to the node of the
+     * leaf it went to. derived name. */
+    void FUN_0013b940(hknpBody *bodies, const u32 *bodyIndices, int numBodies);
+
+    /* The tree built over boxes keyed by the bodies' ids (0x196190, the
+     * supervisor's this round). derived name. */
+    void FUN_00196190(const hkAabb16 *aabbs, const u32 *bodyIndices, int numAabbs);
+
     /* Bodies' boxes removed from the tree, each from the leaf its broad
      * phase id names (0x13db00; the layers' removal at 0x14146e). derived
      * name. */
@@ -6757,6 +6773,12 @@ class BroadPhaseLayers00142a40 /* derived name */
      * removed from each layer's tree; each removed body's mark cleared and
      * its layer flagged for the update. derived name. */
     void FUN_001412e0(const hknpBodyId *bodyIds, int numBodies, const hknpBody *bodies);
+
+    /* Each layer's tree without its flag at +0x50 rebuilt over the bodies
+     * its leaves hold (0x1430b0): the leaves gathered, every box's body id
+     * collected from their buckets, the tree rebuilt over them (0x13b940).
+     * derived name. */
+    void FUN_001430b0(hknpBody *bodies);
 
     /* Slot 7 (0x142e00): the tasks made on first use, then set up from the
      * arguments as they came. derived name. */
@@ -7388,6 +7410,41 @@ inline void hkpLinearParametricCurve::operator delete(void *object, unsigned lon
 inline void hkPackfileWriter::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
+}
+
+/* One wheel's state for the step (inline in slots 5 and 7, 0x1789a0 and
+ * 0x178fd0): its transform's rotation from the
+ * chassis's orientation, the wheel's steering and the chassis frame with its
+ * first two axes swapped, the transform at the hard point, and the cast's end
+ * the suspension's length along its direction. */
+inline void hknpVehicleLinearCastWheelCollide::updateWheelState(const hknpVehicleInstance *vehicle,
+                                                                u8 wheelIndex)
+{
+    const hknpVehicleInstance::WheelInfo &wheelInfo = vehicle->wheelsInfo[wheelIndex];
+    WheelState &wheelState = wheelStates[wheelIndex];
+
+    hknpWorld *world = vehicle->world;
+    const hknpBody &chassis = world->bodyManager.bodies[vehicle->bodyId.value];
+    const hkQuaternion &chassisOrientation =
+        world->motionManager.motions[chassis.motionId].orientation;
+    hkQuaternion wheelOrientation;
+    wheelOrientation.setMul(chassisOrientation, wheelInfo.steeringOrientationChassisSpace);
+
+    const hkMatrix3 &frame = vehicle->data->chassisOrientation;
+    hkMatrix3 rotation;
+    rotation.col0 = frame.col1;
+    rotation.col1 = frame.col0;
+    rotation.col2 = frame.col2;
+    hkQuaternion shapeOrientation; /* derived name */
+    shapeOrientation.FUN_0001a1c0(rotation);
+    wheelOrientation.setMul(wheelOrientation, shapeOrientation);
+    wheelState.transform.rotation.FUN_0000bd30(wheelOrientation);
+
+    wheelState.transform.translation = wheelInfo.hardPointWs;
+    wheelState.to =
+        _mm_add_ps(_mm_mul_ps(_mm_set1_ps(vehicle->suspension->wheelParams[wheelIndex].length),
+                              wheelInfo.suspensionDirectionWs),
+                   wheelInfo.hardPointWs);
 }
 
 inline void hknpVehicleLinearCastWheelCollide::operator delete(void *object, unsigned long numBytes)
