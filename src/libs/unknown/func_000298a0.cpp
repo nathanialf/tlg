@@ -30,17 +30,19 @@ static inline void addShiftedInertia(const Vec4 &shift, const Vec4 &mass, hkMatr
  * the volumes and the centre of mass summed over the elements in the
  * group's frame, then each element's inertia turned into that frame and
  * shifted to the group's centre; a group without mass fails. */
-// NONMATCHING: 121 of 139, size equal: (1) the first loop's sums in other registers (the base:
-// zero xmm2, volume xmm0, mass xmm1, centre xmm3) and the volume's add before the mass's
-// broadcast; (2) the shift's two products take the negated mass second in the base
-// (`vmulps xmm0, xmm0, xmm2`), first here: Reassociate ranks the mass's load below the sums'
-// expression (3.3 Reassociate.cpp:1837-1852); the base's mass operand ranks higher.
-// NOTES Round 79A.
+// NONMATCHING: 130 of 139, size equal; the sums declared in Havok's order (the centre, the
+// mass, then the volume) take the base's registers (zero xmm2, volume xmm0, mass xmm1, centre
+// xmm3). Left: (1) the first loop's tail, list-ilp's order: the base adds the translation in
+// place (xmm4), adds the volume, broadcasts the mass into xmm5 and steps the pointer before the
+// product; here the broadcast comes first and the step last; (2) the shift's two products
+// take the negated mass second in the base (`vmulps xmm0, xmm0, xmm2`), first here:
+// Reassociate ranks the mass's load below the sums' expression (3.3 Reassociate.cpp:1837-1852);
+// the base's mass operand ranks higher. NOTES Round 79A and Round 80A.
 hkResult FUN_000298a0(const hkArray<hkMassElement> &elements, hkMassProperties &result)
 {
-    float groupVolume = 0.0f;
-    Vec4 groupMass = _mm_setzero_ps();
     Vec4 groupCenterOfMass = _mm_setzero_ps();
+    Vec4 groupMass = _mm_setzero_ps();
+    float groupVolume = 0.0f;
     for (int i = 0; i < elements.getSize(); i++) {
         const hkMassElement &element = elements[i];
         const Vec4 centerOfMass =

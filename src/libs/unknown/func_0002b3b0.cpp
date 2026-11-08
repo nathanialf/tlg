@@ -9,14 +9,15 @@
  * the packed normal (the direction when the normal is zero), then offset by
  * the motion's centre of mass; the distances the entries' values B scaled
  * by the info and negated, the smallest kept. */
-// NONMATCHING: 24 of 135 (size 586 against 615), the data flow the base's: left, (1) the
-// side's test: the base sets the side once (`cmp [rcx+0x2c], 0; setne; movzx`, the branch on
-// the same flags) and forms the points' address from it before the loop, here CodeGenPrepare
-// sinks a compare into each user block; (2) the base computes the first point's reference
-// (the direction scaled by its w) inside the loop where LICM hoists it here, and keeps the
-// orientation's w*w - 1/2 and two constant rows on the stack before the loop. A reference read
-// back from the output (out->vector10, forwarded by GVN after LICM) is the lead for (2).
-// NOTES Round 79A.
+// NONMATCHING: 2 of 141 by position (630 bytes against 615); the orientation is read into a
+// local before the loop as the base's is (its load and w*w - 1/2 before the loop, 0x2b490 to
+// 0x2b4cb, where a read in the loop stays in it: the output's stores may alias the motion).
+// Left: (1) the side's test: the base sets the side once (`cmp [rcx+0x2c], 0; setne; movzx`,
+// the branch on the same flags) and keeps rbx for the count, here the side is tested twice;
+// (2) the first point's reference (the direction times its w, 0x2b548): in the loop's first
+// block in the base, hoisted by LICM and spilled here; the base's direction is a register in
+// the loop (xmm2), so a reference read back from the output (round 79A's lead) is not it.
+// NOTES Round 79A and Round 80A.
 void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion *motionA,
                   const hknpMotion *motionB, Output0002b3b0 *out)
 {
@@ -27,6 +28,7 @@ void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion 
         sign = _mm_sub_ps(_mm_setzero_ps(), sign);
     }
     const hknpMotion *motion = motions[side];
+    const hkQuaternion orientation = motion->orientation;
     const Vec4 distanceScale = _mm_mul_ps(_mm_set1_ps(info->value130), info->vector40);
     const int count = self->count < 4 ? self->count : 4;
     const Vec4 direction = self->direction;
@@ -47,7 +49,7 @@ void FUN_0002b3b0(const Info0002b180 *info, Pair08Owner *self, const hknpMotion 
     Vec4 reference = _mm_setzero_ps();
     for (int i = 0; i < count; i++) {
         const Vec4 &local = (&entry[i].vectorA)[side];
-        const Vec4 rotated = rotatedDir(motion->orientation, local);
+        const Vec4 rotated = rotatedDir(orientation, local);
         Vec4 point = _mm_mul_ps(sign, cross3(direction, rotated));
         if (i == 0) {
             reference = _mm_add_ps(_mm_mul_ps(direction, _mm_shuffle_ps(direction, direction,
