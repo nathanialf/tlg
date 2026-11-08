@@ -17,7 +17,7 @@ void Modifier16a4860::FUN_00156dc0(const void *threadContext, const void *shared
         static_cast<ManifoldScaleProperty *>(FUN_0017a0a0(input->collisionCache, 2, 16, 16));
     const Vec4 damp = simdFromFloat(dampFactor);
     const Vec4 r = _mm_rcp_ps(damp);
-    const Vec4 inverseDamp = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(damp, r)));
+    const Vec4 inverseDamp = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(damp, r)));
     const Vec4 ratio = _mm_mul_ps(simdFromFloat(forceFactor), inverseDamp);
     property->separationVelocity = material->softContactSeperationVelocity.getReal();
     property->scaleB = _mm_cvtss_f32(_mm_min_ps(ratio, D_14b2060[3]));

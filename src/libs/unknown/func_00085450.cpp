@@ -23,7 +23,7 @@ void FUN_00085450(const AngularConstraintInfo00085450 &info, const ConstraintQue
                   D_14b2060[3], 0x7F),
         D_14b2060[35]);
     const Vec4 r = _mm_rcp_ps(diag);
-    const Vec4 invDiag = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(diag, r)));
+    const Vec4 invDiag = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(diag, r)));
     jac->angular[0] = _mm_blend_ps(angularA, _mm_mul_ps(virtMassFactor, invDiag), 8);
     const Vec4 error =
         _mm_mul_ps(_mm_dp_ps(info.zeroErrorAxisAinW.quad, info.perpZeroErrorAxisBinW.quad, 0x7F),

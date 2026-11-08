@@ -28,7 +28,8 @@ hkResult hkMatrix3::FUN_0001ae40(const hkMatrix3 &m)
         const Vec4 r1 = cross3(c2, c0);
         const Vec4 r2 = cross3(c0, c1);
         const Vec4 r = _mm_rcp_ps(determinant);
-        const Vec4 inverse = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(determinant, r)));
+        const Vec4 inverse =
+            _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(determinant, r)));
         const Vec4 lo = _mm_unpacklo_ps(r0, r1);
         const Vec4 hi = _mm_unpackhi_ps(r0, r1);
         col0 = _mm_mul_ps(_mm_movelh_ps(lo, r2), inverse);

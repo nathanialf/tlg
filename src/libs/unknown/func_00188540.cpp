@@ -11,7 +11,7 @@
  * the highest set bit of a four-bit mask. */
 extern const Vec4 D_14b2060[];
 extern const Vec4 D_14b4360;
-extern const Vec4 D_14b4380;
+extern const float D_14b4380[4];
 extern const Vec4 D_14b4390;
 extern const u32 D_14b7220[];
 extern const u8 D_14c4160[];
@@ -173,7 +173,8 @@ bool FUN_00187750(const Vec4 &point, const Vec4 *planes, int numPlanes,
                 const Vec4 c = FUN_cross(simplex[0], simplex[1]);
                 const Vec4 len2 = _mm_dp_ps(c, c, 0x7F);
                 const Vec4 r = _mm_rcp_ps(len2);
-                const Vec4 rcp = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(len2, r)));
+                const Vec4 rcp =
+                    _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(len2, r)));
                 const Vec4 invLen2 = _mm_andnot_ps(_mm_cmpeq_ps(len2, _mm_setzero_ps()), rcp);
                 hkMatrix3 m;
                 m.col0 = _mm_mul_ps(FUN_cross(simplex[1], c), invLen2);

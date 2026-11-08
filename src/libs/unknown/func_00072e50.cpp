@@ -52,7 +52,7 @@ void hknpCapsuleShape::unknownVirtual18(const SignedDistanceQuery &query,
         const Vec4 projection = _mm_dp_ps(ab, toA, 0x7f);
         const Vec4 r = _mm_rcp_ps(lengthSquared);
         const Vec4 invLengthSquared =
-            _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(lengthSquared, r)));
+            _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(lengthSquared, r)));
         Vec4 t = _mm_mul_ps(projection, invLengthSquared);
         t = _mm_blendv_ps(D_14b2060[3], t, _mm_cmplt_ps(t, D_14b2060[3]));
         t = _mm_max_ps(_mm_setzero_ps(), t);

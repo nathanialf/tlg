@@ -21,7 +21,8 @@ void hknpVehicleDefaultSteering::calcMainSteeringAngle(
     const Vec4 fullAngleSpeed = _mm_set1_ps(maxSpeedFullSteeringAngle);
     if (_mm_ucomigt_ss(forwardSpeed, fullAngleSpeed)) {
         const Vec4 r = _mm_rcp_ps(forwardSpeed);
-        const Vec4 inverse = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(forwardSpeed, r)));
+        const Vec4 inverse =
+            _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(forwardSpeed, r)));
         const Vec4 factor = _mm_mul_ps(fullAngleSpeed, inverse);
         steeringOutput.mainSteeringAngle *= _mm_cvtss_f32(_mm_mul_ps(factor, factor));
     }

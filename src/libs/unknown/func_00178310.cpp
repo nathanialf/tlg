@@ -21,7 +21,8 @@ void FUN_00178310(Object00178580 *self, const Vec4 &linearVelocity, const Vec4 &
     }
     const Vec4 t = deltaTime;
     const Vec4 r = _mm_rcp_ps(t);
-    self->acceleration = _mm_mul_ps(change, _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(t, r))));
+    self->acceleration =
+        _mm_mul_ps(change, _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(t, r))));
     const Vec4 angularVelocity = rotatedDir(motion.orientation, motion.angularVelocity);
     FUN_0005dc50(world, self->index, linearVelocity, angularVelocity);
 }

@@ -11,7 +11,7 @@ static inline Vec4 zeroW(const Vec4 &v)
 static inline Vec4 reciprocal(const Vec4 &v)
 {
     const Vec4 r = _mm_rcp_ps(v);
-    return _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(v, r)));
+    return _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(v, r)));
 }
 
 void hkIntSpaceUtil::FUN_000936a0(const hkAabb &newAabb)

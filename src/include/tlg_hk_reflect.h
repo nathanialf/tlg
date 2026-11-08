@@ -5006,17 +5006,22 @@ class hknpTyremarksWheel : public hkReferencedObject
     }
 
     /* A point written over the oldest, unless it and the newest both have
-     * no strength (inline in 0x68f50). derived name. */
+     * no strength (inline in 0x68f50). The count and the position are read
+     * once on entry (the base loads the position before the first test and
+     * indexes the store with it; the count's load sinks into the newest's
+     * test) and the strengths compared as vectors (`vpshufd 0xff;
+     * vucomiss`). derived name. */
     void addTyremarkPoint(const Vec4 &pointLeft, const Vec4 &pointRight)
     {
-        if (_mm_cvtss_f32(broadcast<3>(pointRight)) == 0.0f) {
-            const hknpTyremarkPoint &newest =
-                tyremarkPoints.data[(numPoints + currentPosition - 1) % numPoints];
-            if (_mm_cvtss_f32(broadcast<3>(newest.pointRight)) == 0.0f) {
+        const int count = numPoints;         /* derived name */
+        const int current = currentPosition; /* derived name */
+        if (_mm_ucomieq_ss(broadcast<3>(pointRight), _mm_setzero_ps())) {
+            const hknpTyremarkPoint &newest = tyremarkPoints.data[(count + current - 1) % count];
+            if (_mm_ucomieq_ss(broadcast<3>(newest.pointRight), _mm_setzero_ps())) {
                 return;
             }
         }
-        hknpTyremarkPoint &point = tyremarkPoints.data[currentPosition];
+        hknpTyremarkPoint &point = tyremarkPoints.data[current];
         point.pointLeft = pointLeft;
         point.pointRight = pointRight;
         currentPosition = (currentPosition + 1) % numPoints;
@@ -5856,15 +5861,29 @@ struct hkPackedVector8_3 {
 
 extern const hkClassMember D_168e7a0[]; /* derived name: hkPackedVector8_3's record */
 
-/* Two in every lane (derived name): the Newton step of the reciprocal. */
-extern const Vec4 D_14b4380;
+/* The math constants at 0x14b4290 to 0x14b43b0 are separate objects to the
+ * base's compiler, not one table: each is reached through its own GOT load
+ * (0x1a00b, 0x1a017 and 0x1a026 take 0x14b4300, 0x14b42f0 and 0x14b4320 one
+ * load each where a table's address is loaded once and offset, as
+ * D_14b2060's rows are), and the executable keeps no GOT slot for any of
+ * them, every load relaxed to `lea`. */
+
+/* Two in every lane (derived name): the Newton step of the reciprocal,
+ * four floats read with `_mm_load_ps`. A load through a pointer cast of the
+ * array is not one LICM may speculate (3.3's isDereferenceablePointer takes
+ * a global, a GEP into one, an alloca or a byval argument, never a bitcast,
+ * Value.cpp:403-457), so 0x68f50 keeps it in its branch with only the
+ * address hoisted, where a `const Vec4`'s load is hoisted out of the loop;
+ * the memory is still constant to alias analysis, so every other user
+ * schedules it as before. */
+extern const float D_14b4380[4];
 
 /* One half and three in every lane (derived names): the Newton step of the
  * reciprocal square root. */
 extern const Vec4 D_14b4360;
 extern const Vec4 D_14b4390;
 
-/* One and a half pi in every lane (derived names). */
+/* One and pi over two in every lane (derived names). */
 extern const Vec4 D_14b4370;
 extern const Vec4 D_14b4310;
 
@@ -6033,7 +6052,7 @@ void FUN_0001a360(Vec4 &perpendicularOut, const Vec4 &v); /* derived name */
 inline Vec4 reciprocalOrZero(const Vec4 &v) /* derived name */
 {
     const Vec4 r = _mm_rcp_ps(v);
-    const Vec4 refined = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(v, r)));
+    const Vec4 refined = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(v, r)));
     return _mm_andnot_ps(_mm_cmpeq_ps(v, _mm_setzero_ps()), refined);
 }
 
@@ -6045,7 +6064,7 @@ inline Vec4 simdReciprocalOrZero(const Vec4 &v) /* derived name */
 {
     const Vec4 equalsZero = _mm_cmpeq_ps(v, _mm_setzero_ps());
     const Vec4 r = _mm_rcp_ps(v);
-    const Vec4 refined = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, v)));
+    const Vec4 refined = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(r, v)));
     return _mm_andnot_ps(equalsZero, refined);
 }
 
@@ -6054,7 +6073,7 @@ inline void hkcdRay::setEndPoints(const Vec4 &start, const Vec4 &end)
     Vec4 dir = _mm_blend_ps(_mm_sub_ps(end, start), D_14b2060[3], 8);
     dir = _mm_andnot_ps(_mm_cmpeq_ps(dir, _mm_setzero_ps()), dir);
     const Vec4 r = _mm_rcp_ps(dir);
-    const Vec4 inv = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, dir)));
+    const Vec4 inv = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(r, dir)));
     const __m128i sign = _mm_slli_epi32(_mm_srli_epi32(_mm_castps_si128(dir), 31), 31);
     const Vec4 signedMax =
         _mm_castsi128_ps(_mm_xor_si128(sign, _mm_castps_si128(_mm_set1_ps(HK_REAL_MAX))));
@@ -6070,7 +6089,7 @@ inline void hkcdRay::setOriginDirection(const Vec4 &newOrigin, const Vec4 &newDi
     Vec4 dir = _mm_blend_ps(newDirection, D_14b2060[2], 8);
     dir = _mm_andnot_ps(_mm_cmpeq_ps(dir, _mm_setzero_ps()), dir);
     const Vec4 r = _mm_rcp_ps(dir);
-    const Vec4 inv = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, dir)));
+    const Vec4 inv = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(r, dir)));
     const __m128i sign = _mm_slli_epi32(_mm_srli_epi32(_mm_castps_si128(dir), 31), 31);
     const Vec4 signedMax =
         _mm_castsi128_ps(_mm_xor_si128(sign, _mm_castps_si128(_mm_set1_ps(HK_REAL_MAX))));

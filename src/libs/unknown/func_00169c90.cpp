@@ -62,7 +62,8 @@ void FUN_00169c90(int shapeType, const Vec4 *vertices, int numVertices, int scal
             }
             const Vec4 delta = _mm_sub_ps(_mm_mul_ps(absScale, radiusV), newRadius);
             const Vec4 r = _mm_rcp_ps(halfExtents);
-            const Vec4 inverse = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(halfExtents, r)));
+            const Vec4 inverse =
+                _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(halfExtents, r)));
             radiusInOut = _mm_cvtss_f32(newRadius);
             const Vec4 grow = _mm_andnot_ps(_mm_cmpeq_ps(halfExtents, _mm_setzero_ps()),
                                             _mm_mul_ps(delta, inverse));

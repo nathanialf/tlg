@@ -34,7 +34,7 @@ buildLinearRows(const Vec4 &pivotA, const Vec4 &pivotB, const Vec4 &dir, const V
     const Vec4 diag = _mm_hadd_ps(sum, sum);
     jac->angular[1] = _mm_blend_ps(angularB, diag, 8);
     const Vec4 r = _mm_rcp_ps(diag);
-    const Vec4 invDiag = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(diag, r)));
+    const Vec4 invDiag = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(diag, r)));
     jac->angular[0] =
         _mm_blend_ps(angularA, _mm_mul_ps(_mm_set1_ps(in.virtMassFactor), invDiag), 8);
     const Vec4 distance = _mm_dp_ps(error, dir, 0x7f);

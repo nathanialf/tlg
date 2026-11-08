@@ -54,7 +54,8 @@ void hknpVehicleLinearCastWheelCollide::FUN_001794e0(const hknpVehicleInstance *
         const Vec4 projected = _mm_dp_ps(_mm_sub_ps(chassisVelocity, groundVelocity),
                                          output.contactPoint.separatingNormal, 0x7f);
         const Vec4 r = _mm_rcp_ps(denominator);
-        const Vec4 inverse = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(denominator, r)));
+        const Vec4 inverse =
+            _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(denominator, r)));
         const Vec4 scaling = _mm_sub_ps(_mm_setzero_ps(), inverse);
         output.suspensionClosingSpeed = _mm_cvtss_f32(_mm_mul_ps(projected, scaling));
         output.suspensionScalingFactor = _mm_cvtss_f32(scaling);

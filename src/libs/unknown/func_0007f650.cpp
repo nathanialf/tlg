@@ -17,8 +17,8 @@ float hkpLinearParametricCurve::FUN_0007f650(float t, const Vec4 &nearPoint,
         const Vec4 lengthSquared = _mm_dp_ps(ab, ab, 0x7f);
         const Vec4 projection = _mm_dp_ps(ab, _mm_sub_ps(nearPoint, points[ia]), 0x7f);
         const Vec4 r = _mm_rcp_ps(lengthSquared);
-        fraction = _mm_mul_ps(projection,
-                              _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(lengthSquared, r))));
+        fraction = _mm_mul_ps(projection, _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380),
+                                                                   _mm_mul_ps(lengthSquared, r))));
         if (_mm_ucomilt_ss(fraction, _mm_setzero_ps())) {
             if (ia == 0) {
                 break;

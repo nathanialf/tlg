@@ -22,7 +22,7 @@ void hknpWorldObject4f8::MotionRecord::FUN_00066860(int value, bool flag)
 
     const Vec4 c = _mm_set1_ps(1.1f);
     const Vec4 r = _mm_rcp_ps(c);
-    const Vec4 inverse = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(r, c)));
+    const Vec4 inverse = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(r, c)));
     const Vec4 rotation = _mm_mul_ps(_mm_mul_ps(inverse, _mm_set1_ps(128.0f)), D_14b2060[32]);
 
     byteA = static_cast<u8>(value & 3);

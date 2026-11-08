@@ -26,7 +26,7 @@ void FUN_00085550(const LinearConstraintInfo00085550 &info, const ConstraintQuer
     const Vec4 diag = _mm_hadd_ps(sum, sum);
     jac->angular[1] = _mm_blend_ps(angularB, diag, 8);
     const Vec4 r = _mm_rcp_ps(diag);
-    const Vec4 invDiag = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(diag, r)));
+    const Vec4 invDiag = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(diag, r)));
     jac->angular[0] = _mm_blend_ps(angularA, _mm_mul_ps(virtMassFactor, invDiag), 8);
     jac->rhs = info.params->value4 * in.rhsFactor;
     jacobians = jac + 1;

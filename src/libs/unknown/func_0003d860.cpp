@@ -39,7 +39,7 @@ Vec4 hknpMotionWeldTOICommand::FUN_0003d860(const hknpWorld *world,
         _mm_add_ps(distances, _mm_mul_ps(world->solverInfo.vector20, velocities));
     const Vec4 closed = _mm_max_ps(_mm_sub_ps(distances, nextDistances), D_14b2060[35]);
     const Vec4 r = _mm_rcp_ps(closed);
-    const Vec4 invClosed = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(closed, r)));
+    const Vec4 invClosed = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(closed, r)));
     const Vec4 fractions = _mm_mul_ps(_mm_sub_ps(distances, target), invClosed);
 
     switch (hkMath::min2(output.numEntries, 4)) {

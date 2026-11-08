@@ -6,7 +6,7 @@ int hknpScaledConvexShapeBase::FUN_0016cb00(const Vec4 &direction, const Vec4 &p
                                             Vec4 *planeOut, hknpFaceAngle *angleOut) const
 {
     const Vec4 r = _mm_rcp_ps(scale);
-    const Vec4 invScale = _mm_mul_ps(r, _mm_sub_ps(D_14b4380, _mm_mul_ps(scale, r)));
+    const Vec4 invScale = _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(scale, r)));
     const Vec4 localPoint = _mm_mul_ps(invScale, _mm_sub_ps(point, translation));
 
     const Vec4 d = direction;
@@ -17,7 +17,7 @@ int hknpScaledConvexShapeBase::FUN_0016cb00(const Vec4 &direction, const Vec4 &p
         localDirection.quad = _mm_mul_ps(invScale, d);
     } else {
         const Vec4 r2 = _mm_rcp_ps(invScale);
-        const Vec4 s = _mm_mul_ps(r2, _mm_sub_ps(D_14b4380, _mm_mul_ps(invScale, r2)));
+        const Vec4 s = _mm_mul_ps(r2, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(invScale, r2)));
         const Vec4 normal = _mm_mul_ps(d, s);
         const Vec4 lengthSquared = _mm_dp_ps(normal, normal, 0x7F);
         const Vec4 e = _mm_rsqrt_ps(lengthSquared);
@@ -43,7 +43,7 @@ int hknpScaledConvexShapeBase::FUN_0016cb00(const Vec4 &direction, const Vec4 &p
 
     angleOut->value = 0;
     const Vec4 r3 = _mm_rcp_ps(scale);
-    const Vec4 inverse = _mm_mul_ps(r3, _mm_sub_ps(D_14b4380, _mm_mul_ps(scale, r3)));
+    const Vec4 inverse = _mm_mul_ps(r3, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(scale, r3)));
     const Vec4 normal = _mm_mul_ps(localPlane, inverse);
     const Vec4 lengthSquared = _mm_dp_ps(normal, normal, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
