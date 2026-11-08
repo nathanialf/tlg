@@ -21,7 +21,7 @@ static inline void decodeChildAabb(const hkAabb &parent, const Vec4 &extent, __m
  * child's box coded in its first three bytes. */
 bool hknpCompressedMeshShapeTree::FUN_000a8f80(const TreeSlot &slot, u32 *sectionBits) const
 {
-    const u8 *code = slot.node->unknown0;
+    const u8 *code = slot.node->xyz;
     if (code[3] < 0x80) {
         return (sectionBits[slot.index / 32] >> (slot.index % 32)) & 1;
     }
@@ -33,9 +33,9 @@ bool hknpCompressedMeshShapeTree::FUN_000a8f80(const TreeSlot &slot, u32 *sectio
     children[0].node = &nodes.data[children[0].index];
     children[1].node = &nodes.data[children[1].index];
     const __m128i leftCode =
-        _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float *>(children[0].node->unknown0)));
+        _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float *>(children[0].node->xyz)));
     const __m128i rightCode =
-        _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float *>(children[1].node->unknown0)));
+        _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float *>(children[1].node->xyz)));
     const Vec4 extent = _mm_mul_ps(slot.aabb.getExtents(), D_14b2060[27]);
     decodeChildAabb(slot.aabb, extent, leftCode, children[0].aabb);
     decodeChildAabb(slot.aabb, extent, rightCode, children[1].aabb);

@@ -43,8 +43,8 @@ void FUN_000dea80(hkcdStaticTree::DefaultTreeStorage6 *self,
             box.min = node->aabb.min;
             box.max = node->aabb.max;
             const hkAabb &parentBox = boxes[int(node->parent)];
-            FUN_000a9da0(parentBox, box, out.codes);
-            FUN_000a9f10(parentBox, out.codes, *decoded);
+            FUN_000a9da0(parentBox, box, out.xyz);
+            FUN_000a9f10(parentBox, out.xyz, *decoded);
             if (node->children[0] == 0) {
                 out.hiData = u8((data >> 16) & 0x7f);
                 out.loData = u16(data);

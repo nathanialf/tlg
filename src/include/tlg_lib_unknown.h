@@ -40,7 +40,13 @@ struct Pair08Target /* derived name */
 {
     u8 unknown0[0x20];
     hkHalf scale; /* derived name */
-    u8 unknown22[0x1e];
+    u8 unknown22[6];
+    /* Where the record that points here was last written: its block and
+     * its byte offset in it (slot 19 of the world's object at +0x380,
+     * 0x3337b). derived names. */
+    const struct hkBlockStreamBlock *recordBlock;
+    u16 recordOffset;
+    u8 unknown32[0xe];
     Vec4 sum; /* derived name */
 };
 
@@ -675,14 +681,25 @@ void FUN_00031740(const Pair08Owner *self, int count, const hknpMotion *motionA,
                   const hknpMotion *motionB, Vec4 *out); /* derived name */
 void FUN_000348a0(const Pair08Owner *self, const hknpMotion *motionA, const hknpMotion *motionB,
                   const void *argument4, Vec4 *out); /* derived name */
+
+/* A block stream writer of the records with its statistics after it, at
+ * +0x28 (derived name). */
+struct CacheWriter00031a30 : public hkBlockStreamWriter /* derived name */
+{
+    CacheWriterStats00031a30 stats; /* derived name */
+};
+
 /* The record's whole size (derived names): FUN_00031a30 takes the record's
  * count, type and the byte at +4 (the flags whose blocks FUN_0002af50
- * skips) besides four arguments not recovered; FUN_000319f0, called at
- * 0x77011, hands them on from the record. */
-void FUN_00031a30(const Pair08Owner *self, void *argument2, u8 count, u8 type, u8 flags,
-                  void *argument6, void *argument7, void *argument8); /* derived name */
-void FUN_000319f0(const Pair08Owner *self, void *argument2, void *argument3, void *argument4,
-                  void *argument5); /* derived name */
+ * skips), writes the record by the writer with the target given at +0x38,
+ * moves the reader on when there is one, gives the block it wrote in when
+ * asked, and returns the copy it wrote; FUN_000319f0, called at 0x77011,
+ * hands them on from the record. */
+Pair08Owner *FUN_00031a30(const Pair08Owner *self, Pair08Target *target, u8 count, u8 type,
+                          u8 flags, hkBlockStreamReader *reader, CacheWriter00031a30 *writer,
+                          hkBlockStreamBlock **blockOut); /* derived name */
+void FUN_000319f0(const Pair08Owner *self, Pair08Target *target, hkBlockStreamReader *reader,
+                  CacheWriter00031a30 *writer, hkBlockStreamBlock **blockOut); /* derived name */
 
 void FUN_0002b390(Pair08Owner *self,
                   bool enable); /* derived name: sets or clears bit 2 of the byte at +1 */
@@ -1268,6 +1285,23 @@ inline hkArray<T, Allocator> &hkArray<T, Allocator>::operator=(const hkArray &ot
 template <typename T>
 inline void hkArrayBase<T>::_copyFromArray(AllocatorBase &allocator, const hkArrayBase &other)
 {
+    if (hkTrait::IsPodType<T>::result) {
+        /* Plain old data: storage too small given back and taken again at
+         * the other's size, exactly, then the elements copied (the hardware
+         * setup's thread id lists, 0x4cc0). */
+        const int capacity = getCapacity();
+        if (capacity < other.size) {
+            if ((capacityAndFlags & DONT_DEALLOCATE_FLAG) == 0) {
+                allocator.freeBytes(data, capacity * int(sizeof(T)));
+            }
+            int numBytes = other.size * int(sizeof(T));
+            data = static_cast<T *>(allocator.FUN_00008d70(numBytes));
+            capacityAndFlags = numBytes / int(sizeof(T));
+        }
+        size = other.size;
+        hkArrayUtil::copy(data, other.data, size);
+        return;
+    }
     const int oldSize = size;
     const int newSize = other.size;
     const int numAssigned = newSize > oldSize ? oldSize : newSize;
@@ -2080,9 +2114,8 @@ hkReferencedObject *FUN_0019a5f0();      /* hkSerializeDeprecated's; derived nam
 
 /* A job queue's hardware setup (derived names: no string names the
  * struct): the thread count from the hardware info, an empty list of the
- * thread id lists at +0x10 (16-byte elements, arrays of their own: the
- * assignment 0x4b80 grows the list by 16 and frees each dropped element's
- * storage). The queue keeps one at +0x60, built inline (0x56df). */
+ * thread id lists at +0x10 (16-byte elements, arrays of their own). The
+ * queue keeps one at +0x60, built inline (0x56df). */
 struct hkJobQueueHwSetup /* derived name */
 {
     hkJobQueueHwSetup()
@@ -2093,8 +2126,9 @@ struct hkJobQueueHwSetup /* derived name */
         unknown4 = true;
     }
 
-    /* Out of line (0x4b80; the queue's constructor assigns the info's,
-     * 0x57b1): the first 16 bytes, then the lists one by one. */
+    /* Out of line (0x4b80; the queue's constructor calls it, 0x57b1), the
+     * compiler's own body: the first 16 bytes as one copy, then the lists
+     * through hkArray's assignment. */
     hkJobQueueHwSetup &operator=(const hkJobQueueHwSetup &other);
 
     int unknown0;

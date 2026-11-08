@@ -152,7 +152,7 @@ FUN_00039b10 src/libs/unknown/func_00039ae0.cpp _ZL41finishLoadedObjecthknpConve
 FUN_00039e30 src/libs/unknown/func_00039e50.cpp _ZL35finishLoadedObjecthknpProjectileGunPvi
 _ZN18hknpDecoratorShapeD1Ev src/libs/unknown/func_0003b0a0.cpp
 FUN_0003bb00 src/libs/unknown/func_0003bb20.cpp _ZL32finishLoadedObjecthknpDummyShapePvi
-FUN_0003ccf0 src/libs/unknown/func_0003ccf0.cpp
+FUN_0003ccf0 src/libs/unknown/func_0003ccf0.cpp _ZL36finishLoadedObjecthknpFirstPersonGunPvi
 FUN_0003d070 src/libs/unknown/func_0003d090.cpp _ZL39finishLoadedObjecthknpPhysicsSystemDataPvi
 FUN_0003d1d0 src/libs/unknown/func_0003d1f0.cpp _ZL45finishLoadedObjecthknpDefaultBroadPhaseConfigPvi
 FUN_0003d400 src/libs/unknown/func_0003d420.cpp _ZL47finishLoadedObjecthknpConstraintCollisionFilterPvi
@@ -1376,7 +1376,7 @@ _ZN23hkxEdgeSelectionChannelD1Ev src/libs/unknown/func_00088bc0.cpp
 _ZN17hkxAnimatedMatrixD1Ev src/libs/unknown/func_00088d90.cpp
 _ZN16hkxAnimatedFloatD1Ev src/libs/unknown/func_0008b950.cpp
 _ZN25hkxVertexSelectionChannelD1Ev src/libs/unknown/func_0008bbe0.cpp
-FUN_0008a490 src/libs/unknown/func_0008a490.cpp
+FUN_0008a490 src/libs/unknown/func_0008a490.cpp _ZL35finishLoadedObjecthkxMaterialShaderPvi
 _ZN25ConvexBuildConfig000451e0C1Ev src/libs/unknown/func_00042f50.cpp _ZN25ConvexBuildConfig000451e0C2Ev
 FUN_001570a0 src/libs/unknown/func_001570a0.cpp _ZN15Modifier16a486012FUN_001570a0EPKvS1_S1_S1_P26hknpManifoldCollisionCachePK12hknpManifoldP11Pair08Owneri
 _ZN22hkBufferedStreamWriterC1EPvi6hkBool src/libs/unknown/func_00008f50.cpp
@@ -2852,3 +2852,6 @@ FUN_0000e790 src/libs/unknown/func_0000e3e0.cpp _Z12FUN_0000e790P11hkStringPtrPK
 FUN_00085fc0 src/libs/unknown/func_00085fa0.cpp _GLOBAL__I_a
 FUN_00024830 src/libs/unknown/func_00024800.cpp _GLOBAL__I_a
 FUN_0006e0a0 src/libs/unknown/func_0006df00.cpp _ZN15hknpVehicleData12FUN_0006e0a0ERK7hkArrayIN21hknpVehicleSuspension25SuspensionWheelParametersE24hkContainerHeapAllocatorERK11hkTransformRK10hknpMotion
+FUN_0008a4f0 src/libs/unknown/func_0008a490.cpp _GLOBAL__I_a
+FUN_0003cd10 src/libs/unknown/func_0003ccf0.cpp _GLOBAL__I_a
+FUN_0001dd10 src/libs/unknown/func_0001dd10.cpp _GLOBAL__I_a

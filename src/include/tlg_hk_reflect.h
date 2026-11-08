@@ -6964,26 +6964,34 @@ struct hkcdStaticTree {
         hkAabb domain;       /* derived name */
     };
 
-    /* The 4-, 5- and 6-byte node codecs (type info "!hkcdStaticTree::
-     * Codec3Axis5" and "...Codec3Axis6"; the sizes are the cleanup
-     * callbacks' element sizes; a mesh tree section's nodes are 4 bytes,
-     * the mesh tree's destructor 0x20700 frees them at four bytes each). */
-    struct Codec3Axis4 {
-        u8 unknown0[4];
-    };
-
-    struct Codec3Axis5 {
-        u8 unknown0[5];
-    };
-
-    /* A node in six bytes (derived names): the box's three axis codes
-     * (FUN_000a9da0 writes them), then a leaf's data or an inner node's
+    /* The node codecs as their reflection gives them (0x1dd10: the
+     * records name the members, the hkClass constructor's parent argument
+     * the base): the box's three axis codes, which FUN_000a9da0 writes,
+     * then in the 4-, 5- and 6-byte codecs a leaf's data or an inner node's
      * offset to its child, the top bit of the fourth byte set for an inner
-     * node (0xcf7c7, 0xcf7e5). */
-    struct Codec3Axis6 {
-        u8 codes[3];
+     * node (0xcf7c7, 0xcf7e5); a mesh tree section's nodes are 4 bytes, the
+     * mesh tree's destructor 0x20700 frees them at four bytes each. */
+    struct Codec3Axis {
+        u8 xyz[3];
+    };
+
+    struct Codec3Axis4 : public Codec3Axis {
+        u8 data;
+    };
+
+    struct Codec3Axis5 : public Codec3Axis {
+        u8 hiData;
+        u8 loData;
+    };
+
+    struct Codec3Axis6 : public Codec3Axis {
         u8 hiData;
         u16 loData;
+    };
+
+    /* A node as its box (0x20 bytes). */
+    struct CodecRaw {
+        hkAabb aabb;
     };
 
     /* hkcdStaticTree::DefaultTreeStorage5 and DefaultTreeStorage6 (type
@@ -9957,6 +9965,11 @@ struct hknpBodyManager /* derived name */
      * kind's list, the body appended to the list. derived name. */
     void FUN_00161790(const hknpBodyId *bodyIds, int numBodyIds, u16 kind);
 
+    /* A new body set up from its construction info (0x160930; the world's
+     * body creation passes 2 for a body with a motion, 0 for a static one).
+     * derived name. */
+    void FUN_00160930(hknpBody *body, u32 bodyId, const struct hknpBodyCinfo &cinfo, int kind);
+
     /* A body taken from the free list (0x1607c0; the world's body
      * creation): its id, or 0x7fffffff with an error when there is none;
      * the body cleared but for its generation byte, which counts one more,
@@ -10636,7 +10649,16 @@ class hknpWorldObject380 : public hkReferencedObject /* derived name */
                               hkArray<struct JacobianRange000317b0> &grid,
                               hkBlockStreamWriter *pairWriter,
                               hkArray<struct JacobianRange000317b0> &pairGrid);
-    virtual void FUN_000331a0();
+    /* Slot 19 (0x331a0): each range of caches written again, cache by
+     * cache, by the writer of the cells of its two motions as slot 18
+     * files jacobians, each cache's run a range of its own with the
+     * writer's statistics, filed into the grid at the cell. derived name. */
+    virtual void FUN_000331a0(const struct SolverContext000317b0 *context,
+                              const hkArray<struct CacheRange000331a0 *> &ranges,
+                              struct CacheWriter00031a30 *writer,
+                              hkArray<struct CacheRange000331a0> &grid,
+                              struct CacheWriter00031a30 *pairWriter,
+                              hkArray<struct CacheRange000331a0> &pairGrid);
     /* Slot 20 (0x30c10): the pair processed through FUN_0002b6c0, its
      * output given the writer's range and the count written past it.
      * derived name. */
@@ -11648,6 +11670,8 @@ void FUN_000cd040(hknpBody *body, void *argument, const hknpBodyQuality *quality
  * 0x159df0 to the one at +0x5e0 (which hands the pair back), 0x159ca0, and
  * unsubscribes from both in its destructor (0x159bc0). Members named by
  * their offset in the group where their use is not known. */
+struct hknpBodyCinfo;
+
 struct hknpWorldSignals /* derived name */
 {
     /* Out of line (0x48260): every signal destroyed, from the last. */
@@ -11655,10 +11679,14 @@ struct hknpWorldSignals /* derived name */
 
     Signal00093530 signal00;
     Signal00093530 signal08;
-    Signal00093530 signal10;
+    /* Fired when no body is free, before one is taken (0x4e2d9). derived
+     * name. */
+    hkSignal2<hknpWorld *, hknpBodyManager *> bodyBufferFullSignal;
     Signal00093530 signal18;
     Signal00093530 signal20;
-    Signal00093530 signal28;
+    /* Fired with a new body's construction info and id (0x4e498). derived
+     * name. */
+    hkSignal3<hknpWorld *, const hknpBodyCinfo &, u32> bodyCreatedSignal;
     Signal00093530 signal30;
     Signal00093530 signal38;
     /* Fired with each body's id as it is destroyed, under the timer
@@ -12121,6 +12149,16 @@ struct hknpWorld {
     /* Bodies removed from the world (0x4e5d0; the ball gun's reset at
      * 0x15858c passes one with mode 0). derived names. */
     void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
+    /* Bodies added to the world with their addition flags (0x4d650; the
+     * body creation adds its one when it is given flags). derived names. */
+    void FUN_0004d650(const hknpBodyId *bodyIds, int numBodyIds, int additionFlags, int mode);
+    /* A body created from its construction info (0x4e270): its reserved id
+     * or one taken from the free list (the full signal fired when none is
+     * free), its reserved motion or one created for a dynamic info, the body
+     * set up and attached to the motion or made static, the created signal
+     * fired, the body added when flags are given, its shape's watcher told
+     * when the shape has signals; its id back. derived names. */
+    u32 FUN_0004e270(const struct hknpBodyCinfo &cinfo, int additionFlags, int mode);
     hknpEventSignal *FUN_0004fbd0(int eventType, int bodyId); /* derived name */
     /* Bodies destroyed (0x4e980; the character proxy's destructor passes
      * its one with mode 0, 0x176be7). derived names. */
@@ -12569,6 +12607,15 @@ class hknpBallGun : public hknpFirstPersonGun
  * of its five members' values, -1 for none, then maxProjectiles and
  * reloadTime. The rows are generated from the executable (D18). derived
  * name. */
+/* hknpFirstPersonGun's member defaults (0x16960e0): the five members'
+ * offsets into the values, then the name's and the key's. derived name. */
+struct hknpFirstPersonGunDefaults /* derived name */
+{
+    int defaultOffsets[5];
+    const char *name;
+    u8 keyboardKey;
+};
+
 struct hknpProjectileGunDefaults /* derived name */
 {
     int defaultOffsets[5];
@@ -17482,7 +17529,7 @@ class hkxMaterialShader : public hkReferencedObject
     static void operator delete(void *object, unsigned long numBytes);
 
     hkStringPtr name;
-    u8 unknown18[8]; /* type, its width not read */
+    u8 type; /* an enum of hkUint8 (its record's type and subtype, 0x8a5c5) */
     hkStringPtr vertexEntryName;
     hkStringPtr geomEntryName;
     hkStringPtr pixelEntryName;
@@ -22483,6 +22530,37 @@ struct JacobianRange000317b0 : public hkBlockStreamLinkedRange /* derived name *
     u64 unknown20;
     u64 unknown28;
     u64 unknown30;
+} __attribute__((aligned(16)));
+
+/* The statistics a cache writer keeps of what it writes (derived names):
+ * FUN_00031a30 adds each record's entries' size (four bytes an entry and
+ * four more) and keeps the largest entry count. */
+struct CacheWriterStats00031a30 /* derived name */
+{
+    int totalSize; /* derived name */
+    int maxCount;  /* derived name */
+};
+
+/* A range of caches as slot 19 of the object at +0x380 files it (derived
+ * names): a linked range, the statistics of the writer that wrote it at
+ * +0x30, on a 16-byte boundary (0x40 a slot). Built empty with its
+ * statistics cleared (0x332eb to 0x3330c); an assignment copies its 0x38
+ * bytes of data (0x333bd to 0x333e4). */
+struct CacheRange000331a0 : public hkBlockStreamLinkedRange /* derived name */
+{
+    CacheRange000331a0()
+    {
+        numElements = 0;
+        next = 0;
+        unknown18[0] = 0;
+        unknown2c = 0;
+        stats.totalSize = 0;
+        stats.maxCount = 0;
+    }
+
+    u8 unknown20[0xc];
+    int unknown2c;
+    CacheWriterStats00031a30 stats; /* derived name */
 } __attribute__((aligned(16)));
 
 /* What slot 18 of the object at +0x380 reads of its first argument: the

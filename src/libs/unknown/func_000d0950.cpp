@@ -19,12 +19,12 @@ void hknpStaticCompoundShape::unknownVirtual32(hknpShapeInstanceId instanceId,
     hkAabb aabb = tree.getDomain();
     int i = 0;
     while (i != key) {
-        const u8 *node = tree.nodes.data[i].codes;
+        const u8 *node = tree.nodes.data[i].xyz;
         int children[2];
         children[0] = i + 1;
         children[1] = i + 2 * (((node[3] & 0x7f) << 16) | *reinterpret_cast<const u16 *>(node + 4));
         i = children[children[1] <= key];
-        const u8 *codes = tree.nodes.data[i].codes;
+        const u8 *codes = tree.nodes.data[i].xyz;
         hkAabb child = hkAabb();
         FUN_000a9f10(aabb, codes, child);
         aabb.min = child.min;

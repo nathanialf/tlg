@@ -163,3 +163,15 @@ D_1691820 hkClassMember 11 src/include/tlg_hk_reflect.h
 D_1694e60 hkClassMember 3 src/include/tlg_hk_reflect.h
 D_1694ee0 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_1694f30 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_16a1c80 hkClassEnum 1 src/include/tlg_hk_reflect.h
+D_16962f0 hkCustomAttributes::Attribute 1 src/include/tlg_hk_reflect.h
+D_1696310 hkCustomAttributes::Attribute 1 src/include/tlg_hk_reflect.h
+D_1696108 hkCustomAttributes 1 src/include/tlg_hk_reflect.h
+D_1696118 hkCustomAttributes 1 src/include/tlg_hk_reflect.h
+D_16962a0 hkClassEnum 2 src/include/tlg_hk_reflect.h
+D_16960e0 hknpFirstPersonGunDefaults 1 src/include/tlg_hk_reflect.h
+D_168fb30 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_168fb60 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_168fb90 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_168fbe0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_168fc30 hkClassMember 1 src/include/tlg_hk_reflect.h

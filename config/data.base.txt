@@ -162,3 +162,15 @@ D_1691820 src/libs/unknown/func_000238d0.cpp
 D_1694e60 src/libs/unknown/func_00039ae0.cpp
 D_1694ee0 src/libs/unknown/func_00039ae0.cpp
 D_1694f30 src/libs/unknown/func_00039ae0.cpp
+D_16a1c80 src/libs/unknown/func_0008a490.cpp
+D_16962f0 src/libs/unknown/func_0003ccf0.cpp
+D_1696310 src/libs/unknown/func_0003ccf0.cpp
+D_1696108 src/libs/unknown/func_0003ccf0.cpp
+D_1696118 src/libs/unknown/func_0003ccf0.cpp
+D_16962a0 src/libs/unknown/func_0003ccf0.cpp
+D_16960e0 src/libs/unknown/func_0003ccf0.cpp
+D_168fb30 src/libs/unknown/func_0001dd10.cpp
+D_168fb60 src/libs/unknown/func_0001dd10.cpp
+D_168fb90 src/libs/unknown/func_0001dd10.cpp
+D_168fbe0 src/libs/unknown/func_0001dd10.cpp
+D_168fc30 src/libs/unknown/func_0001dd10.cpp
