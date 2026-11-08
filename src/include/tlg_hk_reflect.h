@@ -10079,6 +10079,13 @@ struct hknpMotionManager /* derived name */
             index = 0x7fffffff;
         }
 
+        /* The motion stepped to, through the storage (the index widened as
+         * unsigned, 0x373d9). derived name. */
+        const hknpMotion &getMotion() const
+        {
+            return manager->motions.data[index];
+        }
+
         const hknpMotionManager *manager;
         u32 index;
     };
@@ -12558,6 +12565,11 @@ struct hknpMotionPropertiesLibrary : public hkReferencedObject {
      * constructor at 0x49297, and the game). derived name. */
     void FUN_00036e10(const struct hknpWorld *world);
 
+    /* Every entry past the five presets that no motion of the worlds
+     * uses given back (0x372a0): the ids in use marked in a local bit
+     * field. derived name. */
+    void FUN_000372a0(const struct hknpWorld *worlds, int numWorlds);
+
     /* Out of line (0x36c80, slot 0): the entries' storage, then the
      * signals; the deleting destructor (0x36cf0, slot 1) runs it and frees
      * through the class's delete. */
@@ -13316,16 +13328,19 @@ struct hknpShapeSlot22Output /* derived name */
     u8 unknown0[0x40];
     const hknpShape *leafShape; /* derived name: its user data is the triangle's */
     u8 unknown48[0x108];
-    u8 flags;  /* derived name */
+    u32 flags; /* derived name */
     int value; /* derived name */
-    u8 unknown158[0x18];
+    u8 unknown158[8];
+    /* The scale the leaves are made under, read and reset to one by the
+     * extern mesh's slot 22 (0x166409). derived name. */
+    Vec4 scale;
     const hknpShape *shape; /* derived name */
     u8 unknown178[0x808];
-    /* Four vertices for each quad, and each quad's shape flags (derived
-     * names). */
+    /* Four vertices for each quad, each quad's shape flags and its shape tag
+     * (derived names). */
     Vec4 quadVertices[40];
     u16 quadFlags[10];
-    u8 unknownc14[0x14];
+    u16 quadShapeTags[10];
     float convexRadius; /* derived name */
 };
 
@@ -19356,6 +19371,12 @@ class hknpExternMeshShape : public hknpCompositeShape
     /* Slot 7 (0x166370): that box under a transform (0x94060). derived
      * name. */
     void FUN_00166370(const Mat4 &transform, hkAabb &aabbOut) const;
+
+    /* Slot 22 (0x1663e0): the triangles of up to ten keys as quads, their
+     * vertices under the output's scale (the second and third swapped when
+     * it mirrors), the scale then reset; the shape's own leaves. derived
+     * name. */
+    void FUN_001663e0(const u32 *keys, int numKeys, hknpShapeSlot22Output *output) const;
 
     /* Slot 29 (0x1666e0): every triangle of the geometry appended to the
      * one given, its three vertices scaled and offset by the input, its

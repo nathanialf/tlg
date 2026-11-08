@@ -2845,3 +2845,4 @@ _ZN17hknpCompoundShapeC1ERK22hknpCompoundShapeCinfo src/libs/unknown/func_000412
 FUN_00172c70 src/libs/unknown/func_00172f60.cpp
 FUN_0017f480 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp
 _ZN10hkJobQueueD1Ev src/libs/unknown/func_00005c80.cpp _ZN10hkJobQueueD2Ev
+FUN_0003bc10 src/libs/unknown/func_0003bc10.cpp

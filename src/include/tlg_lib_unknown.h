@@ -6456,6 +6456,34 @@ template <typename T> struct LocalArray : public hkArray<T> /* derived name */ {
     int initialCapacity; /* derived name */
 };
 
+/* A bit field over a local array of words (derived names; Havok's
+ * hkLocalBitField, the storage a hkLocalArray of words): the words, then
+ * the number of bits, every bit set to the fill value (the motion
+ * properties library's unused entries, 0x372a0). */
+struct LocalBitField /* derived name */
+{
+    inline LocalBitField(int numBits_, int fillValue)
+        : words((numBits_ + 31) >> 5), numBits(numBits_)
+    {
+        const int numWords = (numBits_ + 31) >> 5;
+        words.setSize(numWords);
+        hkString::memSet4(words.data, fillValue, numWords);
+    }
+
+    void set(int index)
+    {
+        words.data[index >> 5] |= 1 << (index & 31);
+    }
+
+    bool get(int index) const
+    {
+        return (words.data[index >> 5] >> (index & 31)) & 1;
+    }
+
+    LocalArray<u32> words;
+    int numBits;
+};
+
 /* One of the broad phase's trees (derived names; the layer updates time
  * themselves "TtUpdateVolatileTree" and "TtUpdateNonVolatileTree"): its
  * nodes from a pool, its leaves buckets of up to 31 boxes, each box keyed
