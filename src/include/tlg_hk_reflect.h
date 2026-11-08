@@ -4621,12 +4621,16 @@ class hkxIndexBuffer : public hkReferencedObject
      * tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    u8 indexType; /* an enum of hkUint8; its items not read */
+    u8 indexType; /* an enum of hkUint8 (IndexType, five items at 0x16a1310) */
     hkArray<u16> indices16;
     hkArray<u32> indices32;
     u32 vertexBaseOffset;
     u32 length;
 };
+
+/* hkxIndexBuffer's IndexType enum, through a pointer (its records'
+ * initializer 0x88350 reads it at run time). derived name. */
+extern const hkClassEnum *D_16dc6b8;
 
 /* From its record table at 0x16a13d0: quaternions (an array of reals) at +0x10. */
 class hkxAnimatedQuaternion : public hkReferencedObject
@@ -10668,6 +10672,8 @@ class hkSlot /* derived name */
 class hkSlot0 : public hkSlot /* derived name */
 {
   public:
+    hkSlot0(Signal00093530 *signal, void *object) : hkSlot(signal, object) {}
+
     virtual void call() = 0; /* derived name */
 };
 
@@ -10675,6 +10681,8 @@ class hkSlot0 : public hkSlot /* derived name */
 template <typename P0> class hkSlot1 : public hkSlot /* derived name */
 {
   public:
+    hkSlot1(Signal00093530 *signal, void *object) : hkSlot(signal, object) {}
+
     virtual void call(P0 p0) = 0; /* derived name */
 };
 
@@ -11449,6 +11457,11 @@ struct ShapeWatcherOwner /* derived name */
      * changed. */
     ShapeWatcherOwner();
 
+    /* A body's id given to its shape's watcher (0x155ea0): a watcher of
+     * the shape found, or one taken back from the second list or made new,
+     * set to the shape and subscribed to its two signals. derived name. */
+    void FUN_00155ea0(const hknpBody *body);
+
     /* A body's id taken off its shape's watcher (0x156110); a watcher left
      * with none unsubscribed from its shape, which it drops, and moved to
      * the second list. derived name. */
@@ -11492,6 +11505,14 @@ struct hknpWorld {
      * attached to it refreshed and the body-changed signal fired. derived
      * name. */
     void FUN_0005dfc0(int bodyId, const Vec4 &velocity);
+
+    /* A dynamic body's angular velocity set from a world-space one
+     * (0x5e1a0): nothing when the motion's, in world space, is within row
+     * 35 of the constant table of it in x, y and z; else the body
+     * activated, the velocity stored in the motion's frame, each body
+     * attached to it refreshed and the body-changed signal fired. derived
+     * name. */
+    void FUN_0005e1a0(int bodyId, const Vec4 &angularVelocity);
 
     /* An angular impulse applied to a dynamic body (0x5e910): as 0x5ed40,
      * the motion's angular velocity given the impulse taken into the
@@ -17929,6 +17950,15 @@ class BufferOstream : public hkOstream /* derived name */
 #define HK_NP_CONSTRAINT_MANAGER_CPP                                                               \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Constraint\\hknpConstraintManager.cpp"
 
+/* The file hkHardwareInfo.cpp's reports name (the string at 0x14c3f5e). */
+#define HK_HARDWARE_INFO_CPP                                                                       \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\System\\Hardware\\hkHardwareInfo.cpp"
+
+/* The file hkFreeListMemorySystem.cpp's reports name (the string at
+ * 0x14b3734). */
+#define HK_FREE_LIST_MEMORY_SYSTEM_CPP                                                             \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\Memory\\System\\FreeList\\hkFreeListMemorySystem.cpp"
+
 /* The file hknpShape.cpp's reports name (the string at 0x14bf150). */
 #define HK_NP_SHAPE_CPP                                                                            \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Collide\\Shape\\hknpShape.cpp"
@@ -22612,6 +22642,20 @@ extern hkStaticClassNameRegistry D_57c8870;
 
 struct ShapeWatcher /* derived name */
 {
+    /* Made by its owner's add of a body (0x155f47): watching nothing, its
+     * flags clear, set in the body after the ids' array is built (the
+     * array's three stores come first, 0x155f6c). */
+    ShapeWatcher(ShapeWatcherOwner *owner)
+    {
+        this->owner = owner;
+        shape = HK_NULL;
+        changeFlags = 0;
+    }
+
+    /* The class allocator: 0x28 bytes from the thread's heap (0x155f66;
+     * defined in tlg_lib_unknown.h beside hkSlot's). */
+    static void *operator new(unsigned long numBytes);
+
     void FUN_00155b00(u8 changeFlags); /* derived name */
     /* The second signal's handler (0x155b10): both handlers unsubscribed,
      * the shape dropped, the owner marked changed. derived name. */
@@ -22623,6 +22667,44 @@ struct ShapeWatcher /* derived name */
      * 0x156110). derived name. */
     hkArray<u32> bodyIds;
     u8 changeFlags; /* derived name */
+};
+
+/* The watcher's slot on its shape's change signal (vtable 0x16a47b0, ruled
+ * MemberSlot00155b00, D14): 0x28 bytes, the handler at +0x18 called on the
+ * watcher with the change flags (slot 3, 0x47c80). */
+class MemberSlot00155b00 : public hkSlot1<u8> /* derived name */
+{
+  public:
+    typedef void (ShapeWatcher::*Method)(u8 changeFlags); /* derived name */
+
+    MemberSlot00155b00(Signal00093530 *signal, ShapeWatcher *object, Method method)
+        : hkSlot1<u8>(signal, object), method(method)
+    {
+    }
+
+    int FUN_00047d60(const void *otherMethod, int size) const; /* vtable slot 2; derived name */
+    void call(u8 changeFlags);                                 /* vtable slot 3 (0x47c80) */
+
+    Method method; /* derived name */
+};
+
+/* The watcher's slot on its shape's destruction signal (vtable 0x16a4780,
+ * ruled MemberSlot00155b10, D14): 0x28 bytes, the handler at +0x18 (slot 3,
+ * the shared call 0x47d90). */
+class MemberSlot00155b10 : public hkSlot0 /* derived name */
+{
+  public:
+    typedef void (ShapeWatcher::*Method)(); /* derived name */
+
+    MemberSlot00155b10(Signal00093530 *signal, ShapeWatcher *object, Method method)
+        : hkSlot0(signal, object), method(method)
+    {
+    }
+
+    int FUN_00047d60(const void *otherMethod, int size) const; /* vtable slot 2; derived name */
+    void call();                                               /* vtable slot 3 (0x47d90) */
+
+    Method method; /* derived name */
 };
 
 /* The nodes the XML reader at 0x19da90 returns are hkXmlParser::Node's

@@ -3,7 +3,7 @@
 
 void hkFreeListMemorySystem::threadQuit(hkMemoryRouter &router, int flags)
 {
-    ThreadData &thread = threads[router.threadIndex];
+    ThreadData &thread = threads[static_cast<int>(reinterpret_cast<hkUlong>(router.userData))];
     if (flags & FLAG_TEMPORARY) {
         router.stack.FUN_0000ee00(0);
         thread.memory.FUN_00014690();
@@ -12,7 +12,7 @@ void hkFreeListMemorySystem::threadQuit(hkMemoryRouter &router, int flags)
     }
     if (flags & FLAG_ROUTER) {
         thread.memory.FUN_00014690();
-        thread.pointer198 = 0;
+        thread.name = 0;
         thread.inUse = false;
         FUN_00018160(&router, 0, sizeof(hkMemoryRouter));
     }

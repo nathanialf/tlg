@@ -100,3 +100,30 @@ void hknpWorld::FUN_0005dfc0(int bodyId, const Vec4 &velocity)
         }
     }
 }
+
+/* NONMATCHING: 136 of 158, size equal: list-ilp's order in the entry block.
+ * The base takes the real part's splat and the velocity's load at the top
+ * with the constants (xmm4 and xmm1, eight vector registers live, xmm8 the
+ * mask) and the cross product's two products after them; here the products
+ * come first and the splat right before its product, the vector pressure
+ * under the scheduler's limit (5 of 10 at the splat's pick, so
+ * RegPressureDiff never decides). The velocity read after the rotation is
+ * worse (135). The rotation alone matches as 0x5df30. */
+void hknpWorld::FUN_0005e1a0(int bodyId, const Vec4 &angularVelocity)
+{
+    const hknpBody &body = bodyManager.bodies[bodyId];
+    if (body.flags & 2) {
+        hknpMotion &motion = motionManager.motions[body.motionId];
+        if (!allXYZ(_mm_cmple_ps(
+                hkMath::quadFabs(_mm_sub_ps(
+                    angularVelocity, rotatedDir(motion.orientation, motion.angularVelocity))),
+                D_14b2060[35]))) {
+            if (!(body.flags & 9)) {
+                FUN_0004e0c0(bodyId);
+            }
+            motion.angularVelocity = rotatedInverseDir(motion.orientation, angularVelocity);
+            FUN_0005b490(bodyId, &motion);
+            signals.bodyChangedSignal.fire(this, bodyId);
+        }
+    }
+}

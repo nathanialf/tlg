@@ -664,6 +664,17 @@ struct ConstraintGroups000c6630 /* derived name */
 {
     void FUN_000c6630(hknpWorld *world, const ConstraintGather000c5e30 *gather, int first, int last,
                       hknpConstraint *constraints);
+
+    /* A group of the gathered constraints, by index: the first and the
+     * last, 12 bytes (the build task's sub-tasks take one each, 0x1552f6).
+     * derived names. */
+    struct Group {
+        int first;
+        int last;
+        u8 unknown8[4];
+    };
+
+    hkArray<Group> groups; /* derived name */
 };
 
 /* hknpPrepareConstraintsTask: vtables 0x16a4650 and 0x16a4698; slot 6 opens the timer "Constraints/Prepare". */
@@ -770,7 +781,7 @@ class hknpBuildConstraintsTask : public hkReferencedObject,
 
     static void operator delete(void *object, unsigned long numBytes);
 
-    /* slot 5 (0x1551a0) */
+    /* slot 5 (0x1551a0; the interface's slot 2 through the thunk 0x155420) */
     virtual void process();
     /* slot 6 (0x155100; the interface's thunk 0x155150) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
@@ -1353,7 +1364,6 @@ class hknpSolveDataTask : public hknpTask /* derived name */
 void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; derived name */
 void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; derived name */
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
-void FUN_001551a0(hknpBuildConstraintsTask *self);          /* vtable slot 5; derived name */
 void FUN_001798c0(hknpPrepareExistingPairsTask *self);      /* vtable slot 5; derived name */
 void FUN_0018ef40(hknpSolverStageTask *self);               /* vtable slot 5; derived name */
 

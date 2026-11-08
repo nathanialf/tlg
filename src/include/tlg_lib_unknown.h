@@ -133,6 +133,14 @@ class CacheModifier0017a000 /* derived name */
     virtual void unknownVirtual5(const void *threadContext, const void *sharedData,
                                  const void *bodyA, const void *bodyB,
                                  hknpManifoldCollisionCache *cache, int value) const;
+    virtual void unknownVirtual6();
+    virtual void unknownVirtual7();
+    virtual void unknownVirtual8();
+    /* Slot 9: a motion's gravity's change over the step, by its id, given
+     * to the modifiers of set 5 to change (the solver's velocities,
+     * 0xcd738). derived name. */
+    virtual void unknownVirtual9(const hknpWorldContextPool::Context *threadContext, int motionId,
+                                 Vec4 *velocityChange);
 };
 
 /* Slot 5 of every modifier whose mask meets the cache's, when any does: a
@@ -161,6 +169,51 @@ inline void fireCacheModifiers(hknpManifoldCollisionCache *cache, /* derived nam
 void FUN_0017a000(hknpManifoldCollisionCache *cache,
                   const hknpWorldContextPool::Context *threadContext, const void *sharedData,
                   const void *bodyA, const void *bodyB, int value); /* derived name */
+
+/* A motion's velocities as the solver keeps them, 32 bytes (derived names):
+ * the world's arrays at +0x4d0 and +0x4e0 hold one per active motion. The
+ * linear velocity's three lanes, the angular one's x in the w, its y and z,
+ * then the inverse inertia's four halves (0xcd79d to 0xcd7cd); zeroed as
+ * two vectors (0xcf1e8). */
+struct SolverVelocity000cf140 /* derived name */
+{
+    Vec4 linear;
+
+    union {
+        Vec4 angular;
+
+        struct {
+            float angularYZ[2];
+            hkHalf inverseInertia[4];
+        };
+    };
+};
+
+/* The velocity sums the solver gathers beside them, 32 bytes (derived
+ * names): zeroed, then the motion's id, its motion properties' id and its
+ * scaled rotation limit at the end of the second vector (0xcd7e1 to
+ * 0xcd825). */
+struct SolverSumVelocity000cf140 /* derived name */
+{
+    Vec4 linear;
+
+    union {
+        Vec4 angular;
+
+        struct {
+            float angularYZ[2];
+            int motionId;
+            u16 motionPropertiesId;
+            hkHalf maxRotationPerStep;
+        };
+    };
+};
+
+/* The velocities of the motions from the second id on (0xcd5f0; the
+ * solver's 0xcf21e and the solve task's 0x16e33d). derived name. */
+void FUN_000cd5f0(const hknpWorldContextPool::Context *threadContext, const hknpWorld *world,
+                  const u32 *motionIds, int numMotionIds, SolverVelocity000cf140 *velocitiesOut,
+                  SolverSumVelocity000cf140 *sumsOut);
 
 /* The collision detector of vtable 0x169b220 (address point 0x169b230,
  * 16 bytes, no type info; built in place at +0x98 of the default modifier
@@ -1645,8 +1698,39 @@ class hkHardwareInfo : public hkReferencedObject
      * FUN_0000bcc0. */
     static void *operator new(unsigned long numBytes);
 
-    int numThreads; /* derived name */
-    u8 unknown10[8];
+    /* The processor's features (derived names), each a bit of the word at
+     * +0x10 read from a CPUID leaf (0x8fbcd to 0x8fd7a): leaf 1's edx and
+     * ecx, the extended leaf 0x80000001's ecx and leaf 7's ebx; bit 23 is
+     * set before any is read. */
+    enum CpuFeature {
+        CPU_CX8 = 1 << 0,
+        CPU_CX16 = 1 << 1,
+        CPU_CMOV = 1 << 2,
+        CPU_CLFLUSH = 1 << 3,
+        CPU_PCLMULQDQ = 1 << 4,
+        CPU_MOVBE = 1 << 5,
+        CPU_POPCNT = 1 << 6,
+        CPU_LZCNT = 1 << 7,
+        CPU_F16C = 1 << 8,
+        CPU_FMA = 1 << 9,
+        CPU_AES = 1 << 10,
+        CPU_MMX = 1 << 11,
+        CPU_AVX = 1 << 12,
+        CPU_AVX2 = 1 << 13,
+        CPU_SSE = 1 << 14,
+        CPU_SSE2 = 1 << 15,
+        CPU_SSE3 = 1 << 16,
+        CPU_SSSE3 = 1 << 17,
+        CPU_SSE41 = 1 << 18,
+        CPU_SSE42 = 1 << 19,
+        CPU_BMI1 = 1 << 21,
+        CPU_BMI2 = 1 << 22,
+        CPU_DEFAULT = 1 << 23
+    };
+
+    int numThreads;  /* derived name */
+    u32 cpuFeatures; /* derived name */
+    u8 unknown14[4];
 };
 
 extern hkHardwareInfo *D_57c8728; /* hkHardwareInfo's singleton instance */
@@ -2565,6 +2649,27 @@ class Elements000760c0 : public hkBaseObject /* derived name */
  * by FUN_0006c850 at 0x6cc19, over the simulation context it is given
  * (kept at +0x150), one element and room for one entry in each array; the
  * thread context it is also given is not read. derived names. */
+/* The constraints' builder's object (derived names; FUN_00150330 hands its
+ * +0x120 and +0x138 to the prepare task and itself to the build task): the
+ * solver's elements at +0x10, the gather and the groups. */
+struct ConstraintSetup00150330 /* derived name */
+{
+    u8 unknown0[0x10];
+    Elements000760c0 *elements;
+    u8 unknown18[0x108];
+    ConstraintGather000c5e30 gather;
+    ConstraintGroups000c6630 groups;
+};
+
+/* The jacobians of a run of gathered constraints built (0xc5340, 0x9f1
+ * bytes; the build task's sub-tasks): as 0xc5d40 takes them, the elements'
+ * array at +0x30, two streams of the context's element and, when the
+ * world's flag at +0x4f0 is set, the element. derived name. */
+void FUN_000c5340(hknpWorldContextPool::Context *context, hknpWorld *world,
+                  hknpConstraint *constraints, const ConstraintGather000c5e30 *gather, int first,
+                  int last, void *argument7, hkBlockStream *streamA, hkBlockStream *streamB,
+                  void *argument10); /* derived name */
+
 class Elements000768c0 : public Elements000760c0 /* derived name */
 {
   public:
@@ -3338,6 +3443,10 @@ struct FreeList;
  * builds the default one on its stack when given none. */
 struct TwoBaseAllocatorCinfo /* derived name */
 {
+    /* No block size and no free lists (0x1b35: the default one is built
+     * so before it is filled). */
+    TwoBaseAllocatorCinfo() : preferredBlockSize(0), numInfos(0) {}
+
     struct Info {
         u64 elementSize; /* derived name */
         u64 alignment;   /* derived name */
@@ -3391,8 +3500,35 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     virtual ~TwoBaseAllocator();
 
     /* The free lists set up from the construction info (0x1ae0; the
-     * constructor ends in a jump to it). derived name. */
+     * constructor ends in a jump to it): the counts cleared, no limit, the
+     * fixed-size allocator over the preferred block size (1024 when none),
+     * then one free list per entry, a list of an element size already made
+     * shared, and every size left without one given the next larger list.
+     * derived name. */
     void FUN_00001ae0(const TwoBaseAllocatorCinfo *cinfo);
+
+    /* A free list built in the storage's next room (inline at 0x1c13; the
+     * room checked first). derived name. */
+    FreeList *newFreeList(u64 elementSize, u64 alignment, u64 blockSize)
+    {
+        if (freeListStorageTop >= freeListStorageEnd) {
+            HK_BREAKPOINT(0);
+        }
+        FreeList *list = freeListStorageTop++;
+        new (list) FreeList(elementSize, alignment, blockSize, largeAllocator, &fixedAllocator);
+        return list;
+    }
+
+    /* A free list's blocks given back and its room too when it was the
+     * last handed out (inline at 0x1c81). derived name. */
+    void deleteFreeList(FreeList *list)
+    {
+        list->~FreeList();
+        if (list + 1 == freeListStorageTop) {
+            freeListStorageTop = list;
+        }
+    }
+
     /* Slot 2 (0x29b0): a block through slot 4, the size passed by
      * reference. */
     virtual void *blockAlloc(int numBytes);
@@ -4485,10 +4621,10 @@ struct hkMemoryRouter /* derived name */
      * derived name. */
     AllocatorBase *allocator60;
     void *pointer68; /* derived name */
-    /* The router's place in the memory system's thread records (0xc827).
-     * derived name. */
-    int threadIndex;
-    u8 unknown74[4];
+    /* The router's place in the memory system's thread records, kept as a
+     * pointer-sized word (0xc590 stores the index as 64 bits, 0xc827 reads
+     * its low 32). derived name. */
+    void *userData;
     int int78; /* derived name */
 };
 
@@ -4598,15 +4734,15 @@ class hkFreeListMemorySystem : public hkMemorySystem
     BufferAllocator bufferAllocator; /* derived name */
 
     /* One record per thread router (derived names): the thread's allocator,
-     * then two pointers and the record's in-use flag, which taking the
-     * router down clears (0xc870, 0xc87c); the constructor clears the
-     * second pointer and the flag (0xc308, 0xc313). */
+     * a pointer, the thread's name (0xc721) and the record's in-use flag,
+     * which taking the router down clears (0xc870, 0xc87c); the constructor
+     * clears the name and the flag (0xc308, 0xc313). */
     struct ThreadData {
-        ThreadData() : pointer198(0), inUse(false) {}
+        ThreadData() : name(0), inUse(false) {}
 
         ThreadMemory memory;
         void *pointer190;
-        void *pointer198;
+        const char *name;
         bool inUse;
     };
 
@@ -5225,6 +5361,11 @@ inline void hkcdDynamicTree::DefaultTree48Storage::operator delete(void *object,
 }
 
 inline void *hkSlot::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(int(numBytes));
+}
+
+inline void *ShapeWatcher::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(int(numBytes));
 }
