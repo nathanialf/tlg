@@ -3297,9 +3297,22 @@ class hkcdPlanarSolid : public hkcdPlanarEntity
   public:
     /* hkcdPlanarSolid::Node (the scoped name a string of the executable,
      * hkClass 0x57ba310): 0x28 bytes (the node storage's free, 0x1d529),
-     * its members not read. */
+     * its members from the records at 0x168f720. Plain data: its finish
+     * constructor and its cleanup are empty (both the type info's
+     * callbacks the empty body 0x1c1e0). */
     struct Node {
-        u8 unknown0[0x28];
+        Node(hkFinishLoadedObjectFlag) {}
+
+        u32 parent;
+        u32 left;
+        u32 right;
+        u32 nextFreeNodeId;
+        u32 planeId;
+        u32 aabbId;
+        u64 material;
+        u32 data;
+        u16 type;
+        u16 flags;
     };
 
     class NodeStorage;
@@ -4793,12 +4806,54 @@ class hkxNode : public hkxAttributeHolder
 class hkxMaterial : public hkxAttributeHolder
 {
   public:
-    hkxMaterial(hkFinishLoadedObjectFlag flag) : hkxAttributeHolder(flag), name(flag) {}
+    /* A texture stage (hkxMaterialTextureStage, 16 bytes): the texture, a
+     * counted reference, its usage hint and texture coordinate channel. */
+    struct TextureStage {
+        hkRefVariant texture;
+        int usageHint;
+        int tcoordChannel;
+    };
 
+    /* A property (hkxMaterialProperty): a key and a value. */
+    struct Property {
+        u32 key;
+        u32 value;
+    };
+
+    hkxMaterial(hkFinishLoadedObjectFlag flag)
+        : hkxAttributeHolder(flag), name(flag), stages(flag), subMaterials(flag), extraData(flag),
+          properties(flag)
+    {
+    }
+
+    /* Out of line (0x87130, slot 0; the deleting one 0x870e0 before it):
+     * the properties freed, the extra data's reference released, the
+     * sub-materials' and the stages' from the last, then the name. */
+    virtual ~hkxMaterial();
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): 0xe0 bytes
+     * by default. */
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* The members by the record names the executable holds (0x14c261d
+     * onward); their records are built at run time. */
     hkStringPtr name;
-    /* To the record's 0xe0 bytes (its member records are built at run
-     * time; the deleting destructor 0x870e0 frees 0xe0). */
-    u8 unknown28[0xb8];
+    hkArray<TextureStage> stages;
+    hkVector4 diffuseColor;
+    hkVector4 ambientColor;
+    hkVector4 specularColor;
+    hkVector4 emissiveColor;
+    hkArray<hkRefPtr<hkxMaterial>> subMaterials;
+    hkRefVariant extraData;
+    float uvMapScale[2];
+    float uvMapOffset[2];
+    float uvMapRotation;
+    u32 uvMapAlgorithm;
+    float specularMultiplier;
+    float specularExponent;
+    float transparency;
+    hkUlong userData;
+    hkArray<Property> properties;
 };
 
 /* hkxMaterialEffect (hkClass 0x57c7140, built at 0x89e36: size 0x30,
@@ -7555,11 +7610,7 @@ struct hknpShapeInstance {
 
     /* A free instance: the marker set, the next free index in the first
      * word of its padding (0x41223, 0x41229). */
-    static void setEmpty(hknpShapeInstance &instance, int next)
-    {
-        instance.padding[4] = 0xff;
-        *reinterpret_cast<int *>(instance.padding) = next;
-    }
+    static inline void setEmpty(hknpShapeInstance &instance, int next);
 
     hkTransform transform;
     hkVector4 scale;
@@ -9758,6 +9809,18 @@ struct hknpMotionManager /* derived name */
      * head of the free list, one fewer in use. derived name. */
     void FUN_000476a0(int motionId);
 
+    /* The motions' storage set up (0x47010; 0x46dc0 calls it first): the
+     * buffer handed in, or one of the capacity allocated. derived name. */
+    bool FUN_00047010(hknpMotion *userMotionBuffer, int capacity);
+
+    /* Set up for a world (0x46dc0; the world's constructor at 0x49b00): the
+     * body manager kept, the motions' storage, the static motion 0 cleared
+     * and in use, a list per cell of the splitter with room for its share
+     * of the capacity holding motion 0, one motion in use and the next free
+     * one 1. derived name. */
+    void FUN_00046dc0(hknpMotion *userMotionBuffer, int capacity, hknpBodyManager *newBodyManager,
+                      const hknpSpaceSplitter *splitter);
+
     /* The world's body manager (0xcd585 reads the bodies and their cells
      * through it). derived name. */
     hknpBodyManager *bodyManager;
@@ -10764,7 +10827,9 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
     /* Room for at least growBy more elements, the storage at least
      * doubled, each new element built and put on the free list in order
      * ahead of the old free ones (0x410a0 for the compound shapes'
-     * instances, which their constructor calls twice). */
+     * instances, which their constructor calls twice; the material
+     * library's constructor 0x77450): each made free by the operations'
+     * setEmpty, which builds the element. */
     void grow(int growBy)
     {
         const int oldCapacity = elements.getSize();
@@ -10779,7 +10844,6 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
             id.value = i;
             T &element = elements[id.value];
             const int next = i < last ? i + 1 : firstFree;
-            new (&element) T();
             Ops::setEmpty(element, next);
         }
         firstFree = oldCapacity;
@@ -10831,6 +10895,15 @@ struct hknpMaterialLibrary : public hkReferencedObject {
      * the entry and the modified signal fired with its id only when the
      * name or the values differ. derived name. */
     void FUN_00077a60(hknpMaterialId id, const hknpMaterial &material);
+
+    /* A material added (0x776a0): a copy with its automatic flags set put
+     * in the first free entry, its id back. derived name. */
+    hknpMaterialId FUN_000776a0(const hknpMaterial &material);
+
+    /* The library of room for a number of materials (0x77450; the world's
+     * constructor at 0x4901d): the entries grown to it, then the four
+     * presets added, the default and the three triggers. derived name. */
+    hknpMaterialLibrary(int initialCapacity);
 
     Signal00093530 materialAddedSignal;
     hkSignal1<hknpMaterialId> materialModifiedSignal;
@@ -15171,6 +15244,15 @@ inline void *operator new(unsigned long, void *where)
     return where;
 }
 
+/* A free instance built in place, then marked (defined after the placement
+ * new it uses). */
+inline void hknpShapeInstance::setEmpty(hknpShapeInstance &instance, int next)
+{
+    new (&instance) hknpShapeInstance();
+    instance.padding[4] = 0xff;
+    *reinterpret_cast<int *>(instance.padding) = next;
+}
+
 /* hknpConstraintCinfo (type info 0x57beab0, size 0x20; its member records
  * are built at run time by the initializer at 0x36a40): constraintData
  * (pointer) at +0, bodyA and bodyB (hkUint32) at +8 and +0xc, flags at
@@ -16205,8 +16287,12 @@ struct hkpWheelFrictionConstraintAtom {
 class hkpWheelFrictionConstraintData : public hkpConstraintData
 {
   public:
+    /* The runtime layout the reflection names ("!hkpWheelFrictionConstraintData::
+     * Runtime", size 1, no members; registered at 0x7b211). */
+    struct Runtime {};
+
     /* Its finish constructor is inline in the type info's finish callback
-     * FUN_0007b0d0 (registered at 0x7b2c7, size 0xd0): the friction atom's
+     * 0x7b0d0 (registered at 0x7b2c7, size 0xd0): the friction atom's
      * impulses are reset. */
     struct Atoms {
         Atoms(hkFinishLoadedObjectFlag flag) : friction(flag) {}
@@ -16215,8 +16301,8 @@ class hkpWheelFrictionConstraintData : public hkpConstraintData
         hkpWheelFrictionConstraintAtom friction;
     };
 
-    /* Inline: the type info's finish callback FUN_0007b110 holds it, as
-     * the reflection initializer (0x7b33a) does: hkpConstraintData's, the
+    /* Inline: the type info's finish callback 0x7b110 holds it, as the
+     * reflection initializer (0x7b33a) does: hkpConstraintData's, the
      * vtable, then the atoms'. */
     hkpWheelFrictionConstraintData(hkFinishLoadedObjectFlag flag)
         : hkpConstraintData(flag), atoms(flag)
@@ -16238,8 +16324,6 @@ class hkpWheelFrictionConstraintData : public hkpConstraintData
 
     Atoms atoms;
 };
-
-void FUN_0007b110(void *object, int finishing); /* derived name */
 
 /* hkpEllipticalLimitConstraintAtom (hkClass 0x57c4cf0, 0x30 bytes in
  * hkp6DofConstraintData's blueprints): the two limit angles at +8 and +0xc,
@@ -20985,6 +21069,22 @@ void FUN_00199970(const hknpWorld *world, const hknpBody *bodyA, const hknpBody 
 void FUN_001743b0(const hknpWorld *world, const hknpBody *bodyA, const hknpBody *bodyB,
                   hkBlockStreamWriter *writer);
 
+/* A collision cache of type 2 over two convex shapes, two quads (derived
+ * names; 0x179c80 writes a new one): the header's fields, the words at
+ * +0x10 and +0x12, 0x41 at +0x14, the bytes at +0x16 and +0x17, the ints
+ * at +0x18 and +0x1c. */
+struct ConvexConvexCache00179c80 : public CollisionCache001785a0 /* derived name */
+{
+    u16 unknown10;
+    u16 unknown12;
+    u8 unknown14;
+    u8 unknown15;
+    u8 unknown16;
+    u8 unknown17;
+    u32 unknown18;
+    u32 unknown1c;
+};
+
 /* A collision cache of type 6 over a shape against a distance field, five
  * quads (derived names): the header's fields and the range of the child
  * caches at +0x20; the time of impact distance in the header's last word.
@@ -21389,20 +21489,24 @@ struct BodyPairEvent00161f10 : public hkCommand /* derived name */
         bodyIdA = idA;
         byte7fB = bodyByte7fB;
         bodyIdB = idB;
-        unknown18 = 0;
-        unknown20 = 2;
-        unknown24 = 0;
-        vector30 = D_14b2060[2];
+        record = 0;
+        status = 2;
+        frictionFactor = 0;
+        impulses = D_14b2060[2];
     }
 
     u32 byte7fA;
     u32 bodyIdA;
     u32 byte7fB;
     u32 bodyIdB;
-    u64 unknown18;
-    u8 unknown20;
-    u32 unknown24;
-    Vec4 vector30;
+    /* The contact's record, the contact's change (0x161cc0: 1 begun, 2
+     * ended, 3 kept, 4 without a cache), the friction factor and the
+     * contact's impulses, as the solver callback 0x161cc0 posts them.
+     * derived names. */
+    struct Pair08Owner *record;
+    u8 status;
+    float frictionFactor;
+    Vec4 impulses;
 };
 
 /* A manifold's state as the modifier of vtable 0x169b190 tracks it (derived

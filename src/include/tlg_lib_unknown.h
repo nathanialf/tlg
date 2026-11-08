@@ -450,6 +450,15 @@ class Modifier16a4fa0 /* derived name */
     FUN_00161f10(CommandOwner00171180 *context, const void *sharedData, const hknpCdBody *cdBodyA,
                  const hknpCdBody *cdBodyB,
                  const hknpManifoldCollisionCache *cache) const; /* vtable slot 5; derived name */
+    /* Slot 10 (0x161cc0), after the contact solve: unless the record's
+     * state is set, whether any of its points took a positive impulse,
+     * kept in bit 0 of the cache's flags at +0x22; a contact begun (bits 1
+     * and 2 then cleared), ended (when bit 2 is set) or kept (when bit 1
+     * is) posts the body pair event with the record, the change, the
+     * friction factor and the impulses; without a cache, any positive
+     * impulse posts it with the change 4. derived name. */
+    void FUN_00161cc0(CommandOwner00171180 *context, const SolverCallbackInput001623a0 *input,
+                      const Vec4 *contactImpulses, float frictionFactor) const;
 };
 
 /* The second argument of the modifier slot 0x156e90: a vector at +0x20 of
@@ -647,6 +656,10 @@ struct hknpCharacterProxySignalData /* derived name */
 /* The record's first and second ints (0x10650, 0x34840). derived names. */
 int FUN_00010650(const Pair08Owner *self); /* derived name */
 int FUN_00034840(const Pair08Owner *self); /* derived name */
+/* The record's count at +2 and its state at +5 (0x348c0, 0x34890).
+ * derived names. */
+int FUN_000348c0(const Pair08Owner *self); /* derived name */
+int FUN_00034890(const Pair08Owner *self); /* derived name */
 
 /* What slot 11 of the modifier at 0x16a4e60 receives (derived name): the
  * pair whose bodies the event names first. */
@@ -1734,14 +1747,80 @@ struct hkgpConvexHullTriangle /* derived name */
     hkgpConvexHullVertex *vertices[3]; /* derived name */
 };
 
+/* A block of a hull's pool (derived names): its storage, then the links
+ * of the pool's list of blocks; freed whole to the heap. */
+template <int STORAGE>
+struct hkgpConvexHullBlock /* derived name */
+{
+    /* Freed to the heap at the block's size. */
+    static void operator delete(void *block, unsigned long numBytes)
+    {
+        hkContainerHeapAllocator::get().blockFree(block, int(numBytes));
+    }
+
+    u8 storage[STORAGE];
+    hkgpConvexHullBlock *prev;
+    hkgpConvexHullBlock *next;
+    u8 unknownEnd[8];
+};
+
+/* The blocks' list unlinked from its head and each block freed (twice in
+ * the reset, 0xaeb40 and 0xaebc0). derived name. */
+template <int STORAGE> inline void freeBlocks(hkgpConvexHullBlock<STORAGE> *&head)
+{
+    while (hkgpConvexHullBlock<STORAGE> *block = head) {
+        if (block->prev) {
+            block->prev->next = block->next;
+        } else {
+            head = block->next;
+        }
+        if (block->next) {
+            block->next->prev = block->prev;
+        }
+        delete block;
+    }
+}
+
 struct hkgpConvexHullData /* derived name */
 {
-    u8 unknown0[0x38];
-    s32 numVertices; /* derived name */
-    u8 unknown3c[0xc];
-    hkgpConvexHullTriangle *firstTriangle; /* derived name */
-    u8 unknown50[0x190];
-    s32 dimension; /* derived name */
+    /* Reset (0xaeb20; the constructor 0xaed70 runs it with false): both
+     * pools' blocks freed, the counts and arrays emptied, the bounds empty,
+     * the frames identity, no dimension; the vector at +0x100 cleared
+     * unless asked to keep it. derived name. */
+    void FUN_000aeb20(bool keep100);
+
+    u8 unknown0[0x28];
+    hkgpConvexHullBlock<0xa08> *vertexBlocks;    /* derived name */
+    hkgpConvexHullVertex *firstVertex;           /* derived name */
+    s32 numVertices;                             /* derived name */
+    hkgpConvexHullBlock<0x1008> *triangleBlocks; /* derived name */
+    hkgpConvexHullTriangle *firstTriangle;       /* derived name */
+    s32 numTriangles;                            /* derived name */
+    hkArray<u8> array58;                         /* derived name */
+    hkArray<u8> array68;                         /* derived name */
+    hkArray<u8> array78;                         /* derived name */
+    Vec4 vector90;                               /* derived name */
+    Vec4 vectorA0;                               /* derived name */
+    hkAabb aabbB0;                               /* derived name */
+    hkAabb aabbD0;                               /* derived name */
+    Vec4 vectorF0;                               /* derived name */
+    Vec4 vector100;                              /* derived name */
+    Vec4 vector110;                              /* derived name */
+    Vec4 vector120;                              /* derived name */
+    void *pointer130;                            /* derived name */
+    void *pointer138;                            /* derived name */
+    hkMatrix3 frame140;                          /* derived name */
+    Vec4 vector170;                              /* derived name */
+    Vec4 vector180;                              /* derived name */
+    hkMatrix3 frame190;                          /* derived name */
+    Vec4 vector1c0;                              /* derived name */
+    Vec4 vector1d0;                              /* derived name */
+    s32 dimension;                               /* derived name */
+    s32 value1e4;                                /* derived name */
+    s32 value1e8;                                /* derived name */
+    hkBool flag1ec;                              /* derived name */
+    hkBool flag1ed;                              /* derived name */
+    hkBool flag1ee;                              /* derived name */
 };
 
 class hkgpConvexHull /* derived name */ : public hkReferencedObject
@@ -3029,6 +3108,37 @@ struct FreeList /* derived name */
         freeHead = static_cast<Element *>(element);
     }
 
+    /* Elements into an array: the freed ones first, then runs of the
+     * current block's next ones, else the slow path one at a time; the
+     * count of free ones taken down by each run (inline in
+     * TwoBaseAllocator's batch allocation, 0x2ab0 to 0x2b9b). derived
+     * name. */
+    inline void allocBatch(void **elementsOut, int numElements)
+    {
+        void **out = elementsOut;
+        void **const end = elementsOut + numElements;
+        Element *element = freeHead;
+        while (out < end && element) {
+            *out++ = element;
+            element = element->next;
+        }
+        freeHead = element;
+        numFreeElements -= out - elementsOut;
+        while (out < end) {
+            if (top < blockEnd) {
+                void **run = out;
+                while (top < blockEnd && run < end) {
+                    *run++ = top;
+                    top += elementSize;
+                }
+                numFreeElements -= run - out;
+                out = run;
+            } else {
+                *out++ = FUN_00019230();
+            }
+        }
+    }
+
     /* Elements put back at the head of the freed ones, a null one
      * uncounted (inline in TwoBaseAllocator's batch free, 0x2e15). derived
      * name. */
@@ -3265,6 +3375,11 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
     /* The rest of the overriders, declared so the class is complete (slot
      * 3 0x2c40; primary slots 13 to 15, 17, 18, 20 and 21). */
     virtual void blockFree(void *pointer, int numBytes);
+    /* Slot 7 (0x29f0): under the lock, small blocks from their size's free
+     * list as one batch, counted as slot 8 counts them; larger ones each
+     * from the allocator below; then the bytes in use checked against the
+     * limit, the peak kept, as slot 4 does. */
+    virtual void blockAllocBatch(void **blocksOut, int numBlocks, int blockSize);
     /* Slot 8 (0x2d70): under the lock, small blocks back on their size's
      * free list as one batch, counted as slot 3 counts one; larger ones
      * each to the allocator below. */
@@ -5594,6 +5709,11 @@ inline void hkxAttributeHolder::operator delete(void *object, unsigned long numB
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxMaterial::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void *hknpSolveDataTask::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -7169,7 +7289,6 @@ inline int cellOf(const hknpSpaceSplitter *splitter, const Vec4 &position)
  * base destructors not declared elsewhere come first. derived names. */
 void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0004b040(hknpWorld *self);
-void FUN_00087130(hkxMaterial *self);
 void FUN_0008d2c0(hkxScene *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
 void FUN_001625d0(hknpVehicleInstance *self);
@@ -7185,7 +7304,6 @@ void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d
 void FUN_0003c370(hknpSphereShape *self);           /* slot 1 of 0x1695c10 */
 void FUN_0004aff0(hknpWorld *self);                 /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);         /* slot 1 of 0x169ab10 */
-void FUN_000870e0(hkxMaterial *self);               /* slot 1 of 0x16a0db0 */
 void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
 void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */

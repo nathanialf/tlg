@@ -136,3 +136,11 @@ D_16a1780 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_16a17b0 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_168c7a0 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_168c7d0 hkClassMember 5 src/include/tlg_hk_reflect.h
+D_169c230 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_169c280 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_168f620 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_168f720 hkClassMember 10 src/include/tlg_hk_reflect.h
+D_168f6a0 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_168f950 hkClassEnum 2 src/include/tlg_hk_reflect.h
+D_168f8b0 hkClassEnum::Item 4 src/include/tlg_hk_reflect.h
+D_168f8f0 hkClassEnum::Item 6 src/include/tlg_hk_reflect.h

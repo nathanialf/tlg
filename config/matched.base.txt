@@ -816,7 +816,7 @@ FUN_00167c00 src/libs/unknown/func_00167c00.cpp
 FUN_000188a0 src/libs/unknown/func_000188a0.cpp
 _ZN11hkSemaphoreC1Eiii src/libs/unknown/func_0001a420.cpp
 FUN_000792e0 src/libs/unknown/func_000792e0.cpp
-FUN_0007b0d0 src/libs/unknown/func_0007b0d0.cpp
+FUN_0007b0d0 src/libs/unknown/func_0007b160.cpp _ZL53finishLoadedObjecthkpWheelFrictionConstraintDataAtomsPvi
 FUN_0007bb90 src/libs/unknown/func_0007bb90.cpp _ZNK29hkpPointToPlaneConstraintData16unknownVirtual20E6hkBoolR21ConstraintRuntimeInfo
 FUN_0007bfe0 src/libs/unknown/func_0007bfe0.cpp
 FUN_0007e2f0 src/libs/unknown/func_0007e2f0.cpp
@@ -1168,7 +1168,7 @@ FUN_00064070 src/libs/unknown/func_00064070.cpp _ZN18hknpWorldObject4f812FUN_000
 _ZN14Signal00093530D1Ev src/libs/unknown/func_00093530.cpp
 FUN_00154f00 src/libs/unknown/func_00154f00.cpp _ZNK26hknpPrepareConstraintsTask7getNameEP11hkStringBufS1_
 FUN_00179870 src/libs/unknown/func_00179870.cpp _ZNK28hknpPrepareExistingPairsTask7getNameEP11hkStringBufS1_
-FUN_0007b110 src/libs/unknown/func_0007b110.cpp
+FUN_0007b110 src/libs/unknown/func_0007b160.cpp _ZL48finishLoadedObjecthkpWheelFrictionConstraintDataPvi
 FUN_0007a020 src/libs/unknown/func_0007a020.cpp _ZNK28hkpPointToPathConstraintData15unknownVirtual6ERN17hkpConstraintData14ConstraintInfoE
 _ZN30hkpSpringDamperConstraintMotorC1Ev src/libs/unknown/func_0017afe0.cpp
 _ZN26hkpPositionConstraintMotorC1Ev src/libs/unknown/func_00082430.cpp
@@ -1320,7 +1320,7 @@ FUN_0008f6a0 src/libs/unknown/func_0008f6a0.cpp _ZN9UnionFind14findRootOfNodeEi
 _ZN18hknpMountedBallGunD0Ev src/libs/unknown/func_00166890.cpp
 FUN_0006b7d0 src/libs/unknown/func_0006b7d0.cpp
 _ZN24hkpRagdollConstraintDataD0Ev src/libs/unknown/func_0007de50.cpp
-FUN_000870e0 src/libs/unknown/func_000870e0.cpp
+_ZN11hkxMaterialD0Ev src/libs/unknown/func_000870e0.cpp
 _ZN18hkxAttributeHolderD0Ev src/libs/unknown/func_00089330.cpp
 _ZN14hkxSkinBindingD0Ev src/libs/unknown/func_0008a9b0.cpp
 _ZN7hkxMeshD0Ev src/libs/unknown/func_0008bf00.cpp
@@ -2781,3 +2781,10 @@ FUN_0005eb00 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005eb00EiRKD
 FUN_00003820 src/libs/unknown/func_00003820.cpp _GLOBAL__I_a
 FUN_0019f310 src/libs/unknown/func_0019f310.cpp _Z12FUN_0019f310PK8hkAabb16iS1_iP9hkKeyPairiRi
 FUN_0012eda0 src/libs/unknown/func_0012eda0.cpp _Z12FUN_0012eda0P25hknpCollisionQueryContextRK22hknpClosestPointsQueryRK18hknpShapeQueryInfoRK9hknpShapeRK19hknpQueryFilterDataS6_RK11hkTransformbP27hknpCollisionQueryCollector
+FUN_00188ed0 src/libs/unknown/func_00188ed0.cpp _Z12FUN_00188ed0RKDv4_ffiP10hkGeometryi
+FUN_000029f0 src/libs/unknown/func_000029f0.cpp _ZN16TwoBaseAllocator15blockAllocBatchEPPvii
+FUN_0007b160 src/libs/unknown/func_0007b160.cpp _GLOBAL__I_a
+_ZN11hkxMaterialD1Ev src/libs/unknown/func_000870e0.cpp
+FUN_00179c80 src/libs/unknown/func_00179c80.cpp _Z12FUN_00179c80PK9hknpWorldPK8hknpBodyS4_P19hkBlockStreamWriter
+FUN_0007f870 src/libs/unknown/func_0007f5c0.cpp _ZNK24hkpLinearParametricCurve12FUN_0007f870EfRDv4_f
+_ZN19hknpMaterialLibraryC1Ei src/libs/unknown/func_00077450.cpp
