@@ -122,9 +122,10 @@ class Walker:
         its own), or into a member of it built in place (`mov [this+0x138],
         vptr`: hkLargeBlockAllocator's constructor 0x12160 builds its
         SingleBlockAllocator member, D14's round 63B row)."""
-        return set(self._walk(fn, fresh=True, members=True))
+        return set(self._walk(fn, fresh=True, members=True, branches=True))
 
-    def _walk(self, ctor: int, fresh: bool = False, members: bool = False) -> list[int]:
+    def _walk(self, ctor: int, fresh: bool = False, members: bool = False,
+              branches: bool = False) -> list[int]:
         """The vtable address points stored into `this` along the fall-through
         path. With `fresh`, the pointer a call returns (`rax`) is an object
         too: a create function news its object and constructs it inline
@@ -135,89 +136,100 @@ class Walker:
         if ctor not in self.funcs:
             return []
         ins_by = self.insns(ctor)
-        this = {"rdi"}
-        regs: dict[str, int] = {}
+        end = ctor + self.funcs[ctor][0]
         seq: list[int] = []
-        pc, steps = ctor, 0
-        while pc in ins_by and steps < 2000:
-            steps += 1
-            ins = ins_by[pc]
-            pc = ins.address + ins.size
-            ops = ins.operands
-            m = ins.mnemonic
-            if m == "ret":
-                break
-            if m == "jmp":
-                if ops[0].type == X86_OP_IMM and ctor <= ops[0].imm < ctor + self.funcs[ctor][0]:
-                    pc = ops[0].imm
+        # with `branches`, a conditional jump's target is walked too, once,
+        # with the state at the jump: a function that builds its objects past
+        # an early exit (0x155ea0 leaves at 0x155ee8 when the body is watched
+        # already, and stores its two slots' vtables after 0x155eed)
+        work: list[tuple[int, set[str], dict[str, int]]] = [(ctor, {"rdi"}, {})]
+        taken: set[int] = set()
+        while work:
+            pc, this, regs = work.pop()
+            steps = 0
+            while pc in ins_by and steps < 2000:
+                steps += 1
+                ins = ins_by[pc]
+                pc = ins.address + ins.size
+                ops = ins.operands
+                m = ins.mnemonic
+                if m == "ret":
+                    break
+                if m == "jmp":
+                    if ops[0].type == X86_OP_IMM and ctor <= ops[0].imm < ctor + self.funcs[ctor][0]:
+                        pc = ops[0].imm
+                        continue
+                    break                                   # a tail call: the callee's stores are not seen
+                if m.startswith("j") and branches and ops[0].type == X86_OP_IMM \
+                        and ctor <= ops[0].imm < end and ops[0].imm not in taken:
+                    taken.add(ops[0].imm)
+                    work.append((ops[0].imm, set(this), dict(regs)))
+                if m.startswith("j") or m in ("nop", "push", "pop", "cmp", "test"):
                     continue
-                break                                   # a tail call: the callee's stores are not seen
-            if m.startswith("j") or m in ("nop", "push", "pop", "cmp", "test"):
-                continue
-            if m == "call":
-                for r in CALLER_SAVED:
-                    regs.pop(r, None)
-                    this.discard(r)
-                if fresh:
-                    this.add("rax")
-                continue
-            if len(ops) == 2 and ops[0].type == X86_OP_REG:
-                d = ins.reg_name(ops[0].reg)
-                src = ops[1]
-                if m == "mov" and src.type == X86_OP_REG:
-                    sname = ins.reg_name(src.reg)
-                    if sname in this:
-                        this.add(d)
-                    else:
+                if m == "call":
+                    for r in CALLER_SAVED:
+                        regs.pop(r, None)
+                        this.discard(r)
+                    if fresh:
+                        this.add("rax")
+                    continue
+                if len(ops) == 2 and ops[0].type == X86_OP_REG:
+                    d = ins.reg_name(ops[0].reg)
+                    src = ops[1]
+                    if m == "mov" and src.type == X86_OP_REG:
+                        sname = ins.reg_name(src.reg)
+                        if sname in this:
+                            this.add(d)
+                        else:
+                            this.discard(d)
+                        if sname in regs:
+                            regs[d] = regs[sname]
+                        else:
+                            regs.pop(d, None)
+                    elif m == "lea" and src.type == X86_OP_MEM and src.mem.base == X86_REG_RIP:
+                        regs[d] = ins.address + ins.size + src.mem.disp
                         this.discard(d)
-                    if sname in regs:
-                        regs[d] = regs[sname]
+                    elif m == "lea" and src.type == X86_OP_MEM and not src.mem.index \
+                            and src.mem.base and ins.reg_name(src.mem.base) in regs:
+                        # the address point formed from the vtable's start in
+                        # another register (`lea rax, [rip+V]; lea rcx, [rax+0x10]`,
+                        # a class with a second vtable, whose other address point
+                        # is `add rax, 0x58`)
+                        regs[d] = regs[ins.reg_name(src.mem.base)] + src.mem.disp
+                        this.discard(d)
+                    elif m == "add" and src.type == X86_OP_IMM and d in regs:
+                        regs[d] += src.imm
                     else:
                         regs.pop(d, None)
-                elif m == "lea" and src.type == X86_OP_MEM and src.mem.base == X86_REG_RIP:
-                    regs[d] = ins.address + ins.size + src.mem.disp
-                    this.discard(d)
-                elif m == "lea" and src.type == X86_OP_MEM and not src.mem.index \
-                        and src.mem.base and ins.reg_name(src.mem.base) in regs:
-                    # the address point formed from the vtable's start in
-                    # another register (`lea rax, [rip+V]; lea rcx, [rax+0x10]`,
-                    # a class with a second vtable, whose other address point
-                    # is `add rax, 0x58`)
-                    regs[d] = regs[ins.reg_name(src.mem.base)] + src.mem.disp
-                    this.discard(d)
-                elif m == "add" and src.type == X86_OP_IMM and d in regs:
-                    regs[d] += src.imm
-                else:
+                        this.discard(d)
+                elif len(ops) == 2 and m == "mov" and ops[0].type == X86_OP_MEM and ops[1].type == X86_OP_REG:
+                    dst = ops[0]
+                    base = ins.reg_name(dst.mem.base) if dst.mem.base else None
+                    v = regs.get(ins.reg_name(ops[1].reg))
+                    # `mov [this], vptr`, or `mov [rip+instance], vptr`: a static
+                    # instance built in place by its initializer (the system
+                    # allocator at 0x4b3b, hkSerializeDeprecated at 0x19a618);
+                    # the instance's address may sit in a register first
+                    # (`lea rsi, [rip+instance]; mov [rsi], vptr` at 0xb138,
+                    # where the same register is the exit registration's
+                    # argument), so a base holding a static address outside
+                    # the vtables is the same store
+                    static = dst.mem.base == X86_REG_RIP or (
+                        base in regs and dst.mem.disp == 0 and not self.in_relro(regs[base]))
+                    # `mov [rbp-X], vptr`: an object on the function's own stack,
+                    # built in place (the visitor the compressed mesh's slot 29
+                    # hands to the tree walk, 0x127a7a)
+                    local = base in ("rbp", "rsp")
+                    # with `members`, a store at an offset of `this` is a member
+                    # object built in place (vptr_stores); vptr_of keeps offset 0
+                    # so a member built after the own vptr store cannot name it
+                    if (base in this and (dst.mem.disp == 0 or members) or static or local) and not dst.mem.index \
+                            and v is not None and self.in_relro(v) and self.is_address_point(v):
+                        seq.append(v)
+                elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
+                    d = ins.reg_name(ops[0].reg)
                     regs.pop(d, None)
                     this.discard(d)
-            elif len(ops) == 2 and m == "mov" and ops[0].type == X86_OP_MEM and ops[1].type == X86_OP_REG:
-                dst = ops[0]
-                base = ins.reg_name(dst.mem.base) if dst.mem.base else None
-                v = regs.get(ins.reg_name(ops[1].reg))
-                # `mov [this], vptr`, or `mov [rip+instance], vptr`: a static
-                # instance built in place by its initializer (the system
-                # allocator at 0x4b3b, hkSerializeDeprecated at 0x19a618);
-                # the instance's address may sit in a register first
-                # (`lea rsi, [rip+instance]; mov [rsi], vptr` at 0xb138,
-                # where the same register is the exit registration's
-                # argument), so a base holding a static address outside
-                # the vtables is the same store
-                static = dst.mem.base == X86_REG_RIP or (
-                    base in regs and dst.mem.disp == 0 and not self.in_relro(regs[base]))
-                # `mov [rbp-X], vptr`: an object on the function's own stack,
-                # built in place (the visitor the compressed mesh's slot 29
-                # hands to the tree walk, 0x127a7a)
-                local = base in ("rbp", "rsp")
-                # with `members`, a store at an offset of `this` is a member
-                # object built in place (vptr_stores); vptr_of keeps offset 0
-                # so a member built after the own vptr store cannot name it
-                if (base in this and (dst.mem.disp == 0 or members) or static or local) and not dst.mem.index \
-                        and v is not None and self.in_relro(v) and self.is_address_point(v):
-                    seq.append(v)
-            elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
-                d = ins.reg_name(ops[0].reg)
-                regs.pop(d, None)
-                this.discard(d)
         return seq
 
     def is_address_point(self, v: int) -> bool:
