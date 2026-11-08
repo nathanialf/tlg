@@ -4045,6 +4045,12 @@ class hknpLinearSurfaceVelocity : public hknpSurfaceVelocity
     hkVector4 velocity;
 };
 
+/* hknpLinearSurfaceVelocity's two enums, Space and ProjectMethod, through
+ * pointers (its records' initializer 0x3d540 reads them at run time).
+ * derived names. */
+extern const hkClassEnum *D_16dc628;
+extern const hkClassEnum *D_16dc618;
+
 struct WheelCollideOutput; /* derived name; below */
 
 /* hknpVehicleSuspension (hkClass 0x57c2f98 built at 0x78090, the string
@@ -8844,11 +8850,24 @@ class hknpEventDispatcher /* derived name */
      * entries put back on the free list. derived name. */
     void FUN_0006c050(hknpBodyId bodyId);
 
+    /* The post-collide stage's pointer and context lent, and taken back
+     * the same way with nulls (0x50681, 0x506d7). derived name. */
+    void setStepContext(void *pointer, void *context)
+    {
+        pointer18 = pointer;
+        context28 = context;
+    }
+
     u8 unknown0[0x10];
     /* The world, whose bodies' capacity a body's first entries are grown to
      * (0x6be0e). derived name. */
     hknpWorld *world;
-    u8 unknown18[0x18];
+    /* What the post-collide stage lends the dispatcher while it dispatches
+     * the commands (0x50681, 0x50685): the world's object at +0x1d0's
+     * pointer and a context. derived names. */
+    void *pointer18;
+    u8 unknown20[8];
+    void *context28;
     u16 firstFreeEntry;               /* derived name */
     hkArray<BodySignalEntry> entries; /* derived name */
     hkArray<u16> bodyFirstEntry;      /* derived name */
@@ -9638,16 +9657,27 @@ struct hknpBodyManager /* derived name */
         return HK_NULL;
     }
 
-    u8 unknown0[8];
+    /* Out of line (0x15faa0; the world's constructor builds it at +0x10,
+     * 0x48b74, with a null first argument and its construction info's body
+     * buffer and capacity): every array and map empty, the storage set up
+     * by 0x15fd30, then body 0 the static body at the identity with an
+     * empty previous box, no cell and no scheduled change; one body.
+     * derived name. */
+    hknpBodyManager(void *argument, hknpBody *userBodyBuffer, int capacity);
+
+    /* The bodies' storage set up over a buffer of a capacity, the
+     * user's when given (0x15fd30). derived name. */
+    void FUN_0015fd30(hknpBody *userBodyBuffer, int capacity);
+
+    void *pointer0;                   /* derived name: the constructor's first argument */
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
     u32 unknown20;
     /* The first free body, linked through each free body's first word
      * (0x160767). derived name. */
     u32 firstFreeBodyId;
-    hkAabb16 *previousAabbs; /* derived name: by body id */
-    u8 unknown30[8];
-    hkArray<BodyEntry> bodyEntries; /* derived name: by body id */
+    hkArray<hkAabb16> previousAabbs; /* derived name: by body id */
+    hkArray<BodyEntry> bodyEntries;  /* derived name: by body id */
     /* Records by body id: the record's index by the body's id, the
      * records, the first free one. derived names. */
     PointerMapOf<u32, int> recordIndices48;
@@ -11331,7 +11361,9 @@ struct hknpWorldSignals /* derived name */
      * with the world at 0x512d8 under "TtPostSolveSignal"; the proxy's
      * 0x177640). derived names. */
     hkSignal1<hknpWorld *> signalE8;
-    hkSignal1<hknpWorld *> signalF0;
+    /* Fired after the collide stage when it has a slot (0x507f8). derived
+     * name. */
+    hkSignal1<hknpWorld *> postCollideSignal;
     Signal00093530 signalF8;
     hkSignal1<hknpWorld *> postSolveSignal;
 };
@@ -11475,6 +11507,29 @@ struct ShapeWatcherOwner /* derived name */
     hkArray<ShapeWatcher *> watchers;      /* derived name */
     hkArray<ShapeWatcher *> otherWatchers; /* derived name */
     bool anyShapeChanged;                  /* derived name */
+};
+
+/* The world's object at +0x6d0 (derived name): the post-collide stage lends
+ * it the object at +0x1d0's pointer and a context while the commands are
+ * dispatched. */
+struct hknpWorldObject6d0 /* derived name */
+{
+    /* Lent, and taken back context first (0x506c0). derived names. */
+    void setStepContext(void *pointer, void *context)
+    {
+        pointer18 = pointer;
+        context20 = context;
+    }
+
+    void clearStepContext()
+    {
+        context20 = HK_NULL;
+        pointer18 = HK_NULL;
+    }
+
+    u8 unknown0[0x18];
+    void *pointer18;
+    void *context20;
 };
 
 struct hknpWorld {
@@ -11821,7 +11876,9 @@ struct hknpWorld {
     hkRefPtr<hknpWorldObject6c0> object6b8; /* derived name */
     hknpWorldObject6c0 *object6c0;          /* derived name */
     hknpEventDispatcher *eventDispatcher;   /* derived name */
-    u8 unknown6d0[8];
+    /* Lent the same pointer and context as the dispatcher by the
+     * post-collide stage (0x5069b, 0x5069f). derived name. */
+    struct hknpWorldObject6d0 *object6d0;
     /* The task the collide stage adds after the collide tasks, given the
      * world and the object at +0x1d0 first (0x50518). derived name. */
     class hknpPostCollideTask *postCollideTask;
@@ -11830,8 +11887,9 @@ struct hknpWorld {
     class hknpPreSolveTask *preSolveTask;
     class hknpPostSolveTask *postSolveTask;
     /* What the object at +0x1d0 builds the collide tasks from (its slot 2,
-     * 0x50503). derived name. */
-    void *pointer6f0;
+     * 0x50503; the post-collide stage takes a context from it, 0x50667).
+     * derived name. */
+    struct hknpWorldContextPool *contextPool;
     /* To the 0x720 bytes its deleting destructor (0x4aff0) frees. */
     u8 unknown6f8[0x28];
 };
@@ -17974,6 +18032,10 @@ class BufferOstream : public hkOstream /* derived name */
 #define HK_HARDWARE_INFO_CPP                                                                       \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\System\\Hardware\\hkHardwareInfo.cpp"
 
+/* The file hkObjectCopier.cpp's reports name (the string at 0x14cd251). */
+#define HK_OBJECT_COPIER_CPP                                                                       \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Serialize\\Copier\\hkObjectCopier.cpp"
+
 /* The file hkSerializeUtil.cpp's reports name (the string at 0x14cb4fe). */
 #define HK_SERIALIZE_UTIL_CPP                                                                      \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Serialize\\Util\\hkSerializeUtil.cpp"
@@ -20999,11 +21061,21 @@ struct hknpWorldContextPool /* derived name */
     /* A context back on the list, at its own index (0x16ffe0). */
     void FUN_0016ffe0(const Context *context);
 
+    /* The commands the collide tasks wrote dispatched through a context
+     * (0x1704b0; the post-collide stage 0x506b4 and 0x50d01). derived
+     * name. */
+    void FUN_001704b0(Context *context, hknpEventDispatcher *dispatcher);
+
     /* Every context in use cleaned with the first context's caches, the
      * pool's stream given back to its cache and the cache freed, then the
      * first context, and no context in use (0x16feb0; the world's stage at
      * 0x513be). derived name. */
     void FUN_0016feb0();
+
+    /* Out of line (0x47db0; the world's step frees the pool after it at
+     * 0x513cb): the members destroyed, the pool's stream and pair entries
+     * first, then each context's stream from the last. */
+    ~hknpWorldContextPool();
 
     /* How many contexts are in use, in two counts (0x16feb0 adds them and
      * clears both at once). derived names. */

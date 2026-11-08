@@ -4,7 +4,7 @@
 void hknpBodyManager::FUN_00161400() /* derived name */
 {
     hknpBody *bodyArray = bodies.data;
-    hkAabb16 *aabbs = previousAabbs;
+    hkAabb16 *aabbs = previousAabbs.data;
     const int numChanges = scheduledBodyChanges.size;
     for (int i = 0; i < numChanges; i++) {
         const ScheduledBodyChange &change = scheduledBodyChanges.data[i];

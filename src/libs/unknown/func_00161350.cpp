@@ -6,7 +6,7 @@
 void hknpBodyManager::FUN_00161350()
 {
     const hknpBody *allBodies = bodies.data;
-    hkAabb16 *aabbs = previousAabbs;
+    hkAabb16 *aabbs = previousAabbs.data;
     const int numIds = activeBodyIds.size;
     int i = 0;
     for (; i < numIds - 8; i++) {

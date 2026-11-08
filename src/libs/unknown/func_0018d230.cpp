@@ -22,7 +22,7 @@ void BroadPhaseCollideTask::process()
         hkBlockStreamWriter writer;
         writer.FUN_000938c0(context->cache250, &newPairs);
         FUN_00197c60(context, context->world->modifierManager->collisionFilter.pntr, treeA, treeB,
-                     &writer, owner->bodyManager->previousAabbs);
+                     &writer, owner->bodyManager->previousAabbs.data);
         writer.FUN_00093a10();
         stream.timerEnd("Et");
     }

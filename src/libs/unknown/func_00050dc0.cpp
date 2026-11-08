@@ -33,7 +33,7 @@ void hknpWorld::FUN_00050dc0(RefArrays1698f80 &arrays, void *argument)
         FUN_000509f0();
         arrays.entry5a = 0xffff;
     }
-    object1d0->unknownVirtual3(pointer6f0, &arrays, argument);
+    object1d0->unknownVirtual3(contextPool, &arrays, argument);
     if (arrays.array10.getSize() || arrays.array20.getSize()) {
         postSolveTask->world = this;
         postSolveTask->unknown20 = object1d0;

@@ -4,7 +4,7 @@
 void hknpWorldObject4f8::FUN_00062490(const hknpBodyId *bodyIds, int numBodyIds,
                                       int islandId) /* derived name */
 {
-    const hkAabb16 *previousAabbs = world->bodyManager.previousAabbs;
+    const hkAabb16 *previousAabbs = world->bodyManager.previousAabbs.data;
     for (int i = 0; i < numBodyIds; i++) {
         const u32 bodyId = bodyIds[i].value;
         hknpBody &body = world->bodyManager.bodies[bodyId];

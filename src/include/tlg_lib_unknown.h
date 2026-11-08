@@ -2810,6 +2810,10 @@ class hkObjectCopier : public hkReferencedObject /* derived name */
     virtual int FUN_001a0b20(const hkClassMember &src,
                              const hkClassMember &dst); /* vtable slot 6; derived name */
 
+    /* A member of the target layout written as zeros, the buffer grown and
+     * cleared for it (0x1a0890). derived name. */
+    void FUN_001a0890(hkOArchive &out, const hkClassMember &member, hkArray<char> &zeros) const;
+
     Layout00180ef0 layoutIn;  /* derived name */
     Layout00180ef0 layoutOut; /* derived name */
     int flags;                /* derived name */
