@@ -1,9 +1,9 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-hknpBodyManager::hknpBodyManager(void *argument, hknpBody *userBodyBuffer, int capacity)
-    : pointer0(argument), motionManager(HK_NULL), firstFreeBodyId(0x7fffffff),
-      firstFreeRecord68(-1), numBodies98(0), peakBodyId(0)
+hknpBodyManager::hknpBodyManager(hknpWorld *world, hknpBody *userBodyBuffer, int capacity)
+    : world(world), motionManager(HK_NULL), firstFreeBodyId(0x7fffffff), firstFreeRecord68(-1),
+      numBodies98(0), peakBodyId(0)
 {
     FUN_0015fd30(userBodyBuffer, capacity);
 

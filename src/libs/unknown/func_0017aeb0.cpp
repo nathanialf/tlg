@@ -16,7 +16,7 @@ void StepTimers::FUN_0017aeb0(ThreadBuffer &stream)
     if (!enabled) {
         return;
     }
-    FUN_0017a3c0(this, stream);
+    FUN_0017a3c0(convex, stream);
     char *const limit = stream.capacityMinus16;
     if (stream.end < limit) {
         TimerMarker *command = reinterpret_cast<TimerMarker *>(stream.end);

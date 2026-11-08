@@ -1,44 +1,6 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-/* A marker written to the stream when it has room (derived name). */
-static inline void addMarker(ThreadBuffer &stream, const char *name)
-{
-    if (stream.end < stream.capacityMinus16) {
-        TimerMarker *command = reinterpret_cast<TimerMarker *>(stream.end);
-        command->commandAndMonitor = name;
-        stream.end = reinterpret_cast<char *>(command + 1);
-    }
-}
-
-/* A count written as a value when it is not zero and the stream has room
- * (derived name): the count read again for the value, after the name is
- * written. */
-static inline void addCount(ThreadBuffer &stream, const char *name, const u32 &count)
-{
-    if (count) {
-        if (stream.end < stream.capacityMinus16) {
-            ThreadBuffer::AddValueCommand *command =
-                reinterpret_cast<ThreadBuffer::AddValueCommand *>(stream.end);
-            command->commandAndMonitor = name;
-            command->value = float(count);
-            stream.end = reinterpret_cast<char *>(command + 1);
-        }
-    }
-}
-
-/* A timer's record copied into the stream as a "Wt" command when it has
- * room (derived name). */
-static inline void addTimer(ThreadBuffer &stream, const TimerRecord &timer)
-{
-    if (stream.end < stream.capacityMinus16) {
-        TimerRecord *command = reinterpret_cast<TimerRecord *>(stream.end);
-        *command = timer;
-        command->commandAndMonitor = "Wt";
-        stream.end = reinterpret_cast<char *>(command + 1);
-    }
-}
-
 /* derived name: the convex against composite timers written when they ran:
  * the box query with its hits and sort, the contact cache's reuse and
  * check with their counts, the timers after them, then the whole. */

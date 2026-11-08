@@ -7,10 +7,10 @@
  * 32-byte store, the frame realigned for it). */
 static inline void fillFilterInput(hknpCollisionFilterShapeInput &input,
                                    const hknpQueryFilterData &filterData,
-                                   const ShapeQuery00038010 &info) /* derived name */
+                                   const hknpShapeQueryInfo &info) /* derived name */
 {
     input.filterData = filterData;
-    input.unknown10 = info.unknown0;
+    input.unknown10 = info.body;
     input.unknown18 = info.unknown8;
     input.unknown20 = info.unknown10;
     input.shapeKey = info.keyPath.key;
@@ -18,9 +18,9 @@ static inline void fillFilterInput(hknpCollisionFilterShapeInput &input,
 
 void hknpCollisionQueryDispatcher::FUN_00070ae0(
     hknpCollisionQueryContext *context, const hknpShapeQuery &query,
-    const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
-    const hknpQueryFilterData &targetFilterData, const ShapeQuery00038010 &targetInfo,
-    void *argument7, bool flipped, void *collector) const
+    const hknpShapeQueryInfo &queryInfo, const hknpShape &targetShape,
+    const hknpQueryFilterData &targetFilterData, const hknpShapeQueryInfo &targetInfo,
+    const hkTransform &queryToTarget, bool flipped, void *collector) const
 {
     context->dispatcher = this;
     if (query.filter) {
@@ -37,14 +37,14 @@ void hknpCollisionQueryDispatcher::FUN_00070ae0(
     const u32 rowA = context->dispatcher->getShapeTypeRow(query.shape->unknownVirtual5());
     const u32 rowB = context->dispatcher->getShapeTypeRow(targetShape.unknownVirtual5());
     closestPoints[rowA][rowB](context, query, queryInfo, targetShape, targetFilterData, targetInfo,
-                              argument7, flipped, collector);
+                              queryToTarget, flipped, collector);
 }
 
 void hknpCollisionQueryDispatcher::FUN_00070d20(
     hknpCollisionQueryContext *context, const hknpShapeQuery &query,
-    const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
-    const hknpQueryFilterData &targetFilterData, const ShapeQuery00038010 &targetInfo,
-    void *argument7, bool flipped, void *argument9, void *collector) const
+    const hknpShapeQueryInfo &queryInfo, const hknpShape &targetShape,
+    const hknpQueryFilterData &targetFilterData, const hknpShapeQueryInfo &targetInfo,
+    const hkTransform &queryToTarget, bool flipped, void *argument9, void *collector) const
 {
     context->dispatcher = this;
     if (query.filter) {
@@ -61,5 +61,5 @@ void hknpCollisionQueryDispatcher::FUN_00070d20(
     const u32 rowA = context->dispatcher->getShapeTypeRow(query.shape->unknownVirtual5());
     const u32 rowB = context->dispatcher->getShapeTypeRow(targetShape.unknownVirtual5());
     shapeCast[rowA][rowB](context, query, queryInfo, targetShape, targetFilterData, targetInfo,
-                          argument7, flipped, argument9, collector);
+                          queryToTarget, flipped, argument9, collector);
 }

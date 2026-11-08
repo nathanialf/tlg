@@ -2,9 +2,9 @@
 #include "tlg_lib_unknown.h"
 
 void hknpConvexShape::FUN_00043110(const void *context, const hknpAabbQuery &query,
-                                   const ShapeQuery00038010 &queryInfo,
+                                   const hknpShapeQueryInfo &queryInfo,
                                    const hknpQueryFilterData &targetFilterData,
-                                   const ShapeQuery00038010 &targetInfo, hkArray<u32> *hits,
+                                   const hknpShapeQueryInfo &targetInfo, hkArray<u32> *hits,
                                    hkAabb *rangeOut) const
 {
     /* The shape's bounds in its own space (slot 7 under the identity). */
@@ -18,7 +18,7 @@ void hknpConvexShape::FUN_00043110(const void *context, const hknpAabbQuery &que
         if (query.filter != HK_NULL) {
             hknpCollisionFilterShapeInput queryInput;
             queryInput.filterData = query.filterData;
-            queryInput.unknown10 = queryInfo.unknown0;
+            queryInput.unknown10 = queryInfo.body;
             queryInput.unknown18 = queryInfo.unknown8;
             queryInput.unknown20 = queryInfo.unknown10;
             queryInput.shapeKey = queryInfo.keyPath.key;
@@ -26,7 +26,7 @@ void hknpConvexShape::FUN_00043110(const void *context, const hknpAabbQuery &que
 
             hknpCollisionFilterShapeInput targetInput;
             targetInput.filterData = targetFilterData;
-            targetInput.unknown10 = targetInfo.unknown0;
+            targetInput.unknown10 = targetInfo.body;
             targetInput.unknown18 = targetInfo.unknown8;
             targetInput.unknown20 = targetInfo.unknown10;
             targetInput.shapeKey = targetInfo.keyPath.key;

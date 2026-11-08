@@ -4983,20 +4983,79 @@ struct CompositeTimers0017a970 /* derived name */
     u8 unknown90[0x100];
 };
 
+/* The composite timers' writers (0x17a3c0, 0x17a680, 0x17a970) write their
+ * markers, counts and timers through these. */
+/* A marker written to the stream when it has room (derived name). */
+inline void addMarker(ThreadBuffer &stream, const char *name)
+{
+    if (stream.end < stream.capacityMinus16) {
+        TimerMarker *command = reinterpret_cast<TimerMarker *>(stream.end);
+        command->commandAndMonitor = name;
+        stream.end = reinterpret_cast<char *>(command + 1);
+    }
+}
+
+/* A count written as a value when it is not zero and the stream has room
+ * (derived name): the count read again for the value, after the name is
+ * written. */
+inline void addCount(ThreadBuffer &stream, const char *name, const u32 &count)
+{
+    if (count) {
+        if (stream.end < stream.capacityMinus16) {
+            ThreadBuffer::AddValueCommand *command =
+                reinterpret_cast<ThreadBuffer::AddValueCommand *>(stream.end);
+            command->commandAndMonitor = name;
+            command->value = float(count);
+            stream.end = reinterpret_cast<char *>(command + 1);
+        }
+    }
+}
+
+/* A timer's record copied into the stream as a "Wt" command when it has
+ * room (derived name). */
+inline void addTimer(ThreadBuffer &stream, const TimerRecord &timer)
+{
+    if (stream.end < stream.capacityMinus16) {
+        TimerRecord *command = reinterpret_cast<TimerRecord *>(stream.end);
+        *command = timer;
+        command->commandAndMonitor = "Wt";
+        stream.end = reinterpret_cast<char *>(command + 1);
+    }
+}
+
+/* The convex against convex collision's timers (derived names, after the
+ * markers 0x17a3c0 writes): the whole of it, the contact cache's check with
+ * the two limits exceeded and its reuse with the caches reused, the GSK
+ * query with its two counts, the pair's own timer, the Jacobians' build. */
+struct ConvexTimers0017a3c0 /* derived name */
+{
+    TimerRecord total;
+    TimerRecord checkContactCache;
+    u32 numMaxRotationExceeded;
+    u32 numMaxPositionExceeded;
+    TimerRecord reuseContactCache;
+    u32 numCachesReused;
+    TimerRecord cvxCvx;
+    TimerRecord gsk;
+    u32 numRerunGskBecauseOfNormal;
+    u32 numSkippedSinceNoPredictedHit;
+    TimerRecord buildJac;
+};
+
 /* The timers at +0x90 of the group written (0x17a680). derived name. */
 void FUN_0017a680(void *timers, ThreadBuffer &stream); /* derived name */
 
 /* An owner of step timers (derived name): two records at +0xa8 and +0xc0,
  * the second written only when its value is set, two groups at +0xd8 and
  * +0x268 that write their own (FUN_0017a970, FUN_0017abe0), and the flag at
- * +0x410 that turns the writing on; FUN_0017a3c0 writes the owner's first
- * commands. Its writer is called by 0x15c5f0 (0x15d77d). */
+ * +0x410 that turns the writing on; FUN_0017a3c0 writes the convex timers
+ * at +0 first. Its writer is called by 0x15c5f0 (0x15d77d). */
 struct StepTimers /* derived name */
 {
     /* 0x17aeb0. derived name. */
     void FUN_0017aeb0(ThreadBuffer &stream);
 
-    u8 unknown0[0xa8];
+    ConvexTimers0017a3c0 convex;     /* derived name */
     TimerRecord timerA8;             /* derived name */
     TimerRecord timerC0;             /* derived name */
     CompositeTimers0017a970 groupD8; /* derived name */
@@ -5004,10 +5063,15 @@ struct StepTimers /* derived name */
     bool enabled;                    /* derived name */
 };
 
-void FUN_0017a3c0(StepTimers *self, ThreadBuffer &stream);                      /* derived name */
+void FUN_0017a3c0(const ConvexTimers0017a3c0 &timers, ThreadBuffer &stream);    /* derived name */
 void FUN_0017a970(const CompositeTimers0017a970 &timers, ThreadBuffer &stream); /* derived name */
 void FUN_0017abe0(void *group, ThreadBuffer &stream);                           /* derived name */
 void FUN_0000ead0(ThreadBuffer *buffer);                                        /* derived name */
+
+inline void *hknpRefMassDistribution::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
 
 inline void *hkMultipleVertexBuffer::operator new(unsigned long numBytes)
 {
@@ -5371,6 +5435,11 @@ inline void *hkSlot::operator new(unsigned long numBytes)
 inline void *ShapeWatcher::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(int(numBytes));
+}
+
+inline void ShapeWatcher::operator delete(void *object, unsigned long numBytes)
+{
+    D_16dc070->temp58->blockFree(object, int(numBytes));
 }
 
 inline void hkSlot::operator delete(void *object, unsigned long numBytes)

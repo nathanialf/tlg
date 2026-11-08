@@ -3740,9 +3740,22 @@ extern const hkClass D_57b8640; /* hkReferencedObject's hkClass */
  * parent hkReferencedObject, one enum, Type, at 0x1699890, whose items are
  * TYPE_NULL, TYPE_MATERIAL_PALETTE, TYPE_UFM and TYPE_USER): its one member,
  * type, a byte of that enum at +0xc. */
+class hknpShape;
+struct hknpQueryFilterData;
+
 class hknpShapeTagCodec : public hkReferencedObject
 {
   public:
+    virtual void unknownVirtual5() const = 0;
+    /* Slot 6: a shape tag decoded into the filter data of the shape a query
+     * meets (the extern mesh's triangles, 0x572a2, query type 4 for the
+     * closest points): the query's body, the shape's root and parent, its
+     * key and the shape itself given. derived names. */
+    virtual void unknownVirtual6(u16 shapeTag, int queryType, const void *body,
+                                 const void *rootShape, const hknpShape *parentShape, u32 shapeKey,
+                                 const hknpShape *shape,
+                                 hknpQueryFilterData *filterDataOut) const = 0;
+
     u8 type;
 };
 
@@ -4361,9 +4374,57 @@ class hkpVehicleFrictionDescription : public hkReferencedObject
 
     static void operator delete(void *object, unsigned long numBytes);
 
-    /* To the class's 0xe0 bytes (its deleting destructor's size, and the
-     * room hknpVehicleData gives it, +0xb0 to +0x190). */
-    u8 unknownC[0xd4];
+    /* hkpVehicleFrictionDescription::AxisDescription (type info
+     * "!hkpVehicleFrictionDescription::AxisDescription", hkClass 0x57c5c78
+     * built by 0x85190: size 0x64, no parent, no finish callback; ten
+     * members from its records at 0x16a03e0, all hkReal). */
+    struct AxisDescription {
+        float frictionCircleYtab[16];
+        float xStep;
+        float xStart;
+        float wheelSurfaceInertia;
+        float wheelSurfaceInertiaInv;
+        float wheelChassisMassRatio;
+        float wheelRadius;
+        float wheelRadiusInv;
+        float wheelDownForceFactor;
+        float wheelDownForceSumFactor;
+    };
+
+    /* The class's three members (records at 0x16a06e0, hkClass 0x57c5cf8
+     * of version 1), to its 0xe0 bytes (its deleting destructor's size,
+     * and the room hknpVehicleData gives it, +0xb0 to +0x190). */
+    float wheelDistance;
+    float chassisMassInv;
+    AxisDescription axleDescr[2];
+};
+
+/* hkpVehicleFrictionStatus (type info "!hkpVehicleFrictionStatus", hkClass
+ * 0x57c5df8 built by 0x85190: size 0x48, no parent): its two axles'
+ * status (the one member, its records at 0x16a0760). Its finish
+ * constructors have nothing to do (the type infos' finish callbacks are the
+ * shared empty body 0x83250). */
+struct hkpVehicleFrictionStatus {
+    /* hkpVehicleFrictionStatus::AxisStatus (type info
+     * "!hkpVehicleFrictionStatus::AxisStatus", hkClass 0x57c5d78: size
+     * 0x24, nine hkReal members from its records at 0x16a0570). */
+    struct AxisStatus {
+        AxisStatus(hkFinishLoadedObjectFlag flag) {}
+
+        float forward_slip_velocity;
+        float side_slip_velocity;
+        float skid_energy_density;
+        float side_force;
+        float delayed_forward_impulse;
+        float sideRhs;
+        float forwardRhs;
+        float relativeSideForce;
+        float relativeForwardForce;
+    };
+
+    hkpVehicleFrictionStatus(hkFinishLoadedObjectFlag flag) : axis{flag, flag} {}
+
+    AxisStatus axis[2];
 };
 
 /* hknpVehicleData (type info 0x57c22f8 built by 0x69290: size 0x1b0,
@@ -6582,10 +6643,19 @@ void FUN_00010fe0(Vec4 &out, const hkQTransform &t, const Vec4 &v);
  * 0x69aa0 from the record table 0x169a860): centerOfMassAndVolume
  * (hkVector4) at +0, majorAxisSpace (hkQuaternion) at +0x10, inertiaTensor
  * (hkVector4) at +0x20. */
+void FUN_00018160(void *dst, int value, unsigned int n); /* derived name: hkString::memSet's body */
+
 struct hknpMassDistribution {
     /* The finish constructor: nothing to fix up (its type info's finish
      * callback is the empty body). */
     hknpMassDistribution(hkFinishLoadedObjectFlag flag) {}
+
+    /* A new one, every byte 0xff (the body manager's copy of a body's,
+     * 0x1611c0, before it is set). */
+    hknpMassDistribution()
+    {
+        FUN_00018160(this, 0xff, sizeof(*this));
+    }
 
     hkVector4 centerOfMassAndVolume;
     hkQuaternion majorAxisSpace;
@@ -6603,11 +6673,22 @@ class hknpRefMassDistribution : public hkReferencedObject
     {
     }
 
+    hknpRefMassDistribution() {}
+
     /* Empty; the deleting destructor is 0x1ba80, the body every vtable of a
      * 0x40-byte reference-counted class with an empty destructor cites
      * (D15: no citing class has other members beside it, and this vtable is
      * the lowest-address citer). */
     virtual ~hknpRefMassDistribution();
+
+    /* The class allocator: from the thread's heap (the body manager's copy,
+     * 0x161176; defined in tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
+    }
 
     static void operator delete(void *object, unsigned long numBytes);
 
@@ -8284,47 +8365,55 @@ class hknpCompressedMeshShapeInternals::KeyMask : public hknpShapeKeyMask
     hkArray<u32> filter;
 };
 
-/* What slot 23 of the shapes takes fourth (derived names): 0x60 bytes on a
- * 16-byte boundary, a shape key mask at +0x28, which the masked shape
- * replaces with its own (0x38010). Its copy goes field by field, the vectors
- * before the float at +0x38, as both copies in the executable have it (the
- * masked shape's 0x38010 and hknpLodShape's slot 23, 0x68810, which builds
- * the same record around a new key). */
-struct alignas(16) ShapeQuery00038010 /* derived name */
+/* What a query hands on about each of its two shapes (derived names;
+ * slot 23 of the shapes takes it fourth): 0x60 bytes on a 16-byte boundary,
+ * the body first (the shape casts' flips hand it on as the query's,
+ * 0x5248f), the key path at +0x18, the shape's transform at +0x20, a shape
+ * key mask at +0x28, which the masked shape replaces with its own (0x38010),
+ * a flag at +0x30 (0x12ede0 tests the target's), the scale the shape's
+ * columns take and the offset added to its translation at +0x40 and +0x50
+ * (0x12edef to 0x12ee36). Its copy goes field by field, the vectors before
+ * the float at +0x38, as every copy in the executable has it (the masked
+ * shape's 0x38010, hknpLodShape's slot 23, 0x68810, which builds the same
+ * record around a new key, and the extern mesh's triangles, 0x57080). One
+ * struct, once two in this tree (hknpShapeQueryInfo and
+ * hknpShapeQueryInfo, round 81A). */
+struct alignas(16) hknpShapeQueryInfo /* derived name */
 {
-    ShapeQuery00038010(const ShapeQuery00038010 &other)
-        : unknown0(other.unknown0), unknown8(other.unknown8), unknown10(other.unknown10),
-          keyPath(other.keyPath), unknown20(other.unknown20), mask(other.mask),
-          unknown30(other.unknown30), unknown34(other.unknown34)
+    hknpShapeQueryInfo(const hknpShapeQueryInfo &other)
+        : body(other.body), unknown8(other.unknown8), unknown10(other.unknown10),
+          keyPath(other.keyPath), shapeToWorld(other.shapeToWorld), mask(other.mask),
+          flag30(other.flag30), unknown34(other.unknown34)
     {
-        unknown40 = other.unknown40;
-        unknown50 = other.unknown50;
+        shapeScale = other.shapeScale;
+        shapeScaleOffset = other.shapeScaleOffset;
         unknown38 = other.unknown38;
     }
 
-    /* The same with a different key mask (the LOD shape's 0x68810 stores
-     * no mask in the copy's place). derived name. */
-    ShapeQuery00038010(const ShapeQuery00038010 &other, const hknpShapeKeyMask *newMask)
-        : unknown0(other.unknown0), unknown8(other.unknown8), unknown10(other.unknown10),
-          keyPath(other.keyPath), unknown20(other.unknown20), mask(newMask),
-          unknown30(other.unknown30), unknown34(other.unknown34)
+    /* The same with a different key mask (the LOD shape's 0x68810 and the
+     * extern mesh's triangles, 0x57080, store no mask in the copy's place).
+     * derived name. */
+    hknpShapeQueryInfo(const hknpShapeQueryInfo &other, const hknpShapeKeyMask *newMask)
+        : body(other.body), unknown8(other.unknown8), unknown10(other.unknown10),
+          keyPath(other.keyPath), shapeToWorld(other.shapeToWorld), mask(newMask),
+          flag30(other.flag30), unknown34(other.unknown34)
     {
-        unknown40 = other.unknown40;
-        unknown50 = other.unknown50;
+        shapeScale = other.shapeScale;
+        shapeScaleOffset = other.shapeScaleOffset;
         unknown38 = other.unknown38;
     }
 
-    const void *unknown0;
+    const hknpBody *body;
     const void *unknown8;
     const void *unknown10;
     hknpShapeKeyPath keyPath; /* derived name: the LOD shape appends its level (0x68810) */
-    const void *unknown20;
+    const hkTransform *shapeToWorld;
     const hknpShapeKeyMask *mask;
-    u8 unknown30;
+    hkBool flag30;
     int unknown34;
     float unknown38;
-    Vec4 unknown40;
-    Vec4 unknown50;
+    Vec4 shapeScale;
+    Vec4 shapeScaleOffset;
 };
 
 /* What slot 29 of the shapes takes first (derived names): 0x50 bytes on a
@@ -8385,7 +8474,7 @@ class hknpMaskedShape : public hknpDecoratorShape
     /* Slot 23 (0x38010): the core shape's slot 23 asked with the shape's
      * mask in a copy of the fourth argument's record. derived name. */
     void FUN_00038010(const void *argument1, const void *argument2, const void *argument3,
-                      const ShapeQuery00038010 &argument4, void *argument5) const;
+                      const hknpShapeQueryInfo &argument4, void *argument5) const;
 
     /* Slot 21 (0x380b0): the core shape's slot 21 asked with the shape's
      * mask in a copy of the fourth argument's record. derived name. */
@@ -8398,10 +8487,10 @@ class hknpMaskedShape : public hknpDecoratorShape
      * with the shape's mask in a copy of the fifth argument's record.
      * derived names. */
     void FUN_00037e90(const void *argument1, const void *argument2, const void *argument3,
-                      const void *argument4, const ShapeQuery00038010 &argument5,
+                      const void *argument4, const hknpShapeQueryInfo &argument5,
                       const void *argument6, void *argument7) const;
     void FUN_00037f50(const void *argument1, const void *argument2, const void *argument3,
-                      const void *argument4, const ShapeQuery00038010 &argument5,
+                      const void *argument4, const hknpShapeQueryInfo &argument5,
                       const void *argument6, void *argument7) const;
 
     /* Slot 29 (0x38130): the core shape's slot 29 asked with the shape's
@@ -8473,7 +8562,7 @@ struct hknpCollisionFilterTargetInput; /* derived name */
 /* What slot 9 asks about each side of a shape query (derived names, 0x38
  * bytes; the convex shape's box query builds two on its stack, 0x4319c):
  * the side's filter data, three pointers and the key of its shape query
- * record (ShapeQuery00038010's first 0x1c bytes), and the shape, none for
+ * record (hknpShapeQueryInfo's first 0x1c bytes), and the shape, none for
  * the query's side. */
 struct hknpCollisionFilterShapeInput /* derived name */
 {
@@ -8503,7 +8592,9 @@ class hknpTriangleShape;
 struct hknpCollisionQueryContext /* derived name */
 {
     const hknpCollisionQueryDispatcher *dispatcher;
-    u8 unknown8[8];
+    /* Decodes the shape tags of the triangles a query meets (0x57251).
+     * derived name. */
+    const hknpShapeTagCodec *shapeTagCodec;
     hknpTriangleShape *queryTriangle;
     hknpTriangleShape *targetTriangle;
 };
@@ -8516,35 +8607,36 @@ struct hknpCollisionQueryContext /* derived name */
 class hknpCollisionQueryDispatcher /* derived name */
 {
   public:
-    typedef void (*ClosestPointsFunction)(hknpCollisionQueryContext *context,
-                                          const hknpShapeQuery &query,
-                                          const ShapeQuery00038010 &queryInfo,
-                                          const hknpShape &targetShape,
-                                          const hknpQueryFilterData &targetFilterData,
-                                          const ShapeQuery00038010 &targetInfo, void *argument7,
-                                          bool flipped, void *collector); /* derived names */
-    typedef void (*ShapeCastFunction)(
+    typedef void (*ClosestPointsFunction)(
         hknpCollisionQueryContext *context, const hknpShapeQuery &query,
-        const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
-        const hknpQueryFilterData &targetFilterData, const ShapeQuery00038010 &targetInfo,
-        void *argument7, bool flipped, void *argument9, void *collector); /* derived names */
+        const hknpShapeQueryInfo &queryInfo, const hknpShape &targetShape,
+        const hknpQueryFilterData &targetFilterData, const hknpShapeQueryInfo &targetInfo,
+        const hkTransform &queryToTarget, bool flipped, void *collector); /* derived names */
+    typedef void (*ShapeCastFunction)(hknpCollisionQueryContext *context,
+                                      const hknpShapeQuery &query,
+                                      const hknpShapeQueryInfo &queryInfo,
+                                      const hknpShape &targetShape,
+                                      const hknpQueryFilterData &targetFilterData,
+                                      const hknpShapeQueryInfo &targetInfo,
+                                      const hkTransform &queryToTarget, bool flipped,
+                                      void *argument9, void *collector); /* derived names */
 
     /* The closest points between the query's shape and a target shape
      * (0x70ae0): unless the query's filter refuses the pair (query type
      * 4, the target as B unless flipped), the function of the two shapes'
      * rows. derived name. */
     void FUN_00070ae0(hknpCollisionQueryContext *context, const hknpShapeQuery &query,
-                      const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
+                      const hknpShapeQueryInfo &queryInfo, const hknpShape &targetShape,
                       const hknpQueryFilterData &targetFilterData,
-                      const ShapeQuery00038010 &targetInfo, void *argument7, bool flipped,
-                      void *collector) const;
+                      const hknpShapeQueryInfo &targetInfo, const hkTransform &queryToTarget,
+                      bool flipped, void *collector) const;
     /* The query's shape cast against a target shape (0x70d20), filtered as
      * query type 2. derived name. */
     void FUN_00070d20(hknpCollisionQueryContext *context, const hknpShapeQuery &query,
-                      const ShapeQuery00038010 &queryInfo, const hknpShape &targetShape,
+                      const hknpShapeQueryInfo &queryInfo, const hknpShape &targetShape,
                       const hknpQueryFilterData &targetFilterData,
-                      const ShapeQuery00038010 &targetInfo, void *argument7, bool flipped,
-                      void *argument9, void *collector) const;
+                      const hknpShapeQueryInfo &targetInfo, const hkTransform &queryToTarget,
+                      bool flipped, void *argument9, void *collector) const;
 
     /* The row of a shape type (inline in both dispatches: the dispatcher
      * read before the shape is asked its type, 0x70e9e). derived name. */
@@ -9709,6 +9801,14 @@ struct hknpBodyManager /* derived name */
      * name. */
     void FUN_00160cd0(u32 bodyId, const char *name);
 
+    /* A body's construction info (0x160fe0): its shape, quality, material,
+     * motion, filter info, flags but the four internal ones, look-ahead,
+     * position and orientation; its name, mass and motion properties from
+     * the arrays by body id when they reach it; a new counted copy of its
+     * mass distribution when it has one, no local frame; its velocities
+     * from the world. derived name. */
+    void FUN_00160fe0(u32 bodyId, hknpBodyCinfo &cinfoOut) const;
+
     /* A body's mass properties (0x161960; the world's 0x4bd9c, 0x4be88,
      * 0x4f166 and 0x5c62b): its shape's, from the body's mass distribution
      * when it has one, at the mass its entry holds (0x161b40 inline).
@@ -9733,13 +9833,16 @@ struct hknpBodyManager /* derived name */
      * by 0x15fd30, then body 0 the static body at the identity with an
      * empty previous box, no cell and no scheduled change; one body.
      * derived name. */
-    hknpBodyManager(void *argument, hknpBody *userBodyBuffer, int capacity);
+    hknpBodyManager(hknpWorld *world, hknpBody *userBodyBuffer, int capacity);
 
     /* The bodies' storage set up over a buffer of a capacity, the
      * user's when given (0x15fd30). derived name. */
     void FUN_0015fd30(hknpBody *userBodyBuffer, int capacity);
 
-    void *pointer0;                   /* derived name: the constructor's first argument */
+    /* The world the bodies belong to, the constructor's first argument: a
+     * body's construction info reads its velocities through it (0x161252,
+     * 0x16126e). derived name. */
+    hknpWorld *world;
     hknpMotionManager *motionManager; /* derived name */
     hkArray<hknpBody> bodies;         /* derived name */
     u32 unknown20;
@@ -11624,6 +11727,10 @@ struct ShapeWatcherOwner /* derived name */
      * the second list. derived name. */
     void FUN_00156110(const hknpBody *body);
 
+    /* 0x155bf0 (the world's destructor, 0x4b8bb): every watcher of both
+     * lists deleted, then the lists. */
+    ~ShapeWatcherOwner();
+
     /* Two lists of watchers, each unsubscribed and freed by 0x155bf0. */
     hkArray<ShapeWatcher *> watchers;      /* derived name */
     hkArray<ShapeWatcher *> otherWatchers; /* derived name */
@@ -13311,9 +13418,17 @@ class hknpConvexShape : public hknpShape
      * a box query) refuses the pair; else the range pushed out of the
      * bounds when one is given (0x14a250). derived name. */
     void FUN_00043110(const void *context, const hknpAabbQuery &query,
-                      const ShapeQuery00038010 &queryInfo,
+                      const hknpShapeQueryInfo &queryInfo,
                       const hknpQueryFilterData &targetFilterData,
-                      const ShapeQuery00038010 &targetInfo, hkArray<u32> *hits,
+                      const hknpShapeQueryInfo &targetInfo, hkArray<u32> *hits,
+                      hkAabb *rangeOut) const;
+    /* Slot 26 (0x432e0): the same test with the hit handed to a collector,
+     * a box query's result touching the query's body and the target's
+     * key. derived name. */
+    void FUN_000432e0(const void *context, const hknpAabbQuery &query,
+                      const hknpShapeQueryInfo &queryInfo,
+                      const hknpQueryFilterData &targetFilterData,
+                      const hknpShapeQueryInfo &targetInfo, hknpCollisionQueryCollector *collector,
                       hkAabb *rangeOut) const;
 
     hkRelArray<Vec4> vertices;
@@ -14664,6 +14779,7 @@ struct hkpConstraintAtom {
         TYPE_CONE_LIMIT = 16,
         TYPE_ANG_FRICTION = 17,
         TYPE_ANG_MOTOR = 18,
+        TYPE_RAGDOLL_MOTOR = 19,
         TYPE_PULLEY = 20,
         TYPE_RACK_AND_PINION = 21,
         TYPE_COG_WHEEL = 22,
@@ -15988,6 +16104,8 @@ struct hkpAngMotorConstraintAtom {
 struct hkpRagdollMotorConstraintAtom {
     /* The finish callback's body is hkpLinMotorConstraintAtom's (0x803f0):
      * the two runtime offsets reset. */
+    hkpRagdollMotorConstraintAtom() {}
+
     hkpRagdollMotorConstraintAtom(hkFinishLoadedObjectFlag)
     {
         initializedOffset = -1;
@@ -16006,7 +16124,7 @@ struct hkpRagdollMotorConstraintAtom {
 };
 
 /* hkpRagdollConstraintData, polymorphic (type info 0x57c5bc8, vtable
- * 0x169d0d0, address point 0x169d0e0; constructor FUN_0007d810, finish
+ * 0x169d0d0, address point 0x169d0e0; constructor 0x7d810, finish
  * callback 0x82c70): its member atoms at +0x20 is an
  * hkpRagdollConstraintData::Atoms, 0x180 bytes (record table from 0x169fbb0:
  * transforms at +0, setupStabilization at +0x90, ragdollMotors at +0xa0,
@@ -16021,6 +16139,9 @@ class hkpRagdollConstraintData : public hkpConstraintData
 {
   public:
     struct Atoms {
+        /* Set by the data's constructor (0x7d810). */
+        Atoms() {}
+
         /* Out of line (0x7dae0): when finishing, the motors' offsets into
          * the runtime are set. */
         Atoms(hkFinishLoadedObjectFlag flag);
@@ -16035,6 +16156,10 @@ class hkpRagdollConstraintData : public hkpConstraintData
         hkpConeLimitConstraintAtom planesLimit;
         hkpBallSocketConstraintAtom ballSocket;
     };
+
+    /* A new ragdoll (0x7d810): every atom typed and set to its defaults,
+     * the cone's stabilization on. */
+    hkpRagdollConstraintData();
 
     /* The finish constructor (0x82c70, the type info's finish function):
      * the atoms finish themselves, and a cone loaded with its stabilization
@@ -16935,11 +17060,20 @@ class hkxVertexBuffer : public hkReferencedObject
  * at +0xc, vertData (hkxVertexBuffer) at +0x10, vertexIndexMap (an array of
  * hkInt32) at +0x98, componentMap (an array of class 0x57c7d40) at +0xa8.
  * The finish callback 0x8cb10 constructs it in place. */
-/* hkxVertexAnimation::UsageMap (the string at 0x14c3679; its hkClass
- * built at 0x8ccca, size 4, three member records): members not typed yet. */
+/* hkxVertexAnimation::UsageMap (type info "!hkxVertexAnimation::UsageMap",
+ * hkClass 0x57c7d40 built at 0x8ccca: size 4, no parent; its three member
+ * records built at run time by 0x8cb40, in .bss at 0x57c7e40): use (an
+ * enum stored as hkUint16, its enum read through the pointer at 0x16dc6e8)
+ * at +0, useIndexOrig and useIndexLocal (hkUint8) at +2 and +3. */
 struct hkxVertexAnimationUsageMap {
-    u8 unknown0[4];
+    u16 use;
+    u8 useIndexOrig;
+    u8 useIndexLocal;
 };
+
+/* The enum of hkxVertexAnimation::UsageMap's use, through a pointer (the
+ * records' initializer 0x8cb40 reads it at run time). derived name. */
+extern const hkClassEnum *D_16dc6e8;
 
 class hkxVertexAnimation : public hkReferencedObject
 {
@@ -19399,16 +19533,16 @@ struct hknpLodShape : public hknpCompositeShape {
      * the last, asked with the query's key extended by the level and no
      * key mask. derived name. */
     void FUN_00068810(const void *argument1, const Slot23Argument *argument2, const void *argument3,
-                      const ShapeQuery00038010 &argument4, void *argument5) const;
+                      const hknpShapeQueryInfo &argument4, void *argument5) const;
     /* Slots 25 and 26 (0x68570, 0x686c0): as slot 23, the level the second
      * argument asks for, at most the last, asked with the query (the fifth
      * argument) copied around the key extended by the level and no key
      * mask. derived names. */
     void FUN_00068570(const void *argument1, const Slot23Argument *argument2, const void *argument3,
-                      const void *argument4, const ShapeQuery00038010 &argument5,
+                      const void *argument4, const hknpShapeQueryInfo &argument5,
                       const void *argument6, void *argument7) const;
     void FUN_000686c0(const void *argument1, const Slot23Argument *argument2, const void *argument3,
-                      const void *argument4, const ShapeQuery00038010 &argument5,
+                      const void *argument4, const hknpShapeQueryInfo &argument5,
                       const void *argument6, void *argument7) const;
     /* Slot 21 (0x68380): the query's level of detail, at most the last
      * level, asked with the key shifted by this shape's bits and the
@@ -20432,9 +20566,8 @@ class hknpFlippedGetClosestPointsQueryCollector
 /* A closest points query (derived names after Havok's): the collision
  * query and the query's shape at +0x20, 0x38 bytes (the flips copy it
  * whole, 0x57ce4 to 0x57d2d). */
-struct hknpClosestPointsQuery : public hknpCollisionQuery /* derived name */
+struct hknpClosestPointsQuery : public hknpShapeQuery /* derived name */
 {
-    const hknpShape *shape;
     /* Two words 0x57530 reads (0x578b7); no array, the query an
      * address-taken object below the flips' transform. derived names. */
     const void *unknown28;
@@ -20455,22 +20588,6 @@ struct hknpShapeCastQuery : public hknpShapeQuery /* derived name */
     u32 unknown60;
     float unknown64;
     const void *body;
-};
-
-/* What a query hands on about each of its two shapes (derived names): the
- * shape's transform at +0x20, a flag at +0x30 (0x12ede0 tests the
- * target's), the scale the shape's columns take and the offset added to
- * its translation at +0x40 and +0x50 (0x12edef to 0x12ee36). */
-struct hknpShapeQueryInfo /* derived name */
-{
-    const void *body; /* derived name: the shape casts' flips hand it on as the query's (0x5248f) */
-    u8 unknown8[0x18];
-    const hkTransform *shapeToWorld; /* derived name */
-    u8 unknown28[8];
-    hkBool flag30; /* derived name */
-    u8 unknown31[0xf];
-    Vec4 shapeScale;       /* derived name */
-    Vec4 shapeScaleOffset; /* derived name */
 };
 
 /* The closest points of the query's shape within a box against the target
@@ -22987,6 +23104,20 @@ struct ShapeWatcher /* derived name */
     /* The class allocator: 0x28 bytes from the thread's heap (0x155f66;
      * defined in tlg_lib_unknown.h beside hkSlot's). */
     static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Deleted by its owner's destructor (0x155c40): a watcher still over
+     * a shape unsubscribes from its two signals and drops it (priced 250
+     * at the owner's deletes, inlined there: the hint's 325). */
+    inline ~ShapeWatcher()
+    {
+        if (shape) {
+            hknpShapeSignals *signals = shape->unknownVirtual8();
+            signals->shapeMutated.unsubscribe(this, &ShapeWatcher::FUN_00155b00);
+            signals->shapeDestroyed.unsubscribe(this, &ShapeWatcher::FUN_00155b10);
+            shape = HK_NULL;
+        }
+    }
 
     void FUN_00155b00(u8 changeFlags); /* derived name */
     /* The second signal's handler (0x155b10): both handlers unsubscribed,
