@@ -9300,6 +9300,24 @@ struct alignas(16) hkAabb16 {
         }
     }
 
+    /* A corner's x and y as one word, x in the low half. derived name. */
+    static u32 xy(const u16 *corner)
+    {
+        return *reinterpret_cast<const u32 *>(corner);
+    }
+
+    /* Disjoint from another box: any of the six differences of a maximum
+     * and the other's minimum negative, z first, the x and y pairs taken
+     * two 16-bit lanes at a time, the signs tested together (the pair
+     * filter's 0x167937: Reassociate joins the four by the order their
+     * loads are written). derived name. */
+    bool disjoint(const hkAabb16 &other) const
+    {
+        const u32 signs = u32(max[2] - other.min[2]) | u32(other.max[2] - min[2]) |
+                          (xy(max) - xy(other.min)) | (xy(other.max) - xy(min));
+        return (signs & 0x80008000) != 0;
+    }
+
     /* The box's key, its low half first (0x19f5dd: the two halves joined
      * into one word). derived name. */
     u32 getKey() const
@@ -12029,6 +12047,10 @@ struct hknpWorld {
      * given a scheduled change with bit 2; the body's flag 0x400 set.
      * derived name. */
     void FUN_0005bf80(int bodyId);
+    /* The collision caches of pairs of bodies rebuilt (0x5c120; the pair
+     * filter's enabling of a pair, 0x167953, with one pair). derived
+     * name. */
+    void FUN_0005c120(const struct hknpBodyIdPair *pairs, int numPairs, int mode);
     /* Bodies removed from the world (0x4e5d0; the ball gun's reset at
      * 0x15858c passes one with mode 0). derived names. */
     void FUN_0004e5d0(const hknpBodyId *bodyIds, int numBodyIds, int mode);
@@ -19324,6 +19346,14 @@ class hknpHeightFieldShape : public hknpCompositeShape
      * name. */
     int FUN_0012b140(void *keysOut, int maxNumKeys, int key,
                      const ShapeKeyQuery000380b0 &query) const;
+
+    /* Slot 22 (0x12b340): the keys' triangles, at most ten, each from its
+     * quad's four corners (the grid position with the quad's heights
+     * between them, under the shape's integer-to-float scale and the
+     * output's scale): a quad's first triangle by the key's low bit, a
+     * second key of the same quad its other triangle; the output's scale
+     * reset to one. derived name. */
+    void FUN_0012b340(const u32 *keys, int numKeys, hknpShapeSlot22Output *output) const;
 
     /* Slot 31: a quad's four heights, its shape tag and whether its
      * triangles are flipped (the compressed shape's 0x175a90); pure here,
