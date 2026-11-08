@@ -2349,3 +2349,50 @@ flag at work, not a source question; a GAME function showing one of those shapes
 question for the game line (measure, never assume). A library function whose residual needs
 `-ffinite-math-only` (an infinity test folded) or a reciprocal estimate is the next decision, with
 the same whole-gate measurement.
+
+## D41. A member order is read from the functions that store the members (2026-11-08)
+
+**Question.** LocalArray (src/include/tlg_lib_unknown.h, the shape of Havok's hkLocalArray: an
+hkArray with the local block's pointer and the initial capacity after it) stores its constructor's
+members in the tree's order data, local copy, capacity. That order was chosen for 0x1707d0 (the
+distinct vertex ids of a convex shape), whose setSize folds its reserve only when the capacity's
+load follows the capacity's store with no other store between: InstCombine forwards a stored
+value to a load through FindAvailableLoadedValue without alias analysis, and that walk stops at a
+store to another field of the same alloca (tools/cc/src/llvm-3.3.src/lib/Analysis/Loads.cpp:176-201;
+InstCombineLoadStoreAlloca.cpp:367). Round 79A ruled for the SDK's order, round 80A measured
+0x1707d0 under it (7 of 137 with setSize, 31 of 96 with setSizeUnchecked), round 81A measured the
+other users.
+
+**Evidence.** The base stores the members in the SDK's order wherever it stores them at all:
+0x13b940 (the broad phase tree's rebuild) stores the data pointer at 0x13baa7 (-0x50), the capacity
+at 0x13bab1 (-0x44) and the local copy at 0x13bab4 (-0x40); 0x1430b0 (the layers' rebuild) the
+same at 0x143180, 0x14318a, 0x14318d. Five functions compile equal under either order (0x1412e0,
+0x142a40, 0x142af0 and 0x142bb0, matched rows under the tree's order and measured equal under the
+SDK's by round 81A; 0x13b940 needs the SDK's). 0x1707d0 keeps the array out of memory from its
+first instruction to its last (0x1707d0 to 0x17091e store no member): it witnesses no order, only
+that the compiler could fold the reserve, which the tree's source does under one order and not
+the other. The destructor adds a second fact from 0x1430b0's loop (0x143300 to 0x14334d): the local
+block is freed first (the stack allocator's inlined fast path, then 0xf460), the size is cleared
+(0x14332a), the owned storage is freed through the container allocator (0x14334d), and nothing is
+stored after it; the tree's LocalArray clears the size conditionally before its free, and its
+hkArray base's destructor (clearAndDeallocate) stores the data pointer and the capacity after. The
+32-byte object gets no lifetime markers (clang 3.3 CGDecl.cpp:792-805, shouldUseLifetimeMarkers
+marks only objects over 32 bytes), so dead store elimination keeps those stores inside a loop and
+removes them at a function's end: every witness that destroys the array once is blind to the
+difference, and only 0x1430b0 sees it.
+
+**Ruling.** The order of a constructor's member stores is read from the functions whose bytes
+store the members. A function in which the object is promoted to registers is no witness for an
+order; a header written to make one such function fold is the optimizer's order, not the
+developer's, and is corrected when a storing witness appears. LocalArray's constructor therefore
+follows the SDK's order (data, capacity, local copy) and its destruction the sequence 0x1430b0
+shows (the local block freed, the size cleared, the owned storage freed, no reset after). Rows are
+never removed, so the header changes in the commit that compiles 0x1707d0 equal under the new
+order, together with 0x13b940 and 0x1430b0; until then the tree's order holds the gate. 0x1707d0's
+question is its source: which statement lets its reserve fold under the SDK's order (the capacity
+read before the local copy is stored, or a size call that does not read the capacity), with the
+second `n != 0` test before the memset and the free's mask 0x3fffff80 as the controls (round 80A's
+measurement, NOTES "Round 80A").
+
+**Trigger.** A header whose member order was chosen for a function that keeps the object in
+registers; a destructor whose stores are seen only in a loop.
