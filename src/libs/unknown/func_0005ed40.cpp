@@ -62,6 +62,20 @@ void hknpWorld::FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &positi
     }
 }
 
+void hknpWorld::FUN_0005eb00(int bodyId, const Vec4 &impulse, const Vec4 &position)
+{
+    const hknpBody &body = bodyManager.bodies[bodyId];
+    if (body.flags & 2) {
+        if (!(body.flags & 9)) {
+            FUN_0004e0c0(bodyId);
+        }
+        hknpMotion &motion = motionManager.motions[body.motionId];
+        motion.applyPointImpulse(impulse, position);
+        FUN_0005b490(bodyId, &motion);
+        signals.bodyChangedSignal.fire(this, bodyId);
+    }
+}
+
 /* Whether a comparison holds in x, y and z (hkVector4Comparison's
  * allAreSet on the three lanes). derived name. */
 static inline bool allXYZ(const Vec4 &comparison) /* derived name */

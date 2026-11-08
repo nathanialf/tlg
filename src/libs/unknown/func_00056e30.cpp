@@ -3,10 +3,12 @@
 
 /* derived name: an adaptor of the world's +0x58 table: the arguments
  * passed on to FUN_00123760. */
-void FUN_00056e30(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9)
+void FUN_00056e30(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector)
 {
-    FUN_00123760(argument1, argument2, argument3, argument4, argument5, argument6, argument7,
-                 argument8, argument9);
+    FUN_00123760(context, query, queryShapeInfo, targetShape, targetShapeFilterData,
+                 targetShapeInfo, queryToTarget, queryAndTargetSwapped, collector);
 }

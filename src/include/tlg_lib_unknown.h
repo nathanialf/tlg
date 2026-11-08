@@ -6103,7 +6103,7 @@ struct BodyPairEntry000717d0 /* derived name */
     BodyPairEntry000717d0() {}
 
     BodyPairEntry000717d0(const BodyPairEntry000717d0 &other)
-        : value0(other.value0), bodyA(other.bodyA), bodyB(other.bodyB), value10(other.value10)
+        : value0(other.value0), bodyA(other.bodyA), bodyB(other.bodyB), cache(other.cache)
     {
     }
 
@@ -6121,8 +6121,23 @@ struct BodyPairEntry000717d0 /* derived name */
     int value0; /* compared signed (0x72b43) */
     hknpBodyId bodyA;
     hknpBodyId bodyB;
-    u64 value10;
+    /* The collision cache the pair came from (0x72833). derived name. */
+    const struct hknpCollisionCache *cache;
 };
+
+/* The pairs' entries handed on (0x72400, 0x33c bytes; 0x72100 and 0x72740
+ * call it). derived names. */
+void FUN_00072400(hknpWorldContextPool::Context *context, void *argument2,
+                  hkArray<BodyPairEntry000717d0> *entries, const void *argument4, int argument5,
+                  void *argument6, void *argument7, void *argument8);
+
+/* An entry for every collision cache of a stream (0x72740; the step at
+ * 0x6d378): the two bodies' ids and the cache, under the island of the
+ * first body unless it is static or active, else the second's; the entries
+ * in a local array handed to 0x72400. derived name. */
+void FUN_00072740(hknpWorldContextPool::Context *context, void *argument2,
+                  const hkBlockStream *caches, void *argument4, const void *argument5,
+                  int argument6, void *argument7, void *argument8);
 
 /* The other order the pair processing sorts its entries by (0x72ab0, its
  * quickSortRecursive; 0x717d0 at 0x71aa5 and 0x72400 at 0x7246b): the
@@ -7020,9 +7035,12 @@ void FUN_001219f0(hknpCollisionQueryContext *context, const hknpClosestPointsQue
                   const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
                   bool queryAndTargetSwapped,
                   hknpCollisionQueryCollector *collector); /* derived name */
-void FUN_00123760(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9); /* derived name */
+void FUN_00123760(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *collector); /* derived name */
 void FUN_0012eda0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
                   const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
                   const hknpQueryFilterData &targetShapeFilterData,

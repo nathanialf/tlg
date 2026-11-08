@@ -18,7 +18,8 @@ typedef void (*ClosestPointsFunction)(hknpCollisionQueryContext *context,
  * clear at 0x563c5: 64 bytes, the last 16 dead under the translation), the
  * hits through a flipping collector, the context's triangles swapped for
  * the run and back. One body for each function, after its adaptor in the
- * world's file (0x56390, 0x565b0, 0x567d0, 0x569f0, 0x56c10). */
+ * world's file (0x56390, 0x565b0, 0x567d0, 0x569f0, 0x56c10, 0x56e60, 0x57340,
+ * 0x57a10). */
 template <ClosestPointsFunction FUNCTION>
 void getClosestPointsFlipped(hknpCollisionQueryContext *context,
                              const hknpClosestPointsQuery &query,
@@ -65,6 +66,24 @@ template void getClosestPointsFlipped<FUN_000f2d80>(hknpCollisionQueryContext *,
                                                     const hknpShapeQueryInfo &, const hkTransform &,
                                                     bool, hknpCollisionQueryCollector *);
 template void getClosestPointsFlipped<FUN_0012eda0>(hknpCollisionQueryContext *,
+                                                    const hknpClosestPointsQuery &,
+                                                    const hknpShapeQueryInfo &, const hknpShape &,
+                                                    const hknpQueryFilterData &,
+                                                    const hknpShapeQueryInfo &, const hkTransform &,
+                                                    bool, hknpCollisionQueryCollector *);
+template void getClosestPointsFlipped<FUN_00123760>(hknpCollisionQueryContext *,
+                                                    const hknpClosestPointsQuery &,
+                                                    const hknpShapeQueryInfo &, const hknpShape &,
+                                                    const hknpQueryFilterData &,
+                                                    const hknpShapeQueryInfo &, const hkTransform &,
+                                                    bool, hknpCollisionQueryCollector *);
+template void getClosestPointsFlipped<FUN_00057080>(hknpCollisionQueryContext *,
+                                                    const hknpClosestPointsQuery &,
+                                                    const hknpShapeQueryInfo &, const hknpShape &,
+                                                    const hknpQueryFilterData &,
+                                                    const hknpShapeQueryInfo &, const hkTransform &,
+                                                    bool, hknpCollisionQueryCollector *);
+template void getClosestPointsFlipped<FUN_00057530>(hknpCollisionQueryContext *,
                                                     const hknpClosestPointsQuery &,
                                                     const hknpShapeQueryInfo &, const hknpShape &,
                                                     const hknpQueryFilterData &,

@@ -9586,6 +9586,16 @@ struct hknpMotion {
      * derived name. */
     void FUN_00157a20(const Vec4 &velocity, const Vec4 &position);
 
+    /* An impulse applied at a point (hknpMotion's applyPointImpulse,
+     * inline in the world's 0x5eb00; 0x157a20 ends the same way): the
+     * linear velocity changed by the inverse mass, the angular one by the
+     * impulse's moment about the centre of mass in the motion's frame, each
+     * with a zero w. The two vectors are taken by value, so the impulse is
+     * read before the centre of mass and the orientation right after it
+     * (the base's operand orders, Reassociate's ranks); the angular velocity
+     * is a named value read before the linear store. derived name. */
+    inline void applyPointImpulse(Vec4 impulse, Vec4 position);
+
     /* The mass matrix of a point of the motion (0x157690, 0x390 bytes: the
      * point's offset from the centre of mass, the inverse inertia in world
      * space, inverted). derived name. */
@@ -9684,6 +9694,19 @@ struct hknpMotion {
     hkVector4 previousLinearVelocity;
     hkVector4 previousAngularVelocity;
 };
+
+inline void hknpMotion::applyPointImpulse(Vec4 impulse, Vec4 position)
+{
+    const Vec4 offset = _mm_sub_ps(position, centerOfMass);
+    const Vec4 angularImpulse = rotatedInverseDir(orientation, cross3(offset, impulse));
+    const Vec4 inverseInertiaAndMass = loadHalves(inverseInertia);
+    const Vec4 inverseMass =
+        _mm_shuffle_ps(inverseInertiaAndMass, inverseInertiaAndMass, _MM_SHUFFLE(3, 3, 3, 3));
+    const Vec4 angular = angularVelocity; /* derived name */
+    linearVelocity = setXYZ_0(_mm_add_ps(linearVelocity, _mm_mul_ps(inverseMass, impulse)));
+    angularVelocity =
+        setXYZ_0(_mm_add_ps(angular, _mm_mul_ps(inverseInertiaAndMass, angularImpulse)));
+}
 
 /* The world's motion manager at +0x110 (derived names: nothing names it):
  * the motions from +8, the highest motion index in use at +0x24, an array
@@ -11324,6 +11347,10 @@ struct hknpWorld {
      * it refreshed (0x5b490, inline in the file), then the body-changed
      * signal fired. derived name. */
     void FUN_0005ed40(int bodyId, const Vec4 &impulse, const Vec4 &position);
+
+    /* The same at a point, the impulse applied there (0x5eb00, the
+     * motion's applyPointImpulse inline). derived name. */
+    void FUN_0005eb00(int bodyId, const Vec4 &impulse, const Vec4 &position);
 
     /* A linear impulse applied to a dynamic body (0x5e780): as 0x5ed40,
      * the motion's linear velocity given the impulse times its inverse
@@ -19893,9 +19920,46 @@ struct hknpClosestPointsQuery : public hknpCollisionQuery /* derived name */
     const void *unknown30;
 };
 
-/* What a query hands on about each of its two shapes (derived name; not
- * read by the flips). */
-struct hknpShapeQueryInfo;
+/* What a query hands on about each of its two shapes (derived names): the
+ * shape's transform at +0x20, a flag at +0x30 (0x12ede0 tests the
+ * target's), the scale the shape's columns take and the offset added to
+ * its translation at +0x40 and +0x50 (0x12edef to 0x12ee36). */
+struct hknpShapeQueryInfo /* derived name */
+{
+    u8 unknown0[0x20];
+    const hkTransform *shapeToWorld; /* derived name */
+    u8 unknown28[8];
+    hkBool flag30; /* derived name */
+    u8 unknown31[0xf];
+    Vec4 shapeScale;       /* derived name */
+    Vec4 shapeScaleOffset; /* derived name */
+};
+
+/* The closest points of the query's shape within a box against the target
+ * shape (0x132790 and 0x12efe0; 0x12eda0 calls the first when the target's
+ * info has its flag at +0x30, the second otherwise): the box's centre and
+ * half extents, then the target and the rest of the query. derived
+ * names. */
+void FUN_00132790(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const Vec4 &center,
+                  const Vec4 &halfExtents, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+void FUN_0012efe0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const Vec4 &center,
+                  const Vec4 &halfExtents, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+
+/* Another closest points function of the world's +0x58 table (0x57080,
+ * 0x2bb bytes; 0x57340 calls it flipped). derived name. */
+void FUN_00057080(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
 
 /* The closest points between a query's shape and a target shape (0x57530,
  * 0x4d4 bytes), with the shapes' filter data and infos, the query's shape
