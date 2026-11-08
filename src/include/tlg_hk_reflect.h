@@ -10849,6 +10849,21 @@ template <typename T, typename Id, int N, typename Ops> struct hkFreeListArray {
         firstFree = oldCapacity;
     }
 
+    /* A free element taken, the array grown by N first when none is free,
+     * and the element copied into it (the motion properties library's add,
+     * 0x3708c to 0x371ee): its id. */
+    Id allocate(const T &element)
+    {
+        if (firstFree < 0) {
+            grow(N);
+        }
+        Id id;
+        id.value = firstFree;
+        firstFree = Ops::getNext(elements[id.value]);
+        new (&elements[id.value]) T(element);
+        return id;
+    }
+
     /* An element given back: destroyed, made the free list's head (its
      * operations mark it empty over the old head), the id the head (the
      * material library's removal, 0x77cf6). */
@@ -12029,7 +12044,8 @@ class hknpMountedBallGun : public hknpBallGun
 /* hknpMotionProperties (type info 0x57bf510, no vtable; the shared empty
  * body FUN_000396a0 finishes it): 0x40 bytes, its hkClass's size (0x57bf4c0,
  * built at 0x39653), the members from its twenty records at 0x16948a0. */
-struct hknpMotionProperties {
+/* 16-byte aligned: the library copies one in four 16-byte moves (0x371ca). */
+struct alignas(16) hknpMotionProperties {
     /* The presets (hknpMotionPropertiesId's, derived names after the
      * library's five entries 0x36e10 builds). */
     enum Preset { STATIC, DYNAMIC, KEYFRAMED, FROZEN, DEBRIS };
@@ -12047,6 +12063,13 @@ struct hknpMotionProperties {
     {
         isExclusive = 0;
         FUN_000396b0(DYNAMIC, 9.81f, 1.0f);
+    }
+
+    /* The placement form the free list's operations build a free entry
+     * with (0x37168). */
+    static void *operator new(unsigned long, void *where)
+    {
+        return where;
     }
 
     u32 isExclusive;
@@ -12098,9 +12121,25 @@ struct hknpMotionPropertiesId {
  * 0xff in numDeactivationFrequencyPasses (the library's add, 0x3718f and
  * 0x37195). */
 struct hknpMotionPropertiesFreeListArrayOperations {
+    /* Built as the default properties, then marked free over the next
+     * free index (the grow inline in the library's add, 0x37168 to
+     * 0x37195). */
+    static void setEmpty(hknpMotionProperties &element, u32 next)
+    {
+        new (&element) hknpMotionProperties();
+        element.numDeactivationFrequencyPasses = 0xff;
+        element.isExclusive = next;
+    }
+
     static hkBool32 isEmpty(const hknpMotionProperties &element)
     {
         return element.numDeactivationFrequencyPasses == 0xff;
+    }
+
+    /* The next free index a free element holds. */
+    static int getNext(const hknpMotionProperties &element)
+    {
+        return element.isExclusive;
     }
 };
 
@@ -12135,9 +12174,9 @@ struct hknpMotionPropertiesLibrary : public hkReferencedObject {
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    Signal00093530 entryAddedSignal;
-    Signal00093530 entryModifiedSignal;
-    Signal00093530 entryRemovedSignal;
+    hkSignal1<hknpMotionPropertiesId> entryAddedSignal;
+    hkSignal1<hknpMotionPropertiesId> entryModifiedSignal;
+    hkSignal1<hknpMotionPropertiesId> entryRemovedSignal;
     hkFreeListArray<hknpMotionProperties, hknpMotionPropertiesId, 8,
                     hknpMotionPropertiesFreeListArrayOperations>
         entries;
@@ -19891,7 +19930,7 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
  * hit to the wrapped collector with its normal negated and its position
  * moved along the normal (by the hit's distance) or along the direction (by
  * its fraction), so they report the hits of the shape pair flipped
- * (derived names below from that); slot 3 (FUN_00048410, FUN_00048560) and
+ * (derived names below from that); slot 3 (0x48410, 0x48560) and
  * slot 6 (0x48510, 0x48660) forward to the wrapped collector's. */
 class hknpCollisionQueryCollector /* derived name */
 {
@@ -20044,13 +20083,30 @@ struct hknpClosestPointsQuery : public hknpCollisionQuery /* derived name */
     const void *unknown30;
 };
 
+/* A shape cast query (derived names): the shape query, then a vector at
+ * +0x30, the cast's direction at +0x40 (the flips turn it into the
+ * target's space, 0x523e5), a vector at +0x50 the casts add (0x12e951),
+ * two words at +0x60 (0x12e90b broadcasts the second) and the query's body
+ * at +0x68, which the flips take from the target's info. 0x70 bytes, copied
+ * whole (0x523fe to 0x52456). */
+struct hknpShapeCastQuery : public hknpShapeQuery /* derived name */
+{
+    Vec4 unknown30;
+    Vec4 castDirection;
+    Vec4 unknown50;
+    u32 unknown60;
+    float unknown64;
+    const void *body;
+};
+
 /* What a query hands on about each of its two shapes (derived names): the
  * shape's transform at +0x20, a flag at +0x30 (0x12ede0 tests the
  * target's), the scale the shape's columns take and the offset added to
  * its translation at +0x40 and +0x50 (0x12edef to 0x12ee36). */
 struct hknpShapeQueryInfo /* derived name */
 {
-    u8 unknown0[0x20];
+    const void *body; /* derived name: the shape casts' flips hand it on as the query's (0x5248f) */
+    u8 unknown8[0x18];
     const hkTransform *shapeToWorld; /* derived name */
     u8 unknown28[8];
     hkBool flag30; /* derived name */
@@ -20154,14 +20210,29 @@ class hknpScaledOffsetQueryCollector : public hknpCollisionQueryCollector /* der
 class hknpFlippedShapeCastQueryCollector : public hknpCollisionQueryCollector /* derived name */
 {
   public:
-    /* Empty (the shared 0x3b640); the deleting destructor is 0x48520. */
-    virtual ~hknpFlippedShapeCastQueryCollector();
+    /* Over another collector and the cast's direction, the wrapped
+     * collector's hints and early-out value taken (built on the stack by
+     * the shape casts' flips, 0x524d5). */
+    hknpFlippedShapeCastQueryCollector(hknpCollisionQueryCollector *child, const Vec4 &direction)
+        : castDirection(direction), childCollector(child)
+    {
+        hints = child->hints;
+        earlyOut = child->earlyOut;
+    }
 
-    void FUN_00048560(); /* vtable slot 3; derived name */
-    /* Slot 4 (0x48570): the same, the position moved along the cast's
-     * direction by the hit's fraction. derived name. */
-    void FUN_00048570(const struct hknpCollisionResult &hit);
-    bool FUN_00048660() const; /* vtable slot 6; derived name */
+    /* Empty and inline (the shared 0x3b640; the flips call no destructor,
+     * 0x525c4); the deleting destructor 0x48520 is emitted with the vtable
+     * in the file of slot 3, the class's key function. */
+    virtual ~hknpFlippedShapeCastQueryCollector() {}
+
+    /* Slot 3 (0x48560): the wrapped collector's reset. */
+    virtual void reset();
+    /* Slot 4 (0x48570): the hit added to the wrapped collector flipped as
+     * the closest points' flip adds it, the position moved along the
+     * cast's direction by the hit's fraction. */
+    virtual void addHit(const struct hknpCollisionResult &hit);
+    /* Slot 6 (0x48660): the wrapped collector's. */
+    virtual bool unknownVirtual6() const;
 
     Vec4 castDirection;                          /* derived name */
     hknpCollisionQueryCollector *childCollector; /* derived name */

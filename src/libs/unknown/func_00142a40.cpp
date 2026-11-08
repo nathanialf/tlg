@@ -384,7 +384,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
     for (int i = 0; i < droppedNodes.size; i++) {
         LocalArray<int> innerNodes(tree->numLeaves);
         LocalArray<int> leafNodes(tree->numLeaves);
-        FUN_001985d0(droppedNodes[i], tree, innerNodes, leafNodes);
+        FUN_001985d0(droppedNodes[i], tree, &innerNodes, &leafNodes);
         for (int j = 0; j < leafNodes.size; j++) {
             tree->nodes.FUN_00198a20(leafNodes[j]);
         }
@@ -434,7 +434,7 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
         int numKeys = leafJob.numInherited;
         for (int child = 0; child < 2; child++) {
             if (node.children[1] != Node::NO_CHILD) {
-                FUN_001985d0(node.children[child], tree, innerNodes, leafNodes);
+                FUN_001985d0(node.children[child], tree, &innerNodes, &leafNodes);
             }
             for (int i = 0; i < leafNodes.size; i++) {
                 const int bucketIndex = tree->nodes.elements[leafNodes[i]].children[0];

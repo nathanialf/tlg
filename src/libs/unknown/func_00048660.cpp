@@ -4,7 +4,7 @@
 /* derived name: slot 6 of hknpFlippedShapeCastQueryCollector's vtable
  * (0x1699020) forwards to the same slot of the collector it wraps (at
  * +0x30). */
-bool hknpFlippedShapeCastQueryCollector::FUN_00048660() const /* derived name */
+bool hknpFlippedShapeCastQueryCollector::unknownVirtual6() const
 {
     return childCollector->unknownVirtual6();
 }

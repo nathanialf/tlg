@@ -3,8 +3,8 @@
 
 /* derived name: slot 3 of the task: its name, and the second state's fill
  * colour as its description when one is asked for. */
-void hknpBroadPhaseExportNewPairsTask::FUN_0018cfb0(
-    hkStringBuf *name, hkStringBuf *description) const /* derived name */
+void hknpBroadPhaseExportNewPairsTask::getName(hkStringBuf *name,
+                                               hkStringBuf *description) const /* derived name */
 {
     FUN_000116c0(name, "BroadPhase/Export new pairs");
     if (description) {

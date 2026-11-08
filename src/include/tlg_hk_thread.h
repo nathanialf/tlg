@@ -996,13 +996,27 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
  * vtable 0x16a6690, stored at 0x18d673 into +0x20 of the object at +8): the
  * task interface implemented directly, its owner at +8. Slot 3
  * (FUN_0018ce10) names it "BroadPhase/Update dirty bodies". */
-class hknpBroadPhaseUpdateDirtyBodiesTask : public hknpTaskInterface /* derived name */
+class BroadPhaseTasks0018d640; /* tlg_lib_unknown.h */
+
+/* 16-byte aligned, as the broad phase builds its tasks (the layer task's
+ * 0x20 bytes, the finish task cleared in one 16-byte store at 0x18d6d4). */
+class alignas(16) hknpBroadPhaseUpdateDirtyBodiesTask : public hknpTaskInterface /* derived name */
 {
   public:
-    void FUN_0018ce10(hkStringBuf *name,
-                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+    hknpBroadPhaseUpdateDirtyBodiesTask(BroadPhaseTasks0018d640 *taskOwner) : owner(taskOwner) {}
 
-    void *owner; /* derived name */
+    /* The thread's heap (defined in tlg_lib_unknown.h). */
+    static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 2 (0x18d050), the class's key function: timed as the collide
+     * stage's broad phase, the active bodies fetched and the layers'
+     * trees updated from them. */
+    virtual void process();
+    /* Slot 3 (0x18ce10). */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    BroadPhaseTasks0018d640 *owner; /* derived name */
 };
 
 /* Two more 16-byte tasks of the broad phase (derived names from their
@@ -1012,11 +1026,23 @@ class hknpBroadPhaseUpdateDirtyBodiesTask : public hknpTaskInterface /* derived 
  * 0x18d000, "BroadPhase/UpdateFinished") and 0x16a6730 (slot 2 0x18d440,
  * slot 3 0x18cfb0, "BroadPhase/Export new pairs"); both describe
  * themselves in the second state's colour. */
-class hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived name */
+/* 16-byte aligned, as the broad phase builds its tasks (the layer task's
+ * 0x20 bytes, the finish task cleared in one 16-byte store at 0x18d6d4). */
+class alignas(16) hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived name */
 {
   public:
-    void FUN_0018d000(hkStringBuf *name,
-                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+    static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 2 (the shared empty 0x17de10): nothing to do. */
+    virtual void process() {}
+
+    /* Slot 3 (0x18d000), the class's key function. */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    /* Zero (the constructor's 16-byte clear at 0x18d6d4) and not read.
+     * derived name. */
+    void *unknown8;
 };
 
 /* The broad phase's per-layer update task (derived name from its name;
@@ -1024,37 +1050,49 @@ class hknpBroadPhaseUpdateFinishedTask : public hknpTaskInterface /* derived nam
  * for the layers 0 to 3, each with its owner at +8 and its layer at +0x10):
  * slot 2 (0x18d130) the work, slot 3 (0x18ce30) "BroadPhase/Update layer
  * %i" with the layer, described in the first state's colour. */
-class BroadPhaseTasks0018d640; /* tlg_lib_unknown.h */
 
-class hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name */
+/* 16-byte aligned, as the broad phase builds its tasks (the layer task's
+ * 0x20 bytes, the finish task cleared in one 16-byte store at 0x18d6d4). */
+class alignas(16) hknpBroadPhaseUpdateLayerTask : public hknpTaskInterface /* derived name */
 {
   public:
-    /* Slot 2 (0x18d130): under the collide stage's broad phase timer, the
-     * layer's tree updated when it holds boxes, as a volatile layer
-     * (0x142a40) or a pending one (0x142af0). derived name. */
-    void FUN_0018d130();
+    hknpBroadPhaseUpdateLayerTask(BroadPhaseTasks0018d640 *taskOwner, int taskLayer)
+        : owner(taskOwner), layer(taskLayer)
+    {
+    }
 
-    void FUN_0018ce30(hkStringBuf *name,
-                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+    static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 2 (0x18d130), the class's key function: under the collide
+     * stage's broad phase timer, the layer's tree updated when it holds
+     * boxes, as a volatile layer (0x142a40) or a pending one (0x142af0). */
+    virtual void process();
+    /* Slot 3 (0x18ce30). */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
     BroadPhaseTasks0018d640 *owner; /* derived name */
     int layer;                      /* derived name */
 };
 
-class BroadPhaseTasks0018d640;
-
-class hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived name */
+/* 16-byte aligned, as the broad phase builds its tasks (the layer task's
+ * 0x20 bytes, the finish task cleared in one 16-byte store at 0x18d6d4). */
+class alignas(16) hknpBroadPhaseExportNewPairsTask : public hknpTaskInterface /* derived name */
 {
   public:
-    /* Slot 2 (0x18d440): under the collide stage's broad phase timer, a
-     * context taken from the pool appends each layer pair's collide task's
-     * stream of new pairs to the owner's (half as many tasks as the layer
-     * pairs' ints) and frees the task's blocks, then the active bodies'
-     * previous boxes are updated (0x161350). derived name. */
-    void FUN_0018d440();
+    hknpBroadPhaseExportNewPairsTask(BroadPhaseTasks0018d640 *taskOwner) : owner(taskOwner) {}
 
-    void FUN_0018cfb0(hkStringBuf *name,
-                      hkStringBuf *description) const; /* vtable slot 3; derived name */
+    static void *operator new(unsigned long numBytes);
+    static void operator delete(void *object, unsigned long numBytes);
+
+    /* Slot 2 (0x18d440), the class's key function: under the collide
+     * stage's broad phase timer, a context taken from the pool appends each
+     * layer pair's collide task's stream of new pairs to the owner's (half
+     * as many tasks as the layer pairs' ints) and frees the task's blocks,
+     * then the active bodies' previous boxes are updated (0x161350). */
+    virtual void process();
+    /* Slot 3 (0x18cfb0). */
+    virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
     BroadPhaseTasks0018d640 *owner; /* derived name */
 };
@@ -1070,8 +1108,16 @@ class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
   public:
     /* Out of line (0x18ce80, slot 0): the array's storage given back; the
      * deleting destructor (0x18ced0, slot 1) frees the 0x120 bytes. */
+    /* With its owner and the pair it collides, its stream empty
+     * (0x18d842 on). */
+    BroadPhaseCollideTask(BroadPhaseTasks0018d640 *taskOwner, int taskIndex)
+        : owner(taskOwner), index(taskIndex)
+    {
+    }
+
     virtual ~BroadPhaseCollideTask();
 
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     /* slot 2 (0x18d230) */

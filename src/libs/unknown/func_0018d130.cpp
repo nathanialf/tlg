@@ -1,7 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-void hknpBroadPhaseUpdateLayerTask::FUN_0018d130()
+void hknpBroadPhaseUpdateLayerTask::process()
 {
     ThreadBuffer &stream = *D_16dc078;
     stream.timerBeginList("Lt/Physics", "StCollide");

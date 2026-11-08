@@ -1533,8 +1533,6 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
     u64 totalPayloadBytes;               /* derived name */
 };
 
-void FUN_00001fb0(TwoBaseAllocator *self); /* derived name */
-
 /* Primary slots 13, 14, 15, 18 and 21 (interface slots 2, 3, 4, 7 and 10),
  * each run under the spinning mutex at +0x10; reached through the second
  * base by the thunks 0x32d0, 0x3490, 0x3570, 0x3130 and 0x3700 (slot 18,
@@ -3260,8 +3258,10 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
 {
   public:
     /* Slots 0 and 1 (0x14a50): the free list's blocks given back, then
-     * AllocatorBase's destructor (the empty 0x8d60, out of line). */
-    virtual ~FixedSizeAllocator();
+     * AllocatorBase's destructor (the empty 0x8d60, out of line). Inline:
+     * TwoBaseAllocator's destructor holds it (0x2192); emitted with the
+     * vtable in the file of slot 2, the class's key function. */
+    virtual ~FixedSizeAllocator() {}
 
     /* Sets the free list up with an alignment of at least 32 and no element
      * allocator (the caller at 0x1b92 passes 32, 8 and the block size). */
@@ -3269,13 +3269,11 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
                       AllocatorBase *blockAllocator);      /* derived name */
     void FUN_00014c40(MemoryStatistics &statistics) const; /* vtable slot 9; derived name */
 
-    /* Slots 2 and 4 (0x14aa0): an element of the free list. */
-    void *FUN_00014aa0(); /* derived name */
-
-    /* Slots 2 and 3 (0x14aa0 and 0x14af0, the bodies above and of
-     * bufFree), declared so the class is complete: TwoBaseAllocator holds
-     * one. */
+    /* Slots 2 and 4 (0x14aa0), the class's key function: an element of
+     * the free list, whatever the size. */
     virtual void *blockAlloc(int numBytes);
+    /* Slot 3 (0x14af0, the body of bufFree), declared so the class is
+     * complete: TwoBaseAllocator holds one. */
     virtual void blockFree(void *pointer, int numBytes);
 
     /* Slot 7 (0x14b10): the blocks taken from the free list. */
@@ -3287,9 +3285,51 @@ class FixedSizeAllocator : public AllocatorBase /* derived name */
     FreeList freeList; /* derived name */
 };
 
+/* Four doubles as two pairs, Havok's hkVector4d of the SSE build (derived
+ * name): the planar geometry's approximate equations and points, 32-byte
+ * aligned (the frames that hold one are realigned, 0x95fcd). */
+struct alignas(32) hkVector4d /* derived name */
+{
+    __m128d xy;
+    __m128d zw;
+};
+
+/* A 256-bit integer (derived name after Havok's hkSimdInt<256>): the exact
+ * determinants of three planes (0x9cb00). */
+struct hkSimdInt256 /* derived name */
+{
+    u64 words[4];
+};
+
+/* A plane of the planar geometry (derived names after Havok's
+ * hkcdPlanarGeometryPrimitives::Plane): its exact equation in integers,
+ * then the same equation in doubles at +0x20; 0x40 bytes. */
+struct hkcdPlanarPlane /* derived name */
+{
+    s64 exactEquation[4];
+    hkVector4d approxEquation;
+};
+
+/* The determinants of three planes' approximate equations (x, y, z and the
+ * w they divide by) and the bound of each one's error (derived names; what
+ * 0x98800 writes, 0x9a6fe to 0x9a734). */
+struct hkcdPlanarDeterminants /* derived name */
+{
+    hkVector4d values;
+    hkVector4d errors;
+};
+
+void FUN_00098800(const hkVector4d &planeA, const hkVector4d &planeB, const hkVector4d &planeC,
+                  hkcdPlanarDeterminants &out); /* derived name */
+/* The exact determinants of the three planes (0x9cb00). derived name. */
+void FUN_0009cb00(const hkcdPlanarPlane *planes, hkSimdInt256 &x, hkSimdInt256 &y, hkSimdInt256 &z,
+                  hkSimdInt256 &w);
+/* An exact quotient as an int (0x97810). derived name. */
+int FUN_00097810(const hkSimdInt256 &numerator, const hkSimdInt256 &denominator);
+
 /* An allocator (vtable address points 0x168c640 and, for the second base,
  * 0x168c708), both stored by its constructor FUN_00001960. Its complete
- * destructor is FUN_00001fb0, its deleting destructor (slot 1) FUN_00001f90;
+ * destructor is 0x1fb0, its deleting destructor (slot 1) 0x1f90;
  * slot 12 (FUN_00001620) returns the object as its second base. Slot 15
  * (0x34a0, also reached through the second base by the thunk 0x3570) stores
  * a byte limit at +0xb50 under the spinning mutex at +0x10; slot 16
@@ -3429,7 +3469,11 @@ class TwoBaseAllocator : public AllocatorBase, public AllocatorInterface
      * them). derived names. */
     FreeList *freeLists[21];
     int numFreeLists;
-    u8 unknown20c[0x14];
+    /* The free lists' storage handed out from the top (0x1c2d), up to its
+     * end (the limit's address, 0x1ba7); a list deleted from the top gives
+     * its room back (0x1c86, 0x202c). derived names. */
+    FreeList *freeListStorageTop;
+    FreeList *freeListStorageEnd;
     /* The free lists themselves, built in place by the constructor
      * (0x19bd to 0x1abe) and set up by FUN_00001ae0. derived name. */
     FreeList freeListStorage[21];
@@ -4926,6 +4970,70 @@ inline void *BroadPhaseTasks0018d640::operator new(unsigned long numBytes)
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
+/* The broad phase's tasks come from and go back to the calling thread's
+ * heap at their size (the deleting destructors 0x13e50, 0x6c810 and
+ * 0x18ced0 test the object first). */
+inline void *hknpBroadPhaseUpdateDirtyBodiesTask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void hknpBroadPhaseUpdateDirtyBodiesTask::operator delete(void *object,
+                                                                 unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
+inline void *hknpBroadPhaseUpdateLayerTask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void hknpBroadPhaseUpdateLayerTask::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
+inline void *hknpBroadPhaseExportNewPairsTask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void hknpBroadPhaseExportNewPairsTask::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
+inline void *hknpBroadPhaseUpdateFinishedTask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void hknpBroadPhaseUpdateFinishedTask::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
+inline void *BroadPhaseCollideTask::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void BroadPhaseCollideTask::operator delete(void *object, unsigned long numBytes)
+{
+    if (object) {
+        D_16dc070->temp58->blockFree(object, int(numBytes));
+    }
+}
+
 template <typename T> inline void *hkQueue<T>::operator new(unsigned long numBytes)
 {
     return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
@@ -6288,10 +6396,10 @@ struct LeafAge0013b6c0 /* derived name */
     }
 };
 
-/* The nodes of a subtree into the two lists, the inner ones and the leaves
- * (0x1985d0). derived name. */
-void FUN_001985d0(int nodeIndex, BroadPhaseTree00142a40 *tree, hkArray<int> &innerNodes,
-                  hkArray<int> &leafNodes); /* derived name */
+/* The nodes of a subtree into the two lists, the inner ones and the leaves,
+ * each list optional (0x1985d0). derived name. */
+void FUN_001985d0(int nodeIndex, const BroadPhaseTree00142a40 *tree, hkArray<int> *innerNodesOut,
+                  hkArray<int> *leavesOut); /* derived name */
 
 /* A node rebuilt over the bodies of the keys given: 0x13c340 splits them
  * under the box of their centres, 0x13de80 puts them in one leaf. derived
@@ -6477,21 +6585,6 @@ void FUN_00141500(BroadPhaseLayers00142a40 *layers, const hknpBody *bodies);
  * read. derived name. */
 void FUN_0013d110(const u32 *keys, int numKeys, const hknpBody *bodies,
                   BroadPhaseTree00142a40 *tree, int nodeIndex);
-
-/* One of the three 16-byte tasks BroadPhaseTasks0018d640's constructor
- * builds (vtable 0x16a6690, address point 0x16a66a0, no type info; slot 1
- * the shared 0x13e50): its data at +8. Slot 2 (0x18d050), timed as the
- * collide stage's broad phase, fetches the active bodies and updates the
- * layers' trees from them. derived name. */
-class BroadPhaseUpdateTask0018d050 /* derived name */
-{
-  public:
-    virtual ~BroadPhaseUpdateTask0018d050();
-
-    void FUN_0018d050(); /* vtable slot 2; derived name */
-
-    BroadPhaseTasks0018d640 *data; /* derived name */
-};
 
 /* A tree's update (0x13e090): its boxes refreshed from the bodies unless
  * kept, the oldest buckets' ages reset beyond the number given, then the
@@ -7119,21 +7212,36 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
  * pass all of them. The argument types are not recovered, except for the
  * closest points functions (0x56360 to 0x56be0, each adaptor followed by
  * the flipped entry for its function, func_00056390.cpp's template). */
-void FUN_000da720(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, bool argument7, void *argument8,
-                  void *argument9); /* derived name */
-void FUN_000ee260(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, bool argument7, void *argument8,
-                  void *argument9); /* derived name */
-void FUN_000f1ca0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, bool argument7, void *argument8,
-                  void *argument9); /* derived name */
-void FUN_00117280(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, bool argument7, void *argument8,
-                  void *argument9); /* derived name */
-void FUN_0012e7f0(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, bool argument7, void *argument8,
-                  void *argument9); /* derived name */
+void FUN_000da720(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_000ee260(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_000f1ca0(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_00117280(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_0012e7f0(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, bool queryAndTargetSwapped,
+                  hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
 void FUN_000dcae0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
                   const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
                   const hknpQueryFilterData &targetShapeFilterData,
@@ -7176,21 +7284,36 @@ void FUN_0014cd80(hknpCollisionQueryContext *context, const hknpClosestPointsQue
                   const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
                   bool queryAndTargetSwapped,
                   hknpCollisionQueryCollector *collector); /* derived name */
-void FUN_00052380(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9, void *argument10); /* derived name */
-void FUN_00052600(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9, void *argument10); /* derived name */
-void FUN_00052880(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9, void *argument10); /* derived name */
-void FUN_00052b00(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9, void *argument10); /* derived name */
-void FUN_00052d80(void *argument1, void *argument2, void *argument3, void *argument4,
-                  void *argument5, void *argument6, void *argument7, bool argument8,
-                  void *argument9, void *argument10); /* derived name */
+void FUN_00052380(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_00052600(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_00052880(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_00052b00(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
+void FUN_00052d80(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *hitCollector,
+                  hknpCollisionQueryCollector *startPointCollector); /* derived name */
 void FUN_00056360(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
                   const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
                   const hknpQueryFilterData &targetShapeFilterData,

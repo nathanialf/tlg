@@ -8,7 +8,7 @@ static Vec4 negateXyz(const Vec4 &v) /* derived name */
         v, _mm_castsi128_ps(_mm_setr_epi32(int(0x80000000), int(0x80000000), int(0x80000000), 0)));
 }
 
-void hknpFlippedShapeCastQueryCollector::FUN_00048570(const hknpCollisionResult &hit)
+void hknpFlippedShapeCastQueryCollector::addHit(const hknpCollisionResult &hit)
 {
     const Vec4 fraction = _mm_set1_ps(hit.fraction);
     hknpCollisionResult flipped = hit;

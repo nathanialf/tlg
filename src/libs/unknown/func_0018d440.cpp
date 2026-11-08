@@ -1,7 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
-void hknpBroadPhaseExportNewPairsTask::FUN_0018d440()
+void hknpBroadPhaseExportNewPairsTask::process()
 {
     ThreadBuffer &stream = *D_16dc078;
     stream.timerBeginList("Lt/Physics", "StCollide");
