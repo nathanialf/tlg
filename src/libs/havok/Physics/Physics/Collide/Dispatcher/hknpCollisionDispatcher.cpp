@@ -29,7 +29,7 @@ void FUN_0016a370(const hknpWorld *world, const hknpBody *bodyA, const hknpBody 
 
 hknpCollisionDispatcher::hknpCollisionDispatcher()
 {
-    maxCacheSize = 0x50;
+    keepCacheFlags = 0x50;
     for (int i = 0; i < hknpCollisionDispatchType::NUM_TYPES; i++) {
         for (int j = 0; j < hknpCollisionDispatchType::NUM_TYPES; j++) {
             dispatchTable[i][j] = FUN_00174050;

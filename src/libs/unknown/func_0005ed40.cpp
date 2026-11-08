@@ -127,3 +127,26 @@ void hknpWorld::FUN_0005e1a0(int bodyId, const Vec4 &angularVelocity)
         }
     }
 }
+
+void hknpWorld::FUN_0005dc50(int bodyId, const Vec4 &linearVelocity, const Vec4 &angularVelocity)
+{
+    const hknpBody &body = bodyManager.bodies[bodyId];
+    if (body.flags & 2) {
+        hknpMotion &motion = motionManager.motions[body.motionId];
+        if (!allXYZ(
+                _mm_cmple_ps(hkMath::quadFabs(_mm_sub_ps(linearVelocity, motion.linearVelocity)),
+                             D_14b2060[35])) ||
+            !allXYZ(_mm_cmple_ps(
+                hkMath::quadFabs(_mm_sub_ps(
+                    angularVelocity, rotatedDir(motion.orientation, motion.angularVelocity))),
+                D_14b2060[35]))) {
+            if (!(body.flags & 9)) {
+                FUN_0004e0c0(bodyId);
+            }
+            motion.linearVelocity = linearVelocity;
+            motion.angularVelocity = rotatedInverseDir(motion.orientation, angularVelocity);
+            FUN_0005b490(bodyId, &motion);
+            signals.bodyChangedSignal.fire(this, bodyId);
+        }
+    }
+}

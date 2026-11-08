@@ -6794,8 +6794,14 @@ struct hkcdStaticTree {
         u8 unknown0[5];
     };
 
+    /* A node in six bytes (derived names): the box's three axis codes
+     * (FUN_000a9da0 writes them), then a leaf's data or an inner node's
+     * offset to its child, the top bit of the fourth byte set for an inner
+     * node (0xcf7c7, 0xcf7e5). */
     struct Codec3Axis6 {
-        u8 unknown0[6];
+        u8 codes[3];
+        u8 hiData;
+        u16 loData;
     };
 
     /* hkcdStaticTree::DefaultTreeStorage5 and DefaultTreeStorage6 (type
@@ -6989,7 +6995,9 @@ struct hkcdDynamicTree {
     struct CodecRawUlong {
         typedef hkUlong Index;
 
-        u8 unknown0[0x40];
+        hkAabb aabb;
+        hkUlong parent;
+        hkUlong children[2];
     };
 
     /* The 48-byte codec (type info "!hkcdDynamicTree::CodecRawUint"; the
@@ -7053,8 +7061,10 @@ struct hkcdDynamicTree {
             return nodes.data[index];
         }
 
+        typedef typename CODEC::Index Index;
+
         hkArray<CODEC> nodes;
-        typename CODEC::Index firstFree;
+        Index firstFree;
     };
 
     /* hkcdDynamicTree::DynamicStorage32 (hkClass 0x57bb890: 0x18 bytes, no
@@ -7077,7 +7087,7 @@ struct hkcdDynamicTree {
 
         u32 numLeaves;
         u32 path;
-        u32 root;
+        typename STORAGE::Index root;
     };
 
     /* hkcdDynamicTree::DefaultTree48Storage (hkClass 0x57bbb60 built at
@@ -7098,6 +7108,25 @@ struct hkcdDynamicTree {
         void FUN_000bd460(DefaultTree48Storage &treeOut) const;
     };
 };
+
+/* The tree over the raw-ulong codec's 64-byte nodes (derived name, after
+ * DefaultTree48Storage: the static compound shape's builder 0xcfca0 keeps
+ * one on its stack, the root at index 1, the nodes from 1 on). */
+struct DefaultTree64Storage00cf5d0
+    : public hkcdDynamicTree::Tree<
+          hkcdDynamicTree::DefaultDynamicStorage<hkcdDynamicTree::CodecRawUlong>> /* derived name */
+{
+    /* The tree's nodes copied into another tree from its root down, the
+     * root at index 1 (0xbfe20; as 0xbd460 for the 48-byte nodes).
+     * derived name. */
+    void FUN_000bfe20(DefaultTree64Storage00cf5d0 &treeOut) const;
+};
+
+/* A static tree of six-byte nodes built from a dynamic tree of 64-byte
+ * ones (0xcf5d0; the static compound shape's builder 0xcfca0). derived
+ * name. */
+void FUN_000cf5d0(hkcdStaticTree::DefaultTreeStorage6 *self,
+                  const DefaultTree64Storage00cf5d0 &tree); /* derived name */
 
 /* A static tree built from a dynamic tree's nodes (0xdea80; the extern
  * mesh's builder). derived name. */
@@ -9150,7 +9179,13 @@ struct hknpBody {
      * and an active one (0x4d436 tests both, `test 9`), and one that raises
      * trigger events (the trigger modifier's slots 0x161fd0 and 0x1620c0
      * test it on either body). */
-    enum { IS_STATIC = 1 << 0, IS_ACTIVE = 1 << 3, RAISE_TRIGGER_EVENTS = 1 << 4 };
+    enum {
+        IS_STATIC = 1 << 0,
+        IS_DYNAMIC = 1 << 1,   /* derived name: set when attached to a motion (0x4c213) */
+        IS_KEYFRAMED = 1 << 2, /* derived name: a motion of no inverse inertia (0x4c24f) */
+        IS_ACTIVE = 1 << 3,
+        RAISE_TRIGGER_EVENTS = 1 << 4
+    };
 
     void FUN_0003a670(const Vec4 &centerOfMassLocal); /* derived name */
 
@@ -9166,6 +9201,11 @@ struct hknpBody {
      * the world's body setup at 0x4c121 and six more call it). derived
      * name. */
     void FUN_0003a820(const Vec4 &centerOfMassWorld);
+
+    /* The body placed in its motion's frame: its offset from the centre of
+     * mass in its own space, under the motion's orientation (0x3a690; the
+     * world's attach 0x4c353). derived name. */
+    void FUN_0003a690(const Vec4 &centerOfMassWorld, const hkQuaternion *motionOrientation);
 
     /* The motion's frame taken from the body's transform (0x3a920; the
      * world's calls at 0x4e485, 0x5bb14 and 0x5cc4d): the inverse of the
@@ -9409,6 +9449,12 @@ struct U16PointerMap /* derived name */
      * constructor, 0x16d3bf). */
     U16PointerMap() : entries(0), numEntries(0), hashMod(-1) {}
 
+    /* Emptied and its storage given back to the containers' heap, then the
+     * base's out-of-line empty destructor run (the folded 0x17de10; the
+     * constraint manager's destructor, 0x16dadd to 0x16daeb). Defined after
+     * the allocator. */
+    inline ~U16PointerMap();
+
     /* The count's top bit: the map does not own its entries. derived
      * name. */
     enum { DONT_DEALLOCATE_FLAG = int(0x80000000) };
@@ -9500,6 +9546,13 @@ struct BitFieldMap00199770 /* derived name */
     /* Every field given back to the thread's heap at its size, then the
      * map emptied (0x199880). derived name. */
     void FUN_00199880();
+
+    /* Its fields given back (the constraint manager's destructor, 0x16dacd),
+     * then the map's own destructor. */
+    ~BitFieldMap00199770()
+    {
+        FUN_00199880();
+    }
 
     int numBits; /* derived name: the size a new field is made at */
     u8 unknown4[4];
@@ -11461,10 +11514,61 @@ struct hknpConstraintManager /* derived name */
      * then the slot put at the head of the free list. derived name. */
     void FUN_0016df30(unsigned int constraintId);
 
+    /* A walk over the constraints in use (derived names): the end of the
+     * ids handed out and the current id, 0x7fffffff when done; returned by
+     * value, the two in one register (0x16d8e1 to 0x16d94c). A free slot
+     * keeps 0x7fffffff in its first body's id. */
+    struct Iterator {
+        u32 end;
+        u32 constraintId;
+    };
+
+    /* The constraints in use from the first: none when there are none,
+     * else the first slot or the next in use after it. derived name. */
+    Iterator getIterator() const
+    {
+        Iterator it;
+        it.end = peakConstraintId == 0x7fffffff ? 0 : peakConstraintId + 1;
+        if (numUsedConstraints == 0) {
+            it.constraintId = 0x7fffffff;
+            return it;
+        }
+        it.constraintId = 0;
+        if (constraints[0].bodyIdA == 0x7fffffff) {
+            it = getNext(it);
+        }
+        return it;
+    }
+
+    /* The next constraint in use after the current one, or none. derived
+     * name. */
+    Iterator getNext(Iterator it) const
+    {
+        for (;;) {
+            it.constraintId++;
+            if (it.constraintId >= it.end) {
+                it.constraintId = 0x7fffffff;
+                return it;
+            }
+            if (constraints[it.constraintId].bodyIdA != 0x7fffffff) {
+                return it;
+            }
+        }
+    }
+
+    /* Out of line (0x16d8c0; the world's destructor at 0x4bbfb): every
+     * constraint in use destroyed (its runtime given back, its data
+     * released), the storage given back to the thread's heap unless it is
+     * the user's, then the members destroyed. */
+    ~hknpConstraintManager();
+
     hknpWorld *world;            /* derived name */
     hknpConstraint *constraints; /* derived name */
     int capacity;                /* derived name */
-    u8 unknown14[4];
+    /* The constraints' storage the user's, not freed (0x16da88). derived
+     * name. */
+    bool userBuffer;
+    u8 unknown15[3];
     u32 firstFreeConstraintId; /* derived name */
     u8 unknown1c[4];
     /* Each constraint's name by its id, kept only for constraints given
@@ -11572,6 +11676,13 @@ struct hknpWorld {
      * attached to it refreshed and the body-changed signal fired. derived
      * name. */
     void FUN_0005e1a0(int bodyId, const Vec4 &angularVelocity);
+
+    /* Both of a dynamic body's velocities set (0x5dc50): nothing when each
+     * is within row 35 of the constant table of the motion's (the angular
+     * one in world space); else as the two setters, the body activated,
+     * both stored, each body attached to it refreshed and the body-changed
+     * signal fired. derived name. */
+    void FUN_0005dc50(int bodyId, const Vec4 &linearVelocity, const Vec4 &angularVelocity);
 
     /* An angular impulse applied to a dynamic body (0x5e910): as 0x5ed40,
      * the motion's angular velocity given the impulse taken into the
@@ -11793,6 +11904,14 @@ struct hknpWorld {
      * an active one's cell recorded. derived name. */
     void FUN_000cd4c0(hknpMotion &motion, u32 motionId);
 
+    /* A body attached to a motion (0x4c170): linked into the motion's
+     * bodies, made dynamic (keyframed when the motion has no inverse
+     * inertia), the motion's step limits capped by the shape's and the
+     * body's own, the body placed in the motion's frame (the orientation
+     * given, else its own), its box refreshed when it is in the broad phase,
+     * its bounding radius and its look-ahead distance set. derived name. */
+    void FUN_0004c170(int bodyId, int motionId, const hkQuaternion *motionOrientation);
+
     u8 unknown0[0x10];
     /* The bodies and their active list (0x4c720 passes +0x10 to the body
      * manager's functions and indexes the bodies at +0x20); FUN_0004c170 (in
@@ -11829,7 +11948,7 @@ struct hknpWorld {
     struct hknpWorldStreams260 *streams260;
     /* Handed first to the broad phase's pair walk (0x174eea). derived
      * name. */
-    void *pointer268;
+    struct hknpCollisionDispatcher *collisionDispatcher; /* derived name */
     u8 unknown270[8];
     hkBool enabled278;
     u8 unknown279[7];
@@ -19752,6 +19871,12 @@ class hknpVehicleInstance : public hknpUnaryAction
      * second argument is not read. derived name. */
     void FUN_00162db0(const void *argument1, Slot16Output &out) const;
 
+    /* A wheel's current position and orientation (0x1655f0, Havok's
+     * calcCurrentPositionAndRotation, a vtable slot). derived name. */
+    void FUN_001655f0(const hkTransform &chassisTransform,
+                      const class hknpVehicleSuspension *suspension, int wheelIndex, Vec4 &posOut,
+                      hkQuaternion &rotOut) const;
+
     /* hknpVehicleInstance::WheelInfo (0xc0 bytes, member records from
      * 0x16987a0). */
     struct WheelInfo {
@@ -21354,9 +21479,11 @@ struct hknpCollisionDispatcher {
         dispatchTable[typeB][typeA] = func;
     }
 
-    /* The bytes a creator may write for one pair (0x1743b0 reserves 0x50
-     * of the writer's block). derived name. */
-    int maxCacheSize;
+    /* The body flags that keep a pair of bodies both static or keyframed
+     * (flags 1 or 4): such a pair gets caches only when one of its bodies
+     * has one (the broad phase's pair walk, 0x17428d; 0x50 from the
+     * constructor). derived name. */
+    u32 keepCacheFlags;
     CacheCreatorFunc dispatchTable[hknpCollisionDispatchType::NUM_TYPES]
                                   [hknpCollisionDispatchType::NUM_TYPES]; /* derived name */
 };
@@ -21443,8 +21570,17 @@ void FUN_00199b00(const hknpWorld *world, const hknpBody *bodyA, const hknpBody 
  * FUN_00093830 at 0x174184): the world's +0x268 object, the world (its
  * material library's +0x28), the range of pairs to read, the writer and an
  * optional array of 16-byte entries it appends to. derived name. */
-void FUN_00174100(void *argument1, hknpWorld *world, const hkBlockStreamRange *range,
-                  hkBlockStreamWriter *writer, void *entries);
+/* A new pair of the broad phase, the two bodies' ids (8 bytes in the
+ * pairs' stream, 0x174375). derived name. */
+struct BodyPair00174100 /* derived name */
+{
+    u32 bodyIdA;
+    u32 bodyIdB;
+};
+
+void FUN_00174100(const hknpCollisionDispatcher *dispatcher, const hknpWorld *world,
+                  const hkBlockStreamRange *range, hkBlockStreamWriter *writer,
+                  hkArray<hkBlockStreamRange> *entries);
 
 /* An object with a block stream at +0x400 that 0x174ea0 appends the walk's
  * output to (the simulation's 0x6cb88 and 0x15bcc8 pass it). derived name. */
@@ -21457,7 +21593,7 @@ struct Streams00174ea0 /* derived name */
 /* The walk over a range written to the end of the object's stream through
  * a writer of its own (0x174ea0). derived name. */
 void FUN_00174ea0(Streams00174ea0 *self, hknpWorld *world, BlockCache *cache,
-                  const hkBlockStreamRange *range, void *entries);
+                  const hkBlockStreamRange *range, hkArray<hkBlockStreamRange> *entries);
 
 /* A motion moved on by a time step (0xcd870; the caller 0x157be0 passes
  * the motion's scaled velocities): its centre of mass along the linear
@@ -22147,6 +22283,16 @@ struct hkContainerHeapAllocator {
     /* Defined in tlg_lib_unknown.h, after the allocator's class. */
     static AllocatorBase &get(); /* derived name */
 };
+
+/* The folded empty out-of-line destructor the map's runs last (0x17de10).
+ * derived name. */
+void FUN_0017de10(U16PointerMap *self); /* derived name */
+
+inline U16PointerMap::~U16PointerMap()
+{
+    FUN_00199580(hkContainerHeapAllocator::get());
+    FUN_0017de10(this);
+}
 
 /* The temporary allocator (derived name, after the heap allocator's): the
  * router's first static allocator, D_57b8470, which the string buffer's
