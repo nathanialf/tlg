@@ -1380,6 +1380,10 @@ struct hkClass {
 const hkClass *FUN_00004250(const hkClass *self);         /* derived name */
 const hkClass *FUN_00004250(const hkClassMember *member); /* derived name */
 
+/* A member record's enum class (0x7f80, the body every getter of a pointer
+ * at +0x10 shares). derived name. */
+const hkClassEnum *FUN_00007f80(const hkClassMember *self); /* derived name */
+
 /* A member record's C-style array size, 0 for a plain member (0x7e00).
  * derived name. */
 int FUN_00007e00(const hkClassMember *self); /* derived name */
@@ -15666,6 +15670,18 @@ class hkpCallbackConstraintMotor : public hkpLimitedForceConstraintMotor
     hkUlong userData2;
 };
 
+/* hkpCallbackConstraintMotor's CallbackType enum, through a pointer (its
+ * records' initializer 0x7c430 reads it at run time). derived name. */
+extern const hkClassEnum *D_16dc660;
+
+/* The defaults its hkClass carries (0x14c02e4): an offset per member, -1
+ * for none and -2 for zero (derived reading). The rows are generated from
+ * the executable (D18). */
+struct hkpCallbackConstraintMotorDefaults /* derived name */
+{
+    int defaultOffsets[5];
+};
+
 /* hkpSpringDamperConstraintMotor (hkClass 0x57c5bf8, parent
  * hkpLimitedForceConstraintMotor): vtable 0x16a5ce0, finish callback
  * FUN_00083360. */
@@ -17764,6 +17780,10 @@ class hkOArchive : public hkReferencedObject /* derived name */
     /* derived name: a 16-bit value written (0xa480), swapped when the
      * archive swaps. */
     void FUN_0000a480(u16 value);
+    /* derived name: the same for a signed value (hkClass's signature,
+     * 0x4879: its array size and flags sign-extended), the body the linker
+     * folded onto 0xa480. */
+    void FUN_0000a480(s16 value);
     /* derived name: a 32-bit value written (0xa7a0), swapped when the
      * archive swaps. */
     void FUN_0000a7a0(int value);
@@ -17953,6 +17973,10 @@ class BufferOstream : public hkOstream /* derived name */
 /* The file hkHardwareInfo.cpp's reports name (the string at 0x14c3f5e). */
 #define HK_HARDWARE_INFO_CPP                                                                       \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Base\\System\\Hardware\\hkHardwareInfo.cpp"
+
+/* The file hkSerializeUtil.cpp's reports name (the string at 0x14cb4fe). */
+#define HK_SERIALIZE_UTIL_CPP                                                                      \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Common\\Serialize\\Util\\hkSerializeUtil.cpp"
 
 /* The file hkFreeListMemorySystem.cpp's reports name (the string at
  * 0x14b3734). */
@@ -18573,6 +18597,11 @@ class hkGeometry : public hkReferencedObject
     static void operator delete(void *object, unsigned long numBytes);
 
     void FUN_00093c70(); /* derived name */
+
+    /* Another geometry appended, its vertices under a transform when one
+     * is given, its triangles' indices moved past the vertices there were
+     * (0x93c90; the callers 0x425dc and 0x12847f). derived name. */
+    hkResult FUN_00093c90(const hkGeometry &geometry, const hkMatrix4 *transform);
 
     hkArray<Vec4> vertices;
     hkArray<Triangle> triangles;
@@ -22105,12 +22134,43 @@ struct OwnedPointerMapOf : public OwnedPointerMap /* derived name */
  * +0x20, +0x30 and +0x40, a string map from +0x50. */
 class hkVtableClassRegistry;
 
+/* A four-byte structure layout description (its constructors 0x180ee0 and 0x180ef0):
+ * the rules {8, 1, 1, 1} and {8, 1, 0, 1} sit in rodata at 0x14cb8f6 and
+ * 0x14cb8fa, just before the assert string of hkStructureLayout.cpp; the
+ * class is likely hkStructureLayout (the file of FUN_001814f0), not
+ * established. */
+struct LayoutRules00180ef0 {
+    u8 bytesInPointer;
+    u8 littleEndian;
+    u8 reusePadding;
+    u8 emptyBaseOptimization;
+};
+
 struct hkPackfileWriter : public hkReferencedObject /* derived name */
 {
-    /* The options it is built over (0x19bff0 to 0x19c050 read an int at +0,
-     * +4, bytes at +8 and +9, pointers at +0x10 and +0x18 and an int at
-     * +0x20). derived name. */
-    struct Options;
+    /* The options a packfile writer is built over (derived names): the
+     * structure layout written for, a user tag, two flags (the second set by
+     * the save's options, 0x17dbbd), the contents' version and the ids of the
+     * class tests the contents pass (the save at 0x17db39 appends them); the
+     * save copies them member by member (0x17da8c). */
+    struct Options {
+        /* Copied member by member, the same in the writer's constructor
+         * (0x19bff0 to 0x19c01f): a written copy constructor, not the implicit
+         * one's single copy of the leading members. */
+        Options(const Options &other)
+            : layout(other.layout), userTag(other.userTag), writeMetaInfo(other.writeMetaInfo),
+              writeSerializedFalse(other.writeSerializedFalse),
+              contentsVersion(other.contentsVersion), classTestIds(other.classTestIds)
+        {
+        }
+
+        LayoutRules00180ef0 layout;
+        int userTag;
+        hkBool writeMetaInfo;
+        hkBool writeSerializedFalse;
+        const char *contentsVersion;
+        hkArray<u16> classTestIds;
+    };
 
     hkPackfileWriter(const Options &options); /* 0x19be50 */
 
@@ -22147,7 +22207,7 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
 
     /* Slot 9, pure here: the save, over a stream writer and the save
      * options (the binary writer's 0x183350). derived name. */
-    virtual void FUN_00183350(void *writer, const void *options) = 0;
+    virtual hkResult FUN_00183350(void *writer, const void *options) = 0;
 
     /* Slot 10 (0x19d0d0): a section added by its tag. derived name. */
     virtual void FUN_0019d0d0(const char *sectionTag);
@@ -22210,7 +22270,7 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
      * 5, 0x19c3c0). derived names. */
     int contentsIndex;
     int contentsClassIndex;
-    u8 unknownB8[8];
+    void *pointerB8; /* cleared by the constructor; derived name */
     /* The section each object slot 11 placed goes to, by the object's
      * address. derived name. */
     OwnedPointerMap objectToSectionIndex;
@@ -22222,18 +22282,10 @@ struct hkPackfileWriter : public hkReferencedObject /* derived name */
     OwnedPointerMap mapF8;   /* derived name */
     int int108;              /* -1 from the constructor; derived name */
     u8 unknown10c[4];
-    /* The options' words copied by the constructor (0x19bff0 to 0x19c023).
-     * derived names. */
-    int option110;
-    int option114;
-    u8 option118;
-    u8 option119;
-    u8 unknown11a[6];
-    void *option120;
-    /* The options' 16-bit values copied in (0x19c03f to 0x19c092), the last
-     * member, to the size its deleting destructor 0x19c100 frees. derived
-     * name. */
-    hkArray<u16> array128;
+    /* The options it was built over, copied (0x19bff0 to 0x19c092), the
+     * last member, to the size its deleting destructor 0x19c100 frees.
+     * derived name. */
+    Options options;
 };
 
 /* The section tags (derived names): pointers to the strings "__classnames__"
@@ -22309,7 +22361,7 @@ struct hkBinaryPackfileWriter : hkPackfileWriter /* derived name */
 
     virtual ~hkBinaryPackfileWriter(); /* 0x181bf0 */
 
-    virtual void FUN_00183350(void *writer, const void *options); /* slot 9 */
+    virtual hkResult FUN_00183350(void *writer, const void *options); /* slot 9 */
 
     /* A class's record in the class names' section (0x181d00; 0x181dc0
      * writes the reflection's own classes, then the others): its

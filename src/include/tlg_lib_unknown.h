@@ -1526,6 +1526,11 @@ class hkLargeBlockAllocator : public AllocatorBase, public AllocatorInterface /*
      * insert_large_chunk; the free 0x133e0 ends with it). derived name. */
     void FUN_00012410(TreeChunk *chunk, u64 size);
 
+    /* A block of a large size from the tree bins (0x12620, dlmalloc's
+     * tmalloc_large; the allocation 0x128b0 asks it): its payload, or null.
+     * derived name. */
+    void *FUN_00012620(u64 nb);
+
     /* dlmalloc's tree bins: sizes from 256 bytes, two bins a power of
      * two. */
     enum { TREEBIN_SHIFT = 8, NTREEBINS = 32 };
@@ -2737,18 +2742,6 @@ u64 FUN_00184cf0(); /* derived name */
 /* The tick counter (0x92200, a jump to FUN_00184cf0). derived name. */
 u64 FUN_00092200(); /* derived name */
 
-/* A four-byte structure layout description (its constructors 0x180ee0 and 0x180ef0):
- * the rules {8, 1, 1, 1} and {8, 1, 0, 1} sit in rodata at 0x14cb8f6 and
- * 0x14cb8fa, just before the assert string of hkStructureLayout.cpp; the
- * class is likely hkStructureLayout (the file of FUN_001814f0), not
- * established. */
-struct LayoutRules00180ef0 {
-    u8 bytesInPointer;
-    u8 littleEndian;
-    u8 reusePadding;
-    u8 emptyBaseOptimization;
-};
-
 struct Layout00180ef0 {
     /* Out of line: the host's rules (0x180ee0), the rules given
      * (0x180ef0). */
@@ -2762,6 +2755,12 @@ struct Layout00180ef0 {
 
     LayoutRules00180ef0 rules;
 };
+
+/* A binary packfile of an object saved to a writer (0x17da40, Havok's
+ * hkSerializeUtil::savePackfile). derived name. */
+hkResult FUN_0017da40(const void *object, const hkClass &klass, hkStreamWriter *writer,
+                      const hkPackfileWriter::Options &optionsIn, void *userListener,
+                      int saveOptions); /* derived name */
 
 /* The host's rules (0x14cb8f6), which the loader's check (0x17dec0)
  * compares a packfile's with. derived name. */

@@ -151,3 +151,6 @@ D_169d630 hkClassEnum 1 src/include/tlg_hk_reflect.h
 D_169d5e0 hkClassEnum::Item 5 src/include/tlg_hk_reflect.h
 D_16a1360 hkClassEnum 1 src/include/tlg_hk_reflect.h
 D_16a1310 hkClassEnum::Item 5 src/include/tlg_hk_reflect.h
+D_169c910 hkClassEnum 1 src/include/tlg_hk_reflect.h
+D_169c8c0 hkClassEnum::Item 5 src/include/tlg_hk_reflect.h
+D_14c02e4 hkpCallbackConstraintMotorDefaults 1 src/include/tlg_hk_reflect.h
