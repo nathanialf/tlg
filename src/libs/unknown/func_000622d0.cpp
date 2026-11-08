@@ -4,7 +4,7 @@
 void hknpWorldObject4f8::FUN_000622d0(int id)
 {
     Entry18 *entry = unknown18[id];
-    const int weight = entry->head.count + 2;
+    const int weight = entry->head.numElements + 2;
 
     /* Pending: every place that holds it cleared. */
     bool pending = false;

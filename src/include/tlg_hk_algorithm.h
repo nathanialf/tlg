@@ -133,6 +133,69 @@ template <typename T, typename L> inline void quickSort(T *pArr, int numElem, L 
     }
 }
 
+/* The numElem elements sorted without recursion (derived name, after
+ * Havok's explicitStackQuickSort): ranges kept on two stacks of 64
+ * bounds, the larger part of each split pushed and the smaller one sorted
+ * next; the middle element the pivot (inline in the shape's key query
+ * 0x172f60). */
+template <typename T, typename L>
+inline void explicitStackQuickSort(T *pArr, int numElem, L cmpLess)
+{
+    if (numElem <= 1) {
+        return;
+    }
+    T *lowerStack[64];
+    T *upperStack[64];
+    lowerStack[0] = pArr;
+    upperStack[0] = pArr + (numElem - 1);
+    int stackIndex = 0;
+    do {
+        T *low = lowerStack[stackIndex];
+        T *high = upperStack[stackIndex];
+        for (;;) {
+            T *i = low;
+            T *j = high;
+            const T pivot = low[(high - low) >> 1];
+            do {
+                while (cmpLess(*i, pivot)) {
+                    i++;
+                }
+                while (cmpLess(pivot, *j)) {
+                    j--;
+                }
+                if (i <= j) {
+                    if (i != j) {
+                        swap(*j, *i);
+                    }
+                    i++;
+                    j--;
+                }
+            } while (i <= j);
+            if (low < j) {
+                if (i < high) {
+                    if (high - i > j - low) {
+                        lowerStack[stackIndex] = i;
+                        upperStack[stackIndex] = high;
+                        stackIndex++;
+                        high = j;
+                    } else {
+                        lowerStack[stackIndex] = low;
+                        upperStack[stackIndex] = j;
+                        stackIndex++;
+                        low = i;
+                    }
+                } else {
+                    high = j;
+                }
+            } else if (i < high) {
+                low = i;
+            } else {
+                break;
+            }
+        }
+    } while (--stackIndex >= 0);
+}
+
 } // namespace hkAlgorithm
 
 #endif

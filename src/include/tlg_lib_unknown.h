@@ -2171,8 +2171,8 @@ class PlainPolymorphic
 /* A reference-counted object, 0x50 bytes (vtable 0x16969d0, constructor
  * FUN_0003e840: takes a counted reference to the object at +0x10, stores the
  * int argument at +0x18 and +0x1c, clears the int at +0xc and the vector at
- * +0x30). The game code at 0xeaa625 sets +0xc to 1 through FUN_0003ea60;
- * FUN_0003ea80 returns the address of the vector. */
+ * +0x30). The game code at 0xeaa625 sets +0xc to 1 through 0x3ea60;
+ * 0x3ea80 returns the address of the vector. */
 
 /* The world's work on the body of an index with a pointer and an int
  * (0x5d6b0; its bodies are the 0x90-byte entries at +0x20). derived
@@ -2216,13 +2216,6 @@ void FUN_00178460(Object00178580 *self, const Vec4 &angularVelocity);
  * game calls it at 0xeb0590, 0xeb0c69 and 0xeb0ee7). */
 void FUN_00178310(Object00178580 *self, const Vec4 &linearVelocity, const Vec4 &deltaTime,
                   bool activate);
-
-struct Object0003ea60 {
-    u8 unknown0[0xc];
-    s32 value;
-    u8 unknown10[0x20];
-    Vec4 vector; /* +0x30 */
-};
 
 /* A reference-counted object, 0x70 bytes (vtable 0x169ab20, constructor
  * FUN_0006bc50) holding arrays at +0x38 (16-byte elements, each releasing
@@ -3659,8 +3652,12 @@ class ThreadMemory : public AllocatorBase /* derived name */
  * nodes. */
 struct UnionFindParents /* derived name */
 {
-    /* Back to the thread's heap at its size, 0x10 bytes (the owner's
-     * destructor, 0x65e2f). */
+    /* Over the parents' storage (the owner's constructor, 0x65d94). */
+    UnionFindParents(int *storage) : data(storage) {}
+
+    /* From the thread's heap and back at its size, 0x10 bytes (the
+     * owner's constructor and destructor, 0x65d91 and 0x65e2f). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     int *data; /* derived name */
@@ -3672,8 +3669,9 @@ struct UnionFind /* derived name */
     /* 0x8f640: every node its own root. */
     UnionFind(UnionFindParents *parents, int numNodes);
 
-    /* Back to the thread's heap at its size, 0x18 bytes (the owner's
-     * destructor, 0x65e01). */
+    /* From the thread's heap and back at its size, 0x18 bytes (the
+     * owner's constructor and destructor, 0x65daa and 0x65e01). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     /* 0x8f6a0 (called at 0x62ce4): a node's root, every node on the way
@@ -3742,7 +3740,7 @@ struct Record00065f00 /* derived name */
     u8 unknown18[8];
 };
 
-/* The union-find's owner (constructor FUN_00065b70, destructor
+/* The union-find's owner (constructor 0x65b70, destructor
  * FUN_00065de0): the union-find at +0 (freed with 0x18 bytes) and its
  * parents at +8 (0x10 bytes), twelve 32-byte records from +0x10 (each
  * starting with an empty hkBitField; FUN_00065f00 returns one by index), the
@@ -3751,6 +3749,11 @@ struct Record00065f00 /* derived name */
  * 0x14e946, after the records are filled). */
 struct Object00065f20 /* derived name */
 {
+    /* Out of line (0x65b70): the records empty, the counts kept, the
+     * parents' storage and the two objects from the thread's heap, the
+     * union-find over the parents, then open. */
+    Object00065f20(int nodeCount, int recordCount);
+
     /* Out of line (0x65de0): the union-find and its parents deleted, the
      * parents' storage given back at the node count's size, then the
      * records' bit fields. */
@@ -5160,6 +5163,16 @@ inline void Object00015700::Block::operator delete(void *object, unsigned long n
     }
 }
 
+inline void *UnionFindParents::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
+inline void *UnionFind::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+}
+
 inline void UnionFindParents::operator delete(void *object, unsigned long numBytes)
 {
     D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
@@ -6353,6 +6366,23 @@ struct BodyPairEntry000717d0 /* derived name */
     const struct hknpCollisionCache *cache;
 };
 
+/* Two bodies' ids (derived name after Havok's hknpBodyIdPair): the pairs
+ * whose caches 0x636c0 drops. */
+struct hknpBodyIdPair /* derived name */
+{
+    hknpBodyId bodyIdA;
+    hknpBodyId bodyIdB;
+};
+
+/* A cache of a pair either dropped (its bodies' pair recorded and its type's
+ * detector told, reason 5) or moved into the writer, its solver record let
+ * go and its child caches moved with it (0x636c0; 0x72400 calls it).
+ * derived names. */
+void FUN_000636c0(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
+                  bool drop, const hknpCollisionCache *cache, hkBlockStream *childCacheStream,
+                  hkBlockStreamWriter *writer, hkBlockStreamWriter *childCacheWriter,
+                  hkArray<hknpBodyIdPair> *droppedPairs);
+
 /* The pairs' entries handed on (0x72400, 0x33c bytes; 0x72100 and 0x72740
  * call it). derived names. */
 void FUN_00072400(hknpWorldContextPool::Context *context, void *argument2,
@@ -6856,7 +6886,12 @@ struct hknpCharacterInput /* derived name */
      * then how well it supports the character (2: supported). */
     hkBool isSurfaceDynamic; /* derived name */
     u8 supportedState;       /* derived name */
-    u8 unknown42[0xe];
+    u8 unknown42[2];
+    /* How far the character stands above the surface (the on-ground state
+     * pulls it down along the normal when positive, 0x6fe7d). derived
+     * name. */
+    float surfaceDistanceExcess;
+    u8 unknown48[8];
     Vec4 surfaceNormal;   /* derived name: the climbing state jumps off along it */
     Vec4 surfaceVelocity; /* derived name */
     u8 unknown70[8];
@@ -6871,6 +6906,9 @@ struct hknpCharacterInput /* derived name */
 struct hknpCharacterOutput /* derived name */
 {
     Vec4 velocity; /* derived name */
+    /* The velocity the states start from (the on-ground state's input to
+     * its movement, 0x6fdef). derived name. */
+    Vec4 inputVelocity;
 };
 
 /* A character state's id (derived names): the index of its handler in the
@@ -6962,6 +7000,14 @@ class hknpCharacterContext : public hkReferencedObject /* derived name */
 
     void FUN_0003e9c0(int state, const hknpCharacterInput &input,
                       hknpCharacterOutput &output); /* derived name */
+
+    /* The character type set (0x3ea60; the game sets 1 at 0xeaa625).
+     * derived name. */
+    void FUN_0003ea60(int type);
+
+    /* The previous surface velocity (0x3ea80, out of line: the on-ground
+     * state calls it, 0x6fdd7). derived name. */
+    const Vec4 &FUN_0003ea80() const;
 
     /* The updates since the state changed (the getter folded onto the
      * int-at-+0x40 body 0xb670; 0x61f40 asks it). derived name. */
@@ -7192,6 +7238,14 @@ class hknpCharacterStateOnGround : public hkReferencedObject /* derived name */
      * its velocity first stripped of the part along up when the state kills
      * it on launch. derived name. */
     void FUN_0006fd40(hknpCharacterContext &context, const hknpCharacterInput &input,
+                      hknpCharacterOutput &output);
+
+    /* Slot 6 (0x6fdb0): the velocity relative to the surface moved toward
+     * the stick's at the walk speed, pulled down along the surface normal
+     * when above it, its fall along up limited to the gravity's step when
+     * asked, then put back on the horizontal at the same speed unless
+     * disabled. derived name. */
+    void FUN_0006fdb0(hknpCharacterContext &context, const hknpCharacterInput &input,
                       hknpCharacterOutput &output);
 
     float gain;                         /* derived name */

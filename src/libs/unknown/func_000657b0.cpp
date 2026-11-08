@@ -19,7 +19,7 @@ void FUN_000657b0(hknpWorldObject4f8 *self, hknpWorldContextPool::Context *conte
     for (int i = 1; i < numRecords; i++) {
         const SortRecord00062100 &record = data[i];
         const SortRecord00062100 &kept = data[last];
-        if ((record.count | kept.count) == 0 || kept == record) {
+        if ((record.numElements | kept.numElements) == 0 || kept == record) {
             continue;
         }
         last++;

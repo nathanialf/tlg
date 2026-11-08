@@ -62,7 +62,7 @@ FUN_00011e00 src/libs/unknown/leaf_00011e00.cpp
 FUN_00013e90 src/libs/unknown/leaf_00013e90.cpp
 FUN_0002abc0 src/libs/unknown/leaf_0002abc0.cpp
 FUN_00034840 src/libs/unknown/leaf_00034840.cpp
-FUN_0003ea60 src/libs/unknown/leaf_0003ea60.cpp
+FUN_0003ea60 src/libs/unknown/leaf_0003ea60.cpp _ZN20hknpCharacterContext12FUN_0003ea60Ei
 FUN_0007f640 src/libs/unknown/leaf_0007f640.cpp
 FUN_000ad770 src/libs/unknown/leaf_000ad770.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad770Ev
 FUN_000ad780 src/libs/unknown/leaf_000ad780.cpp _ZN19hkMemoryMeshTexture12FUN_000ad780Ei
@@ -159,7 +159,7 @@ FUN_0003d400 src/libs/unknown/func_0003d420.cpp _ZL47finishLoadedObjecthknpConst
 FUN_0003de50 src/libs/unknown/func_0003de70.cpp _ZL30finishLoadedObjecthknpLodShapePvi
 FUN_0003e020 src/libs/unknown/func_0003e040.cpp _ZL35finishLoadedObjecthknpWorldSnapshotPvi
 FUN_0003e730 src/libs/unknown/func_0003e730.cpp _ZL35finishLoadedObjecthknpTriangleShapePvi
-FUN_0003ea80 src/libs/unknown/leaf_0003ea80.cpp
+FUN_0003ea80 src/libs/unknown/leaf_0003ea80.cpp _ZNK20hknpCharacterContext12FUN_0003ea80Ev
 FUN_0003f380 src/libs/unknown/func_0003f3a0.cpp _ZL36finishLoadedObjecthknpMountedBallGunPvi
 FUN_0003f610 src/libs/unknown/func_0003f660.cpp _ZL39finishLoadedObjecthknpScaledConvexShapePvi
 FUN_0003f640 src/libs/unknown/func_0003f660.cpp _ZL43finishLoadedObjecthknpScaledConvexShapeBasePvi
@@ -376,7 +376,7 @@ FUN_00023170 src/libs/unknown/func_00023170.cpp _ZN16hkMemoryMeshBody12FUN_00023
 FUN_0002a910 src/libs/unknown/leaf_0002a910.cpp _ZNK17hkMemoryMeshShape12FUN_0002a910Ev
 FUN_0002a920 src/libs/unknown/func_0002a920.cpp _ZN17hkMemoryMeshShape12FUN_0002a920EPKc
 FUN_000348d0 src/libs/unknown/func_000348d0.cpp
-FUN_00036990 src/libs/unknown/func_00036990.cpp
+FUN_00036990 src/libs/unknown/func_00036a10.cpp _ZL37finishLoadedObjecthknpConstraintCinfoPvi
 FUN_00038250 src/libs/unknown/func_00038330.cpp _ZL31finishLoadedObjecthknpBodyCinfoPvi
 FUN_0003c660 src/libs/unknown/leaf_0003c660.cpp
 FUN_00073940 src/libs/unknown/leaf_00073940.cpp
@@ -1154,7 +1154,7 @@ FUN_00175f30 src/libs/unknown/func_00175f30.cpp
 FUN_00001200 src/libs/unknown/func_00001200.cpp
 FUN_00001140 src/libs/unknown/func_00001200.cpp
 FUN_000089a0 src/libs/unknown/func_000089a0.cpp _ZN9hkOstream12FUN_000089a0ERK11hkStringBuf
-FUN_0007f120 src/libs/unknown/func_0007f120.cpp
+FUN_0007f120 src/libs/unknown/func_0007f170.cpp _ZL46finishLoadedObjecthkpPointToPathConstraintDataPvi
 FUN_00091650 src/libs/unknown/func_00091650.cpp _ZNK9StringMap12FUN_00091650EPNS_11IteratorTagE
 FUN_00093a70 src/libs/unknown/func_000937c0.cpp _ZN21hkBlockStreamConsumer12FUN_00093a70EP10BlockCacheP13hkBlockStream
 FUN_00009cc0 src/libs/unknown/func_00009cc0.cpp _ZN10hkBitField12FUN_00009cc0EPv
@@ -1560,7 +1560,7 @@ _ZN9hknpShapeD2Ev src/libs/unknown/func_0006fb50.cpp
 _ZN17hkxTextureInplaceD1Ev src/libs/unknown/func_0008aa90.cpp
 FUN_0008ab00 src/libs/unknown/func_0008aa90.cpp _ZN17hkxTextureInplaceD0Ev
 FUN_000068e0 src/libs/unknown/func_000068e0.cpp _Z12FUN_000068e0v
-FUN_000369a0 src/libs/unknown/func_000369a0.cpp _ZN19hknpConstraintCinfo12FUN_000369a0EPv
+FUN_000369a0 src/libs/unknown/func_00036a10.cpp _ZL38cleanupLoadedObjecthknpConstraintCinfoPv
 _ZN9hkOstreamD1Ev src/libs/unknown/func_00008310.cpp
 FUN_00008270 src/libs/unknown/func_00008310.cpp _ZN9hkOstreamD0Ev
 _ZN10hkOArchiveD1Ev src/libs/unknown/func_0000a3b0.cpp
@@ -2797,3 +2797,11 @@ FUN_00052db0 src/libs/unknown/func_000523b0.cpp _Z16shapeCastFlippedIXadL_Z12FUN
 _ZN23BroadPhaseTasks0018d640C1Ev src/libs/unknown/func_0018d640.cpp _ZN23BroadPhaseTasks0018d640C2Ev
 _ZN16TwoBaseAllocatorD1Ev src/libs/unknown/func_00001fb0.cpp
 FUN_001985d0 src/libs/unknown/func_001985d0.cpp _Z12FUN_001985d0iPK22BroadPhaseTree00142a40P7hkArrayIi24hkContainerHeapAllocatorES5_
+FUN_00065910 src/libs/unknown/func_00065910.cpp _Z12FUN_00065910PN20hknpWorldContextPool7ContextEPK18ModifierSharedDataP18SortRecord00062100P13hkBlockStream
+_ZN14Object00065f20C1Eii src/libs/unknown/func_00065de0.cpp _ZN14Object00065f20C2Eii
+FUN_0006fdb0 src/libs/unknown/func_0006fdb0.cpp _ZN26hknpCharacterStateOnGround12FUN_0006fdb0ER20hknpCharacterContextRK18hknpCharacterInputR19hknpCharacterOutput
+FUN_00040070 src/libs/unknown/func_00040070.cpp _Z12FUN_00040070PK14Output0002b3b0PK10hknpMotionS4_PDv4_f
+FUN_0017e9a0 src/libs/unknown/func_0017e9a0.cpp _ZN21hkBuiltinTypeRegistry12FUN_0017e9a0Ev
+FUN_00011e50 src/libs/unknown/func_00011e50.cpp _GLOBAL__I_a
+FUN_0007f170 src/libs/unknown/func_0007f170.cpp _GLOBAL__I_a
+FUN_00036a10 src/libs/unknown/func_00036a10.cpp _GLOBAL__I_a

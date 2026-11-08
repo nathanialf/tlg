@@ -6,14 +6,14 @@
  * and the keys decide. */
 bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b)
 {
-    if (a.count == 0) {
+    if (a.numElements == 0) {
         return false;
     }
-    if (b.count == 0) {
+    if (b.numElements == 0) {
         return true;
     }
-    if (a.target->order == b.target->order) {
-        return a.key < b.key;
+    if (a.startBlock->header.blockIndexInStream == b.startBlock->header.blockIndexInStream) {
+        return a.startByteOffset < b.startByteOffset;
     }
-    return a.target->order < b.target->order;
+    return a.startBlock->header.blockIndexInStream < b.startBlock->header.blockIndexInStream;
 }

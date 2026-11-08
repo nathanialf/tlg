@@ -958,7 +958,7 @@ struct hkAabbHalf {
  * template over the storage; the one instance used here is spelled out.
  * FUN_00047b30 resizes it, filling the new bits. */
 struct hkBitFieldStorage {
-    hkBitFieldStorage() {}
+    hkBitFieldStorage() : numBits(0) {}
 
     /* A loaded image's storage is left as loaded. */
     hkBitFieldStorage(hkFinishLoadedObjectFlag flag) : words(flag) {}
@@ -2700,6 +2700,14 @@ void FUN_0000e5c0(hkStringPtr *self, hkFinishLoadedObjectFlag flag); /* derived 
  * allocator, copy), FUN_00011900 formats into it. */
 struct hkStringBuf /* derived name */
 {
+    /* Empty: the terminator alone in the object's room (inline in the
+     * resource search, 0x180018). */
+    hkStringBuf()
+    {
+        string.setSizeUnchecked(1);
+        string.data[0] = 0;
+    }
+
     hkStringBuf(const hkStringPtr &source);
 
     /* Out of line (0x115f0; the image loader's at 0x1885ad and the XML
@@ -10344,34 +10352,28 @@ class hknpWorldObject388 : public hkReferencedObject /* derived name */
 struct hkBlockStreamReader; /* below */
 
 /* A 16-byte record of the array at +0xb8 of the object FUN_000657b0 sorts
- * (derived names): a pointer to an object with an int at +4, a 16-bit key
- * at +8 and a count at +0xc. FUN_00062100 is the order the sort
- * (0x62130) is given: records with a count first, then by the int
- * the pointer reaches, then by the key. */
-struct SortRecord00062100 /* derived name */
+ * (derived names): a range of a block stream on a 16-byte boundary (the
+ * clean's per-record step 0x65910 reads the caches it spans). FUN_00062100
+ * is the order the sort (0x62130) is given: records with elements first,
+ * then by the start block's index in its stream, then by the offset. */
+struct alignas(16) SortRecord00062100 : public hkBlockStreamRange /* derived name */
 {
-    /* No count yet (the sort's pivot is built once, its count zeroed at
+    /* No elements yet (the sort's pivot is built once, its count zeroed at
      * the sort's entry, 0x6215d). */
-    SortRecord00062100() : count(0) {}
-
-    struct Target {
-        u8 unknown0[4];
-        int order; /* derived name */
-    };
-
-    /* The same record: the counts, the targets and both keys equal (the
-     * duplicates 0x657b0 drops after the sort, compared in this order).
-     * derived name. */
-    bool operator==(const SortRecord00062100 &other) const
+    SortRecord00062100()
     {
-        return count == other.count && target == other.target && keyA == other.keyA &&
-               key == other.key;
+        numElements = 0;
     }
 
-    const Target *target __attribute__((aligned(16))); /* derived name */
-    u16 key;                                           /* derived name */
-    u16 keyA;                                          /* derived name */
-    int count;                                         /* derived name */
+    /* The same record: the counts, the start blocks and both of the start
+     * block's values equal (the duplicates 0x657b0 drops after the sort,
+     * compared in this order). derived name. */
+    bool operator==(const SortRecord00062100 &other) const
+    {
+        return numElements == other.numElements && startBlock == other.startBlock &&
+               startBlockNumElements == other.startBlockNumElements &&
+               startByteOffset == other.startByteOffset;
+    }
 };
 
 bool FUN_00062100(const SortRecord00062100 &a, const SortRecord00062100 &b); /* derived name */
@@ -14555,12 +14557,10 @@ class hkpPrismaticConstraintData : public hkpConstraintData
 /* Polymorphic constraint data classes with no member read yet (vtable
  * address points; the class names from the type-info registrations of their
  * finish constructors). hkpPointToPathConstraintData: 0x169bc50 (finish
- * constructor FUN_0007f120). hkpCogWheelConstraintData: 0x169c2c0
+ * callback 0x7f120, its initializer's file's own). hkpCogWheelConstraintData: 0x169c2c0
  * (FUN_0007c9d0). hkpRagdollLimitsData: 0x169c950 (FUN_000788f0); its slot
  * 20 (0x7c8b0) is also hkpHingeLimitsData's (0x169fef0, FUN_00082250). */
 class hkpPointToPathConstraintData; /* defined after hkEnum */
-
-void FUN_0007f120(void *object, int finishing); /* derived name */
 
 /* hkpCogWheelConstraintAtom (0x10 bytes, member records from 0x169dc60). */
 struct hkpCogWheelConstraintAtom {
@@ -15333,18 +15333,18 @@ inline void hknpShapeInstance::setEmpty(hknpShapeInstance &instance, int next)
 }
 
 /* hknpConstraintCinfo (type info 0x57beab0, size 0x20; its member records
- * are built at run time by the initializer at 0x36a40): constraintData
+ * are built at run time by the initializer at 0x36a10, which also holds its
+ * type info's two callbacks, 0x36990 and 0x369a0): constraintData
  * (pointer) at +0, bodyA and bodyB (hkUint32) at +8 and +0xc, flags at
  * +0x10, name (hkStringPtr) at +0x18. Its finish constructor finishes the
  * name. constraintData is a counted reference to the constraint data
  * (hkpConstraintData: the cleanup releases it). */
+/* hknpConstraintCinfo's flags enum, through a pointer (its records'
+ * initializer 0x36a10 reads it at run time). derived name. */
+extern const hkClassEnum *D_16dc650;
+
 struct hknpConstraintCinfo {
     hknpConstraintCinfo(hkFinishLoadedObjectFlag flag) : constraintData(flag), name(flag) {}
-
-    /* The cleanup callback of its type info (0x369a0, registered by the
-     * initializer at 0x36c62): the cinfo destroyed in place, the name, then
-     * the data's reference. derived name. */
-    static void FUN_000369a0(void *object);
 
     hkRefPtr<hkpConstraintData> constraintData;
     u32 bodyA;
@@ -17044,11 +17044,15 @@ class hkResourceHandle : public hkResourceBase
      * its 0x17fdb0 (the name, then the object and its class). derived
      * names. */
     virtual void unknownVirtual5();
-    virtual void unknownVirtual6();
+    /* Slot 6: the handle's name, written into the buffer given (the
+     * container's search 0x17ff90 compares it). derived name after
+     * Havok's. */
+    virtual const char *getName(hkStringBuf &buffer) const;
     virtual void FUN_0017d550(const char *newName);
     /* Slot 8: the object held. */
     virtual void *FUN_00007f80() const;
-    virtual void unknownVirtual9();
+    /* Slot 9: the class of the object held. derived name after Havok's. */
+    virtual const hkClass *getClass() const;
     virtual void FUN_0017f320(hkReferencedObject *object, const hkClass *klass);
     virtual void unknownVirtual11();
     /* Slot 12: the external link of a member name removed. */
@@ -17213,6 +17217,13 @@ class hkMemoryResourceContainer : public hkResourceContainer
     hkMemoryResourceContainer *FUN_001806b0(const char *childName,
                                             const hkResourceContainer *previous);
 
+    /* Slot 10 (0x17ff90): the first resource after the previous one given
+     * (from the first when none) whose name and class are the ones given
+     * (any for null; a derived class does); a resource of the name whose
+     * class is neither warned of, and none returned. derived name. */
+    hkResourceHandle *FUN_0017ff90(const char *objectName, const hkClass *klass,
+                                   const hkResourceHandle *previous);
+
     /* Slot 12 (0x180360): the child of the name, or a new one appended to
      * the children with this container as its parent (its creation's
      * reference released once the children hold it). derived name. */
@@ -17277,7 +17288,7 @@ class hkpParametricCurve;
 class hkpPointToPathConstraintData : public hkpConstraintData
 {
   public:
-    /* Inline: the type info's finish callback FUN_0007f120 holds it, as
+    /* Inline: the type info's finish callback 0x7f120 holds it, as
      * the reflection initializer (0x7f377) does: hkpConstraintData's, the
      * vtable, then the bridge atom's finish. */
     hkpPointToPathConstraintData(hkFinishLoadedObjectFlag flag)
@@ -20315,6 +20326,11 @@ class hkpParametricCurve : public hkReferencedObject
 
 /* Built by the reflection initializer at 0x7c030. */
 extern const hkClass D_57c3c68; /* hkpParametricCurve's hkClass */
+extern const hkClass D_57c2fe8; /* hkpBridgeAtoms's hkClass */
+/* hkpPointToPathConstraintData's OrientationConstraintType enum, through a
+ * pointer (its records' initializer 0x7f170 reads it at run time). derived
+ * name. */
+extern const hkClassEnum *D_16dc668;
 
 /* hkpLinearParametricCurve (hkClass 0x57c3268, 0x50 bytes, parent
  * hkpParametricCurve; finish callback FUN_00078b00;
@@ -20987,6 +21003,16 @@ struct hknpCollisionDetector /* derived name */
                          const hknpCollisionCache *cache, void *argument4, void *argument5,
                          hknpCdBody *cdBodyA, hknpCdBody *cdBodyB,
                          int argument8); /* vtable slot 4; derived name */
+    virtual void unknownVirtual5();
+    /* Slot 6 (the composite detectors' 0x1555a0): a moved cache's child
+     * caches moved with it into the writer; asked only of a detector with
+     * child caches (0x638c3). derived name. */
+    virtual void moveChildCaches(hknpWorldContextPool::Context *context, hknpCollisionCache *cache,
+                                 hkBlockStream *childCacheStream,
+                                 hkBlockStream *childCacheStreamPpu, hkBlockStreamWriter *writer);
+
+    /* Whether its caches have child caches (0x638c3). derived name. */
+    int hasChildCaches;
 };
 
 /* The base of the detectors of the composite caches (derived name; slots 1
@@ -21382,6 +21408,18 @@ struct hkBlockStreamReader /* derived name */
             return currentByteLocation;
         }
         return FUN_00093830();
+    }
+
+    /* The next element of a size, the next block's first without the
+     * prefetch (0x65b10 to 0x65b30, through 0x93bf0). derived name. */
+    const void *advanceToNext(int elementSize)
+    {
+        currentByteLocation = hkAddByteOffsetConst(currentByteLocation, elementSize);
+        numElementsToReadInThisBlock--;
+        if (numElementsToReadInThisBlock > 0) {
+            return currentByteLocation;
+        }
+        return FUN_00093bf0();
     }
 
     const hkBlockStreamBlock *currentBlock; /* derived name */
@@ -22141,6 +22179,10 @@ extern const char *D_16dcbb0; /* "__data__" (0x14ccdc2) */
 extern const hkClass D_57b77f0; /* hkClass's hkClass */
 extern const hkClass D_57b7d18; /* hkClassMember's hkClass */
 extern const hkClass D_57b93e0; /* hkClassEnum's hkClass */
+extern const hkClass D_57b7ee8; /* hkCustomAttributes's hkClass */
+/* hkClassEnum's flags enum (FlagValues), through a pointer (its records'
+ * initializer 0x11e50 reads it at run time). derived name. */
+extern const hkClassEnum *D_16dc580;
 extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
 
 /* hkBinaryPackfileWriter (derived name; vtable 0x16a6470), the writer
@@ -22506,6 +22548,11 @@ class hkBuiltinTypeRegistry : public hkReferencedObject
      * by its name, its type info, and its vtable when the class has one
      * (an interface counted over it and its parents). derived name. */
     virtual void FUN_0017ef10(const hkTypeInfo *info, const hkClass *klass);
+    /* Slot 9 (0x17e9a0): the three registries made anew, each replacing
+     * its singleton's instance (the old one's reference released), then
+     * filled from the static class name registry and the builtin type
+     * infos and classes. derived name. */
+    virtual void FUN_0017e9a0();
 };
 
 extern hkBuiltinTypeRegistry *D_57c8898; /* hkBuiltinTypeRegistry's instance */

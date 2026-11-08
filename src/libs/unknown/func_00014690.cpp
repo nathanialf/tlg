@@ -1,6 +1,83 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_lib_unknown.h"
 
+/* The row a block size is served from: a small size in one of eleven rows
+ * up to 640 bytes, a larger one in a row of 1, 2, 4 or 8 kilobytes
+ * (derived name). */
+static int constSizeToRow(int size)
+{
+    if (size <= ThreadMemory::MAX_SMALL_ROW_SIZE) {
+        if (size <= 32) {
+            return 1;
+        }
+        if (size <= 48) {
+            return 2;
+        }
+        if (size <= 64) {
+            return 3;
+        }
+        if (size <= 96) {
+            return 4;
+        }
+        if (size <= 128) {
+            return 5;
+        }
+        if (size <= 160) {
+            return 6;
+        }
+        if (size <= 192) {
+            return 7;
+        }
+        if (size <= 256) {
+            return 8;
+        }
+        if (size <= 320) {
+            return 9;
+        }
+        if (size <= 512) {
+            return 10;
+        }
+        return 11;
+    }
+    if (size <= 1024) {
+        return 12;
+    }
+    if (size <= 2048) {
+        return 13;
+    }
+    if (size <= 4096) {
+        return 14;
+    }
+    return 15;
+}
+
+// NONMATCHING: 75 of 96 (size 573 against 604): equal through the small rows' loop; the base
+// unrolls the large rows' loop (eight constant stores pairs), where 3.3's LoopUnroll refuses
+// it: Loop Size 28, 224 > 150 (debug opt -debug-only=loop-unroll), the inlined size test's
+// small-size branches already constant (IndVarSimplify) but still blocks of the loop. A row
+// rule whose large sizes do not pass through the small chain's blocks is the lead. NOTES
+// Round 79A.
+ThreadMemory::ThreadMemory()
+{
+    for (int i = 0; i < 16; i++) {
+        freeLists[i].head = HK_NULL;
+        freeLists[i].numElem = 0;
+    }
+    for (int i = 0; i <= MAX_SMALL_ROW_SIZE / 32; i++) {
+        const int size = i * 32;
+        const int row = constSizeToRow(size);
+        smallSizeToRow[i] = s8(row);
+        rowToSize[row] = size;
+    }
+    for (int i = 0; i < MAX_ROW_SIZE / 1024; i++) {
+        const int size = (i + 1) * 1024;
+        const int row = constSizeToRow(size);
+        largeSizeToRow[i] = row;
+        rowToSize[row] = size;
+    }
+    memory = HK_NULL;
+}
+
 /* Slot 13: every block the free lists keep given back to the allocator the
  * thread draws from, the last row first, four at a time. */
 void ThreadMemory::FUN_00014690()
