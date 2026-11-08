@@ -38,3 +38,36 @@ void *hknpWorld::FUN_00051610() const /* derived name */
 {
     return object1d0->pointer10;
 }
+
+// NONMATCHING: list-ilp order (202 of 212 instructions, 857 bytes as the base): the constraints'
+// pointer is loaded after the created signal's head is tagged, just before the head's store, where the
+// base loads it after the signal's address; after the walk the index's shift comes after the head's
+// untagging, where the base shifts first. The bottom-up ILP pick ties to BURRSort's closestSucc (the
+// load feeds the store's token factor); moving the load after the store in the IR (a85/t2.ll) puts
+// it after the store, so the base's order is not that.
+u32 hknpWorld::FUN_0004d0a0(const hknpConstraintCinfo &cinfo, hkBool32 keepInactive)
+{
+    if (cinfo.constraintData->unknownVirtual5() == 3) {
+        HK_WARN(0xa32e5834, HK_NP_WORLD_CPP, 1318,
+                "Attempted to create an unsupported constraint type. Skipping creation of the "
+                "constraint.");
+        return 0x7fffffff;
+    }
+    if (cinfo.bodyA == cinfo.bodyB) {
+        HK_WARN(0x4c873b15, HK_NP_WORLD_CPP, 1323,
+                "Attempted to constrain a body to itself. Skipping creation of the constraint.");
+        return 0x7fffffff;
+    }
+    if (constraintManager.firstFreeConstraintId == 0x7fffffff) {
+        signals.constraintBufferFullSignal.fire(this, &constraintManager);
+    }
+    const u32 constraintId = constraintManager.FUN_0016db90();
+    constraintManager.FUN_0016dc90(constraintId, cinfo);
+    const hknpConstraint &constraint = constraintManager.constraints[constraintId];
+    signals.constraintCreatedSignal.fire(this, cinfo, constraintId);
+    if (!(constraint.flags & 4)) {
+        FUN_0004d400(&constraint, keepInactive);
+        signals.constraintAddedSignal.fire(this, constraintId);
+    }
+    return constraintId;
+}

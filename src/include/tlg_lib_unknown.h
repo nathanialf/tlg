@@ -8242,4 +8242,42 @@ struct UniquePositions000aa8b0 /* derived name */
     hkArray<Entry> entries;       /* derived name */
 };
 
+/* A polytope's volume integration over its faces (derived names after
+ * Mirtich's: the projection axis C, the projection integrals of a face, its
+ * face integrals). */
+/* A polytope's volume integration face by face (derived names after
+ * Mirtich's algorithm, which the arithmetic follows term for term): the
+ * projection axis C at +0, the face's projection integrals packed four to a
+ * vector from +0x10 (0x29b60 sums them over the face's edges), its face
+ * integrals from +0x70. */
+struct VolumeIntegrator00029b60 /* derived name */
+{
+    void FUN_00029b60(const Vec4 *vertices);                     /* derived name */
+    void FUN_00029f00(const Vec4 *vertices, const Vec4 &normal); /* derived name */
+    /* The volume integrals of a closed triangle mesh, its vertices moved
+     * by an offset (Mirtich's compVolumeIntegrals; 0x2a1c0, called at
+     * 0x288c0). derived name. */
+    void FUN_0002a1c0(const hkGeometry &geometry, const Vec4 &offset);
+
+    int axisC;
+    Vec4 p1;
+    Vec4 pab;
+    Vec4 paab;
+    Vec4 pabb;
+    Vec4 pa;
+    Vec4 pb;
+    Vec4 faab;
+    Vec4 fbbc;
+    Vec4 fcca;
+    Vec4 fa;
+    Vec4 fb;
+    Vec4 fc;
+    /* The volume integrals (Mirtich's T0, T1, T2 and TP), every lane of the
+     * first. derived names. */
+    Vec4 t0;
+    Vec4 t1;
+    Vec4 t2;
+    Vec4 tp;
+};
+
 #endif

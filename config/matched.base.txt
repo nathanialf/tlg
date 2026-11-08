@@ -2860,3 +2860,4 @@ FUN_00027c00 src/libs/unknown/func_00027b80.cpp _GLOBAL__I_a
 FUN_000689c0 src/libs/unknown/func_000689a0.cpp _GLOBAL__I_a
 FUN_00063a40 src/libs/unknown/func_00063a40.cpp
 FUN_001891e0 src/libs/unknown/func_001891e0.cpp _Z12FUN_001891e0P10hkGeometryf
+FUN_000a9fc0 src/libs/unknown/func_000aa340.cpp _Z12FUN_000a9fc0RK7hkcdRayRKDv4_fS4_S4_iPS2_S5_

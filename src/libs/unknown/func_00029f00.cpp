@@ -1,33 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
-#include "tlg_hk_reflect.h"
-
-/* A polytope's volume integration over its faces (derived names after
- * Mirtich's: the projection axis C, the projection integrals of a face, its
- * face integrals). */
-/* A polytope's volume integration face by face (derived names after
- * Mirtich's algorithm, which the arithmetic follows term for term): the
- * projection axis C at +0, the face's projection integrals packed four to a
- * vector from +0x10 (0x29b60 sums them over the face's edges), its face
- * integrals from +0x70. */
-struct VolumeIntegrator00029b60 /* derived name */
-{
-    void FUN_00029b60(const Vec4 *vertices);                     /* derived name */
-    void FUN_00029f00(const Vec4 *vertices, const Vec4 &normal); /* derived name */
-
-    int axisC;
-    Vec4 p1;
-    Vec4 pab;
-    Vec4 paab;
-    Vec4 pabb;
-    Vec4 pa;
-    Vec4 pb;
-    Vec4 faab;
-    Vec4 fbbc;
-    Vec4 fcca;
-    Vec4 fa;
-    Vec4 fb;
-    Vec4 fc;
-};
+#include "tlg_lib_unknown.h"
 
 #define SPLAT(v, i) _mm_shuffle_ps((v), (v), _MM_SHUFFLE(i, i, i, i))
 

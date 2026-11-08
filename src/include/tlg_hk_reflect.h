@@ -773,6 +773,12 @@ template <typename T> struct hkArrayBase /* derived name */ {
         return data[index];
     }
 
+    /* The first element (Havok's hkArray::begin). */
+    const T *begin() const
+    {
+        return data;
+    }
+
     T *data;              /* derived name */
     int size;             /* derived name */
     int capacityAndFlags; /* derived name */
@@ -3927,6 +3933,17 @@ struct hkcdRay /* derived name */
     Vec4 invDirection;
 };
 
+/* A ray's segment, up to the fraction, against a triangle (0xa9fc0; the
+ * shapes' ray casts call it at 0x43fa5, 0xe3f3d, 0xede8e, 0x12dabd and
+ * 0x16bb14): no hit when both ends lie on one side of the plane; else the
+ * fraction cut to the crossing, the normal turned to face the origin, and
+ * one for a front face or two for a back face when the flags allow it and
+ * the ray passes inside each edge within a tolerance (the file's global at
+ * 0x57c87e0, plus a share of the origin's distance); with flag 8 a sliver
+ * is tested at its vertices too. derived names. */
+int FUN_000a9fc0(const hkcdRay &ray, const Vec4 &a, const Vec4 &b, const Vec4 &c, int flags,
+                 Vec4 *fractionInOut, Vec4 *normalOut);
+
 /* A ray cast query (derived names): the query, the ray from +0x20 and
  * flags at +0x50, cleared. */
 struct hknpRayCastQuery : public hknpCollisionQuery /* derived name */
@@ -6100,6 +6117,11 @@ extern const hkClassMember D_168e7a0[]; /* derived name: hkPackedVector8_3's rec
  * schedules it as before. */
 extern const float D_14b4380[4];
 
+/* The index of the highest set bit of a four-bit comparison mask, by the
+ * mask (bytes; the largest component's index, 0x18853d and 0x2a32f).
+ * derived name. */
+extern const u8 D_14c4160[];
+
 /* One half and three in every lane (derived names): the Newton step of the
  * reciprocal square root. */
 extern const float D_14b4360[4];
@@ -6176,6 +6198,42 @@ inline void quadSinCos(const Vec4 &angle, Vec4 &sinOut, Vec4 &cosOut)
     sinOut = _mm_xor_ps(_mm_min_ps(sinResult, D_14b4370), signBitSin);
     cosOut = _mm_xor_ps(_mm_min_ps(cosResult, D_14b4370), signBitCos);
 }
+
+namespace hkMath
+{
+/* The arc sine in every lane, Cephes' single precision approximation
+ * (its five coefficients): above one half from the square root of half of
+ * one minus the magnitude, below 1e-4 the magnitude itself, the sign put
+ * back last (inline in the quaternion's angle, 0x1a0a0, and in the
+ * hard key frame, 0x5e420). derived name. */
+inline Vec4 quadAsin(const Vec4 &x) /* derived name */
+{
+    const Vec4 sign = _mm_and_ps(D_14b41d0, x);
+    const Vec4 a = _mm_min_ps(D_14b4370, _mm_andnot_ps(D_14b41d0, x));
+    const Vec4 big = _mm_cmplt_ps(_mm_load_ps(D_14b4360), a);
+    const Vec4 zBig = _mm_mul_ps(_mm_sub_ps(D_14b4370, a), _mm_load_ps(D_14b4360));
+    const Vec4 z = _mm_blendv_ps(_mm_mul_ps(a, a), zBig, big);
+    Vec4 p =
+        _mm_add_ps(_mm_mul_ps(z, _mm_set1_ps(4.2163199048E-2f)), _mm_set1_ps(2.4181311049E-2f));
+    p = _mm_add_ps(_mm_mul_ps(z, p), _mm_set1_ps(4.5470025998E-2f));
+    p = _mm_add_ps(_mm_mul_ps(z, p), _mm_set1_ps(7.4953002686E-2f));
+    p = _mm_add_ps(_mm_mul_ps(z, p), _mm_set1_ps(1.6666752422E-1f));
+    p = _mm_mul_ps(z, p);
+    const Vec4 s = _mm_blendv_ps(a, _mm_sqrt_ps(zBig), big);
+    const Vec4 r = _mm_add_ps(s, _mm_mul_ps(s, p));
+    const Vec4 rBig = _mm_sub_ps(D_14b4310, _mm_add_ps(r, r));
+    const Vec4 result =
+        _mm_blendv_ps(_mm_blendv_ps(r, rBig, big), a, _mm_cmplt_ps(a, _mm_set1_ps(1e-4f)));
+    return _mm_xor_ps(result, sign);
+}
+
+/* The arc sine of a float, lane 0 of the vector form (the hard key frame's
+ * small angle, 0x5e630). derived name. */
+inline float asin(float r) /* derived name */
+{
+    return _mm_cvtss_f32(quadAsin(_mm_set_ss(r)));
+}
+} // namespace hkMath
 
 /* A vector's length over x, y and z, as Havok's hkVector4::length<3> is on
  * this platform at its default accuracy: the square root of the squared
@@ -10801,13 +10859,16 @@ struct BodyKey0005c120 /* derived name */
     }
 
     u32 byte7f;
-    u32 bodyId;
+    /* Signed: the streams' walks index the bodies with it sign-extended
+     * (0x175064, 0x1751da). */
+    int bodyId;
 };
 
 /* Two bodies' keys, a 16-byte record (derived name): the world streams'
- * array at +0xc00 (0x5c120 appends one for each pair it keeps) and the
- * array at +0x98 of the world's object at +0x4f8 (0x63a40, an activated
- * group's pairs). */
+ * array at +0xc00 (0x5c120 appends one for each pair it keeps, 0x175160
+ * hands on those still valid and empties it) and the array at +0x98 of the
+ * world's object at +0x4f8 (0x63a40, an activated group's pairs); the
+ * two compared as one 64-bit word with a body's own (0x175010). */
 struct BodyKeyPair0005c120 /* derived name */
 {
     BodyKey0005c120 bodyA;
@@ -11712,6 +11773,8 @@ void FUN_000cd040(hknpBody *body, void *argument, const hknpBodyQuality *quality
  * unsubscribes from both in its destructor (0x159bc0). Members named by
  * their offset in the group where their use is not known. */
 struct hknpBodyCinfo;
+struct hknpConstraintCinfo;
+struct hknpConstraintManager;
 
 struct hknpWorldSignals /* derived name */
 {
@@ -11753,10 +11816,14 @@ struct hknpWorldSignals /* derived name */
     Signal00093530 signal90;
     hkSignal2<hknpWorld *, int> bodyChangedSignal; /* 0x5fcf0 (quality), 0x60100 (filter info) */
     Signal00093530 signalA0;
-    Signal00093530 signalA8;
+    /* Fired when no constraint is free, before one is taken (0x4d1a1).
+     * derived name. */
+    hkSignal2<hknpWorld *, hknpConstraintManager *> constraintBufferFullSignal;
     Signal00093530 signalB0;
     Signal00093530 signalB8;
-    Signal00093530 signalC0;
+    /* Fired with a new constraint's construction info and id (0x4d259).
+     * derived name. */
+    hkSignal3<hknpWorld *, const hknpConstraintCinfo &, u32> constraintCreatedSignal;
     /* Fired with the world and a constraint's id as the constraint is
      * destroyed, after the removed signal for an enabled one (0x4d5b5).
      * derived name. */
@@ -12045,6 +12112,14 @@ struct hknpWorld {
      * signal fired. derived name. */
     void FUN_0005dc50(int bodyId, const Vec4 &linearVelocity, const Vec4 &angularVelocity);
 
+    /* A body driven to a target position and orientation over a time step
+     * (0x5e420, Havok's hard key frame): the linear velocity that takes its
+     * centre of mass to the target's, the angular velocity of the rotation
+     * from its orientation to the target's (none when that has no axis),
+     * both set through 0x5dc50. derived name. */
+    void FUN_0005e420(int bodyId, const Vec4 &targetPosition, const hkQuaternion &targetOrientation,
+                      float deltaTime);
+
     /* An angular impulse applied to a dynamic body (0x5e910): as 0x5ed40,
      * the motion's angular velocity given the impulse taken into the
      * motion's frame times its inverse inertia. derived name. */
@@ -12243,6 +12318,14 @@ struct hknpWorld {
      * world, neither static nor active, is handed over first. derived
      * name. */
     void FUN_0004d400(const hknpConstraint *constraint, hkBool32 keepInactive);
+    /* A constraint created from its construction info (0x4d0a0): refused
+     * with a warning for an unsupported data type (3) or a body constrained
+     * to itself; else an id taken from the free list (the full signal fired
+     * when none is free), the constraint set up, the created signal fired,
+     * and unless it is created disabled (flag 4) its bodies recorded and the
+     * added signal fired; its id back, 0x7fffffff when refused. derived
+     * names. */
+    u32 FUN_0004d0a0(const hknpConstraintCinfo &cinfo, hkBool32 keepInactive);
     /* A disabled constraint enabled (0x4fc10): its flag 4 cleared, its
      * bodies recorded as 0x4d400 records them under the activation given,
      * and the signal at +0x5d8 fired. derived name. */
@@ -18710,6 +18793,10 @@ class BufferOstream : public hkOstream /* derived name */
 #define HK_NP_MOTION_MANAGER_CPP                                                                   \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Motion\\hknpMotionManager.cpp"
 
+/* The file hknpWorld.cpp's reports name (the string at 0x14bda3d). */
+#define HK_NP_WORLD_CPP                                                                            \
+    "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\World\\hknpWorld.cpp"
+
 /* The file hknpBodyManager.cpp's reports name (the string at 0x14ca361). */
 #define HK_NP_BODY_MANAGER_CPP                                                                     \
     "Y:\\NightlyJobs\\20141121-01\\Source\\Physics\\Physics\\Dynamics\\Body\\hknpBodyManager.cpp"
@@ -21060,6 +21147,16 @@ void FUN_00057530(hknpCollisionQueryContext *context, const hknpClosestPointsQue
                   const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
                   bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
 
+/* The closest points against a masked target (0x581c0, a function of the
+ * world's +0x58 table): the pair dispatched again with the target's core
+ * shape, the target's info carrying the shape's mask and a copy of the
+ * query's carrying none. derived name. */
+void FUN_000581c0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+
 /* The same, the two swapped first when the query's shape has more key bits
  * than the target (0x57c00; 0x57530 calls it). derived name. */
 void FUN_00057c00(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
@@ -21536,25 +21633,11 @@ struct hkBlockStreamBlock /* derived name */
     u8 data[0xfe0]; /* derived name */
 };
 
-/* A pair of bodies as the world's caller of 0x175010 keeps them (derived
- * names), 16 bytes: each body as its byte at +0x7f and its id, the two
- * compared as one 64-bit word with the body's own. */
-struct BodyKeyPair00175010 /* derived name */
-{
-    struct Key {
-        u32 byte7f;
-        int id;
-    };
-
-    Key a;
-    Key b;
-};
-
 /* derived name: of the pairs, those whose two bodies are still added, in
  * the broad phase and the same bodies (their keys unchanged), written to the
  * end of the stream as their two ids (0x175010; the world's 0x64110 calls it
  * with the cache at +0x250 of its object). */
-void FUN_00175010(hknpWorld *world, BlockCache *cache, const hkArray<BodyKeyPair00175010> &pairs,
+void FUN_00175010(hknpWorld *world, BlockCache *cache, const hkArray<BodyKeyPair0005c120> &pairs,
                   hkBlockStream *stream);
 
 inline void *hkBlockStreamWriter::reserve(int numBytes)
@@ -22004,6 +22087,16 @@ struct hknpWorldStreams260 /* derived name */
      * them (0x717d0), then appended to the pair at +0x200 and reset, all
      * through the context's cache. derived name. */
     void FUN_00174f30(hknpWorldContextPool::Context *context);
+
+    /* The pairs at +0xc00 handed on and the array emptied (0x175160): each
+     * pair whose two bodies are still the ones its keys name; when the
+     * world's flag at +0x4f0 is set, a pair of which neither body is
+     * static or active, or one inactive beside an active one, is recorded
+     * with the object at +0x4f8 and kept with the island of its inactive
+     * body, the others written to the end of the stream as their two ids;
+     * when it is clear every pair is written (0x175010, inline). derived
+     * name. */
+    void FUN_00175160(hknpWorldContextPool::Context *context, hkBlockStream *stream);
 
     hkBlockStream stream000;
     hkBlockStream stream100;
