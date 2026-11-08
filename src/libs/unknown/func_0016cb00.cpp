@@ -21,9 +21,9 @@ int hknpScaledConvexShapeBase::FUN_0016cb00(const Vec4 &direction, const Vec4 &p
         const Vec4 normal = _mm_mul_ps(d, s);
         const Vec4 lengthSquared = _mm_dp_ps(normal, normal, 0x7F);
         const Vec4 e = _mm_rsqrt_ps(lengthSquared);
-        const Vec4 invLength =
-            _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                       _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        const Vec4 invLength = _mm_mul_ps(
+            _mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+            _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
         localDirection.quad = _mm_mul_ps(_mm_blend_ps(normal, broadcast<3>(d), 8), invLength);
     }
 
@@ -48,8 +48,8 @@ int hknpScaledConvexShapeBase::FUN_0016cb00(const Vec4 &direction, const Vec4 &p
     const Vec4 lengthSquared = _mm_dp_ps(normal, normal, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     localPlane = _mm_mul_ps(_mm_blend_ps(normal, broadcast<3>(localPlane), 8), invLength);
     *planeOut = _mm_blend_ps(
         localPlane, _mm_sub_ps(broadcast<3>(localPlane), _mm_dp_ps(localPlane, translation, 0x7F)),

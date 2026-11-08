@@ -32,8 +32,8 @@ void hkCompressedMassProperties::FUN_000263e0(hkDiagonalizedMassProperties &prop
     const Vec4 lengthSquared = _mm_dp_ps(q, q, 0xFF);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     properties.majorAxisSpace.vec = _mm_mul_ps(q, invLength);
 }
 
@@ -64,8 +64,8 @@ void hkCompressedMassProperties::FUN_000261a0(hkMassProperties &out) const
     const Vec4 lengthSquared = _mm_dp_ps(q, q, 0xFF);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     hkQuaternion axes;
     axes.vec = _mm_mul_ps(q, invLength);
     hkMatrix3 rotation;

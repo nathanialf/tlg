@@ -11,8 +11,8 @@ static inline Vec4 quadAsin(const Vec4 &x) /* derived name */
 {
     const Vec4 sign = _mm_and_ps(D_14b41d0, x);
     const Vec4 a = _mm_min_ps(D_14b4370, _mm_andnot_ps(D_14b41d0, x));
-    const Vec4 big = _mm_cmplt_ps(D_14b4360, a);
-    const Vec4 zBig = _mm_mul_ps(_mm_sub_ps(D_14b4370, a), D_14b4360);
+    const Vec4 big = _mm_cmplt_ps(_mm_load_ps(D_14b4360), a);
+    const Vec4 zBig = _mm_mul_ps(_mm_sub_ps(D_14b4370, a), _mm_load_ps(D_14b4360));
     const Vec4 z = _mm_blendv_ps(_mm_mul_ps(a, a), zBig, big);
     Vec4 p =
         _mm_add_ps(_mm_mul_ps(z, _mm_set1_ps(4.2163199048E-2f)), _mm_set1_ps(2.4181311049E-2f));

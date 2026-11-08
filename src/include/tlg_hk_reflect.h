@@ -6056,8 +6056,8 @@ extern const float D_14b4380[4];
 
 /* One half and three in every lane (derived names): the Newton step of the
  * reciprocal square root. */
-extern const Vec4 D_14b4360;
-extern const Vec4 D_14b4390;
+extern const float D_14b4360[4];
+extern const float D_14b4390[4];
 
 /* One and pi over two in every lane (derived names). */
 extern const Vec4 D_14b4370;
@@ -6117,7 +6117,7 @@ inline void quadSinCos(const Vec4 &angle, Vec4 &sinOut, Vec4 &cosOut)
     Vec4 c = _mm_add_ps(_mm_mul_ps(z, D_14b42c0), D_14b42d0);
     c = _mm_add_ps(_mm_mul_ps(z, c), D_14b42e0);
     c = _mm_mul_ps(_mm_mul_ps(z, z), c);
-    c = _mm_add_ps(D_14b4370, _mm_sub_ps(c, _mm_mul_ps(z, D_14b4360)));
+    c = _mm_add_ps(D_14b4370, _mm_sub_ps(c, _mm_mul_ps(z, _mm_load_ps(D_14b4360))));
 
     Vec4 s = _mm_add_ps(_mm_mul_ps(z, D_14b4290), D_14b42a0);
     s = _mm_add_ps(_mm_mul_ps(z, s), D_14b42b0);
@@ -6142,10 +6142,34 @@ inline Vec4 length3(const Vec4 &v)
     const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
                          _mm_mul_ps(lengthSquared, invLength));
+}
+
+/* A vector no longer than a length over x, y and z, its NaN lanes zeroed
+ * first: scaled down to the length by the reciprocal of its own (the
+ * square root's estimate refined by one Newton step, zero where the
+ * squared length is not positive) where it is longer, as Havok's
+ * hkVector4::setClampedToMaxLength is on this platform (the solve's
+ * velocity changes, 0x1484ec and 0x148564). The Newton step's constants
+ * are read through a float pointer, a load LICM may not speculate: the
+ * solve keeps only their addresses out of its loop (0x14844b, 0x148452)
+ * and reads them under the test. derived name. */
+inline Vec4 clampedToMaxLength3(const Vec4 &v, const Vec4 &maxLength) /* derived name */
+{
+    const Vec4 x = _mm_andnot_ps(_mm_cmpneq_ps(v, v), v);
+    const Vec4 lengthSquared = _mm_dp_ps(x, x, 0x7F);
+    const Vec4 e = _mm_rsqrt_ps(lengthSquared);
+    const Vec4 half = _mm_load_ps(D_14b4360);
+    const Vec4 three = _mm_load_ps(D_14b4390);
+    const Vec4 invLength =
+        _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
+                      _mm_mul_ps(_mm_mul_ps(e, half),
+                                 _mm_sub_ps(three, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
+    const Vec4 tooLong = _mm_cmplt_ps(maxLength, _mm_mul_ps(lengthSquared, invLength));
+    return _mm_blendv_ps(x, _mm_mul_ps(x, _mm_mul_ps(maxLength, invLength)), tooLong);
 }
 
 /* A vector scaled to unit length over x, y and z by the reciprocal square
@@ -6155,9 +6179,9 @@ inline Vec4 normalized3Unchecked(const Vec4 &v) /* derived name */
 {
     const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
-    return _mm_mul_ps(
-        v, _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                      _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
+    return _mm_mul_ps(v, _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                                    _mm_sub_ps(_mm_load_ps(D_14b4390),
+                                               _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
 }
 
 /* A length over x, y and z at the reciprocal square root's own accuracy, without the
@@ -6180,8 +6204,8 @@ inline Vec4 lengthInverse3(const Vec4 &v) /* derived name */
     const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     return _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength);
 }
 
@@ -6194,8 +6218,8 @@ inline Vec4 normalized3(const Vec4 &v) /* derived name */
     const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     return _mm_mul_ps(v, _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength));
 }
 
@@ -6502,8 +6526,8 @@ inline void hkQuaternion::normalize()
     const Vec4 lengthSquared = _mm_dp_ps(vec, vec, 0xff);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     vec = _mm_mul_ps(vec, invLength);
 }
 
@@ -6564,8 +6588,8 @@ inline Vec4 normalizedIfNotZero3(const Vec4 &v) /* derived name */
     const Vec4 lengthSquared = _mm_dp_ps(v, v, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(lengthSquared);
     const Vec4 invLength =
-        _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                   _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
     const Vec4 normalized =
         _mm_mul_ps(v, _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()), invLength));
     const Vec4 positive =
@@ -9036,7 +9060,10 @@ class hknpEventDispatcher /* derived name */
      * the commands (0x50681, 0x50685): the world's object at +0x1d0's
      * pointer and a context. derived names. */
     void *pointer18;
-    u8 unknown20[8];
+    /* The writer the dispatch of the collide tasks' commands copies the
+     * rest into, lent while it runs (0x1705b4, cleared at 0x170749).
+     * derived name. */
+    struct hkBlockStreamWriter *commandWriter;
     void *context28;
     u16 firstFreeEntry;               /* derived name */
     hkArray<BodySignalEntry> entries; /* derived name */
@@ -12119,7 +12146,11 @@ struct hknpWorld {
     hknpWorldObject4f8 *object4f8; /* derived name */
     u8 unknown500[8];
     hknpWorldSignals signals; /* derived name */
-    u8 unknown610[0x18];
+    /* The commands' executors (the pool's dispatch of the collide tasks'
+     * commands runs the ones flagged for it through them, 0x170670).
+     * derived name. */
+    class hkPrimaryCommandDispatcher *commandDispatcher;
+    u8 unknown618[0x10];
     /* The step's current stage (hknpPostCollideTask's work sets 8 before
      * its stage, 0x489ad). derived name. */
     int simulationStage;

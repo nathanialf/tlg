@@ -19,9 +19,9 @@ int hknpScaledConvexShapeBase::FUN_0016aaf0(int faceIndex, Vec4 *planeOut, Vec4 
         const Vec4 normal = _mm_mul_ps(plane, invScale);
         const Vec4 lengthSquared = _mm_dp_ps(normal, normal, 0x7F);
         const Vec4 e = _mm_rsqrt_ps(lengthSquared);
-        const Vec4 invLength =
-            _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                       _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        const Vec4 invLength = _mm_mul_ps(
+            _mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+            _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
         plane = _mm_mul_ps(_mm_blend_ps(normal, distance, 8), invLength);
     }
     const Vec4 distance = _mm_sub_ps(broadcast<3>(plane), _mm_dp_ps(plane, translation, 0x7F));

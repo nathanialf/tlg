@@ -47,10 +47,11 @@ void hknpCharacterStateOnGround::FUN_0006fdb0(hknpCharacterContext &context,
         if (_mm_cvtss_f32(_mm_dp_ps(output.velocity, input.up, 0x7f)) > 0.001f) {
             const Vec4 lengthSquared = _mm_dp_ps(output.velocity, output.velocity, 0x7f);
             const Vec4 e = _mm_rsqrt_ps(lengthSquared);
-            const Vec4 invLength = _mm_andnot_ps(
-                _mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
-                _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                           _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
+            const Vec4 invLength =
+                _mm_andnot_ps(_mm_cmple_ps(lengthSquared, _mm_setzero_ps()),
+                              _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                                         _mm_sub_ps(_mm_load_ps(D_14b4390),
+                                                    _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
             output.velocity = _mm_mul_ps(output.velocity, invLength);
             const Vec4 length = _mm_mul_ps(lengthSquared, invLength);
             const Vec4 c = cross3(input.surfaceNormal, output.velocity);

@@ -177,6 +177,24 @@ void FUN_0017a000(hknpManifoldCollisionCache *cache,
  * two vectors (0xcf1e8). */
 struct SolverVelocity000cf140 /* derived name */
 {
+    /* The angular velocity's three lanes from +0xc, w zero: an unaligned
+     * load of four floats, the fourth blended out (0x1484b7). derived
+     * name. */
+    Vec4 getAngular() const
+    {
+        const float *angularXYZ = reinterpret_cast<const float *>(this) + 3;
+        return _mm_blend_ps(
+            _mm_castsi128_ps(_mm_lddqu_si128(reinterpret_cast<const __m128i *>(angularXYZ))),
+            _mm_setzero_ps(), 8);
+    }
+
+    /* The inverse inertia's four halves as floats, from the second
+     * vector's upper words unpacked over zero (0x148604). derived name. */
+    Vec4 getInverseInertia() const
+    {
+        return _mm_castsi128_ps(_mm_unpackhi_epi16(_mm_setzero_si128(), _mm_castps_si128(angular)));
+    }
+
     Vec4 linear;
 
     union {
@@ -195,6 +213,24 @@ struct SolverVelocity000cf140 /* derived name */
  * 0xcd825). */
 struct SolverSumVelocity000cf140 /* derived name */
 {
+    /* The angular sum's three lanes from +0xc, w zero (0x1484ac), and
+     * stored back as three floats over the linear one's w and the two
+     * after (0x1485e3, 0x1485e8). derived names. */
+    Vec4 getAngular() const
+    {
+        const float *angularXYZ = reinterpret_cast<const float *>(this) + 3;
+        return _mm_blend_ps(
+            _mm_castsi128_ps(_mm_lddqu_si128(reinterpret_cast<const __m128i *>(angularXYZ))),
+            _mm_setzero_ps(), 8);
+    }
+
+    void setAngular(const Vec4 &v)
+    {
+        float *angularXYZ = reinterpret_cast<float *>(this) + 3;
+        _mm_storel_pd(reinterpret_cast<double *>(angularXYZ), _mm_castps_pd(v));
+        *reinterpret_cast<int *>(angularXYZ + 2) = _mm_extract_ps(v, 2);
+    }
+
     Vec4 linear;
 
     union {
@@ -208,6 +244,19 @@ struct SolverSumVelocity000cf140 /* derived name */
         };
     };
 };
+
+/* The solve's step of the motions' velocities (0x148400; the solve at
+ * 0x3fe84 and 0x19908c): each motion's change of velocity since the sums
+ * reduced by its properties' stabilization (unless it passes their speed
+ * threshold) and clamped to their largest speeds, the sums moved by the
+ * changes over the step's time, the gravity of the step added for a motion
+ * with a mass, the modifiers of set 5 its properties enable told of it, and
+ * the velocities set to the change past the new sums with the gravity.
+ * derived name. */
+void FUN_00148400(const hknpWorldContextPool::Context *threadContext, const hknpSolverStep &step,
+                  SolverVelocity000cf140 *velocities, SolverSumVelocity000cf140 *sums,
+                  int numMotions, const hknpSolverInfo &solverInfo,
+                  const hknpMotionProperties *properties);
 
 /* The velocities of the motions from the second id on (0xcd5f0; the
  * solver's 0xcf21e and the solve task's 0x16e33d). derived name. */
@@ -7851,6 +7900,23 @@ void FUN_00057050(void *argument1, void *argument2, void *argument3, void *argum
                   void *argument5, void *argument6, void *argument7, bool argument8,
                   void *argument9); /* derived name */
 
+/* One cell's sums over its bodies (derived names): their integer
+ * positions' coordinates and their number, 64-bit (0x60d50 converts them
+ * with vcvtsi2ss of a quadword); sixteen cells to a block, one block a
+ * thread. */
+struct CellSums00060d50 /* derived name */
+{
+    s64 x;
+    s64 y;
+    s64 z;
+    s64 count;
+};
+
+struct CellSumsBlock00060d50 /* derived name */
+{
+    CellSums00060d50 cells[16];
+};
+
 /* Up to 16 points over the space splitters' base (derived names; vtable
  * 0x1699510, address point 0x1699520, stored by its constructor
  * FUN_00060c70): the world builds it in 0x170 bytes (0x4991f) when its
@@ -7878,6 +7944,18 @@ class FlaggedPoints00060c70 : public hknpSpaceSplitter /* derived name */
      * even steps along the box's diagonal, each given its share of the
      * bodies. derived name. */
     void FUN_000611a0(int numBodies, const hkAabb &aabb);
+
+    /* The points moved to their bodies' mean positions (0x60d50; the solve
+     * finalize task calls it for a splitter of kind 1 at 0x14ed86): the
+     * threads' sums added up per point, each point's count kept and its
+     * position the mean taken out of the integer space, an empty point at
+     * the origin; then the least used point merged into the most used one
+     * when more points are in use than one per eight bodies, or the most
+     * used one split onto an empty point when fewer are and it holds
+     * fifteen bodies or more; every empty point sent far away. derived
+     * name. */
+    void FUN_00060d50(const CellSumsBlock00060d50 *blocks, int numBlocks,
+                      const hkIntSpaceUtil &intSpace);
 
     int flags[16];   /* derived name */
     Vec4 points[16]; /* derived name */

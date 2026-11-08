@@ -36,9 +36,9 @@ void FUN_0002b180(const Info0002b180 *info, Pair08Owner *self, const Vec4 &a, co
                                                  _mm_cmplt_ps(lengthA, lengthB));
         const Vec4 lengthSquared = _mm_max_ps(lengthA, lengthB);
         const Vec4 e = _mm_rsqrt_ps(lengthSquared);
-        const Vec4 invLength =
-            _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                       _mm_sub_ps(D_14b4390, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
+        const Vec4 invLength = _mm_mul_ps(
+            _mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+            _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e))));
         const Vec4 tangentB = _mm_mul_ps(cross3(direction, perpendicular), invLength);
         const Vec4 tangentA = _mm_mul_ps(perpendicular, invLength);
         const Vec4 alongB = _mm_dp_ps(a, tangentB, 0x7f);

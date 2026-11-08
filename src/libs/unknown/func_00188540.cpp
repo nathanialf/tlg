@@ -10,9 +10,9 @@
  * a comparison by its four bits (row m at element 4 * m) and the index of
  * the highest set bit of a four-bit mask. */
 extern const Vec4 D_14b2060[];
-extern const Vec4 D_14b4360;
+extern const float D_14b4360[4];
 extern const float D_14b4380[4];
-extern const Vec4 D_14b4390;
+extern const float D_14b4390[4];
 extern const u32 D_14b7220[];
 extern const u8 D_14c4160[];
 
@@ -248,10 +248,10 @@ bool FUN_00187750(const Vec4 &point, const Vec4 *planes, int numPlanes,
     const Vec4 d = _mm_sub_ps(point, closestOut);
     const Vec4 len2 = _mm_dp_ps(d, d, 0x7F);
     const Vec4 e = _mm_rsqrt_ps(len2);
-    const Vec4 invLen =
-        _mm_andnot_ps(_mm_cmple_ps(len2, _mm_setzero_ps()),
-                      _mm_mul_ps(_mm_mul_ps(e, D_14b4360),
-                                 _mm_sub_ps(D_14b4390, _mm_mul_ps(len2, _mm_mul_ps(e, e)))));
+    const Vec4 invLen = _mm_andnot_ps(
+        _mm_cmple_ps(len2, _mm_setzero_ps()),
+        _mm_mul_ps(_mm_mul_ps(e, _mm_load_ps(D_14b4360)),
+                   _mm_sub_ps(_mm_load_ps(D_14b4390), _mm_mul_ps(len2, _mm_mul_ps(e, e)))));
     distanceOut = _mm_mul_ps(len2, invLen);
     normalOut = _mm_mul_ps(d, invLen);
     if (*numIterationsOut <= 1) {
