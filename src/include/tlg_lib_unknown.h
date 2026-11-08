@@ -6707,19 +6707,91 @@ void FUN_000636c0(hknpWorldContextPool::Context *context, const ModifierSharedDa
                   hkBlockStreamWriter *writer, hkBlockStreamWriter *childCacheWriter,
                   hkArray<hknpBodyIdPair> *droppedPairs);
 
-/* The pairs' entries handed on (0x72400, 0x33c bytes; 0x72100 and 0x72740
- * call it). derived names. */
-void FUN_00072400(hknpWorldContextPool::Context *context, void *argument2,
-                  hkArray<BodyPairEntry000717d0> *entries, const void *argument4, int argument5,
-                  void *argument6, void *argument7, void *argument8);
+/* An island of the world's object at +0x4f8 (derived names after Havok's
+ * hknpDeactivatedIsland; the object's islands at +0x58, their count at
+ * +0x60, 0x6d33c): the ranges of its caches and of their child caches in
+ * the inactive streams, the pairs its dropped caches leave, its id, and
+ * whether its caches start blocks of their own. */
+struct hknpDeactivatedIsland /* derived name */
+{
+    /* The island's two ranges started where the writers are, each writer
+     * first moved to a new block when the island keeps its blocks apart
+     * (0x72400; the flag read once). derived name. */
+    void startRanges(hkBlockStreamWriter *cacheWriter, hkBlockStreamWriter *childCacheWriter)
+    {
+        const bool ownBlocks = usesOwnBlocks;
+        if (ownBlocks) {
+            cacheWriter->startNewBlockIfUsed();
+        }
+        cacheRange.setStartPoint(cacheWriter);
+        if (ownBlocks) {
+            childCacheWriter->startNewBlockIfUsed();
+        }
+        childCacheRange.setStartPoint(childCacheWriter);
+    }
+
+    /* The two ranges ended the same way (0x72400). derived name. */
+    void endRanges(hkBlockStreamWriter *cacheWriter, hkBlockStreamWriter *childCacheWriter)
+    {
+        const bool ownBlocks = usesOwnBlocks;
+        if (ownBlocks) {
+            cacheWriter->startNewBlockIfUsed();
+        }
+        cacheRange.FUN_00092220(cacheWriter);
+        if (ownBlocks) {
+            childCacheWriter->startNewBlockIfUsed();
+        }
+        childCacheRange.FUN_00092220(childCacheWriter);
+    }
+
+    hkBlockStreamRange cacheRange;      /* derived name */
+    hkBlockStreamRange childCacheRange; /* derived name */
+    u8 unknown20[0x20];
+    hkArray<hknpBodyIdPair> droppedPairs; /* derived name */
+    u32 islandId;                         /* derived name */
+    u8 unknown54[0xc];
+    bool usesOwnBlocks; /* derived name */
+};
+
+/* The order 0x72400 sorts the islands in (0x72c10, its quick sort's
+ * instantiation, called at 0x72450): an empty slot before any island,
+ * islands by their ids, compared unsigned (0x72c83). derived name. */
+struct KeyLess00072c10 /* derived name */
+{
+    bool operator()(hknpDeactivatedIsland *const &a, hknpDeactivatedIsland *const &b) const
+    {
+        if (!a) {
+            return b != HK_NULL;
+        }
+        return b && a->islandId < b->islandId;
+    }
+};
+
+/* The pairs' caches moved into the islands' ranges (0x72400, 0x33c bytes;
+ * 0x72100 and 0x72740 call it): the islands sorted by id and the entries
+ * by island, both inactive streams appended to, and for each island its
+ * entries' caches dropped or moved (0x636c0) between the start and the end
+ * of its two ranges. derived names. */
+void FUN_00072400(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
+                  hkArray<BodyPairEntry000717d0> *entries, hknpDeactivatedIsland **islands,
+                  int numIslands, hkBlockStream *childCacheStream, hkBlockStream *cacheStreamOut,
+                  hkBlockStream *childCacheStreamOut);
+
+/* The same over the ranges of several arrays of a stream's ranges
+ * (0x72100), the entries counted from the ranges first. derived name. */
+void FUN_00072100(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
+                  const hkArray<hkBlockStreamRange> *const *rangeArrays, int numRangeArrays,
+                  hknpDeactivatedIsland **islands, int numIslands, hkBlockStream *childCacheStream,
+                  hkBlockStream *cacheStreamOut, hkBlockStream *childCacheStreamOut);
 
 /* An entry for every collision cache of a stream (0x72740; the step at
  * 0x6d378): the two bodies' ids and the cache, under the island of the
  * first body unless it is static or active, else the second's; the entries
  * in a local array handed to 0x72400. derived name. */
-void FUN_00072740(hknpWorldContextPool::Context *context, void *argument2,
-                  const hkBlockStream *caches, void *argument4, const void *argument5,
-                  int argument6, void *argument7, void *argument8);
+void FUN_00072740(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
+                  const hkBlockStream *caches, hkBlockStream *childCacheStream,
+                  hknpDeactivatedIsland **islands, int numIslands, hkBlockStream *cacheStreamOut,
+                  hkBlockStream *childCacheStreamOut);
 
 /* The other order the pair processing sorts its entries by (0x72ab0, its
  * quickSortRecursive; 0x717d0 at 0x71aa5 and 0x72400 at 0x7246b): the

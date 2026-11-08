@@ -21038,6 +21038,12 @@ struct hkBlockStreamWriter /* derived name */
      * do not fit (0x1785a0 inline). derived name. */
     void *reserve(int numBytes);
 
+    /* The current block closed when anything is written to it, counted as
+     * full, so that what is written next starts a block of its own (an
+     * island that keeps its caches' blocks apart, 0x72400). Defined after
+     * the block. derived name. */
+    inline void startNewBlockIfUsed();
+
     /* The bytes reserved counted as one element written: the offset read,
      * then the count, the offset written before the count. Where the new
      * offset is not read again the update folds into `add [offset], n`
@@ -21329,6 +21335,14 @@ struct hkBlockStream /* derived name */
      * bytes in all. derived name. */
     hkInplaceArrayAligned16<hkBlockStreamBlock *, 24> blocks;
 };
+
+inline void hkBlockStreamWriter::startNewBlockIfUsed()
+{
+    if (currentByteOffset != 0) {
+        currentByteOffset = int(sizeof(currentBlock->data));
+        FUN_000939c0();
+    }
+}
 
 inline void hkBlockStreamRange::setStartPoint(const hkBlockStreamWriter *writer)
 {
@@ -23636,27 +23650,6 @@ struct AccessIdLess0018e3e0 /* derived name */
     }
 
     const SolverArrays0003f820::Access *accesses;
-};
-
-/* What 0x72400 sorts by pointer (derived names): a 32-bit key at +0x50,
- * compared unsigned (0x72c83). */
-struct Keyed00072c10 /* derived name */
-{
-    u8 unknown0[0x50];
-    u32 key;
-};
-
-/* The order 0x72400 sorts them in (0x72c10, its quick sort's instantiation):
- * a null pointer before any object, objects by their keys. derived name. */
-struct KeyLess00072c10 /* derived name */
-{
-    bool operator()(const Keyed00072c10 *const &a, const Keyed00072c10 *const &b) const
-    {
-        if (!a) {
-            return b != HK_NULL;
-        }
-        return b && a->key < b->key;
-    }
 };
 
 /* derived name: the box around the boxes' centres (FUN_001854b0; called at
