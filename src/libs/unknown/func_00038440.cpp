@@ -9,9 +9,9 @@ hknpStaticCompoundShape::hknpStaticCompoundShape(const hknpCompoundShapeCinfo &c
 {
     FUN_000cfca0();
     updateAabb();
-    if (cinfo.unknown18) {
+    if (cinfo.massConfig) {
         hkDiagonalizedMassProperties massProperties;
-        unknownVirtual28(cinfo.unknown18, &massProperties);
+        unknownVirtual28(cinfo.massConfig, &massProperties);
         hknpShapeMassProperties *shapeMassProperties =
             static_cast<hknpShapeMassProperties *>(getProperty(0xf100));
         const bool kept = shapeMassProperties != HK_NULL;

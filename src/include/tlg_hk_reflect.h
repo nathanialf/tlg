@@ -7788,6 +7788,13 @@ struct hknpShapeInstance {
      * word of its padding (0x41223, 0x41229). */
     static inline void setEmpty(hknpShapeInstance &instance, int next);
 
+    /* A free instance's next free index (the compound's constructor takes
+     * the head's at 0x41405). */
+    static int getNext(const hknpShapeInstance &instance)
+    {
+        return *reinterpret_cast<const int *>(instance.padding);
+    }
+
     hkTransform transform;
     hkVector4 scale;
     hkRefPtr<const hknpShape> shape;
@@ -13735,7 +13742,7 @@ class hknpTriangleShape : public hknpConvexPolytopeShape
 };
 
 /* hknpConvexPolytopeShape::Connectivity (scoped name of the type info;
- * vtable 0x1694e20, finish callback FUN_00039ae0): the shape's
+ * vtable 0x1694e20, finish callback 0x39ae0): the shape's
  * connectivity pointer at +0x38 refers to one. */
 /* A point's closest point on a convex polytope, with a cache of the plane it
  * was last outside of (derived names; 0x14a090, the queries 0x55b05,
@@ -19364,12 +19371,15 @@ struct hknpCompoundShapeCinfo /* derived name */
 {
     hknpCompoundShapeCinfo();
 
-    const void *unknown0;
-    int unknown8;
-    int unknownC;
-    bool unknown10;
-    const MassConfig00168340 *unknown18; /* the mass configuration, or null */
-    void *unknown20;
+    /* The instances copied in (0x412a0: 0x80 bytes each, their ids written
+     * to the array at +0x20, or to a block of the thread's stack when it is
+     * null); the shape's capacity the larger of the two counts. */
+    const hknpShapeInstance *instances;   /* derived name */
+    int numInstances;                     /* derived name */
+    int instanceCapacity;                 /* derived name */
+    bool isMutable;                       /* derived name: copied to the shape's hkBool at +0xa0 */
+    const MassConfig00168340 *massConfig; /* derived name: the mass configuration, or null */
+    hknpShapeInstanceId *instanceIdsOut;  /* derived name */
 };
 
 /* hknpCompoundShape: its hkClass at 0x57c2e78 is built by the reflection

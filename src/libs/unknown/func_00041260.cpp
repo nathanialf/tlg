@@ -3,6 +3,7 @@
 
 /* The compound shape description's constructor: everything empty. */
 hknpCompoundShapeCinfo::hknpCompoundShapeCinfo()
-    : unknown0(0), unknown8(0), unknownC(0), unknown10(false), unknown18(0), unknown20(0)
+    : instances(0), numInstances(0), instanceCapacity(0), isMutable(false), massConfig(0),
+      instanceIdsOut(0)
 {
 }

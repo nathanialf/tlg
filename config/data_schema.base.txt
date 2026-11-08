@@ -160,3 +160,6 @@ D_16917a0 hkClassMember 3 src/include/tlg_hk_reflect.h
 D_16919e0 hkClassMember 2 src/include/tlg_hk_reflect.h
 D_1691a30 hkClassMember 7 src/include/tlg_hk_reflect.h
 D_1691820 hkClassMember 11 src/include/tlg_hk_reflect.h
+D_1694e60 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_1694ee0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_1694f30 hkClassMember 2 src/include/tlg_hk_reflect.h
