@@ -2396,3 +2396,67 @@ measurement, NOTES "Round 80A").
 
 **Trigger.** A header whose member order was chosen for a function that keeps the object in
 registers; a destructor whose stores are seen only in a loop.
+
+## D42. The library compiler unswitches loops at -O2, under LoopUnswitch's compile-wide budget (2026-11-09)
+
+**Question.** D21 left open whether the two copies of a loop that FUN_00187750 holds are the
+developer's loops or a compiler that unswitches at -O2: upstream 3.3 creates LoopUnswitch with
+OptimizeForSize set at every level below -O3 (lib/Transforms/IPO/PassManagerBuilder.cpp:189), and
+UnswitchIfProfitable then refuses every non-trivial unswitch (LoopUnswitch.cpp:651). Rounds 84A to
+89A brought seven more functions with the shape: 0x5c120 (matched by writing the two loops, cookbook
+773), 0xab150 and 0xab4f0 (the vertex buffer utility's element conversions, where only the first
+cases of a switch carry the copy), 0x1698f0, 0x776a0, 0x1806b0's neighbours. D21 asked the
+supervisor to run every level experiment.
+
+**Evidence (2026-11-09, supervisor; flags and compiler restored after each run, objects rebuilt
+from an empty cache).**
+
+- `-O3 -fno-vectorize` over the whole gate: 2,862 of 2,868 rows equal. Six fail: 0x4470, 0xac810,
+  0x1412e0, 0x1806b0 and 0x1985d0 grow (214 to 315, 488 to 648, 541 to 581, 142 to 174, 597 to 889
+  bytes), 0x936a0 differs by two bytes at the same size. The five growing rows compile equal again
+  at `-O3 -fno-vectorize -mllvm -loop-unswitch-threshold=0`: their growth is non-trivial unswitching
+  of a loop-invariant test the base left inside the loop (0x1806b0's `childName == 0` in its search
+  loop). Holding the inliner at -O2's 225 (`-mllvm -inline-threshold=225`) changes none of the six.
+  0x936a0's two bytes are the operands of one vmulps swapped, the promoted-argument form of its
+  static reciprocal helper: -O3's ArgumentPromotion (PassManagerBuilder.cpp, OptLevel > 2), which the
+  base lacks.
+- At the same level the unswitch witnesses move to the base's size and near equality: 0xab150 16
+  to 240 of 243, 0x1698f0 38 to 221 of 223 (810 to 925 bytes), 0x776a0 65 to 151 of 247 (604 to 924
+  bytes), 0xab4f0 22 to 74 of 249. The inline-cost margin witnesses (0x175160, 0x581c0) do not move.
+- No per-function threshold separates the two sets. A sweep of `-loop-unswitch-threshold` from 10 to
+  90 at that level gives 0xab4f0 its best (244 of 247) at 30 to 50 and 0xab150 its best (240 of 243)
+  from 60 up, while 0x1806b0 holds only below 20 and 0xac810 only below 40.
+- The budget is not per loop. LUAnalysisCache::MaxSize starts at the threshold (100) once, when the
+  pass is constructed, is debited by every loop the pass unswitches (LoopUnswitch.cpp:250-252) and
+  refunded only when a loop is forgotten (:284): one budget for every function of a compile, spent
+  in function order. Compiled as one TU in the base's address order (0xaaaf0, 0xaab10, 0xaacb0,
+  0xaae70, 0xaafd0, 0xab150, 0xab4f0, 0xac810) at `-O3 -fno-vectorize -mllvm -inline-threshold=225`,
+  the five matched rows stay equal, 0xab150 is 240 of 243, 0xab4f0 244 of 247 (its best from the
+  sweep, now at the default threshold) and 0xac810 is equal: the budget is spent before it, as the
+  base shows. That is the pattern the whole region shows, unswitched loops in some functions and
+  the same shapes left alone in others of the same library, with no per-function rule.
+- One line of 3.3 reproduces all of it at the line's own flags: PassManagerBuilder.cpp:189 with
+  `createLoopUnswitchPass(SizeLevel)` in place of `createLoopUnswitchPass(SizeLevel || OptLevel <
+  3)`, built into tools/cc/src/build-3.3 and run over the whole gate with config/flags.base.txt
+  unchanged: 2,863 of 2,868 rows equal, the five growing rows the only failures, 0x936a0 equal,
+  0xab150 240 of 243, 0x1698f0 221 of 223 at 925 bytes.
+
+**Ruling.** The library region's compiler ran LoopUnswitch's non-trivial unswitching at -O2 with
+3.3's compile-wide budget. The reproduction is a backport patch to the 3.3 source
+(tools/patches/llvm-3.3-unswitch-01-nontrivial-at-O2.patch, the one line above), not a level or a
+flag: -O3's other two differences are excluded (ArgumentPromotion by 0x936a0) or unsupported (the
+inliner's 275 by nothing). The line keeps `-O2`. The patch lands in one commit with the five rows
+compiling equal under it, since the gate never drops a row: 0x4470, 0xac810, 0x1412e0, 0x1806b0 and
+0x1985d0 were not unswitched in the base, so either an earlier function of their source file spent
+the budget (0xac810's case, shown above; the TU is assembled in the base's order, which
+docs/FINISHING.md asks for anyway) or the base's source holds no loop-invariant test inside the
+loop (a different form of the loop; a check for the worker). Until that commit, a loop copied under
+an invariant test is a D42 residual and is not worked at the current compiler; cookbook 773's form
+(two loops written in source) is not used for a new function, and 0x5c120 is rechecked under the
+patch with one loop. A matched function whose source holds two copies of a loop that the patched
+compiler would produce from one is rewritten with one when the patch lands, since the one is the
+developer's.
+
+**Trigger to revisit.** A function the patched compiler unswitches where the base does not, with
+its whole source file assembled in the base's order and no earlier unswitch to spend the budget;
+or a budget that the TU order cannot account for (a refund the base shows, LoopUnswitch.cpp:284).
