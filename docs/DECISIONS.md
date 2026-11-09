@@ -2547,3 +2547,43 @@ no file string is named by its class as before, with the derived marker.
 
 **Trigger to revisit.** A function whose FDE's CIE differs from its neighbours' while a file
 string or a class ties it to them; or one of the two interrupted runs turning out to be two files.
+
+## D45. The game compiler emits a weak-linkage structor as its own function (2026-11-09)
+
+**Question.** Rounds 103A to 108A matched 248 complete destructors of the game region that are a
+five-byte jump to the class's base-object destructor, and five constructors of the same shape,
+as free-function stand-ins: upstream 4.0.0 under the game line never emits them (an inline or
+instantiated destructor's D1 is replaced by its D2, an explicit instantiation's D1 and D2 share a
+D5 COMDAT body, a strong one is an alias). Which rule the base's compiler followed bears on D6.
+
+**Evidence (round 109A's census and tests, the supervisor's patch and gate, 2026-11-09).**
+
+- Every game vtable with functions in slots 0 and 1 (1,868): 507 whose D0 calls the slot-0 body
+  (the alias relation; 476 with D0 the next function), 248 whose slot 0 is `jmp X` with D0 calling
+  X (X 147 to 2,925 bytes, median 550; 123 store the vtable itself, 125 a base's), 905 whose slot 0
+  is a body D0 does not call, 208 a bare ret. No virtual-base shape. The thunks sit in the
+  linker's linkonce stretch from 0x1340000 (122 of the 123 own thunks), the aliases below it (497
+  of 507). The library region, 3.3's: 29, 14, 95, 87.
+- Nine structor cases (strong, inline, explicit instantiation, derived inline, virtual base; a
+  small and a big body) compiled under the game flags with 3.3, 3.4.2, 3.5.2, 3.6.2, 3.7.1, 3.8.1,
+  3.9.1 and 4.0.0, and 4.0.0's cc1 without -mconstructor-aliases (a109/t/). Strong: every compiler
+  aliases D1 to D2. Inline: 3.3 emits D1 as its own function (`jmp D2` when big) with D0 calling
+  D2; 3.4.2 and later replace D1 by D2. Explicit instantiation: 3.3 to 3.5.2 the thunk, 3.6.2 and
+  later the D5 group. Aliases off: no alias at all, D1 and D2 twin bodies for a strong class, which
+  the 507 exclude. Only 3.3's rule gives all three of the base's relations in the base's places.
+- One rule in 4.0.0's ItaniumCXXABI.cpp getCodegenToUse (weak-for-linker linkage returns Emit
+  before the RAUW and COMDAT cases) reproduces 3.3's shape in all nine cases (a109/t/4p_*) and
+  leaves the other cases as 4.0.0 has them; the whole gate, every row of both regions, passes
+  under it from an empty object cache (scratchpad d45/gate_structor.log, 5 minutes).
+
+**Ruling.** The game line's compiler is 4.0.0 built from source with the backport
+`tools/patches/llvm-4.0.0-structor-01-weak-structor-emitted.patch` (cxx=4.0.0-src in
+config/flags.base.txt), D6's generation and flags unchanged. A destructor or constructor the base
+holds as a thunk is written as the class's own inline (or instantiated) structor, not as a free
+function; the stand-ins of rounds 103A to 108A are rewritten as classes where the class is known,
+and the "derived from" comments corrected where the target is the same class's D2. The bytes of
+D2 and D0 do not move; only the D1 and C1 rows gain their class symbols.
+
+**Trigger to revisit.** A weak-linkage structor the base holds as one body where the patched
+compiler emits two (a RAUW shape in the base); or an alias the base shows for a definition the
+patched compiler emits separately.
