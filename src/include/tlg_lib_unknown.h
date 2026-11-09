@@ -1481,7 +1481,7 @@ struct ElementPool00198a20 /* derived name */
 
     /* The growth itself, inline in both 0x196570 and the allocation
      * 0x196630: declared `inline`, the hint its cost (250 to 275) needs in
-     * the allocation (defined in func_00196570.cpp). derived name. */
+     * the allocation (defined in func_00195ee0.cpp). derived name. */
     inline void growTo(u32 numElements);
 
     /* A free element taken (0x196630; the tree's builders at 0x13cae1,
@@ -6710,11 +6710,34 @@ struct BroadPhaseTree00142a40 /* derived name */
 
     /* The tree reset and its arrays given back (0x195fe0, which runs the
      * body 0x195ff0; the layers' destructor calls it at 0x140ead before it
-     * frees the 0x58 bytes). */
+     * frees the 0x58 bytes). The body is reset() and the members'
+     * destructors: defined `inline` with that body, 0x195ff0 compiles equal
+     * where a use emits it (NOTES round 92A). */
     ~BroadPhaseTree00142a40();
 
     /* The thread's heap. */
     static void operator delete(void *object, unsigned long numBytes);
+
+    /* Emptied (inline at the head of the build 0x196190 and of the base
+     * destructor 0x195ff0): the nodes dropped when there is a root, no
+     * root, leaf or box, 128 buckets, each free, handed out from the lowest
+     * index. Inline by keyword: the build holds it whole, past the plain
+     * threshold. derived name. */
+    inline void reset()
+    {
+        if (root != Node::NO_CHILD) {
+            nodes.elements.clear();
+            nodes.freeIndices.clear();
+        }
+        root = Node::NO_CHILD;
+        numLeaves = 0;
+        numEntries = 0;
+        freeBuckets.setSize(128);
+        buckets.setSize(128);
+        for (int i = 0; i < 128; i++) {
+            freeBuckets[i] = 128 - 1 - i;
+        }
+    }
 
     /* A body's box added (0x13cf50; the layer's additions at 0x13d59e and
      * 0x141116): its entry keyed by the body's index, its centre doubled;
@@ -6738,6 +6761,12 @@ struct BroadPhaseTree00142a40 /* derived name */
     /* The tree built over boxes keyed by the bodies' ids (0x196190, the
      * supervisor's this round). derived name. */
     void FUN_00196190(const hkAabb16 *aabbs, const u32 *bodyIndices, int numAabbs);
+
+    /* The subtree under a node built over the boxes the indices name
+     * (0x196720; the build 0x196190 calls it for the root with the box
+     * around every box's centre). derived name. */
+    void FUN_00196720(int nodeIndex, const hkAabb16 &centres, const hkAabb16 *aabbs,
+                      const u32 *bodyIndices, int *indices, int numIndices);
 
     /* Bodies' boxes removed from the tree, each from the leaf its broad
      * phase id names (0x13db00; the layers' removal at 0x14146e). derived
@@ -7188,6 +7217,29 @@ struct BroadPhaseContext00142ea0 /* derived name */
 void FUN_00197c60(const BroadPhaseContext00142ea0 *context, hknpCollisionFilter *filter,
                   const BroadPhaseTree00142a40 *treeA, const BroadPhaseTree00142a40 *treeB,
                   void *pairsOut, int argument6); /* derived name */
+
+/* Two leaves whose boxes overlap, one of each tree (derived names; 16
+ * bytes on 0x197c60's list, the leaves' node pointers). */
+struct LeafPair00197710 /* derived name */
+{
+    const BroadPhaseTree00142a40::Node *leafA;
+    const BroadPhaseTree00142a40::Node *leafB;
+};
+
+/* Every pair of a leaf of one tree and a leaf of the other whose boxes
+ * overlap appended to the list (0x197710; 0x197cd2). derived name. */
+void FUN_00197710(const BroadPhaseTree00142a40 *treeA, const BroadPhaseTree00142a40 *treeB,
+                  hkArray<LeafPair00197710> &pairsOut); /* derived name */
+
+/* The overlapping pairs of two leaves' buckets (0x198030; 0x197d79): the
+ * sweep of one bucket's own boxes when the two leaves are one, else each
+ * bucket's boxes inside the leaves' common box gathered and the two lists
+ * swept. derived name. */
+int FUN_00198030(const BroadPhaseTree00142a40::Bucket *bucketA,
+                 const BroadPhaseTree00142a40::Bucket *bucketB,
+                 const BroadPhaseTree00142a40::Node *leafA,
+                 const BroadPhaseTree00142a40::Node *leafB, hkKeyPair *pairsOut,
+                 int maxNumPairs); /* derived name */
 
 /* The same, as the collide task calls it (0x18d397): over a thread's
  * context, the pairs into a writer, the body manager's previous boxes last.
