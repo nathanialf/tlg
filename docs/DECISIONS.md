@@ -172,6 +172,19 @@ canary-loading functions in the game region.
 cannot reproduce after source-form and flag review, classified in
 `docs/NOTES.md`.
 
+**Addendum, 2026-11-09 (after D45).** Two shapes of the game region are what a pre-3.9 clang
+emits and upstream 4.0.0 does not: the weak-linkage structor emitted as its own function (D45,
+clang 3.3's rule) and the masked load of a bool global shrunk to i1 (`mov al, [rip]; and al, 1`,
+0xb108d0 and eight more sites; 3.7.1 and 3.8.1 emit the mask, 3.9.1 and later do not). Measured
+over the whole gate with the prebuilt 3.8.1 on the game line (scratchpad d6/gate_381.log): 1,300
+of the 1,301 game rows compile equal, the one failure 0xdebd80's `ud2; ud2` after __builtin_trap,
+which is one of this entry's 4.0.0 fingerprints. The matched rows, small leaves, do not separate
+the generations; the fingerprints of this entry (the trap pairs, the merged constant stores, the
+missing vzeroupper) still do. The reading stands: the game compiler is a 4.0.0-generation code
+generator carrying older frontend and lowering rules, each reproduced as a backport patch on the
+4.0.0 source build when a region-wide census shows the base never deviates from it (D45; the i1
+mask is the next candidate, round 114A's investigation).
+
 ## D7. The gate is the whole text segment (2026-10-24)
 
 **Problem.** D1's per-function comparison masks the fields the linker fills.
