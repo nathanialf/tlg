@@ -7,7 +7,8 @@
 // address fixups, here the fourth vertex: InstCombine has folded the two
 // `v += 4` into a phi of the unincremented pointer, so the four loads are
 // fixups of their own rather than one IV chain as in 0x3c3c0; docs/NOTES.md,
-// Round 70A).
+// Round 70A). 56 of 61 at 304 bytes on 2026-11-09, the same under D42's
+// compiler (Round 97A).
 void Collector000a6d60::FUN_000a1960(const VertexView000a6d60 *view, const Vec4 &direction,
                                      const void *argument3, const void *argument4, Vec4 *vertexOut,
                                      Vec4 *argument6, Vec4 *argument7) const

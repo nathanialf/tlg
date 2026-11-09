@@ -7,7 +7,7 @@
 // edx and its rounded copy in eax; here the mask comes first and the two
 // registers trade. Every spelling of the tail tried (a named index, a pointer,
 // the mask first, the size read once) compiles the same (docs/NOTES.md,
-// Round 66A).
+// Round 66A); 96 of 108 again on 2026-11-09 under both compilers (Round 97A).
 /* The words for the new size; the bits gained, from the old size to the
  * new one, set to the value; then the bits of the last word past the size
  * set to it too. */

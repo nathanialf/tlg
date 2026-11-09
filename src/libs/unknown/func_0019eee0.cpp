@@ -29,11 +29,15 @@ extern const hkClass D_57c8a20; /* derived name */
  * called hasVtable, the root counts one more implemented interface when it
  * had it and loses it too; then the classes the declared members hold,
  * recursively. */
-// NONMATCHING: 0x19efc0, 17 of 93: the parent's tail call becomes the loop
-// (TailCallElim), which LoopRotate then rotates here, the map lookup
-// duplicated into the latch; the base keeps the loop unrotated (the entry
-// jumps to the lookup, the second parent call at the loop's top). Everything
-// inside the loop is the base's (docs/NOTES.md, Round 66A).
+// NONMATCHING: 0x19efc0, 318 bytes against 325: the parent's tail call
+// becomes the loop (TailCallElim), which LoopRotate then rotates here, the
+// map lookup duplicated into the entry and the latch; the base keeps the loop
+// unrotated (the entry jumps to the lookup, the second parent call at the
+// loop's top). Everything inside the loop is the base's (docs/NOTES.md,
+// Round 66A). Round 97A: none of rotateLoop's refusals holds for the
+// eliminated tail call (header cost 7 of 16, one latch, not exiting), and
+// D_57c8a20 is this file's (its initializer 0x19f710 builds it, 0x19f767),
+// so it is file-local under D17 once that initializer is written.
 void FUN_0019efc0(const hkClass *klass, PointerMap &done)
 {
     const int flags = int(done.FUN_00013b30(hkUlong(klass), 0));
