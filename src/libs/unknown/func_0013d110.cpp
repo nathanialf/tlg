@@ -1,4 +1,5 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
+#include "tlg_hk_algorithm.h"
 #include "tlg_lib_unknown.h"
 
 /* NONMATCHING: draft; defined here because the layers' removal below
@@ -47,6 +48,64 @@ void FUN_0013d110(const u32 *keys, int numKeys, const hknpBody *bodies,
             node.aabb = aabb;
         }
     }
+}
+
+/* The bodies of one leaf removed from it: their indices gathered from the
+ * keys from first to last into a buffer of the thread's stack. derived
+ * name. */
+static inline void removeBodiesFromLeaf(BroadPhaseTree00142a40 *tree, const u32 *bodyIndices,
+                                        const KeyIndex0013b870 *keys, int first, int last,
+                                        const hknpBody *bodies, int nodeIndex) /* derived name */
+{
+    const int numInLeaf = last - first;
+    LocalBuffer<u32> indices(numInLeaf);
+    for (int i = 0; i < numInLeaf; i++) {
+        indices.data[i] = bodyIndices[keys[first + i].index];
+    }
+    FUN_0013d110(indices.data, numInLeaf, bodies, tree, nodeIndex);
+}
+
+/* derived name: the bodies' boxes removed from the tree: each body's key (its broad phase id, the
+ * leaf's node) gathered with its place in the list into a buffer of the thread's stack, the keys
+ * sorted, and the bodies of each leaf removed from it together. */
+// NONMATCHING: greedy's assignment (199 of 243 lines in place, 889 bytes as the base once the
+// thread-local accesses are relaxed): the key count takes eax and the body count edi here where
+// the base gives the count r8 and the body count eax; every later use of the count follows, and
+// the key's compare then folds its load (`cmp [r12 + r13*8], ecx`) where the base loads it into
+// the free eax first.
+void BroadPhaseTree00142a40::FUN_0013db00(const u32 *bodyIndices, int numBodies,
+                                          const hknpBody *bodies)
+{
+    if (numBodies == 0) {
+        return;
+    }
+    LocalBuffer<KeyIndex0013b870> keys(numBodies);
+    int numKeys = 0;
+    for (int i = 0; i < numBodies; i++) {
+        const u32 broadPhaseId = bodies[bodyIndices[i]].broadPhaseId;
+        if (broadPhaseId != 0xffffffff) {
+            keys.data[numKeys].key = broadPhaseId & 0x1fffffff;
+            keys.data[numKeys].index = i;
+            numKeys++;
+        }
+    }
+    if (numKeys == 0) {
+        return;
+    }
+
+    hkAlgorithm::quickSort(keys.data, numKeys, hkAlgorithm::less<KeyIndex0013b870>());
+    int first = -1;
+    u32 nodeIndex = 0xffffffff;
+    for (int k = 0; k < numKeys; k++) {
+        if (keys.data[k].key != nodeIndex) {
+            if (nodeIndex != 0xffffffff) {
+                removeBodiesFromLeaf(this, bodyIndices, keys.data, first, k, bodies, nodeIndex);
+            }
+            first = k;
+            nodeIndex = keys.data[k].key;
+        }
+    }
+    removeBodiesFromLeaf(this, bodyIndices, keys.data, first, numKeys, bodies, nodeIndex);
 }
 
 /* One body's box removed from a leaf (the removal of several with one

@@ -189,3 +189,10 @@ D_16a27a0 hkClassMember 1 src/include/tlg_hk_reflect.h
 D_16a27d0 hkClassEnum::Item 5 src/include/tlg_hk_reflect.h
 D_16a2820 hkClassEnum::Item 10 src/include/tlg_hk_reflect.h
 D_16a28c0 hkClassEnum 2 src/include/tlg_hk_reflect.h
+D_16929d0 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_1692a50 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_1692a80 hkClassMember 1 src/include/tlg_hk_reflect.h
+D_16a3010 hkClassMember 4 src/include/tlg_hk_reflect.h
+D_16a3130 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_16a3180 hkClassEnum::Item 2 src/include/tlg_hk_reflect.h
+D_16a31a0 hkClassEnum 1 src/include/tlg_hk_reflect.h

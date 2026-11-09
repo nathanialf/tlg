@@ -3,7 +3,7 @@
 
 /* The pair index of every two cells, filled by the space splitter's
  * constructor (0x605b0's file); a missing cell (0xff) is row or column 0. */
-extern u8 D_57c1660[17][17];
+extern u8 D_57c1660[17 * 17];
 
 /* A range linked in after a cell's first one, or made the first when the
  * cell has none. derived name. */
@@ -37,12 +37,10 @@ static inline void addRange(hkArray<JacobianRange000317b0> &grid, hkBlockStreamW
     writer->advance(sizeof(JacobianRange000317b0));
 }
 
-// NONMATCHING: 89 of 147, the cells' width (docs/NOTES.md, Round 76B): the base keeps the two
-// cells and the cell phi in 32 bits (`movzx ecx, byte [..+0x3e]; cmp ecx, 0xff`, `inc ecx; movzx
-// eax, cl`, the pair index `imul ecx, ecx, 0x11; add ecx, eax; movsxd`), the sibling slot 19
-// (0x331a0) the same; here InstCombine narrows the compares, the increments and the phi to i8
-// (FoldPHIArgOpIntoPHI over one-use zexts), and the registers follow. The selection is one
-// insertion after the writer and grid are chosen (three inlined copies otherwise).
+/* The pair index read as the space splitter's table is laid out, a row of 17 a cell: each cell
+ * plus one masked to a byte, so a missing cell (0xff) is row or column 0, the add kept in 32 bits
+ * and the flat index `row * 17 + column` sign-extended (cookbook 800). The selection is one
+ * insertion after the writer and grid are chosen (three inlined copies otherwise). */
 void hknpWorldObject380::FUN_000317b0(const SolverContext000317b0 *context,
                                       const hkArray<JacobianRange000317b0 *> &ranges,
                                       hkBlockStreamWriter *writer,
@@ -80,7 +78,7 @@ void hknpWorldObject380::FUN_000317b0(const SolverContext000317b0 *context,
         } else {
             rangeWriter = pairWriter;
             rangeGrid = &pairGrid;
-            cell = D_57c1660[u8(cellB + 1)][u8(cellA + 1)];
+            cell = D_57c1660[((cellB + 1) & 0xff) * 17 + ((cellA + 1) & 0xff)];
         }
         addRange(*rangeGrid, rangeWriter, cell, *range);
     }

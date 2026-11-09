@@ -5,7 +5,7 @@ void hknpDynamicCompoundShape::unknownVirtual32(hknpShapeInstanceId instanceId,
                                                 hkAabb &aabbOut) const
 {
     const hkAabb &leaf =
-        boundingVolumeData->nodes[instances.elements[instanceId.value].getLeafIndex()];
+        boundingVolumeData->aabbTree.nodes[instances.elements[instanceId.value].getLeafIndex()];
     aabbOut.max = setXYZ_0(leaf.max);
     aabbOut.min = leaf.min;
 }

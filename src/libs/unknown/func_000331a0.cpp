@@ -3,45 +3,14 @@
 
 /* The pair index of every two cells, filled by the space splitter's
  * constructor (0x605b0's file); a missing cell (0xff) is row or column 0. */
-extern u8 D_57c1660[17][17];
+extern u8 D_57c1660[17 * 17];
 
-/* A range linked in after a cell's first one, or made the first when the
- * cell has none. derived name. */
-static inline void appendRange(CacheRange000331a0 &entry, CacheRange000331a0 *range)
-{
-    if (entry.numElements == 0) {
-        entry = *range;
-    } else {
-        range->next = entry.next;
-        entry.next = range;
-    }
-}
-
-/* A range filed at a cell of a grid: kept in place when the cell is empty,
- * otherwise copied by the grid's writer and linked in. derived name. */
-static inline void addRange(hkArray<CacheRange000331a0> &grid, CacheWriter00031a30 *writer,
-                            int cell, const CacheRange000331a0 &range)
-{
-    if (range.numElements == 0) {
-        return;
-    }
-    CacheRange000331a0 &entry = grid[cell];
-    if (entry.numElements == 0) {
-        entry = range;
-        return;
-    }
-    CacheRange000331a0 *copy =
-        static_cast<CacheRange000331a0 *>(writer->reserve(sizeof(CacheRange000331a0)));
-    *copy = range;
-    appendRange(entry, copy);
-    writer->advance(sizeof(CacheRange000331a0));
-}
-
-// NONMATCHING: 0x317b0's cells' width (docs/NOTES.md, Round 83A): equal but for the cells, which
-// the base keeps in 32 bits (`movzx eax, byte [..+0x3e]; cmp eax, 0xff`, the phi `mov r13d, eax`,
-// the pair index `imul ecx, ecx, 0x11; add ecx, eax; movsxd`) where InstCombine narrows them to i8
-// here (the phi zero-extended before `shl r13, 6`, the index in 64 bits); a switch on the first
-// cell and a flat index into the table compile the same.
+// NONMATCHING: the second arm's phi copies (189 of 191, 833 bytes as the base): for a missing
+// second cell the base reloads the grid and the writer before the cell's copy `mov r13d, eax`,
+// here the cell's copy comes between the two reloads. The cells' width of round 83A was the pair
+// index: `(cell + 1) & 0xff` keeps the add in 32 bits where `u8(cell + 1)` narrows it, and the
+// flat index `row * 17 + column` gives the base's `imul ecx; add ecx; movsxd` (docs/NOTES.md,
+// Round 87A). The grid declared before the writer orders the first arm's reloads as the base's.
 void hknpWorldObject380::FUN_000331a0(const SolverContext000317b0 *context,
                                       const hkArray<CacheRange000331a0 *> &ranges,
                                       CacheWriter00031a30 *writer,
@@ -66,8 +35,8 @@ void hknpWorldObject380::FUN_000331a0(const SolverContext000317b0 *context,
             const int cellB =
                 world->motionManager.motions[world->bodyManager.bodies[cache->second].motionId]
                     .cellIndex;
-            CacheWriter00031a30 *cacheWriter;
             hkArray<CacheRange000331a0> *cacheGrid;
+            CacheWriter00031a30 *cacheWriter;
             int cell;
             if (cellA == 0xff) {
                 cacheWriter = writer;
@@ -80,7 +49,7 @@ void hknpWorldObject380::FUN_000331a0(const SolverContext000317b0 *context,
             } else {
                 cacheWriter = pairWriter;
                 cacheGrid = &pairGrid;
-                cell = D_57c1660[u8(cellB + 1)][u8(cellA + 1)];
+                cell = D_57c1660[((cellB + 1) & 0xff) * 17 + ((cellA + 1) & 0xff)];
             }
 
             CacheRange000331a0 cacheRange;

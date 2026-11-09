@@ -71,3 +71,41 @@ u32 hknpWorld::FUN_0004d0a0(const hknpConstraintCinfo &cinfo, hkBool32 keepInact
     }
     return constraintId;
 }
+
+/* derived name: a body turned to an orientation (0x5d330; the body manager's 0x16edc5 and the game
+ * call it): nothing when the rotation is within epsilon of the body's, else the rotation taken; about
+ * the centre of mass (pivot 1) the translation moved so the motion's centre of mass stays where it
+ * is; then the transform's update, the static body moved signal for a body without a motion and the
+ * body changed signal for any. */
+void hknpWorld::FUN_0005d330(int bodyId, const hkQuaternion &orientation, int pivot,
+                             int activation) /* derived name */
+{
+    hknpBody &body = bodyManager.bodies[bodyId];
+    hkMatrix3 rotation;
+    rotation.FUN_0000bd30(orientation);
+    hkTransform transform = body.transform;
+    const Vec4 epsilon = D_14b2060[35];
+    if (FUN_0001add0(transform.rotation, rotation, epsilon)) {
+        return;
+    }
+
+    transform.rotation = rotation;
+    if (pivot == 1) {
+        const hknpMotion &motion = motionManager.motions[body.motionId];
+        const hkMatrix3 &bodyRotation = body.transform.rotation;
+        const Vec4 centerOfMassLocal = setFromScalars(
+            broadcast<3>(bodyRotation.getColumn(0)), broadcast<3>(bodyRotation.getColumn(1)),
+            broadcast<3>(bodyRotation.getColumn(2)), broadcast<3>(bodyRotation.getColumn(2)));
+        Vec4 centerOfMass;
+        FUN_00010f50(centerOfMass, transform, centerOfMassLocal);
+        transform.translation =
+            _mm_add_ps(_mm_sub_ps(motion.centerOfMass, centerOfMass), transform.translation);
+    }
+    body.setTransformKeepingW(transform);
+    FUN_0005c900(bodyId, &orientation, pivot, activation);
+
+    if (body.motionId == 0) {
+        signals.staticBodyMovedSignal.fire(this, bodyId);
+    }
+    signals.bodyChangedSignal.fire(this, bodyId);
+}

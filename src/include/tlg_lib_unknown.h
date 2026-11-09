@@ -686,8 +686,49 @@ void FUN_000348a0(const Pair08Owner *self, const hknpMotion *motionA, const hknp
  * +0x28 (derived name). */
 struct CacheWriter00031a30 : public hkBlockStreamWriter /* derived name */
 {
+    /* Unbound, nothing counted (on the stack in 0x76ed0: the stream's
+     * null, then the two counts). */
+    CacheWriter00031a30()
+    {
+        stats.totalSize = 0;
+        stats.maxCount = 0;
+    }
+
     CacheWriterStats00031a30 stats; /* derived name */
 };
+
+/* A range linked in after a cell's first one, or made the first when the
+ * cell has none. derived name. */
+inline void appendRange(CacheRange000331a0 &entry, CacheRange000331a0 *range)
+{
+    if (entry.numElements == 0) {
+        entry = *range;
+    } else {
+        range->next = entry.next;
+        entry.next = range;
+    }
+}
+
+/* A range filed at a cell of a grid: kept in place when the cell is empty,
+ * otherwise copied by the grid's writer and linked in (0x331a0, 0x76ed0).
+ * derived name. */
+inline void addRange(hkArray<CacheRange000331a0> &grid, CacheWriter00031a30 *writer, int cell,
+                     const CacheRange000331a0 &range)
+{
+    if (range.numElements == 0) {
+        return;
+    }
+    CacheRange000331a0 &entry = grid[cell];
+    if (entry.numElements == 0) {
+        entry = range;
+        return;
+    }
+    CacheRange000331a0 *copy =
+        static_cast<CacheRange000331a0 *>(writer->reserve(sizeof(CacheRange000331a0)));
+    *copy = range;
+    appendRange(entry, copy);
+    writer->advance(sizeof(CacheRange000331a0));
+}
 
 /* The record's whole size (derived names): FUN_00031a30 takes the record's
  * count, type and the byte at +4 (the flags whose blocks FUN_0002af50
@@ -784,6 +825,10 @@ struct hknpCharacterProxySignalData /* derived name */
 /* The record's first and second ints (0x10650, 0x34840). derived names. */
 int FUN_00010650(const Pair08Owner *self); /* derived name */
 int FUN_00034840(const Pair08Owner *self); /* derived name */
+/* The cells of the record's first and second bodies' motions
+ * (0x34990 and 0x349a0, forwarding to another file). derived names. */
+u8 FUN_00034990(const hknpWorld *world, const Pair08Owner *self); /* derived name */
+u8 FUN_000349a0(const hknpWorld *world, const Pair08Owner *self); /* derived name */
 /* The record's count at +2 and its state at +5 (0x348c0, 0x34890).
  * derived names. */
 int FUN_000348c0(const Pair08Owner *self); /* derived name */
@@ -2693,6 +2738,14 @@ struct ElementsContext00077250 /* derived name */
     u8 unknown0[0x10];
     u8 unknown10[8];
     hknpWorld *world;
+    u8 unknown20[0x250];
+    /* The cache the elements' first stream is appended to with (slot 5,
+     * 0x76f80). derived name. */
+    BlockCache *cache270;
+    u8 unknown278[0x118];
+    /* Where slot 5 writes a pair's range as a command when there is more
+     * than one element (0x77089). derived name. */
+    hkBlockStreamCommandWriter *commandWriter;
 };
 
 struct hknpConstraint;
@@ -2753,6 +2806,12 @@ class Elements000760c0 : public hkBaseObject /* derived name */
      * yet. derived names. */
     virtual void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
 
+    /* Slot 5 (0x76ed0): a cache written to the end of the first element's
+     * second stream, the range it took filed at the grid cell of its two
+     * bodies' cells; with more than one element the range is handed on as
+     * a command instead. derived name. */
+    void FUN_00076ed0(const Pair08Owner *cache);
+
     /* Slot 6 (0x77250): an immediate constraint between two bodies over a
      * constraint data built on the stack (with its immediate id when it has
      * one), its flags or'ed in, its solver data added (0xc5d40) and the
@@ -2761,7 +2820,9 @@ class Elements000760c0 : public hkBaseObject /* derived name */
                       hknpImmediateConstraintId immediateId, u8 extraFlags);
 
     u8 unknown8[8];
-    hkArray<Entry40> array10;  /* derived name */
+    /* The caches' ranges by the grid cell of their two bodies (slot 5).
+     * derived name. */
+    hkArray<CacheRange000331a0> cacheGrid;
     hkArray<Entry40> array20;  /* derived name */
     hkArray<Entry30> array30;  /* derived name */
     hkBlockStream stream40;    /* derived name */
@@ -6593,6 +6654,23 @@ struct LocalBitField /* derived name */
 
     LocalArray<u32> words;
     int numBits;
+};
+
+/* A key and the index of what it was taken from, ordered by the key as an
+ * unsigned word: 0x13d530 and 0x13db00 build them (the latter from a
+ * 144-byte record's word at +0x6c, its top three bits cleared, skipping
+ * -1) and sort them with the instantiation of func_0013b870.cpp (0x13d797, 0x13dbe3).
+ * The same code as 0x13b6c0's sort, a second instantiation. derived
+ * names. */
+struct KeyIndex0013b870 /* derived name */
+{
+    u32 key;
+    u32 index; /* read unsigned: 0x13dcc0 `mov edx, [rax]` */
+
+    bool operator<(const KeyIndex0013b870 &other) const
+    {
+        return key < other.key;
+    }
 };
 
 /* One of the broad phase's trees (derived names; the layer updates time

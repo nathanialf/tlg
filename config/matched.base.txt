@@ -208,8 +208,8 @@ FUN_0008da40 src/libs/unknown/func_0008da60.cpp _ZL32finishLoadedObjecthkxEnviro
 FUN_0008dbf0 src/libs/unknown/func_0008dbf0.cpp
 FUN_0008e530 src/libs/unknown/func_0008e6b0.cpp _ZL50finishLoadedObjecthkRootLevelContainerNamedVariantPvi
 FUN_0008e5c0 src/libs/unknown/func_0008e6b0.cpp _ZL38finishLoadedObjecthkRootLevelContainerPvi
-FUN_0008e820 src/libs/unknown/func_0008e820.cpp
-FUN_0008e870 src/libs/unknown/func_0008e870.cpp
+FUN_0008e820 src/libs/unknown/func_0008e8c0.cpp _ZL43finishLoadedObjecthkMemoryResourceContainerPvi
+FUN_0008e870 src/libs/unknown/func_0008e8c0.cpp _ZL40finishLoadedObjecthkMemoryResourceHandlePvi
 FUN_00092200 src/libs/unknown/func_00092200.cpp
 _ZN13hkSkinBindingD1Ev src/libs/unknown/leaf_000242d0.cpp
 FUN_000acae0 src/libs/unknown/leaf_000acae0.cpp _ZNK20hkMemoryMeshMaterial12FUN_000acae0Ev
@@ -564,9 +564,9 @@ FUN_00024fa0 src/libs/unknown/func_00024fa0.cpp _ZN22hkMultipleVertexBufferC2E24
 FUN_0002b010 src/libs/unknown/leaf_0002b010.cpp
 FUN_0002b030 src/libs/unknown/leaf_0002b030.cpp
 FUN_00034000 src/libs/unknown/func_00034020.cpp _ZL48finishLoadedObjecthknpStaticCompoundShapeKeyMaskPvi
-FUN_000343b0 src/libs/unknown/func_000343b0.cpp
-FUN_000343e0 src/libs/unknown/func_000343e0.cpp
-FUN_00034440 src/libs/unknown/func_00034440.cpp
+FUN_000343b0 src/libs/unknown/func_00034490.cpp _ZL51finishLoadedObjecthknpCompoundShapeInternalsKeyMaskPvi
+FUN_000343e0 src/libs/unknown/func_00034490.cpp _ZL46finishLoadedObjecthknpDynamicCompoundShapeDataPvi
+FUN_00034440 src/libs/unknown/func_00034490.cpp _ZL45finishLoadedObjecthknpStaticCompoundShapeDataPvi
 FUN_00034e00 src/libs/unknown/func_00034e00.cpp
 FUN_00035c60 src/libs/unknown/func_00035c60.cpp _ZL50finishLoadedObjecthknpVehicleDefaultVelocityDamperPvi
 FUN_000361c0 src/libs/unknown/func_000361c0.cpp
@@ -2864,3 +2864,8 @@ FUN_000a9fc0 src/libs/unknown/func_000aa340.cpp _Z12FUN_000a9fc0RK7hkcdRayRKDv4_
 FUN_001562a0 src/libs/unknown/func_001562a0.cpp _ZN17ShapeWatcherOwner12FUN_001562a0EP9hknpWorld
 FUN_00038d80 src/libs/unknown/func_00038d30.cpp _GLOBAL__I_a
 FUN_0008cee0 src/libs/unknown/func_0008ce10.cpp _GLOBAL__I_a
+FUN_0005d330 src/libs/havok/Physics/Physics/Dynamics/World/hknpWorld.cpp
+FUN_00034490 src/libs/unknown/func_00034490.cpp _GLOBAL__I_a
+FUN_000317b0 src/libs/unknown/func_000317b0.cpp _ZN18hknpWorldObject38012FUN_000317b0EPK21SolverContext000317b0RK7hkArrayIP21JacobianRange000317b024hkContainerHeapAllocatorEP19hkBlockStreamWriterRS3_IS4_S6_ESB_SD_
+_ZN19hknpModifierManagerC1Ev src/libs/unknown/func_00066230.cpp
+FUN_0008e8c0 src/libs/unknown/func_0008e8c0.cpp _GLOBAL__I_a

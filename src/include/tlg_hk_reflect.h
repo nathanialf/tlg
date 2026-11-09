@@ -3499,12 +3499,28 @@ class hkcdPlanarSolid::NodeStorage : public hkReferencedObject
 
 /* Reference-counted classes whose finish constructors are inline in their
  * finish callbacks and store only the vtable (vtable, callback): */
-/* hknpDynamicCompoundShapeData: vtable 0x1692990, finish callback FUN_000343e0. */
+/* hknpDynamicCompoundShapeTree (hkClass 0x57be020 built at 0x34668: 0x20
+ * bytes over hkcdDynamicTreeDefaultTree32Storage's 0x57bba90, no members of
+ * its own). Its type info's cleanup frees the 32-byte nodes, the body the
+ * linker folded with hkcdStaticTree::DefaultTreeStorage32's (0x1e170). */
+struct hknpDynamicCompoundShapeTree {
+    hknpDynamicCompoundShapeTree(hkFinishLoadedObjectFlag flag) : nodes(flag) {}
+
+    /* The tree's nodes, each an AABB whose max's w the tree keeps its own
+     * data in (the shape's slot 32, 0xf04a0, reads a leaf's and clears that
+     * w). derived name. */
+    hkArray<struct hkAabb> nodes;
+    u8 unknown10[0x10];
+};
+
+/* hknpDynamicCompoundShapeData: vtable 0x1692990, finish callback FUN_000343e0
+ * (hkClass 0x57bdfa0 built at 0x345bb: 0x30 bytes, one member record at
+ * 0x1692a50): aabbTree at +0x10. */
 class hknpDynamicCompoundShapeData : public hkReferencedObject
 {
   public:
     hknpDynamicCompoundShapeData(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag), nodes(flag)
+        : hkReferencedObject(flag), aabbTree(flag)
     {
     }
 
@@ -3514,14 +3530,7 @@ class hknpDynamicCompoundShapeData : public hkReferencedObject
     /* The reference-counted class delete (tlg_lib_unknown.h). */
     static void operator delete(void *object, unsigned long numBytes);
 
-    /* The tree's nodes from +0x10, each an AABB whose max's w the tree
-     * keeps its own data in (the shape's slot 32, 0xf04a0, reads a leaf's
-     * and clears that w). derived name. */
-    hkArray<struct hkAabb> nodes;
-    /* The rest of its one member, aabbTree (an hknpDynamicCompoundShapeTree,
-     * record 0x1692a50, from +0x10), to the class's 0x30 bytes (its hkClass
-     * built at 0x345bb). */
-    u8 unknown20[0x10];
+    hknpDynamicCompoundShapeTree aabbTree;
 };
 
 /* hknpCompressedMeshShapeInternals (its own members not yet read) and its
@@ -8695,7 +8704,7 @@ void FUN_00038230(hknpMaskedShape::MaskWrapper *self,
 /* hknpWorld (the name of its source file, hknpWorld.cpp, which the homed
  * FUN_0004d0a0 asserts in; the class name is derived from it): its
  * constructor FUN_00048b20 builds the 0x570-byte object at +0x1b8
- * (constructor FUN_00066230; a derived name below, from what it holds), and
+ * (its constructor 0x66230; a derived name below, from what it holds), and
  * sets the collision filter of the world's description (+0xa8 of it) there
  * through FUN_000667b0, which keeps a reference to the new filter at +0x568
  * and releases the old one. FUN_0004bcc0 forwards to it. */
@@ -9114,6 +9123,11 @@ class hknpModifierManager /* derived name */
     void FUN_00066790(CollisionCacheType type, hknpCollisionDetector *detector); /* derived name */
     void FUN_000667b0(hknpCollisionFilter *filter);                              /* derived name */
 
+    /* Out of line (0x66230; the world's constructor calls it at 0x49cf0 on
+     * the 0x570 bytes it allocates): every set empty, each entry's mask
+     * cleared, the tables and the filter null (one memset from +0x4c8). */
+    hknpModifierManager();
+
     /* Out of line (0x665c0; the world's destructor calls it at 0x4b4d5
      * before freeing the 0x570 bytes): the filter's reference released. */
     ~hknpModifierManager();
@@ -9125,9 +9139,14 @@ class hknpModifierManager /* derived name */
      * the cache callbacks read the first (0x17a000). */
     struct ModifierSet {
         struct Entry {
+            /* No modifier filed: the mask cleared, the pointer left. */
+            Entry() : mask(0) {}
+
             u32 mask;
             CacheModifier0017a000 *modifier;
         };
+
+        ModifierSet() : enabledModifiers(0), numModifiers(0) {}
 
         u32 enabledModifiers;
         int numModifiers;
@@ -9135,7 +9154,9 @@ class hknpModifierManager /* derived name */
     };
 
     ModifierSet modifierSets[9]; /* derived name */
-    u8 unknown4c8[0x18];
+    /* Three objects the world's constructor sets (0x4a16e to 0x4a18a).
+     * derived name. */
+    void *objects4c8[3];
     void *objects4e0[NUM_TYPES_4E0];                                      /* derived name */
     hknpCollisionDetector *collisionDetectors[NUM_COLLISION_CACHE_TYPES]; /* derived name */
     /* The world's collision filter, a reference kept by FUN_000667b0.
@@ -9567,12 +9588,15 @@ struct hknpBody {
 
     /* A transform taken, each column's w lane (the centre of mass) and the
      * translation's (the look-ahead distance) kept (inline in 0x3aa60 and
-     * the world's 0x5d130). derived name. */
+     * the world's 0x5d130 and 0x5d330). The columns kept are read through
+     * getColumn: 0x5d330 reads the second and third from the body's
+     * pointer plus 0x10 and 0x20 held in registers, where the members'
+     * own addresses fold. derived name. */
     void setTransformKeepingW(const hkTransform &t)
     {
-        const Vec4 col0 = _mm_blend_ps(t.rotation.col0, transform.rotation.col0, 8);
-        const Vec4 col1 = _mm_blend_ps(t.rotation.col1, transform.rotation.col1, 8);
-        const Vec4 col2 = _mm_blend_ps(t.rotation.col2, transform.rotation.col2, 8);
+        const Vec4 col0 = _mm_blend_ps(t.rotation.col0, transform.rotation.getColumn(0), 8);
+        const Vec4 col1 = _mm_blend_ps(t.rotation.col1, transform.rotation.getColumn(1), 8);
+        const Vec4 col2 = _mm_blend_ps(t.rotation.col2, transform.rotation.getColumn(2), 8);
         const Vec4 translation = _mm_blend_ps(t.translation, transform.translation, 8);
         transform.rotation.col0 = col0;
         transform.rotation.col1 = col1;
@@ -12303,9 +12327,9 @@ struct hknpWorld {
     void FUN_0005b580(int bodyId, float value, int mode);
 
     /* The body's transform updated after a change (0x5c900, 0x824 bytes;
-     * 0x5d130 calls it with a null third argument and zero). derived
+     * 0x5d130 calls it with a null orientation and pivot 0, 0x5d330 with its own). derived
      * names. */
-    void FUN_0005c900(int bodyId, const void *argument3, int argument4, int activation);
+    void FUN_0005c900(int bodyId, const hkQuaternion *orientation, int pivot, int activation);
 
     /* A body moved to a position (0x5d130; the body manager's 0x16eda3 and
      * the game call it): nothing when every coordinate is within epsilon of
@@ -12313,6 +12337,9 @@ struct hknpWorld {
      * transform's update run, the static body moved signal fired for a body
      * without a motion and the body changed signal for any. derived name. */
     void FUN_0005d130(int bodyId, const Vec4 &position, int activation);
+    /* A body turned to an orientation (0x5d330), about its position or (pivot 1) its centre of
+     * mass. derived name. */
+    void FUN_0005d330(int bodyId, const hkQuaternion &orientation, int pivot, int activation);
     /* A body's record of the body manager's map at +0x48 freed when it has
      * one (0x5f240, called by 0x16eca0); unless the body is static or the
      * mode is 2, a body neither static nor keyframed (flags 9) handed on and
@@ -18046,6 +18073,15 @@ class hkResourceHandle : public hkResourceBase
  * 0x14c7cba, in that order; hkxEnvironment::Variable's type info cites the
  * same callbacks, the same layout). */
 struct hkMemoryResourceHandleExternalLink {
+    hkMemoryResourceHandleExternalLink() {}
+
+    /* Finished in place (its type info's callback, folded with
+     * hkxEnvironment::Variable's 0x8d9e0). */
+    hkMemoryResourceHandleExternalLink(hkFinishLoadedObjectFlag flag)
+        : memberName(flag), externalId(flag)
+    {
+    }
+
     hkStringPtr memberName;
     hkStringPtr externalId;
 };
