@@ -2102,6 +2102,11 @@ class hkgpConvexHull /* derived name */ : public hkReferencedObject
      * geometry, the material and a flag. derived name. */
     hkResult FUN_000bcee0(int source, hkGeometry &geometryOut, int material, bool flag);
 
+    /* The hull moved out by a distance (0xb8d50, homed in hkgpConvexHull.cpp;
+     * the geometry build 0x1698f0 calls it for a positive radius). derived
+     * name. */
+    void FUN_000b8d50(float distance);
+
     int FUN_000b6bf0() const;                     /* derived name */
     int FUN_000b8a80() const;                     /* derived name */
     hkgpConvexHullTriangle *FUN_000b6d10() const; /* derived name */

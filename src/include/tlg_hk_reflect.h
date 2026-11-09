@@ -1532,6 +1532,21 @@ struct hkMatrix3 {
         return reinterpret_cast<const float *>(&col0 + column)[row];
     }
 
+    float &operator()(int row, int column)
+    {
+        return reinterpret_cast<float *>(&col0 + column)[row];
+    }
+
+    /* Zero but for the diagonal (the motion's mass matrix, 0x157690, sets
+     * its inverse mass there). */
+    void setDiagonal(float m00, float m11, float m22)
+    {
+        setZero();
+        (*this)(0, 0) = m00;
+        (*this)(1, 1) = m11;
+        (*this)(2, 2) = m22;
+    }
+
     /* A column by its index (the point-to-plane data's slot 19, 0x7bcc1,
      * reads one of a product's on the stack). */
     const Vec4 &getColumn(int column) const
@@ -1572,6 +1587,15 @@ struct hkMatrix3 {
      * combineColumns. derived names. */
     inline void setMul(const hkMatrix3 &a, const hkMatrix3 &b);
     inline void setMulTransposed(const hkMatrix3 &a, const hkMatrix3 &b);
+    /* This set to a * b, the first column first, a's columns read before
+     * any is written, so a may be this (the motion's mass matrix 0x157690
+     * multiplies a product by a matrix into itself). derived name. */
+    inline void setMulInPlace(const hkMatrix3 &a, const hkMatrix3 &b);
+    /* This set to the inverse of a symmetric m (inline in the motion's mass
+     * matrix, 0x157690): the columns' cross products over the determinant,
+     * no transpose, zero where the determinant is within 0x1ae40's
+     * tolerance. Defined after cross3. derived name. */
+    inline void setInverseSymmetric(const hkMatrix3 &m);
 
     /* This matrix brought into a basis: r times this times r's transpose
      * (0x1aaa0; the inertia's world form at 0x299fd, the geometry code at
@@ -1790,6 +1814,16 @@ inline void hkMatrix3::setMul(const hkMatrix3 &a, const hkMatrix3 &b)
     col2 = combineColumns(c0, c1, c2, b.col2);
     col1 = combineColumns(c0, c1, c2, b.col1);
     col0 = combineColumns(c0, c1, c2, b.col0);
+}
+
+inline void hkMatrix3::setMulInPlace(const hkMatrix3 &a, const hkMatrix3 &b)
+{
+    const Vec4 c0 = a.col0;
+    const Vec4 c1 = a.col1;
+    const Vec4 c2 = a.col2;
+    col0 = combineColumns(c0, c1, c2, b.col0);
+    col1 = combineColumns(c0, c1, c2, b.col1);
+    col2 = combineColumns(c0, c1, c2, b.col2);
 }
 
 inline void hkMatrix3::setMulTransposed(const hkMatrix3 &a, const hkMatrix3 &b)
@@ -6682,6 +6716,30 @@ inline Vec4 cross3(const Vec4 &a, const Vec4 &b) /* derived name */
     return _mm_shuffle_ps(t, t, _MM_SHUFFLE(3, 0, 2, 1));
 }
 
+inline void hkMatrix3::setInverseSymmetric(const hkMatrix3 &m)
+{
+    const Vec4 c0 = m.col0;
+    const Vec4 c1 = m.col1;
+    const Vec4 c2 = m.col2;
+    const Vec4 r0 = cross3(c1, c2);
+    const Vec4 one = D_14b2060[3];
+    const Vec4 epsilon = D_14b2060[35];
+    const Vec4 size0 = _mm_dp_ps(hkMath::quadFabs(c0), one, 0x7f);
+    const Vec4 size1 = _mm_dp_ps(hkMath::quadFabs(c1), one, 0x7f);
+    const Vec4 size2 = _mm_dp_ps(hkMath::quadFabs(c2), one, 0x7f);
+    const Vec4 tolerance = _mm_mul_ps(_mm_mul_ps(size0, epsilon), _mm_mul_ps(size1, size2));
+    const Vec4 determinant = _mm_dp_ps(c0, r0, 0x7f);
+    const Vec4 invertible = _mm_cmplt_ps(tolerance, hkMath::quadFabs(determinant));
+    const Vec4 r1 = cross3(c2, c0);
+    const Vec4 r2 = cross3(c0, c1);
+    const Vec4 r = _mm_rcp_ps(determinant);
+    const Vec4 inverse =
+        _mm_mul_ps(r, _mm_sub_ps(_mm_load_ps(D_14b4380), _mm_mul_ps(determinant, r)));
+    col0 = _mm_and_ps(invertible, _mm_mul_ps(r0, inverse));
+    col1 = _mm_and_ps(invertible, _mm_mul_ps(r1, inverse));
+    col2 = _mm_and_ps(invertible, _mm_mul_ps(r2, inverse));
+}
+
 inline void hkQuaternion::setMul(const hkQuaternion &q0, const hkQuaternion &q1)
 {
     const Vec4 a = q0.vec;
@@ -8251,8 +8309,8 @@ class alignas(16) hknpShape : public hkReferencedObject
      * 0x152170). derived name. */
     virtual void unknownVirtual18(const SignedDistanceQuery &query,
                                   SignedDistanceContact *contactsOut) const;
-    virtual void unknownVirtual19(const void *argument1, const void *argument2, int argument3,
-                                  float argument4, void *argument5, void *argument6) const;
+    virtual void unknownVirtual19(const void *argument1, const void *argument2, float argument3,
+                                  int argument4, void *argument5, void *argument6) const;
     /* Slot 19's default (0x6ebf0), which the capsule's calls for a query
      * shape other than a capsule. derived name. */
     int FUN_0006ebf0(const SignedDistanceInput00073a80 *input,
@@ -8365,7 +8423,7 @@ class hknpDecoratorShape : public hknpShape
     float FUN_0003b1c0() const;                      /* vtable slot 17; derived name */
     void FUN_0003b1d0(const SignedDistanceQuery &query,
                       SignedDistanceContact *contactsOut) const; /* vtable slot 18; derived name */
-    void FUN_0003b1e0(const void *argument1, const void *argument2, int argument3, float argument4,
+    void FUN_0003b1e0(const void *argument1, const void *argument2, float argument3, int argument4,
                       void *argument5, void *argument6) const; /* vtable slot 19; derived name */
     hknpShapeKeyMask *FUN_0003b1f0() const;                    /* vtable slot 20; derived name */
     int
@@ -10230,6 +10288,21 @@ struct hknpMotion {
      * rotation's transpose (0x157350; called at 0x4f3cb). derived name. */
     void FUN_00157350(hkMatrix3 &inertiaOut) const;
 
+    /* The inverse inertia tensor in world space, inline (0x157690): the
+     * orientation's rotation, its columns scaled by the inverse inertia,
+     * times the rotation's transpose. derived name. */
+    inline void getInverseInertiaWorld(hkMatrix3 &inverseInertiaOut) const
+    {
+        hkMatrix3 rotation;
+        rotation.FUN_0000bd30(orientation);
+        const Vec4 inverseInertiaLocal = loadHalves(inverseInertia);
+        hkMatrix3 scaled;
+        scaled.col0 = _mm_mul_ps(broadcast<0>(inverseInertiaLocal), rotation.col0);
+        scaled.col1 = _mm_mul_ps(broadcast<1>(inverseInertiaLocal), rotation.col1);
+        scaled.col2 = _mm_mul_ps(broadcast<2>(inverseInertiaLocal), rotation.col2);
+        inverseInertiaOut.FUN_0001abb0(scaled, rotation);
+    }
+
     /* Set from diagonalized mass properties under a transform (0x157420;
      * the world's body additions at 0x4bdd1, 0x4c035 and 0x4f716): the
      * centre of mass moved by the transform, the orientation the
@@ -11570,7 +11643,7 @@ struct hknpMaterialLibrary : public hkReferencedObject {
      * presets added, the default and the three triggers. derived name. */
     hknpMaterialLibrary(int initialCapacity);
 
-    Signal00093530 materialAddedSignal;
+    hkSignal1<hknpMaterialId> materialAddedSignal;
     hkSignal1<hknpMaterialId> materialModifiedSignal;
     hkSignal1<hknpMaterialId> materialRemovedSignal;
     hkFreeListArray<hknpMaterial, hknpMaterialId, 8, hknpMaterialFreeListArrayOperations> entries;
@@ -14803,6 +14876,12 @@ struct hknpMaterialFreeListArrayOperations {
         new (&material) hknpMaterial();
         material.maxContactImpulse = -1.0f;
         material.isExclusive = next;
+    }
+
+    /* The next free id a free material keeps (the library's add, 0x7796a). */
+    static int getNext(const hknpMaterial &material)
+    {
+        return material.isExclusive;
     }
 };
 
@@ -21351,6 +21430,15 @@ void FUN_00057530(hknpCollisionQueryContext *context, const hknpClosestPointsQue
  * shape, the target's info carrying the shape's mask and a copy of the
  * query's carrying none. derived name. */
 void FUN_000581c0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+
+/* The closest points between a masked query shape and a masked target
+ * (0x594a0): both core shapes, each info carrying its shape's mask. derived
+ * name. */
+void FUN_000594a0(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
                   const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
                   const hknpQueryFilterData &targetShapeFilterData,
                   const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
