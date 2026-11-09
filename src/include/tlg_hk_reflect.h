@@ -1335,6 +1335,11 @@ struct hkClass {
      * (0x42b0) and members (0x4350). derived names. */
     int FUN_000042b0() const; /* derived name */
     int FUN_00004350() const; /* derived name */
+    /* The enum lookups the linker discarded (their tails are residue at
+     * 0x4300, 0x4310 and 0x4320, D13). derived names. */
+    int getNumEnums() const;                                      /* derived name */
+    const hkClassEnum &getEnum(int index) const;                  /* derived name */
+    const hkClassEnum *getEnumByName(const char *enumName) const; /* derived name */
     /* The class's own counts and members, out of line (0x42f0: its
      * implemented interfaces; 0x4440: its declared members; 0x4450: a
      * declared member by index; the writers' walks call them, 0x180f50 and

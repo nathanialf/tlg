@@ -1,6 +1,45 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include "tlg_hk_reflect.h"
 
+/* The class's enums, counted, indexed and looked up by name as its members
+ * are below. The linker discarded all three, since nothing calls them: the
+ * residue keeps the last 16-byte line of each, byte for byte (0x4300, the
+ * count's loop; 0x4310, the indexed lookup's return; 0x4320, the name
+ * lookup's epilogue; D13). They come before the members' lookups in the
+ * file, and the name lookup's loop is unswitched on `this == null` first,
+ * which spends the compile's unswitch budget before 0x4470 (D42). */
+int hkClass::getNumEnums() const /* derived name */
+{
+    int count = numDeclaredEnums;
+    for (const hkClass *c = parent; c; c = c->parent) {
+        count += c->numDeclaredEnums;
+    }
+    return count;
+}
+
+const hkClassEnum &hkClass::getEnum(int index) const /* derived name */
+{
+    int localIndex = index - getNumEnums();
+    for (const hkClass *c = this; c; c = c->parent) {
+        localIndex += c->numDeclaredEnums;
+        if (localIndex >= 0) {
+            return c->declaredEnums[localIndex];
+        }
+    }
+    return declaredEnums[0];
+}
+
+const hkClassEnum *hkClass::getEnumByName(const char *enumName) const /* derived name */
+{
+    for (int i = 0; i < getNumEnums(); i++) {
+        const hkClassEnum &classEnum = getEnum(i);
+        if (FUN_00017f40(classEnum.name, enumName) == 0) {
+            return &classEnum;
+        }
+    }
+    return HK_NULL;
+}
+
 /* derived name: the number of members of a class, its own and its
  * parents'. */
 int hkClass::FUN_00004350() const
