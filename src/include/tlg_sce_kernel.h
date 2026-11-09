@@ -31,6 +31,11 @@ typedef pthread *pthread_t;
 struct pthread_attr;
 typedef pthread_attr *pthread_attr_t;
 
+/* A read-write lock of the kernel library: a handle, as FreeBSD's
+ * pthread_rwlock_t is (0x1393750 passes the address of the one at +0x8). */
+struct pthread_rwlock;
+typedef pthread_rwlock *pthread_rwlock_t;
+
 extern "C" {
 int pthread_mutex_destroy(pthread_mutex_t *mutex);
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
@@ -53,6 +58,9 @@ int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr
 int sceKernelDeleteSema(SceKernelSema sema);
 int sceKernelWaitSema(SceKernelSema sema, int needCount, unsigned int *timeout);
 int sceKernelSignalSema(SceKernelSema sema, int signalCount);
+int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);
+int scePthreadRwlockUnlock(pthread_rwlock_t *rwlock);
+int scePthreadRwlockWrlock(pthread_rwlock_t *rwlock);
 }
 
 #endif

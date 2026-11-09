@@ -9,6 +9,7 @@ struct Target00db4080 { /* derived name */
     u8 unknown0[0x58];
     int unknown58;
     int unknown5c;
+    u8 unknown60[4]; /* its address returned by FUN_013c83e0; type and size not traced */
 };
 
 struct Object00db4080 { /* derived name */
