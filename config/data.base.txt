@@ -195,3 +195,7 @@ D_16a3010 src/libs/unknown/func_0008e8c0.cpp
 D_16a3130 src/libs/unknown/func_0008e8c0.cpp
 D_16a3180 src/libs/unknown/func_0008e8c0.cpp
 D_16a31a0 src/libs/unknown/func_0008e8c0.cpp
+D_168cc30 src/libs/unknown/func_000079b0.cpp
+D_168ce70 src/libs/unknown/func_000079b0.cpp
+D_168cee0 src/libs/unknown/func_000079b0.cpp
+D_168cf40 src/libs/unknown/func_000079b0.cpp

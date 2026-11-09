@@ -8130,7 +8130,12 @@ struct SignedDistanceContact /* derived name */
     Vec4 normal;
     float distance;
     u16 sphereIndex;
-    u8 unknown26[0x22];
+    u8 unknown26[2];
+    /* The query body's shape key and filter data (the capsule's slot 19,
+     * 0x73c7a to 0x73c94). derived names. */
+    u32 queryShapeKey;
+    hknpQueryFilterData queryFilterData;
+    u8 unknown40[8];
     u32 shapeKey;
     u16 shapeTag;
     u8 unknown4e[2];
@@ -8141,6 +8146,17 @@ struct SignedDistanceContact /* derived name */
  * 0x60 with members to +0x54 (the hkClass sizes, built at 0x38fd9,
  * 0x38b95 and 0x71755). */
 class hknpConvexShape;
+
+struct SignedDistanceQueryBody;
+struct hkBlockStreamWriter;
+
+/* What slot 19 is handed first (derived name): flags at +0xc, of which 4
+ * asks for the nearest contact alone (the capsule's 0x73b88). */
+struct SignedDistanceInput00073a80 /* derived name */
+{
+    u8 unknown0[0xc];
+    int flags; /* derived name */
+};
 
 class alignas(16) hknpShape : public hkReferencedObject
 {
@@ -8237,6 +8253,11 @@ class alignas(16) hknpShape : public hkReferencedObject
                                   SignedDistanceContact *contactsOut) const;
     virtual void unknownVirtual19(const void *argument1, const void *argument2, int argument3,
                                   float argument4, void *argument5, void *argument6) const;
+    /* Slot 19's default (0x6ebf0), which the capsule's calls for a query
+     * shape other than a capsule. derived name. */
+    int FUN_0006ebf0(const SignedDistanceInput00073a80 *input,
+                     const SignedDistanceQueryBody &queryBody, float maxDistance,
+                     int vertexIdOffset, void *argument5, hkBlockStreamWriter *contactsOut) const;
     /* Slot 20: a new key mask for the shape (hknpStaticCompoundShape's
      * 0xdea30 builds one; the decorator's forwards). */
     virtual hknpShapeKeyMask *unknownVirtual20() const;
@@ -9072,8 +9093,26 @@ struct hknpCdBodyForCollide /* derived name */ : public hknpCdBody {
     /* The body's whole shape (the triangle welding reads its convex
      * radius, 0x69d33). derived name. */
     const hknpShape *rootShape;
-    const void *unknown38;
+    /* The body's transform (the capsule's slot 19 takes the query
+     * capsule's segment through it, 0x73ad9). derived name. */
+    const hkTransform *transform;
 };
+
+/* The query body the shapes' slot 19 takes (derived name): a collide body
+ * with its filter data after it, 0x58 bytes (hknpShape's 0x6ebf0 copies it
+ * whole, 0x6ec7e). */
+struct SignedDistanceQueryBody /* derived name */ : public hknpCdBodyForCollide {
+    hknpQueryFilterData filterData; /* derived name */
+    u8 unknown50[8];
+};
+
+struct hkContactPoint;
+
+/* The closest points of two capsules, each its segment's two ends and a
+ * radius, as three contact points (0x950b0; the capsule's slot 19 calls
+ * it). derived names. */
+void FUN_000950b0(const Vec4 *capsuleA, float radiusA, const Vec4 *capsuleB, float radiusB,
+                  hkContactPoint *pointsOut);
 
 /* The modifier of vtable 0x16a4e50 (address point 0x16a4e60, no type info,
  * 8 bytes: slot 1 is the shared 0xd900; derived name), built by FUN_00048b20
@@ -14128,6 +14167,14 @@ class hknpCapsuleShape : public hknpConvexPolytopeShape
     void unknownVirtual18(const SignedDistanceQuery &query,
                           SignedDistanceContact *contactsOut) const;
 
+    /* Slot 19 (0x73a80): against a query capsule, the closest points of
+     * the two segments written as contacts nearer than the distance (only
+     * the nearest when the input's flag 4 is set); any other shape by
+     * hknpShape's 0x6ebf0. Returns 3. derived name. */
+    int FUN_00073a80(const SignedDistanceInput00073a80 *input,
+                     const SignedDistanceQueryBody &queryBody, float maxDistance,
+                     int vertexIdOffset, void *argument5, hkBlockStreamWriter *contactsOut) const;
+
     /* Slot 28 (0x73110): the capsule's own answer from its segment and
      * convex radius; the shape's default when that fails. derived name. */
     void FUN_00073110(const void *argument1, void *argument2) const;
@@ -14356,6 +14403,10 @@ struct hknpBodyQualityLibrary;
 class hknpBroadPhaseConfig;
 
 struct hknpWorldCinfo {
+    /* Out of line (0x3b290; the game builds one at 0xe99c92 and 0xea953e):
+     * every quad cleared, then the defaults. */
+    hknpWorldCinfo();
+
     /* Out of line and empty (the members' finish constructors are empty);
      * the linker kept one empty body for it and 305 vtable slots, 0x3b640,
      * the row FUN_0003b640. Defined in the destructor's file (D15's round
@@ -20352,6 +20403,18 @@ class hkArrayStreamWriter : public hkStreamWriter
 /* hkContactPoint (its member records at 0x168d9b0): position and
  * separatingNormal, the distance in the normal's w. */
 struct hkContactPoint {
+    /* The distance in the normal's w (the capsule's slot 19 sets and reads
+     * it, 0x73b5e). derived names. */
+    float getDistance() const
+    {
+        return reinterpret_cast<const float *>(&separatingNormal)[3];
+    }
+
+    void setDistance(float distance)
+    {
+        reinterpret_cast<float *>(&separatingNormal)[3] = distance;
+    }
+
     Vec4 position;
     Vec4 separatingNormal;
 };
@@ -21292,6 +21355,16 @@ void FUN_000581c0(hknpCollisionQueryContext *context, const hknpClosestPointsQue
                   const hknpQueryFilterData &targetShapeFilterData,
                   const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
                   bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+
+/* The shape cast against a masked target (0x533c0, a function of the
+ * world's +0x420 table): as 0x581c0, the cast's query copied and dispatched
+ * again through the dispatcher's shape cast (0x70d20, inline in the base).
+ * derived name. */
+void FUN_000533c0(hknpCollisionQueryContext *context, const hknpShapeCastQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, void *argument9, void *collector);
 
 /* The same, the two swapped first when the query's shape has more key bits
  * than the target (0x57c00; 0x57530 calls it). derived name. */
@@ -23425,6 +23498,10 @@ extern const hkClass D_57b7ee8; /* hkCustomAttributes's hkClass */
 /* hkClassEnum's flags enum (FlagValues), through a pointer (its records'
  * initializer 0x11e50 reads it at run time). derived name. */
 extern const hkClassEnum *D_16dc580;
+/* hkClassMember's Type and FlagValues enums, through pointers (its records'
+ * initializer 0x79b0 reads them at run time). derived names. */
+extern const hkClassEnum *D_16dc140;
+extern const hkClassEnum *D_16dc148;
 extern const hkClass D_57b92c0; /* hkClassEnumItem's hkClass */
 
 /* hkBinaryPackfileWriter (derived name; vtable 0x16a6470), the writer
