@@ -34,6 +34,9 @@ void *memalign(size_t alignment, size_t size);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
 unsigned long _Stoul(const char *s, char **endptr, int base);
+/* Sony's C library extension: the usable size of a block from any of its
+ * spaces (its NID verified as "sceLibcMspaceMallocUsableSize"). */
+size_t sceLibcMspaceMallocUsableSize(void *ptr);
 }
 
 #endif

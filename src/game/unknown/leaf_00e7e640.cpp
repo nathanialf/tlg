@@ -1,6 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 
-/* derived names: a script C function that returns 0 (no results). FUN_00e80560
+/* a script C function that returns 0 (no results). FUN_00e80560
  * pushes it (lea at 0xe807a2) through FUN_00dd6ba0, the VM's push of a named C
  * function (FUN_00c87e30's registrations call it), with the function name
  * "LuaBindings::VectorLength2", after the key "Length"; the VM's strings name
@@ -9,7 +9,12 @@
  * ruling. */
 struct lua_State;
 
-int FUN_00e7e640(lua_State *state) /* derived name */
+namespace LuaBindings
+{
+
+int VectorLength2(lua_State *state)
 {
     return 0;
 }
+
+} // namespace LuaBindings

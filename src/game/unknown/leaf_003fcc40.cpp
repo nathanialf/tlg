@@ -1,0 +1,14 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+
+/* derived names: a virtual method that passes its arguments on to FUN_00a8d620
+ * as a tail call; slot 7 of the vtable at 0x16a96d0 (stored by FUN_003fbc60
+ * FUN_003fc620). The record is the one FUN_00a8d620 works on; the return type
+ * is not traced. */
+struct Object00a8d620; /* derived name */
+
+void FUN_00a8d620(Object00a8d620 *self); /* derived name */
+
+void FUN_003fcc40(Object00a8d620 *self) /* derived name */
+{
+    FUN_00a8d620(self);
+}

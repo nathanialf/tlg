@@ -1,8 +1,12 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 
-/* derived names: an empty virtual method, slot 0 of the vtable at 0x16ac7a8
- * (its pointer at 0x16ac7b8), the vtable stored by FUN_006e1910. Class and
- * method unknown. */
-struct Object006e1d80;
+/* derived names: a class whose destructor does nothing, the vtable at
+ * 0x16ac7a8 (stored by FUN_006e1910): slot 0 the complete destructor, slot 1
+ * the deleting one (operator delete of the object). */
+class Object006e1d80 /* derived name */
+{
+  public:
+    virtual ~Object006e1d80();
+};
 
-void FUN_006e1d80(Object006e1d80 *self) /* derived name */ {}
+Object006e1d80::~Object006e1d80() {}
