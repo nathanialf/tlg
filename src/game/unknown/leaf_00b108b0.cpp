@@ -19,12 +19,6 @@ void FUN_00b108c0() /* derived name */
     D_583262c = false;
 }
 
-// NONMATCHING: FUN_00b108d0, the base masks the load (`mov al, [rip]; and al, 1`,
-// 9 bytes) and 4.0.0 returns it bare (7 bytes): GlobalOpt shrinks this static to
-// an i1 (stores of true and false only) and 3.9 and later return an i1 load
-// unmasked; 3.7.1 and 3.8.1 give the base bytes from this source. The base has 8
-// more masked byte-global loads (0x5946608 read from many files, one store of 1),
-// a region-wide question (the loads, the visibility of direct globals).
 bool FUN_00b108d0() /* derived name */
 {
     return D_583262c;

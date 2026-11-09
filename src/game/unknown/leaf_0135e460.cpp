@@ -11,17 +11,11 @@
  * is 0x16abb00) holds it unadjusted. Class and method unknown. */
 struct Object0135e290 { /* derived name */
     u8 unknown0[0xc];
-    int unknown0c; /* compared by FUN_0135e2a0, FUN_0135e2d0, FUN_0135e330 and FUN_0135e460 */
+    int unknown0c; /* compared by FUN_0135e2a0, FUN_0135e2d0, FUN_0135e330, FUN_0135e460, FUN_0135e470 and FUN_0135e480 */
     u8 unknown10[0x14 - 0x10];
     int unknown14; /* compared by FUN_0135e290 */
 };
 
-// NONMATCHING: FUN_0135e460, the base returns the compare as `cmp; sete al; movzx eax, al`
-// (11 bytes) and 4.0.0 as `xor eax, eax; cmp; sete al` (10 bytes): X86FixupSetCC
-// (lib/Target/X86/X86FixupSetCC.cpp, new in LLVM 3.9) rewrites a setcc's zero
-// extension into a zeroing xor before the flags. 3.8.1 emits the base's shape from
-// this source, 3.9.1 and 4.0.0-src the other. The base's game region has 1,548
-// setcc+movzx pairs in 775 functions and no matched game row holds one.
 int FUN_0135e460(const Object0135e290 *self) /* derived name */
 {
     return self->unknown0c == 19;

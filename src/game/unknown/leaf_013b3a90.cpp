@@ -7,8 +7,10 @@
  * FUN_00d69070 FUN_00d693d0. The int is the `mov eax` width; its meaning is
  * not traced. Class and method unknown. */
 struct Object013b3a90 { /* derived name */
-    u8 unknown0[0x128];
-    int unknown128;
+    u8 unknown0[0x104];
+    int unknown104; /* set to 1 by FUN_013b3aa0 */
+    u8 unknown108[0x128 - 0x108];
+    int unknown128; /* returned by FUN_013b3a90 */
 };
 
 int FUN_013b3a90(const Object013b3a90 *self) /* derived name */
