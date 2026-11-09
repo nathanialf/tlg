@@ -119,6 +119,112 @@ int ElementPool00198a20::FUN_00197610(Element *node)
     return node->numLeaves;
 }
 
+/* A node of a tree by its index, its cache line prefetched for the walk's
+ * next step. derived name. */
+static inline const BroadPhaseTree00142a40::Node *prefetchNode(const BroadPhaseTree00142a40 *tree,
+                                                               int index)
+{
+    const BroadPhaseTree00142a40::Node *node = &tree->nodes.elements[index];
+    _mm_prefetch(reinterpret_cast<const char *>(node), _MM_HINT_NTA);
+    return node;
+}
+
+/* A pair of leaves appended to the list. derived name. */
+static inline void addLeafPair(hkArray<LeafPair00197710> &pairsOut,
+                               const BroadPhaseTree00142a40::Node *leafA,
+                               const BroadPhaseTree00142a40::Node *leafB)
+{
+    pairsOut.expandOne().set(leafA, leafB);
+}
+
+/* The two trees walked against each other on a stack of node pairs, 128
+ * in place and doubled when fewer than three slots are left: a pair whose
+ * boxes are disjoint dropped, two leaves appended, a node against itself
+ * split into its children's pairs, else the inner node's (or both nodes')
+ * children paired, one pair walked on and the others pushed. */
+void FUN_00197710(const BroadPhaseTree00142a40 *treeA, const BroadPhaseTree00142a40 *treeB,
+                  hkArray<LeafPair00197710> &pairsOut)
+{
+    typedef BroadPhaseTree00142a40::Node Node;
+    const Node *rootA = treeA->getRoot();
+    const Node *rootB = treeB->getRoot();
+    if (!rootA || !rootB) {
+        return;
+    }
+    if (rootA == rootB && rootA->children[1] == Node::NO_CHILD) {
+        addLeafPair(pairsOut, rootA, rootA);
+        return;
+    }
+    hkInplaceArray<LeafPair00197710, 128> stack;
+    stack.setSize(128);
+    stack[0].set(rootA, rootB);
+    int numPairs = 1;
+    int stackSize = stack.getSize();
+    do {
+        numPairs--;
+        const Node *a = stack[numPairs].leafA;
+        const Node *b = stack[numPairs].leafB;
+        while (!a->aabb.disjoint(b->aabb)) {
+            if (numPairs >= stackSize - 3) {
+                stackSize *= 2;
+                stack.setSize(stackSize);
+            }
+            if (a == b) {
+                const Node *node = a;
+                while (true) {
+                    const Node *child0 = prefetchNode(treeA, node->children[0]);
+                    const Node *child1 = prefetchNode(treeA, node->children[1]);
+                    if (child1->children[1] == Node::NO_CHILD) {
+                        addLeafPair(pairsOut, child1, child1);
+                    } else {
+                        stack[numPairs].set(child1, child1);
+                        numPairs++;
+                    }
+                    stack[numPairs].set(child0, child1);
+                    numPairs++;
+                    if (child0->children[1] == Node::NO_CHILD) {
+                        addLeafPair(pairsOut, child0, child0);
+                        break;
+                    }
+                    node = child0;
+                }
+                break;
+            }
+            const bool aIsLeaf = a->children[1] == Node::NO_CHILD;
+            const bool bIsLeaf = b->children[1] == Node::NO_CHILD;
+            if (aIsLeaf) {
+                if (bIsLeaf) {
+                    addLeafPair(pairsOut, a, b);
+                    break;
+                }
+                const Node *b0 = prefetchNode(treeB, b->children[0]);
+                const Node *b1 = prefetchNode(treeB, b->children[1]);
+                stack[numPairs].set(a, b0);
+                numPairs++;
+                b = b1;
+            } else {
+                const Node *a0 = prefetchNode(treeA, a->children[0]);
+                if (bIsLeaf) {
+                    const Node *a1 = prefetchNode(treeA, a->children[1]);
+                    stack[numPairs].set(a0, b);
+                    numPairs++;
+                    a = a1;
+                } else {
+                    const Node *b0 = prefetchNode(treeB, b->children[0]);
+                    const Node *a1 = prefetchNode(treeA, a->children[1]);
+                    const Node *b1 = prefetchNode(treeB, b->children[1]);
+                    stack[numPairs].set(a1, b1);
+                    stack[numPairs + 1].set(a0, b1);
+                    stack[numPairs + 2].set(a1, b0);
+                    numPairs += 3;
+                    a = a0;
+                    b = b0;
+                }
+            }
+        }
+    } while (numPairs);
+}
+
 /* The pairs found are held in place and handed on when the next leaves'
  * pairs might not fit, and after the last leaves; within one call of the
  * buckets' sweep they stay under its room. derived names. */
@@ -261,6 +367,70 @@ int FUN_00198030(const BroadPhaseTree00142a40::Bucket *bucketA,
     int numPairsSkipped = 0;
     return FUN_0019f550(bucketA->entries, bucketA->numEntries, pairsOut, maxNumPairs,
                         numPairsSkipped);
+}
+
+/* The squared distance from a node's box's centre (each axis's halves
+ * summed, as the entries' centres are) to a point. derived name. */
+static inline u32 centreDistanceSquared(const BroadPhaseTree00142a40::Node &node,
+                                        const u32 (&point)[3])
+{
+    u32 centre2[3];
+    for (int i = 0; i < 3; i++) {
+        centre2[i] = (node.aabb.max[i] >> 1) + (node.aabb.min[i] >> 1);
+    }
+    u32 distance = 0;
+    for (int i = 0; i < 3; i++) {
+        const u32 delta = centre2[i] - point[i];
+        distance += delta * delta;
+    }
+    return distance;
+}
+
+/* The leaf whose centre is nearest a point, from a walk of the tree on a
+ * stack of 128 in place: an inner node's children pushed while nearer than
+ * the nearest leaf so far, the farther first; none for no node. derived
+ * name. */
+int FUN_001981e0(BroadPhaseTree00142a40::Node *node, BroadPhaseTree00142a40 *tree,
+                 const u32 (&centre2)[3], u32 maxDistance)
+{
+    int nearest = BroadPhaseTree00142a40::Node::NO_CHILD;
+    if (node) {
+        hkInplaceArray<int, 128> stack;
+        stack.pushBack(tree->root);
+        while (stack.getSize()) {
+            const int index = stack[stack.getSize() - 1];
+            stack.popBack();
+            const BroadPhaseTree00142a40::Node &current = tree->nodes.elements[index];
+            if (current.children[1] == BroadPhaseTree00142a40::Node::NO_CHILD) {
+                const u32 distance = centreDistanceSquared(current, centre2);
+                if (distance < maxDistance) {
+                    maxDistance = distance;
+                    nearest = index;
+                }
+            } else {
+                const u32 distance0 =
+                    centreDistanceSquared(tree->nodes.elements[current.children[0]], centre2);
+                const u32 distance1 =
+                    centreDistanceSquared(tree->nodes.elements[current.children[1]], centre2);
+                if (distance0 < distance1) {
+                    if (distance1 < maxDistance) {
+                        stack.pushBack(current.getChild(1));
+                    }
+                    if (distance0 < maxDistance) {
+                        stack.pushBack(current.getChild(0));
+                    }
+                } else {
+                    if (distance1 < maxDistance) {
+                        stack.pushBack(current.getChild(0));
+                    }
+                    if (distance0 < maxDistance) {
+                        stack.pushBack(current.getChild(1));
+                    }
+                }
+            }
+        }
+    }
+    return nearest;
 }
 
 /* derived name: the subtree under a node walked from an inplace stack of

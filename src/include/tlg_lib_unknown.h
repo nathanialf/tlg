@@ -6811,10 +6811,11 @@ struct BroadPhaseTree00142a40 /* derived name */
     int maxLeafEntries;
 };
 
-/* The leaf a new entry goes to by its doubled centre, from a node down
- * (0x1981e0; -1 for the root's parent): its index back. derived name. */
+/* The leaf a new entry goes to, the one whose centre is nearest the
+ * entry's within a squared distance (0x1981e0; the additions pass the root
+ * and no limit, -1): its index back, NO_CHILD for no node. derived name. */
 int FUN_001981e0(BroadPhaseTree00142a40::Node *node, BroadPhaseTree00142a40 *tree,
-                 const u32 (&centre2)[3], int parentIndex);
+                 const u32 (&centre2)[3], u32 maxDistance);
 
 /* The leaves under a node of a tree, their node indices appended in the
  * order a walk on a stack of 128 in place finds them (0x198830; the tree
@@ -7223,6 +7224,14 @@ void FUN_00197c60(const BroadPhaseContext00142ea0 *context, hknpCollisionFilter 
  * bytes on 0x197c60's list, the leaves' node pointers). */
 struct LeafPair00197710 /* derived name */
 {
+    /* Both nodes set (the walk 0x197710 writes its pairs so, each
+     * through one address). derived name. */
+    void set(const BroadPhaseTree00142a40::Node *nodeA, const BroadPhaseTree00142a40::Node *nodeB)
+    {
+        leafA = nodeA;
+        leafB = nodeB;
+    }
+
     const BroadPhaseTree00142a40::Node *leafA;
     const BroadPhaseTree00142a40::Node *leafB;
 };
