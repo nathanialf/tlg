@@ -133,4 +133,16 @@ class Class137ba70 /* derived name */
     void FUN_0137ba70(int bits);
 };
 
+/* The class whose vtable is at 0x16b57c0 (stored by FUN_00b38190 and
+ * FUN_01395730): slots 2, 7 and 8 and the thunks' offsets as Class137ba70's,
+ * slots 5 and 6 its own (FUN_00b386b0, the same body as FUN_0137ba50, its
+ * thunk FUN_00b386c0 in the base at +0x30; FUN_00b38650), slot 9 FUN_00b383d0
+ * not traced. Derived from Class137ba70 as a model of the shared slots. */
+class Class16b57c0 : public Class137ba70 /* derived name */
+{
+  public:
+    void FUN_0137ba50();
+    int FUN_00004340(int mask) const;
+};
+
 #endif
