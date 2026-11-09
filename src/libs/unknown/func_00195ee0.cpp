@@ -1,6 +1,7 @@
 /* src/libs/unknown/: library-region functions (below 0x1a3e00; docs/TARGETS.md) matched before their library is known. */
 #include <smmintrin.h>
 
+#include "tlg_hk_algorithm.h"
 #include "tlg_lib_unknown.h"
 
 /* derived name: no root yet, so the reset finds no nodes to drop. */
@@ -31,11 +32,11 @@ void FUN_00195fe0(Object00195ff0 *self) /* derived name */
  * room for twice as many leaves as the boxes fill at a quarter of the leaf
  * size, the root taken, the indices of the boxes and the box around their
  * centres made, the root's subtree built (0x196720) and refitted. */
-// NONMATCHING: 145 of 248 equal, everything to the centres' loop: the base keeps the box around
-// the centres in six registers through the loop (LICM's promotion, the box stored after it),
-// which needs 0x196720 defined in this file: FunctionAttrs then marks the box `nocapture` in
-// it and the box no longer escapes (measured with a stand-in definition; the loop's 16-bit
-// compares stay to be read, the base's are 32-bit over zero-extended values).
+// NONMATCHING: 149 of 248 by a listing with 0x196720's draft defined in this file (145 before):
+// the base keeps the box around the centres in six registers through the loop (LICM's
+// promotion, the box stored after it); the draft's callee copies the box into its first job,
+// and the loop's 16-bit compares stay to be read (the base's are 32-bit over zero-extended
+// values).
 void BroadPhaseTree00142a40::FUN_00196190(const hkAabb16 *aabbs, const u32 *bodyIndices,
                                           int numAabbs)
 {
@@ -66,6 +67,178 @@ void BroadPhaseTree00142a40::FUN_00196190(const hkAabb16 *aabbs, const u32 *body
     }
     FUN_00196720(root, centres, aabbs, bodyIndices, indices.data, numAabbs);
     nodes.FUN_00197610(&nodes.elements[root]);
+}
+
+/* A subtree waiting to be built (derived names), 32 bytes: the box around
+ * its boxes' centres, its run of the indices and the node it becomes. */
+struct BuildJob00196720 /* derived name */
+{
+    hkAabb16 centres;
+    int start;
+    int count;
+    int nodeIndex;
+};
+
+/* A box's centre, each axis's halves summed. derived name. */
+static inline void getCentre2(const hkAabb16 &aabb, u32 (&centre2)[3])
+{
+    for (int i = 0; i < 3; i++) {
+        centre2[i] = (aabb.max[i] >> 1) + (aabb.min[i] >> 1);
+    }
+}
+
+/* A box grown by a centre. derived name. */
+static inline void includeCentre(hkAabb16 &aabb, const u32 (&centre2)[3])
+{
+    for (int i = 0; i < 3; i++) {
+        aabb.min[i] = hkMath::min2(aabb.min[i], u16(centre2[i]));
+    }
+    for (int i = 0; i < 3; i++) {
+        aabb.max[i] = hkMath::max2(aabb.max[i], u16(centre2[i]));
+    }
+}
+
+/* The subtree under a node built over the boxes the indices name, from a
+ * stack of jobs: a job of fewer boxes than a leaf holds kept for the end,
+ * else its indices split at the centre of the longest axis of its centres'
+ * box (in half when that axis is shorter than 2), the two halves' centres'
+ * boxes grown as they are sorted, two nodes taken for them; then each kept
+ * job made one leaf, its boxes copied into a new bucket with their bodies'
+ * keys, the node's box their union, two empty boxes past the last and the
+ * boxes sorted. The number of leaves made back. */
+// NONMATCHING: draft (round 96A), 3822 bytes as the base, 33 of 788 by quick_diff: the
+// base's first pass enters the job loop with the index known (no empty test; the first job's
+// stores rbp-relative and the size not reloaded) and holds the centre and extent arrays and the
+// two leaf-job arrays 0x40 bytes deeper in a larger frame; the partition's order not yet walked.
+int BroadPhaseTree00142a40::FUN_00196720(int nodeIndex, const hkAabb16 &centres,
+                                         const hkAabb16 *aabbs, const u32 *bodyIndices,
+                                         int *indices, int numIndices)
+{
+    hkInplaceArray<BuildJob00196720, 64> leafJobs;
+    hkInplaceArray<BuildJob00196720, 64> jobs;
+    BuildJob00196720 &first = jobs.expandOne();
+    first.centres = centres;
+    first.start = 0;
+    first.count = numIndices;
+    first.nodeIndex = nodeIndex;
+    while (jobs.getSize()) {
+        const BuildJob00196720 job = jobs[jobs.getSize() - 1];
+        jobs.popBack();
+        if (job.count < maxLeafEntries) {
+            leafJobs.pushBack(job);
+            continue;
+        }
+        u32 centre2[3];
+        u32 extent[3];
+        for (int i = 0; i < 3; i++) {
+            centre2[i] = (job.centres.min[i] >> 1) + (job.centres.max[i] >> 1);
+            extent[i] = job.centres.max[i] - job.centres.min[i];
+        }
+        int axis = extent[0] < extent[1] ? 1 : 0;
+        if (extent[axis] < extent[2]) {
+            axis = 2;
+        }
+        hkAabb16 centresA;
+        hkAabb16 centresB;
+        int mid;
+        if (extent[axis] < 2) {
+            centresA = job.centres;
+            centresB = job.centres;
+            mid = job.start + job.count / 2;
+        } else {
+            const u32 split = centre2[axis];
+            centresA.setEmpty();
+            centresB.setEmpty();
+            int i = job.start;
+            int j = job.start + job.count - 1;
+            while (true) {
+                u32 centreI[3];
+                getCentre2(aabbs[indices[i]], centreI);
+                while (centreI[axis] <= split) {
+                    includeCentre(centresA, centreI);
+                    i++;
+                    getCentre2(aabbs[indices[i]], centreI);
+                }
+                u32 centreJ[3];
+                getCentre2(aabbs[indices[j]], centreJ);
+                while (centreJ[axis] > split) {
+                    includeCentre(centresB, centreJ);
+                    j--;
+                    getCentre2(aabbs[indices[j]], centreJ);
+                }
+                if (i >= j) {
+                    break;
+                }
+                const int index = indices[i];
+                indices[i] = indices[j];
+                indices[j] = index;
+                includeCentre(centresA, centreJ);
+                includeCentre(centresB, centreI);
+                i++;
+                j--;
+                if (i > j) {
+                    break;
+                }
+            }
+            mid = i;
+        }
+        int indexA;
+        nodes.FUN_00196630(&indexA);
+        nodes.elements[job.nodeIndex].children[0] = indexA;
+        int indexB;
+        nodes.FUN_00196630(&indexB);
+        nodes.elements[job.nodeIndex].children[1] = indexB;
+        const int countA = mid - job.start;
+        const int countB = job.count - countA;
+
+        BuildJob00196720 jobB;
+        jobB.centres = centresB;
+        jobB.start = mid;
+        jobB.count = countB;
+        jobB.nodeIndex = indexB;
+        if (countB < maxLeafEntries) {
+            leafJobs.pushBack(jobB);
+        } else {
+            jobs.pushBack(jobB);
+        }
+        BuildJob00196720 jobA;
+        jobA.centres = centresA;
+        jobA.start = job.start;
+        jobA.count = countA;
+        jobA.nodeIndex = indexA;
+        if (countA < maxLeafEntries) {
+            leafJobs.pushBack(jobA);
+        } else {
+            jobs.pushBack(jobA);
+        }
+    }
+
+    for (int i = 0; i < leafJobs.getSize(); i++) {
+        const BuildJob00196720 &job = leafJobs[i];
+        numLeaves++;
+        const int bucketIndex = allocateBucket();
+        Node &node = nodes.elements[job.nodeIndex];
+        node.children[1] = Node::NO_CHILD;
+        node.children[0] = bucketIndex;
+        Bucket &bucket = buckets[bucketIndex];
+        bucket.numEntries = job.count;
+        for (int j = 0; j < bucket.numEntries; j++) {
+            const int index = indices[job.start + j];
+            hkAabb16 &entry = bucket.entries[j];
+            entry = aabbs[index];
+            entry.key = u16(bodyIndices[index]);
+            entry.key1 = u16(bodyIndices[index] >> 16);
+        }
+        FUN_00185460(&nodes.elements[job.nodeIndex].aabb, bucket.entries, bucket.numEntries);
+        for (int j = 0; j < 2; j++) {
+            hkAabb16 &end = bucket.entries[bucket.numEntries + j];
+            end.min[0] = 0xffff;
+            end.min[1] = end.min[2] = 0x7fff;
+            end.max[0] = end.max[1] = end.max[2] = 0;
+        }
+        hkAlgorithm::quickSort(bucket.entries, bucket.numEntries, hkAlgorithm::less<hkAabb16>());
+    }
+    return leafJobs.getSize();
 }
 
 inline void ElementPool00198a20::growTo(u32 numElements)

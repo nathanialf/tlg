@@ -6765,9 +6765,10 @@ struct BroadPhaseTree00142a40 /* derived name */
 
     /* The subtree under a node built over the boxes the indices name
      * (0x196720; the build 0x196190 calls it for the root with the box
-     * around every box's centre). derived name. */
-    void FUN_00196720(int nodeIndex, const hkAabb16 &centres, const hkAabb16 *aabbs,
-                      const u32 *bodyIndices, int *indices, int numIndices);
+     * around every box's centre; the number of leaves made back, which
+     * the build ignores). derived name. */
+    int FUN_00196720(int nodeIndex, const hkAabb16 &centres, const hkAabb16 *aabbs,
+                     const u32 *bodyIndices, int *indices, int numIndices);
 
     /* Bodies' boxes removed from the tree, each from the leaf its broad
      * phase id names (0x13db00; the layers' removal at 0x14146e). derived
