@@ -861,7 +861,7 @@ _ZN26hkBlockStreamCommandWriterC1Ev src/libs/unknown/func_000904c0.cpp
 FUN_000938a0 src/libs/unknown/func_000938a0.cpp
 FUN_00094df0 src/libs/unknown/func_00094d90.cpp
 _ZN19hkcdDynamicAabbTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0009fc10.cpp
-FUN_000aaaf0 src/libs/unknown/func_000aaaf0.cpp
+FUN_000aaaf0 src/libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp
 FUN_0017bb20 src/libs/unknown/func_0017bb20.cpp
 FUN_001a0470 src/libs/unknown/func_001a0470.cpp _ZN8RawImageC2Ev
 FUN_0002d770 src/libs/unknown/func_0002d770.cpp
@@ -1270,7 +1270,7 @@ FUN_0019e6b0 src/libs/unknown/func_0019e6b0.cpp _ZN11hkXmlParser12FUN_0019e6b0EP
 _ZN17RouterAllocator50D0Ev src/libs/unknown/func_0000ac10.cpp
 _ZN9RefArraysD0Ev src/libs/unknown/func_000514a0.cpp
 _ZN16RefArrays1698f80D0Ev src/libs/unknown/func_000514a0.cpp
-_ZN24BroadPhaseLayers00142a40D0Ev src/libs/unknown/func_00140e20.cpp
+_ZN24BroadPhaseLayers00142a40D0Ev src/libs/unknown/func_0013cf50.cpp
 _ZN16Elements000760c0D0Ev src/libs/unknown/func_00076910.cpp
 FUN_0014e0b0 src/libs/unknown/func_0014e0b0.cpp _Z12FUN_0014e0b0P23hknpWorldObject1d0Large
 FUN_00093340 src/libs/unknown/func_00093340.cpp _ZN16FiosStreamReader12FUN_00093340EPvi
@@ -1348,7 +1348,7 @@ _ZN17hknpSolveDataTaskD0Ev src/libs/unknown/func_0016e9f0.cpp
 _ZN18hknpCharacterProxyD0Ev src/libs/unknown/func_00176b70.cpp
 _ZN21hkp6DofConstraintDataD0Ev src/libs/unknown/func_0017b700.cpp
 _ZN22hkMemoryResourceHandleD0Ev src/libs/unknown/func_0017f130.cpp
-_ZN25hkMemoryResourceContainerD0Ev src/libs/unknown/func_0017fbd0.cpp
+_ZN25hkMemoryResourceContainerD0Ev src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp
 _ZN22hkBinaryPackfileWriterD0Ev src/libs/unknown/func_00181b10.cpp
 _ZN14hkDebugDisplayD0Ev src/libs/unknown/func_001837c0.cpp
 _ZN16hkProcessFactoryD0Ev src/libs/unknown/func_00183d60.cpp
@@ -1466,7 +1466,7 @@ FUN_0017a360 src/libs/unknown/func_0017a360.cpp _ZN14Object0017a36012FUN_0017a36
 FUN_0017d430 src/libs/unknown/func_0017d430.cpp
 FUN_00199520 src/libs/unknown/func_00199520.cpp _ZNK13U16PointerMap12FUN_00199520IPN19BitFieldMap001997705BlockEEET_tS4_
 FUN_0000eca0 src/libs/unknown/func_0000eca0.cpp _ZN12ThreadBuffer12FUN_0000eca0Ev
-_ZN25hkMemoryResourceContainerC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_0017fb60.cpp
+_ZN25hkMemoryResourceContainerC1E24hkFinishLoadedObjectFlag src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp
 FUN_0019f210 src/libs/unknown/func_0019f210.cpp
 FUN_000ad7c0 src/libs/unknown/func_000ad7c0.cpp _ZNK19hkMemoryMeshTexture12FUN_000ad7c0Ev
 FUN_00017ab0 src/libs/unknown/func_00017ab0.cpp
@@ -1811,7 +1811,7 @@ _ZN11hkXmlParserD1Ev src/libs/unknown/func_0019da00.cpp
 _ZN11hkXmlParserD0Ev src/libs/unknown/func_0019da00.cpp
 FUN_0000daf0 src/libs/unknown/func_0000daf0.cpp
 _ZN18hknpCompositeShapeD1Ev src/libs/unknown/leaf_00042e80.cpp
-FUN_001806b0 src/libs/unknown/func_001806b0.cpp _ZN25hkMemoryResourceContainer12FUN_001806b0EPKcPK19hkResourceContainer
+FUN_001806b0 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp _ZN25hkMemoryResourceContainer12FUN_001806b0EPKcPK19hkResourceContainer
 FUN_0017f3e0 src/libs/unknown/func_0017f3e0.cpp _ZN22hkMemoryResourceHandle12FUN_0017f3e0EPKc
 FUN_000138a0 src/libs/unknown/func_000138a0.cpp _ZN10PointerMap12FUN_000138a0ImEEiR13AllocatorBasemT_
 FUN_0016ae80 src/libs/unknown/func_0016ae80.cpp _ZNK25hknpScaledConvexShapeBase12FUN_0016ae80EPKhiPDv4_f
@@ -1937,8 +1937,8 @@ FUN_0019bb80 src/libs/unknown/func_0019bb80.cpp _Z12FUN_0019bb80Pv
 _ZN12hkcdSimdTreeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00021920.cpp
 _ZN23hknpExternMeshShapeDataD1Ev src/libs/unknown/func_00035310.cpp
 _ZN23hknpExternMeshShapeDataD0Ev src/libs/unknown/func_00035310.cpp
-FUN_00142a40 src/libs/unknown/func_00142a40.cpp _Z12FUN_00142a40P24BroadPhaseLayers00142a40PK8hknpBodyi
-FUN_00142af0 src/libs/unknown/func_00142a40.cpp _Z12FUN_00142af0P24BroadPhaseLayers00142a40PK8hknpBodyib
+FUN_00142a40 src/libs/unknown/func_0013cf50.cpp _Z12FUN_00142a40P24BroadPhaseLayers00142a40PK8hknpBodyi
+FUN_00142af0 src/libs/unknown/func_0013cf50.cpp _Z12FUN_00142af0P24BroadPhaseLayers00142a40PK8hknpBodyib
 FUN_00093b10 src/libs/unknown/func_00093830.cpp _ZN21hkBlockStreamConsumer12FUN_00093b10Ev
 _ZN15hknpConvexShapeC1E24hkFinishLoadedObjectFlag src/libs/unknown/func_00042e90.cpp
 FUN_00079f70 src/libs/unknown/func_00079f70.cpp _ZN28hkpPointToPathConstraintData7setPathEP18hkpParametricCurve
@@ -1952,7 +1952,7 @@ FUN_0002ad50 src/libs/unknown/func_0002ad50.cpp _ZN17hkMemoryMeshShape12FUN_0002
 FUN_00065fd0 src/libs/unknown/func_00065fd0.cpp _Z12FUN_00065fd0P14Object00065f20PK13hkBlockStreamRK7hkArrayI14UnionFindRange24hkContainerHeapAllocatorE
 FUN_00090000 src/libs/unknown/func_00090000.cpp _ZN19hkArrayStreamWriter12FUN_00090000EPKvi
 FUN_000936a0 src/libs/unknown/func_000936a0.cpp _ZN14hkIntSpaceUtil12FUN_000936a0ERK6hkAabb
-FUN_0017f9b0 src/libs/unknown/func_0017f9b0.cpp _ZN25hkMemoryResourceContainer12FUN_0017f9b0EPK13hkResourceMap
+FUN_0017f9b0 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp _ZN25hkMemoryResourceContainer12FUN_0017f9b0EPK13hkResourceMap
 FUN_00012ee0 src/libs/unknown/func_00012ee0.cpp _ZN21hkLargeBlockAllocator12FUN_00002f10EPFvPvmbiS0_ES0_
 FUN_00012fb0 src/libs/unknown/func_00012ee0.cpp _ZThn8_N21hkLargeBlockAllocator12FUN_00002f10EPFvPvmbiS0_ES0_
 FUN_000667b0 src/libs/unknown/func_000667b0.cpp _ZN19hknpModifierManager12FUN_000667b0EP19hknpCollisionFilter
@@ -1973,7 +1973,7 @@ FUN_000263e0 src/libs/unknown/func_000261a0.cpp _ZNK26hkCompressedMassProperties
 FUN_00090100 src/libs/unknown/func_00090100.cpp _ZN19hkArrayStreamWriter12FUN_00090100Eii
 FUN_001997d0 src/libs/unknown/func_001997d0.cpp _ZN19BitFieldMap0019977012FUN_001997d0Ei
 _ZN14Object0019a7c0D1Ev src/libs/unknown/func_0019a7c0.cpp
-FUN_00142bb0 src/libs/unknown/func_00142a40.cpp _Z12FUN_00142bb0P24BroadPhaseLayers00142a40PK8hknpBodyi
+FUN_00142bb0 src/libs/unknown/func_0013cf50.cpp _Z12FUN_00142bb0P24BroadPhaseLayers00142a40PK8hknpBodyi
 FUN_00156e90 src/libs/unknown/func_00156e90.cpp _ZN15Modifier16a486012FUN_00156e90EPKvPK26ModifierSharedData00156e90S1_S1_P12hknpManifold
 _ZN15XmlStartElementD1Ev src/libs/unknown/func_0019da90.cpp
 _ZN15XmlStartElementD0Ev src/libs/unknown/func_0019da90.cpp
@@ -2114,7 +2114,7 @@ FUN_00000bf0 src/libs/unknown/func_00000bf0.cpp
 FUN_00034e40 src/libs/unknown/func_00035640.cpp _ZL132cleanupLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRunPv
 _ZN11hkAlgorithm18quickSortRecursiveIhN20SolverArrays0003f82012AccessIdLessEEEvPT_iiT0_ src/libs/unknown/func_000402f0.cpp
 FUN_00157350 src/libs/unknown/func_00157350.cpp
-FUN_0017fa60 src/libs/unknown/func_0017fa60.cpp
+FUN_0017fa60 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp
 _ZN11hkAlgorithm18quickSortRecursiveIh20AccessIdLess0018e3e0EEvPT_iiT0_ src/libs/unknown/func_0018f360.cpp
 FUN_0003eb70 src/libs/unknown/func_0003eb70.cpp
 FUN_0003ec40 src/libs/unknown/func_0003ec40.cpp
@@ -2444,7 +2444,7 @@ FUN_000199f0 src/libs/unknown/func_000199f0.cpp
 FUN_00068810 src/libs/unknown/func_00068810.cpp
 _ZN22hkpFixedConstraintDataC1Ev src/libs/unknown/func_0007bcf0.cpp _ZN22hkpFixedConstraintDataC2Ev
 FUN_001839d0 src/libs/unknown/func_001839d0.cpp
-FUN_000aae70 src/libs/unknown/func_000aae70.cpp
+FUN_000aae70 src/libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp
 FUN_000cf8d0 src/libs/unknown/func_000cf8d0.cpp
 _ZN24MemoryWalkFilter000015c0C1EP13AllocatorBasePKP8FreeListiPFvPvmbiS6_ES6_ src/libs/unknown/func_00001630.cpp _ZN24MemoryWalkFilter000015c0C2EP13AllocatorBasePKP8FreeListiPFvPvmbiS6_ES6_
 FUN_000a9410 src/libs/unknown/func_000a9410.cpp _ZNK27hknpCompressedMeshShapeTree12FUN_000a9410ER7hkArrayIj24hkContainerHeapAllocatorEjb
@@ -2457,7 +2457,7 @@ FUN_00158bf0 src/libs/unknown/func_00158bf0.cpp _ZN30hknpVehicleRayCastWheelColl
 FUN_00016350 src/libs/unknown/func_00016350.cpp
 _ZNK19hknpSolverStageTask7getNameEP11hkStringBufS1_ src/libs/unknown/func_0018f140.cpp
 FUN_0005da80 src/libs/unknown/func_0005da80.cpp _ZN9hknpWorld12FUN_0005da80Eif
-FUN_00180560 src/libs/unknown/func_00180560.cpp _ZN25hkMemoryResourceContainer12FUN_00180560EPS_
+FUN_00180560 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp _ZN25hkMemoryResourceContainer12FUN_00180560EPS_
 FUN_0016d090 src/libs/unknown/func_0016d090.cpp _ZN30hknpScaledOffsetQueryCollector12FUN_0016d090ERK19hknpCollisionResult
 FUN_00009ad0 src/libs/unknown/func_00009ad0.cpp
 FUN_00042fa0 src/libs/unknown/func_00042fa0.cpp _ZNK15hknpConvexShape15unknownVirtual7ERK4Mat4R6hkAabb
@@ -2527,7 +2527,7 @@ FUN_00035640 src/libs/unknown/func_00035640.cpp _GLOBAL__I_a
 FUN_00078660 src/libs/unknown/func_00078660.cpp _GLOBAL__I_a
 FUN_00161790 src/libs/havok/Physics/Physics/Dynamics/Body/hknpBodyManager.cpp
 _ZN23hknpCompressedMeshShapeD1Ev src/libs/unknown/func_001586d0.cpp
-FUN_001801f0 src/libs/unknown/func_001801f0.cpp
+FUN_001801f0 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp
 FUN_0003e5b0 src/libs/unknown/func_0003e5b0.cpp _GLOBAL__I_a
 FUN_000479c0 src/libs/unknown/func_000479c0.cpp _GLOBAL__I_a
 FUN_00066630 src/libs/unknown/func_00066630.cpp _ZN19hknpModifierManager12FUN_00066630EjP21CacheModifier0017a000i
@@ -2582,7 +2582,7 @@ FUN_00087b70 src/libs/unknown/func_00087b70.cpp _GLOBAL__I_a
 FUN_0005ed40 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005ed40EiRKDv4_fS2_
 FUN_00060a10 src/libs/unknown/func_00060a10.cpp _ZN17hknpSpaceSplitter12FUN_00060a10Ei
 FUN_00090570 src/libs/unknown/func_00090570.cpp _ZN26hkPrimaryCommandDispatcherC1Ev
-FUN_000aafd0 src/libs/unknown/func_000aafd0.cpp
+FUN_000aafd0 src/libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp
 FUN_00064db0 src/libs/unknown/func_00064db0.cpp _ZN18hknpWorldObject4f812FUN_00064db0EPK10hknpBodyIdiRi
 FUN_00199600 src/libs/unknown/func_00199600.cpp
 _ZN7hkxMeshD1Ev src/libs/unknown/func_0008bf00.cpp
@@ -2599,9 +2599,9 @@ FUN_00013940 src/libs/unknown/func_000138a0.cpp _ZN10PointerMap12FUN_00013940ER1
 FUN_0000b7e0 src/libs/unknown/func_0000b330.cpp _ZN14Object0000b3307messageEN7hkError7MessageEiPKcS3_i
 _ZN16TwoBaseAllocatorC1EP13AllocatorBaseP18AllocatorInterfacePK21TwoBaseAllocatorCinfo src/libs/unknown/func_00001960.cpp
 _ZN17hknpSolveDataTaskD1Ev src/libs/unknown/func_0016e9f0.cpp
-_ZN24BroadPhaseLayers00142a40D1Ev src/libs/unknown/func_00140e20.cpp _ZN24BroadPhaseLayers00142a40D2Ev
-FUN_000aab10 src/libs/unknown/func_000aab10.cpp
-_ZN25hkMemoryResourceContainerD1Ev src/libs/unknown/func_0017fbd0.cpp _ZN25hkMemoryResourceContainerD2Ev
+_ZN24BroadPhaseLayers00142a40D1Ev src/libs/unknown/func_0013cf50.cpp _ZN24BroadPhaseLayers00142a40D2Ev
+FUN_000aab10 src/libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp
+_ZN25hkMemoryResourceContainerD1Ev src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp _ZN25hkMemoryResourceContainerD2Ev
 FUN_0005e780 src/libs/unknown/func_0005ed40.cpp
 FUN_00092380 src/libs/unknown/func_000922f0.cpp _ZN9RefArrays12FUN_00092380EP8hknpTaskii
 _ZN23hknpStaticCompoundShapeC1ERK22hknpCompoundShapeCinfo src/libs/unknown/func_00038440.cpp _ZN23hknpStaticCompoundShapeC2ERK22hknpCompoundShapeCinfo
@@ -2674,7 +2674,7 @@ FUN_000189d0 src/libs/unknown/func_000189d0.cpp _ZN8FreeList12FUN_000189d0EP13Fr
 FUN_0003ad80 src/libs/unknown/func_0003ad80.cpp _GLOBAL__I_a
 FUN_00089160 src/libs/unknown/func_00089160.cpp _GLOBAL__I_a
 FUN_00005fc0 src/libs/unknown/func_00005fc0.cpp _ZN14Object00005fc012FUN_00005fc0Eb
-FUN_000aacb0 src/libs/unknown/func_000aacb0.cpp
+FUN_000aacb0 src/libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp
 FUN_0013cf50 src/libs/unknown/func_0013cf50.cpp _ZN22BroadPhaseTree00142a4012FUN_0013cf50EjPK8hknpBody
 FUN_0007ce60 src/libs/unknown/func_0007ce60.cpp _GLOBAL__I_a
 FUN_00082050 src/libs/unknown/func_00082050.cpp _GLOBAL__I_a
@@ -2707,12 +2707,12 @@ FUN_00144a60 src/libs/unknown/func_00144a60.cpp _ZNK24BroadPhaseLayers00142a4012
 _ZN22hkMultipleVertexBufferD2Ev src/libs/unknown/func_00025590.cpp
 FUN_00011900 src/libs/unknown/func_00011900.cpp
 FUN_00161960 src/libs/unknown/func_00161b40.cpp _ZNK15hknpBodyManager12FUN_00161960EjR28hkDiagonalizedMassProperties
-FUN_0017fdb0 src/libs/unknown/func_0017fdb0.cpp _ZN25hkMemoryResourceContainer12FUN_0017fdb0EPKcP18hkReferencedObjectPK7hkClass
+FUN_0017fdb0 src/libs/havok/Common/Serialize/ResourceDatabase/hkResourceHandle.cpp _ZN25hkMemoryResourceContainer12FUN_0017fdb0EPKcP18hkReferencedObjectPK7hkClass
 FUN_00019230 src/libs/unknown/func_00019230.cpp _ZN8FreeList12FUN_00019230Ev
 FUN_00071330 src/libs/unknown/func_00071330.cpp _ZN22hknpBodyQualityLibrary12FUN_00071330ERK27hknpBodyQualityLibraryCinfo
 FUN_001814f0 src/libs/havok/Common/Serialize/Util/hkStructureLayout.cpp
 FUN_00015ae0 src/libs/unknown/func_00015ae0.cpp _ZN14Object0001570012FUN_00015ae0Ev
-FUN_000ac810 src/libs/unknown/func_000ac810.cpp _ZN22hkMeshVertexBufferUtil12FUN_000ac810ERKN18hkMeshVertexBuffer14LockedVertices6BufferES4_i
+FUN_000ac810 src/libs/havok/Common/GeometryUtilities/Mesh/Utils/VertexBufferUtil/hkMeshVertexBufferUtil.cpp _ZN22hkMeshVertexBufferUtil12FUN_000ac810ERKN18hkMeshVertexBuffer14LockedVertices6BufferES4_i
 FUN_0005e910 src/libs/unknown/func_0005ed40.cpp _ZN9hknpWorld12FUN_0005e910EiRKDv4_f
 FUN_00198830 src/libs/unknown/func_00198830.cpp _Z12FUN_00198830iPK22BroadPhaseTree00142a40R7hkArrayIi24hkContainerHeapAllocatorE
 FUN_0019aca0 src/libs/unknown/func_0019aca0.cpp _ZN22hkPlatformObjectWriter12FUN_0019aca0EP14hkStreamWriterPKvRK7hkClassR16hkRelocationInfo
@@ -2733,7 +2733,7 @@ FUN_0003c6d0 src/libs/unknown/func_0003c6d0.cpp
 _ZN18hkcdPlanarGeometryD1Ev src/libs/unknown/func_0009b1c0.cpp
 FUN_0018d230 src/libs/unknown/func_0018d230.cpp _ZN21BroadPhaseCollideTask7processEv
 _ZN7hkxNodeD1Ev src/libs/unknown/func_0008c110.cpp
-FUN_0013de80 src/libs/unknown/func_0013de80.cpp
+FUN_0013de80 src/libs/unknown/func_0013cf50.cpp
 FUN_00089ca0 src/libs/unknown/func_00089ca0.cpp _GLOBAL__I_a
 FUN_00057c00 src/libs/unknown/func_00057c00.cpp
 FUN_00038780 src/libs/unknown/func_00038780.cpp _GLOBAL__I_a
@@ -2761,7 +2761,7 @@ FUN_00094e10 src/libs/unknown/func_00094e10.cpp _ZN13hkBlockStream12FUN_00094e10
 FUN_001794e0 src/libs/unknown/func_001794e0.cpp _ZNK33hknpVehicleLinearCastWheelCollide12FUN_001794e0EPK19hknpVehicleInstancehRK19hknpCollisionResultPK9hknpWorldR18WheelCollideOutput
 FUN_00089940 src/libs/unknown/func_00089940.cpp _GLOBAL__I_a
 FUN_00002f10 src/libs/unknown/func_00002f10.cpp _ZN16TwoBaseAllocator12FUN_00002f10EPFvPvmbiS0_ES0_
-FUN_001412e0 src/libs/unknown/func_0013d110.cpp _ZN24BroadPhaseLayers00142a4012FUN_001412e0EPK10hknpBodyIdiPK8hknpBody
+FUN_001412e0 src/libs/unknown/func_0013cf50.cpp _ZN24BroadPhaseLayers00142a4012FUN_001412e0EPK10hknpBodyIdiPK8hknpBody
 FUN_00069c10 src/libs/unknown/func_00069c10.cpp _ZN27hknpTriangleWeldingModifier12FUN_00069c10EPKvS1_S1_RK20hknpCdBodyForCollideS4_P12hknpManifoldi
 _ZN21hkLargeBlockAllocator12FUN_00003140Ev src/libs/unknown/func_000131a0.cpp
 FUN_00177410 src/libs/unknown/func_00177410.cpp _ZN18hknpCharacterProxy12FUN_00177410EP9hknpWorld

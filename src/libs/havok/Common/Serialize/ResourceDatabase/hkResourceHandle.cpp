@@ -88,6 +88,56 @@ void hkResourceHandle::FUN_0017f770(const hkResourceMap *map)
     }
 }
 
+void hkMemoryResourceContainer::FUN_0017f9b0(const hkResourceMap *map)
+{
+    hkArray<hkResourceHandle *> handles;
+    FUN_0017fa60(handles);
+    for (int i = 0; i < handles.size; i++) {
+        handles[i]->FUN_0017f770(map);
+    }
+}
+
+void hkResourceContainer::FUN_0017fa60(hkArray<hkResourceHandle *> &handlesOut)
+{
+    for (hkResourceContainer *child = FUN_001806b0(HK_NULL, HK_NULL); child;
+         child = FUN_001806b0(HK_NULL, child)) {
+        child->FUN_0017fa60(handlesOut);
+    }
+    for (hkResourceHandle *handle = FUN_0017ff90(HK_NULL, HK_NULL, HK_NULL); handle;
+         handle = FUN_0017ff90(HK_NULL, HK_NULL, handle)) {
+        handlesOut.pushBack(handle);
+    }
+}
+
+/* hkMemoryResourceContainer's finish constructor: the name finished out of
+ * line; a loaded container's children get their parent back. */
+hkMemoryResourceContainer::hkMemoryResourceContainer(hkFinishLoadedObjectFlag flag)
+    : hkResourceContainer(flag), name(flag), resourceHandles(flag), children(flag)
+{
+    if (flag.finishing) {
+        for (int i = 0; i < children.getSize(); i++) {
+            children[i]->parent = this;
+        }
+    }
+}
+
+/* The memory resource container destroyed (the compiler's D0 at 0x17fbd0
+ * and D1 at 0x17fc20): the members only, the children and the resources
+ * from the last, then the name. */
+hkMemoryResourceContainer::~hkMemoryResourceContainer() {}
+
+hkResourceHandle *hkMemoryResourceContainer::FUN_0017fdb0(const char *handleName,
+                                                          hkReferencedObject *object,
+                                                          const hkClass *klass)
+{
+    hkMemoryResourceHandle *handle = new hkMemoryResourceHandle();
+    handle->FUN_0017d550(handleName);
+    handle->FUN_0017f320(object, klass);
+    resourceHandles.pushBack(handle);
+    handle->removeReference();
+    return handle;
+}
+
 /* Whether a handle's name is the one given (its name written into a buffer
  * of its own, given back before the answer is used, 0x180063). derived
  * name. */
@@ -97,14 +147,10 @@ static inline bool hasName(const hkResourceHandle *handle, const char *name)
     return FUN_00017f40(name, handle->getName(buffer)) == 0;
 }
 
-// NONMATCHING: 18 of 152, size 560 against 601: D21's unswitch shape (a fifth witness, reported,
-// not worked further): the base tests `i < size` once after the previous handle's search, then
-// the name, and runs one of two copies of the loop (with the name compared; without it, the
-// class test's null case taken out of the loop as a trivial unswitch), the shape a non-trivial
-// unswitch of the loop-invariant `objectName` gives; one loop with the name tested inside
-// compiles to one loop (3.3's LoopUnswitch refuses the non-trivial condition at -O2,
-// LoopUnswitch.cpp:651), and the two loops written out test the name before each guard.
-// NOTES Round 79A.
+// NONMATCHING: equal under D42's compiler; claimed when the patch lands. One loop with the name
+// and the class tested inside; the base holds it twice, chosen by `objectName`, the non-trivial
+// unswitch of docs/DECISIONS.md D42, which spends the compile's budget before 0x1806b0's search
+// loop (left whole in the base). Under the gate's compiler: one loop, 522 bytes against 601.
 hkResourceHandle *hkMemoryResourceContainer::FUN_0017ff90(const char *objectName,
                                                           const hkClass *klass,
                                                           const hkResourceHandle *previous)
@@ -117,15 +163,15 @@ hkResourceHandle *hkMemoryResourceContainer::FUN_0017ff90(const char *objectName
             }
         }
     }
-    if (objectName) {
-        for (; i < resourceHandles.getSize(); i++) {
-            hkResourceHandle *handle = resourceHandles[i];
-            if (!hasName(handle, objectName)) {
-                continue;
-            }
-            if (klass) {
-                const hkClass *objectClass = handle->getClass();
-                if (objectClass != klass && !klass->FUN_00004270(objectClass)) {
+    for (; i < resourceHandles.getSize(); i++) {
+        hkResourceHandle *handle = resourceHandles[i];
+        if (objectName && !hasName(handle, objectName)) {
+            continue;
+        }
+        if (klass) {
+            const hkClass *objectClass = handle->getClass();
+            if (objectClass != klass && !klass->FUN_00004270(objectClass)) {
+                if (objectName) {
                     char assertBuf[512];
                     BufferOstream ostr(assertBuf, sizeof(assertBuf));
                     ostr.FUN_00008440("Class mismatch, cannot resolve link: ")
@@ -135,20 +181,65 @@ hkResourceHandle *hkMemoryResourceContainer::FUN_0017ff90(const char *objectName
                     hkError::FUN_00014c70(0xf034ed22, assertBuf, HK_RESOURCE_HANDLE_CPP, 317);
                     return HK_NULL;
                 }
+                continue;
             }
-            return handle;
         }
-    } else {
-        for (; i < resourceHandles.getSize(); i++) {
-            hkResourceHandle *handle = resourceHandles[i];
-            if (!klass) {
-                return handle;
-            }
-            const hkClass *objectClass = handle->getClass();
-            if (objectClass == klass || klass->FUN_00004270(objectClass)) {
-                return handle;
+        return handle;
+    }
+    return HK_NULL;
+}
+
+void hkMemoryResourceContainer::FUN_001801f0(hkResourceHandle *handle) /* derived name */
+{
+    const int index = resourceHandles.indexOf(static_cast<hkMemoryResourceHandle *>(handle));
+    if (index >= 0) {
+        resourceHandles.removeAtAndCopy(index);
+    }
+}
+
+// NONMATCHING: 492 bytes against 508. The base keeps the found child in
+// %r12, the register the new container takes, so both paths return through
+// one `mov rax, r12`; it takes the new container's count word and parent
+// field as addresses once (`lea rbx, [r12 + 8]`, `lea r13, [r12 + 0x18]`) for
+// every count change and the parent's store; the append's null test and
+// store come in another order (docs/NOTES.md, Round 75B).
+hkResourceContainer *hkMemoryResourceContainer::FUN_00180360(const char *containerName)
+{
+    hkResourceContainer *container = FUN_001806b0(containerName, HK_NULL);
+    if (!container) {
+        hkRefPtr<hkMemoryResourceContainer> created = new hkMemoryResourceContainer(containerName);
+        children.pushBack(created);
+        created->releaseReference();
+        created->parent = this;
+        container = created;
+    }
+    return container;
+}
+
+void hkMemoryResourceContainer::FUN_00180560(hkMemoryResourceContainer *child)
+{
+    const int index = children.indexOf(child);
+    if (index >= 0) {
+        children.removeAt(index);
+    }
+}
+
+hkMemoryResourceContainer *
+hkMemoryResourceContainer::FUN_001806b0(const char *childName, const hkResourceContainer *previous)
+{
+    int i = 0;
+    if (previous) {
+        while (i < children.getSize()) {
+            if (children[i++] == previous) {
+                break;
             }
         }
     }
-    return HK_NULL;
+    while (i < children.getSize()) {
+        hkMemoryResourceContainer *child = children[i++];
+        if (!childName || FUN_00017f40(childName, child->name.cString()) == 0) {
+            return child;
+        }
+    }
+    return 0;
 }
