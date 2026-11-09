@@ -3714,3 +3714,8 @@ FUN_00b0aee0 src/game/unknown/leaf_00b0a9c0.cpp _ZN14Object00b0aee0D0Ev
 FUN_00b0b540 src/game/unknown/leaf_00b0a9c0.cpp _ZN14Object00b0b540D0Ev
 FUN_0091b760 src/game/unknown/leaf_0091b760.cpp _Z12FUN_0091b760Pv
 FUN_00ac13d0 src/game/unknown/leaf_00ac13d0.cpp _Z12FUN_00ac13d0P14Object00ac13d0
+FUN_0013b940 src/libs/unknown/func_0013b940.cpp _ZN22BroadPhaseTree00142a4012FUN_0013b940EP8hknpBodyPKji
+FUN_00140ff0 src/libs/unknown/func_0013cf50.cpp _ZN24BroadPhaseLayers00142a4012FUN_00140ff0EPK10hknpBodyIdiP8hknpBody
+FUN_001a1e80 src/libs/unknown/func_001a1e80.cpp
+FUN_00072100 src/libs/unknown/func_00072740.cpp
+FUN_00072740 src/libs/unknown/func_00072740.cpp

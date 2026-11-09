@@ -6610,16 +6610,22 @@ template <typename T> struct LocalBuffer /* derived name */ {
     int size;
 };
 
-/* The storage and its local copy are stored before the capacity: a
- * setSize that follows reads the capacity back right after its store, where
- * InstCombine's store-to-load forwarding folds the reserve away before GVN,
- * so the array leaves memory (0x1707d0). */
+/* Havok's hkLocalArray: the storage, the capacity, then the local copy,
+ * the order of every function that stores them (0x13b940 at 0x13baa7 to
+ * 0x13bab4, 0x1430b0, 0x140ff0, 0x1a1e80, 0x72100, D41). The destructor
+ * clears the size while the storage is still the local block, gives the
+ * block back, then hkArray's destructor clears and frees an outgrown
+ * storage. Its reset of the data and the capacity is dead where the array
+ * dies: at a function's end, or at the lifetime's end the inliner marks
+ * around a helper's array (0x1430b0's loop holds none, the helper inlined
+ * into it); a 32-byte object of the function's own gets no marker (clang
+ * 3.3 CGDecl.cpp:792-805). */
 template <typename T> struct LocalArray : public hkArray<T> /* derived name */ {
     explicit LocalArray(int n) : initialCapacity(n)
     {
         this->data = n ? stackAllocate<T>(n) : 0;
-        localMemory = this->data;
         this->capacityAndFlags = n | hkArray<T>::DONT_DEALLOCATE_FLAG;
+        localMemory = this->data;
     }
 
     ~LocalArray()

@@ -663,10 +663,7 @@ BroadPhaseLayers00142a40::~BroadPhaseLayers00142a40()
  * gathered layer by layer (the layers counted in a byte) into a buffer of
  * the thread's stack and removed from each layer's tree that holds some of
  * them; each removed body's mark cleared. */
-// NONMATCHING: 203 of 207, size equal: equal under LocalArray's SDK order (data, capacity, local
-// copy: 0x14107a, 0x141087, 0x14108a, the fourth function that stores them, D41); the tree's
-// order stores the local copy before the capacity. The header waits for 0x1707d0 (D41). The
-// destructor's conditional size clear is the base's (0x141240 to 0x14124a), then the local
+// The array's destructor: the conditional size clear is the base's (0x141240 to 0x14124a), then the local
 // block's free, then hkArray's.
 void BroadPhaseLayers00142a40::FUN_00140ff0(const hknpBodyId *bodyIds, int numBodies,
                                             hknpBody *bodies)

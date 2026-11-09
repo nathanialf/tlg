@@ -72,10 +72,6 @@ void FUN_00072400(hknpWorldContextPool::Context *context, const ModifierSharedDa
     cacheWriter.FUN_00093a10();
 }
 
-// NONMATCHING: 196 of 199 (763 bytes, the size equal), D41's class only: the local array's
-// constructor stores the data, the capacity, then the local memory (Havok's order: 0x721e3,
-// 0x721ed, 0x721f0), where the tree's LocalArray stores the local memory before the capacity
-// for 0x1707d0. Under the SDK order it compiles equal (199 instructions), as 0x72740 does.
 // The entries stay in registers through the loop because 0x72400, the local array's one
 // escape, is defined in this unit: FunctionAttrs marks its parameter nocapture, so BasicAA's
 // isNonEscapingLocalObject holds (BasicAliasAnalysis.cpp:45-60, 703). The ids are read after
@@ -123,9 +119,7 @@ void FUN_00072100(hknpWorldContextPool::Context *context, const ModifierSharedDa
                  childCacheStreamOut);
 }
 
-// NONMATCHING: 148 of 151 (571 bytes, the size equal), D41's class only (0x727db, 0x727e5,
-// 0x727e8: the data, the capacity, then the local memory); equal (151 instructions) under the
-// SDK order. As 0x72100: 0x72400 in this unit, the ids read before they are stored.
+// As 0x72100: 0x72400 in this unit, the ids read before they are stored.
 void FUN_00072740(hknpWorldContextPool::Context *context, const ModifierSharedData *shared,
                   const hkBlockStream *caches, hkBlockStream *childCacheStream,
                   hknpDeactivatedIsland **islands, int numIslands, hkBlockStream *cacheStreamOut,
