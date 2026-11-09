@@ -2500,3 +2500,39 @@ derived names marked).
 
 **Trigger to revisit.** A residue fragment that two different functions' last lines both equal;
 or a written function whose fragment match depends on a form the file's other functions contradict.
+
+**Addendum, 2026-11-09 (rounds 96A and 99A).** The broad phase tree's object is 0x195ee0 to
+0x198a70 (D44), not 0x194990 onward: 0x194990 belongs to the convex-convex detector's object with
+0x18f430, so it is not the spender. The spender of 0x1985d0's budget is therefore inside the
+tree's own object: the base forms of the drafts still open there (0x196720, 0x196190, 0x198030,
+0x197610), the destructor 0x195ff0 (its body equal, its emission not yet understood), or a
+linkonce function the base's compile emitted and the linker then dropped for another object's
+copy, which the trace of our file cannot show when our header's form differs. "Cost too high: N"
+in the trace names a loop of N blocks whose quota is zero; from 21 blocks up that is the loop's
+own size, not the budget left. The dedicated rounds stop here; the file's drafts return to the
+parked rotation, each visit rerunning the trace, and the patch lands when 0x1985d0 reads "cost
+too high" under it.
+
+## D44. An object's functions share one CIE in .eh_frame (2026-11-09)
+
+**Question.** Assembling a source file in the base's order (D42, docs/FINISHING.md) needs the
+file's boundaries, which rounds 90A to 92A inferred from class names and neighbours, and round 99A
+found wrong for the broad phase tree (0x194990 was taken for its first function).
+
+**Evidence.** Every FDE names its CIE by a relative offset; the linker kept each object's CIE
+rather than merging the byte-identical copies, so the executable holds 637 distinct CIEs and the
+functions whose FDEs share one came from one object. Checked against three files whose bounds
+were known from their functions: hkClass.cpp is one CIE from 0x4060 to 0x4a40 (25 functions, the
+hkUuid initializer 0x3ed0 before it in another), the vertex buffer utility is exactly 0xaaaf0 to
+0xac810 (9), the broad phase tree exactly 0x195ee0 to 0x198a70 (16, so 0x198830, 0x198a20 and
+0x198a70 belong to it after 0x1985d0). `tools/eh_objects.py` lists the objects (639 address runs
+of the 637 CIEs: two objects' runs are interrupted once by another's) and, with a range, the
+object a function belongs to.
+
+**Ruling.** A file assembled in the base's order takes its members from the object the tool
+names, every function of the object in address order, and nothing from outside it; a matched
+function moved into its object's file keeps its row (retargeted). An object whose functions carry
+no file string is named by its class as before, with the derived marker.
+
+**Trigger to revisit.** A function whose FDE's CIE differs from its neighbours' while a file
+string or a class ties it to them; or one of the two interrupted runs turning out to be two files.
