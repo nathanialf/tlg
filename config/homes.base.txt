@@ -38,7 +38,7 @@
 #   FUN_00bb5dc0 anzu/engine_src/render/ps4/JsDeviceContextInline.h anzu/engine_src/render/ps4/JsDeviceContextInline.h
 #   FUN_00bd5000 anzu/engine_src/render/ps4/JsDeviceContextInline.h
 #   FUN_00d68470 anzu/engine_src/render/ps4/util/condition_variable.h anzu/engine_src/render/ps4/util/mutex.h
-#   FUN_00d687e0 anzu/engine_src/render/ps4/util/condition_variable.h anzu/engine_src/render/ps4/util/mutex.h
+#   _ZN14Object00d687e0D1Ev anzu/engine_src/render/ps4/util/condition_variable.h anzu/engine_src/render/ps4/util/mutex.h
 #   FUN_00d97a60 anzu/external/havok/HavokScriptVM-2013.3.0/source/virtualMachine/Memory/MemoryManager.h
 #   FUN_00d98ac0 anzu/external/havok/HavokScriptVM-2013.3.0/source/virtualMachine/Memory/MemoryManager.h
 #   FUN_00d98d00 anzu/external/havok/HavokScriptVM-2013.3.0/source/virtualMachine/Memory/MemoryManager.h anzu/external/havok/HavokScriptVM-2013.3.0/source/virtualMachine/lua_impl.inl
@@ -162,8 +162,8 @@
 #   FUN_0149aa20 anzu/engine_src/render/ps4/util/condition_variable.h anzu/engine_src/render/ps4/util/mutex.h
 FUN_00000ee0 libs/havok/Common/Base/System/Error/hkError.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/System/Error/hkError.cpp
 FUN_0000c590 libs/havok/Common/Base/Memory/System/FreeList/hkFreeListMemorySystem.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/Memory/System/FreeList/hkFreeListMemorySystem.cpp
-FUN_000104c0 libs/havok/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp
-FUN_00010520 libs/havok/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp
+_ZN8hkThreadD1Ev libs/havok/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp
+_ZN8hkThread10joinThreadEv libs/havok/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp Y:/NightlyJobs/20141121-01/Source/Common/Base/Thread/Thread/Posix/hkPosixThread.cpp
 FUN_00021b90 libs/havok/Geometry/Internal/DataStructures/SimdTree/hkcdSimdTree.cpp Y:/NightlyJobs/20141121-01/Source/Geometry/Internal/DataStructures/SimdTree/hkcdSimdTree.cpp
 FUN_000475c0 libs/havok/Physics/Physics/Dynamics/Motion/hknpMotionManager.cpp Y:/NightlyJobs/20141121-01/Source/Physics/Physics/Dynamics/Motion/hknpMotionManager.cpp
 FUN_0004d0a0 libs/havok/Physics/Physics/Dynamics/World/hknpWorld.cpp Y:/NightlyJobs/20141121-01/Source/Physics/Physics/Dynamics/World/hknpWorld.cpp
@@ -483,7 +483,7 @@ FUN_01304dd0 game/anzu/engine_src/render/ps4/JsDepthStencilView.cpp D:/trico/eng
 FUN_01305e90 game/anzu/engine_src/render/ps4/JsDevice.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsDevice.cpp
 FUN_01306250 game/anzu/engine_src/render/ps4/JsDevice.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsDevice.cpp
 FUN_01306470 game/anzu/engine_src/render/ps4/JsDevice.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsDevice.cpp
-FUN_0130acb0 game/anzu/engine_src/render/ps4/JsUnknown.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsUnknown.cpp
+_ZN14Object0130acb0D1Ev game/anzu/engine_src/render/ps4/JsUnknown.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsUnknown.cpp
 FUN_0130adf0 game/anzu/engine_src/render/ps4/JsUnknown.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsUnknown.cpp
 FUN_0130d070 game/anzu/engine_src/render/ps4/JsDeviceContext.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsDeviceContext.cpp
 FUN_0130e040 game/anzu/engine_src/render/ps4/JsDeviceContext.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsDeviceContext.cpp
@@ -514,7 +514,7 @@ FUN_01325260 game/anzu/engine_src/render/ps4/JsVertexShader.cpp D:/trico/engine/
 FUN_01325520 game/anzu/engine_src/render/ps4/JsVertexShader.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsVertexShader.cpp
 FUN_013257d0 game/anzu/engine_src/render/ps4/JsVertexShader.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsVertexShader.cpp
 FUN_01325a80 game/anzu/engine_src/render/ps4/JsVertexShader.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsVertexShader.cpp
-FUN_01326b10 game/anzu/engine_src/render/ps4/JsView.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsView.cpp
+_ZN14Object01326b10D1Ev game/anzu/engine_src/render/ps4/JsView.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsView.cpp
 FUN_01326c10 game/anzu/engine_src/render/ps4/JsView.cpp D:/trico/engine/anzu/engine_src/render/ps4/JsView.cpp
 FUN_013ab050 game/anzu/external/havok/HavokScriptVM-2013.3.0/source/virtualMachine/vm-aux.cpp D:/trico/engine/anzu/external/havok/HavokScriptVM-2013.3.0/build/../source/virtualMachine/vm-aux.cpp
 FUN_0149ada0 game/anzu/external/havok/HavokScriptVM-2013.3.0/source/virtualMachine/vm-core.cpp D:/trico/engine/anzu/external/havok/HavokScriptVM-2013.3.0/build/../source/virtualMachine/vm-core.cpp

@@ -1,16 +1,22 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 
-/* derived names: the complete destructor of a class derived from the one whose
- * destructor is FUN_00c1b7f0, its own body empty, so the base destructor runs
- * as a tail call; slot 0 of the vtable at 0x16b2860 (stored by FUN_00a84ed0),
- * slot 1 (0xa85540) the deleting destructor calling FUN_00c1b7f0 before
- * operator delete. Written as a free function on the base record until the
- * base destructor's row is named (a class form needs its D2 symbol). */
-struct Object00c1b7f0; /* derived name */
-
-void FUN_00c1b7f0(Object00c1b7f0 *self); /* derived name */
-
-void FUN_00a85530(Object00c1b7f0 *self) /* derived name */
+/* derived names: the complete destructor of a class derived from the one
+ * whose destructor is 0xc1b7f0, its own body empty, so the base destructor
+ * runs as a tail call; slot 0 of the vtable at 0x16b2860 (stored by
+ * FUN_00a84ed0), slot 1 (0xa85540) the deleting destructor calling 0xc1b7f0
+ * before operator delete. The class form: Object00a85530 derives from
+ * Object00c1b7f0, whose destructor is the one at 0xc1b7f0 (its row named for
+ * it, D15), and its own destructor is defined empty out of line. */
+class Object00c1b7f0 /* derived name */
 {
-    FUN_00c1b7f0(self);
-}
+  public:
+    virtual ~Object00c1b7f0();
+};
+
+class Object00a85530 : public Object00c1b7f0 /* derived name */
+{
+  public:
+    virtual ~Object00a85530();
+};
+
+Object00a85530::~Object00a85530() {}
