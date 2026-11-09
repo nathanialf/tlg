@@ -479,7 +479,7 @@ rQFVBXp-Cxg V V func fseek
 rcQCUr0EaRU V V func ?
 sUP1hBaouOw V V func ?
 tIhsqj0qsFE V V func free
-tQIo+GIPklo V V func ?
+tQIo+GIPklo V V func _ZSt14_Xlength_errorPKc
 tcVi5SivF7Q V V func sprintf
 tsvEmnenz48 V V func __cxa_atexit
 uMei1W9uyNo V V func exit

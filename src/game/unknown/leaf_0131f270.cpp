@@ -1,0 +1,56 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_types.h"
+
+/* derived names: calls slot 32 of the object its second argument points to
+ * when the int at +0x48 is 5, as a tail call. The argument's class is not
+ * traced; slot 7 of the vtable at 0x16c3b40 (its pointer at 0x16c3b88), the
+ * vtable stored by FUN_0130a930. Class and method unknown. */
+struct Object0131f270 { /* derived name */
+    u8 unknown0[0x48];
+    int unknown48;
+};
+
+class Target0131f270 /* derived name */
+{
+  public:
+    virtual void slot0();  /* derived name; not traced */
+    virtual void slot1();  /* derived name; not traced */
+    virtual void slot2();  /* derived name; not traced */
+    virtual void slot3();  /* derived name; not traced */
+    virtual void slot4();  /* derived name; not traced */
+    virtual void slot5();  /* derived name; not traced */
+    virtual void slot6();  /* derived name; not traced */
+    virtual void slot7();  /* derived name; not traced */
+    virtual void slot8();  /* derived name; not traced */
+    virtual void slot9();  /* derived name; not traced */
+    virtual void slot10(); /* derived name; not traced */
+    virtual void slot11(); /* derived name; not traced */
+    virtual void slot12(); /* derived name; not traced */
+    virtual void slot13(); /* derived name; not traced */
+    virtual void slot14(); /* derived name; not traced */
+    virtual void slot15(); /* derived name; not traced */
+    virtual void slot16(); /* derived name; not traced */
+    virtual void slot17(); /* derived name; not traced */
+    virtual void slot18(); /* derived name; not traced */
+    virtual void slot19(); /* derived name; not traced */
+    virtual void slot20(); /* derived name; not traced */
+    virtual void slot21(); /* derived name; not traced */
+    virtual void slot22(); /* derived name; not traced */
+    virtual void slot23(); /* derived name; not traced */
+    virtual void slot24(); /* derived name; not traced */
+    virtual void slot25(); /* derived name; not traced */
+    virtual void slot26(); /* derived name; not traced */
+    virtual void slot27(); /* derived name; not traced */
+    virtual void slot28(); /* derived name; not traced */
+    virtual void slot29(); /* derived name; not traced */
+    virtual void slot30(); /* derived name; not traced */
+    virtual void slot31(); /* derived name; not traced */
+    virtual void slot32(); /* derived name; not traced */
+};
+
+void FUN_0131f270(const Object0131f270 *self, Target0131f270 *target) /* derived name */
+{
+    if (self->unknown48 == 5) {
+        target->slot32();
+    }
+}
