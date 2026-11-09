@@ -20,7 +20,7 @@ void ShapeWatcherOwner::FUN_00155ea0(const hknpBody *body)
         }
         ShapeWatcher *watcher = watchers[numWatchers];
         watcher->shape = body->shape;
-        watcher->changeFlags = 0;
+        watcher->changeFlags.clear();
         hknpShapeSignals *signals = watcher->shape->unknownVirtual8();
         new MemberSlot00155b00(&signals->shapeMutated, watcher, &ShapeWatcher::FUN_00155b00);
         new MemberSlot00155b10(&signals->shapeDestroyed, watcher, &ShapeWatcher::FUN_00155b10);

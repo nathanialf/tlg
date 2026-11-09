@@ -5,6 +5,6 @@
  * gathers the flags and marks the owner changed (tlg_hk_reflect.h). */
 void ShapeWatcher::FUN_00155b00(u8 flags) /* derived name */
 {
-    changeFlags |= flags;
+    changeFlags.orWith(flags);
     owner->anyShapeChanged = true;
 }

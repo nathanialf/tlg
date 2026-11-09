@@ -1153,6 +1153,11 @@ template <typename BITS, typename STORAGE> class hkFlags
         m_storage &= ~mask;
     }
 
+    void clear()
+    {
+        m_storage = 0;
+    }
+
     STORAGE m_storage;
 };
 
@@ -7757,6 +7762,15 @@ struct hkSignal3 : public Signal00093530 /* derived name */ {
     void fire(P0 p0, P1 p1, P2 p2);
 };
 
+/* A signal whose slots take five arguments (derived name): fire calls slot
+ * 3 of each slot with the five (the world's shape-changed signal passes the
+ * world, the shape held, its change flags and its bodies' ids, 0x156548);
+ * defined after hkSlot. */
+template <typename P0, typename P1, typename P2, typename P3, typename P4>
+struct hkSignal5 : public Signal00093530 /* derived name */ {
+    void fire(P0 p0, P1 p1, P2 p2, P3 p3, P4 p4);
+};
+
 struct hknpShapeSignals {
     hkSignal1<u8> shapeMutated; /* derived name */
     hkSignal0 shapeDestroyed;   /* derived name */
@@ -11211,6 +11225,14 @@ template <typename P0, typename P1, typename P2> class hkSlot3 : public hkSlot /
     virtual void call(P0 p0, P1 p1, P2 p2) = 0; /* derived name */
 };
 
+/* A slot of a signal with five arguments (derived name): slot 3 calls it. */
+template <typename P0, typename P1, typename P2, typename P3, typename P4>
+class hkSlot5 : public hkSlot /* derived name */
+{
+  public:
+    virtual void call(P0 p0, P1 p1, P2 p2, P3 p3, P4 p4) = 0; /* derived name */
+};
+
 /* The two flag bits a slot link keeps low (derived names). */
 inline hkSlot *untagSlotLink(const void *link) /* derived name */
 {
@@ -11317,6 +11339,30 @@ inline void hkSignal3<P0, P1, P2>::fire(P0 p0, P1 p1, P2 p2)
         hkSlot *next = untagSlotLink(slot->next);
         if (slotLinkFlags(slot->next) == 0) {
             static_cast<hkSlot3<P0, P1, P2> *>(slot)->call(p0, p1, p2);
+            if (slotLinkFlags(slot->next) == 0) {
+                prevLink = reinterpret_cast<hkUlong *>(&slot->next);
+                slot = next;
+                continue;
+            }
+        }
+        delete slot;
+        *prevLink = (*prevLink & 3) | reinterpret_cast<hkUlong>(next);
+        slot = next;
+    }
+    slots = untagSlotLink(slots);
+}
+
+/* The same walk, each slot called with the five arguments. */
+template <typename P0, typename P1, typename P2, typename P3, typename P4>
+inline void hkSignal5<P0, P1, P2, P3, P4>::fire(P0 p0, P1 p1, P2 p2, P3 p3, P4 p4)
+{
+    hkUlong *prevLink = reinterpret_cast<hkUlong *>(this);
+    hkSlot *slot = untagSlotLink(slots);
+    slots = reinterpret_cast<void *>(reinterpret_cast<hkUlong>(slot) | 1);
+    while (slot) {
+        hkSlot *next = untagSlotLink(slot->next);
+        if (slotLinkFlags(slot->next) == 0) {
+            static_cast<hkSlot5<P0, P1, P2, P3, P4> *>(slot)->call(p0, p1, p2, p3, p4);
             if (slotLinkFlags(slot->next) == 0) {
                 prevLink = reinterpret_cast<hkUlong *>(&slot->next);
                 slot = next;
@@ -11815,7 +11861,11 @@ struct hknpWorldSignals /* derived name */
     Signal00093530 signal88;
     Signal00093530 signal90;
     hkSignal2<hknpWorld *, int> bodyChangedSignal; /* 0x5fcf0 (quality), 0x60100 (filter info) */
-    Signal00093530 signalA0;
+    /* Fired for each watched shape that changed, once its bodies are
+     * updated (0x1562a0): the world, the shape held, its change flags and
+     * its bodies' ids. derived name. */
+    hkSignal5<hknpWorld *, const hkRefPtr<const hknpShape> &, u8, const u32 *, int>
+        shapeChangedSignal;
     /* Fired when no constraint is free, before one is taken (0x4d1a1).
      * derived name. */
     hkSignal2<hknpWorld *, hknpConstraintManager *> constraintBufferFullSignal;
@@ -12030,6 +12080,16 @@ struct ShapeWatcherOwner /* derived name */
      * with none unsubscribed from its shape, which it drops, and moved to
      * the second list. derived name. */
     void FUN_00156110(const hknpBody *body);
+
+    /* The changed shapes' bodies updated (0x1562a0; the world's collide
+     * tasks build at 0x5005e, under the timer
+     * "TtUpdateCachesOfMutatedShapes"): from the last watcher, one whose
+     * shape is gone moved to the second list; one whose shape changed has
+     * each body's mass properties refreshed (flag 1) and, in the broad
+     * phase, the body rebuilt (4), its shape's caches updated (2) or its
+     * box refreshed; then the world's signal fired and the flags cleared.
+     * derived name. */
+    void FUN_001562a0(struct hknpWorld *world);
 
     /* 0x155bf0 (the world's destructor, 0x4b8bb): every watcher of both
      * lists deleted, then the lists. */
@@ -12258,6 +12318,13 @@ struct hknpWorld {
      * mode is 2, a body neither static nor keyframed (flags 9) handed on and
      * its motion updated; then the body signal fired. derived names. */
     void FUN_0005f240(u32 bodyId, int mode);
+    /* A body's mass distribution set (0x5eec0, called by 0x16eca0): the
+     * command built for the record (the trace of an API call, nothing reads
+     * it), the body's record of the body manager's map at +0x48 taken from
+     * the free list (grown by eight when none is free) and the map told
+     * when it has none, the distribution copied into it; then as 0x5f240.
+     * derived name. */
+    void FUN_0005eec0(u32 bodyId, const hknpMassDistribution &massDistribution, int mode);
     void FUN_0004bcd0(int motionId); /* derived name */
     /* A body's collision caches rebuilt (0x5bf80, as 0x5fab0 does): the
      * body's pairs looked up again (an added body's through 0x4e0c0 or its
@@ -18167,10 +18234,23 @@ class hkMemoryResourceContainer : public hkResourceContainer
  * vtable; its records, built at run time by the initializer from 0x8cf60,
  * name byteStride and channelID, the hkStringPtr at +0x10). Its finish
  * constructor finishes the channel name, its destructor destroys it. */
+/* hkxVertexDescription::ElementDecl (hkClass 0x57c7ec0, built at 0x8d163:
+ * size 0x18, version 4): its six records, built when the file is
+ * initialized, name and type the members; the two enums are
+ * hkxVertexDescription's own (DataType and DataUsage, records 0x16a28c0),
+ * their values not read here. */
 struct hkxVertexDescriptionElementDecl {
+    enum DataType {}; /* hkxVertexDescription::DataType; values not typed */
+
+    enum DataUsage {}; /* hkxVertexDescription::DataUsage; values not typed */
+
     hkxVertexDescriptionElementDecl(hkFinishLoadedObjectFlag flag) : channelID(flag) {}
 
-    u8 unknown0[0x10];
+    u32 byteOffset;
+    hkEnum<DataType, u16> type;
+    hkEnum<DataUsage, u16> usage;
+    u32 byteStride;
+    u8 numElements;
     hkStringPtr channelID;
 };
 
@@ -20494,7 +20574,7 @@ struct hknpVehicleFrictionSolverAxleParams /* derived name */
     Vec4 forwardDirWs;
     /* The ground body's accumulator, when the axle stands on one (0x164040
      * reads its linear velocity). derived name. */
-    const hknpVehicleVelocityAccumulator *groundObject;
+    hknpVehicleVelocityAccumulator *groundObject;
     u8 unknown38[8];
     float frictionCoefficient;
     float viscosityFrictionCoefficient;
@@ -20656,6 +20736,26 @@ class hknpVehicleInstance : public hknpUnaryAction
      * radius, the slip added, and the angle advanced. derived name. */
     void FUN_00163ef0(float deltaTime, const u32 *groundBodyIds,
                       const struct hknpVehicleFrictionSolverParams &params);
+
+    /* The number of wheels, as Havok's hkpVehicleInstance::getNumWheels:
+     * the data's count read as an hkUint8 (0x1632d0's loop, `movzx`).
+     * derived name. */
+    u8 getNumWheels() const
+    {
+        return data->numWheels;
+    }
+
+    /* The suspension's forces applied for a step (0x1632d0, Havok's
+     * applySuspensionForces; the step at 0x164d51): each wheel's force over
+     * the time along its contact normal pushes the chassis's accumulator at
+     * the hard point when it is positive; on a ground body with a solver id
+     * the impulse against it, scaled by the wheel's force feedback and
+     * limited by the ground's mass and the wheel's maximum acceleration,
+     * pushes the axle's ground accumulator when the body is the axle's
+     * ground (the force handed out zero), or is handed out. derived name. */
+    void FUN_001632d0(float deltaTime, const hkArray<float> &suspensionForceAtWheel,
+                      const u32 *groundBodyIds, struct hknpVehicleFrictionSolverParams &params,
+                      Vec4 *suspensionForcesAtWheel);
     void FUN_001648c0(float deltaTime,
                       const hknpVehicleAerodynamics::AerodynamicsDragOutput &aerodynamicsDragInfo,
                       const hkArray<float> &suspensionForceAtWheel,
@@ -22506,6 +22606,15 @@ struct hkBlockStreamConsumer : public hkBlockStreamReader /* derived name */
  * type at +3, the index of the dispatcher that executes it. */
 struct hkCommand /* derived name */
 {
+    hkCommand() {}
+
+    /* The header filled in order (the mass distribution command,
+     * 0x5eef1). */
+    hkCommand(u16 size, u8 primary, u16 secondary)
+        : sizePaddedTo16(size), unknown2(0), primaryType(primary), secondaryType(secondary)
+    {
+    }
+
     u16 sizePaddedTo16; /* derived name */
     u8 unknown2;
     u8 primaryType;    /* derived name */
@@ -23677,7 +23786,7 @@ struct ShapeWatcher /* derived name */
     {
         this->owner = owner;
         shape = HK_NULL;
-        changeFlags = 0;
+        changeFlags.clear();
     }
 
     /* The class allocator: 0x28 bytes from the thread's heap (0x155f66;
@@ -23708,7 +23817,9 @@ struct ShapeWatcher /* derived name */
     /* The ids of the bodies over the shape (the owner's removal of one,
      * 0x156110). derived name. */
     hkArray<u32> bodyIds;
-    u8 changeFlags; /* derived name */
+    /* The changes its shape reported (the handler gathers them, 0x155b00),
+     * each tested in its own width (0x156432's `mov al`). derived name. */
+    hkFlags<u8, u8> changeFlags;
 };
 
 /* The watcher's slot on its shape's change signal (vtable 0x16a47b0, ruled

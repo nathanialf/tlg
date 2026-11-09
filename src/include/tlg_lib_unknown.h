@@ -1922,6 +1922,12 @@ struct hkStridedVertices /* derived name */
     int striding;          /* derived name */
 };
 
+/* A convex shape built from vertices with a convex radius under the
+ * settings (0x44710; the box's 0x451e0, the wheel shape 0x178620 and the
+ * game call it). derived name. */
+class hknpConvexShape *FUN_00044710(const hkStridedVertices &vertices, float convexRadius,
+                                    const ConvexBuildConfig000451e0 &config); /* derived name */
+
 /* A reference-counted convex hull (derived names; the class takes its name
  * from the file hkgpConvexHull.cpp, whose assert FUN_000b8d50 cites, in the
  * later generation's stretch, D22): built and destroyed out of line (the
