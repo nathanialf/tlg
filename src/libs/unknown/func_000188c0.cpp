@@ -11,6 +11,12 @@
 // active blocks' sum, whose rotated phis LoopRotate orders pointer first (the
 // count's zero copied second, the base the other way), and the totals'
 // compare branching to the walk where the base branches to the failure.
+// Round 94A (both compilers the same, 5 of 80 by position, four lines by
+// alignment): the zero of the free count and of the active sum is copied
+// twice (the guard's block and the rotated loop's preheader; the base's one
+// zero serves both phis), and the walk's next-pointer load stays in the offset
+// test's block where the base keeps it in a latch block of its own, entered by
+// `jmp` from the totals' compare.
 bool FreeList::FUN_000188c0() const
 {
     u64 numFree = 0;

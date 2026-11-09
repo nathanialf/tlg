@@ -5259,8 +5259,9 @@ struct ConvexTimers0017a3c0 /* derived name */
 void FUN_0017a680(void *timers, ThreadBuffer &stream); /* derived name */
 
 /* An owner of step timers (derived name): two records at +0xa8 and +0xc0,
- * the second written only when its value is set, two groups at +0xd8 and
- * +0x268 that write their own (FUN_0017a970, FUN_0017abe0), and the flag at
+ * the Sdf section's whole and its Jacobians' build, the second written only
+ * when its value is set, two groups at +0xd8 and +0x268 that write their own
+ * (FUN_0017a970, FUN_0017abe0), and the flag at
  * +0x410 that turns the writing on; FUN_0017a3c0 writes the convex timers
  * at +0 first. Its writer is called by 0x15c5f0 (0x15d77d). */
 struct StepTimers /* derived name */
@@ -5269,8 +5270,8 @@ struct StepTimers /* derived name */
     void FUN_0017aeb0(ThreadBuffer &stream);
 
     ConvexTimers0017a3c0 convex;     /* derived name */
-    TimerRecord timerA8;             /* derived name */
-    TimerRecord timerC0;             /* derived name */
+    TimerRecord sdfTimer;            /* derived name */
+    TimerRecord buildJacTimer;       /* derived name */
     CompositeTimers0017a970 groupD8; /* derived name */
     u8 group268[0x1a8];              /* derived name */
     bool enabled;                    /* derived name */

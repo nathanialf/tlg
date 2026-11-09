@@ -2922,3 +2922,4 @@ FUN_0052dc60 src/game/unknown/leaf_0052dc60.cpp _Z12FUN_0052dc60P14Object0052dc6
 FUN_0052dd30 src/game/unknown/leaf_0052dd30.cpp _Z12FUN_0052dd30P14Object0052dd30
 FUN_0052de20 src/game/unknown/leaf_0052de20.cpp _Z12FUN_0052de20P14Object0052de20
 FUN_0057f3a0 src/game/unknown/leaf_0057f3a0.cpp _Z12FUN_0057f3a0P14Object0057f3a0Pv
+FUN_0017aeb0 src/libs/unknown/func_0017aeb0.cpp _ZN10StepTimers12FUN_0017aeb0ER12ThreadBuffer

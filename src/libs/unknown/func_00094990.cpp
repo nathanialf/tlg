@@ -30,10 +30,12 @@ void hkBlockStream::FUN_00094990(BlockCache *cache)
  * already holds one empty block none of which was freed, else every block
  * back to the cache (0x94990, inline here) and a new one appended, its
  * statements written out as the setup's are (func_000947f0.cpp). */
-// NONMATCHING: equal in its statements' order and every block's code but for the array's
-// address (NOTES Round 64B): EarlyCSE gives the entry test's `blocks` member expression (this
-// + 0x20) to the append's getSize and pushBack, so the address is kept in r14 from the entry
-// (`lea r14, [rbx+0x20]`, r15 the cache), where the base forms it at the grow call only.
+// NONMATCHING: 282 bytes against 268, the same under D42's compiler (round 94A): one phi
+// (NOTES Round 72A, 73A): JumpThreading clones the inlined 0x94990's entry block for the
+// partiallyFreed test, and that block holds the callee's hkArrayBase subobject GEP (kept
+// unmerged by shouldMergeGEPs, two all-zero data reads over it), so its two copies meet in a
+// phi and the data is read through `lea rax, [rbx+0x20]` where the base reads [rbx+0x20]
+// directly. Lead: a 0x94990 (matched) whose data reads leave the subobject one all-zero user.
 void hkBlockStream::FUN_00094880(BlockCache *cache)
 {
     if (blocks.size) {

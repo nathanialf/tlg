@@ -6,7 +6,8 @@
 // reuses r14 for the first node and zeroes the result at the end), and its link loop is
 // unrotated under the guard (`cmp r15d, eax; jg` then a header test), its last link stored
 // through the loop's own offset, where LoopRotate rotates this one behind a second guard
-// (NOTES Round 62B).
+// (NOTES Round 62B). Round 94A: 41 of 76, 252 bytes against 235, the same under D42's
+// compiler (no copied loop here; the rotation is LoopRotate's, not LoopUnswitch's).
 hkResult hkcdDynamicTree::DynamicStorage32::FUN_00022600(int numNodes)
 {
     if (numNodes == 0) {
