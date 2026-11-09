@@ -2460,3 +2460,43 @@ developer's.
 **Trigger to revisit.** A function the patched compiler unswitches where the base does not, with
 its whole source file assembled in the base's order and no earlier unswitch to spend the budget;
 or a budget that the TU order cannot account for (a refund the base shows, LoopUnswitch.cpp:284).
+
+**Addendum, 2026-11-09 (rounds 90A and 91A).** Three of the five rows were explained by an
+earlier unswitch in their source file and fixed by assembling the file in the base's order
+(hkResourceHandle.cpp: 0x17ff90's search loop unswitched twice, then 0x1806b0's "cost too high";
+the broad phase unit: 0x13e090's gather before 0x1412e0; the vertex buffer utility's file). The
+pass's own trace (a debug build of the same patched source, `-debug-only=loop-unswitch`) shows each.
+0x4470's spender was outside the function table: three hkClass enum functions the linker discarded,
+whose last lines survive as residue at 0x4300, 0x4310 and 0x4320 (D43); written into the file
+before 0x4350, their first loop takes the budget and 0x4470's reads "cost too high" as the base
+has it. One row remains, 0x1985d0: no residue from 0x19443b to 0x1997b0, no copied loop in the
+callees the pass meets first, and the file's thirteen earlier functions (0x194990 to 0x1981e0,
+15 KB) have no source yet; the spender is sought as they are written. A fourth way to spend the
+budget is read from the source and not yet observed: when LoopUnswitch deletes the loop it works
+on, RemoveLoopFromHierarchy clears currentLoop (LoopUnswitch.cpp:1011-1014) and releaseMemory
+refunds nothing, so that loop's whole reservation is lost for the rest of the compile. Also under
+the patch: 0x5c120's and 0x45c0's two loop paths come from one loop each (cookbook 773's form is
+the compiler's), to be rewritten in the switch commit with 0x17ff90, 0xab150 and 0xab4f0 claimed.
+
+## D43. A function the linker discarded is written when the residue shows it (2026-11-09)
+
+**Question.** D13 classes the text between the unwind tables' functions as padding or linker
+residue, "never source, never claimed". Round 91A found that the three residue fragments at
+0x4300 (13 bytes), 0x4310 (5) and 0x4320 (11) are the last 16-byte lines of three hkClass enum
+functions written in the file's own idiom (the enums counted through the parents, an indexed
+lookup, a lookup by name): compiled from source, each function's last line equals its fragment
+byte for byte (supervisor's check, 2026-11-09, from the object of func_00004350.cpp). The linker
+dropped the functions as unreferenced and left those lines. The functions matter: the pass ran on
+them before 0x4470 and the first of their loops spent LoopUnswitch's budget (D42).
+
+**Ruling.** A function that the base's text does not keep may be written into its file, with no
+row, when a residue fragment equals the compiled function's bytes at the fragment's offset within
+its last line and the function's place in the file follows from its address (the fragment's). The
+definition carries a comment naming the fragment ("discarded by the linker; residue 0x4300 to
+0x430d"). The residue rows stay what D13 says: never claimed; the fragment is evidence, not a
+target. A function with no such fragment is not written on the strength of the budget alone: that
+would be a steer. Names follow the usual rule (SDK method names unmarked where the class is known,
+derived names marked).
+
+**Trigger to revisit.** A residue fragment that two different functions' last lines both equal;
+or a written function whose fragment match depends on a form the file's other functions contradict.
