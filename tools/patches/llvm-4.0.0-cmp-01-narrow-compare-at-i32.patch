@@ -1,0 +1,35 @@
+llvm-4.0.0 backport patch: an 8- or 16-bit compare is done at i32 (PS4)
+
+This patch CHANGES CODE GENERATION for an integer comparison of 8 or
+16 bits against a value other than zero. Upstream 4.0.0 (since 3.9)
+compares at the operand's width (`cmp byte [mem], 1`) and promotes only
+a 16-bit compare with an immediate; LLVM 3.5 to 3.8 extended both
+operands to i32 first (X86ISelLowering.cpp, EmitCmp: "Do the comparison
+at i32 if it's smaller, besides the Atom case"), so the byte is loaded
+with movzx and compared as a dword (`movzx eax, byte [mem]; cmp eax,
+1`). The game region holds 12 byte and 3 word compares against a
+nonzero operand in 21 MB of code (2,205 `cmp byte [mem], 0` and 68
+`cmp word [mem], 0`, which go through EmitTest and are not promoted);
+the library region, built by 3.3 before the rule, holds 611 and 289.
+The masked i1 loads of the region tested as conditions are all
+`movzx eax, byte [rip+x]; and eax, 1; cmp eax, 1` (23 sites), which
+this rule and the masked-load patch give together; 0xb100c0's flag test
+compiles to the base's bytes with both.
+
+--- a/lib/Target/X86/X86ISelLowering.cpp
++++ b/lib/Target/X86/X86ISelLowering.cpp
+@@ -16245,10 +16245,10 @@
+ 
+   if ((Op0.getValueType() == MVT::i8 || Op0.getValueType() == MVT::i16 ||
+        Op0.getValueType() == MVT::i32 || Op0.getValueType() == MVT::i64)) {
+-    // Only promote the compare up to I32 if it is a 16 bit operation
+-    // with an immediate.  16 bit immediates are to be avoided.
+-    if ((Op0.getValueType() == MVT::i16 &&
+-         (isa<ConstantSDNode>(Op0) || isa<ConstantSDNode>(Op1))) &&
++    // PS4: do the comparison at i32 if it's smaller, besides the Atom case,
++    // as LLVM 3.5 to 3.8 did; keep the smaller reference when optimizing
++    // for size.
++    if (Op0.getValueType() != MVT::i32 && Op0.getValueType() != MVT::i64 &&
+         !DAG.getMachineFunction().getFunction()->optForMinSize() &&
+         !Subtarget.isAtom()) {
+       unsigned ExtendOp =

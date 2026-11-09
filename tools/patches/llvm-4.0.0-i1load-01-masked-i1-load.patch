@@ -1,0 +1,45 @@
+llvm-4.0.0 backport patch: a zero-extending load of an i1 masks the byte (PS4)
+
+This patch CHANGES CODE GENERATION for a load of an i1 from memory,
+which GlobalOpt makes of an internal bool global that is only ever
+stored true and false. Upstream 4.0.0 (since 3.9) selects the
+zero-extending load as a bare byte load, trusting the upper bits; the
+PS4 compiler that built the game region kept LLVM 3.7's selection
+patterns (X86InstrCompiler.td, "zextload bool -> zextload byte"): the
+loaded byte is masked with `and 1`, at i8 (`mov al, [rip+x]; and al,
+1`, the short AL form) or at i32 with the 32-bit immediate (`movzx eax,
+byte [rip+x]; and eax, 1` encoded 25 01 00 00 00, or 81 /4 with another
+register). LLVM 3.8 used the 8-bit-immediate AND for the wider forms
+(83 /4 01); the base has none of those after such a load. Measured over
+the game region (docs/NOTES.md, round 114A): the 45 loads of the 20
+byte globals that are stored only with constant 0 and 1 and never have
+their address taken are all masked in these forms (22 at i8, 23 at
+i32), and none is loaded without the mask; the unmasked byte loads of
+the region (11,994, `test al, al`) are on globals whose address is
+taken (the function-local static guards). With this patch 0xb108d0
+compiles to the base's bytes.
+
+--- a/lib/Target/X86/X86InstrCompiler.td
++++ b/lib/Target/X86/X86InstrCompiler.td
+@@ -1191,13 +1191,15 @@
+ defm : CMOVmr<X86_COND_NO, CMOVO16rm , CMOVO32rm , CMOVO64rm>;
+ 
+ // zextload bool -> zextload byte
+-// i1 stored in one byte in zero-extended form.
+-// Upper bits cleanup should be executed before Store.
+-def : Pat<(zextloadi8i1  addr:$src), (MOV8rm addr:$src)>;
+-def : Pat<(zextloadi16i1 addr:$src), (MOVZX16rm8 addr:$src)>;
+-def : Pat<(zextloadi32i1 addr:$src), (MOVZX32rm8 addr:$src)>;
++// PS4: an i1 in memory is not trusted to be zero-extended; the loaded byte
++// is masked to its low bit, as LLVM 3.7 selected it (3.8 used the
++// 8-bit-immediate forms for the wider ANDs).
++def : Pat<(zextloadi8i1  addr:$src), (AND8ri (MOV8rm addr:$src), (i8 1))>;
++def : Pat<(zextloadi16i1 addr:$src), (AND16ri (MOVZX16rm8 addr:$src), (i16 1))>;
++def : Pat<(zextloadi32i1 addr:$src), (AND32ri (MOVZX32rm8 addr:$src), (i32 1))>;
+ def : Pat<(zextloadi64i1 addr:$src),
+-          (SUBREG_TO_REG (i64 0), (MOVZX32rm8 addr:$src), sub_32bit)>;
++          (SUBREG_TO_REG (i64 0),
++           (AND32ri (MOVZX32rm8 addr:$src), (i32 1)), sub_32bit)>;
+ 
+ // extload bool -> extload byte
+ // When extloading from 16-bit and smaller memory locations into 64-bit

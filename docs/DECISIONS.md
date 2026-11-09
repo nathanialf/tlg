@@ -2600,3 +2600,44 @@ D2 and D0 do not move; only the D1 and C1 rows gain their class symbols.
 **Trigger to revisit.** A weak-linkage structor the base holds as one body where the patched
 compiler emits two (a RAUW shape in the base); or an alias the base shows for a definition the
 patched compiler emits separately.
+
+## D46. The game compiler's X86 backend keeps three pre-3.9 rules (2026-11-09)
+
+**Question.** After D45, three shapes of the game region remained that upstream 4.0.0 never emits:
+a bool global shrunk to i1 is loaded with a mask (`mov al, [rip + x]; and al, 1`; `movzx eax, byte
+ptr [rip + x]; and eax, 1; cmp eax, 1`), a compare of a byte or a word is done at i32, and a zero-
+extended setcc is `sete al; movzx eax, al` where 4.0.0 clears the register first (lib/Target/X86/
+X86FixupSetCC.cpp, new in 3.9). Round 113A's five `return field == k` functions and round 112A's
+0xb108d0 failed on them.
+
+**Evidence (round 114A, scratchpad a114/; the supervisor's whole gate, d46/).**
+
+- The i1 mask is codegen, not IR: every release from 3.6.2 to 5.0.2 produces the same `load i1`
+  of the shrunk static; 3.7.1 and 3.8.1 select the mask (X86InstrCompiler.td, "zextload bool ->
+  zextload byte"), 3.6.2 and 3.9.1 onward do not. The base's 32-bit masks are the imm32 forms
+  (`25 01 00 00 00`, `81 e2 01 00 00 00`): 3.7.1's patterns, not 3.8.1's imm8 ones. Census: the
+  game region's 20 byte globals stored only with constants 0 and 1 and never address-taken are
+  loaded at 45 sites, all masked, none bare; the 11,994 `mov al; test al, al` loads are all
+  address-taken guards. The i32 compare (X86ISelLowering.cpp EmitCmp, 3.5.2 to 3.8.1; 4.0.0 keeps
+  it only for i16 against an immediate): the game region has 15 byte or word compares against a
+  nonzero value, all `cmp x, 1` feeding sbb or adc or a misdecode; the library region, whose 3.3
+  predates the rule, has 900. FixupSetCC: 1,548 `setcc; movzx` pairs in 775 game functions and no
+  xor-before-setcc form but 76 ordinary zeroed registers; the library 234 pairs, none of the form.
+- Source forms excluded by bytes: a bitfield (read-modify-write stores where the base stores a
+  plain byte), a written `& 1` (selects `83 e0 01`, never the base's imm32), a flag (none restores
+  either pattern).
+- Three one-rule backports (X86InstrCompiler.td with 3.7.1's patterns; EmitCmp with 3.8.1's
+  condition; createX86FixupSetCC left out of the pipeline), applied together: 0xb108d0 and the five
+  setcc functions compile equal; the two bool-reading drafts move their first difference past the
+  flag test; every one of the 1,471 matched game rows is equal per function (a114/sw/), and the
+  whole gate passes from an empty object cache (d46/gate_three.log, 6m52s).
+
+**Ruling.** The three patches join the structor backport in the 4.0.0 source build of the game
+line (tools/patches/llvm-4.0.0-i1load-01, -cmp-01, -setcc-01). Each is one instruction form or
+one pass, narrower than any source form, with the source alternatives excluded above: a compiler
+change may never stand in for a source shape (the ICO lesson, 2026-11-09).
+
+**Trigger to revisit.** A shrunk bool the base loads bare; a byte compare against a nonzero value
+the base does at 8 bits outside the sbb/adc forms; a `xor; cmp; setcc` the base emits where a
+register was not otherwise zeroed; or 0x5a8dbb4 (masked, yet stored by setne) and the 15 `cmp
+byte, 0` globals, left as a probe: whether those are struct members or wider-stored neighbours.

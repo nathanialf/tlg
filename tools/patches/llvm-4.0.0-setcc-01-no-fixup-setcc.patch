@@ -1,0 +1,25 @@
+llvm-4.0.0 backport patch: X86FixupSetCC is not run (PS4)
+
+This patch CHANGES CODE GENERATION for a zero-extended setcc. The pass
+X86FixupSetCC, new in LLVM 3.9 (lib/Target/X86/X86FixupSetCC.cpp, added
+to the pipeline in X86PassConfig::addPreRegAlloc), rewrites `setcc r8;
+movzx r32, r8` as `xor r32, r32; ...; setcc r8` with the zeroing hoisted
+before the flag-setting instruction. The game region was built without
+it: 1,548 `setcc; movzx` pairs in 775 functions, and the 76 xor-before-
+setcc hits are ordinary zeroed registers (round 113A, 0x30d620 and
+0x2a58b7 checked); the library region has 234 pairs in 90 functions and
+no xor form. With this patch 0x135e290, 0x135e2a0, 0x135e2d0, 0x135e330
+and 0x135e460 compile to the base's bytes.
+
+--- a/lib/Target/X86/X86TargetMachine.cpp
++++ b/lib/Target/X86/X86TargetMachine.cpp
+@@ -375,7 +375,8 @@
+ 
+ void X86PassConfig::addPreRegAlloc() {
+   if (getOptLevel() != CodeGenOpt::None) {
+-    addPass(createX86FixupSetCC());
++    // PS4: no X86FixupSetCC (new in LLVM 3.9): a zero-extended setcc stays
++    // `setcc; movzx`, as the earlier releases left it.
+     addPass(createX86OptimizeLEAs());
+     addPass(createX86CallFrameOptimization());
+   }
