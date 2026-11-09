@@ -8185,7 +8185,6 @@ inline int cellOf(const hknpSpaceSplitter *splitter, const Vec4 &position)
  * are not (cookbook 15, 97): the base destructor, then the object back to
  * the thread's heap at its recorded size, the class's own by default. The
  * base destructors not declared elsewhere come first. derived names. */
-void FUN_00037c40(hknpMaskedShape *self);
 void FUN_0004b040(hknpWorld *self);
 void FUN_0008d2c0(hkxScene *self);
 void FUN_0015bfa0(hknpWorldSnapshot *self);
@@ -8194,7 +8193,6 @@ void FUN_00165af0(hknpPhysicsSystemData *self);
 
 void FUN_000231b0(hkMemoryMeshBody *self);                 /* slot 1 of 0x1691600 */
 void FUN_00033f40(hknpStaticCompoundShapeInternals *self); /* slot 1 of 0x1692830 */
-void FUN_00037bf0(hknpMaskedShape *self);                  /* slot 1 of 0x1693a80 */
 void FUN_0003b050(hknpDecoratorShape *self);               /* slot 1 of 0x16958d0 */
 /* Also slot 1 of hknpConvexShape's vtable 0x1697d90 (one body for the
  * classes of 0x30 bytes, named for the sphere's constructor beside it,

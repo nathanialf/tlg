@@ -1300,7 +1300,8 @@ _ZN17hkMemoryMeshShapeD0Ev src/libs/unknown/func_0002a9b0.cpp
 FUN_00033f40 src/libs/unknown/func_00033f40.cpp
 _ZN27hknpCompressedMeshShapeDataD0Ev src/libs/unknown/func_00034da0.cpp
 _ZN27hknpCompressedMeshShapeDataD2Ev src/libs/unknown/func_00034da0.cpp
-FUN_00037bf0 src/libs/unknown/func_00037bf0.cpp
+_ZN15hknpMaskedShapeD0Ev src/libs/unknown/func_00037bf0.cpp
+_ZN15hknpMaskedShapeD1Ev src/libs/unknown/func_00037bf0.cpp
 FUN_0003b050 src/libs/unknown/func_0003b050.cpp
 FUN_0003c370 src/libs/unknown/func_0003c370.cpp
 _ZN17hknpCompoundShapeD0Ev src/libs/unknown/func_00041650.cpp
@@ -3021,3 +3022,5 @@ FUN_00777ca0 src/game/unknown/leaf_00777ca0.cpp _Z12FUN_00777ca0P14Object00777ca
 FUN_00778150 src/game/unknown/leaf_00778150.cpp _Z12FUN_00778150P14Object00778150
 FUN_00197710 src/libs/unknown/func_00195ee0.cpp _Z12FUN_00197710PK22BroadPhaseTree00142a40S1_R7hkArrayI16LeafPair0019771024hkContainerHeapAllocatorE
 FUN_001981e0 src/libs/unknown/func_00195ee0.cpp _Z12FUN_001981e0PN19ElementPool00198a207ElementEP22BroadPhaseTree00142a40RA3_Kjj
+FUN_0001ae40 src/libs/unknown/func_0001ae40.cpp _ZN9hkMatrix312FUN_0001ae40ERKS_
+FUN_0003a920 src/libs/unknown/func_0003a670.cpp _ZN8hknpBody12FUN_0003a920Ev

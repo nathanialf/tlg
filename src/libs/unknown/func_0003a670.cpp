@@ -12,16 +12,10 @@ void hknpBody::FUN_0003a670(const Vec4 &centerOfMassLocal)
     _mm_store_ss(&lane(transform.rotation.col2, 3), broadcast<2>(centerOfMassLocal));
 }
 
-/* The motion's frame from the transform: the rotation's inverse packed,
- * the inverse's translation kept as the centre of mass (the setter above,
- * inline). */
-// NONMATCHING: 62 of 66 (size equal); the centre of mass's lanes go out as the base's since
-// the setter stores scalars (above). Left: the rotation's products take their operands the
-// other way round (`vmulps xmm3, xmm3, xmm1` and `vmulps xmm4, xmm0, xmm4` at 0x3a9a4, the dot
-// product's and the sum's at 0x3a9e8 and 0x3a9fc): the base copies the translation into the
-// local as an integer vector (`vmovdqa`, 0x3a948, the aggregate copy of an hkVector4) and
-// Reassociate ranks its value as that load; here the copy is a float load. NOTES Round 64A
-// and Round 80A.
+/* The motion's frame from the transform: the rotation's inverse, the
+ * inverse's translation kept as the centre of mass (the setter above,
+ * inline) after the inverse rotation is packed; both halves of the inverse
+ * are computed before either is stored. */
 void hknpBody::FUN_0003a920()
 {
     hkQTransformf bodyTransform;
@@ -30,6 +24,10 @@ void hknpBody::FUN_0003a920()
 
     hkQuaternion inverse;
     inverse.vec = _mm_xor_ps(bodyTransform.rotation.vec, _mm_setr_ps(-0.0f, -0.0f, -0.0f, 0.0f));
+
+    hkVector4 centerOfMassLocal;
+    centerOfMassLocal.quad =
+        _mm_xor_ps(rotatedDir(inverse, bodyTransform.translation), _mm_set1_ps(-0.0f));
 
     /* Each lane times 30000 in the upper half, converted with saturation,
      * the sign bit flipped, the upper half kept. */
@@ -43,9 +41,6 @@ void hknpBody::FUN_0003a920()
     motionToBodyRotation[2] = s16(_mm_extract_epi16(converted, 5));
     motionToBodyRotation[3] = s16(_mm_extract_epi16(converted, 7));
 
-    hkVector4 centerOfMassLocal;
-    centerOfMassLocal.quad =
-        _mm_xor_ps(rotatedDir(inverse, bodyTransform.translation), _mm_set1_ps(-0.0f));
     FUN_0003a670(centerOfMassLocal.quad);
 }
 
