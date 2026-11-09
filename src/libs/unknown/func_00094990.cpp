@@ -36,6 +36,12 @@ void hkBlockStream::FUN_00094990(BlockCache *cache)
 // unmerged by shouldMergeGEPs, two all-zero data reads over it), so its two copies meet in a
 // phi and the data is read through `lea rax, [rbx+0x20]` where the base reads [rbx+0x20]
 // directly. Lead: a 0x94990 (matched) whose data reads leave the subobject one all-zero user.
+// Round 105A, from the IR: the subobject GEP sits in 0x94990's entry because EarlyCSE joins it
+// with the size read's; its two all-zero users are the data reads of the compaction branch and
+// of the call's branch, neither dominating the other, and after threading each becomes a phi of
+// the two clones (%18 and %38), so FoldPHIArgGEPIntoPHI's one-use test (InstCombinePHI.cpp:149)
+// refuses both. The data read hoisted to the entry (a local before the test) is not the base's
+// (0x94990 at 110 bytes against 119, the load kept in the entry).
 void hkBlockStream::FUN_00094880(BlockCache *cache)
 {
     if (blocks.size) {
