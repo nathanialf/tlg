@@ -78,10 +78,13 @@ class Class16cc478 /* derived name */
 
     int FUN_0137b9e0() const;
     int FUN_0137b9f0() const;
+    int FUN_01376380() const;
 
     u8 unknown48[0x58];
     int unknowna0; /* returned by FUN_0137b9f0 */
     int unknowna4; /* returned by FUN_0137b9e0 */
+    u8 unknowna8[0x254 - 0xa8];
+    int unknown254; /* returned by FUN_01376380 */
 };
 
 /* The base shared by the classes whose vtables hold the thunks 0x13746b0,

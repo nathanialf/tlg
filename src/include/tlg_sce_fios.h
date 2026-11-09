@@ -55,6 +55,7 @@ int sceFiosFHOpenSync(const SceFiosOpAttr *attr, SceFiosFH *fh, const char *path
                       const SceFiosOpenParams *params);
 int sceFiosStatSync(const SceFiosOpAttr *attr, const char *path, SceFiosStat *stat);
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
+SceFiosSize sceFiosFHGetSize(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
 int sceFiosFHSyncSync(const SceFiosOpAttr *attr, SceFiosFH fh);
 int sceFiosFHCloseSync(const SceFiosOpAttr *attr, SceFiosFH fh);
