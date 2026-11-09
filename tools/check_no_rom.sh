@@ -62,7 +62,8 @@ for f in "${files[@]}"; do
     [[ -z "$f" ]] && continue
     [[ ! -f "$f" ]] && continue
     # config/functions.<ver>.txt: `addr size name` rows, no bytes; exempt.
-    case "$f" in config/functions.*.txt) continue ;; esac
+    # config/matched.<ver>.txt: `function tu [symbol]` rows, no bytes; exempt.
+    case "$f" in config/functions.*.txt|config/matched.*.txt) continue ;; esac
     # docs/<slug>/progress.json: names, addresses and integer byte counts.
     case "$f" in docs/*/progress.json) continue ;; esac
     size=$(wc -c < "$f")
