@@ -12,7 +12,8 @@ bool FUN_00187750(const Vec4 &point, const Vec4 *planes, int numPlanes,
 // tolerance's load (the base loads the constant table first), so the two
 // spills come out in the other order (a frame 16 bytes larger) and the
 // radii's broadcasts and the following registers differ (docs/NOTES.md,
-// Round 64A).
+// Round 64A). Round 101A: the preheader's IR holds the table's load before the planes' base
+// (as the base's machine order), so the reversal is the scheduler's (list-ilp, no new lead).
 void hknpConvexPolytopeShape::unknownVirtual18(const SignedDistanceQuery &query,
                                                SignedDistanceContact *contactsOut) const
 {

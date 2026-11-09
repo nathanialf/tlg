@@ -7,7 +7,11 @@
  * chunk and its payload. */
 // NONMATCHING (NOTES Round 64B): every block, branch and memory operand is the base's; the
 // registers are permuted (the base keeps the pointer in r15, the chunk's size in r14, the
-// merged chunk and size in r13 and r12, this compile r12, r13, r15 and rbx).
+// merged chunk and size in r13 and r12, this compile r12, r13, r15 and rbx). Round 101A: the
+// IR's sum is already `add (next head & ~3), size` as the base's `and rbx; add rbx, r12`, but
+// this compile ties it to the size's register (`add rbx, r14`, a commuted two-address add) and
+// the base to the next head's, copying the size into it on the in-use path (`mov rbx, r12` at
+// 0x1347e, the one instruction over); the sum written before the unlink changes nothing.
 void hkLargeBlockAllocator::blockFree(void *pointer, int numBytes)
 {
     if (!pointer) {

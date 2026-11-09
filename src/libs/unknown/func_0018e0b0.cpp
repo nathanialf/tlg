@@ -26,7 +26,10 @@ struct PairKeyGreater0018d960 /* derived name */
 // ebx; cmp ebx, r8d`, the base folds it), so one register fewer: the stack
 // guard's address is loaded again at the end where the base keeps it in
 // r12 (docs/NOTES.md, Round 63A; the second scan's two increments are the
-// base's since the template tests j != i, Round 70A).
+// base's since the template tests j != i, Round 70A). Round 101A: the same TU compiled
+// without -g folds the load as the base (`lea; lea; cmp dword ptr [...], r8d`, the registers
+// still apart): the DBG_VALUE is the cause; the comparator taking its entries by value, or
+// returning hkBool, leaves it in place.
 /* The entries' sort (0x18e0b0, called at 0x18dcf8). */
 template void hkAlgorithm::quickSortRecursive(PairSortEntry0018d960 *pArr, int d, int h,
                                               PairKeyGreater0018d960 cmpLess);

@@ -38,7 +38,8 @@ hknpTriangleShape::hknpTriangleShape(hkFinishLoadedObjectFlag flag) : hknpConvex
 // base's (the projection's dot taken before the reciprocal and the sphere's
 // radius read before the capsule's, Reassociate's ranks); left: the
 // latch's two steps, `add r9, 0x10` before `lea r8, [rdx + 0x50]` in the
-// base (docs/NOTES.md, Round 70A).
+// base (docs/NOTES.md, Round 70A). Round 101A: unchanged, 62 of 64 (list-ilp's order of
+// the two induction steps, no new lead).
 void hknpCapsuleShape::unknownVirtual18(const SignedDistanceQuery &query,
                                         SignedDistanceContact *contactsOut) const
 {

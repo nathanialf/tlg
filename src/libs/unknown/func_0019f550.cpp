@@ -4,7 +4,10 @@
 // NONMATCHING (NOTES Round 64B): the inner sweep, its masks, pairs and counts are the base's;
 // left, the outer loop: the base keeps it unrotated (the count's `dec; test; jle` at its head,
 // the box advanced before the sweep, `jmp` back from the sweep's end), where LoopRotate rotates
-// this one behind a guard.
+// this one behind a guard. Round 101A: the box advanced before the sweep (`cur = a++`) compiles
+// to the same 87 instructions; in that IR every condition of rotateLoop holds for the outer loop
+// (LoopRotation.cpp:270-311: a 3-instruction exiting header, one latch, the merged inner exit,
+// not exiting), so the base's IR had an outer loop rotateLoop refused; same under D42's compiler.
 int FUN_0019f550(const hkAabb16 *boxes, int numBoxes, hkKeyPair *pairsOut, int maxNumPairs,
                  int &numPairsSkippedOut) /* derived name */
 {

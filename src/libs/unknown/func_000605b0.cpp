@@ -20,7 +20,9 @@ static inline u32 cellPairIndex(u32 hi, u32 lo)
 // loop, which is LoopUnswitch's non-trivial unswitch of this loop (3.3 does
 // it at -O3 only, LoopUnswitch.cpp:651); u16(hi + 1) is held as
 // `shl 16; add 0x10000; shr 16`, the form of a 16-bit bitfield read, also
-// at 0x18e820.
+// at 0x18e820. Round 101A, under D42's compiler: the loop is unswitched as the base (250 of 277
+// bytes, 9 of 76); left is cookbook 335's 16-bit form, whose absence lets SCEV turn the
+// triangular index into recurrences (`add ecx, edi; add edi, 2`) where the base multiplies.
 hknpSpaceSplitter::hknpSpaceSplitter(int type) : type(type)
 {
     for (int a = 0; a < 17; a++) {
