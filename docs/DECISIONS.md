@@ -2397,6 +2397,17 @@ measurement, NOTES "Round 80A").
 **Trigger.** A header whose member order was chosen for a function that keeps the object in
 registers; a destructor whose stores are seen only in a loop.
 
+**Addendum, 2026-11-09 (round 105A).** The switch landed (commit f5f8797): LocalArray stores in
+the SDK's order and 0x13b940, 0x140ff0, 0x1a1e80, 0x72100 and 0x72740 are claimed under it, every
+earlier LocalArray row equal, 0x1707d0 equal as an hkLocalBitField (cookbook 981). The destructor
+sequence this entry read from 0x1430b0 is not a header fact: hkArray's destructor does reset the
+data and the capacity (235 rows fail with the reset removed), and what removes the reset in
+0x1430b0's loop is the inliner. The per-layer body is a static helper of the file; InlineFunction
+puts lifetime markers around the helper's arrays and DSE drops the reset before the end marker
+(DeadStoreElimination.cpp:221), which an inline member of the class, not inlined there, does not
+get (cookbook 980). 0x1430b0 stands at 187 of 189 at the base's size, the last difference a null
+phi constant's place before the leaves' initial-capacity store (list-ilp order).
+
 ## D42. The library compiler unswitches loops at -O2, under LoopUnswitch's compile-wide budget (2026-11-09)
 
 **Question.** D21 left open whether the two copies of a loop that FUN_00187750 holds are the
