@@ -102,6 +102,9 @@ class Class137ba70Base0 /* derived name */
      * FUN_01397980 in 0x16b0cf0); slots 2 to 4 (FUN_00cb66f0 and two empty
      * bodies) are not traced. */
     virtual ~Class137ba70Base0();
+    virtual void FUN_00cb66f0(); /* derived name; parameters not traced */
+    virtual void slot3();        /* derived name; 0x1af750, not traced */
+    virtual void slot4();        /* derived name; 0x1af750, not traced */
 
     u8 unknown8[0x18];
     int flags; /* derived name: bits set by FUN_0137ba70, 0x30 cleared by FUN_0137ba50 */
