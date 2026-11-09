@@ -84,7 +84,11 @@ def compile_tu(tu: str, ver: str) -> Path:
     obj = build_dir(REPO_ROOT, ver) / "obj" / (tu + ".o")
     src = REPO_ROOT / tu
     generate_tables_of(tu, ver)
-    if obj.exists() and obj.stat().st_mtime >= src.stat().st_mtime:
+    # A reinstalled compiler (tools/build_llvm.sh replaces tools/cc/llvm-*-src)
+    # makes every older object stale, whichever line built it.
+    compilers = [c.stat().st_mtime for c in (REPO_ROOT / "tools" / "cc").glob("llvm-*-src/bin/clang") if c.exists()]
+    newest = max([src.stat().st_mtime] + compilers)
+    if obj.exists() and obj.stat().st_mtime >= newest:
         dep = obj.with_name(obj.name + ".d")
         # ninja (deps = gcc) consumes the depfile it was given, so an object
         # ninja built has no .d beside it and its headers cannot be checked:
