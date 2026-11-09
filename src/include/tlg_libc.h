@@ -13,6 +13,8 @@
 typedef long time_t;
 /* FreeBSD's clock_t, a 32-bit int (the seed at 0xdb5f keeps eax). */
 typedef int clock_t;
+/* The C library's stream, opaque here (FreeBSD's struct __sFILE). */
+typedef struct __sFILE FILE;
 
 extern "C" {
 int strcmp(const char *a, const char *b);
@@ -30,6 +32,10 @@ clock_t clock(void);
 int printf(const char *format, ...);
 int vsnprintf(char *s, size_t n, const char *format, va_list args);
 void perror(const char *message);
+int puts(const char *s);
+void srand(unsigned int seed);
+size_t fread(void *ptr, size_t size, size_t n, FILE *stream);
+size_t fwrite(const void *ptr, size_t size, size_t n, FILE *stream);
 void *memalign(size_t alignment, size_t size);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
