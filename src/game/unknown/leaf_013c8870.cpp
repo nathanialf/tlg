@@ -15,7 +15,6 @@ struct Record013c8870 { /* derived name */
     Item013c8870 *unknown10;
 };
 
-// NONMATCHING: MachineSink splits the null edge (37.5%, at or under its 40% threshold, MachineSink.cpp:400-402 of 4.0.0, a rule 3.6.2 lacks) and sinks the return's 0 onto it (`je L; ...; ret; L: xor eax, eax; ret`); the base keeps the 0 in the entry before the test (`xor eax, eax; test rcx, rcx; je ret`, the item in rcx)
 void *FUN_013c8870(Context013c8870 *, Record013c8870 *record,
                    Item013c8870 **item) /* derived name */
 {

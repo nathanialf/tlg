@@ -10,7 +10,6 @@ struct Entry00c11e40 { /* derived name */
     u8 unknown8[0x10];
 };
 
-// NONMATCHING: the base materializes the first return's 1 before the second compare's branch on one shared return block (`mov eax, 1; je ret`) where the compile duplicates the return (`je L; ...; ret; L: mov eax, 1; ret`); the same unduplicated shared return as FUN_0139eae0's, no source form found
 int FUN_00c11e40(const void *first, const void *second) /* derived name */
 {
     if (static_cast<const Entry00c11e40 *>(first)->unknown0 == 0) {

@@ -1,0 +1,31 @@
+llvm-4.0.0 backport patch: MachineSink splits no critical edge by branch probability (PS4)
+
+This patch CHANGES CODE GENERATION for a cheap instruction (a constant,
+a zero, a copy) whose value is live on one edge of a conditional branch
+only. r284757 (f03f51555a63, 2016-10-20, "Using branch probability to
+guide critical edge splitting.", D24818) added to
+MachineSinking::isWorthBreakingCriticalEdge a test that breaks the edge
+whenever its probability is at or under machine-sink-split-probability-
+threshold (40%); a null or `== 0` test gives that edge 37.5%, so 4.0.0
+sinks a return's constant onto its own block (`je L; ...; ret; L: mov
+eax, 1; ret`). It is not in 3.9.1's MachineSink.cpp; first released in
+4.0.0. The game region keeps the constant before the test on one shared
+return: 34 such sites at a shared `ret` and none of 4.0.0's form where
+the rule alone makes it (round 128A). With this patch 0xc11e40 and
+0x7790c0 compile to the base's bytes and no matched game row changes.
+The hidden option -machine-sink-split-probability-threshold=0 gives the
+same objects.
+
+--- a/lib/CodeGen/MachineSink.cpp
++++ b/lib/CodeGen/MachineSink.cpp
+@@ -397,10 +397,6 @@
+   if (!MI.isCopy() && !TII->isAsCheapAsAMove(MI))
+     return true;
+ 
+-  if (From->isSuccessor(To) && MBPI->getEdgeProbability(From, To) <=
+-      BranchProbability(SplitEdgeProbabilityThreshold, 100))
+-    return true;
+-
+   // MI is cheap, we probably don't want to break the critical edge for it.
+   // However, if this would allow some definitions of its source operands
+   // to be sunk then it's probably worth it.

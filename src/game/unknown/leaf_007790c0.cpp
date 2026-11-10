@@ -20,7 +20,6 @@ struct Object007790c0 { /* derived name */
     int unknown3c;
 };
 
-// NONMATCHING: the join block (the store) is tail-duplicated into both arms; the base keeps one store with the 0 set before the branch (round 123A's shared-return class, as FUN_00c11e40)
 void FUN_007790c0(Object007790c0 *self, const Source007790c0 *source) /* derived name */
 {
     Record007790c0 *record = source->unknown58;

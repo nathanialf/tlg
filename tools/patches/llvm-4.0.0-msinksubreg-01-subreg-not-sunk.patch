@@ -1,0 +1,30 @@
+llvm-4.0.0 backport patch: MachineSink does not sink subreg_to_reg, insert_subreg or reg_sequence (PS4)
+
+This patch CHANGES CODE GENERATION for a 32-bit constant used as a
+64-bit value on one edge of a conditional branch. r278466 (7e103d92cc2b,
+2016-08-12, "Recommit 'Remove the restriction that MachineSinking is now
+stopped by "insert_subreg, subreg_to_reg, and reg_sequence"
+instructions'", D23210, PR28852) made TargetInstrInfo::shouldSink return
+true; before it the default refused the three, as in 3.9.1. With the
+restriction gone the SUBREG_TO_REG of `xor eax, eax` is sunk, and as it
+is not as cheap as a move its critical edge is broken at any
+probability, so a pointer return's 0 moves onto its own block. First
+released in 4.0.0. With this patch and msinksplit-01, 0x13c8870 compiles
+to the base's bytes and no matched game row changes; no option restores
+the rule.
+
+--- a/include/llvm/Target/TargetInstrInfo.h
++++ b/include/llvm/Target/TargetInstrInfo.h
+@@ -270,8 +270,11 @@
+   /// MachineSink determines on its own whether the instruction is safe to sink;
+   /// this gives the target a hook to override the default behavior with regards
+   /// to which instructions should be sunk.
++  /// The default behavior is to not sink insert_subreg, subreg_to_reg, and
++  /// reg_sequence. These are meant to be close to the source to make it easier
++  /// to coalesce.
+   virtual bool shouldSink(const MachineInstr &MI) const {
+-    return true;
++    return !MI.isInsertSubreg() && !MI.isSubregToReg() && !MI.isRegSequence();
+   }
+ 
+   /// Re-issue the specified 'original' instruction at the

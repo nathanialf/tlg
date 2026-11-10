@@ -2693,3 +2693,54 @@ constant-only `or`; the i32 compare is 3.5's to 3.8's).
 **Trigger to revisit.** A game function whose frame setup follows a conditional branch; a `lea`
 with a displacement over two bit-disjoint registers in the game region; or a matched row that
 needs either 3.8 behaviour.
+
+## D48. The game compiler's MachineSink is 3.9's: no edge split by branch probability, no sinking of subreg_to_reg (2026-11-10)
+
+**Question.** Rounds 123A and 127A met functions whose base keeps a return constant in the entry
+block before the test, on one shared `ret` (`mov eax, 1; je ret` in 0xc11e40; `xor eax, eax; test;
+je` in 0x13c8870), where the game line moves the constant onto a block of its own behind the
+branch. Round 123A filed it as a missing source form.
+
+**Evidence (round 128A, scratchpad a128/; the supervisor's whole gate).**
+
+- Two rules of lib/CodeGen/MachineSink, both first released in 4.0.0, make the split. Upstream
+  r284757 (f03f51555a63, 2016-10-20, "Using branch probability to guide critical edge splitting",
+  D24818) breaks a critical edge for a cheap instruction when the edge's probability is at or
+  under 40% (MachineSink.cpp:400-402; a null or `== 0` test gives 37.5%). Upstream r278466
+  (7e103d92cc2b, 2016-08-12, D23210) made TargetInstrInfo::shouldSink return true, where up to
+  3.9.1 it refused insert_subreg, subreg_to_reg and reg_sequence; a 64-bit zero is a
+  subreg_to_reg, not as cheap as a move, so once it may be sunk its edge is broken at any
+  probability. 3.9.1's MachineSink.cpp differs from 4.0.0's by the probability test and edits
+  without effect (a128/hist/ms_391_400.diff).
+- The releases: 0x13c8870's and 0xc11e40's sources compile to the base's bytes under the prebuilt
+  3.6.2, 3.7.1, 3.8.1 and 3.9.1 and split under 4.0.0 and 5.0.2 (a128/hist/rel/summary.txt).
+- Census over the game region, straight-line liveness from both successors: 15,871 sites keep a
+  cheap definition before a branch although it is live on one critical successor only and 4.0.0's
+  rules would split the edge (467 in the library, the 3.3 control); at a shared `ret`, 34 sites in
+  28 functions. 4.0.0's form at a return (one eax constant and `ret` on a single conditional
+  edge): 11 sites in 9 functions, each read: tail calls on the other path, bool returns (an 8-bit
+  copy, which the earlier releases split too), switch defaults and even compares; five of them are
+  matched rows and stay equal under both backports. The script's wider count of split-looking
+  blocks (751) is register copies at joins of several predecessors; twenty read, none the shape.
+  No counterexample found.
+- Source forms excluded by bytes: a result local, a ternary and the arms swapped, on both
+  functions, six compiles: all still split under the unpatched line.
+- Two one-rule backports (the probability test removed; shouldSink restored to 3.9.1's text). Over
+  the 2,929 matched game rows in 2,634 files no object changes under the first or under both.
+  0xc11e40 and 0x7790c0 compile equal under the first alone, 0x13c8870 needs both. The hidden
+  option `-machine-sink-split-probability-threshold=0` gives the first backport's objects; no
+  option gives the second, so both are patches (D47's reasons).
+
+**Ruling.** Both patches join the game line's 4.0.0 source build (tools/patches/
+llvm-4.0.0-msinksplit-01-no-probability-split.patch, llvm-4.0.0-msinksubreg-01-subreg-not-sunk.
+patch): eight backports with D45's, D46's and D47's. One decision, two patches, because they are
+two upstream commits and one function needs both. Round 123A's "shared return" class is closed as
+this rule, not a source form. These two are target-independent code generation of late 2016,
+where D46's and D47's are X86 rules of 3.7 and 3.8; D6's fingerprints (the trap pair, the merged
+constant stores) remain 4.0.0's. Whether a single upstream state holds the whole region is D6's
+open question and the next investigation's (every matched row and draft under each prebuilt
+release, failures classified).
+
+**Trigger to revisit.** A game function with a cheap constant alone on a block reached by one
+conditional edge where neither a tail call, an 8-bit copy nor a switch explains it; or a matched
+row that needs either 4.0.0 rule.
