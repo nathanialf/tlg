@@ -13,7 +13,6 @@ struct Object00582360; /* derived name */
 
 void FUN_005823a0(Object00582360 *self, Record00582360 **record); /* derived name */
 
-// NONMATCHING: shrink-wrapping: 4.0.0 places push rbp after the early test (ShrinkWrap.cpp, enabled by X86FrameLowering.cpp:2722-2725 under a frame pointer); the base sets up the frame at entry, as every one of the region's 12,521 framed functions does
 int FUN_00582360(Object00582360 *self, Record00582360 **record) /* derived name */
 {
     if ((*record)->unknown40 == 0) {

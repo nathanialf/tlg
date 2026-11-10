@@ -21,7 +21,6 @@ class Object00d8ff30 /* derived name */
     int unknown30;
 };
 
-// NONMATCHING: shrink-wrapping: 4.0.0 places push rbp after the early test (ShrinkWrap.cpp, enabled by X86FrameLowering.cpp:2722-2725 under a frame pointer); the base sets up the frame at entry, as every one of the region's 12,521 framed functions does
 int FUN_00d8ff30(Object00d8ff30 *self) /* derived name */
 {
     if (self->unknown30) {

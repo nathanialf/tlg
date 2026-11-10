@@ -2641,3 +2641,55 @@ change may never stand in for a source shape (the ICO lesson, 2026-11-09).
 the base does at 8 bits outside the sbb/adc forms; a `xor; cmp; setcc` the base emits where a
 register was not otherwise zeroed; or 0x5a8dbb4 (masked, yet stored by setne) and the 15 `cmp
 byte, 0` globals, left as a probe: whether those are struct members or wider-stored neighbours.
+
+## D47. Two more pre-3.8 rules of the game compiler's X86 backend: no shrink-wrapping, an `or` is an address only with a constant (2026-11-10)
+
+**Question.** After D46, round 125A met two shapes upstream 4.0.0 never emits. Five small
+functions (0xd8ff10, 0xd8ff30, 0x582360, 0x582380, 0xc871e0) set up their frame at entry where
+4.0.0 moves `push rbp; mov rbp, rsp` below an early test (lib/CodeGen/ShrinkWrap.cpp, enabled for
+X86 by X86FrameLowering::enableShrinkWrapping). 0x12fd220 keeps two `or` instructions of operands
+with no common bits where 4.0.0 selects one `lea` (X86ISelDAGToDAG.cpp, the `or` case of the
+address matcher).
+
+**Evidence (round 126A, scratchpad a126/; the supervisor's whole gate).**
+
+- Shrink-wrapping. Census: of the game region's 16,341 functions 12,521 push rbp, every one as its
+  first instruction; 12,563 push a callee-saved register, none after a branch or an exit; the 78
+  functions whose early exit needs no frame (a test before any stack use, branching to `pop rbp;
+  ret`: the shape 4.0.0 shrink-wraps) all keep the frame at entry. The library region (3.3):
+  2,101 and 15, likewise. History: ShrinkWrap.cpp exists in 3.7.1 but is off (lib/CodeGen/
+  Passes.cpp:220, `EnableShrinkWrap(false)`); upstream r255175 (5d2f7cfd44db, 2015-12-09, "[X86]
+  Enable shrink-wrapping by default") turned it on, first released in 3.8.0. 0xd8ff10's source
+  compiled with each release: 3.6.2 and 3.7.1 set the frame up at entry, 3.8.1 to 5.0.2 below the
+  test.
+- The `or`. Census: the game region has 44 `or r, r` of bit-disjoint operands beside an `or $C` on
+  the same register (25 functions) and 21 with an operand shifted by 1 to 3, and no `lea` with a
+  displacement over two bit-disjoint registers; the 68 two-register `lea`s of disjoint operands
+  without a displacement are the `or_is_add` pattern every release has (3.3's
+  X86InstrCompiler.td:1189). History: 3.7.1 matches only "X | C" as "X + C" (X86ISelDAGToDAG.cpp:
+  1268-1280); upstream r252515 (32538d681177, 2015-11-09, "[x86] try harder to match bitwise 'or'
+  into an LEA", D13956) added the haveNoCommonBitsSet test, first released in 3.8.0. 0xbc4a68's
+  expression compiles to the base's `lea (r,r); and; and; shl; or; or $0x406` under 3.7.1 and
+  under the backport, to one `lea` under 4.0.0.
+- Source forms excluded by bytes. Shrink-wrapping: a local read before the test, an explicit early
+  return and a result variable are each still shrink-wrapped by 4.0.0; a form that needs the frame
+  on the early path adds bytes the base does not have. The `or`: written as `+`, `^` or `|=` the
+  expression still gives 4.0.0's `lea`; the masks and shifts are in the base's bytes, so any source
+  for those sites has operands the compiler proves disjoint. The hidden option
+  `-enable-shrink-wrap=false` gives the same objects as the first backport; the backport was taken
+  because it touches X86 alone and leaves the game line's flags as they are.
+- Two one-rule backports (enableShrinkWrapping returns false; the `or` case restored to 3.7.1's
+  text), each alone over the 2,909 matched game rows in 2,615 files: no row changes (a126/sw/).
+  The five functions compile equal under the first; 0x12fd220 keeps its two `or`s under the second
+  and still differs in the order of an and/shl pair (list-ilp), so it is not claimed.
+
+**Ruling.** Both patches join the game line's 4.0.0 source build (tools/patches/
+llvm-4.0.0-shrinkwrap-01-no-x86-shrink-wrap.patch, llvm-4.0.0-orlea-01-or-constant-only.patch):
+six backports with D45's and D46's. Each is one pass or one matcher case, narrower than any
+source form, with the source alternatives excluded above. With D46's three, five X86 rules of the
+game compiler now read as 3.7's (the imm32 mask patterns, no FixupSetCC, no shrink-wrapping, the
+constant-only `or`; the i32 compare is 3.5's to 3.8's).
+
+**Trigger to revisit.** A game function whose frame setup follows a conditional branch; a `lea`
+with a displacement over two bit-disjoint registers in the game region; or a matched row that
+needs either 3.8 behaviour.

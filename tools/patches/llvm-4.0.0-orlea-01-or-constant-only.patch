@@ -1,0 +1,50 @@
+llvm-4.0.0 backport patch: an 'or' is an address only with a constant (PS4)
+
+This patch CHANGES CODE GENERATION for an 'or' of operands with no
+common bits. Up to LLVM 3.7 the X86 address matcher took "X | C" as
+"X + C" only (X86ISelDAGToDAG.cpp, isBaseWithConstantOffset); r252515
+(32538d681177, 2015-11-09, "[x86] try harder to match bitwise 'or' into
+an LEA", D13956), first released in 3.8.0, looks through any 'or' whose
+operands haveNoCommonBitsSet, so `(a | b) | C` and `(x << 1..3) | y`
+select one lea. The game region keeps the ors: 44 `or r, r` with
+bit-disjoint operands next to an `or $C` on the same register and 21 with
+a shifted-by-1-to-3 operand, and no lea with a displacement over two
+bit-disjoint registers; the 68 two-register leas of disjoint operands
+without a displacement are the ADD_DB form every release has. 0xbc4a68's
+`lea (r,r); and $2; and $8; shl $10; or; or $0x406` is 3.7.1's and this
+patch's output for the same expression, where 4.0.0 gives one lea. With
+this patch 0x12fd220 keeps `or eax, esi; or eax, 0x924000` (its
+remaining difference is the order of the and/shl pair, list-ilp) and no
+matched game row changes.
+
+--- a/lib/Target/X86/X86ISelDAGToDAG.cpp
++++ b/lib/Target/X86/X86ISelDAGToDAG.cpp
+@@ -1336,15 +1336,19 @@
+     break;
+ 
+   case ISD::OR:
+-    // We want to look through a transform in InstCombine and DAGCombiner that
+-    // turns 'add' into 'or', so we can treat this 'or' exactly like an 'add'.
+-    // Example: (or (and x, 1), (shl y, 3)) --> (add (and x, 1), (shl y, 3))
+-    // An 'lea' can then be used to match the shift (multiply) and add:
+-    // and $1, %esi
+-    // lea (%rsi, %rdi, 8), %rax
+-    if (CurDAG->haveNoCommonBitsSet(N.getOperand(0), N.getOperand(1)) &&
+-        !matchAdd(N, AM, Depth))
+-      return false;
++    // PS4: only "X | C" is matched as "X + C", iff X is known to have C bits
++    // clear, as LLVM 3.7 did; an 'or' of two non-constant operands with no
++    // common bits is not looked through as an 'add'.
++    if (CurDAG->isBaseWithConstantOffset(N)) {
++      X86ISelAddressMode Backup = AM;
++      ConstantSDNode *CN = cast<ConstantSDNode>(N.getOperand(1));
++
++      // Start with the LHS as an addr mode.
++      if (!matchAddressRecursively(N.getOperand(0), AM, Depth+1) &&
++          !foldOffsetIntoAddress(CN->getSExtValue(), AM))
++        return false;
++      AM = Backup;
++    }
+     break;
+ 
+   case ISD::AND: {

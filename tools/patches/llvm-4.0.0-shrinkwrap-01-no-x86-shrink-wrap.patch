@@ -1,0 +1,39 @@
+llvm-4.0.0 backport patch: no shrink-wrapping on X86 (PS4)
+
+This patch CHANGES CODE GENERATION for a function whose frame is needed
+on one path only. ShrinkWrap (lib/CodeGen/ShrinkWrap.cpp) is in LLVM 3.7
+but off by default (lib/CodeGen/Passes.cpp, EnableShrinkWrap(false)); it
+was enabled for X86 by r255175 (5d2f7cfd44db, 2015-12-09, "[X86] Enable
+shrink-wrapping by default..."), first released in 3.8.0: 3.7.1 sets up
+`push rbp; mov rbp, rsp` at entry, 3.8.1 to 5.0.2 below an early test.
+The game region was built without it: all 12,521 of its functions that
+push rbp do so as their first instruction, no callee-saved push follows
+a branch or an exit, and the 78 functions whose early exit needs no frame
+(a test before any stack use, branching to `pop rbp; ret`) all keep the
+frame at entry; the library region (3.3) likewise (2,101 and 15). With
+this patch 0xd8ff10, 0xd8ff30, 0x582360, 0x582380 and 0xc871e0 compile
+to the base's bytes and no matched game row changes. The hidden option
+-enable-shrink-wrap=false gives the same objects.
+
+--- a/lib/Target/X86/X86FrameLowering.cpp
++++ b/lib/Target/X86/X86FrameLowering.cpp
+@@ -2720,16 +2720,9 @@
+ }
+ 
+ bool X86FrameLowering::enableShrinkWrapping(const MachineFunction &MF) const {
+-  // If we may need to emit frameless compact unwind information, give
+-  // up as this is currently broken: PR25614.
+-  return (MF.getFunction()->hasFnAttribute(Attribute::NoUnwind) || hasFP(MF)) &&
+-         // The lowering of segmented stack and HiPE only support entry blocks
+-         // as prologue blocks: PR26107.
+-         // This limitation may be lifted if we fix:
+-         // - adjustForSegmentedStacks
+-         // - adjustForHiPEPrologue
+-         MF.getFunction()->getCallingConv() != CallingConv::HiPE &&
+-         !MF.shouldSplitStack();
++  // PS4: shrink-wrapping is not enabled for X86, as before LLVM 3.8: the
++  // prologue stays in the entry block and the epilogue in the return blocks.
++  return false;
+ }
+ 
+ MachineBasicBlock::iterator X86FrameLowering::restoreWin32EHStackPointers(
