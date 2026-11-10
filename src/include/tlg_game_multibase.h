@@ -205,4 +205,43 @@ class Object01395de0 /* derived name */
     Target01395de0 *unknown60;
 };
 
+/* The class whose vtable is at 0x16c7b78 (stored by FUN_00958460 and
+ * FUN_0137e6e0): secondary vtables whose pointers are at 0x16c7c28 (offset to
+ * top -0x128; slot 0 the thunk 0x95b980 of FUN_0095b960) and beside it one
+ * slot each (offsets to top -0x120: 0x95a1b0; -0x130). The bases' sizes
+ * between their vptrs are those offsets; their other slots and fields are not
+ * traced. */
+class Base0095b960_0 /* derived name */
+{
+  public:
+    virtual ~Base0095b960_0();
+
+    u8 unknown8[0x118];
+};
+
+class Base0095b960_120 /* derived name */
+{
+  public:
+    virtual void slot0(); /* derived name; 0x95a1b0, not traced */
+};
+
+class Base0095b960_128 /* derived name */
+{
+  public:
+    virtual void FUN_0095b960() = 0; /* derived name */
+};
+
+class Object0095b960 /* derived name */
+    : public Base0095b960_0,
+      public Base0095b960_120,
+      public Base0095b960_128
+{
+  public:
+    /* Slot 10 of the primary vtable (its pointer at 0x16c7bd8). */
+    void FUN_0095b960();
+
+    u8 unknown130[0x1f0 - 0x130];
+    int unknown1f0;
+};
+
 #endif
