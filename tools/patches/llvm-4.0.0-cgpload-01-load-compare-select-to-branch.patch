@@ -1,0 +1,39 @@
+llvm-4.0.0 backport patch: a select on a compare of a single-use load is a branch (PS4)
+
+This patch CHANGES CODE GENERATION for a select whose condition is a
+compare with one use and an operand that is a load with one use.
+r261809 (161dc1c60532, 2016-02-25, "[CodeGenPrepare] Remove load-based
+heuristic", D16836) removed from isFormingBranchFromSelectProfitable
+(lib/CodeGen/CodeGenPrepare.cpp) the test that turned such a select into
+a branch, "to avoid stalls on a load from memory"; it is in 3.3's text
+and in 3.8.1's, which equals the parent of r261809's, and absent from
+3.9.0 on. The game region keeps the branch: a compare of a folded memory
+operand feeding one select is a jump over one mov at 302 sites and a
+single cmov at 18 (14 select chains, one reused compare, one sext, one
+combined condition, and 0x131f599, whose compare has two uses: round
+131A), each a form the test itself leaves a select, where masked memory
+tests (an `and` of the load) are 0 branches against 45 cmovs and
+register compares 1,583 against 9,637 (round 130A). With this patch
+0x5894e0, 0x92ce60 and 0x139eae0 compile to the base's bytes and no
+matched game row changes. No hidden option gives the same objects.
+
+--- a/lib/CodeGen/CodeGenPrepare.cpp
++++ b/lib/CodeGen/CodeGenPrepare.cpp
+@@ -4700,6 +4700,17 @@
+   if (!Cmp || !Cmp->hasOneUse())
+     return false;
+ 
++  Value *CmpOp0 = Cmp->getOperand(0);
++  Value *CmpOp1 = Cmp->getOperand(1);
++
++  // Emit "cmov on compare with a memory operand" as a branch to avoid stalls
++  // on a load from memory. But if the load is used more than once, do not
++  // change the select to a branch because the load is probably needed
++  // regardless of whether the branch is taken or not.
++  if ((isa<LoadInst>(CmpOp0) && CmpOp0->hasOneUse()) ||
++      (isa<LoadInst>(CmpOp1) && CmpOp1->hasOneUse()))
++    return true;
++
+   // If either operand of the select is expensive and only needed on one side
+   // of the select, we should form a branch.
+   if (sinkSelectOperand(TTI, SI->getTrueValue()) ||

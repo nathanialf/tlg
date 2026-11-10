@@ -14,7 +14,6 @@ struct Object005894e0 { /* derived name */
     int unknown1d8;
 };
 
-// NONMATCHING: FoldTwoEntryPHINode: the stores sunk to the join and the two values folded to a cmov; the base keeps the two arms (or 0x20; jmp / and ~0x20) and one store
 int FUN_005894e0(Object005894e0 *self, Target005894e0 *target) /* derived name */
 {
     if (self->unknown1d8) {

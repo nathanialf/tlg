@@ -10,7 +10,6 @@ struct Element0092ce60 { /* derived name */
     float unknown8;
 };
 
-// NONMATCHING: round 123A's comparison class: a select of the constants 1 and -1 on the float compare is a cmova here; the base sets 1 before the compare and branches over the -1 to one shared return (as FUN_00c11e40 and FUN_0139eae0)
 int FUN_0092ce60(const void *a, const void *b) /* derived name */
 {
     const Element0092ce60 *x = static_cast<const Element0092ce60 *>(a);

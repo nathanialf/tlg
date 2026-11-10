@@ -2770,3 +2770,50 @@ release, failures classified).
 **Trigger to revisit.** A game function with a cheap constant alone on a block reached by one
 conditional edge where neither a tail call, an 8-bit copy nor a switch explains it; or a matched
 row that needs either 4.0.0 rule.
+
+## D49. The game compiler's CodeGenPrepare keeps the load test: a select on a compare of a single-use load is a branch (2026-11-10)
+
+**Question.** Three drafts (0x5894e0, 0x92ce60, 0x139eae0) differ from the base in one shape: the
+base branches over one `mov` where the game line selects a `cmov`, and each compare has a memory
+operand. Round 129A found that the prebuilt 3.6.2, 3.7.1 and 3.8.1 compile all three to the
+base's bytes and 3.9.1 and later do not. They had been filed under FoldTwoEntryPHINode and round
+123A's comparison class.
+
+**Evidence (rounds 129A, 130A, 131A; scratch a129/, a130/, a131/ under
+.claude/handoff/scratch-archive/; the supervisor's whole gate).**
+
+- The rule: isFormingBranchFromSelectProfitable (lib/CodeGen/CodeGenPrepare.cpp) turned a select
+  into a branch when its compare has one use and an operand that is a load with one use, "to
+  avoid stalls on a load from memory". Upstream r261809 (161dc1c60532, 2016-02-25,
+  "[CodeGenPrepare] Remove load-based heuristic", D16836) removed that test and nothing else;
+  3.8.1's function text equals the text of r261809's parent (a130/hist/), and 3.3 has the same
+  test (lib/Transforms/Scalar/CodeGenPrepare.cpp:1805). First release without it: 3.9.0.
+- Census over the game region (a130/cen4/): a compare with a folded memory operand feeding one
+  select is a jump over one `mov` at 302 sites and a single `cmov` at 18; a masked memory test
+  (an `and` of the load, not a LoadInst operand) is 0 branches against 45 `cmov`s; register
+  compares are 1,583 against 9,637. Twenty of the 302 read. The 18: 14 select chains, a reused
+  compare, a sext, a combined condition, each a form the test itself leaves a select (the
+  reconstructions give the same under 3.8.1 and under the backport), and 0x131f599.
+- 0x131f599, the candidate counterexample, sits in FUN_0131f450 beside a heuristic branch. Round
+  131A wrote the function (CreateRasterizerState of JsRasterizerState.cpp by its assert strings;
+  a131/s5.cpp): under the backport the site compiles to the base's `cmp dword ptr [rax + 0x30],
+  2; cmove` and the bool site at +0x50 to the base's branch; under the installed line both are
+  `cmov`. In the IR at CodeGenPrepare the site's compare has two uses (two identical selects made
+  by the last SimplifyCFG's store speculation, one for the store and one for the value read
+  again), so the test does not fire; the bool's has one. The source form is a constructor that
+  initialises the register and a creator that sets it through the member (a131, probe_one.ll and
+  probe_two.ll). The rule holds there as upstream had it. The function as a whole is not matched
+  (five residuals away from the site, linkage among them).
+- Source forms excluded by bytes: a result variable, the ternary and the arms swapped on each of
+  the three drafts, nine compiles: all `cmov` under the installed line. A choice between `if` and
+  `?:` cannot produce a split that follows the operand's kind (load 302 to 18, masked load 0 to
+  45).
+- One hunk restores the test in 4.0.0's function. Over the 2,932 matched game rows no object
+  changes; the three drafts compile equal; no hidden option gives the same objects.
+
+**Ruling.** The patch joins the game line's 4.0.0 source build (tools/patches/
+llvm-4.0.0-cgpload-01-load-compare-select-to-branch.patch): nine backports. FoldTwoEntryPHINode
+(0x5894e0) and the 1/-1 comparison class are closed as this rule where the compare reads memory.
+
+**Trigger to revisit.** A game site where a compare with one use and a single-use load operand
+feeds a `cmov`; or FUN_0131f450 matched whole with a source that contradicts the reading above.

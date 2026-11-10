@@ -9,7 +9,6 @@ struct Entry0139eae0 { /* derived name */
     u8 unknown8[8];
 };
 
-// NONMATCHING: the base keeps the constant select as a branch on one shared return block (`mov eax, 1; cmp; ja ret; mov eax, -1; ret`) where 4.0.0 forms a cmov from this source and from the `?:`; 4.0.0's CodeGenPrepare turns a select into a branch only for an expensive operand (CodeGenPrepare.cpp:4672), and the region has 8 such `mov eax, 1; cmp; jcc; mov eax, -1` sites against 23,920 cmovs; no source form found
 int FUN_0139eae0(const void *first, const void *second) /* derived name */
 {
     if (static_cast<const Entry0139eae0 *>(first)->unknown0 >

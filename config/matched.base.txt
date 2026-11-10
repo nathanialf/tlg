@@ -5805,3 +5805,6 @@ FUN_00e5be50 src/game/unknown/leaf_00e5be50.cpp _Z12FUN_00e5be50P14Object00e5be5
 FUN_00c11e40 src/game/unknown/leaf_00c11e40.cpp _Z12FUN_00c11e40PKvS0_
 FUN_007790c0 src/game/unknown/leaf_007790c0.cpp _Z12FUN_007790c0P14Object007790c0PK14Source007790c0
 FUN_013c8870 src/game/unknown/leaf_013c8870.cpp _Z12FUN_013c8870P15Context013c8870P14Record013c8870PP12Item013c8870
+FUN_005894e0 src/game/unknown/leaf_005894e0.cpp _Z12FUN_005894e0P14Object005894e0P14Target005894e0
+FUN_0092ce60 src/game/unknown/leaf_0092ce60.cpp _Z12FUN_0092ce60PKvS0_
+FUN_0139eae0 src/game/unknown/leaf_0139eae0.cpp _Z12FUN_0139eae0PKvS0_
