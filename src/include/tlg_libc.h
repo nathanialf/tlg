@@ -15,6 +15,10 @@ typedef long time_t;
 typedef int clock_t;
 /* The C library's stream, opaque here (FreeBSD's struct __sFILE). */
 typedef struct __sFILE FILE;
+/* fseek's origin from the start of the stream (FreeBSD's stdio.h). */
+#define SEEK_SET 0
+/* Positive infinity as a float, as the C library's math.h spells it. */
+#define HUGE_VALF __builtin_huge_valf()
 
 extern "C" {
 int strcmp(const char *a, const char *b);
@@ -36,6 +40,7 @@ int puts(const char *s);
 void srand(unsigned int seed);
 size_t fread(void *ptr, size_t size, size_t n, FILE *stream);
 size_t fwrite(const void *ptr, size_t size, size_t n, FILE *stream);
+int fseek(FILE *stream, long offset, int whence);
 void *memalign(size_t alignment, size_t size);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
