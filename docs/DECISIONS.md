@@ -185,6 +185,32 @@ generator carrying older frontend and lowering rules, each reproduced as a backp
 4.0.0 source build when a region-wide census shows the base never deviates from it (D45; the i1
 mask is the next candidate, round 114A's investigation).
 
+**Addendum, 2026-11-10 (round 129A, after D48).** Every matched game row (2,932 in 2,637 files)
+and every unmatched draft, compiled under each prebuilt release with the game line's flags
+(scratchpad a129/sweep_table.txt, sw/res_<release>.tsv, rule_table.txt): 3.6.2 holds 2,909 rows,
+3.7.1 2,922, 3.8.1 2,918, 3.9.1 2,877, unpatched 4.0.0 2,879, the 4.0.0 source build with its
+eight backports all 2,932. Three corrections to this entry's fingerprints, each dated from the
+upstream history: the trap pair is the PS4 TrapUnreachable setting (r264224, 2016-03-24, first in
+3.9; the base has 342 `ud2; ud2` pairs), the missing vzeroupper is the btver2 change (r260764,
+2016-02-12, first in 3.9; the base has no vzeroupper against 31,253 ymm operands), both Sony's own
+patches sent upstream, so they do not date the base; the merged constant stores are 3.8's and
+later (0xacd590; r248169 of 2015-09-21 is the candidate, not confirmed by backing it out). The
+4.0.0 fingerprints the rows do show are two: the X86 representative register class of float
+values (r282836, 2016-09-30: list-ilp's register-pressure order in 0x228960, 0x228a60, 0x4b7be0,
+0x6e1d60, 0x82fbe0; `-disable-sched-reg-pressure` on the source build gives 3.9.1's bytes) and
+SimplifyCFG's sinking of common loads (r279460, 2016-08-22: 0x1393600's cmovge;
+`-simplifycfg-sink-common=false` gives 3.9.1's). Against them stand the rules the base lacks
+(D46 to D48 and a ninth candidate, CodeGenPrepare's load-based select-to-branch heuristic, removed
+by r261809 on 2016-02-25, which three drafts need), dated from 2015-07-17 to 2016-10-20. No single
+upstream date separates the rules the base has from those it lacks: they overlap by about
+fourteen months, so the base's compiler is a fork with its own selection of changes, and neither
+"4.0.0 with backports" (nine with the candidate) nor "3.7.1 with forward ports" (five, one of
+them a rewritten SimplifyCFG function, and D45's backport) is the original; both are
+reproductions. The line stays the 4.0.0 source build: it holds every row today, each of its
+patches is one rule with a census, and a move to 3.7.1 would have to carry a pass rewrite and
+re-prove every decision on rows that are still small leaves. Trigger to revisit: a class of
+functions (not leaves) that the 4.0.0 line cannot hold and 3.7.1 does, measured by the same sweep.
+
 ## D7. The gate is the whole text segment (2026-10-24)
 
 **Problem.** D1's per-function comparison masks the fields the linker fills.
