@@ -41,20 +41,19 @@ class Object0092ce20 /* derived name */
     int unknown280;
 };
 
-// NONMATCHING: switch lowering order, as 0x131f2c0: the base compares 1 then 2, the build 2 then 1 (SelectionDAGBuilder.cpp:8963, the clusters sorted by probability, then the fall-through rearrangement): a compiler-history candidate, not tested
 void FUN_0092ce20(Object0092ce20 *self) /* derived name */
 {
     self->slot24(1);
     switch (self->unknown280) {
-    case 1:
-        self->unknown24 |= 0x80;
-        break;
-    case 2:
-        break;
     default:
         if (self->unknown280 & 1) {
             self->unknown24 |= 0x80;
         }
+        break;
+    case 1:
+        self->unknown24 |= 0x80;
+        break;
+    case 2:
         break;
     }
 }

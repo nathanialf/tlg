@@ -49,16 +49,16 @@ struct Object0131f2c0 { /* derived name */
     void *unknown40;
 };
 
-// NONMATCHING: switch lowering order: the base compares 1, 5 (one destination), then 2; the build's three-case chain compares 5, 2, 1, and written as || the two compares fold to (kind | 4) == 5 (InstCombine): a compiler-history candidate, not tested
+// NONMATCHING: with case 2 written first the compares are the base's (1, 5, then 2), but the build lays out case 2's arm after the chain where the base lays out the 1/5 arm, and loads +0x40 in each arm where the base loads it once in the shared tail call (the call sunk with a phi of the slot, the load not): a layout and sinking residual, case 5 before case 1 in either order no better
 void FUN_0131f2c0(Object0131f2c0 *self, Argument0131f2c0 *argument) /* derived name */
 {
     switch (self->unknown34) {
+    case 2:
+        argument->slot28(self->unknown40);
+        break;
     case 1:
     case 5:
         argument->slot30(self->unknown40);
-        break;
-    case 2:
-        argument->slot28(self->unknown40);
         break;
     }
 }

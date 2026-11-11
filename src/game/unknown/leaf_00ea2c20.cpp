@@ -3,7 +3,10 @@
 
 #include "tlg_sce_kernel.h"
 
-/* derived names: slot 42 of the vtables at 0x16be490 and 0x16b93f8: drops one
+/* derived names: slots 41 and 42 of the vtables at 0x16be490 and 0x16b93f8.
+ * Slot 41 takes the recursive lock: unless the calling thread already owns
+ * it, locks the mutex at +0x330 and becomes the owner at +0x338; then counts
+ * one more level at +0x340 and returns 1. Slot 42 drops one
  * level of the lock count at +0x340 and, at the last, clears the owner at
  * +0x338 and unlocks the mutex at +0x330. Class and method unknown. */
 struct Object00ea2c20 { /* derived name */
@@ -23,4 +26,15 @@ void FUN_00ea2c20(Object00ea2c20 *self) /* derived name */
         self->owner = 0;
         scePthreadMutexUnlock(&self->mutex);
     }
+}
+
+int FUN_00ea2bd0(Object00ea2c20 *self) /* derived name */
+{
+    pthread_t thread = scePthreadSelf();
+    if (self->owner != thread) {
+        scePthreadMutexLock(&self->mutex);
+        self->owner = thread;
+    }
+    ++self->depth;
+    return 1;
 }
