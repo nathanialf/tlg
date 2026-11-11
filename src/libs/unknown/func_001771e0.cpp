@@ -20,7 +20,7 @@ static inline void *const *bodyProperty(const BitFieldMap00199770 &map, int body
 // so the id's load comes before the world's (`mov r15, [r14+0x18]`), where the base loads the
 // world first: in the base the zext's operand was not the load (no zext was live out).
 void hknpCharacterProxy::FUN_001771e0(const hknpCharacterProxyContact &contact,
-                                      const hknpMaterial *material, ContactSink001771e0 *sink)
+                                      const hknpMaterial *material, Elements000760c0 *sink)
 {
     const float distance = lane(contact.contactPoint.separatingNormal, 3);
     hknpManifold manifold;
@@ -39,8 +39,8 @@ void hknpCharacterProxy::FUN_001771e0(const hknpCharacterProxyContact &contact,
     ContactParams001771e0 params;
     params.restitution = contact.flag28 == 1 ? 0.0f : 1.0f;
     Pair08Owner *record = HK_NULL;
-    sink->unknownVirtual4(bodyId.value, contact.bodyId.value, &manifold, material, material,
-                          &params, &record);
+    sink->FUN_000769c0(bodyId.value, contact.bodyId.value, &manifold, material, material, &params,
+                       &record);
 
     const hknpWorld *const proxyWorld = world;
     const int bodyIndex = contact.bodyId.value;

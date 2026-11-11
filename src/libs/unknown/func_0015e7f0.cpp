@@ -57,12 +57,12 @@ void hknpCollidePairsTask::process()
             const int cellB = cell.cellB;
             CacheRange000331a0 rangeA;
             rangeA.setStartPoint(&writers.writerA0);
-            writers.countsC8[0] = 0;
-            writers.countsC8[1] = 0;
+            writers.writerA0.stats.totalSize = 0;
+            writers.writerA0.stats.maxCount = 0;
             CacheRange000331a0 rangeB;
             rangeB.setStartPoint(&writers.writerD0);
-            writers.countsF8[0] = 0;
-            writers.countsF8[1] = 0;
+            writers.writerD0.stats.totalSize = 0;
+            writers.writerD0.stats.maxCount = 0;
             cell.range.setStartPoint(&writers.writer178);
             hkBlockStreamConsumer consumer;
             consumer.FUN_00093ab0(context->cache258, stream120,
@@ -96,11 +96,11 @@ void hknpCollidePairsTask::process()
             rangesOut160[cellB] = range50;
             object380->unknownVirtual11(context->records268, 3);
             rangeA.FUN_00092220(&writers.writerA0);
-            rangeA.stats.totalSize = writers.countsC8[0];
-            rangeA.stats.maxCount = writers.countsC8[1];
+            rangeA.stats.totalSize = writers.writerA0.stats.totalSize;
+            rangeA.stats.maxCount = writers.writerA0.stats.maxCount;
             rangeB.FUN_00092220(&writers.writerD0);
-            rangeB.stats.totalSize = writers.countsF8[0];
-            rangeB.stats.maxCount = writers.countsF8[1];
+            rangeB.stats.totalSize = writers.writerD0.stats.totalSize;
+            rangeB.stats.maxCount = writers.writerD0.stats.maxCount;
             cell.range.FUN_00092220(&writers.writer178);
             if (rangeA.numElements != 0) {
                 appendLinkedRange(shared->cacheGrid[cellB], rangeA, writers.writerA0);
@@ -114,12 +114,12 @@ void hknpCollidePairsTask::process()
             range50.setStartPoint(&writers.writer50);
             CacheRange000331a0 rangeA;
             rangeA.setStartPoint(&writers.writerA0);
-            writers.countsC8[0] = 0;
-            writers.countsC8[1] = 0;
+            writers.writerA0.stats.totalSize = 0;
+            writers.writerA0.stats.maxCount = 0;
             CacheRange000331a0 rangeB;
             rangeB.setStartPoint(&writers.writerD0);
-            writers.countsF8[0] = 0;
-            writers.countsF8[1] = 0;
+            writers.writerD0.stats.totalSize = 0;
+            writers.writerD0.stats.maxCount = 0;
             hkBlockStreamConsumer consumer;
             consumer.FUN_00093ab0(context->cache258, stream120,
                                   static_cast<hkBlockStream *>(unknown68), &batch.range);
@@ -135,11 +135,11 @@ void hknpCollidePairsTask::process()
             context->commandRange.range.setStartPoint(&commandWriter);
             object380->unknownVirtual11(context->records268, 2);
             rangeA.FUN_00092220(&writers.writerA0);
-            rangeA.stats.totalSize = writers.countsC8[0];
-            rangeA.stats.maxCount = writers.countsC8[1];
+            rangeA.stats.totalSize = writers.writerA0.stats.totalSize;
+            rangeA.stats.maxCount = writers.writerA0.stats.maxCount;
             rangeB.FUN_00092220(&writers.writerD0);
-            rangeB.stats.totalSize = writers.countsF8[0];
-            rangeB.stats.maxCount = writers.countsF8[1];
+            rangeB.stats.totalSize = writers.writerD0.stats.totalSize;
+            rangeB.stats.maxCount = writers.writerD0.stats.maxCount;
             if (rangeA.numElements != 0) {
                 batch.output = rangeA;
             } else if (rangeB.numElements != 0) {

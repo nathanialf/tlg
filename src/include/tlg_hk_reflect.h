@@ -12455,7 +12455,7 @@ struct hknpWorld {
      * name. */
     void FUN_0005b560(int bodyId, bool flag);       /* derived name */
     void FUN_0004bcc0(hknpCollisionFilter *filter); /* derived name */
-    void *FUN_00051610() const;                     /* derived name */
+    class Elements000760c0 *FUN_00051610() const;   /* derived name */
     /* A constraint disabled, once (bit 2 of its flags), the constraint
      * signal at +0x5e0 fired with the world and its id (0x4fcf0; the game
      * calls it from 0xeadb24). derived name. */
@@ -21186,7 +21186,7 @@ struct hknpCharacterProxySignalData;   /* derived name: the second, a pointer at
 class hknpCharacterProxy;
 
 struct hknpCharacterProxyContact;
-class ContactSink001771e0;
+class Elements000760c0;
 
 class hknpCharacterProxyListener : public hkReferencedObject /* derived name */
 {
@@ -21197,7 +21197,7 @@ class hknpCharacterProxyListener : public hkReferencedObject /* derived name */
                                 const hknpCharacterProxyContact *contact);
     /* Slot 6 (+0x30): the new contacts gathered for the proxy (0x177469).
      * derived name. */
-    virtual void unknownVirtual6(hknpCharacterProxy *proxy, ContactSink001771e0 *sink,
+    virtual void unknownVirtual6(hknpCharacterProxy *proxy, Elements000760c0 *sink,
                                  hkArray<hknpCharacterProxyContact> &contactsOut);
     virtual void unknownVirtual7(hknpCharacterProxy *proxy);
 };
@@ -21215,23 +21215,6 @@ struct hknpCharacterProxyContact /* derived name */
      * derived name. */
     u8 flag28;
     u8 unknown29[7];
-};
-
-/* What the world's object at +0x1d0 holds at +0x10 (derived name): slot 4
- * (+0x20) takes a manifold between two bodies, a material for each and
- * the contact's parameters, and gives back a solver record (0x177353; the
- * character proxy passes its contact's material for both). */
-class ContactSink001771e0 /* derived name */
-{
-  public:
-    virtual ~ContactSink001771e0();
-    virtual void unknownVirtual2();
-    virtual void unknownVirtual3();
-    virtual void unknownVirtual4(int bodyIdA, int bodyIdB, const struct hknpManifold *manifold,
-                                 const struct hknpMaterial *materialA,
-                                 const struct hknpMaterial *materialB,
-                                 const struct ContactParams001771e0 *params,
-                                 struct Pair08Owner **recordOut);
 };
 
 /* A contact's parameters for the sink (derived names): a restitution, 0
@@ -21318,7 +21301,7 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
      * back takes mode 3 with the proxy's share of the step when the body
      * touched is dynamic and has no 0xf002 property. derived name. */
     void FUN_001771e0(const hknpCharacterProxyContact &contact, const hknpMaterial *material,
-                      ContactSink001771e0 *sink);
+                      Elements000760c0 *sink);
 
     /* The handler of the world's signal at +0x5f8, which the constructor
      * subscribes at 0x1767dd (0x177410): the listener gathers new contacts;
@@ -22818,6 +22801,30 @@ struct StepStreams0015e980 /* derived name */
     u8 unknown701[0xf];
 };
 
+/* The statistics a cache writer keeps of what it writes (derived names):
+ * FUN_00031a30 adds each record's entries' size (four bytes an entry and
+ * four more) and keeps the largest entry count. */
+struct CacheWriterStats00031a30 /* derived name */
+{
+    int totalSize; /* derived name */
+    int maxCount;  /* derived name */
+};
+
+/* A block stream writer of the records with its statistics after it, at
+ * +0x28 (derived name). */
+struct CacheWriter00031a30 : public hkBlockStreamWriter /* derived name */
+{
+    /* Unbound, nothing counted (on the stack in 0x76ed0: the stream's
+     * null, then the two counts). */
+    CacheWriter00031a30()
+    {
+        stats.totalSize = 0;
+        stats.maxCount = 0;
+    }
+
+    CacheWriterStats00031a30 stats; /* derived name */
+};
+
 /* The writers of the narrow phase's pairs task (derived names): a stack
  * object of its work (0x15ea30, at -0x808), every writer finalized at its
  * end in its "StFinalizeWriters" timer (0x15e030), the three from +0x128
@@ -22825,13 +22832,9 @@ struct StepStreams0015e980 /* derived name */
 struct CollideWriters0015e030 /* derived name */
 {
     /* Every writer unbound, the three counted ones' counts cleared (the
-     * stores before 0x15ec08). */
+     * stores before 0x15ec08), the first two by their own constructors. */
     CollideWriters0015e030()
     {
-        countsC8[0] = 0;
-        countsC8[1] = 0;
-        countsF8[0] = 0;
-        countsF8[1] = 0;
         counts1A0[0] = 0;
         counts1A0[1] = 0;
     }
@@ -22853,10 +22856,8 @@ struct CollideWriters0015e030 /* derived name */
     hkBlockStreamWriter writer28;
     hkBlockStreamWriter writer50;
     hkBlockStreamWriter writer78;
-    hkBlockStreamWriter writerA0;
-    int countsC8[2]; /* derived name */
-    hkBlockStreamWriter writerD0;
-    int countsF8[2]; /* derived name */
+    CacheWriter00031a30 writerA0;
+    CacheWriter00031a30 writerD0;
     hkBlockStreamWriter writer100;
     hkBlockStreamWriter writer128;
     hkBlockStreamWriter writer150;
@@ -23215,15 +23216,6 @@ struct JacobianRange000317b0 : public hkBlockStreamLinkedRange /* derived name *
     u64 unknown28;
     u64 unknown30;
 } __attribute__((aligned(16)));
-
-/* The statistics a cache writer keeps of what it writes (derived names):
- * FUN_00031a30 adds each record's entries' size (four bytes an entry and
- * four more) and keeps the largest entry count. */
-struct CacheWriterStats00031a30 /* derived name */
-{
-    int totalSize; /* derived name */
-    int maxCount;  /* derived name */
-};
 
 /* A range of caches as slot 19 of the object at +0x380 files it (derived
  * names): a linked range, the statistics of the writer that wrote it at

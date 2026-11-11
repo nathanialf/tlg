@@ -34,7 +34,7 @@ hknpEventSignal *hknpWorld::FUN_0004fbe0(int eventType) /* derived name */
 
 /* derived name: the pointer at +0x10 of the world's object at +0x1d0
  * (called at 0x177435). */
-void *hknpWorld::FUN_00051610() const /* derived name */
+Elements000760c0 *hknpWorld::FUN_00051610() const /* derived name */
 {
     return object1d0->elements;
 }

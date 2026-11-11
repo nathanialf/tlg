@@ -573,15 +573,6 @@ class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterfac
 
 class Elements000760c0; /* tlg_lib_unknown.h */
 
-/* What the deactivation tasks reach the solver's elements through
- * (derived names): them at +0x10, as the world objects at +0x1d0 hold
- * them. */
-struct TaskOwner0014e850 /* derived name */
-{
-    u8 unknown0[0x10];
-    Elements000760c0 *elements; /* derived name */
-};
-
 class hknpAddActiveBodyPairsTask : public hkReferencedObject,
                                    public hknpTaskInterface /* derived name */
 {
@@ -592,7 +583,9 @@ class hknpAddActiveBodyPairsTask : public hkReferencedObject,
     /* slot 6 (0x14e9c0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
 
-    TaskOwner0014e850 *owner;          /* derived name */
+    /* The world's object at +0x1d0, the solver's elements at its +0x10
+     * (0x14e850). derived name. */
+    hknpWorldObject1d0 *owner;         /* derived name */
     hknpWorldContextPool *contextPool; /* derived name */
 };
 

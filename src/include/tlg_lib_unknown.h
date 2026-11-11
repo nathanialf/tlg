@@ -682,21 +682,6 @@ void FUN_00031740(const Pair08Owner *self, int count, const hknpMotion *motionA,
 void FUN_000348a0(const Pair08Owner *self, const hknpMotion *motionA, const hknpMotion *motionB,
                   const void *argument4, Vec4 *out); /* derived name */
 
-/* A block stream writer of the records with its statistics after it, at
- * +0x28 (derived name). */
-struct CacheWriter00031a30 : public hkBlockStreamWriter /* derived name */
-{
-    /* Unbound, nothing counted (on the stack in 0x76ed0: the stream's
-     * null, then the two counts). */
-    CacheWriter00031a30()
-    {
-        stats.totalSize = 0;
-        stats.maxCount = 0;
-    }
-
-    CacheWriterStats00031a30 stats; /* derived name */
-};
-
 /* A range linked in after a cell's first one, or made the first when the
  * cell has none. derived name. */
 inline void appendRange(CacheRange000331a0 &entry, CacheRange000331a0 *range)
@@ -2822,9 +2807,19 @@ class Elements000760c0 : public hkBaseObject /* derived name */
     /* Slot 3 of both vtables (0x76910), the class's key function: every
      * element's streams emptied, the second and third with the first
      * cache, the others with the second, then the stream at +0x40 with the
-     * second. Slots 4 to 6 (0x769c0, 0x76ed0, 0x77250) are not declared
-     * yet. derived names. */
+     * second. Slots 5 and 6 (0x76ed0, 0x77250) are declared below as
+     * plain members, as their callers call them directly. derived names. */
     virtual void FUN_00076910(BlockCache *cacheA, BlockCache *cacheB);
+
+    /* Slot 4 (0x769c0, +0x20): a manifold between two bodies, a material
+     * for each and the contact's parameters taken, a solver record given
+     * back (the character proxy's 0x177353 passes its contact's material
+     * for both). derived name. */
+    virtual void FUN_000769c0(int bodyIdA, int bodyIdB, const struct hknpManifold *manifold,
+                              const struct hknpMaterial *materialA,
+                              const struct hknpMaterial *materialB,
+                              const struct ContactParams001771e0 *params,
+                              struct Pair08Owner **recordOut);
 
     /* Slot 5 (0x76ed0): a cache written to the end of the first element's
      * second stream, the range it took filed at the grid cell of its two

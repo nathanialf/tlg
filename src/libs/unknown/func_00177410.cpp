@@ -3,7 +3,7 @@
 
 void hknpCharacterProxy::FUN_00177410(hknpWorld *signalWorld)
 {
-    ContactSink001771e0 *sink = static_cast<ContactSink001771e0 *>(signalWorld->FUN_00051610());
+    Elements000760c0 *sink = signalWorld->FUN_00051610();
     hkArray<hknpCharacterProxyContact> newContacts;
     if (listener.pntr) {
         listener.pntr->unknownVirtual6(this, sink, newContacts);
