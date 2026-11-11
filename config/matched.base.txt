@@ -6056,3 +6056,4 @@ FUN_00de9a50 src/game/unknown/leaf_00de9a50.cpp _Z12FUN_00de9a50P13State00de9a50
 FUN_00e903a0 src/game/unknown/leaf_00e903a0.cpp _Z12FUN_00e903a0PK14Object00e903a0P16Defaults00e903a0
 FUN_00c59ef0 src/game/unknown/leaf_00c59ef0.cpp _Z12FUN_00c59ef0P12Node00c59ef0
 FUN_001798c0 src/libs/unknown/func_00179840.cpp _ZN28hknpPrepareExistingPairsTask7processEv
+_ZN18hknpWorldObject4f8D1Ev src/libs/unknown/func_00062770.cpp _ZN18hknpWorldObject4f8D2Ev

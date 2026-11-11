@@ -11082,6 +11082,9 @@ struct IdPair0004cad0 /* derived name */
 
 struct hknpWorldObject4f8 /* derived name */
 {
+    /* Out of line (0x62770; the world's destructor calls it, 0x4b623). */
+    ~hknpWorldObject4f8();
+
     void FUN_00062b20(int bodyId, bool flag); /* derived name */
     /* Takes a body that is in the broad phase (0x639b0, through
      * hknpWorld::FUN_0004e0c0): reads its flags, bit 3 first. derived name. */
@@ -11291,7 +11294,8 @@ struct hknpWorldObject4f8 /* derived name */
     hkArray<Entry18 *> unknown18;
     hkArray<int> freeIds;            /* derived name: the ids 0x622d0 frees */
     hkArray<BodyRecord> bodyRecords; /* derived name */
-    hkArray<u8> unknown48;           /* element type not read yet */
+    /* 8-byte elements, by the destructor's free (0x62a3e). */
+    hkArray<u64> unknown48; /* element type not read yet */
     hkArray<Entry18 *> unknown58;
     hkArray<int> ids68;                  /* derived name */
     int int78;                           /* derived name */
@@ -11892,7 +11896,9 @@ class hknpWorldObject1e0 /* derived name */
     virtual void unknownVirtual0();
     virtual void unknownVirtual1();
     virtual void unknownVirtual2();
-    virtual void unknownVirtual3();
+    /* Slot 3: bodies taken out of the broad phase (the world's removal,
+     * 0x4e8b7, hands it the ids and the world's bodies). derived name. */
+    virtual void removeBodies(const hknpBodyId *bodyIds, int numBodyIds, hknpBody *bodies);
     /* Slot 4: bodies by their ids, the ids a stride of bytes apart (the
      * activation of a body's group, 0x63ea3, hands it the ids it has
      * recorded, their count and 8). derived names. */
@@ -11994,7 +12000,10 @@ struct hknpWorldSignals /* derived name */
      * name. */
     hkSignal3<hknpWorld *, const hknpBodyCinfo &, u32> bodyCreatedSignal;
     Signal00093530 signal30;
-    Signal00093530 signal38;
+    /* Fired with each body's id as it is removed from the world, under the
+     * timer "FireBodyRemoved" when anything listens (0x4e688). derived
+     * name. */
+    hkSignal2<hknpWorld *, int> bodyRemovedSignal;
     /* Fired with each body's id as it is destroyed, under the timer
      * "FireBodyDestroyed" when anything listens (0x4ea32). derived name. */
     hkSignal2<hknpWorld *, int> bodyDestroyedSignal;
@@ -13939,9 +13948,31 @@ struct hknpShapeSlot22Output /* derived name */
      * fourth vertex the first. derived name. */
     hknpTriangleShape *FUN_00040c10(int quadIndex, hknpTriangleShape *shapeOut) const;
 
-    u8 unknown0[0x40];
+    /* The transform's state in the flags (the compound shape's slot 22
+     * composes an instance's transform by them, 0x41afe to 0x41c85).
+     * derived names. */
+    enum {
+        TRANSFORM_IS_IDENTITY = 1 << 0,
+        TRANSFORM_IS_SET = 1 << 1,
+        TRANSFORM_IS_TRANSLATION = 1 << 2
+    };
+
+    /* A composite level walked on the way to the leaf (0x41cc3 to
+     * 0x41cf7): the instance's shape tag, the composite, the instance and
+     * its shape, 0x20 bytes. derived names. */
+    struct Level {
+        u16 shapeTag;
+        const hknpShape *shape;
+        int index;
+        const hknpShape *child;
+    };
+
+    /* The transform the leaf is under (derived name). */
+    hkTransform transform;
     const hknpShape *leafShape; /* derived name: its user data is the triangle's */
-    u8 unknown48[0x108];
+    Level levels[8];            /* derived name */
+    int numLevels;              /* derived name */
+    u8 unknown14c[4];
     u32 flags; /* derived name */
     int value; /* derived name */
     u8 unknown158[8];
@@ -13949,7 +13980,10 @@ struct hknpShapeSlot22Output /* derived name */
      * extern mesh's slot 22 (0x166409). derived name. */
     Vec4 scale;
     const hknpShape *shape; /* derived name */
-    u8 unknown178[0x808];
+    /* A convex child under a scale is built here as a scaled convex
+     * shape (0x41dad). derived name. */
+    alignas(16) u8 scaledShapeBuffer[0x60];
+    u8 unknown1e0[0x7a0];
     /* Four vertices for each quad, each quad's shape flags and its shape tag
      * (derived names). */
     Vec4 quadVertices[40];
@@ -20202,6 +20236,10 @@ class hknpCompoundShape : public hknpCompositeShape
      * given. derived name. */
     int FUN_000418c0(void *keysOut, int maxNumKeys, int key,
                      const ShapeKeyQuery000380b0 &query) const;
+
+    /* Slot 22 (0x41a80): the leaf a path of keys selects, through the
+     * instance the first key names. derived name. */
+    void FUN_00041a80(const u32 *keys, int numKeys, hknpShapeSlot22Output *output) const;
 
     /* Slot 29 (0x42300): the instances' geometry. derived name. */
     int FUN_00042300(const struct hknpShapeSlot29Input &input, hkGeometry *geometryOut) const;
