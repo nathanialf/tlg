@@ -7898,6 +7898,11 @@ inline void hkxSparselyAnimatedBool::operator delete(void *object, unsigned long
     freeReferencedObject(object, numBytes);
 }
 
+inline void hkxMeshSection::operator delete(void *object, unsigned long numBytes)
+{
+    freeReferencedObject(object, numBytes);
+}
+
 inline void hkxSparselyAnimatedString::operator delete(void *object, unsigned long numBytes)
 {
     freeReferencedObject(object, numBytes);
@@ -8208,7 +8213,6 @@ void FUN_0004aff0(hknpWorld *self);                 /* slot 1 of 0x1699220 */
 void FUN_0006b7d0(RefArrays0005a230 *self);         /* slot 1 of 0x169ab10 */
 void FUN_0008beb0(hkxMesh *self);                   /* slot 1 of 0x16a25a0 */
 void FUN_0008d270(hkxScene *self);                  /* slot 1 of 0x16a2910 */
-void FUN_0008dc00(hkxMeshSection *self);            /* slot 1 of 0x16a29d0 */
 void FUN_000aa680(hkSkinnedRefMeshShape *self);     /* slot 1 of 0x16a38b0 */
 void FUN_00157ea0(hknpBallGun *self);               /* slot 1 of 0x16a48d0 */
 void FUN_00159600(hknpProjectileGun *self);         /* slot 1 of 0x16a4b30 */

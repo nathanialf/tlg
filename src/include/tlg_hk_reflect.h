@@ -17652,8 +17652,8 @@ void FUN_0017b5f0(hkp6DofConstraintData *self, hkFinishLoadedObjectFlag flag); /
  * hkxVertexBuffer's on the member at +0x10): its inline destructor's three
  * variants 0x8c930, 0x8c940 and 0x8c990.
  * hkxMeshSection, polymorphic (type info 0x57c8200, size 0x70, vtable
- * 0x16a29e0 stored by its finish constructor 0x8e000): slot 0, the complete
- * destructor FUN_0008dbf0, runs the out-of-line FUN_0008dc50.
+ * 0x16a29e0 stored by its finish constructor 0x8e000): its inline
+ * destructor's three variants 0x8dbf0, 0x8dc00 and 0x8dc50.
  * hkxAttribute (type info 0x57c7900, size 0x10, no vtable, cleanup 0x66e80):
  * its finish constructor FUN_0017d790 runs hkStringPtr's on +0.
  * hkxEnvironment (type info 0x57c8180, size 0x20): FUN_0017d6f0 stores the
@@ -18016,21 +18016,28 @@ class hkxMeshSection : public hkReferencedObject
 {
   public:
     hkxMeshSection(hkFinishLoadedObjectFlag flag)
-        : hkReferencedObject(flag), indexBuffers(flag), userChannels(flag), vertexAnimations(flag),
-          linearKeyFrameHints(flag), boneMatrixMap(flag)
+        : hkReferencedObject(flag), vertexBuffer(flag), indexBuffers(flag), material(flag),
+          userChannels(flag), vertexAnimations(flag), linearKeyFrameHints(flag), boneMatrixMap(flag)
     {
     }
 
-    /* Slot 0 (FUN_0008dbf0) runs the out-of-line FUN_0008dc50; the
-     * deleting destructor 0x8dc00 frees 0x70. */
-    virtual ~hkxMeshSection();
+    /* Inline, emitted with the vtable beside the finish constructor
+     * (cookbook 441): the complete destructor 0x8dbf0 a jump to the base
+     * one 0x8dc50, the deleting one 0x8dc00 between them; the members
+     * destroyed from the last, each counted reference released and
+     * cleared. */
+    inline virtual ~hkxMeshSection() {}
+
+    /* The reference-counted class delete (tlg_lib_unknown.h): the deleting
+     * destructor frees at the recorded size, 0x70. */
+    static void operator delete(void *object, unsigned long numBytes);
 
     /* The record's members (0x16a2a10). */
-    hkxVertexBuffer *vertexBuffer;
-    hkArray<hkxIndexBuffer *> indexBuffers;
-    hkxMaterial *material;
-    hkArray<hkReferencedObject *> userChannels;
-    hkArray<hkxVertexAnimation *> vertexAnimations;
+    hkRefPtr<hkxVertexBuffer> vertexBuffer;
+    hkArray<hkRefPtr<hkxIndexBuffer>> indexBuffers;
+    hkRefPtr<hkxMaterial> material;
+    hkArray<hkRefPtr<hkReferencedObject>> userChannels;
+    hkArray<hkRefPtr<hkxVertexAnimation>> vertexAnimations;
     hkArray<float> linearKeyFrameHints;
     hkArray<hkMeshBoneIndexMapping> boneMatrixMap;
 };
@@ -18427,7 +18434,6 @@ struct hkxVertexDescriptionElementDecl {
 
 inline hkxVertexBuffer::~hkxVertexBuffer() {}
 
-void FUN_0008dc50(hkxMeshSection *self);                                      /* derived name */
 void FUN_0017d790(hkxAttribute *self, hkFinishLoadedObjectFlag flag);         /* derived name */
 void FUN_0017de10(hkRootLevelContainer *self, hkFinishLoadedObjectFlag flag); /* derived name */
 

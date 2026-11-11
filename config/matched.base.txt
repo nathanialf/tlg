@@ -205,7 +205,7 @@ FUN_0008b870 src/libs/unknown/func_0008b890.cpp _ZL30finishLoadedObjecthkxAttrib
 _ZN18hkxVertexAnimationD1Ev src/libs/unknown/func_0008cb10.cpp
 FUN_0008ce40 src/libs/unknown/func_0008ce10.cpp _ZL38finishLoadedObjecthkxVertexDescriptionPvi
 FUN_0008da40 src/libs/unknown/func_0008da60.cpp _ZL32finishLoadedObjecthkxEnvironmentPvi
-FUN_0008dbf0 src/libs/unknown/func_0008dbf0.cpp
+_ZN14hkxMeshSectionD1Ev src/libs/unknown/func_0008e000.cpp
 FUN_0008e530 src/libs/unknown/func_0008e6b0.cpp _ZL50finishLoadedObjecthkRootLevelContainerNamedVariantPvi
 FUN_0008e5c0 src/libs/unknown/func_0008e6b0.cpp _ZL38finishLoadedObjecthkRootLevelContainerPvi
 FUN_0008e820 src/libs/unknown/func_0008e8c0.cpp _ZL43finishLoadedObjecthkMemoryResourceContainerPvi
@@ -1327,7 +1327,8 @@ _ZN7hkxMeshD0Ev src/libs/unknown/func_0008bf00.cpp
 _ZN7hkxNodeD0Ev src/libs/unknown/func_0008c110.cpp
 _ZN18hkxVertexAnimationD0Ev src/libs/unknown/func_0008cb10.cpp
 FUN_0008d270 src/libs/unknown/func_0008d270.cpp
-FUN_0008dc00 src/libs/unknown/func_0008dc00.cpp
+_ZN14hkxMeshSectionD0Ev src/libs/unknown/func_0008e000.cpp
+_ZN14hkxMeshSectionD2Ev src/libs/unknown/func_0008e000.cpp
 _ZN15hkcdPlanarSolidD0Ev src/libs/unknown/func_00095870.cpp
 _ZN18hkcdPlanarGeometryD0Ev src/libs/unknown/func_0009b1c0.cpp
 _ZN20hkcdPlanarCsgOperandD0Ev src/libs/unknown/func_0009c120.cpp
