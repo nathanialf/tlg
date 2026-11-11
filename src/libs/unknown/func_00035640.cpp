@@ -7,9 +7,10 @@ typedef hkcdStaticMeshTree<hkcdStaticMeshTreeCommonConfig<u32, u64, 11, 21>,
                            hknpCompressedMeshShapeTreeDataRun>
     MeshTree00035640; /* derived name */
 
-/* derived names: the finish callback of hknpCompressedMeshShapeTree's type info (0x57be2f0, and of the hkcdStaticMeshTree type info 0x57be570):
- * construct the object in place from a loaded image through its out-of-line
- * finish constructor. */
+/* derived names: the finish callback of the mesh tree instance's type info
+ * (0x57be570): construct the object in place from a loaded image through
+ * its out-of-line finish constructor. The linker folded it onto the
+ * previous file's equal callback for hknpCompressedMeshShapeTree, 0x34e30. */
 static void
 finishLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun(
     void *object, int finishing) /* derived name */
@@ -29,10 +30,10 @@ cleanupLoadedObjecthkcdStaticMeshTreeBasePrimitiveDataRunBasehknpCompressedMeshS
     static_cast<DataRunBase00035640 *>(object)->~DataRunBase00035640();
 }
 
-/* derived name: the cleanup callback of hknpCompressedMeshShapeTree's type
- * info (registered at 0x35163; the mesh tree instance's type info, at
- * 0x3575b, cites the same body): the tree destroyed in place, its data runs,
- * shared and packed vertices given back, then the base's destructor. */
+/* derived name: the cleanup callback of the mesh tree instance's type info
+ * (0x3575b): the tree destroyed in place, its data runs, shared and packed
+ * vertices given back, then the base's destructor; folded onto the previous
+ * file's equal callback for hknpCompressedMeshShapeTree, 0x34e40. */
 static void
 cleanupLoadedObjecthkcdStaticMeshTreehkcdStaticMeshTreeCommonConfigunsignedintunsignedlonglong1121hknpCompressedMeshShapeTreeDataRun(
     void *object) /* derived name */

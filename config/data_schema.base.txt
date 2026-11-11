@@ -208,3 +208,6 @@ D_16bced0 HksLibraryEntry 3 src/include/tlg_hks.h
 D_16bd0a0 HksLibraryEntry 6 src/include/tlg_hks.h
 D_16bd100 HksLibraryEntry 10 src/include/tlg_hks.h
 D_14d2e60 FormatWord001a72a0 32 src/include/tlg_format_table.h
+D_1692b40 hkClassMember 3 src/include/tlg_hk_reflect.h
+D_1692bc0 hkClassMember 2 src/include/tlg_hk_reflect.h
+D_1692c10 hkClassMember 1 src/include/tlg_hk_reflect.h

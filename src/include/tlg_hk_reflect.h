@@ -6838,6 +6838,10 @@ inline void hkQuaternion::setInverseMul(const hkQuaternion &a, const hkQuaternio
     vec = _mm_blend_ps(xyz, _mm_dp_ps(a.vec, b.vec, 0xff), 8);
 }
 
+/* The rotation out of line (0x11060; the character proxy's ground calls it
+ * at 0x178014). derived name. */
+void FUN_00011060(Vec4 &out, const hkQuaternion &q, const Vec4 &v);
+
 /* The inverse rotation out of line (0x110c0; called by a motion's set-up at
  * 0x15725f and by 0x1656a0). derived name. */
 void FUN_000110c0(Vec4 &out, const hkQuaternion &q, const Vec4 &v);
@@ -21204,7 +21208,9 @@ struct hknpCharacterProxyContact /* derived name */
      * normal's w (0x1771e0 reads it at +0x1c). */
     hkContactPoint contactPoint; /* derived name */
     hknpBodyId bodyId;           /* derived name: the body touched */
-    u8 unknown24[4];
+    /* The share of the body's point velocity the ground takes from this
+     * contact (0x17803e). derived name. */
+    float velocityWeight;
     /* 1 for a contact the proxy keeps from before (0x1774da, 0x177301).
      * derived name. */
     u8 flag28;
@@ -21242,11 +21248,25 @@ struct ContactParams001771e0 /* derived name */
 };
 
 /* What the proxy's support check fills (derived names; vtable slot 6 of the
- * proxy, 0x1781b0): whether it is supported at +1. */
+ * proxy, 0x1781b0): whether it is supported at +1; slot 8 (0x177e00) the
+ * rest, from the supporting contacts. */
 struct hknpCharacterSurfaceInfo /* derived name */
 {
-    u8 unknown0;
-    u8 supportedState; /* derived name */
+    hkBool surfaceIsDynamic;     /* derived name: a dynamic body among them */
+    u8 supportedState;           /* derived name */
+    float surfaceDistanceExcess; /* derived name: their mean distance, less the proxy's */
+    Vec4 surfaceNormal;          /* derived name: their normals' sum, normalized */
+    Vec4 surfaceVelocity;        /* derived name: their bodies' mean point velocity */
+};
+
+/* The step a support check is made for (derived names; slot 8 reads the
+ * step's length at +8 and its reciprocal at +0xc). */
+struct hkStepInfo /* derived name */
+{
+    float startTime;    /* derived name */
+    float endTime;      /* derived name */
+    float deltaTime;    /* derived name */
+    float invDeltaTime; /* derived name */
 };
 
 class hknpCharacterProxy : public hkReferencedObject /* derived name */
@@ -21273,10 +21293,16 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
      * supporting contacts in a direction into an array of up to 20 at
      * first, its answer kept in the surface info; when supported, slot 8
      * builds the surface from them. derived names. */
-    virtual void FUN_001781b0(const Vec4 &direction, hknpCharacterSurfaceInfo &surface);
-    virtual bool FUN_00177660(const Vec4 &direction, hkArray<int> &supports); /* slot 7 */
+    virtual void FUN_001781b0(const hkStepInfo &stepInfo, hknpCharacterSurfaceInfo &surface);
+    virtual bool FUN_00177660(const hkStepInfo &stepInfo, hkArray<int> &supports); /* slot 7 */
+    /* Slot 8 (0x177e00, timed as "getGround"): the surface from the
+     * supporting contacts (indices into the contacts at +0x68): their
+     * normals summed and normalized, their distances' mean less the
+     * proxy's own at +0x4c (0.01 when the proxy's body has flag 8 and a
+     * body is dynamic), and the mean of each non-static body's point
+     * velocity at the contact, weighted by the contact. derived name. */
     virtual void FUN_00177e00(const hkArray<int> &supports, hknpCharacterSurfaceInfo &surface,
-                              const Vec4 &direction); /* slot 8 */
+                              const hkStepInfo &stepInfo);
 
     void FUN_00176b10(hknpCharacterProxySignalSource *source,
                       hknpCharacterProxySignalData *data); /* derived name */
@@ -21312,7 +21338,11 @@ class hknpCharacterProxy : public hkReferencedObject /* derived name */
     const hknpShape *shape;                        /* derived name: released by the destructor */
     hknpWorld *world;                              /* copied from the cinfo's +0x18; derived name */
     hkRefPtr<hknpCharacterProxyListener> listener; /* derived name */
-    u8 unknown28[0x38];
+    u8 unknown28[0x24];
+    /* What the ground's distance is measured past (0x17814a). derived
+     * name. */
+    float keepDistance;
+    u8 unknown50[0x10];
     /* The share of a dynamic body's step a contact's record is given
      * (0x177371). derived name. */
     float contactShare;
