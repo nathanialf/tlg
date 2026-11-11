@@ -18,18 +18,39 @@ class Class16cc478Base0 /* derived name */
   public:
     /* Slots 0 and 1: FUN_013755d0 and FUN_01375710 store the vtable. */
     virtual ~Class16cc478Base0();
+    /* Slots 2 to 5 of 0x16cc478: 0x69a0, FUN_01375860, FUN_00b3d280,
+     * FUN_00b3d320. */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
+    virtual void slot5(); /* derived name; not traced */
 
     u8 unknown8[0x8];
 };
 
-/* At +0x10: three slots (the thunk 0x1374700, FUN_0137bfe0, FUN_0137bff0),
- * not traced. */
+/* At +0x10: three slots (the thunk 0x1374700, FUN_0137bfe0, FUN_0137bff0);
+ * the first overridden by FUN_0137ba00, which reads the object at +0x8 of this
+ * base (+0x18 of the class). */
+class Class16cc478Member18 /* derived name */
+{
+  public:
+    virtual void slot0(); /* derived name; not traced */
+    virtual void slot1(); /* derived name; not traced */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
+    virtual void slot5(); /* derived name; not traced */
+    virtual void slot6(); /* derived name; not traced */
+    virtual int slot7();  /* derived name */
+};
+
 class Class16cc478Base10 /* derived name */
 {
   public:
-    virtual void FUN_01374700() = 0; /* derived name, after its thunk; not traced */
+    virtual int FUN_01374700() = 0; /* derived name, after its thunk */
 
-    u8 unknown8[0x10];
+    Class16cc478Member18 *member8; /* +0x8 */
+    u8 unknown10[0x8];
 };
 
 /* At +0x28: one slot; its thunk 0x1374750 calls FUN_01376390 on the object
@@ -75,11 +96,14 @@ class Class16cc478 /* derived name */
 {
   public:
     virtual ~Class16cc478();
+    /* Slot 6, FUN_01376230, the first of the class's own slots. */
+    virtual void FUN_01376230(); /* derived name; parameters not traced */
 
     int FUN_0137b9e0() const;
     int FUN_0137b9f0() const;
     int FUN_01376350() const;
     int FUN_01376380() const;
+    int FUN_01374700(); /* slot 13, FUN_0137ba00 */
 
     u8 unknown48[0x58];
     int unknowna0; /* returned by FUN_0137b9f0 */
@@ -208,16 +232,37 @@ class Base01395de0_0 /* derived name */
 {
   public:
     virtual ~Base01395de0_0();
+    /* Slots 2 to 4 of 0x16cf260: 0x69a0, 0x58a0, FUN_01395db0. */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
 
     u8 unknown8[8];
+};
+
+/* The object at +0x8 of the base at +0x10 (+0x18 of the class): FUN_01396750
+ * asks its slot 7. */
+class Member01395de0_18 /* derived name */
+{
+  public:
+    virtual void slot0(); /* derived name; not traced */
+    virtual void slot1(); /* derived name; not traced */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
+    virtual void slot5(); /* derived name; not traced */
+    virtual void slot6(); /* derived name; not traced */
+    virtual int slot7();  /* derived name */
 };
 
 class Base01395de0_10 /* derived name */
 {
   public:
-    virtual void FUN_01395bd0(); /* derived name; parameters not traced */
+    /* Overridden by FUN_01396750 (its thunk 0x1395bd0). */
+    virtual int FUN_01395bd0() = 0; /* derived name, after its thunk */
 
-    u8 unknown8[0x10];
+    Member01395de0_18 *member8; /* +0x8 */
+    u8 unknown10[8];
 };
 
 class Base01395de0_28 /* derived name */
@@ -246,6 +291,11 @@ class Object01395de0 /* derived name */
 
     /* Slot 5 of the primary vtable (its pointer at 0x16cf298). */
     void FUN_01395de0(Target01395de0 *value);
+    /* Slots 6 and 7, FUN_00953730 and FUN_01395df0. */
+    virtual void FUN_00953730(); /* derived name; parameters not traced */
+    virtual void FUN_01395df0(); /* derived name; parameters not traced */
+    /* Slot 13 (its pointer at 0x16cf2d8), FUN_01396750. */
+    int FUN_01395bd0();
 
     u8 unknown40[0x60 - 0x40];
     Target01395de0 *unknown60;
