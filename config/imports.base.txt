@@ -131,7 +131,7 @@ yFVnOdGxvZY F G func scePadSetVibration
 2Z+PpY6CaJg G H func pthread_mutex_unlock
 7H0iTOciTLo G H func pthread_mutex_lock
 E+tyo3lp5Lw G H func pthread_attr_setdetachstate
-E6ao34wPw+U G H func ?
+E6ao34wPw+U G H func stat
 EotR8a3ASf4 G H func pthread_self
 HF7lK46xzjY G H func pthread_mutexattr_destroy
 JGMio+21L4c G H func ?
@@ -427,7 +427,7 @@ XKRegsFpEpk V V func ?
 Y7aJ1uydPMo V V func realloc
 YQ0navp+YIc V V func puts
 ZE6RNL+eLbk V V func tanf
-ZtjspkJQ+vw V V func ?
+ZtjspkJQ+vw V V func _FSin
 aaDMGGkXFxo V V func frexpf
 aesyjrHVWy4 V V func strncmp
 bzQExy189ZI V V func ?

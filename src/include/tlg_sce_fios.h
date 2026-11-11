@@ -76,6 +76,8 @@ SceFiosSize sceFiosFHWriteSync(const SceFiosOpAttr *attr, SceFiosFH fh, const vo
                                SceFiosSize length);
 int sceFiosFileDeleteSync(const SceFiosOpAttr *attr, const char *path);
 int sceFiosDirectoryCreate(const SceFiosOpAttr *attr, const char *path);
+/* An error code's text written into a buffer of size bytes (FUN_00e5e6a0). */
+const char *sceFiosDebugDumpError(int err, char *buffer, unsigned long size);
 }
 
 #endif

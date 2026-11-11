@@ -42,7 +42,8 @@ extern Object05938c40 *D_5938c40;
 struct Object00ca2880; /* derived name */
 struct Target00ca2880; /* derived name */
 
-void FUN_00c569b0(Target00ca2880 *target, int value); /* derived name */
+int FUN_00c569b0(Target00ca2880 *target,
+                 int value); /* derived name; FUN_00d8feb0 adds its result */
 
 void FUN_00ca2880(Object00ca2880 *, void *, Target00ca2880 *target) /* derived name */
 {

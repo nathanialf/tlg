@@ -21,6 +21,37 @@ typedef struct __sFILE FILE;
 /* Positive infinity as a float, as the C library's math.h spells it. */
 #define HUGE_VALF __builtin_huge_valf()
 
+/* A file's status as stat fills it: FreeBSD 9's amd64 layout, 0x78 bytes
+ * (FUN_00e5c830's buffer), the mode a 16-bit word at +0x8. */
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
+struct stat {
+    unsigned int st_dev;
+    unsigned int st_ino;
+    unsigned short st_mode;
+    unsigned short st_nlink;
+    unsigned int st_uid;
+    unsigned int st_gid;
+    unsigned int st_rdev;
+    struct timespec st_atim;
+    struct timespec st_mtim;
+    struct timespec st_ctim;
+    long st_size;
+    long st_blocks;
+    unsigned int st_blksize;
+    unsigned int st_flags;
+    unsigned int st_gen;
+    int st_lspare;
+    struct timespec st_birthtim;
+};
+
+/* The mode's directory and regular-file bits (FreeBSD's sys/stat.h). */
+#define S_IFDIR 0040000
+#define S_IFREG 0100000
+
 extern "C" {
 int strcmp(const char *a, const char *b);
 int strncmp(const char *a, const char *b, size_t n);
@@ -48,7 +79,24 @@ long ftell(FILE *stream);
 int fflush(FILE *stream);
 FILE *fopen(const char *path, const char *mode);
 int fclose(FILE *stream);
+/* NID verified as "stat" (E6ao34wPw+U). */
+int stat(const char *path, struct stat *status);
 float fabsf(float x);
+/* The C library's float sine and cosine kernel (Dinkumware's; its NID
+ * verified as "_FSin"): the sine for a quadrant offset of 0, the cosine for
+ * 1; the third argument is 0 at every one of the executable's 1,709 calls. */
+float _FSin(float x, unsigned int quadrantOffset, int unknown);
+
+inline float sinf(float x)
+{
+    return _FSin(x, 0, 0);
+}
+
+inline float cosf(float x)
+{
+    return _FSin(x, 1, 0);
+}
+
 void *memalign(size_t alignment, size_t size);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */

@@ -9,14 +9,37 @@
 struct Target0131e2d0;       /* derived name */
 struct Member05adaaa8_10238; /* derived name */
 
-struct Object05adaaa8 { /* derived name */
-    u8 unknown0[0x100a0];
+class Object05adaaa8 /* derived name */
+{
+  public:
+    virtual void slot0();   /* derived name; not traced */
+    virtual void slot1();   /* derived name; not traced */
+    virtual void destroy(); /* derived name; slot 2 (FUN_013224a0) */
+
+    /* derived name: the reference a holder drops (FUN_013224a0): the
+     * count taken down atomically, slot 2 called for the last one, the
+     * count returned read again after the decrement */
+    long release()
+    {
+        if (__sync_fetch_and_sub(&references, 1) == 1)
+            destroy();
+        return references;
+    }
+
+    /* volatile: the count other threads take and drop while this one
+     * releases (the base reads it again after the decrement) */
+    volatile long references; /* +0x8 */
+    u8 unknown10[0x100a0 - 0x10];
     /* +0x100a0: incremented atomically (`lock inc qword`) after each entry
      * FUN_0131e770 hands to FUN_0131e2d0 */
     long unknown100a0;
-    u8 unknown100a8[0x10];
+    u8 unknown100a8[0x8];
+    long
+        unknown100b0; /* +0x100b0: incremented as +0x100a0 is, after each entry FUN_013224a0 hands to +0x100e8 */
     Target0131e2d0 *unknown100b8; /* +0x100b8: FUN_0131e2d0's first argument (FUN_0131e770) */
-    u8 unknown100c0[0x10238 - 0x100c0];
+    u8 unknown100c0[0x100e8 - 0x100c0];
+    Target0131e2d0 *unknown100e8; /* +0x100e8: FUN_0131e2d0's first argument (FUN_013224a0) */
+    u8 unknown100f0[0x10238 - 0x100f0];
     Member05adaaa8_10238 *unknown10238; /* +0x10238: passed to FUN_01305ce0 by FUN_01499360 */
 };
 

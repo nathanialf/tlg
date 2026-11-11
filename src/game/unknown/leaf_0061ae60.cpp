@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_log.h"
 #include "tlg_game_name.h"
+#include "tlg_math.h"
 
 /* FixCamera (the class's name from its messages "FixCamera(%s)::Init" and
  * "FixCamera(%s)::Term"; derived names otherwise), its vtable at 0x16abef8
@@ -24,7 +25,20 @@ class FixCamera : public Object00afd410
 {
   public:
     virtual ~FixCamera();
+
+    u8 unknown10[0x50];
+    Float4A unknown60; /* +0x60: FUN_0061aeb0 */
+    Float4A unknown70; /* +0x70: FUN_0061aeb0 */
 };
+
+struct Source0061aeb0 { /* derived name */
+    u8 unknown0[0x120];
+    Float4A unknown120; /* +0x120 */
+    u8 unknown130[0x10];
+    Float4A unknown140; /* +0x140 */
+};
+
+Float4A FUN_0134ab60(const Float4A &value); /* derived name; not traced */
 
 extern const char D_158983a[]; /* "FixCamera(%s)::Term\n" */
 extern const char D_158984f[]; /* "FixCamera(%s)::Init\n" */
@@ -44,4 +58,13 @@ void FUN_0061ae60(FixCamera *self) /* derived name */
 {
     FUN_00afded0(self, 26, 2);
     FUN_00c831d0(self, D_158984f, D_17ac870[self->unknownC.index].string0);
+}
+
+/* The function at 0x16abf40 in the vtable, written as a free function:
+ * copies the row at +0x120 of its source and FUN_0134ab60's answer for the
+ * row at +0x140 into the rows at +0x60 and +0x70. */
+void FUN_0061aeb0(FixCamera *self, const Source0061aeb0 *source) /* derived name */
+{
+    self->unknown60 = source->unknown120;
+    self->unknown70 = FUN_0134ab60(source->unknown140);
 }

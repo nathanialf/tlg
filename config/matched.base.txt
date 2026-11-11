@@ -6920,3 +6920,15 @@ FUN_004749b0 src/game/unknown/func_004730f0.cpp __cxx_global_array_dtor
 FUN_00a05070 src/game/unknown/func_00a04d30.cpp __cxx_global_array_dtor
 FUN_008503c0 src/game/unknown/func_008503c0.cpp _GLOBAL__sub_I_func_008503c0.cpp
 FUN_003399a0 src/game/unknown/func_003399a0.cpp _GLOBAL__sub_I_func_003399a0.cpp
+FUN_013224a0 src/game/unknown/leaf_013224a0.cpp _ZN14Object016c3c08D1Ev
+FUN_01322510 src/game/unknown/leaf_013224a0.cpp _ZN14Object016c3c08D0Ev
+FUN_013a5580 src/game/unknown/leaf_013a5580.cpp _Z12FUN_013a5580P14Object013a6a50
+FUN_00e5bd70 src/game/unknown/leaf_00e5b7e0.cpp _ZN14Object00e5b7e06slot12EPvP14Record00e5b7e0
+FUN_00e5e6a0 src/game/unknown/leaf_00e5e6a0.cpp _Z12FUN_00e5e6a0PviPKvl
+FUN_0079ee00 src/game/unknown/leaf_0079ee00.cpp _Z12FUN_0079ee00P14Object0079ee00
+FUN_0061aeb0 src/game/unknown/leaf_0061ae60.cpp _Z12FUN_0061aeb0P9FixCameraPK14Source0061aeb0
+FUN_00b4b950 src/game/unknown/leaf_00b4b950.cpp _Z12FUN_00b4b950P14Object00b4b950
+FUN_0139c910 src/game/unknown/leaf_0139c910.cpp _Z12FUN_0139c910P12Node0139c910i
+FUN_001b3940 src/game/unknown/leaf_001b3940.cpp _Z12FUN_001b3940P9lua_State
+FUN_00968640 src/game/unknown/leaf_00968640.cpp _Z12FUN_00968640P14Object00968640P15Visitor00968640
+FUN_00dd0f20 src/game/unknown/leaf_00dd0f20.cpp _Z12FUN_00dd0f20P14Object00dd0f20P13Value00dd0f20
