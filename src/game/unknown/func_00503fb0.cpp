@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_name.h"
+#include "tlg_game_type.h"
 #include <functional>
 
 /* derived names: FUN_00503fb0 (0x1440 bytes) searches a tree of nodes with
@@ -20,21 +21,6 @@
  * an atomic decrement drops it); a component's type is a chain of types
  * linked by their first field. The rest of the creating function is not
  * traced. */
-struct Type00503fb0 {     /* derived name */
-    Type00503fb0 *parent; /* +0x0 */
-};
-
-/* the type itself or one it derives from */
-inline bool isKindOf(const Type00503fb0 *t, const Type00503fb0 *type) /* derived name */
-{
-    do {
-        if (t == type)
-            return true;
-        t = t->parent;
-    } while (t);
-    return false;
-}
-
 struct Component00503fb0 { /* derived name */
     u8 unknown0[0x18];
     Type00503fb0 *type; /* +0x18 */

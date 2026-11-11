@@ -48,4 +48,19 @@ inline void releaseBlock(void *block) /* derived name */
     free(block);
 }
 
+/* derived names: the class whose vtable is at 0x16d3868
+ * (config/vtables.derived.base.txt): its destructor (FUN_013d2f90,
+ * leaf_013d2f90.cpp) releases the block it holds at +0x18. Also a member at
+ * +0x10 of the classes whose vtables are 0x16bf020 and 0x16c1e40. The other
+ * members are not traced. */
+class Object013d2f90 /* derived name */
+{
+  public:
+    virtual ~Object013d2f90();
+
+  private:
+    u8 unknown8[0x10];
+    void *unknown18; /* +0x18: owned block */
+};
+
 #endif

@@ -76,6 +76,7 @@ struct Compiler00dacb80 { /* derived name */
 void FUN_013bde50(void *field);                                            /* derived name */
 void FUN_013bdca0(void *field);                                            /* derived name */
 void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression); /* derived name */
+void FUN_00dae7e0(Compiler00dacb80 *self);                                 /* derived name */
 
 /* derived name: the word of the instruction at pc */
 static inline u32 *instruction(FuncState00dacb80 *fs, u32 pc)
@@ -142,6 +143,21 @@ void FUN_00dafb70(Compiler00dacb80 *self) /* derived name */
     Block00dacb80 *block = self->funcState->unknown1798;
     block->unknown8 = self->funcState->pc;
     self->funcState->unknown1798->unknown4 = self->reporter->slot4();
+}
+
+/* derived name: slot 15 of the vtable at 0x16bb0c0 (its pointer at
+ * 0x16bb148): FUN_00db00e0's body after a call of FUN_00dae7e0, with the
+ * jump read from +0x14 of the record */
+// NONMATCHING: greedy's assignment, as FUN_00db00e0: the base copies the pc
+// through edi and sets rdi to self after it, the build through esi
+void FUN_00dafdc0(Compiler00dacb80 *self) /* derived name */
+{
+    FUN_00dae7e0(self);
+    FuncState00dacb80 *fs = self->funcState;
+    int jump = fs->unknown1798->unknown14;
+    fs->lastTarget = fs->pc;
+    FUN_00dacb80(self, &self->funcState->jumpList, jump);
+    FUN_013bde50(&self->funcState->unknown1708);
 }
 
 void FUN_00da7a00(Compiler00dacb80 *self) /* derived name */
