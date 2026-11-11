@@ -979,6 +979,10 @@ struct hkAabbHalf {
 struct hkBitFieldStorage {
     hkBitFieldStorage() : numBits(0) {}
 
+    /* Words for a number of bits, the array built at that size (the broad
+     * phase layers' constructor, 0x140aa8 to 0x140b3c). */
+    hkBitFieldStorage(int numWords, int numBits_) : words(numWords), numBits(numBits_) {}
+
     /* A loaded image's storage is left as loaded. */
     hkBitFieldStorage(hkFinishLoadedObjectFlag flag) : words(flag) {}
 
@@ -988,6 +992,10 @@ struct hkBitFieldStorage {
 
 struct hkBitField {
     hkBitField() {}
+
+    /* A number of bits, every one set to the value given (0x140aa8 to
+     * 0x140b7e: the words sized again, then filled). */
+    inline hkBitField(int numBits, int initialValue);
 
     /* A loaded image's field is left as loaded. */
     hkBitField(hkFinishLoadedObjectFlag flag) : storage(flag) {}

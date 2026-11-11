@@ -648,6 +648,40 @@ void FUN_0013e090(BroadPhaseLayers00142a40 *layers, BroadPhaseTree00142a40 *tree
     tree->nodes.FUN_00197610(&tree->nodes.elements[tree->root]);
 }
 
+// NONMATCHING: round 142C, 150 of 246 by sequence, 992 bytes for 955; the bit field's and the
+// reference's code in the base's shape. Residuals: (1) greedy's assignment from the first
+// instruction (this in r12, the capacity in ebx, where the base has rbx and r15d); (2) the words'
+// pointer for the fill's memset is read before the size store and the guard, where the base reads
+// it in the guarded block (the loop's preheader); an in-loop read is not hoisted at all (measured);
+// (3) the layer index is copied to rsi as 64 bits (`mov rsi, r15`) where the base copies 32
+// (`mov esi, r14d`): its index is an i32 zero-extended at the call, the u8 counter widened once.
+BroadPhaseLayers00142a40::BroadPhaseLayers00142a40(int bodyCapacity, hknpBroadPhaseConfig *config_)
+    : markedBodies(bodyCapacity, 0), lowestMarkedId(0xffffffff), highestMarkedId(0), tasks(HK_NULL)
+{
+    config = config_;
+    numLayers = config_->getNumLayers();
+    for (u8 i = 0; i < numLayers; i++) {
+        const hknpBroadPhaseConfig::Layer *layer = config_->FUN_00154e00(i);
+        trees[i] = new BroadPhaseTree00142a40(0x1d);
+        flag50[i] = layer->isVolatile;
+        updatePending[i] = false;
+    }
+    for (u8 i = u8(numLayers); i < 8; i++) {
+        trees[i] = HK_NULL;
+    }
+    for (u8 i = 0; i < numLayers; i++) {
+        const hknpBroadPhaseConfig::Layer *layerA = config_->FUN_00154e00(i);
+        for (u8 j = i; j < numLayers; j++) {
+            const hknpBroadPhaseConfig::Layer *layerB = config_->FUN_00154e00(j);
+            if ((layerA->collideWithLayerMask & (1 << j)) ||
+                (layerB->collideWithLayerMask & (1 << i))) {
+                layerPairs.pushBack(i);
+                layerPairs.pushBack(j);
+            }
+        }
+    }
+}
+
 /* The broad phase's trees by layer destroyed (the compiler's D0 at 0x140e20
  * and D1 at 0x140e70): each layer's tree and the tasks deleted, then the
  * marked bodies, the layer pairs and the configuration's reference. */

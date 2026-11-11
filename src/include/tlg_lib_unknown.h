@@ -1441,6 +1441,17 @@ template <typename T, typename Allocator> inline hkArray<T, Allocator>::hkArray(
     this->capacityAndFlags = capacity ? capacity : hkArrayBase<T>::DONT_DEALLOCATE_FLAG;
 }
 
+inline hkBitField::hkBitField(int numBits, int initialValue) : storage((numBits + 31) >> 5, numBits)
+{
+    const int numWords = (numBits + 31) >> 5;
+    storage.words.setSize(numWords);
+    const u32 fill = initialValue ? 0xffffffffu : 0u;
+    u32 *words = storage.words.data;
+    for (int i = 0; i < numWords; i++) {
+        words[i] = fill;
+    }
+}
+
 template <typename T>
 inline void hkArrayBase<T>::pushBack(AllocatorBase &allocator, const T &element)
 {
@@ -6733,6 +6744,13 @@ struct BroadPhaseTree00142a40 /* derived name */
      * derived name. */
     BroadPhaseTree00142a40(int maxLeafEntries);
 
+    /* From the thread's heap (the broad phase layers' constructor,
+     * 0x140c80). */
+    static void *operator new(unsigned long numBytes)
+    {
+        return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
+    }
+
     /* The tree reset and its arrays given back (0x195fe0, which runs the
      * body 0x195ff0; the layers' destructor calls it at 0x140ead before it
      * frees the 0x58 bytes). The body is reset() and the members'
@@ -7141,6 +7159,13 @@ void FUN_00144170(const BroadPhaseTree00142a40 *tree, int root, const hknpRayCas
 class BroadPhaseLayers00142a40 /* derived name */
 {
   public:
+    /* The world's broad phase (0x140a60; the world at 0x499a0 and
+     * 0x499f3): the marked bodies' bits for the body capacity, the
+     * config held, a tree of 0x1d leaf entries for each of its layers
+     * with the layer's volatile flag, and every pair of layers either of
+     * which collides with the other. derived name. */
+    BroadPhaseLayers00142a40(int bodyCapacity, hknpBroadPhaseConfig *config_);
+
     /* Out of line (0x140e70, slot 0; the deleting destructor 0x140e20
      * before it): each layer's tree deleted, then the tasks, then the
      * members. */
