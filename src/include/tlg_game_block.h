@@ -22,11 +22,12 @@ struct BlockHeader05943280 { /* derived name */
 class Owner05943280 /* derived name */
 {
   public:
-    virtual void slot0();                       /* derived name; not traced */
-    virtual void slot1();                       /* derived name; not traced */
-    virtual void slot2();                       /* derived name; not traced */
-    virtual void slot3();                       /* derived name; not traced */
-    virtual void slot4();                       /* derived name; not traced */
+    virtual void slot0(); /* derived name; not traced */
+    virtual void slot1(); /* derived name; not traced */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+    virtual void *slot4(unsigned size, unsigned alignment,
+                        int flags);             /* derived name: an allocation */
     virtual void slot5();                       /* derived name; not traced */
     virtual void slot6(void *block, int value); /* derived name; not traced */
 };

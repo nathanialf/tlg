@@ -144,6 +144,16 @@ void FUN_00dafb70(Compiler00dacb80 *self) /* derived name */
     self->funcState->unknown1798->unknown4 = self->reporter->slot4();
 }
 
+/* derived name: slot 13 of the vtable at 0x16bb0c0 (its pointer at
+ * 0x16bb138): FUN_00dacb80 joins the jump at +0x8 of the record to the list
+ * at +0x4, then FUN_00db00e0, slot 12 (its pointer at 0x16bb130) */
+void FUN_00db0140(Compiler00dacb80 *self) /* derived name */
+{
+    Block00dacb80 *block = self->funcState->unknown1798;
+    FUN_00dacb80(self, &block->unknown4, block->unknown8);
+    FUN_00db00e0(self);
+}
+
 /* derived name: slot 15 of the vtable at 0x16bb0c0 (its pointer at
  * 0x16bb148): FUN_00db00e0's body after a call of FUN_00dae7e0, with the
  * jump read from +0x14 of the record */

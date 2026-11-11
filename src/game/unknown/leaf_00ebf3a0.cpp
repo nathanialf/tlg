@@ -1,4 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include <stddef.h>
+
 #include "tlg_types.h"
 
 /* derived names: allocates size bytes aligned to 32 from the heap that slot
@@ -61,13 +63,18 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-// NONMATCHING: the base keeps the argument in a 64-bit register (`mov rbx, rdi`) though it tests
-// and passes only its low half (`test ebx, ebx`, `mov esi, ebx`): a 64-bit parameter used as 32
-// bits, whose source form is not found; this copies a 32-bit one (`mov ebx, edi`), the rest equal
-void *FUN_00ebf3a0(unsigned size) /* derived name */
+/* derived name: size bytes aligned to 32 from a heap, nothing (null) for a
+ * size of 0; the size is 32 bits at the heap's slot */
+static inline void *allocateFrom(Heap00ebf3a0 *heap, unsigned size)
 {
-    Heap00ebf3a0 *heap = D_5938c40->unknown100->slot33();
     if (!size)
         return 0;
     return heap->slot4(size, 0x20, 1);
+}
+
+/* the allocation hook FUN_00eb45d0 installs at 0x57ad990, in place of
+ * FUN_00f02650 (leaf_00f02650.cpp): a 64-bit size */
+void *FUN_00ebf3a0(size_t size) /* derived name */
+{
+    return allocateFrom(D_5938c40->unknown100->slot33(), size);
 }
