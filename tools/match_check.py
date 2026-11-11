@@ -392,8 +392,10 @@ class _ObjectView:
             self.sections = {}
             self.relocs: dict[int, list] = {}
             self.names: dict[int, str] = {}
+            self.entsizes: dict[int, int] = {}
             for i, sec in enumerate(elf.iter_sections()):
                 self.names[i] = sec.name
+                self.entsizes[i] = sec["sh_entsize"]
                 if isinstance(sec, RelocationSection):
                     self.relocs.setdefault(sec["sh_info"], []).extend(
                         (r["r_offset"], r["r_info_type"], r["r_info_sym"],

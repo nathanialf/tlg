@@ -318,6 +318,17 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
             if blob:
                 if hint is not None and bytes_at(base, hint, blob):
                     return hint, ""
+                # a constant-pool entry (.LCPI*) of a merged constant section
+                # (.rodata.cst4/8/16): the run to the next NUL above reads on
+                # into the next constants of the whole module's pool; the one
+                # entry where the base's field points is the placement (round
+                # 157A: 0.02f of FUN_008b0a30)
+                v = mc.object_view(obj)
+                ent = v.entsizes.get(r.sym_section, 0)
+                if (hint is not None and r.sym_size == 0 and ent and len(blob) > ent
+                        and v.sections[r.sym_section][1] & 0x30 == 0x10
+                        and bytes_at(base, hint, blob[:ent])):
+                    return hint, ""
                 hits = base.find_bytes(blob)
                 if len(hits) == 1:
                     return hits[0], ""

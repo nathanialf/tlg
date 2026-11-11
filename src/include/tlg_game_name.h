@@ -42,6 +42,20 @@ class Name /* derived name */
     {
     }
 
+    /* a copy holds its own reference: the count at +0x10 of the entry raised
+     * before the index is taken (0x8aefb0, 0x8af269) */
+    Name(const Name &other)
+    {
+        __sync_fetch_and_add(&D_17ac870[other.index].references10, 1);
+        index = other.index;
+    }
+
+    /* one entry per string: names compare by index (0x8af27f) */
+    bool operator==(const Name &other) const
+    {
+        return index == other.index;
+    }
+
     ~Name()
     {
         if (index != 0) {
