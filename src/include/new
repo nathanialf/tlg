@@ -1,0 +1,20 @@
+/* The C++ library's <new>, as much of it as the game's code attests,
+ * declared by us (docs/FINISHING.md rule 8; the build's -nostdlibinc hides
+ * the host's headers, as for stdlib.h): the placement forms, which construct
+ * an object in storage the caller gives. The library declares them inline
+ * and non-throwing, so a placement new-expression tests the storage for null
+ * before it constructs. */
+#ifndef TLG_NEW
+#define TLG_NEW
+
+inline void *operator new(unsigned long, void *where) noexcept
+{
+    return where;
+}
+
+inline void *operator new[](unsigned long, void *where) noexcept
+{
+    return where;
+}
+
+#endif

@@ -6,7 +6,8 @@
  * +0x58 of the record at +0x100 of the object the pointer at 0x57c9390 holds
  * counted in hundredths (as FUN_008b0b60 (leaf_008b0b60.cpp) returns it times
  * 100), keeps the sum between 0 and 100 and stores it back divided by 100
- * (times 0.01). The object itself is not read. */
+ * (times 0.01), returning the kept sum (xmm0 stays live past the store, so
+ * the stored product takes xmm1). The object itself is not read. */
 struct Object008b14a0; /* derived name */
 
 struct Member057c9390_100 { /* derived name */
@@ -21,8 +22,7 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: greedy's assignment: the instructions are the base's but the product takes xmm0 where the base puts it in xmm1
-void FUN_008b14a0(Object008b14a0 *, const float *delta) /* derived name */
+float FUN_008b14a0(Object008b14a0 *, const float *delta) /* derived name */
 {
     Member057c9390_100 *record = D_57c9390->unknown100;
     float percent = record->unknown58 * 100.0f + *delta;
@@ -33,4 +33,5 @@ void FUN_008b14a0(Object008b14a0 *, const float *delta) /* derived name */
         percent = 100.0f;
     }
     record->unknown58 = percent * 0.01f;
+    return percent;
 }
