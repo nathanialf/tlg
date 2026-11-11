@@ -19,8 +19,6 @@ struct Object00d41700 { /* derived name */
     unsigned unknownc;
 };
 
-// NONMATCHING: list-ilp order: the base loads the first record's index before the table's lea, the
-// compile the lea first; every instruction else equal
 int FUN_00d41700(const void *a, const void *b) /* derived name */
 {
     const Object00d41700 *first = *static_cast<Object00d41700 *const *>(a);

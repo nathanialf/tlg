@@ -1,0 +1,35 @@
+llvm-4.0.0 backport patch: a switch condition is not narrowed below the largest legal integer (PS4)
+
+This patch CHANGES CODE GENERATION for a switch on a zero-extended byte or
+word. Upstream r274233 (7c6eab577743, 2016-06-30, "[InstCombine] shrink
+switch conditions better (PR24766)", D12965), first released in 3.9.0,
+lets InstCombine::visitSwitchInst truncate the condition to any narrower
+width, so a switch on an unsigned byte is lowered in i8 (`addb $-K, %al;
+movzbl %al, %eax; cmpl $N, %eax`); LLVM 3.8 truncated only to a width at
+least the largest legal integer type (64 bits on x86-64), so the byte stays
+zero-extended and the cases are subtracted at i32 (`movzbl; addl $-K` or
+`leal -K(%rcx)`). In the game region the jump tables indexed by a
+zero-extended byte less a nonzero lowest case are 2 at i32 (0xed8bf8,
+0x1304664) and 5 in i8, the five each a form an if chain on a char gives
+under 3.8.1 too (SimplifyCFG builds the switch from compares already
+narrowed); a lowest case of 0 gives the same bytes under both rules.
+
+--- a/lib/Transforms/InstCombine/InstructionCombining.cpp
++++ b/lib/Transforms/InstCombine/InstructionCombining.cpp
+@@ -2266,10 +2266,12 @@
+ 
+   unsigned NewWidth = BitWidth - std::max(LeadingKnownZeros, LeadingKnownOnes);
+ 
+-  // Shrink the condition operand if the new type is smaller than the old type.
+-  // This may produce a non-standard type for the switch, but that's ok because
+-  // the backend should extend back to a legal type for the target.
+-  if (NewWidth > 0 && NewWidth < BitWidth) {
++  // PS4: truncate the condition operand only if the new type is equal to or
++  // larger than the largest legal integer type, as LLVM 3.8 did (x86
++  // generates redundant zero-extension instructions if the operand is
++  // truncated to i8 or i16).
++  if (NewWidth > 0 && NewWidth < BitWidth &&
++      NewWidth >= DL.getLargestLegalIntTypeSizeInBits()) {
+     IntegerType *Ty = IntegerType::get(SI.getContext(), NewWidth);
+     Builder->SetInsertPoint(&SI);
+     Value *NewCond = Builder->CreateTrunc(Cond, Ty, "trunc");

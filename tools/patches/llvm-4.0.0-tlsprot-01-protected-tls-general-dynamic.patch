@@ -1,0 +1,30 @@
+llvm-4.0.0 backport patch: a protected thread-local stays general-dynamic in a shared object (PS4)
+
+This patch CHANGES CODE GENERATION for a thread-local variable a -fPIC
+(non-PIE) unit defines at protected visibility. Upstream r273921
+(8121becac311, 2016-06-27, "Teach shouldAssumeDSOLocal about tls"),
+first released in 3.9.0, made TargetMachine::getTLSModel take IsLocal
+from shouldAssumeDSOLocal, which is true for any non-default visibility,
+so a protected definition is local-dynamic (`leaq x@TLSLD`, `x@DTPOFF`).
+LLVM 3.8 gave local-dynamic only to a local or hidden symbol. The base
+has general-dynamic at all 21,974 thread-local sites and local-dynamic
+at none (D23, round 124A). This patch restores 3.8's condition inside
+the shared-library branch only. With it the game module's thread-local
+stand-ins are protected like every other (D50, D51): FUN_00d6a930
+compiles to the base's bytes and no matched game row changes (round
+145B).
+
+--- a/lib/Target/TargetMachine.cpp	2026-11-11 03:57:04.439595384 +0000
++++ b/lib/Target/TargetMachine.cpp	2026-11-11 03:57:04.448461707 +0000
+@@ -173,7 +173,10 @@
+ 
+   TLSModel::Model Model;
+   if (IsSharedLibrary) {
+-    if (IsLocal)
++    // PS4: the shared-library rule of LLVM 3.8 (before r273921): only a
++    // local or hidden symbol is local-dynamic; a protected one stays
++    // general-dynamic.
++    if (GV->hasLocalLinkage() || GV->hasHiddenVisibility())
+       Model = TLSModel::LocalDynamic;
+     else
+       Model = TLSModel::GeneralDynamic;

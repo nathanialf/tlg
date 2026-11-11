@@ -12,7 +12,6 @@ struct Record00d332b0 { /* derived name */
     Target00d332b0 *unknown20;
 };
 
-// NONMATCHING: the virtual member pointer's slot load is `[rcx + rdx - 1]` (the pointer's value the base register) in the base, `[rdx + rcx - 1]` (the vtable) in the compile; every instruction else equal. The prebuilt 3.6.2 and 3.8.1 compile this source to the base's bytes, 3.9.1 and 4.0.0 to the compile's, with the same IR after CodeGenPrepare under 3.8.1 and 4.0.0: a selection-DAG change of 3.9 (a 4.0.0-line question)
 void FUN_00d332b0(Record00d332b0 *record) /* derived name */
 {
     (record->unknown20->*record->unknown10)(record);

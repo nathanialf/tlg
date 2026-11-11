@@ -24,9 +24,6 @@ struct Object00be5650 { /* derived name */
     u32 index;
 };
 
-// NONMATCHING: list-ilp order of the two block additions (the base adds the offset table's offset
-// first, rcx, then the data's, rdx; the compile the reverse); 3.8.1 gives the base's order, 3.9.1 and
-// 4.0.0 this one (round 135B, prebuilt releases), as FUN_013c8720
 const u8 *FUN_00be5650(const Object00be5650 *self) /* derived name */
 {
     const Record00be5650 *record = self->unknownd8;

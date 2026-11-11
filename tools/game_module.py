@@ -19,9 +19,9 @@ libraries' stay behind the GOT. The gate builds it the same way:
        (tools/module_boundary.py) puts its base address in the game's part of
        the data: protected, writable, zero-initialised, of the declared type
        and alignment, in a module of its own (build/<slug>/game/standins.ll)
-       linked in last. A thread-local stand-in has default visibility: under
-       protected visibility the 4.0.0 compiler accesses it local-dynamic,
-       which the base's code is not (D23). A library object, an import, a
+       linked in last. A thread-local stand-in is protected like the rest:
+       the game compiler keeps a protected thread-local general-dynamic, as
+       the base's code is (D23, D51). A library object, an import, a
        library vtable and a name without a base address stay declarations
        (the GOT and PLT forms). An opaque class (a declaration whose type no
        file completes) is completed as one byte.
@@ -157,10 +157,6 @@ def check_units(units: list[Unit]) -> tuple[list[str], list[str]]:
     for u in units:
         for name, (linkage, tls) in sorted(u.defs.items()):
             lines.append(f"{u.tu} {name} {linkage}")
-            if tls:
-                errors.append(f"{u.tu} defines the thread-local {name}: the module would access it local-dynamic "
-                              "(protected visibility), which no access in the base is; a game thread-local waits "
-                              "for the supervisor's ruling on the TLS model (round 133A)")
             if linkage in LOCAL:
                 if linkage == "internal":
                     local.setdefault(name, []).append(u.tu)
@@ -238,11 +234,11 @@ def standins(units: list[Unit], ver: str, base=None, table=None) -> tuple[str, l
         u, d = decls[name][0]
         tls = d.group(3)
         unnamed = "unnamed_addr "     # llvm-link keeps the weakest of every declaration's
-        vis = "" if tls else "protected "
+        vis = "protected "
         ty = types.subst(u, d.group(8))
         q = name if re.fullmatch(r"[-a-zA-Z$._][-a-zA-Z$._0-9]*", name) else '"' + name + '"'
         out.append(f"@{q} = {vis}{tls}{unnamed}{d.group(5)}global {ty} zeroinitializer{d.group(9) or ''}")
-        log.append(f"DEF {name} {where}" + (" thread_local default visibility" if tls else ""))
+        log.append(f"DEF {name} {where}" + (" thread_local" if tls else ""))
     for name in sorted({n for u in units for n in u.avail} - defined):
         log.append(f"AVAILABLE_EXTERNALLY {name} (kept: no file defines it)")
     for o in types.opaque:

@@ -1,0 +1,61 @@
+llvm-4.0.0 backport patch: an instruction's register operands in their list order for the scheduling graph (PS4)
+
+This patch CHANGES CODE GENERATION for the order of independent
+instructions after register allocation. Upstream r269076 (a356bb7fa46d,
+2016-05-10, "[ScheduleDAG] Make sure to process all def operands before
+any use operands"), first released in 3.9.0, makes
+ScheduleDAGInstrs::buildSchedGraph visit an instruction's defs before
+its uses; 3.8 visited the operands in their order on the operand list,
+which gives the post-RA list scheduler other register dependence edges
+(the two independent adds of 0xbe5650 and the folded-load add and mask
+constant of 0x13c8720 come out in the base's order). The upstream fix is
+for an explicit use before an implicit def of the same register (a
+Hexagon call); this restores the one-pass loop.
+
+--- a/lib/CodeGen/ScheduleDAGInstrs.cpp
++++ b/lib/CodeGen/ScheduleDAGInstrs.cpp
+@@ -899,37 +899,21 @@
+         "Cannot schedule terminators or labels!");
+ 
+     // Add register-based dependencies (data, anti, and output).
+-    // For some instructions (calls, returns, inline-asm, etc.) there can
+-    // be explicit uses and implicit defs, in which case the use will appear
+-    // on the operand list before the def. Do two passes over the operand
+-    // list to make sure that defs are processed before any uses.
++    // PS4: the operands in their order on the operand list, as LLVM 3.8 did.
+     bool HasVRegDef = false;
+     for (unsigned j = 0, n = MI.getNumOperands(); j != n; ++j) {
+       const MachineOperand &MO = MI.getOperand(j);
+-      if (!MO.isReg() || !MO.isDef())
++      if (!MO.isReg())
+         continue;
+       unsigned Reg = MO.getReg();
+       if (TargetRegisterInfo::isPhysicalRegister(Reg)) {
+         addPhysRegDeps(SU, j);
+       } else if (TargetRegisterInfo::isVirtualRegister(Reg)) {
+-        HasVRegDef = true;
+-        addVRegDefDeps(SU, j);
+-      }
+-    }
+-    // Now process all uses.
+-    for (unsigned j = 0, n = MI.getNumOperands(); j != n; ++j) {
+-      const MachineOperand &MO = MI.getOperand(j);
+-      // Only look at use operands.
+-      // We do not need to check for MO.readsReg() here because subsequent
+-      // subregister defs will get output dependence edges and need no
+-      // additional use dependencies.
+-      if (!MO.isReg() || !MO.isUse())
+-        continue;
+-      unsigned Reg = MO.getReg();
+-      if (TargetRegisterInfo::isPhysicalRegister(Reg)) {
+-        addPhysRegDeps(SU, j);
+-      } else if (TargetRegisterInfo::isVirtualRegister(Reg) && MO.readsReg()) {
+-        addVRegUseDeps(SU, j);
++        if (MO.isDef()) {
++          HasVRegDef = true;
++          addVRegDefDeps(SU, j);
++        } else if (MO.readsReg()) // ignore undef operands
++          addVRegUseDeps(SU, j);
+       }
+     }
+ 

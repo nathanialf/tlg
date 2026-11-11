@@ -21,9 +21,6 @@ struct Object013c8720 { /* derived name */
     u64 unknowne0;
 };
 
-// NONMATCHING: list-ilp order, the mask's `mov eax, 0xfffffff0` before the `add ecx, [rsi + 0x10]`
-// (the base has the add first); 3.6.2, 3.7.1 and 3.8.1 give the base's order, 3.9.1 and 4.0.0 this one
-// (round 135B, prebuilt releases)
 void FUN_013c8720(Object013c8720 *self, const Record013c8720 *record) /* derived name */
 {
     if (record->unknown18) {

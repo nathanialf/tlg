@@ -1,0 +1,29 @@
+llvm-4.0.0 backport patch: ReassociateOps keeps 3.8's operand order (PS4)
+
+This patch CHANGES CODE GENERATION for an add (or another associative
+operation) of a value and an operation with a constant. Upstream r262148
+(982224cfb8de, 2016-02-27, "DAGCombiner: Don't unnecessarily swap
+operands in ReassociateOps"), first released in 3.9.0, builds
+(op y, (op x, c1)) as (op (op y, x), c1); 3.8 built (op (op x, y), c1).
+The address of a member-function pointer's vtable slot shows it: the
+game region loads it as `-0x1(%rcx,%rdx)`, the pointer's offset as base
+and the vtable as index, at 49 sites, and in the other order at none
+(rounds 138B and 145B). With this patch 0xd332b0 compiles to the base's
+bytes and no matched game row changes (one function of the game module
+changes: that draft).
+
+--- a/lib/CodeGen/SelectionDAG/DAGCombiner.cpp	2026-11-11 04:02:54.832531182 +0000
++++ b/lib/CodeGen/SelectionDAG/DAGCombiner.cpp	2026-11-11 04:02:54.841097078 +0000
+@@ -880,9 +880,9 @@
+         return SDValue();
+       }
+       if (N1.hasOneUse()) {
+-        // reassoc. (op x, (op y, c1)) -> (op (op x, y), c1) iff x+c1 has one
+-        // use
+-        SDValue OpNode = DAG.getNode(Opc, SDLoc(N0), VT, N0, N1.getOperand(0));
++        // reassoc. (op y, (op x, c1)) -> (op (op x, y), c1) iff x+c1 has one
++        // use (PS4: LLVM 3.8's operand order, before r262148)
++        SDValue OpNode = DAG.getNode(Opc, SDLoc(N0), VT, N1.getOperand(0), N0);
+         if (!OpNode.getNode())
+           return SDValue();
+         AddToWorklist(OpNode.getNode());

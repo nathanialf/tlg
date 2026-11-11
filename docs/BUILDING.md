@@ -113,7 +113,7 @@ import and a library vtable stay declarations), links every unit and the
 stand-ins with `llvm-link`, and runs one `-O2` pipeline and code generation
 over the module (`tools/compile_cpp.sh --codegen`), to
 `build/base/game/module.o`. It refuses a name two game files define, naming
-both, and a thread-local a game file defines. `build/base/game/symbols.txt`
+both. `build/base/game/symbols.txt`
 lists what each unit defines, which the gate checks a row's unit against.
 `config/modules.base.txt` is written from the base by
 `tools/module_boundary.py` (a census of every RIP-relative operand by the

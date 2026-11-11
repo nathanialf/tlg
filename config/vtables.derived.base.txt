@@ -193,3 +193,5 @@ _ZTV14Object016ce5f8 0x16ce5f8 Object016ce5f8 derived ctor FUN_00a657a0 # game r
 _ZTV14Object016ce640 0x16ce640 Object016ce640 derived ctor FUN_00a658f0 # game region (round 144A): the guarded local static object of the accessor FUN_00a658f0, which alone stores this vtable; no type info and no string names the class
 _ZTV14Object016ce688 0x16ce688 Object016ce688 derived ctor FUN_00a65a40 # game region (round 144A): the guarded local static object of the accessor FUN_00a65a40, which alone stores this vtable; no type info and no string names the class
 _ZTV14Object016ce6d0 0x16ce6d0 Object016ce6d0 derived ctor FUN_00a65bd0 # game region (round 144A): the guarded local static object of the accessor FUN_00a65bd0, which alone stores this vtable; no type info and no string names the class
+_ZTV14Object016b5a40 0x16b5a40 Object016b5a40 derived ctor FUN_00b3ec10 # game region (round 146C): stored by FUN_00b3ec10; no type info and no string names the class
+_ZTV14Object016b5c48 0x16b5c48 Object016b5c48 derived ctor FUN_00b404d0 # game region (round 146C): stored by FUN_00b404d0 _ZN14Object01397620D1Ev; no type info and no string names the class

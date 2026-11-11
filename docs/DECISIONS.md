@@ -2887,3 +2887,61 @@ one-rule backport is open, to be ruled with its census before any game file defi
 through the GOT, that the boundary gets wrong; a matched row whose bytes differ between the
 single-file module and the whole module for a reason other than another file's body; a link of
 the module that merges two different bodies under one name.
+
+## D51. Four more rules of the game compiler: protected thread-locals stay general-dynamic, the scheduler's operand order, the switch condition's width, ReassociateOps' operand order (2026-11-11)
+
+**Question.** D50 left a thread-local stand-in at default visibility because 4.0.0 gives a
+protected thread-local definition the local-dynamic model. Rounds 132B and 135B met drafts that
+compile to the base's bytes under the prebuilt 3.8.1 and not under 3.9.1 or later.
+
+**Evidence (rounds 138B, 141B, 145B; scratch b138/, b141/, b145/ under
+.claude/handoff/scratch-archive/; each patch built alone on the nine-backport source, then
+together; the supervisor's whole gate).**
+
+- Thread-locals. Upstream r273921 (8121becac311, 2016-06-27, "Teach shouldAssumeDSOLocal about
+  tls"), first in 3.9.0, made getTLSModel treat any non-default visibility as local. The base has
+  general-dynamic at all 21,974 thread-local sites and local-dynamic at none (D23, round 124A). A
+  protected `__thread` definition is TLSGD under 3.8.1 and under the patch, TLSLD under 3.9.1 and
+  the unpatched line. With the patch and protected thread-local stand-ins FUN_00d6a930 is equal
+  and every game row holds.
+- The scheduling graph. Upstream r269076 (a356bb7fa46d, 2016-05-10), first in 3.9.0, makes
+  ScheduleDAGInstrs::buildSchedGraph visit an instruction's defs before its uses; 3.8 took the
+  operands in list order, which gives the post-RA list scheduler other dependence edges. The rule
+  has no byte form to count; the sweep stands for the census: no matched row changes, and
+  0xbe5650, 0x13c8720 and (in the whole module) 0xd41700 compile equal. Post-RA scheduling itself
+  runs in the base: turning it off breaks 225 matched rows.
+- The switch condition. Upstream r274233 (7c6eab577743, 2016-06-30, D12965), first in 3.9.0, lets
+  InstCombine narrow a switch condition to any width; 3.8 narrowed only to a width at least the
+  largest legal integer. Census: jump tables indexed by a zero-extended byte less a nonzero
+  lowest case are 2 at i32 (0xed8bf8, 0x1304664), a form the unpatched line cannot emit, and 5 in
+  i8, each the form an if chain on a char gives under 3.8.1 too. No matched row changes. No draft
+  becomes equal by this patch alone (0x12fd360 also needs the layout rule below).
+- ReassociateOps. Upstream r262148 (982224cfb8de, 2016-02-27), first in 3.9.0, builds
+  (op y, (op x, c1)) as (op (op y, x), c1) where 3.8 built (op (op x, y), c1). Census: the
+  member-function pointer's vtable slot is addressed with the pointer's offset as base and the
+  vtable as index at 49 sites of the game region and in the other order at none. No matched row
+  changes; 0xd332b0 compiles equal.
+- Together: all 3,437 matched game rows equal in the module and per file; six functions of the
+  module change, all drafts.
+- Source forms: none of the four has one (a TLS model, a scheduling order, an integer width
+  chosen by the optimizer, an operand order inside the DAG combiner are not spelled in C++); for
+  the switch, four spellings were compiled and none gives the base's width.
+
+**Ruling.** Four patches join the game line's 4.0.0 source build (tools/patches/
+llvm-4.0.0-tlsprot-01, -schedops-01, -switchwidth-01, -reassoc-01): thirteen backports. The
+game module's thread-local stand-ins become protected like every other and a game file may
+define a thread-local (tools/game_module.py; D50's exception is closed).
+
+**Held, not adopted.** (1) r277187's forward check in MachineBlockPlacement (mbpprob-01): it makes
+0x12fd360 equal together with the switch patch and changes no matched row, but it has one
+witness, no byte form to census, and six other layout drafts (0x13985e0, 0x13999c0, 0x139a080,
+0x845560, 0x1395c30, 0x1395e40) are unchanged by it: it waits for a second witness. (2) No tail
+duplication in MachineBlockPlacement (r283934): 0xebbb70 says the base lacks it, 25 guard-and-
+latch pairs look like its copies, and 10 pairs of 3 to 5 common instructions, which it cannot
+copy and tail merging should merge, stay unmerged by a mechanism not found: conflicting
+evidence, held. (3) The min/max canonicalization (r287585): it breaks a matched row and its
+witness stays unequal for two more reasons.
+
+**Trigger to revisit.** A game thread-local access in the local-dynamic form; a matched row
+that needs 3.9's scheduling order, switch width or operand order; the member-pointer address
+with the vtable as base.
