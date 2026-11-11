@@ -40,6 +40,15 @@ defines its symbol (tools/match_check.py tu_functions), and the list of
 internal names two files define (`renamed`): the link gives the second a
 `.N` suffix, so a row or data claim naming one is refused.
 
+A name the compiler gives (COMPILER_LOCAL: clang's array-destroy helper
+`__cxx_global_array_dtor`, `.1`, `.2` in the unit's own order) is the
+exception: no source can rename it, and ten units define one. Its row names
+the unit's own symbol (what the unit's IR and its single-file object call
+it, which depends on that unit alone), and the gate finds the module's
+symbol for it by proof, never by the link's numbering:
+tools/match_check.py compiler_local_aliases, from the unit's IR
+(function_refs) and the module object's relocations.
+
     game_module.py --out build/base/game/module.o <a.bc>... | @<list>   the module (ninja's edge)
     game_module.py --out <obj> --single <a.bc>                 a module of one file and its stand-ins
                                                                (the inner loop, tools/quick_diff.sh)
@@ -74,6 +83,43 @@ TYPE_REF = re.compile(r'%' + NAME)
 DECL = re.compile(r'^external ((?:hidden |protected |default )?)((?:dllimport )?)((?:thread_local(?:\([a-z]+\))? )?)'
                   r'((?:local_unnamed_addr |unnamed_addr )?)((?:addrspace\(\d+\) )?)((?:externally_initialized )?)'
                   r'(global|constant) (.*?)(, align \d+)?$')
+
+
+# The internal function names the compiler gives, not the developer: clang
+# 4.0.0's destroy helper of a static array of a class with a destructor
+# (CGDeclCXX.cpp:613, generateDestroyHelper), which the unit's module numbers
+# `.1`, `.2` on a second and third (ValueSymbolTable::makeUniqueName), and
+# which llvm-link renames again, by one counter over the whole link, when an
+# earlier unit holds the name. A developer's static is not one of these: a
+# collision of one is refused as before (docs/DECISIONS.md D50).
+COMPILER_LOCAL = re.compile(r"^__cxx_global_array_dtor(?:\.\d+)*$")
+REF = re.compile(r"@(" + NAME + r")")
+
+
+def compiler_local(name: str) -> bool:
+    return bool(COMPILER_LOCAL.match(name))
+
+
+def function_refs(path: Path) -> dict[str, set[str]]:
+    """function name -> every global its body in the IR text `path`
+    references by name (the `define` line to the closing brace)."""
+    out: dict[str, set[str]] = {}
+    cur: set[str] | None = None
+    for line in path.read_text().splitlines():
+        if cur is None:
+            if line.startswith("define "):
+                m = DEFINE_LINE.match(line)
+                if m:
+                    cur = out.setdefault(unquote(m.group(2)), set())
+                    body = line[m.end():]
+                    cur.update(unquote(x) for x in REF.findall(body))
+                    if body.rstrip().endswith("}"):
+                        cur = None
+        elif line.startswith("}"):
+            cur = None
+        else:
+            cur.update(unquote(x) for x in REF.findall(line))
+    return out
 
 
 def module_dir(ver: str) -> Path:

@@ -228,23 +228,129 @@ def tu_functions(tu: str, obj: Path, ver: str) -> dict[str, tuple[bytes, list]]:
     """object_functions(obj), narrowed for the game module to the functions
     the unit itself defines (build/<slug>/game/symbols.txt), so a row is
     checked against its own unit; an internal name two game files define is
-    left out (the link renamed the second), and renamed_note says why."""
+    left out (the link renamed the second), and renamed_note says why. A
+    name the compiler gives (game_module.COMPILER_LOCAL) is never taken by
+    its spelling in the module: it is keyed by the unit's own name and maps to
+    the module's symbol compiler_local_aliases proves."""
     funcs = object_functions(obj)
     if not is_module_tu(tu) or obj != object_path(tu, ver):
         return funcs
     import game_module as gm
     by_tu, renamed = gm.load_symbols(ver)
-    mine = by_tu.get(tu, set()) - renamed
-    return {k: v for k, v in funcs.items() if k in mine}
+    mine = {s for s in by_tu.get(tu, set()) - renamed if not gm.compiler_local(s)}
+    out = {k: v for k, v in funcs.items() if k in mine}
+    aliases, _why = compiler_local_aliases(tu, obj, ver)
+    for unit_name, module_name in aliases.items():
+        out[unit_name] = funcs[module_name]
+    return out
+
+
+_ALIASES: dict[tuple, tuple[dict[str, str], dict[str, str]]] = {}
+
+
+def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str], dict[str, str]]:
+    """({unit's name: module object's symbol}, {unit's name: why none}) for
+    the functions of a game unit whose names the compiler gave
+    (game_module.COMPILER_LOCAL: `__cxx_global_array_dtor`, `.1`, ...).
+
+    The link renames such a function when an earlier unit holds its name, by
+    one counter over the whole link, so the module's spelling says nothing
+    about whose it is. The row names it as the unit does (its IR and its
+    single-file object), which depends on that unit alone, and the module
+    symbol is proven by two facts the unit's IR and the module object both
+    state:
+
+      1. what it reaches: the unit's own uniquely named internal objects and
+         functions its IR body references (an array-destroy helper reaches its
+         array, `_ZZ<owner>E9D_<hex>`), against the same names among the
+         candidate's relocations (D17 attributes a section-relative field to
+         the named local it lands in); the sets must be equal and not empty;
+      2. who reaches it: every function of the unit with a stable name whose
+         IR body references it (the owner's `__cxa_atexit` registration) and
+         that the module object defines must reference the candidate.
+
+    A candidate is a local function of the module of the same compiler name
+    with any `.N` suffixes. Exactly one candidate must satisfy both, and no
+    other compiler-named function of the unit may reach the same set, or
+    there is no alias and `why` says which fact failed. A wrong alias would
+    still fail later: the row's bytes and relocation targets are compared with
+    the base's at its address, and the layout resolves the owner's reference
+    to the module symbol through the row (tools/layout_link.py)."""
+    import game_module as gm
+    st = obj.stat()
+    key = (tu, str(obj), st.st_mtime_ns, st.st_size)
+    if key in _ALIASES:
+        return _ALIASES[key]
+    by_tu, renamed = gm.load_symbols(ver)
+    names = sorted(s for s in by_tu.get(tu, set()) if gm.compiler_local(s))
+    aliases: dict[str, str] = {}
+    why: dict[str, str] = {}
+    if names:
+        ll = gm.ir_path(tu, ver).with_suffix(".ll")
+        unit = gm.Unit(ll, tu)
+        refs = gm.function_refs(ll)
+        # names that are the unit's alone and that no link renames: internal,
+        # defined by no other game file, not compiler-given, no `.N` of the
+        # link's form
+        own = {n for n, (lk, _tls) in unit.defs.items()
+               if lk in gm.LOCAL and n not in renamed and not gm.compiler_local(n) and "." not in n}
+        stable = {n for n in refs if not gm.compiler_local(n) and n not in renamed and "." not in n}
+        funcs = object_functions(obj)
+        cands = {c: {r.symbol for r in rl} for c, (_b, rl) in funcs.items() if gm.compiler_local(c)}
+        reach = {n: refs.get(n, set()) & own for n in names}
+        for n in names:
+            if not reach[n]:
+                why[n] = "its IR body reaches none of the unit's own named objects"
+                continue
+            twins = [m for m in names if m != n and reach[m] == reach[n]]
+            if twins:
+                why[n] = f"{twins[0]} reaches the same objects ({', '.join(sorted(reach[n]))})"
+                continue
+            anchors = sorted(f for f in stable if n in refs[f] and f in funcs)
+            if not anchors:
+                why[n] = "no function of the unit that references it in its IR is in the module object"
+                continue
+            hits = [c for c, rs in cands.items()
+                    if rs & own == reach[n] and all(c in {r.symbol for r in funcs[f][1]} for f in anchors)]
+            if len(hits) == 1:
+                aliases[n] = hits[0]
+            else:
+                why[n] = (f"{len(hits)} module functions reach {', '.join(sorted(reach[n]))} and are "
+                          f"referenced by {', '.join(anchors)}" + (f" ({', '.join(sorted(hits))})" if hits else ""))
+    _ALIASES[key] = (aliases, why)
+    return aliases, why
+
+
+def is_compiler_local(name: str) -> bool:
+    """A function name the compiler gives (game_module.COMPILER_LOCAL)."""
+    from game_module import compiler_local
+    return compiler_local(name)
+
+
+def module_symbol(tu: str, sym: str, obj: Path, ver: str) -> str:
+    """The module object's symbol for a row's `sym`: the proven alias of a
+    compiler-given name, else `sym` itself."""
+    if is_module_tu(tu) and obj == object_path(tu, ver):
+        import game_module as gm
+        if gm.compiler_local(sym):
+            return compiler_local_aliases(tu, obj, ver)[0].get(sym, sym)
+    return sym
 
 
 def renamed_note(tu: str, sym: str, ver: str) -> str:
     """A refusal's reason when `sym` is an internal name more than one game
-    file defines, else ""."""
+    file defines, or a compiler-given name with no proven module symbol,
+    else ""."""
     if not is_module_tu(tu):
         return ""
     import game_module as gm
     by_tu, renamed = gm.load_symbols(ver)
+    if gm.compiler_local(sym):
+        obj = object_path(tu, ver)
+        if not obj.exists() or sym not in by_tu.get(tu, set()):
+            return f" ({sym}: the unit does not define this compiler-given name)"
+        why = compiler_local_aliases(tu, obj, ver)[1].get(sym)
+        return f" ({sym} is a compiler-given name with no proven module symbol: {why})" if why else ""
     if sym in renamed:
         tus = sorted(t for t, ss in by_tu.items() if sym in ss)
         return (f" ({sym} is an internal name {len(tus)} game files define ({', '.join(tus[:4])}); "

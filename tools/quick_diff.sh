@@ -10,7 +10,9 @@
 # second); --module compiles it in the whole game module, the gate's object
 # (ninja rebuilds what changed); --both shows each and says whether the
 # function differs between them, which is a cross-file effect (another file's
-# definition inlined or propagated) and real information.
+# definition inlined or propagated) and real information. A function whose
+# name the compiler gave (`__cxx_global_array_dtor.2`) is named as the unit
+# names it, in both builds (match_check.py compiler_local_aliases).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

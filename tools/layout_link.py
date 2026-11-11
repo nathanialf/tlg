@@ -271,6 +271,12 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     # checked, as the gate compares a claimed row (match_check.compare); a raw
     # byte search cannot find it when the code holds an unrelocated field (a
     # vtable load, 0x87950's and 0x85d80's initializers)
+    # a function whose name the compiler gave (an array-destroy helper, the
+    # module's spelling of it renamed by the link): where the row its proven
+    # alias belongs to puts it (match_check.compiler_local_aliases); unclaimed,
+    # by its code at the base's field as below
+    if (obj, r.symbol) in _ROW_BY_SYMBOL and mc.is_compiler_local(r.symbol):
+        return _ROW_BY_SYMBOL[(obj, r.symbol)], ""
     if hint is not None and not r.symbol.startswith(".") and _function_at_hint(base, obj, r.symbol, hint):
         return hint, ""
     # the same for a function ANOTHER claimed unit defines out of line under a
@@ -483,6 +489,17 @@ def build_image(ver: str, log=print) -> dict:
     # another references resolves whatever the units' order
     _CLAIMED_OBJECTS[:] = list(dict.fromkeys(o for o in (compiled(tu) for tu in sorted(by_tu)) if o is not None))
     _DEFINERS.clear()
+    # a row of a compiler-given name (game_module.COMPILER_LOCAL) answers for
+    # the module symbol its alias proves (match_check.compiler_local_aliases),
+    # before any unit is laid out, so the owner's reference to it resolves
+    # through the row whatever the order: a wrong alias puts the owner's field
+    # at another address and the segment differs from the base
+    _ROW_BY_SYMBOL.clear()
+    for tu, pairs in sorted(by_tu.items()):
+        obj = compiled(tu)
+        for fn, sym in pairs:
+            if obj is not None and fn in base.func_by_name and mc.module_symbol(tu, sym, obj, ver) != sym:
+                _ROW_BY_SYMBOL[(obj, mc.module_symbol(tu, sym, obj, ver))] = base.func_by_name[fn][0]
     for tu, pairs in sorted(by_tu.items()):
         obj = compiled(tu)
         if obj is None:
@@ -499,7 +516,7 @@ def build_image(ver: str, log=print) -> dict:
                 report["errors"][fn] = f"{tu} does not define {sym}{mc.renamed_note(tu, sym, ver)}"
                 continue
             addr, size = base.func_by_name[fn]
-            _ROW_BY_SYMBOL[(obj, sym)] = addr
+            _ROW_BY_SYMBOL[(obj, mc.module_symbol(tu, sym, obj, ver))] = addr
             code, relocs = objfuncs[sym]
             resolved, errs = apply_relocs(base, obj, code, relocs, addr)
             if errs:
