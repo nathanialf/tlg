@@ -46,6 +46,11 @@ class Name /* derived name */
     {
     }
 
+    /* the empty name, index 0, which release() leaves alone (a file's name
+     * cleared by its initializer before its destructor is registered:
+     * 0x4aa8ee, `movl $0` to 0x57d7338) */
+    Name() : index(0) {}
+
     /* a copy holds its own reference: the count at +0x10 of the entry raised
      * before the index is taken (0x8aefb0, 0x8af269) */
     Name(const Name &other)

@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
+#include "tlg_game_vector.h"
 
 /* derived names: slot 3 of the vtable at 0x16b3910 (its pointer at 0x16b3938),
  * the vtable stored by FUN_00abf490, returns the address of the object at
@@ -14,9 +15,12 @@
 extern const char D_15a7fec[19];
 extern const char D_15a7fff[14];
 
-// NONMATCHING: the file's initializer (FUN_00acd770): the two names are
-// written; the nineteen 16-byte vector constants it stores first
-// (0x582c390 to 0x582c4b0, from 0x153f0b0 on) are not.
+// NONMATCHING: the file's initializer (FUN_00acd770): the vector constants
+// of tlg_game_vector.h (the file's copies 0x582c390 to 0x582c4b0,
+// config/header_statics.base.txt) and the two names are written; the x
+// mask's store is `vmovdqa` in this build where the base has `vmovaps`
+// (round 189A's movd-domain class), and the last name's index store and
+// `lea rsi` are in the other order.
 Name D_582c384(D_15a7fec, false);
 Name D_582c380(D_15a7fff, false);
 
