@@ -48,6 +48,21 @@ inline void releaseBlock(void *block) /* derived name */
     free(block);
 }
 
+/* derived name: a member that owns a block and releases it when its holder
+ * is destroyed, after the members declared below it (FUN_013e4b40 releases
+ * its block at +0x18 after the destructor of its member at +0x30). */
+class OwnedBlock05943280
+{
+  public:
+    ~OwnedBlock05943280()
+    {
+        releaseBlock(block);
+    }
+
+  private:
+    void *block;
+};
+
 /* derived names: the class whose vtable is at 0x16d3868
  * (config/vtables.derived.base.txt): its destructor (FUN_013d2f90,
  * leaf_013d2f90.cpp) releases the block it holds at +0x18. Also a member at

@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_object0134a660.h"
 
 /* derived names: passes the address of the int at +0x22c to FUN_01331c10 as a
  * tail call; slot 3 of the vtable at 0x16a7a50 (its pointer at 0x16a7a78), the
@@ -12,35 +13,6 @@
  * cmpxchg (incrementing it, waiting through imports otherwise) and
  * FUN_0134a3a0 (slot 4) decrements it atomically: a lock count taken and
  * released, its meaning not traced. Class and method unknown. */
-struct
-    Value0134a530 { /* derived name: 8 bytes copied as one, alignment 4 (the field's offset); type not traced */
-    u8 unknown0[8];
-};
-
-struct Object0134a660 { /* derived name */
-    u8 unknown0[0x20];
-    u8 unknown20; /* bit 4 set by FUN_0134a670, FUN_0134a680 and FUN_0134a690 */
-    u8 unknown21[0x22c - 0x21];
-    int unknown22c; /* decremented atomically by FUN_0134a3a0; its address passed to FUN_01331c10 by FUN_0134a390 */
-    u8 unknown230[0x4f4 - 0x230];
-    u32 unknown4f4; /* its address returned by FUN_0134a3e0, stored by FUN_0134a540; 32 bits wide, type not traced */
-    u32 unknown4f8; /* bits returned by FUN_0134a660, stored by FUN_0134a670, set by FUN_0134a680 and cleared by FUN_0134a690 (each also sets bit 4 of the byte at +0x20) */
-    Value0134a530 unknown4fc; /* its address returned by FUN_0134a3d0, copied in by FUN_0134a530 */
-    u32 unknown504; /* its address returned by FUN_0134a3f0, stored by FUN_0134a550; 32 bits wide, type not traced */
-    u32 unknown508; /* its address returned by FUN_0134a400, stored by FUN_0134a560; 32 bits wide, type not traced */
-    u32 unknown50c; /* its address returned by FUN_0134a410, stored by FUN_0134a570; 32 bits wide, type and size not traced */
-    u8 unknown510[0x520 - 0x510];
-    u8 unknown520[0x10]; /* its address returned by FUN_0134a430; type not traced */
-    u8 unknown530[0x10]; /* its address returned by FUN_0134a440; type not traced */
-    u8 unknown540[0xc];  /* its address returned by FUN_0134a3b0; type not traced */
-    u8 unknown54c[4];    /* its address returned by FUN_0134a3c0; type not traced */
-    u32 unknown550; /* bits returned by FUN_0134a6a0, stored by FUN_0134a6b0, set by FUN_0134a6c0, cleared by FUN_0134a6d0 */
-    u8 unknown554[0x558 - 0x554];
-    u8 unknown558[4]; /* its address returned by FUN_0134a420; type and size not traced */
-    u8 unknown55c[0x578 - 0x55c];
-    float unknown578; /* returned by FUN_0134a6e0 */
-};
-
 void FUN_01331c10(int *count); /* derived name */
 
 void FUN_0134a390(Object0134a660 *self) /* derived name */
