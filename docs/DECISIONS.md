@@ -2945,3 +2945,56 @@ witness stays unequal for two more reasons.
 **Trigger to revisit.** A game thread-local access in the local-dynamic form; a matched row
 that needs 3.9's scheduling order, switch width or operand order; the member-pointer address
 with the vtable as base.
+
+## D52. std::function and its lambdas are written as the developer wrote them; an instantiation's vtable is inferred from its claimed slots (2026-11-11)
+
+**Question.** About 500 small functions of the game region are the virtual slots of the standard
+library's function implementation objects, one eight-slot vtable per lambda held in a
+`std::function`; 11 large functions create them. Rounds 135B to 146C wrote the slots as free
+functions on hand-declared classes with one derived vtable row each (D14): 340 rows that way.
+That is not the source: the developer wrote a lambda where a `std::function` was wanted, and the
+library's header did the rest.
+
+**Evidence (rounds 147A, 148A; scratch a147/, a148/ under .claude/handoff/scratch-archive/).**
+
+- The executable imports `_ZSt19_Xbad_function_callv` (the throw of an empty function object),
+  `_ZSt14_Xlength_errorPKc` and `_ZSt11_Xbad_allocv`, each name verified by its NID: the game uses
+  the SDK library's `std::function`.
+- The data model, from the bytes: 65 implementation vtables, every one of 8 slots and no other
+  count: copy, move, call (arguments by reference), target type (returns 0: no type info),
+  destroy and free, the complete and deleting destructors, the callable's address. A function
+  object is 0x20 bytes of space and the implementation pointer at +0x20, null when empty; the
+  implementation is built in the space up to 0x20 bytes and on the heap above; the destructor is
+  `if (impl) impl->slot4(impl != &space)`, the call tests the pointer and calls
+  `_Xbad_function_call`.
+- A header written from those bytes (src/include/functional, with src/include/utility and
+  src/include/new; nothing read or copied from any vendor's library) and three lambdas written
+  in their creating functions compile slots 2 to 7 of their vtables to the base's bytes (147A);
+  13 vtables are migrated in the tree with every re-pointed row equal in the gate (148A). Slots 0
+  and 1 differ in one thing, the null test after operator new (a compiler rule under
+  investigation, round 149B's opnew-01), and are not claimed until it is ruled.
+- Three facts of the source the bytes force: the callable sits in a holder of its own (an empty
+  lambda's copy is one byte); the implementation holds an allocator with a user-provided copy
+  constructor and destructor; the implementation is copied by its implicit copy constructor.
+- Folding: 4 of the 65 vtables have slots the linker folded with other functions; the other 61
+  keep byte-identical slots apart. D15's one name per address covers the folded ones.
+
+**Ruling.** (1) src/include/functional is the tree's `<functional>`: `std::function`,
+`std::allocator` and the `_X` helpers are facts (the imports); every internal name is ours and
+carries the derived-name marker. (2) A lambda is written as a lambda in the function that
+creates it; that function may stand in the tree as an unclaimed draft with a NONMATCHING note
+while the lambda's functions are claimed, each proven on its own bytes. (3) A row for an
+instantiation is `FUN_<addr> <unit> <the compiler's mangled symbol>`. (4) An instantiation's
+vtable takes no hand-made row: tools/base_elf.py resolves it as the one base vtable that holds
+every claimed row of the instantiation in its slot, once slot 0's row is claimed and that
+function stores the vtable's address point; until then nothing may reference the vtable, and
+`tools/vtable_names.py --check` lists it as pending and fails on any disagreement of slots.
+(5) tools/rename_rows.py rewrites the symbol column when an enclosing function is renamed or a
+unit's lambdas are renumbered, accepting only the one assignment under which every row compares
+equal. (6) A slot is claimed only after `tools/quick_diff.sh --both`: the whole module is the
+measure (two single-file results in round 148A were wrong against it). (7) The 340 rows of the
+earlier form and their D14 rows are migrated vtable by vtable as each creating function's file
+is written; none is added in the old form.
+
+**Trigger to revisit.** An implementation vtable with a slot count other than eight; a function
+object whose layout contradicts the header; a vtable two instantiations both claim.
