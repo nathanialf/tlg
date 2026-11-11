@@ -3119,3 +3119,32 @@ patch): nineteen backports. The second executes D26 for the game line.
 **Trigger to revisit.** A game join entered by a conditional arc where two arms' stores of
 different immediates are sunk into a block of their own and no ternary explains it; a call of
 `__stack_chk_fail` not followed by the nop.
+
+## D55. The game line stores stack arguments into a reserved call frame: X86CallFrameOptimization off (2026-11-11)
+
+**Question.** Round 173C's draft 0x98eb90 passes three arguments on the stack. The base reserves
+the frame (`sub rsp, 0x20`) and stores to `[rsp]`; the installed game compiler pushes them
+(`X86CallFrameOptimization`, lib/Target/X86/X86CallFrameOptimization.cpp of 4.0.0). No source
+form chooses between a push and a store of an outgoing argument.
+
+**Evidence, over the region.** (1) The base: inside the 19,735 functions of
+`config/functions.base.txt`, the game region holds no push of an immediate and no push of a
+memory operand (the library region holds 18; every other such push in the disassembly, 6,754,
+lies outside any function, in data). (2) The build: the gate's game module compiled by the
+installed compiler holds 8 such pushes. (3) With `-mllvm -no-x86-call-frame-opt` (the pass's own
+upstream option, line 42 of that file) the module sweep is identical row for row and draft for
+draft to the sweep without it (3,822 rows and 178 drafts of round 176B's lists), so no matched
+row depends on the pass; 0x98eb90's frame becomes the base's. (4) The prebuilt 3.8.1 release
+stores, 3.9.1 and 4.0.0 push (round 173C's probe): the base agrees with the older behaviour, as
+in D47, D48 and D54.
+
+**Decision.** `-mllvm -no-x86-call-frame-opt` on the `src/game/` line of
+`config/flags.base.txt`. A per-prefix flag, not a patch: the option is upstream's and turns off
+exactly the pass in question. The library line (3.3) has no such pass for x86-64 and is not
+changed.
+
+**Not shown.** Pushes of a register as an outgoing argument were not counted separately from
+prologue pushes. The upstream revision that enabled the pass for x86-64 between 3.8.1 and 3.9.1
+was not identified.
+
+**Trigger to revisit.** A game function of the base that pushes an outgoing argument.
