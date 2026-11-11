@@ -434,7 +434,7 @@ bzQExy189ZI V V func ?
 c41UEHVtiEA V V func ?
 cpCOXWMgha0 V V func rand
 eLdDw6l0-bU V V func snprintf
-eT2UsmTewbU V V func ?
+eT2UsmTewbU V V func _ZSt11_Xbad_allocv
 efhK-YSUYYQ V V func ?
 fEoW6BJsPt4 V V func sceLibcMspaceMallocUsableSize
 fJnpuVVBbKk V V func _Znwm
