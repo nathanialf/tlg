@@ -3148,3 +3148,40 @@ prologue pushes. The upstream revision that enabled the pass for x86-64 between 
 was not identified.
 
 **Trigger to revisit.** A game function of the base that pushes an outgoing argument.
+
+## D56. A compiler-named internal function is claimed under its unit's own spelling (2026-11-11)
+
+**Question.** The gate builds the game as one module (D50). Ten units define
+`__cxx_global_array_dtor`, the name clang gives an array's destroy helper
+(lib/CodeGen/CGDeclCXX.cpp, generateDestroyHelper, of 4.0.0); the link renames all but one by a
+counter over the whole link (`.38` to `.46` for the leaf units' helpers in the module object),
+and `tools/match_check.py` refused a row on such a name. The source cannot rename it.
+
+**Decision.** A row for a compiler-given internal function (`game_module.COMPILER_LOCAL`) names
+it as its unit does: the symbol in the unit's own IR and single-file object, which depends on
+that unit alone (clang numbers `.N` inside the unit). The gate maps it to the module's symbol by
+two facts the unit's IR and the module object both state
+(`match_check.compiler_local_aliases`): what it reaches (the unit's own uniquely named internal
+objects, a non-empty set equal on both sides) and who reaches it (every stably named function
+of the unit that references it references the candidate). Exactly one candidate must satisfy
+both and no other compiler-named function of the unit may reach the same set; otherwise the row
+is refused with the fact that failed. `tools/layout_link.py` places the row under the proven
+symbol and resolves the owner's reference through it.
+
+**Evidence.** Round 177A: every one of the 23 helpers claimed has one proven candidate; with two
+aliases swapped a helper compares 16 of 16 bytes equal but its target fails (the base refers to
+0x581ea90, the source to 0x581eaa0) and the owner's reference resolves to the wrong row; the
+gate's row count was 6,698 before and after the tool change; a developer-named colliding static
+(`_ZL11_mm_set1_psf`) is still refused.
+
+**Excluded.** A module suffix written by hand in the row (it changes when a unit is added);
+renaming internal names in the bitcode before the link (rewriting the compiler's output); the
+order of the owner's references alone (order is not a proof); the same path for developer-named
+statics (D50's addendum: the source can name them).
+
+**Extension.** Clang's other generated internals (`__cxx_global_var_init`, `_GLOBAL__sub_I_`)
+may take the same path under the same two-fact proof when a static-initializer owner is
+written; each added name pattern is listed here with its first rows.
+
+**Trigger to revisit.** A compiler-named function that reaches no uniquely named object of its
+unit, or two that reach the same set.
