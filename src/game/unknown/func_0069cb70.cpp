@@ -45,13 +45,32 @@ void FUN_01331c10(int *readers);          /* derived name */
 void FUN_00c56950(void *record);          /* derived name */
 void FUN_00d501d0(Target0069d410 *, int); /* derived name */
 
-struct Task0069cb70 { /* derived name: the 0x50-byte object, its other members not traced */
-    u8 unknown0[0x20];
+/* the 0x50-byte object (its vtable's row in config/vtables.derived.base.txt
+ * names the class): slots 0 and 1 its destructors, which destroy the
+ * std::function member; slot 2 is the library's 0x69a0 (folded), slot 3
+ * FUN_013580d0, which calls the member with the pointer at +0x10. Its other
+ * members are not traced. */
+class Object013606c0 /* derived name */
+{
+  public:
+    virtual ~Object013606c0();
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; FUN_013580d0 */
+
+    u8 unknown8[8];
+    Arg0069d410 *unknown10; /* +0x10 */
+    u8 unknown18[8];
     std::function<void(Arg0069d410 &)> callback; /* +0x20 */
+    u8 unknown48[8];
 };
 
+// NONMATCHING: 0x1360680 and 0x13606c0 (15 of 21): the base loads the
+// implementation's vtable before the deallocate flag (`mov rcx, [rdi]` first,
+// as at all 18 such calls in the base); this build computes the flag first
+Object013606c0::~Object013606c0() {}
+
 // NONMATCHING: not written beyond the lambda
-void FUN_0069cb70(Task0069cb70 *task) /* derived name */
+void FUN_0069cb70(Object013606c0 *task) /* derived name */
 {
     task->callback = std::function<void(Arg0069d410 &)>([](Arg0069d410 &arg) {
         void *record = arg.unknown10;

@@ -276,9 +276,7 @@ extern Name D_581e900[]; /* derived name: the three entries of the second list *
 extern Name D_581e940[]; /* derived name: the entries of three more lists */
 extern Name D_581e968[];
 extern Name D_581e980[]; /* derived name: the text an entry is cleared to */
-extern Name D_581ea80[]; /* derived name: the entries two later lists clear */
-extern Name D_581eaa0[];
-extern Name D_581ee20; /* derived name: the text those entries are cleared to */
+extern Name D_581ee20;   /* derived name: the text those entries are cleared to */
 
 // NONMATCHING: not written beyond the lambdas. Slots 2 not matched: 0x8af240
 // and 0x8b1090 (the base's frame is 0x20 bytes larger, two more spills),
@@ -322,6 +320,17 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
     unsigned count3 = 0, count4 = 0;
     int unknown988 = 0, unknown990 = 0, unknown928 = 0, unknown930 = 0, unknown938 = 0,
         unknown940 = 0, unknown948 = 0, unknown950 = 0, unknown958 = 0, unknown960 = 0;
+    // NONMATCHING: the base builds every list it hands out as a guarded static
+    // copied from its locals before the first list (0x88cd1e to 0x88f912);
+    // these are its one-name lists, each destroyed by its own array destructor
+    // (0x8ab1a0 to 0x8ab430); which local each copies (rbp-0x8e0, -0x1048,
+    // -0x8e8, -0x101c, -0x103c, -0x1064) is not traced
+    static Name D_581ea80[] = {yes3}; /* derived name: the entries two later lists clear */
+    static Name D_581ea90[] = {yes4};
+    static Name D_581eaa0[] = {yes5};
+    static Name D_581eac8[] = {no3};
+    static Name D_581ead8[] = {label};
+    static Name D_581eae8[] = {help};
     auto setText = [&owner](Name id, const Name &text) { FUN_008ab9e0(owner, id.index, text); };
     auto clearText = [&setText](const Name &id) { setText(id, D_581e81c); };
     auto clearTitle = [&setText, &title]() { setText(title, D_581e81c); };
