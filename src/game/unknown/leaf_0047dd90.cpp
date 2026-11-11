@@ -12,7 +12,7 @@ class Object0047dd90 /* derived name */
   public:
     virtual ~Object0047dd90();
     virtual const char *FUN_0047ddb0();            /* derived name */
-    virtual void FUN_0047ddc0(char character);     /* derived name; not traced past the append */
+    virtual void FUN_0047ddc0(char character);     /* derived name */
     virtual void FUN_0047de10(const char *string); /* derived name; not traced past the append */
     virtual bool FUN_0047de50();                   /* derived name */
 
@@ -61,4 +61,19 @@ void Object0047dd90::FUN_0047de10(const char *string)
 {
     while (*string)
         FUN_0047ddc0(*string++);
+}
+
+/* slot 3: appends a character and keeps the text terminated; when full, the
+ * last three characters become "..." and the overflow is recorded */
+void Object0047dd90::FUN_0047ddc0(char character)
+{
+    if (length >= 0x20000) {
+        text[length - 3] = '.';
+        text[length - 2] = '.';
+        text[length - 1] = '.';
+        overflowed = true;
+        return;
+    }
+    text[length++] = character;
+    text[length] = 0;
 }

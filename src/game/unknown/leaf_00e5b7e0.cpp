@@ -1,25 +1,42 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_mutex.h"
+#include "tlg_libc.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16bdb40 (config/vtables.derived.base.txt): it stores the vtable and
  * destroys the mutex member at +0x110, whose destructor (leaf_013847e0.cpp)
  * the module inlines; slot 8, FUN_00e5bc80, opens a handle for its argument
  * through slot 3 (with 0), takes slot 7's answer for it and closes it
- * through slot 4, null without a handle. The other members and slots are
+ * through slot 4, null without a handle. A handle holds a C stream
+ * (FUN_00de9a00's file handle): slot 7, FUN_00e5bc30, gives its size (the
+ * position restored), slot 15, FUN_00e5be90, reads size bytes at an offset
+ * into a buffer, 1 when the seek succeeds (else 0). The other members and slots are
  * not traced. The destructor is
  * the class's key function, so this file emits the vtable. */
+struct FileHandle00e5b7e0 /* derived name */
+{
+    FILE *file; /* +0x0 */
+};
+
 class Object00e5b7e0 /* derived name */
 {
   public:
     virtual ~Object00e5b7e0();
-    virtual void slot2();                        /* derived name; not traced */
-    virtual void *slot3(void *key, int unknown); /* derived name; not traced */
-    virtual void slot4(void *handle);            /* derived name; not traced */
-    virtual void slot5();                        /* derived name; not traced */
-    virtual void slot6();                        /* derived name; not traced */
-    virtual void *slot7(void *handle);           /* derived name; not traced */
-    virtual void *slot8(void *key);              /* derived name */
+    virtual void slot2();                                      /* derived name; not traced */
+    virtual FileHandle00e5b7e0 *slot3(void *key, int unknown); /* derived name; not traced */
+    virtual void slot4(FileHandle00e5b7e0 *handle);            /* derived name; not traced */
+    virtual void slot5();                                      /* derived name; not traced */
+    virtual void slot6();                                      /* derived name; not traced */
+    virtual long slot7(FileHandle00e5b7e0 *handle);            /* derived name */
+    virtual long slot8(void *key);                             /* derived name */
+    virtual void slot9();                                      /* derived name; not traced */
+    virtual void slot10();                                     /* derived name; not traced */
+    virtual void slot11();                                     /* derived name; not traced */
+    virtual void slot12();                                     /* derived name; not traced */
+    virtual void slot13();                                     /* derived name; not traced */
+    virtual void slot14();                                     /* derived name; not traced */
+    virtual int slot15(FileHandle00e5b7e0 *handle, unsigned offset, void *buffer,
+                       size_t size); /* derived name */
 
   private:
     u8 unknown8[0x108];
@@ -32,12 +49,31 @@ class Object00e5b7e0 /* derived name */
 // member before a delete), a question of where the cross-file inlining ran.
 Object00e5b7e0::~Object00e5b7e0() {}
 
-void *Object00e5b7e0::slot8(void *key)
+long Object00e5b7e0::slot7(FileHandle00e5b7e0 *handle)
 {
-    void *handle = slot3(key, 0);
+    FILE *file = handle->file;
+    const long position = ftell(file);
+    fseek(file, 0, SEEK_END);
+    const long size = ftell(file);
+    fseek(file, position, SEEK_SET);
+    return size;
+}
+
+long Object00e5b7e0::slot8(void *key)
+{
+    FileHandle00e5b7e0 *handle = slot3(key, 0);
     if (!handle)
         return 0;
-    void *result = slot7(handle);
+    const long result = slot7(handle);
     slot4(handle);
     return result;
+}
+
+int Object00e5b7e0::slot15(FileHandle00e5b7e0 *handle, unsigned offset, void *buffer, size_t size)
+{
+    FILE *file = handle->file;
+    if (fseek(file, offset, SEEK_SET) != 0)
+        return 0;
+    fread(buffer, 1, size, file);
+    return 1;
 }
