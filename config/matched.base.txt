@@ -5926,3 +5926,8 @@ FUN_013c8400 src/game/unknown/leaf_013c8400.cpp _Z12FUN_013c8400P14Object013c840
 FUN_013d2a40 src/game/unknown/leaf_013d2a40.cpp _Z12FUN_013d2a40P14Object013d2a40
 FUN_013d63a0 src/game/unknown/leaf_013d63a0.cpp _Z12FUN_013d63a0P14Object013d63a0
 FUN_0004cad0 src/libs/unknown/func_0004cad0.cpp _ZN9hknpWorld12FUN_0004cad0EPKiiRiR7hkArrayI14IdPair0004cad024hkContainerTempAllocatorE
+FUN_01373a50 src/game/unknown/leaf_01373a50.cpp _Z12FUN_01373a50PK14Object01373a50
+FUN_00b10d80 src/game/unknown/leaf_00b10d80.cpp _Z12FUN_00b10d80v
+FUN_013320a0 src/game/unknown/leaf_013320a0.cpp _Z12FUN_013320a0P14Object013a6a50
+FUN_00e030d0 src/game/unknown/leaf_00e030d0.cpp _ZN14Object00e030d0D1Ev
+FUN_0037aa70 src/game/unknown/leaf_0037aa70.cpp _ZN14Object0037aa70D1Ev
