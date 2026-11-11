@@ -236,3 +236,11 @@ _ZTV14Object016c0478 0x16c0478 Object016c0478 derived ctor FUN_00fe2710 # game r
 _ZTV14Object016c2620 0x16c2620 Object016c2620 derived ctor FUN_0124f080 # game region (round 173C): stored by FUN_0124f080 FUN_01258670 FUN_012586d0; no type info and no string names the class
 _ZTV14Object016bf020 0x16bf020 Object016bf020 derived ctor FUN_00f4cf00 # game region (round 173C): stored by FUN_00f4cf00 FUN_013d2aa0 FUN_013d2b00; no type info and no string names the class
 _ZTV14Object016c1e40 0x16c1e40 Object016c1e40 derived ctor FUN_0120fe90 # game region (round 173C): stored by FUN_0120fe90 FUN_01478180 FUN_014781e0; no type info and no string names the class
+_ZTV14Object016a7ce8 0x16a7ce8 Object016a7ce8 derived ctor FUN_002a8650 # game region (round 179C): stored by FUN_002a8650 FUN_002a87b0 FUN_002a8810; no type info and no string names the class
+_ZTV14Object016a9e70 0x16a9e70 Object016a9e70 derived ctor FUN_0047e4e0 # game region (round 179C): stored by FUN_0047e4e0 FUN_00490030 FUN_00490090; no type info and no string names the class
+_ZTV14Object016ac8c8 0x16ac8c8 Object016ac8c8 derived ctor FUN_00760f90 # game region (round 179C): stored by FUN_00760f90 FUN_00761150 FUN_007611b0; no type info and no string names the class
+_ZTV14Object016ad3b8 0x16ad3b8 Object016ad3b8 derived ctor FUN_0077bd10 # game region (round 179C): stored by FUN_0077bd10 FUN_0077bdf0 FUN_0077be50; no type info and no string names the class
+_ZTV14Object016ad868 0x16ad868 Object016ad868 derived ctor FUN_00799900 # game region (round 179C): stored by FUN_00799900 FUN_00799a10 FUN_00799a70; no type info and no string names the class
+_ZTV14Object016b1ee0 0x16b1ee0 Object016b1ee0 derived ctor FUN_00a51c80 # game region (round 179C): stored by FUN_00a51c80 FUN_00a51de0 FUN_00a51e40; no type info and no string names the class
+_ZTV14Object016b5d88 0x16b5d88 Object016b5d88 derived ctor FUN_00b42f60 # game region (round 179C): stored by FUN_00b42f60 FUN_00b430c0 FUN_00b43120; no type info and no string names the class
+_ZTV14Object016a89f8 0x16a89f8 Object016a89f8 derived ctor FUN_0035b770 # game region (round 179C): stored by FUN_0035b770 FUN_0134de30 FUN_0134de90; no type info and no string names the class
