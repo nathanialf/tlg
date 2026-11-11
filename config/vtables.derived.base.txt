@@ -154,12 +154,6 @@ _ZTV14Object00b46c90 0x16b6188 Object00b46c90 derived ctor FUN_00b46c90 # game r
 _ZTV14Object00b49750 0x16b6288 Object00b49750 derived ctor FUN_00b49750 # game region (round 140A): 0xb49750 stores this vtable (3 storing sites in the base); no type info and no string names the class
 _ZTV14Object0139e160 0x16d0270 Object0139e160 derived ctor FUN_0139e160 # game region (round 140A): 0x139e160 stores this vtable (10 storing sites in the base); no type info and no string names the class
 _ZTV14Object013d2460 0x16d3778 Object013d2460 derived ctor FUN_013d2460 # game region (round 140A): 0x13d2460 stores this vtable (2 storing sites in the base); no type info and no string names the class
-_ZTV14Object0052d470 0x16ab308 Object0052d470 derived ctor FUN_0052d470 # game region (round 143B): stored by FUN_0052c710 FUN_0052d470 FUN_0052d890; no type info and no string names the class
-_ZTV14Object0052d4b0 0x16ab358 Object0052d4b0 derived ctor FUN_0052d4b0 # game region (round 143B): stored by FUN_0052c710 FUN_0052d4b0 FUN_0052d9c0; no type info and no string names the class
-_ZTV14Object0052d4f0 0x16ab3a8 Object0052d4f0 derived ctor FUN_0052d4f0 # game region (round 143B): stored by FUN_0052c710 FUN_0052d4f0 FUN_0052db10; no type info and no string names the class
-_ZTV14Object0052d530 0x16ab3f8 Object0052d530 derived ctor FUN_0052d530 # game region (round 143B): stored by FUN_0052c710 FUN_0052d530 FUN_0052dbe0; no type info and no string names the class
-_ZTV14Object0052d570 0x16ab448 Object0052d570 derived ctor FUN_0052d570 # game region (round 143B): stored by FUN_0052c710 FUN_0052d570 FUN_0052dcd0; no type info and no string names the class
-_ZTV14Object0052d5b0 0x16ab498 Object0052d5b0 derived ctor FUN_0052d5b0 # game region (round 143B): stored by FUN_0052c710 FUN_0052d5b0 FUN_0052dda0; no type info and no string names the class
 _ZTV14Object00875120 0x16af238 Object00875120 derived ctor FUN_00875120 # game region (round 143B): stored by FUN_00872a80 FUN_00875120 FUN_00875160; no type info and no string names the class
 _ZTV14Object00a073a0 0x16b1ba0 Object00a073a0 derived ctor FUN_00a073a0 # game region (round 143B): stored by FUN_001bd010 FUN_00a073a0 FUN_00a07510; no type info and no string names the class
 _ZTV14Object00b32f80 0x16b55a0 Object00b32f80 derived ctor FUN_00b32f80 # game region (round 143B): stored by FUN_00908b80 FUN_00b32dd0 FUN_00b32f80 FUN_00b32fc0; no type info and no string names the class
