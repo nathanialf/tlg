@@ -14,11 +14,6 @@ struct Source00f170d0 /* derived name */
 
 void FUN_00ed1a40(void *buffer, const void *data, u64 size); /* derived name */
 
-// NONMATCHING: a store ordered differently, the two hand-backs sunk into one: this
-// SimplifyCFG merges `*out = data` and `*out = buffer` into one store after a phi
-// (4.0.0 SinkThenElseCodeToEnd, SimplifyCFG.cpp:1682, which takes an end block with
-// one conditional incoming arc), where the base keeps both stores; 3.6.2's
-// (SimplifyCFG.cpp:1227) refuses an end block with more than two predecessors.
 int FUN_00f170d0(const Source00f170d0 *self, unsigned offset, void *buffer, u64 size,
                  const void **out) /* derived name */
 {

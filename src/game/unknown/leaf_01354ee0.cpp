@@ -14,8 +14,6 @@ void FUN_005155c0(Object005155c0 *destination, Object005155c0 *source, int *coun
 
 struct Object01354ee0; /* derived name */
 
-// NONMATCHING: the base's one-byte nop after the call of __stack_chk_fail that ends
-// the function (D26's rule, a backport of the library line only); all else equal.
 void FUN_01354ee0(Object01354ee0 *, Object005155c0 *source,
                   Object005155c0 *destination) /* derived name */
 {

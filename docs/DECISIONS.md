@@ -3075,3 +3075,47 @@ every release from 3.6.2 to 9.0.0 agrees): 0x92ce20 is equal with `default:` wri
 the base lacks; an aligned zeroing store at offset 0 of a new's result in an object not a
 multiple of 16; a zeroing run the base shortens at its start that field stores do not explain;
 a `movzx r32, m8` in an innermost loop that only the pass makes.
+
+## D54. SimplifyCFG sinks through two unconditional arcs only; D26's nop on the game line (2026-11-11)
+
+**Question.** Two things. (1) Drafts of rounds 143B, 144A and 157A keep, in the base, a store at
+the end of each of two arms (`mov [x], 1` and `mov [x], 2`) where the game line stores once in a
+block of its own, the immediate chosen by a phi. (2) D26 (2026-10-27) ruled that the PS4 compiler
+follows every call to `__stack_chk_fail` with one `nop` and patched the library line; the game
+line was left for the day it was a source build (D45) and was never patched: a game function with
+a stack canary ended one byte short of the base.
+
+**Evidence (rounds 151B, 154B, 159C; scratch b151/, b154/, sspnop/ under
+.claude/handoff/scratch-archive/; the supervisor's whole gate).**
+
+- Sinking. Upstream r279460 (2016-08-22) rewrote SimplifyCFG's SinkThenElseCodeToEnd to sink when
+  the instructions differ in an operand, through a phi; the base has it (D6's addendum: the
+  matched 0x1393600). Upstream r280364 (88cad7e5cf, 2016-09-01, "Handle tail-sinking of more than
+  2 incoming branches", first in 4.0) lifted its restriction to an end block with exactly two
+  unconditional predecessors, splitting the unconditional arcs into a `.sink.split` block when a
+  conditional arc also enters. Census, control flow rebuilt from the bytes: 104 joins of the game
+  region entered by a conditional arc keep two stores of different immediates at the arm ends,
+  which r280364 would sink; 107 more with three or more such arms and no conditional arc, its
+  other half, also unsunk. The split form with an immediate in every arm occurs once (0x69600a in
+  FUN_00691910: two stores merged into one 64-bit immediate), where `x = c ? A : B;` then a store
+  gives it with no sinking; the other 176 split-looking sites store a loaded or computed value,
+  which a ternary or a shared tail gives. With the patch 0xf170d0 and the call slots 0x8b0700,
+  0x8b0eb0 and 0x8afc90 compile equal and no matched row changes.
+- The nop. D26's census stands: 5,981 of 5,981 calls of the stub in the game region are followed
+  by 0x90, 5,899 game functions end with it. A probe under the unpatched game line ends at the
+  call. In 4.0 the failure call is a libcall of the stack protector's lowering (an external
+  symbol), where 3.3 called the declared function: the first port of the library's hunk tested a
+  global only and emitted nothing (found by the probe on the installed compiler before anything
+  was committed); the patch tests both. With it the probe ends `call; nop` and 0x1354ee0 compiles
+  equal. No matched game row carried a canary, so none changes.
+- Source forms: for the sinking, the arms' operand order was corrected first (`yes == selected`,
+  as the compare's operands show) and the two stores remained sunk under the unpatched line in
+  every arm order; the nop has none.
+
+**Ruling.** Two patches join the game line's 4.0.0 source build (tools/patches/
+llvm-4.0.0-sinkcond-01-two-unconditional-arcs.patch, llvm-4.0.0-sspnop-01-stack-chk-fail-nop.
+patch): nineteen backports. The second executes D26 for the game line.
+
+**Trigger to revisit.** A game join entered by a conditional arc where two arms' stores of
+different immediates are sunk into a block of their own and no ternary explains it; a call of
+`__stack_chk_fail` not followed by the nop.
