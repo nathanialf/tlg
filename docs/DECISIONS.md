@@ -3191,3 +3191,83 @@ never by counting. First rows: the 25 helpers of twenty static-initializer files
 
 **Trigger to revisit.** A compiler-named function that reaches no uniquely named object of its
 unit, or two that reach the same set.
+
+## D57. A header's namespace-scope static: one name in the header, one checked address per unit (2026-11-11)
+
+**Question.** 325 of the game's 332 per-file static initializers begin with the same nineteen
+16-byte stores: a math header's `static const` vector constants, constructed into each file's
+own copies. The tree names a file-local object by its address (D17); a header static has one
+name and a different address in every unit, in 123 different .bss orders.
+
+**Decision.** The object is written once in the header under its derived name
+(`src/include/tlg_game_vector.h`: class Vector4, nineteen objects in the base's order). Its
+per-unit address is data: `config/header_statics.base.txt`, `<tu> <symbol> 0x<addr>`, one row
+per unit and object. `tools/match_check.py` resolves a function's reference to the unit's copy
+to `D_<row address>`, then checked like any `D_<hex>`. In the whole module the copy is proven,
+not read from the link's `.N`: every function of the unit that references it references one and
+the same candidate, and no other unit's proof gives that candidate. A unit with no row, or an
+unproven copy, fails the function with the row it needs and where the base's field points.
+`tools/layout_link.py` checks every row (the unit proves the copy, the address lies in .bss, no
+two rows share one). A file's `_GLOBAL__sub_I_` whose IR reaches no uniquely named object is its
+own alias when no other unit defines the name and `.ctors` points at it (D56).
+
+**Evidence.** Round 189A: twelve units, 228 rows, every block store's target verified in both
+builds; with two rows swapped, two wrong targets (the base's 0x58b65f0 against 0x58b6600 and
+the reverse); with a row dropped, the refusal names the row and the base's field; the gate's
+count 6,849 before and after the tool change.
+
+**Excluded.** A `D_<hex>` per unit through the preprocessor (the header would carry each unit's
+facts); one `extern` shared object (the base has 325 copies, each stored by its own unit); a
+block base address with a fixed layout (123 orders); the nineteen definitions copied into every
+file; renaming internal names before the link (D56's exclusion); the link's `.N`.
+
+**Trigger to revisit.** A copy read only through a function the module shares between units,
+which no function of the reading unit can prove.
+
+## D58. LoopStrengthReduce counts an immediate once per run of equal offsets: r278927's cost not taken (2026-11-11)
+
+**Question.** 53 array-destroy loops of the game (ten or more names) exit on the add's flags
+with a -4 displacement (`add rbx, -4; jne`); the installed compiler compares (`cmp rbx, -4`)
+from a zero-displacement base.
+
+**Evidence.** Round 185A: nine source forms of the element's destructor all give the compare;
+the prebuilt 3.9.1 gives the base's form, 4.0.0 and 5.0.2 do not. Round 186B: the deciding
+change is r278927 (llvm-project 7a79422536d8, 2016-08-17, first release 4.0), which removed
+`LSRUse::Offsets`, so `Cost::RateFormula` adds an immediate's cost once per fixup instead of
+once per run of equal offsets. Taken back in the cost alone: the module sweep is equal row for
+row and draft for draft to the installed compiler's (3,923 of 3,973 resolvable rows in both),
+and 12 of the 53 loops compile to the base's bytes where none did; the supervisor's own sweep
+of the two patches of D58 and D59 together gave the same (s190: `cmp $-4` loops 12 before, 0
+after).
+
+**Decision.** `tools/patches/llvm-4.0.0-lsroffsets-01-immediate-once-per-offset-run.patch`.
+The rest of r278927 stays. The patch reproduces the Offsets list's rule over the fixups in
+their order; 3.9 also appended to that list when uses were merged, a path not reproduced.
+
+**Not explained.** The base unrolls a list of nine names and loops at ten; every release from
+3.8.1 to 4.0.0 unrolls ten and eleven as well (loop cost 15; the base's boundary needs 17 or
+18, or a limit in (119, 132]). Open; 37 of the 53 loops also wait on lists not yet written.
+
+**Trigger to revisit.** A game loop whose exit is the compare form where the offsets of its
+address uses are equal.
+
+## D59. MOVD and MOVQ between general and vector registers carry no execution domain: r288902 not taken (2026-11-11)
+
+**Question.** Every block initializer of D57 builds its lane mask with `mov eax, -1; vmovd
+xmm2, eax; vmovaps [mask], xmm2`; the installed compiler stores with `vmovdqa`. No source form
+changes the domain of the store.
+
+**Evidence.** In the game region a `vmovd` of a general register into a vector register is
+followed directly by a `vmovaps` store 376 times and by a `vmovdqa` store once (the
+supervisor's count over the disassembly; round 189A's count by next use: 456, 42 `vmovups`, 1).
+r288902 (llvm-project 8893bd95f015, 2016-12-07, first release 4.0) put six groups of
+X86InstrSSE.td in SSEPackedInt; the prebuilt 3.6.2 to 3.9.1 give `vmovaps`, 4.0.0 and 5.0.2
+`vmovdqa`. With that file's part of the commit taken back the module sweep is equal row for
+row and draft for draft to the installed compiler's, and the twelve initializers in the tree
+store with `vmovaps` (12 `vmovdqa` stores before, 0 after).
+
+**Decision.** `tools/patches/llvm-4.0.0-movddomain-01-movd-movq-default-domain.patch`: the
+commit's X86InstrSSE.td hunks reversed exactly. Twenty-one backports with D58's.
+
+**Trigger to revisit.** A game `vmovdqa` or `vpxor`-family instruction that only the integer
+domain of a preceding movd or movq explains.

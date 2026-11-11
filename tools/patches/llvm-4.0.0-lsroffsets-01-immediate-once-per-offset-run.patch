@@ -1,0 +1,45 @@
+llvm-4.0.0 backport patch: LoopStrengthReduce counts an immediate once per run of equal fixup offsets (PS4)
+
+This patch CHANGES CODE GENERATION for a loop whose address uses share a
+non-zero offset. r278927 (Jonas Paulsson, 2016-08-17, "[LoopStrenghtReduce]
+Refactoring and addition of a new target cost function", llvm-project
+7a79422536d8, D19152, first release LLVM 4.0) made an LSRUse own its fixups
+and removed the use's Offsets list; Cost::RateFormula then adds the
+immediate's cost once per fixup where 3.9 added it once per entry of that
+list, which held a run of equal offsets once. With three accesses at -4 the
+4.0.0 cost picks a zero-displacement base and an exit compare (`cmp rbx,
+-4`); 3.9.1 and the base keep the -4 displacement and exit on the add's
+flags (`add rbx, -4; jne`). In the game region 53 array-destroy loops over
+ten or more names have the base's form (round 181A's census, round 185A's
+probe: no source form of the element's destructor changes the exit; the
+prebuilt 3.9.1 gives the base's bytes, 4.0.0 and 5.0.2 do not). With this
+patch 12 of those loops compile to the base's bytes (none before) and no
+matched game row and no draft changes (round 186B's module sweep, repeated
+by the supervisor). The rest of r278927 (the fixups' ownership, the target
+cost hook) stays.
+
+--- a/lib/Transforms/Scalar/LoopStrengthReduce.cpp
++++ b/lib/Transforms/Scalar/LoopStrengthReduce.cpp
+@@ -1184,10 +1184,21 @@
+   ScaleCost += getScalingFactorCost(TTI, LU, F);
+ 
+   // Tally up the non-zero immediates.
++  // PS4: an immediate is counted once per run of fixups with the same
++  // offset, as 3.9's LSRUse::Offsets list had it; r278927 (a use owns its
++  // fixups, the Offsets vector removed), which counts it once per fixup, is
++  // not taken.
++  bool HavePrevOffset = false;
++  int64_t PrevOffset = 0;
+   for (const LSRFixup &Fixup : LU.Fixups) {
+     int64_t O = Fixup.Offset;
+     int64_t Offset = (uint64_t)O + F.BaseOffset;
+-    if (F.BaseGV)
++    bool NewOffset = !HavePrevOffset || O != PrevOffset;
++    HavePrevOffset = true;
++    PrevOffset = O;
++    if (!NewOffset)
++      ; // counted with the fixup before it
++    else if (F.BaseGV)
+       ImmCost += 64; // Handle symbolic values conservatively.
+                      // TODO: This should probably be the pointer size.
+     else if (Offset != 0)

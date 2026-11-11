@@ -1,0 +1,111 @@
+llvm-4.0.0 backport patch: MOVD/MOVQ between general and vector registers carry no execution domain (PS4)
+
+This patch CHANGES CODE GENERATION for a vector register loaded by movd or
+movq and then stored or combined: the execution-domain fix no longer turns
+the following move into its integer form. r288902 (Simon Pilgrim,
+2016-12-07, "[X86][SSE] Consistently set MOVD/MOVQ load/store/move
+instructions to integer domain", llvm-project 8893bd95f015, D27419, first
+release LLVM 4.0) put six groups of X86InstrSSE.td in SSEPackedInt; 3.9 left
+them in the default domain. This patch takes back that file's part of the
+commit exactly (the AVX-512 file is not used by btver2 and is left). In the
+game region a `vmovd` of a general register into a vector register is
+followed directly by a `vmovaps` store 376 times and by a `vmovdqa` store
+once; 4.0.0 gives `vmovdqa` (the lane-mask constant of the 325 per-file
+static initializers: `mov eax, -1; vmovd xmm2, eax; vmovaps [mask], xmm2`),
+the prebuilt 3.6.2 to 3.9.1 give `vmovaps` (round 189A). No source form
+changes the store's domain. With this patch the twelve initializers in the
+tree store with `vmovaps` and no matched game row and no draft changes (the
+supervisor's module sweep).
+
+--- a/lib/Target/X86/X86InstrSSE.td
++++ b/lib/Target/X86/X86InstrSSE.td
+@@ -4621,7 +4621,6 @@
+ //===---------------------------------------------------------------------===//
+ // Move Int Doubleword to Packed Double Int
+ //
+-let ExeDomain = SSEPackedInt in {
+ def VMOVDI2PDIrr : VS2I<0x6E, MRMSrcReg, (outs VR128:$dst), (ins GR32:$src),
+                       "movd\t{$src, $dst|$dst, $src}",
+                       [(set VR128:$dst,
+@@ -4672,12 +4671,11 @@
+                        "mov{d|q}\t{$src, $dst|$dst, $src}",
+                        [(set FR64:$dst, (bitconvert GR64:$src))],
+                        IIC_SSE_MOVDQ>, Sched<[WriteMove]>;
+-} // ExeDomain = SSEPackedInt
+ 
+ //===---------------------------------------------------------------------===//
+ // Move Int Doubleword to Single Scalar
+ //
+-let ExeDomain = SSEPackedInt, isCodeGenOnly = 1 in {
++let isCodeGenOnly = 1 in {
+   def VMOVDI2SSrr  : VS2I<0x6E, MRMSrcReg, (outs FR32:$dst), (ins GR32:$src),
+                         "movd\t{$src, $dst|$dst, $src}",
+                         [(set FR32:$dst, (bitconvert GR32:$src))],
+@@ -4697,12 +4695,11 @@
+                         "movd\t{$src, $dst|$dst, $src}",
+                         [(set FR32:$dst, (bitconvert (loadi32 addr:$src)))],
+                         IIC_SSE_MOVDQ>, Sched<[WriteLoad]>;
+-} // ExeDomain = SSEPackedInt, isCodeGenOnly = 1
++}
+ 
+ //===---------------------------------------------------------------------===//
+ // Move Packed Doubleword Int to Packed Double Int
+ //
+-let ExeDomain = SSEPackedInt in {
+ def VMOVPDI2DIrr  : VS2I<0x7E, MRMDestReg, (outs GR32:$dst), (ins VR128:$src),
+                        "movd\t{$src, $dst|$dst, $src}",
+                        [(set GR32:$dst, (extractelt (v4i32 VR128:$src),
+@@ -4724,7 +4721,6 @@
+                        [(store (i32 (extractelt (v4i32 VR128:$src),
+                                      (iPTR 0))), addr:$dst)],
+                                      IIC_SSE_MOVDQ>, Sched<[WriteStore]>;
+-} // ExeDomain = SSEPackedInt
+ 
+ def : Pat<(v8i32 (X86Vinsert (v8i32 immAllZerosV), GR32:$src2, (iPTR 0))),
+         (SUBREG_TO_REG (i32 0), (VMOVDI2PDIrr GR32:$src2), sub_xmm)>;
+@@ -4741,7 +4737,6 @@
+ //===---------------------------------------------------------------------===//
+ // Move Packed Doubleword Int first element to Doubleword Int
+ //
+-let ExeDomain = SSEPackedInt in {
+ let SchedRW = [WriteMove] in {
+ def VMOVPQIto64rr : VRS2I<0x7E, MRMDestReg, (outs GR64:$dst), (ins VR128:$src),
+                           "movq\t{$src, $dst|$dst, $src}",
+@@ -4766,12 +4761,11 @@
+ def MOVPQIto64rm : RS2I<0x7E, MRMDestMem, (outs), (ins i64mem:$dst, VR128:$src),
+                         "mov{d|q}\t{$src, $dst|$dst, $src}",
+                         [], IIC_SSE_MOVDQ>, Sched<[WriteStore]>;
+-} // ExeDomain = SSEPackedInt
+ 
+ //===---------------------------------------------------------------------===//
+ // Bitcast FR64 <-> GR64
+ //
+-let ExeDomain = SSEPackedInt, isCodeGenOnly = 1 in {
++let isCodeGenOnly = 1 in {
+   let Predicates = [UseAVX] in
+   def VMOV64toSDrm : VS2SI<0x7E, MRMSrcMem, (outs FR64:$dst), (ins i64mem:$src),
+                           "movq\t{$src, $dst|$dst, $src}",
+@@ -4798,12 +4792,12 @@
+                          "movq\t{$src, $dst|$dst, $src}",
+                          [(store (i64 (bitconvert FR64:$src)), addr:$dst)],
+                          IIC_SSE_MOVDQ>, Sched<[WriteStore]>;
+-} // ExeDomain = SSEPackedInt, isCodeGenOnly = 1
++}
+ 
+ //===---------------------------------------------------------------------===//
+ // Move Scalar Single to Double Int
+ //
+-let ExeDomain = SSEPackedInt, isCodeGenOnly = 1 in {
++let isCodeGenOnly = 1 in {
+   def VMOVSS2DIrr  : VS2I<0x7E, MRMDestReg, (outs GR32:$dst), (ins FR32:$src),
+                         "movd\t{$src, $dst|$dst, $src}",
+                         [(set GR32:$dst, (bitconvert FR32:$src))],
+@@ -4820,7 +4814,7 @@
+                         "movd\t{$src, $dst|$dst, $src}",
+                         [(store (i32 (bitconvert FR32:$src)), addr:$dst)],
+                         IIC_SSE_MOVDQ>, Sched<[WriteStore]>;
+-} // ExeDomain = SSEPackedInt, isCodeGenOnly = 1
++}
+ 
+ let Predicates = [UseAVX] in {
+   let AddedComplexity = 15 in {
