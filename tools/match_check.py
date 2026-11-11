@@ -251,7 +251,8 @@ _ALIASES: dict[tuple, tuple[dict[str, str], dict[str, str]]] = {}
 def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str], dict[str, str]]:
     """({unit's name: module object's symbol}, {unit's name: why none}) for
     the functions of a game unit whose names the compiler gave
-    (game_module.COMPILER_LOCAL: `__cxx_global_array_dtor`, `.1`, ...).
+    (game_module.COMPILER_LOCAL: `__cxx_global_array_dtor`, `.1`, ...;
+    `__cxx_global_var_init`, `.1`, ...; `_GLOBAL__sub_I_<file>`).
 
     The link renames such a function when an earlier unit holds its name, by
     one counter over the whole link, so the module's spelling says nothing
@@ -261,28 +262,42 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
     state:
 
       1. what it reaches: the unit's own uniquely named internal objects and
-         functions its IR body references (an array-destroy helper reaches its
-         array, `_ZZ<owner>E9D_<hex>`), against the same names among the
-         candidate's relocations (D17 attributes a section-relative field to
-         the named local it lands in); the sets must be equal and not empty;
+         functions its IR body references, directly or through the
+         compiler-named functions it calls (an array-destroy helper reaches
+         its array, `_ZZ<owner>E9D_<hex>` or `_ZL9D_<hex>`; a file's
+         `_GLOBAL__sub_I_` reaches every object its `__cxx_global_var_init`s
+         initialise), against the same names among the candidate's
+         relocations (D17 attributes a section-relative field to the named
+         local it lands in); the sets must be equal and not empty;
       2. who reaches it: every function of the unit with a stable name whose
-         IR body references it (the owner's `__cxa_atexit` registration) and
-         that the module object defines must reference the candidate.
+         IR body references it (the owner's `__cxa_atexit` registration), and
+         every compiler-named one already proven (by its module symbol),
+         must reference the candidate in the module object; a compiler-named
+         referrer the module does not keep (a `__cxx_global_var_init` the
+         pipeline inlined into its `_GLOBAL__sub_I_`) is passed through to
+         its own referrers; a `_GLOBAL__sub_I_` is reached from
+         `@llvm.global_ctors`, and the candidate must be a target of the
+         module object's constructor table (`.ctors` on this target).
 
     A candidate is a local function of the module of the same compiler name
     with any `.N` suffixes. Exactly one candidate must satisfy both, and no
-    other compiler-named function of the unit may reach the same set, or
-    there is no alias and `why` says which fact failed. A wrong alias would
-    still fail later: the row's bytes and relocation targets are compared with
-    the base's at its address, and the layout resolves the owner's reference
-    to the module symbol through the row (tools/layout_link.py)."""
+    other compiler-named function of the unit of the same kind may reach the
+    same set, or there is no alias and `why` says which fact failed. A wrong
+    alias would still fail later: the row's bytes and relocation targets are
+    compared with the base's at its address, and the layout resolves the
+    owner's reference to the module symbol through the row
+    (tools/layout_link.py)."""
     import game_module as gm
     st = obj.stat()
     key = (tu, str(obj), st.st_mtime_ns, st.st_size)
     if key in _ALIASES:
         return _ALIASES[key]
     by_tu, renamed = gm.load_symbols(ver)
-    names = sorted(s for s in by_tu.get(tu, set()) if gm.compiler_local(s))
+    # the file's initializer first, then the objects' initializers, then the
+    # helpers they register: each is anchored by the one before it
+    order = {"_GLOBAL__sub_I_": 0, "__cxx_global_var_init": 1}
+    names = sorted((s for s in by_tu.get(tu, set()) if gm.compiler_local(s)),
+                   key=lambda s: (order.get(s[:15], order.get(gm.compiler_kind(s), 2)), s))
     aliases: dict[str, str] = {}
     why: dict[str, str] = {}
     if names:
@@ -297,21 +312,65 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
         stable = {n for n in refs if not gm.compiler_local(n) and n not in renamed and "." not in n}
         funcs = object_functions(obj)
         cands = {c: {r.symbol for r in rl} for c, (_b, rl) in funcs.items() if gm.compiler_local(c)}
-        reach = {n: refs.get(n, set()) & own for n in names}
+        ctors = init_array_targets(obj)
+
+        def closure(n: str, seen: frozenset = frozenset()) -> set[str]:
+            out = set(refs.get(n, set()))
+            for g in refs.get(n, set()):
+                if gm.compiler_local(g) and g in refs and g not in seen and g != n:
+                    out |= closure(g, seen | {n})
+            return out
+
+        reach = {n: closure(n) & own for n in names}
+        inlined: set[str] = set()
+
+        def anchors_of(n: str, seen: frozenset = frozenset()) -> tuple[list[str], str]:
+            out: list[str] = []
+            for f in sorted(f for f in refs if n in refs[f] and f != n):
+                if f in stable:
+                    if f in funcs:
+                        out.append(f)
+                elif f in aliases:
+                    out.append(aliases[f])
+                elif f in inlined and f not in seen:
+                    sub, bad = anchors_of(f, seen | {n})
+                    if bad:
+                        return [], bad
+                    out += sub
+                elif gm.compiler_local(f):
+                    return [], f"its referrer {f} is not proven ({why.get(f, 'not examined')})"
+            return out, ""
+
         for n in names:
+            kind = gm.compiler_kind(n)
             if not reach[n]:
                 why[n] = "its IR body reaches none of the unit's own named objects"
                 continue
-            twins = [m for m in names if m != n and reach[m] == reach[n]]
+            twins = [m for m in names if m != n and gm.compiler_kind(m) == kind and reach[m] == reach[n]]
             if twins:
                 why[n] = f"{twins[0]} reaches the same objects ({', '.join(sorted(reach[n]))})"
                 continue
-            anchors = sorted(f for f in stable if n in refs[f] and f in funcs)
-            if not anchors:
-                why[n] = "no function of the unit that references it in its IR is in the module object"
-                continue
-            hits = [c for c, rs in cands.items()
-                    if rs & own == reach[n] and all(c in {r.symbol for r in funcs[f][1]} for f in anchors)]
+            mine = {c: rs for c, rs in cands.items() if gm.compiler_kind(c) == kind and rs & own == reach[n]}
+            if n.startswith("_GLOBAL__sub_I_"):
+                hits = [c for c in mine if c in ctors]
+                anchors = [".ctors"]
+            else:
+                anchors, bad = anchors_of(n)
+                if bad:
+                    why[n] = bad
+                    continue
+                if not anchors:
+                    if not mine and kind == "__cxx_global_var_init":
+                        inlined.add(n)
+                        why[n] = "the module keeps no function of it (inlined into its referrer)"
+                        continue
+                    why[n] = "no function of the unit that references it in its IR is in the module object"
+                    continue
+                hits = [c for c, rs in mine.items() if all(c in {r.symbol for r in funcs[f][1]} for f in anchors)]
+                if not hits and not mine and kind == "__cxx_global_var_init":
+                    inlined.add(n)
+                    why[n] = "the module keeps no function of it (inlined into its referrer)"
+                    continue
             if len(hits) == 1:
                 aliases[n] = hits[0]
             else:
@@ -319,6 +378,38 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
                           f"referenced by {', '.join(anchors)}" + (f" ({', '.join(sorted(hits))})" if hits else ""))
     _ALIASES[key] = (aliases, why)
     return aliases, why
+
+
+def init_array_targets(obj: Path) -> set[str]:
+    """The functions the object's constructor table points at (a file's
+    `_GLOBAL__sub_I_`, from `@llvm.global_ctors`): `.ctors` for the game's
+    target (x86_64-scei-ps4, whose clang does not use `.init_array`),
+    `.init_array` otherwise; each attributed to its named symbol as a
+    function's relocation is (D17)."""
+    st = obj.stat()
+    key = (str(obj), st.st_mtime_ns, st.st_size)
+    if key not in _INIT_ARRAY:
+        from elftools.elf.elffile import ELFFile
+        from elftools.elf.relocation import RelocationSection
+        out: set[str] = set()
+        with obj.open("rb") as f:
+            elf = ELFFile(f)
+            syms = list(elf.get_section_by_name(".symtab").iter_symbols())
+            locs = named_locals(syms)
+            for sec in elf.iter_sections():
+                if not isinstance(sec, RelocationSection):
+                    continue
+                if not elf.get_section(sec["sh_info"]).name.startswith((".init_array", ".ctors")):
+                    continue
+                for r in sec.iter_relocations():
+                    rsym = syms[r["r_info_sym"]]
+                    name = reloc_symbol(elf, locs, rsym, r["r_addend"] if "r_addend" in r.entry else 0, 0)[0]
+                    out.add(name)
+        _INIT_ARRAY[key] = out
+    return _INIT_ARRAY[key]
+
+
+_INIT_ARRAY: dict[tuple, set[str]] = {}
 
 
 def is_compiler_local(name: str) -> bool:

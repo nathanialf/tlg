@@ -90,14 +90,30 @@ DECL = re.compile(r'^external ((?:hidden |protected |default )?)((?:dllimport )?
 # (CGDeclCXX.cpp:613, generateDestroyHelper), which the unit's module numbers
 # `.1`, `.2` on a second and third (ValueSymbolTable::makeUniqueName), and
 # which llvm-link renames again, by one counter over the whole link, when an
-# earlier unit holds the name. A developer's static is not one of these: a
-# collision of one is refused as before (docs/DECISIONS.md D50).
-COMPILER_LOCAL = re.compile(r"^__cxx_global_array_dtor(?:\.\d+)*$")
+# earlier unit holds the name; and the static initializer of a namespace-scope
+# object, `__cxx_global_var_init` (`.1`, ... in the unit's order,
+# CGDeclCXX.cpp EmitCXXGlobalVarDeclInitFunc), which the unit's
+# `_GLOBAL__sub_I_<file>` calls (EmitCXXGlobalInitFunc, the name from the main
+# file's name) and which the -O2 pipeline inlines there. The unit's `.N`
+# comes from one counter over its names, so a file's initializers and helpers
+# interleave (`__cxx_global_var_init`, `__cxx_global_array_dtor`,
+# `__cxx_global_var_init.1`, `__cxx_global_array_dtor.2`). A developer's static
+# is not one of these: a collision of one is refused as before
+# (docs/DECISIONS.md D50, D56).
+COMPILER_LOCAL = re.compile(r"^(?:(?:__cxx_global_array_dtor|__cxx_global_var_init)(?:\.\d+)*|_GLOBAL__sub_I_.+)$")
+COMPILER_BASE = re.compile(r"(?:\.\d+)+$")
 REF = re.compile(r"@(" + NAME + r")")
 
 
 def compiler_local(name: str) -> bool:
     return bool(COMPILER_LOCAL.match(name))
+
+
+def compiler_kind(name: str) -> str:
+    """A compiler-given name without the `.N` the unit or the link added:
+    two names of one kind are the same function of different units, or of
+    one unit in its order."""
+    return COMPILER_BASE.sub("", name)
 
 
 def function_refs(path: Path) -> dict[str, set[str]]:
