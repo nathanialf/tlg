@@ -53,7 +53,7 @@ case "$GITDIR" in /*) ;; *) GITDIR="$ROOT/$GITDIR" ;; esac
 "$ROOT/.venv/bin/python" -I "$ROOT/tools/check_dev_native.py"
 
 STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACMR -z | tr '\0' '\n' |
-    grep -E '^src/.*\.(c|cpp|cc|h|hpp|inl)$' || true)
+    grep -E '^src/(.*\.(c|cpp|cc|h|hpp|inl)|include/[a-z_]+)$' || true)
 if [[ -n "$STAGED_SRC" ]]; then
     # shellcheck disable=SC2086
     "$ROOT/tools/format.sh" --check $STAGED_SRC

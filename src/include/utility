@@ -1,0 +1,40 @@
+/* The C++ library's <utility>, as much of it as <functional> needs, declared
+ * by us from the standard's description (docs/FINISHING.md rule 8; the
+ * build's -nostdlibinc hides the host's headers): std::move and
+ * std::forward (C++11 20.2.3, 20.2.4) and the reference removal they rest on
+ * (C++11 20.9.7.2, which the standard puts in <type_traits>). None of them
+ * emits code of its own: each is a cast the optimizer removes. */
+#ifndef TLG_UTILITY
+#define TLG_UTILITY
+
+namespace std
+{
+template <class T> struct remove_reference {
+    typedef T type;
+};
+
+template <class T> struct remove_reference<T &> {
+    typedef T type;
+};
+
+template <class T> struct remove_reference<T &&> {
+    typedef T type;
+};
+
+template <class T> inline typename remove_reference<T>::type &&move(T &&t) noexcept
+{
+    return static_cast<typename remove_reference<T>::type &&>(t);
+}
+
+template <class T> inline T &&forward(typename remove_reference<T>::type &t) noexcept
+{
+    return static_cast<T &&>(t);
+}
+
+template <class T> inline T &&forward(typename remove_reference<T>::type &&t) noexcept
+{
+    return static_cast<T &&>(t);
+}
+} // namespace std
+
+#endif

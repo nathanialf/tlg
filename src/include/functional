@@ -1,0 +1,250 @@
+/* The C++ library's <functional>, as much of it as the game's code attests:
+ * std::function (C++11 20.8.11.2), declared by us from the executable's
+ * bytes (rounds 147A and 148A, docs/NOTES.md; docs/FINISHING.md rule 8).
+ * std::function and std::allocator are the standard's names, and the
+ * imports _ZSt19_Xbad_function_callv and _ZSt11_Xbad_allocv name the two
+ * helpers the library calls; every other name here is ours. The layout, read
+ * from the game's 65 implementation vtables (0x16aabe0 to 0x16d3a80) and the
+ * functions that build and call them:
+ *   function<R(A...)>: 0x20 bytes of space at +0, the implementation pointer
+ *     at +0x20, null when empty; 0x30 bytes in all. The implementation is
+ *     built in the space when it is 0x20 bytes or less (0x18 and 0x20 built
+ *     at 0x504257 and 0x8908d6), on the heap above (0x28 at 0x89913e, 0xb0 at
+ *     0x8907b0).
+ *   the implementation: the vptr, the callable at +8, then an empty
+ *     allocator; 0x10 bytes for an empty lambda, 0x18 for an 8-byte one.
+ *   its vtable, eight slots (0x16ab3a8's: 0x52d4f0, 0x52db10, 0x52db50,
+ *     0x52db70, 0x52db80, 0x52dbb0, 0x52dbc0, 0x52dbd0): copy into a place
+ *     (a new block when given none), move into a place, call, the target's
+ *     type, destroy and free when asked, the complete and the deleting
+ *     destructor, the callable's address. */
+#ifndef TLG_FUNCTIONAL
+#define TLG_FUNCTIONAL
+
+#include <new>
+#include <utility>
+
+namespace std
+{
+[[noreturn]] void _Xbad_alloc();         /* the import _ZSt11_Xbad_allocv */
+[[noreturn]] void _Xbad_function_call(); /* the import _ZSt19_Xbad_function_callv */
+
+/* std::allocator (C++11 20.6.9) as far as a function object needs it: the
+ * synopsis's constructors and destructor, user-provided and empty. That they
+ * are user-provided is in the bytes: the implementation's copy (slot 0)
+ * copies the callable's bytes and nothing after them, and every vtable's
+ * complete destructor (slot 5) is a function of its own, as for a class
+ * with a member whose destructor is not trivial. */
+template <class T> class allocator
+{
+  public:
+    allocator() noexcept {}
+
+    allocator(const allocator &) noexcept {}
+
+    template <class U> allocator(const allocator<U> &) noexcept {}
+
+    ~allocator() {}
+};
+
+/* The callable as the implementation holds it, a member of its own: slot 0
+ * of an empty lambda's vtable copies one byte (`mov cl, [rbx+8]; mov
+ * [rax+8], cl` at 0x52d51a), which a copy of an empty closure itself never
+ * does and a copy of a class whose one member is the closure does. */
+template <class F>
+struct _Function_callee /* derived name */
+{
+    F _Object; /* derived name */
+};
+
+/* The interface every implementation fills, in the order of its vtable. */
+template <class R, class... A> class _Function_base /* derived name */
+{
+  public:
+    virtual _Function_base *_Copy(void *where) const = 0; /* derived name; slot 0 */
+    virtual _Function_base *_Move(void *where) = 0;       /* derived name; slot 1 */
+    virtual R _Call(A &&...args) = 0;                     /* derived name; slot 2 */
+    virtual const void *_Target_type() const = 0;         /* derived name; slot 3 */
+    virtual void _Delete_this(bool deallocate) = 0;       /* derived name; slot 4 */
+
+    virtual ~_Function_base() {} /* slots 5 and 6 */
+
+    virtual const void *_Get() const = 0; /* derived name; slot 7 */
+};
+
+/* The implementation for a callable of type F: one instantiation (and one
+ * vtable) per callable type, which is one per lambda. */
+template <class F, class R, class... A>
+class _Function_impl : public _Function_base<R, A...> /* derived name */
+{
+    typedef _Function_base<R, A...> _Base;
+
+  public:
+    explicit _Function_impl(const F &f) : _Callee{f} {}
+
+    explicit _Function_impl(F &&f) : _Callee{std::move(f)} {}
+
+    /* a new block for an implementation that does not fit the space, or
+     * for a copy given no place: operator new, then _Xbad_alloc on null
+     * (0x52d501 to 0x52d50e and 0x52d527) */
+    static void *_Allocate() /* derived name */
+    {
+        void *p = operator new(sizeof(_Function_impl));
+        if (!p)
+            _Xbad_alloc();
+        return p;
+    }
+
+    _Base *_Copy(void *where) const override
+    {
+        if (!where)
+            where = _Allocate();
+        return new (where) _Function_impl(*this);
+    }
+
+    _Base *_Move(void *where) override
+    {
+        if (!where)
+            where = _Allocate();
+        return new (where) _Function_impl(std::move(*this));
+    }
+
+    /* every argument by reference (0x52db50 reads its object through rsi) */
+    R _Call(A &&...args) override
+    {
+        return _Callee._Object(std::forward<A>(args)...);
+    }
+
+    /* built without RTTI: no type to give (`xor eax, eax; ret`, 0x52db70) */
+    const void *_Target_type() const override
+    {
+        return 0;
+    }
+
+    /* the destructor through the vtable (`call [rax+0x28]`, 0x52db90),
+     * then operator delete when the implementation is on the heap */
+    void _Delete_this(bool deallocate) override
+    {
+        this->~_Function_impl();
+        if (deallocate)
+            operator delete(this);
+    }
+
+    /* `lea rax, [rdi+8]; ret` (0x52dbd0) */
+    const void *_Get() const override
+    {
+        return &_Callee._Object;
+    }
+
+  private:
+    _Function_callee<F> _Callee; /* derived name; +8 */
+    allocator<F> _Alloc;         /* derived name */
+};
+
+template <class S> class function;
+
+template <class R, class... A> class function<R(A...)>
+{
+    typedef _Function_base<R, A...> _Base;
+
+  public:
+    function() : _Impl(0) {}
+
+    function(const function &other) : _Impl(0)
+    {
+        _Reset_copy(other);
+    }
+
+    function(function &&other) : _Impl(0)
+    {
+        _Reset_move(other);
+    }
+
+    template <class F> function(F f) : _Impl(0)
+    {
+        _Reset(std::move(f));
+    }
+
+    ~function()
+    {
+        _Tidy();
+    }
+
+    function &operator=(const function &other)
+    {
+        _Tidy();
+        _Reset_copy(other);
+        return *this;
+    }
+
+    explicit operator bool() const
+    {
+        return _Impl != 0;
+    }
+
+    /* an empty function calls _Xbad_function_call; else slot 2 */
+    R operator()(A... args) const
+    {
+        if (!_Impl)
+            _Xbad_function_call();
+        return _Impl->_Call(std::forward<A>(args)...);
+    }
+
+  private:
+    void *_Space_address() const /* derived name */
+    {
+        return const_cast<void *>(static_cast<const void *>(&_Space));
+    }
+
+    bool _Local() const /* derived name */
+    {
+        return _Impl == _Space_address();
+    }
+
+    /* `if (impl) impl->slot4(impl != &space); impl = 0` */
+    void _Tidy() /* derived name */
+    {
+        if (_Impl) {
+            _Impl->_Delete_this(!_Local());
+            _Impl = 0;
+        }
+    }
+
+    void _Reset_copy(const function &other) /* derived name */
+    {
+        if (other._Impl)
+            _Impl = other._Impl->_Copy(other._Local() ? _Space_address() : 0);
+    }
+
+    void _Reset_move(function &other) /* derived name */
+    {
+        if (other._Impl) {
+            if (other._Local()) {
+                _Impl = other._Impl->_Move(_Space_address());
+                other._Tidy();
+            } else {
+                _Impl = other._Impl;
+                other._Impl = 0;
+            }
+        }
+    }
+
+    template <class F> void _Reset(F &&f) /* derived name */
+    {
+        typedef _Function_impl<typename remove_reference<F>::type, R, A...> _Impl_type;
+        if (sizeof(_Impl_type) <= sizeof(_Space))
+            _Impl = new (_Space_address()) _Impl_type(std::move(f));
+        else
+            _Impl = new (_Impl_type::_Allocate()) _Impl_type(std::move(f));
+    }
+
+    union {
+        long double _Align; /* derived name: aligned as the strictest fundamental type */
+        char _Bytes[0x20];  /* derived name */
+    } _Space;               /* derived name; +0 */
+
+    _Base *_Impl; /* derived name; +0x20 */
+};
+} // namespace std
+
+#endif

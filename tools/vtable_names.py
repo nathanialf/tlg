@@ -503,20 +503,47 @@ def check_derived(elf: BaseElf) -> list[str]:
     return errors
 
 
+def check_instantiations(elf: BaseElf) -> tuple[int, list[str], list[str]]:
+    """Every vtable of a library instantiation the claimed rows are members of
+    (tools/base_elf.py INSTANTIATION_SLOTS, round 148A): the rows must sit in
+    their slots of one base vtable, and a claimed slot-0 row must store that
+    vtable's address point. One whose slot 0 is not claimed is listed, not
+    failed: no claimed row can reference its vtable until slot 0 is claimed
+    (address_of refuses it), and slot 0 waits on the operator new question
+    (docs/NOTES.md, round 147A). Returns (count, pending lines, errors)."""
+    pending, errors = [], []
+    rows = elf.instantiation_rows()
+    for sym in sorted(rows):
+        slots = " ".join(f"{k}:0x{a:x}" for k, (_s, a) in sorted(rows[sym].items()))
+        try:
+            if 0 in rows[sym]:
+                elf.instantiation_vtable(sym)
+            else:
+                addr = elf.instantiation_vtable(sym, require_slot0=False)
+                pending.append(f"pending: {sym} 0x{addr:x} (slots {slots}): slot 0 not claimed")
+        except ValueError as e:
+            errors.append(str(e))
+    return len(rows), pending, errors
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--md", action="store_true", help="print a Markdown summary")
     ap.add_argument("--no-write", action="store_true", help="do not write config/vtables.<slug>.txt")
-    ap.add_argument("--check", action="store_true", help="verify config/vtables.derived.<slug>.txt only")
+    ap.add_argument("--check", action="store_true", help="verify config/vtables.derived.<slug>.txt and the instantiation vtables only")
     a = ap.parse_args(argv)
     elf = BaseElf(REPO_ROOT)
     if a.check:
         errs = check_derived(elf)
-        for e in errs:
+        inst, pending, ierrs = check_instantiations(elf)
+        for e in errs + ierrs:
             print(e, file=sys.stderr)
-        print(f"vtable_names: {len(elf._derived)} derived rows, {len(errs)} failing")
-        return 1 if errs else 0
+        for p in pending:
+            print(p)
+        print(f"vtable_names: {len(elf._derived)} derived rows, {len(errs)} failing; "
+              f"{inst} instantiation vtables, {len(ierrs)} failing, {len(pending)} with slot 0 unclaimed")
+        return 1 if errs or ierrs else 0
     w = Walker(elf)
     hits = []
     for addr, (size, _name) in w.funcs.items():

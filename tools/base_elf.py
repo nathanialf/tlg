@@ -350,6 +350,8 @@ class BaseElf:
                 return self.vtables[name]
             if name in self._derived:
                 return self._verify_derived(name)
+            if self.instantiation_template(name) is not None:
+                return self.instantiation_vtable(name)
             return None
         ident = self.base_identifier(name)
         if ident in self.func_by_name:
@@ -419,6 +421,170 @@ class BaseElf:
         stored = w.vptr_stores(fn)
         if addr + 0x10 not in stored:
             raise ValueError(f"vtables.derived: {sym}: {ctor} stores "
+                             f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")
+        self.vtables[sym] = addr
+        return addr
+
+    # --- vtables of library instantiations (round 148A) ----------------------
+    # A class template of our own library headers whose instantiations the
+    # compiler emits with their vtables: the mangled template prefix and the
+    # slot of each virtual member, by its mangled name (src/include/functional:
+    # std::function's implementation, one instantiation per callable type,
+    # internal to its unit when the callable is a lambda of an ordinary
+    # function). Such a vtable has no hand-made row (D14): it is the base
+    # vtable that holds the claimed rows of the instantiation in their slots,
+    # and its slot-0 row must be claimed and store that vtable's address point.
+    INSTANTIATION_SLOTS = {
+        "St14_Function_implI": {"_Copy": 0, "_Move": 1, "_Call": 2, "_Target_type": 3, "_Delete_this": 4,
+                                "D1": 5, "D2": 5, "D0": 6, "_Get": 7},
+    }
+
+    @classmethod
+    def instantiation_template(cls, vtable: str) -> str | None:
+        """The template prefix of INSTANTIATION_SLOTS a `_ZTV` symbol
+        instantiates, or None."""
+        enc = vtable[len("_ZTV"):] if vtable.startswith("_ZTV") else ""
+        return next((t for t in cls.INSTANTIATION_SLOTS if enc.startswith(t)), None)
+
+    @staticmethod
+    def mangled_close(s: str, i: int, depth: int = 1) -> int | None:
+        """The index just past the `E` that closes `depth` open levels of an
+        Itanium mangled name read from `s[i]` (the end of a template argument
+        list or a local name `Z<encoding>E`), or None when it does not close.
+        Counts the productions that open a level ending in `E` (template
+        arguments, a local name, a pack, a function type, a nested name, an
+        expression, a closure type), skipping what may hold an `E` or digits
+        of its own (a source name, a substitution or template parameter, an
+        array bound, a literal)."""
+        try:
+            while depth:
+                c = s[i]
+                if c.isdigit():                        # <length><identifier>
+                    j = i
+                    while s[j].isdigit():
+                        j += 1
+                    i = j + int(s[i:j])
+                    continue
+                if c in "ST":                          # S<seq>_, T<seq>_, or St, Sa...
+                    j = i + 1
+                    while s[j].isdigit() or s[j].isupper():
+                        j += 1
+                    if s[j] == "_":
+                        i = j + 1
+                    else:
+                        i += 2 if c == "S" else 1
+                    continue
+                if c == "A":                           # A<bound>_
+                    i = s.index("_", i) + 1
+                    continue
+                if c == "L":                           # L<type><value>E or L_Z<encoding>E
+                    if s.startswith("_Z", i + 1):
+                        depth += 1
+                        i += 3
+                    else:
+                        i = s.index("E", i) + 1
+                    continue
+                if c == "U" and s[i + 1] == "l":    # a closure type: Ul<parameters>E[<n>]_
+                    depth += 1
+                    i += 2
+                    continue
+                if c in "IZJFNX":
+                    depth += 1
+                elif c == "E":
+                    depth -= 1
+                i += 1
+        except (IndexError, ValueError):
+            return None
+        return i if i <= len(s) else None
+
+    @classmethod
+    def instantiation_member(cls, sym: str) -> tuple[str, int] | None:
+        """(`_ZTV` symbol, slot) of a member symbol of an instantiation of
+        INSTANTIATION_SLOTS: `_ZN[K]<class><member>E<params>`, the class
+        encoding the same string the vtable symbol carries after `_ZTV`."""
+        import re
+        m = re.match(r"^_ZNK?", sym)
+        if not m:
+            return None
+        rest = sym[m.end():]
+        tmpl = next((t for t in cls.INSTANTIATION_SLOTS if rest.startswith(t)), None)
+        if tmpl is None:
+            return None
+        i = cls.mangled_close(rest, len(tmpl))
+        if i is None:
+            return None
+        enc, member = rest[:i], rest[i:]
+        m2 = re.match(r"^(\d+)", member)
+        name = member[m2.end():m2.end() + int(m2.group(1))] if m2 else member[:2]
+        slot = cls.INSTANTIATION_SLOTS[tmpl].get(name)
+        return None if slot is None else ("_ZTV" + enc, slot)
+
+    def _matched_symbols(self) -> dict[str, int]:
+        """symbol -> address of every row of config/matched.<slug>.txt."""
+        if getattr(self, "_matched", None) is None:
+            self._matched = {}
+            p = config_path(self.root, self.version, "matched", "txt")
+            if p.exists():
+                for line in p.read_text().splitlines():
+                    s = line.split("#", 1)[0].split()
+                    if len(s) >= 2 and s[0] in self.func_by_name:
+                        self._matched[s[2] if len(s) > 2 else s[0]] = self.func_by_name[s[0]][0]
+        return self._matched
+
+    def instantiation_rows(self) -> dict[str, dict[int, tuple[str, int]]]:
+        """`_ZTV` symbol -> {slot: (row symbol, address)} over the claimed rows."""
+        out: dict[str, dict[int, tuple[str, int]]] = {}
+        for sym, addr in self._matched_symbols().items():
+            m = self.instantiation_member(sym)
+            if m is not None:
+                out.setdefault(m[0], {})[m[1]] = (sym, addr)
+        return out
+
+    def _slot_index(self) -> dict[int, list[int]]:
+        """text address -> every 8-aligned read-only-data address holding it."""
+        if getattr(self, "_slots", None) is None:
+            self._slots = {}
+            relro = next(p for p in self.loaded_segments() if p["type"] == self.PT_SCE_RELRO)
+            seg = self.data[relro["offset"]:relro["offset"] + relro["filesz"]]
+            lo, hi = self.text["vaddr"], self.text["vaddr"] + self.text["memsz"]
+            for i, (v,) in enumerate(struct.iter_unpack("<Q", seg[:len(seg) // 8 * 8])):
+                if lo <= v < hi:
+                    self._slots.setdefault(v, []).append(relro["vaddr"] + 8 * i)
+        return self._slots
+
+    def instantiation_vtable(self, sym: str, require_slot0: bool = True) -> int:
+        """The base vtable of an instantiation's `_ZTV` symbol: the one vtable
+        whose slots hold every claimed row of the instantiation at its slot,
+        with slot 0's row claimed and storing the vtable's address point
+        (tools/vtable_names.py --check runs this over every instantiation).
+        Raises ValueError saying which condition fails. `require_slot0`
+        false: the slots' agreement alone (tools/vtable_names.py --check of
+        an instantiation whose slot 0 is not claimed yet)."""
+        rows = self.instantiation_rows().get(sym, {})
+        if not rows:
+            raise ValueError(f"{sym}: an instantiation's vtable, and no claimed row is a member of it")
+        index = self._slot_index()
+        cands = None
+        for slot, (rsym, addr) in sorted(rows.items()):
+            here = {p - 0x10 - 8 * slot for p in index.get(addr, [])}
+            here = {x for x in here if self.read(x, 0x10) == bytes(0x10)}
+            cands = here if cands is None else cands & here
+        if not cands:
+            raise ValueError(f"{sym}: no base vtable holds its claimed rows in their slots ("
+                             + ", ".join(f"slot {k} 0x{a:x}" for k, (_s, a) in sorted(rows.items())) + ")")
+        if len(cands) > 1:
+            raise ValueError(f"{sym}: {len(cands)} base vtables hold its claimed rows in their slots ("
+                             + ", ".join(hex(x) for x in sorted(cands)) + "); slot 0's row decides")
+        addr = cands.pop()
+        if 0 not in rows and not require_slot0:
+            return addr
+        if 0 not in rows:
+            raise ValueError(f"{sym}: the vtable at 0x{addr:x} holds its claimed rows, but its slot-0 row "
+                             "is not claimed (slot 0 stores the vtable and is its evidence)")
+        from vtable_names import Walker
+        stored = Walker(self).vptr_stores(rows[0][1])
+        if addr + 0x10 not in stored:
+            raise ValueError(f"{sym}: its slot-0 row {rows[0][0]} stores "
                              f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")
         self.vtables[sym] = addr
         return addr

@@ -51,7 +51,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 ALLOW = REPO_ROOT / "tools" / "dev_native_allow.txt"
-SRC_RE = re.compile(r"^src/.*\.(c|cc|cpp|cxx|h|hpp|inl)$")
+SRC_RE = re.compile(r"^src/(.*\.(c|cc|cpp|cxx|h|hpp|inl)|include/[a-z_]+)$")  # include/<name>: a C++ library header
 
 RULES = [
     ("inline assembly", re.compile(r"(?<![A-Za-z0-9_])(__asm__|__asm|asm)\s*(volatile\s*|__volatile__\s*)?[\(\{]")),

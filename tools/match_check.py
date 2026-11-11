@@ -542,7 +542,11 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
         if r.width != 4 or r.offset + 4 > len(base_bytes):
             unverified += 1
             continue
-        expected = base.address_of(r.symbol) if base is not None else None
+        try:
+            expected = base.address_of(r.symbol) if base is not None else None
+        except ValueError as e:   # a vtable whose evidence fails (a D14 row, an instantiation's slot-0 row)
+            bad.append(f"{e} (reloc at +0x{r.offset:x})")
+            continue
         if expected is None:
             unverified += 1
             continue

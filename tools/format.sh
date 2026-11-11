@@ -17,7 +17,9 @@ if [[ "${1:-}" == "--check" ]]; then mode=check; shift; fi
 if [[ $# -gt 0 ]]; then
     files=("$@")
 else
-    mapfile -t files < <(cd "$ROOT" && git ls-files -co --exclude-standard 'src/*.c' 'src/*.cpp' 'src/*.h' 'src/*.hpp' 'src/*.inl')
+    # src/include/<name> without an extension: the C++ library headers (<new>, <functional>)
+    mapfile -t files < <(cd "$ROOT" && git ls-files -co --exclude-standard 'src/*.c' 'src/*.cpp' 'src/*.h' 'src/*.hpp' 'src/*.inl' &&
+        git ls-files -co --exclude-standard 'src/include/*' | grep -E '^src/include/[a-z_]+$')
 fi
 [[ ${#files[@]} -gt 0 ]] || exit 0
 cd "$ROOT"

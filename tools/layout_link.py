@@ -229,7 +229,10 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     constant-pool entry whose bytes occur more than once (a float constant
     such as pi sits in hundreds of pools) is placed where the base points,
     provided the bytes there are the entry's."""
-    s = base.address_of(r.symbol)
+    try:
+        s = base.address_of(r.symbol)
+    except ValueError as e:   # a vtable whose evidence fails (a D14 row, an instantiation's slot-0 row)
+        return None, str(e)
     if s is not None:
         return s, ""
     # a function in its own section (-ffunction-sections, docs/DECISIONS.md
