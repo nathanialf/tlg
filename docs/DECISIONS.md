@@ -2888,6 +2888,23 @@ through the GOT, that the boundary gets wrong; a matched row whose bytes differ 
 single-file module and the whole module for a reason other than another file's body; a link of
 the module that merges two different bodies under one name.
 
+**Addendum, 2026-11-11 (round 156C).** The module is not internalised: it is one module whose
+functions have external linkage unless the source says `static`. Evidence over the region
+(scratch c156/): 86 directly-called functions whose address is never taken keep a value in rax
+that no caller reads, and 6 one in xmm0 (six read by hand: a `mov eax, 1` or `mov al, 1` before
+the epilogue, callers that overwrite rax); a function with local linkage would have lost that
+return (SCCP.cpp:1676-1680, DeadArgumentElimination.cpp:501 of the compiler's source). The 12
+game thread-locals are general-dynamic at all 20,990 game sites and the executable exports
+nothing that would have kept them external. An internal rewrite of the gate's module, tried in
+scratch, deletes 1,551 matched functions whose callers are unwritten and changes 128. What had
+looked like a mark of internalisation is not one: an unused argument is dropped at the call
+sites of ANY function whose exact definition the module holds (DeadArgumentElimination.cpp:
+242-278), so FUN_00c831d0's first argument is unset at 378 of its 380 call sites once its body
+is written. A dropped return value does need local linkage: the nine accessors FUN_00a64740 to
+FUN_00a65bd0 are `static` in the source, and a file of src/game/ may hold a static with its
+callers from far-apart addresses (the game is one object in the base; a file boundary there is
+the tree's own).
+
 ## D51. Four more rules of the game compiler: protected thread-locals stay general-dynamic, the scheduler's operand order, the switch condition's width, ReassociateOps' operand order (2026-11-11)
 
 **Question.** D50 left a thread-local stand-in at default visibility because 4.0.0 gives a
