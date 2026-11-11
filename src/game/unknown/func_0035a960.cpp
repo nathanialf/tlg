@@ -7,10 +7,10 @@
  * (config/header_statics.base.txt), then one name from strings, in this order,
  * each registered with Name's destructor (0x1331800). */
 
-// NONMATCHING: the file's initializer (FUN_0035a960): the x mask's store is
-// `vmovdqa` in this build where the base has `vmovaps` (the movd-domain
-// class), and the last name's index store and `lea rsi` before the tail
-// call to __cxa_atexit are in the other order.
+// NONMATCHING: the file's initializer (FUN_0035a960): the last name's index
+// store and `lea rsi` before the tail call to __cxa_atexit are in the other
+// order (the parked order class: the base's instruction selection puts the
+// store first in a tail block).
 extern const char D_15ca420[7];
 
 Name D_57cf0c0(D_15ca420, false);

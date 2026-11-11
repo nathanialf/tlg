@@ -7,8 +7,7 @@
  * (config/header_statics.base.txt), then one empty name (index 0), registered with
  * Name's destructor (0x1331800). */
 
-// NONMATCHING: the file's initializer (FUN_004aa8c0): the x mask's store is
-// `vmovdqa` in this build where the base has `vmovaps` (the movd-domain
-// class), and the base registers the empty name first, before the constants,
-// with no frame (345 bytes against 337).
+// NONMATCHING: the file's initializer (FUN_004aa8c0): the base sets up the
+// empty name's registration first, before the constants, with no frame (345
+// bytes against 337).
 Name D_57d7338;

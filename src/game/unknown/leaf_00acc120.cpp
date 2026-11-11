@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
+#include "tlg_game_vector.h"
 
 /* derived names: slot 3 of the vtable at 0x16b3870 (its pointer at 0x16b3898),
  * the vtable stored by FUN_00abf490, returns the address of the object at
@@ -7,11 +8,29 @@
  * "AIMODE_SOL_PullHelm" (its hash from FUN_013bad90), stored by the file's
  * initializer at 0xacc29c, which registers Name's destructor (0x1331800) for it
  * with __cxa_atexit: a Name (tlg_game_name.h), looked up without interning
- * (`xor ecx, ecx`). Declared extern: the initializer's direct store makes it
- * the file's own (D17), and that initializer is not written. Class and method
+ * (`xor ecx, ecx`). The file's initializer FUN_00acc130 builds the vector
+ * constants of tlg_game_vector.h and the file's names, below. Class and method
  * unknown. */
 
-extern Name D_582c040;
+// NONMATCHING: the file's initializer (FUN_00acc130): the last name's index
+// store and `lea rsi` before the tail call to __cxa_atexit are in the other
+// order (the parked order class: the base's instruction selection puts the
+// store first in a tail block).
+extern const char D_14b31ee[5];
+extern const char D_14b31f3[6];
+extern const char D_15a7ed2[20];
+extern const char D_15a7ee6[30];
+extern const char D_15a7f04[18];
+extern const char D_15a7f16[17];
+extern const char D_15a7f27[15];
+
+Name D_582c040(D_15a7ed2, false);
+Name D_582c03c(D_14b31ee, false);
+Name D_582c180(D_14b31f3, false);
+Name D_582c038(D_15a7ee6, false);
+Name D_582c030(D_15a7f04, false);
+Name D_582c034(D_15a7f16, false);
+Name D_582c184(D_15a7f27, false);
 
 struct Object00acc120;
 

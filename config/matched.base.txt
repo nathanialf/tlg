@@ -6918,3 +6918,5 @@ FUN_0036abb0 src/game/unknown/func_0036a1b0.cpp __cxx_global_array_dtor.2
 FUN_00422da0 src/game/unknown/func_00421aa0.cpp __cxx_global_array_dtor.6
 FUN_004749b0 src/game/unknown/func_004730f0.cpp __cxx_global_array_dtor
 FUN_00a05070 src/game/unknown/func_00a04d30.cpp __cxx_global_array_dtor
+FUN_008503c0 src/game/unknown/func_008503c0.cpp _GLOBAL__sub_I_func_008503c0.cpp
+FUN_003399a0 src/game/unknown/func_003399a0.cpp _GLOBAL__sub_I_func_003399a0.cpp
