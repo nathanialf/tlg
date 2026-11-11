@@ -13506,6 +13506,14 @@ struct hknpMotionCinfo {
      * with no rotation (rows 3 and 32 of the vector constant table). */
     hknpMotionCinfo();
 
+    /* Set for a number of bodies moving as one (0x159130; the game calls it
+     * at 0xea9139): the first body's frame, the bodies' mass properties
+     * (one body's alone, several combined as elements placed in that
+     * frame) giving the centre of mass, the first body's orientation and
+     * velocities, the motion properties 1, no inverse mass or inertia.
+     * derived name. */
+    void FUN_00159130(const struct hknpBodyCinfo *bodyCinfos, int numBodyCinfos);
+
     u16 motionPropertiesId;
     hkBool enableDeactivation;
     float inverseMass;
@@ -22283,7 +22291,16 @@ struct hknpWorldContextPool /* derived name */
         /* The two triangles' shapes (0x167f3e). derived names. */
         InplaceTriangle00078160 *triangleShape0;
         InplaceTriangle00078160 *triangleShape1;
-        void *pointer220; /* derived name: cleared by the set-up */
+
+        /* Cleared by the set-up; the last sub-integration passes its
+         * data and its count at +0x10 on when the world's flag at +0x4f0
+         * is set (0x1990f6, 0x3ffaa). derived names. */
+        struct Record220 {
+            void *data;
+            u8 unknown8[8];
+            int count;
+        } *record220;
+
         /* What a solver stage task runs over, set before its stage
          * (0x18efa7). derived name. */
         void *solverStages;
@@ -24359,6 +24376,14 @@ struct hkPackfileHeader {
     u16 maxpredicate;
     u16 predicateArraySizePlusPadding;
 };
+
+/* The index of a pair of cells, the larger first (derived name): the
+ * splitter's pair table (0x605b0) and a solver stage's command list
+ * (0x19900c, a cell with itself). */
+static inline u32 cellPairIndex(u32 hi, u32 lo)
+{
+    return (u16(hi + 1) * hi) / 2 + lo;
+}
 
 /* The world's space splitter (derived names after the timer
  * "TtUpdateSpaceSplitter", 0x14c9b0a; the pointer at +0x1d8 of the world):

@@ -9,7 +9,7 @@ bool FUN_0018f030(hknpWorldContextPool::Context *context, SolverStages0018ef40 *
 {
     const u8 index3 = info->index3;
     const u8 index4 = info->index4;
-    const int lastSubStage = stages->config->numSubStages - 1;
+    const int lastSubStage = stages->config->numMicroSteps - 1;
     switch (info->type) {
     case 0:
         FUN_00198b40(context, stage, subStage, threadIndex, info->index1, info->index2, index3,

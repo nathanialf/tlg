@@ -14,7 +14,7 @@ void hknpWorldContextPool::Context::FUN_00167d50(hknpWorld *newWorld,
     materials = newWorld->materialLibrary->entries.elements.data;
     numMaterials = newWorld->materialLibrary->entries.elements.size;
     motionProperties = newWorld->motionPropertiesLibrary->entries.elements.data;
-    pointer220 = HK_NULL;
+    record220 = HK_NULL;
     pointer240 = HK_NULL;
 
     cache258 = new BlockCache(newWorld->persistentStreamAllocator);

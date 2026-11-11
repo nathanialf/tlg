@@ -8,12 +8,6 @@
  * relaxed to `lea`s. */
 extern u8 D_57c1660[17][17];
 
-/* The index of a pair of cells, the larger first (derived name). */
-static inline u32 cellPairIndex(u32 hi, u32 lo)
-{
-    return (u16(hi + 1) * hi) / 2 + lo;
-}
-
 // NONMATCHING: classified with D21's unswitch shape (docs/NOTES.md "Round
 // 64A"): the base holds two copies of the inner loop, one for a == 0, the
 // general copy keeping the dead (a | b) == 0 test and tri(a - 1) inside the

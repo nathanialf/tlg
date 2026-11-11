@@ -264,6 +264,18 @@ void FUN_00148400(const hknpWorldContextPool::Context *threadContext, const hknp
                   int numMotions, const hknpSolverInfo &solverInfo,
                   const hknpMotionProperties *properties);
 
+/* The solve's last sub-integration of the motions' velocities (0x148720;
+ * the solve at 0x3ffea and 0x199159), over the ranges of a stage: with the
+ * record at +0x220 of the context, its data, the first motion and its
+ * count when the world's flag at +0x4f0 is set, else nulls and zeros.
+ * derived name. */
+void FUN_00148720(const hknpSolverStep &step, SolverVelocity000cf140 *velocities,
+                  SolverSumVelocity000cf140 *sums, int numMotions, const void *argument5,
+                  const void *argument6, const hknpMotionProperties *properties,
+                  const SolverStages0018ef40 *stages,
+                  const hknpWorldContextPool::Context *threadContext, void *argument10,
+                  void *recordData, int firstMotion, int recordCount);
+
 /* The velocities of the motions from the second id on (0xcd5f0; the
  * solver's 0xcf21e and the solve task's 0x16e33d). derived name. */
 void FUN_000cd5f0(const hknpWorldContextPool::Context *threadContext, const hknpWorld *world,

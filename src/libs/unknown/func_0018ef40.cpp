@@ -12,7 +12,7 @@ void FUN_0018ef40(hknpSolverStageTask *self)
     hknpWorldContextPool::Context *context = pool->FUN_0016ff90();
     context->solverStages = self->stages;
     FUN_0018f030(context, self->stages, self->stage, self->subStage, context->index, &self->info);
-    if (self->subStage == self->stages->config->numSubStages - 1) {
+    if (self->subStage == self->stages->config->numMicroSteps - 1) {
         self->subStage = 0;
         self->stage++;
     } else {

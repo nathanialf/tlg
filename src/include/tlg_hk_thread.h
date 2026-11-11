@@ -1091,14 +1091,6 @@ class BroadPhaseCollideTask : public hknpTaskInterface /* derived name */
  * second vtable's slots 2 and 3 are the this-adjusting thunks of primary
  * slots 5 and 6, both too large to inline; the complete destructor is the
  * shared empty body 0x17de10. */
-/* What the solver's stage tasks run over (derived names): the world's
- * context pool at +0x10 and, at +0x28, an object whose int at +0xbc is the
- * number of sub-stages of a stage (0x18efd5). */
-struct SolverStageConfig0018ef40 /* derived name */
-{
-    u8 unknown0[0xbc];
-    int numSubStages; /* derived name */
-};
 
 /* A stage list of the solver (derived names): records of a stride at +0
  * from +0x18, each with a count at +0xc that the stage task's name prints
@@ -1120,14 +1112,39 @@ struct SolverStageList0018f140 /* derived name */
     const char *records;
 };
 
+struct SolverVelocity000cf140;    /* tlg_lib_unknown.h */
+struct SolverSumVelocity000cf140; /* tlg_lib_unknown.h */
+
+/* What the solver's stage tasks run over (derived names): the world's
+ * context pool at +0x10 and the solver's settings at +0x28 (their micro
+ * steps are a stage's sub-stages, 0x18efd5; the sub-integration's step is
+ * set up from them, 0x198fe2), the motions' ranges by a stage's index at
+ * +0x40 and the motions' velocities and sums at +0x60 and +0x88 (0x199014,
+ * 0x199062). The solve of 0x3fa40 builds one on its stack. */
 struct SolverStages0018ef40 /* derived name */
 {
+    /* The motions of a stage's index: the first and how many (0x199014,
+     * 0x19905e). */
+    struct MotionRange {
+        int first;
+        int count;
+    };
+
     u8 unknown0[0x10];
     hknpWorldContextPool *contextPool; /* derived name */
     u8 unknown18[0x10];
-    SolverStageConfig0018ef40 *config; /* derived name */
-    u8 unknown30[0x40];
+    const hknpSolverInfo *config; /* derived name */
+    u8 unknown30[0x10];
+    const MotionRange *motionRanges; /* derived name */
+    u8 unknown48[8];
+    const void *data50; /* derived name: the last sub-integration's fifth argument */
+    u8 unknown58[8];
+    SolverVelocity000cf140 *velocities; /* derived name */
+    u8 unknown68[8];
     SolverStageList0018f140 *lists[3]; /* derived name: by a stage's first index */
+    SolverSumVelocity000cf140 *sums;   /* derived name */
+    const void *data90;                /* derived name: the last sub-integration's sixth argument */
+    const hknpMotionProperties *motionProperties; /* derived name */
 };
 
 /* A stage's description (derived names): its type first (1 and 0 name the
