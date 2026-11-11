@@ -56,6 +56,12 @@ unsigned long _Stoul(const char *s, char **endptr, int base);
 /* Sony's C library extension: the usable size of a block from any of its
  * spaces (its NID verified as "sceLibcMspaceMallocUsableSize"). */
 size_t sceLibcMspaceMallocUsableSize(void *ptr);
+/* Sony's C library spaces: an allocation from one space (the NIDs verified
+ * as "sceLibcMspaceMalloc", "sceLibcMspaceCalloc", "sceLibcMspaceMemalign"). */
+typedef void *SceLibcMspace;
+void *sceLibcMspaceMalloc(SceLibcMspace space, size_t size);
+void *sceLibcMspaceCalloc(SceLibcMspace space, size_t count, size_t size);
+void *sceLibcMspaceMemalign(SceLibcMspace space, size_t boundary, size_t size);
 /* Dinkumware's case-mapping tables of the current locale, indexed by an
  * unsigned char (their NIDs verified as "_Getptolower" and "_Getptoupper";
  * the result is indexed directly, so the table itself, not a pointer to it). */

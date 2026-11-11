@@ -919,4 +919,7 @@ sceFiosSaveTimeStamp
 sceFiosFHGetOpenParams
 sceFiosDeleteSync
 sceLibcMspaceMallocUsableSize
+sceLibcMspaceMalloc
+sceLibcMspaceCalloc
+sceLibcMspaceMemalign
 _ZSt11_Xbad_allocv
