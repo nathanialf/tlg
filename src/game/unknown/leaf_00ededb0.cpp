@@ -1,0 +1,35 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_types.h"
+
+/* derived names: a callback (its address taken by FUN_00ee5d20, lea at
+ * 0xee6177): with the function pointer at +0x70 of the record at +0x90 set,
+ * returns what it gives for the object, the pointer at +0x0 of its argument,
+ * 0, the int at +0x8 and the pointer at +0x10, as a tail call; else 0. The
+ * types are not traced. */
+struct Object00ededb0; /* derived name */
+
+struct Argument00ededb0 { /* derived name */
+    void *unknown0;
+    int unknown8;
+    void *unknown10;
+};
+
+struct Record00ededb0 { /* derived name */
+    u8 unknown0[0x70];
+    int (*unknown70)(Object00ededb0 *self, void *first, int zero, int second, void *third);
+};
+
+struct Object00ededb0 { /* derived name */
+    u8 unknown0[0x90];
+    Record00ededb0 *unknown90;
+};
+
+// NONMATCHING: list-ilp order: the base loads the argument's fields in source order (+0x0 into r9 first, moved to rsi last; 36 bytes), the compile loads +0x10 and +0x8 first and +0x0 straight into rsi (33 bytes)
+int FUN_00ededb0(Object00ededb0 *self, const Argument00ededb0 *argument) /* derived name */
+{
+    int (*function)(Object00ededb0 *, void *, int, int, void *) = self->unknown90->unknown70;
+    if (function) {
+        return function(self, argument->unknown0, 0, argument->unknown8, argument->unknown10);
+    }
+    return 0;
+}

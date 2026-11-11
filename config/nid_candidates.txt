@@ -22,6 +22,7 @@ _ZdaPv
 _ZSt9terminatev
 _ZSt15get_new_handlerv
 _ZSt14_Xlength_errorPKc
+_ZSt19_Xbad_function_callv
 _ZTVN10__cxxabiv117__class_type_infoE
 _ZTVN10__cxxabiv120__si_class_type_infoE
 _ZTVN10__cxxabiv121__vmi_class_type_infoE
@@ -144,6 +145,8 @@ isnan
 isinf
 toupper
 tolower
+_Getptolower
+_Getptoupper
 isspace
 isdigit
 isalpha

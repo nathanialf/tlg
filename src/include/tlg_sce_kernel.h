@@ -5,8 +5,10 @@
 #ifndef TLG_SCE_KERNEL_H
 #define TLG_SCE_KERNEL_H
 
-struct SceKernelSemaObject;                 /* derived name */
-typedef SceKernelSemaObject *SceKernelSema; /* derived name: an 8-byte handle */
+struct SceKernelSemaObject;                           /* derived name */
+typedef SceKernelSemaObject *SceKernelSema;           /* derived name: an 8-byte handle */
+struct SceKernelEventFlagObject;                      /* derived name */
+typedef SceKernelEventFlagObject *SceKernelEventFlag; /* derived name: an 8-byte handle */
 
 /* The POSIX mutex of the kernel library: a handle, as FreeBSD's
  * pthread_mutex_t is a pointer to the library's own record (the critical
@@ -56,6 +58,7 @@ int pthread_create_name_np(pthread_t *thread, const pthread_attr_t *attr,
 int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr, int initCount,
                         int maxCount, const void *option);
 int sceKernelDeleteSema(SceKernelSema sema);
+int sceKernelDeleteEventFlag(SceKernelEventFlag ef);
 int sceKernelWaitSema(SceKernelSema sema, int needCount, unsigned int *timeout);
 int sceKernelSignalSema(SceKernelSema sema, int signalCount);
 int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);

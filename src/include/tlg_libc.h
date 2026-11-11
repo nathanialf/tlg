@@ -48,6 +48,11 @@ unsigned long _Stoul(const char *s, char **endptr, int base);
 /* Sony's C library extension: the usable size of a block from any of its
  * spaces (its NID verified as "sceLibcMspaceMallocUsableSize"). */
 size_t sceLibcMspaceMallocUsableSize(void *ptr);
+/* Dinkumware's case-mapping tables of the current locale, indexed by an
+ * unsigned char (their NIDs verified as "_Getptolower" and "_Getptoupper";
+ * the result is indexed directly, so the table itself, not a pointer to it). */
+const short *_Getptolower(void);
+const short *_Getptoupper(void);
 }
 
 #endif

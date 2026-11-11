@@ -15,6 +15,7 @@ extern "C" {
 void *malloc(size_t size);
 void free(void *p);
 int posix_memalign(void **memptr, size_t alignment, size_t size);
+[[noreturn]] void exit(int status); /* FreeBSD declares it __dead2 */
 }
 
 #endif

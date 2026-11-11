@@ -199,3 +199,11 @@ D_168cc30 src/libs/unknown/func_000079b0.cpp
 D_168ce70 src/libs/unknown/func_000079b0.cpp
 D_168cee0 src/libs/unknown/func_000079b0.cpp
 D_168cf40 src/libs/unknown/func_000079b0.cpp
+D_16bc8b0 src/game/unknown/leaf_00dbeaf0.cpp
+D_16bc9b0 src/game/unknown/leaf_00dbeb20.cpp
+D_16bcd00 src/game/unknown/leaf_00dc1200.cpp
+D_16bce20 src/game/unknown/leaf_00dc1c10.cpp
+D_16bced0 src/game/unknown/leaf_00dc1c40.cpp
+D_16bd0a0 src/game/unknown/leaf_00dc2d80.cpp
+D_16bd100 src/game/unknown/leaf_00dc2db0.cpp
+D_14d2e60 src/game/unknown/leaf_001a72a0.cpp

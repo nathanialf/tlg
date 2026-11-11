@@ -355,7 +355,7 @@ R9lA82OraNs T U func sceAppContentInitialize
 1D0H2KNjshE V V func powf
 1Pk0qZQGeWo V V func sscanf
 1TDo-ImqkJc V V obj ?
-1uJgoVq3bQU V V func ?
+1uJgoVq3bQU V V func _Getptolower
 24m4Z4bUaoY V V func ?
 2sWzhYqFH4E V V obj ?
 3+UPM-9E6xY V V func modff
@@ -393,7 +393,7 @@ LYo3GhIlB38 V V func ?
 Ls4tzzhimqQ V V func strcat
 LxcEU+ICu8U V V func ?
 Lyx2DzUL7Lc V V func ?
-MELi-cKqWq0 V V func ?
+MELi-cKqWq0 V V func _ZSt19_Xbad_function_callv
 MLWl90SFWNE V V func _ZdaPv
 MUjC4lbHrK4 V V func fflush
 MZO7FXyAPU8 V V func ?
@@ -476,7 +476,7 @@ q+9E0X3aWpU V V func ?
 q0F6yS-rCms V V func ?
 qWESlyXMI3E V V func ?
 rQFVBXp-Cxg V V func fseek
-rcQCUr0EaRU V V func ?
+rcQCUr0EaRU V V func _Getptoupper
 sUP1hBaouOw V V func ?
 tIhsqj0qsFE V V func free
 tQIo+GIPklo V V func _ZSt14_Xlength_errorPKc

@@ -1,0 +1,23 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_types.h"
+
+#include "tlg_format_table.h"
+
+/* derived names: stores the top five bits (27 to 31) of the format word the
+ * format number selects in the table at 0x14d2e60 and returns 0; returns
+ * 0x80d30000 without an output or for a number past 31. Called by
+ * FUN_001a44e0, FUN_001a5cb0, FUN_001ac870 and FUN_012fd5c0. The table's
+ * other readers (FUN_001a7060 to FUN_001a7120, the same test and another bit
+ * range each) belong in this file when they are written. */
+static const FormatWord001a72a0 D_14d2e60[32] = {
+#include "gen/D_14d2e60.inc"
+};
+
+int FUN_001a72a0(u32 *out, u32 format) /* derived name */
+{
+    if (!out || format > 31) {
+        return 0x80d30000;
+    }
+    *out = D_14d2e60[format].bits >> 27;
+    return 0;
+}
