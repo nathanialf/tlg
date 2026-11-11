@@ -3271,3 +3271,73 @@ commit's X86InstrSSE.td hunks reversed exactly. Twenty-one backports with D58's.
 
 **Trigger to revisit.** A game `vmovdqa` or `vpxor`-family instruction that only the integer
 domain of a preceding movd or movq explains.
+
+## D60. A conditional branch's uses give no edge to the scheduling region's exit: r286544 not taken (2026-11-11)
+
+**Question.** 0x83fef0 stores a value and then tests it (`mov [rbx+0x554], eax; test eax, eax;
+jne`); the installed compiler lifts the test above the store. No source form reaches it: the
+machine code is the same in 3.9.1 and 4.0.0 until the post-RA list scheduler.
+
+**Evidence.** Round 192B: every game draft compiled alone under the prebuilt 3.8.1 and 3.9.1;
+0x83fef0 and 0x1496a80 are equal under both and first differ from 4.0.0 at that scheduler. The
+change is r286544 (llvm-project 325cd2c98ab6, 2016-11-11, first release 4.0): the branch's
+uses get an edge to ExitSU and macro fusion walks ExitSU's predecessors and zeroes the fused
+edge's latency. Both code hunks taken back: every matched row's line identical to the installed
+compiler's (3,965 of 4,010 resolvable rows in both), and 0x83fef0, 0x1380640, 0x1380850,
+0x1496a80 equal; the supervisor's own build of the unconditional form and sweep gave the same
+(s194).
+
+**Decision.** `tools/patches/llvm-4.0.0-condjumpdeps-01-no-exit-edge-for-branch-uses.patch`.
+The commit's signature changes stay.
+
+**Trigger to revisit.** A game block where the flag setter is lifted above an independent
+store or load before its conditional branch.
+
+## D61. Block placement duplicates no tail: `-tail-dup-placement=false` (2026-11-11)
+
+**Question.** D51 held r283934 (tail duplication during MachineBlockPlacement, first release
+4.0) on conflicting evidence: 0xebbb70 said the base lacks it, 25 guard-and-latch pairs of the
+base looked like its copies.
+
+**Evidence.** Round 192B: with the pass's own option off every matched row's line is identical
+and four drafts become equal (0x4a2c80, 0x8455a0, 0xebbb70, 0xecc810). Round 194B: none of the
+25 pairs, and none of the 10 longer unmerged pairs D51 names, lies in a matched row or a draft;
+the two drafts that show the base's merged tests need the option off; placement duplication
+copies at most two instructions (MachineBlockPlacement.cpp:139-144 of 4.0.0), so it cannot
+have made the 10 longer pairs: whatever keeps those unmerged would keep the 25 unmerged too.
+
+**Decision.** `-mllvm -tail-dup-placement=false` on the `src/game/` line of
+`config/flags.base.txt`: the pass's upstream option, a per-prefix flag as in D55.
+
+**Not explained.** The 35 pairs the branch folder's tail merging would merge and the base
+keeps apart; no function holding one is written yet.
+
+**Trigger to revisit.** A game function, written whole, whose base bytes hold a two-instruction
+tail copied into predecessors that only placement duplication produces.
+
+## D62. The anti-dependency breaker skips a def of a kept register: r270935 not taken (2026-11-11)
+
+**Question.** 0xdb00e0 and 0xdafdc0 load the script's pc into r8d and edi; the installed
+compiler uses esi. Their notes blamed the allocator; round 194B showed the allocation is the
+same and the register is renamed after it, by the post-RA scheduler's critical
+anti-dependency breaker.
+
+**Evidence.** Equal under the prebuilt 3.8.1 only. r270935 (llvm-project 05aeeb5cf19e,
+2016-05-26, first release 3.9) made ScanInstruction process a def of a register in KeepRegs
+instead of skipping it. With that hunk reversed exactly (round 196B): no matched row's line
+changes, both functions equal the base, and they are the only two of the module's 4,679
+functions that change. `-break-anti-dependencies=none` and `=all` leave both unequal.
+
+**Decision.** `tools/patches/llvm-4.0.0-antidepkeep-01-kept-register-def-skipped.patch`.
+Twenty-three backports with D60's. This is the first rule where the base agrees with 3.8 and
+not 3.9; D6's addendum (the base is a fork, not a release) stands.
+
+**Held beside it (round 196B), one partial witness each:** clang r282453 (an array
+subscript's index emitted before its base: 0xc19ab0, 1 of 23 to 5 of 24, one function of 4,680
+changed), r276008 (`returned` inferred on an argument: 0xeeac70, 0 of 32 to 17 of 22, one
+function changed), and a condition with no upstream state (D49's load test not applied to a
+floating-point select: 0x1395c30 and 0x1395e40 equal, no row changed). Each waits for a second
+witness.
+
+**Trigger to revisit.** A post-RA rename in a game function that only r270935's bookkeeping
+gives.

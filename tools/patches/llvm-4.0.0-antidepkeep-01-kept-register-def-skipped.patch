@@ -1,0 +1,53 @@
+llvm-4.0.0 backport patch: the anti-dependency breaker skips a def of a register it must keep (PS4)
+
+This patch CHANGES CODE GENERATION after register allocation, where the
+post-RA scheduler's critical anti-dependency breaker (btver2 enables that
+scheduler) renames a register. r270935 (Mitch Bodart, 2016-05-26,
+"[CodeGen] Fix problem with X86 byte registers exposed by r268845",
+llvm-project 05aeeb5cf19e, first release LLVM 3.9) made
+CriticalAntiDepBreaker::ScanInstruction process a def of a register already
+in KeepRegs (its def index, kill index and class reset, the register kept)
+where earlier releases skipped such a def. With it the pc load of
+0xdb00e0 and 0xdafdc0 is renamed to esi; the prebuilt 3.8.1 and the base
+rename it to r8d and edi (round 194B: the scheduler's input is identical;
+`-break-anti-dependencies=none` and `=all` both stay unequal; no source form
+reaches a rename made after allocation). With the hunk reversed exactly
+those two functions compile to the base's bytes and they are the only two
+of the module's 4,679 functions that change; no matched game row changes
+(round 196B's module sweep).
+
+diff -ru a/lib/CodeGen/CriticalAntiDepBreaker.cpp b/lib/CodeGen/CriticalAntiDepBreaker.cpp
+--- a/lib/CodeGen/CriticalAntiDepBreaker.cpp
++++ b/lib/CodeGen/CriticalAntiDepBreaker.cpp
+@@ -260,24 +260,25 @@
+       if (Reg == 0) continue;
+       if (!MO.isDef()) continue;
+ 
++      // PS4: a def of a register already in KeepRegs is skipped, as before
++      // r270935; its Keep flag and the def bookkeeping of a kept register are
++      // not taken.
++      // If we've already marked this reg as unchangeable, carry on.
++      if (KeepRegs.test(Reg)) continue;
++
+       // Ignore two-addr defs.
+       if (MI.isRegTiedToUseOperand(i))
+         continue;
+ 
+-      // If we've already marked this reg as unchangeable, don't remove
+-      // it or any of its subregs from KeepRegs.
+-      bool Keep = KeepRegs.test(Reg);
+-
+       // For the reg itself and all subregs: update the def to current;
+       // reset the kill state, any restrictions, and references.
+       for (MCSubRegIterator SRI(Reg, TRI, true); SRI.isValid(); ++SRI) {
+         unsigned SubregReg = *SRI;
+         DefIndices[SubregReg] = Count;
+         KillIndices[SubregReg] = ~0u;
++        KeepRegs.reset(SubregReg);
+         Classes[SubregReg] = nullptr;
+         RegRefs.erase(SubregReg);
+-        if (!Keep)
+-          KeepRegs.reset(SubregReg);
+       }
+       // Conservatively mark super-registers as unusable.
+       for (MCSuperRegIterator SR(Reg, TRI); SR.isValid(); ++SR)

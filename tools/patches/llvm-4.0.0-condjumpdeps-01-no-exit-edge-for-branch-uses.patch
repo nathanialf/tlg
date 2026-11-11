@@ -1,0 +1,104 @@
+llvm-4.0.0 backport patch: a conditional branch's uses give no edge to the region's exit (PS4)
+
+This patch CHANGES CODE GENERATION for a block that ends in a conditional
+branch: the schedulers built on ScheduleDAGInstrs (the MachineScheduler and
+the post-RA list scheduler btver2 enables) no longer hold the flag setter
+against the exit node. r286544 (Matthias Braun, 2016-11-11,
+"ScheduleDAGInstrs: Add condjump deps to addSchedBarrierDeps()",
+llvm-project 325cd2c98ab6, D25140, first release LLVM 4.0) added the
+branch's uses to ExitSU and rewrote macro fusion to walk ExitSU's
+predecessors and set the fused edge's latency to zero; with it the post-RA
+scheduler lifts `test eax, eax` above an independent store (`mov
+[rbx+0x554], eax`), where 3.9.1 and the base keep the store first
+(0x83fef0: the machine code is the same in both releases until that pass;
+round 192B). This patch takes back both code hunks: addSchedBarrierDeps
+gives ExitSU the uses of a call or barrier only, and macro fusion looks at
+the units with no successors that write a register the branch reads. The
+signature changes of the commit (createMacroFusionDAGMutation without TRI)
+are kept; they do not change code. With this patch 0x83fef0, 0x1380640,
+0x1380850 and 0x1496a80 compile to the base's bytes and no matched game row
+changes (the module sweep of round 192B, repeated by the supervisor with
+this unconditional form).
+
+diff -ru a/lib/CodeGen/MachineScheduler.cpp b/lib/CodeGen/MachineScheduler.cpp
+--- a/lib/CodeGen/MachineScheduler.cpp
++++ b/lib/CodeGen/MachineScheduler.cpp
+@@ -1579,12 +1579,28 @@
+   if (!Branch)
+     return;
+ 
+-  for (SDep &PredDep : ExitSU.Preds) {
+-    if (PredDep.isWeak())
++  // PS4: the SUnits with no successors that write a register the branch
++  // reads, as before r286544; its walk over ExitSU's predecessors is not taken.
++  const TargetRegisterInfo &TRI = *DAG->TRI;
++  for (SUnit &SU : DAG->SUnits) {
++    // SUnits with successors can't be schedule in front of the ExitSU.
++    if (!SU.Succs.empty())
+       continue;
+-    SUnit &SU = *PredDep.getSUnit();
+-    MachineInstr &Pred = *SU.getInstr();
+-    if (!TII.shouldScheduleAdjacent(Pred, *Branch))
++    // We only care if the node writes to a register that the branch reads.
++    MachineInstr *Pred = SU.getInstr();
++    bool HasDataDep = false;
++    for (const MachineOperand &MO : Branch->uses()) {
++      if (!MO.isReg() || !MO.readsReg())
++        continue;
++      if (Pred->modifiesRegister(MO.getReg(), &TRI)) {
++        HasDataDep = true;
++        break;
++      }
++    }
++    if (!HasDataDep)
++      continue;
++
++    if (!TII.shouldScheduleAdjacent(*Pred, *Branch))
+       continue;
+ 
+     // Create a single weak edge from SU to ExitSU. The only effect is to cause
+@@ -1597,16 +1613,8 @@
+     (void)Success;
+     assert(Success && "No DAG nodes should be reachable from ExitSU");
+ 
+-    // Adjust latency of data deps between the nodes.
+-    for (SDep &PredDep : ExitSU.Preds) {
+-      if (PredDep.getSUnit() == &SU)
+-        PredDep.setLatency(0);
+-    }
+-    for (SDep &SuccDep : SU.Succs) {
+-      if (SuccDep.getSUnit() == &ExitSU)
+-        SuccDep.setLatency(0);
+-    }
+-
++    // PS4: no latency set to zero between the fused nodes, as before r286544;
++    // its latency adjustment is not taken.
+     DEBUG(dbgs() << "Macro Fuse SU(" << SU.NodeNum << ")\n");
+     break;
+   }
+diff -ru a/lib/CodeGen/ScheduleDAGInstrs.cpp b/lib/CodeGen/ScheduleDAGInstrs.cpp
+--- a/lib/CodeGen/ScheduleDAGInstrs.cpp
++++ b/lib/CodeGen/ScheduleDAGInstrs.cpp
+@@ -247,8 +247,10 @@
+ void ScheduleDAGInstrs::addSchedBarrierDeps() {
+   MachineInstr *ExitMI = RegionEnd != BB->end() ? &*RegionEnd : nullptr;
+   ExitSU.setInstr(ExitMI);
+-  // Add dependencies on the defs and uses of the instruction.
+-  if (ExitMI) {
++  // PS4: only a call or barrier's uses, else the successors' live-ins, as
++  // before r286544; its conditional-jump uses are not taken.
++  bool AllDepKnown = ExitMI && (ExitMI->isCall() || ExitMI->isBarrier());
++  if (ExitMI && AllDepKnown) {
+     for (const MachineOperand &MO : ExitMI->operands()) {
+       if (!MO.isReg() || MO.isDef()) continue;
+       unsigned Reg = MO.getReg();
+@@ -258,8 +260,7 @@
+         addVRegUseDeps(&ExitSU, ExitMI->getOperandNo(&MO));
+       }
+     }
+-  }
+-  if (!ExitMI || (!ExitMI->isCall() && !ExitMI->isBarrier())) {
++  } else {
+     // For others, e.g. fallthrough, conditional branch, assume the exit
+     // uses all the registers that are livein to the successor blocks.
+     for (const MachineBasicBlock *Succ : BB->successors()) {
