@@ -3179,9 +3179,15 @@ renaming internal names in the bitcode before the link (rewriting the compiler's
 order of the owner's references alone (order is not a proof); the same path for developer-named
 statics (D50's addendum: the source can name them).
 
-**Extension.** Clang's other generated internals (`__cxx_global_var_init`, `_GLOBAL__sub_I_`)
-may take the same path under the same two-fact proof when a static-initializer owner is
-written; each added name pattern is listed here with its first rows.
+**Extension (round 181A).** `COMPILER_LOCAL` also covers `__cxx_global_var_init[.N]` and
+`_GLOBAL__sub_I_<file>`. What a function reaches is followed through the compiler-named
+functions it calls; an initializer the pipeline inlined is passed through to its referrer; twins
+are compared within one kind of name; a `_GLOBAL__sub_I_` is proven by being a target of the
+module's constructor table (`.ctors` on x86_64-scei-ps4). Within one unit `.N` comes from one
+counter shared by initializers and helpers, so a row takes its `.N` from the unit's symbols,
+never by counting. First rows: the 25 helpers of twenty static-initializer files
+(FUN_00685a40's file and nineteen others); the fault test (two helper aliases swapped: 100 of
+100 bytes equal, target wrong, base 0x5829730 against 0x58296a0) was rerun for the new names.
 
 **Trigger to revisit.** A compiler-named function that reaches no uniquely named object of its
 unit, or two that reach the same set.
