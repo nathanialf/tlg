@@ -26,6 +26,13 @@
 #   4. Configure (CMake + ninja, Release, X86 only, no assertions), build the
 #      `clang` target and install it with its resource headers
 #      (lib/clang/<version>/include, which -nostdlibinc relies on for xmmintrin.h).
+#   5. For 4.0.0, build `llvm-link` from the same tree and configuration and
+#      install it into tools/cc/llvm-<version>-src-tools/bin: the game region
+#      is linked as one module before its -O2 pipeline (tools/game_module.py,
+#      docs/DECISIONS.md D50). It sits beside the prefix, not in it, so the
+#      prefix stays the compiler alone that --verify compares with the
+#      prebuilt release. An install whose compiler is current but which has no
+#      llvm-link (one made before D50) gets it from the existing build tree.
 #
 # Skipped when the install exists, is newer than every patch and was built
 # from the same patch set (hashes in <prefix>/.build-stamp, each line marked
@@ -67,6 +74,10 @@ HOST_CXXFLAGS[3.3]='-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-chec
 VERIFY_SUBST[4.0.0]='-mllvm -disable-post-ra|-mllvm -pre-RA-sched=list-ilp'
 VERIFY_SUBST[3.3]='-fstack-protector-strong|-fstack-protector'
 
+# The IR tools a version's line needs beside its compiler (step 5)
+declare -A EXTRA_TOOLS
+EXTRA_TOOLS[4.0.0]='llvm-link'
+
 VER=4.0.0
 if [[ $# -gt 0 && "$1" != -* ]]; then VER="$1"; shift; fi
 [[ -n "${LLVM_SHA[$VER]:-}" ]] || { echo "build_llvm: unknown version $VER (known: ${!LLVM_SHA[*]})" >&2; exit 2; }
@@ -80,6 +91,7 @@ SRC="$SRCROOT/llvm-$VER.src"
 BLD="$SRCROOT/build-$VER"
 PREFIX="$ROOT/tools/cc/llvm-$VER-src"
 PREBUILT="$ROOT/tools/cc/llvm-$VER"
+TOOLS_DIR="$ROOT/tools/cc/llvm-$VER-src-tools"
 JOBS="${JOBS:-3}"
 NINJA="$ROOT/.venv/bin/ninja"
 [[ -x "$NINJA" ]] || NINJA="$(command -v ninja || true)"
@@ -89,7 +101,7 @@ for a in "$@"; do
     case "$a" in
         --verify) do_verify=1 ;;
         --force) force=1 ;;
-        -h|--help) sed -n '2,46p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,52p' "$0"; exit 0 ;;
         *) echo "usage: $0 [<version>] [--verify] [--force]" >&2; exit 2 ;;
     esac
 done
@@ -127,6 +139,26 @@ patch_list() {
     for p in "${HOST_PATCHES[@]}"; do echo "host     $(sha256sum "$p" | sed "s|$ROOT/||")"; done
     for p in "${BACKPORT_PATCHES[@]}"; do echo "backport $(sha256sum "$p" | sed "s|$ROOT/||")"; done
     echo "cxxflags ${HOST_CXXFLAGS[$VER]:-}"
+}
+
+tools_up_to_date() {  # every extra tool installed, from the same patch set
+    local t
+    [[ -n "${EXTRA_TOOLS[$VER]:-}" ]] || return 0
+    for t in ${EXTRA_TOOLS[$VER]}; do [[ -x "$TOOLS_DIR/bin/$t" ]] || return 1; done
+    [[ -f "$TOOLS_DIR/.build-stamp" && "$(cat "$TOOLS_DIR/.build-stamp")" == "$(patch_list)" ]]
+}
+install_tools() {  # build the extra tools in $BLD and install them into $TOOLS_DIR
+    local t
+    [[ -n "${EXTRA_TOOLS[$VER]:-}" ]] || return 0
+    echo "==> building ${EXTRA_TOOLS[$VER]} (-j$JOBS)"
+    # shellcheck disable=SC2086
+    "$NINJA" -C "$BLD" -j"$JOBS" ${EXTRA_TOOLS[$VER]} >> "$BLD/ninja.log" 2>&1 ||
+        { grep -E '^FAILED|error:' "$BLD/ninja.log" | head -n 40 >&2; echo "build_llvm: build failed, log $BLD/ninja.log" >&2; exit 1; }
+    rm -rf "$TOOLS_DIR"
+    mkdir -p "$TOOLS_DIR/bin"
+    for t in ${EXTRA_TOOLS[$VER]}; do cp -a "$BLD/bin/$t" "$TOOLS_DIR/bin/"; done
+    patch_list > "$TOOLS_DIR/.build-stamp"
+    echo "==> ${EXTRA_TOOLS[$VER]} at $TOOLS_DIR/bin"
 }
 
 build() {
@@ -198,6 +230,7 @@ build() {
     [[ -x "$PREFIX/bin/clang" && -f "$PREFIX/lib/clang/$VER/include/xmmintrin.h" ]] ||
         { echo "build_llvm: install incomplete under $PREFIX" >&2; exit 1; }
     patch_list > "$PREFIX/.build-stamp"
+    install_tools
     echo "==> LLVM $VER (from source) at $PREFIX in $(( (SECONDS - t0) / 60 )) min ($("$PREFIX/bin/clang" --version | head -n1))"
 }
 
@@ -275,6 +308,9 @@ verify() {
 if [[ $do_build == 1 ]]; then
     if [[ $force == 0 ]] && up_to_date; then
         echo "==> LLVM $VER (from source) already at $PREFIX, newer than the patches"
+        if ! tools_up_to_date; then
+            if [[ -f "$BLD/build.ninja" ]]; then install_tools; else build; fi
+        fi
     else
         build
     fi

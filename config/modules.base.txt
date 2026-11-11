@@ -1,0 +1,55 @@
+# The game module's boundary: who owns each address of the executable's data, for the
+# stand-in definitions of tools/game_module.py (an object a game source declares and no
+# game file defines is defined, protected and zero-initialised, when its address is `game`;
+# else it stays a declaration). Written by tools/module_boundary.py from the base (its
+# docstring has the method: a census of every RIP-relative operand of the code by the
+# region of the instruction, a cut per data area, the exceptions above the cut carved out);
+# regenerated, never edited; `tools/module_boundary.py --check` verifies it.
+# census: 440278 RIP-relative operands, GOT 0x16d7fc0..0x16d9148, PLT 0x14b00d8..0x14b2048
+#   rodata 0x14b2048..0x168a5ec: 53328 targets, 50677 game-only, 2608 with no game site, 43 both
+#   relro  0x168c000..0x16dc000: 3109 targets, 2325 game-only, 776 with no game site, 8 both
+#          cut after 0x16a75d0: 1 game-only target(s) below it stay the library's, 2 above it are carved out
+#   data   0x16dc000..0x57af288: 377 targets, 293 game-only, 83 with no game site, 1 both
+#          cut after 0x16dcbd0: 0 game-only target(s) below it stay the library's, 2 above it are carved out
+#   bss    0x57af288..0x5ae2d10: 57323 targets, 54510 game-only, 2810 with no game site, 3 both
+#          cut after 0x57c9040: 0 game-only target(s) below it stay the library's, 0 above it are carved out
+#   GOT    23 slot(s) hold a RELATIVE target; 3 data object(s) reached through them
+#   tls    0x16dc060..0x16dc0d0: 15 variables accessed, 3 by the library
+# <lo> <hi> <owner> <area> [note]
+0x14b2048 0x14b2060 game rodata interleaved (155 runs of game and non-game targets)
+0x14b2060 0x14b2400 lib rodata 0x14b2060 reached through the GOT slot 0x16d80d8 by game+lib code
+0x14b2400 0x168a5ec game rodata interleaved (155 runs of game and non-game targets)
+0x168c000 0x16a75d1 lib relro
+0x16a75d1 0x16c8219 game relro
+0x16c8219 0x16c82b1 lib relro 0x16c82b0 referenced only by library code (4 site(s), first 0x17ebad)
+0x16c82b1 0x16c9061 lib relro 0x16c9060 referenced only by library code (3 site(s), first 0x17ebf0)
+0x16c9061 0x16d7fc0 game relro
+0x16d7fc0 0x16d9148 got relro the GOT
+0x16d9148 0x16dc000 game relro
+0x16dc000 0x16dc048 crt data PT_SCE_PROCPARAM
+0x16dc048 0x16dc060 lib data
+0x16dc060 0x16dc068 game tls tp -112: accessed by game
+0x16dc068 0x16dc070 lib tls tp -104: accessed by lib
+0x16dc070 0x16dc078 lib tls tp -96: accessed by game+lib
+0x16dc078 0x16dc080 lib tls tp -88: accessed by game+lib
+0x16dc080 0x16dc088 game tls tp -80: accessed by game
+0x16dc088 0x16dc089 game tls tp -72: accessed by game
+0x16dc089 0x16dc090 game tls tp -71: accessed by game
+0x16dc090 0x16dc098 game tls tp -64: accessed by game
+0x16dc098 0x16dc0a0 game tls tp -56: accessed by game
+0x16dc0a0 0x16dc0a8 game tls tp -48: accessed by game
+0x16dc0a8 0x16dc0b0 game tls tp -40: accessed by game
+0x16dc0b0 0x16dc0b8 game tls tp -32: accessed by game
+0x16dc0b8 0x16dc0c0 game tls tp -24: accessed by game
+0x16dc0c0 0x16dc0c8 game tls tp -16: accessed by game
+0x16dc0c8 0x16dc0d0 game tls tp -8: accessed by game
+0x16dc0d0 0x16dcbd1 lib data
+0x16dcbd1 0x57adf69 game data
+0x57adf69 0x57af269 crt data 0x57af268 referenced only by CRT code (1 site(s), first 0x31)
+0x57af269 0x57af281 crt data 0x57af280 referenced only by CRT code (1 site(s), first 0x149ad50)
+0x57af281 0x57af288 game data
+0x57af288 0x57af300 lib bss 0x57af288 reached through the GOT slot 0x16d80b0 by crt code
+0x57af300 0x57b77f0 lib bss
+0x57b77f0 0x57b7840 lib bss 0x57b77f0 reached through the GOT slot 0x16d80e0 by lib code
+0x57b7840 0x57c9041 lib bss
+0x57c9041 0x5ae2d10 game bss

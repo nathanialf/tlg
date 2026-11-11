@@ -4,7 +4,9 @@ check_elf.py: the match gate and the progress files.
 
   --gate      Every row of config/matched.<slug>.txt (`<function> <tu> [<symbol>]`)
               is compiled (tools/compile_cpp.sh, or the object ninja built under
-              build/<slug>/obj/) and compared with the base executable at the
+              build/<slug>/obj/; a game row's object is the one game module,
+              build/<slug>/game/module.o, tools/game_module.py, and its unit
+              must define the row's symbol) and compared with the base executable at the
               function's address (tools/match_check.py): every instruction
               equal, the linker-filled fields masked and then checked for real
               where the base can place the symbol. Then the whole text segment
@@ -101,7 +103,7 @@ def check_all() -> tuple[dict[str, dict], bool]:
             print(f"check_elf: {tu} failed to compile", file=sys.stderr)
             ok = False
             continue
-        objfuncs = mc.object_functions(obj)
+        objfuncs = mc.tu_functions(tu, obj, VERSION)
         for fn, sym in pairs:
             if fn not in funcs:
                 print(f"check_elf: {fn} is not a row of config/functions.{VERSION}.txt", file=sys.stderr)
@@ -109,7 +111,8 @@ def check_all() -> tuple[dict[str, dict], bool]:
                 continue
             sym = mc.resolve_symbol(objfuncs, sym and sym or fn, sym) or sym
             if sym not in objfuncs:
-                print(f"check_elf: {tu} does not define {sym} (for {fn})", file=sys.stderr)
+                print(f"check_elf: {tu} does not define {sym} (for {fn}){mc.renamed_note(tu, sym, VERSION)}",
+                      file=sys.stderr)
                 ok = False
                 continue
             addr, size = funcs[fn]
@@ -133,7 +136,7 @@ def gate_cache_key() -> str:
         p = config_path(REPO_ROOT, VERSION, stem, "txt")
         h.update(p.read_bytes() if p.exists() else b"")
     for tu in sorted({tu for _fn, tu, _sym in load_matched()}):
-        obj = build_dir(REPO_ROOT, VERSION) / "obj" / (tu + ".o")
+        obj = mc.object_path(tu, VERSION)
         st = obj.stat() if obj.exists() else None
         h.update(f"{tu} {st.st_size if st else -1} {st.st_mtime_ns if st else -1}\n".encode())
     return h.hexdigest()

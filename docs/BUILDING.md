@@ -34,7 +34,7 @@ Everything else is fetched by `tools/setup.sh` into `tools/ext/` and
 | .NET 8 runtime (`dotnet-install.sh`, user-local) | `tools/ext/dotnet/` | runs PkgTool.Core |
 | LibOrbisPkg PkgTool.Core 0.2.231, framework-dependent build | `tools/ext/pkgtool/` | extracts the package (the self-contained Linux build bundles a 2020 .NET Core 3 that needs libssl 1.x and ICU, neither on a current host) |
 | LLVM 3.3 and 4.0.0 prebuilt + Debian's `libtinfo5` (`tools/fetch_llvm.sh`) | `tools/cc/llvm-3.3/`, `tools/cc/llvm-4.0.0/`, `tools/cc/shim/` | the game region's compiler, and the 3.3 release the library region's from-source build is verified against (`docs/TARGETS.md`); other releases for `tools/compiler_probe.sh` on demand |
-| LLVM 3.3, 3.6.2 and 4.0.0 built from source (`tools/build_llvm.sh <version>`; 3.3 is required, about 15 minutes on 3 cores; 3.6.2 and 4.0.0 optional, about 20 and 40) | `tools/cc/llvm-<version>-src/` | verified byte-identical to the prebuilt releases (`--verify`); 3.3 then carries the twelve backports the library prefix compiles with (`cxx=3.3-src`, D20, D26, D27, D28, D29, D31, D33, D35, D36; no available_externally vtable for a class whose key function another unit defines, r189852, D37). Pins: llvm-3.3.src.tar.gz `68766b1e70d05a25e2f502e997a3cb3937187a3296595cf6e0977d5cd6727578`, cfe-3.3.src.tar.gz `b1b55de4ab3a57d3e0331a83e0284610191c77d924e3446498d9113d08dfb996` (signed by Bill Wendling, key C135 49BB 82A1 7681 BF71 43C2 B446 8DF4 E95C 63DC); host build `-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-checks` with GCC 14 (the last keeps the `this == 0` tests of `Value::print` and `Type::print`, which `-print-after-all` relies on); host patch `llvm-3.3-host-01-llvm-build-python3` (the configure-time tool to Python 3); backports `llvm-3.3-sspstrong-01-fstack-protector-strong` (clang 3.5's `-fstack-protector-strong` frontend, changes code only under that flag) and `llvm-3.3-sspnop-01-stack-chk-fail-nop` (one nop after every call to `__stack_chk_fail`, as the PS4 compiler emits it, D26; changes code only where a canary is emitted) and `llvm-3.3-storemerge-01-single-merge-per-visit` (one store merge per visit of a store, the 3.2 release's `visitSTORE`, D27; changes code only where one chain holds more than one mergeable run) and `llvm-3.3-jumptable-01-table-before-function-end` (a function's jump tables printed before its end label, so its size and unwind range cover them, D28; changes only functions with a switch table) and `llvm-3.3-bextr-01-and-shift-mask-combine` (upstream b25f0f5538fb of 2013-09-02: `bextr` from a shifted value masked with a contiguous mask, D29; changes only such extracts on a BMI target) and `llvm-3.3-scalarfp-01-lane0-op-insert` (upstream r196925 of 2013-12-10: a scalar add, sub, mul or div on lane 0 followed by its insert selects the SSE scalar instruction, D31; changes only such lane-0 operations) and `llvm-3.3-memdepdbg-01-dbg-before-scan-limit` (upstream r194646 of 2013-11-13: a debug intrinsic is skipped before the memory dependence scan's block limit is spent, D33; changes only `-g` compiles whose scan meets debug intrinsics) and `llvm-3.3-inlinedbg-01-dbg-not-counted-in-vector-bonus` (upstream r200609 of 2014-02-01: a debug intrinsic is not counted among the instructions the inline cost's vector bonus is decided on, D33; changes only `-g` compiles where that count decides an inline) and `llvm-3.3-ssplayout-01-protector-layout-analysis` (upstream r191570, r193653 and r197653 of 2013-09-27 to 2013-12-19: the stack protector pass classifies the allocas it protects and the prolog and epilog inserter lays the protected frame out from that classification, D35; changes only functions with a canary) and `llvm-3.3-ssplayout-02-sspstrong-layout-rules` (upstream r200601 of 2014-02-01 and r199684 of 2014-01-20: large arrays, then small arrays, then address-taken objects after the guard, the classification kept when stack coloring merges slots, D35; changes only functions with a canary) and `llvm-3.3-looprotate-01-no-rotation-after-latch-fold` (the pre-state of upstream r181230 of 2013-05-06 for one condition: a loop whose latch LoopRotate has just folded into the final exit is left unrotated, D36; changes only such loops) |
+| LLVM 3.3, 3.6.2 and 4.0.0 built from source (`tools/build_llvm.sh <version>`; 3.3 is required, about 15 minutes on 3 cores; 3.6.2 and 4.0.0 optional, about 20 and 40) | `tools/cc/llvm-<version>-src/` (4.0.0's `llvm-link` in `tools/cc/llvm-4.0.0-src-tools/bin/`, for the game module) | verified byte-identical to the prebuilt releases (`--verify`); 3.3 then carries the twelve backports the library prefix compiles with (`cxx=3.3-src`, D20, D26, D27, D28, D29, D31, D33, D35, D36; no available_externally vtable for a class whose key function another unit defines, r189852, D37). Pins: llvm-3.3.src.tar.gz `68766b1e70d05a25e2f502e997a3cb3937187a3296595cf6e0977d5cd6727578`, cfe-3.3.src.tar.gz `b1b55de4ab3a57d3e0331a83e0284610191c77d924e3446498d9113d08dfb996` (signed by Bill Wendling, key C135 49BB 82A1 7681 BF71 43C2 B446 8DF4 E95C 63DC); host build `-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-checks` with GCC 14 (the last keeps the `this == 0` tests of `Value::print` and `Type::print`, which `-print-after-all` relies on); host patch `llvm-3.3-host-01-llvm-build-python3` (the configure-time tool to Python 3); backports `llvm-3.3-sspstrong-01-fstack-protector-strong` (clang 3.5's `-fstack-protector-strong` frontend, changes code only under that flag) and `llvm-3.3-sspnop-01-stack-chk-fail-nop` (one nop after every call to `__stack_chk_fail`, as the PS4 compiler emits it, D26; changes code only where a canary is emitted) and `llvm-3.3-storemerge-01-single-merge-per-visit` (one store merge per visit of a store, the 3.2 release's `visitSTORE`, D27; changes code only where one chain holds more than one mergeable run) and `llvm-3.3-jumptable-01-table-before-function-end` (a function's jump tables printed before its end label, so its size and unwind range cover them, D28; changes only functions with a switch table) and `llvm-3.3-bextr-01-and-shift-mask-combine` (upstream b25f0f5538fb of 2013-09-02: `bextr` from a shifted value masked with a contiguous mask, D29; changes only such extracts on a BMI target) and `llvm-3.3-scalarfp-01-lane0-op-insert` (upstream r196925 of 2013-12-10: a scalar add, sub, mul or div on lane 0 followed by its insert selects the SSE scalar instruction, D31; changes only such lane-0 operations) and `llvm-3.3-memdepdbg-01-dbg-before-scan-limit` (upstream r194646 of 2013-11-13: a debug intrinsic is skipped before the memory dependence scan's block limit is spent, D33; changes only `-g` compiles whose scan meets debug intrinsics) and `llvm-3.3-inlinedbg-01-dbg-not-counted-in-vector-bonus` (upstream r200609 of 2014-02-01: a debug intrinsic is not counted among the instructions the inline cost's vector bonus is decided on, D33; changes only `-g` compiles where that count decides an inline) and `llvm-3.3-ssplayout-01-protector-layout-analysis` (upstream r191570, r193653 and r197653 of 2013-09-27 to 2013-12-19: the stack protector pass classifies the allocas it protects and the prolog and epilog inserter lays the protected frame out from that classification, D35; changes only functions with a canary) and `llvm-3.3-ssplayout-02-sspstrong-layout-rules` (upstream r200601 of 2014-02-01 and r199684 of 2014-01-20: large arrays, then small arrays, then address-taken objects after the guard, the classification kept when stack coloring merges slots, D35; changes only functions with a canary) and `llvm-3.3-looprotate-01-no-rotation-after-latch-fold` (the pre-state of upstream r181230 of 2013-05-06 for one condition: a loop whose latch LoopRotate has just folded into the final exit is left unrotated, D36; changes only such loops) |
 | objdiff-cli 3.8.3 | `tools/ext/objdiff/` | optional interactive object diff viewer |
 | Ghidra 12.2 | `tools/ghidra/ghidra_12.2_PUBLIC/` | optional analysis (`SKIP_GHIDRA=1` skips the 570 MB download) |
 
@@ -95,9 +95,31 @@ checks the host packages; installs the git hooks (`tools/install_hooks.sh`).
 ## 3. `tools/build.sh setup`
 
 Deletes `build/base/`, verifies the hashes, writes `build.ninja`
-(`tools/gen_ninja.py`): one `cxx` edge per source under `src/`
+(`tools/gen_ninja.py`): one `cxx` edge per source under `src/libs/`
 (`tools/compile_cpp.sh`, flags from `config/flags.base.txt` by longest
-matching prefix) to `build/base/obj/<path>.o`, and the `gate` target.
+matching prefix) to `build/base/obj/<path>.o`, the game module's edges, and
+the `gate` target.
+
+The game region is built as one module (`docs/DECISIONS.md` D50): each
+source under `src/game/` has an `ir` edge (`tools/compile_cpp.sh --ir`) to
+its unoptimised bitcode, `build/base/game/ir/<path>.bc` (the front end at
+the game line's `-O2` with `-Xclang -disable-llvm-optzns`), with the same
+module as text beside it; one `game_module` edge (`tools/game_module.py`)
+then writes the stand-in definitions (`build/base/game/module.standins.ll`:
+every object a game file declares and none defines, whose base address
+`config/modules.base.txt` gives to the game, as a protected, writable,
+zero-initialised definition of the declared type; a library object, an
+import and a library vtable stay declarations), links every unit and the
+stand-ins with `llvm-link`, and runs one `-O2` pipeline and code generation
+over the module (`tools/compile_cpp.sh --codegen`), to
+`build/base/game/module.o`. It refuses a name two game files define, naming
+both, and a thread-local a game file defines. `build/base/game/symbols.txt`
+lists what each unit defines, which the gate checks a row's unit against.
+`config/modules.base.txt` is written from the base by
+`tools/module_boundary.py` (a census of every RIP-relative operand by the
+region of the instruction; `--check` verifies it). `llvm-link` comes from
+the game compiler's own source tree: `tools/build_llvm.sh 4.0.0` builds it
+and installs it into `tools/cc/llvm-4.0.0-src-tools/bin/`.
 `tools/build.sh regen` rewrites it after adding a source; `verify` checks the
 hashes alone; `clean` and `distclean` remove the build output.
 
@@ -128,7 +150,8 @@ braces of the definition as `"gen/D_<hex>.inc"` (`tools/compile_cpp.sh` puts
 
 `ninja` compiles every object, then runs `tools/check_elf.py --gate`: for
 every row of `config/matched.base.txt` (`<function> <tu> [<symbol>]`), the
-function's bytes in the TU's object are compared with the base executable's
+function's bytes in the TU's object (a game row's: the module object, where
+the row's unit must define the symbol) are compared with the base executable's
 at the function's address (`config/functions.base.txt`), instruction by
 instruction, with only the linker-filled fields masked
 (`tools/match_check.py`; `docs/MATCH.md` explains the masking and the target
@@ -142,7 +165,12 @@ too. There is no real link: the original's linker and SDK libraries are
 Sony's, so the layout is done by the tool and the PLT, GOT and data are read
 from the base.
 
-The inner loop is `tools/quick_diff.sh <tu> <function> [<symbol>]`.
+The inner loop is `tools/quick_diff.sh <tu> <function> [<symbol>]`. For a
+game unit it builds a module of that one file and its stand-ins, the same
+flags, pipeline and code generation as the gate's module; `--module`
+compares in the whole module, as the gate does, and `--both` shows the two
+and says whether the function differs between them (a cross-file effect:
+another file's definition inlined or propagated).
 
 ## The survey: `tools/survey_elf.py`
 

@@ -114,6 +114,27 @@ def object_data_symbols(obj: Path) -> dict[str, tuple[bytes, list[mc.Reloc], boo
     return out
 
 
+_OBJ_DATA: dict[tuple[str, int], dict] = {}
+
+
+def tu_data_symbols(tu: str, obj: Path, ver: str) -> dict:
+    """object_data_symbols(obj), read once per object, narrowed for the game
+    module to the objects the unit itself defines (match_check.tu_functions:
+    an internal name two game files define is left out, the link renamed it).
+    The module's stand-ins are not any unit's and are never laid out: a
+    reference to one resolves by its name's address like any declaration."""
+    key = (str(obj), obj.stat().st_mtime_ns)
+    if key not in _OBJ_DATA:
+        _OBJ_DATA[key] = object_data_symbols(obj)
+    objs = _OBJ_DATA[key]
+    if not mc.is_module_tu(tu) or obj != mc.object_path(tu, ver):
+        return objs
+    import game_module as gm
+    by_tu, renamed = gm.load_symbols(ver)
+    mine = by_tu.get(tu, set()) - renamed
+    return {k: v for k, v in objs.items() if k in mine}
+
+
 def bytes_at(base: BaseElf, va: int, blob: bytes) -> bool:
     """Whether `blob` is the base's bytes at `va`, inside one loaded segment
     (what BaseElf.find_bytes would report at that address)."""
@@ -124,14 +145,11 @@ def bytes_at(base: BaseElf, va: int, blob: bytes) -> bool:
     return False
 
 
-_OBJ_FUNCS: dict[Path, dict] = {}
 
 
 def _object_functions(obj: Path) -> dict:
-    """match_check.object_functions, once per object."""
-    if obj not in _OBJ_FUNCS:
-        _OBJ_FUNCS[obj] = mc.object_functions(obj)
-    return _OBJ_FUNCS[obj]
+    """match_check.object_functions, once per object (it caches by state)."""
+    return mc.object_functions(obj)
 
 
 _ROW_BY_SYMBOL: dict[tuple[Path, str], int] = {}  # (object, symbol) -> a claimed row's address
@@ -449,7 +467,7 @@ def build_image(ver: str, log=print) -> dict:
 
     # every claimed unit's object first, so a symbol one unit defines and
     # another references resolves whatever the units' order
-    _CLAIMED_OBJECTS[:] = [o for o in (compiled(tu) for tu in sorted(by_tu)) if o is not None]
+    _CLAIMED_OBJECTS[:] = list(dict.fromkeys(o for o in (compiled(tu) for tu in sorted(by_tu)) if o is not None))
     _DEFINERS.clear()
     for tu, pairs in sorted(by_tu.items()):
         obj = compiled(tu)
@@ -457,14 +475,14 @@ def build_image(ver: str, log=print) -> dict:
             for fn, _ in pairs:
                 report["errors"][fn] = f"{tu} failed to compile"
             continue
-        objfuncs = mc.object_functions(obj)
+        objfuncs = mc.tu_functions(tu, obj, ver)
         for fn, sym in pairs:
             if fn not in base.func_by_name:
                 report["errors"][fn] = "not in the function table"
                 continue
             sym = mc.resolve_symbol(objfuncs, fn, sym) or sym
             if sym not in objfuncs:
-                report["errors"][fn] = f"{tu} does not define {sym}"
+                report["errors"][fn] = f"{tu} does not define {sym}{mc.renamed_note(tu, sym, ver)}"
                 continue
             addr, size = base.func_by_name[fn]
             _ROW_BY_SYMBOL[(obj, sym)] = addr
@@ -497,13 +515,13 @@ def build_image(ver: str, log=print) -> dict:
         if obj is None:
             report["errors"][dn] = f"{tu} failed to compile"
             continue
-        objs = object_data_symbols(obj)
+        objs = tu_data_symbols(tu, obj, ver)
         if sym not in objs:
             cands = [k for k in objs if BaseElf.base_identifier(k) == dn]
             if len(cands) == 1:
                 sym = cands[0]
         if sym not in objs:
-            report["errors"][dn] = f"{tu} does not define {sym}"
+            report["errors"][dn] = f"{tu} does not define {sym}{mc.renamed_note(tu, sym, ver)}"
             continue
         data, relocs, nobits = objs[sym]
         sg = seg_for(addr)

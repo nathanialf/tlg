@@ -10,6 +10,13 @@ Every row of config/data_schema.<slug>.txt gets a `gen_data` edge
 (tools/gen_data_inc.py) writing build/<slug>/gen/D_<hex>.inc from the user's
 executable, an implicit input of the compile of the TU config/data.<slug>.txt
 names for it (docs/DECISIONS.md D18).
+The game region (src/game/, tools/game_module.py's MODULE_PREFIX) is one
+module (docs/DECISIONS.md D50): each of its sources has an `ir` edge
+(tools/compile_cpp.sh --ir) to build/<slug>/game/ir/<path>.bc (and .ll), and one
+`game_module` edge links them all with their stand-ins and compiles the
+module to build/<slug>/game/module.o, with the compiler, llvm-link, the
+boundary (config/modules.<slug>.txt) and the configuration the stand-ins read
+as implicit inputs. The library sources keep one object each.
 `gate` is the default target. There is no link step: the original was linked
 by Sony's linker against its SDK, and the match is per function.
 
@@ -25,6 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tlg_version import baseelf_path, build_dir, config_path, detect_version  # noqa: E402
 from gen_data_inc import schema_rows  # noqa: E402
+from game_module import LLVM_LINK, MODULE_PREFIX  # noqa: E402
 
 SRC_EXTS = (".cpp", ".cc", ".c")
 
@@ -96,6 +104,17 @@ def main() -> int:
              # an object it does not recompile keeps the mtime ninja recorded
              "  depfile = $out.d",
              "",
+             "rule cxx_ir",
+             f"  command = VERSION={ver} tools/compile_cpp.sh --ir $in $out",
+             "  description = IR $in",
+             "  depfile = $out.d",
+             "",
+             "rule game_module",
+             f"  command = VERSION={ver} .venv/bin/python -I tools/game_module.py --out $out @$out.rsp",
+             "  description = MODULE $out",
+             "  rspfile = $out.rsp",
+             "  rspfile_content = $in_newline",
+             "",
              "rule gen_data",
              f"  command = VERSION={ver} .venv/bin/python -I tools/gen_data_inc.py $ident --out $out --depfile $out.d",
              "  description = GEN $out",
@@ -118,14 +137,32 @@ def main() -> int:
                      f"{esc(str(elf))}")
         lines.append(f"  ident = {ident}")
     objs = []
+    lls = []
+    module_cc = ""
     table = compilers(REPO_ROOT / flags)
     for s in srcs:
-        o = f"{bd}/obj/{s}.o"
-        objs.append(o)
         gen = "".join(f" {esc(g)}" for g in gen_of.pop(s, []))
         cc = compiler_of(s, table)
         ccdep = f" {esc(cc)}" if (REPO_ROOT / cc).exists() else ""
+        if s.startswith(MODULE_PREFIX):
+            bc = f"{bd}/game/ir/{s}.bc"
+            lls.append(bc)
+            module_cc = ccdep
+            lines.append(f"build {esc(bc)} | {esc(bc[:-3] + '.ll')}: cxx_ir {esc(s)} | tools/compile_cpp.sh "
+                         f"{esc(str(flags))}{ccdep} {esc(LLVM_LINK)}{gen}")
+            continue
+        o = f"{bd}/obj/{s}.o"
+        objs.append(o)
         lines.append(f"build {esc(o)}: cxx {esc(s)} | tools/compile_cpp.sh {esc(str(flags))}{ccdep}{gen}")
+    if lls:
+        cfg = " ".join(esc(str(config_path(REPO_ROOT, ver, stem, "txt").relative_to(REPO_ROOT)))
+                       for stem in ("modules", "functions", "vtables", "vtables.derived", "imports")
+                       if config_path(REPO_ROOT, ver, stem, "txt").exists())
+        mod = f"{bd}/game/module.o"
+        objs.append(mod)
+        lines.append(f"build {esc(mod)}: game_module {' '.join(esc(x) for x in lls)} | tools/game_module.py "
+                     f"tools/module_boundary.py tools/base_elf.py tools/compile_cpp.sh {esc(str(flags))} {cfg} "
+                     f"{esc(str(elf))} {esc(LLVM_LINK)}{module_cc}")
     for tu in gen_of:
         print(f"gen_ninja: {tu} (config/data.{ver}.txt) is not a source under src/", file=sys.stderr)
         return 1
@@ -133,11 +170,11 @@ def main() -> int:
     deps = " ".join(esc(o) for o in objs)
     lines.append(f"build gate: gate | {deps} tools/check_elf.py tools/match_check.py "
                  f"{esc(str(matched))} {esc(str(funcs))}".rstrip())
-    lines.append(f"build build.ninja: regen | tools/gen_ninja.py tools/tlg_version.py tools/gen_data_inc.py "
+    lines.append(f"build build.ninja: regen | tools/gen_ninja.py tools/tlg_version.py tools/gen_data_inc.py tools/game_module.py "
                  f"{esc(str(schema_cfg))} {esc(str(data_cfg))}")
     lines.append("default gate")
     (REPO_ROOT / "build.ninja").write_text("\n".join(lines) + "\n")
-    print(f"gen_ninja: {len(srcs)} source(s), VERSION={ver}")
+    print(f"gen_ninja: {len(srcs)} source(s), {len(lls)} in the game module, VERSION={ver}")
     return 0
 
 

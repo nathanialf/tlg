@@ -95,6 +95,17 @@
 #   -std=gnu++11                    the Orbis driver's default dialect (slides)
 #   -fshort-wchar -D__ORBIS__       the PS4 target's wchar_t is unsigned short
 #   -D__PS4__                       and these are its macros (clang 3.7+)
+#   -fvisibility=protected (game)   the game is one module (D50, tools/game_module.py):
+#                                   its own functions and objects are reached
+#                                   PC-relative and called without the PLT,
+#                                   the libraries' through the GOT; protected
+#                                   is the visibility that gives both under
+#                                   -fPIC (round 124A's witnesses)
+#   -ffunction-sections (game)      a call between two functions of the one
+#                                   module object keeps its relocation (the
+#                                   assembler resolves a call inside one
+#                                   section, and a protected callee has no PLT
+#                                   entry to keep it: round 133A)
 #   -nostdlibinc -nostdinc++        no host libc headers (src/include/ carries
 #                                   our own, FINISHING rule 8); the compiler's
 #                                   intrinsic headers (xmmintrin.h) stay. Not
@@ -103,4 +114,4 @@
 #                                   as builtins (D11: libs 64 calls, 0 tail
 #                                   jumps; game 1,417 calls, 18 tail jumps)
 src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections -fPIC -fstack-protector-strong -fno-math-errno -fno-honor-nans -funsafe-math-optimizations -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include -g
-src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -fPIC -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include

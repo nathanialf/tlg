@@ -22,6 +22,12 @@ stub. A wrong target fails the function whatever the score (tools/base_elf.py).
                                                   that config/functions lists
     match_check.py --obj build/base/obj/x/y.o ...  an object already built
 
+A game unit (src/game/) is compiled as the gate compiles it, one module
+(tools/game_module.py, D50): by default the module of that one file and its
+stand-ins (fast, the inner loop); --module the whole game module, the
+gate's object; --both each, saying whether the function's bytes differ
+between them (a difference is a cross-file effect, real information).
+
 <name> is the function's row in config/functions.<slug>.txt (FUN_<addr>, or
 its real name); --symbol is the object's symbol when it differs (a mangled
 C++ name behind a FUN_ row). With --diff the first difference is printed
@@ -78,30 +84,172 @@ def generate_tables_of(tu: str, ver: str) -> None:
                            cwd=REPO_ROOT, check=True, env={**os.environ, "VERSION": ver})
 
 
+def _compilers_newest(link: bool = False) -> float:
+    """The newest installed compiler built from source (tools/build_llvm.sh
+    replaces tools/cc/llvm-*-src): a reinstalled one makes every older object
+    stale, whichever line built it (round 116A). With `link`, llvm-link beside
+    the game's too (tools/cc/llvm-*-src-tools), which the game's bitcode and
+    module pass through."""
+    cc = REPO_ROOT / "tools" / "cc"
+    paths = list(cc.glob("llvm-*-src/bin/clang")) + (list(cc.glob("llvm-*-src-tools/bin/llvm-link")) if link else [])
+    return max([p.stat().st_mtime for p in paths if p.exists()] + [0.0])
+
+
+def _fresh(out: Path, src: Path, link: bool = False) -> bool:
+    """Whether `out` is newer than `src`, the compilers and every header its
+    depfile (<out>.d, written by tools/compile_cpp.sh) lists."""
+    if not out.exists() or out.stat().st_mtime < max(src.stat().st_mtime, _compilers_newest(link)):
+        return False
+    dep = out.with_name(out.name + ".d")
+    # ninja (deps = gcc) consumes the depfile it was given, so an object
+    # ninja built has no .d beside it and its headers cannot be checked:
+    # it is recompiled (round 31's note: a header change was not seen).
+    if not dep.exists():
+        return False
+    text = dep.read_text().replace("\\\n", " ")
+    deps = [Path(d) for d in text.split(":", 1)[1].split()] if ":" in text else []
+    mt = out.stat().st_mtime
+    return not any(not (d if d.is_absolute() else REPO_ROOT / d).exists()
+                   or (d if d.is_absolute() else REPO_ROOT / d).stat().st_mtime > mt for d in deps)
+
+
+def is_module_tu(tu: str) -> bool:
+    """A unit of the game module (tools/game_module.py, D50)."""
+    from game_module import MODULE_PREFIX
+    return tu.startswith(MODULE_PREFIX)
+
+
+def object_path(tu: str, ver: str) -> Path:
+    """Where the unit's code is compiled to: its own object, or for a game
+    unit the one module object."""
+    if is_module_tu(tu):
+        import game_module as gm
+        return gm.module_object(ver)
+    return build_dir(REPO_ROOT, ver) / "obj" / (tu + ".o")
+
+
 def compile_tu(tu: str, ver: str) -> Path:
     """The TU's object, recompiled when the TU or any header its depfile
-    lists (tools/compile_cpp.sh writes <obj>.d) is newer than it."""
-    obj = build_dir(REPO_ROOT, ver) / "obj" / (tu + ".o")
+    lists (tools/compile_cpp.sh writes <obj>.d) is newer than it. A game
+    unit's object is the game module's (module_object)."""
+    if is_module_tu(tu):
+        return module_object(tu, ver)
+    obj = object_path(tu, ver)
     src = REPO_ROOT / tu
     generate_tables_of(tu, ver)
-    # A reinstalled compiler (tools/build_llvm.sh replaces tools/cc/llvm-*-src)
-    # makes every older object stale, whichever line built it.
-    compilers = [c.stat().st_mtime for c in (REPO_ROOT / "tools" / "cc").glob("llvm-*-src/bin/clang") if c.exists()]
-    newest = max([src.stat().st_mtime] + compilers)
-    if obj.exists() and obj.stat().st_mtime >= newest:
-        dep = obj.with_name(obj.name + ".d")
-        # ninja (deps = gcc) consumes the depfile it was given, so an object
-        # ninja built has no .d beside it and its headers cannot be checked:
-        # it is recompiled (round 31's note: a header change was not seen).
-        if dep.exists():
-            text = dep.read_text().replace("\\\n", " ")
-            deps = [Path(d) for d in text.split(":", 1)[1].split()] if ":" in text else []
-            stale = [d for d in deps if not d.exists() or d.stat().st_mtime > obj.stat().st_mtime]
-            if not stale:
-                return obj
+    if _fresh(obj, src):
+        return obj
     subprocess.run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), tu, str(obj.relative_to(REPO_ROOT))],
                    cwd=REPO_ROOT, check=True)
     return obj
+
+
+_MODULE_CHECKED: dict[str, bool] = {}     # version -> whether the module built
+
+
+def module_stale(ver: str) -> str | None:
+    """Why build/<slug>/game/module.o is stale, or None: it must be newer than
+    the compilers, the tools and configuration its edge names, and every game
+    unit's bitcode, each newer than its source and headers, and it must have
+    been linked from exactly today's game sources."""
+    import game_module as gm
+    obj = gm.module_object(ver)
+    if not obj.exists():
+        return "not built"
+    mt = obj.stat().st_mtime
+    inputs = obj.with_name(obj.name[:-2] + ".inputs")
+    have = inputs.read_text().split()[:-1] if inputs.exists() else []
+    from gen_ninja import sources
+    want = [str(gm.ir_path(s, ver)) for s in sources() if s.startswith(gm.MODULE_PREFIX)]
+    if [str(Path(h).resolve()) for h in have] != [str(Path(w).resolve()) for w in want]:
+        return "the game sources changed"
+    for p in ([REPO_ROOT / "tools" / n for n in ("game_module.py", "module_boundary.py", "base_elf.py", "compile_cpp.sh")]
+              + [config_path(REPO_ROOT, ver, st, "txt") for st in ("flags", "modules", "functions", "vtables",
+                                                                 "vtables.derived", "imports")]):
+        if p.exists() and p.stat().st_mtime > mt:
+            return f"{p.relative_to(REPO_ROOT)} is newer"
+    if _compilers_newest(link=True) > mt:
+        return "a compiler is newer"
+    for s in sources():
+        if s.startswith(gm.MODULE_PREFIX):
+            bc = gm.ir_path(s, ver)
+            if not _fresh(bc, REPO_ROOT / s, link=True) or bc.stat().st_mtime > mt:
+                return f"{s} changed"
+    return None
+
+
+def module_object(tu: str, ver: str) -> Path:
+    """The game module's object, rebuilt by ninja when stale (checked once per
+    process: a gate run under ninja finds it built)."""
+    import game_module as gm
+    obj = gm.module_object(ver)
+    if ver not in _MODULE_CHECKED:
+        why = module_stale(ver)
+        ok = True
+        if why:
+            print(f"match_check: the game module is stale ({why}): ninja {obj.relative_to(REPO_ROOT)}",
+                  file=sys.stderr)
+            env = {**os.environ, "VERSION": ver}
+            if why == "the game sources changed":
+                subprocess.run([sys.executable, "-I", str(REPO_ROOT / "tools" / "gen_ninja.py")],
+                               cwd=REPO_ROOT, check=True, env=env)
+            ninja = REPO_ROOT / ".venv" / "bin" / "ninja"
+            ok = subprocess.run([str(ninja) if ninja.exists() else "ninja", str(obj.relative_to(REPO_ROOT))],
+                                cwd=REPO_ROOT, env=env).returncode == 0
+        _MODULE_CHECKED[ver] = ok
+    if not _MODULE_CHECKED[ver]:
+        # one failed build answers for every game unit of this run
+        raise subprocess.CalledProcessError(1, ["game_module", tu])
+    return obj
+
+
+def single_module(tu: str, ver: str, base=None) -> Path:
+    """The inner loop's object for a game unit: the same pipeline over a
+    module of that one file and its stand-ins (tools/game_module.py --single):
+    the unit's bitcode, recompiled when stale, its stand-ins, the -O2 pipeline
+    and code generation."""
+    import game_module as gm
+    bc = gm.ir_path(tu, ver)
+    generate_tables_of(tu, ver)
+    if not _fresh(bc, REPO_ROOT / tu, link=True):
+        bc.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), "--ir", tu, str(bc.relative_to(REPO_ROOT))],
+                       cwd=REPO_ROOT, check=True)
+    out = gm.single_object(tu, ver)
+    try:
+        gm.build([bc], out, ver, single=True, base=base)
+    except gm.Refusal as e:
+        print(f"match_check: {e}", file=sys.stderr)
+        raise subprocess.CalledProcessError(1, ["game_module", tu])
+    return out
+
+
+def tu_functions(tu: str, obj: Path, ver: str) -> dict[str, tuple[bytes, list]]:
+    """object_functions(obj), narrowed for the game module to the functions
+    the unit itself defines (build/<slug>/game/symbols.txt), so a row is
+    checked against its own unit; an internal name two game files define is
+    left out (the link renamed the second), and renamed_note says why."""
+    funcs = object_functions(obj)
+    if not is_module_tu(tu) or obj != object_path(tu, ver):
+        return funcs
+    import game_module as gm
+    by_tu, renamed = gm.load_symbols(ver)
+    mine = by_tu.get(tu, set()) - renamed
+    return {k: v for k, v in funcs.items() if k in mine}
+
+
+def renamed_note(tu: str, sym: str, ver: str) -> str:
+    """A refusal's reason when `sym` is an internal name more than one game
+    file defines, else ""."""
+    if not is_module_tu(tu):
+        return ""
+    import game_module as gm
+    by_tu, renamed = gm.load_symbols(ver)
+    if sym in renamed:
+        tus = sorted(t for t, ss in by_tu.items() if sym in ss)
+        return (f" ({sym} is an internal name {len(tus)} game files define ({', '.join(tus[:4])}); "
+                "the module's link renamed all but one: give it a name of its own)")
+    return ""
 
 
 class Reloc:
@@ -174,8 +322,21 @@ def field_tails(code: bytes, offsets: list[int]) -> dict[int, int]:
     return out
 
 
+_OBJECT_FUNCTIONS: dict[tuple[str, int, int], dict] = {}
+
+
 def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
-    """symbol -> (bytes, [Reloc]) for every STT_FUNC the object defines."""
+    """symbol -> (bytes, [Reloc]) for every STT_FUNC the object defines;
+    read once per object state (the game module's object serves every game
+    unit)."""
+    st = obj.stat()
+    key = (str(obj), st.st_mtime_ns, st.st_size)
+    if key not in _OBJECT_FUNCTIONS:
+        _OBJECT_FUNCTIONS[key] = _object_functions(obj)
+    return _OBJECT_FUNCTIONS[key]
+
+
+def _object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
     from elftools.elf.elffile import ELFFile
     from elftools.elf.relocation import RelocationSection
     out = {}
@@ -210,27 +371,61 @@ def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
 
 def object_symbol(obj: Path, name: str) -> tuple[int, int, int] | None:
     """(section index, value, size) of a symbol the object defines, or None."""
-    from elftools.elf.elffile import ELFFile
-    with obj.open("rb") as f:
-        elf = ELFFile(f)
-        symtab = elf.get_section_by_name(".symtab")
-        for s in symtab.iter_symbols():
-            if s.name == name and s["st_shndx"] not in ("SHN_UNDEF", "SHN_ABS"):
-                return s["st_shndx"], s["st_value"], s["st_size"]
+    for s in object_view(obj).syms:
+        if s.name == name and s["st_shndx"] not in ("SHN_UNDEF", "SHN_ABS"):
+            return s["st_shndx"], s["st_value"], s["st_size"]
     return None
+
+
+class _ObjectView:
+    """One object file read once: its symbols, its named locals, every
+    section's bytes, flags and size, and its relocations by the section they
+    apply to. The game module's object serves thousands of lookups a gate."""
+
+    def __init__(self, obj: Path):
+        from elftools.elf.elffile import ELFFile
+        from elftools.elf.relocation import RelocationSection
+        with obj.open("rb") as f:
+            elf = ELFFile(f)
+            self.syms = list(elf.get_section_by_name(".symtab").iter_symbols())
+            self.locs = named_locals(self.syms)
+            self.sections = {}
+            self.relocs: dict[int, list] = {}
+            self.names: dict[int, str] = {}
+            for i, sec in enumerate(elf.iter_sections()):
+                self.names[i] = sec.name
+                if isinstance(sec, RelocationSection):
+                    self.relocs.setdefault(sec["sh_info"], []).extend(
+                        (r["r_offset"], r["r_info_type"], r["r_info_sym"],
+                         r["r_addend"] if "r_addend" in r.entry else 0) for r in sec.iter_relocations())
+                else:
+                    self.sections[i] = (sec.data(), sec["sh_flags"], sec["sh_size"])
+
+    def get_section(self, i: int):
+        """What reloc_symbol needs of a section: its name."""
+        class _S:
+            name = self.names[i]
+        return _S()
+
+
+_OBJECT_VIEWS: dict[tuple[str, int, int], _ObjectView] = {}
+
+
+def object_view(obj: Path) -> _ObjectView:
+    st = obj.stat()
+    key = (str(obj), st.st_mtime_ns, st.st_size)
+    if key not in _OBJECT_VIEWS:
+        _OBJECT_VIEWS[key] = _ObjectView(obj)
+    return _OBJECT_VIEWS[key]
 
 
 def object_bytes_of(obj: Path, section_index: int, value: int, size: int) -> bytes:
     """The bytes a local data symbol (a string literal) covers in the object."""
-    from elftools.elf.elffile import ELFFile
-    with obj.open("rb") as f:
-        elf = ELFFile(f)
-        sec = elf.get_section(section_index)
-        d = sec.data()
-        if size == 0:  # a section symbol: the literal runs to the next NUL
-            end = d.find(b"\0", value)
-            size = (end + 1 if end >= 0 else len(d)) - value
-        return d[value:value + size]
+    d = object_view(obj).sections[section_index][0]
+    if size == 0:  # a section symbol: the literal runs to the next NUL
+        end = d.find(b"\0", value)
+        size = (end + 1 if end >= 0 else len(d)) - value
+    return d[value:value + size]
 
 
 def object_data_relocs(obj: Path, section_index: int, value: int, size: int) -> tuple[list, int, bool]:
@@ -238,29 +433,18 @@ def object_data_relocs(obj: Path, section_index: int, value: int, size: int) -> 
     of pointers), as object_functions lists a function's: ([Reloc] with offsets
     from `value`, the size read (to the section's end when `size` is 0), whether
     the section is a merged-strings section)."""
-    from elftools.elf.elffile import ELFFile
-    from elftools.elf.relocation import RelocationSection
+    v = object_view(obj)
+    _data, flags, sh_size = v.sections[section_index]
+    strings = bool(flags & 0x30 == 0x30)   # SHF_MERGE | SHF_STRINGS
+    if size == 0:
+        size = sh_size - value
     out = []
-    with obj.open("rb") as f:
-        elf = ELFFile(f)
-        sec = elf.get_section(section_index)
-        strings = bool(sec["sh_flags"] & 0x30 == 0x30)   # SHF_MERGE | SHF_STRINGS
-        if size == 0:
-            size = sec["sh_size"] - value
-        symtab = elf.get_section_by_name(".symtab")
-        syms = list(symtab.iter_symbols())
-        locs = named_locals(syms)
-        for rs in elf.iter_sections():
-            if not isinstance(rs, RelocationSection) or rs["sh_info"] != section_index:
-                continue
-            for r in rs.iter_relocations():
-                off = r["r_offset"]
-                if not (value <= off < value + size):
-                    continue
-                rsym, ty = syms[r["r_info_sym"]], r["r_info_type"]
-                addend = r["r_addend"] if "r_addend" in r.entry else 0
-                name, addend, v, ssize = reloc_symbol(elf, locs, rsym, addend, 0)
-                out.append(Reloc(off - value, RELOC_WIDTH.get(ty, 4), ty, name, addend, rsym["st_shndx"], v, ssize))
+    for off, ty, si, addend in v.relocs.get(section_index, []):
+        if not (value <= off < value + size):
+            continue
+        rsym = v.syms[si]
+        name, addend, sv, ssize = reloc_symbol(v, v.locs, rsym, addend, 0)
+        out.append(Reloc(off - value, RELOC_WIDTH.get(ty, 4), ty, name, addend, rsym["st_shndx"], sv, ssize))
     return sorted(out, key=lambda r: r.offset), size, strings
 
 
@@ -463,51 +647,81 @@ def main(argv=None) -> int:
                     help="every object function whose symbol names a functions row")
     ap.add_argument("--diff", action="store_true")
     ap.add_argument("--json", action="store_true")
+    m = ap.add_mutually_exclusive_group()
+    m.add_argument("--module", action="store_true",
+                   help="a game unit: compare in the whole game module, as the gate does")
+    m.add_argument("--both", action="store_true",
+                   help="a game unit: the single-file module and the whole module, and whether they differ")
     a = ap.parse_args(argv)
     ver = detect_version(REPO_ROOT)
     funcs = load_functions(ver)
     base = BaseElf(REPO_ROOT, ver)
     data, phdrs = base.data, base.phdrs
-    obj = compile_tu(a.tu, ver) if a.tu else Path(a.obj)
-    objfuncs = object_functions(obj)
-
-    pairs: list[tuple[str, str]] = []
-    if a.all:
-        pairs = [(s, s) for s in objfuncs if s in funcs]
-    for i, fn in enumerate(a.func):
-        pairs.append((fn, a.symbol[i] if i < len(a.symbol) else fn))
-    if not pairs:
-        print("match_check: nothing to check (--func or --all)", file=sys.stderr)
-        return 2
-
+    variants: list[tuple[str, Path]] = []
+    if a.tu and is_module_tu(a.tu):
+        if not a.module:
+            variants.append(("single-file module", single_module(a.tu, ver, base)))
+        if a.module or a.both:
+            variants.append(("whole game module", compile_tu(a.tu, ver)))
+        if not a.json:
+            print(f"({a.tu}: " + " and ".join(f"{lab}" for lab, _ in variants)
+                  + (": the unit and its stand-ins alone; --module for the gate's whole module)"
+                     if not (a.module or a.both) else ")"))
+    else:
+        variants.append(("", compile_tu(a.tu, ver) if a.tu else Path(a.obj)))
     worst = 1.0
-    for fn, sym in pairs:
-        if fn not in funcs:
-            print(f"match_check: {fn} is not in config/functions.{ver}.txt", file=sys.stderr)
+    seen: dict[str, list] = {}
+    for label, obj in variants:
+        objfuncs = tu_functions(a.tu, obj, ver) if a.tu else object_functions(obj)
+        pairs: list[tuple[str, str]] = []
+        if a.all:
+            pairs = [(s, s) for s in objfuncs if s in funcs]
+        for i, fn in enumerate(a.func):
+            pairs.append((fn, a.symbol[i] if i < len(a.symbol) else fn))
+        if not pairs:
+            print("match_check: nothing to check (--func or --all)", file=sys.stderr)
             return 2
-        sym = resolve_symbol(objfuncs, fn, sym) or sym
-        if sym not in objfuncs:
-            print(f"match_check: symbol {sym} not defined in {obj} "
-                  f"(have: {', '.join(sorted(objfuncs)[:8])}{'...' if len(objfuncs) > 8 else ''})",
-                  file=sys.stderr)
-            return 2
-        addr, size = funcs[fn]
-        off = vaddr_to_off(phdrs, addr)
-        base_bytes = data[off:off + size]
-        ob, rl = objfuncs[sym]
-        r = compare(ob, rl, base_bytes, addr, base)
-        worst = min(worst, r["score"] if r["targets_ok"] else 0.0)
-        if a.json:
-            print(json.dumps({"func": fn, "symbol": sym, "addr": addr, "size": size,
-                              "score": r["score"], "equal": r["equal"],
-                              "obj_insns": r["obj_insns"], "base_insns": r["base_insns"],
-                              "obj_size": r["obj_size"], "base_size": r["base_size"],
-                              "targets_ok": r["targets_ok"], "bad_targets": r["bad_targets"],
-                              "unverified_relocs": r["unverified_relocs"]}))
-        elif a.diff or r["first_diff"] is not None or not r["targets_ok"]:
-            print_diff(fn if fn == sym else f"{fn} ({sym})", r)
-        else:
-            print(f"{fn}: equal")
+        if len(variants) > 1:
+            print(f"== {label}")
+        for fn, sym in pairs:
+            if fn not in funcs:
+                print(f"match_check: {fn} is not in config/functions.{ver}.txt", file=sys.stderr)
+                return 2
+            sym = resolve_symbol(objfuncs, fn, sym) or sym
+            if sym not in objfuncs:
+                print(f"match_check: symbol {sym} not defined in {obj}"
+                      f"{renamed_note(a.tu, sym, ver) if a.tu else ''} "
+                      f"(have: {', '.join(sorted(objfuncs)[:8])}{'...' if len(objfuncs) > 8 else ''})",
+                      file=sys.stderr)
+                return 2
+            addr, size = funcs[fn]
+            off = vaddr_to_off(phdrs, addr)
+            base_bytes = data[off:off + size]
+            ob, rl = objfuncs[sym]
+            r = compare(ob, rl, base_bytes, addr, base)
+            seen.setdefault(fn, []).append((label, ob, r["score"] if r["targets_ok"] else 0.0))
+            worst = min(worst, r["score"] if r["targets_ok"] else 0.0)
+            if a.json:
+                print(json.dumps({"func": fn, "symbol": sym, "addr": addr, "size": size,
+                                  "score": r["score"], "equal": r["equal"],
+                                  "obj_insns": r["obj_insns"], "base_insns": r["base_insns"],
+                                  "obj_size": r["obj_size"], "base_size": r["base_size"],
+                                  "targets_ok": r["targets_ok"], "bad_targets": r["bad_targets"],
+                                  "unverified_relocs": r["unverified_relocs"]}
+                                 | ({"build": label} if label else {})))
+            elif a.diff or r["first_diff"] is not None or not r["targets_ok"]:
+                print_diff(fn if fn == sym else f"{fn} ({sym})", r)
+            else:
+                print(f"{fn}: equal")
+    if len(variants) > 1 and not a.json:
+        for fn, vs in seen.items():
+            (l1, b1, s1), (l2, b2, s2) = vs[0], vs[-1]
+            if b1 != b2 or s1 != s2:
+                print(f"{fn}: the single-file module and the whole module DIFFER ({s1:.4f} and {s2:.4f}): "
+                      "the module shows the unit something another file defines (cross-file inlining or "
+                      "propagation); the gate's answer is the whole module's")
+            else:
+                print(f"{fn}: the single-file module and the whole module give the same bytes")
     return 0 if worst == 1.0 else 1
 
 

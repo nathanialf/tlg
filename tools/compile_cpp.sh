@@ -4,13 +4,34 @@
 # <object>. The compiler is the prefix line's cxx=<version>, else $TLG_CXX, else
 # tools/cc/llvm-4.0.0/bin/clang. Run from the repo root
 # (gen_ninja.py's commands are); paths are repo-relative.
+#
+# The game region is built as one module (tools/game_module.py, D50), in two
+# steps that use the same flags line:
+#   compile_cpp.sh --ir <source> <out.bc>   the unit's unoptimised bitcode:
+#       the front end at the line's -O2 with the pipeline off
+#       (`-Xclang -disable-llvm-optzns`; bitcode keeps the in-memory use-list
+#       order), and beside it <out>.ll, the same module as text
+#       (llvm-link -S), which tools/game_module.py reads for what the unit
+#       defines and declares. Text is not linked: its use-list directives on
+#       a constant count the constant's uses in every module of the context,
+#       so the second file that orders `i32 1` fails to parse
+#   compile_cpp.sh --codegen <prefix> <module.bc> <object>   the line's -O2
+#       pipeline and code generation over a linked module; the driver's
+#       front-end flags (-I, -std) have nothing to act on in an IR input and
+#       -Qunused-arguments keeps it from saying so
 set -euo pipefail
+mode=obj
+case "${1:-}" in
+    --ir) mode=ir; shift ;;
+    --codegen) mode=codegen; shift; prefix_of="$1"; shift ;;
+esac
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 # shellcheck source=tools/tlg_version.sh
 . tools/tlg_version.sh
 tlg_version_init "$ROOT"
 src="$1"; obj="$2"
+match="${prefix_of:-$src}"
 # The project default is the prebuilt LLVM 4.0.0 under tools/cc/ (tools/setup.sh,
 # docs/TARGETS.md); a prefix's cxx=<version> or TLG_CXX overrides it.
 DEFAULT_CXX="$ROOT/tools/cc/llvm-4.0.0/bin/clang"
@@ -24,7 +45,7 @@ best=""; bestlen=-1
 while IFS= read -r line; do
     [[ -z "$line" || "$line" == \#* ]] && continue
     prefix="${line%% *}"; rest="${line#* }"
-    if [[ "$src" == "$prefix"* && ${#prefix} -gt $bestlen ]]; then best="$rest"; bestlen=${#prefix}; fi
+    if [[ "$match" == "$prefix"* && ${#prefix} -gt $bestlen ]]; then best="$rest"; bestlen=${#prefix}; fi
 done < "$flags_file"
 if [[ $bestlen -lt 0 ]]; then
     echo "compile_cpp: no flags prefix in $flags_file matches $src" >&2; exit 1
@@ -45,4 +66,10 @@ mkdir -p "$(dirname "$obj")"
 # (tools/gen_data_inc.py, docs/DECISIONS.md D18), included by the TU that
 # defines the table as "gen/D_<hex>.inc". It emits nothing of its own.
 # shellcheck disable=SC2086
-exec "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -c "$src" -o "$obj"
+case "$mode" in
+    ir) "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -emit-llvm -Xclang -disable-llvm-optzns \
+            -c "$src" -o "$obj"
+        exec "$ROOT/tools/cc/llvm-4.0.0-src-tools/bin/llvm-link" -S -o "${obj%.bc}.ll" "$obj" ;;
+    codegen) exec "$CXX" $best -Qunused-arguments -c "$src" -o "$obj" ;;
+    *) exec "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -c "$src" -o "$obj" ;;
+esac
