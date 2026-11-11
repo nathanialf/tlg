@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_log.h"
 
 /* derived names: calls the variadic FUN_00c831d0 with the object, the format
  * "%s" and its third argument (al zeroed, no vector arguments), as a tail
@@ -8,8 +8,6 @@
  * 0x10e0-byte frame. The types and the return type are not traced. Class and
  * method unknown. */
 struct Object00b34430; /* derived name */
-
-void FUN_00c831d0(Object00b34430 *self, const char *format, ...); /* derived name */
 
 void FUN_00b34430(Object00b34430 *self, void *, const char *text) /* derived name */
 {
