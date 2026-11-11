@@ -1,0 +1,56 @@
+llvm-4.0.0 backport patch: operator new's result is nonnull only at a new-expression (PS4)
+
+This patch CHANGES CODE GENERATION for a null test of operator new's
+result. r256787 (Philip Reames, 2016-01-04, "[MemoryBuiltins] Remove
+isOperatorNewLike by consolidating non-null inference handling", first
+release LLVM 3.8) replaced isKnownNonNull's isOperatorNewLikeFn test,
+which held only where the call may be the builtin (a new-expression; a
+direct call of the nobuiltin declaration did not qualify), with a
+nonnull return attribute that InferFunctionAttrs puts on the
+declaration of _Znwj/_Znwm/_Znaj/_Znam, so every call, direct or not,
+loses its null test. The game region keeps `test rax, rax` after 156
+calls of _Znwm, every one branching to _Xbad_alloc (130 of them the
+std::function copy and move slots, whose source tests the pointer), a
+form the unpatched line cannot emit; 2,110 calls are untested (rounds
+147A and 149B). This patch restores the
+pre-r256787 rule: no nonnull on the declaration, and isKnownNonNull
+treats a non-nobuiltin call of the four one-argument operator news as
+nonnull (by name, as TargetLibraryInfo names them on this target).
+
+--- a/lib/Analysis/ValueTracking.cpp
++++ b/lib/Analysis/ValueTracking.cpp
+@@ -3385,9 +3385,19 @@
+   if (const LoadInst *LI = dyn_cast<LoadInst>(V))
+     return LI->getMetadata(LLVMContext::MD_nonnull);
+ 
+-  if (auto CS = ImmutableCallSite(V))
++  if (auto CS = ImmutableCallSite(V)) {
+     if (CS.isReturnNonNull())
+       return true;
++    // PS4: operator new never returns null where the call may be treated as
++    // the builtin (a new-expression), as isOperatorNewLikeFn gave it before
++    // r256787 (LLVM 3.8).
++    if (!CS.isNoBuiltin())
++      if (const Function *F = CS.getCalledFunction())
++        if (F->getFunctionType()->getNumParams() == 1 &&
++            (F->getName() == "_Znwj" || F->getName() == "_Znwm" ||
++             F->getName() == "_Znaj" || F->getName() == "_Znam"))
++          return true;
++  }
+ 
+   return false;
+ }
+--- a/lib/Transforms/Utils/BuildLibCalls.cpp
++++ b/lib/Transforms/Utils/BuildLibCalls.cpp
+@@ -682,8 +682,9 @@
+   case LibFunc::msvc_new_longlong: // new(unsigned long long)
+   case LibFunc::msvc_new_array_int: // new[](unsigned int)
+   case LibFunc::msvc_new_array_longlong: // new[](unsigned long long)
+-    // Operator new always returns a nonnull noalias pointer
+-    Changed |= setNonNull(F, AttributeSet::ReturnIndex);
++    // PS4: no nonnull on the declaration (r256787, 2016-01-04, LLVM 3.8):
++    // a direct call of operator new keeps its null test; a new-expression's
++    // result is known nonnull in isKnownNonNull, as before that change.
+     Changed |= setDoesNotAlias(F, AttributeSet::ReturnIndex);
+     return Changed;
+   //TODO: add LibFunc entries for:

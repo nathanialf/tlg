@@ -1,0 +1,33 @@
+llvm-4.0.0 backport patch: X86FixupBWInsts is off by default (PS4)
+
+This patch CHANGES CODE GENERATION for byte and word moves. The pass
+X86FixupBWInsts (lib/Target/X86/X86FixupBWInsts.cpp) was added off by
+default in r260572 (Kevin B. Smith, 2016-02-11) and turned on in r265830
+(2016-04-08, "Fix PR23155 by turning on X86FixupBWInsts by default"),
+both first released in LLVM 3.9. It rewrites `mov r8, m8` in an
+innermost loop and `mov r16, m16` as zero-extending 32-bit loads, and
+`mov r8, r8` / `mov r16, r16` as 32-bit copies, where the upper bits are
+dead. The game region keeps `mov r8, m8` at 802 sites that lie in an
+innermost loop with the 32-bit register dead after the load, and
+`mov r16, r16` at 1,004 sites with the upper half dead: sites the pass
+rewrites (round 151B: control flow, natural loops and forward liveness
+from the bytes; a sample of 40 and of 20 read). With the pass off (this patch, or the
+hidden option -fixup-byte-word-insts=false) 0x47de10 compiles to the
+base's bytes and one function of the game module changes.
+
+--- a/lib/Target/X86/X86FixupBWInsts.cpp
++++ b/lib/Target/X86/X86FixupBWInsts.cpp
+@@ -66,10 +66,12 @@
+ #define DEBUG_TYPE FIXUPBW_NAME
+ 
+ // Option to allow this optimization pass to have fine-grained control.
++// PS4: off by default, as the pass was added (r260572) before r265830 turned
++// it on (LLVM 3.9).
+ static cl::opt<bool>
+     FixupBWInsts("fixup-byte-word-insts",
+                  cl::desc("Change byte and word instructions to larger sizes"),
+-                 cl::init(true), cl::Hidden);
++                 cl::init(false), cl::Hidden);
+ 
+ namespace {
+ class FixupBWInstPass : public MachineFunctionPass {

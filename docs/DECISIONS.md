@@ -2998,3 +2998,63 @@ is written; none is added in the old form.
 
 **Trigger to revisit.** An implementation vtable with a slot count other than eight; a function
 object whose layout contradicts the header; a vtable two instantiations both claim.
+
+## D53. Four more rules of the game compiler: operator new's result, a new-expression's alignment, DSE's trim, X86FixupBWInsts (2026-11-11)
+
+**Question.** The copy and move slots of the std::function implementation objects (D52) keep a
+null test after operator new that the game line deletes; rounds 146C and 147A met it
+independently, and round 146C met two more shapes: an unaligned zeroing store right after
+operator new where the line stores aligned, and a byte load in a loop kept as `mov al` where
+the line widens it.
+
+**Evidence (rounds 147A, 149B, 151B; scratch a147/, b149/, b151/ under
+.claude/handoff/scratch-archive/; each patch built alone, then together; the supervisor's
+whole gate).**
+
+- Operator new. Upstream r256787 (2016-01-04, first in 3.8) replaced isKnownNonNull's test for
+  an operator new call that may be the builtin (a new-expression) with a nonnull attribute on
+  the declaration, so every call loses its null test. Measured on a probe: 3.7.1 keeps the test
+  after a direct call and folds it after a new-expression; 3.8.1 and 4.0.0 fold both; the patch
+  gives 3.7.1's result. Census: `test rax, rax` follows 156 calls of `_Znwm` in the game region,
+  every one branching to `_Xbad_alloc` (130 of them std::function's copy and move slots), a form
+  the unpatched line cannot emit; 2,110 calls are untested. The nothrow forms are not imported.
+  No matched row changes; the three examples' slots 0 and 1 compile equal.
+- A new-expression's alignment. Upstream r283789 (2016-10-10, first in clang 4.0) takes the
+  storage of a global operator new as aligned to min(16, the type's size). Census: 142 call
+  sites store a zeroed vector register at offset 0 of the result, all unaligned, none aligned;
+  every one of the 34 zeroed aligned stores after a call lands in an object whose size is a
+  multiple of 16 (vector members, aligned by their type).
+- DeadStoreElimination. Upstream r267197 (2016-04-22, first in 3.9) shortens a memset at its
+  start; 3.8 at its end only. Census: 32 zeroing 16-byte stores are rewritten in their first 8
+  bytes at once, which the trim would have cut; the search for a zeroing run the base does
+  shorten at its start found 47 candidates, each explained by a constructor storing fields one
+  by one. Its limit, stated: where a memset covers exactly the fields the two give the same
+  bytes, so the search can only fail to find a counterexample. Alone the patch changes no
+  function of the module; with the alignment patch 0x137c3e0 compiles equal (it needs both).
+- X86FixupBWInsts. The pass was added off in r260572 and turned on in r265830 (2016-04-08), both
+  first in 3.9. Census by the pass's own conditions (control flow, natural loops and forward
+  liveness rebuilt from the bytes): 802 `mov r8, m8` lie in an innermost loop with the 32-bit
+  register dead after the load, and 1,004 `mov r16, r16` have a dead upper half: sites the pass
+  rewrites. A sample of 40 byte loads read: 35 provably meet the conditions, 4 undecided (an
+  argument register reaching a call), 1 in an outer loop (the pass skips it), none live. The
+  hidden option gives the same module as the patch. No matched row changes; 0x47de10 compiles
+  equal.
+- Together with every earlier backport: all 3,523 matched game rows equal.
+- Source forms: none of the four has one (a null test the source writes is kept or deleted by
+  the optimizer; an alignment the front end assumes; a store the optimizer trims; a move the
+  back end widens).
+
+**Ruling.** Four patches join the game line's 4.0.0 source build (tools/patches/
+llvm-4.0.0-opnew-01, -newalign-01, -dsebegin-01, -fixupbw-01): seventeen backports.
+
+**Held, not adopted.** SimplifyCFG's sinking through an end block with a conditional arc
+(r280364, 2016-09-01, first in 4.0; sinkcond-01): it makes 0xf170d0 equal with every row equal
+and keeps r279460's sinking that the matched 0x1393600 needs, but its byte census is not done.
+**Not a compiler rule.** The order of a switch's compares follows the order of the arms in the
+source (the fall-through rearrangement after the probability sort, SelectionDAGBuilder.cpp:8970;
+every release from 3.6.2 to 9.0.0 agrees): 0x92ce20 is equal with `default:` written first.
+
+**Trigger to revisit.** A game call of operator new whose null test the source must have and
+the base lacks; an aligned zeroing store at offset 0 of a new's result in an object not a
+multiple of 16; a zeroing run the base shortens at its start that field stores do not explain;
+a `movzx r32, m8` in an innermost loop that only the pass makes.

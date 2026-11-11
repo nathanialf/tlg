@@ -57,7 +57,6 @@ bool FUN_0047e4d0(Object0047dd60 *self) /* derived name */
 }
 
 /* slot 4: appends each character of the string through slot 3 */
-// NONMATCHING: X86FixupBWInsts: the loop's byte load is `movzx eax, byte ptr [rbx]` where the base keeps `mov al, byte ptr [rbx]` (4.0.0 X86FixupBWInsts.cpp:285 widens byte loads in innermost loops when not optimizing for size, on by default at line 72); every other instruction equal
 void Object0047dd90::FUN_0047de10(const char *string)
 {
     while (*string)

@@ -1,0 +1,33 @@
+llvm-4.0.0 backport patch: DSE shortens a memset or memcpy at its end only (PS4)
+
+This patch CHANGES CODE GENERATION for a memset or memcpy whose first
+bytes a later store overwrites. r267197 (Jun Bum Lim, 2016-04-22,
+"[DeadStoreElimination] Shorten beginning of memset overwritten by later
+stores", first release LLVM 3.9) trims such an intrinsic from its start
+when the alignment allows (lib/Transforms/Scalar/DeadStoreElimination.cpp
+tryToShorten); 3.8.1 shortens at the end only. In the game region 32
+zeroed 16-byte `vmovups`/`vmovdqu` stores (alignment below 16) are
+rewritten at their first 8 bytes within six straight-line instructions
+(0x923815, 0xb9a065, ...), which the trim would have cut to an 8-byte
+store at +8; a search for a zeroing run the base does shorten at its
+start found none that a constructor storing fields one by one does not
+explain (round 151B). Alone it changes no function of the game module; with
+newalign-01 0x137c3e0 compiles to the base's bytes.
+
+--- a/lib/Transforms/Scalar/DeadStoreElimination.cpp
++++ b/lib/Transforms/Scalar/DeadStoreElimination.cpp
+@@ -840,10 +840,12 @@
+   // Power of 2 vector writes are probably always a bad idea to optimize
+   // as any store/memset/memcpy is likely using vector instructions so
+   // shortening it to not vector size is likely to be slower
++  // PS4: a memset or memcpy is shortened at its end only, as before the
++  // beginning was (LLVM 3.9).
++  if (!IsOverwriteEnd)
++    return false;
+   MemIntrinsic *EarlierIntrinsic = cast<MemIntrinsic>(EarlierWrite);
+   unsigned EarlierWriteAlign = EarlierIntrinsic->getAlignment();
+-  if (!IsOverwriteEnd)
+-    LaterOffset = int64_t(LaterOffset + LaterSize);
+ 
+   if (!(llvm::isPowerOf2_64(LaterOffset) && EarlierWriteAlign <= LaterOffset) &&
+       !((EarlierWriteAlign != 0) && LaterOffset % EarlierWriteAlign == 0))

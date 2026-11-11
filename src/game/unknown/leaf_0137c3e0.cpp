@@ -27,7 +27,6 @@ class Object0137c3e0 : public Job0137c420 /* derived name */
 
 void FUN_0137c420(Object0137c420 *self, Job0137c420 *job); /* derived name */
 
-// NONMATCHING: the zeroing store is `vmovaps` where the base has `vmovups`: 4.0.0's new-expression takes the storage of a replaceable global operator new as aligned to min(16, the type's size) (CGExprCXX.cpp:1572, NewAlign 128 bits on x86-64, TargetInfo.cpp:46), the base the type's own alignment; 46 of the 48 xmm stores right after _Znwm in the game region are vmovups, the two vmovaps into 16-byte vector members (0xfe58f0, 0x1251fc0); the other seven functions of the shape (0x137c640 to 0x137c910) are not written
 void FUN_0137c3e0(Object0137c420 *self) /* derived name */
 {
     FUN_0137c420(self, new Object0137c3e0());
