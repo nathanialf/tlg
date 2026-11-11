@@ -2817,3 +2817,73 @@ llvm-4.0.0-cgpload-01-load-compare-select-to-branch.patch): nine backports. Fold
 
 **Trigger to revisit.** A game site where a compare with one use and a single-use load operand
 feeds a `cmov`; or FUN_0131f450 matched whole with a source that contradicts the reading above.
+
+## D50. The game region is one module; the libraries are the other (2026-11-11)
+
+**Question.** The game region reaches its own data with direct operands and stores its own
+vptrs with the +0x10 folded into the `lea`, where a translation unit compiled alone under the
+game line reaches an object another file defines through the GOT (D10's relaxed `lea` and a
+load). By round 132B about 800 small functions waited on it: direct reads of shared objects,
+folded vptr stores, and the deleting destructors emitted with them.
+
+**Evidence (rounds 124A, 133A, 134A; scratch a124/, a133/, a134/ under
+.claude/handoff/scratch-archive/; the gate).**
+
+- The base, by census of every RIP-relative operand by the region of its instruction
+  (tools/module_boundary.py, 440,278 operands): the game reaches 53,033 of its data addresses
+  only directly and 4,295 of its vptr stores are folded; it reaches the libraries' objects only
+  through the GOT forms (24 `lea` sites, 3 library vtables as `lea; add 0x10`) and never
+  directly; all 21,974 thread-local accesses are general-dynamic relaxed by the linker (D23),
+  none local-dynamic, local-exec or compiled initial-exec; the game region is one CIE run in
+  .eh_frame (0x1afa60 to 0x14a8fa0), where the libraries have 637.
+- No flag makes a declaration local: an extern object is a GOT load under -fPIC, -fPIE,
+  hidden and protected visibility alike (clang gives a declaration no visibility unless it is
+  explicit, CodeGenModule.cpp:1039-1041). A definition is local under protected visibility
+  (4.0.0 TargetMachine.cpp:137). PIE is excluded by the thread-locals (a definition goes
+  local-exec), hidden by the three library vtables and the thread-local model.
+- Round 133A built the game's sources as one module in scratch, four ways. The form taken:
+  every file to unoptimised bitcode by the front end at -O2, one link, a generated definition
+  for every game-side object the sources declare and no file defines yet, one -O2 pipeline and
+  code generation. All 2,935 matched game rows equal; the nine linkage witnesses, written as
+  plain externs, equal; a library object, a library thread-local, a library vtable and the
+  imports keep their GOT and PLT forms. A second optimisation run over per-file optimised
+  bitcode loses 8 rows (GlobalOpt deletes stores the unwritten part of the module reads) and
+  was dropped. The per-file variant with stand-ins holds the same rows and witnesses but cannot
+  give two shapes the base has, which need another file's body: a destructor that keeps only
+  its vptr store because a member's empty destructor in another file was inlined (0xcef1f0's
+  shape), and a thunk whose callee always returns 1 (`call F; mov eax, 1`, IPSCCP over an exact
+  definition, 0x1374750's shape).
+- The user, 2026-11-10: the game as one module is accepted, the libraries being the other
+  module; a source statement that emits nothing is wrong.
+
+**Ruling.** The gate builds src/game/ as one module (tools/game_module.py, tools/gen_ninja.py,
+tools/compile_cpp.sh): each unit to bitcode with `-Xclang -disable-llvm-optzns`; llvm-link
+(built from the game compiler's own source, installed beside it in
+tools/cc/llvm-4.0.0-src-tools/ by tools/build_llvm.sh); stand-in definitions generated into the
+build directory, protected, writable, zero-initialised, with the declared type and alignment,
+for the objects config/modules.base.txt gives the game; one -O2 and code generation to
+build/base/game/module.o. The game line gains `-fvisibility=protected -ffunction-sections`
+(the second so that a call between two functions of the one object keeps its relocation for
+the gate). config/modules.base.txt is written by tools/module_boundary.py from the base and
+checked by `--check`: one cut per data area, with the exceptions carved out (the CRT's objects,
+0x16c82b0 and 0x16c9060, the libraries' three thread-locals, and every object the game reaches
+through a RELATIVE GOT slot, 0x14b2060 among them). Nothing is added to a source file. A name
+two game files define, and a thread-local a game file defines, are refused by the build.
+tools/quick_diff.sh compiles a module of the one file and its stand-ins by default and the
+whole module with `--module`; a difference between the two for a function is cross-file
+optimisation and is reported with `--both`. D17 stands for an object one file owns. First rows
+under it: 0x1373a50, 0xb10d80, 0x13320a0, 0xe030d0, 0x37aa70.
+
+**What it is not.** The stand-ins are the gate's, like the bytes it takes from the base for
+unwritten functions (D7): they hold no content, and an optimisation that needs an object's
+content (a const table folded) is not reproduced until that object is claimed (D8, D18). The
+module is incomplete: a file-local object is judged on the functions written so far, as before.
+A thread-local stand-in is emitted at default visibility because 4.0.0 gives a protected
+thread-local definition the local-dynamic model where the base has general-dynamic
+(TargetMachine.cpp:172; 3.6.2's rule at TargetMachine.cpp:107-117 keeps general-dynamic): the
+one-rule backport is open, to be ruled with its census before any game file defines one.
+
+**Trigger to revisit.** A game access to a library object in direct form, or to a game object
+through the GOT, that the boundary gets wrong; a matched row whose bytes differ between the
+single-file module and the whole module for a reason other than another file's body; a link of
+the module that merges two different bodies under one name.
