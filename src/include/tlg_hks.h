@@ -6,7 +6,8 @@
 #include "tlg_types.h"
 
 /* A value on the VM's stack: a type tag, then the value (16 bytes). The tags
- * the bytes show: 1 a boolean, 3 a number (a float). derived name. */
+ * the bytes show: 0 nil, 1 a boolean, 3 a number (a float), 8 a thread.
+ * derived name. */
 struct HksObject {
     int type; /* derived name */
     u32 pad4; /* derived name; never written */
@@ -22,8 +23,22 @@ struct HksObject {
  * slot the next pushed value takes, and at +0x50 the base of the running C
  * function's frame, its first argument (the count of arguments is top - base:
  * FUN_008f38f0, FUN_00e7d500; FUN_00845520 reads the first). */
+struct lua_State;
+
+/* The state the VM's threads share, as far as the bytes read it: the main
+ * thread at +0x200 (FUN_00deceb0 compares the running thread with it) and an
+ * array of values from +0x208 indexed by a value's type tag plus 27
+ * (FUN_00dedab0). derived name. */
+struct HksGlobal {
+    u8 unknown0[0x200];
+    lua_State *mainThread;   /* +0x200, derived name */
+    HksObject unknown208[1]; /* +0x208, derived name; its extent not traced */
+};
+
 struct lua_State {
-    u8 unknown0[0x48];
+    u8 unknown0[0x10];
+    HksGlobal *global; /* +0x10, derived name */
+    u8 unknown18[0x30];
     HksObject *top;  /* derived name */
     HksObject *base; /* derived name */
 };

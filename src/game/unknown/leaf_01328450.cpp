@@ -14,6 +14,9 @@ struct Scale01328450 { /* derived name */
     double unknown28[4];
 };
 
+// NONMATCHING: the mask of the low halves is `vpand` with a constant in the base;
+// the intrinsic `and` with 0xffff lowers to `vpxor; vpblendw` here (4.0.0, and the
+// prebuilt 3.8.1 and 3.9.1 alike); a scalar loop is not vectorized (the stores may alias).
 void FUN_01328450(float *destination, const u32 *source,
                   const Scale01328450 *scale) /* derived name */
 {
