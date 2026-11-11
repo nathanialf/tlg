@@ -21487,6 +21487,15 @@ void FUN_000581c0(hknpCollisionQueryContext *context, const hknpClosestPointsQue
                   const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
                   bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
 
+/* The closest points from a masked query shape (0x57e10): the pair
+ * dispatched again with the query's core shape, the query's info carrying
+ * the shape's mask. derived name. */
+void FUN_00057e10(hknpCollisionQueryContext *context, const hknpClosestPointsQuery &query,
+                  const hknpShapeQueryInfo &queryShapeInfo, const hknpShape &targetShape,
+                  const hknpQueryFilterData &targetShapeFilterData,
+                  const hknpShapeQueryInfo &targetShapeInfo, const hkTransform &queryToTarget,
+                  bool queryAndTargetSwapped, hknpCollisionQueryCollector *collector);
+
 /* The closest points between a masked query shape and a masked target
  * (0x594a0): both core shapes, each info carrying its shape's mask. derived
  * name. */
