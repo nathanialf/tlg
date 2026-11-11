@@ -66,6 +66,7 @@ int scePthreadMutexUnlock(pthread_mutex_t *mutex);
 int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockUnlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockWrlock(pthread_rwlock_t *rwlock);
+pthread_t scePthreadSelf(void); /* the calling thread (0x69d42f compares it with a lock's owner) */
 }
 
 #endif
