@@ -42,6 +42,9 @@ size_t fread(void *ptr, size_t size, size_t n, FILE *stream);
 size_t fwrite(const void *ptr, size_t size, size_t n, FILE *stream);
 int fseek(FILE *stream, long offset, int whence);
 int fflush(FILE *stream);
+FILE *fopen(const char *path, const char *mode);
+int fclose(FILE *stream);
+float fabsf(float x);
 void *memalign(size_t alignment, size_t size);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */

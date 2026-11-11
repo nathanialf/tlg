@@ -19,10 +19,13 @@ struct HksObject {
 };
 
 /* The VM's state as far as the bytes read it: the stack top at +0x48, the
- * slot the next pushed value takes. */
+ * slot the next pushed value takes, and at +0x50 the base of the running C
+ * function's frame, its first argument (the count of arguments is top - base:
+ * FUN_008f38f0, FUN_00e7d500; FUN_00845520 reads the first). */
 struct lua_State {
     u8 unknown0[0x48];
-    HksObject *top; /* derived name */
+    HksObject *top;  /* derived name */
+    HksObject *base; /* derived name */
 };
 
 /* One entry of a library's table of C functions, a name and its function,

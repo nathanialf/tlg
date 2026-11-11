@@ -17,6 +17,11 @@ class Object00c9cf90 /* derived name */
   public:
     virtual ~Object00c9cf90();
 
+    static void operator delete(void *p)
+    {
+        free(p);
+    }
+
   private:
     u8 unknown8[8];
     void *unknown10;
