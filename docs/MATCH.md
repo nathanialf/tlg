@@ -54,7 +54,12 @@ placed by the reviewer from the bodies, not by the row.
    `config/vtables.base.txt` (the vtables the executable's type-info
    registrations name, `tools/vtable_names.py`, D12) or from
    `config/vtables.derived.base.txt` (vtables named by ruling from the
-   constructor that stores them, D14), so a constructor is written as a
+   constructor that stores them, D14), or, for std::function's
+   implementation of a lambda (src/include/functional), from the base vtable
+   that holds the instantiation's claimed rows in their slots, its slot-0
+   row claimed and storing it (no hand-made row; `tools/vtable_names.py
+   --check`; a lambda's rows are re-pointed by `tools/rename_rows.py`), so a
+   constructor is written as a
    constructor, and a class neither file names waits for a ruling (report
    the vtable address, the storing constructor and every string or
    registration near it), not a hand-written vptr store. A name taken from a string, an export or a vtable is a fact;
