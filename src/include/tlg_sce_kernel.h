@@ -59,6 +59,9 @@ int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr
                         int maxCount, const void *option);
 int sceKernelDeleteSema(SceKernelSema sema);
 int sceKernelDeleteEventFlag(SceKernelEventFlag ef);
+/* Waits for bits of an event flag (FUN_00ecc810 passes bit 0 and the mode 0x11). */
+int sceKernelWaitEventFlag(SceKernelEventFlag ef, unsigned long bitPattern, unsigned int waitMode,
+                           unsigned long *resultPattern, unsigned int *timeout);
 /* A direct-memory range given back: its start (an offset, not an address)
  * and its length (0xcffd45). */
 int sceKernelReleaseDirectMemory(long start, unsigned long len);

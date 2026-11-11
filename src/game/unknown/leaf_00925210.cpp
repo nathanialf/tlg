@@ -5,7 +5,8 @@
  * 0x16b0e50), beside FUN_00925260 (slot 23): when bit 1 of the flags at
  * +0x274 is set, clears bits 2 and 3 of them and calls slots 15 and 16 of the
  * object the pointer at +0x258 holds with 0 (the second a tail call). The
- * member's class is not traced. Class and method unknown. */
+ * member's class is not traced. Class and method unknown. FUN_009251b0, slot
+ * 21 (its pointer at 0x16b0e48), sets the two bits and calls the slots with 1. */
 class Member00925210_258 /* derived name */
 {
   public:
@@ -42,5 +43,14 @@ void FUN_00925210(Object00925210 *self) /* derived name */
         self->unknown274 &= ~0xcu;
         self->unknown258->slot15(0);
         self->unknown258->slot16(0);
+    }
+}
+
+void FUN_009251b0(Object00925210 *self) /* derived name */
+{
+    if (self->unknown274 & 2) {
+        self->unknown274 |= 0xcu;
+        self->unknown258->slot15(1);
+        self->unknown258->slot16(1);
     }
 }
