@@ -16,9 +16,9 @@ void hknpSolverFactoryTask::process()
     stream.timerBeginList("Lt/Physics", "StSolve");
     hknpWorldContextPool *pool = contextPool;
     hknpWorldContextPool::Context *context = pool->FUN_0016ff90();
-    void *pointer10 = owner->pointer10;
+    Elements000760c0 *elements = owner->elements;
     owner->task190.setAndDontIncrementRefCount(
-        new hknpSolveDataTask(contextPool, context, pointer10));
+        new hknpSolveDataTask(contextPool, context, elements));
 
     const hknpWorld *world = context->world;
     const int numSubSteps = world->solverInfo.numSteps * world->solverInfo.numMicroSteps;
@@ -31,7 +31,7 @@ void hknpSolverFactoryTask::process()
     RefArrays::EntryId none;
     none.value = 0xffff;
     static_cast<hknpSolveDataTask *>(owner->task190.pntr)
-        ->FUN_0016e7d0(contextPool, context, pointer10, &arrays, none, entry);
+        ->FUN_0016e7d0(contextPool, context, elements, &arrays, none, entry);
     void *pointer = arrays.FUN_000925d0(queue, entry);
     queue->unknownVirtual4(pointer, unknown30);
     arrays.FUN_00092650(queue, 12);

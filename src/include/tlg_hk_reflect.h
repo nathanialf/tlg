@@ -9360,7 +9360,7 @@ class hknpWorldObject1d0 /* derived name */
     /* Inline: the pointer cleared and the kind stored, 1 by the larger
      * class's constructor (0x150251), 0 by the world for the smaller one
      * (0x4a2c4). */
-    hknpWorldObject1d0(int simulationType) : pointer10(HK_NULL), simulationType(simulationType) {}
+    hknpWorldObject1d0(int simulationType) : elements(HK_NULL), simulationType(simulationType) {}
 
     /* Inline and empty: the smaller class's deleting destructor (0x6c810)
      * calls no base destructor. */
@@ -9377,7 +9377,10 @@ class hknpWorldObject1d0 /* derived name */
     virtual void unknownVirtual3(void *argument, class RefArrays *arrays, void *argument3) = 0;
 
     u8 unknown8[8];
-    void *pointer10;    /* derived name */
+    /* The solver's elements (derived name): the larger class's prepare
+     * task makes them and stores them here (0x1799ee); the world hands
+     * them to its step's dispatchers (0x505f0). */
+    class Elements000760c0 *elements;
     int simulationType; /* derived name: the world description's byte at +0x50 */
 };
 
@@ -9440,20 +9443,47 @@ struct hkIntSpaceUtil /* derived name */
 
 struct hknpWorld;
 
-/* An array of 8-byte entries (a 16-bit key and an index) and a cursor
- * (derived name): its constructor 0xc63f0 and its clear 0xc6420 are out of
- * line, its destructor is the array's (inline in 0x14e100). */
-struct KeyedArray000c63f0 /* derived name */
+struct hknpConstraint;
+
+/* What the constraints' preparation fills (derived names): the
+ * constraints gathered (0xc5e30, from the world's constraints up to the
+ * highest id in use) as 8-byte entries (a 16-bit key and an index) whose
+ * count is at +8, then the first entry not yet taken at +0x10, up to which
+ * their groups are made (0xc6630). Its constructor 0xc63f0 and its clear
+ * 0xc6420 are out of line, its destructor is the array's (inline in
+ * 0x14e100); the larger world object holds it at +0x120. */
+struct ConstraintGather000c5e30 /* derived name */
 {
-    KeyedArray000c63f0();
+    ConstraintGather000c5e30();
+
+    void FUN_000c5e30(hknpWorld *world, hknpConstraint *constraints, int numConstraints);
 
     hkArray<u64> entries; /* derived name */
-    int cursor;           /* derived name: the first entry not yet taken */
+    int numEntries10;     /* derived name: the first entry not yet taken */
     int unknown14;
 };
 
-/* A 12-byte entry of the larger object's two arrays at +0x138 and +0x148
- * (derived name; its fields are not read yet). */
+/* The groups of the gathered constraints (derived names; 0xc6630 makes
+ * them), the larger world object's +0x138. */
+struct ConstraintGroups000c6630 /* derived name */
+{
+    void FUN_000c6630(hknpWorld *world, const ConstraintGather000c5e30 *gather, int first, int last,
+                      hknpConstraint *constraints);
+
+    /* A group of the gathered constraints, by index: the first and the
+     * last, 12 bytes (the build task's sub-tasks take one each, 0x1552f6).
+     * derived names. */
+    struct Group {
+        int first;
+        int last;
+        u8 unknown8[4];
+    };
+
+    hkArray<Group> groups; /* derived name */
+};
+
+/* A 12-byte entry of the larger object's array at +0x148 (derived name;
+ * its fields are not read yet). */
 struct Entry0014e100 /* derived name */
 {
     u32 unknown0[3];
@@ -9469,7 +9499,7 @@ class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
 {
   public:
     /* Out of line (0x150240; the world's at 0x4a2a6): the kind 1, the
-     * in-place array of 24, the keyed array, the two arrays and the eight
+     * in-place array of 24, the gather, the groups, the array and the eight
      * tasks empty. */
     hknpWorldObject1d0Large();
 
@@ -9488,11 +9518,13 @@ class hknpWorldObject1d0Large : public hknpWorldObject1d0 /* derived name */
 
     u8 unknown1c[0x24];
     hkInplaceArrayAligned16<u64, 24> entries40; /* derived name */
-    KeyedArray000c63f0 keyedArray;              /* derived name */
-    /* 12-byte entries (the destructor frees capacity times 12); passed to
-     * the build constraints tasks (+0x138) and the new pairs task (+0x148)
-     * by the builder 0x150330. derived names. */
-    hkArray<Entry0014e100> array138;
+    /* The constraints' gather and groups: the builder 0x150330 hands
+     * them to the prepare task (0x154ed0), the build task reads them
+     * (0x155100). derived names. */
+    ConstraintGather000c5e30 gather;
+    ConstraintGroups000c6630 groups;
+    /* 12-byte entries (the destructor frees capacity times 12), passed to
+     * the new pairs task by the builder 0x150330. derived name. */
     hkArray<Entry0014e100> array148;
     /* The tasks the builder 0x150330 makes (derived names): the existing
      * and the new pairs' collide tasks around the new pairs' preparation,

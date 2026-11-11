@@ -13,8 +13,8 @@ void hknpWorld::FUN_000505f0()
     stream.timerBegin("TtDispatchCommands");
     hknpWorldContextPool *pool = contextPool;
     hknpWorldContextPool::Context *context = pool->FUN_0016ff90();
-    eventDispatcher->setStepContext(object1d0->pointer10, context);
-    object6d0->setStepContext(object1d0->pointer10, context);
+    eventDispatcher->setStepContext(object1d0->elements, context);
+    object6d0->setStepContext(object1d0->elements, context);
     contextPool->FUN_001704b0(context, eventDispatcher);
     object6d0->clearStepContext();
     eventDispatcher->setStepContext(HK_NULL, HK_NULL);

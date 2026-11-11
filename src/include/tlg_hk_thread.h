@@ -571,15 +571,15 @@ class hknpSolverFactoryTask : public hkReferencedObject, public hknpTaskInterfac
     u8 unknown88[8];
 };
 
-/* hknpAddActiveBodyPairsTask: vtables 0x16a4110 and 0x16a4158; slot 6 opens the timer "Deactivation/AddActiveBodyPairs". */
-struct CollideShared0015ea30;
+class Elements000760c0; /* tlg_lib_unknown.h */
 
-/* What the deactivation tasks reach the collide stage's shared data
- * through (derived names): it at +0x10. */
+/* What the deactivation tasks reach the solver's elements through
+ * (derived names): them at +0x10, as the world objects at +0x1d0 hold
+ * them. */
 struct TaskOwner0014e850 /* derived name */
 {
     u8 unknown0[0x10];
-    CollideShared0015ea30 *shared; /* derived name */
+    Elements000760c0 *elements; /* derived name */
 };
 
 class hknpAddActiveBodyPairsTask : public hkReferencedObject,
@@ -648,37 +648,6 @@ class hknpProcessFirstRoundResultsTask : public hkReferencedObject,
   public:
     /* slot 6 (0x1501e0) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
-};
-
-/* What the constraints' preparation fills (derived names): the
- * constraints gathered (0xc5e30, from the world's constraints up to the
- * highest id in use), their count at +8, then their groups (0xc6630, over
- * the gathered ones from the first to the last of +0x10). */
-struct ConstraintGather000c5e30 /* derived name */
-{
-    void FUN_000c5e30(hknpWorld *world, hknpConstraint *constraints, int numConstraints);
-
-    u8 unknown0[8];
-    int numConstraints; /* derived name */
-    u8 unknownC[4];
-    int numEntries10; /* derived name */
-};
-
-struct ConstraintGroups000c6630 /* derived name */
-{
-    void FUN_000c6630(hknpWorld *world, const ConstraintGather000c5e30 *gather, int first, int last,
-                      hknpConstraint *constraints);
-
-    /* A group of the gathered constraints, by index: the first and the
-     * last, 12 bytes (the build task's sub-tasks take one each, 0x1552f6).
-     * derived names. */
-    struct Group {
-        int first;
-        int last;
-        u8 unknown8[4];
-    };
-
-    hkArray<Group> groups; /* derived name */
 };
 
 /* hknpPrepareConstraintsTask: vtables 0x16a4650 and 0x16a4698; slot 6 opens the timer "Constraints/Prepare". */
@@ -855,26 +824,6 @@ class hknpPrepareNewPairsTask : public hkReferencedObject,
     u8 unknown478[8];
 };
 
-/* A collide task's output range (derived names), 0x38 bytes on a 16-byte
- * boundary (0x40 a slot), a stack object of 0x15ea30 built empty: a linked
- * range, a flag, and the counts of the writer it was taken from. */
-struct CollideRange0015ea30 /* derived name */
-{
-    CollideRange0015ea30() : next(0), flag(false), unknown2c(0)
-    {
-        range.numElements = 0;
-        writerCounts[0] = 0;
-        writerCounts[1] = 0;
-    }
-
-    hkBlockStreamRange range __attribute__((aligned(16)));
-    CollideRange0015ea30 *next;
-    hkBool flag; /* derived name */
-    u8 unknown19[0x13];
-    int unknown2c;
-    int writerCounts[2]; /* derived name */
-};
-
 /* A range appended to a list whose first range is kept in place: copied
  * into the list's first when that is empty, else written into the stream
  * and linked in after it (derived name; the collide task's slot 5). */
@@ -895,19 +844,6 @@ inline void appendLinkedRange(T &list, const T &range, hkBlockStreamWriter &writ
     }
     writer.advance(int(sizeof(T)));
 }
-
-/* What the collide tasks share (derived names): the output lists by grid
- * cell at +0x10 and +0x20, and five streams a context at +0x140. */
-struct CollideShared0015ea30 /* derived name */
-{
-    u8 unknown0[0x10];
-    CollideRange0015ea30 *rangesA; /* derived name */
-    u8 unknown18[8];
-    CollideRange0015ea30 *rangesB; /* derived name */
-    u8 unknown28[0x118];
-    hkBlockStream (*contextStreams)[5]; /* derived name */
-    int numContexts;                    /* derived name */
-};
 
 /* The pairs of a batch through the collision detectors (0x15c5f0; the
  * collide task's slot 5 calls it once a batch, the second consumer null
@@ -930,7 +866,6 @@ void FUN_0015c5f0(hknpWorldContextPool::Context *context, void *shared, int cell
  * the arrays from the last member; the complete destructor 0x15dc50 jumps
  * to it and the deleting one 0x15dc60 calls it (a linkonce destructor is
  * not aliased by clang 3.3, CGCXX.cpp:124-127). */
-class Elements000760c0; /* tlg_lib_unknown.h */
 
 class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
@@ -959,7 +894,7 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
      * range the batch reads, its output and its command range. */
     struct Entry70 {
         hkBlockStreamRange range;
-        CollideRange0015ea30 output;
+        CacheRange000331a0 output;
         LinkedRange0015ea30 commands;
     };
 
@@ -998,10 +933,10 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
     /* The step's stream sets, one in use per context (slot 5 picks the
      * set by the context's index). derived name. */
     hkArray<StepStreams0015e980> streamSets;
-    CollideShared0015ea30 *shared; /* derived name */
-    hkBlockStream *stream120;      /* derived name */
-    void *unknown128;              /* derived name */
-    u8 firstContextIndex;          /* derived name */
+    Elements000760c0 *shared; /* derived name: the solver's elements (0x15e220) */
+    hkBlockStream *stream120; /* derived name */
+    void *unknown128;         /* derived name */
+    u8 firstContextIndex;     /* derived name */
     u8 unknown131;
     hkBool flag132; /* derived name */
     hkBool flag133; /* derived name */

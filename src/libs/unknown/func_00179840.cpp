@@ -34,7 +34,7 @@ void hknpPrepareExistingPairsTask::process()
     hknpWorldContextPool *pool = static_cast<hknpWorldContextPool *>(unknown18);
     hknpWorldContextPool::Context *context = pool->FUN_0016ff90();
     hknpWorld *world = context->world;
-    ConstraintSetup00150330 *setup = static_cast<ConstraintSetup00150330 *>(unknown20);
+    hknpWorldObject1d0Large *setup = static_cast<hknpWorldObject1d0Large *>(unknown20);
     hknpWorldStreams260 *streams = world->streams260;
     stream.timerBeginList("LtPrepareNarrowPhase", "StAllocateSolverData");
     const int numCells = world->spaceSplitter->numCells;
@@ -58,10 +58,10 @@ void hknpPrepareExistingPairsTask::process()
         appendLinkedRange((*context->commandRanges)[0], commands, commandWriter);
     }
     stream.timerSplitList("StInitNarrowPhaseTasks");
-    setup->existingPairsTask->FUN_0015e220(static_cast<hknpWorldContextPool *>(unknown18), context,
-                                           setup->elements, streams, false);
-    setup->newPairsTask->FUN_0015e220(static_cast<hknpWorldContextPool *>(unknown18), context,
-                                      setup->elements, streams, false);
+    setup->collideExistingPairsTask->FUN_0015e220(static_cast<hknpWorldContextPool *>(unknown18),
+                                                  context, setup->elements, streams, false);
+    setup->collideNewPairsTask->FUN_0015e220(static_cast<hknpWorldContextPool *>(unknown18),
+                                             context, setup->elements, streams, false);
     stream.timerEndList("lt");
     pool->FUN_0016ffe0(context);
     stream.timerEndList("lt");

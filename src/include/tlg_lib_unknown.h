@@ -709,6 +709,24 @@ inline void appendRange(CacheRange000331a0 &entry, CacheRange000331a0 *range)
     }
 }
 
+/* A range appended to a cell's list as appendLinkedRange does for a
+ * linked range: copied into the cell's first when that is empty, else
+ * written into the stream and linked in after it (the collide task's slot
+ * 5). derived name. */
+inline void appendLinkedRange(CacheRange000331a0 &list, const CacheRange000331a0 &range,
+                              hkBlockStreamWriter &writer)
+{
+    if (list.numElements == 0) {
+        list = range;
+        return;
+    }
+    CacheRange000331a0 *added =
+        static_cast<CacheRange000331a0 *>(writer.reserve(int(sizeof(CacheRange000331a0))));
+    *added = range;
+    appendRange(list, added);
+    writer.advance(int(sizeof(CacheRange000331a0)));
+}
+
 /* A range filed at a cell of a grid: kept in place when the cell is empty,
  * otherwise copied by the grid's writer and linked in (0x331a0, 0x76ed0).
  * derived name. */
@@ -2785,13 +2803,8 @@ class Elements000760c0 : public hkBaseObject /* derived name */
     static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
-    /* An entry of the arrays at +0x10 and +0x20 (0x40 bytes) and of the
-     * array at +0x30 (0x30 bytes), by the constructor's reserves and the
-     * destructor's frees (derived names). */
-    struct Entry40 {
-        u8 unknown0[0x40];
-    };
-
+    /* An entry of the array at +0x30 (0x30 bytes), by the constructor's
+     * reserve and the destructor's free (derived name). */
     struct Entry30 {
         u8 unknown0[0x30];
     };
@@ -2830,7 +2843,9 @@ class Elements000760c0 : public hkBaseObject /* derived name */
     /* The caches' ranges by the grid cell of their two bodies (slot 5).
      * derived name. */
     hkArray<CacheRange000331a0> cacheGrid;
-    hkArray<Entry40> array20;  /* derived name */
+    /* The new pairs' output ranges by grid cell, the collide task's second
+     * list (0x15ea30). derived name. */
+    hkArray<CacheRange000331a0> array20;
     hkArray<Entry30> array30;  /* derived name */
     hkBlockStream stream40;    /* derived name */
     hkArray<Element> elements; /* derived name */
@@ -2844,25 +2859,6 @@ class Elements000760c0 : public hkBaseObject /* derived name */
  * by FUN_0006c850 at 0x6cc19, over the simulation context it is given
  * (kept at +0x150), one element and room for one entry in each array; the
  * thread context it is also given is not read. derived names. */
-/* The constraints' builder's object (derived names; FUN_00150330 hands the
- * pool and itself to the prepare task, 0x15038c, and itself to the build
- * task): the solver's elements at +0x10 (the prepare task makes them), the
- * gather and the groups. */
-struct ConstraintSetup00150330 /* derived name */
-{
-    u8 unknown0[0x10];
-    Elements000760c0 *elements;
-    u8 unknown18[0x108];
-    ConstraintGather000c5e30 gather;
-    ConstraintGroups000c6630 groups;
-    u8 unknown148[0x10];
-    /* The two pairs tasks the builder makes (0x150939, kind 1, and
-     * 0x150b19, kind 0), set up by the prepare task (0x179bcf). derived
-     * names. */
-    hknpCollidePairsTask *existingPairsTask;
-    u8 unknown160[8];
-    hknpCollidePairsTask *newPairsTask;
-};
 
 /* The jacobians of a run of gathered constraints built (0xc5340, 0x9f1
  * bytes; the build task's sub-tasks): as 0xc5d40 takes them, the elements'

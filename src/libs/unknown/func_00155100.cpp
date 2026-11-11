@@ -29,7 +29,7 @@ void hknpBuildConstraintsTask::process()
     if (groups->groups.getSize() == 0 || unknown38 >= groups->groups.getSize()) {
         return;
     }
-    ConstraintSetup00150330 *setup = static_cast<ConstraintSetup00150330 *>(unknown20);
+    hknpWorldObject1d0Large *setup = static_cast<hknpWorldObject1d0Large *>(unknown20);
     Elements000760c0 *elements = setup->elements;
     ThreadBuffer &stream = *D_16dc078;
     stream.timerBeginList("Lt/Physics", "StCollide");

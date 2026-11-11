@@ -34,7 +34,7 @@ void hknpCollidePairsTask::process()
     stream.timerBeginList("LtNarrowPhase", "StInit");
     hknpWorldContextPool *pool = contextPool;
     hknpWorldContextPool::Context *context = pool->FUN_0016ff90();
-    hkBlockStream *sharedStreams = shared->contextStreams[context->index];
+    hkBlockStream *sharedStreams = shared->elements[context->index].slots;
     StepStreams0015e980 &set = streamSets[context->index - firstContextIndex];
     if (!set.inUse) {
         set.FUN_0015e8b0(context, pairsKind);
@@ -55,12 +55,12 @@ void hknpCollidePairsTask::process()
             Entry20 &cell = cells[i];
             const int cellA = cell.cellA;
             const int cellB = cell.cellB;
-            CollideRange0015ea30 rangeA;
-            rangeA.range.setStartPoint(&writers.writerA0);
+            CacheRange000331a0 rangeA;
+            rangeA.setStartPoint(&writers.writerA0);
             writers.countsC8[0] = 0;
             writers.countsC8[1] = 0;
-            CollideRange0015ea30 rangeB;
-            rangeB.range.setStartPoint(&writers.writerD0);
+            CacheRange000331a0 rangeB;
+            rangeB.setStartPoint(&writers.writerD0);
             writers.countsF8[0] = 0;
             writers.countsF8[1] = 0;
             cell.range.setStartPoint(&writers.writer178);
@@ -95,29 +95,29 @@ void hknpCollidePairsTask::process()
             rangesOut158[cellB] = range0;
             rangesOut160[cellB] = range50;
             object380->unknownVirtual11(context->records268, 3);
-            rangeA.range.FUN_00092220(&writers.writerA0);
-            rangeA.writerCounts[0] = writers.countsC8[0];
-            rangeA.writerCounts[1] = writers.countsC8[1];
-            rangeB.range.FUN_00092220(&writers.writerD0);
-            rangeB.writerCounts[0] = writers.countsF8[0];
-            rangeB.writerCounts[1] = writers.countsF8[1];
+            rangeA.FUN_00092220(&writers.writerA0);
+            rangeA.stats.totalSize = writers.countsC8[0];
+            rangeA.stats.maxCount = writers.countsC8[1];
+            rangeB.FUN_00092220(&writers.writerD0);
+            rangeB.stats.totalSize = writers.countsF8[0];
+            rangeB.stats.maxCount = writers.countsF8[1];
             cell.range.FUN_00092220(&writers.writer178);
-            if (rangeA.range.numElements != 0) {
-                appendLinkedRange(shared->rangesA[cellB], rangeA, writers.writerA0);
+            if (rangeA.numElements != 0) {
+                appendLinkedRange(shared->cacheGrid[cellB], rangeA, writers.writerA0);
             }
-            if (cellA != 0xff && rangeB.range.numElements != 0) {
-                appendLinkedRange(shared->rangesB[cellA], rangeB, writers.writerD0);
+            if (cellA != 0xff && rangeB.numElements != 0) {
+                appendLinkedRange(shared->array20[cellA], rangeB, writers.writerD0);
             }
         } else {
             Entry70 &batch = batches[i];
             hkBlockStreamRange range50;
             range50.setStartPoint(&writers.writer50);
-            CollideRange0015ea30 rangeA;
-            rangeA.range.setStartPoint(&writers.writerA0);
+            CacheRange000331a0 rangeA;
+            rangeA.setStartPoint(&writers.writerA0);
             writers.countsC8[0] = 0;
             writers.countsC8[1] = 0;
-            CollideRange0015ea30 rangeB;
-            rangeB.range.setStartPoint(&writers.writerD0);
+            CacheRange000331a0 rangeB;
+            rangeB.setStartPoint(&writers.writerD0);
             writers.countsF8[0] = 0;
             writers.countsF8[1] = 0;
             hkBlockStreamConsumer consumer;
@@ -134,19 +134,19 @@ void hknpCollidePairsTask::process()
             batch.commands = context->commandRange;
             context->commandRange.range.setStartPoint(&commandWriter);
             object380->unknownVirtual11(context->records268, 2);
-            rangeA.range.FUN_00092220(&writers.writerA0);
-            rangeA.writerCounts[0] = writers.countsC8[0];
-            rangeA.writerCounts[1] = writers.countsC8[1];
-            rangeB.range.FUN_00092220(&writers.writerD0);
-            rangeB.writerCounts[0] = writers.countsF8[0];
-            rangeB.writerCounts[1] = writers.countsF8[1];
-            if (rangeA.range.numElements != 0) {
+            rangeA.FUN_00092220(&writers.writerA0);
+            rangeA.stats.totalSize = writers.countsC8[0];
+            rangeA.stats.maxCount = writers.countsC8[1];
+            rangeB.FUN_00092220(&writers.writerD0);
+            rangeB.stats.totalSize = writers.countsF8[0];
+            rangeB.stats.maxCount = writers.countsF8[1];
+            if (rangeA.numElements != 0) {
                 batch.output = rangeA;
-            } else if (rangeB.range.numElements != 0) {
+            } else if (rangeB.numElements != 0) {
                 batch.output = rangeB;
             } else {
-                batch.output.range.startBlock = HK_NULL;
-                batch.output.range.numElements = 0;
+                batch.output.startBlock = HK_NULL;
+                batch.output.numElements = 0;
                 batch.output.next = HK_NULL;
             }
             range50.FUN_00092220(&writers.writer50);

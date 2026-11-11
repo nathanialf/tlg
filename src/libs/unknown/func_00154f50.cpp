@@ -20,7 +20,7 @@ void hknpPrepareConstraintsTask::process()
         ThreadBuffer::AddValueCommand *command =
             reinterpret_cast<ThreadBuffer::AddValueCommand *>(stream.end);
         command->commandAndMonitor = "MiNumConstraints";
-        command->value = float(gather()->numConstraints);
+        command->value = float(gather()->entries.getSize());
         stream.end = reinterpret_cast<char *>(command + 1);
     }
     stream.timerEndList("lt");

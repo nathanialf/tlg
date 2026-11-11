@@ -36,7 +36,7 @@ hknpEventSignal *hknpWorld::FUN_0004fbe0(int eventType) /* derived name */
  * (called at 0x177435). */
 void *hknpWorld::FUN_00051610() const /* derived name */
 {
-    return object1d0->pointer10;
+    return object1d0->elements;
 }
 
 // NONMATCHING: list-ilp order (202 of 212 instructions, 857 bytes as the base): the constraints'

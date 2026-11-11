@@ -13,12 +13,12 @@ void hknpAddActiveBodyPairsTask::process()
     stream.timerBegin("TtAddActiveBodyPairs");
     hknpWorldContextPool *pool = contextPool;
     hknpWorldContextPool::Context *context = pool->FUN_0016ff90();
-    CollideShared0015ea30 *shared = owner->shared;
+    Elements000760c0 *elements = owner->elements;
     Object00065f20 *unionFind = context->unionFind;
     const hkArray<UnionFindRange> *ranges = context->unionFindRanges;
     FUN_00065f10(unionFind);
-    for (int i = 0; i < shared->numContexts; i++) {
-        const hkBlockStream &pairs = shared->contextStreams[i][0];
+    for (int i = 0; i < elements->elements.getSize(); i++) {
+        const hkBlockStream &pairs = elements->elements[i].slots[0];
         if (pairs.numTotalElements) {
             FUN_00065fd0(unionFind, &pairs, *ranges);
         }
