@@ -38,6 +38,14 @@ class Object0137c700 : public Job0137c420 /* derived name */
 {
 };
 
+class Object0137c760 : public Job0137c420 /* derived name */
+{
+};
+
+class Object016ccac8 : public Job0137c420 /* derived name */
+{
+};
+
 class Object0137c7f0 : public Job0137c420 /* derived name */
 {
 };
@@ -74,6 +82,22 @@ void FUN_0137c6a0(Object0137c420 *self) /* derived name */
 void FUN_0137c700(Object0137c420 *self) /* derived name */
 {
     FUN_0137c420(self, new Object0137c700());
+}
+
+/* The job FUN_0137c760 queues depends on its argument: the class whose
+ * vtable is at 0x16cca90 when it is set, else the one at 0x16ccac8. */
+// NONMATCHING: the two arms' vtable stores: the base allocates once, branches
+// and stores in each arm (the machine tail merge joins the stores); this build
+// sinks the stores into one and selects the vtable with `cmov` (the store
+// sinking under investigation, D54).
+void FUN_0137c760(Object0137c420 *self, int which) /* derived name */
+{
+    Job0137c420 *job;
+    if (which)
+        job = new Object0137c760();
+    else
+        job = new Object016ccac8();
+    FUN_0137c420(self, job);
 }
 
 void FUN_0137c7f0(Object0137c420 *self) /* derived name */

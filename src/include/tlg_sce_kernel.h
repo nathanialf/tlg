@@ -59,6 +59,9 @@ int sceKernelCreateSema(SceKernelSema *sema, const char *name, unsigned int attr
                         int maxCount, const void *option);
 int sceKernelDeleteSema(SceKernelSema sema);
 int sceKernelDeleteEventFlag(SceKernelEventFlag ef);
+/* A direct-memory range given back: its start (an offset, not an address)
+ * and its length (0xcffd45). */
+int sceKernelReleaseDirectMemory(long start, unsigned long len);
 int sceKernelWaitSema(SceKernelSema sema, int needCount, unsigned int *timeout);
 int sceKernelSignalSema(SceKernelSema sema, int signalCount);
 int scePthreadMutexDestroy(pthread_mutex_t *mutex);
