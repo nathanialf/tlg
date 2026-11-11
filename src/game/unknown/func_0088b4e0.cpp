@@ -176,14 +176,98 @@ void FUN_008ac610(void *closure, Name label, Name help,
 void FUN_008ac270(void *closure, const Name *label, std::function<int()> current, /* derived name */
                   std::function<int(int)> step);
 
-/* the creating function's closure at rbp-0xaa0 the first choice's step
- * calls (0x8af9c1): the label at +0x130, two names and the new choice */
-struct Refresh008ac030 { /* derived name: its captures not traced */
-    void *unknown0;
+extern Name D_581e80c; /* derived name: the text an entry is cleared to */
+
+/* the creating function's setText as the refresh closure sees it: the
+ * reference to the owner it captures (three loads to the owner, 0x8ac063) */
+struct SetText008ac030 { /* derived name */
+    Owner0088b4e0 **owner;
+
+    void operator()(Name id, const Name &text) const
+    {
+        FUN_008ab9e0(*owner, id.index, text);
+    }
 };
 
+struct Vec2 { /* derived name: an entry's position */
+    float x, y;
+};
+
+void FUN_0087acf0(Vec2 *position, const Entry008ab9e0 *entry); /* derived name */
+void FUN_0087a660(Entry008ab9e0 *entry, const Vec2 *position); /* derived name */
+
+/* the record FUN_00c57870 finds for the panel: its bounds at +0x150 and +0x160 */
+struct Record008acb00 { /* derived name */
+    u8 unknown0[0x150];
+    float unknown150; /* +0x150 */
+    u8 unknown154[0xc];
+    float unknown160; /* +0x160 */
+};
+
+extern u64 D_59453d0;
+
+Record008acb00 *FUN_00c57870(Panel008ab9e0 *panel, u64 key, int unknown2); /* derived name */
+
+/* the creating function's closure FUN_008ac030 hands on to (0x8ac1a6): the
+ * setText closure, the owner and a flag, each captured by reference */
+struct Show008acb00 { /* derived name */
+    SetText008ac030 *setText;
+    Owner0088b4e0 **owner;
+    bool *raised; /* derived name */
+};
+
+/* both entries' texts cleared; the two entries placed at the position of
+ * the label of the choice, then either side of it by the label's width */
+// NONMATCHING: the base keeps the position's y in a register across the four
+// calls to FUN_0087a660 and its x across the third (the callee only reads its
+// position: FUN_0087a660 not written); the Name temporaries as FUN_008ac030.
+void FUN_008acb00(Show008acb00 *closure, const Name *labels, Name a, Name b, /* derived name */
+                  int choice)
+{
+    (*closure->setText)(a, D_581e80c);
+    (*closure->setText)(b, D_581e80c);
+    Owner0088b4e0 *owner = *closure->owner;
+    Entry008ab9e0 *selected = owner->entry(owner->indexOf(labels[choice].index));
+    Entry008ab9e0 *first = owner->entry(owner->indexOf(a.index));
+    Entry008ab9e0 *second = owner->entry(owner->indexOf(b.index));
+    Vec2 position;
+    FUN_0087acf0(&position, selected);
+    float gap = 12.0f;
+    if (selected->panel) {
+        if (Record008acb00 *record = FUN_00c57870(selected->panel, D_59453d0, 0))
+            gap = (record->unknown160 - record->unknown150) * 500.0f + 12.0f;
+    }
+    if (*closure->raised)
+        position.y += 3.0f;
+    FUN_0087a660(first, &position);
+    FUN_0087a660(second, &position);
+    Vec2 left = {position.x + gap, position.y};
+    FUN_0087a660(first, &left);
+    Vec2 right = {position.x - gap, position.y};
+    FUN_0087a660(second, &right);
+}
+
+/* the creating function's closure at rbp-0xaa0 the first choice's step
+ * calls (0x8af9c1): both entries' texts cleared, then the label at +0x130,
+ * the two names and the new choice handed on */
+struct Refresh008ac030 { /* derived name */
+    SetText008ac030 *setText;
+    Show008acb00 *show;
+};
+
+// NONMATCHING: the base keeps each Name temporary's index in a register across
+// the later copies' `lock inc` and its own `lock xadd` (`mov edi, ebx`), where
+// this build reloads it: a sequentially consistent read-modify-write clobbers
+// every location for the optimizer (AAResults::getModRefInfo(AtomicRMW)), and
+// the base still reloads the source's index after each copy's increment
+// (0x8ac076): no ordering of the builtins gives both; then the registers differ.
 void FUN_008ac030(Refresh008ac030 *closure, const Name *label, Name a, Name b, /* derived name */
-                  int choice);
+                  int choice)
+{
+    (*closure->setText)(a, D_581e80c);
+    (*closure->setText)(b, D_581e80c);
+    FUN_008acb00(closure->show, label, a, b, choice);
+}
 
 extern Name D_581e81c;
 extern Name D_581e8d0[]; /* derived name: the choices' labels */
@@ -210,8 +294,9 @@ extern Name D_581ee20; /* derived name: the text those entries are cleared to */
 // defined in the module); not written yet. Slot 2 of 0x16af780 (0x8affc0):
 // the sign compare scheduled before the add, registers renumbered. Slot 2
 // of 0x16af640 (0x8af940): the base keeps the two copied names' indices in
-// registers across FUN_008ac030 (its arguments only read: FUN_008ac030 not
-// written yet). Slots 2 of 0x16af820 and 0x16af8c0 (0x8b0260, 0x8b04b0):
+// registers across FUN_008ac030; with FUN_008ac030 written this build keeps
+// the second, and reloads the first after the second copy's `lock inc` (the
+// atomics' question at FUN_008ac030). Slots 2 of 0x16af820 and 0x16af8c0 (0x8b0260, 0x8b04b0):
 // the base computes the result before the negated value is stored, list-ilp
 // order. Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
 // has an LEA where this build adds or copies (`lea esi, [rsi + rdx]`, `lea
@@ -500,7 +585,7 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
     /* the choices (0x8a0513 on): the first a member of the object, the
      * camera axes inverted or not, and two settings packed in +0x4c as
      * (a * 2 + b) + 1, a of three and b of two */
-    Refresh008ac030 refresh = {0};
+    Refresh008ac030 refresh = {0, 0};
     Name choiceA(""), choiceB("");
     FUN_008ac270(
         closure, self->unknown130, [self]() { return self->unknown140; },
