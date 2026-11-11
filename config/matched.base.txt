@@ -3188,8 +3188,8 @@ FUN_00b77040 src/game/unknown/leaf_00b77040.cpp _Z12FUN_00b77040P14Object00b7704
 FUN_00b98190 src/game/unknown/leaf_00b98190.cpp _Z12FUN_00b98190P14Object00b98190
 FUN_00b997b0 src/game/unknown/leaf_00b997b0.cpp _ZN14Object00b997b0D1Ev
 FUN_00bb4520 src/game/unknown/leaf_00bb4520.cpp _Z12FUN_00bb4520P14Object00bb4520
-FUN_00bd2b20 src/game/unknown/leaf_00bd2b20.cpp _ZN14Object00bd2b20D1Ev
-FUN_00bd2be0 src/game/unknown/leaf_00bd2be0.cpp _ZN14Object00bd2be0D1Ev
+FUN_00bd2b20 src/game/unknown/func_00bc62a0.cpp _ZNSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_0iJEED2Ev
+FUN_00bd2be0 src/game/unknown/func_00bc62a0.cpp _ZNSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_1iJEED2Ev
 FUN_00bd2ca0 src/game/unknown/leaf_00bd2ca0.cpp _ZN14Object00bd2ca0D1Ev
 FUN_00bd2cd0 src/game/unknown/leaf_00bd2cd0.cpp _Z12FUN_00bd2cd0v
 FUN_00be0c30 src/game/unknown/leaf_00be0c30.cpp _Z12FUN_00be0c30P14Object00be0c30
@@ -3438,8 +3438,8 @@ FUN_00b386d0 src/game/unknown/leaf_00b386d0.cpp _Z12FUN_00b386d0PvS_
 FUN_00b3d6c0 src/game/unknown/leaf_00b3d6c0.cpp _Z12FUN_00b3d6c0PvS_
 FUN_00b40180 src/game/unknown/leaf_00b40180.cpp _Z12FUN_00b40180PvS_
 FUN_00b75950 src/game/unknown/leaf_00b75950.cpp _Z12FUN_00b75950P14Object00b75950
-FUN_00bd2ae0 src/game/unknown/leaf_00bd2ae0.cpp _Z12FUN_00bd2ae0P14Object00bd2ae0
-FUN_00bd2ba0 src/game/unknown/leaf_00bd2ba0.cpp _Z12FUN_00bd2ba0P14Object00bd2ba0
+FUN_00bd2ae0 src/game/unknown/func_00bc62a0.cpp _ZNKSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_0iJEE12_Target_typeEv
+FUN_00bd2ba0 src/game/unknown/func_00bc62a0.cpp _ZNKSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_1iJEE12_Target_typeEv
 FUN_00bd2c60 src/game/unknown/leaf_00bd2c60.cpp _Z12FUN_00bd2c60P14Object00bd2c60
 FUN_00be1030 src/game/unknown/leaf_00be1030.cpp _Z12FUN_00be1030PvS_
 FUN_00be6450 src/game/unknown/leaf_00be6450.cpp _Z12FUN_00be6450PvS_
@@ -3721,10 +3721,10 @@ FUN_001a1e80 src/libs/unknown/func_001a1e80.cpp
 FUN_00072100 src/libs/unknown/func_00072740.cpp
 FUN_00072740 src/libs/unknown/func_00072740.cpp
 FUN_00b997c0 src/game/unknown/leaf_00b997b0.cpp _ZN14Object00b997b0D0Ev
-FUN_00bd2b30 src/game/unknown/leaf_00bd2b20.cpp _ZN14Object00bd2b20D0Ev
-FUN_00bd2b40 src/game/unknown/leaf_00bd2b20.cpp _ZN14Object00bd2b2012FUN_00bd2b40Ev
-FUN_00bd2bf0 src/game/unknown/leaf_00bd2be0.cpp _ZN14Object00bd2be0D0Ev
-FUN_00bd2c00 src/game/unknown/leaf_00bd2be0.cpp _ZN14Object00bd2be012FUN_00bd2c00Ev
+FUN_00bd2b30 src/game/unknown/func_00bc62a0.cpp _ZNSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_0iJEED0Ev
+FUN_00bd2b40 src/game/unknown/func_00bc62a0.cpp _ZNKSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_0iJEE4_GetEv
+FUN_00bd2bf0 src/game/unknown/func_00bc62a0.cpp _ZNSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_1iJEED0Ev
+FUN_00bd2c00 src/game/unknown/func_00bc62a0.cpp _ZNKSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_1iJEE4_GetEv
 FUN_00bd2cb0 src/game/unknown/leaf_00bd2ca0.cpp _ZN14Object00bd2ca0D0Ev
 FUN_00bd2cc0 src/game/unknown/leaf_00bd2ca0.cpp _ZN14Object00bd2ca012FUN_00bd2cc0Ev
 FUN_00bedb10 src/game/unknown/leaf_00bedb00.cpp _ZN14Object00bedb00D0Ev
@@ -5972,8 +5972,8 @@ FUN_008b1f20 src/game/unknown/leaf_008b1f50.cpp _ZN14Object008b1f5012FUN_008b1f2
 FUN_008b2180 src/game/unknown/leaf_008b21b0.cpp _ZN14Object008b21b012FUN_008b2180Eb
 FUN_008b2440 src/game/unknown/leaf_008b2470.cpp _ZN14Object008b247012FUN_008b2440Eb
 FUN_008b26a0 src/game/unknown/leaf_008b26d0.cpp _ZN14Object008b26d012FUN_008b26a0Eb
-FUN_00bd2af0 src/game/unknown/leaf_00bd2b20.cpp _ZN14Object00bd2b2012FUN_00bd2af0Eb
-FUN_00bd2bb0 src/game/unknown/leaf_00bd2be0.cpp _ZN14Object00bd2be012FUN_00bd2bb0Eb
+FUN_00bd2af0 src/game/unknown/func_00bc62a0.cpp _ZNSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_0iJEE12_Delete_thisEb
+FUN_00bd2bb0 src/game/unknown/func_00bc62a0.cpp _ZNSt14_Function_implIZ12FUN_00bc62a0P13Owner00bc62a0iE3$_1iJEE12_Delete_thisEb
 FUN_00bd2c70 src/game/unknown/leaf_00bd2ca0.cpp _ZN14Object00bd2ca012FUN_00bd2c70Eb
 FUN_00fbdcd0 src/game/unknown/leaf_00fbdd00.cpp _ZN14Object00fbdd0012FUN_00fbdcd0Eb
 FUN_010055f0 src/game/unknown/func_00ffaab0.cpp _ZNSt14_Function_implIZ12FUN_00ffaab0P15Context00ffaab0P13Owner00ffaab0iiE3$_2iJiEE12_Delete_thisEb
