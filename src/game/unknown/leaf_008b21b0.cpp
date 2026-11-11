@@ -8,12 +8,26 @@
 class Object008b21b0 /* derived name */
 {
   public:
+    virtual Object008b21b0 *FUN_008b1f80(void *where); /* derived name */
+    virtual Object008b21b0 *FUN_008b1fd0(void *where); /* derived name */
+    virtual void FUN_008b2020(void *argument);         /* derived name */
+    virtual const void *FUN_008b2170();                /* derived name */
+    virtual void FUN_008b2180(bool deallocate);        /* derived name */
     virtual ~Object008b21b0();
     virtual void *FUN_008b21d0(); /* derived name */
 
   private:
     unsigned char stored[32]; /* +0x8, 32 bytes copied by slots 0 and 1 */
 };
+
+/* slot 4: destroys the object through its virtual destructor, then frees
+ * the storage when asked */
+void Object008b21b0::FUN_008b2180(bool deallocate)
+{
+    this->~Object008b21b0();
+    if (deallocate)
+        operator delete(this);
+}
 
 Object008b21b0::~Object008b21b0() {}
 

@@ -8,12 +8,26 @@
 class Object01271070 /* derived name */
 {
   public:
+    virtual Object01271070 *FUN_01270fa0(void *where); /* derived name */
+    virtual Object01271070 *FUN_01270fe0(void *where); /* derived name */
+    virtual void FUN_01271020(void *argument);         /* derived name */
+    virtual const void *FUN_01271030();                /* derived name */
+    virtual void FUN_01271040(bool deallocate);        /* derived name */
     virtual ~Object01271070();
     virtual void *FUN_01271090(); /* derived name */
 
   private:
     void *stored; /* +0x8, 8 bytes copied by slots 0 and 1 */
 };
+
+/* slot 4: destroys the object through its virtual destructor, then frees
+ * the storage when asked */
+void Object01271070::FUN_01271040(bool deallocate)
+{
+    this->~Object01271070();
+    if (deallocate)
+        operator delete(this);
+}
 
 Object01271070::~Object01271070() {}
 

@@ -61,6 +61,8 @@ int sceKernelDeleteSema(SceKernelSema sema);
 int sceKernelDeleteEventFlag(SceKernelEventFlag ef);
 int sceKernelWaitSema(SceKernelSema sema, int needCount, unsigned int *timeout);
 int sceKernelSignalSema(SceKernelSema sema, int signalCount);
+int scePthreadMutexDestroy(pthread_mutex_t *mutex);
+int scePthreadMutexUnlock(pthread_mutex_t *mutex);
 int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockUnlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockWrlock(pthread_rwlock_t *rwlock);

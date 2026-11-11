@@ -78,13 +78,18 @@ class Class16cc478 /* derived name */
 
     int FUN_0137b9e0() const;
     int FUN_0137b9f0() const;
+    int FUN_01376350() const;
     int FUN_01376380() const;
 
     u8 unknown48[0x58];
     int unknowna0; /* returned by FUN_0137b9f0 */
     int unknowna4; /* returned by FUN_0137b9e0 */
-    u8 unknowna8[0x254 - 0xa8];
+    u8 unknowna8[4];
+    int unknownac; /* read by FUN_01376350 */
+    u8 unknownb0[0x254 - 0xb0];
     int unknown254; /* returned by FUN_01376380 */
+    u8 unknown258[0x380 - 0x258];
+    int unknown380; /* tested by FUN_01376350 */
 };
 
 /* The base shared by the classes whose vtables hold the thunks 0x13746b0,
@@ -149,6 +154,47 @@ class Class16b57c0 : public Class137ba70 /* derived name */
   public:
     void FUN_0137ba50();
     int FUN_00004340(int mask) const;
+
+    u8 unknown38[8];
+    Class137ba70
+        *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared (FUN_00b38650) */
+};
+
+/* The class whose vtable is at 0x16b10c8 (stored by FUN_00953850; the vtable
+ * at 0x16b1168, stored by FUN_00953a30, holds the same slot 6): the slots of
+ * Class137ba70 but slot 6, its own (FUN_00961140, its thunk in the base at
+ * +0x28). */
+class Class16b10c8 : public Class137ba70 /* derived name */
+{
+  public:
+    int FUN_00004340(int mask) const;
+
+    u8 unknown38[8];
+    Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
+};
+
+/* The class whose vtable is at 0x16b5720 (stored by FUN_00b37fd0): the slots
+ * of Class137ba70 but slot 6, its own (FUN_00b38370, its thunk in the base at
+ * +0x28). */
+class Class16b5720 : public Class137ba70 /* derived name */
+{
+  public:
+    int FUN_00004340(int mask) const;
+
+    u8 unknown38[8];
+    Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
+};
+
+/* The class whose vtable is at 0x16b5900 (stored by FUN_00b3da40): the slots
+ * of Class137ba70 but slot 6, its own (FUN_00b3ddf0, its thunk in the base at
+ * +0x28). */
+class Class16b5900 : public Class137ba70 /* derived name */
+{
+  public:
+    int FUN_00004340(int mask) const;
+
+    u8 unknown38[8];
+    Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
 };
 
 /* The class whose vtable is at 0x16cf260 (stored by FUN_00b3de50,
