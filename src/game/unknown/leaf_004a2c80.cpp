@@ -43,7 +43,6 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: an unrotated list loop (round 149B's class): the base jumps into the null test with the entry loaded, the build rotates the loop (a guard test before it); both functions
 int FUN_004a2c80(void *, Message004a2c80 *message) /* derived name */
 {
     Tables004a2c80 *tables = D_57c9390->unknown38->unknown900->unknown58;

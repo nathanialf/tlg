@@ -127,7 +127,6 @@ void FUN_00dacb80(Compiler00dacb80 *self, int *list, int jump) /* derived name *
     fixJump(self, fs, pc, jump);
 }
 
-// NONMATCHING: the post-RA scheduler's anti-dependency breaker: the assignment is the base's; CriticalAntiDepBreaker renames the pc load to r8d in the base and to esi in the build (r270935, round 194B)
 void FUN_00db00e0(Compiler00dacb80 *self) /* derived name */
 {
     FuncState00dacb80 *fs = self->funcState;
@@ -148,9 +147,6 @@ void FUN_00dafb70(Compiler00dacb80 *self) /* derived name */
 /* derived name: slot 15 of the vtable at 0x16bb0c0 (its pointer at
  * 0x16bb148): FUN_00db00e0's body after a call of FUN_00dae7e0, with the
  * jump read from +0x14 of the record */
-// NONMATCHING: the post-RA scheduler's anti-dependency breaker, as FUN_00db00e0:
-// the assignment is the base's; CriticalAntiDepBreaker renames the pc load to
-// edi in the base and to esi in the build (r270935, round 194B)
 void FUN_00dafdc0(Compiler00dacb80 *self) /* derived name */
 {
     FUN_00dae7e0(self);

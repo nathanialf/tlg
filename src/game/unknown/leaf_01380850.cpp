@@ -24,9 +24,6 @@ struct Object01380850 { /* derived name */
     float unknowna0;
 };
 
-// NONMATCHING: list-ilp order: the base stores the field before the test of the same value, the
-// compile tests first; every instruction else equal (the order class round 138B's (4) scheduling
-// backport moves, not tested here)
 int FUN_01380850(Object01380850 *self, Argument01380850 *argument) /* derived name */
 {
     self->unknown48 = argument;

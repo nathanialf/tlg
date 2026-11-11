@@ -25,7 +25,6 @@ struct Object01388460 { /* derived name */
     Pair01388460 unknown14[1]; /* +0x14 */
 };
 
-// NONMATCHING: list-ilp order: the base loads the pair's handle before the table's `lea`, the build after (0xd84b70, matched, has the `lea` first)
 void *FUN_01388460(Object01388460 *self, int key, void *missing) /* derived name */
 {
     void *result = missing;

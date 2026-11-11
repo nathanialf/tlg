@@ -38,9 +38,6 @@ struct Object008455a0 { /* derived name */
 
 void FUN_008458e0(Member008455a0 **member); /* derived name */
 
-// NONMATCHING: the unrotated list loop: the base jumps to the test at the
-// bottom (`jmp; ... test rbx, rbx; jne`), this build rotates it and guards it
-// at the top (round 149B's question).
 int FUN_008455a0(Object008455a0 *self, int event, int value) /* derived name */
 {
     if (event == 1 && value == 0) {

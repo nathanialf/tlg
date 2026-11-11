@@ -35,8 +35,6 @@ struct Object01496a80 /* derived name */
 };
 
 /* derived names: closes a marker in the owner's command buffer. */
-// NONMATCHING: list-ilp order of two independent loads: the base loads the command pointer (+0x70)
-// before the end (+0x68), this the end first; the rest equal
 void FUN_01496a80(Object01496a80 *self) /* derived name */
 {
     CommandBuffer01496a80 &commands = self->commands;

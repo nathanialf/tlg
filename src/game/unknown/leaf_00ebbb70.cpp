@@ -28,9 +28,6 @@ struct Object00ebbb70 { /* derived name */
     Node00ebbb70 *first;
 };
 
-// NONMATCHING: the loop is rotated (a guard test, then the body with the test at its end); the base
-// keeps it unrotated (jmp to the test, the header laid out last); 3.8.1 and 3.9.1 give the base's
-// form for this source, 4.0.0 rotates it (round 135B, prebuilt releases)
 void FUN_00ebbb70(Object00ebbb70 *self) /* derived name */
 {
     for (Node00ebbb70 *node = self->first; node; node = node->next) {

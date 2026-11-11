@@ -16,8 +16,6 @@ struct Thread00ecc810 { /* derived name */
 extern SceKernelEventFlag D_5a8dfb0;
 extern unsigned int D_179ef90; /* derived name: the port, -1 when closed */
 
-// NONMATCHING: the unrotated loop, the base enters at the quit test (`jmp`) where
-// the build rotates the loop and tests the flag before it.
 void *FUN_00ecc810(void *argument) /* derived name */
 {
     Thread00ecc810 *thread = static_cast<Thread00ecc810 *>(argument);

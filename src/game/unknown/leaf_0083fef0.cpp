@@ -66,9 +66,6 @@ class Object0083fef0 /* derived name */
     int unknown554;
 };
 
-// NONMATCHING: list-ilp order: the base stores the field before the test of the same value, the
-// compile tests first; every instruction else equal (the order class round 138B's (4) scheduling
-// backport moves, not tested here)
 void FUN_0083fef0(Object0083fef0 *self) /* derived name */
 {
     self->slot47(0);
