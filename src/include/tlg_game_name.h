@@ -38,8 +38,11 @@ void FUN_00d66e30(unsigned index); /* derived name */
 class Name /* derived name */
 {
   public:
+    /* add false looks the string up without interning it (0x5066c5:
+     * `xor ecx, ecx`) */
     template <size_t N>
-    Name(const char (&string)[N]) : index(FUN_013baad0(string, FUN_013bad90(string), N - 1, true))
+    Name(const char (&string)[N], bool add = true)
+        : index(FUN_013baad0(string, FUN_013bad90(string), N - 1, add))
     {
     }
 
