@@ -7,8 +7,7 @@
  * failed format sending the whole buffer, then writes it to the game's
  * output on channel 0; a null format writes nothing. */
 // NONMATCHING: list-ilp order, the base tests the length (`test eax, eax`) before
-// `mov ecx, 0xfff`, the build after; and the base's one-byte nop after the call
-// of __stack_chk_fail that ends the function (D26, the library line's backport only).
+// `mov ecx, 0xfff`, the build after (the select written either way, the same).
 void FUN_00c831d0(const void *, const char *format, ...)
 {
     if (format) {

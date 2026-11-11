@@ -86,10 +86,10 @@ void FUN_0137c700(Object0137c420 *self) /* derived name */
 
 /* The job FUN_0137c760 queues depends on its argument: the class whose
  * vtable is at 0x16cca90 when it is set, else the one at 0x16ccac8. */
-// NONMATCHING: the two arms' vtable stores: the base allocates once, branches
-// and stores in each arm (the machine tail merge joins the stores); this build
-// sinks the stores into one and selects the vtable with `cmov` (the store
-// sinking under investigation, D54).
+// NONMATCHING: FoldTwoEntryPHINode, the vtable's phi: the base allocates once,
+// branches over the two vtables' `lea` and stores once at the join; this
+// build (D54's rule installed, the same in both builds) makes the phi a
+// select (`cmove`). The stores are sunk into one in both.
 void FUN_0137c760(Object0137c420 *self, int which) /* derived name */
 {
     Job0137c420 *job;

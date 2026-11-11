@@ -1,0 +1,23 @@
+/* The C++ library's <algorithm>, as much of it as the game's sources use,
+ * declared by us from the standard's description (docs/FINISHING.md rule 8;
+ * the build's -nostdlibinc hides the host's headers): std::min and std::max
+ * (C++11 25.4.7), which return a reference to one of their arguments, so a
+ * bound that is not a variable is a temporary whose address the select
+ * takes (FUN_013c99b0). */
+#ifndef TLG_ALGORITHM
+#define TLG_ALGORITHM
+
+namespace std
+{
+template <class T> inline const T &min(const T &a, const T &b)
+{
+    return b < a ? b : a;
+}
+
+template <class T> inline const T &max(const T &a, const T &b)
+{
+    return a < b ? b : a;
+}
+} // namespace std
+
+#endif

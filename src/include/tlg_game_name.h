@@ -16,7 +16,8 @@ struct NameTableEntry017ac870 /* derived name */
     const char *string0; /* +0x0 */
     u8 unknown8[8];
     int references10; /* +0x10 */
-    u8 unknown14[0xc];
+    u8 unknown14[4];
+    void *record18; /* +0x18: a record of the name's, null for none (FUN_00618b00) */
 };
 
 extern NameTableEntry017ac870 D_17ac870[];
