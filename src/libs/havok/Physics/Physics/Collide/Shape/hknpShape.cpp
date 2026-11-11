@@ -6,10 +6,10 @@
  * implemented" under its own id, at the line of the file the executable
  * gives. */
 
-int hknpShape::unknownVirtual5() const
+hknpShape::ShapeType hknpShape::unknownVirtual5() const
 {
     HK_ERROR(0x4cc169fa, HK_NP_SHAPE_CPP, 32, "Not implemented");
-    return 22;
+    return SHAPE_TYPE_NOT_IMPLEMENTED;
 }
 
 void hknpShape::unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const

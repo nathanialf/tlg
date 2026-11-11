@@ -1884,6 +1884,10 @@ struct hkMatrix4 {
      * (0x10a70; the game calls it at 0xea114d). */
     void FUN_00010a70(const hkTransform &transform);
 
+    /* The same inline (Havok's set from a transform; the compound shape's
+     * geometry, 0x4256b). derived name. */
+    inline void set(const hkTransform &transform);
+
     Vec4 col0; /* derived name */
     Vec4 col1; /* derived name */
     Vec4 col2; /* derived name */
@@ -6112,6 +6116,21 @@ inline const Vec4 &getVectorConstant(VectorConstant row) /* derived name */
     return D_14b2060[row];
 }
 
+/* The rotation's columns with w zero, the translation with w one (row 3 of
+ * the table), the columns read first (0x10a70 out of line). */
+inline void hkMatrix4::set(const hkTransform &transform)
+{
+    const Vec4 c0 = transform.rotation.col0;
+    const Vec4 c1 = transform.rotation.col1;
+    const Vec4 c2 = transform.rotation.col2;
+    const Vec4 c3 = transform.translation;
+    const Vec4 zero = _mm_setzero_ps();
+    col0 = _mm_blend_ps(c0, zero, 8);
+    col1 = _mm_blend_ps(c1, zero, 8);
+    col2 = _mm_blend_ps(c2, zero, 8);
+    col3 = _mm_blend_ps(c3, D_14b2060[3], 8);
+}
+
 /* derived name: the step from one point toward another at a speed (0x156cd0;
  * the callers at 0x158292 and 0x166b88): when the two are more than
  * epsilon (row 35) apart, the speed along the way plus a correction from a
@@ -8053,6 +8072,7 @@ void FUN_00169e50(const void *argument1, const void *argument2, const hknpShape 
                   const void *argument3, const void *argument4, void *argument5); /* derived name */
 
 class hknpShapeKeyMask;
+struct hknpShapeSlot29Input;
 
 /* What a shape's mass properties are built from (derived names; the
  * second member's name is a string of the executable, m_inertiaFactor):
@@ -8278,9 +8298,18 @@ class alignas(16) hknpShape : public hkReferencedObject
      * (hknpShape's own 0x6faa0, the capsule's 0x72ec0). */
     static void operator delete(void *object, unsigned long numBytes);
 
+    /* Slot 5's values (derived names): the two convex types a scaled
+     * convex shape is built over (the compound shape's geometry compares
+     * below 2, unsigned, 0x42484), and the default's 22. */
+    enum ShapeType {
+        SHAPE_TYPE_CONVEX = 0,
+        SHAPE_TYPE_CONVEX_POLYTOPE = 1,
+        SHAPE_TYPE_NOT_IMPLEMENTED = 22
+    };
+
     /* Slots 5 and 6: the defaults (0x6e3d0, 0x6e510) report "Not
      * implemented" and return 22 and 0. */
-    virtual int unknownVirtual5() const;
+    virtual ShapeType unknownVirtual5() const;
     virtual int unknownVirtual6() const;
     /* Slot 7: the shape's bounds under a transform. */
     virtual void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const;
@@ -8361,7 +8390,8 @@ class alignas(16) hknpShape : public hkReferencedObject
     void FUN_0006fc70(const void *argument1, void *argument2) const;
     /* Slot 29: a value the masked shape's override (0x38130) hands back
      * from the core shape's. */
-    virtual int unknownVirtual29(const void *argument1, void *argument2) const;
+    virtual int unknownVirtual29(const struct hknpShapeSlot29Input &input,
+                                 hkGeometry *geometryOut) const;
     /* Slot 30: the shared empty body 0x3b640, kept by every shape vtable
      * read so far. */
     virtual void unknownVirtual30();
@@ -8452,8 +8482,8 @@ class hknpDecoratorShape : public hknpShape
                      int currentLod) const; /* vtable slot 27; derived name */
     void FUN_0003b260(const MassConfig00168340 *config, hkDiagonalizedMassProperties *propertiesOut)
         const; /* vtable slot 28; derived name */
-    int FUN_0003b270(const void *argument1,
-                     void *argument2) const; /* vtable slot 29; derived name */
+    int FUN_0003b270(const hknpShapeSlot29Input &input,
+                     hkGeometry *geometryOut) const; /* vtable slot 29; derived name */
 
     const hknpShape *coreShape;
     int coreShapeSize; /* the record's second member (TYPE_INT32, +0x30) */
@@ -8680,21 +8710,6 @@ struct alignas(16) hknpShapeQueryInfo /* derived name */
     Vec4 shapeScaleOffset;
 };
 
-/* What slot 29 of the shapes takes first (derived names): 0x50 bytes on a
- * 16-byte boundary (the masked shape's 0x38130 copies it in four vector
- * moves and two words), a shape key mask at +8, which the masked shape
- * replaces with its own; hknpLodShape's slot 29 reads a level of detail
- * at +0x10. */
-struct alignas(16) ShapeQuery00038130 /* derived name */
-{
-    const void *unknown0;
-    const hknpShapeKeyMask *mask;
-    int levelOfDetail;
-    u8 unknown14[0x2c];
-    const void *unknown40;
-    const void *unknown48;
-};
-
 /* hknpMaskedShape, polymorphic, 0x70 bytes (type info 0x57bea28, vtable
  * 0x1693a80, address point 0x1693a90), reflected with hknpDecoratorShape as
  * its parent (hkClass 0x57be9d8): members from its record table at
@@ -8759,7 +8774,7 @@ class hknpMaskedShape : public hknpDecoratorShape
 
     /* Slot 29 (0x38130): the core shape's slot 29 asked with the shape's
      * mask in a copy of the first argument's record. derived name. */
-    int FUN_00038130(const ShapeQuery00038130 &argument1, void *argument2) const;
+    int FUN_00038130(const hknpShapeSlot29Input &input, hkGeometry *geometryOut) const;
 
     hknpShapeKeyMask *mask;
     MaskWrapper maskWrapper;
@@ -13948,13 +13963,27 @@ struct hknpShapeSlot22Output /* derived name */
  * shape's vertices as v * scale + offset. */
 struct hknpShapeSlot29Input /* derived name */
 {
+    /* A mode with the defaults (the compound shape's input for each
+     * instance, 0x42503 to 0x4254f, a temporary of its slot 29 call built
+     * after the callee is loaded): no flag, mask or level, a unit scale and
+     * no offset (rows 3 and 2 of the vector constants), the mode stored
+     * last. */
+    explicit hknpShapeSlot29Input(int mode_)
+        : flag4(false), mask(HK_NULL), levelOfDetail(0), scale(D_14b2060[3]), value30(0),
+          offset(D_14b2060[2])
+    {
+        mode = mode_;
+    }
+
     int mode;     /* derived name */
     hkBool flag4; /* the compressed mesh's walk's last argument (0x127a97); derived name */
-    u8 unknown5[0x1b];
-    Vec4 scale;  /* derived name */
-    int value30; /* the compressed mesh's query's +0x20 (0x127a70); derived name */
-    u8 unknown34[0xc];
-    Vec4 offset; /* derived name */
+    /* The keys' mask, tested by instance in the compound shape (0x4244e).
+     * derived name. */
+    const hknpShapeKeyMask *mask;
+    int levelOfDetail; /* derived name */
+    Vec4 scale;        /* derived name */
+    int value30;       /* the compressed mesh's query's +0x20 (0x127a70); derived name */
+    Vec4 offset;       /* derived name */
 };
 
 class hknpConvexShape;
@@ -19681,6 +19710,9 @@ class hkGeometry : public hkReferencedObject
 
     hkGeometry(hkFinishLoadedObjectFlag flag);
 
+    /* Empty (the compound shape's geometry for each instance, 0x42499). */
+    hkGeometry() {}
+
     /* The arrays given back (0x27f50, slot 0; the deleting destructor
      * 0x27fd0 holds the same body). Inline: the executable holds the
      * complete destructor before the deleting one, the order a vtable's
@@ -19700,6 +19732,11 @@ class hkGeometry : public hkReferencedObject
      * (0x93c90; the callers 0x425dc and 0x12847f). derived name. */
     hkResult FUN_00093c90(const hkGeometry &geometry, const hkMatrix4 *transform);
 
+    /* The same under a transform, made a matrix first (inline in the
+     * compound shape's geometry, 0x4256b; defined after hkMatrix4's set).
+     * derived name. */
+    inline hkResult appendGeometry(const hkGeometry &geometry, const hkTransform &transform);
+
     hkArray<Vec4> vertices;
     hkArray<Triangle> triangles;
 };
@@ -19707,6 +19744,13 @@ class hkGeometry : public hkReferencedObject
 /* The geometry's vertices that lie within a tolerance welded into one, the
  * triangles' indices rewritten (0x1891e0; the mesh tree's walk ends with
  * it at no tolerance). derived name. */
+inline hkResult hkGeometry::appendGeometry(const hkGeometry &geometry, const hkTransform &transform)
+{
+    hkMatrix4 matrix;
+    matrix.set(transform);
+    return FUN_00093c90(geometry, &matrix);
+}
+
 void FUN_001891e0(hkGeometry *geometry, float tolerance);
 
 /* The records the weld's worker (0x189540) is given arrays of, 32 and 8
@@ -20159,6 +20203,9 @@ class hknpCompoundShape : public hknpCompositeShape
     int FUN_000418c0(void *keysOut, int maxNumKeys, int key,
                      const ShapeKeyQuery000380b0 &query) const;
 
+    /* Slot 29 (0x42300): the instances' geometry. derived name. */
+    int FUN_00042300(const struct hknpShapeSlot29Input &input, hkGeometry *geometryOut) const;
+
     /* Aligned to 16 bytes (the record's flag 0x100, ALIGN_16), at +0x60. */
     alignas(16)
         hkFreeListArray<hknpShapeInstance, hknpShapeInstanceId, 8, hknpShapeInstance> instances;
@@ -20265,15 +20312,9 @@ struct hknpLodShape : public hknpCompositeShape {
      * the levels' shapes released, then the composite shape's inline. */
     inline virtual ~hknpLodShape();
 
-    /* What slot 29's first argument holds at +0x10 (derived names). */
-    struct Slot29Argument {
-        u8 unknown0[0x10];
-        int levelOfDetail; /* derived name */
-    };
-
     void unknownVirtual7(const Mat4 &transform, hkAabb &aabbOut) const; /* FUN_00068350 */
-    int FUN_00068960(const Slot29Argument *argument1,
-                     void *argument2) const; /* vtable slot 29; derived name */
+    int FUN_00068960(const hknpShapeSlot29Input &input,
+                     hkGeometry *geometryOut) const; /* vtable slot 29; derived name */
     /* Slot 22 (0x68440): the level the first key selects (its top key
      * bits) asked for the leaf, the keys handed on with this shape's bits
      * shifted out (each the next key's bits set below it), at most ten.
