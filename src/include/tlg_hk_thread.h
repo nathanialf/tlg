@@ -930,6 +930,8 @@ void FUN_0015c5f0(hknpWorldContextPool::Context *context, void *shared, int cell
  * the arrays from the last member; the complete destructor 0x15dc50 jumps
  * to it and the deleting one 0x15dc60 calls it (a linkonce destructor is
  * not aliased by clang 3.3, CGCXX.cpp:124-127). */
+class Elements000760c0; /* tlg_lib_unknown.h */
+
 class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface /* derived name */
 {
   public:
@@ -972,6 +974,12 @@ class hknpCollidePairsTask : public hkReferencedObject, public hknpTaskInterface
     virtual void process();
     /* slot 6 (0x15e7f0; the interface's thunk 0x15e850) */
     virtual void getName(hkStringBuf *name, hkStringBuf *description) const;
+
+    /* Set up for a step (0x15e220; the prepare task calls it for both
+     * tasks): the pool at +0xc0, the elements at +0x118, the world's
+     * streams by the kind, the flag at +0x131. derived name. */
+    void FUN_0015e220(hknpWorldContextPool *pool, hknpWorldContextPool::Context *context,
+                      Elements000760c0 *elements, hknpWorldStreams260 *streams, bool flag131);
 
     u8 unknown18[8];
     u8 shared20[0x48]; /* derived name: handed to 0x15c5f0 */
@@ -1368,7 +1376,6 @@ class hknpSolveDataTask : public hknpTask /* derived name */
 void FUN_0014ea20(hknpSolveFinalizeTask *self);             /* vtable slot 5; derived name */
 void FUN_0014f190(hknpProcessSecondRoundResultsTask *self); /* vtable slot 5; derived name */
 void FUN_0014fa50(hknpProcessFirstRoundResultsTask *self);  /* vtable slot 5; derived name */
-void FUN_001798c0(hknpPrepareExistingPairsTask *self);      /* vtable slot 5; derived name */
 void FUN_0018ef40(hknpSolverStageTask *self);               /* vtable slot 5; derived name */
 
 #endif

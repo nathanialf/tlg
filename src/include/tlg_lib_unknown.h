@@ -2780,7 +2780,9 @@ class Elements000760c0 : public hkBaseObject /* derived name */
     inline virtual ~Elements000760c0() {}
 
     /* From the thread's heap and back at the class's size, a null object
-     * left alone (0x76081). */
+     * left alone (0x76081); the prepare-existing-pairs task takes its 0x160
+     * bytes in place (0x1799ad). */
+    static void *operator new(unsigned long numBytes);
     static void operator delete(void *object, unsigned long numBytes);
 
     /* An entry of the arrays at +0x10 and +0x20 (0x40 bytes) and of the
@@ -2842,9 +2844,10 @@ class Elements000760c0 : public hkBaseObject /* derived name */
  * by FUN_0006c850 at 0x6cc19, over the simulation context it is given
  * (kept at +0x150), one element and room for one entry in each array; the
  * thread context it is also given is not read. derived names. */
-/* The constraints' builder's object (derived names; FUN_00150330 hands its
- * +0x120 and +0x138 to the prepare task and itself to the build task): the
- * solver's elements at +0x10, the gather and the groups. */
+/* The constraints' builder's object (derived names; FUN_00150330 hands the
+ * pool and itself to the prepare task, 0x15038c, and itself to the build
+ * task): the solver's elements at +0x10 (the prepare task makes them), the
+ * gather and the groups. */
 struct ConstraintSetup00150330 /* derived name */
 {
     u8 unknown0[0x10];
@@ -2852,6 +2855,13 @@ struct ConstraintSetup00150330 /* derived name */
     u8 unknown18[0x108];
     ConstraintGather000c5e30 gather;
     ConstraintGroups000c6630 groups;
+    u8 unknown148[0x10];
+    /* The two pairs tasks the builder makes (0x150939, kind 1, and
+     * 0x150b19, kind 0), set up by the prepare task (0x179bcf). derived
+     * names. */
+    hknpCollidePairsTask *existingPairsTask;
+    u8 unknown160[8];
+    hknpCollidePairsTask *newPairsTask;
 };
 
 /* The jacobians of a run of gathered constraints built (0xc5340, 0x9f1
@@ -5579,6 +5589,11 @@ inline void RefArrays::operator delete(void *object, unsigned long numBytes)
     if (object) {
         D_16dc070->temp58->blockFree(object, static_cast<int>(numBytes));
     }
+}
+
+inline void *Elements000760c0::operator new(unsigned long numBytes)
+{
+    return D_16dc070->temp58->blockAlloc(static_cast<int>(numBytes));
 }
 
 inline void Elements000760c0::operator delete(void *object, unsigned long numBytes)
