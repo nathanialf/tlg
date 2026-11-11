@@ -16,15 +16,15 @@ static inline bool allEqual3(const Vec4 &a, const Vec4 &b)
  * stay in the instance (at most ten, each past this shape's bits); a
  * convex child under a scale other than one is built as a scaled convex
  * shape in the output's buffer, any other child is the leaf itself. */
-// NONMATCHING: 137 of 216 by difflib, 957 bytes for the base's 941. Landed: the instance's transform
-// read into a local first (its columns loaded once for the three cases), the translation multiplied
-// as instance by scale (the scale's load then stays in each path and is PRE'd where neither flag is
-// set, as in the base). Residuals: (1) the composed case folds the output translation's load into
-// its add, so the translation is computed before the column stores and held in xmm9; the base loads
-// it with the columns and computes it last into xmm0, which lets the translation-only case share its
-// store and mask by tail merging (the 16 bytes, and the xmm numbering after it); (2) the loop's key
-// compare: InstCombine turns the key's sext(trunc) into shl/ashr and compares in 32 bits where the
-// base compares the two ids in 16 (`cmp ax, r8w`).
+// NONMATCHING: 144 of 216 by difflib at the base's instruction count, 957 bytes for 941. Landed: the
+// instance's transform read into a local first (its columns loaded once for the three cases), the
+// translation multiplied as instance by scale (the scale's load then stays in each path and is PRE'd
+// where neither flag is set), the composed translation read after the columns are stored (computed
+// last, as in the base). Residuals: (1) that translation's load is folded into its add here, where
+// the base loads it with the columns and adds in xmm0, which lets the translation-only case share
+// the store and mask by tail merging (the 16 bytes; the xmm numbering follows); (2) the loop's key
+// compare is 32-bit (InstCombine turns the key's sext(trunc) into shl/ashr); u16 operands give a
+// 16-bit `xor`, not the base's `cmp ax, r8w`.
 void hknpCompoundShape::FUN_00041a80(const u32 *keys, int numKeys,
                                      hknpShapeSlot22Output *output) const
 {
@@ -47,12 +47,11 @@ void hknpCompoundShape::FUN_00041a80(const u32 *keys, int numKeys,
             const Vec4 c0 = output->transform.rotation.col0;
             const Vec4 c1 = output->transform.rotation.col1;
             const Vec4 c2 = output->transform.rotation.col2;
-            const Vec4 t = output->transform.translation;
             output->transform.rotation.col0 = combineColumns(c0, c1, c2, transform.rotation.col0);
             output->transform.rotation.col1 = combineColumns(c0, c1, c2, transform.rotation.col1);
             output->transform.rotation.col2 = combineColumns(c0, c1, c2, transform.rotation.col2);
-            output->transform.translation =
-                _mm_add_ps(t, combineColumns(c0, c1, c2, transform.translation));
+            output->transform.translation = _mm_add_ps(
+                output->transform.translation, combineColumns(c0, c1, c2, transform.translation));
         }
         output->flags = (output->flags & ~(hknpShapeSlot22Output::TRANSFORM_IS_IDENTITY |
                                            hknpShapeSlot22Output::TRANSFORM_IS_SET |
