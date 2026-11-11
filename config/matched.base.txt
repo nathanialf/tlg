@@ -6906,3 +6906,15 @@ FUN_00dd2820 src/game/unknown/leaf_00dd2820.cpp _ZN14Object016bba90D1Ev
 FUN_00dd2890 src/game/unknown/leaf_00dd2820.cpp _ZN14Object016bba90D0Ev
 FUN_0069bb10 src/game/unknown/leaf_0069bb10.cpp
 FUN_0134a450 src/game/unknown/leaf_0134a4c0.cpp _Z12FUN_0134a450P14Object0134a660RK4Name
+FUN_008ab0c0 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.15
+FUN_008ab130 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.16
+FUN_008ab6c0 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.28
+FUN_008ab730 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.29
+FUN_008ab810 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.31
+FUN_008ab880 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.32
+FUN_008ab970 src/game/unknown/func_0088b4e0.cpp __cxx_global_array_dtor.34
+FUN_0036ab40 src/game/unknown/func_0036a1b0.cpp __cxx_global_array_dtor
+FUN_0036abb0 src/game/unknown/func_0036a1b0.cpp __cxx_global_array_dtor.2
+FUN_00422da0 src/game/unknown/func_00421aa0.cpp __cxx_global_array_dtor.6
+FUN_004749b0 src/game/unknown/func_004730f0.cpp __cxx_global_array_dtor
+FUN_00a05070 src/game/unknown/func_00a04d30.cpp __cxx_global_array_dtor
