@@ -194,3 +194,4 @@ _ZTV14Object0148c2f0 0x16d7c58 Object0148c2f0 derived ctor FUN_0148c2f0 # game r
 _ZTV14Object00f0e560 0x16bedb8 Object00f0e560 derived ctor FUN_00f0e560 # game region (round 150C): 0xf0e560 stores this vtable; no type info and no string names the class
 _ZTV14Object013cd2a0 0x16d3670 Object013cd2a0 derived ctor FUN_013cd2a0 # game region (round 150C): 0x13cd2a0 stores this vtable; no type info and no string names the class
 _ZTV14Object00e5b7e0 0x16bdb40 Object00e5b7e0 derived ctor FUN_00e5b7e0 # game region (round 150C): 0xe5b7e0 stores this vtable; no type info and no string names the class
+_ZTV9FixCamera 0x16abef8 FixCamera derived ctor FUN_0061ab50 # game region (round 152C): the class its messages name ("FixCamera(%s)::Init", "::Term"); stored by FUN_0061ab50, FUN_0061adc0 and FUN_0061ae10; no type info
