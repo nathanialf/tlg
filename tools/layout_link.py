@@ -578,6 +578,35 @@ def build_image(ver: str, log=print) -> dict:
         report["data"][dn] = {"tu": tu, "symbol": sym, "addr": addr, "size": len(data),
                               "relocs": len(relocs), "nobits": not in_file, "segment": sg["name"]}
 
+    # --- header statics -------------------------------------------------------------
+    # every row of config/header_statics.<slug>.txt (a unit's copy of an object
+    # its header defines, match_check "header statics"): the unit exists, its
+    # module code keeps the copy and proves it (match_check.header_static_aliases),
+    # the address is in the NOBITS tail of a loaded segment (the copies are
+    # .bss), and no two rows give one address. The address itself is checked by
+    # every claimed function that references the copy (the file's initializer
+    # stores each one), as any D_<hex> is.
+    seen_at: dict[int, str] = {}
+    for tu, rows in sorted(mc.load_header_statics(ver).items()):
+        obj = compiled(tu) if (REPO_ROOT / tu).exists() else None
+        proven: dict[str, str] = {}
+        why: dict[str, str] = {}
+        if obj is not None and mc.is_module_tu(tu):
+            al, why = mc.header_static_aliases(tu, obj, ver)
+            proven = {n: c for c, n in al.items()}
+        for sym, addr in sorted(rows.items()):
+            key = f"header static {tu} {sym}"
+            sg = seg_for(addr)
+            if obj is None:
+                report["errors"][key] = f"{tu} does not exist or failed to compile"
+            elif sym not in proven:
+                report["errors"][key] = f"the unit's copy is not proven: {why.get(sym, 'the unit does not define it')}"
+            elif sg is None or addr < sg["vaddr"] + sg["filesz"]:
+                report["errors"][key] = f"0x{addr:x} is not in the NOBITS (.bss) part of a loaded segment"
+            elif addr in seen_at:
+                report["errors"][key] = f"0x{addr:x} is also the row of {seen_at[addr]}"
+            seen_at.setdefault(addr, f"{tu} {sym}")
+
     # --- compare ------------------------------------------------------------------
     import bisect
     fstarts = [a for a, _, _ in base.functions]

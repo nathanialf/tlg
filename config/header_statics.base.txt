@@ -1,0 +1,18 @@
+# Header statics: one name in a header, one copy per unit (tools/match_check.py,
+# "header statics"; round 189A). A namespace-scope `static const` object a
+# header defines is an internal object of every unit that includes it, each
+# copy at its own address in that unit's .bss. A row gives the address of one
+# unit's copy:
+#
+#   <tu> <symbol as the unit spells it> 0x<address in the base>
+#
+# A function's reference to the copy resolves to the row's address as D_<hex>
+# and is checked against the base's field like any D_<hex> (match_check and the
+# layout), so a wrong row fails the unit's initializer, which stores every
+# copy, and every claimed function of the unit that reads one; a reference to a
+# header static of a unit with no row fails, naming the row it needs. In the
+# whole game module the unit's copy is proven by the functions of the unit that
+# reference it (header_static_aliases), never by the link's `.N`. Rows are
+# written from the unit's initializer in the base (the first store of each
+# constant), one per object; the nineteen objects' order in .bss differs by
+# unit (123 orders over 325 units), so no unit's layout is assumed.

@@ -336,7 +336,12 @@ class BaseElf:
         """Where the base put `name`: a function of the table (by its mangled
         name or its bare identifier), a `D_<hex>` data label, a vtable the
         executable names (config/vtables.<slug>.txt, tools/vtable_names.py),
-        or an import (its PLT stub)."""
+        or an import (its PLT stub). A name beginning `!` is a reference the
+        gate has already refused (tools/match_check.py with_header_statics: a
+        header static whose unit has no row or whose copy is not proven); it
+        raises ValueError with the reason."""
+        if name.startswith("!"):
+            raise ValueError(name[1:])
         if name in self.func_by_name:
             return self.func_by_name[name][0]
         alias = self.ctor_alias(name)

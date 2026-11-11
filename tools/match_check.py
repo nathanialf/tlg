@@ -233,7 +233,10 @@ def tu_functions(tu: str, obj: Path, ver: str) -> dict[str, tuple[bytes, list]]:
     its spelling in the module: it is keyed by the unit's own name and maps to
     the module's symbol compiler_local_aliases proves."""
     funcs = object_functions(obj)
-    if not is_module_tu(tu) or obj != object_path(tu, ver):
+    if not is_module_tu(tu):
+        return funcs
+    funcs = with_header_statics(tu, obj, ver, funcs)
+    if obj != object_path(tu, ver):
         return funcs
     import game_module as gm
     by_tu, renamed = gm.load_symbols(ver)
@@ -344,6 +347,15 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
         for n in names:
             kind = gm.compiler_kind(n)
             if not reach[n]:
+                if (n.startswith("_GLOBAL__sub_I_") and n not in renamed and n in funcs and n in ctors
+                        and sum(1 for t in by_tu.values() if n in t) == 1):
+                    # a file's initializer whose objects are all the unit's
+                    # own but none uniquely named (header statics, renamed by
+                    # the link; external objects): its name, from the file's
+                    # name, is defined by this unit alone, so the link keeps it,
+                    # and the constructor table points at it
+                    aliases[n] = n
+                    continue
                 why[n] = "its IR body reaches none of the unit's own named objects"
                 continue
             twins = [m for m in names if m != n and gm.compiler_kind(m) == kind and reach[m] == reach[n]]
@@ -378,6 +390,228 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
                           f"referenced by {', '.join(anchors)}" + (f" ({', '.join(sorted(hits))})" if hits else ""))
     _ALIASES[key] = (aliases, why)
     return aliases, why
+
+
+# --- header statics: one name in a header, one copy and one address per unit --
+#
+# A namespace-scope `static` (or `const`) object a header defines is an
+# internal object of every unit that includes it: each unit has its own copy,
+# at its own address, under the one name the header gives it (the game's
+# vector constants, tlg_game_vector.h: 325 copies of the same nineteen
+# objects, each unit's in its own .bss). The address is a fact about the unit,
+# so it is data: config/header_statics.<slug>.txt, `<tu> <symbol> 0x<addr>`
+# (the symbol as the unit spells it, `_ZL11VECTOR_ZERO`). A function's
+# reference to the unit's copy is resolved to the row's address under the name
+# `D_<hex>` (tu_functions), and is then checked like any D_<hex>: the field
+# must encode that address in the base, in match_check and in the layout, so a
+# wrong row fails the first claimed function that touches the object (the
+# file's initializer stores every one). A reference to a header static of a
+# unit with no row fails, naming the row it needs.
+#
+# In the whole module the link renames all copies but the first (`.N`), so
+# which module symbol is the unit's copy is proven, never read from the
+# numbering (as D56 does for compiler-named functions): the functions of the
+# unit whose IR references the object (directly or through the compiler-named
+# functions they call), each by its module symbol (a stable name, or the
+# alias compiler_local_aliases proves), must all reference one and the same
+# candidate (a local object of the module whose name is the unit's with any
+# `.N`), and no other unit's proof may give that candidate.
+
+HEADER_STATIC_SUFFIX = re.compile(r"(?:\.\d+)+$")
+
+
+def load_header_statics(ver: str) -> dict[str, dict[str, int]]:
+    """{tu: {symbol: address}} from config/header_statics.<slug>.txt."""
+    key = ver
+    if key not in _HEADER_ROWS:
+        p = config_path(REPO_ROOT, ver, "header_statics", "txt")
+        out: dict[str, dict[str, int]] = {}
+        if p.exists():
+            for n, line in enumerate(p.read_text().splitlines(), 1):
+                s = line.split("#", 1)[0].split()
+                if not s:
+                    continue
+                if len(s) != 3 or not s[2].startswith("0x"):
+                    raise SystemExit(f"{p.relative_to(REPO_ROOT)}:{n}: a row is `<tu> <symbol> 0x<addr>`")
+                if s[1] in out.get(s[0], {}):
+                    raise SystemExit(f"{p.relative_to(REPO_ROOT)}:{n}: {s[0]} {s[1]} has two rows")
+                out.setdefault(s[0], {})[s[1]] = int(s[2], 16)
+        _HEADER_ROWS[key] = out
+    return _HEADER_ROWS[key]
+
+
+_HEADER_ROWS: dict[str, dict[str, dict[str, int]]] = {}
+
+
+def header_static_names(ver: str, obj: Path | None = None) -> set[str]:
+    """Every symbol a row of config/header_statics.<slug>.txt names, and, given
+    the object, every internal data object of it that two or more game files
+    define under one name (the link renamed all but one: a header static
+    whether or not a row names it yet; a name of the D_<hex> or FUN_<hex> form
+    is a file's own and is left out)."""
+    names = {s for rows in load_header_statics(ver).values() for s in rows}
+    if obj is not None:
+        import game_module as gm
+        _by_tu, renamed = gm.load_symbols(ver)
+        objs = {HEADER_STATIC_SUFFIX.sub("", c) for c in local_objects(obj)}
+        names |= {n for n in renamed if n in objs and not gm.compiler_local(n)
+                  and not BaseElf.base_identifier(n).startswith(("D_", "FUN_"))}
+    return names
+
+
+def local_objects(obj: Path) -> set[str]:
+    """The names of the local data objects (STB_LOCAL STT_OBJECT) an object
+    defines."""
+    st = obj.stat()
+    key = (str(obj), st.st_mtime_ns, st.st_size)
+    if key not in _LOCAL_OBJECTS:
+        from elftools.elf.elffile import ELFFile
+        with obj.open("rb") as f:
+            elf = ELFFile(f)
+            _LOCAL_OBJECTS[key] = {
+                s.name for s in elf.get_section_by_name(".symtab").iter_symbols()
+                if s["st_info"]["bind"] == "STB_LOCAL" and s["st_info"]["type"] == "STT_OBJECT" and s.name}
+    return _LOCAL_OBJECTS[key]
+
+
+_LOCAL_OBJECTS: dict[tuple, set[str]] = {}
+
+
+def header_static_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str], dict[str, str]]:
+    """({object symbol: unit symbol}, {unit symbol: why none}) for the header
+    statics (the symbols config/header_statics names) the game unit `tu`
+    defines, in `obj`: the unit's single-file module, where the unit's names
+    are its own, or the whole module, where each is proven as the comment
+    above says and no other unit with rows is given the same candidate."""
+    st = obj.stat()
+    key = (tu, str(obj), st.st_mtime_ns, st.st_size)
+    if key in _HEADER_ALIASES:
+        return _HEADER_ALIASES[key]
+    aliases, why = _header_static_proofs(tu, obj, ver)
+    aliases, why = dict(aliases), dict(why)
+    if aliases and obj == object_path(tu, ver):
+        for other in sorted(load_header_statics(ver)):
+            if other == tu or not (REPO_ROOT / other).exists():
+                continue
+            theirs = _header_static_proofs(other, obj, ver)[0]
+            for c in [c for c in aliases if c in theirs]:
+                why[aliases.pop(c)] = f"{c} is proven for {other} too"
+    _HEADER_ALIASES[key] = (aliases, why)
+    return aliases, why
+
+
+def _header_static_proofs(tu: str, obj: Path, ver: str) -> tuple[dict[str, str], dict[str, str]]:
+    import game_module as gm
+    st = obj.stat()
+    key = ("proof", tu, str(obj), st.st_mtime_ns, st.st_size)
+    if key in _HEADER_ALIASES:
+        return _HEADER_ALIASES[key]
+    names = header_static_names(ver, obj)
+    aliases: dict[str, str] = {}
+    why: dict[str, str] = {}
+    ll = gm.ir_path(tu, ver).with_suffix(".ll")
+    if names and ll.exists():
+        unit = gm.Unit(ll, tu)
+        mine = sorted(n for n, (lk, _tls) in unit.defs.items() if lk in gm.LOCAL and n in names)
+        have = local_objects(obj)
+        if obj != object_path(tu, ver):
+            for n in mine:
+                if n in have:
+                    aliases[n] = n
+                else:
+                    why[n] = "the unit's object keeps no copy of it"
+        elif mine:
+            refs = gm.function_refs(ll)
+            by_tu, renamed = gm.load_symbols(ver)
+            funcs = object_functions(obj)
+            cl_aliases = compiler_local_aliases(tu, obj, ver)[0]
+
+            def closure(n: str, seen: frozenset = frozenset()) -> set[str]:
+                out = set(refs.get(n, set()))
+                for g in refs.get(n, set()):
+                    if gm.compiler_local(g) and g in refs and g not in seen and g != n:
+                        out |= closure(g, seen | {n})
+                return out
+
+            # the unit's functions by their module symbols: a name the unit
+            # alone defines and the link keeps (not shared, not renamed, not
+            # compiler-given), or a compiler-given one's proven alias
+            anchors_of: dict[str, str] = {}
+            for f in refs:
+                lk = unit.defs.get(f, ("", False))[0]
+                if gm.compiler_local(f):
+                    if f in cl_aliases:
+                        anchors_of[f] = cl_aliases[f]
+                elif lk and lk not in gm.SHARED and f not in renamed and f in funcs:
+                    anchors_of[f] = f
+            reach = {f: closure(f) for f in anchors_of}
+            for n in mine:
+                cands = {c for c in have if HEADER_STATIC_SUFFIX.sub("", c) == n}
+                anchors = sorted(anchors_of[f] for f in anchors_of if n in reach[f])
+                if not anchors:
+                    why[n] = ("no function of the unit that references it has a module symbol the gate can "
+                              "prove (a stable name, or a proven compiler-given alias)")
+                    continue
+                common = set(cands)
+                for a in anchors:
+                    common &= {r.symbol for r in funcs[a][1]}
+                if len(common) == 1:
+                    aliases[common.pop()] = n
+                else:
+                    why[n] = (f"{len(common)} module objects named {n}[.N] are referenced by all of "
+                              f"{', '.join(anchors)}" + (f" ({', '.join(sorted(common))})" if common else ""))
+    _HEADER_ALIASES[key] = (aliases, why)
+    return aliases, why
+
+
+_HEADER_ALIASES: dict[tuple, tuple[dict[str, str], dict[str, str]]] = {}
+
+
+def with_header_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
+    """`funcs` with every reference to a header static resolved: to `D_<hex>`,
+    the address config/header_statics gives the copy's unit, when the copy is
+    proven (header_static_aliases); else to a name BaseElf.address_of refuses
+    with the reason (`!<why>`), so match_check and the layout fail the
+    function and say which row it needs. A reference to anything else is
+    untouched, so no row of a unit without header statics changes."""
+    names = header_static_names(ver, obj)
+    if not names:
+        return funcs
+    rows = load_header_statics(ver)
+    # every unit's proven copies in this object (a function may reach another
+    # unit's copy through a body the module shares), then this unit's
+    resolved: dict[str, int | str] = {}
+    module = obj == object_path(tu, ver)
+    units = sorted(set(rows) | {tu}) if module else [tu]
+    for u in units:
+        if not (REPO_ROOT / u).exists():
+            continue
+        al, why = header_static_aliases(u, obj, ver)
+        for c, n in al.items():
+            if n in rows.get(u, {}):
+                resolved[c] = rows[u][n]
+            else:
+                resolved[c] = (f"!{n}: a header static of {u} with no row: add `{u} {n} 0x<addr>` to "
+                               f"config/header_statics.{ver}.txt, the address of the unit's copy")
+        if u == tu:
+            for n, w in why.items():
+                resolved.setdefault(n, f"!{n}: a header static of {u} whose copy is not proven: {w}")
+    hit = False
+    out = {}
+    for k, (code, relocs) in funcs.items():
+        if not any(HEADER_STATIC_SUFFIX.sub("", r.symbol) in names for r in relocs):
+            out[k] = (code, relocs)
+            continue
+        new = []
+        for r in relocs:
+            if HEADER_STATIC_SUFFIX.sub("", r.symbol) in names:
+                hit = True
+                t = resolved.get(r.symbol, f"!{r.symbol}: a header static no unit's proof places")
+                sym = f"D_{t:x}" if isinstance(t, int) else t
+                r = Reloc(r.offset, r.width, r.type, sym, r.addend, r.sym_section, r.sym_value, r.sym_size)
+            new.append(r)
+        out[k] = (code, new)
+    return out if hit else funcs
 
 
 def init_array_targets(obj: Path) -> set[str]:
@@ -744,7 +978,10 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
         try:
             expected = base.address_of(r.symbol) if base is not None else None
         except ValueError as e:   # a vtable whose evidence fails (a D14 row, an instantiation's slot-0 row)
-            bad.append(f"{e} (reloc at +0x{r.offset:x})")
+            where = ""
+            if r.symbol.startswith("!") and r.type in (2, 4):   # a refused header static: where the base points
+                where = f"; the base's field points at 0x{_st.unpack_from('<i', base_bytes, r.offset)[0] + base_addr + r.offset - r.addend:x}"
+            bad.append(f"{e} (reloc at +0x{r.offset:x}{where})")
             continue
         if expected is None:
             unverified += 1
