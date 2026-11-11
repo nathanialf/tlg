@@ -7,13 +7,16 @@
 /* derived names: FUN_0088b4e0 (102307 bytes) builds a menu of named entries
  * (the strings "cansel" and "decide" are the sounds FUN_0088b2b0 plays) and
  * hands its items std::function callbacks: 34 implementations, their vtables
- * in the order of their `lea`s (0x8906b8 on). The first 22 are written
- * below in that order: 0x16af4b0, 0x16af500, 0x16af550, 0x16af5a0,
- * 0x16af910, 0x16af960, 0x16af9b0, 0x16afaf0, 0x16afb40, 0x16afb90,
- * 0x16afdc0, 0x16afe10, 0x16afe60, 0x16afeb0, 0x16af6e0, 0x16af730,
- * 0x16af780, 0x16aff00, 0x16afa00, 0x16afa50, 0x16afaa0, 0x16af690; the
- * other 12 (0x16af5f0 on, the `lea` at 0x8a0513) are still in their holder
- * files. setText, clearText and clearTitle are the creating function's
+ * in the order of their `lea`s (0x8906b8 on). They are written below in
+ * that order: 0x16af4b0, 0x16af500, 0x16af550, 0x16af5a0, 0x16af910,
+ * 0x16af960, 0x16af9b0, 0x16afaf0, 0x16afb40, 0x16afb90, 0x16afdc0,
+ * 0x16afe10, 0x16afe60, 0x16afeb0, 0x16af6e0, 0x16af730, 0x16af780,
+ * 0x16aff00, 0x16afa00, 0x16afa50, 0x16afaa0, 0x16af690; then the choices
+ * and two sliders from the `lea` at 0x8a0513, each choice's getter written
+ * before its step (the step's `lea` comes first where the getter is stored
+ * in place): 0x16af5f0, 0x16af640, 0x16afbe0, 0x16af7d0, 0x16af820,
+ * 0x16afc30, 0x16af870, 0x16af8c0, 0x16afc80, 0x16afcd0, 0x16afd20,
+ * 0x16afd70. setText, clearText and clearTitle are the creating function's
  * closures at rbp-0x9c0, rbp-0x9e8 and rbp-0x9d8, which the callbacks call
  * through (inlined there); clearList is the one the later lists' callbacks
  * call (its count read once, `test; je` then `dec; jne` on a 32-bit
@@ -23,11 +26,102 @@
  * other members are not traced. */
 void FUN_0088b2b0(const char *name); /* derived name: plays the named sound */
 
+struct Class008ab9e0 { /* derived name: a class record, its parent at +0 */
+    const Class008ab9e0 *parent;
+};
+
+extern const Class008ab9e0 *D_57db090; /* derived name: the class of a text widget */
+
+struct Widget008ab9e0 { /* derived name */
+    u8 unknown0[0x18];
+    const Class008ab9e0 *type; /* +0x18 */
+    u8 unknown20[0x68];
+    Name text; /* +0x88 */
+
+    bool isKindOf(const Class008ab9e0 *of) const
+    {
+        const Class008ab9e0 *c = type;
+        while (c != of) {
+            c = c->parent;
+            if (!c)
+                return false;
+        }
+        return true;
+    }
+};
+
+void FUN_01331c10(int *readers); /* derived name */
+
+/* the item's widgets, read under the lock at +0x30 */
+struct Panel008ab9e0 { /* derived name */
+    u8 unknown0[0x30];
+    int readers; /* +0x30, derived name */
+    u8 unknown34[0x24];
+    Widget008ab9e0 **widgets; /* +0x58, derived name */
+    unsigned widgetCount;     /* +0x60, derived name */
+
+    Widget008ab9e0 *find(const Class008ab9e0 *kind)
+    {
+        FUN_01331c10(&readers);
+        Widget008ab9e0 *found = 0;
+        for (int i = 0; i < widgetCount; i++) {
+            if (widgets[i]->isKindOf(kind)) {
+                found = widgets[i];
+                break;
+            }
+        }
+        __sync_fetch_and_sub(&readers, 1);
+        return found;
+    }
+};
+
+struct Item008ab9e0 { /* derived name */
+    u8 unknown0[0x28];
+    unsigned id; /* +0x28 */
+};
+
+/* an entry of the list at +0x148: 0x30 bytes */
+struct Entry008ab9e0 { /* derived name */
+    u8 unknown0[8];
+    Item008ab9e0 *item; /* +0x8 */
+    u8 unknown10[0x10];
+    Panel008ab9e0 *panel; /* +0x20 */
+    u8 unknown28[8];
+
+    void setText(Name text)
+    {
+        if (panel) {
+            if (Widget008ab9e0 *widget = panel->find(D_57db090))
+                widget->text = text;
+        }
+    }
+};
+
 struct Owner0088b4e0 { /* derived name */
     u8 unknown0[0x110];
     int unknown110; /* +0x110 */
     u8 unknown114[0x10];
     int unknown124; /* +0x124 */
+    u8 unknown128[8];
+    Name *unknown130; /* +0x130, the label FUN_008ac030 is given */
+    u8 unknown138[8];
+    int unknown140; /* +0x140, a choice of two */
+    u8 unknown144[4];
+    Entry008ab9e0 *entries; /* +0x148, derived name */
+    unsigned entryCount;    /* +0x150, derived name */
+
+    int indexOf(unsigned id) const
+    {
+        for (unsigned i = 0; i < entryCount; i++)
+            if (entries[i].item->id == id)
+                return i;
+        return -1;
+    }
+
+    Entry008ab9e0 *entry(int i)
+    {
+        return i < 0 ? 0 : &entries[i];
+    }
 };
 
 /* the record at +0x100 of D_57c9390 the sliders read and write: values
@@ -52,7 +146,10 @@ extern Object057c9390 *D_57c9390;
 
 /* the entry of `self`'s list whose id is `id` (+0x28 of the item at +0x8 of
  * each 0x30-byte element) is given `text` */
-void FUN_008ab9e0(Owner0088b4e0 *self, unsigned id, Name text); /* derived name */
+void FUN_008ab9e0(Owner0088b4e0 *self, unsigned id, Name text) /* derived name */
+{
+    self->entry(self->indexOf(id))->setText(text);
+}
 
 /* the list builder the first callbacks go to: the base calls it through a
  * closure of the creating function (rbp-0xa18); its arguments here are the
@@ -73,7 +170,24 @@ void FUN_008ac610(void *closure, Name label, Name help,
                   std::function<float()> value, /* derived name */
                   float step, float scale);
 
+/* a choice entry (0x8a058f on): its label, the getter of the current
+ * choice and the step that moves it and returns the new one; the closure
+ * as FUN_008abb70's */
+void FUN_008ac270(void *closure, const Name *label, std::function<int()> current, /* derived name */
+                  std::function<int(int)> step);
+
+/* the creating function's closure at rbp-0xaa0 the first choice's step
+ * calls (0x8af9c1): the label at +0x130, two names and the new choice */
+struct Refresh008ac030 { /* derived name: its captures not traced */
+    void *unknown0;
+};
+
+void FUN_008ac030(Refresh008ac030 *closure, const Name *label, Name a, Name b, /* derived name */
+                  int choice);
+
 extern Name D_581e81c;
+extern Name D_581e8d0[]; /* derived name: the choices' labels */
+extern Name D_581e8e0[];
 extern Name D_581e900[]; /* derived name: the three entries of the second list */
 extern Name D_581e940[]; /* derived name: the entries of three more lists */
 extern Name D_581e968[];
@@ -94,7 +208,14 @@ extern Name D_581ee20; /* derived name: the text those entries are cleared to */
 // text's index in a register across FUN_008ab9e0, which reads its Name
 // argument only (the attribute the compiler infers when FUN_008ab9e0 is
 // defined in the module); not written yet. Slot 2 of 0x16af780 (0x8affc0):
-// the sign compare scheduled before the add, registers renumbered.
+// the sign compare scheduled before the add, registers renumbered. Slot 2
+// of 0x16af640 (0x8af940): the base keeps the two copied names' indices in
+// registers across FUN_008ac030 (its arguments only read: FUN_008ac030 not
+// written yet). Slots 2 of 0x16af820 and 0x16af8c0 (0x8b0260, 0x8b04b0):
+// the base computes the result before the negated value is stored, list-ilp
+// order. Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
+// has an LEA where this build adds or copies (`lea esi, [rsi + rdx]`, `lea
+// esi, [rdx - 1]`): the two-address pass, not identified.
 void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
 {
     Owner0088b4e0 *owner = self;
@@ -114,6 +235,8 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
     Name label(""), help("");
     Name yes3(""), yes4(""), yes5(""), no3("");
     unsigned count3 = 0, count4 = 0;
+    int unknown988 = 0, unknown990 = 0, unknown928 = 0, unknown930 = 0, unknown938 = 0,
+        unknown940 = 0, unknown948 = 0, unknown950 = 0, unknown958 = 0, unknown960 = 0;
     auto setText = [&owner](Name id, const Name &text) { FUN_008ab9e0(owner, id.index, text); };
     auto clearText = [&setText](const Name &id) { setText(id, D_581e81c); };
     auto clearTitle = [&setText, &title]() { setText(title, D_581e81c); };
@@ -178,13 +301,13 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
         [&busy, &yes, self, &done, &no](Name selected) {
             Owner0088b4e0 *menu = self;
             busy = true;
-            if (selected == yes) {
+            if (yes == selected) {
                 FUN_0088b2b0("decide");
                 busy = true;
                 menu->unknown110++;
                 menu->unknown124 = 1100;
                 done = true;
-            } else if (selected == no) {
+            } else if (no == selected) {
                 FUN_0088b2b0("cansel");
                 busy = true;
                 menu->unknown110++;
@@ -219,13 +342,13 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
         [&busy, &yes2, self, &changed, &no2](Name selected) {
             Owner0088b4e0 *menu = self;
             busy = true;
-            if (selected == yes2) {
+            if (yes2 == selected) {
                 FUN_0088b2b0("decide");
                 busy = true;
                 menu->unknown110++;
                 menu->unknown124 = 1200;
                 changed = true;
-            } else if (selected == no2) {
+            } else if (no2 == selected) {
                 FUN_0088b2b0("cansel");
                 busy = true;
                 menu->unknown110++;
@@ -373,4 +496,81 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
         closure, label, help,
         []() -> float { return (fabsf(D_57c9390->unknown100->unknown40) - 0.5f) * 100.0f; }, 2.0f,
         0.995f);
+
+    /* the choices (0x8a0513 on): the first a member of the object, the
+     * camera axes inverted or not, and two settings packed in +0x4c as
+     * (a * 2 + b) + 1, a of three and b of two */
+    Refresh008ac030 refresh = {0};
+    Name choiceA(""), choiceB("");
+    FUN_008ac270(
+        closure, self->unknown130, [self]() { return self->unknown140; },
+        [self, &refresh, &choiceA, &choiceB](int step) {
+            Owner0088b4e0 *menu = self;
+            menu->unknown140 = (step + menu->unknown140 + 2) % 2;
+            FUN_008ac030(&refresh, menu->unknown130, choiceA, choiceB, menu->unknown140);
+            return menu->unknown140;
+        });
+    FUN_008ac880(
+        closure, label, help,
+        [&unknown988, &unknown968](float delta) -> float {
+            Settings057c9390 *settings = D_57c9390->unknown100;
+            float percent = settings->unknown50 * 100.0f + delta;
+            percent = percent < 0.0f ? 0.0f : percent;
+            percent = percent > 100.0f ? 100.0f : percent;
+            settings->unknown50 = percent * 0.01f;
+            return percent;
+        },
+        Name("slider_music"), 2.0f, 0.995f);
+    FUN_008ac270(
+        closure, D_581e8d0,
+        [&unknown928]() -> int { return D_57c9390->unknown100->unknown44 <= 0.0f; },
+        [&unknown928, &unknown930](int) -> int {
+            Settings057c9390 *settings = D_57c9390->unknown100;
+            /* the new choice is the other one: computed before the flip */
+            float speed = settings->unknown44;
+            settings->unknown44 = -speed;
+            return speed <= 0.0f ? 0 : 1;
+        });
+    FUN_008ac880(
+        closure, label, help,
+        [&unknown990, &unknown968](float delta) -> float {
+            Settings057c9390 *settings = D_57c9390->unknown100;
+            float percent = settings->unknown54 * 100.0f + delta;
+            percent = percent < 0.0f ? 0.0f : percent;
+            percent = percent > 100.0f ? 100.0f : percent;
+            settings->unknown54 = percent * 0.01f;
+            return percent;
+        },
+        Name("slider_sfx"), 2.0f, 0.995f);
+    FUN_008ac270(
+        closure, D_581e8e0,
+        [&unknown938]() -> int { return D_57c9390->unknown100->unknown40 <= 0.0f; },
+        [&unknown938, &unknown940](int) -> int {
+            Settings057c9390 *settings = D_57c9390->unknown100;
+            /* the new choice is the other one: computed before the flip */
+            float speed = settings->unknown40;
+            settings->unknown40 = -speed;
+            return speed <= 0.0f ? 0 : 1;
+        });
+    FUN_008ac270(
+        closure, D_581e968,
+        [&unknown948]() -> int { return (D_57c9390->unknown100->unknown4c - 1) / 2; },
+        [&unknown948, &unknown950](int step) -> int {
+            Settings057c9390 *settings = D_57c9390->unknown100;
+            unsigned a = (settings->unknown4c - 1) / 2;
+            unsigned next = (step + a + 3) % 3;
+            if (a != next)
+                settings->unknown4c = (int)(settings->unknown4c - 1) % 2 + next * 2 + 1;
+            return next;
+        });
+    FUN_008ac270(
+        closure, D_581e980, [&unknown958]() -> int { return D_57c9390->unknown100->unknown4c % 2; },
+        [&unknown958, &unknown960](int step) -> int {
+            Settings057c9390 *settings = D_57c9390->unknown100;
+            unsigned current = settings->unknown4c % 2;
+            unsigned b = (step + settings->unknown4c) % 2;
+            if (current != b)
+                settings->unknown4c = ((int)(settings->unknown4c - 1) / 2 * 2 + (b ^ 1)) + 1;
+            return b;
+        });
 }

@@ -56,7 +56,25 @@ class Name /* derived name */
         return index == other.index;
     }
 
+    /* the new reference raised before the old one is dropped, and nothing
+     * done when the two are the same name (0x8abaf0) */
+    Name &operator=(const Name &other)
+    {
+        if (index != other.index) {
+            __sync_fetch_and_add(&D_17ac870[other.index].references10, 1);
+            release();
+            index = other.index;
+        }
+        return *this;
+    }
+
     ~Name()
+    {
+        release();
+    }
+
+    /* drops this name's reference: the entry is freed with its last one */
+    void release() /* derived name */
     {
         if (index != 0) {
             if (__sync_fetch_and_sub(&D_17ac870[index].references10, 1) == 1)
