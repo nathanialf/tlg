@@ -195,3 +195,11 @@ _ZTV14Object00f0e560 0x16bedb8 Object00f0e560 derived ctor FUN_00f0e560 # game r
 _ZTV14Object013cd2a0 0x16d3670 Object013cd2a0 derived ctor FUN_013cd2a0 # game region (round 150C): 0x13cd2a0 stores this vtable; no type info and no string names the class
 _ZTV14Object00e5b7e0 0x16bdb40 Object00e5b7e0 derived ctor FUN_00e5b7e0 # game region (round 150C): 0xe5b7e0 stores this vtable; no type info and no string names the class
 _ZTV9FixCamera 0x16abef8 FixCamera derived ctor FUN_0061ab50 # game region (round 152C): the class its messages name ("FixCamera(%s)::Init", "::Term"); stored by FUN_0061ab50, FUN_0061adc0 and FUN_0061ae10; no type info
+_ZTV14Object013d2ee0 0x16d3950 Object013d2ee0 derived ctor FUN_013d2ee0 # game region (round 155C): the destructor 0x13d2ee0 stores this vtable; no type info and no string names the class
+_ZTV14Object013d2f90 0x16d3868 Object013d2f90 derived ctor FUN_013d2f90 # game region (round 155C): the destructor 0x13d2f90 stores this vtable; no type info and no string names the class
+_ZTV14Object013d3040 0x16d3840 Object013d3040 derived ctor FUN_013d3040 # game region (round 155C): the destructor 0x13d3040 stores this vtable; no type info and no string names the class
+_ZTV14Object013d30f0 0x16d3750 Object013d30f0 derived ctor FUN_013d30f0 # game region (round 155C): the destructor 0x13d30f0 stores this vtable; no type info and no string names the class
+_ZTV14Object013d6840 0x16d3b70 Object013d6840 derived ctor FUN_013d6840 # game region (round 155C): the destructor 0x13d6840 stores this vtable; no type info and no string names the class
+_ZTV14Object013da160 0x16d3be0 Object013da160 derived ctor FUN_013da160 # game region (round 155C): the destructor 0x13da160 stores this vtable; no type info and no string names the class
+_ZTV14Object013e96a0 0x16d50b0 Object013e96a0 derived ctor FUN_013e96a0 # game region (round 155C): the destructor 0x13e96a0 stores this vtable; no type info and no string names the class
+_ZTV14Object013f9340 0x16d55b8 Object013f9340 derived ctor FUN_013f9340 # game region (round 155C): the destructor 0x13f9340 stores this vtable; no type info and no string names the class
