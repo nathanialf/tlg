@@ -24,6 +24,8 @@ class Reporter00dacb80 /* derived name */
     virtual void slot2();                    /* derived name; not traced */
     virtual void slot3(const char *message); /* derived name; not traced */
     virtual int slot4();                     /* derived name; not traced */
+    virtual void slot5();                    /* derived name; not traced */
+    virtual int slot6();                     /* derived name; not traced */
 };
 
 struct CodePage00dacb80 { /* derived name */
@@ -77,6 +79,7 @@ void FUN_013bde50(void *field);                                            /* de
 void FUN_013bdca0(void *field);                                            /* derived name */
 void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression); /* derived name */
 void FUN_00dae7e0(Compiler00dacb80 *self);                                 /* derived name */
+int FUN_00db1aa0(Compiler00dacb80 *self, u32 code, int value);             /* derived name */
 
 /* derived name: the word of the instruction at pc */
 static inline u32 *instruction(FuncState00dacb80 *fs, u32 pc)
@@ -176,4 +179,43 @@ void FUN_00da7a00(Compiler00dacb80 *self) /* derived name */
         expression->kind = 3;
     FUN_00da7a60(self, expression);
     self->funcState->unknown1798->unknown14 = expression->unknown3c;
+}
+
+/* derived name: slots 10 and 11 of the vtable at 0x16bb0c0 (their pointers
+ * at 0x16bb120 and 0x16bb128), one body: a jump emitted by FUN_00db1aa0
+ * (the code 0x38fffe00 and slot 6 of the reporter) with the pending jump
+ * list (+0xc40, left empty) joined to it, the jump joined to the record's
+ * list at +0x4, then FUN_00db00e0's body over the jump at +0x8 */
+// NONMATCHING: list-ilp order: the base adds 4 to the record (the exit list's address) right
+// after the vptr load, the build after the jump list's store; the tail's pc in esi against edi
+// (greedy's assignment)
+void FUN_00daff40(Compiler00dacb80 *self) /* derived name */
+{
+    FuncState00dacb80 *fs = self->funcState;
+    int *exits = &fs->unknown1798->unknown4;
+    int pending = fs->jumpList;
+    fs->jumpList = -1;
+    int jump = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
+    FUN_00dacb80(self, &jump, pending);
+    FUN_00dacb80(self, exits, jump);
+    fs = self->funcState;
+    int target = fs->unknown1798->unknown8;
+    fs->lastTarget = fs->pc;
+    FUN_00dacb80(self, &self->funcState->jumpList, target);
+}
+
+// NONMATCHING: as FUN_00daff40, one body
+void FUN_00db0010(Compiler00dacb80 *self) /* derived name */
+{
+    FuncState00dacb80 *fs = self->funcState;
+    int *exits = &fs->unknown1798->unknown4;
+    int pending = fs->jumpList;
+    fs->jumpList = -1;
+    int jump = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
+    FUN_00dacb80(self, &jump, pending);
+    FUN_00dacb80(self, exits, jump);
+    fs = self->funcState;
+    int target = fs->unknown1798->unknown8;
+    fs->lastTarget = fs->pc;
+    FUN_00dacb80(self, &self->funcState->jumpList, target);
 }

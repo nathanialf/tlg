@@ -32,6 +32,8 @@ struct FuncState00da5b20 { /* derived name */
     u8 *free;                       /* +0x16f8 */
     u32 count;                      /* +0x1700 */
     u32 capacity;                   /* +0x1704 */
+    u8 unknown1708[0xa8];
+    int unknown17b0; /* +0x17b0: cleared by FUN_00dad190 */
 };
 
 struct Compiler00da5b20 { /* derived name */

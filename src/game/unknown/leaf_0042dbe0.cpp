@@ -16,12 +16,23 @@ struct Target0042dbe0 /* derived name */
     u8 flags100; /* +0x100 */
 };
 
+struct Position0042dbe0 { /* derived name */
+    int x;                /* copied whole */
+    float y;              /* raised by 0.5 for the debug text */
+    int z;                /* copied whole */
+    int w;                /* copied whole */
+};
+
 struct Object0042dbe0 /* derived name */
 {
     u8 unknown0[0x28];
     Source0042dbe0 *unknown28; /* +0x28 */
-    u8 unknown30[0xd8];
+    u8 unknown30[0x20];
+    Position0042dbe0 position; /* +0x50 */
+    u8 unknown60[0xa8];
     Target0042dbe0 *unknown108; /* +0x108 */
+    u8 unknown110[0xcc];
+    float jumpSpeed; /* +0x1dc: derived name, after its debug text */
 };
 
 void FUN_002054d0(Target0042dbe0 **slot, Source0042dbe0 *source, int flag); /* derived name */
@@ -32,5 +43,31 @@ void FUN_0042dbe0(Object0042dbe0 *self) /* derived name */
         FUN_002054d0(&self->unknown108, self->unknown28, 0);
         if (self->unknown108)
             self->unknown108->flags100 &= ~2;
+    }
+}
+
+/* derived names: the method in the same place of another class (its address
+ * at 0x16aa780): FUN_0042dbe0's body, then, with the slot at +0x108 filled,
+ * a line of debug text "JumpSpeed: %f" with the float at +0x1dc drawn half a
+ * unit above the position at +0x50 (FUN_00205720: the position, a colour
+ * 0xc080a0ff and a scale of 1, a flag 0, the format and its value) */
+struct TextStyle0042dbe0 { /* derived name */
+    u32 colour;
+    float scale;
+};
+
+void FUN_00205720(const Position0042dbe0 *position, const TextStyle0042dbe0 *style, int flag,
+                  const char *format, ...); /* derived name */
+
+// NONMATCHING: greedy's assignment: the base holds the object in rbx and the slot's address in
+// r14, the build the other way; the operations the same
+void FUN_004eafd0(Object0042dbe0 *self) /* derived name */
+{
+    FUN_0042dbe0(self);
+    if (self->unknown108) {
+        Position0042dbe0 position = self->position;
+        position.y += 0.5f;
+        TextStyle0042dbe0 style = {0xc080a0ff, 1.0f};
+        FUN_00205720(&position, &style, 0, "JumpSpeed: %f", self->jumpSpeed);
     }
 }
