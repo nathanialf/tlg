@@ -3539,3 +3539,50 @@ are both refuted).
 
 **Trigger to revisit.** A game `add` of a commuted two-address instruction that only the
 re-sampled operand keeps from becoming a `lea`.
+
+## D72. A jump table needs 40% density: `-jump-table-density=40` (2026-11-12)
+
+**Question.** 0x12fd240 switches over 13 cases in a range of 52; the installed compiler makes
+one 52-entry table (25% dense); the base makes a table for the dense part only (8 of 20
+values) and compares for the rest.
+
+**Evidence.** The base's 468 jump tables by density (cases over entries, the most common
+target taken as the default: an approximate count, round 219C's census repeated by the
+supervisor): 7 below 40%, 24 from 40 to 50%, 40 from 50 to 60%, 293 full: a floor at 40%,
+where LLVM 4.0.0's default minimum is 10% (`jump-table-density`, SelectionDAGBuilder.cpp:93;
+its own value for functions optimised for size is 40) and 3.6.2's lowering requires 40%. With
+the option at 40 the module sweep is identical row for row and draft for draft to the
+installed line's (s223: 4,219 of 4,268 resolvable rows in both).
+
+**Decision.** `-mllvm -jump-table-density=40` on the `src/game/` line of
+`config/flags.base.txt`: the upstream option, a per-prefix flag as in D55 and D61.
+
+**Not shown.** The seven tables under 40% by the approximate count were not read one by one
+(a default target that is also a case's target is miscounted as the default).
+
+**Trigger to revisit.** A game jump table, in a function written whole, whose density is below
+40% by its source's cases.
+
+## D73. A claimed function's jump table is derived from its row and proven entry by entry (2026-11-12)
+
+**Question.** The game line lowers a switch to a table of 32-bit entries in .rodata, each the
+target block's address minus the table's. The layout step refused any unit holding such a
+table ("a layout extension"), so no game function with a jump table could be claimed; the
+region has 468 tables in 344 functions.
+
+**Decision (round 219C, `jump_table` in `tools/layout_link.py`).** The table has no config
+row: it is derived from the function's row on every run. Its address is where the base's own
+`lea` points and must lie in the game's read-only data (`config/modules.base.txt`); the
+object's table must be exactly its entries, each a PC-relative relocation to a block of that
+function; every entry must equal the base's word at that entry or the row fails naming the
+entry; the table's bytes are then laid at its address so the segment comparison covers them;
+a table that overlaps another claimed object fails its row. Any other data object holding a
+relocation that is not a pointer keeps the old refusal.
+
+**Evidence.** The gate's count 7,150 before and after the tool change; with one entry of
+0x13985e0's table moved by five bytes in a scratch copy of the object the row fails: "entry 1
+(+0x4) targets +0x35 (0x1398615), the base's entry targets 0x1398610"; five functions claimed
+through it (0x13985e0, 0x13999c0, 0x139a080, 0xdd1d60, 0x331950).
+
+**Excluded.** A config row typed by hand per table; skipping the table; trusting the object's
+entries without the base's bytes.

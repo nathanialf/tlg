@@ -68,6 +68,10 @@
 #                                   into its predecessors (r283934, first in
 #                                   4.0, not taken): four drafts take the
 #                                   base's merged tests, no row changes (D61)
+#   -mllvm -jump-table-density=40 (game)
+#                                   a switch becomes a jump table only at 40%
+#                                   density: the base's 468 tables have a
+#                                   floor there; 4.0.0's default is 10 (D72)
 #   -fPIC                           the executable is position independent
 #                                   (ET_SCE_DYNEXEC, 29k relocations); an
 #                                   Orbis driver default (Sony's 2013 LLVM dev
@@ -124,4 +128,4 @@
 #                                   as builtins (D11: libs 64 calls, 0 tail
 #                                   jumps; game 1,417 calls, 18 tail jumps)
 src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections -fPIC -fstack-protector-strong -fno-math-errno -fno-honor-nans -funsafe-math-optimizations -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include -g
-src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -mllvm -jump-table-density=40 -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
