@@ -32,6 +32,16 @@ class Node00503fb0; /* derived name */
 
 void FUN_00c14bc0(Node00503fb0 *node); /* derived name: releases it later */
 
+/* the value at `value` replaced by `replacement` when it is `expected`;
+ * returns the value found (`lock cmpxchg; cmove eax, ecx` at every site: the
+ * expected value is returned when the exchange was made) */
+inline int compareAndSwap(int *value, int expected, int replacement) /* derived name */
+{
+    __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_SEQ_CST,
+                                __ATOMIC_SEQ_CST);
+    return expected;
+}
+
 /* a counted reference to a node: the count at +0x8 of the node is left
  * alone once it holds the released mark */
 template <class T> class Ref00503fb0 /* derived name */
@@ -45,16 +55,29 @@ template <class T> class Ref00503fb0 /* derived name */
 
     ~Ref00503fb0()
     {
-        if (object && object->references != RELEASED &&
-            __sync_fetch_and_sub(&object->references, 1) == 1) {
-            if (D_16dc088) {
-                int count;
-                do
-                    count = object->references;
-                while (__sync_val_compare_and_swap(&object->references, count, RELEASED) != count);
-                object->destroy();
-            } else {
-                FUN_00c14bc0(object);
+        release();
+    }
+
+    /* drops the reference and leaves this empty: the pointer is cleared
+     * first (`mov qword [rdi], 0` before the count is read); the last
+     * reference destroys the object at once on a thread whose flag is set,
+     * else hands it to FUN_00c14bc0 */
+    void release() /* derived name */
+    {
+        T *released = object;
+        if (released) {
+            object = 0;
+            if (released->references != RELEASED &&
+                __sync_fetch_and_sub(&released->references, 1) == 1) {
+                if (D_16dc088) {
+                    int count;
+                    do
+                        count = released->references;
+                    while (compareAndSwap(&released->references, count, RELEASED) != count);
+                    released->destroy();
+                } else {
+                    FUN_00c14bc0(released);
+                }
             }
         }
     }
