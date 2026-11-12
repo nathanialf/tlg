@@ -50,6 +50,39 @@ fact about the base: regenerated, never edited.
 
     module_boundary.py            write config/modules.<slug>.txt
     module_boundary.py --check    regenerate in memory, exit 1 if the file differs
+
+Local data (config/local_data.<slug>.txt, one `<symbol>` per row, written by
+hand with the variable): a game variable that was local to the optimiser when
+the base was built, though the source declares it for every file. GlobalOpt
+turns a variable into a one-bit value only when it has local linkage and every
+store is the initial value, one other constant, or a value loaded from the
+variable itself (lib/Transforms/IPO/GlobalOpt.cpp of 4.0.0: processGlobal
+returns before processInternalGlobal unless hasLocalLinkage; the shrink is
+TryToShrinkGlobalToBoolean), and the base's code shows which variables it
+did that to: a one-bit load is masked (`movzx; and 1`, `mov; xor 1; test 1`,
+`test byte, 1`), where a bool that kept its byte is compared whole
+(`cmp byte, 0`). tools/game_module.py gives a row's variable internal linkage
+in the linked module before the pipeline; a row is never trusted:
+`local_proof` reads every access of the variable in the game's code and
+refuses the row unless
+
+    - no access compares the byte whole, takes another width, or does
+      anything but load or store the byte;
+    - at least one load is masked; a loaded byte's first use within WINDOW
+      instructions is the mask, or the byte is kept (stored or copied, read
+      later: not judged), never a test of the whole byte; a register is
+      stored at most as often as a byte is kept (the saved copy put back);
+    - every store of a constant stores 0 or 1, and 1 is stored somewhere (a
+      variable never set would have been folded to its initial value).
+
+A thread-local's accesses are found from its `add rax, [rip+slot]` sites
+(item 6), following the address register and its copies in text order for
+WINDOW instructions, to the function's end or a `ret` (branches are not
+followed: a linear reading, which can miss an access but does not invent
+one for a register still holding the address); an ordinary variable's are
+the RIP-relative operands that name it.
+
+    module_boundary.py --local    prove every row of config/local_data.<slug>.txt, exit 1 on a refusal
 """
 from __future__ import annotations
 
@@ -70,6 +103,7 @@ GAME_START = 0x1a3e00          # docs/DECISIONS.md D6: the game region's first a
 PT_SCE_RELRO, PT_SCE_PROCPARAM = 0x61000010, 0x61000001
 RIP = re.compile(r"\[rip ([+-]) 0x([0-9a-f]+)\]")
 TLS_ADD = re.compile(r"^rax, qword ptr \[rip ([+-]) 0x([0-9a-f]+)\]$")
+REG64 = ["rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp"] + [f"r{i}" for i in range(8, 16)]
 
 
 def census(base: BaseElf) -> tuple[list[tuple[int, int, str]], dict]:
@@ -111,6 +145,197 @@ def census(base: BaseElf) -> tuple[list[tuple[int, int, str]], dict]:
             # the decoder stops at a byte it cannot decode (residue in a gap): step over it
             off = end + 1 if end < hi else end
     return refs, {"plt": (plt_lo, plt_hi), "tls_adds": tls_adds}
+
+
+WINDOW = 25
+_LEGACY = {"ax": "rax", "bx": "rbx", "cx": "rcx", "dx": "rdx", "si": "rsi", "di": "rdi", "bp": "rbp", "sp": "rsp"}
+FAMILY: dict[str, str] = {}
+for _w, _q in _LEGACY.items():
+    for _n in (_q, "e" + _w, _w, _w + "l" if _w in ("si", "di", "bp", "sp") else _w[0] + "l"):
+        FAMILY[_n] = _q
+    if _w in ("ax", "bx", "cx", "dx"):
+        FAMILY[_w[0] + "h"] = _q
+for _i in range(8, 16):
+    for _sfx in ("", "d", "w", "b"):
+        FAMILY[f"r{_i}{_sfx}"] = f"r{_i}"
+CALL_CLOBBERED = {"rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11"}
+MEM = re.compile(r"^(?:(byte|word|dword|qword|xmmword|ymmword|tbyte) ptr )?(?:[a-z]s:)?\[(.*)\]$")
+NO_DEST = ("cmp", "test", "push", "call", "jmp", "ret", "nop", "bt", "ucomis", "comis", "vucomis", "vcomis")
+LOCAL_KINDS = ("masked", "kept", "plain", "store0", "store1", "store_reg", "other")
+
+
+def _classify(insns, i, is_var) -> tuple[str, str] | None:
+    """What instruction i does to the variable: (kind, text) or None when it
+    does not touch it. `is_var(operand)` says whether a memory operand is the
+    variable itself."""
+    addr, size, mn, ops = insns[i]
+    parts = ops.split(", ") if ops else []
+    hit = [k for k, o in enumerate(parts) if MEM.match(o) and is_var(o, addr + size)]
+    if not hit or mn == "nop":
+        return None
+    text = f"0x{addr:x}: {mn} {ops}"
+    k = hit[0]
+    width = MEM.match(parts[k]).group(1)
+    if width != "byte" or len(parts) != 2:
+        return "other", text
+    other = parts[1 - k]
+    if k == 0:
+        if mn == "mov":
+            if other in ("0", "1"):
+                return "store" + other, text
+            return ("store_reg" if other in FAMILY else "other"), text
+        if mn == "cmp" and other == "0":
+            return "plain", text
+        if mn == "test" and other == "1":
+            return "masked", text
+        return "other", text
+    if mn not in ("mov", "movzx") or other not in FAMILY:
+        return "other", text
+    # a load: the first later use of the loaded register says whether one bit of it is read
+    fam = FAMILY[other]
+    for a2, s2, mn2, ops2 in insns[i + 1:i + 1 + WINDOW]:
+        p2 = ops2.split(", ") if ops2 else []
+        if mn2 == "nop" or not any(FAMILY.get(x) == fam for x in re.findall(r"[a-z][a-z0-9]+", ops2)):
+            if mn2 in ("call", "ret"):
+                break
+            continue
+        if len(p2) == 2 and FAMILY.get(p2[0]) == fam:
+            if p2[1] == "1" and mn2 in ("and", "xor", "test"):
+                return "masked", text
+            if (mn2 == "test" and FAMILY.get(p2[1]) == fam) or (mn2 == "cmp" and p2[1] == "0"):
+                return "plain", text + f" ; 0x{a2:x}: {mn2} {ops2}"
+        break
+    return "kept", text
+
+
+def local_census(base: BaseElf, variables: dict[str, int]) -> dict[str, dict]:
+    """{symbol: {kind: [text]} and "sites"} for each variable (symbol ->
+    address in the base): every access the game's code makes."""
+    from capstone import CS_ARCH_X86, CS_MODE_64, Cs
+    md = Cs(CS_ARCH_X86, CS_MODE_64)
+    text = base.text
+    lo_text = text["vaddr"]
+    tdata = base.data[text["offset"]:text["offset"] + text["filesz"]]
+    tls = next(p for p in base.phdrs if p["type"] == PT_TLS)
+    tls_lo, tls_hi = tls["vaddr"], tls["vaddr"] + tls["memsz"]
+    align = tls["align"] or 1
+    tls_size = (tls["memsz"] + align - 1) // align * align
+    funcs = sorted((a, a + s) for a, s, _n in base.functions if a >= GAME_START)
+    starts = [f[0] for f in funcs]
+    out = {n: {**{k: [] for k in LOCAL_KINDS}, "sites": 0} for n in variables}
+    tls_vars = {n: a for n, a in variables.items() if tls_lo <= a < tls_hi}
+    plain_vars = {n: a for n, a in variables.items() if n not in tls_vars}
+    if tls_vars:
+        want = {a - tls_lo - tls_size: n for n, a in tls_vars.items()}     # thread-pointer offset -> symbol
+        head = bytes.fromhex("64488b042500000000480305")                   # mov rax, fs:[0]; add rax, [rip+d32]
+        pos = tdata.find(head, GAME_START - lo_text)
+        while pos >= 0:
+            end = lo_text + pos + len(head) + 4
+            slot = end + struct.unpack("<i", tdata[pos + len(head):pos + len(head) + 4])[0]
+            i = bisect.bisect_right(starts, end) - 1
+            name = None
+            if i >= 0 and end < funcs[i][1] and text["vaddr"] + text["filesz"] <= slot:
+                try:
+                    name = want.get(struct.unpack("<q", base.read(slot, 8))[0])
+                except Exception:
+                    name = None
+            if name:
+                rec = out[name]
+                rec["sites"] += 1
+                insns = []
+                for ins in md.disasm_lite(tdata[end - lo_text:funcs[i][1] - lo_text], end):
+                    insns.append(ins)
+                    if len(insns) >= 2 * WINDOW or ins[2] == "ret":
+                        break
+                track = {"rax"}
+                for j, (addr, size, mn, ops) in enumerate(insns[:WINDOW]):
+                    if not track:
+                        break
+                    parts = ops.split(", ") if ops else []
+
+                    def is_var(o, _next, track=track):
+                        return MEM.match(o).group(2) in track
+
+                    c = _classify(insns, j, is_var)
+                    if c:
+                        rec[c[0]].append(c[1])
+                    elif mn != "nop":
+                        for o in parts:
+                            m = MEM.match(o)
+                            if m and any(FAMILY.get(x) in track for x in re.findall(r"[a-z][a-z0-9]+", m.group(2))):
+                                rec["other"].append(f"0x{addr:x}: {mn} {ops}")
+                    if mn == "call":
+                        track -= CALL_CLOBBERED
+                    elif mn == "mov" and len(parts) == 2 and parts[0] in REG64 and parts[1] in track:
+                        track.add(parts[0])
+                    elif parts and parts[0] in FAMILY and not mn.startswith(NO_DEST):
+                        track.discard(FAMILY[parts[0]])
+                    if mn == "ret":
+                        break
+            pos = tdata.find(head, pos + 1)
+    if plain_vars:
+        by_addr = {a: n for n, a in plain_vars.items()}
+        for lo, hi in funcs:
+            insns = list(md.disasm_lite(tdata[lo - lo_text:hi - lo_text], lo))
+            for j, (addr, size, mn, ops) in enumerate(insns):
+                m = RIP.search(ops)
+                if not m:
+                    continue
+                target = addr + size + int(m.group(2), 16) * (1 if m.group(1) == "+" else -1)
+                name = by_addr.get(target)
+                if name is None:
+                    continue
+                out[name]["sites"] += 1
+
+                def is_var(o, nxt, target=target):
+                    r = RIP.search(o)
+                    return bool(r) and nxt + int(r.group(2), 16) * (1 if r.group(1) == "+" else -1) == target
+
+                c = _classify(insns, j, is_var) or ("other", f"0x{addr:x}: {mn} {ops}")
+                out[name][c[0]].append(c[1])
+    return out
+
+
+def local_rows(ver: str) -> list[str]:
+    """The symbols of config/local_data.<slug>.txt."""
+    p = config_path(REPO_ROOT, ver, "local_data", "txt")
+    if not p.exists():
+        return []
+    return [l.split()[0] for l in p.read_text().splitlines() if l.strip() and not l.startswith("#")]
+
+
+def local_proof(base: BaseElf, names: list[str]) -> tuple[dict[str, str], list[str]]:
+    """({symbol: the proof's one line}, [refusal]) for the rows `names`."""
+    variables, errors = {}, []
+    for n in names:
+        a = base.address_of(n) if re.fullmatch(r"D_[0-9a-f]+", n) else None
+        if a is None:
+            errors.append(f"local data row {n}: not a D_<hex> data label of the base")
+        else:
+            variables[n] = a
+    proofs = {}
+    for n, rec in local_census(base, variables).items():
+        c = {k: len(rec[k]) for k in LOCAL_KINDS}
+        line = (f"{n} sites={rec['sites']} " + " ".join(f"{k}={c[k]}" for k in LOCAL_KINDS))
+        why = []
+        if c["plain"]:
+            why.append(f"{c['plain']} read(s) compare the whole byte, the form of a variable that kept its byte "
+                       f"(first {rec['plain'][0]})")
+        if c["other"]:
+            why.append(f"{c['other']} access(es) are not a byte load or store (first {rec['other'][0]})")
+        if not c["masked"]:
+            why.append("no read takes one bit of the byte")
+        if c["store_reg"] > c["kept"]:
+            why.append(f"{c['store_reg']} register store(s) against {c['kept']} kept load(s): a register stored "
+                       f"must be a copy of the variable put back (first {rec['store_reg'][0]})")
+        if not c["store1"]:
+            why.append("no store of 1: a variable never set is folded to its initial value, not shrunk")
+        if why:
+            errors.append(f"local data row {n} is refused, the base's code does not show a variable local to the "
+                          f"optimiser: " + "; ".join(why) + f" [{line}]")
+        else:
+            proofs[n] = line
+    return proofs, errors
 
 
 def hx(v: int) -> str:
@@ -302,9 +527,17 @@ def owner_of(table, addr: int | None) -> str | None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="exit 1 if config/modules.<slug>.txt is not what the base gives")
+    ap.add_argument("--local", action="store_true", help="prove the rows of config/local_data.<slug>.txt")
     a = ap.parse_args(argv)
     ver = detect_version(REPO_ROOT)
     base = BaseElf(REPO_ROOT, ver)
+    if a.local:
+        proofs, errors = local_proof(base, local_rows(ver))
+        for line in proofs.values():
+            print(f"module_boundary: local {line}")
+        for e in errors:
+            print(f"module_boundary: {e}", file=sys.stderr)
+        return 1 if errors else 0
     text = "\n".join(build(base)) + "\n"
     out = config_path(REPO_ROOT, ver, "modules", "txt")
     if a.check:

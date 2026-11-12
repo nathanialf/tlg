@@ -728,6 +728,19 @@ def build_image(ver: str, log=print) -> dict:
                 report["errors"][key] = f"0x{addr:x} is also the row of {seen_at[addr]}"
             seen_at.setdefault(addr, f"{tu} {sym}")
 
+    # --- local data -----------------------------------------------------------------
+    # every row of config/local_data.<slug>.txt (a variable tools/game_module.py makes
+    # local before the pipeline, D74), used by a source yet or not: the base's code
+    # must show a variable the optimiser shrank to one bit (module_boundary.local_proof).
+    from module_boundary import local_proof, local_rows
+    rows_local = local_rows(ver)
+    if rows_local:
+        proofs, refusals = local_proof(base, rows_local)
+        for n in sorted(proofs):
+            log(f"local data: {proofs[n]}")
+        for e in refusals:      # "local data row <symbol> ..."
+            report["errors"]["local data row " + e.split()[3].rstrip(":")] = e
+
     # --- compare ------------------------------------------------------------------
     import bisect
     fstarts = [a for a, _, _ in base.functions]

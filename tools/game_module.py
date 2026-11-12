@@ -28,6 +28,22 @@ libraries' stay behind the GOT. The gate builds it the same way:
     3. llvm-link (built from the game compiler's own source, tools/cc/
        llvm-4.0.0-src-tools/bin) links every file and the stand-ins into one
        module, in the sources' order.
+    3a. The local data (config/local_data.<slug>.txt, D74): a variable of a
+       row was local to the optimiser when the base was built (its reads take
+       one bit: GlobalOpt's shrink, which needs local linkage), though every
+       file declares it. Each row the module defines is proven from the
+       base's code (tools/module_boundary.py local_proof; a row that fails is
+       a refusal, with what the base shows) and then given internal linkage
+       in the linked module, the one thing the step changes: `opt
+       -internalize` with every other definition of the module on its
+       preserved list (the list is the module's own symbol table, and the
+       table is read again afterwards: exactly the rows went local). While
+       the variable's definition is a stand-in, the stand-in carries one
+       writer, `__standin_writer_<symbol>`, storing 1: the base's code stores
+       1 somewhere (the proof says so), the files written so far may not,
+       and a local variable nothing sets is folded to its initial value. The
+       writer is the gate's, like the stand-in, and goes when a file defines
+       the variable.
     4. One -O2 pipeline and code generation over the module, to one object
        (tools/compile_cpp.sh --codegen), build/<slug>/game/module.o.
 
@@ -71,6 +87,9 @@ from tlg_version import build_dir, detect_version  # noqa: E402
 
 MODULE_PREFIX = "src/game/"
 LLVM_LINK = "tools/cc/llvm-4.0.0-src-tools/bin/llvm-link"
+LLVM_OPT = "tools/cc/llvm-4.0.0/bin/opt"
+LLVM_NM = "tools/cc/llvm-4.0.0/bin/llvm-nm"
+STANDIN_WRITER = "__standin_writer_"
 LINKAGES = {"private", "internal", "available_externally", "linkonce", "weak", "common", "appending",
             "extern_weak", "linkonce_odr", "weak_odr", "external"}
 LOCAL = {"private", "internal"}
@@ -270,8 +289,10 @@ class TypeTable:
         return TYPE_REF.sub(lambda m: self.name(u, m.group(0)), text)
 
 
-def standins(units: list[Unit], ver: str, base=None, table=None) -> tuple[str, list[str]]:
-    """(the stand-in module's text, a log line per declaration considered)."""
+def standins(units: list[Unit], ver: str, base=None, table=None, local=()) -> tuple[str, list[str]]:
+    """(the stand-in module's text, a log line per declaration considered).
+    `local`: the rows of config/local_data.<slug>.txt; a stand-in for one
+    carries its writer."""
     from base_elf import BaseElf
     from module_boundary import load, owner_of
     base = base or BaseElf(REPO_ROOT, ver)
@@ -301,6 +322,12 @@ def standins(units: list[Unit], ver: str, base=None, table=None) -> tuple[str, l
         q = name if re.fullmatch(r"[-a-zA-Z$._][-a-zA-Z$._0-9]*", name) else '"' + name + '"'
         out.append(f"@{q} = {vis}{tls}{unnamed}{d.group(5)}global {ty} zeroinitializer{d.group(9) or ''}")
         log.append(f"DEF {name} {where}" + (" thread_local" if tls else ""))
+        if name in local:
+            if ty != "i8":
+                raise Refusal(f"local data row {name}: declared as {ty}, not a bool")
+            out.append(f"define protected void @{STANDIN_WRITER}{name}() {{\n  store i8 1, i8* @{q}, align 1\n"
+                       f"  ret void\n}}")
+            log.append(f"WRITER {name}")
     for name in sorted({n for u in units for n in u.avail} - defined):
         log.append(f"AVAILABLE_EXTERNALLY {name} (kept: no file defines it)")
     for o in types.opaque:
@@ -318,12 +345,63 @@ def run(cmd: list[str], what: str) -> None:
         raise Refusal(f"{what} failed ({' '.join(cmd[:2])} ...)")
 
 
+def externals(bc: Path) -> set[str]:
+    """The names a bitcode module defines with non-local linkage."""
+    env = {**os.environ, "LD_LIBRARY_PATH": str(REPO_ROOT / "tools" / "cc" / "shim")}
+    r = subprocess.run([str(REPO_ROOT / LLVM_NM), "--defined-only", str(bc)], cwd=REPO_ROOT, capture_output=True,
+                       text=True, env=env)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        raise Refusal("llvm-nm failed on the linked module")
+    names = set()
+    for line in r.stdout.splitlines():
+        s = line.split()
+        if len(s) >= 2 and s[-2].isupper():
+            names.add(s[-1])
+    return names
+
+
+def make_local(bc: Path, names: list[str]) -> None:
+    """Give `names` internal linkage in the linked module `bc`, in place,
+    and nothing else: every other non-local definition is on the preserved
+    list, and the symbol table before and after must differ by `names`
+    alone."""
+    before = externals(bc)
+    missing = [n for n in names if n not in before]
+    if missing:
+        raise Refusal(f"local data: the linked module does not define {' '.join(missing)} with external linkage")
+    api = Path(str(bc) + ".preserved")
+    api.write_text("".join(f"{n}\n" for n in sorted(before - set(names))))
+    tmp = Path(str(bc) + ".local")
+    env = {**os.environ, "LD_LIBRARY_PATH": str(REPO_ROOT / "tools" / "cc" / "shim")}
+    r = subprocess.run([str(REPO_ROOT / LLVM_OPT), "-internalize", f"-internalize-public-api-file={api}",
+                        "-o", str(tmp), str(bc)], cwd=REPO_ROOT, capture_output=True, text=True, env=env)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        raise Refusal("opt -internalize failed on the linked module")
+    after = externals(tmp)
+    if before - after != set(names) or after - before:
+        raise Refusal("local data: the internalising step changed other definitions: "
+                      + " ".join(sorted((before - after) ^ set(names) | (after - before))[:8]))
+    tmp.replace(bc)
+
+
 def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None) -> list[str]:
     """Link the files and their stand-ins and compile the module to `out`.
     Returns the stand-in log."""
     units = [Unit(p.with_suffix(".ll"), tu_of(p, ver)) for p in bcs]
     lines, renamed = check_units(units)
-    text, log = standins(units, ver, base)
+    from base_elf import BaseElf
+    from module_boundary import local_proof, local_rows
+    base = base or BaseElf(REPO_ROOT, ver)
+    rows = local_rows(ver)
+    named = {n for u in units for n in list(u.defs) + list(u.decls)}
+    local = [n for n in rows if n in named]
+    if local:
+        proofs, errors = local_proof(base, local)
+        if errors:
+            raise Refusal("\n".join(errors))
+    text, log = standins(units, ver, base, local=set(local))
     work = out.parent / (out.name[:-2] if out.name.endswith(".o") else out.name)
     out.parent.mkdir(parents=True, exist_ok=True)
     sl = Path(str(work) + ".standins.ll")
@@ -332,6 +410,12 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
     rsp = Path(str(work) + ".inputs")
     rsp.write_text("".join(f"{p}\n" for p in bcs) + f"{sl}\n")
     run([str(REPO_ROOT / LLVM_LINK), "-o", str(bc), f"@{rsp}"], "llvm-link")
+    defined = {n for u in units for n, (linkage, _t) in u.defs.items() if linkage not in LOCAL}
+    defined |= {x.split()[1] for x in log if x.startswith("DEF ")}
+    local = [n for n in local if n in defined]
+    if local:
+        make_local(bc, local)
+        log += [f"LOCAL {proofs[n]}" for n in local]
     run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), "--codegen", MODULE_PREFIX, str(bc), str(out)],
         "code generation")
     Path(str(work) + ".standins.log").write_text("\n".join(log) + "\n")

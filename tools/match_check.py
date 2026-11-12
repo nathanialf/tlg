@@ -165,7 +165,7 @@ def module_stale(ver: str) -> str | None:
         return "the game sources changed"
     for p in ([REPO_ROOT / "tools" / n for n in ("game_module.py", "module_boundary.py", "base_elf.py", "compile_cpp.sh")]
               + [config_path(REPO_ROOT, ver, st, "txt") for st in ("flags", "modules", "functions", "vtables",
-                                                                 "vtables.derived", "imports")]):
+                                                                 "vtables.derived", "imports", "local_data")]):
         if p.exists() and p.stat().st_mtime > mt:
             return f"{p.relative_to(REPO_ROOT)} is newer"
     if _compilers_newest(link=True) > mt:
@@ -190,6 +190,10 @@ def module_object(tu: str, ver: str) -> Path:
             print(f"match_check: the game module is stale ({why}): ninja {obj.relative_to(REPO_ROOT)}",
                   file=sys.stderr)
             env = {**os.environ, "VERSION": ver}
+            if "local_data" in why:
+                # the row file is not yet an input of ninja's module edge (tools/gen_ninja.py):
+                # without the object ninja builds it again
+                obj.unlink()
             if why == "the game sources changed":
                 subprocess.run([sys.executable, "-I", str(REPO_ROOT / "tools" / "gen_ninja.py")],
                                cwd=REPO_ROOT, check=True, env=env)

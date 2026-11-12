@@ -1,0 +1,8 @@
+# Game variables that were local to the optimiser when the base was built, though the
+# source declares them for every file (docs/DECISIONS.md D74): one `<symbol>` per row,
+# written with the variable. tools/game_module.py gives a row's variable internal linkage
+# in the linked module before the pipeline. A row is proven from the base's code before
+# it is used, never trusted (tools/module_boundary.py --local: every read takes one bit
+# or is a saved copy put back, every store is 0, 1 or that copy).
+D_16dc088
+D_16dc098
