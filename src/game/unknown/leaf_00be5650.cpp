@@ -30,8 +30,11 @@ const u8 *FUN_00be5650(const Object00be5650 *self) /* derived name */
     if (!record) {
         return 0;
     }
-    const u8 *block = reinterpret_cast<const u8 *>(record->block);
-    const u8 *data = block + record->block->dataOffset;
-    const u32 *offsets = reinterpret_cast<const u32 *>(block + record->block->offsetsOffset);
-    return data + offsets[self->index];
+    /* the block's offsets are relative to its own address: each is added to
+     * the address as an integer, offset first (0xbe5668: `add rcx, rax` on
+     * the offset's register) */
+    u64 block = reinterpret_cast<u64>(record->block);
+    u64 data = record->block->dataOffset + block;
+    const u32 *offsets = reinterpret_cast<const u32 *>(record->block->offsetsOffset + block);
+    return reinterpret_cast<const u8 *>(data + offsets[self->index]);
 }

@@ -3508,3 +3508,34 @@ backports with D66 to D69's.
 zero-masking `and` kept instead of a blend): no draft becomes equal. The loop-preheader
 protection: two drafts toward, 0xdacb80 away. r282836 taken back is REFUTED (18 rows): the
 base has it, so 0xbb4af0 stays a draft.
+
+## D71. After a commute the two-address pass tests the operand tied before it: r249378 not taken (2026-11-12)
+
+**Question.** 0xcef1b0 and 0x1393620 have a `lea` where the installed compiler keeps an `add`;
+the matched row 0xbe5650 has two `add`s that r249378's absence would turn into `lea`s, so
+round 208B refuted the reversal.
+
+**Evidence.** Round 216B: for both shapes the first pass that differs between the prebuilt
+3.7.1 and 3.8.1 is the two-address pass and nothing before it; r249378 (2c4068f40966,
+2015-10-06, first release 3.8) re-samples the tied operand after a commute; 3.7 tests the
+operand tied before it and converts the commuted `add` to a `lea`. 3.7.1 gets 0xbe5650 wrong
+as the tree wrote it (a byte pointer plus an offset) and right when the block's relative
+offsets are read as such data is read: each offset added to the block's address as an integer,
+offset first: that form is equal under 3.7.1, 3.8.1 and the installed line with and without
+the reversal. So the row's old text matched only through a 3.8 behaviour the base lacks.
+
+**Decision.** `tools/patches/llvm-4.0.0-twoaddr-01-no-resample-after-commute.patch`, and
+`src/game/unknown/leaf_00be5650.cpp` rewritten in the same commit (a row's text changed, the
+row kept). Thirty-two backports. 0xcef1b0 and 0x1393620 become equal; fifteen functions of the
+module change; no other row changes.
+
+**Held beside it (rounds 216B, 218B).** The loop-preheader option and r271602: 0xdacb80's two
+preheader blocks in the base are the installed line's, block for block. r259736 taken back:
+the base has it. A sinking rule in which an operand already sunk still counts as a PHI (no
+upstream state): it gives 0xdacb80's three address blocks and loses its preheader copy. D49's
+load test not applied to an FP select with a +0.0 arm (no upstream state; the census of the
+base is undecided for that arm; "not for an FP select" and "not when both arms are constants"
+are both refuted).
+
+**Trigger to revisit.** A game `add` of a commuted two-address instruction that only the
+re-sampled operand keeps from becoming a `lea`.

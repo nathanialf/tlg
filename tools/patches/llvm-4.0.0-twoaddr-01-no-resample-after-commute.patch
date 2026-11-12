@@ -1,0 +1,41 @@
+llvm-4.0.0 backport patch: after a commute the two-address pass tests the operand tied before it, as 3.7 (PS4)
+
+This patch CHANGES CODE GENERATION in TwoAddressInstructionPass's
+tryInstructionTransform. r249378 (Craig Topper, llvm-project 2c4068f40966,
+2015-10-06, "[TwoAddressInstructionPass] When looking for a 3 addr
+conversion after commuting, make sure regB has been updated to take into
+account the commute", first release LLVM 3.8) re-samples regB and its
+kill state after a commute; 3.7 does not, so its three-address conversion
+sees the operand that was tied before the commute (live through, so not
+killed) and turns the commuted `add` into a `lea`. 0xcef1b0 and 0x1393620
+are equal to the base in the prebuilt 3.7.1's module and lost in 3.8.1's;
+the first pass that differs is this one and nothing before it (round
+216B). The one matched row that had needed r249378, 0xbe5650, was 3.7.1's
+own miss as the tree wrote it; written as the block's relative offsets
+are read (each offset added to the block's address as an integer, offset
+first) it is equal under 3.7.1, 3.8.1 and this line with or without the
+patch, and the tree has that form from this commit. With the patch
+0xcef1b0 and 0x1393620 compile to the base's bytes, 0xeaaec0 goes from 15
+to 18 of 20, fifteen functions of the module change and no other matched
+game row changes (round 216B, which built and swept this unconditional
+form alone).
+
+diff -ru a/lib/CodeGen/TwoAddressInstructionPass.cpp b/lib/CodeGen/TwoAddressInstructionPass.cpp
+--- a/lib/CodeGen/TwoAddressInstructionPass.cpp
++++ b/lib/CodeGen/TwoAddressInstructionPass.cpp
+@@ -1263,12 +1263,9 @@
+     return true;
+   }
+ 
+-  // If we commuted, regB may have changed so we should re-sample it to avoid
+-  // confusing the three address conversion below.
+-  if (Commuted) {
+-    regB = MI.getOperand(SrcIdx).getReg();
+-    regBKilled = isKilled(MI, regB, MRI, TII, LIS, true);
+-  }
++  // PS4: regB and regBKilled are not re-sampled after a commute (the three
++  // address conversion below sees the operand tied before the commute), as
++  // before r249378 (2c4068f40966, first in 3.8): not taken.
+ 
+   if (MI.isConvertibleTo3Addr()) {
+     // This instruction is potentially convertible to a true
