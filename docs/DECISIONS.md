@@ -3367,3 +3367,54 @@ rule is shown to predict both.
 
 **Trigger to revisit.** A game `andn` whose result is only compared with zero and whose mask is
 a constant.
+
+## D64. GVN's scalar PRE reports only its last instruction's change: r253518 not taken (2026-11-12)
+
+**Question.** 0x307330 and 0x402110 keep `add rax, 0x40` before a store; the installed compiler
+folds the constant into the store's address.
+
+**Evidence.** Round 208B's table of 253 drafts compiled alone: both are equal under the
+prebuilt 3.7.1 only. The first pass that differs is GVN; r253518 (llvm-project adb4057a153a,
+2015-11-18, first release 3.8) changed performPRE's `Changed = performScalarPRE(...)` to
+`Changed |=`, so a further round runs when an earlier instruction of a block was changed. With
+the assignment restored: no matched row's line changes, both functions equal the base, and
+they are the only two of the module's 4,998 functions that change (the worker's sweep and the
+supervisor's own with the unconditional form: s210). The rule changes how often an IR pass
+repeats, so it has no instruction form to census.
+
+**Decision.** `tools/patches/llvm-4.0.0-gvnpre-01-pre-last-change-only.patch`.
+
+**Trigger to revisit.** A game function whose bytes need GVN's further PRE round.
+
+## D65. The rewritten loop exit test truncates the induction variable: r278421 not taken (2026-11-12)
+
+**Question.** 0xd49e00's loop compares its counter at 32 bits (`cmp r8d, ecx`); the installed
+compiler compares at 64 (`cmp r8, rcx`). The test is one IndVarSimplify writes (linear
+function test replacement), not the source's.
+
+**Evidence.** Equal under the prebuilt 3.7.1 and 3.8.1. r278421 (llvm-project dbcfea98115b,
+2016-08-11, first release 4.0) extends the trip count when that is provably equivalent;
+earlier releases always truncated the induction variable. Taken back: no matched row's line
+changes, 0xd49e00 and 0x470400 equal the base, six functions of the module change (both
+sweeps as in D64). Census by a crude form (a 64-bit increment followed by a compare of the
+same variable): 1,607 at 32 bits against 828 at 64 in the game region; a 64-bit count is also
+legitimate, so the census does not decide alone.
+
+**Decision.** `tools/patches/llvm-4.0.0-lftrwidth-01-exit-test-truncates-iv.patch`.
+Twenty-six backports with D64's.
+
+**Held beside them (round 208B).** The switch-weight series r246104, r246129, r246522 (first
+release 3.8: the jump table's range check weighted 20 to 80 instead of evenly): three drafts
+equal, twelve functions changed, no row changed, but the tested hunk approximates 3.7's weight
+of the default edge: held until the three commits are reversed exactly. r249378
+(TwoAddressInstructionPass) is refuted by the matched row 0xbe5650. r259673's chain edge from
+a non-aliasing store to an unknown load (0x968760's remaining difference): census 5 against 3:
+held.
+
+**Note on D58 (round 201A).** D58's trigger fired once (a name-pair list's destructor exiting
+on the add's flags in the build where the base compares) and was resolved by a source form:
+the count and the entries held in one member instead of two gave the same optimised IR up to
+use-list order, and LoopStrengthReduce's choice follows use-list order. No compiler change.
+
+**Trigger to revisit.** A game loop whose rewritten exit test compares at the induction
+variable's width where the count is narrower.

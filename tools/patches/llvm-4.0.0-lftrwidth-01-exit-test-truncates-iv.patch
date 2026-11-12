@@ -1,0 +1,63 @@
+llvm-4.0.0 backport patch: the rewritten loop exit test truncates the induction variable (PS4)
+
+This patch CHANGES CODE GENERATION for a loop whose exit test
+IndVarSimplify rewrites (linear function test replacement) when the
+induction variable is wider than the trip count. r278421 (llvm-project
+dbcfea98115b, 2016-08-11, first release LLVM 4.0) made the rewritten test
+extend the trip count to the variable's width when that is provably
+equivalent, where earlier releases always truncated the induction variable
+to the count's width. The base compares at the count's width (`cmp r8d,
+ecx`), 4.0.0 at the variable's (`cmp r8, rcx`): 0xd49e00 is equal to the
+base under the prebuilt 3.7.1 and 3.8.1 (round 208B); no source form
+selects the width of a test the pass rewrites. In the game region a 64-bit
+increment followed by a compare of the same variable compares at 32 bits
+1,607 times and at 64 bits 828 times (a 64-bit count is also legitimate,
+so the census is two-sided by its form). With the hunk taken back 0xd49e00
+and 0x470400 compile to the base's bytes, six functions of the module
+change and no matched game row changes (round 208B's sweep, repeated by
+the supervisor with this unconditional form).
+
+diff -ru a/lib/Transforms/Scalar/IndVarSimplify.cpp b/lib/Transforms/Scalar/IndVarSimplify.cpp
+--- a/lib/Transforms/Scalar/IndVarSimplify.cpp
++++ b/lib/Transforms/Scalar/IndVarSimplify.cpp
+@@ -2223,36 +2223,10 @@
+ 
+       DEBUG(dbgs() << "  Widen RHS:\t" << *ExitCnt << "\n");
+     } else {
+-      // We try to extend trip count first. If that doesn't work we truncate IV.
+-      // Zext(trunc(IV)) == IV implies equivalence of the following two:
+-      // Trunc(IV) == ExitCnt and IV == zext(ExitCnt). Similarly for sext. If
+-      // one of the two holds, extend the trip count, otherwise we truncate IV.
+-      bool Extended = false;
+-      const SCEV *IV = SE->getSCEV(CmpIndVar);
+-      const SCEV *ZExtTrunc =
+-           SE->getZeroExtendExpr(SE->getTruncateExpr(SE->getSCEV(CmpIndVar),
+-                                                     ExitCnt->getType()),
+-                                 CmpIndVar->getType());
+-
+-      if (ZExtTrunc == IV) {
+-        Extended = true;
+-        ExitCnt = Builder.CreateZExt(ExitCnt, IndVar->getType(),
+-                                     "wide.trip.count");
+-      } else {
+-        const SCEV *SExtTrunc =
+-          SE->getSignExtendExpr(SE->getTruncateExpr(SE->getSCEV(CmpIndVar),
+-                                                    ExitCnt->getType()),
+-                                CmpIndVar->getType());
+-        if (SExtTrunc == IV) {
+-          Extended = true;
+-          ExitCnt = Builder.CreateSExt(ExitCnt, IndVar->getType(),
+-                                       "wide.trip.count");
+-        }
+-      }
+-
+-      if (!Extended)
+-        CmpIndVar = Builder.CreateTrunc(CmpIndVar, ExitCnt->getType(),
+-                                        "lftr.wideiv");
++      // PS4: the IV is truncated to the count's width, as before r278421 (not taken): the count
++      // is never extended.
++      CmpIndVar = Builder.CreateTrunc(CmpIndVar, ExitCnt->getType(),
++                                      "lftr.wideiv");
+     }
+   }
+   Value *Cond = Builder.CreateICmp(P, CmpIndVar, ExitCnt, "exitcond");

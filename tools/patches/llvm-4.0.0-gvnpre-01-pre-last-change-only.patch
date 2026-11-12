@@ -1,0 +1,29 @@
+llvm-4.0.0 backport patch: GVN's scalar PRE reports only its last instruction's change (PS4)
+
+This patch CHANGES CODE GENERATION where partial redundancy elimination in
+GVN would run a further round. r253518 (llvm-project adb4057a153a,
+2015-11-18, first release LLVM 3.8) made GVN::performPRE accumulate
+(`Changed |= performScalarPRE(...)`) where earlier releases assigned
+(`Changed = ...`), so that a pass over a block that changed only an earlier
+instruction started no further round. 0x307330 and 0x402110 keep an
+address materialised (`add rax, 0x40`) that the further round folds into
+the store; they are equal to the base under the prebuilt 3.7.1 only (round
+208B). No source form reaches the number of rounds. With the assignment
+restored those two functions compile to the base's bytes and are the only
+two of the module's 4,998 that change; no matched game row changes (round
+208B's sweep, repeated by the supervisor with this unconditional form).
+
+diff -ru a/lib/Transforms/Scalar/GVN.cpp b/lib/Transforms/Scalar/GVN.cpp
+--- a/lib/Transforms/Scalar/GVN.cpp
++++ b/lib/Transforms/Scalar/GVN.cpp
+@@ -2541,7 +2541,9 @@
+                               BE = CurrentBlock->end();
+          BI != BE;) {
+       Instruction *CurInst = &*BI++;
+-      Changed |= performScalarPRE(CurInst);
++      // PS4: performPRE reports only the last instruction's PRE, as before r253518 (not taken):
++      // a round that changed only earlier instructions starts no further round.
++      Changed = performScalarPRE(CurInst);
+     }
+   }
+ 
