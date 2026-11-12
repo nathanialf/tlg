@@ -20,8 +20,6 @@ void FUN_00b41b80(Object013985e0 *self, float time, float frames); /* derived na
 void FUN_00b41d50(Object013985e0 *self, float time, float frames); /* derived name */
 void FUN_00b41f20(Object013985e0 *self, float time, float frames); /* derived name */
 
-// NONMATCHING: equal under D66 (quick_diff --both), but its jump table is in .rodata and the gate's
-// layout refuses a relocation in a data object (a layout extension): not claimable until the layout places it
 void FUN_013985e0(Object013985e0 *self, float time) /* derived name */
 {
     if (!self->unknown60)

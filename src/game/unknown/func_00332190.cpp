@@ -66,3 +66,52 @@ Name D_57cdcac(D_15657a5);
 Name D_57cdd08(D_15cb0f3);
 Name D_57cdd34(D_15657b6);
 Name D_57cdd38(D_15657d4);
+
+/* derived names: FUN_00331950 passes the member at +0xd8 of its second
+ * argument to FUN_01344a20 with one of this file's names by the kind at +0x70
+ * (an eight-case jump table, 0x1557df8): 1 D_57cdd20, 2 D_57cdd24, 3 and 5
+ * D_57cdd28, 4 and 6 D_57cdd2c, 7 D_57cdd30, 8 the object's own name at +0x84
+ * when it is not empty; any other kind does nothing. Class and method
+ * unknown. */
+struct Object00331950 /* derived name */
+{
+    u8 unknown0[0x70];
+    int kind; /* +0x70 */ /* derived name */
+    u8 unknown74[0x10];
+    Name name; /* +0x84 */ /* derived name */
+};
+
+struct Target00331950 /* derived name */
+{
+    u8 unknown0[0xd8];
+    u8 unknownd8[1]; /* +0xd8: its extent not traced */
+};
+
+void FUN_01344a20(void *member, const Name *name); /* derived name */
+
+void FUN_00331950(const Object00331950 *self, Target00331950 *target) /* derived name */
+{
+    switch (self->kind) {
+    case 1:
+        FUN_01344a20(target->unknownd8, &D_57cdd20);
+        break;
+    case 2:
+        FUN_01344a20(target->unknownd8, &D_57cdd24);
+        break;
+    case 3:
+    case 5:
+        FUN_01344a20(target->unknownd8, &D_57cdd28);
+        break;
+    case 4:
+    case 6:
+        FUN_01344a20(target->unknownd8, &D_57cdd2c);
+        break;
+    case 7:
+        FUN_01344a20(target->unknownd8, &D_57cdd30);
+        break;
+    case 8:
+        if (self->name.index != 0)
+            FUN_01344a20(target->unknownd8, &self->name);
+        break;
+    }
+}
