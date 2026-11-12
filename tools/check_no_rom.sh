@@ -15,7 +15,7 @@
 #      and content ids (CUSA*, EP9000-*, UP9000-*, JP9000-*), and the names the
 #      tools give the user's package (TLG_*.pkg) whatever the extension.
 #   3. Any tracked file > 256 KiB (sources under src/: 8 MiB), except the
-#      named text files below.
+#      named text files below (address and name tables with no bytes).
 #   4. ELF and SELF magic sniff regardless of extension.
 #   5. Raw byte-array initializers in tracked C/C++.
 #   6. Any file whose path matches our gitignore patterns but is somehow
@@ -63,7 +63,12 @@ for f in "${files[@]}"; do
     [[ ! -f "$f" ]] && continue
     # config/functions.<ver>.txt: `addr size name` rows, no bytes; exempt.
     # config/matched.<ver>.txt: `function tu [symbol]` rows, no bytes; exempt.
+    # config/vtables.derived.<ver>.txt: `symbol address class ctor function`
+    # rows; config/header_statics.<ver>.txt: `tu symbol address` rows: the
+    # gate's own generated address tables, names and addresses only, no
+    # bytes; exempt (the maintainer's ruling, 2026-11-12).
     case "$f" in config/functions.*.txt|config/matched.*.txt) continue ;; esac
+    case "$f" in config/vtables.derived.*.txt|config/header_statics.*.txt) continue ;; esac
     # docs/<slug>/progress.json: names, addresses and integer byte counts.
     case "$f" in docs/*/progress.json) continue ;; esac
     size=$(wc -c < "$f")
