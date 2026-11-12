@@ -64,6 +64,7 @@ char *strncpy(char *dst, const char *src, size_t n);
 char *strcat(char *dst, const char *src);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
+char *strstr(const char *s, const char *find);
 time_t time(time_t *t);
 clock_t clock(void);
 int printf(const char *format, ...);

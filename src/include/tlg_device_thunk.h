@@ -35,12 +35,33 @@ struct Node583950 {
     Node583950 *child58; /* +0x58 */
 };
 
+/* A node of the kind FUN_0058da20 and its two copies are given: the index of
+ * its Name at +0x2c (the name table, tlg_game_name.h) and the node of the
+ * list it refers to at +0x38. derived names. */
+struct NamedNode583950 {
+    u8 unknown0[0x2c];
+    unsigned name; /* +0x2c */
+    u8 unknown30[8];
+    void *target; /* +0x38 */
+};
+
 /* The owner's list of nodes: a count and an array of pointers (read by
  * FUN_00583980 and its six copies). derived names. */
 struct NodeList583950 {
+    /* the storage of the node at an index: the first node's value is at the
+     * start of the storage, each later one's at its offset (FUN_0057f9d0,
+     * FUN_00584df0 and FUN_0058da20 read it; derived name) */
+    char *value(unsigned index) const
+    {
+        return values + (index != 0 && index < count ? offsets[index - 1] : 0);
+    }
+
     u8 unknown0[8];
     unsigned count; /* +0x8 */
     void **items;   /* +0x10 */
+    int *offsets;   /* +0x18: the byte offset of each node's value from the second on */
+    u8 unknown20[8];
+    char *values; /* +0x28 */
 };
 
 struct Owner583950 {
@@ -49,19 +70,28 @@ struct Owner583950 {
      * in the list, else its index in the argument (derived name) */
     bool find(void *node, unsigned &index) const
     {
-        for (int i = current; i < list->count; ++i) {
-            if (list->items[i] == node) {
-                index = i;
-                return true;
+        const NodeList583950 *nodes = list;
+        unsigned at = current;
+        bool found = false;
+        for (unsigned i = current; i < nodes->count; ++i) {
+            if (nodes->items[i] == node) {
+                at = i;
+                found = true;
+                break;
             }
         }
-        for (int i = 0; i < current; ++i) {
-            if (list->items[i] == node) {
-                index = i;
-                return true;
+        if (!found) {
+            for (unsigned i = 0; i < current; ++i) {
+                if (nodes->items[i] == node) {
+                    at = i;
+                    found = true;
+                    break;
+                }
             }
         }
-        return false;
+        if (found)
+            index = at;
+        return found;
     }
 
     /* makes a node of the list the current one; nothing changes when the
@@ -93,7 +123,18 @@ struct Owner583950 {
     NodeList583950 *list;    /* +0x40 */
     Handler583950 *handlers; /* +0x48, indexed by a node's kind */
     u8 unknown50[0xa0];
-    Device583950 *device; /* +0xf0 */
+
+    /* +0xf0: the owner's current value, read by its type at +0x100 (0 an
+     * int, 4 a float, 7 three floats: FUN_0058fc10) or as the object the
+     * handlers FUN_00583950 and its siblings call through. derived names */
+    union {
+        Device583950 *device;
+        int intValue;
+        float floatValue;
+        float vector[3];
+    };
+
+    int valueType; /* +0x100 */
 };
 
 #endif

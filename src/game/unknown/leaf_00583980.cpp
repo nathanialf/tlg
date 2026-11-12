@@ -4,7 +4,9 @@
 /* derived names: a handler whose address FUN_00525530 takes (lea at
  * 0x525bce): makes its argument the owner's current node; returns 0.
  * Handler unknown. */
-// NONMATCHING: IndVarSimplify, the widened index's start sign-extended (movsxd) where the base zero-extends it (mov r9d); 26 of 27 instructions
+// NONMATCHING: the base widens the search index to 64 bits from a zero-extended start (`mov rcx, r9`);
+// Owner583950::find with an unsigned index keeps it 32 bits (`mov eax, ecx` each pass), with an int
+// index it widens from a sign-extended start (movsxd): the shape of 0x58da20's residual (round 217C)
 int FUN_00583980(Owner583950 *self, void *arg) /* derived name */
 {
     self->select(arg);
