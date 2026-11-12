@@ -7373,3 +7373,5 @@ FUN_008c14b0 src/game/unknown/leaf_008c14b0.cpp _ZN14Object016b01b8D1Ev
 FUN_008c1ad0 src/game/unknown/leaf_008c1ad0.cpp _ZN14Object016b0238D1Ev
 FUN_00af1500 src/game/unknown/leaf_00af1500.cpp _ZN14Object016b4340D1Ev
 FUN_013bbb30 src/game/unknown/leaf_013bbb30.cpp _ZN14Object016bad40D1Ev
+FUN_00d8f280 src/game/unknown/leaf_00d8f280.cpp
+FUN_00da7a60 src/game/unknown/leaf_00dacb80.cpp

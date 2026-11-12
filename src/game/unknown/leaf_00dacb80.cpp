@@ -25,7 +25,7 @@ class Reporter00dacb80 /* derived name */
     virtual void slot3(const char *message); /* derived name; not traced */
     virtual int slot4();                     /* derived name; not traced */
     virtual void slot5();                    /* derived name; not traced */
-    virtual int slot6();                     /* derived name; not traced */
+    virtual int slot6();                     /* derived name; the line FUN_00da7a60 codes with */
 };
 
 struct CodePage00dacb80 { /* derived name */
@@ -44,7 +44,10 @@ struct Block00dacb80 { /* derived name */
 
 struct Expression00dacb80 { /* derived name */
     int kind;               /* derived name */
-    u8 unknown4[0x38];
+    u8 unknown4[4];
+    int unknown8;
+    u8 unknownc[0x2c];
+    int unknown38;
     int unknown3c;
 };
 
@@ -79,7 +82,11 @@ void FUN_013bde50(void *field);                                            /* de
 void FUN_013bdca0(void *field);                                            /* derived name */
 void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression); /* derived name */
 void FUN_00dae7e0(Compiler00dacb80 *self);                                 /* derived name */
-int FUN_00db1aa0(Compiler00dacb80 *self, u32 code, int value);             /* derived name */
+void FUN_00da7fc0(Compiler00dacb80 *self, Expression00dacb80 *expression); /* derived name */
+int FUN_00db1aa0(Compiler00dacb80 *self, u32 word, int line);              /* derived name */
+int FUN_00db1f70(Compiler00dacb80 *self, Expression00dacb80 *expression,
+                 int condition);                  /* derived name */
+u8 *FUN_00db1e60(Compiler00dacb80 *self, int pc); /* derived name */
 
 /* derived name: the word of the instruction at pc */
 static inline u32 *instruction(FuncState00dacb80 *fs, u32 pc)
@@ -218,4 +225,50 @@ void FUN_00db0010(Compiler00dacb80 *self) /* derived name */
     int target = fs->unknown1798->unknown8;
     fs->lastTarget = fs->pc;
     FUN_00dacb80(self, &self->funcState->jumpList, target);
+}
+
+/* derived name: as Lua 5.1's luaK_goiftrue: FUN_00da7fc0 first (as
+ * luaK_dischargevars), then by the expression's kind (2 to 11, the jump
+ * table 0x155a018): 2, 4 and 5 jump nowhere; 3 codes a jump (the word
+ * 0x38fffe00 with the reporter's slot 6, FUN_00db1aa0) joined to the pending
+ * list at +0xc40, which it takes; 11 flips the byte FUN_00db1e60 returns for
+ * the jump at +0x8 (as invertjump) and takes that jump; any other kind
+ * FUN_00db1f70 with 0 (as jumponcond). The jump joins the list at +0x3c, and
+ * the list at +0x38 goes to the pending list at the current pc (as
+ * luaK_patchtohere) and is emptied. The kinds' names are not traced. */
+void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression) /* derived name */
+{
+    FUN_00da7fc0(self, expression);
+    int jump;
+    switch (expression->kind) {
+    case 2:
+    case 4:
+    case 5:
+        jump = -1;
+        break;
+    case 3: {
+        FuncState00dacb80 *fs = self->funcState;
+        int pending = fs->jumpList;
+        fs->jumpList = -1;
+        int coded = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
+        FUN_00dacb80(self, &coded, pending);
+        jump = coded;
+        break;
+    }
+    case 11: {
+        u8 *control = FUN_00db1e60(self, expression->unknown8);
+        *control = !*control;
+        jump = expression->unknown8;
+        break;
+    }
+    default:
+        jump = FUN_00db1f70(self, expression, 0);
+        break;
+    }
+    FUN_00dacb80(self, &expression->unknown3c, jump);
+    FuncState00dacb80 *fs = self->funcState;
+    int list = expression->unknown38;
+    fs->lastTarget = fs->pc;
+    FUN_00dacb80(self, &self->funcState->jumpList, list);
+    expression->unknown38 = -1;
 }

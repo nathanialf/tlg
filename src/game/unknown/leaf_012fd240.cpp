@@ -3,12 +3,13 @@
 
 /* derived names: a code from two small counts (the first in the high nibble
  * of the key, the second in the low one): thirteen pairs from 0x10 to 0x43
- * give 0x442c to 0x4438 (the eleven-case part a twenty-entry jump table,
+ * give 0x442c to 0x4438 (the eight cases from 0x30 a twenty-entry jump table,
  * 0x155c904), any other pair 0x4400; ored with 0x220000, and with 0x8000 and
  * 0x40000 when the first count is 4. What the codes name is not traced. */
-// NONMATCHING: the switch's lowering: the build makes one 52-entry table over 0x10 to 0x43
-// (13 cases, 25%: 4.0's jump-table-density 10), the base a table over 0x30 to 0x43 only (8 of
-// 20, 40%) and compares for the rest: 3.9's 40% minimum (NOTES round 219C, a region question)
+// NONMATCHING: under D72 the table (0x30 to 0x43) and every constant are the base's (the code
+// or'd last keeps 0x220000 out of the cases' constants); left: the low cases' block order (the
+// base falls through to 0x11's block and to the default's before the tail: the switch-weight
+// class) and the tail's or order (Reassociate: sete before cmove in the base)
 u32 FUN_012fd240(int first, int second) /* derived name */
 {
     u32 code;
@@ -56,5 +57,5 @@ u32 FUN_012fd240(int first, int second) /* derived name */
         code = 0x4400;
         break;
     }
-    return code | 0x220000 | (first == 4 ? 0x8000 : 0) | (first == 4 ? 0x40000 : 0);
+    return 0x220000 | (first == 4 ? 0x8000 : 0) | static_cast<u32>(first == 4) << 18 | code;
 }
