@@ -26,6 +26,16 @@ out here.
        the base must carry a RELATIVE relocation at that slot) and write it
        at the address. An object in the NOBITS tail of the data segment
        (.bss) has no bytes to compare; it counts as owned.
+    2c. A claimed game function's own jump table (a switch the game line,
+       PIC, lowers to 32-bit entries in .rodata, each the target block's
+       address minus the table's) has no row: it is derived from the
+       function's row every run (jump_table). Its address is where the base's
+       `lea` points, inside the game's rodata (config/modules.<slug>.txt);
+       every entry, an R_X86_64_PC32 to a block of that function, must equal
+       the base's word at that entry or the row fails naming the entry; the
+       table is then laid at its address like a data object, and may overlap
+       no other claimed object or table. A relocation other than a pointer in
+       any other data object is still refused (a layout extension).
     3. Compare every segment with the base, whole. Any differing byte names
        the function or data object it falls in (or the gap, which would mean
        a claimed object overran its size).
@@ -222,6 +232,74 @@ def _relocated_data(base: BaseElf, obj: Path, r: mc.Reloc, hint: int | None):
     return (bytes(filled), ""), off
 
 
+_GAME_RODATA: list[tuple[int, int]] = []
+
+
+def game_rodata(ver: str) -> list[tuple[int, int]]:
+    """The game's read-only data ranges of config/modules.<slug>.txt (the rows
+    `<lo> <hi> game rodata ...`), where the game line's jump tables lie."""
+    if not _GAME_RODATA:
+        for line in config_path(REPO_ROOT, ver, "modules", "txt").read_text().splitlines():
+            s = line.split("#", 1)[0].split()
+            if len(s) >= 4 and s[2] == "game" and s[3] == "rodata":
+                _GAME_RODATA.append((int(s[0], 16), int(s[1], 16)))
+    return _GAME_RODATA
+
+
+def jump_table(base: BaseElf, obj: Path, r: mc.Reloc, own: str, addr: int, size: int,
+               hint: int | None, ver: str):
+    """A claimed function's own jump table (the game line, x86_64-scei-ps4 PIC:
+    a switch lowered to 32-bit entries in .rodata, each the target block's
+    address minus the table's, loaded by one `lea` of the table's section).
+    None when `r` (a relocation of the function `own`, laid at `addr`, `size`
+    bytes) does not refer to such a table, which leaves every other data
+    object to _relocated_data and its refusal of any relocation but a pointer.
+    Else (table address, bytes) or a string naming why the row fails. Nothing
+    is trusted: the table's address T is where the base's own `lea` points,
+    inside the game's rodata (config/modules.<slug>.txt); the object's table
+    must be exactly its entries, each an R_X86_64_PC32 to a block b_i of this
+    function; and every entry i must be the base's: the 32-bit word at
+    T + 4*i equals (addr + b_i) - T. The table is derived from the row every
+    gate and re-proven every run; build_image lays its bytes at T and the
+    segment comparison covers them."""
+    if r.type != R_X86_64_PC32 or r.sym_size != 0 or not r.symbol.startswith(".") \
+            or not isinstance(r.sym_section, int) or r.sym_section <= 0:
+        return None
+    off = r.addend + r.width
+    if off < 0:
+        return None
+    start = r.sym_value + off
+    drl, tsize, strings = mc.object_data_relocs(obj, r.sym_section, start, 0)
+    mine = (".text." + own, own)
+    if strings or not any(d.symbol in mine for d in drl):
+        return None
+    where = f"jump table of {r.symbol}+{off:#x}"
+    if hint is None:
+        return f"{where}: the base's lea field cannot be read"
+    T = hint + off
+    if not any(lo <= T and T + tsize <= hi for lo, hi in game_rodata(ver)):
+        return f"{where}: the base's lea points at 0x{T:x}, not inside the game's rodata"
+    if [d.offset for d in drl] != list(range(0, tsize, 4)):
+        return f"{where}: the table's {tsize} bytes are not exactly its 4-byte entries"
+    out = bytearray(tsize)
+    for i, d in enumerate(drl):
+        if d.type != R_X86_64_PC32 or d.width != 4 or d.symbol not in mine:
+            return f"{where}: entry {i} (+{d.offset:#x}) is a relocation of type {d.type} to {d.symbol}, not a block of {own}"
+        b = d.addend - d.offset   # S + A - P with P = T + offset: A - offset is the block
+        if not 0 <= b < size:
+            return f"{where}: entry {i} (+{d.offset:#x}) targets +{b:#x}, outside the function"
+        want = addr + b - T
+        try:
+            have = struct.unpack("<i", base.read(T + d.offset, 4))[0]
+        except Exception:  # noqa: BLE001
+            return f"{where}: entry {i} at 0x{T + d.offset:x} cannot be read in the base"
+        if have != want:
+            return (f"{where} at 0x{T:x}: entry {i} (+{d.offset:#x}) targets +{b:#x} (0x{addr + b:x}), "
+                    f"the base's entry targets 0x{T + have:x}")
+        struct.pack_into("<i", out, d.offset, want)
+    return T, bytes(out)
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                            hint: int | None = None) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why).
@@ -359,7 +437,12 @@ def base_dynamic_relocs(base: BaseElf) -> dict[int, tuple[int, str, int]]:
 
 
 def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], addr: int,
-                 in_data: bool = False) -> tuple[bytearray, list[str]]:
+                 in_data: bool = False, own: str | None = None, ver: str | None = None,
+                 tables: list | None = None) -> tuple[bytearray, list[str]]:
+    """The code or data object's bytes with every relocation resolved at
+    `addr`. For a function, `own` is its symbol in the object: a `lea` of its
+    own jump table (jump_table) resolves to the base's table, proven entry by
+    entry, and (address, bytes) is appended to `tables` for build_image."""
     if not in_data:
         # the linker's GD-to-IE relaxation of every thread-local access (D23)
         code, relocs = mc.relax_tls_gd(code, relocs)
@@ -430,6 +513,15 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
                 hint = struct.unpack("<i", base.read(P, 4))[0] + P - r.addend
             except ValueError:
                 hint = None
+        if own is not None and tables is not None:
+            jt = jump_table(base, obj, r, own, addr, len(code), hint, ver)
+            if isinstance(jt, str):
+                errors.append(f"+0x{r.offset:x} {jt}")
+                continue
+            if jt is not None:
+                tables.append(jt)
+                struct.pack_into("<i", out, r.offset, hint + r.addend - P)
+                continue
         S, why = resolve_symbol_address(base, obj, r, hint)
         if S is None:
             errors.append(f"+0x{r.offset:x} {why}")
@@ -476,6 +568,7 @@ def build_image(ver: str, log=print) -> dict:
     for fn, tu, sym in load_matched(ver):
         by_tu.setdefault(tu, []).append((fn, sym))
     objcache: dict[str, Path | None] = {}
+    jump_tables: list[tuple[int, bytes, str]] = []   # (address, bytes, function) of each claimed function's own
 
     def compiled(tu: str) -> Path | None:
         if tu not in objcache:
@@ -518,7 +611,11 @@ def build_image(ver: str, log=print) -> dict:
             addr, size = base.func_by_name[fn]
             _ROW_BY_SYMBOL[(obj, mc.module_symbol(tu, sym, obj, ver))] = addr
             code, relocs = objfuncs[sym]
-            resolved, errs = apply_relocs(base, obj, code, relocs, addr)
+            tabs: list[tuple[int, bytes]] = []
+            resolved, errs = apply_relocs(base, obj, code, relocs, addr,
+                                          own=mc.module_symbol(tu, sym, obj, ver), ver=ver, tables=tabs)
+            for T, blob in dict(tabs).items():
+                jump_tables.append((T, blob, fn))
             if errs:
                 report["errors"][fn] = "; ".join(errs)
             if len(resolved) != size:
@@ -577,6 +674,30 @@ def build_image(ver: str, log=print) -> dict:
         sg["claims"].append((addr, addr + len(data), dn))
         report["data"][dn] = {"tu": tu, "symbol": sym, "addr": addr, "size": len(data),
                               "relocs": len(relocs), "nobits": not in_file, "segment": sg["name"]}
+
+    # --- jump tables ------------------------------------------------------------------
+    # a claimed function's own jump table (jump_table: its address and every
+    # entry proven against the base when the function was laid out): laid at
+    # its address like a data object, with no row of its own (it is derived
+    # from the function's row every run); a table that overlaps another
+    # function's table or any other claimed object fails its function's row
+    report["jump_tables"] = {}
+    for T, blob, fn in sorted(jump_tables):
+        sg = seg_for(T)
+        if sg is None or T + len(blob) > sg["vaddr"] + sg["filesz"]:
+            report["errors"][fn] = f"jump table 0x{T:x}+{len(blob)} is not inside one loaded segment's file bytes"
+            continue
+        clash = [c for c in sg["claims"] if c[0] < T + len(blob) and T < c[1]]
+        if clash:
+            report["errors"][fn] = (report["errors"].get(fn, "") + f"; jump table 0x{T:x}+{len(blob)} overlaps "
+                                    + ", ".join(f"{c[2]} (0x{c[0]:x}..0x{c[1]:x})" for c in clash)).lstrip("; ")
+            continue
+        off = T - sg["vaddr"]
+        sg["image"][off:off + len(blob)] = blob
+        sg["from_source"] += len(blob)
+        sg["claims"].append((T, T + len(blob), f"{fn} jump table"))
+        report["jump_tables"][f"0x{T:x}"] = {"function": fn, "size": len(blob), "entries": len(blob) // 4,
+                                             "segment": sg["name"]}
 
     # --- header statics -------------------------------------------------------------
     # every row of config/header_statics.<slug>.txt (a unit's copy of an object
@@ -662,7 +783,8 @@ def main(argv=None) -> int:
     ver = detect_version(REPO_ROOT)
     r = build_image(ver)
     if not a.quiet:
-        print(f"layout ({ver}): {len(r['functions'])} function(s) and {len(r['data'])} data object(s) from source, "
+        print(f"layout ({ver}): {len(r['functions'])} function(s), {len(r['data'])} data object(s) and "
+              f"{len(r['jump_tables'])} jump table(s) from source, "
               f"{sum(f['relocs'] for f in list(r['functions'].values()) + list(r['data'].values()))} relocation(s) resolved")
         for fn, why in sorted(r["errors"].items()):
             print(f"  ERROR {fn}: {why}")
