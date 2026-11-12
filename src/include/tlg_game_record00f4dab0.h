@@ -6,22 +6,16 @@
 
 #include "tlg_types.h"
 #include "tlg_game_block.h"
+#include "tlg_game_object0134f620.h"
 
-/* derived names: the members FUN_01347230 and FUN_0134f620 tear down (their
- * fields are not traced here) */
+/* derived names: the member FUN_01347230 tears down (its fields are not
+ * traced here); FUN_0134f620's record is tlg_game_object0134f620.h's */
 struct Object01347230 /* derived name */
 {
     u8 unknown0[0x18];
 };
 
-struct Object0134f620 /* derived name */
-{
-    void **unknown0; /* +0x0 */
-    int unknown8;    /* +0x8 */
-};
-
 void FUN_01347230(Object01347230 *self); /* derived name */
-void FUN_0134f620(Object0134f620 *self); /* derived name */
 
 /* derived names: the record: its destructor releases the block at +0x60,
  * then tears down the members at +0x20 and +0x8 (FUN_00f4dab0 and
