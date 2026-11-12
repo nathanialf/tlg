@@ -5,6 +5,7 @@
 #define TLG_GAME_MULTIBASE_H
 
 #include "tlg_types.h"
+#include "tlg_game_object016b9108.h"
 
 /* The class whose vtable is at 0x16cc478 (stored by FUN_009232e0,
  * FUN_013755d0 and FUN_01375710): secondary vtables at offsets 0x10, 0x28,
@@ -123,22 +124,8 @@ class Class16cc478 /* derived name */
  * FUN_0137ba60 and FUN_0137ba70 are slots 5, 7 and 8 of those primary vtables
  * and override the three slots of the base at +0x30; slot 6, the one slot of
  * the base at +0x28, returns the int at +0x20 in 0x16b0cf0 (its body folded
- * into the library's FUN_00004340, its thunk 0x13746f0). */
-class Class137ba70Base0 /* derived name */
-{
-  public:
-    /* Slots 0 and 1 hold the derived classes' destructors (FUN_01397860 and
-     * FUN_01397980 in 0x16b0cf0); slots 2 to 4 (FUN_00cb66f0 and two empty
-     * bodies) are not traced. */
-    virtual ~Class137ba70Base0();
-    virtual void FUN_00cb66f0(); /* derived name; parameters not traced */
-    virtual void slot3();        /* derived name; 0x1af750, not traced */
-    virtual void slot4();        /* derived name; 0x1af750, not traced */
-
-    u8 unknown8[0x18];
-    int flags; /* derived name: bits set by FUN_0137ba70, 0x30 cleared by FUN_0137ba50 */
-};
-
+ * into the library's FUN_00004340, its thunk 0x13746f0). The primary base
+ * is Object016b9108 (tlg_game_object016b9108.h). */
 class Class137ba70Base28 /* derived name */
 {
   public:
@@ -154,7 +141,7 @@ class Class137ba70Base30 /* derived name */
 };
 
 class Class137ba70 /* derived name */
-    : public Class137ba70Base0,
+    : public Object016b9108,
       public Class137ba70Base28,
       public Class137ba70Base30
 {
@@ -219,6 +206,36 @@ class Class16b5900 : public Class137ba70 /* derived name */
 
     u8 unknown38[8];
     Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
+};
+
+/* The classes whose vtables are at 0x16b15a0 (stored by FUN_0096a720 and
+ * FUN_0096a910; the class at 0x16b1640, built by FUN_0096a910, keeps this
+ * slot 6) and 0x16b5860 (stored by FUN_00b386f0; the class at 0x16b0c50,
+ * built by FUN_0091b770, keeps it): the slots of Class137ba70 but slot 6,
+ * their own (FUN_0096e630 and FUN_00b3d5e0, one shape: bits 1 and 2 of the
+ * mask in the first, bits 0 and 2 in the second; their thunks in the base
+ * at +0x28 FUN_0096e6a0 and FUN_00b3d650), and slot 9, 0x42d0's
+ * `return 0`. */
+class Class16b15a0 : public Class137ba70 /* derived name */
+{
+  public:
+    int FUN_00004340(int mask) const;
+
+    u8 unknown38[8];
+    Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
+    Class137ba70 *child48; /* +0x48, derived name: asked when bit 1 is set */
+    Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
+};
+
+class Class16b5860 : public Class137ba70 /* derived name */
+{
+  public:
+    int FUN_00004340(int mask) const;
+
+    u8 unknown38[8];
+    Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
+    Class137ba70 *child48; /* +0x48, derived name: asked when bit 0 is set */
+    Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
 };
 
 /* The class whose vtable is at 0x16cf260 (stored by FUN_00b3de50,

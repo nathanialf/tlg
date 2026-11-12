@@ -20,14 +20,20 @@
  * the two destructors, the release FUN_00cb66f0 (leaf_00cb66f0.cpp, a free
  * function there: clears flag bit 1, unregisters the object and hands it to
  * its allocator record; the constructor calls it when it drops the last
- * reference), and two empty slots folded onto 0x1af750; only the destructor
- * is declared here. tlg_game_multibase.h's Class137ba70Base0 is this class
- * seen from the classes derived from it (slots 2 to 4, the int at +0x20). */
+ * reference), and two empty slots folded onto 0x1af750, declared here so the
+ * derived classes' own slots (5 and on) take their places in the vtable.
+ * tlg_game_multibase.h's Class137ba70 derives from it (slots 2 to 4, the
+ * int at +0x20). */
 class Object016b9108 /* derived name */
 {
   public:
     Object016b9108(const Name &name); /* FUN_00cb6310 */
     virtual ~Object016b9108();
+    /* Slots 2 to 4 of 0x16b9108: the release FUN_00cb66f0 and two empty
+     * bodies folded onto 0x1af750; parameters not traced. */
+    virtual void FUN_00cb66f0(); /* derived name, after the release */
+    virtual void slot3();        /* derived name; 0x1af750 */
+    virtual void slot4();        /* derived name; 0x1af750 */
 
   private:
     /* +0x8: the reference count, 0xdeadc0de once the object is released
@@ -43,7 +49,12 @@ class Object016b9108 /* derived name */
     /* +0x18: the record whose function at +0x10 frees this object
      * (FUN_00cb66f0: `mov rax, [rbx+0x18]; mov rdi, rbx; jmp [rax+0x10]`) */
     void *allocator18;
-    int unknown20; /* +0x20: zero in the constructor */
+
+  protected:
+    /* +0x20: zero in the constructor; the bits the classes derived from it
+     * set and test (FUN_0137ba70 sets them, FUN_0137ba50 clears 0x30, slot 6
+     * of tlg_game_multibase.h's classes returns them) */
+    int flags;
 };
 
 #endif
