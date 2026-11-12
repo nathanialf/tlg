@@ -1,0 +1,36 @@
+llvm-4.0.0 backport patch: a store to a non-aliasing spill slot gets no chain edge to an unknown load (PS4)
+
+This patch CHANGES CODE GENERATION after register allocation, in the
+post-RA list scheduler: r259673 (llvm-project ac29f01788e3, 2016-02-03,
+first release LLVM 3.9) rewrote ScheduleDAGInstrs' memory dependencies and
+added a chain edge from a store to a stack slot that aliases nothing to a
+later load of unknown memory, which keeps a spill ahead of an independent
+copy. The base places the copy first (`mov r14, rdi` before `vmovss
+[rbp-0x14], xmm0`: 0x968760, equal in the prebuilt 3.7.1's and 3.8.1's
+modules). This patch takes back that edge alone. With it 0x968760 and
+0xedede0 compile to the base's bytes, six functions of the module change
+(none away from the base) and no matched game row changes. A census of the
+exact shape in the game region finds five copy-first sites and three
+spill-first; none of the three is in a function the tree has written.
+
+diff -ru a/lib/CodeGen/ScheduleDAGInstrs.cpp b/lib/CodeGen/ScheduleDAGInstrs.cpp
+--- a/lib/CodeGen/ScheduleDAGInstrs.cpp
++++ b/lib/CodeGen/ScheduleDAGInstrs.cpp
+@@ -1002,8 +1002,15 @@
+         }
+         // The store may have dependencies to unanalyzable loads and
+         // stores.
+-        addChainDependencies(SU, Loads, UnknownValue);
+-        addChainDependencies(SU, Stores, UnknownValue);
++        // PS4: not when every underlying object of the store is non-aliasing, as before r259673
++        // (ac29f01788e3, first in 3.9): not taken.
++        bool AnyMayAlias = false;
++        for (const UnderlyingObject &UnderlObj : Objs)
++          AnyMayAlias |= UnderlObj.mayAlias();
++        if (AnyMayAlias) {
++          addChainDependencies(SU, Loads, UnknownValue);
++          addChainDependencies(SU, Stores, UnknownValue);
++        }
+       }
+     } else { // SU is a load.
+       if (Objs.empty()) {

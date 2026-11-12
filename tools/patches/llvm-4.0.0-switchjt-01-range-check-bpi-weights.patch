@@ -1,0 +1,52 @@
+llvm-4.0.0 backport patch: a jump table's range check takes BranchProbabilityInfo's edge weights (PS4)
+
+This patch CHANGES CODE GENERATION for a switch lowered to a jump table:
+which side of the range check falls through. In 3.7 the range check's two
+edges are added with no weight of their own and so take
+BranchProbabilityInfo's (the default side the switch-to-default weight, the
+table side the default weight). r246104 and r246522 (Cong Hou, 2015-08-26
+and 2015-09-01, first release LLVM 3.8) give the table the cases' summed
+weight and share the default's out. This patch restores 3.7's values for
+the range check alone; the unhandled-sum change (r246129), the bit-test
+header and the pivot's halves stay as 4.0.0 has them. In the game region
+the table falls through at 315 range checks and the default at 111; the
+gate's module has 4 and 0 without this patch and 1 and 3 with it. With it
+0x13985e0, 0x13999c0 and 0x139a080 compile to the base's bytes, three
+functions of the module change and no matched game row changes (round
+210B, which built and swept this unconditional form; the supervisor's
+sweep of the five patches of D66 to D70 together).
+
+diff -ru a/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp b/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+--- a/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
++++ b/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+@@ -9009,26 +9009,10 @@
+         MachineBasicBlock *JumpMBB = JT->MBB;
+         CurMF->insert(BBI, JumpMBB);
+ 
+-        auto JumpProb = I->Prob;
+-        auto FallthroughProb = UnhandledProbs;
+-
+-        // If the default statement is a target of the jump table, we evenly
+-        // distribute the default probability to successors of CurMBB. Also
+-        // update the probability on the edge from JumpMBB to Fallthrough.
+-        for (MachineBasicBlock::succ_iterator SI = JumpMBB->succ_begin(),
+-                                              SE = JumpMBB->succ_end();
+-             SI != SE; ++SI) {
+-          if (*SI == DefaultMBB) {
+-            JumpProb += DefaultProb / 2;
+-            FallthroughProb -= DefaultProb / 2;
+-            JumpMBB->setSuccProbability(SI, DefaultProb / 2);
+-            JumpMBB->normalizeSuccProbs();
+-            break;
+-          }
+-        }
+-
+-        addSuccessorWithProb(CurMBB, Fallthrough, FallthroughProb);
+-        addSuccessorWithProb(CurMBB, JumpMBB, JumpProb);
++        // PS4: the range check's two edges from BPI and no share of the default's
++        // probability into the table, as before r246104 and r246522 (not taken).
++        addSuccessorWithProb(CurMBB, Fallthrough);
++        addSuccessorWithProb(CurMBB, JumpMBB);
+         CurMBB->normalizeSuccProbs();
+ 
+         // The jump table header will be inserted in our current block, do the

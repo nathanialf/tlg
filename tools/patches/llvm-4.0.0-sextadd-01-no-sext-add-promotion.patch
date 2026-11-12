@@ -1,0 +1,28 @@
+llvm-4.0.0 backport patch: a sign-extended add is not widened in instruction selection (PS4)
+
+This patch CHANGES CODE GENERATION for `(i64)(a + b)` with a no-wrap
+32-bit add used as an address: r250560 (llvm-project bbd524496ccf,
+2015-10-16, first release LLVM 3.8) made X86's DAG combine promote
+sext(add nsw) to an add of extended operands so that the add folds into
+the address. The base keeps the add in 32 bits and extends its result
+(`inc eax; cdqe`) at 108 sites of the game region (round 214B's census:
+one-sided). 0xb34440 and 0xb34470 are equal to the base in the prebuilt
+3.7.1's module and first lost in 3.8.1's; their IR is the same in both. No
+source form reaches a combine made at instruction selection. With the
+combine taken back both compile to the base's bytes, four functions of the
+module change and no matched game row changes.
+
+diff -ru a/lib/Target/X86/X86ISelLowering.cpp b/lib/Target/X86/X86ISelLowering.cpp
+--- a/lib/Target/X86/X86ISelLowering.cpp
++++ b/lib/Target/X86/X86ISelLowering.cpp
+@@ -32878,6 +32878,10 @@
+     return SDValue();
+ 
+   bool Sext = Ext->getOpcode() == ISD::SIGN_EXTEND;
++  // PS4: a sign extension stays after the 'add nsw' it extends, as before r250560
++  // (bbd524496ccf, first in 3.8); its promotion is not taken.
++  if (Sext)
++    return SDValue();
+   bool NSW = Add->getFlags()->hasNoSignedWrap();
+   bool NUW = Add->getFlags()->hasNoUnsignedWrap();
+ 

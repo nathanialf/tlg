@@ -1,0 +1,27 @@
+llvm-4.0.0 backport patch: BasicAA does not call two positive-offset GEPs no-alias (PS4)
+
+This patch CHANGES CODE GENERATION where alias analysis lets a load be
+forwarded across a store through a variable index. BasicAA's rule that a
+GEP whose variable indices are all known positive cannot alias an object
+it starts beyond was added for 3.6 (r221876), reverted for 3.7 (r245394,
+llvm-project b700e357b5ca) and reapplied for 3.8 (r246502, 5989bc6f4161,
+2015-08-31). The base reloads a count after a store to entries[count]
+(0x13883d0: equal in the prebuilt 3.7.1's module, first lost in 3.8.1's,
+at the first InstCombine, which forwards the load). With the rule's use in
+aliasGEP taken back that function compiles to the base's bytes and is the
+only one of the module that changes; no matched game row changes.
+
+diff -ru a/lib/Analysis/BasicAliasAnalysis.cpp b/lib/Analysis/BasicAliasAnalysis.cpp
+--- a/lib/Analysis/BasicAliasAnalysis.cpp
++++ b/lib/Analysis/BasicAliasAnalysis.cpp
+@@ -1246,7 +1246,9 @@
+ 
+   if (!DecompGEP1.VarIndices.empty()) {
+     uint64_t Modulo = 0;
+-    bool AllPositive = true;
++    // PS4: no NoAlias from variable indices known non-negative, as in 3.7.1 (r245394 reverted
++    // r221876 on the 3.7 branch; r246502, first in 3.8, reapplied it): not taken.
++    bool AllPositive = false;
+     for (unsigned i = 0, e = DecompGEP1.VarIndices.size(); i != e; ++i) {
+ 
+       // Try to distinguish something like &A[i][1] against &A[42][0].

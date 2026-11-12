@@ -3418,3 +3418,93 @@ use-list order, and LoopStrengthReduce's choice follows use-list order. No compi
 
 **Trigger to revisit.** A game loop whose rewritten exit test compares at the induction
 variable's width where the count is narrower.
+
+## D6, third addendum. The line re-measured over the whole module: it stays; the base is a 3.7-era code generator with a few later changes (2026-11-12)
+
+**Measurement (round 212B).** The whole game module built as the gate builds it by each
+prebuilt release (3,691 units, none rejected; the gate's stand-ins unchanged), every matched
+row and draft compared. Rows equal of 4,135: the installed line (4.0.0 with twenty-six
+backports) 4,087; 3.7.1 3,888 as built and 4,023 once the PS4 settings it lacks are counted in
+(the trap after a noreturn call 95 rows, D26's nop 22, no vzeroupper 10, both 8); 3.8.1 3,853
+and 3,890; 3.9.1 3,702; the prebuilt 4.0.0 3,699. Drafts equal of 257: installed 5, 3.7.1 20,
+3.8.1 9, 3.9.1 4, 4.0.0 2. No row is equal under a release and not under the installed line.
+After the PS4 settings 3.7.1 still lacks eight behaviours the base has (58 rows): list-ilp's
+register-pressure order r282836 (4.0; 20 rows), the array-destroy helper's function attributes
+(clang 3.8; 24), SimplifyCFG's sinking r279460 (4.0; 3), an aligned vector move (3.8; 5),
+constant store merging (3.8; 3), r249378 (3.8; one row), two singles. Every backport's witness
+is equal under the release the backport restores.
+
+**Decision.** The line stays LLVM 4.0.0 with backports: it holds 64 more rows than 3.7.1 with
+every PS4 setting ported, and a 3.7.1 line would need forward ports of two 4.0 passes. But the
+base's compiler is, by every count, a 3.7-era code generator with a small number of later
+changes, so the method is fixed accordingly: a draft that is equal in the prebuilt 3.7.1's
+module and not under the installed line names an upstream change between 3.7 and 4.0 to take
+back, found in the public history, reversed exactly, swept over the module (no row changed),
+and adopted on an equal witness. D66 to D70 are the first decisions made on that footing.
+
+## D66. A jump table's range check takes BranchProbabilityInfo's weights: r246104 and r246522 not taken there (2026-11-12)
+
+**Evidence.** 0x13985e0, 0x13999c0, 0x139a080 are equal under 3.7.1 only. 3.7 adds the range
+check's two edges with no weight, so they take BranchProbabilityInfo's; the 2015 series (first
+release 3.8) weights the table by its cases and shares the default's weight out. The exact
+reversal for the range check alone (round 210B, built and swept in its unconditional form): no
+matched row's line changes, the three functions equal the base and are the only three that
+change. Census of which side falls through: the base 315 table against 111 default; the
+module 4 and 0 before, 1 and 3 after.
+
+**Decision.** `tools/patches/llvm-4.0.0-switchjt-01-range-check-bpi-weights.patch`. The
+series' other parts stay: the unhandled-sum change reproduces 3.7.1's counts on four drafts
+without making one equal (held); the bit-test and pivot parts change nothing in the module.
+
+## D67. A sign-extended add is not widened at instruction selection: r250560 not taken (2026-11-12)
+
+**Evidence.** The base keeps `inc eax; cdqe` at 108 sites of the game region (one-sided
+census). 0xb34440 and 0xb34470 are equal in the 3.7.1 module and first lost in 3.8.1's, with
+the same IR in both; r250560 (bbd524496ccf, 2015-10-16, first release 3.8) promotes
+sext(add nsw) in X86's DAG combine. Taken back: no row's line changes, both equal, four
+functions change.
+
+**Decision.** `tools/patches/llvm-4.0.0-sextadd-01-no-sext-add-promotion.patch`.
+
+## D68. BasicAA's all-positive-offsets rule is absent, as in 3.7: r246502 not taken (2026-11-12)
+
+**Evidence.** 0x13883d0 reloads a count after a store to entries[count]; equal in the 3.7.1
+module, first lost in 3.8.1's at the first InstCombine. The rule was in 3.6 (r221876),
+reverted for 3.7 (r245394) and reapplied for 3.8 (r246502, 5989bc6f4161, 2015-08-31). Its use
+in aliasGEP taken back: no row's line changes; the witness equals the base and is the only
+function that changes. One witness: adopted on D6's third addendum (the base agrees with 3.7
+where 3.7 and 3.8 differ and no row says otherwise).
+
+**Decision.** `tools/patches/llvm-4.0.0-baapos-01-no-allpositive-noalias.patch`.
+
+## D69. No chain edge from a spill-slot store to an unknown load: r259673's edge not taken (2026-11-12)
+
+**Evidence.** 0x968760's last difference after D63 is a spill placed before an independent
+copy by the post-RA scheduler; equal in the 3.7.1 and 3.8.1 modules. r259673 (ac29f01788e3,
+2016-02-03, first release 3.9) rewrote ScheduleDAGInstrs' memory dependencies; the narrow
+rule taken back is the chain edge from a store to a non-aliasing stack slot to a later load of
+unknown memory. With it: no row's line changes, 0x968760 and 0xedede0 equal, six functions
+change, none away from the base. The census of the exact shape is two-sided (five copy-first,
+three spill-first), and none of the three spill-first sites is in a function the tree holds.
+
+**Decision.** `tools/patches/llvm-4.0.0-sdichain-01-no-spill-store-chain-edge.patch`.
+
+**Trigger to revisit.** One of the three spill-first sites (0x4c0fa0 among them) written whole
+and unequal only in that order.
+
+## D70. Block placement keeps 3.9's forward check: r277187 not taken (2026-11-12)
+
+**Evidence.** D51 held this (mbpprob-01) for a second witness. 0x12fd360 is equal in the 3.7.1
+module; with 3.9's three lines restored in hasBetterLayoutPredecessor no row's line changes,
+0x12fd360 equals the base and two functions change. D51's other layout drafts are explained
+elsewhere (three by D66) or are equal under no release, so the second witness is the
+whole-module measurement of D6's third addendum, not another function.
+
+**Decision.** `tools/patches/llvm-4.0.0-mbpfwd-01-forward-check-as-3.9.patch`. Thirty-one
+backports with D66 to D69's.
+
+**Held beside these (round 214B).** r271602 (InstSimplify after the late LICM, first release
+3.9): 0x1af9d0 equal, but 0xdacb80 moves away (16 to 4 of 78). r243831 with r288365 (a
+zero-masking `and` kept instead of a blend): no draft becomes equal. The loop-preheader
+protection: two drafts toward, 0xdacb80 away. r282836 taken back is REFUTED (18 rows): the
+base has it, so 0xbb4af0 stays a draft.

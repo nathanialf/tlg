@@ -1,0 +1,28 @@
+llvm-4.0.0 backport patch: block placement keeps 3.9's forward check (PS4)
+
+This patch CHANGES CODE GENERATION in MachineBlockPlacement's
+hasBetterLayoutPredecessor. r277187 (Kyle Butt, llvm-project 02d8d054abaa,
+2016-07-29, first release LLVM 4.0) replaced the three lines of 3.9's
+forward check there; this patch restores them (the commit's comments are
+left). D51 held this reversal for a second witness; round 212B's
+whole-module measurement gives the missing support: 0x12fd360 is equal to
+the base in the prebuilt 3.7.1's module. With the patch that function
+compiles to the base's bytes, two functions of the module change and no
+matched game row changes (round 214B; the supervisor's sweep of the five
+patches of D66 to D70 together). The rule has no byte form to census.
+
+diff -ru a/lib/CodeGen/MachineBlockPlacement.cpp b/lib/CodeGen/MachineBlockPlacement.cpp
+--- a/lib/CodeGen/MachineBlockPlacement.cpp
++++ b/lib/CodeGen/MachineBlockPlacement.cpp
+@@ -748,6 +748,11 @@
+   // but they all fit this general pattern.)
+   BranchProbability HotProb = getLayoutSuccessorProbThreshold(BB);
+ 
++  // PS4: LLVM 3.9's forward check (removed by r277187, 02d8d054abaa, first in 4.0): a
++  // successor below the hot probability is laid out in topological order.
++  if (SuccProb < HotProb)
++    return true;
++
+   // Make sure that a hot successor doesn't have a globally more
+   // important predecessor.
+   BlockFrequency CandidateEdgeFreq = MBFI->getBlockFreq(BB) * RealSuccProb;
