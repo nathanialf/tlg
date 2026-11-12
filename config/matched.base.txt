@@ -7356,3 +7356,5 @@ FUN_013999c0 src/game/unknown/leaf_013999c0.cpp
 FUN_0139a080 src/game/unknown/leaf_0139a080.cpp
 FUN_00dd1d60 src/game/unknown/leaf_00dd1d60.cpp
 FUN_00331950 src/game/unknown/func_00332190.cpp
+FUN_00cef1b0 src/game/unknown/leaf_00cef1b0.cpp
+FUN_01393620 src/game/unknown/leaf_01393620.cpp

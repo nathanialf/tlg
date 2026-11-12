@@ -13,7 +13,6 @@ struct Object01393620 { /* derived name */
     int unknown14;
 };
 
-// NONMATCHING: the sum is `lea esi, [rsi + rdx]` in the base (TwoAddress turning the add into an LEA because its tied source stays live), `add esi, edx` in the compile; the operands swapped and a 64-bit size compile the same
 void *FUN_01393620(Object01393620 *self, int size) /* derived name */
 {
     if (!self->unknown8) {

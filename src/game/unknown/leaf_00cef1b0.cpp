@@ -24,9 +24,6 @@ struct Argument00cef1b0 { /* derived name */
     int unknown60;
 };
 
-// NONMATCHING: the block's address plus its offset is `lea rdx, [rdx + rax]` in the base, `add
-// rdx, rax` in the compile (TwoAddress's add-to-lea, the class of FUN_01393620); every instruction
-// else equal
 void FUN_00cef1b0(Object00cef1b0 *, Argument00cef1b0 *argument) /* derived name */
 {
     argument->unknown58 = 0;
