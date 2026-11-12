@@ -8,8 +8,9 @@
 #include "tlg_game_name.h"
 
 /* derived names: the class whose vtable is at 0x16b9108
- * (config/vtables.derived.base.txt). Its constructor FUN_00cb6310 (not
- * written) takes the object's name by reference and is called by the
+ * (config/vtables.derived.base.txt). Its constructor at 0xcb6310 (not
+ * written; FUN_00cb6310 in the comments of the files written before its row
+ * was named) takes the object's name by reference and is called by the
  * creators of the derived classes (FUN_00206b60 and on) after they allocate
  * the object and take the lock at 0x59458a4: it zeroes the fields, keeps bit
  * 6 of the flags, assigns the name, takes the allocator the creator left at
@@ -27,7 +28,7 @@
 class Object016b9108 /* derived name */
 {
   public:
-    Object016b9108(const Name &name); /* FUN_00cb6310 */
+    Object016b9108(const Name &name); /* 0xcb6310, its row named after it (D15) */
     virtual ~Object016b9108();
     /* Slots 2 to 4 of 0x16b9108: the release FUN_00cb66f0 and two empty
      * bodies folded onto 0x1af750; parameters not traced. */

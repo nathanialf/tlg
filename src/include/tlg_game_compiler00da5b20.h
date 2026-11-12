@@ -23,8 +23,31 @@ struct ExpressionChunk00da5b20 { /* derived name */
     ExpressionChunk00da5b20 *prev; /* +0x390 */
 };
 
+/* derived names: a third stack, of 24-byte blocks (FUN_00daec00 and
+ * FUN_00dafe20 push one), in chunks of four from the heap at +0x1708 of the
+ * same record, kept as the expressions are: the chunk in use at +0x1790, the
+ * block on top at +0x1798, the next free one at +0x17a0, the count at +0x17a8
+ * and the capacity at +0x17ac */
+struct Block00daec00 { /* derived name */
+    int kind;          /* +0x0: 0 (FUN_00daec00) or 3 (FUN_00dafe20) */
+    int unknown4;      /* +0x4 */
+    u32 unknown8;
+    u16 unknownc;  /* +0xc: the low word of the record's int at +0xc44 */
+    int unknown10; /* +0x10 */
+    int unknown14; /* +0x14 */
+};
+
+struct BlockChunk00daec00 { /* derived name */
+    Block00daec00 blocks[4];
+    Block00daec00 *start;     /* +0x60 */
+    BlockChunk00daec00 *next; /* +0x68 */
+    BlockChunk00daec00 *prev; /* +0x70 */
+};
+
 struct FuncState00da5b20 { /* derived name */
-    u8 unknown0[0x1340];
+    u8 unknown0[0xc44];
+    int unknownc44; /* +0xc44: FUN_00daa830 copies it, FUN_00daec00 its low word */
+    u8 unknownc48[0x6f8];
     void *heap; /* +0x1340 */
     u8 unknown1348[0x3a0];
     ExpressionChunk00da5b20 *chunk; /* +0x16e8 */
@@ -32,8 +55,14 @@ struct FuncState00da5b20 { /* derived name */
     u8 *free;                       /* +0x16f8 */
     u32 count;                      /* +0x1700 */
     u32 capacity;                   /* +0x1704 */
-    u8 unknown1708[0xa8];
-    int unknown17b0; /* +0x17b0: cleared by FUN_00dad190 */
+    void *blockHeap;                /* +0x1708: the heap of the blocks' chunks */
+    u8 unknown1710[0x80];
+    BlockChunk00daec00 *blockChunk; /* +0x1790 */
+    Block00daec00 *blockTop;        /* +0x1798 */
+    Block00daec00 *blockFree;       /* +0x17a0 */
+    u32 blockCount;                 /* +0x17a8 */
+    u32 blockCapacity;              /* +0x17ac */
+    int unknown17b0;                /* +0x17b0: cleared by FUN_00dad190 */
 };
 
 /* derived names: the token the source at +0x10 returns from its slot 8:
@@ -69,8 +98,12 @@ class Source016bb0c0 /* derived name */
 
 /* derived names: the compiler's listener at +0x18: slot 153 + k of
  * 0x16bb0c0 passes event k on to its slot 2 + k (`call [rax + 0x10 + 8k]`),
- * after its destructors in slots 0 and 1; the slots after event 104 are not
- * traced */
+ * after its destructors in slots 0 and 1. From slot 287 of 0x16bb0c0 the
+ * kinds leave the slots' order (slots 287 to 290 record kinds 141 to 144,
+ * slots 291 to 297 kinds 134 to 140) while the listener's slot stays the
+ * compiler's less 151 (slots 292, 295 and 297 call its slots 141, 144 and
+ * 146; the others there pass arguments and are not traced): the events are
+ * named by kind and declared in slot order */
 class Listener016bb0c0 /* derived name */
 {
   public:
@@ -180,6 +213,46 @@ class Listener016bb0c0 /* derived name */
     virtual void event102(); /* parameters not traced */
     virtual void event103();
     virtual void event104();
+    virtual void event105();
+    virtual void event106();
+    virtual void event107();
+    virtual void event108();
+    virtual void event109();
+    virtual void event110();
+    virtual void event111(); /* parameters not traced */
+    virtual void event112(); /* parameters not traced */
+    virtual void event113(); /* parameters not traced */
+    virtual void event114(); /* parameters not traced */
+    virtual void event115();
+    virtual void event116();
+    virtual void event117();
+    virtual void event118();
+    virtual void event119();
+    virtual void event120(); /* parameters not traced */
+    virtual void event121(); /* parameters not traced */
+    virtual void event122(); /* parameters not traced */
+    virtual void event123();
+    virtual void event124();
+    virtual void event125();
+    virtual void event126(); /* parameters not traced */
+    virtual void event127();
+    virtual void event128();
+    virtual void event129();
+    virtual void event130();
+    virtual void event131();
+    virtual void event132();
+    virtual void event133();
+    virtual void event141(); /* parameters not traced */
+    virtual void event142(); /* parameters not traced */
+    virtual void event143(); /* parameters not traced */
+    virtual void event144(); /* parameters not traced */
+    virtual void event134(); /* parameters not traced */
+    virtual void event135();
+    virtual void event136(); /* parameters not traced */
+    virtual void event137(); /* parameters not traced */
+    virtual void event138();
+    virtual void event139(); /* parameters not traced */
+    virtual void event140();
 };
 
 /* derived names: the 0x30-byte event the slots of 0x16bb0c0 from 153 pass
@@ -219,11 +292,20 @@ struct EntryChunk00dadfd0 { /* derived name */
     EntryChunk00dadfd0 *prev; /* +0x50 */
 };
 
+/* derived name: the record at +0x4b8 of the compiler, whose int at +0x84
+ * FUN_00daa830 sets */
+struct Record00daa830 { /* derived name */
+    u8 unknown0[0x84];
+    int unknown84; /* +0x84 */
+};
+
 struct Compiler00da5b20 { /* derived name */
     u8 unknown0[0x10];
     Source016bb0c0 *source;     /* +0x10 */
     Listener016bb0c0 *listener; /* +0x18 */
-    u8 unknown20[0x4b0];
+    u8 unknown20[0x498];
+    Record00daa830 *record4b8; /* +0x4b8 */
+    u8 unknown4c0[0x10];
     void *heap4d0; /* +0x4d0: the heap of the entries' chunks */
     u8 unknown4d8[0x60];
     EntryChunk00dadfd0 *entryChunk; /* +0x538: the chunk in use */
@@ -267,6 +349,35 @@ static inline void pushExpression(FuncState00da5b20 *fs)
         fs->free = fs->chunk->start;
     }
     ++fs->count;
+}
+
+/* derived name: pushes a block, the next free one moving to the next chunk
+ * (allocated and linked after the one in use when there is none) when the
+ * chunk is full; returns the block pushed */
+static inline Block00daec00 *pushBlock(FuncState00da5b20 *fs)
+{
+    Block00daec00 *block = fs->blockFree;
+    fs->blockTop = block;
+    fs->blockFree = block + 1;
+    BlockChunk00daec00 *chunk = fs->blockChunk;
+    if (fs->blockFree >= chunk->start + 4) {
+        if (chunk->next) {
+            fs->blockChunk = chunk->next;
+        } else {
+            BlockChunk00daec00 *added = static_cast<BlockChunk00daec00 *>(
+                FUN_013bd790(fs->blockHeap, sizeof(BlockChunk00daec00), 0x21));
+            BlockChunk00daec00 *last = fs->blockChunk;
+            added->start = added->blocks;
+            added->next = 0;
+            added->prev = last;
+            last->next = added;
+            fs->blockChunk = added;
+            fs->blockCapacity += 4;
+        }
+        fs->blockFree = fs->blockChunk->start;
+    }
+    ++fs->blockCount;
+    return block;
 }
 
 #endif
