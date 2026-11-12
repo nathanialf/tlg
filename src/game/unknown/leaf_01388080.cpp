@@ -19,3 +19,19 @@ class Object01388080 /* derived name */
 };
 
 Object01388080::~Object01388080() {}
+
+/* derived names: the class of the vtable at 0x16cdf90
+ * (config/vtables.derived.base.txt), derived from the one above: a second
+ * Name at +0x14, in the base's tail padding. Its complete destructor
+ * 0x1387f60 releases it, then runs the base's (the base's vtable stored, its
+ * Name at +0x10 released); the deleting one 0x1387ff0 is the compiler's. */
+class Object016cdf90 : public Object01388080 /* derived name */
+{
+  public:
+    virtual ~Object016cdf90();
+
+  private:
+    Name unknown14; /* +0x14 */
+};
+
+Object016cdf90::~Object016cdf90() {}

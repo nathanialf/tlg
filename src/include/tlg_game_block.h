@@ -27,8 +27,9 @@ class Owner05943280 /* derived name */
     virtual void slot2(); /* derived name; not traced */
     virtual void slot3(); /* derived name; not traced */
     virtual void *slot4(unsigned size, unsigned alignment,
-                        int flags);             /* derived name: an allocation */
-    virtual void slot5();                       /* derived name; not traced */
+                        int flags); /* derived name: an allocation */
+    virtual void *slot5(void *block, unsigned size, unsigned alignment,
+                        int flags); /* derived name: a reallocation of a block it gave */
     virtual void slot6(void *block, int value); /* derived name; not traced */
 };
 
@@ -47,6 +48,19 @@ inline void releaseBlock(void *block) /* derived name */
         }
     }
     free(block);
+}
+
+/* derived name: a block grown or first allocated: an existing block goes
+ * back to its own owner (slot 5), a new one comes from the owner whose index
+ * the holder keeps (slot 4). */
+inline void *reallocateBlock(void *block, unsigned size, unsigned alignment,
+                             unsigned allocator) /* derived name */
+{
+    if (block) {
+        const BlockHeader05943280 *header = static_cast<BlockHeader05943280 *>(block) - 1;
+        return D_5943280[header->owner]->slot5(block, size, alignment, 1);
+    }
+    return D_5943280[allocator]->slot4(size, alignment, 1);
 }
 
 /* derived name: a member that owns a block and releases it when its holder
