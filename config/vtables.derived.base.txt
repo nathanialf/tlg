@@ -414,3 +414,5 @@ _ZTV14Object016a7620 0x16a7620 Object016a7620 derived ctor FUN_001b0a40 # game r
 _ZTV14Object016cabc8 0x16cabc8 Object016cabc8 derived ctor FUN_002212a0 # game region (round 211C): stored by FUN_002212a0 FUN_01350030 FUN_013500e0; no type info and no string names the class
 _ZTV14Object016cae20 0x16cae20 Object016cae20 derived ctor FUN_004a8e50 # game region (round 211C): stored by FUN_004a8e50 FUN_01352de0 FUN_01352e90; no type info and no string names the class
 _ZTV14Object016ac780 0x16ac780 Object016ac780 derived ctor FUN_001bd010 # game region (round 211C): stored by FUN_001bd010 FUN_006e1430 FUN_006e14f0; no type info and no string names the class
+_ZTV14Object016b15a0 0x16b15a0 Object016b15a0 derived ctor FUN_0096a720 # game region (round 207A): stored by FUN_0096a720 FUN_0096a910; no type info and no string names the class
+_ZTV14Object016b5860 0x16b5860 Object016b5860 derived ctor FUN_00b386f0 # game region (round 207A): stored by FUN_00b386f0; no type info and no string names the class
