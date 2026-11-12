@@ -16,23 +16,18 @@ class Object016abab8 : public Object016b9108 /* derived name */
 
   private:
     u8 unknown24[0xc];
-    /* +0x30: torn down by the destructor (`lea rdi, [rbx+0x30]; call FUN_0134f620`) */
+    /* +0x30: torn down by the destructor (`lea rdi, [rbx+0x30]; call 0x134f620`) */
     Object0134f620 record30;
     u8 unknown40[0x18];
-    /* +0x58: torn down by the destructor (`lea rdi, [rbx+0x58]; call FUN_0134f620`) */
+    /* +0x58: torn down by the destructor (`lea rdi, [rbx+0x58]; call 0x134f620`) */
     Object0134f620 record58;
     u8 unknown68[0x10];
-    /* +0x78: torn down by the destructor (`lea rdi, [rbx+0x78]; call FUN_0134f620`) */
+    /* +0x78: torn down by the destructor (`lea rdi, [rbx+0x78]; call 0x134f620`) */
     Object0134f620 record78;
 };
 
-/* derived name: the complete destructor: the records, last first, then the base's destructor
+/* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_005ab930, slot 1, is
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-Object016abab8::~Object016abab8()
-{
-    FUN_0134f620(&record78);
-    FUN_0134f620(&record58);
-    FUN_0134f620(&record30);
-}
+Object016abab8::~Object016abab8() {}

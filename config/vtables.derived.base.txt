@@ -573,7 +573,7 @@ _ZTV14Object016ac990 0x16ac990 Object016ac990 derived ctor FUN_00763020 # stored
 _ZTV14Object016acb20 0x16acb20 Object016acb20 derived ctor FUN_007658a0 # stored by FUN_007658a0 FUN_007659d0
 _ZTV14Object016acbe8 0x16acbe8 Object016acbe8 derived ctor FUN_00767b40 # stored by FUN_00767b40 FUN_00768000
 _ZTV14Object016accb0 0x16accb0 Object016accb0 derived ctor FUN_0076e4a0 # stored by FUN_0076e4a0 FUN_0076e620
-_ZTV14Object016acd78 0x16acd78 Object016acd78 derived ctor FUN_00774370 # stored by FUN_00774370 FUN_00774560 FUN_00774660
+_ZTV14Object00774560 0x16acd78 Object00774560 derived ctor FUN_00774370 # stored by FUN_00774370 FUN_00774560 FUN_00774660
 _ZTV14Object016ace40 0x16ace40 Object016ace40 derived ctor FUN_00775ec0 # stored by FUN_00775ec0 FUN_00776130
 _ZTV14Object016ad228 0x16ad228 Object016ad228 derived ctor FUN_007795c0 # stored by FUN_007795c0 FUN_007796c0
 _ZTV14Object016ad2f0 0x16ad2f0 Object016ad2f0 derived ctor FUN_0077a9d0 # stored by FUN_0077a9d0 FUN_0077ac30
@@ -847,7 +847,7 @@ _ZTV14Object016b7dd0 0x16b7dd0 Object016b7dd0 derived ctor FUN_00bf7d70 # stored
 _ZTV14Object016b7e18 0x16b7e18 Object016b7e18 derived ctor FUN_00bff9d0 # stored by FUN_00bff9d0 FUN_013a1bf0
 _ZTV14Object016b7f00 0x16b7f00 Object016b7f00 derived ctor FUN_00c18d90 # stored by FUN_00c18d90 FUN_00c19090
 _ZTV14Object016b7f48 0x16b7f48 Object016b7f48 derived ctor FUN_00c18f10 # stored by FUN_00c18f10 FUN_00c19860
-_ZTV14Object016b7fb0 0x16b7fb0 Object016b7fb0 derived ctor FUN_00c19b00 # stored by FUN_00c19b00 FUN_00c19c80 FUN_00c19d70
+_ZTV14Object00c19c80 0x16b7fb0 Object00c19c80 derived ctor FUN_00c19b00 # stored by FUN_00c19b00 FUN_00c19c80 FUN_00c19d70
 _ZTV14Object016b8040 0x16b8040 Object016b8040 derived ctor FUN_00c19f10 # stored by FUN_00c19f10 FUN_00c1a5e0
 _ZTV14Object016b8150 0x16b8150 Object016b8150 derived ctor FUN_00c1b970 # stored by FUN_00c1b970 FUN_00c1bb30
 _ZTV14Object016b8188 0x16b8188 Object016b8188 derived ctor FUN_00c1ccc0 # stored by FUN_00c1ccc0 FUN_00c1cfd0

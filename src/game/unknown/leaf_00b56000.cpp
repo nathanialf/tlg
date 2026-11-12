@@ -19,15 +19,12 @@ class Object016b6a70 : public Object016b9108 /* derived name */
   private:
     u8 unknown24[0x10];
     Name name34; /* +0x34: released by the destructor (`mov eax, [rbx+0x34]; shl 5`) */
-    /* +0x38: torn down by the destructor (`lea rdi, [rbx+0x38]; call FUN_0134f620`) */
+    /* +0x38: torn down by the destructor (`lea rdi, [rbx+0x38]; call 0x134f620`) */
     Object0134f620 record38;
 };
 
-/* derived name: the complete destructor: the records, last first, then the other members in reverse, then the base's destructor
+/* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_00b560d0, slot 1, is
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-Object016b6a70::~Object016b6a70()
-{
-    FUN_0134f620(&record38);
-}
+Object016b6a70::~Object016b6a70() {}

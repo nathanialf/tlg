@@ -4,10 +4,10 @@
 
 /* derived names: the class of the vtable at 0x16cb760
  * (config/vtables.derived.base.txt; made by FUN_00704230): owned blocks at
- * +0x10 and +0x48 and between them the record FUN_0134f620 tears down, at
+ * +0x10 and +0x48 and between them an Object0134f620 record, at
  * +0x28. Its complete destructor 0x1369ca0 releases the block at +0x48, tears
  * down the record, then releases the block at +0x10 as a tail call, and calls
- * no base, as Record00f4dab0's destructor does; the deleting one 0x1369d50 is
+ * no base: the three members destroyed, last first; the deleting one 0x1369d50 is
  * the compiler's. The other members are not traced. */
 class Object016cb760 /* derived name */
 {
@@ -16,18 +16,13 @@ class Object016cb760 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    void *block10; /* +0x10: owned block */
+    OwnedBlock05943280 block10; /* +0x10: owned block */
     u8 unknown18[0x10];
     Object0134f620 unknown28; /* +0x28 */
     u8 unknown38[0x10];
-    void *block48; /* +0x48: owned block */
+    OwnedBlock05943280 block48; /* +0x48: owned block */
 };
 
 // NONMATCHING: the deleting destructor 0x1369d50 calls this one (28 bytes) where the base inlines it
 // (an inline-cost margin); this complete destructor is equal
-Object016cb760::~Object016cb760()
-{
-    releaseBlock(block48);
-    FUN_0134f620(&unknown28);
-    releaseBlock(block10);
-}
+Object016cb760::~Object016cb760() {}

@@ -8,14 +8,17 @@
 #include "tlg_game_block.h"
 #include "tlg_game_object0134f620.h"
 
-/* derived names: the member FUN_01347230 tears down (its fields are not
- * traced here); FUN_0134f620's record is tlg_game_object0134f620.h's */
+/* derived names: the member whose destructor is 0x1347230 (D15, as
+ * Object0134f620's: an array of 0x60-byte entries at +0x0 counted by the int
+ * at +0x8, each dropping the reference at +0x58, then the array's block
+ * freed; not written: it reads the thread-local flag D_16dc088). Its fields
+ * are not traced here; the record at +0x20 is tlg_game_object0134f620.h's. */
 struct Object01347230 /* derived name */
 {
+    ~Object01347230();
+
     u8 unknown0[0x18];
 };
-
-void FUN_01347230(Object01347230 *self); /* derived name */
 
 /* derived names: the record: its destructor releases the block at +0x60,
  * then tears down the members at +0x20 and +0x8 (FUN_00f4dab0 and
@@ -25,8 +28,6 @@ struct Record00f4dab0 /* derived name */
     ~Record00f4dab0()
     {
         releaseBlock(block60);
-        FUN_0134f620(&unknown20);
-        FUN_01347230(&unknown8);
     }
 
     u8 unknown0[8];

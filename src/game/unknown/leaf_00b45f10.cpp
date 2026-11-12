@@ -1,29 +1,23 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_name.h"
+#include "tlg_game_object0134f620.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16b6138 (config/vtables.derived.base.txt, stored by its constructor
  * FUN_00b45e50): it stores the vtable, runs the class's FUN_00b45f80 on the
- * object, then FUN_0139b6b0 on its member at +0x28 and FUN_0134f620 on the
+ * object, then FUN_0139b6b0 on its member at +0x28 and 0x134f620 on the
  * one at +0x10 (each written as a free function on its record, as
  * leaf_00b45590.cpp), then releases its Name at +0xc. It has no base.
  * FUN_00b461f0, slot 1, is the deleting one (the Name's clear dead before
  * operator delete). The destructor is the class's key function, so this file
  * emits the vtable. The other members are not traced. */
-struct Object0134f620 /* derived name */
-{
-    void **unknown0; /* +0x0: the pointers it frees */
-    int unknown8;    /* +0x8: their count */
-};
-
 struct Object0139b6b0 /* derived name */
 {
     void *unknown0; /* +0x0: the 16-byte entries it releases */
     int unknown8;   /* +0x8: their count */
 };
 
-void FUN_0134f620(Object0134f620 *self); /* derived name */
 void FUN_0139b6b0(Object0139b6b0 *self); /* derived name */
 
 class Object016b6138 /* derived name */
@@ -44,5 +38,4 @@ Object016b6138::~Object016b6138()
 {
     FUN_00b45f80();
     FUN_0139b6b0(&unknown28);
-    FUN_0134f620(&unknown10);
 }

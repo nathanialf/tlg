@@ -15,7 +15,7 @@ void FUN_0139b6b0(Object0139b6b0 *self); /* derived name */
 
 /* derived names: the class of the vtable at 0x16b1ac8
  * (config/vtables.derived.base.txt; made by FUN_001bd010): the record
- * FUN_0134f620 tears down at +0x10, an owned block at +0x28, the record
+ * 0x134f620 tears down at +0x10, an owned block at +0x28, the record
  * FUN_0139b6b0 tears down at +0x40 and an owned block at +0x58. Its complete
  * destructor 0xa01c20 releases them from the last to the first, the first as
  * a tail call, and calls no base; the deleting one 0xa01cd0 is the
@@ -43,5 +43,4 @@ Object016b1ac8::~Object016b1ac8()
     releaseBlock(block58);
     FUN_0139b6b0(&unknown40);
     releaseBlock(block28);
-    FUN_0134f620(&unknown10);
 }

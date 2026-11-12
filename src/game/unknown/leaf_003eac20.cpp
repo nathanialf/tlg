@@ -18,15 +18,12 @@ class Object016a9290 : public Object016b9108 /* derived name */
     /* +0x28: an owned block, released by the destructor (`mov rax, [rbx+0x28]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block28;
     u8 unknown30[0x10];
-    /* +0x40: torn down by the destructor (`lea rdi, [rbx+0x40]; call FUN_0134f620`) */
+    /* +0x40: torn down by the destructor (`lea rdi, [rbx+0x40]; call 0x134f620`) */
     Object0134f620 record40;
 };
 
-/* derived name: the complete destructor: the records, last first, then the other members in reverse, then the base's destructor
+/* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_003eacf0, slot 1, is
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-Object016a9290::~Object016a9290()
-{
-    FUN_0134f620(&record40);
-}
+Object016a9290::~Object016a9290() {}
