@@ -7367,3 +7367,9 @@ FUN_00d5ccb0 src/game/unknown/leaf_00d5ccb0.cpp
 FUN_00431030 src/game/unknown/leaf_00431030.cpp
 FUN_01499280 src/game/unknown/leaf_01499280.cpp _ZN25DepthRenderTarget0149928012setArrayViewEjj
 FUN_01499fa0 src/game/unknown/leaf_01499280.cpp _ZN15Texture01499fa012setArrayViewEjj
+_ZN14Object00774560D1Ev src/game/unknown/leaf_00774560.cpp
+_ZN14Object00c19c80D1Ev src/game/unknown/leaf_00c19c80.cpp
+FUN_008c14b0 src/game/unknown/leaf_008c14b0.cpp _ZN14Object016b01b8D1Ev
+FUN_008c1ad0 src/game/unknown/leaf_008c1ad0.cpp _ZN14Object016b0238D1Ev
+FUN_00af1500 src/game/unknown/leaf_00af1500.cpp _ZN14Object016b4340D1Ev
+FUN_013bbb30 src/game/unknown/leaf_013bbb30.cpp _ZN14Object016bad40D1Ev

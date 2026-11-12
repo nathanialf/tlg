@@ -1428,3 +1428,20 @@ _ZTV14Object016d7dc0 0x16d7dc0 Object016d7dc0 derived ctor FUN_014917f0 # stored
 _ZTV14Object016d7de8 0x16d7de8 Object016d7de8 derived ctor FUN_012e12b0 # stored by FUN_012e12b0 FUN_014917f0 FUN_01491e40
 _ZTV14Object016d7e68 0x16d7e68 Object016d7e68 derived ctor FUN_012ec160 # stored by FUN_012ec160 FUN_012ec7e0 FUN_01495350
 _ZTV14Object016d7eb0 0x16d7eb0 Object016d7eb0 derived ctor FUN_012ec7e0 # stored by FUN_012ec7e0 FUN_01495350
+_ZTV14Object016ae7e0 0x16ae7e0 Object016ae7e0 derived ctor FUN_00818b00 # stored by FUN_00818b00 FUN_00818d10 FUN_00818ea0 and 5 more
+_ZTV14Object016b0178 0x16b0178 Object016b0178 derived ctor FUN_008c0fe0 # stored by FUN_008c0fe0 FUN_008c1140 FUN_008c1230 FUN_008c17c0
+_ZTV14Object016b1c88 0x16b1c88 Object016b1c88 derived ctor FUN_00a28440 # stored by FUN_00a28440
+_ZTV14Object016b8118 0x16b8118 Object016b8118 derived ctor FUN_00c1b680 # stored by FUN_00c1b680 FUN_00c1b7f0 FUN_00c1b8b0 and 59 more
+_ZTV14Object016b92f8 0x16b92f8 Object016b92f8 derived ctor FUN_00ccfbe0 # stored by FUN_00ccfbe0 FUN_00ccfd00 FUN_00ccfdb0 and 2 more
+_ZTV14Object016ba058 0x16ba058 Object016ba058 derived ctor FUN_007a6f20 # stored by FUN_007a6f20 FUN_007aeee0 FUN_00d11040 and 5 more
+_ZTV14Object016ba268 0x16ba268 Object016ba268 derived ctor FUN_00c68720 # stored by FUN_00c68720 FUN_00c688c0 FUN_00c68d00 and 11 more
+_ZTV14Object016c78d0 0x16c78d0 Object016c78d0 derived ctor FUN_004233f0 # stored by FUN_004233f0 FUN_006d2bf0 FUN_007b1d50 FUN_007b1e30
+_ZTV14Object016c7c78 0x16c7c78 Object016c7c78 derived ctor FUN_00a29d80 # stored by FUN_00a29d80 FUN_00a29f30 FUN_00a2a290 and 4 more
+_ZTV14Object016cbae0 0x16cbae0 Object016cbae0 derived ctor FUN_007ad260 # stored by FUN_007ad260 FUN_0136e240 FUN_0136e390 and 4 more
+_ZTV14Object016cbca0 0x16cbca0 Object016cbca0 derived ctor FUN_007adf30 # stored by FUN_007adf30 FUN_0136d4c0 FUN_0136d610 and 4 more
+_ZTV14Object016cbd80 0x16cbd80 Object016cbd80 derived ctor FUN_007ae5c0 # stored by FUN_007ae5c0 FUN_0136cbe0 FUN_0136cd30 and 4 more
+_ZTV14Object016cc398 0x16cc398 Object016cc398 derived ctor FUN_008f5760 # stored by FUN_008f5760 FUN_008f5830 FUN_00901550 and 4 more
+_ZTV14Object016cd348 0x16cd348 Object016cd348 derived ctor FUN_00991430 # stored by FUN_00991430 FUN_00991560 FUN_00991670 and 3 more
+_ZTV14Object016d0300 0x16d0300 Object016d0300 derived ctor FUN_00bfa840 # stored by FUN_00bfa840 FUN_00bfb1c0 FUN_00bfbb40 and 17 more
+_ZTV14Object016cb168 0x16cb168 Object016cb168 derived ctor FUN_005aaa70 # stored by FUN_005aaa70 FUN_005ab240 FUN_005ab2e0 and 7 more
+_ZTV14Object016cc130 0x16cc130 Object016cc130 derived ctor FUN_0085e360 # stored by FUN_0085e360 FUN_0085e950 FUN_0086a010 and 14 more
