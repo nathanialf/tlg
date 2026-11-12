@@ -20,9 +20,6 @@ class NameList013883d0 /* derived name */
     NamedValue013883d0 entries[1]; /* +0x14: the class's own length */
 };
 
-// NONMATCHING: the base increments the count in memory after the value's store (`inc dword
-// [rbx + 0x10]`: the store not proven apart from the count), the build keeps the count it read
-// (BasicAA: a zero-extended index past +0x18) and stores count + 1; rbx and r12 exchanged
 void NameList013883d0::add(const Name &name, unsigned value)
 {
     entries[count].name = name;

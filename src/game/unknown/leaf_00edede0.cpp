@@ -24,8 +24,6 @@ struct Node00edede0 { /* derived name */
     float unknown2d8;
 };
 
-// NONMATCHING: list-ilp order, the base loads the next link (+0x18) before the
-// max where the build loads it after the max's spill and reload.
 float FUN_00edede0(Node00edede0 *node) /* derived name */
 {
     float level = node->unknown2d4 * node->unknown2d8;

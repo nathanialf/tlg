@@ -30,10 +30,6 @@ struct Object00b34440 { /* derived name */
     void *unknown40[1];
 };
 
-// NONMATCHING: the index's add is done in 32 bits before the sign extension (`inc eax; cdqe; mov
-// rax, [rbx + rax*8 + 0x40]`), so the base's add has no nsw; `slot10() + 1` as an int subscript
-// folds the 1 into the displacement (`cdqe; mov rax, [rbx + rax*8 + 0x48]`). The source of an add
-// without nsw (unsigned arithmetic converted back) not found
 void *FUN_00b34440(const Object00b34440 *self) /* derived name */
 {
     return self->unknown40[D_5989c08->slot10() + 1];

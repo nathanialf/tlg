@@ -21,10 +21,6 @@ struct Object00968760 { /* derived name */
 
 void FUN_0092da90(Entry00968760 *entry, float step); /* derived name */
 
-// NONMATCHING: the two-bit test: the base masks and compares (`and edx, 3; cmp edx, 3; jne`),
-// the build turns `(x & 3) == 3` into `andn edx, edx, r15d` with 3 kept in r15
-// (TargetLowering::simplifySetCCWithAnd, hasAndNotCompare under BMI), one register more to save;
-// the base has the and-compare form at 245 multi-bit sites of the region
 int FUN_00968760(Object00968760 *self, float step) /* derived name */
 {
     if (!self->unknown5c) {

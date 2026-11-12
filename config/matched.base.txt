@@ -7148,3 +7148,9 @@ FUN_00dab940 src/game/unknown/leaf_00dab940.cpp _Z12FUN_00dab940P16Compiler00da5
 FUN_00dadde0 src/game/unknown/leaf_00dadde0.cpp _Z12FUN_00dadde0P16Compiler00da5b20
 FUN_00dadea0 src/game/unknown/leaf_00dadea0.cpp _Z12FUN_00dadea0P16Compiler00da5b20
 FUN_00da5b20 src/game/unknown/leaf_00da5b20.cpp _Z12FUN_00da5b20P16Compiler00da5b20
+FUN_00968760 src/game/unknown/leaf_00968760.cpp
+FUN_00b34440 src/game/unknown/leaf_00b34440.cpp
+FUN_00b34470 src/game/unknown/leaf_00b34470.cpp
+FUN_00edede0 src/game/unknown/leaf_00edede0.cpp
+FUN_012fd360 src/game/unknown/leaf_012fd360.cpp
+FUN_013883d0 src/game/unknown/leaf_013883d0.cpp _ZN16NameList013883d03addERK4Namej
