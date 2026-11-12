@@ -16,6 +16,11 @@
 struct Object0134f620 /* derived name */
 {
     ~Object0134f620();
+    /* derived name: 0x138c8d0 drops every pointer of the array (the same
+     * release), then resizes the array's block to its int argument where
+     * the capacity at +0xc differs (not written: it reads the thread-local
+     * flag too). A holder's destructor passes 0 (`xor esi, esi`). */
+    void FUN_0138c8d0(int capacity);
 
     void **unknown0; /* +0x0 */
     int unknown8;    /* +0x8 */

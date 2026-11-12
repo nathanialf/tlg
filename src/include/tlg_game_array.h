@@ -18,6 +18,18 @@
 template <class T> class Array05943280 /* derived name */
 {
   public:
+    /* the elements destroyed first to last, the array and the count read
+     * again at each one, then the block released (0x1373420, an array of
+     * Names at +0x28 of its holder: `mov r12, [r14+0x28]; mov ebx, ebx;
+     * mov ecx, [r12+rbx*4]` ... `inc ebx; cmp ebx, eax; jb`, then the
+     * release of the block at +0x28) */
+    ~Array05943280()
+    {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
+        releaseBlock(data);
+    }
+
     /* appends a copy of the value, growing the block first when it is full */
     void push(const T &value)
     {

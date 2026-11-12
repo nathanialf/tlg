@@ -1,0 +1,35 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016b9108.h"
+#include "tlg_game_array.h"
+#include "tlg_game_name.h"
+
+/* derived names: the class whose vtable is at 0x16a8b58
+ * (config/vtables.derived.base.txt, stored by FUN_00368a80 FUN_00368e70), derived from
+ * Object016b9108: its slots 2 to 4 are the base's. Its own fields
+ * from +0x24 are traced only where its destructor FUN_00368e70 tears them down
+ * (the arrays of Names at +0x50, +0x30, the Names at +0x48, +0x28); the rest are not traced. */
+class Object016a8b58 : public Object016b9108 /* derived name */
+{
+  public:
+    virtual ~Object016a8b58();
+
+  private:
+    u8 unknown24[0x4];
+    Name name28; /* +0x28: released by the destructor (`mov eax, [rbx+0x28]; shl 5`) */
+    u8 unknown2c[0x4];
+    /* +0x30: an array of Names (the block at +0x30, the count at +0x38): the destructor releases each
+     * (`mov r12, [r14+0x30]; mov ecx, [r12+rbx*4]` ... `cmp ebx, eax; jb`), then the block */
+    Array05943280<Name> names30;
+    Name name48; /* +0x48: released by the destructor (`mov eax, [rbx+0x48]; shl 5`) */
+    u8 unknown4c[0x4];
+    /* +0x50: an array of Names (the block at +0x50, the count at +0x58): the destructor releases each
+     * (`mov r12, [r14+0x50]; mov ecx, [r12+rbx*4]` ... `cmp ebx, eax; jb`), then the block */
+    Array05943280<Name> names50;
+};
+
+/* derived name: the complete destructor: the body is empty; the members are
+ * released, last first, then the base's destructor
+ * is inlined (its vptr store, then the two names).
+ * FUN_003690a0, slot 1, is the deleting one. The destructor is the class's key
+ * function, so this file emits the vtable. */
+Object016a8b58::~Object016a8b58() {}
