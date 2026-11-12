@@ -6960,3 +6960,10 @@ FUN_01246f50 src/game/unknown/leaf_01246f50.cpp _ZN14Object01246f505slot7EP14Hol
 FUN_00dac050 src/game/unknown/leaf_00dac050.cpp _Z12FUN_00dac050P16Compiler00dac050
 FUN_0057f3b0 src/game/unknown/leaf_0057f3b0.cpp _Z12FUN_0057f3b0P11Owner583950Pv
 FUN_00ac80e0 src/game/unknown/leaf_00ac80e0.cpp _ZN14Object00ac80e05slot5Ev
+FUN_00c03000 src/game/unknown/leaf_00c03000.cpp _Z12FUN_00c03000P11Owner583950Pv
+FUN_00b1a520 src/game/unknown/leaf_00b1a520.cpp _Z12FUN_00b1a520P14Object00b1a520
+FUN_00c19e60 src/game/unknown/leaf_00c19e60.cpp _Z12FUN_00c19e60P15Machine00c19e60P14Holder00c19e60
+FUN_0139e0d0 src/game/unknown/leaf_0139e0d0.cpp _Z12FUN_0139e0d0Pvjj
+FUN_00a53160 src/game/unknown/leaf_00a53160.cpp _Z12FUN_00a53160P14Object00a53160
+FUN_00ebf620 src/game/unknown/leaf_00ebf620.cpp _Z12FUN_00ebf620P13Arena00ebf620
+FUN_00ad1c10 src/game/unknown/leaf_00ad1c10.cpp _Z12FUN_00ad1c10v
