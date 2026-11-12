@@ -114,8 +114,9 @@ struct NamedValue /* derived name */
  * slot 4 on 0xdde740, which returns its int argument, slot 5 on FUN_0138d9d0,
  * the name's string of an index or else the second argument, slot 6 on
  * FUN_0138da00, a lookup by string). Slot 3 is each class's own
- * (FUN_0138d450 and on: the entry of an index, else the class's static
- * "<ERROR>" entry). The classes have no common polymorphic base: an empty
+ * (FUN_0138d450 and on: the name of the entry of an index, else the class's
+ * static "<ERROR>" name, a Name: the nine are 4 bytes apart from 0x5828ac0,
+ * each registered with Name's destructor). The classes have no common polymorphic base: an empty
  * destructor inherited from one is called through a cast in the complete
  * destructor and its __cxa_atexit is then kept, which the accessors do not
  * register (GlobalOpt drops the registration of an empty destructor). */
@@ -147,7 +148,7 @@ class Object016ce490 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -167,7 +168,7 @@ class Object016ce4d8 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -187,7 +188,7 @@ class Object016ce520 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -207,7 +208,7 @@ class Object016ce568 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -227,7 +228,7 @@ class Object016ce5b0 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -247,7 +248,7 @@ class Object016ce5f8 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -267,7 +268,7 @@ class Object016ce640 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -287,7 +288,7 @@ class Object016ce688 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;
@@ -307,7 +308,7 @@ class Object016ce6d0 : public NamedValueTable /* derived name */
 
     virtual void unknown2() {}
 
-    virtual const NamedValue *entry(int index) const;
+    virtual const Name *entry(int index) const;
     virtual int value(int index) const;
     virtual const char *name(int index, const char *fallback) const;
     virtual int find(const char *string) const;

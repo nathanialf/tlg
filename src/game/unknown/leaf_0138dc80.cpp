@@ -12,12 +12,12 @@ class Object016ce788 /* derived name */
   public:
     virtual ~Object016ce788() {}
 
-    virtual const NamedValue *FUN_0138dc80(int index) const;
+    virtual const Name *FUN_0138dc80(int index) const;
     virtual int FUN_0138dcb0(int index) const;
     virtual const char *FUN_0138dce0(int index, const char *fallback) const;
 };
 
-const NamedValue *Object016ce788::FUN_0138dc80(int index) const
+const Name *Object016ce788::FUN_0138dc80(int index) const
 {
     return FUN_00a653b0().entry(index);
 }

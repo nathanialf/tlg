@@ -48,7 +48,8 @@ struct Object00402110 { /* derived name */
     u8 flags44c; /* bit 0 tested */
 };
 
-// NONMATCHING: the base materialises the state's +0x40 in the join (add rax, 0x40; mov dword [rax], 1), the build folds it into the store's address
+// The base materialises the state's +0x40 in the join (add rax, 0x40): GVN's
+// scalar PRE stops after its last change (docs/DECISIONS.md D64).
 void FUN_00402110(Object00402110 *self) /* derived name */
 {
     if ((self->flags44c & 1) || self->unknown30 == 0 || self->unknown90 != 0) {

@@ -32,9 +32,8 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: the loop's exit compare, the base the truncated induction variable
-// (`inc rdx; cmp edx, ecx`), the build the widened one (`cmp rcx, rdx`):
-// IndVarSimplify's widenLoopCompare (IndVarSimplify.cpp:1289, not in 3.6.2).
+// The exit compare is the truncated induction variable (`inc rdx; cmp edx,
+// ecx`): docs/DECISIONS.md D65.
 int FUN_00470400(lua_State *) /* derived name */
 {
     Member057c9390_38_900 *list = D_57c9390->unknown38->unknown900;

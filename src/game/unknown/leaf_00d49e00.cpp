@@ -19,9 +19,8 @@ struct List00d49e00 { /* derived name */
 
 struct Object00d49e00; /* derived name */
 
-// NONMATCHING: the loop's exit compare, the base the truncated induction
-// variable (`inc rcx; cmp r8d, ecx`), the build the widened one (`cmp r8,
-// rcx`): IndVarSimplify, leaf_00470400.cpp's class; the rest equal (20 of 21).
+// The exit compare is the truncated induction variable (`inc rcx; cmp r8d,
+// ecx`): docs/DECISIONS.md D65.
 void FUN_00d49e00(Object00d49e00 *, const List00d49e00 *source,
                   List00d49e00 *target) /* derived name */
 {
