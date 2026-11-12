@@ -27,6 +27,25 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
+    /* sets the count, the elements value-initialized: an unchanged count
+     * returns at once; otherwise the array is emptied, the capacity made
+     * the count exactly (the block reallocated when it differs) and the
+     * elements cleared one by one (FUN_00a18a70 and four more over arrays
+     * of 4-byte elements) */
+    void resize(unsigned size)
+    {
+        if (count == size)
+            return;
+        count = 0;
+        if (capacity != size) {
+            capacity = size;
+            data = static_cast<T *>(reallocateBlock(data, size * sizeof(T), alignof(T), allocator));
+        }
+        count = size;
+        for (unsigned i = 0; i < count; ++i)
+            new (&data[i]) T();
+    }
+
   private:
     /* the owner is read before the new capacity is stored (the base keeps
      * the load above the store, in the block of the growth) */

@@ -83,6 +83,12 @@ int fclose(FILE *stream);
 /* NID verified as "stat" (E6ao34wPw+U). */
 int stat(const char *path, struct stat *status);
 float fabsf(float x);
+/* NIDs verified as "acosf", "asinf", "atanf", "tanf", "expf". */
+float acosf(float x);
+float asinf(float x);
+float atanf(float x);
+float tanf(float x);
+float expf(float x);
 /* The C library's float sine and cosine kernel (Dinkumware's; its NID
  * verified as "_FSin"): the sine for a quadrant offset of 0, the cosine for
  * 1; the third argument is 0 at every one of the executable's 1,709 calls. */
