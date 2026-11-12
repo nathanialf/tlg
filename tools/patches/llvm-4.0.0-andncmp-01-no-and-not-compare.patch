@@ -1,0 +1,47 @@
+llvm-4.0.0 backport patch: a multi-bit mask compared with itself stays an and and a compare (PS4)
+
+This patch CHANGES CODE GENERATION for `(x & C) == C` with more than one
+bit in C on a target with an and-not instruction (BMI's andn; btver2 has
+it). r268858 (Sanjay Patel, 2016-05-07, "[TargetLowering] try to use
+and-not instead of and + compare", llvm-project c2751e7050b2, D19087,
+first release LLVM 3.9) rewrites the compare to `(~x & C) == 0`, which is
+selected as `andn`. In the game region `and C; cmp C` with a multi-bit
+constant occurs at 245 sites; of the 98 `andn` 96 produce a value and the
+two that feed a branch (0x1301214, 0x130147c) have a variable mask: no
+`andn` compare with a constant mask exists (round 202B's census). 0x968760
+is equal to the base under the prebuilt 3.8.1 and uses `andn` under 3.9.1
+and 4.0.0; no source form selects between the two instructions. With the
+hunk taken back that function is the only one of the module's 4,955 that
+changes and no matched game row changes (round 202B's module sweep).
+
+diff -ru a/lib/CodeGen/SelectionDAG/TargetLowering.cpp b/lib/CodeGen/SelectionDAG/TargetLowering.cpp
+--- a/lib/CodeGen/SelectionDAG/TargetLowering.cpp
++++ b/lib/CodeGen/SelectionDAG/TargetLowering.cpp
+@@ -1427,24 +1427,10 @@
+     if (DCI.isBeforeLegalizeOps() ||
+         isCondCodeLegal(Cond, N0.getSimpleValueType()))
+       return DAG.getSetCC(DL, VT, N0, Zero, Cond);
+-  } else if (N0.hasOneUse() && hasAndNotCompare(Y)) {
+-    // If the target supports an 'and-not' or 'and-complement' logic operation,
+-    // try to use that to make a comparison operation more efficient.
+-    // But don't do this transform if the mask is a single bit because there are
+-    // more efficient ways to deal with that case (for example, 'bt' on x86 or
+-    // 'rlwinm' on PPC).
+-
+-    // Bail out if the compare operand that we want to turn into a zero is
+-    // already a zero (otherwise, infinite loop).
+-    auto *YConst = dyn_cast<ConstantSDNode>(Y);
+-    if (YConst && YConst->isNullValue())
+-      return SDValue();
+-
+-    // Transform this into: ~X & Y == 0.
+-    SDValue NotX = DAG.getNOT(SDLoc(X), X, OpVT);
+-    SDValue NewAnd = DAG.getNode(ISD::AND, SDLoc(N0), OpVT, NotX, Y);
+-    return DAG.getSetCC(DL, VT, NewAnd, Zero, Cond);
+   }
++  // PS4: (X & Y) == Y with a multi-bit Y stays an and and a compare, as before
++  // r268858; its rewrite to ~X & Y == 0 for a target with an and-not compare
++  // (andn under BMI) is not taken.
+ 
+   return SDValue();
+ }

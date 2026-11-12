@@ -3341,3 +3341,29 @@ witness.
 
 **Trigger to revisit.** A post-RA rename in a game function that only r270935's bookkeeping
 gives.
+
+## D63. A multi-bit mask compared with itself stays `and; cmp`: r268858 not taken (2026-11-12)
+
+**Question.** 0x968760 tests `(x & 3) == 3` with `and; cmp`; the installed compiler emits
+`andn` and tests the result against zero. No source form selects between the two.
+
+**Evidence.** Round 202B's census of the game region: `and C; cmp C` with a multi-bit constant
+at 245 sites (32 in the library); of the 98 `andn`, 96 produce a value and the two that feed a
+branch (0x1301214, 0x130147c) have a variable mask: no `andn` compare with a constant mask
+exists. 0x968760 is equal under the prebuilt 3.8.1 and uses `andn` under 3.9.1 and 4.0.0. The
+change is r268858 (llvm-project c2751e7050b2, 2016-05-07, first release 3.9), the and-not
+branch of simplifySetCCWithAnd. Taken back: no matched row's line changes and one function of
+the module's 4,955 changes, the witness (2 of 37 to 33 of 35; what remains is a spill placed
+before a copy, another rule).
+
+**Decision.** `tools/patches/llvm-4.0.0-andncmp-01-no-and-not-compare.patch`. Twenty-four
+backports. With D62 this is the second rule where the base agrees with 3.8 against 3.9.
+
+**Held beside it (round 202B).** The loop-preheader protection of CodeGenPrepare
+(d3fb38cae522, first release 3.9; its own option `-disable-preheader-prot`): 0xdd2290 is equal
+without it and 0x4f46c0 fits, but 0xdacb80 shows a kept preheader holding a copy, and the base
+has both forms (1,872 loops with the zero after the guard, 387 above it): held until 3.8's
+rule is shown to predict both.
+
+**Trigger to revisit.** A game `andn` whose result is only compared with zero and whose mask is
+a constant.
