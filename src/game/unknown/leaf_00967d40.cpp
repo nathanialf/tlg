@@ -30,11 +30,12 @@ class Object016b1208 : public Object016ccdf0 /* derived name */
 
 /* derived name: the complete destructor: destroys the entries in place where
  * the array is set and clears the pointer; then Object016ccdf0's destructor
- * is inlined. FUN_00967e80, slot 1, is the deleting one. */
-// NONMATCHING: an inline-cost margin: the build tail-calls the base's destructor FUN_0137f420 where the
-// base inlines it; with it inlined 72 of 82 instructions are the base's, the loop's second test
-// `cmp [r14+0x58], 2; jb` against `cmp [r14+0x58], 1; jbe` and the entry's address formed after its
-// vptr load (`add rdi, rax`) against before it (`lea rdi, [rax+rcx]`)
+ * is inlined. FUN_00967e80, slot 1, is the deleting one. This unit stores
+ * Object016ccdf0's vtable, so it emits that class's vtable and its two
+ * destructors (FUN_0137f420, FUN_0137f500). */
+// NONMATCHING: 319 bytes against 320 with the base's destructor inlined as the base has it: the loop's
+// second test `cmp [r14+0x58], 2; jb` against `cmp [r14+0x58], 1; jbe` and the entry's address formed
+// after its vptr load (`add rdi, rax`) against before it (`lea rdi, [rax+rcx]`)
 Object016b1208::~Object016b1208()
 {
     if (entries50 != 0) {

@@ -22,4 +22,13 @@ class Object016cbae0 : public Object016b9108 /* derived name */
     Name name94; /* +0x94: released by the destructor (`mov eax, [rbx+0x94]; shl 5`) */
 };
 
+/* derived name: the complete destructor (slot 0 of 0x16cbae0, FUN_0136e780): the
+ * body is empty; the two Names are released, last first, then the base's
+ * destructor is inlined (its vptr store, then the two names). FUN_0136e880,
+ * slot 1, is the deleting one. Defined here, inline: the destructors of the
+ * derived classes hold this body, and with no key function the class's
+ * vtable and its two destructors are emitted by a unit that stores the
+ * vtable (leaf_0136e4e0.cpp, the row's unit). */
+inline Object016cbae0::~Object016cbae0() {}
+
 #endif
