@@ -156,7 +156,7 @@ def main() -> int:
         lines.append(f"build {esc(o)}: cxx {esc(s)} | tools/compile_cpp.sh {esc(str(flags))}{ccdep}{gen}")
     if lls:
         cfg = " ".join(esc(str(config_path(REPO_ROOT, ver, stem, "txt").relative_to(REPO_ROOT)))
-                       for stem in ("modules", "functions", "vtables", "vtables.derived", "imports")
+                       for stem in ("modules", "functions", "vtables", "vtables.derived", "imports", "local_data")
                        if config_path(REPO_ROOT, ver, stem, "txt").exists())
         mod = f"{bd}/game/module.o"
         objs.append(mod)

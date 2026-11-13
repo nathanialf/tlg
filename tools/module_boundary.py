@@ -76,11 +76,22 @@ refuses the row unless
       variable never set would have been folded to its initial value).
 
 A thread-local's accesses are found from its `add rax, [rip+slot]` sites
-(item 6), following the address register and its copies in text order for
-WINDOW instructions, to the function's end or a `ret` (branches are not
-followed: a linear reading, which can miss an access but does not invent
-one for a register still holding the address); an ordinary variable's are
-the RIP-relative operands that name it.
+(item 6), following the address register and its 64-bit copies for WINDOW
+instructions along every path from the site: a direct jump is followed to
+its target and a conditional one on both sides, to a `ret`, an indirect jump
+or the function's end; an ordinary variable's are the RIP-relative operands
+that name it. A loaded byte's first use is read the same way, on every path:
+whole on any path refuses the row, another use on any path is a kept byte.
+What this can still miss, and so cannot refuse: an access more than WINDOW
+instructions from its site; one through an address kept in memory (spilled,
+or stored in an object) or passed to a callee, or in a register a call
+preserves only by the callee's own saving; one behind an indirect jump (a
+jump table); an address formed any other way than the site's two
+instructions; a loaded byte copied to another register or to memory before
+it is tested (a kept byte, not judged). It does not invent an access: a
+register is read as the address only on a path where it still holds it. A
+function that does not decode whole from its first byte is read in text
+order from the site, as before.
 
     module_boundary.py --local    prove every row of config/local_data.<slug>.txt, exit 1 on a refusal
 """
@@ -164,10 +175,47 @@ NO_DEST = ("cmp", "test", "push", "call", "jmp", "ret", "nop", "bt", "ucomis", "
 LOCAL_KINDS = ("masked", "kept", "plain", "store0", "store1", "store_reg", "other")
 
 
-def _classify(insns, i, is_var) -> tuple[str, str] | None:
+def _successors(insns, index, k) -> list[int]:
+    """The instructions that can run after instruction k inside its function:
+    the next one in text order and a direct jump's target (an indirect jump,
+    a jump out of the function and a `ret` have none)."""
+    _addr, _size, mn, ops = insns[k]
+    if mn == "ret":
+        return []
+    nxt = [k + 1] if k + 1 < len(insns) else []
+    if not mn.startswith("j"):
+        return nxt
+    t = index.get(int(ops, 16)) if re.fullmatch(r"0x[0-9a-f]+", ops) else None
+    target = [t] if t is not None else []
+    return target if mn == "jmp" else nxt + target
+
+
+def _walk(insns, index, i, limit):
+    """Instruction numbers after i, each once, to `limit` instructions along a
+    path. With `index` (address -> number over the whole function) the paths
+    follow direct jumps and both sides of a conditional one; without it the
+    order is the text's. The caller sends False to end the path it is on."""
+    if index is None:
+        for k in range(i + 1, min(i + 1 + limit, len(insns))):
+            if (yield k) is False:
+                return
+        return
+    seen = {i}
+    todo = [(k, 1) for k in reversed(_successors(insns, index, i))]
+    while todo:
+        k, depth = todo.pop()
+        if k in seen or depth > limit:
+            continue
+        seen.add(k)
+        if (yield k) is False:
+            continue
+        todo.extend((n, depth + 1) for n in reversed(_successors(insns, index, k)))
+
+
+def _classify(insns, i, is_var, index=None) -> tuple[str, str] | None:
     """What instruction i does to the variable: (kind, text) or None when it
     does not touch it. `is_var(operand)` says whether a memory operand is the
-    variable itself."""
+    variable itself; `index` as _walk takes it."""
     addr, size, mn, ops = insns[i]
     parts = ops.split(", ") if ops else []
     hit = [k for k, o in enumerate(parts) if MEM.match(o) and is_var(o, addr + size)]
@@ -191,21 +239,32 @@ def _classify(insns, i, is_var) -> tuple[str, str] | None:
         return "other", text
     if mn not in ("mov", "movzx") or other not in FAMILY:
         return "other", text
-    # a load: the first later use of the loaded register says whether one bit of it is read
+    # a load: the first later use of the loaded register on each path says whether one bit
+    # of it is read: whole on any path is a refusal, another use on any path a kept byte
     fam = FAMILY[other]
-    for a2, s2, mn2, ops2 in insns[i + 1:i + 1 + WINDOW]:
-        p2 = ops2.split(", ") if ops2 else []
+    masked = kept = False
+    walk = _walk(insns, index, i, WINDOW)
+    j = next(walk, None)
+    while j is not None:
+        a2, _s2, mn2, ops2 = insns[j]
+        go = True
         if mn2 == "nop" or not any(FAMILY.get(x) == fam for x in re.findall(r"[a-z][a-z0-9]+", ops2)):
-            if mn2 in ("call", "ret"):
-                break
-            continue
-        if len(p2) == 2 and FAMILY.get(p2[0]) == fam:
-            if p2[1] == "1" and mn2 in ("and", "xor", "test"):
-                return "masked", text
-            if (mn2 == "test" and FAMILY.get(p2[1]) == fam) or (mn2 == "cmp" and p2[1] == "0"):
+            go = mn2 not in ("call", "ret")
+        else:
+            p2 = ops2.split(", ") if ops2 else []
+            go = False
+            if len(p2) == 2 and FAMILY.get(p2[0]) == fam and p2[1] == "1" and mn2 in ("and", "xor", "test"):
+                masked = True
+            elif len(p2) == 2 and FAMILY.get(p2[0]) == fam and ((mn2 == "test" and FAMILY.get(p2[1]) == fam)
+                                                                 or (mn2 == "cmp" and p2[1] == "0")):
                 return "plain", text + f" ; 0x{a2:x}: {mn2} {ops2}"
-        break
-    return "kept", text
+            else:
+                kept = True
+        try:
+            j = walk.send(go)
+        except StopIteration:
+            j = None
+    return ("masked" if masked and not kept else "kept"), text
 
 
 def local_census(base: BaseElf, variables: dict[str, int]) -> dict[str, dict]:
@@ -228,6 +287,8 @@ def local_census(base: BaseElf, variables: dict[str, int]) -> dict[str, dict]:
     if tls_vars:
         want = {a - tls_lo - tls_size: n for n, a in tls_vars.items()}     # thread-pointer offset -> symbol
         head = bytes.fromhex("64488b042500000000480305")                   # mov rax, fs:[0]; add rax, [rip+d32]
+        whole: dict[int, tuple[list, dict[int, int]]] = {}                 # function -> its instructions, by address
+        counted: dict[str, set[int]] = {n: set() for n in tls_vars}        # an access is counted once
         pos = tdata.find(head, GAME_START - lo_text)
         while pos >= 0:
             end = lo_text + pos + len(head) + 4
@@ -242,41 +303,60 @@ def local_census(base: BaseElf, variables: dict[str, int]) -> dict[str, dict]:
             if name:
                 rec = out[name]
                 rec["sites"] += 1
-                insns = []
-                for ins in md.disasm_lite(tdata[end - lo_text:funcs[i][1] - lo_text], end):
-                    insns.append(ins)
-                    if len(insns) >= 2 * WINDOW or ins[2] == "ret":
-                        break
-                track = {"rax"}
-                for j, (addr, size, mn, ops) in enumerate(insns[:WINDOW]):
-                    if not track:
-                        break
+                lo, hi = funcs[i]
+                if lo not in whole:
+                    fi = list(md.disasm_lite(tdata[lo - lo_text:hi - lo_text], lo))
+                    whole[lo] = (fi, {ins[0]: k for k, ins in enumerate(fi)})
+                insns, index = whole[lo]
+                if end in index and insns[-1][0] + insns[-1][1] == hi:
+                    first = index[end]
+                else:                                                       # not decoded whole: the text's order
+                    insns, index, first = [], None, 0
+                    for ins in md.disasm_lite(tdata[end - lo_text:hi - lo_text], end):
+                        insns.append(ins)
+                        if len(insns) >= 2 * WINDOW or ins[2] == "ret":
+                            break
+                # the address register and its 64-bit copies, along every path from the site
+                todo = [(first, 0, frozenset({"rax"}))]
+                seen: set[int] = set()
+                while todo:
+                    j, depth, track = todo.pop()
+                    if j in seen or depth >= WINDOW or j >= len(insns) or not track:
+                        continue
+                    seen.add(j)
+                    addr, size, mn, ops = insns[j]
                     parts = ops.split(", ") if ops else []
 
                     def is_var(o, _next, track=track):
                         return MEM.match(o).group(2) in track
 
-                    c = _classify(insns, j, is_var)
-                    if c:
-                        rec[c[0]].append(c[1])
-                    elif mn != "nop":
+                    c = _classify(insns, j, is_var, index)
+                    if c is None and mn != "nop":
                         for o in parts:
                             m = MEM.match(o)
                             if m and any(FAMILY.get(x) in track for x in re.findall(r"[a-z][a-z0-9]+", m.group(2))):
-                                rec["other"].append(f"0x{addr:x}: {mn} {ops}")
+                                c = ("other", f"0x{addr:x}: {mn} {ops}")
+                    if c and addr not in counted[name]:
+                        counted[name].add(addr)
+                        rec[c[0]].append(c[1])
                     if mn == "call":
-                        track -= CALL_CLOBBERED
+                        track = track - CALL_CLOBBERED
                     elif mn == "mov" and len(parts) == 2 and parts[0] in REG64 and parts[1] in track:
-                        track.add(parts[0])
+                        track = track | {parts[0]}
                     elif parts and parts[0] in FAMILY and not mn.startswith(NO_DEST):
-                        track.discard(FAMILY[parts[0]])
-                    if mn == "ret":
-                        break
+                        track = track - {FAMILY[parts[0]]}
+                    if index is None:
+                        if mn != "ret":
+                            todo.append((j + 1, depth + 1, track))
+                    else:
+                        todo.extend((n, depth + 1, track) for n in reversed(_successors(insns, index, j)))
             pos = tdata.find(head, pos + 1)
     if plain_vars:
         by_addr = {a: n for n, a in plain_vars.items()}
         for lo, hi in funcs:
             insns = list(md.disasm_lite(tdata[lo - lo_text:hi - lo_text], lo))
+            index = ({ins[0]: k for k, ins in enumerate(insns)}
+                     if insns and insns[-1][0] + insns[-1][1] == hi else None)
             for j, (addr, size, mn, ops) in enumerate(insns):
                 m = RIP.search(ops)
                 if not m:
@@ -291,7 +371,7 @@ def local_census(base: BaseElf, variables: dict[str, int]) -> dict[str, dict]:
                     r = RIP.search(o)
                     return bool(r) and nxt + int(r.group(2), 16) * (1 if r.group(1) == "+" else -1) == target
 
-                c = _classify(insns, j, is_var) or ("other", f"0x{addr:x}: {mn} {ops}")
+                c = _classify(insns, j, is_var, index) or ("other", f"0x{addr:x}: {mn} {ops}")
                 out[name][c[0]].append(c[1])
     return out
 
