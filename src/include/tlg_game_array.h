@@ -39,6 +39,32 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
+    /* copies another array: the array is emptied, the capacity made the
+     * other's count exactly and, for a count that is not zero, the count
+     * stored and the elements copy-constructed one by one from the other's
+     * block, read once (FUN_003431f0: `cmp rbx, r14; je`, `mov r15d,
+     * [r14+8]; mov [rbx+8], 0`, the reallocation, `test r15d, r15d; je; mov
+     * [rbx+8], r15d; xor ecx, ecx; mov rax, [r14]`, then the loop up to the
+     * count read again). */
+    void operator=(const Array05943280 &other)
+    {
+        if (this == &other)
+            return;
+        unsigned size = other.count;
+        count = 0;
+        if (capacity != size) {
+            capacity = size;
+            data = static_cast<T *>(
+                reallocateBlock(data, size * sizeof(T), alignof(T), D_5943280[allocator]));
+        }
+        if (size) {
+            count = size;
+            const T *values = other.data;
+            for (unsigned i = 0; i < count; ++i)
+                new (&data[i]) T(values[i]);
+        }
+    }
+
     /* sets the count: the array is emptied, the capacity made the count
      * exactly (the block reallocated when it differs) and, for a count that
      * is not zero, the count stored and the elements default-constructed
