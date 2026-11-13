@@ -28,8 +28,7 @@ class Object016b1ac8 /* derived name */
   private:
     u8 unknown8[0x8];
     Object0134f620 unknown10; /* +0x10 */
-    u8 unknown20[0x8];
-    void *block28; /* +0x28: owned block */
+    void *block28;            /* +0x28: owned block */
     u8 unknown30[0x10];
     Object0139b6b0 unknown40; /* +0x40 */
     u8 unknown50[0x8];

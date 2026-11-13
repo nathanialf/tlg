@@ -30,7 +30,6 @@ class Object016b6138 /* derived name */
     u8 unknown8[4];
     Name nameC;               /* +0xc */
     Object0134f620 unknown10; /* +0x10 */
-    u8 unknown20[8];
     Object0139b6b0 unknown28; /* +0x28 */
 };
 

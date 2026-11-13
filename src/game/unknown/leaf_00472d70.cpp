@@ -16,7 +16,7 @@ class Object016a9d18 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: torn down by the destructor (`lea rdi, [rbx+0x28]; call 0x134f620`) */
     Object0134f620 record28;
-    u8 unknown38[0x18];
+    u8 unknown40[0x10];
     /* +0x50: torn down by the destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
     Object0134f620 record50;
 };

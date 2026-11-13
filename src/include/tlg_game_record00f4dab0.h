@@ -33,7 +33,7 @@ struct Record00f4dab0 /* derived name */
     u8 unknown0[8];
     Object01347230 unknown8;  /* +0x8 */
     Object0134f620 unknown20; /* +0x20 */
-    u8 unknown30[0x30];
+    u8 unknown38[0x28];
     void *block60; /* +0x60: owned block */
 };
 

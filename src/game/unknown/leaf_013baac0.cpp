@@ -14,7 +14,6 @@ struct Object013baac0 /* derived name */
     ~Object013baac0();
 
     Object0134f620 record0; /* +0x0 */
-    u8 unknown10[8];        /* +0x10: an int set before registration, +0x14 zeroed; not traced */
 };
 
 Object013baac0::~Object013baac0() {}

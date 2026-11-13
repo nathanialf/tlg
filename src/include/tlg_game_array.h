@@ -89,6 +89,27 @@ template <class T> class Array05943280 /* derived name */
         }
     }
 
+    /* empties the array and makes the capacity `size` exactly: the elements
+     * destroyed first to last, the array and the count read again at each
+     * one, the count cleared, then the block reallocated where the capacity
+     * differs (FUN_0138c8d0 over counted references: the loop of the
+     * destructor, `mov ebx, [rbp-0x2c]; mov [r15+8], 0; cmp [r15+0xc], ebx;
+     * je; mov [r15+0xc], ebx; shl ebx, 3`, the reallocation). Twenty
+     * holders' destructors hold it inlined with 0 (0x57edc0: `mov
+     * [r15+0x58], 0; cmp [r15+0x5c], 0; je; mov [r15+0x5c], 0`); 42 sites
+     * call it with 0 (0xa7b920). */
+    void clear(unsigned size)
+    {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
+        count = 0;
+        if (capacity != size) {
+            capacity = size;
+            data = static_cast<T *>(
+                reallocateBlock(data, size * sizeof(T), alignof(T), D_5943280[allocator]));
+        }
+    }
+
     T &operator[](unsigned index)
     {
         return data[index];

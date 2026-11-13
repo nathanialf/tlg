@@ -17,13 +17,11 @@ class Object016a7e28 : public Object016b9108 /* derived name */
     u8 unknown24[0xc];
     /* +0x30: torn down by the destructor (`lea rdi, [rbx+0x30]; call 0x134f620`) */
     Object0134f620 record30;
-    u8 unknown40[0x8];
     /* +0x48: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Node00503fb0> held48;
     /* +0x50: torn down by the destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
     Object0134f620 record50;
-    u8 unknown60[0x8];
     /* +0x68: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Node00503fb0> held68;

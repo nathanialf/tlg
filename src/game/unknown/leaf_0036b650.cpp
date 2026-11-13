@@ -20,7 +20,6 @@ class Object016a8b90 : public Object016b9108 /* derived name */
     Ref00503fb0<Node00503fb0> held68;
     /* +0x70: torn down by the destructor (`lea rdi, [rbx+0x70]; call 0x134f620`) */
     Object0134f620 record70;
-    u8 unknown80[0x8];
     /* +0x88: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Node00503fb0> held88;

@@ -23,19 +23,17 @@ class Object016ab4e8 : public Object016b9108 /* derived name */
     u8 unknown24[0x14];
     /* +0x38: torn down by the destructor (`lea rdi, [rbx+0x38]; call 0x134f620`) */
     Object0134f620 record38;
-    u8 unknown48[0x18];
+    u8 unknown50[0x10];
     /* +0x60: torn down by the destructor (`lea rdi, [rbx+0x60]; call 0x134f620`) */
     Object0134f620 record60;
-    u8 unknown70[0x60];
+    u8 unknown78[0x58];
     /* +0xd0: an owned block, released by the destructor (`mov rax, [rbx+0xd0]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 blockd0;
     u8 unknownd8[0x88];
     /* +0x160: torn down by the destructor (`lea rdi, [rbx+0x160]; call 0x134f620`) */
     Object0134f620 record160;
-    u8 unknown170[0x8];
     /* +0x178: torn down by the destructor (`lea rdi, [rbx+0x178]; call 0x134f620`) */
     Object0134f620 record178;
-    u8 unknown188[0x8];
     /* +0x190: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Node00503fb0> held190;

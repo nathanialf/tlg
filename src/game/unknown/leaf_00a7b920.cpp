@@ -20,7 +20,6 @@ class Object016b2430 : public Object016b9108 /* derived name */
     u8 unknown24[0x3c];
     /* +0x60: emptied by the destructor's body (`lea r14, [rbx+0x60]; xor esi, esi; call 0x138c8d0`), torn down last (`mov rdi, r14; call 0x134f620`) */
     Object0134f620 record60;
-    u8 unknown70[0x8];
     /* +0x78: an owned block, released by the destructor (`mov rax, [rbx+0x78]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block78;
     u8 unknown80[0x10];
@@ -40,5 +39,5 @@ class Object016b2430 : public Object016b9108 /* derived name */
  * vtable. */
 Object016b2430::~Object016b2430()
 {
-    record60.FUN_0138c8d0(0);
+    record60.clear(0);
 }

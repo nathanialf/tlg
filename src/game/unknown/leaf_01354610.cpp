@@ -19,7 +19,7 @@ class Object016cae70 /* derived name */
     OwnedBlock05943280 block10; /* +0x10: owned block */
     u8 unknown18[0x10];
     Object0134f620 unknown28; /* +0x28 */
-    u8 unknown38[0x20];
+    u8 unknown40[0x18];
     OwnedBlock05943280 block58; /* +0x58: owned block */
 };
 

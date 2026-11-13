@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object00cf7fb0.h"
 
 /* derived names: the complete destructor of a class derived from the one
  * whose destructor is 0xcf7fb0, its own body empty, so the base destructor
@@ -9,12 +10,6 @@
  * the 4 vtables. The class form: Object013b34e0 derives from Object00cf7fb0,
  * whose destructor is the one at 0xcf7fb0 (its row named for it, D15), and
  * its own destructor is defined empty out of line. */
-class Object00cf7fb0 /* derived name */
-{
-  public:
-    virtual ~Object00cf7fb0();
-};
-
 class Object013b34e0 : public Object00cf7fb0 /* derived name */
 {
   public:

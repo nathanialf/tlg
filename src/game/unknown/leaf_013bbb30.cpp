@@ -21,7 +21,6 @@ class Object016bad40 : public Object016b9108 /* derived name */
     u8 unknown24[0x14];
     /* +0x38: torn down by the destructor (`lea rdi, [rbx+0x38]; call 0x134f620`) */
     Object0134f620 record38;
-    u8 unknown48[0x8];
     /* +0x50: an owned block, released by the destructor (`mov rax, [rbx+0x50]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block50;
 };

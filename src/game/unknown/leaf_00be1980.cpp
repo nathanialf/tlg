@@ -19,7 +19,7 @@ class Object016c7fb0 : public Object016b9108 /* derived name */
     Name name24; /* +0x24: released by the destructor (`mov eax, [rbx+0x24]; shl 5`) */
     /* +0x28: torn down by the destructor (`lea rdi, [rbx+0x28]; call 0x134f620`) */
     Object0134f620 record28;
-    u8 unknown38[0x20];
+    u8 unknown40[0x18];
     /* +0x58: an owned block, released by the destructor (`mov rax, [rbx+0x58]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block58;
     u8 unknown60[0x10];

@@ -18,7 +18,6 @@ class Object016b00d0 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: torn down by the destructor (`lea rdi, [rbx+0x28]; call 0x134f620`) */
     Object0134f620 record28;
-    u8 unknown38[0x8];
     /* +0x40: an array of Names (the block at +0x40, the count at +0x48): the destructor releases each
      * (`mov r12, [r14+0x40]; mov ecx, [r12+rbx*4]` ... `cmp ebx, eax; jb`), then the block */
     Array05943280<Name> names40;

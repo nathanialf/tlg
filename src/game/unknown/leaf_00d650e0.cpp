@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_block.h"
+#include "tlg_game_object00d30550.h"
 
 /* derived names: a buffer member: its block at +0x0, a count at +0x8, flags
  * at +0xc (bit 0: the block is not its own; bit 4 survives a reset) and an
@@ -28,12 +29,6 @@ struct Buffer00d650e0 { /* derived name */
  * at +0x50 and runs its base's destructor FUN_00d30550 as a tail call.
  * FUN_00d655d0, slot 1, is the deleting one; slot 2 is FUN_00cb66f0. The
  * destructor is the class's key function, so this file emits the vtable. */
-class Object00d30550 /* derived name */
-{
-  public:
-    virtual ~Object00d30550();
-};
-
 class Object016baa48 : public Object00d30550 /* derived name */
 {
   public:

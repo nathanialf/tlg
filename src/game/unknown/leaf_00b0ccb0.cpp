@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_object0134f620.h"
+#include "tlg_game_object00c55550.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16b4b00 (config/vtables.derived.base.txt): it stores the vtable, runs
@@ -10,12 +11,6 @@
  * class's key function, so this file emits the vtable. The other members are
  * not traced. */
 void FUN_00c2a490(Object0134f620 *self); /* derived name */
-
-class Object00c55550 /* derived name */
-{
-  public:
-    virtual ~Object00c55550();
-};
 
 class Object00c29c00 : public Object00c55550 /* derived name */
 {
@@ -33,7 +28,7 @@ class Object00b0ccb0 : public Object00c29c00 /* derived name */
     virtual ~Object00b0ccb0();
 
   private:
-    u8 unknown248[0x30];
+    u8 unknown250[0x28];
     Object0134f620 unknown278; /* +0x278 */
 };
 

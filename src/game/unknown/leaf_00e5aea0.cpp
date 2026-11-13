@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_object00c55550.h"
 
 /* derived names: a reference-counted object: its count at +0x8, taken down
  * atomically; the holder of the last reference calls slot 2 to destroy it.
@@ -31,12 +32,6 @@ class Shared00e5aea0 /* derived name */
  * Object00c55550's (0xc55550). FUN_00e5af00, slot 1, is the deleting one. The
  * destructor is the class's key function, so this file emits the vtable. The
  * other members are not traced. */
-class Object00c55550 /* derived name */
-{
-  public:
-    virtual ~Object00c55550();
-};
-
 class Object016bdaa8 : public Object00c55550 /* derived name */
 {
   public:

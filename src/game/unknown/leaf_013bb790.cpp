@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object0139d760.h"
 
 /* derived names: the complete destructor of a class derived from the one
  * whose destructor is 0x139d760, its own body empty, so the base destructor
@@ -8,12 +9,6 @@
  * form: Object013bb790 derives from Object0139d760, whose destructor is the
  * one at 0x139d760 (its row named for it, D15), and its own destructor is
  * defined empty out of line. */
-class Object0139d760 /* derived name */
-{
-  public:
-    virtual ~Object0139d760();
-};
-
 class Object013bb790 : public Object0139d760 /* derived name */
 {
   public:

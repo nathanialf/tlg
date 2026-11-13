@@ -29,7 +29,6 @@ class Object00b46c90 /* derived name */
   private:
     u8 unknown8[8];
     Object0134f620 unknown10; /* +0x10 */
-    u8 unknown20[8];
     Object0139b6b0 unknown28; /* +0x28 */
 };
 
