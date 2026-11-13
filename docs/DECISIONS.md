@@ -3648,3 +3648,77 @@ swept only the six destructor functions change, to equal.
 
 **Trigger to revisit.** A local-dynamic access (`__tls_get_addr` with a module-base
 relocation and `@dtpoff` offsets) anywhere in the base.
+
+## D76. No wrap flags inferred on (A + C) from A's range: r251048 not taken (2026-11-13)
+
+**Question.** 0x583980, 0x583d80, 0x58b7c0 and 0xc060d0 are equal to the base in the prebuilt
+3.7.1's whole-module build and not under the installed line: loop strength reduction works on
+a 32-bit induction variable where the base has the 64-bit recurrence.
+
+**Evidence.** Round 233B: a reduced function whose `opt -analyze -iv-users` folds zext(i) to
+an i64 add recurrence under 3.7.1 and not under 3.8.1, 3.9.1 or 4.0.0. r251048 (8f27415c05,
+2015-10-22, "[SCEV] Mark AddExprs as nsw or nuw if legal", first release 3.8) makes
+StrengthenNoWrapFlags ask for A's signed and unsigned range when (A + C) is built; read from
+the sources, that query computes the backedge-taken count before the extension is requested
+and the unfolded extension stays in the unique table. The unconditional reversal built and
+swept alone by the round: 0 matched rows change, 4 of 6,123 functions change, all four equal.
+The supervisor repeated the build and sweep with D77 and D78 together: 0 rows change, 7 drafts
+become equal, 19 functions change (13 toward, 5 level, 1 away), test tree restored by sha256.
+
+**Decision.** `tools/patches/llvm-4.0.0-scevaddflags-01-no-add-const-nowrap.patch`.
+
+**Excluded.** A source form: the four functions' loops are plain indexed loops; no spelling of
+the index reached the 64-bit recurrence under the installed line (the drafts stood at 5/29 and
+10/62).
+
+**Trigger to revisit.** A game loop whose bytes need a no-wrap flag only A's range can prove.
+
+## D77. A switch's range compare carries the sum of the clusters still to test: r246129 and r246522's share not taken (2026-11-13)
+
+**Question.** Held since round 210B for want of an equal witness: under D66 the false edge of
+a case cluster's compare still carried 3.8's sum (the unhandled clusters plus the default's
+share, the cluster subtracted before its compare).
+
+**Evidence.** Round 233B: 0x1af030 and 0x1af3c0 are equal in the prebuilt 3.7.1's module and
+22 of 59 under the installed line. 3.7's rule (the sum without the default's share, a cluster
+leaving it where its compare is emitted, an empty sum left to BranchProbabilityInfo; r246129,
+08cb4fc688a9, 2015-08-27, and r246522, 511298b91951, 2015-09-01, both first release 3.8)
+built and swept alone on top of D66: 0 rows change; 13 functions change: both witnesses equal,
+7 toward (0x12fd240 13 to 49 of 58, 0x13d2490 18 to 41 of 52, 0x13cc210 15 to 24 of 33,
+0xb5bc40 1 to 7 of 12), 5 level, 1 away (the draft 0xef65f0, 4 to 2 of 18).
+
+**Decision.** `tools/patches/llvm-4.0.0-switchunh-01-unhandled-sum-as-3.7.patch`.
+
+**Stands against it.** 0xef65f0 (a draft at 4 of 18, not a row). 0x82ee90 is a counter-witness
+to the exactness of D66's form, not to this rule: it is equal only with D66 off, which loses
+five rows; what remains there is block placement under D66's probabilities for a table whose
+gap entry is the default.
+
+**Trigger to revisit.** 0xef65f0 or 0x82ee90 worked to a first difference that names this rule.
+
+## D78. An array subscript's index is emitted before its base: clang r282453 not taken (2026-11-13)
+
+**Question.** Held since round 196B on one witness: clang 4.0.0 emits a subscript's index
+after its base (C++17's order); the base's bytes show the index first.
+
+**Evidence.** Round 233B's second witness: 0x13ace60 is equal in the prebuilt 3.7.1's module
+and 27 of 63 under the installed line; with the base's field address emitted after the index,
+SimplifyCFG hoists the address GVN's scalar PRE left in a split edge and the edge block
+disappears. clang r282453 (9e67b9922bb1, 2016-09-26, first release 4.0.0). The unconditional
+reversal (round 196B's form) built alone, the module rebuilt from all 4,219 units by that
+front end (0 rejected) and swept: 0 rows change; 2 functions change: 0x13ace60 equal,
+0xc19ab0 1 of 23 to 5 of 24.
+
+**Decision.** `tools/patches/llvm-4.0.0-subscript-01-index-before-base.patch`. Thirty-six
+backports with D76 and D77.
+
+**Held beside them (round 233B).** Load widening: r281074 (22ce5eb05159, 2016-09-09, first
+release 4.0.0) taken back makes 0x20d3d0, 0xb46580 and 0xb746b0 equal and changes 110 rows;
+with 3.7's field alignment in the front end (part of clang r246985) it changes 5 rows, all
+Float4A `vmovaps`; with Float4A holding a vector, 1 row. The base has 5,964 widened sites
+(an 8-byte load then `shr 32`) in 871 functions and the module 0, so widening is region-wide
+in the base; the candidate waits on Float4A's source form. The deleting destructors 0xeaaf10,
+0xeab310, 0xeb1840: the machine scheduler's order on one input differs from 3.7.1; commit not
+traced.
+
+**Trigger to revisit.** A game subscript whose bytes need the base emitted first.

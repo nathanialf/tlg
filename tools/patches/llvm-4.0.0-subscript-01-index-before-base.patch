@@ -1,0 +1,132 @@
+llvm-4.0.0 backport patch: an array subscript's index is emitted before its base, as before r282453 (PS4)
+
+This patch CHANGES CODE GENERATION in clang's
+CodeGenFunction::EmitArraySubscriptExpr. clang r282453 (llvm-project
+9e67b9922bb1, 2016-09-26, C++17's evaluation order for subscripts,
+first release 4.0.0) emits the index after the base where the base is
+written first. Before it the index is emitted, checked and promoted
+before any base. With the base's field address emitted after the index,
+SimplifyCFG hoists the address GVN's scalar PRE left in a split edge
+and the edge block disappears: 0x13ace60 is equal to the base in the
+prebuilt 3.7.1's module and 27 of 63 under this line without the patch
+(round 233B); round 196B's first witness had held the candidate. With
+the patch 0x13ace60 compiles to the base's bytes, 0xc19ab0 goes from
+1 of 23 to 5 of 24, those are the only two functions of the rebuilt
+module that change, and no matched game row changes (round 233B built
+the front end, rebuilt the module from every unit and swept this
+unconditional form alone).
+
+diff -ru a/tools/clang/lib/CodeGen/CGExpr.cpp b/tools/clang/lib/CodeGen/CGExpr.cpp
+--- a/tools/clang/lib/CodeGen/CGExpr.cpp
++++ b/tools/clang/lib/CodeGen/CGExpr.cpp
+@@ -2935,30 +2935,15 @@
+ 
+ LValue CodeGenFunction::EmitArraySubscriptExpr(const ArraySubscriptExpr *E,
+                                                bool Accessed) {
+-  // The index must always be an integer, which is not an aggregate.  Emit it
+-  // in lexical order (this complexity is, sadly, required by C++17).
+-  llvm::Value *IdxPre =
+-      (E->getLHS() == E->getIdx()) ? EmitScalarExpr(E->getIdx()) : nullptr;
+-  auto EmitIdxAfterBase = [&, IdxPre](bool Promote) -> llvm::Value * {
+-    auto *Idx = IdxPre;
+-    if (E->getLHS() != E->getIdx()) {
+-      assert(E->getRHS() == E->getIdx() && "index was neither LHS nor RHS");
+-      Idx = EmitScalarExpr(E->getIdx());
+-    }
+-
+-    QualType IdxTy = E->getIdx()->getType();
+-    bool IdxSigned = IdxTy->isSignedIntegerOrEnumerationType();
+-
+-    if (SanOpts.has(SanitizerKind::ArrayBounds))
+-      EmitBoundsCheck(E, E->getBase(), Idx, IdxTy, Accessed);
++  // PS4: the index emitted, checked and promoted before the base, as before
++  // r282453; its lexical order (C++17's EmitIdxAfterBase) is not taken.
++  // The index must always be an integer, which is not an aggregate.  Emit it.
++  llvm::Value *Idx = EmitScalarExpr(E->getIdx());
++  QualType IdxTy  = E->getIdx()->getType();
++  bool IdxSigned = IdxTy->isSignedIntegerOrEnumerationType();
+ 
+-    // Extend or truncate the index type to 32 or 64-bits.
+-    if (Promote && Idx->getType() != IntPtrTy)
+-      Idx = Builder.CreateIntCast(Idx, IntPtrTy, IdxSigned, "idxprom");
+-
+-    return Idx;
+-  };
+-  IdxPre = nullptr;
++  if (SanOpts.has(SanitizerKind::ArrayBounds))
++    EmitBoundsCheck(E, E->getBase(), Idx, IdxTy, Accessed);
+ 
+   // If the base is a vector type, then we are forming a vector element lvalue
+   // with this subscript.
+@@ -2966,7 +2951,6 @@
+       !isa<ExtVectorElementExpr>(E->getBase())) {
+     // Emit the vector as an lvalue to get its address.
+     LValue LHS = EmitLValue(E->getBase());
+-    auto *Idx = EmitIdxAfterBase(/*Promote*/false);
+     assert(LHS.isSimple() && "Can only subscript lvalue vectors here!");
+     return LValue::MakeVectorElt(LHS.getAddress(), Idx,
+                                  E->getBase()->getType(),
+@@ -2975,10 +2959,14 @@
+ 
+   // All the other cases basically behave like simple offsetting.
+ 
++  // PS4: promoted here, before any base is emitted, as before r282453.
++  // Extend or truncate the index type to 32 or 64-bits.
++  if (Idx->getType() != IntPtrTy)
++    Idx = Builder.CreateIntCast(Idx, IntPtrTy, IdxSigned, "idxprom");
++
+   // Handle the extvector case we ignored above.
+   if (isa<ExtVectorElementExpr>(E->getBase())) {
+     LValue LV = EmitLValue(E->getBase());
+-    auto *Idx = EmitIdxAfterBase(/*Promote*/true);
+     Address Addr = EmitExtVectorElementLValue(LV);
+ 
+     QualType EltType = LV.getType()->castAs<VectorType>()->getElementType();
+@@ -2994,7 +2982,6 @@
+     // it.  It needs to be emitted first in case it's what captures
+     // the VLA bounds.
+     Addr = EmitPointerWithAlignment(E->getBase(), &AlignSource);
+-    auto *Idx = EmitIdxAfterBase(/*Promote*/true);
+ 
+     // The element count here is the total number of non-VLA elements.
+     llvm::Value *numElements = getVLASize(vla).first;
+@@ -3014,17 +3001,16 @@
+ 
+   } else if (const ObjCObjectType *OIT = E->getType()->getAs<ObjCObjectType>()){
+     // Indexing over an interface, as in "NSString *P; P[4];"
+-
+-    // Emit the base pointer.
+-    Addr = EmitPointerWithAlignment(E->getBase(), &AlignSource);
+-    auto *Idx = EmitIdxAfterBase(/*Promote*/true);
+-
++    // PS4: the scaled index before the base pointer, as before r282453.
+     CharUnits InterfaceSize = getContext().getTypeSizeInChars(OIT);
+-    llvm::Value *InterfaceSizeVal =
+-        llvm::ConstantInt::get(Idx->getType(), InterfaceSize.getQuantity());
++    llvm::Value *InterfaceSizeVal = 
++      llvm::ConstantInt::get(Idx->getType(), InterfaceSize.getQuantity());;
+ 
+     llvm::Value *ScaledIdx = Builder.CreateMul(Idx, InterfaceSizeVal);
+ 
++    // Emit the base pointer.
++    Addr = EmitPointerWithAlignment(E->getBase(), &AlignSource);
++
+     // We don't necessarily build correct LLVM struct types for ObjC
+     // interfaces, so we can't rely on GEP to do this scaling
+     // correctly, so we need to cast to i8*.  FIXME: is this actually
+@@ -3055,7 +3041,6 @@
+       ArrayLV = EmitArraySubscriptExpr(ASE, /*Accessed*/ true);
+     else
+       ArrayLV = EmitLValue(Array);
+-    auto *Idx = EmitIdxAfterBase(/*Promote*/true);
+ 
+     // Propagate the alignment from the array itself to the result.
+     Addr = emitArraySubscriptGEP(*this, ArrayLV.getAddress(),
+@@ -3066,7 +3051,6 @@
+   } else {
+     // The base must be a pointer; emit it with an estimate of its alignment.
+     Addr = EmitPointerWithAlignment(E->getBase(), &AlignSource);
+-    auto *Idx = EmitIdxAfterBase(/*Promote*/true);
+     Addr = emitArraySubscriptGEP(*this, Addr, Idx, E->getType(),
+                                  !getLangOpts().isSignedOverflowDefined());
+   }

@@ -1,0 +1,59 @@
+llvm-4.0.0 backport patch: a switch's range compare carries the sum of the clusters still to test, as 3.7 (PS4)
+
+This patch CHANGES CODE GENERATION in SelectionDAGBuilder's
+lowerWorkItem. r246129 (llvm-project 08cb4fc688a9, 2015-08-27) and
+r246522 (511298b91951, 2015-09-01), both first released in LLVM 3.8,
+make the false edge of a case cluster's compare carry the unhandled
+clusters plus the default's share, subtracting a cluster before its
+compare is emitted. 3.7 gives the false edge the sum of the clusters
+still to be tested without the default's share, a cluster leaves the
+sum where its compare is emitted, and an empty sum is left to
+BranchProbabilityInfo. This sits on top of switchjt-01 (D66). 0x1af030
+and 0x1af3c0 are equal to the base in the prebuilt 3.7.1's module and
+22 of 59 under this line without the patch. With the patch both compile
+to the base's bytes, thirteen functions of the module change (seven
+toward the base, among them 0x12fd240 from 13 to 49 of 58 and 0x13d2490
+from 18 to 41 of 52; five level; one draft away, 0xef65f0 from 4 to 2
+of 18) and no matched game row changes (round 233B built and swept this
+unconditional form alone; held since round 210B for want of an equal
+witness).
+
+diff -ru a/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp b/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+--- a/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
++++ b/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+@@ -8981,7 +8981,11 @@
+ 
+   // Compute total probability.
+   BranchProbability DefaultProb = W.DefaultProb;
+-  BranchProbability UnhandledProbs = DefaultProb;
++  // PS4: the false edge of a range compare carries the sum of the clusters
++  // still to be tested, without the default's share, and a cluster leaves
++  // the sum where its compare is emitted, as 3.7 (r246129 and r246522's
++  // share not taken); an empty sum is BranchProbabilityInfo's.
++  BranchProbability UnhandledProbs = BranchProbability::getZero();
+   for (CaseClusterIt I = W.FirstCluster; I <= W.LastCluster; ++I)
+     UnhandledProbs += I->Prob;
+ 
+@@ -8997,8 +9001,6 @@
+       // Put Cond in a virtual register to make it available from the new blocks.
+       ExportFromCurrentBlock(Cond);
+     }
+-    UnhandledProbs -= I->Prob;
+-
+     switch (I->Kind) {
+       case CC_JumpTable: {
+         // FIXME: Optimize away range check based on pivot comparisons.
+@@ -9073,8 +9075,12 @@
+         }
+ 
+         // The false probability is the sum of all unhandled cases.
++        UnhandledProbs -= I->Prob;
++        BranchProbability FalseProb = UnhandledProbs.isZero()
++                                          ? BranchProbability::getUnknown()
++                                          : UnhandledProbs;
+         CaseBlock CB(CC, LHS, RHS, MHS, I->MBB, Fallthrough, CurMBB, I->Prob,
+-                     UnhandledProbs);
++                     FalseProb);
+ 
+         if (CurMBB == SwitchMBB)
+           visitSwitchCase(CB, SwitchMBB);

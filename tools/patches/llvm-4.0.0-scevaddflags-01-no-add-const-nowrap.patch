@@ -1,0 +1,63 @@
+llvm-4.0.0 backport patch: no nsw/nuw inferred on (A + C) from A's range, as 3.7 (PS4)
+
+This patch CHANGES CODE GENERATION through ScalarEvolution's
+StrengthenNoWrapFlags. r251048 (llvm-project 8f27415c05, 2015-10-22,
+"[SCEV] Mark AddExprs as nsw or nuw if legal", first release LLVM 3.8)
+asks for the signed and unsigned range of A when an add expression
+(A + C) is built. That query computes the loop's backedge-taken count
+before the zero extension of its induction variable is requested, the
+unfolded extension stays in the unique table, and loop strength
+reduction never sees the 64-bit recurrence 3.7 gives it (reduced
+witness: `opt -analyze -iv-users` folds zext(i) under 3.7.1 and not
+under 3.8.1, 3.9.1 or 4.0.0; round 233B). 0x583980, 0x583d80, 0x58b7c0
+and 0xc060d0 are equal to the base in the prebuilt 3.7.1's module and
+not under this line without the patch. With the patch those four compile
+to the base's bytes, they are the only four of the module's 6,123
+functions that change, and no matched game row changes (round 233B
+built and swept this unconditional form alone; the supervisor repeated
+the build and sweep with switchunh-01 and subscript-01).
+
+diff -ru a/lib/Analysis/ScalarEvolution.cpp b/lib/Analysis/ScalarEvolution.cpp
+--- a/lib/Analysis/ScalarEvolution.cpp
++++ b/lib/Analysis/ScalarEvolution.cpp
+@@ -2047,7 +2047,6 @@
+                       const SmallVectorImpl<const SCEV *> &Ops,
+                       SCEV::NoWrapFlags Flags) {
+   using namespace std::placeholders;
+-  typedef OverflowingBinaryOperator OBO;
+ 
+   bool CanAnalyze =
+       Type == scAddExpr || Type == scAddRecExpr || Type == scMulExpr;
+@@ -2067,29 +2066,9 @@
+     Flags =
+         ScalarEvolution::setFlags(Flags, (SCEV::NoWrapFlags)SignOrUnsignMask);
+ 
+-  SignOrUnsignWrap = ScalarEvolution::maskFlags(Flags, SignOrUnsignMask);
+-
+-  if (SignOrUnsignWrap != SignOrUnsignMask && Type == scAddExpr &&
+-      Ops.size() == 2 && isa<SCEVConstant>(Ops[0])) {
+-
+-    // (A + C) --> (A + C)<nsw> if the addition does not sign overflow
+-    // (A + C) --> (A + C)<nuw> if the addition does not unsign overflow
+-
+-    const APInt &C = cast<SCEVConstant>(Ops[0])->getAPInt();
+-    if (!(SignOrUnsignWrap & SCEV::FlagNSW)) {
+-      auto NSWRegion = ConstantRange::makeGuaranteedNoWrapRegion(
+-          Instruction::Add, C, OBO::NoSignedWrap);
+-      if (NSWRegion.contains(SE->getSignedRange(Ops[1])))
+-        Flags = ScalarEvolution::setFlags(Flags, SCEV::FlagNSW);
+-    }
+-    if (!(SignOrUnsignWrap & SCEV::FlagNUW)) {
+-      auto NUWRegion = ConstantRange::makeGuaranteedNoWrapRegion(
+-          Instruction::Add, C, OBO::NoUnsignedWrap);
+-      if (NUWRegion.contains(SE->getUnsignedRange(Ops[1])))
+-        Flags = ScalarEvolution::setFlags(Flags, SCEV::FlagNUW);
+-    }
+-  }
+-
++  // PS4: no nsw/nuw inferred on (A + C) from A's range (r251048 not taken):
++  // the range query computed the loop's backedge-taken count before the
++  // extension of its induction variable was asked for.
+   return Flags;
+ }
+ 
