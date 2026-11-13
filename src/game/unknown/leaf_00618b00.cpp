@@ -21,20 +21,12 @@ struct Object00618b00 { /* derived name */
     Name unknown30; /* +0x30 */
 };
 
-// NONMATCHING: the base reads the thread's flag only after the record's flag
-// test fails and tests it `movzx; and 1; cmp 1` (the shape at most of the
-// flag's 1,158 sites); here the read is speculated and or-ed with the record's
-// flag. A definition in this file gives the same bytes; a static one is
-// folded to false (nothing in the file writes it).
 int FUN_00618b00(const Object00618b00 *self) /* derived name */
 {
     const Record00618b00 *record =
         static_cast<const Record00618b00 *>(D_17ac870[self->unknown30.index].record18);
-    if (record) {
-        if (record->unknown16 & 4)
-            return 1;
-        if (D_16dc098)
-            return 1;
-    }
-    return 0;
+    int result = 0;
+    if (record && ((record->unknown16 & 4) || D_16dc098))
+        result = 1;
+    return result;
 }

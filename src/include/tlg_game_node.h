@@ -42,6 +42,41 @@ inline int compareAndSwap(int *value, int expected, int replacement) /* derived 
     return expected;
 }
 
+/* the same for a pointer (`lock cmpxchg qword; cmove rax, rbx` at 0x45c487) */
+template <class T>
+inline T *compareAndSwap(T **value, T *expected, T *replacement) /* derived name */
+{
+    __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_SEQ_CST,
+                                __ATOMIC_SEQ_CST);
+    return expected;
+}
+
+/* one more reference to a counted object; the count is left alone once it
+ * holds the released mark */
+template <class T> inline void addReference(T *object) /* derived name */
+{
+    if (object->references != RELEASED)
+        __sync_fetch_and_add(&object->references, 1);
+}
+
+/* one reference less: the last one destroys the object at once on a thread
+ * whose flag is set (the count swapped for the released mark first), else
+ * hands it to FUN_00c14bc0 */
+template <class T> inline void dropReference(T *object) /* derived name */
+{
+    if (object->references != RELEASED && __sync_fetch_and_sub(&object->references, 1) == 1) {
+        if (D_16dc088) {
+            int count;
+            do
+                count = object->references;
+            while (compareAndSwap(&object->references, count, RELEASED) != count);
+            object->destroy();
+        } else {
+            FUN_00c14bc0(object);
+        }
+    }
+}
+
 /* a counted reference to a node: the count at +0x8 of the node is left
  * alone once it holds the released mark */
 template <class T> class Ref00503fb0 /* derived name */
@@ -49,8 +84,8 @@ template <class T> class Ref00503fb0 /* derived name */
   public:
     Ref00503fb0(const Ref00503fb0 &other) : object(other.object)
     {
-        if (object && object->references != RELEASED)
-            __sync_fetch_and_add(&object->references, 1);
+        if (object)
+            addReference(object);
     }
 
     ~Ref00503fb0()
@@ -67,18 +102,7 @@ template <class T> class Ref00503fb0 /* derived name */
         T *released = object;
         if (released) {
             object = 0;
-            if (released->references != RELEASED &&
-                __sync_fetch_and_sub(&released->references, 1) == 1) {
-                if (D_16dc088) {
-                    int count;
-                    do
-                        count = released->references;
-                    while (compareAndSwap(&released->references, count, RELEASED) != count);
-                    released->destroy();
-                } else {
-                    FUN_00c14bc0(released);
-                }
-            }
+            dropReference(released);
         }
     }
 
@@ -88,6 +112,91 @@ template <class T> class Ref00503fb0 /* derived name */
     }
 
   private:
+    T *object;
+};
+
+/* this thread's flag: set, the thread may use an object a name names
+ * whatever the object's own flags say (1,158 sites read it) */
+extern __thread bool D_16dc098; /* derived name */
+
+/* whether this thread may use an object a name names: any thread when the
+ * object's flag 4 at +0x16 is set, else a thread whose own flag is. T has
+ * the field `flags16`. */
+template <class T> inline bool isUsable(const T *object) /* derived name */
+{
+    return (object->flags16 & 4) || D_16dc098;
+}
+
+/* the object a name names (the record of its entry in the name table) when
+ * this thread may use it and its type at +0x18 is `type` or derives from it,
+ * else null; nothing is looked up for a null type. T has the fields
+ * `flags16` and `type`. */
+template <class T>
+inline T *findNamed(const Name &name, const Type00503fb0 *type) /* derived name */
+{
+    T *found = 0;
+    if (type) {
+        T *object = static_cast<T *>(D_17ac870[name.index].record18);
+        if (object && isUsable(object) && isKindOf(object->type, type))
+            found = object;
+    }
+    return found;
+}
+
+/* a counted reference another thread may replace: the pointer is exchanged
+ * by compare-and-swap, then the new object gains a reference and the old one
+ * loses its own (FUN_0045c470 sets one from a pointer, FUN_013cfaa0 from
+ * another reference, FUN_0079d400 empties one) */
+template <class T> class AtomicRef0045c470 /* derived name */
+{
+  public:
+    /* an object of a class over T goes in: the pointer is converted where
+     * it is exchanged and compared (`cmp rsi, rbx` at 0x45c494, the
+     * argument first, where an argument of T's own type compares second) */
+    template <class U> void set(U *replacement) /* derived name */
+    {
+        T *old;
+        do
+            old = object;
+        while (compareAndSwap(&object, old, static_cast<T *>(replacement)) != old);
+        exchanged(old, replacement);
+    }
+
+    /* the other reference is read again at each attempt (`mov rcx, [rsi]`
+     * inside the loop at 0x13cfab3) */
+    AtomicRef0045c470 &operator=(const AtomicRef0045c470 &other)
+    {
+        T *old, *replacement;
+        do {
+            old = object;
+            replacement = other.object;
+        } while (compareAndSwap(&object, old, replacement) != old);
+        exchanged(old, replacement);
+        return *this;
+    }
+
+    void clear() /* derived name */
+    {
+        T *old;
+        do
+            old = object;
+        while (compareAndSwap(&object, old, static_cast<T *>(0)) != old);
+        if (old)
+            dropReference(old);
+    }
+
+  private:
+    /* the counts after an exchange: nothing when the same object went in */
+    static void exchanged(T *old, T *replacement) /* derived name */
+    {
+        if (replacement != old) {
+            if (replacement)
+                addReference(replacement);
+            if (old)
+                dropReference(old);
+        }
+    }
+
     T *object;
 };
 
@@ -123,7 +232,10 @@ class Node00503fb0 /* derived name */
     }
 
     int references; /* +0x8 */
-    u8 unknownc[0x24];
+    u8 unknownc[0xa];
+    u16 flags16;              /* +0x16: bit 2 lets any thread use the node (FUN_00618b00) */
+    const Type00503fb0 *type; /* +0x18: the node's own type (FUN_00858390) */
+    u8 unknown20[0x10];
     int readers;                         /* +0x30 */
     Node00503fb0 *parent;                /* +0x38 */
     Ref00503fb0<Node00503fb0> *children; /* +0x40 */
