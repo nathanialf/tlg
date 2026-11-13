@@ -13,6 +13,28 @@ typedef SceKernelEventFlagObject *SceKernelEventFlag; /* derived name: an 8-byte
 /* The POSIX mutex of the kernel library: a handle, as FreeBSD's
  * pthread_mutex_t is a pointer to the library's own record (the critical
  * section's 16 bytes hold it and an int). */
+struct SceKernelEqueueObject; /* derived name */
+typedef SceKernelEqueueObject
+    *SceKernelEqueue; /* derived name: an 8-byte handle (`mov r12, [rax]` at 0x218941) */
+typedef unsigned int SceKernelUseconds;
+
+/* a time in seconds and nanoseconds (0x218929: 0 and 100000 stored as two qwords) */
+struct SceKernelTimespec {
+    long tv_sec;
+    long tv_nsec;
+};
+
+/* an event a queue returns, 32 bytes (0x21897b: its address `[rbp-0x68]`, the next local at -0x44); its
+ * fields are not read by the code written so far */
+struct SceKernelEvent {
+    unsigned long ident;
+    short filter;
+    unsigned short flags;
+    unsigned int fflags;
+    long data;
+    void *udata;
+};
+
 struct pthread_mutex;
 typedef pthread_mutex *pthread_mutex_t;
 
@@ -65,6 +87,10 @@ int sceKernelWaitEventFlag(SceKernelEventFlag ef, unsigned long bitPattern, unsi
 /* A direct-memory range given back: its start (an offset, not an address)
  * and its length (0xcffd45). */
 int sceKernelReleaseDirectMemory(long start, unsigned long len);
+int sceKernelAddHRTimerEvent(SceKernelEqueue eq, int id, SceKernelTimespec *ts, void *udata);
+int sceKernelWaitEqueue(SceKernelEqueue eq, SceKernelEvent *ev, int num, int *out,
+                        SceKernelUseconds *timeout);
+int sceKernelUsleep(SceKernelUseconds microseconds);
 int sceKernelWaitSema(SceKernelSema sema, int needCount, unsigned int *timeout);
 int sceKernelSignalSema(SceKernelSema sema, int signalCount);
 int scePthreadMutexDestroy(pthread_mutex_t *mutex);

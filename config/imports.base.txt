@@ -196,7 +196,7 @@ MBuItvba6z8 U H func sceKernelReleaseDirectMemory
 Ou3iL1abvng U H func __stack_chk_fail
 Ox9i0c7L5w0 U H func scePthreadRwlockRdlock
 R1Jvn8bSCW8 U H func sceKernelDeleteSema
-R74tt43xP6k U H func ?
+R74tt43xP6k U H func sceKernelAddHRTimerEvent
 T72hz6ffq08 U H func scePthreadYield
 UK2Tl2DWUns U H func sceKernelClose
 UTXzJbWhhTE U H func scePthreadAttrSetstacksize

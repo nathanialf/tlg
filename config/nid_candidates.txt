@@ -925,3 +925,4 @@ sceLibcMspaceMemalign
 _ZSt11_Xbad_allocv
 stat
 _FSin
+sceKernelAddHRTimerEvent
