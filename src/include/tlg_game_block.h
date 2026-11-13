@@ -51,16 +51,22 @@ inline void releaseBlock(void *block) /* derived name */
 }
 
 /* derived name: a block grown or first allocated: an existing block goes
- * back to its own owner (slot 5), a new one comes from the owner whose index
- * the holder keeps (slot 4). */
+ * back to its own owner (slot 5); with none, the owner the caller looked up
+ * gives a new one (slot 4). The caller indexes the table: at each growth site
+ * the table's address is formed once above the block's null test and the
+ * holder's index is read there (FUN_001b59d0: `lea rcx, [D_5943280]` at
+ * 0x1b5a04, `mov edx, [rbx+0x10]` at 0x1b5a24 above `test rsi, rsi`), and
+ * the entry itself is loaded only in the arm that allocates (`mov rdi,
+ * [rcx+rdx*8]` at 0x1b5a4f); the other arm indexes the same table by the
+ * header's owner (0x1b5a2c). */
 inline void *reallocateBlock(void *block, unsigned size, unsigned alignment,
-                             unsigned allocator) /* derived name */
+                             Owner05943280 *first) /* derived name */
 {
     if (block) {
         const BlockHeader05943280 *header = static_cast<BlockHeader05943280 *>(block) - 1;
         return D_5943280[header->owner]->slot5(block, size, alignment, 1);
     }
-    return D_5943280[allocator]->slot4(size, alignment, 1);
+    return first->slot4(size, alignment, 1);
 }
 
 /* derived name: a member that owns a block and releases it when its holder

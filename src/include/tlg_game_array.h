@@ -39,31 +39,70 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
-    /* sets the count, the elements value-initialized: an unchanged count
-     * returns at once; otherwise the array is emptied, the capacity made
-     * the count exactly (the block reallocated when it differs) and the
-     * elements cleared one by one (FUN_00a18a70 and four more over arrays
-     * of 4-byte elements) */
+    /* sets the count: the array is emptied, the capacity made the count
+     * exactly (the block reallocated when it differs) and, for a count that
+     * is not zero, the count stored and the elements default-constructed
+     * one by one. FUN_013fb000 (0x70-byte elements): `mov [rbx+8], 0; cmp
+     * [rbx+0xc], r14d; je`, the reallocation, `test r14d, r14d; je`, then
+     * `mov [rbx+8], r14d` and the constructors' loop up to the count read
+     * again. Over ints the loop is nothing and the caller clears them itself
+     * (FUN_00a18a70: `test r14d, r14d; je; mov [rbx+0x90], r14d`, and on the
+     * other path `cmp [rbx+0x90], 0` before its own loop). */
     void resize(unsigned size)
     {
-        if (count == size)
-            return;
         count = 0;
         if (capacity != size) {
             capacity = size;
-            data = static_cast<T *>(reallocateBlock(data, size * sizeof(T), alignof(T), allocator));
+            data = static_cast<T *>(
+                reallocateBlock(data, size * sizeof(T), alignof(T), D_5943280[allocator]));
         }
-        count = size;
-        for (unsigned i = 0; i < count; ++i)
-            new (&data[i]) T();
+        if (size) {
+            count = size;
+            for (unsigned i = 0; i < count; ++i)
+                new (&data[i]) T;
+        }
+    }
+
+    T &operator[](unsigned index)
+    {
+        return data[index];
+    }
+
+    /* makes room for `size` elements: a smaller capacity becomes the size
+     * exactly and the block is reallocated (FUN_0134cdf0: `cmp [r15+0xc],
+     * eax; jae`, then the capacity stored and the growth's reallocation) */
+    void reserve(unsigned size)
+    {
+        if (capacity < size) {
+            capacity = size;
+            data = static_cast<T *>(
+                reallocateBlock(data, size * sizeof(T), alignof(T), D_5943280[allocator]));
+        }
+    }
+
+    unsigned size() const
+    {
+        return count;
+    }
+
+    const T *begin() const
+    {
+        return data;
+    }
+
+    const T *end() const
+    {
+        return data + count;
     }
 
   private:
-    /* the owner is read before the new capacity is stored (the base keeps
-     * the load above the store, in the block of the growth) */
+    /* the capacity is stored first, then the block and the array's owner
+     * are read for the reallocation (FUN_001b59d0: `mov [rbx+0xc], eax` at
+     * 0x1b5a1b, then `mov rsi, [rbx]; mov edx, [rbx+0x10]`); the block is
+     * aligned as its elements are (8 for the references, 16 for the 64-byte
+     * elements at 0x342e8d) */
     void grow(unsigned size)
     {
-        unsigned owner = allocator;
         unsigned step = size / 2 + 1;
         if (step > 0x400000 / sizeof(T))
             step = 0x400000 / sizeof(T);
@@ -71,7 +110,8 @@ template <class T> class Array05943280 /* derived name */
         if (target > 0x1fffffff)
             target = 0x1fffffff;
         capacity = target;
-        data = static_cast<T *>(reallocateBlock(data, target * sizeof(T), 8, owner));
+        data = static_cast<T *>(
+            reallocateBlock(data, target * sizeof(T), alignof(T), D_5943280[allocator]));
     }
 
     T *data;            /* +0x0 */
