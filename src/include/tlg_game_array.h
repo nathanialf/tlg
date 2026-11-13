@@ -132,6 +132,23 @@ template <class T> class Array05943280 /* derived name */
         return count;
     }
 
+    /* empties the array and gives its block back: the elements destroyed
+     * first to last, the array and the count read again at each one, the
+     * count cleared, then a capacity that is not zero cleared and the block
+     * reallocated to no bytes (FUN_00326670 and its copies, one for each
+     * element class: `mov [r14+8], 0; cmp [r14+0xc], 0; je; mov [r14+0xc],
+     * 0`, then the reallocation with `xor edx, edx` or `xor esi, esi`) */
+    void clear()
+    {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
+        count = 0;
+        if (capacity != 0) {
+            capacity = 0;
+            data = static_cast<T *>(reallocateBlock(data, 0, alignof(T), D_5943280[allocator]));
+        }
+    }
+
     const T *begin() const
     {
         return data;
