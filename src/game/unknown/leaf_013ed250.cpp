@@ -29,11 +29,4 @@ class Object016d5050 /* derived name */
 /* derived name: the complete destructor: the body is empty; the reference is
  * released. FUN_013ed2e0, slot 1, is the deleting one. The destructor is the
  * class's key function, so this file emits the vtable. */
-// NONMATCHING: three instructions, the thread-local's access sequence: the
-// flag D_16dc088 is local to the module's optimiser (config/local_data.base.txt)
-// and the installed compiler gives a local thread-local the local-dynamic
-// sequence (`lea rdi, [rip]; call; movzx eax, byte [rax + off]`) where the
-// base has the general-dynamic one of every thread-local access. Both
-// destructors compile equal once the compiler keeps it general-dynamic
-// (round 228C's test build, restored).
 Object016d5050::~Object016d5050() {}

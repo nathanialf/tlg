@@ -3586,3 +3586,65 @@ through it (0x13985e0, 0x13999c0, 0x139a080, 0xdd1d60, 0x331950).
 
 **Excluded.** A config row typed by hand per table; skipping the table; trusting the object's
 entries without the base's bytes.
+
+## D74. The game's bool variables that were local to the optimiser: rows of local data, proven from the base (2026-11-13)
+
+**Question.** Every bool global of the game that GlobalOpt could shrink to one bit is read as a
+masked single bit (19 of 19 ordinary globals; the four thread-local bools at 9,382 sites): the
+form TryToShrinkGlobalToBoolean gives, and it runs only on a variable with local linkage. Yet
+the two thread-local flags D_16dc088 and D_16dc098 have one address each and are read in 2,482
+and 542 functions across the whole region with no accessor function between (the smallest
+readers hold the read inline), the game was many translation units (332 static initializers),
+and functions were not internalised (D50: 89 of 92 kept unused returns are never address-taken).
+About 2,800 functions and 511 destructor pairs read the flags.
+
+**The maintainer's ruling (2026-11-12).** "we can internalize variables if they are appropriate
+and make sense dev native".
+
+**Decision (round 228C).** The source keeps the developer's form: an ordinary variable
+declared in a header and defined once (`extern __thread bool`). That the base's build treated
+it as local is the gate's knowledge, as checked data: a row `<symbol>` in
+`config/local_data.base.txt` makes `tools/game_module.py` give that variable internal linkage
+in the linked module before the pipeline (the prebuilt `opt -internalize` with every other
+definition preserved; refused unless the symbol table changes by exactly the rows). A row is
+proven from the base before it is used (`tools/module_boundary.py --local`): every read takes
+one bit or is a saved copy put back, every store is 0, 1 or that copy; a variable any read of
+which compares the whole byte is refused. A stand-in for a row's variable carries one writer
+so the shrink's condition holds; it goes when a file defines the variable. Of the 19 shrunk
+ordinary bools, 17 are reached from one unit or two adjacent ones and are plain file statics
+needing nothing; rows exist for the two flags.
+
+**Evidence.** The proof's counts: D_16dc088 8,224 sites, 8,204 masked, seven saved copies put
+back, stores of 1 ten and of 0 three; D_16dc098 1,158 sites, 1,144 masked. The gate's count
+7,458 before and after the tool. The fault test: D_58b6008 marked local is refused ("4 read(s)
+compare the whole byte ... first 0xb91249"), as are a pointer and the flag at tp -71. With D75
+the three destructor pairs 0x138e5f0, 0x13ed250, 0x1482fd0 equal the base.
+
+**Not shown.** No public mechanism internalises variables and not functions; the twelve
+shrink-eligible bools the base did not shrink are all bytes inside larger objects, and their
+IR form was not compiled. The proof reads 25 instructions of text order after an access, not
+control flow.
+
+**Excluded.** A `static` in a header (one copy per unit; each flag has one address); an
+accessor function (none exists in the base); internalising the whole module (D50); a
+source attribute.
+
+## D75. A thread-local with local linkage stays general-dynamic (2026-11-13)
+
+**Question.** With D74 a flag is local, and the installed compiler then accesses it through
+the local-dynamic model; all 21,974 thread-local accesses of the base are general-dynamic
+(D23). `-ftls-model=global-dynamic` does not help: a selected model can only strengthen the
+computed one (TargetMachine.cpp:190-193 of 4.0.0).
+
+**Decision.** `tools/patches/llvm-4.0.0-tlsprot-02-local-tls-general-dynamic.patch`: in the
+position-independent branch of TargetMachine::getTLSModel only a hidden symbol is
+local-dynamic. Thirty-three backports. This rule has NO UPSTREAM STATE (every release from
+3.8.0 to 12.0.0 gives local-dynamic here): it is adopted on the executable's own evidence: no
+local-dynamic access anywhere, beside thread-locals that were local when optimised.
+
+**Evidence.** Round 228C, the rule as a hidden option: option off, the module object is
+identical; option on, the module's local-dynamic relocations go from 10 to 0 and of 4,589 rows
+swept only the six destructor functions change, to equal.
+
+**Trigger to revisit.** A local-dynamic access (`__tls_get_addr` with a module-base
+relocation and `@dtpoff` offsets) anywhere in the base.

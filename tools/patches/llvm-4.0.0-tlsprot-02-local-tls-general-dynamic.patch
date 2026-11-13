@@ -1,0 +1,31 @@
+llvm-4.0.0 backport patch: a thread-local with local linkage stays general-dynamic (PS4)
+
+This patch CHANGES CODE GENERATION for a thread-local variable with local
+linkage in position-independent code: it is accessed through the
+general-dynamic model, not local-dynamic. It has NO UPSTREAM STATE: every
+release from 3.8.0 to 12.0.0 gives a local thread-local the local-dynamic
+model here (round 182B's citations), and no public PS4 rule is known. The
+evidence is the executable's own: all 21,974 thread-local accesses of the
+base are general-dynamic and none is local-dynamic (D23, round 124A),
+while its four thread-local bools are read as masked single bits at 9,382
+sites, the form GlobalOpt gives only a variable with local linkage (round
+180B, round 182B; D74). So the base's compiler did not emit local-dynamic
+for a variable it treated as local. With this patch and D74's local data
+rows the three destructor pairs 0x138e5f0, 0x13ed250 and 0x1482fd0 compile
+to the base's bytes; of 4,589 rows swept only those six functions change
+(round 228C's sweep with the rule as a hidden option).
+
+--- a/lib/Target/TargetMachine.cpp
++++ b/lib/Target/TargetMachine.cpp
+@@ -176,7 +176,10 @@
+     // PS4: the shared-library rule of LLVM 3.8 (before r273921): only a
+     // local or hidden symbol is local-dynamic; a protected one stays
+     // general-dynamic.
+-    if (GV->hasLocalLinkage() || GV->hasHiddenVisibility())
++    // PS4: a thread-local with local linkage stays general-dynamic too (the
++    // executable has no local-dynamic access, and its thread-local bools
++    // were local when optimised).
++    if (GV->hasHiddenVisibility())
+       Model = TLSModel::LocalDynamic;
+     else
+       Model = TLSModel::GeneralDynamic;
