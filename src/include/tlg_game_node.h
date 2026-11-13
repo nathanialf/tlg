@@ -82,6 +82,14 @@ template <class T> inline void dropReference(T *object) /* derived name */
 template <class T> class Ref00503fb0 /* derived name */
 {
   public:
+    /* a reference to an object held by pointer (0xbe7e3f: the count raised
+     * behind the null test) */
+    explicit Ref00503fb0(T *object) : object(object)
+    {
+        if (object)
+            addReference(object);
+    }
+
     Ref00503fb0(const Ref00503fb0 &other) : object(other.object)
     {
         if (object)
