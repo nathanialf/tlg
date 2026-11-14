@@ -3722,3 +3722,28 @@ in the base; the candidate waits on Float4A's source form. The deleting destruct
 traced.
 
 **Trigger to revisit.** A game subscript whose bytes need the base emitted first.
+
+### D78 addendum: WITHDRAWN (2026-11-14)
+
+The audit the maintainer ordered ("validate there is no C++ source that can reach the
+matches") found an ordinary source form that reaches D78's witness without the rule. Round
+240D, repeated by the supervisor: 0x13ace60 with the block array read through an accessor
+member (`Block013ace60 &at(int index) { return blocks[index]; }`) is equal (63 instructions,
+204 bytes) under the compiler built without subscript-01 and under the installed one alike;
+D78's other mover, 0xc19ab0, reaches the same 5 of 24 without the rule through an accessor;
+0x58da20 reaches its bytes without the rule through a local for the offset. The leave-one-out
+sweep (round 241B) shows no matched row lost without the patch. An accessor is what a
+developer writes; the rule is not needed, so it is not kept: `leaf_013ace60.cpp` takes the
+accessor form in this commit, and `tools/patches/llvm-4.0.0-subscript-01-index-before-base.patch`
+is removed at the next compiler install (the audit holds the build tree until then; the row is
+equal under both compilers meanwhile). Thirty-five backports after that install.
+
+D76 and D77 under the same test (round 240D, six developer forms per witness beside the
+tree's, compiled without the rule; `scratch d240/forms/README.txt`): none equal. D76's
+nearest is a 64-bit index (19 of 27), excluded by bytes (the base compares 32 bits). D77's
+nearest is the cases written in descending order (37 of 58). D77 gained three witnesses whose
+rows need it: 0xef65f0 (2 of 18 without it; its earlier "away" was the draft's own case
+order), 0x13cc210 and 0xb5bc40.
+
+Rule from here on: a compiler rule is installed only after the developer forms tried on its
+witnesses under the compiler without it are recorded in its decision.

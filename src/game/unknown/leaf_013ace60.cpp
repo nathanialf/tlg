@@ -16,24 +16,29 @@ struct Block013ace60 { /* derived name */
 struct Blocks013ace60 {    /* derived name */
     Block013ace60 *blocks; /* +0x0 */
     int count;             /* +0x8 */
+
+    Block013ace60 &at(int index) /* derived name */
+    {
+        return blocks[index];
+    }
 };
 
 void FUN_013ace60(Blocks013ace60 *list, int i) /* derived name */
 {
     if (i < 0)
         return;
-    if (i < list->count && list->blocks[i + 1].state == 0) {
-        list->blocks[i].size += list->blocks[i + 1].size;
-        list->blocks[i].flag = list->blocks[i + 1].flag;
-        list->blocks[i + 1].state = 2;
-        list->blocks[i + 1].flag = 0;
+    if (i < list->count && list->at(i + 1).state == 0) {
+        list->at(i).size += list->at(i + 1).size;
+        list->at(i).flag = list->at(i + 1).flag;
+        list->at(i + 1).state = 2;
+        list->at(i + 1).flag = 0;
     }
-    if (i > 0 && list->blocks[i - 1].state == 0) {
-        list->blocks[i - 1].size += list->blocks[i].size;
-        list->blocks[i - 1].flag = list->blocks[i].flag;
-        list->blocks[i].state = 2;
-        list->blocks[i].flag = 0;
+    if (i > 0 && list->at(i - 1).state == 0) {
+        list->at(i - 1).size += list->at(i).size;
+        list->at(i - 1).flag = list->at(i).flag;
+        list->at(i).state = 2;
+        list->at(i).flag = 0;
         i--;
     }
-    list->blocks[i].state = 0;
+    list->at(i).state = 0;
 }
