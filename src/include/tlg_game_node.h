@@ -195,6 +195,19 @@ template <class T> class AtomicRef0045c470 /* derived name */
             dropReference(old);
     }
 
+    /* drops the reference without an exchange, as the reference's last
+     * use does: the pointer cleared first, then the count lowered (the last
+     * element of an array at 0x81abc4: `mov r15, [rcx+rax*8]; test r15,
+     * r15; je; mov qword [rcx+rax*8], 0`) */
+    void release() /* derived name */
+    {
+        T *released = object;
+        if (released) {
+            object = 0;
+            dropReference(released);
+        }
+    }
+
     /* the object as it is now (`cmp qword [rbx+0x38], 0` at 0x4ab651) */
     T *get() const
     {
