@@ -7,10 +7,6 @@
  * (config/header_statics.base.txt), then 4 names from strings, in this order,
  * each registered with Name's destructor (0x1331800). */
 
-// NONMATCHING: the file's initializer (FUN_00b1e2a0): the last name's index
-// store and `lea rsi` before the tail call to __cxa_atexit are in the other
-// order (the parked order class: the base's instruction selection puts the
-// store first in a tail block).
 extern const char D_15abf5d[23];
 extern const char D_15abf74[29];
 extern const char D_15abf91[16];

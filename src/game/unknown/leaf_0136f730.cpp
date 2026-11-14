@@ -21,8 +21,6 @@ struct Context0136f730 /* derived name */
 
 void FUN_008113a0(void *target, void *first, void *second); /* derived name */
 
-// NONMATCHING: list-ilp order: the base loads +0x28 of the context before the
-// pair (the arguments in their order), the build after them
 void FUN_0136f730(void *, const Object0136f730 *object,
                   const Context0136f730 *context) /* derived name */
 {

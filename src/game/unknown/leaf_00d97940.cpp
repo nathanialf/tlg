@@ -28,8 +28,6 @@ struct Reader00d97940 {     /* derived name */
 int FUN_013bd670(Reader00d97940 *self, u8 *data, size_t bytes);   /* derived name */
 void FUN_00d96630(State00d97940 *state, const char *format, ...); /* derived name */
 
-// NONMATCHING: list-ilp order, in the eight-byte loop only: the build subtracts from the count
-// right after the first loads (add r15, -8), the base after the pointer's add at the loop's end
 int FUN_00d97940(Reader00d97940 *self, u8 *data, size_t bytes, size_t size) /* derived name */
 {
     if (!FUN_013bd670(self, data, bytes))

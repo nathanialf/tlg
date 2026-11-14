@@ -16,6 +16,16 @@ struct Target779070 {
     Vec4 sourceA;
     Vec4 unknown13d0;
     Vec4 sourceB;
+
+    void setRowB(const Vec4 &row)
+    {
+        rowB = row;
+    } /* derived name */
+
+    void setRowA(const Vec4 &row)
+    {
+        rowA = row;
+    } /* derived name */
 };
 
 struct Owner779070 {

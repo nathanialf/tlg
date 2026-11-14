@@ -26,8 +26,6 @@ struct Object00968820 /* derived name */
     u32 unknown58;            /* +0x58: the entry count */
 };
 
-// NONMATCHING: greedy's assignment, as its siblings 0x968550 to 0x9685f0: the array
-// base in rsi and the scaled index in rax where the base has them the other way.
 void FUN_00968820(Object00968820 *self, int enable) /* derived name */
 {
     for (u32 i = 0; i < self->unknown58; i++) {

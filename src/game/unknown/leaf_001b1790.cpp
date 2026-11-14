@@ -21,9 +21,9 @@ extern Object05938c40 *D_5938c40;
 
 int FUN_001b1790(lua_State *state) /* derived name */
 {
-    bool loading = D_5938c40->unknown38->unknown100 != 0;
+    int loading = D_5938c40->unknown38->unknown100;
     HksObject *top = state->top;
-    top->value.boolean = loading;
+    top->value.boolean = loading != 0;
     top->type = 1;
     state->top = top + 1;
     return 1;

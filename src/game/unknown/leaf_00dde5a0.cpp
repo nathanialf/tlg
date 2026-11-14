@@ -16,8 +16,6 @@ struct Node00dde5a0 { /* derived name */
     Node00dde5a0 **unknown40; /* +0x40: the children */
 };
 
-// NONMATCHING: greedy's assignment: the array and the index are in rcx and rax
-// in the base, rax and rcx here; every instruction else is the base's.
 void FUN_00dde5a0(Object00dde5a0 *self, Node00dde5a0 *node) /* derived name */
 {
     node->flags0 |= 1;

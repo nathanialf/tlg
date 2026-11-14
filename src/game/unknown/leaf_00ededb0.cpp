@@ -24,7 +24,6 @@ struct Object00ededb0 { /* derived name */
     Record00ededb0 *unknown90;
 };
 
-// NONMATCHING: list-ilp order: the base loads the argument's fields in source order (+0x0 into r9 first, moved to rsi last; 36 bytes), the compile loads +0x10 and +0x8 first and +0x0 straight into rsi (33 bytes)
 int FUN_00ededb0(Object00ededb0 *self, const Argument00ededb0 *argument) /* derived name */
 {
     int (*function)(Object00ededb0 *, void *, int, int, void *) = self->unknown90->unknown70;

@@ -48,7 +48,6 @@ class Target0131f290 /* derived name */
     virtual void slot29(void *pointer); /* derived name */
 };
 
-// NONMATCHING: greedy's assignment: the base gives the target's vtable rax and the pointer rdx, the compile rcx and rax; every instruction else equal (a local for the pointer compiles the same)
 void FUN_0131f290(const Object0131f290 *self, Target0131f290 *target) /* derived name */
 {
     if (self->unknown34 == 1 || self->unknown34 == 5) {

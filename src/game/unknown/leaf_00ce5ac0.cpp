@@ -10,7 +10,6 @@ struct Object00ce5ac0 { /* derived name */
     int unknownd4;
 };
 
-// NONMATCHING: greedy's assignment: the base gives the first element pointer and its key rax/eax, the second rcx, the compile the reverse; every instruction else equal (the class of FUN_00d1df80; the pointer-pair comparisons all show it)
 int FUN_00ce5ac0(const void *a, const void *b) /* derived name */
 {
     const Object00ce5ac0 *x = *static_cast<Object00ce5ac0 *const *>(a);

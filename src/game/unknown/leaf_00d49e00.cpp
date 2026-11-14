@@ -26,8 +26,8 @@ void FUN_00d49e00(Object00d49e00 *, const List00d49e00 *source,
 {
     int count = target->count240;
     for (int i = 0; i < count; ++i) {
-        const Entry00d49e00 *from = source->entries238[i];
         Entry00d49e00 *to = target->entries238[i];
+        const Entry00d49e00 *from = source->entries238[i];
         for (int k = 0; k < 4; ++k)
             to->unknown278[k] = from->unknown278[k];
     }

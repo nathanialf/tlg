@@ -22,7 +22,6 @@ struct Object013d02a0 { /* derived name */
     Record013d02a0 *unknown8;
 };
 
-// NONMATCHING: greedy's assignment of a scaled-index chain: the base gives the entries' pointer rcx and the index rax, the compile rax and rcx; every instruction else equal (125A's class)
 int FUN_013d02a0(const Object013d02a0 *self, int index) /* derived name */
 {
     const Record013d02a0 *record = self->unknown8;

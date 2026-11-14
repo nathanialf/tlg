@@ -17,5 +17,6 @@ void FUN_01305ce0(Member05adaaa8_10238 *member, void *argument, int value); /* d
 
 void FUN_01499360(Object01499360 *, void *argument, unsigned index) /* derived name */
 {
-    FUN_01305ce0(D_5adaaa8->unknown10238, argument, D_1525560[index]);
+    int value = D_1525560[index];
+    FUN_01305ce0(D_5adaaa8->unknown10238, argument, value);
 }

@@ -19,7 +19,6 @@ struct Array013af260 { /* derived name */
 
 void FUN_00d0cc60(Object013af260 *self, void *entry, void *argument); /* derived name */
 
-// NONMATCHING: scheduling of the outgoing copy rdx = rcx against the two scaled-index leas (base: copy first, the loaded pointer in rsi, the index in rax; compiled: copy last, the pointer in rax); the same body with an imul scale (FUN_01354940) is equal
 void FUN_013af260(Object013af260 *self, Array013af260 *array, int i,
                   void *argument) /* derived name */
 {

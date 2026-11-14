@@ -11,5 +11,5 @@ extern const u32 D_15574c0[];
 
 u32 FUN_012fd1f0(unsigned index) /* derived name */
 {
-    return 0x924000 | (D_15574c0[index] & 0xf) << 8 | (D_15574b0[index] & 0xff);
+    return (D_15574b0[index] & 0xff) | (D_15574c0[index] & 0xf) << 8 | 0x924000;
 }

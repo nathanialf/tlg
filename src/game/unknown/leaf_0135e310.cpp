@@ -12,5 +12,5 @@ struct Object0135e290 { /* derived name */
 
 int FUN_0135e310(const Object0135e290 *self) /* derived name */
 {
-    return self->unknown0c == 27 || self->unknown0c == 3;
+    return self->unknown0c == 3 || self->unknown0c == 27;
 }

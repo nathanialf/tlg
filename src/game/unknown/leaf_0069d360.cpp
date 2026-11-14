@@ -39,5 +39,6 @@ extern Object057c9390 *D_57c9390;
 
 void FUN_0069d360() /* derived name */
 {
-    D_5938c40->unknown48->slot4(D_57c9390->unknown98->unknown28);
+    Member057c9390_98_28 *value = D_57c9390->unknown98->unknown28;
+    D_5938c40->unknown48->slot4(value);
 }

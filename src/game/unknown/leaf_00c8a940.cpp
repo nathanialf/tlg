@@ -29,7 +29,6 @@ HksObject FUN_00db7fd0(lua_State *state, int type, void *table,
                        const HksObject *key);                             /* derived name */
 void FUN_00d971b0(lua_State *state, HksObject *object, HksObject *table); /* derived name */
 
-// NONMATCHING: instruction order (list-ilp): the base loads the type at +0x1c8 before the table at +0x1d0, the build after
 void FUN_00c8a940(lua_State *state, const Value00c8a940 *value) /* derived name */
 {
     Value00c8a940 *copy = static_cast<Value00c8a940 *>(FUN_00dba890(state, sizeof(Value00c8a940)));

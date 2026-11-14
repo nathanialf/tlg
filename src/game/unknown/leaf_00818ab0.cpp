@@ -27,9 +27,6 @@ struct Target00818ab0 { /* derived name */
 
 void FUN_0138e360(Member00818ab0 **member, Entry00818ab0 *entry); /* derived name */
 
-// NONMATCHING: list-ilp order in the preheader: the base computes the member's
-// address (`add r14, 0x58`) before the byte count (`shl r15, 3`), this build
-// after; an index loop gives the order but counts by one.
 void FUN_00818ab0(Object00818ab0 *, const Source00818ab0 *source,
                   Target00818ab0 *target) /* derived name */
 {

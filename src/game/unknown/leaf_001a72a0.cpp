@@ -14,8 +14,6 @@ static const FormatWord001a72a0 D_14d2e60[32] = {
 };
 
 /* stores the 3 bits 22 to 24 of the format word */
-// NONMATCHING: list-ilp order, the bextr control constant (mov ecx, imm) is scheduled before the
-// table's lea, the base has the lea first (rcx the table, edx the control)
 int FUN_001a7060(u32 *out, u32 format) /* derived name */
 {
     if (!out || format > 31) {
@@ -26,8 +24,6 @@ int FUN_001a7060(u32 *out, u32 format) /* derived name */
 }
 
 /* stores the 4 bits 2 to 5 of the format word */
-// NONMATCHING: list-ilp order, the bextr control constant (mov ecx, imm) is scheduled before the
-// table's lea, the base has the lea first (rcx the table, edx the control)
 int FUN_001a7090(u32 *out, u32 format) /* derived name */
 {
     if (!out || format > 31) {
@@ -38,8 +34,6 @@ int FUN_001a7090(u32 *out, u32 format) /* derived name */
 }
 
 /* stores the 5 bits 6 to 10 of the format word */
-// NONMATCHING: list-ilp order, the bextr control constant (mov ecx, imm) is scheduled before the
-// table's lea, the base has the lea first (rcx the table, edx the control)
 int FUN_001a70c0(u32 *out, u32 format) /* derived name */
 {
     if (!out || format > 31) {
@@ -50,8 +44,6 @@ int FUN_001a70c0(u32 *out, u32 format) /* derived name */
 }
 
 /* stores the 3 bits 11 to 13 of the format word */
-// NONMATCHING: list-ilp order, the bextr control constant (mov ecx, imm) is scheduled before the
-// table's lea, the base has the lea first (rcx the table, edx the control)
 int FUN_001a70f0(u32 *out, u32 format) /* derived name */
 {
     if (!out || format > 31) {
@@ -62,8 +54,6 @@ int FUN_001a70f0(u32 *out, u32 format) /* derived name */
 }
 
 /* stores the 2 bits 25 to 26 of the format word */
-// NONMATCHING: list-ilp order, the bextr control constant (mov ecx, imm) is scheduled before the
-// table's lea, the base has the lea first (rcx the table, edx the control)
 int FUN_001a7120(u32 *out, u32 format) /* derived name */
 {
     if (!out || format > 31) {

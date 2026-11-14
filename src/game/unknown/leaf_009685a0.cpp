@@ -18,9 +18,6 @@ struct Object009685a0 { /* derived name */
     u32 unknown58;            /* +0x58: the entry count */
 };
 
-// NONMATCHING: greedy's assignment: the shifted index in rdx and the flags in ecx where
-// the base has the index in rcx and the flags in edx; the select's operands are the base's
-// (the entry taken by reference: two indexed stores give `and; or; cmovne`).
 void FUN_009685a0(Object009685a0 *self, bool enable) /* derived name */
 {
     for (u32 i = 0; i < self->unknown58; i++) {

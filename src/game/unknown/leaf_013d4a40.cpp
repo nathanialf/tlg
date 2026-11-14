@@ -31,7 +31,6 @@ struct Object013d4a40 { /* derived name */
     ElementArray013d4a40 unknown28; /* +0x28 */
 };
 
-// NONMATCHING: list-ilp order and greedy's assignment: the shape is the base's (the unsigned counter, the int index sign-extended in the loop), but the hoisted loads come *id first where the base loads the data pointer first, and the count and the counter take edx and ecx where the base has ecx and edx
 Element013d4a40 *FUN_013d4a40(Object013d4a40 *self, const int *id) /* derived name */
 {
     for (unsigned i = 0; i < self->unknown28.size(); i++) {

@@ -9,7 +9,6 @@ struct Record00d1df80 { /* derived name */
     u32 unknown40;
 };
 
-// NONMATCHING: greedy's assignment: the base gives the first pointer and its key rax/eax and the second rcx, the compile the reverse (rcx/ecx first, rax second); every instruction else equal. The operands swapped in the source move the registers but lose the load fold (30 bytes)
 int FUN_00d1df80(const void *first, const void *second) /* derived name */
 {
     const Record00d1df80 *a = *static_cast<Record00d1df80 *const *>(first);

@@ -12,9 +12,6 @@ extern SceLibcMspace D_57c9120[2]; /* derived name: the large space, then the sm
 
 void FUN_001b00c0(); /* derived name: out of memory, does not return */
 
-// NONMATCHING: list-ilp order and greedy's assignment, the base masks the space index
-// (`and ebx, 1`) before the first call, the build after it (the whole module; the space ^ 1
-// of the second attempt as the base's `xor rbx, 1`)
 void *FUN_001b00e0(size_t size) /* derived name */
 {
     size_t space = size <= 0x480000;
@@ -26,9 +23,6 @@ void *FUN_001b00e0(size_t size) /* derived name */
     return 0;
 }
 
-// NONMATCHING: list-ilp order and greedy's assignment, the base masks the space index
-// (`and ebx, 1`) before the first call, the build after it (the whole module; the space ^ 1
-// of the second attempt as the base's `xor rbx, 1`)
 void *FUN_001b0170(size_t count, size_t size) /* derived name */
 {
     size_t space = size <= 0x480000;
@@ -40,9 +34,6 @@ void *FUN_001b0170(size_t count, size_t size) /* derived name */
     return 0;
 }
 
-// NONMATCHING: list-ilp order and greedy's assignment, the base masks the space index
-// (`and ebx, 1`) before the first call, the build after it (the whole module; the space ^ 1
-// of the second attempt as the base's `xor rbx, 1`)
 void *FUN_001b02f0(size_t boundary, size_t size) /* derived name */
 {
     size_t space = size <= 0x480000;

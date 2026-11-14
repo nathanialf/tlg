@@ -29,7 +29,6 @@ struct Object00ea12f0 { /* derived name */
     Worlds00ea12f0 *unknown268;
 };
 
-// NONMATCHING: greedy's assignment: the body record takes rcx where the base has rax (the first instructions; the shape is the base's)
 void FUN_00ea12f0(Object00ea12f0 *self, Argument00ea12f0 *argument) /* derived name */
 {
     Body00ea12f0 *body = argument->unknown48;

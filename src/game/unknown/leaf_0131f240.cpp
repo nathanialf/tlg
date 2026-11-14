@@ -49,7 +49,6 @@ class Target0131f240 /* derived name */
     virtual void slot31(bool flag, void *pointer, bool again); /* derived name */
 };
 
-// NONMATCHING: greedy's assignment: the base gives the target's vtable rax and the pointer r9, the compile rcx and rax, with the moves ordered after them; the flag passed twice is what the base's `movzx ecx, dl; mov esi, ecx` holds (35 bytes, equal to the base's; with the flag once, 34)
 void FUN_0131f240(const Object0131f240 *self, Target0131f240 *target, bool flag) /* derived name */
 {
     if (self->unknown48 == 5) {

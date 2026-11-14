@@ -13,7 +13,6 @@ struct Object00bed8c0 { /* derived name */
     u8 unknown5c[0x3a44];
 };
 
-// NONMATCHING: greedy's assignment: the order and the instructions are the base's, the second pointer and the key take rdx and ecx where the base has rcx and edx (nested or flat tests alike)
 int FUN_00bed8c0(const void *a, const void *b) /* derived name */
 {
     const Object00bed8c0 *left = *(const Object00bed8c0 *const *)a;

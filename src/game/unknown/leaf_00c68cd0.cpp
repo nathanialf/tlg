@@ -11,10 +11,6 @@ struct Entry00c68cd0 { /* derived name */
     u32 unknown8_9 : 23; /* not traced */
 };
 
-// NONMATCHING: list-ilp order and greedy's assignment: the base loads the first record's word
-// into ecx and folds the second's into the and, then sets the select's 1 and -1 after the compare
-// (ecx reused); the compile loads the second first and sets both constants at entry (3.7.1 to
-// 4.0.0 alike)
 int FUN_00c68cd0(const Entry00c68cd0 *a, const Entry00c68cd0 *b) /* derived name */
 {
     return (a->unknown8 ^ 0x100) > (b->unknown8 ^ 0x100) ? 1 : -1;

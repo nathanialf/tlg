@@ -41,8 +41,6 @@ struct Object007af2c0 /* derived name */
     u32 count328;    /* +0x328 */
 };
 
-// NONMATCHING: greedy's assignment, the array in rcx and the index in rdx where the
-// base has them the other way; every instruction else equal.
 void FUN_007af2c0(Object007af2c0 *self, const Argument007af2c0 *argument) /* derived name */
 {
     if (argument->unknown238) {

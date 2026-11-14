@@ -12,10 +12,6 @@
  * constants of tlg_game_vector.h and the file's names, below. Class and method
  * unknown. */
 
-// NONMATCHING: the file's initializer (FUN_00ac2870): the last name's index
-// store and `lea rsi` before the tail call to __cxa_atexit are in the other
-// order (the parked order class: the base's instruction selection puts the
-// store first in a tail block).
 extern const char D_15a7bc7[14];
 extern const char D_15a7bd5[14];
 extern const char D_15a7be3[14];

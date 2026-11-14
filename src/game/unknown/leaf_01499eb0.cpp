@@ -36,8 +36,6 @@ struct Object01499eb0 /* derived name */
 
 /* derived names: closes a marker in the owner's command buffer; its pointer
  * is at 0x16c3ad8 (a vtable without a row). */
-// NONMATCHING: list-ilp order, as FUN_01496a80: the base loads the command pointer (+0x47d0)
-// before the end (+0x47c8), the build the end first; the rest equal
 void FUN_01499eb0(Object01499eb0 *self) /* derived name */
 {
     CommandBuffer01499eb0 &commands = self->commands;

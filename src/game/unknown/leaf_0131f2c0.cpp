@@ -49,9 +49,6 @@ struct Object0131f2c0 { /* derived name */
     void *unknown40;
 };
 
-// NONMATCHING: 5/18, the compares (1, 5, then 2) and the blocks are the base's; left, instruction
-// order: the base loads the slot before the argument (+0x40) in each arm, so the argument's load
-// is shared in the tail; the build loads the argument between the vtable and the slot
 void FUN_0131f2c0(Object0131f2c0 *self, Argument0131f2c0 *argument) /* derived name */
 {
     switch (self->unknown34) {

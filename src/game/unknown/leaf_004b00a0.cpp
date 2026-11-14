@@ -19,9 +19,6 @@ struct Object004b00a0 { /* derived name */
     Float4 position; /* +0x40, derived name */
 };
 
-// NONMATCHING: list-ilp order: the base computes x, y, z in that order into xmm1, xmm2,
-// xmm0; the build schedules the z product first (xmm1) and x last (also with the offset
-// as a Vec3 product first); the loads before the stores and the w load first are the base's.
 Float4 FUN_004b00a0(const Object004b00a0 *self) /* derived name */
 {
     const float w = self->position.w;

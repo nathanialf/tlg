@@ -18,7 +18,6 @@ struct Object013d02e0 { /* derived name */
 void FUN_007a4fa0(void *object, float x, float y, float z, void *pointer,
                   int value); /* derived name */
 
-// NONMATCHING: list-ilp order: the base loads the object and the three floats first, then the pointer and the int into rsi and edx; the compile loads the record's two fields first into rax and rcx and moves them after (the same with a 12-byte record passed by value)
 void FUN_013d02e0(Object013d02e0 *self, const float *vector,
                   const Record013d02e0 *record) /* derived name */
 {

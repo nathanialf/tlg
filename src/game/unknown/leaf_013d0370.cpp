@@ -25,9 +25,6 @@ struct Object013d0370 { /* derived name */
     int unknown28;
 };
 
-// NONMATCHING: the base passes the result pointer on in rdi as it came (only copying it to rbx for
-// the return), the compile copies rbx back to rdi before each call; every instruction else equal
-// (greedy's or the coalescer's choice)
 Float4A FUN_013d0370(const Object013d0370 *self) /* derived name */
 {
     if (self->unknown28)

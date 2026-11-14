@@ -6,9 +6,9 @@
  * returns as a number and returns 1 (one result). */
 int FUN_00de6990(lua_State *state) /* derived name */
 {
-    float now = clock();
+    clock_t now = clock();
     HksObject *top = state->top;
-    top->value.number = now;
+    top->value.number = (float)now;
     top->type = 3;
     state->top = top + 1;
     return 1;

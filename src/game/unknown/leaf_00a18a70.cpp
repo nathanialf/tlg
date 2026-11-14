@@ -9,10 +9,6 @@ struct Object00a18a70 { /* derived name */
     Array05943280<int> values; /* +0x88 */
 };
 
-// NONMATCHING: instruction order and a register exchange (the parked classes): the base forms
-// the size in bytes before the table's address (`lea eax, [r14*4]; lea rcx, [D_5943280]`), the
-// build the other way; in the clearing loop the base holds the block in rdx and the index in
-// rcx, the build the reverse. The growth and the rest are the base's (46 of 51).
 void FUN_00a18a70(Object00a18a70 *self, unsigned count) /* derived name */
 {
     if (self->values.size() == count)

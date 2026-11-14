@@ -24,7 +24,6 @@ struct Object01367690 { /* derived name */
 
 void FUN_013618c0(Member01367690 *member); /* derived name */
 
-// NONMATCHING: a register exchange (59/64; 0x13676d0: the block in rcx and the index in rax, the build has them the other way round)
 void FUN_01367690(Object01367690 *self) /* derived name */
 {
     FUN_013618c0(reinterpret_cast<Member01367690 *>(self->unknown1c0));

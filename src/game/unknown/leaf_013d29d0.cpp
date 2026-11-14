@@ -15,7 +15,6 @@ struct Object013d29d0 { /* derived name */
     Record013d29d0 *unknown8;
 };
 
-// NONMATCHING: greedy's assignment: the base gives the value xmm0 and the zero xmm1 (reused for the 1.0 and the quotient), the compile the reverse; every instruction else equal (the siblings FUN_013d2a40 and FUN_013d63a0, whose value is a field read after the zero, match)
 void FUN_013d29d0(Object013d29d0 *self, const float *value) /* derived name */
 {
     float v = *value;

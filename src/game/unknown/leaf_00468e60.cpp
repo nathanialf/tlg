@@ -53,9 +53,6 @@ int FUN_00468e60(lua_State *state) /* derived name */
     if (!status)
         return 0;
     FUN_00c89360(state, escape->unknown4e0);
-    HksObject *top = state->top;
-    top->value.boolean = status == 1;
-    top->type = 1;
-    state->top = top + 1;
+    pushBoolean(state, status == 1);
     return 2;
 }

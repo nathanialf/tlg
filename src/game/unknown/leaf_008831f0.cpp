@@ -43,10 +43,6 @@ extern Object057c9390 *D_57c9390;
 
 struct Object008831f0; /* derived name */
 
-// NONMATCHING: list-ilp order: the base loads the data pointer before the value (`mov rdx, [rdi];
-// mov eax, [rsi]`), this the value first; with `value == data[i]` the loads come out in the base's
-// order and the compare's operands the other way (`cmp eax, [rdx + rcx*4]`). The int index
-// (widened, the compare truncated) is the base's.
 void FUN_008831f0(Object008831f0 *, const int &value) /* derived name */
 {
     IntArray008831f0 &values = D_57c9390->unknown108->unknown30->values;

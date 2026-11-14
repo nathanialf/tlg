@@ -18,5 +18,6 @@ struct Owner778dc0 {
 
 void FUN_00778dc0(const Owner778dc0 *self) /* derived name */
 {
-    self->target->value = self->value;
+    Target778dc0 *target = self->target;
+    target->value = self->value;
 }

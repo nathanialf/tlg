@@ -24,9 +24,6 @@ struct Object008728d0 { /* derived name */
 void FUN_00c66b10(Member05938c40_98 *member, void *first, void *second,
                   float value); /* derived name */
 
-// NONMATCHING: the base loads the member at +0x98 into rax and copies it to rdi (`mov rax, [rax +
-// 0x98]; mov rdi, rax`), the compile loads it straight into rdi; every instruction else equal
-// (greedy's or the coalescer's choice, not traced)
 int FUN_008728d0(Object008728d0 *self) /* derived name */
 {
     FUN_00c66b10(D_5938c40->unknown98, self->unknown58, self->unknown60, 1.0f);

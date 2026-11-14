@@ -26,9 +26,6 @@ struct Job0098eb90 { /* derived name */
 void FUN_0098ebf0(Target0098eb90 *target, Job0098eb90 *job, void *a, void *b, void *c, void *d,
                   int e, float f, int g, int h, float i, float j); /* derived name */
 
-// NONMATCHING: X86CallFrameOptimization pushes the three stack arguments where
-// the base reserves the call frame (`sub rsp, 0x20` and stores to [rsp]); with
-// -no-x86-call-frame-opt the frame is the base's and list-ilp's load order remains.
 void FUN_0098eb90(Job0098eb90 *job) /* derived name */
 {
     FUN_0098ebf0(job->unknown58, job, job->unknown20, job->unknown28, job->unknown30,

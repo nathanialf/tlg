@@ -17,9 +17,6 @@ extern Object057c9390 *D_57c9390;
 
 int FUN_001b0880(lua_State *state) /* derived name */
 {
-    HksObject *top = state->top;
-    top->value.number = D_57c9390->unknown140;
-    top->type = 3;
-    state->top = top + 1;
+    pushNumber(state, D_57c9390->unknown140);
     return 1;
 }

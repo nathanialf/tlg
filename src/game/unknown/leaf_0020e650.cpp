@@ -19,7 +19,6 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: list-ilp order, as 0x1b3a80: the stack top loaded second in the base
 int FUN_0020e650(lua_State *state) /* derived name */
 {
     bool value = D_57c9390->unknown128->unknown74 == 0;

@@ -46,8 +46,6 @@ struct Object00b0acf0 { /* derived name */
 void FUN_00b0a9f0(Object00b0acf0 *self, const Reference00b0acf0 *reference,
                   int id); /* derived name */
 
-// NONMATCHING: list-ilp order, as FUN_00b0adf0's: the subtractions from z down where the base
-// subtracts +0x120 first (vsubss), with the cases' lea order and registers following
 void FUN_00b0acf0(Object00b0acf0 *self, const Reference00b0acf0 *reference) /* derived name */
 {
     const Owner00b0acf0 *owner = reference->owner;

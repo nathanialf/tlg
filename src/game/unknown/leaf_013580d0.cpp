@@ -32,5 +32,6 @@ void FUN_013580d0(Object013580d0 *self) /* derived name */
     if (!self->unknown40) {
         std::_Xbad_function_call();
     }
-    self->unknown40->slot2(self->unknown10);
+    void *argument = self->unknown10;
+    self->unknown40->slot2(argument);
 }

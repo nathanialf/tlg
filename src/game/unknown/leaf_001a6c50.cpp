@@ -16,8 +16,6 @@ struct Descriptor001a6c50 { /* derived name */
 
 u32 FUN_001a6b50(u32 first, u32 bytes, u32 second, u32 flag, bool kind); /* derived name */
 
-// NONMATCHING: list-ilp order, the descriptor's three fields loaded in the
-// reverse of the base's (+0x30, +0x28, +0x2c), and the result copied before the shift.
 int FUN_001a6c50(u32 *out, const Descriptor001a6c50 *descriptor, u32 first,
                  u32 second) /* derived name */
 {

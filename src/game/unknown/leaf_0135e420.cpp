@@ -15,7 +15,6 @@ struct Object0135e420 { /* derived name */
     int unknown28; /* +0x28: the value looked up */
 };
 
-// NONMATCHING: list-ilp order: the preheader's two hoisted loads come out in the reverse of their IR order (measured: data[i] == self->+0x28 gives +0x28 first, the base's data pointer second; self->+0x28 == data[i] gives the base's order but `cmp edi, [mem]` for the base's `cmp [mem], edi`; the value read before the loop gives +0x28 first); the base needs +0x28 hoisted first and the element as the compare's first operand
 int FUN_0135e420(Object0135e420 *self, const IntArray0135e420 *array) /* derived name */
 {
     int index = -1;

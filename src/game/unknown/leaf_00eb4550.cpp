@@ -36,7 +36,6 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-// NONMATCHING: list-ilp order: the build places `mov eax, -0x41` before the test of the slot's result, so the result is first copied to ecx; the base tests eax, then loads the constant (xor ecx, ecx; test eax, eax; mov eax, -0x41; cmovne); written as one `if` with && the null path is no longer shared
 int FUN_00eb4550(void *, void *, void *a, void *b, void *c, void *d) /* derived name */
 {
     Member05938c40_28 *member = D_5938c40->unknown28;

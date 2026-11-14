@@ -22,7 +22,6 @@ struct Object013d02c0 { /* derived name */
 void FUN_007a4c40(Target013d02c0 *target, void *a, void *pointer, int value, void *b,
                   void *c); /* derived name */
 
-// NONMATCHING: list-ilp order of the argument shuffle (the base loads the pair's pointer into rax first and moves r9, r8 before the int; compiled: rcx saved to rax first)
 void FUN_013d02c0(Object013d02c0 *self, void *a, const Pair013d02c0 *pair, void *b,
                   void *c) /* derived name */
 {

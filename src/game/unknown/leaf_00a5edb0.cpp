@@ -17,9 +17,6 @@ extern Object05827ee0 *D_5827ee0;
 
 int FUN_00a5edb0(lua_State *state) /* derived name */
 {
-    HksObject *top = state->top;
-    top->value.boolean = D_5827ee0->unknownA;
-    top->type = 1;
-    state->top = top + 1;
+    pushBoolean(state, D_5827ee0->unknownA);
     return 1;
 }

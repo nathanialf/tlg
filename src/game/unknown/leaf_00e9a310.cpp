@@ -10,7 +10,6 @@ struct Object00e9a310; /* derived name */
 
 extern __thread hkMemoryRouter *D_16dc0c0;
 
-// NONMATCHING: list-ilp order: the base loads slot 13 into r14 before the thread-local's general-dynamic call (GetTLSADDR chains it to the entry, free to move), the build calls first and keeps no r14
 void FUN_00e9a310(Object00e9a310 *) /* derived name */
 {
     FUN_00006c50()->garbageCollectThread(*D_16dc0c0);

@@ -52,12 +52,14 @@
 #                                   scheduled forms the base has
 #   -march=btver2                   the Jaguar: its instruction set is in use
 #                                   (bextr 1,328, andn 108, lzcnt 69, movbe 14)
-#   -mllvm -pre-RA-sched=list-ilp   the game region's instruction order: with
-#                                   upstream's default source-order DAG
-#                                   scheduler two independent loads come out
-#                                   in the other order (0x639e60, 0x779070);
-#                                   list-ilp, list-burr and list-hybrid all
-#                                   give the base's order on the probe
+#   -mllvm -pre-RA-sched=list-ilp   removed from the game line on 2026-11-14,
+#                                   after an audit of the whole game module
+#                                   without it: every row that needed it is
+#                                   written in ordinary C++ with its reads in
+#                                   the base's order (22 rows; 0x75f2c0 by the
+#                                   layout of its lock scope), and 316 drafts
+#                                   are equal without it. The DAG scheduler is
+#                                   upstream's default, the source-order one.
 #   -mllvm -no-x86-call-frame-opt (game)
 #                                   stack arguments are stored into a reserved
 #                                   call frame, never pushed: no game function
@@ -128,4 +130,4 @@
 #                                   as builtins (D11: libs 64 calls, 0 tail
 #                                   jumps; game 1,417 calls, 18 tail jumps)
 src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections -fPIC -fstack-protector-strong -fno-math-errno -fno-honor-nans -funsafe-math-optimizations -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include -g
-src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -pre-RA-sched=list-ilp -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -mllvm -jump-table-density=40 -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -mllvm -jump-table-density=40 -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include

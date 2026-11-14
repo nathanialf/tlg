@@ -57,8 +57,6 @@ static inline void place(Object00b0adf0 *self, const Reference00b0adf0 *referenc
     FUN_00b0a9f0(self, reference, set);
 }
 
-// NONMATCHING: list-ilp order, the x and y subtractions in the other order (vsubss of +0x120
-// first in the base)
 void FUN_00b0adf0(Object00b0adf0 *self, const Reference00b0adf0 *reference) /* derived name */
 {
     const Owner00b0adf0 *owner = reference->owner;
@@ -66,8 +64,6 @@ void FUN_00b0adf0(Object00b0adf0 *self, const Reference00b0adf0 *reference) /* d
         place(self, reference, owner->firstSet, owner->first);
 }
 
-// NONMATCHING: list-ilp order, the x and y subtractions in the other order (vsubss of +0x120
-// first in the base)
 void FUN_00b0ae70(Object00b0adf0 *self, const Reference00b0adf0 *reference) /* derived name */
 {
     const Owner00b0adf0 *owner = reference->owner;
@@ -75,8 +71,6 @@ void FUN_00b0ae70(Object00b0adf0 *self, const Reference00b0adf0 *reference) /* d
         place(self, reference, owner->secondSet, owner->second);
 }
 
-// NONMATCHING: list-ilp order, the x and y subtractions in the other order (vsubss of +0x120
-// first in the base)
 void FUN_00b0b550(Object00b0adf0 *self, const Reference00b0adf0 *reference) /* derived name */
 {
     const Owner00b0adf0 *owner = reference->owner;

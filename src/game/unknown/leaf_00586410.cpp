@@ -21,8 +21,6 @@ struct Object00586410 { /* derived name */
 
 void FUN_00c0a000(Object00586410 *self); /* derived name */
 
-// NONMATCHING: list-ilp's load order: the base reads +0x10, +0x14, +0x18 in
-// order before the call, this build +0x18 first; the rest is the base's.
 int FUN_00586410(Object00586410 *self) /* derived name */
 {
     const u32 flags10 = self->unknown118->flags10;

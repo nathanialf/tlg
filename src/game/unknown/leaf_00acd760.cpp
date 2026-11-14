@@ -15,11 +15,6 @@
 extern const char D_15a7fec[19];
 extern const char D_15a7fff[14];
 
-// NONMATCHING: the file's initializer (FUN_00acd770): the vector constants
-// of tlg_game_vector.h (the file's copies 0x582c390 to 0x582c4b0,
-// config/header_statics.base.txt) and the two names are written; the last
-// name's index store and `lea rsi` before the tail call to __cxa_atexit are
-// in the other order (the parked order class).
 Name D_582c384(D_15a7fec, false);
 Name D_582c380(D_15a7fff, false);
 

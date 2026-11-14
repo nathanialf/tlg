@@ -9,7 +9,6 @@ struct Element00fee950 { /* derived name */
     float unknown14;
 };
 
-// NONMATCHING: list-ilp order: the base loads the first element's float into xmm0 first, the compile the second's (the compare's operands the same); every instruction else equal (the comparisons written with the second element first compile the same)
 int FUN_00fee950(const void *a, const void *b) /* derived name */
 {
     const Element00fee950 *x = static_cast<const Element00fee950 *>(a);

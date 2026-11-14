@@ -27,7 +27,6 @@ void FUN_00db3300(Object00db3680 *self, void *name, int *index, void **found); /
 void FUN_00daba60(Object00db3680 *self, void *target, int count, int index,
                   void *found); /* derived name */
 
-// NONMATCHING: instruction order (list-ilp): the base loads the index (ecx) before the pointer (r8) for the call, the build after
 void FUN_00db3680(Object00db3680 *self, void *target, void *name) /* derived name */
 {
     int index = -1;

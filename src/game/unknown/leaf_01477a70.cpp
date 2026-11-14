@@ -25,9 +25,6 @@ struct Object01477a70 { /* derived name */
     Owner01477a70 *owner; /* +0x8 */
 };
 
-// NONMATCHING: list-ilp order, the base sign-extends the index after the
-// second element's store, the build before the second load (the array
-// initialised either way, the same).
 float FUN_01477a70(const Object01477a70 *self, int index) /* derived name */
 {
     const Record01477a70 *record = self->owner->record;

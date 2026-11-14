@@ -15,7 +15,6 @@ struct Object00eb2930 { /* derived name */
     Entry00eb2930 *unknown20;
 };
 
-// NONMATCHING: greedy's assignment of the scaled-index chain (base: the array pointer in rcx, the index in rax; compiled: the reverse), as FUN_0139ecf0 and FUN_013af260
 int FUN_00eb2930(const Object00eb2930 *self, int i) /* derived name */
 {
     return static_cast<u16>(self->unknown20[i].unknown6 + 1);

@@ -18,7 +18,6 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-// NONMATCHING: list-ilp order: the base loads the stack top second, after the object pointer and before the record, so the top takes rcx and the result rax (0x1b1790 and 0x1b2700, the same source shape, have it after the compare); IR order, a post-increment and the type stored first do not move it
 int FUN_001b3a80(lua_State *state) /* derived name */
 {
     bool value = D_5938c40->unknownf58->unknownc != 0;

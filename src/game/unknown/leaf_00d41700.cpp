@@ -22,6 +22,8 @@ struct Object00d41700 { /* derived name */
 int FUN_00d41700(const void *a, const void *b) /* derived name */
 {
     const Object00d41700 *first = *static_cast<Object00d41700 *const *>(a);
+    unsigned firstKey = D_17ac870[first->unknownc].unknown8;
     const Object00d41700 *second = *static_cast<Object00d41700 *const *>(b);
-    return D_17ac870[first->unknownc].unknown8 < D_17ac870[second->unknownc].unknown8 ? 1 : -1;
+    unsigned secondKey = D_17ac870[second->unknownc].unknown8;
+    return firstKey < secondKey ? 1 : -1;
 }

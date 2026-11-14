@@ -14,9 +14,6 @@ struct Entry017ac870 { /* derived name */
 
 extern Entry017ac870 D_17ac870[];
 
-// NONMATCHING: list-ilp order: the base computes the first index's entry first (`mov eax, [rdi]`
-// ... `mov rdi, [rax + rcx]`), the compile the second's: the tie of the 0x1b0670 comparators
-// (their note), the same direction in all four; every instruction else equal
 int FUN_00cbd710(const void *a, const void *b) /* derived name */
 {
     return strcmp(D_17ac870[*static_cast<const unsigned *>(a)].unknown0,

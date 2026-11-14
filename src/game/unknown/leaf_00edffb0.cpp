@@ -142,8 +142,6 @@ int FUN_00edf960(Voice00edf960 *voice, const Request00edf960 *request) /* derive
     return FUN_00ee00b0(-7, 0, 83, D_15c3038, index);
 }
 
-// NONMATCHING: greedy's assignment: the base keeps the table in rdi and the
-// index in ecx, the build the reverse (rcx, edi); FUN_00edf960 is equal
 int FUN_00edffb0(const Player00edffb0 *player, u32 index, Result00edffb0 *result) /* derived name */
 {
     const Morph00edffb0 *morph = findMorph(player, index);

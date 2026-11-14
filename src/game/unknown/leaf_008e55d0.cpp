@@ -10,7 +10,6 @@
  * the parameter-count message into a local buffer that nothing reads, then
  * pushes the float at +0x4c of the object the pointer at 0x581f740 holds as a number and returns 1 (one result). The C function's own
  * name is unknown. */
-// NONMATCHING: instruction order (list-ilp): the base loads the format's address, the name's, then the buffer's (lea rsi; lea rdx; lea rdi, as at all 41 sites of this format), the build the buffer's first
 int FUN_008e55d0(lua_State *state) /* derived name */
 {
     int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);

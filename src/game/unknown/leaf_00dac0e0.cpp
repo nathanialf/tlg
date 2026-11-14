@@ -37,7 +37,6 @@ struct Object00dac0e0 { /* derived name */
 
 int FUN_00da9130(Object00dac0e0 *self, const HksObject *value); /* derived name */
 
-// NONMATCHING: register exchange: the base holds the buffer's address in rcx and the byte before it in rdx, the build the other way
 void FUN_00dac0e0(Object00dac0e0 *self, void *pointer) /* derived name */
 {
     Target00dac0e0 *target = self->unknown7dc8->unknown16f0;

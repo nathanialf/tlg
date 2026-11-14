@@ -17,9 +17,6 @@ struct Argument00dd1e40 {   /* derived name */
 
 void FUN_013bfd90(Object00dd1e40 *self, Target00dd1e40 *value); /* derived name */
 
-// NONMATCHING: greedy's assignment: the array pointer in rax and the zero-extended
-// index in rcx where the base has them the other way round (`mov rcx, [r15 + 8];
-// mov eax, ebx`).
 void FUN_00dd1e40(Object00dd1e40 *self, const Argument00dd1e40 *argument) /* derived name */
 {
     for (u32 i = 0; i < argument->count; i++)

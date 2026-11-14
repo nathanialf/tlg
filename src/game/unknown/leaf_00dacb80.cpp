@@ -149,8 +149,7 @@ void FUN_00db00e0(Compiler00dacb80 *self) /* derived name */
 void FUN_00dafb70(Compiler00dacb80 *self) /* derived name */
 {
     self->funcState->lastTarget = self->funcState->pc;
-    Block00dacb80 *block = self->funcState->unknown1798;
-    block->unknown8 = self->funcState->pc;
+    self->funcState->unknown1798->unknown8 = self->funcState->pc;
     self->funcState->unknown1798->unknown4 = self->reporter->slot4();
 }
 

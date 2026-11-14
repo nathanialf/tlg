@@ -27,9 +27,6 @@ struct ModuleHandle00cb57e0 { /* derived name */
 
 extern Module00cb57e0 *D_5945880; /* derived name: the first module */
 
-// NONMATCHING: greedy's assignment in the function loop (the base's index in rbx, the entry
-// in r13 and the string in r12; the build rbx, r12, r13 the other way round) and the
-// order of the two increments (list-ilp); every other instruction equal
 ModuleHandle00cb57e0 *FUN_00cb57e0(const char *name) /* derived name */
 {
     if (!name || !*name)

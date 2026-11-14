@@ -6,8 +6,6 @@
  * bytes hold "..." (a message vsnprintf cuts short ends with the dots), a
  * failed format sending the whole buffer, then writes it to the game's
  * output on channel 0; a null format writes nothing. */
-// NONMATCHING: list-ilp order, the base tests the length (`test eax, eax`) before
-// `mov ecx, 0xfff`, the build after (the select written either way, the same).
 void FUN_00c831d0(const void *, const char *format, ...)
 {
     if (format) {

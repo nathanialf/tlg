@@ -5,6 +5,6 @@
  * implementation, or two instantiations. */
 void FUN_007793f0(const Owner779070 *self, const Source779070 *src) /* derived name */
 {
-    self->target->rowB = src->a;
-    self->target->rowA = src->b;
+    self->target->setRowB(src->a);
+    self->target->setRowA(src->b);
 }

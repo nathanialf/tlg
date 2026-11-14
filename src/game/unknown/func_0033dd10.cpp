@@ -7,10 +7,6 @@
  * (config/header_statics.base.txt), then one name from strings, in this order,
  * each registered with Name's destructor (0x1331800). */
 
-// NONMATCHING: the file's initializer (FUN_0033dd10): the last name's
-// registration is not a tail call (the file's own vector follows it), and
-// `lea rsi` (the name) and `lea rdi` (the destructor) before the call to
-// __cxa_atexit are in the other order (the parked order class).
 extern const char D_15ca420[7];
 
 Name D_57ce480(D_15ca420, false);

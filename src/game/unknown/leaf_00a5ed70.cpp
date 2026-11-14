@@ -17,7 +17,6 @@ struct Object05827ee0 { /* derived name */
 
 extern Object05827ee0 *D_5827ee0;
 
-// NONMATCHING: greedy's assignment, as FUN_001b1010's: the base gives the object at 0x57c9390's chain or the spell a different register from the stack top than the build does (rax and rcx, or rax and rcx with rdx, swapped); the instructions are the base's but the order of the result's mov
 int FUN_00a5ed70(lua_State *state) /* derived name */
 {
     Object05827ee0 *spell = D_5827ee0;
