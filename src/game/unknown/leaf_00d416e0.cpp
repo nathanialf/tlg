@@ -9,12 +9,12 @@ struct Object00d416e0 { /* derived name */
     u32 unknown38;
 };
 
-// NONMATCHING: greedy's assignment: the base gives the second pointer rdx and the first object's key ecx, the compile rcx and edx; every instruction else equal (the class of FUN_00d1df80)
 int FUN_00d416e0(const void *a, const void *b) /* derived name */
 {
     const Object00d416e0 *x = *static_cast<Object00d416e0 *const *>(a);
+    const u32 key = x->unknown38;
     const Object00d416e0 *y = *static_cast<Object00d416e0 *const *>(b);
-    if (x->unknown38 < y->unknown38) {
+    if (key < y->unknown38) {
         return 1;
     }
     return -1;

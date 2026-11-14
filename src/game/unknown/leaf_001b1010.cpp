@@ -15,15 +15,8 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: greedy's assignment: the base gives the pointer at 0x57c9390 rax, the bextr control
-// edx and the stack top rcx, the compile rcx, eax and rdx; every instruction else equal (the value
-// computed before the top in the source compiles the same; the sibling FUN_001b0880 with a plain
-// float is equal)
 int FUN_001b1010(lua_State *state) /* derived name */
 {
-    HksObject *top = state->top;
-    top->value.boolean = (D_57c9390->unknown184 & 2) != 0;
-    top->type = 1;
-    state->top = top + 1;
+    pushBoolean(state, (D_57c9390->unknown184 & 2) != 0);
     return 1;
 }

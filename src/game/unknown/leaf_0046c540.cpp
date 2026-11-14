@@ -24,12 +24,8 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: greedy's assignment: the order is the base's, the object chain takes rcx and the stack top rax where the base has the reverse
 int FUN_0046c540(lua_State *state) /* derived name */
 {
-    HksObject *top = state->top;
-    top->value.boolean = D_57c9390->unknown38->unknown900->unknown1e5;
-    top->type = 1;
-    state->top = top + 1;
+    pushBoolean(state, D_57c9390->unknown38->unknown900->unknown1e5);
     return 1;
 }

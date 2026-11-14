@@ -18,7 +18,7 @@ struct Object00218650 /* derived name */
     int indexOf(const int &id) const /* derived name */
     {
         for (int i = 0; i < count40; ++i) {
-            if (id == ids38[i])
+            if (ids38[i] == id)
                 return i;
         }
         return -1;
@@ -27,11 +27,6 @@ struct Object00218650 /* derived name */
 
 void FUN_002178a0(Object00218650 *self); /* derived name */
 
-// NONMATCHING: list-ilp's order of the two loads hoisted before the loop and the
-// compare's operands: written `id == ids38[i]` the loads are the base's and the
-// compare is `cmp esi, [rdx + rcx*4]` (the base `cmp [rdx + rcx*4], esi`);
-// written `ids38[i] == id` (by value or by reference) the compare is the base's
-// and the two loads come the other way.
 int FUN_00218650(Object00218650 *self, const int *id) /* derived name */
 {
     if (self->indexOf(*id) >= 0) {

@@ -21,11 +21,11 @@ extern Registry057ca270 *D_57ca270;
 struct Object00217db0;                                      /* derived name */
 int FUN_00217db0(Object00217db0 *object, const Name &name); /* derived name */
 void FUN_00cb8790(Registry057ca270 *registry, int (*visit)(Object00217db0 *, const Name &),
-                  Name name); /* derived name */
+                  const Name &name); /* derived name */
 
-// NONMATCHING: waits on the visitor's definition (its address is a direct lea in the base, a GOT load while the module only declares it); and the base copies the Name before it loads the pointer at 0x57ca270, the build after
 int FUN_008584b0(void *, const Event008584b0 *event) /* derived name */
 {
-    FUN_00cb8790(D_57ca270, FUN_00217db0, event->name);
+    Name name(event->name);
+    FUN_00cb8790(D_57ca270, FUN_00217db0, name);
     return 1;
 }

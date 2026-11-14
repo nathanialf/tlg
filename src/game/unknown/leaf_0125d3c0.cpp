@@ -14,6 +14,11 @@ struct Pair0125d3c0 { /* derived name */
 struct Table0125d3c0 { /* derived name */
     u8 unknown0[0x20];
     Pair0125d3c0 unknown20[1];
+
+    const Pair0125d3c0 &at(int index) const
+    {
+        return unknown20[index];
+    } /* derived name */
 };
 
 struct Object0125d3c0 { /* derived name */
@@ -21,10 +26,10 @@ struct Object0125d3c0 { /* derived name */
     Table0125d3c0 *unknown8;
 };
 
-// NONMATCHING: greedy's assignment: the base gives the table pointer rax and the scaled index rcx (`[rax + rcx + 0x20]`), the compile rcx and rax; every instruction else equal. Returned as one aggregate, the copy is a single 32-byte ymm move (the base copies the two vectors)
+/* the two vectors are copied one by one (returned as one aggregate assignment the copy is a single 32-byte move) */
 Pair0125d3c0 FUN_0125d3c0(const Object0125d3c0 *self, int index) /* derived name */
 {
-    const Pair0125d3c0 &entry = self->unknown8->unknown20[index];
+    const Pair0125d3c0 &entry = self->unknown8->at(index);
     Pair0125d3c0 result;
     result.unknown0 = entry.unknown0;
     result.unknown10 = entry.unknown10;

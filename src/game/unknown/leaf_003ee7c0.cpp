@@ -10,7 +10,7 @@ struct IdList003ee7c0 { /* derived name */
     u32 *ids;           /* +0x0 */
     u32 count;          /* +0x8 */
 
-    int indexOf(u32 id) const
+    int indexOf(const u32 &id) const
     {
         for (int i = 0; i < count; i++) {
             if (ids[i] == id)
@@ -43,8 +43,6 @@ struct Object003ee7c0 { /* derived name */
     u32 id; /* +0x24 */
 };
 
-// NONMATCHING: list-ilp order: the base loads the array before the id
-// (`mov rax, [rcx+0x5488]; mov edi, [rdi+0x24]`), the build the id first
 int FUN_003ee7c0(const Object003ee7c0 *self, const Argument003ee7c0 *argument) /* derived name */
 {
     World003ee7c0 *world = argument->world;

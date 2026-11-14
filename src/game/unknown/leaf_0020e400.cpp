@@ -22,14 +22,13 @@ struct Object057c9390 /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: two independent instructions in the other order: the base stores the
-// type, then advances the top with `add rdx, 0x10`, where this computes `lea rax,
-// [rdx + 0x10]` before the type store.
+// NONMATCHING: 9/16, the instructions and their order are the base's; the registers are not (the
+// base keeps the stack top in rdx and the first compare's byte in cl, the build rcx and dl)
 int FUN_0020e400(lua_State *state) /* derived name */
 {
     int phase = D_57c9390->unknown128->unknownFc;
     HksObject *top = state->top;
-    top->value.boolean = phase == 7 || phase == 0;
+    top->value.boolean = phase == 0 || phase == 7;
     top->type = 1;
     state->top = top + 1;
     return 1;

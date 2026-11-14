@@ -53,6 +53,11 @@ struct Target00eb1360 { /* derived name */
     };
 
     int unknown24;
+
+    void setValue(const u64 &v)
+    {
+        value = v;
+    } /* derived name */
 };
 
 struct Object00eb1360 { /* derived name */
@@ -61,15 +66,12 @@ struct Object00eb1360 { /* derived name */
     Target00eb1360 *target; /* +0x28 */
 };
 
-// NONMATCHING: 21/43, 129 bytes of 129, the compares (3, 2, then 1) and the blocks are the base's;
-// left, two instructions in the other order in each arm (first difference at instruction 11: the
-// base loads the target, `mov rcx, [rdi + 0x28]`, before the first int, the build after it)
 void FUN_00eb1360(Object00eb1360 *self) /* derived name */
 {
     Source00eb1360 *source = self->source;
     if (!source)
         return;
-    self->target->value = source->value;
+    self->target->setValue(source->value);
     switch (source->kind) {
     case 1: {
         Target00eb1360 *target = self->target;

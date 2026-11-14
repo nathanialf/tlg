@@ -10,6 +10,14 @@
  * fields' meaning are not traced. */
 struct Float4_00762ca0 { /* derived name */
     float x, y, z, w;
+
+    void set(float x_, float y_, float z_, float w_) /* derived name */
+    {
+        x = x_;
+        y = y_;
+        z = z_;
+        w = w_;
+    }
 };
 
 struct Source00762ca0 { /* derived name */
@@ -42,30 +50,24 @@ struct Object0079a960 { /* derived name */
     Float4A position;      /* +0x120 */
 };
 
-// NONMATCHING: list-ilp order: the base loads the point x, y, z upward and the record pointer before
-// the fourth word, the build z, y, x and the word first (the same with the offset built by copy and
-// subtractions); 7 of 17, size equal
 void FUN_00762ca0(Object00762ca0 *self, const Source00762ca0 *source) /* derived name */
 {
     self->position = source->position;
     if (!self->unknown140) {
-        Float4_00762ca0 offset = {self->point.x - self->position.x,
-                                  self->point.y - self->position.y,
-                                  self->point.z - self->position.z, self->point.w};
-        self->record->offset = offset;
+        const float x = self->point.x - self->position.x;
+        const float y = self->point.y - self->position.y;
+        const float z = self->point.z - self->position.z;
+        self->record->offset.set(x, y, z, self->point.w);
     }
 }
 
-// NONMATCHING: list-ilp order: the base loads the point x, y, z upward and the record pointer before
-// the fourth word, the build z, y, x and the word first (the same with the offset built by copy and
-// subtractions); as FUN_00762ca0
 void FUN_0079a960(Object0079a960 *self, const Source00762ca0 *source) /* derived name */
 {
     self->position = source->position;
     if (!self->unknown100) {
-        Float4_00762ca0 offset = {self->point.x - self->position.x,
-                                  self->point.y - self->position.y,
-                                  self->point.z - self->position.z, self->point.w};
-        self->record->offset = offset;
+        const float x = self->point.x - self->position.x;
+        const float y = self->point.y - self->position.y;
+        const float z = self->point.z - self->position.z;
+        self->record->offset.set(x, y, z, self->point.w);
     }
 }
