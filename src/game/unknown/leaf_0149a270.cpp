@@ -35,10 +35,6 @@ struct Object0149a270 { /* derived name */
 unsigned FUN_012fcd90(const Descriptor0149a270 *descriptor);
 void FUN_012fcb30(Descriptor0149a270 *descriptor, unsigned value);
 
-// NONMATCHING: 13/36 alone, the compares (11, then 1) and the blocks are the base's; instruction
-// order (list-ilp): the base takes the descriptor's address, `lea r14, [rbx + 0x58]`, before the
-// first call and keeps it in r14 (FUN_00e9a310's class), the build takes it after the call; and in
-// the copying arm eax and ecx are exchanged
 void FUN_0149a270(Object0149a270 *self) /* derived name */
 {
     Source0149a270 *source = self->source;

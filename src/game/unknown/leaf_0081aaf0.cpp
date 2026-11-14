@@ -10,7 +10,4 @@ class Value0081aaf0 : public Node00503fb0 /* derived name */
 {
 };
 
-// NONMATCHING: a register exchange (96/101): at 0x81abc4 the base has the count in eax and the block in rcx
-// (`mov eax, [r14+8]; mov rcx, [r14]; dec eax`), the build the block in rax and the count in ecx; the copies
-// 0x8298d0, 0x82f610, 0xc64690, 0xd66a00, 0xd703b0 wait on it.
 template void Array0081aaf0<AtomicRef0045c470<Value0081aaf0>>::removeUnordered(unsigned);

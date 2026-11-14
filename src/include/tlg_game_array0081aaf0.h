@@ -21,8 +21,10 @@ template <class T> class Array0081aaf0 /* derived name */
     void removeUnordered(unsigned index) /* derived name */
     {
         unsigned last = count - 1;
-        if (index < last)
-            data[index] = data[last];
+        if (index < last) {
+            T &element = data[index];
+            element = data[last];
+        }
         data[count - 1].release();
         --count;
     }

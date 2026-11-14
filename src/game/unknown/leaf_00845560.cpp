@@ -23,10 +23,6 @@ struct Object057c9390 /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: two instructions in the other order: with the bool converted to float the
-// arms lay out as the base's (`jne` to the 1.0 load), but the base loads the top (`mov rax,
-// [rdi+0x48]` at 0x84556b) before the compare and this after the arms join; the two
-// statements in either order give the same bytes.
 int FUN_00845560(lua_State *state) /* derived name */
 {
     const Member057c9390_60 *member = D_57c9390->unknown60;

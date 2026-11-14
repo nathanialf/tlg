@@ -35,13 +35,10 @@ class Object016be848 : public Object00cef2a0 /* derived name */
     Held00eb17d0 *unknown28; /* +0x28 */
 };
 
-// NONMATCHING: two residuals. The base's destructor (leaf_00cef2a0.cpp)
-// keeps its vptr store in the base and compiles to a bare
-// return here (a destructor that keeps only its vptr store, the class held
-// open), so the base's store after the release and the frame around the
-// release's call are missing; and the count's merge in the release loop is
-// `or esi, edx` where the base has `lea esi, [rsi + rdx]` (leaf_00eaaec0.cpp's
-// residual, `lea` against `or`).
+// NONMATCHING: the complete destructor only (the deleting one is equal): the base's
+// destructor keeps its vptr store in the base and compiles to a bare return here (a
+// destructor that keeps only its vptr store, the class held open), so the base's store
+// after the release and the frame around the release's call are missing.
 Object016be848::~Object016be848()
 {
     unknown28->holder10 = 0;

@@ -18,11 +18,6 @@ class Object00eaaec0 /* derived name */
     Referenced00eaaec0 *unknown10; /* +0x10 */
 };
 
-// NONMATCHING: the count's merge in the release loop: the base has `lea esi,
-// [rsi + rdx]` where this build has `or esi, edx` (InstCombine's or of the
-// masked halves either way; the base converts the or-as-add pseudo to three
-// addresses with the low half live after the loop: 63 such `lea` in the game
-// region's releases, the increments keep `or`); one byte short.
 Object00eaaec0::~Object00eaaec0()
 {
     unknown10->removeReference();

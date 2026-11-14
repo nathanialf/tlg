@@ -28,12 +28,17 @@ class Referenced00eaaec0 /* derived name */
             /* volatile: other threads change the count between the reads,
              * so each attempt reads it again (0xeaaee0 reloads it). */
             volatile u32 *count = &memSizeAndRefCount;
+            /* the lowered count is formed before the size is masked
+             * (0xeaaee2: `lea edx, [rax + 0xffff]; movzx edx, dx` ahead of
+             * `and esi, 0xffff0000`) and tested after the exchange */
             u32 oldValue, newValue;
+            u32 newCount;
             do {
                 oldValue = *count;
-                newValue = (oldValue & 0xffff0000) | u16(oldValue - 1);
+                newCount = (oldValue - 1) & 0xffff;
+                newValue = (oldValue & 0xffff0000) | newCount;
             } while (__sync_val_compare_and_swap(count, oldValue, newValue) != oldValue);
-            if (u16(newValue) == 0) {
+            if (newCount == 0) {
                 deleteThis();
             }
         }
