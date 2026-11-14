@@ -1360,7 +1360,7 @@ flag (0xde6c40, 0x778080), and the prefix covers the marks' bounds, not the libr
 string range: a float-bearing sndx unit outside 0xec18b0 to 0xf15220 joins the prefix when it
 is written.
 
-## D79 (proposed number). CodeGenPrepare's loop-preheader protection is not in the base: `-mllvm -disable-preheader-prot` on the game line (2026-11-14)
+## D80. CodeGenPrepare's loop-preheader protection is not in the base: `-mllvm -disable-preheader-prot` on the game line (2026-11-14)
 
 **Question.** Held beside D63 since round 202B: LLVM r265397 (d3fb38cae522, 2016-04-05, first release 3.9.0;
 lib/CodeGen/CodeGenPrepare.cpp:471 to 474, the first test of isMergingEmptyBlockProfitable; its option
