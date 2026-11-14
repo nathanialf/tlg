@@ -7972,3 +7972,4 @@ FUN_00b72dd0 src/game/unknown/leaf_00b72dd0.cpp
 FUN_01345750 src/game/unknown/leaf_01345750.cpp
 FUN_00abcf40 src/game/unknown/leaf_00abcf40.cpp
 FUN_006df470 src/game/unknown/leaf_006df470.cpp _ZN14Record006df470aSERKS_
+_ZN14Object004ac9b0D1Ev src/game/unknown/leaf_004ac9b0.cpp

@@ -13,6 +13,7 @@
 #include <new>
 
 #include "tlg_types.h"
+#include "tlg_libc.h"
 #include "tlg_game_block.h"
 
 template <class T> class Array05943280 /* derived name */
@@ -147,6 +148,43 @@ template <class T> class Array05943280 /* derived name */
             capacity = 0;
             data = static_cast<T *>(reallocateBlock(data, 0, alignof(T), D_5943280[allocator]));
         }
+    }
+
+    /* the element at a signed index (`movsxd rcx, eax; shl rcx, 4` inside
+     * the loops at 0xf1a990 and 0xfc56e0, whose counter is compared
+     * unsigned) */
+    const T &at(int index) const /* derived name */
+    {
+        return data[index];
+    }
+
+    /* the index of the first element equal to `key`, or -1 (`test eax,
+     * eax; js` on the result at 0xf1a9a9) */
+    template <class K> int find(const K &key) const /* derived name */
+    {
+        for (unsigned i = 0; i < count; ++i)
+            if (at(i) == key)
+                return i;
+        return -1;
+    }
+
+    /* the element at `index` destroyed and the ones after it moved down
+     * (0xf1a9ad to 0xf1a9ff: the size in 32 bits, `shl edx, 4; sub edx,
+     * ebx`) */
+    void removeAt(unsigned index) /* derived name */
+    {
+        data[index].~T();
+        memmove(&data[index], &data[index + 1], (count - index - 1) * unsigned(sizeof(T)));
+        --count;
+    }
+
+    /* every element destroyed and the count cleared, the block and the
+     * capacity kept (0x1343a80, 0x13544e0) */
+    void removeAll() /* derived name */
+    {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
+        count = 0;
     }
 
     const T *begin() const

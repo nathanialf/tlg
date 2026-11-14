@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_array.h"
 #include "tlg_game_node.h"
 
 /* derived names: FUN_013618c0 over the member at +0x1c0, the count at
@@ -16,9 +17,8 @@ struct Member01367690; /* derived name */
 struct Object01367690 { /* derived name */
     u8 unknown0[0x1c0];
     u8 unknown1c0[0xd8];
-    Element01367690 *elements; /* +0x298 */
-    unsigned elementCount;     /* +0x2a0 */
-    u8 unknown2a4[0x14];
+    Array05943280<Element01367690> elements; /* +0x298 */
+    u8 unknown2b0[0x8];
     unsigned unknown2b8; /* +0x2b8 */
 };
 
@@ -29,7 +29,5 @@ void FUN_01367690(Object01367690 *self) /* derived name */
 {
     FUN_013618c0(reinterpret_cast<Member01367690 *>(self->unknown1c0));
     self->unknown2b8 = 0;
-    for (unsigned i = 0; i < self->elementCount; ++i)
-        self->elements[i].reference.release();
-    self->elementCount = 0;
+    self->elements.removeAll();
 }

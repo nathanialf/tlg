@@ -185,6 +185,19 @@ template <class T> class AtomicRef0045c470 /* derived name */
         return *this;
     }
 
+    /* the reference is dropped the plain way, the pointer cleared first
+     * without an exchange (`mov r12, [r15]; test; mov qword [r15], 0` at
+     * 0xf1aa96, after the destructor's body emptied the same member by
+     * compare-and-swap; the same at 0x4aca44) */
+    ~AtomicRef0045c470()
+    {
+        T *released = object;
+        if (released) {
+            object = 0;
+            dropReference(released);
+        }
+    }
+
     void clear() /* derived name */
     {
         T *old;

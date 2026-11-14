@@ -8,36 +8,19 @@
 #define TLG_GAME_ARRAY01343A80_H
 
 #include "tlg_types.h"
+#include "tlg_game_array.h"
 #include "tlg_game_node.h"
 
-template <class T> class Array01343a80 /* derived name */
+template <class T> class Array01343a80 : public Array05943280<T> /* derived name */
 {
   public:
-    /* empties the array and keeps its block: the elements destroyed first
-     * to last, the array and the count read again at each one, then the
-     * count cleared (0x1343ac0: `mov rax, [r14+0x28]; mov ebx, ebx; mov
-     * r15, [rax+rbx*8]` ... `inc ebx; cmp ebx, [r14+0x30]; jb`, then `mov
-     * [r14+0x30], 0`) */
-    void removeAll() /* derived name */
-    {
-        for (unsigned i = 0; i < count; ++i)
-            data[i].~T();
-        count = 0;
-    }
-
-    /* the state put back from 1 to 0 (`mov eax, 1; lock cmpxchg [r14+0x24],
-     * ecx` at 0x1343b6e, the value found not used) */
     void release() /* derived name */
     {
         compareAndSwap(&state, 1, 0);
     }
 
   private:
-    T *data;            /* +0x0 */
-    unsigned count;     /* +0x8 */
-    unsigned capacity;  /* +0xc */
-    unsigned allocator; /* +0x10 */
-    int state;          /* +0x14 */
+    int state; /* +0x14 */
 };
 
 #endif
