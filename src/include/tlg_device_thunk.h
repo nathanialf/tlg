@@ -52,8 +52,14 @@ struct NodeList583950 {
     unsigned count; /* +0x8 */
     void **items;   /* +0x10 */
     int *offsets;   /* +0x18: the byte offset of each node's value from the second on */
-    u8 unknown20[8];
-    char *values; /* +0x28 */
+    u8 *states;     /* +0x20: a byte for each node (FUN_00583bb0) */
+    char *values;   /* +0x28 */
+};
+
+/* A node of the kind FUN_00583bb0 is given: the flags at +0x28. derived names. */
+struct StateNode583950 {
+    u8 unknown0[0x28];
+    u8 flags; /* +0x28 */
 };
 
 struct Owner583950 {
@@ -107,6 +113,25 @@ struct Owner583950 {
         return nodes->values + offset;
     }
 
+    /* the state byte of the current node, null when the index is past the
+     * list's end. derived name */
+    u8 *currentState() const
+    {
+        const NodeList583950 *nodes = list;
+        return current < nodes->count ? nodes->states + current : 0;
+    }
+
+    /* makes a node of the list the current one and returns its state byte;
+     * null when the node is not in the list (FUN_00583bb0). derived name */
+    u8 *selectState(void *node)
+    {
+        unsigned index;
+        if (!find(node, index))
+            return 0;
+        current = index;
+        return currentState();
+    }
+
     /* hands a node to the handler of its kind, when it has a kind and the
      * kind a handler; the table is read first (FUN_00583d20 reads it before
      * each of its two nodes is tested). derived name */
@@ -125,7 +150,9 @@ struct Owner583950 {
     u8 unknown3c[4];
     NodeList583950 *list;    /* +0x40 */
     Handler583950 *handlers; /* +0x48, indexed by a node's kind */
-    u8 unknown50[0xa0];
+    u8 unknown50[0x88];
+    int unknownd8; /* +0xd8: the state FUN_00583bb0 leaves */
+    u8 unknowndc[0x14];
 
     /* +0xf0: the owner's current value, read by its type at +0x100 (0 an
      * int, 4 a float, 7 three floats: FUN_0058fc10) or as the object the
