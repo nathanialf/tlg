@@ -427,12 +427,21 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
     return log
 
 
+_SYMBOLS: dict[tuple, tuple[dict[str, set[str]], set[str]]] = {}
+
+
 def load_symbols(ver: str) -> tuple[dict[str, set[str]], set[str]]:
-    """({tu: {symbol}}, {renamed internal name}) from build/<slug>/game/symbols.txt."""
+    """({tu: {symbol}}, {renamed internal name}) from build/<slug>/game/symbols.txt.
+    The gate asks once per unit, so the parse is kept for the file as it
+    stands (path, mtime, size); callers read the result and never change it."""
+    p = module_dir(ver) / "symbols.txt"
+    st = p.stat() if p.exists() else None
+    key = (str(p), st.st_mtime_ns if st else None, st.st_size if st else None)
+    if key in _SYMBOLS:
+        return _SYMBOLS[key]
     by_tu: dict[str, set[str]] = {}
     renamed: set[str] = set()
-    p = module_dir(ver) / "symbols.txt"
-    if p.exists():
+    if st:
         for line in p.read_text().splitlines():
             if line.startswith("#"):
                 continue
@@ -441,6 +450,8 @@ def load_symbols(ver: str) -> tuple[dict[str, set[str]], set[str]]:
                 renamed.add(s[1])
             elif len(s) >= 2:
                 by_tu.setdefault(s[0], set()).add(s[1])
+    _SYMBOLS.clear()
+    _SYMBOLS[key] = (by_tu, renamed)
     return by_tu, renamed
 
 

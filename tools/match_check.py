@@ -567,6 +567,9 @@ def _header_static_proofs(tu: str, obj: Path, ver: str) -> tuple[dict[str, str],
 _HEADER_ALIASES: dict[tuple, tuple[dict[str, str], dict[str, str]]] = {}
 
 
+_HEADER_NAMED: dict = {}
+
+
 def with_header_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
     """`funcs` with every reference to a header static resolved: to `D_<hex>`,
     the address config/header_statics gives the copy's unit, when the copy is
@@ -596,15 +599,29 @@ def with_header_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
         if u == tu:
             for n, w in why.items():
                 resolved.setdefault(n, f"!{n}: a header static of {u} whose copy is not proven: {w}")
+    # whether a symbol names a header static: asked for every relocation of
+    # every function of the object once per unit, so answered once per symbol
+    nkey = frozenset(names)
+    if _HEADER_NAMED.get("names") != nkey:
+        _HEADER_NAMED.clear()
+        _HEADER_NAMED["names"] = nkey
+    memo = _HEADER_NAMED.setdefault("memo", {})
+
+    def named(symbol: str) -> bool:
+        v = memo.get(symbol)
+        if v is None:
+            v = memo[symbol] = HEADER_STATIC_SUFFIX.sub("", symbol) in names
+        return v
+
     hit = False
     out = {}
     for k, (code, relocs) in funcs.items():
-        if not any(HEADER_STATIC_SUFFIX.sub("", r.symbol) in names for r in relocs):
+        if not any(named(r.symbol) for r in relocs):
             out[k] = (code, relocs)
             continue
         new = []
         for r in relocs:
-            if HEADER_STATIC_SUFFIX.sub("", r.symbol) in names:
+            if named(r.symbol):
                 hit = True
                 t = resolved.get(r.symbol, f"!{r.symbol}: a header static no unit's proof places")
                 sym = f"D_{t:x}" if isinstance(t, int) else t
