@@ -20,9 +20,9 @@ int FUN_00bed8c0(const void *a, const void *b) /* derived name */
     int order = left->unknown54 - right->unknown54;
     if (order == 0) {
         order = right->unknown58 - left->unknown58;
-    }
-    if (order == 0) {
-        order = (int)(left - right);
+        if (order == 0) {
+            order = (int)(left - right);
+        }
     }
     return order > 0 ? 1 : -1;
 }

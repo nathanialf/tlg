@@ -1,6 +1,5 @@
 /* src/game/sndx/: functions inside the sndx sound runtime (0xec18b0 to 0xf15220; its assert strings name sndx_buss_fx.c, sndx_player_sequence.c and sndx_audioout_orbis.c), built without -ffast-math (config/flags.base.txt); matched before their translation unit is known. */
 #include "tlg_types.h"
-#include <algorithm>
 
 /* derived names: called by FUN_00ee83f0 and by itself: the product of the
  * floats at +0x2d4 and +0x2d8 of a node, raised to the largest such value of
@@ -27,7 +26,10 @@ struct Node00edede0 { /* derived name */
 float FUN_00edede0(Node00edede0 *node) /* derived name */
 {
     float level = node->unknown2d4 * node->unknown2d8;
-    for (Node00edede0 *child = node->children->node; child; child = child->next->node)
-        level = std::max(level, FUN_00edede0(child));
+    for (Node00edede0 *child = node->children->node; child; child = child->next->node) {
+        float value = FUN_00edede0(child);
+        if (value > level)
+            level = value;
+    }
     return level;
 }

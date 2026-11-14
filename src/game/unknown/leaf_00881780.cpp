@@ -26,8 +26,9 @@ extern Object057c9390 *D_57c9390;
 
 int FUN_00881780(lua_State *) /* derived name */
 {
-    D_57c9390->unknownd0->unknowne0 = 0;
-    D_57c9390->unknownd0->unknown210 = 0;
-    D_57c9390->unknownd0->unknown218 = 1;
+    Object057c9390 *object = D_57c9390;
+    object->unknownd0->unknowne0 = 0;
+    object->unknownd0->unknown210 = 0;
+    object->unknownd0->unknown218 = 1;
     return 0;
 }

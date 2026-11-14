@@ -17,8 +17,5 @@ u32 FUN_01395db0(const Object01395db0 *self) /* derived name */
         return 80;
     }
     u32 count = self->unknownd8 + 1;
-    if (count < 2) {
-        count = 2;
-    }
-    return count * 80;
+    return (count > 2 ? count : 2) * 80;
 }

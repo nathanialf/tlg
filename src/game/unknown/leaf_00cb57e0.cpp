@@ -36,10 +36,11 @@ ModuleHandle00cb57e0 *FUN_00cb57e0(const char *name) /* derived name */
             ModuleHandle00cb57e0 *handle = new ModuleHandle00cb57e0;
             handle->module = module;
             handle->unknown8 = 0;
-            for (size_t i = 0; i < module->functionCount; i++) {
-                if (strcmp("ModuleInitialize", module->functions[i].name) == 0) {
-                    if (module->functions[i].function)
-                        module->functions[i].function();
+            ModuleFunction00cb57e0 *function = module->functions;
+            for (size_t i = 0; i < module->functionCount; i++, function++) {
+                if (strcmp("ModuleInitialize", function->name) == 0) {
+                    if (function->function)
+                        function->function();
                     break;
                 }
             }
