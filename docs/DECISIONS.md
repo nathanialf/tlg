@@ -3747,3 +3747,73 @@ order), 0x13cc210 and 0xb5bc40.
 
 Rule from here on: a compiler rule is installed only after the developer forms tried on its
 witnesses under the compiler without it are recorded in its decision.
+
+### D6 fourth addendum: the scheduler flag removed from the game line (2026-11-14)
+
+Question. Is list-ilp the base's DAG scheduler in the game region, or a stand-in for the order of reads in the source?
+Evidence. The flag was chosen on two probe rows (0x639e60, 0x779070). Round 241B and round 244B measured the whole gate
+module without it: of 5047 game rows 22 were lost; 21 are equal in ordinary C++ once the reads are written in the base's
+order (forms per row in round 244B's entry: the header's pushNumber/pushBoolean inline for 0x1b0880, 0xa5edb0, 0x468e60;
+the int read before the top for 0x1b1790, 0x1b2700; a clock_t local for 0xde6990; a local for the target pointer for
+0x639e60, 0x778dc0; inline setters for 0x779070, 0x7793f0; the argument or key read into a local first for 0x69d360,
+0xd41700, 0xd49e00, 0x13580d0, 0x1499360; no block local for 0xdafb70; the operands or compares in the base's order for
+0x12fd1f0, 0x135e2b0, 0x135e310, 0x135e3a0; 0x3e3e00 a pair of floats copied by value, round 249B). 316 drafts are equal
+without it (221 static initializers, 3 deleting destructors, 92 functions), none is lost. The last row, 0x75f2c0, kept
+the base's instructions with another register assignment: the base needs the leave code laid out before the search
+loop's body (round 246B's IR probe); no public release from 3.7.1 to 9.0.0 does that for a loop left by break (round
+249B's oracle), and the row is equal when the reader count is held by a scope object in the init of a for statement
+that runs once, whose destructor clang lays out before the statement's body.
+Decision. The flag is removed from the src/game/ line; the scheduler is upstream's default.
+Trigger to revisit. A second function whose base order no source order gives without the flag; or a ruling that the
+one-pass for scope of 0x75f2c0 is not a developer's form (then 0x75f2c0 is the only row that speaks for the flag, and
+the nine unclaimed loops of its shape in census.tsv are the place to test the scope form again).
+
+**Is the one-pass for scope a developer's form?** (the maintainer's test: "would a dev have
+written it?"). Round 252B, independent of 0x75f2c0: 155 game functions take this reader lock
+in 265 scopes. Three of them (0x45b950, 0x45bad0, 0x45f4e0: a return from inside a loop inside
+the scope) keep clang's cleanup destination index in a register (`mov ebx, 2` before the loop,
+`mov ebx, 1` on the return path, one leave, `cmp ebx, 2`): the for-scope form produces exactly
+those constants and the single leave; plain enter and leave statements produce none, and a
+block-scoped object produces none. So the base's own bytes show the for-statement scope with
+this lock. The idiom is not universal: 0x45bc50, 0x46bf30 and 0xb91cc0 drop the lock by hand
+on two paths (two leaves, no index). No case was found where the plain form is equal and the
+scope form is not. The four claimed users are equal with one shared class and macro.
+
+### The audit of the compiler rules (2026-11-14): outcome and the forms recorded
+
+The maintainer ordered every compiler rule of the game line audited: "validate there's no c++
+source that can reach the matches"; the deciding test: "would a dev have written it?".
+Method: one compiler per rule with that rule alone reversed (36, kept in scratch
+`b241/loo/`), the module swept (rows lost without the rule: `b241/dependents.tsv`), then
+developer forms compiled without the rule on its dependent rows (rounds 240D, 241B, 245D,
+247C; per rule `forms/<rule>/README.txt` under scratch d240, b241, d245, c247), and two-rule
+leave-outs for the switch pair (round 248D).
+
+- **Removed.** D78 (subscript-01): an accessor member reaches its witness. The scheduler flag
+  `-pre-RA-sched=list-ilp` (above): every row that needed it is written without it.
+- **Stands, forms that reach rows without the rule rejected as not a developer's:** newalign-01
+  (D53: `new (operator new(sizeof(T))) T()`, a class operator new that clears, a constructor
+  that memsets a polymorphic object: at 142 of 142 zeroed new-sites a developer writes
+  `new T()`); sextadd-01 (D67: an unsigned return against the data model, whose word holds the
+  sentinels 0xffffffff and 0xfffffffd; an unsigned constant nothing evidences); mbpfwd-01 and
+  cgpload-01 (`__builtin_expect`); tlsprot-01 (`visibility("default")`); dsebegin-01 (a vector
+  store over the vtable pointer; an inline SSE clear the census of 2,266 new-sites speaks
+  against).
+- **Stands, no form found** (about six per row, every dependent row where five or fewer, else
+  sampled by shape): andncmp-01, orlea-01, baapos-01, twoaddr-01, sdichain-01, lftrwidth-01,
+  movddomain-01, reassoc-01, switchwidth-01, gvnpre-01, antidepkeep-01, fixupbw-01,
+  schedops-01, sinkcond-01, mbpfwd-01, `-tail-dup-placement=false`, lsroffsets-01,
+  msinksplit-01, setcc-01, shrinkwrap-01, opnew-01, condjumpdeps-01, sspnop-01,
+  msinksubreg-01, i1load-01, cmp-01, tlsprot-02, D76 (scevaddflags-01), D77 (switchunh-01).
+  Limits: the heavily depended rules were sampled, most runs were a unit alone, and the 186
+  thread-flag readers got no forms of their own under i1load-01 and cmp-01.
+- **Stands on drafts or a pair:** switchjt-01 (D66: no row needs it alone; with D77 it is the
+  coherent 3.7 pair; draft 0x12fd240 needs both; 0x82ee90, equal only with both out, is the
+  open counter-witness); `-no-x86-call-frame-opt` (D55) and `-jump-table-density=40` (D72:
+  rows 0x1af030, 0x1af3c0 since round 240D).
+- **Open:** structor-01 (D45): its six lost rows are lost by symbol name only; its real
+  witnesses (own-vtable `jmp D2` thunks) are free-function stand-ins: one is to be written as
+  a class so the rule rests on a row, or the rule goes.
+
+Rule from here on: a compiler rule is installed only with the developer forms tried without
+it recorded in its decision.
