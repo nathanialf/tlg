@@ -3817,3 +3817,25 @@ leave-outs for the switch pair (round 248D).
 
 Rule from here on: a compiler rule is installed only with the developer forms tried without
 it recorded in its decision.
+
+### D78 second addendum: REINSTATED (2026-11-14)
+
+The withdrawal was the supervisor's error. Its evidence was one function (0x13ace60) that an
+accessor reaches without the rule and a sweep of the rows of that day. The install without
+`subscript-01` was then gated on main at 3456964b: 18 matched rows are not equal without the
+rule (scratch `b249/rows_need_subscript_scores.txt`: 0x7af2c0, 0x968550, 0x9685a0, 0x9685f0,
+0x968820, 0xa18a70, 0xdd1dc0, 0xdd1e40, 0xdd24b0, 0xdde5a0, 0xde2e60, 0xde3000, 0xeb2930,
+0xedffb0, 0x1367690, 0x139ecf0, 0x13af260, 0x13d02a0), all claimed since, most with the
+scheduler flag's removal. Their sources are the plainest C++ there is: `self->unknown50[i]`,
+`_Getptolower()[static_cast<u8>(c)]`, `&array->unknown0[i]`, `self->unknown20[i].unknown6`.
+The maintainer's test ("would a dev have written it?") decides it the other way round from
+how the withdrawal read it: a developer writes the direct subscript, in eighteen functions and
+more to come; an accessor in every one of them would be the contrivance. And the reversed
+commit (clang r282453, 2016-09-26, C++17's evaluation order) cannot be in the base's 3.7-era
+compiler, the same ground on which newalign-01 stands. With the rule installed no matched
+row asks for the base before the index.
+
+So: `tools/patches/llvm-4.0.0-subscript-01-index-before-base.patch` stays; thirty-six
+backports. 0x13ace60 and 0xc8b0d0 keep their accessor and local forms (equal with and without
+the rule). The audit's lesson is recorded with its limit: one function reached by another
+form does not unseat a rule; the question is what the developer wrote at ALL its sites.
