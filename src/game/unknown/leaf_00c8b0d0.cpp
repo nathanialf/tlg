@@ -22,7 +22,8 @@ unsigned FUN_00c8b0d0(Object00c8b0d0 *self, const Float4A &a, const Float4A &b) 
 {
     if (self->entryCount >= 64)
         return 0;
-    Entry00c8b0d0 &entry = self->entries[self->current][self->entryCount++];
+    const unsigned index = self->entryCount++;
+    Entry00c8b0d0 &entry = self->entries[self->current][index];
     entry.unknown0 = a;
     entry.unknown10 = b;
     entry.unknown30 = -1.0f;
