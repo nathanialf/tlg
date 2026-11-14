@@ -10,8 +10,11 @@ struct Format01327490 { /* derived name */
     u8 bits[4]; /* +0x6 */
 };
 
-// NONMATCHING: the base loads the fourth value (`mov eax, [rsi+0xc]`) before the third store, the
-// build after it (34 of 37; `__restrict` on the output vectorizes the loop instead)
+// NONMATCHING: 34 of 37: the base loads the fourth value (`mov eax, [rsi+0xc]`) before the third
+// store, the build after it. A source question (the releases 3.7.1 to 3.9.1 give the build's
+// order from this loop): a load is chained behind the store before it, so the fourth value is
+// read before the third result is stored, and only the fourth (`__restrict` on the output
+// vectorizes the loop instead)
 void FUN_01327490(u32 *out, const u32 *in, const Format01327490 *format) /* derived name */
 {
     for (int i = 0; i < 4; ++i) {

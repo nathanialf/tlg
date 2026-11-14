@@ -35,8 +35,9 @@ struct Holder00dd2290 { /* derived name */
 
 void FUN_013bf850(Object00dd1dc0 *self, Target00dd1dc0 *value); /* derived name */
 
-// NONMATCHING: the counter's zero (`xor ebx, ebx`) above the loop guard in the base, in the
-// preheader after `je` in the build (sunk or materialized there: not traced)
+// NONMATCHING: 28/31: the counter's zero (`xor ebx, ebx`) above the loop guard in the base, in
+// the preheader after `je` in the build (the class of 0x804c70 and 0x373200: the releases to
+// 3.8.1 give the base's order from this source, 3.9.1 the build's)
 void FUN_00dd2290(Object00dd1dc0 *self, const Holder00dd2290 *holder) /* derived name */
 {
     FUN_013bf850(self, holder->record->unknown18);

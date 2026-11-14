@@ -57,8 +57,9 @@ struct Job00845f30 { /* derived name */
     u32 count;          /* +0x20 */
 };
 
-// NONMATCHING: the count tested as 64 bits (`test r14, r14`, the u32 index zero-extended) where
-// the base tests r14d, and the float spilled before the list's loads; not reduced further
+// NONMATCHING: 27/32: the first item's address: the base loads the item table into a register
+// and forms `lea rbx, [rax + rcx*8]`, the build shifts the index and adds the table from memory
+// (`shl rbx, 3; add rbx, [rax]`); the releases to 3.8.1 give the base's form from this source
 void FUN_00845f30(Job00845f30 *job) /* derived name */
 {
     const u32 count = job->count;

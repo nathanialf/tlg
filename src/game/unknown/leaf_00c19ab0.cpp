@@ -22,15 +22,11 @@ struct Object00c19ab0 /* derived name */
     Record00c19ab0 *record; /* +0x10 */
 };
 
-// NONMATCHING: 5/24, the blocks are the base's (the record and its end table loaded in each arm);
-// left, instruction order and its registers: the base loads the count before the item table
-// (`mov ecx, [rdi + 8]` second) and keeps the offset in eax to the return, the build loads the
-// item table first and copies the offset at the end (`mov eax, esi`)
 u8 *FUN_00c19ab0(Object00c19ab0 *self, void *item, unsigned size) /* derived name */
 {
     const unsigned index = self->count;
     self->record->items[index] = item;
-    const unsigned offset = index ? self->record->ends[index - 1] : 0;
+    const u64 offset = index ? self->record->ends[index - 1] : 0;
     self->record->ends[index] = offset + ((size + 15) & ~15u);
     self->count = index + 1;
     return self->record->data + offset;

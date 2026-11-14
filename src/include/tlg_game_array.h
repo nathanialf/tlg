@@ -178,11 +178,13 @@ template <class T> class Array05943280 /* derived name */
 
     /* the element at `index` destroyed and the ones after it moved down
      * (0xf1a9ad to 0xf1a9ff: the size in 32 bits, `shl edx, 4; sub edx,
-     * ebx`) */
+     * ebx`, and worked out before the two addresses: the source is a `lea`
+     * of its own at 0xf1a9ef) */
     void removeAt(unsigned index) /* derived name */
     {
         data[index].~T();
-        memmove(&data[index], &data[index + 1], (count - index - 1) * unsigned(sizeof(T)));
+        const unsigned size = (count - index - 1) * unsigned(sizeof(T));
+        memmove(&data[index], &data[index + 1], size);
         --count;
     }
 

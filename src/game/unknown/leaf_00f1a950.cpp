@@ -32,11 +32,6 @@ class Object016bedd8 : public Object00c1b7f0 /* derived name */
  * base's destructor FUN_00c1b7f0 runs as a tail call. FUN_00f1abf0, slot 1,
  * is the deleting one. The destructor is the class's key function, so this
  * file emits the vtable. */
-// NONMATCHING: 667 bytes against 667, one difference left without the scheduler flag (round 253A): the
-// memmove's source is formed first and with a `lea` in the base (`lea rsi, [r12+rbx]; lea rdi,
-// [r12+rbx-0x10]` at 0xf1a9ef: the block still live at the source), where the build forms the destination
-// first and the source last (`lea rdi; add r12, rbx; ...; mov rsi, r12`); the loop's two recurrences and
-// the reload order are the base's now
 Object016bedd8::~Object016bedd8()
 {
     if (registry)

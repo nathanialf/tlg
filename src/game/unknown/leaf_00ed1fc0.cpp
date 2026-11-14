@@ -7,8 +7,8 @@
  * (0xed83aa, 0xed83bf, 0xef3a69, 0xef443d). */
 // NONMATCHING: 12/50 alone, the compares (`*`, `?`, then 0) and the blocks are the base's; the
 // base keeps the text in one register (rbx, `inc rbx` ahead of the compare with `*`), the build
-// gives the `*` arm's loop its own copy (`mov rbx, r14`, `lea rbx, [rbx + 1]` after the test of the
-// text's end) and reads the outer one in the other arms: the inner loop's exit value rewritten
+// reads the outer loop's text in the arms that leave the `*` loop (the exit values of its first
+// iteration rewritten by the induction variable pass) and gives the `*` loop its own copy
 bool FUN_00ed1fc0(const char *text, const char *pattern) /* derived name */
 {
     switch (*pattern) {

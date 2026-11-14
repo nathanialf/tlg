@@ -47,24 +47,24 @@ static inline float clamp(float value, float low, float high)
     return value < low ? low : (high < value ? high : value);
 }
 
-// NONMATCHING: 16/34, 137 bytes of 139, the compares (1, then 0), the blocks and every operation
-// are the base's; greedy's assignment and instruction order: the base keeps the index in r8 and the
-// set's word in r9 (`mov r8d, esi` second, `bt r9d, ecx`), the build the index in r9 and the word
-// in ecx; the base loads the low bound before the high one (xmm1, xmm2), the build the high first
+// NONMATCHING: 32/34, 139 bytes of 139: the two bounds' loads exchanged in the shared clamp
+// block (the base loads the low bound first, as the source reads them); the build's order is
+// made by the scheduler after register allocation (the loads are low, high before it)
 void FUN_00ef01f0(Object00ef01f0 *self, unsigned index, float amount) /* derived name */
 {
+    float &value = self->values[index];
     if (self->set.test(index)) {
         const Rule00ef01f0 &rule = D_1521f00[index];
         switch (rule.kind) {
         case 0:
-            self->values[index] = clamp(amount * self->values[index], rule.min, rule.max);
+            value = clamp(amount * value, rule.min, rule.max);
             break;
         case 1:
-            self->values[index] = clamp(amount + self->values[index], rule.min, rule.max);
+            value = clamp(amount + value, rule.min, rule.max);
             break;
         }
     } else {
-        self->values[index] = amount;
+        value = amount;
     }
     self->changed.set(index, true);
     self->set.set(index, true);

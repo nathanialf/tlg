@@ -14,21 +14,37 @@ struct Entry013d2860 /* derived name */
     u8 unknown54[0xc];
 };
 
+/* an array of a fixed capacity: raw storage for its elements, then how many
+ * are in use; the end is formed from the size in bytes (the base tests the
+ * product, `shl rax, 5; lea rax, [rax + rax*2]; test rax, rax`, not the
+ * count). The capacity of two is the room between +0x10 and the count. */
+template <typename T, int N>
+struct FixedArray013d2860 /* derived name */
+{
+    T *begin()
+    {
+        return reinterpret_cast<T *>(storage);
+    }
+
+    T *end()
+    {
+        return reinterpret_cast<T *>(storage + count * sizeof(T));
+    }
+
+    u8 storage[N * sizeof(T)]; /* +0x0 */
+    unsigned count;            /* +N * sizeof(T) */
+};
+
 struct Object013d2860 /* derived name */
 {
     u8 unknown0[0x10];
-    Entry013d2860 unknown10[2]; /* +0x10: its extent not traced */
-    unsigned unknownD0;         /* +0xd0 */
+    FixedArray013d2860<Entry013d2860, 2> unknown10; /* +0x10, its count at +0xd0 */
 };
 
-// NONMATCHING: the base tests the byte extent (`shl rax, 5; lea rax, [rax + 2*rax];
-// test rax, rax`) before the loop, a compare InstCombine keeps only when the
-// offset's multiply has no wrap flag; an array index (here, and an index loop)
-// gives the count's test.
 void FUN_013d2860(Object013d2860 *self) /* derived name */
 {
-    for (Entry013d2860 *entry = self->unknown10, *end = self->unknown10 + self->unknownD0;
-         entry != end; ++entry) {
+    for (Entry013d2860 *entry = self->unknown10.begin(), *end = self->unknown10.end(); entry != end;
+         ++entry) {
         entry->unknown0 = 1;
         entry->unknown50 = 0;
     }
