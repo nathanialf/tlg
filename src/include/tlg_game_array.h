@@ -233,11 +233,9 @@ template <class T> class Array05943280 /* derived name */
     void grow(unsigned size)
     {
         unsigned step = size / 2 + 1;
-        if (step > 0x400000 / sizeof(T))
-            step = 0x400000 / sizeof(T);
+        step = step < unsigned(0x400000 / sizeof(T)) ? step : unsigned(0x400000 / sizeof(T));
         unsigned target = size + step;
-        if (target > 0x1fffffff)
-            target = 0x1fffffff;
+        target = target < 0x1fffffffu ? target : 0x1fffffffu;
         capacity = target;
         data = static_cast<T *>(
             reallocateBlock(data, target * sizeof(T), alignof(T), D_5943280[allocator]));
