@@ -26,12 +26,11 @@ struct Object01395e40 { /* derived name */
     int unknownd8;
 };
 
-// NONMATCHING: block placement: the select becomes CodeGenPrepare's branch (D49) and the base lays the 0.0 arm out as the fallthrough with `jne` to the 1.0 arm, the build the 1.0 arm with `je`; == 0 ? 0 : 1 and an if/else stay a select (the CMOV expansion), an early return changes nothing
 int FUN_01395e40(Object01395e40 *self, Argument01395e40 *argument) /* derived name */
 {
     Record01395e40 *record = argument->unknown10->unknown5b0;
     if (record != 0) {
-        record->unknown5c = self->unknownd8 != 0 ? 1.0f : 0.0f;
+        record->unknown5c = self->unknownd8 != 0;
     }
     return 1;
 }
