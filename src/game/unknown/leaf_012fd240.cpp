@@ -6,10 +6,10 @@
  * give 0x442c to 0x4438 (the eight cases from 0x30 a twenty-entry jump table,
  * 0x155c904), any other pair 0x4400; ored with 0x220000, and with 0x8000 and
  * 0x40000 when the first count is 4. What the codes name is not traced. */
-// NONMATCHING: under D72 the table (0x30 to 0x43) and every constant are the base's (the code
-// or'd last keeps 0x220000 out of the cases' constants); left: the low cases' block order (the
-// base falls through to 0x11's block and to the default's before the tail: the switch-weight
-// class) and the tail's or order (Reassociate: sete before cmove in the base)
+// NONMATCHING: 49/58: the table (0x30 to 0x43), every constant and every block are the base's;
+// left, instruction order in the tail (the first difference `cmp edi, 4` against `mov edx,
+// 0x228000`): the IR is the base's tree ((flag << 18 | select) | code) but the build ors the code
+// into the select first and the shifted flag last
 u32 FUN_012fd240(int first, int second) /* derived name */
 {
     u32 code;

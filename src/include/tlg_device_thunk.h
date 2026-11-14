@@ -48,14 +48,6 @@ struct NamedNode583950 {
 /* The owner's list of nodes: a count and an array of pointers (read by
  * FUN_00583980 and its six copies). derived names. */
 struct NodeList583950 {
-    /* the storage of the node at an index: the first node's value is at the
-     * start of the storage, each later one's at its offset (FUN_0057f9d0,
-     * FUN_00584df0 and FUN_0058da20 read it; derived name) */
-    char *value(unsigned index) const
-    {
-        return values + (index != 0 && index < count ? offsets[index - 1] : 0);
-    }
-
     u8 unknown0[8];
     unsigned count; /* +0x8 */
     void **items;   /* +0x10 */
@@ -102,6 +94,17 @@ struct Owner583950 {
         unsigned index;
         if (find(node, index))
             current = index;
+    }
+
+    /* the storage of the current node: the first node's value is at the
+     * start of the list's storage, each later one's at its offset
+     * (FUN_0058da20 and its two copies; FUN_0057f9d0 and FUN_00584df0 read
+     * the same fields). derived name */
+    char *currentValue() const
+    {
+        const NodeList583950 *nodes = list;
+        const int offset = current != 0 && current < nodes->count ? nodes->offsets[current - 1] : 0;
+        return nodes->values + offset;
     }
 
     /* hands a node to the handler of its kind, when it has a kind and the

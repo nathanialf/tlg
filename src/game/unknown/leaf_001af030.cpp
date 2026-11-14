@@ -63,9 +63,6 @@ static inline bool wholeSurface(SurfaceRegion001af030 *region, const Surface001a
     return true;
 }
 
-// NONMATCHING: block placement: the base puts the case-1 body right after its compare
-// (`cmp ecx, 1; jne` falling into it) and tests 4 after the cases above 7; the build lays
-// the case-1 body out last (`je` to it), in either order of the cases
 int FUN_001af030(void *destination, const void *source,
                  const Surface001af030 *surface) /* derived name */
 {
@@ -78,9 +75,6 @@ int FUN_001af030(void *destination, const void *source,
                         region.width * region.height);
 }
 
-// NONMATCHING: block placement: the base puts the case-1 body right after its compare
-// (`cmp ecx, 1; jne` falling into it) and tests 4 after the cases above 7; the build lays
-// the case-1 body out last (`je` to it), in either order of the cases
 int FUN_001af3c0(void *destination, const void *source,
                  const Surface001af030 *surface) /* derived name */
 {

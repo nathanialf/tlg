@@ -13,13 +13,12 @@ struct Object00b5bc40 { /* derived name */
     float unknown11c;
 };
 
-// NONMATCHING: the two stores to +0x11c sunk into one store of a phi (the constants then loaded, SimplifyCFG's sinking of common code with differing operands, new in 4.0) where the base keeps the two immediate stores and duplicates the +0x84 store into the 0 arm: a compiler-history candidate, not tested; the == 0 arm first (as an if chain or a switch) compares 0 first, a switch with case 2 first gets the base compare but the stores stay sunk
 void FUN_00b5bc40(Object00b5bc40 *self) /* derived name */
 {
-    if (self->unknown54 == 2) {
-        self->unknown11c = 2.0f;
-    } else if (self->unknown54 == 0) {
+    if (self->unknown54 == 0) {
         self->unknown11c = 0.5f;
+    } else if (self->unknown54 == 2) {
+        self->unknown11c = 2.0f;
     }
     self->unknown84 = 99999.0f;
 }

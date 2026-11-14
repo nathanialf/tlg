@@ -32,8 +32,6 @@ struct Object013cc210 { /* derived name */
     Record013cc210 *record88; /* +0x88 */
 };
 
-// NONMATCHING: the kinds' compare order: the base tests 5, 2, 1, this build
-// makes a switch of the chain and tests 1, 2, 5 (round 149B's question).
 bool FUN_013cc210(const Filter013cc210 *, int kind, const Query013cc210 *query,
                   const Object013cc210 *object) /* derived name */
 {
@@ -46,17 +44,17 @@ bool FUN_013cc210(const Filter013cc210 *, int kind, const Query013cc210 *query,
     const Target013cc210 *target = record->target20;
     if (!target)
         return false;
-    if (kind == 5)
-        return (target->mask5c & mask) != 0;
-    if (kind == 2) {
-        if (target->flags60 & 8)
-            return (target->mask5c & mask) != 0;
-        return false;
-    }
     if (kind == 1) {
         if (target->flags60 & 8)
             return (target->mask5c & mask) != 0;
         return false;
     }
+    if (kind == 2) {
+        if (target->flags60 & 8)
+            return (target->mask5c & mask) != 0;
+        return false;
+    }
+    if (kind == 5)
+        return (target->mask5c & mask) != 0;
     return false;
 }

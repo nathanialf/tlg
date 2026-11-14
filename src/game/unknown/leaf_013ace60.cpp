@@ -18,9 +18,6 @@ struct Blocks013ace60 {    /* derived name */
     int count;             /* +0x8 */
 };
 
-// NONMATCHING: block placement of the merged index's constant: for i = 0 the base gives the
-// join its 0 in a block of its own (`xor eax, eax; jmp`), the build sets it before the
-// `test esi, esi` of the first block; every other instruction equal
 void FUN_013ace60(Blocks013ace60 *list, int i) /* derived name */
 {
     if (i < 0)

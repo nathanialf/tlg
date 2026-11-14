@@ -49,7 +49,9 @@ struct Object0131f2c0 { /* derived name */
     void *unknown40;
 };
 
-// NONMATCHING: with case 2 written first the compares are the base's (1, 5, then 2), but the build lays out case 2's arm after the chain where the base lays out the 1/5 arm, and loads +0x40 in each arm where the base loads it once in the shared tail call (the call sunk with a phi of the slot, the load not): a layout and sinking residual, case 5 before case 1 in either order no better
+// NONMATCHING: 5/18, the compares (1, 5, then 2) and the blocks are the base's; left, instruction
+// order: the base loads the slot before the argument (+0x40) in each arm, so the argument's load
+// is shared in the tail; the build loads the argument between the vtable and the slot
 void FUN_0131f2c0(Object0131f2c0 *self, Argument0131f2c0 *argument) /* derived name */
 {
     switch (self->unknown34) {

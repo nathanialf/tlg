@@ -14,17 +14,15 @@ struct Object00ef65f0 /* derived name */
     int values[4]; /* +0x5ac */
 };
 
-// NONMATCHING: a switch's cases compared in ascending order (round 149B's class): the base tests
-// 0x2001 first, as written; this build turns the chain into a switch and tests 0x2000 first
 void FUN_00ef65f0(Object00ef65f0 *self, int message, int value) /* derived name */
 {
-    if (message == 0x2001) {
-        self->mode = 2;
-        if (self->count < 4)
-            self->values[self->count++] = value;
-    } else if (message == 0x2000) {
+    if (message == 0x2000) {
         self->mode = 1;
         self->count = 1;
         self->values[0] = value;
+    } else if (message == 0x2001) {
+        self->mode = 2;
+        if (self->count < 4)
+            self->values[self->count++] = value;
     }
 }
