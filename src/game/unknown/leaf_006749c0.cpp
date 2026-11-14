@@ -18,11 +18,12 @@ struct Object006749c0 { /* derived name */
 void FUN_00822e90(Object006749c0 *self); /* derived name */
 void FUN_0134d0e0(Object006749c0 *self); /* derived name */
 
-// NONMATCHING: the timer's compare: the base tests `vucomiss 0, timer; jae` (skip when not
-// above zero), `timer > 0.0f` gives `vucomiss timer, 0; jbe`; the subtraction's registers follow
+// NONMATCHING: 23/25: the compare is the base's (`vucomiss 0, timer; jae`: not below or equal, so
+// an unordered timer counts down too); left, the difference's register (the base subtracts into
+// xmm1, the timer's, the build into xmm0, the argument's)
 void FUN_006749c0(Object006749c0 *self, float elapsed) /* derived name */
 {
-    if (self->timer > 0.0f)
+    if (!(self->timer <= 0.0f))
         self->timer -= elapsed;
     FUN_00822e90(self);
     if (self->unknown298 != 0 || (self->flags & 0x10)) {
