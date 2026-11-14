@@ -31,9 +31,14 @@ class Owner05943280 /* derived name */
     virtual void *slot5(void *block, unsigned size, unsigned alignment,
                         int flags); /* derived name: a reallocation of a block it gave */
     virtual void slot6(void *block, int value); /* derived name; not traced */
+
+    u8 unknown8[0x10];
+    unsigned index; /* +0x18: the owner's index in the table (0x12adad8: what a new array keeps) */
 };
 
 extern Owner05943280 *D_5943280[];
+
+extern __thread Owner05943280 *D_16dc090; /* derived name: the calling thread's heap */
 
 inline void releaseBlock(void *block) /* derived name */
 {

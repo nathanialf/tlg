@@ -10,13 +10,18 @@ struct Type00503fb0 {     /* derived name */
     Type00503fb0 *parent; /* +0x0 */
 };
 
-/* the type itself or one it derives from */
+/* the type itself or one it derives from: the type is compared first, then
+ * each parent as it is read and before it is tested for the end (0xc1ad02 to
+ * 0xc1ad1b: `cmp rax, rcx; je`, then `mov rdx, [rdx]; cmp rdx, rcx; je; test
+ * rdx, rdx; jne`) */
 inline bool isKindOf(const Type00503fb0 *t, const Type00503fb0 *type) /* derived name */
 {
+    if (t == type)
+        return true;
     do {
+        t = t->parent;
         if (t == type)
             return true;
-        t = t->parent;
     } while (t);
     return false;
 }

@@ -10,7 +10,6 @@
  * at 0x5943280, through the heap's slot 4 with 1 as its last argument (as
  * FUN_001afa60 with its alignment of 32); malloc when there is no heap;
  * nothing (null) for a size of 0. */
-extern __thread Owner05943280 *D_16dc090; /* derived name: the calling thread's heap */
 
 void *FUN_0139e0d0(void *, unsigned size, unsigned alignment) /* derived name */
 {

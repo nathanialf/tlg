@@ -14,6 +14,10 @@
 template <class T> class Array01343a80 : public Array05943280<T> /* derived name */
 {
   public:
+    /* the state cleared after the array is made empty (0x12adade, 0xc1acc0:
+     * `mov dword [rbp-0x3c], 0` after the index's store at +0x10) */
+    Array01343a80() : state(0) {}
+
     void release() /* derived name */
     {
         compareAndSwap(&state, 1, 0);

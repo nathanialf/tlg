@@ -13,7 +13,6 @@
  * and passed as 32 bits though the register is kept whole (`mov r14, rdi;
  * test r14d, r14d`): the entries take a 64-bit size and the allocation a
  * 32-bit one. Any argument after the size is not read. */
-extern __thread Owner05943280 *D_16dc090; /* derived name: the calling thread's heap */
 
 static inline void *allocate(unsigned size) /* derived name */
 {

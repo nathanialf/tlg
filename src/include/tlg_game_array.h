@@ -19,6 +19,14 @@
 template <class T> class Array05943280 /* derived name */
 {
   public:
+    /* an empty array whose first block will come from the calling thread's
+     * heap, or from the table's first owner on a thread that has none
+     * (0x12adab9 to 0x12adadb and 0xc1ac94 to 0xc1acbd: the block, the count
+     * and the capacity cleared in one 16-byte store, `mov rcx, [D_16dc090];
+     * xor eax, eax; test rcx, rcx; je; mov eax, [rcx+0x18]`, the index
+     * stored at +0x10) */
+    Array05943280() : data(0), count(0), capacity(0), allocator(D_16dc090 ? D_16dc090->index : 0) {}
+
     /* the elements destroyed first to last, the array and the count read
      * again at each one, then the block released (0x1373420, an array of
      * Names at +0x28 of its holder: `mov r12, [r14+0x28]; mov ebx, ebx;
