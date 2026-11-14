@@ -7,18 +7,7 @@
 #include "tlg_types.h"
 #include "tlg_game_block.h"
 #include "tlg_game_object0134f620.h"
-
-/* derived names: the member whose destructor is 0x1347230 (D15, as
- * Object0134f620's: an array of 0x60-byte entries at +0x0 counted by the int
- * at +0x8, each dropping the reference at +0x58, then the array's block
- * freed; not written: it reads the thread-local flag D_16dc088). Its fields
- * are not traced here; the record at +0x20 is tlg_game_object0134f620.h's. */
-struct Object01347230 /* derived name */
-{
-    ~Object01347230();
-
-    u8 unknown0[0x18];
-};
+#include "tlg_game_object0139b6b0.h"
 
 /* derived names: the record: its destructor releases the block at +0x60,
  * then tears down the members at +0x20 and +0x8 (FUN_00f4dab0 and
