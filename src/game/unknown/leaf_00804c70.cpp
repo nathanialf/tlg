@@ -23,9 +23,6 @@ struct Object00804c70 { /* derived name */
     unsigned itemCount;   /* +0x2a0 */
 };
 
-// NONMATCHING: CodeGenPrepare's preheader protection (held beside D63, round 202B): 63/68; the base has
-// `mov edx, 0xdeadc0de` in the flag's block right after the thread-local's address (0x804d06), the build in a
-// preheader block of the exchange loop behind the `jne`
 void FUN_00804c70(Object00804c70 *self) /* derived name */
 {
     for (unsigned i = 0; i < self->itemCount; ++i)

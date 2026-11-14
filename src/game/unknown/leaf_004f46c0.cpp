@@ -24,9 +24,6 @@ extern Object057c9390 *D_57c9390;
 
 void FUN_005016d0(Object005016d0 *object); /* derived name */
 
-// NONMATCHING: the loop's zero (`xor esi, esi`) in the entry block in the base, in the preheader in
-// the build: CodeGenPrepare's preheader protection (`-disable-preheader-prot`, in 3.9.1 and 4.0.0,
-// not 3.8.1) keeps the empty preheader; with it off this probe gives the base's bytes
 void FUN_004f46c0(Object005016d0 *object) /* derived name */
 {
     List057c9390_c8 *list = D_57c9390->unknownc8;

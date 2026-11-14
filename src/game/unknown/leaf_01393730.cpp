@@ -48,7 +48,6 @@ class Object01393730 /* derived name */
     Record01393730 *unknown8; /* +0x8 */
 };
 
-// NONMATCHING: the loop's zero (xor eax, eax) is in the entry block in the base, in the preheader in the build (round 199C's preheader-protection lead); and the base loads 0x1e28 and 0x2028 each before its own add, the build hoists both
 void Object01393730::slot0(Target01393730 *target, void *, unsigned short *entries)
 {
     for (int i = 0; i < target->count; i++)

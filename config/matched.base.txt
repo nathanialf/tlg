@@ -8334,3 +8334,15 @@ FUN_007af310 src/game/unknown/leaf_007af2c0.cpp _Z12FUN_007af310P14Object007af2c
 FUN_00f51a20 src/game/unknown/leaf_00f51a20.cpp _Z12FUN_00f51a20R6Float4RKS_fff
 FUN_0108d770 src/game/unknown/leaf_0108d770.cpp _Z12FUN_0108d770PfS_ff
 FUN_0109ddf0 src/game/unknown/leaf_0109ddf0.cpp _Z12FUN_0109ddf0PfS_ff
+FUN_00804c70 src/game/unknown/leaf_00804c70.cpp
+FUN_00373200 src/game/unknown/leaf_00373200.cpp
+FUN_004f46c0 src/game/unknown/leaf_004f46c0.cpp
+FUN_00dd2290 src/game/unknown/leaf_00dd2290.cpp
+FUN_00967d40 src/game/unknown/leaf_00967d40.cpp _ZN14Object016b1208D2Ev
+FUN_013936a0 src/game/unknown/leaf_01393730.cpp _ZN14Object013937305slot0EP14Target01393730PvPt
+FUN_013ceda0 src/game/unknown/leaf_013ceda0.cpp _ZN13Array05943280I13Entry013ceda0E15destroyElementsEv
+FUN_01352a50 src/game/unknown/leaf_01352a50.cpp
+FUN_013aca00 src/game/unknown/leaf_013aca00.cpp
+FUN_0135fae0 src/game/unknown/leaf_0135fae0.cpp
+FUN_00231020 src/game/unknown/leaf_00231020.cpp
+_ZN13Entry00231020D1Ev src/game/unknown/leaf_00231020.cpp _ZN13Entry00231020D2Ev

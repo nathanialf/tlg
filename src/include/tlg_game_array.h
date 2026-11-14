@@ -166,6 +166,13 @@ template <class T> class Array05943280 /* derived name */
         return data[index];
     }
 
+    /* the same of an array that is written through (0x231057: `movsxd rax,
+     * r13d; imul rbx, rax, 0xe0` under `cmp r13d, eax; jb`) */
+    T &at(int index) /* derived name */
+    {
+        return data[index];
+    }
+
     /* the index of the first element equal to `key`, or -1 (`test eax,
      * eax; js` on the result at 0xf1a9a9) */
     template <class K> int find(const K &key) const /* derived name */
@@ -195,6 +202,16 @@ template <class T> class Array05943280 /* derived name */
         for (unsigned i = 0; i < count; ++i)
             data[i].~T();
         count = 0;
+    }
+
+    /* every element destroyed, first to last, the count and the block left
+     * as they are: a function of its own over the 32-byte entries at +0x118
+     * of two holders (0x13ceda0, called before the count is cleared at
+     * 0xf3de6b and before the block is released at 0x13d2338) */
+    void destroyElements() /* derived name */
+    {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
     }
 
     const T *begin() const
