@@ -71,4 +71,27 @@ class Registry00f516f0 : public Array05943280<Entry00f516f0> /* derived name */
     }
 };
 
+/* derived names: what several of those classes hold while they are active
+ * and let go of in their destructors: an object released through slot 3 of
+ * its vtable where it is set, the pointer cleared either way (FUN_0101ece0: `mov rdi,
+ * [r14+0x258]; test rdi, rdi; je; mov rax, [rdi]; call [rax+0x18]; mov
+ * [r14+0x258], 0`). The other slots are not traced. */
+class Released0101ece0 /* derived name */
+{
+  public:
+    virtual void slot0();   /* derived name; not traced */
+    virtual void slot1();   /* derived name; not traced */
+    virtual void slot2();   /* derived name; not traced */
+    virtual void release(); /* derived name: slot 3 */
+};
+
+/* derived names: the 0xa0-byte element of the array several of those
+ * classes hold: a Name at +0x0, released for each element when the array is
+ * destroyed (FUN_0101ece0: `lea rdx, [rcx+rcx*4]; shl rdx, 5; mov ecx,
+ * [r13+rdx]` at 0x101ee63). The rest is not traced. */
+struct Element0101ece0 { /* derived name */
+    Name name;           /* +0x0 */
+    u8 unknown4[0x9c];
+};
+
 #endif

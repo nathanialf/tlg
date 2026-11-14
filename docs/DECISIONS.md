@@ -1359,3 +1359,55 @@ threshold test written threshold-first is ordinary. Against: two drafts move awa
 flag (0xde6c40, 0x778080), and the prefix covers the marks' bounds, not the library's full
 string range: a float-bearing sndx unit outside 0xec18b0 to 0xf15220 joins the prefix when it
 is written.
+
+## D79 (proposed number). CodeGenPrepare's loop-preheader protection is not in the base: `-mllvm -disable-preheader-prot` on the game line (2026-11-14)
+
+**Question.** Held beside D63 since round 202B: LLVM r265397 (d3fb38cae522, 2016-04-05, first release 3.9.0;
+lib/CodeGen/CodeGenPrepare.cpp:471 to 474, the first test of isMergingEmptyBlockProfitable; its option
+`-disable-preheader-prot` at :121) keeps an empty loop preheader from being merged into the branch that
+enters it. Does the base's code generator have it?
+
+**Evidence.**
+- Census of the constant (round 260A, a260/census_dead_*.txt): `mov reg, 0xdeadc0de` BEFORE the thread flag's
+  test (`mov; movzx; and; cmp; jne`): base 1,292 sites in 474 functions; the module with the protection 0;
+  the module with the option 8 (d263/census_dead_module_after.txt), in the functions claimed by this round.
+- Census of a counter's zero (d263/loopcensus.py, loopcensus_base.txt, loopcensus_module_before.txt,
+  loopcensus_module_after.txt): a guarded counted loop with `xor r, r` ABOVE the guard's compare (the zero in
+  the guard's block: only possible when the preheader is merged): base 78 sites (76 in unclaimed functions),
+  module with the protection 0 of 39, module with the option 2 (0xdd2290, 0x13936a0). The other form (the zero
+  behind the guard's branch) is 1,064 in the base, 39 in the module before and 43 after: the option's
+  compiler makes both forms, the protected one makes only the second.
+- Whole tree (round 263D, branch r263d): the flag added to the src/game/ line, everything rebuilt, the gate
+  run: `gate: OK`, 8,314 claimed functions before and with the flag, no row differs. 13 of 5,919 module
+  functions change (d263/fnchg.txt, the same 13 as a260/php/fnchg.txt).
+- Rows: six drafts equal as they stood (0x804c70, 0x373200, 0x4f46c0, 0xdd2290, 0x967d40, 0x13936a0); six
+  functions written new under the flag, equal on their first compile (0x13ceda0, 0x1352a50, 0x13aca00,
+  0x135fae0, 0x231020, 0x1347ab0), five of them among the smallest ten of the 474.
+- The commit cannot be in a 3.7-era compiler (first release 3.9.0); D6's third addendum.
+
+**Forms excluded (the audit's rule).** Round 260A, whole module, without the option
+(a260/forms/README_c3_c4_module.txt): the tree's form and six more on 0x804c70, the tree's and three more
+on 0x373200: none moves the constant above the flag's test. By construction: the constant is no value of
+the source; MachineLICM hoists it to the loop's preheader, and only the block the preheader is can change.
+THE TEST at all sites: the sources are a `for` over an array and a release of a counted reference
+(`self->item(i)->unknown80.clear()`, `entries.removeAll()`, `table->clear()`): what a developer writes, at
+474 functions.
+
+**Decision.** `-mllvm -disable-preheader-prot` on the src/game/ line of config/flags.base.txt (commit
+2f670b26 on r263d). An upstream option of the installed compiler, no patch, per prefix.
+
+**What stands against.**
+- 0xdacb80 (17 of 80 with the option, 16 without): the base has `test ecx, ecx; je; mov esi, ecx` before its
+  first page walk (the count's copy behind the guard) and the option gives `mov esi, ecx; test; je`. The
+  function is not reproduced under any configuration (its address shape, the unsunk returns of
+  instruction(): rounds 216B, 218B), so the block is read from a function whose IR is not the base's.
+- 0xabbfd0 (2 of 64) and the four copies of 0xf501a0 (2 of 29) change and stay far (the IndVarSimplify
+  class); nothing to read from them.
+
+**Trigger to revisit.** A game loop whose base bytes show an EMPTY preheader kept apart from its guard (a
+block holding only a phi's copy or a hoisted constant, behind the guard's branch, in a function otherwise
+equal); or 0xdacb80 equal but for that block.
+
+The option is on both game prefixes (src/game/ and src/game/sndx/): Sony's sound runtime was
+built by the same SDK-era compiler, which predates the 3.9 behaviour; its 26 rows are equal
+with and without it.
