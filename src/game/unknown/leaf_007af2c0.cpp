@@ -51,8 +51,6 @@ void FUN_007af2c0(Object007af2c0 *self, const Argument007af2c0 *argument) /* der
     }
 }
 
-// NONMATCHING: the inequality's branch, the build `jne; jp` (une), the base one `je`
-// over the body (one, a one-sided test that skips the unordered case).
 void FUN_007af310(Object007af2c0 *self, const Argument007af2c0 *argument) /* derived name */
 {
     if (argument->unknown238) {

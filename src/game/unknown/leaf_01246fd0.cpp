@@ -16,7 +16,7 @@ int FUN_01246fd0(Stepper00fb5c50 *self, StepContext00fb5c50 *context) /* derived
     StepInput00fb5c50 *input = context->input;
     self->follow(input);
     self->unknown60 = self->level(context);
-    if (input->records[0].value < D_14e1c60 && input->records[1].value < D_14e1c60)
+    if (D_14e1c60 > input->records[0].value && D_14e1c60 > input->records[1].value)
         return 0;
     FUN_01245b60(self, context);
     FUN_01246b00(self);

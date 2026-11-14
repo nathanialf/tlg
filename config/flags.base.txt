@@ -85,6 +85,23 @@
 #                                   in both regions
 #   -fno-exceptions -fno-rtti       Orbis driver defaults (same slides)
 #   -fno-math-errno                 the upstream PS4 toolchain's default
+#   -ffast-math (game, not src/game/sndx/)
+#                                   the game's float code is reassociated and
+#                                   takes no account of NaNs: a sum of products
+#                                   is emitted highest rank first (0xf51a20 and
+#                                   its copies, 0x762bd0, 0x7790f0, 0x108d770,
+#                                   0x109ddf0: equal under the flag with 3.7.1,
+#                                   3.9.1 and this compiler, under no narrower
+#                                   flag); of the region's 25,734 float
+#                                   compares 94 carry a parity branch and of
+#                                   its 4,041 divisions 29 are by a constant,
+#                                   every one of them inside 0xec18b0 to
+#                                   0xf15220, the sndx sound runtime (a C
+#                                   library by its assert strings' file names,
+#                                   sndx_buss_fx.c among them, linked into the
+#                                   game): src/game/sndx/ holds the units whose
+#                                   functions lie there and is the game line
+#                                   without the flag
 #   -fno-honor-nans (libs)          the library region's float equality
 #                                   tests carry no parity branch (121 sites
 #                                   with none, 0 with one; the game region
@@ -130,4 +147,5 @@
 #                                   as builtins (D11: libs 64 calls, 0 tail
 #                                   jumps; game 1,417 calls, 18 tail jumps)
 src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections -fPIC -fstack-protector-strong -fno-math-errno -fno-honor-nans -funsafe-math-optimizations -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include -g
-src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -mllvm -jump-table-density=40 -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -mllvm -jump-table-density=40 -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -ffast-math -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/game/sndx/ cxx=4.0.0-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -no-x86-call-frame-opt -mllvm -tail-dup-placement=false -mllvm -jump-table-density=40 -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include

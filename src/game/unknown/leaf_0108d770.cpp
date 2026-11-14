@@ -7,7 +7,6 @@
  * velocity, scaled by 0.44f and added to the value; the old value becomes the
  * previous one. FUN_0108d770 and FUN_0109ddf0 differ in the scale (0.44 and
  * 0.24). The meaning of the constants is not traced. */
-// NONMATCHING: the two adds' operands are commuted: the base adds the velocity to the product (vaddss xmm0, xmm0, xmm3) and the value to the scaled sum (vaddss xmm0, xmm0, xmm2), the build the other way round; both source orders compile the same
 void FUN_0108d770(float *value, float *previous, float target, float step) /* derived name */
 {
     float current = *value;

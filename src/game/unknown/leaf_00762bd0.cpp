@@ -46,11 +46,6 @@ static inline int signOf(const float &value)
  * again from zero when the two differ in sign; when the state's int at
  * +0x20e8 is set, stores the object's position less the other's and marks
  * the object; then copies the object's int at +0x1ac into the state */
-// NONMATCHING: 25/37, a register exchange: the base keeps the total in r8d and
-// the step in r9d and compares `cmp ecx, edx` (the total's sign first); the
-// build has r9d and r8d. Comparing the step's sign first gives the base's
-// registers and `cmp edx, ecx` (30/37); the step read into a local first and
-// the sign as `< 0 ? -1 : 1` give this build.
 void FUN_00762bd0(Object00762bd0 *self, const Other00762bd0 *other) /* derived name */
 {
     State00762bd0 *state = self->state;

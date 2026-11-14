@@ -1,4 +1,4 @@
-/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+/* src/game/sndx/: functions inside the sndx sound runtime (0xec18b0 to 0xf15220; its assert strings name sndx_buss_fx.c, sndx_player_sequence.c and sndx_audioout_orbis.c), built without -ffast-math (config/flags.base.txt); matched before their translation unit is known. */
 
 /* derived names: the second entry of a table of two callbacks at 0x57ac9c0 in
  * .data (its first FUN_00ed19c0; lea at 0xec577b and on in FUN_00ec4540):

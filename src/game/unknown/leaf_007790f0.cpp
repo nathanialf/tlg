@@ -31,8 +31,6 @@ static inline int signOf(float value)
     return (bits.i >> 31) | 1;
 }
 
-// NONMATCHING: 20/21: one add's operands (the base `vaddss xmm0, xmm1, xmm0`, the total first; the
-// build the step first, whichever way the source adds them: 0x762bd0's residual)
 void FUN_007790f0(Object007790f0 *self) /* derived name */
 {
     Record007790f0 *record = self->unknown68;

@@ -12,10 +12,10 @@ struct Scale01328ed0 { /* derived name */
 
 void FUN_01328ed0(float *out, const int *in, const Scale01328ed0 *scale) /* derived name */
 {
-    double x = in[0] * 2.0 * scale->unknown28[0] - 1.0;
-    double y = in[1] * 2.0 * scale->unknown28[1] - 1.0;
-    double z = in[2] * 2.0 * scale->unknown28[2] - 1.0;
-    double w = in[3] * 2.0 * scale->unknown28[3] - 1.0;
+    double x = scale->unknown28[0] * in[0] * 2.0 - 1.0;
+    double y = scale->unknown28[1] * in[1] * 2.0 - 1.0;
+    double z = scale->unknown28[2] * in[2] * 2.0 - 1.0;
+    double w = scale->unknown28[3] * in[3] * 2.0 - 1.0;
     out[0] = static_cast<float>(x);
     out[1] = static_cast<float>(y);
     out[2] = static_cast<float>(z);

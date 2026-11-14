@@ -7,17 +7,16 @@
  * Its callers are not traced. */
 float FUN_004ada80(float value, float from, float to) /* derived name */
 {
-    if (from <= to) {
-        float step = 0.0f;
-        if (value > from) {
-            if (value >= to) {
-                step = 1.0f;
-            } else {
-                float range = to - from;
-                step = range > 0.0f ? (value - from) / range : 0.5f;
-            }
+    if (to < from)
+        return 1.0f - FUN_004ada80(value, to, from);
+    float step = 0.0f;
+    if (value > from) {
+        if (value >= to) {
+            step = 1.0f;
+        } else {
+            float range = to - from;
+            step = range > 0.0f ? (value - from) / range : 0.5f;
         }
-        return step;
     }
-    return 1.0f - FUN_004ada80(value, to, from);
+    return step;
 }
