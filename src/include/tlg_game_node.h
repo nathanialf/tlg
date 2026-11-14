@@ -195,6 +195,12 @@ template <class T> class AtomicRef0045c470 /* derived name */
             dropReference(old);
     }
 
+    /* the object as it is now (`cmp qword [rbx+0x38], 0` at 0x4ab651) */
+    T *get() const
+    {
+        return object;
+    }
+
   private:
     /* the counts after an exchange: nothing when the same object went in */
     static void exchanged(T *old, T *replacement) /* derived name */
@@ -245,7 +251,10 @@ class Node00503fb0 /* derived name */
     u8 unknownc[0xa];
     u16 flags16;              /* +0x16: bit 2 lets any thread use the node (FUN_00618b00) */
     const Type00503fb0 *type; /* +0x18: the node's own type (FUN_00858390) */
-    u8 unknown20[0x10];
+    u8 flags20;               /* +0x20: bit 1 set when a child is taken out (FUN_00c57120) */
+    u8 unknown21[0x3];
+    int unknown24; /* +0x24: the index of the object's handler in a visitor's table (FUN_00589590) */
+    u8 unknown28[0x8];
     int readers;                         /* +0x30 */
     Node00503fb0 *parent;                /* +0x38 */
     Ref00503fb0<Node00503fb0> *children; /* +0x40 */
