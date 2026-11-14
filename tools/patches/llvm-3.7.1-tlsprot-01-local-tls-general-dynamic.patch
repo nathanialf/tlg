@@ -1,0 +1,33 @@
+llvm-3.7.1 patch: a thread-local with local linkage stays general-dynamic (PS4)
+
+This patch CHANGES CODE GENERATION for a thread-local variable with local
+linkage in position-independent code: it is accessed through the
+general-dynamic model, not local-dynamic. It has NO UPSTREAM STATE: 3.7.1,
+like every release from 3.8.0 to 12.0.0, gives a local thread-local the
+local-dynamic model here, and no public PS4 rule is known. The evidence is
+the executable's own (docs/DECISIONS.md D75): all 21,974 thread-local
+accesses of the base are general-dynamic and none is local-dynamic, while
+its four thread-local bools are read as masked single bits at 9,382
+sites, the form GlobalOpt gives only a variable with local linkage (D74).
+It is the 3.7.1 form of
+tools/patches/llvm-4.0.0-tlsprot-02-local-tls-general-dynamic.patch.
+4.0.0's tlsprot-01 is not needed: it restores 3.8's rule for a protected
+symbol, which 3.7.1 has (only a local or hidden symbol is local-dynamic,
+TargetMachine.cpp:120). Swept alone over the game module built by the
+pristine 3.7.1 (round 270B, 5,496 rows, 6,641 functions): 424 functions
+change; 246 rows become equal (4,789 to 5,035) and none is lost.
+
+--- a/lib/Target/TargetMachine.cpp
++++ b/lib/Target/TargetMachine.cpp
+@@ -117,7 +117,10 @@
+ 
+   TLSModel::Model Model;
+   if (isPIC && !isPIE) {
+-    if (isLocal || isHidden)
++    // PS4: a thread-local with local linkage stays general-dynamic (the
++    // executable has no local-dynamic access, and its thread-local bools
++    // were local when optimised); only a hidden one is local-dynamic.
++    if (isHidden)
+       Model = TLSModel::LocalDynamic;
+     else
+       Model = TLSModel::GeneralDynamic;

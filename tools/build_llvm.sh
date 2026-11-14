@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tools/build_llvm.sh [<version>] [--verify] [--force]: build upstream LLVM +
-# clang <version> (default 4.0.0; 3.3 and 3.6.2 also known) from the release
+# clang <version> (default 4.0.0; 3.3, 3.6.2 and 3.7.1 also known) from the release
 # sources on this host, into tools/cc/llvm-<version>-src/. Built with the host
 # patches alone it is the pristine baseline, and it must compile every probe
 # TU and every file under src/ to the same code as the prebuilt release under
@@ -12,7 +12,9 @@
 #      checked when the pins were taken: 3.3 by Bill Wendling, key C135 49BB
 #      82A1 7681 BF71 43C2 B446 8DF4 E95C 63DC; 3.6.2 by Tom Stellard, key
 #      11E5 21D6 4698 2372 EB57 7A1F 8F08 71F2 0211 9294; 4.0.0 by Hans
-#      Wennborg, key B6C8 F982 82B9 44E3 B0D5 C253 0FC3 042E 345A D05D),
+#      Wennborg, key B6C8 F982 82B9 44E3 B0D5 C253 0FC3 042E 345A D05D;
+#      3.7.1's pins are the SHA-256 of the two tarballs as releases.llvm.org
+#      served them on 2026-11-14, their signatures not checked),
 #      unpack them into tools/cc/src/llvm-<version>.src/ with clang at
 #      tools/clang. The tree is always unpacked fresh from the pinned tarballs.
 #   2. Apply tools/patches/llvm-<version>-host-*.patch in order (-p1 from the
@@ -26,7 +28,7 @@
 #   4. Configure (CMake + ninja, Release, X86 only, no assertions), build the
 #      `clang` target and install it with its resource headers
 #      (lib/clang/<version>/include, which -nostdlibinc relies on for xmmintrin.h).
-#   5. For 4.0.0, build `llvm-link` from the same tree and configuration and
+#   5. For 4.0.0 and 3.7.1, build `llvm-link` from the same tree and configuration and
 #      install it into tools/cc/llvm-<version>-src-tools/bin: the game region
 #      is linked as one module before its -O2 pipeline (tools/game_module.py,
 #      docs/DECISIONS.md D50). It sits beside the prefix, not in it, so the
@@ -48,7 +50,7 @@
 #
 # Host: gcc/g++ (14 tested), cmake >= 3.5, ninja (.venv/bin/ninja or PATH).
 # JOBS sets the parallelism (default 3). Everything here is upstream LLVM
-# (3.3, 3.6.2 and 4.0.0 are under the University of Illinois/NCSA licence);
+# (3.3, 3.6.2, 3.7.1 and 4.0.0 are under the University of Illinois/NCSA licence);
 # nothing comes from a Sony SDK.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -60,6 +62,8 @@ CFE_SHA[3.3]=b1b55de4ab3a57d3e0331a83e0284610191c77d924e3446498d9113d08dfb996
 EXT[3.3]=tar.gz
 LLVM_SHA[3.6.2]=f60dc158bfda6822de167e87275848969f0558b3134892ff54fced87e4667b94
 CFE_SHA[3.6.2]=ae9180466a23acb426d12444d866b266ff2289b266064d362462e44f8d4699f3
+LLVM_SHA[3.7.1]=be7794ed0cec42d6c682ca8e3517535b54555a3defabec83554dbc74db545ad5
+CFE_SHA[3.7.1]=56e2164c7c2a1772d5ed2a3e57485ff73ff06c97dff12edbeea1acc4412b0674
 LLVM_SHA[4.0.0]=8d10511df96e73b8ff9e7abbfb4d4d432edbdbe965f1f4f07afaf370b8a533be
 CFE_SHA[4.0.0]=cea5f88ebddb30e296ca89130c83b9d46c2d833685e2912303c828054c4dc98a
 # The host C++ dialect and options an old tree needs (its CMake sets none):
@@ -70,6 +74,9 @@ CFE_SHA[4.0.0]=cea5f88ebddb30e296ca89130c83b9d46c2d833685e2912303c828054c4dc98a
 # (lib/IR/AsmWriter.cpp:2182, 2198: -print-after-all crashed printing the
 # call graph's external node without -fno-delete-null-pointer-checks).
 HOST_CXXFLAGS[3.3]='-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-checks'
+# 3.7's User::operator new stores the operand count before the constructor
+# runs (lib/IR/User.cpp), the store -fno-lifetime-dse keeps.
+HOST_CXXFLAGS[3.7.1]='-fno-lifetime-dse'
 # --verify: "<from>|<to>" applied to every flags line for this version
 VERIFY_SUBST[4.0.0]='-mllvm -disable-post-ra|-mllvm -pre-RA-sched=list-ilp'
 VERIFY_SUBST[3.3]='-fstack-protector-strong|-fstack-protector'
@@ -77,6 +84,7 @@ VERIFY_SUBST[3.3]='-fstack-protector-strong|-fstack-protector'
 # The IR tools a version's line needs beside its compiler (step 5)
 declare -A EXTRA_TOOLS
 EXTRA_TOOLS[4.0.0]='llvm-link'
+EXTRA_TOOLS[3.7.1]='llvm-link'
 
 VER=4.0.0
 if [[ $# -gt 0 && "$1" != -* ]]; then VER="$1"; shift; fi
@@ -202,7 +210,8 @@ build() {
     echo "==> building clang (-j$JOBS; 30-60 min on 3 cores)"
     local t0=$SECONDS
     # The 2015-2017 sources trip many GCC 14 warnings; keep them in a log.
-    "$NINJA" -C "$BLD" -j"$JOBS" clang > "$BLD/ninja.log" 2>&1 ||
+    # shellcheck disable=SC2086
+    "$NINJA" -C "$BLD" -j"$JOBS" clang ${EXTRA_TOOLS[$VER]:-} > "$BLD/ninja.log" 2>&1 ||
         { grep -E '^FAILED|error:' "$BLD/ninja.log" | head -n 40 >&2; echo "build_llvm: build failed, log $BLD/ninja.log" >&2; exit 1; }
     echo "==> installing into $PREFIX"
     rm -rf "$PREFIX"

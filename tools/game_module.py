@@ -86,9 +86,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tlg_version import build_dir, detect_version  # noqa: E402
 
 MODULE_PREFIX = "src/game/"
-LLVM_LINK = "tools/cc/llvm-4.0.0-src-tools/bin/llvm-link"
-LLVM_OPT = "tools/cc/llvm-4.0.0/bin/opt"
-LLVM_NM = "tools/cc/llvm-4.0.0/bin/llvm-nm"
+
+
+
+def _line_version() -> str:
+    """The LLVM release of the game line's compiler: the `cxx=<version>-src`
+    of the src/game/ line of config/flags.<slug>.txt (4.0.0 when it names
+    none). Bitcode is read only by its own release's tools."""
+    flags = REPO_ROOT / "config" / f"flags.{detect_version(REPO_ROOT)}.txt"
+    for line in flags.read_text().splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and parts[0] == MODULE_PREFIX and parts[1].startswith("cxx="):
+            return parts[1][len("cxx="):].removesuffix("-src")
+    return "4.0.0"
+
+
+# llvm-link built from the line's own source (tools/build_llvm.sh); opt and
+# llvm-nm of the same release as fetched (tools/fetch_llvm.sh)
+LLVM_LINK = f"tools/cc/llvm-{_line_version()}-src-tools/bin/llvm-link"
+LLVM_OPT = f"tools/cc/llvm-{_line_version()}/bin/opt"
+LLVM_NM = f"tools/cc/llvm-{_line_version()}/bin/llvm-nm"
 STANDIN_WRITER = "__standin_writer_"
 LINKAGES = {"private", "internal", "available_externally", "linkonce", "weak", "common", "appending",
             "extern_weak", "linkonce_odr", "weak_odr", "external"}

@@ -1,0 +1,30 @@
+llvm-3.7.1 forward port: a trap after a call to a noreturn function (PS4)
+
+This patch CHANGES CODE GENERATION for every `unreachable` on the PS4
+triple: it is lowered to a trap (`ud2`), so a call to a noreturn function
+is followed by an instruction of its own function. Upstream r264224
+(f81836bd18be, 2016-03-24, "[PS4] Guarantee an instruction after a
+'noreturn' call", first released in 3.9.0) sets
+TargetOptions::TrapUnreachable for the PS4 as it was set for 64-bit
+Windows; 3.7.1 has the option and its lowering
+(SelectionDAGBuilder::visitUnreachable, FastISel) and sets it for
+Windows alone. This is that commit's one condition and nothing else. The
+base has `ud2` after its noreturn calls (503 in the game region,
+config/flags.base.txt). Swept alone over the game module built by the
+pristine 3.7.1 (round 270B, 5,496 rows, 6,641 functions): 138 functions
+change; 106 rows become equal (4,789 to 4,895) and none is lost.
+
+--- a/lib/Target/X86/X86TargetMachine.cpp
++++ b/lib/Target/X86/X86TargetMachine.cpp
+@@ -107,7 +107,10 @@
+   // after a call to 'noreturn' function.
+   // To prevent that, we emit a trap for 'unreachable' IR instructions.
+   // (which on X86, happens to be the 'ud2' instruction)
+-  if (Subtarget.isTargetWin64())
++  // On PS4, the "return address" of a 'noreturn' call must still be within
++  // the calling function, and TrapUnreachable is an easy way to get that
++  // (upstream r264224, first released in 3.9.0).
++  if (Subtarget.isTargetWin64() || Subtarget.isTargetPS4())
+     this->Options.TrapUnreachable = true;
+ 
+   // By default (and when -ffast-math is on), enable estimate codegen for

@@ -1,0 +1,35 @@
+llvm-3.7.1 patch: a weak-linkage structor is emitted as its own function (PS4)
+
+This patch CHANGES CODE GENERATION for the complete constructor and
+destructor (C1, D1) of a class whose structor has weak linkage for the
+linker: an inline definition, an implicit or an explicit template
+instantiation. Upstream 3.7.1 replaces such a D1 by the D2 (RAUW), so
+the executable holds one body and no D1 symbol; the PS4 compiler that
+built the game region kept clang 3.3's rule (CGCXX.cpp,
+TryEmitDefinitionAsAlias: no alias to a linker-weak target, no
+replacement): D1 is emitted as its own function that calls D2, which the
+optimizer inlines when D2 is small and leaves as a tail jump when it is
+not. A strong definition still becomes an alias. It is the 3.7.1 form of
+tools/patches/llvm-4.0.0-structor-01-weak-structor-emitted.patch
+(docs/DECISIONS.md D45: 507 strong aliases, 248 five-byte D1 thunks, 905
+D1 bodies of their own over every vtable of the game region). Swept
+alone over the game module, front end and code generation (round 270B,
+5,496 rows): 53 functions appear that the pristine module does not hold,
+2 change in bytes; the six rows that had no symbol are found (2 equal, 1
+equal but for the thread-local access, 3 differ); no other row changes.
+
+--- a/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
++++ b/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
+@@ -3204,6 +3204,12 @@
+   }
+   llvm::GlobalValue::LinkageTypes Linkage = CGM.getFunctionLinkage(AliasDecl);
+ 
++  // PS4: a structor with weak linkage (inline, template instantiation) is
++  // emitted as its own function that calls the base variant, as clang 3.3
++  // emitted it; only a strong definition becomes an alias.
++  if (llvm::GlobalValue::isWeakForLinker(Linkage))
++    return StructorCodegen::Emit;
++
+   if (llvm::GlobalValue::isDiscardableIfUnused(Linkage))
+     return StructorCodegen::RAUW;
+ 

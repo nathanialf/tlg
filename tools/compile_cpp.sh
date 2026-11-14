@@ -35,6 +35,9 @@ match="${prefix_of:-$src}"
 # The project default is the prebuilt LLVM 4.0.0 under tools/cc/ (tools/setup.sh,
 # docs/TARGETS.md); a prefix's cxx=<version> or TLG_CXX overrides it.
 DEFAULT_CXX="$ROOT/tools/cc/llvm-4.0.0/bin/clang"
+# llvm-link of the compiler's own release (bitcode is read only by its own
+# release's tools): tools/cc/llvm-<version>-src-tools/bin, 4.0.0's otherwise
+LLVM_LINK="$ROOT/tools/cc/llvm-4.0.0-src-tools/bin/llvm-link"
 [[ -x "$DEFAULT_CXX" ]] || DEFAULT_CXX=clang-19
 CXX="${TLG_CXX:-$DEFAULT_CXX}"
 # A prebuilt LLVM release under tools/cc/ links against libtinfo.so.5, which
@@ -54,7 +57,9 @@ fi
 # this prefix (a tools/cc/llvm-<version>/bin/clang, or any path).
 if [[ "$best" == cxx=* ]]; then
     sel="${best%% *}"; sel="${sel#cxx=}"; best="${best#* }"
-    if [[ -x "$ROOT/tools/cc/llvm-$sel/bin/clang" ]]; then CXX="$ROOT/tools/cc/llvm-$sel/bin/clang"
+    if [[ -x "$ROOT/tools/cc/llvm-$sel/bin/clang" ]]; then
+        CXX="$ROOT/tools/cc/llvm-$sel/bin/clang"
+        [[ -x "$ROOT/tools/cc/llvm-$sel-tools/bin/llvm-link" ]] && LLVM_LINK="$ROOT/tools/cc/llvm-$sel-tools/bin/llvm-link"
     else CXX="$sel"; fi
     case "$CXX" in */tools/cc/*|tools/cc/*) export LD_LIBRARY_PATH="$ROOT/tools/cc/shim${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;; esac
 fi
@@ -69,7 +74,7 @@ mkdir -p "$(dirname "$obj")"
 case "$mode" in
     ir) "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -emit-llvm -Xclang -disable-llvm-optzns \
             -c "$src" -o "$obj"
-        exec "$ROOT/tools/cc/llvm-4.0.0-src-tools/bin/llvm-link" -S -o "${obj%.bc}.ll" "$obj" ;;
+        exec "$LLVM_LINK" -S -o "${obj%.bc}.ll" "$obj" ;;
     codegen) exec "$CXX" $best -Qunused-arguments -c "$src" -o "$obj" ;;
     *) exec "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -c "$src" -o "$obj" ;;
 esac
