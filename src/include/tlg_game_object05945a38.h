@@ -5,6 +5,7 @@
 #ifndef TLG_GAME_OBJECT05945A38_H
 #define TLG_GAME_OBJECT05945A38_H
 
+#include "tlg_game_node.h"
 #include "tlg_sce_kernel.h"
 #include "tlg_types.h"
 
@@ -47,5 +48,22 @@ struct Object05945a38 { /* derived name */
 };
 
 extern Object05945a38 *D_5945a38;
+
+/* the object of a type under a name. A name that already names an object
+ * this thread may use: with mode 1 the object gives its name up
+ * (FUN_00cbc2d0 with the empty name) and a new one is made; with any other
+ * mode the object itself is returned when its type is `type`, else null.
+ * Otherwise a new one is made under the lock: the type's function runs with
+ * the second heap of the table at 0x5943280 as the thread's heap and the
+ * thread's flag at 0x16dc089 set, the type's listener is told, and the
+ * object is registered (FUN_00cbb990). Null for a null type and for a type
+ * that makes nothing. */
+Node00503fb0 *FUN_00cbc5a0(Object05945a38 *owner, Type00503fb0 *type, const Name &name,
+                           int mode); /* derived name */
+/* gives the object the name; the result is not read where it is called */
+int FUN_00cbc2d0(Object05945a38 *owner, Node00503fb0 *object, const Name &name); /* derived name */
+/* registers a new object of the type under the name at +0xc of it */
+void FUN_00cbb990(Object05945a38 *owner, Type00503fb0 *type, Node00503fb0 *object,
+                  const Name *name); /* derived name */
 
 #endif

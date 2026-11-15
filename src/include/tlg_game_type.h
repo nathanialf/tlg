@@ -6,8 +6,28 @@
 /* derived names: a type is a chain of types linked by their first field;
  * an object's type pointer is compared along the chain with the address a
  * global holds (FUN_00503fb0, FUN_00644eb0, FUN_013937c0) */
+class Node00503fb0; /* derived name */
+class Name;         /* derived name */
+
+/* what a type is told of each object made of it (slot 0, called with the
+ * new object or null by FUN_00cbc5a0 at 0xcbc775); the other slots are not
+ * traced */
+class TypeListener00cbc5a0 /* derived name */
+{
+  public:
+    virtual void created(Node00503fb0 *object); /* derived name */
+};
+
 struct Type00503fb0 {     /* derived name */
     Type00503fb0 *parent; /* +0x0 */
+    /* +0x8: makes an object of the type under a name, null for a type that
+     * cannot be made (FUN_00cbc5a0: `mov r13, [r13+8]; test r13, r13`, then
+     * `call r13` with the type and the name's address) */
+    Node00503fb0 *(*create)(Type00503fb0 *type, const Name *name);
+    /* +0x10: frees an object of the type (FUN_00cb66f0: `mov rax,
+     * [rbx+0x18]; mov rdi, rbx; jmp [rax+0x10]`) */
+    void (*destroy)(Node00503fb0 *object);
+    TypeListener00cbc5a0 *listener; /* +0x18 */
 };
 
 /* the type itself or one it derives from: the type is compared first, then

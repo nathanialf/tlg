@@ -12,7 +12,7 @@
 #ifndef TLG_GAME_OBJECT016B9108_INLINE_H
 #define TLG_GAME_OBJECT016B9108_INLINE_H
 
-#include "tlg_game_object016b9108.h"
+#include "tlg_game_object01343880.h"
 
 /* derived names: the class whose vtable is at 0x16c7700
  * (config/vtables.derived.base.txt, stored by FUN_0036ac20): its slots 2 to
@@ -78,18 +78,13 @@ class Object016cbbc0 : public Object016b9108 /* derived name */
 };
 
 /* derived names: the class whose vtable is at 0x16cbfe8
- * (config/vtables.derived.base.txt, stored by FUN_0082fc00): its slots 2 to
- * 4 are the base's, slots 5 to 8 its own (declared; not written). Its own
+ * (config/vtables.derived.base.txt, stored by FUN_0082fc00), derived from
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own
  * fields are not traced. */
-class Object016cbfe8 : public Object016b9108 /* derived name */
+class Object016cbfe8 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016cbfe8() {}
-
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16cc1f0
@@ -142,18 +137,13 @@ class Object016cd6e0 : public Object016b9108 /* derived name */
 };
 
 /* derived names: the class whose vtable is at 0x16cda90
- * (config/vtables.derived.base.txt, stored by FUN_009b4ac0): its slots 2 to
- * 4 are the base's, slots 5 to 8 its own (declared; not written). Its own
+ * (config/vtables.derived.base.txt, stored by FUN_009b4ac0), derived from
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own
  * fields are not traced. */
-class Object016cda90 : public Object016b9108 /* derived name */
+class Object016cda90 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016cda90() {}
-
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16cdae8
@@ -239,33 +229,23 @@ class Object016b80d0 : public Object016b9108 /* derived name */
 };
 
 /* derived names: the class whose vtable is at 0x16d1448
- * (config/vtables.derived.base.txt, stored by FUN_00c5a000): its slots 2 to
- * 4 are the base's, slots 5 to 8 its own (declared; not written). Its own
+ * (config/vtables.derived.base.txt, stored by FUN_00c5a000), derived from
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own
  * fields are not traced. */
-class Object016d1448 : public Object016b9108 /* derived name */
+class Object016d1448 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016d1448() {}
-
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16d19b0
- * (config/vtables.derived.base.txt, stored by FUN_00cccbd0): its slots 2 to
- * 4 are the base's, slots 5 to 8 its own (declared; not written). Its own
+ * (config/vtables.derived.base.txt, stored by FUN_00cccbd0), derived from
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own
  * fields are not traced. */
-class Object016d19b0 : public Object016b9108 /* derived name */
+class Object016d19b0 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016d19b0() {}
-
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16d2068
@@ -332,33 +312,23 @@ class Object016d27b8 : public Object016b9108 /* derived name */
 };
 
 /* derived names: the class whose vtable is at 0x16d2de0
- * (config/vtables.derived.base.txt, stored by FUN_00e63af0): its slots 2 to
- * 4 are the base's, slots 5 to 8 its own (declared; not written). Its own
+ * (config/vtables.derived.base.txt, stored by FUN_00e63af0), derived from
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own
  * fields are not traced. */
-class Object016d2de0 : public Object016b9108 /* derived name */
+class Object016d2de0 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016d2de0() {}
-
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16d2f28
- * (config/vtables.derived.base.txt, stored by FUN_00e87bb0): its slots 2 to
- * 4 are the base's, slots 5 to 8 its own (declared; not written). Its own
+ * (config/vtables.derived.base.txt, stored by FUN_00e87bb0), derived from
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own
  * fields are not traced. */
-class Object016d2f28 : public Object016b9108 /* derived name */
+class Object016d2f28 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016d2f28() {}
-
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16d2f80

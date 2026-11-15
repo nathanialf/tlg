@@ -28,6 +28,11 @@ static const int RELEASED = 0xdeadc0de; /* derived name */
 
 extern __thread bool D_16dc088; /* derived name: the thread destroys released objects itself */
 
+/* set for the calling thread while a type's function makes an object
+ * (FUN_00cbc5a0: read, set to 1 and put back around `call r13` at 0xcbc759);
+ * its readers are not traced */
+extern __thread bool D_16dc089; /* derived name */
+
 class Node00503fb0; /* derived name */
 
 void FUN_00c14bc0(Node00503fb0 *node); /* derived name: releases it later */

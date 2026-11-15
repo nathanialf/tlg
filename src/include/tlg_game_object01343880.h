@@ -46,9 +46,12 @@ class Object01343880 : public Object016b9108 /* derived name */
     /* slot 8: FUN_001af750 again */
     virtual void slot8() {} /* derived name */
 
+  protected:
+    void *
+        unknown28; /* +0x28: null from the constructor, set by slot 6; read by a derived class's slot 7 (0xcabe49) */
+
   private:
-    void *unknown28; /* +0x28: null from the constructor, set by slot 6 */
-    int unknown30;   /* +0x30: zero from the constructor; not traced */
+    int unknown30; /* +0x30: zero from the constructor; not traced */
 };
 
 #endif

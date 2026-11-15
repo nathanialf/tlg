@@ -1,22 +1,18 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
+#include "tlg_game_object01343880.h"
 
 /* derived names: the class whose vtable is at 0x16abdb8
  * (config/vtables.derived.base.txt, stored by FUN_00617420 FUN_006175c0 FUN_006176b0), derived from
- * Object016b9108: its slots 2 to 4 are the base's, slots 5 to 8 its own (declared; their bodies are not written here). Its own fields
- * from +0x24 are traced only where its destructor FUN_006175c0 tears them down
+ * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's). Its own fields
+ * from +0x34 are traced only where its destructor FUN_006175c0 tears them down
  * (the Names at +0x78, +0x40); the rest are not traced. */
-class Object016abdb8 : public Object016b9108 /* derived name */
+class Object016abdb8 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object016abdb8();
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 
   private:
-    u8 unknown24[0x1c];
+    u8 unknown34[0xc];
     Name name40; /* +0x40: released by the destructor (`mov eax, [rbx+0x40]; shl 5`) */
     u8 unknown44[0x34];
     Name name78; /* +0x78: released by the destructor (`mov eax, [rbx+0x78]; shl 5`) */
