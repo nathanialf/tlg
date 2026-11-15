@@ -19,13 +19,28 @@ class Object016ad9f8 : public Object00774560 /* derived name */
     virtual ~Object016ad9f8();
 
   private:
-    u8 unknowne8[0x14];
+    u8 unknowne8[0x8];
+    float unknownf0; /* +0xf0: 0.3 from the constructor; not traced */
+    u8 unknownf4[0x8];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
-    u8 unknown100[0x58];
+    u8 unknown100[0x20];
+    float unknown120; /* +0x120: 0.0 from the constructor; not traced */
+    float unknown124; /* +0x124: 4.9 from the constructor; not traced */
+    float unknown128; /* +0x128: 0.0 from the constructor; not traced */
+    float unknown12c; /* +0x12c: 1.0 from the constructor; not traced */
+    float unknown130; /* +0x130: 0.0 from the constructor; not traced */
+    float unknown134; /* +0x134: 0.3 from the constructor; not traced */
+    float unknown138; /* +0x138: 0.0 from the constructor; not traced */
+    float unknown13c; /* +0x13c: 1.0 from the constructor; not traced */
+    float unknown140; /* +0x140: 1.0 from the constructor; not traced */
+    int unknown144;   /* +0x144: zero from the constructor; not traced */
+    int unknown148;   /* +0x148: zero from the constructor; not traced */
+    u8 unknown14c[0xc];
     /* +0x158: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held158;
-    u8 unknown160[0x10]; /* the rest of the 0x170 bytes the creator allocates; not traced */
+    AtomicRef0045c470<Node00503fb0> held158;
+    float unknown160;   /* +0x160: -1.0 from the constructor; not traced */
+    u8 unknown164[0xc]; /* the rest of the 0x170 bytes the creator allocates; not traced */
 };
 
 #endif

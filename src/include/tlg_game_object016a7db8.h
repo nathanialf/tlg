@@ -3,8 +3,9 @@
 #ifndef TLG_GAME_OBJECT016A7DB8_H
 #define TLG_GAME_OBJECT016A7DB8_H
 
-#include "tlg_game_block.h"
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_name.h"
+#include "tlg_math.h"
 #include "tlg_game_object016b9108.h"
 
 /* derived names: the class whose vtable is at 0x16a7db8
@@ -19,28 +20,37 @@ class Object016a7db8 : public Object016b9108 /* derived name */
     virtual ~Object016a7db8();
 
   private:
-    u8 unknown24[0x44];
-    /* +0x68: an owned block, released by the destructor (`mov rax, [rbx+0x68]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block68;
-    u8 unknown70[0x10];
-    /* +0x80: an owned block, released by the destructor (`mov rax, [rbx+0x80]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block80;
-    u8 unknown88[0x10];
-    /* +0x98: an owned block, released by the destructor (`mov rax, [rbx+0x98]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block98;
-    u8 unknowna0[0x10];
-    /* +0xb0: an owned block, released by the destructor (`mov rax, [rbx+0xb0]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 blockb0;
-    u8 unknownb8[0x10];
-    /* +0xc8: an owned block, released by the destructor (`mov rax, [rbx+0xc8]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 blockc8;
-    u8 unknownd0[0x50];
-    /* +0x120: an owned block, released by the destructor (`mov rax, [rbx+0x120]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block120;
-    u8 unknown128[0x10];
-    /* +0x138: an owned block, released by the destructor (`mov rax, [rbx+0x138]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block138;
-    u8 unknown140[0x10]; /* the rest of the 0x150 bytes the creator allocates; not traced */
+    u8 unknown24[0xc];
+    Float4A unknown30; /* +0x30: (0, 0, 0, 1) from the constructor; not traced */
+    Float4A unknown40; /* +0x40: (0, 0, 0, 1) from the constructor; not traced */
+    Float4A unknown50; /* +0x50: (0, 0, 0, 1) from the constructor; not traced */
+    int unknown60;     /* +0x60: zero from the constructor; not traced */
+    u8 unknown64[0x4];
+    Array01343a80<u32>
+        array68; /* +0x68: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<u32>
+        array80; /* +0x80: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<u32>
+        array98; /* +0x98: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<u32>
+        arrayb0; /* +0xb0: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<u32>
+        arrayc8; /* +0xc8: an array whose elements need no destructor, emptied by the constructor */
+    int unknowne0; /* +0xe0: zero from the constructor; not traced */
+    u8 unknowne4[0xc];
+    Float4A unknownf0; /* +0xf0: (0, 0, 0, 1) from the constructor; not traced */
+    int unknown100;    /* +0x100: zero from the constructor; not traced */
+    float unknown104;  /* +0x104: zero from the constructor; not traced */
+    float unknown108;  /* +0x108: zero from the constructor; not traced */
+    float unknown10c;  /* +0x10c: 1.0 from the constructor; not traced */
+    float unknown110;  /* +0x110: zero from the constructor; not traced */
+    int unknown114;    /* +0x114: zero from the constructor; not traced */
+    int unknown118;    /* +0x118: zero from the constructor; not traced */
+    float unknown11c;  /* +0x11c: 1.0 from the constructor; not traced */
+    Array01343a80<u32>
+        array120; /* +0x120: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<u32>
+        array138; /* +0x138: an array whose elements need no destructor, emptied by the constructor */
 };
 
 #endif

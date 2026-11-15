@@ -3,8 +3,8 @@
 #ifndef TLG_GAME_OBJECT016AD930_H
 #define TLG_GAME_OBJECT016AD930_H
 
+#include "tlg_game_link0079ab40.h"
 #include "tlg_game_name.h"
-#include "tlg_game_node.h"
 #include "tlg_game_object00774560.h"
 
 /* derived names: the class whose vtable is at 0x16ad930
@@ -21,15 +21,10 @@ class Object016ad930 : public Object00774560 /* derived name */
   private:
     u8 unknowne8[0x14];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
-    u8 unknown100[0x8];
-    /* +0x108: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held108;
-    u8 unknown110[0x28];
-    /* +0x138: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held138;
-    u8 unknown140[0x30]; /* the rest of the 0x170 bytes the creator allocates; not traced */
+    /* +0x100, +0x130: two links, each reset by the constructor's body */
+    Link0079ab40 link100;
+    Link0079ab40 link130;
+    u8 unknown160[0x10]; /* the rest of the 0x170 bytes the creator allocates; not traced */
 };
 
 #endif

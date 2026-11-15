@@ -3,7 +3,7 @@
 #ifndef TLG_GAME_OBJECT016A9578_H
 #define TLG_GAME_OBJECT016A9578_H
 
-#include "tlg_game_array.h"
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_name.h"
 #include "tlg_game_object016b9108.h"
 
@@ -27,7 +27,7 @@ class Object016a9578 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: an array of Names (the block at +0x28, the count at +0x30): the destructor releases each
      * (`mov r12, [r14+0x28]; mov ecx, [r12+rbx*4]` ... `cmp ebx, eax; jb`), then the block */
-    Array05943280<Name> names28;
+    Array01343a80<Name> names28;
     Name name40; /* +0x40: released by the destructor (`mov eax, [rbx+0x40]; shl 5`) */
 };
 

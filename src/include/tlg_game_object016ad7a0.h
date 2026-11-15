@@ -3,8 +3,8 @@
 #ifndef TLG_GAME_OBJECT016AD7A0_H
 #define TLG_GAME_OBJECT016AD7A0_H
 
+#include "tlg_game_link0079ab40.h"
 #include "tlg_game_name.h"
-#include "tlg_game_node.h"
 #include "tlg_game_object00774560.h"
 
 /* derived names: the class whose vtable is at 0x16ad7a0
@@ -21,15 +21,16 @@ class Object016ad7a0 : public Object00774560 /* derived name */
   private:
     u8 unknowne8[0x14];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
-    u8 unknown100[0x8];
-    /* +0x108: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held108;
-    u8 unknown110[0x28];
-    /* +0x138: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held138;
-    u8 unknown140[0x40]; /* the rest of the 0x180 bytes the creator allocates; not traced */
+    /* +0x100, +0x130: two links, each reset by the constructor's body */
+    Link0079ab40 link100;
+    Link0079ab40 link130;
+    int unknown160;   /* +0x160: zero from the constructor; not traced */
+    int unknown164;   /* +0x164: zero from the constructor; not traced */
+    float unknown168; /* +0x168: 45.0 from the constructor; not traced */
+    float unknown16c; /* +0x16c: 0.001 from the constructor; not traced */
+    u8 unknown170[0x4];
+    int unknown174;     /* +0x174: 1 from the constructor; not traced */
+    u8 unknown178[0x8]; /* the rest of the 0x180 bytes the creator allocates; not traced */
 };
 
 #endif
