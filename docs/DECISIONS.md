@@ -1494,3 +1494,31 @@ with it (0xdacb80). The four reversals drafted for the 4.0.0 line on 2026-11-14 
 were never installed: 3.7.1 has those behaviours. D80's counter-witness 0x13e8670 and the
 counter-witness of the D66/D77 pair (0x82ee90, equal under 3.7.1) are to be re-read under this
 line. The 4.0.0 patch files stay in the tree until a separate commit retires them.
+
+## D82. Four of the gate's proofs extended, each derived or proven against the base every run (2026-11-15)
+
+Round 285B closed four gaps that held back functions already equal to the base; none adds a
+trusted fact, each has a fault test whose message names the wrong input (scratch b285/).
+
+- **A constant in plain .rodata (extends D73).** 3.7.1 has no `.rodata.cst32`. For a game
+  function's PC-relative read of a section that is only allocated, the constant is the
+  operand's width at the addend, and it must equal the base's bytes where the base's own
+  instruction points, inside the game's rodata. No config row. A `lea` of plain .rodata keeps
+  the old rule (there is no access width to read).
+- **A masked copy put back (extends D74).** GlobalOpt's shrink accepts a store of a value
+  loaded from the variable itself: `mov r, byte; and r, 1` then `mov byte, r` into the same
+  operand with the register and the address unwritten between is a copy put back. D_16dc089
+  joins `config/local_data.base.txt` on that proof.
+- **A destructor no row names (changes D15's fold rule).** It resolves through its class's
+  vtable slot (0 the complete or base destructor, 1 the deleting one) when the slot holds the
+  first address of a function-table row, claimed or not; the reference is then checked
+  against the base's field like any target. A class whose destructor is not its first virtual
+  is refused, never wrongly accepted.
+- **The guard of a function-local static.** Game module only. The address is the base's own
+  reference where the function tests the guard and passes it to the guard routines; one
+  address per guard across every claimed function, inside the game's .bss, overlapping no
+  claimed object, header static or other guard. Not fault-tested: the four overlap refusals of
+  the layout (each needs a full layout run).
+
+Seven rows came with them. Trigger to revisit: a refusal by any of the four that a reading of
+the base shows to be right code.
