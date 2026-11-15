@@ -1,12 +1,15 @@
 /* src/include/tlg_game_object01439e30.h: the two 0x150-byte members whose
- * destructors are 0x1439e30 and 0x1491e40 (game region; docs/TARGETS.md).
- * Every name here is derived. */
+ * destructors are 0x1439e30 and 0x1491e40, and the 0x500-byte members their
+ * holders keep before them (game region; docs/TARGETS.md). Every name here
+ * is derived. */
 #ifndef TLG_GAME_OBJECT01439E30_H
 #define TLG_GAME_OBJECT01439E30_H
 
 #include "tlg_types.h"
 #include "tlg_game_array.h"
 #include "tlg_game_block.h"
+#include "tlg_game_object0134f620.h"
+#include "tlg_game_object0139b6b0.h"
 
 /* derived names: the 24-byte element of the array at +0x28 of those
  * classes: a block at +0x0, released for each element when the array is
@@ -61,7 +64,6 @@ class Object016d5eb8 : public Object016d5e90 /* derived name */
   public:
     ~Object016d5eb8();
 
-    virtual void slot1(); /* derived name; not traced */
     virtual void slot3(); /* derived name; not traced */
     virtual void slot4(); /* derived name; not traced */
     virtual void slot5(); /* derived name; not traced */
@@ -112,7 +114,6 @@ class Object016d7de8 : public Object016d7dc0 /* derived name */
   public:
     ~Object016d7de8();
 
-    virtual void slot1(); /* derived name; not traced */
     virtual void slot3(); /* derived name; not traced */
     virtual void slot4(); /* derived name; not traced */
     virtual void slot5(); /* derived name; not traced */
@@ -125,6 +126,56 @@ class Object016d7de8 : public Object016d7dc0 /* derived name */
     u8 unknownd0[0x20];
     Array05943280<int> arrayf0; /* +0xf0 */
     u8 unknown108[0x48];
+};
+
+/* derived names: the class whose vtable is at 0x16d5e60 (four slots; the
+ * row of config/vtables.derived.base.txt names it), the member at +0x240 of
+ * the class whose destructor is FUN_011436d0, which holds its destructor
+ * inlined (0x011436d0 + 0x181: the vtable stored, the block at +0x170
+ * released, then `lea rdi, [r14+0x370]; call 0x134f620` and `lea rdi,
+ * [r14+0x358]; call 0x1347230`: the arrays at +0x130 and +0x118). No
+ * destructor of its own in the executable. 0x500 bytes to the member after
+ * it. The slots are not traced. */
+class Object016d5e60 /* derived name */
+{
+  public:
+    virtual void slot0(); /* derived name; not traced */
+    virtual void slot1(); /* derived name; not traced */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+
+  private:
+    u8 unknown8[0x110];
+    Object01347230 array118; /* +0x118 */
+    Object0134f620 array130; /* +0x130 */
+    u8 unknown148[0x28];
+    OwnedBlock05943280 block170; /* +0x170 */
+    u8 unknown178[0x388];
+};
+
+/* derived names: the class whose vtable is at 0x16d7d90 (four slots; the
+ * row of config/vtables.derived.base.txt names it), the member at +0x240 of
+ * the class whose destructor is FUN_012e1d00, which holds its destructor
+ * inlined (0x012e1d00 + 0x181: the vtable stored, the block at +0x170
+ * released, then `lea rdi, [r14+0x370]; call 0x134f620` and `lea rdi,
+ * [r14+0x358]; call 0x1347230`: the arrays at +0x130 and +0x118). No
+ * destructor of its own in the executable. 0x500 bytes to the member after
+ * it. The slots are not traced. */
+class Object016d7d90 /* derived name */
+{
+  public:
+    virtual void slot0(); /* derived name; not traced */
+    virtual void slot1(); /* derived name; not traced */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+
+  private:
+    u8 unknown8[0x110];
+    Object01347230 array118; /* +0x118 */
+    Object0134f620 array130; /* +0x130 */
+    u8 unknown148[0x28];
+    OwnedBlock05943280 block170; /* +0x170 */
+    u8 unknown178[0x388];
 };
 
 #endif

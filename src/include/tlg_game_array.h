@@ -158,6 +158,20 @@ template <class T> class Array05943280 /* derived name */
         }
     }
 
+    /* empties the array and lets its block go: the count cleared, the
+     * block released, then the pointer and the capacity cleared (ten arrays
+     * of FUN_00fbe380's class, each `mov dword [r14+0x218], 0`, the release
+     * of the block at +0x210, `mov qword [r14+0x210], 0; mov dword
+     * [r14+0x21c], 0`). The arrays it is seen on have elements with no
+     * destructor. */
+    void freeBlock() /* derived name */
+    {
+        count = 0;
+        releaseBlock(data);
+        data = 0;
+        capacity = 0;
+    }
+
     /* the element at a signed index (`movsxd rcx, eax; shl rcx, 4` inside
      * the loops at 0xf1a990 and 0xfc56e0, whose counter is compared
      * unsigned) */

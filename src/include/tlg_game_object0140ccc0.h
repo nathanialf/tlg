@@ -36,7 +36,11 @@ class Object0140ccc0 /* derived name */
 
 /* derived names: the member with four of them (the destructor FUN_013e8670
  * releases the references at +0x2d8, +0x228, +0x178 and +0xc8, then the one
- * at +0x18). */
+ * at +0x18). Four members, not an array of four: each release in the
+ * destructor is laid out as the first is (the thread's flag tested `movzx
+ * eax, byte [rax]; and eax, 1; cmp eax, 1; jne` at 0x13e8745, 0x13e87c5 and
+ * 0x13e8845 as at 0x13e86c0), where the copies the compiler makes of an
+ * unrolled array loop test it `mov al, [rax]; and al, 1; je`. */
 class Object013e8670 /* derived name */
 {
   public:
@@ -46,7 +50,10 @@ class Object013e8670 /* derived name */
     u8 unknown0[0x18];
     Ref00503fb0<Node00503fb0> ref18; /* +0x18 */
     u8 unknown20[0x10];
-    Element0140ccc0 elements[4]; /* +0x30 */
+    Element0140ccc0 element30;  /* +0x30 */
+    Element0140ccc0 elemente0;  /* +0xe0 */
+    Element0140ccc0 element190; /* +0x190 */
+    Element0140ccc0 element240; /* +0x240 */
 };
 
 #endif
