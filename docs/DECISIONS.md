@@ -1522,3 +1522,162 @@ trusted fact, each has a fault test whose message names the wrong input (scratch
 
 Seven rows came with them. Trigger to revisit: a refusal by any of the four that a reading of
 the base shows to be right code.
+
+## D83. The game module is built in two stages; D50 is superseded (2026-11-15)
+
+**Question.** D50 builds the game region as one module through one -O2 pipeline: every unit's unoptimised bitcode linked,
+then optimised once. Several families of base functions cannot be written in any source under that form, and each is what
+a build gives that optimises every unit alone and then runs a link stage over the linked units. Did the developers build in
+two stages, what is the form of the second, and what must the compiler carry for it to hold every row?
+
+**Evidence (by round; scratch under .claude/handoff/scratch-archive/).**
+- 235C (c235/): two-stage forms alone make 24 of the 34 margin deleting destructors equal (after its own -O2 the D0 has
+  inlined its complete destructor, whose callees are still calls; one pipeline inlines the other way). Three base
+  destructors called by 60 derived ones want a link-stage inliner.
+- 238A: the array's clear(unsigned) exists in four copies with the constant folded in (0x52d740 and 0x52d5f0 clear(0x40),
+  0x2e6bd0 clear(0x10), 0xab2940 clear(0x100)): SCCP into a function of local linkage: template members were local when the
+  optimiser saw every caller.
+- 253A (a253/): the seven save/set/restore writers of D_16dc088 cannot enter the one-pipeline module: the bool copy reaches
+  GlobalOpt as zext(trunc(load)) and un-shrinks the flag for 233 reader rows; the base's GlobalOpt saw IR already through
+  InstCombine.
+- 259B (b259/): the forms on the 4.0.0 line's opt: full internalisation refuted (returns no caller reads are kept, one call
+  site included); best form "used odr definitions internal".
+- 269C: linkonce members with one call site are inlined at any size (0x13cd320, 0x1439e30): a local function's
+  single-caller credit.
+- 275C (c275/): stage 1's inliner is at the stock thresholds with the call's own cost credited (inlinecall); no second
+  threshold for the per-unit stage.
+- 279C (c279/): on the 3.7.1 line form Lou loses 12 of 5,444 game rows and gains what no one-stage form gives: 24 of 34
+  margin destructors, the four clears (4 of 4 with the used odr definitions internal, 0 otherwise), 0x13cd320 (171 of
+  173), the seven writers with no reader lost (one stage loses 267).
+- 281D (d281/): against 3.7.1's addLTOOptimizationPasses (GlobalOpt, FunctionAttrs, GVN, SLP; no Reassociate, no
+  TailCallElim): the flag operand order in 0xcbc5a0 and 63 readers (Reassociate ran before the shrink); five constructors
+  that call and return where one pipeline tail-calls (0xb0e520, 0x7a27a0, 0x7a2d90, 0x7aedb0, 0xd63f10); 0xa54400's twelve
+  floats stored 8 + 4 (two SLP runs).
+- 282E (e282/): one unit in two stages (ts.sh): 0x13cd320 equal with `if (p) { delete[] p; p = 0; }`; 0x1439e30 and
+  0x1491e40 equal (the base part's implicit destructor inlined); 0xfdbd90 equal; two classes at one vtable address
+  (0x16d6730, about ten pairs): identical local vtables merged at a link stage.
+- 283C (c283/): the form in the gate (tools/game_module.py and the tools beside it) with an opt built from the patched
+  3.7.1 tree. CONTROL: that opt's -O2 over the one-stage module.bc equals the gate's module, 6,667 functions, 0 differ.
+  Under the form 8,352 of 8,379 rows equal at first; after the round's sources every row but four: 0x618b00 10/25,
+  0xb1a200 15/80, 0x307330 26/39, 0x402110 26/39. 21 margin deleting destructors and 0x13cd320 equal in the tree; on
+  313ae159 the five constructors (302 bytes each), 0xc91f20 (255), 0x995b40 (588), 0xa54400 (355, with the link's SLP).
+- 290C (c290/): rebased on 41e71ea6, the gate under form Lou loses exactly the four, .relro and .data identical. 3.7.1's
+  -flto stage 1 (PrepareForLTO: only EliminateAvailableExternally dropped) changes 7 functions, 0 rows. Sweeps over the
+  whole module: stage 1 -O1 939 functions, 158 rows lost; stage 1 -enable-pre=false 2 gained, 25 lost; stage 1
+  -bonus-inst-threshold=0 3 functions, 2 gained (0x618b00, 0xb1a200), 0 lost; link -enable-pre=false 3 functions, 2 gained
+  (0x307330, 0x402110), 0 lost, draft 0xc1ac70 81/97 to 43/97. Form h (both settings) gated OK; REFUSED by the supervisor:
+  two internal thresholds fitted to two rows each.
+- 296C (c296/): two censuses and a private probe build. A: of the base's 1,158 reads of D_16dc098, 909 have the
+  thread-local's address before the bit-4 branch (IR folded; 903 the inline usable test, `movb; xorb 1; testb 1`), 200
+  after (IR two blocks; 187 `movzbl; and 1; cmp 1`, the plain if of 0x618b00), 5 loads hoisted out of loops into `or`, 3
+  two-cmov selects: the base speculates thread-local loads, but not as FoldBranchToCommonDest's bonus instruction (0 of the
+  1,093 sites that meet its precondition). B: stage 1's GVN performs 136 scalar PREs in 133 functions, the base agrees with
+  each; the link's performs 3 (0x307330, 0x402110, draft 0xc1ac70 with no code change), the base agrees with none. Both
+  rules hardwired, opt rebuilt, swept with no options: 6,721 functions, 4 rows gained, 0 lost, draft 0xcb8240 11/162 to
+  51/159; control (the probe opt with the rules off) equal to the installed clang's stage 1 over all 4,519 units.
+- 298C (c298/): before the install, main 58b848bd's ONE-STAGE module.bc through the probe opt (both rules) -O2 and code
+  generation: 0 of 6,827 functions differ, the IR identical to the ten-patch opt's (one stage shrinks D_16dc098 to i1
+  before SimplifyCFG sees the test; ltopre touches only the link pipeline): trees still on one stage keep every row.
+  Installed (tools/build_llvm.sh 3.7.1, thirteen patches: clang-3.7 sha256 f823eee8..., opt b7e31952...). The switch
+  rebased onto 58b848bd and gated with the installed opt: 8,624 of 8,627 rows at first, the three lost being
+  Array05943280's destructors over Element013742e0, Element013aec80, Element0134aa10 (the link inlines D2 into D1; their
+  rows re-pointed to the D1 symbols, each equal); then the hook's gate: OK, 8,627 rows, .text .relro .data identical to the
+  base (commit 76f262ad).
+
+**The form.**
+1. Stage 1: each unit's unoptimised bitcode (the front end at the unit's flags line, `-Xclang -disable-llvm-optzns`)
+   through that line's own -O2 pipeline by the game line's clang, to bitcode (build/base/game/unit/<path>.bc).
+2. llvm-link of the stage 1 units and the generated stand-ins, in the sources' order (tools/cc/llvm-3.7.1-src-tools).
+3. Made internal in the linked module, in one `opt -internalize` step with every other definition preserved and the
+   symbol table compared before and after: the rows of config/local_data.base.txt (D74's proof unchanged) and every
+   linkonce_odr or weak_odr definition that another definition of the module names (an alias is not a user). A function
+   the source defines with external linkage stays external (D50's addendum: kept returns).
+4. Stage 2, the link's pipeline: `opt -std-link-opts -vectorize-loops -vectorize-slp` by the opt built from the patched
+   3.7.1 tree: PassManagerBuilder::populateLTOPassManager at the stock thresholds with both vectorisers on, as libLTO runs
+   it (LTOCodeGenerator.cpp:538-548 sets PMB.LoopVectorize and PMB.SLPVectorize, OptLevel 2).
+5. Code generation alone by the game line's clang (`-Xclang -disable-llvm-optzns`), to build/base/game/module.o.
+The gate's proofs run on the new object: D56's alias proof and D57's header-static proof; a piece of a file static that the
+link's GlobalOpt splits (`<name>.<i>...`) is placed at the offset of the element it names, from the type the unit's IR
+gives the static (tools/ir_layout.py), and counts as its static in D56's proof (0x214710, 0x422e10).
+tools/quick_diff.sh's single-file module goes through both stages and is a pre-screen; a row is claimed under --module.
+
+**The two local rules (patches eleven and twelve of the 3.7.1 line; neither has an upstream state).**
+- tlsbonus-01: SimplifyCFG's FoldBranchToCommonDest takes no load of a thread-local variable as its bonus instruction.
+  Census: 200 base reads of D_16dc098 unfolded where every opt from 3.7.1 to 9.0.0 folds the shape (c296/ctlu); 909 folded
+  by other routes, which the rule leaves alone (isSafeToSpeculativelyExecute is not touched: the blanket rule unfolds
+  0xcbc5a0 against the base). Alone: 3 functions change, 0x618b00 and 0xb1a200 equal, draft 0xcb8240 nearer, 0 lost.
+- ltopre-01: the link stage's GVN does no scalar PRE (GVN(NoLoads, NoScalarPRE), set only in addLTOOptimizationPasses);
+  load PRE and every per-unit pipeline unchanged. Census: link scalar PRE fires in 3 functions of the module, the base
+  agrees with none; stage 1's 136 are all agreed. Alone: 2 functions change, 0x307330 and 0x402110 equal, 0xc1ac70
+  unchanged (81/97), 0 lost. FLAGGED WEAK: three sites, two rows.
+The same install carries a thirteenth patch, lxadd-01 (a locked exchange-add one micro-op in the btver2 scheduling model,
+round 295E): a code-generation model rule independent of this decision, which the supervisor records as its own decision.
+
+**What was excluded.**
+- Whole-program internalisation: refuted by kept returns (D50's addendum; 259B with one call site too); it also deletes the
+  unfinished module's unreached functions.
+- Every odr definition internal, used or not (279C's Lo): 28 claimed functions deleted.
+- A fitted link inline threshold: the 20 base-destructor witnesses want one in (180, 205]: a fit to three callees, not
+  taken.
+- Helper functions the base lacks (279C's external flag reader and setter): the gate held with them (c283/gate3.log) but
+  the base has no function that returns the thread flag (the smallest of the 542 readers of GOT slot 0x16d80f0 is
+  0x618b00) and no `mov [rdi+0x40], esi; ret`: refused.
+- Per-file optimisation levels (stage 1 -O1 or none for the four rows' units): flags are per prefix.
+- The two thresholds of form h (stage 1 -bonus-inst-threshold=0, link -enable-pre=false): each fitted to two rows; the
+  link setting also turns off load PRE, which draft 0xc1ac70 shows the base's link had. Replaced by the two narrow rules.
+- Stage 1 as -O1, -flto (PrepareForLTO), -enable-pre=false, -enable-load-pre=false: each measured above, none holds the four
+  without losses (or at all).
+- A second -O2 in place of the link pipeline (279C's D forms): loses the same rows and six more.
+
+**What stands against.**
+- ltopre-01 rests on three sites; nothing excludes a link stage whose GVN never sees stage 1's phi (an earlier link pass
+  rewriting it) or a stage 1 that ends differently. "No GVN at the link" is excluded (281D's constructors).
+- tlsbonus-01 is narrower than any reason found for it (a thread-local access is a call until the linker relaxes it, which
+  would stop every speculation route; the base takes the others). The 200 unfolded sites are read from the address
+  position, a code-generation signature measured on the module's five sites, not source by source.
+- The 20 base-destructor witnesses still want a lower link threshold (6 of 20 at stock).
+- The unit map: stage 1 is per tree file; where a row shows two tree files were one unit they become one file
+  (user_malloc.c: 0x1b00c0 with its callers). No map of the base's units exists.
+- The seven flag writers keep a four-instruction residual (107 of 111); 0x13f33a0 (the base calls where the build jumps)
+  is not opened; 0xcbc5a0's usable-test order (281D's (a)) is not given by the form.
+
+**Trigger to revisit.** A base function that shows a link-stage scalar PRE (ltopre-01); a plain `(test) || thread-local`
+branch that the base folds (tlsbonus-01); a row that needs a function the source defines with external linkage to be
+local; a claimed function deleted because its only written caller inlines it (write the second caller, do not weaken the
+rule); a split static whose base addresses are not the whole object's; the 20 base-destructor witnesses explained by
+something other than a threshold.
+
+## D84. The locked exchange-add is one micro-op in the game line's CPU model (2026-11-15)
+
+**Question.** Fifteen destructor pairs differ from the base by one register exchange in a loop
+over 0xa0-byte elements that each release a Name: the base has the scaled index in rdx and
+the Name's id in rcx, the build the reverse.
+
+**Evidence.** Round 287E, with an assertions build of 3.7.1's `llc` used only to read the
+scheduler: it is an issue-width hazard, not a heuristic. The btver2 model gives `lock xadd`
+two micro-ops (WriteALULd and WriteRMW) against an issue width of two, so after a
+one-micro-op compare it waits and the bottom-up scheduler takes the sunk address add first.
+Round 292E: no scheduler option holds every row (top-down loses 18, the scheduling model off
+12; 3.7.1 already schedules bottom-up only); the model is byte-identical from 3.6.2 to 4.0.0.
+Round 295E: the later upstream model (r343671, 2018-10-03, first release 8.0.0) sets WriteRMW
+to zero micro-ops for everything: as it stands it loses four rows, all `cmp dword [mem], 0`
+where the base keeps two micro-ops, and moves the `lock cmpxchg` functions away. The locked
+exchange-add ALONE at one micro-op (one InstRW) changes six functions of the module, loses no
+row of 5,701 and makes 0x101ece0, 0x1271520 and 0x128ef90 equal with their D2s; the wider
+forms hold the rows and move two `lock inc` drafts against the base.
+
+**Decision.** `tools/patches/llvm-3.7.1-lxadd-01-locked-xadd-one-micro-op.patch`, the
+thirteenth patch of the game line. A local rule: it has no upstream state and Sony's
+authorship of it is not shown.
+
+**Excluded, with what each costs.** A compiler barrier after the atomic operation in Name's
+release (the three drafts equal, 43 claimed rows lost: the deleting destructors whose inlined
+body holds two or three releases go over the inline threshold; the same for a barrier at all
+201 atomic sites and for a signal fence). `-misched-topdown` (18 rows). `-schedmodel=false`
+(12). r343671 as it stands (4).
+
+**Stands against it.** One loop shape carries it. The module cannot tell it from the wider
+forms except by two far drafts.
+
+**Trigger to revisit.** A base block where a locked exchange-add is scheduled as two
+micro-ops; or a `lock inc` or `lock dec` block that needs one.
