@@ -71,7 +71,14 @@ refuses the row unless
     - at least one load is masked; a loaded byte's first use within WINDOW
       instructions is the mask, or the byte is kept (stored or copied, read
       later: not judged), never a test of the whole byte; a register is
-      stored at most as often as a byte is kept (the saved copy put back);
+      stored at most as often as a byte is kept or a masked copy is put back
+      (the saved copy: GlobalOpt accepts a store of 0, of the one other
+      constant, or of a value loaded from the variable itself, GlobalStatus's
+      analyzeGlobal and TryToShrinkGlobalToBoolean of LLVM 3.7.1; the shrink
+      turns the loaded copy into a load of the bit, so the copy is either the
+      byte kept whole or `mov r, byte; and r, 1` with `mov byte, r` after it
+      into the same operand, the register and the address untouched between:
+      a "copy", _put_back);
     - every store of a constant stores 0 or 1, and 1 is stored somewhere (a
       variable never set would have been folded to its initial value).
 
@@ -172,7 +179,8 @@ for _i in range(8, 16):
 CALL_CLOBBERED = {"rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11"}
 MEM = re.compile(r"^(?:(byte|word|dword|qword|xmmword|ymmword|tbyte) ptr )?(?:[a-z]s:)?\[(.*)\]$")
 NO_DEST = ("cmp", "test", "push", "call", "jmp", "ret", "nop", "bt", "ucomis", "comis", "vucomis", "vcomis")
-LOCAL_KINDS = ("masked", "kept", "plain", "store0", "store1", "store_reg", "other")
+LOCAL_KINDS = ("masked", "copy", "kept", "plain", "store0", "store1", "store_reg", "other")
+CALLEE_SAVED = {"rbx", "rbp", "r12", "r13", "r14", "r15"}
 
 
 def _successors(insns, index, k) -> list[int]:
@@ -212,6 +220,43 @@ def _walk(insns, index, i, limit):
         todo.extend((n, depth + 1) for n in reversed(_successors(insns, index, k)))
 
 
+def _put_back(insns, index, j, fam, operand) -> str | None:
+    """Whether the bit masked at instruction j (`and <fam>, 1`) is stored back
+    into the variable it was loaded from: the text of the first
+    `mov byte ptr [<operand>], <fam's byte>` on a path from j, or None. This is
+    the shrunk form of a saved copy put back (GlobalOpt's
+    TryToShrinkGlobalToBoolean: a store of a loaded copy of the variable
+    becomes a store of the i1 loaded, whose byte the code generator masks). A
+    path ends where the copy or a register of the variable's address is
+    written or read by anything else, at a `ret`, and at a call unless the
+    copy and the address are in registers a call preserves."""
+    addr_regs = {FAMILY[x] for x in re.findall(r"[a-z][a-z0-9]+", operand) if x in FAMILY}
+    walk = _walk(insns, index, j, WINDOW)
+    k = next(walk, None)
+    while k is not None:
+        a2, _s2, mn2, ops2 = insns[k]
+        p2 = ops2.split(", ") if ops2 else []
+        go = True
+        if mn2 == "ret":
+            go = False
+        elif mn2 == "call":
+            go = fam in CALLEE_SAVED and addr_regs <= CALLEE_SAVED
+        elif mn2 != "nop":
+            m = MEM.match(p2[0]) if p2 else None
+            if (mn2 == "mov" and len(p2) == 2 and m and m.group(1) == "byte" and m.group(2) == operand
+                    and FAMILY.get(p2[1]) == fam):
+                return f"0x{a2:x}: {mn2} {ops2}"
+            if any(FAMILY.get(x) == fam for x in re.findall(r"[a-z][a-z0-9]+", ops2)):
+                go = False
+            elif p2 and FAMILY.get(p2[0]) in addr_regs and not mn2.startswith(NO_DEST):
+                go = False
+        try:
+            k = walk.send(go)
+        except StopIteration:
+            k = None
+    return None
+
+
 def _classify(insns, i, is_var, index=None) -> tuple[str, str] | None:
     """What instruction i does to the variable: (kind, text) or None when it
     does not touch it. `is_var(operand)` says whether a memory operand is the
@@ -243,6 +288,7 @@ def _classify(insns, i, is_var, index=None) -> tuple[str, str] | None:
     # of it is read: whole on any path is a refusal, another use on any path a kept byte
     fam = FAMILY[other]
     masked = kept = False
+    copies = []
     walk = _walk(insns, index, i, WINDOW)
     j = next(walk, None)
     while j is not None:
@@ -255,6 +301,10 @@ def _classify(insns, i, is_var, index=None) -> tuple[str, str] | None:
             go = False
             if len(p2) == 2 and FAMILY.get(p2[0]) == fam and p2[1] == "1" and mn2 in ("and", "xor", "test"):
                 masked = True
+                if mn2 == "and":    # the masked bit may be the saved copy, put back later
+                    back = _put_back(insns, index, j, fam, MEM.match(parts[k]).group(2))
+                    if back:
+                        copies.append(back)
             elif len(p2) == 2 and FAMILY.get(p2[0]) == fam and ((mn2 == "test" and FAMILY.get(p2[1]) == fam)
                                                                  or (mn2 == "cmp" and p2[1] == "0")):
                 return "plain", text + f" ; 0x{a2:x}: {mn2} {ops2}"
@@ -264,6 +314,8 @@ def _classify(insns, i, is_var, index=None) -> tuple[str, str] | None:
             j = walk.send(go)
         except StopIteration:
             j = None
+    if masked and not kept and copies:
+        return "copy", text + " ; " + copies[0]
     return ("masked" if masked and not kept else "kept"), text
 
 
@@ -403,11 +455,12 @@ def local_proof(base: BaseElf, names: list[str]) -> tuple[dict[str, str], list[s
                        f"(first {rec['plain'][0]})")
         if c["other"]:
             why.append(f"{c['other']} access(es) are not a byte load or store (first {rec['other'][0]})")
-        if not c["masked"]:
+        if not c["masked"] and not c["copy"]:
             why.append("no read takes one bit of the byte")
-        if c["store_reg"] > c["kept"]:
-            why.append(f"{c['store_reg']} register store(s) against {c['kept']} kept load(s): a register stored "
-                       f"must be a copy of the variable put back (first {rec['store_reg'][0]})")
+        if c["store_reg"] > c["kept"] + c["copy"]:
+            why.append(f"{c['store_reg']} register store(s) against {c['kept']} kept load(s) and {c['copy']} masked "
+                       f"cop(ies) put back: a register stored must be a copy of the variable put back "
+                       f"(first {rec['store_reg'][0]})")
         if not c["store1"]:
             why.append("no store of 1: a variable never set is folded to its initial value, not shrunk")
         if why:
