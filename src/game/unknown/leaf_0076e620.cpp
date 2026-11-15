@@ -1,31 +1,48 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object00774560.h"
-#include "tlg_game_node.h"
+#include "tlg_game_object016accb0.h"
 
-/* derived names: the class whose vtable is at 0x16accb0
- * (config/vtables.derived.base.txt, stored by FUN_0076e4a0 FUN_0076e620), derived from
- * Object00774560: slots 2 to 22 are the base's or override them.
- * Its own fields are traced only where its destructor FUN_0076e620 tears them
- * down (the counted references at +0x188, +0x180, the Names at +0x14c, +0x148, +0x100); the rest are not traced. */
-class Object016accb0 : public Object00774560 /* derived name */
+/* derived names: a name every object of the class starts with (defined in
+ * func_00773e90.cpp, "jt_ProxySamplingA"), and a value of four ints the
+ * executable only reads (0x58178b0, zero: no store anywhere) */
+extern Name D_58178ac;
+extern Value004af700 D_58178b0;
+
+/* derived name: the constructor (tlg_game_object016accb0.h): its base
+ * Object00774560 is built from the name passed on (FUN_00774370), the names
+ * and the references start empty; then the body: the base's float at +0x7c,
+ * the fields from +0xf0 in order, the Name at +0x100 a copy of D_58178ac,
+ * the value at +0x120 copied member by member from D_58178b0 (`mov dword;
+ * shr rax, 0x20; mov dword`). */
+Object016accb0::Object016accb0(const Name &name) : Object00774560(name)
 {
-  public:
-    virtual ~Object016accb0();
-
-  private:
-    u8 unknowne8[0x18];
-    Name name100; /* +0x100: released by the destructor (`mov eax, [rbx+0x100]; shl 5`) */
-    u8 unknown104[0x44];
-    Name name148; /* +0x148: released by the destructor (`mov eax, [rbx+0x148]; shl 5`) */
-    Name name14c; /* +0x14c: released by the destructor (`mov eax, [rbx+0x14c]; shl 5`) */
-    u8 unknown150[0x30];
-    /* +0x180: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held180;
-    /* +0x188: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held188;
-};
+    unknown7c = 0.2f;
+    unknownf0 = 0.25f;
+    unknownfc = 0.1f;
+    name100 = D_58178ac;
+    unknown104 = 0.5f;
+    unknown108 = 0.5f;
+    unknown10c = -1;
+    unknown110 = -1;
+    unknown114 = 0;
+    unknown120.set(D_58178b0);
+    unknown130 = -1;
+    unknown134[0] = 0.0f;
+    unknown134[1] = 0.0f;
+    unknown134[2] = 3.40282347e+38f;
+    unknown134[3] = 3.40282347e+38f;
+    unknown144 = 0;
+    unknown150 = 1;
+    unknown154[0] = -3.40282347e+38f;
+    unknown154[1] = -3.40282347e+38f;
+    unknown154[2] = -3.40282347e+38f;
+    unknown154[3] = 3.40282347e+38f;
+    unknown164[0] = 0;
+    unknown164[1] = 0x72000;
+    unknown164[2] = -1;
+    unknown164[3] = -1;
+    unknown174 = -1;
+    unknown178 = 1;
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's
  * destructor FUN_00774560 runs as a tail call. FUN_0076e800, slot 1, is

@@ -1,34 +1,25 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
+#include "tlg_game_object016a91c8.h"
 
-/* derived names: the class whose vtable is at 0x16a91c8
- * (config/vtables.derived.base.txt, stored by FUN_003e4660 FUN_003e4870), derived from
- * Object016b9108: its slots 2 to 4 are the base's. Its own fields
- * from +0x24 are traced only where its destructor FUN_003e4870 tears them down
- * (the Names at +0x70, +0x6c, +0x68, +0x64, +0x60, +0x5c, +0x58, +0x54, +0x50, +0x4c, +0x48, +0x44, +0x40, +0x28, +0x24); the rest are not traced. */
-class Object016a91c8 : public Object016b9108 /* derived name */
+/* derived name: the constructor (tlg_game_object016a91c8.h): its base
+ * Object016b9108 is built from the name passed on, the Names start empty;
+ * then the body: the float at +0x2c, the value at +0x30 (`vmovaps`, after
+ * the zero runs), and the nine Names from +0x50 released in order. */
+// NONMATCHING: the base reloads every one of the nine Names after the zero run (`mov eax, [rbx+0x50]; test`), the build forwards the zero to the first three (released before any atomic) and reloads from +0x5c: a loop unrolled after the last GVN in the base (the late LoopUnroll) is the lead, the source form not found
+Object016a91c8::Object016a91c8(const Name &name) : Object016b9108(name)
 {
-  public:
-    virtual ~Object016a91c8();
-
-  private:
-    Name name24; /* +0x24: released by the destructor (`mov eax, [rbx+0x24]; shl 5`) */
-    Name name28; /* +0x28: released by the destructor (`mov eax, [rbx+0x28]; shl 5`) */
-    u8 unknown2c[0x14];
-    Name name40; /* +0x40: released by the destructor (`mov eax, [rbx+0x40]; shl 5`) */
-    Name name44; /* +0x44: released by the destructor (`mov eax, [rbx+0x44]; shl 5`) */
-    Name name48; /* +0x48: released by the destructor (`mov eax, [rbx+0x48]; shl 5`) */
-    Name name4c; /* +0x4c: released by the destructor (`mov eax, [rbx+0x4c]; shl 5`) */
-    Name name50; /* +0x50: released by the destructor (`mov eax, [rbx+0x50]; shl 5`) */
-    Name name54; /* +0x54: released by the destructor (`mov eax, [rbx+0x54]; shl 5`) */
-    Name name58; /* +0x58: released by the destructor (`mov eax, [rbx+0x58]; shl 5`) */
-    Name name5c; /* +0x5c: released by the destructor (`mov eax, [rbx+0x5c]; shl 5`) */
-    Name name60; /* +0x60: released by the destructor (`mov eax, [rbx+0x60]; shl 5`) */
-    Name name64; /* +0x64: released by the destructor (`mov eax, [rbx+0x64]; shl 5`) */
-    Name name68; /* +0x68: released by the destructor (`mov eax, [rbx+0x68]; shl 5`) */
-    Name name6c; /* +0x6c: released by the destructor (`mov eax, [rbx+0x6c]; shl 5`) */
-    Name name70; /* +0x70: released by the destructor (`mov eax, [rbx+0x70]; shl 5`) */
-};
+    unknown2c = 3.40282347e+38f;
+    unknown30 = Float4A(0.0f, 0.0f, 0.0f, 0.0f);
+    name50.release();
+    name54.release();
+    name58.release();
+    name5c.release();
+    name60.release();
+    name64.release();
+    name68.release();
+    name6c.release();
+    name70.release();
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_003e4bf0, slot 1, is

@@ -1,22 +1,17 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
-#include "tlg_game_block.h"
+#include "tlg_game_object016a7d48.h"
 
-/* derived names: the class whose vtable is at 0x16a7d48
- * (config/vtables.derived.base.txt, stored by FUN_002a89e0 FUN_002a8ab0 FUN_002a8b80), derived from
- * Object016b9108: its slots 2 to 4 are the base's. Its own fields
- * from +0x24 are traced only where its destructor FUN_002a8ab0 tears them down
- * (the block at +0x28); the rest are not traced. */
-class Object016a7d48 : public Object016b9108 /* derived name */
+/* derived name: the constructor (tlg_game_object016a7d48.h): its base
+ * Object016b9108 is built from the name passed on, the array at +0x28 starts
+ * empty; then the body: the array emptied with a capacity of 0 (`mov dword
+ * [rbx+0x30], 0; cmp dword [rbx+0x34], 0; je`), the value at +0x40 and the
+ * float at +0x50. */
+Object016a7d48::Object016a7d48(const Name &name) : Object016b9108(name)
 {
-  public:
-    virtual ~Object016a7d48();
-
-  private:
-    u8 unknown24[0x4];
-    /* +0x28: an owned block, released by the destructor (`mov rax, [rbx+0x28]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block28;
-};
+    array28.clear(0);
+    unknown40 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+    unknown50 = 0.1f;
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_002a8b80, slot 1, is

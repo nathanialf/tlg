@@ -1,26 +1,32 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
-#include "tlg_game_node.h"
+#include "tlg_game_object016b8a80.h"
 
-/* derived names: the class whose vtable is at 0x16b8a80
- * (config/vtables.derived.base.txt, stored by FUN_00c92fd0 FUN_00c930e0), derived from
- * Object016b9108: its slots 2 to 4 are the base's.
- * Its own fields are traced only where its destructor FUN_00c930e0 tears them
- * down (the counted references at +0x30, +0x28); the rest are not traced. */
-class Object016b8a80 : public Object016b9108 /* derived name */
-{
-  public:
-    virtual ~Object016b8a80();
-
-  private:
-    u8 unknown24[0x4];
-    /* +0x28: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held28;
-    /* +0x30: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held30;
+/* derived names: the record the pointer at 0x5938c40 holds, and the record
+ * at its +0x38, whose object at +0x30 the constructor below takes (`mov
+ * rax, [rax+0x38]; mov rcx, [rax+0x30]`). */
+struct Member05938c40_38 {
+    u8 unknown0[0x30];
+    Node00503fb0 *unknown30;
 };
+
+struct Object05938c40 {
+    u8 unknown0[0x38];
+    Member05938c40_38 *unknown38;
+};
+
+extern Object05938c40 *D_5938c40;
+
+/* derived name: the constructor (tlg_game_object016b8a80.h): its base
+ * Object016b9108 is built from the name passed on, the two references start
+ * empty (one 16-byte clear at +0x28); then the body: the reference at +0x30
+ * set to the object the global record's member at +0x38 holds at +0x30, and
+ * the value at +0x40. */
+// NONMATCHING: the peeled first exchange (`xor eax, eax; lock cmpxchg; je`) is kept with `sete al; test al, al` where the base folds it (round 280D's 0xc91f20: a CSE after the late instcombine, the two-stage question); the old pointer compared second (`cmp rbx, rcx`, base `cmp rcx, rbx`)
+Object016b8a80::Object016b8a80(const Name &name) : Object016b9108(name)
+{
+    held30.set(D_5938c40->unknown38->unknown30);
+    unknown40 = Float4A(1.0f, 1.0f, 0.0f, 0.0f);
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's
  * destructor is inlined (its vptr store, then the two names). FUN_00c93280, slot 1, is
