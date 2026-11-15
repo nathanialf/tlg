@@ -493,7 +493,11 @@ def parent_rows(w: Walker, base_calls: dict[int, set[str]], known: set[int], kno
 
 
 def check_derived(elf: BaseElf) -> list[str]:
-    """Every row of config/vtables.derived.<slug>.txt against its evidence."""
+    """Every row of config/vtables.derived.<slug>.txt against its evidence:
+    the constructor it cites stores the address point; a row that `merges`
+    a second class into an address another row holds is proven in the game
+    module's object as well (base_elf.py _prove_merge: one object for the
+    two symbols, equal to the base's vtable word for word)."""
     errors = []
     for sym in list(elf._derived):
         try:
@@ -541,7 +545,8 @@ def main(argv=None) -> int:
             print(e, file=sys.stderr)
         for p in pending:
             print(p)
-        print(f"vtable_names: {len(elf._derived)} derived rows, {len(errs)} failing; "
+        print(f"vtable_names: {len(elf._derived)} derived rows ({len(elf._merged)} merging a second class "
+              f"into an address another row holds), {len(errs)} failing; "
               f"{inst} instantiation vtables, {len(ierrs)} failing, {len(pending)} with slot 0 unclaimed")
         return 1 if errs or ierrs else 0
     w = Walker(elf)

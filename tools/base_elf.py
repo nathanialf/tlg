@@ -30,6 +30,9 @@ PT_TLS = 7
 # stores (tools/vtable_names.py Walker.vptr_stores)}, for _verify_derived
 _VPTR_STORES: dict[tuple[str, int], frozenset[int]] = {}
 
+# {(base file, object, its mtime and size, row): "" or the refusal}, for _prove_merge
+_MERGE_PROOFS: dict[tuple, str] = {}
+
 
 # --- the gate's cache ----------------------------------------------------------
 #
@@ -241,22 +244,30 @@ class BaseElf:
         # D14): symbol -> address of the _ZTV object. A derived row is
         # verified against the constructor it cites the first time the gate
         # resolves it (`_verify_derived`).
+        #
+        # One class per address, with one exception: a derived row may carry
+        # `merges <symbol>` after its constructor, naming the row that already
+        # holds its address (a generated row, or a derived row without
+        # `merges`). Two classes whose vtables are identical constants of
+        # local linkage are one object after the link stage (ConstantMerge in
+        # 3.7.1's populateLTOPassManager, lib/Transforms/IPO/ConstantMerge.cpp:
+        # the duplicate's uses are given the canonical global and the duplicate
+        # is erased), so the base holds one vtable for both and the module
+        # references whichever survived. The second class's row resolves only
+        # when that is proven every time it is asked (`_prove_merge`): the
+        # module defines one object for the two symbols, and that object's
+        # words equal the base's vtable word for word.
         self.vtables: dict[str, int] = {}
         self._derived: dict[str, tuple[int, str, str]] = {}
+        self._merged: dict[str, str] = {}       # a second class's row -> the row holding its address
+        self._proving: set[str] = set()         # rows whose merge is being proven (no destructor folds through them)
+        self.merge_object: Path | None = None   # the object a merge is proven in (None: the game module's)
         p = config_path(repo_root, self.version, "vtables", "txt")
         if p.exists():
             for line in p.read_text().splitlines():
                 s = line.split("#", 1)[0].split()
                 if len(s) >= 2 and s[0].startswith("_ZTV"):
                     self.vtables[s[0]] = int(s[1], 16)
-        p = config_path(repo_root, self.version, "vtables.derived", "txt")
-        if p.exists():
-            for line in p.read_text().splitlines():
-                s = line.split("#", 1)[0].split()
-                if len(s) >= 6 and s[0].startswith("_ZTV") and s[3] == "derived" and s[4] == "ctor":
-                    if s[0] in self.vtables or int(s[1], 16) in self.vtables.values():
-                        raise ValueError(f"{p.name}: {s[0]} 0x{int(s[1], 16):x} duplicates a generated row")
-                    self._derived[s[0]] = (int(s[1], 16), s[2], s[5])
         self._dyn = None
         self._plt = None
         self._got = None
@@ -265,6 +276,41 @@ class BaseElf:
         self._dso = None
         self._fold_starts = None
         self._import_names = None
+        p = config_path(repo_root, self.version, "vtables.derived", "txt")
+        if p.exists():
+            self._load_derived(p, p.read_text().splitlines())
+
+    def _load_derived(self, p: Path, lines: list[str]) -> None:
+        """The rows of config/vtables.derived.<slug>.txt (`lines` of the file
+        `p`), with the one-class-per-address rule and its `merges` exception
+        (above). Raises ValueError naming the row and the address's holder."""
+        holder = {a: sym for sym, a in self.vtables.items()}
+        holder.update({a: sym for sym, (a, _c, _f) in self._derived.items() if sym not in self._merged})
+        rows = []
+        for line in lines:
+            s = line.split("#", 1)[0].split()
+            if len(s) >= 6 and s[0].startswith("_ZTV") and s[3] == "derived" and s[4] == "ctor":
+                merges = None
+                if len(s) > 6:
+                    if s[6] != "merges" or len(s) != 8:
+                        raise ValueError(f"{p.name}: {s[0]}: after the constructor only `merges <vtable symbol>`")
+                    merges = s[7]
+                if s[0] in self.vtables or s[0] in self._derived:
+                    raise ValueError(f"{p.name}: {s[0]} is named twice")
+                self._derived[s[0]] = (int(s[1], 16), s[2], s[5])
+                rows.append((s[0], int(s[1], 16), merges))
+        for sym, a, merges in rows:              # the holders first: rows without `merges`
+            if merges is None:
+                if a in holder:
+                    raise ValueError(f"{p.name}: {sym} 0x{a:x}: the address is {holder[a]}'s; a second class at one "
+                                     f"vtable address needs `merges {holder[a]}` and its proof")
+                holder[a] = sym
+        for sym, a, merges in rows:
+            if merges is not None:
+                if holder.get(a) != merges:
+                    raise ValueError(f"{p.name}: {sym} merges {merges}, which is not the row holding 0x{a:x} "
+                                     f"({holder.get(a, 'no row holds it')})")
+                self._merged[sym] = merges
 
     # --- bytes -------------------------------------------------------------
     PT_SCE_RELRO = 0x61000010
@@ -515,6 +561,8 @@ class BaseElf:
             return None
         enc, slot = m.group(1), (1 if m.group(2) == "0" else 0)
         for vt in ("_ZTV" + enc, "_ZTVN" + enc + "E"):
+            if vt in self._proving:     # the vtable is what is being proven: its slot proves nothing
+                continue
             addr = self.vtables.get(vt)
             if addr is None and vt in self._derived:
                 try:
@@ -654,8 +702,123 @@ class BaseElf:
         if addr + 0x10 not in stored:
             raise ValueError(f"vtables.derived: {sym}: {ctor} stores "
                              f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")
+        if sym in self._merged:     # proven in the object every time it is asked, never kept in self.vtables
+            self._prove_merge(sym)
+            return addr
         self.vtables[sym] = addr
         return addr
+
+    def merged_row_address(self, sym: str) -> int | None:
+        """The address a `merges` row names, unproven: the game module's
+        stand-ins are decided by it before the module exists
+        (tools/game_module.py); every reference is proven (_prove_merge)."""
+        return self._derived[sym][0] if sym in self._merged else None
+
+    def _merge_object(self) -> Path:
+        if self.merge_object is not None:
+            return Path(self.merge_object)
+        from game_module import module_object
+        return module_object(self.version)
+
+    def _prove_merge(self, sym: str) -> None:
+        """A second class's row at an address another row holds (`merges`):
+        it holds when the object the module was compiled to (merge_object,
+        else the game module's) defines ONE object for the two vtable
+        symbols, and that object, word for word, is the base's vtable at the
+        address: the offset to top and the type info as bytes, each slot as
+        the address its relocation resolves to (address_of; a destructor of
+        the row's own class is not folded through the vtable being proven).
+        Two objects are refused with the first word in which they differ; a
+        word that differs from the base's is refused with the word named.
+        Raises ValueError with the reason; answered once per object state."""
+        obj = self._merge_object()
+        first = self._merged[sym]
+        if not obj.exists():
+            raise ValueError(f"vtables.derived: {sym} merges {first}: no object to prove it in ({obj} is not built)")
+        st = obj.stat()
+        key = (str(self.path), str(obj), st.st_mtime_ns, st.st_size, sym)
+        if key not in _MERGE_PROOFS:
+            _MERGE_PROOFS[key] = self._merge_refusal(sym, first, obj)
+        if _MERGE_PROOFS[key]:
+            raise ValueError(_MERGE_PROOFS[key])
+
+    def _merge_refusal(self, sym: str, first: str, obj: Path) -> str:
+        """_prove_merge's answer: "" when the merge holds, else the reason."""
+        import match_check as mc
+        addr = self._derived[sym][0]
+        head = f"vtables.derived: {sym} merges {first} at 0x{addr:x}"
+        v = mc.object_view(obj)
+
+        def where(name):
+            for s in v.syms:
+                if s.name == name and s["st_shndx"] not in ("SHN_UNDEF", "SHN_ABS", "SHN_COMMON"):
+                    return s["st_shndx"], s["st_value"], s["st_size"]
+            return None
+
+        def words(d):
+            shndx, value, size = d
+            if size % 8:
+                return None, f"its size {size} is not a whole number of slots"
+            data = v.sections[shndx][0][value:value + size].ljust(size, b"\0")
+            relocs, _n, _s = mc.object_data_relocs(obj, shndx, value, size)
+            at = {}
+            for r in relocs:
+                if r.offset % 8 or r.width != 8:
+                    return None, f"a relocation of {r.width} bytes at +0x{r.offset:x} is not a slot"
+                at[r.offset] = (r.symbol, r.addend)
+            return [at.get(o, (None, int.from_bytes(data[o:o + 8], "little"))) for o in range(0, size, 8)], ""
+
+        def label(i):
+            return {0: "the offset to top", 1: "the type info"}.get(i, f"slot {i - 2}")
+
+        def show(w):
+            if w is None:
+                return "nothing"
+            if w[0] is None:
+                return f"0x{w[1]:x}"
+            return w[0] + (f"{w[1]:+#x}" if w[1] else "")
+
+        mine, held = where(sym), where(first)
+        if mine is None and held is None:
+            return f"{head}: {obj.name} defines neither: no merged constant to prove"
+        if mine is not None and held is not None and mine != held:
+            a, why = words(held)
+            b, why2 = words(mine)
+            if a is None or b is None:
+                return f"{head}: they are two objects in {obj.name}, not one: {why or why2}"
+            for i in range(max(len(a), len(b))):
+                x = a[i] if i < len(a) else None
+                y = b[i] if i < len(b) else None
+                if x != y:
+                    return (f"{head}: they are two objects in {obj.name}, not one merged constant: {label(i)} "
+                            f"differs ({first} holds {show(x)}, {sym} holds {show(y)})")
+            return (f"{head}: they are two objects in {obj.name} with the same words, not one merged constant "
+                    f"(the link merges only constants of local linkage)")
+        name = sym if mine is not None else first
+        ws, why = words(mine if mine is not None else held)
+        if ws is None:
+            return f"{head}: the module's {name}: {why}"
+        self._proving.add(sym)
+        try:
+            for i, w in enumerate(ws):
+                want = int.from_bytes(self.read(addr + 8 * i, 8), "little")
+                if w[0] is None:
+                    got = w[1]
+                else:
+                    try:
+                        s = self.address_of(w[0])
+                    except ValueError as e:
+                        return f"{head}: {label(i)} of the module's {name} holds {show(w)}: {e}"
+                    if s is None:
+                        return (f"{head}: {label(i)} of the module's {name} holds {show(w)}, "
+                                "which the base does not place")
+                    got = s + w[1]
+                if got != want:
+                    return (f"{head}: {label(i)} of the module's {name} holds {show(w)} (0x{got:x}); "
+                            f"the base's vtable holds 0x{want:x} there")
+        finally:
+            self._proving.discard(sym)
+        return ""
 
     # --- vtables of library instantiations (round 148A) ----------------------
     # A class template of our own library headers whose instantiations the

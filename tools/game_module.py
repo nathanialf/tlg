@@ -363,7 +363,9 @@ def standins(units: list[Unit], ver: str, base=None, table=None, local=()) -> tu
     types = TypeTable(units)
     out, log = [], []
     for name in sorted(decls):
-        addr = base.address_of(name)
+        addr = base.merged_row_address(name)
+        if addr is None:
+            addr = base.address_of(name)
         owner = owner_of(table, addr)
         where = f"0x{addr:x}" if addr is not None else "-"
         if owner != "game":

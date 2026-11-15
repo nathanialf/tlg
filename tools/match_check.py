@@ -1448,6 +1448,7 @@ def main(argv=None) -> int:
     worst = 1.0
     seen: dict[str, list] = {}
     for label, obj in variants:
+        base.merge_object = obj     # a second class's vtable row is proven in the object compared (base_elf)
         objfuncs = tu_functions(a.tu, obj, ver) if a.tu else object_functions(obj)
         pairs: list[tuple[str, str]] = []
         if a.all:
