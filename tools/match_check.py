@@ -91,46 +91,63 @@ def generate_tables_of(tu: str, ver: str) -> None:
     for ident, row in rows.items():
         if row.get("tu") == tu:
             out = build_dir(REPO_ROOT, ver) / "gen" / f"{ident}.inc"
-            ck = None
+            dep = out.with_name(out.name + ".d")
             if gate_cache_on():
-                inputs = _table_inputs(row, ver)
+                inputs = _table_inputs(ident, row, out, ver)
                 if inputs is not None:
-                    ck = gate_cache_key("table", (ident, inputs))
-                    have = gate_cache_get("table", ck)
+                    have = gate_cache_get("table", gate_cache_key("table", inputs))
                     if have is not _MISS and have == file_digest(out):
                         continue
-            subprocess.run([sys.executable, "-I", str(REPO_ROOT / "tools" / "gen_data_inc.py"), ident],
+            # the depfile as ninja's gen_data edge writes it: the text and the
+            # headers it read come from the same run
+            subprocess.run([sys.executable, "-I", str(REPO_ROOT / "tools" / "gen_data_inc.py"), ident,
+                            "--out", str(out.relative_to(REPO_ROOT)),
+                            "--depfile", str(dep.relative_to(REPO_ROOT))],
                            cwd=REPO_ROOT, check=True, env={**os.environ, "VERSION": ver})
-            if ck is not None:
-                gate_cache_put("table", ck, file_digest(out))
+            if gate_cache_on():
+                inputs = _table_inputs(ident, row, out, ver)
+                if inputs is not None:
+                    gate_cache_put("table", gate_cache_key("table", inputs), file_digest(out))
     _TABLES_DONE.add((tu, ver))
 
 
 _TABLE_INPUTS: dict[str, tuple] = {}
 
 
-def _table_inputs(row: dict, ver: str) -> tuple | None:
+def _table_inputs(ident: str, row: dict, out: Path, ver: str) -> tuple | None:
     """What tools/gen_data_inc.py's text for a schema row is a function of,
-    besides the row and the tools: the base executable's bytes, the
+    besides the tools: the row, the base executable's bytes, the
     configuration it reads (the schema and data rows; the function table,
-    the vtables and the imports, through BaseElf), every header under
-    src/include/ (the row's header and what it includes are read from there)
-    and the c++filt it runs. None when the row's header is not under
-    src/include/ (then the tool runs every time)."""
-    if not row.get("header", "").startswith("src/include/"):
+    the vtables and the imports, through BaseElf), the c++filt it runs, and
+    the headers: the ones the run that wrote the file read (its depfile,
+    written by the same run, each by its bytes) and the names of every file
+    under src/include/, which decide where an include resolves (a header
+    added beside one read could take an include's place). A run reads what
+    the files it reads tell it to, so the same files with the same bytes
+    under the same names read the same text. None (the tool runs every
+    time) when the row's header or a header read is not under src/include/,
+    or the depfile is missing."""
+    dep = out.with_name(out.name + ".d")
+    if not row.get("header", "").startswith("src/include/") or not dep.exists():
         return None
+    text = dep.read_text().replace("\\\n", " ")
+    if ":" not in text:
+        return None
+    read = sorted(set(text.split(":", 1)[1].split()))
+    if any(not h.startswith("src/include/") or ".." in Path(h).parts for h in read):
+        return None
+    from base_elf import file_digest
     if ver not in _TABLE_INPUTS:
         import shutil
-        from base_elf import file_digest
         cfg = tuple((st, file_digest(config_path(REPO_ROOT, ver, st, "txt")))
                     for st in ("data_schema", "data", "functions", "vtables", "vtables.derived", "imports"))
         inc = REPO_ROOT / "src" / "include"
-        headers = tuple(sorted((p.relative_to(REPO_ROOT).as_posix(), file_digest(p))
-                               for p in inc.rglob("*") if p.is_file()))
+        names = tuple(sorted(p.relative_to(REPO_ROOT).as_posix() for p in inc.rglob("*")))
         cxxfilt = shutil.which("c++filt")
-        _TABLE_INPUTS[ver] = (file_digest(baseelf_path(REPO_ROOT, ver)), cfg, headers,
+        _TABLE_INPUTS[ver] = (file_digest(baseelf_path(REPO_ROOT, ver)), cfg, names,
                               (cxxfilt, file_digest(Path(cxxfilt)) if cxxfilt else ""))
-    return _TABLE_INPUTS[ver] + (tuple(sorted(row.items())),)
+    return (ident, tuple(sorted(row.items())), _TABLE_INPUTS[ver],
+            tuple((h, file_digest(REPO_ROOT / h)) for h in read))
 
 
 _LINE_COMPILERS: dict[str, list[tuple[str, str]]] = {}     # version -> (prefix, compiler) per flags line
