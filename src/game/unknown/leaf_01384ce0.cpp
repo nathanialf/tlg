@@ -1,31 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
-#include "tlg_game_node.h"
-#include "tlg_game_object0134f620.h"
+#include "tlg_game_object016b1928.h"
 
-/* derived names: the class whose vtable is at 0x16b1928
- * (config/vtables.derived.base.txt, stored by FUN_009b4670 FUN_01384ce0 FUN_01384e00), derived from
- * Object016b9108: its slots 2 to 4 are the base's, slots 5 to 6 its own (declared; their bodies
- * are not written here).
- * Its own fields are traced only where its destructor FUN_01384ce0 tears them
- * down (the counted reference at +0x40, the record at +0x28); the rest are not traced. */
-class Object016b1928 : public Object016b9108 /* derived name */
-{
-  public:
-    virtual ~Object016b1928();
-    virtual void slot5(); /* derived name; FUN_01384810, not traced */
-    virtual void slot6(); /* derived name; FUN_009f37a0, not traced */
-
-  private:
-    u8 unknown24[0x4];
-    /* +0x28: torn down by the destructor (`lea rdi, [rbx+0x28]; call 0x134f620`) */
-    Object0134f620 record28;
-    /* +0x40: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held40;
-};
-
-/* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's
+/* derived name: the complete destructor of Object016b1928 (tlg_game_object016b1928.h): the body is empty; the members are released, last first, then the base's
  * destructor is inlined (its vptr store, then the two names). FUN_01384e00, slot 1, is
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
