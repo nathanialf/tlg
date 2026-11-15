@@ -6,6 +6,12 @@
 
 #include "tlg_game_object016b9108.h"
 #include "tlg_game_node.h"
+#include "tlg_math.h"
+#include "tlg_game_value004af700.h"
+
+/* derived name: the value the constructor copies to +0x50 (`mov rax,
+ * [0x57d7870]; mov rcx, [0x57d7878]`) */
+extern Value004af700 D_57d7870;
 
 /* derived names: the class whose vtable is at 0x16aa0d0
  * (config/vtables.derived.base.txt, stored by FUN_004af700 FUN_004af8a0 FUN_004b16e0 FUN_004b7d80), derived from
@@ -16,6 +22,17 @@
 class Object016aa0d0 : public Object016b9108 /* derived name */
 {
   public:
+    /* inlined in the creators (FUN_004af700, FUN_004b60b0, FUN_004b0570):
+     * the base built from the name, the vptr (dead in the derived classes'),
+     * the two references cleared in one store, -1 at +0x38, `mov byte
+     * [r15+0x3c], 0`, the aligned 16 bytes at +0x40 cleared (`vmovdqa`), then
+     * the value at 0x57d7870 copied to +0x50 in the body */
+    Object016aa0d0(const Name &name)
+        : Object016b9108(name), unknown38(-1), unknown3c(false), unknown40(0.0f, 0.0f, 0.0f, 0.0f)
+    {
+        unknown50.set(D_57d7870);
+    }
+
     virtual ~Object016aa0d0();
     virtual void slot5();  /* derived name; FUN_004afa60, not traced */
     virtual void slot6();  /* derived name; FUN_000042d0, not traced */
@@ -33,6 +50,10 @@ class Object016aa0d0 : public Object016b9108 /* derived name */
     /* +0x30: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Node00503fb0> held30;
+    int unknown38;           /* +0x38: -1 from the constructor; not traced */
+    bool unknown3c;          /* +0x3c: false from the constructor; not traced */
+    Float4A unknown40;       /* +0x40: zero from the constructor; not traced */
+    Value004af700 unknown50; /* +0x50: the value at 0x57d7870 from the constructor; not traced */
 };
 
 #endif
