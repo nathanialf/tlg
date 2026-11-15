@@ -12,9 +12,6 @@ struct Scale01328450 { /* derived name */
     double unknown28[4];
 };
 
-// NONMATCHING: the instructions are the base's; the layout does not place the 32-byte constant
-// of the multiply (65536.0 four times, the relocation at +0x19: "literal b'\x00' of .rodata") and
-// refuses the row: a tool question.
 /* The four are converted before the first is stored (the base converts them as
  * one vector: the unsigned conversion to double is the back end's, the high
  * half times 65536 plus the low half). */

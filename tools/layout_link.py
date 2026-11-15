@@ -36,6 +36,12 @@ out here.
        table is then laid at its address like a data object, and may overlap
        no other claimed object or table. A relocation other than a pointer in
        any other data object is still refused (a layout extension).
+    2d. A constant a claimed game function reads from the module's plain
+       .rodata (a 32-byte vector constant: LLVM 3.7.1 has no .rodata.cst32)
+       has no row either (rodata_constant): the bytes the instruction reads,
+       as many as its operand is wide, at the offset its relocation gives,
+       must equal the base's bytes where the base's own instruction points,
+       inside the game's rodata, or the row fails with both.
     3. Compare every segment with the base, whole. Any differing byte names
        the function or data object it falls in (or the gap, which would mean
        a claimed object overran its size).
@@ -300,6 +306,86 @@ def jump_table(base: BaseElf, obj: Path, r: mc.Reloc, own: str, addr: int, size:
     return T, bytes(out)
 
 
+def rip_access(code: bytes, offset: int) -> tuple[int, int, str] | None:
+    """What the instruction holding the relocated field at `offset` reads or
+    writes through its RIP-relative operand: (bytes from the field to the
+    instruction's end, the operand's width in bytes, the mnemonic); None when
+    the field is not the displacement of such an operand or the instruction
+    only takes the address (`lea`: no width to read)."""
+    from capstone import CS_ARCH_X86, CS_MODE_64, Cs
+    from capstone.x86 import X86_OP_MEM, X86_REG_RIP
+    md = Cs(CS_ARCH_X86, CS_MODE_64)
+    md.detail = True
+    for ins in md.disasm(code, 0):
+        if ins.address + ins.size <= offset:
+            continue
+        if ins.address > offset or ins.mnemonic == "lea" or ins.disp_offset != offset - ins.address:
+            return None
+        for op in ins.operands:
+            if op.type == X86_OP_MEM and op.mem.base == X86_REG_RIP and op.size:
+                return ins.address + ins.size - offset, op.size, ins.mnemonic
+        return None
+    return None
+
+
+def rodata_constant(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, ver: str):
+    """A constant the compiler left in the object's plain read-only data (a
+    section that is allocated and nothing else: not writable, not merged, not
+    strings; LLVM 3.7.1 has no .rodata.cst32, so a 32-byte vector constant
+    lies there, among whatever the units put before and after it), read by an
+    instruction of a claimed function through a PC-relative `<section> +
+    addend` relocation at the base's address `P`. None when `r` is not such a
+    read (a `lea`, a named object, a merged or writable section, bytes that
+    hold a relocation), which leaves it to resolve_symbol_address. Else the
+    address S to resolve the section's symbol to, or a string naming why the
+    row fails. Nothing is trusted and nothing is read as a string: the
+    constant is the bytes the instruction itself reads, as many as its
+    operand is wide (32 for a ymm load, 16 for an xmm one, 4 or 8 for a
+    scalar), at the offset the field's addend and the instruction's end give;
+    the base's constant is where the base's own instruction at this site
+    points, inside the game's rodata (config/modules.<slug>.txt); and the two
+    must be equal byte for byte, as a merged constant-pool entry is proven
+    (round 157A). The game module's object only: the library line's
+    constants are all in merged sections."""
+    if r.type != R_X86_64_PC32 or r.sym_size != 0 or not r.symbol.startswith(".") \
+            or not isinstance(r.sym_section, int) or r.sym_section <= 0:
+        return None
+    import game_module as gm
+    if obj != gm.module_object(ver):    # the library line merges its constants (.rodata.cst*): no such read
+        return None
+    view = mc.object_view(obj)
+    if r.sym_section not in view.sections:
+        return None
+    data, flags, _size = view.sections[r.sym_section]
+    if flags & 0x37 != 0x2:     # SHF_ALLOC alone of WRITE, ALLOC, EXECINSTR, MERGE, STRINGS
+        return None
+    acc = rip_access(code, r.offset)
+    if acc is None:
+        return None
+    tail, width, mnemonic = acc
+    start = r.sym_value + r.addend + tail
+    where = f"constant of {r.symbol}+{start:#x} ({width} bytes, read by {mnemonic})"
+    if start < 0 or start + width > len(data):
+        return f"{where}: outside the section's {len(data)} bytes"
+    if any(start < off + mc.RELOC_WIDTH.get(ty, 4) and off < start + width
+           for off, ty, _si, _a in view.relocs.get(r.sym_section, [])):
+        return None
+    try:
+        T = struct.unpack("<i", base.read(P, 4))[0] + P + tail
+    except Exception:  # noqa: BLE001
+        return f"{where}: the base's field at 0x{P:x} cannot be read"
+    if not any(lo <= T and T + width <= hi for lo, hi in game_rodata(ver)):
+        return f"{where}: the base's instruction reads 0x{T & 0xFFFFFFFFFFFFFFFF:x}, not inside the game's rodata"
+    want = bytes(data[start:start + width])
+    try:
+        have = base.read(T, width)
+    except Exception:  # noqa: BLE001
+        return f"{where}: the base's 0x{T:x} cannot be read"
+    if have != want:
+        return f"{where}: the object holds {want.hex()}, the base's instruction reads {have.hex()} at 0x{T:x}"
+    return T - start + r.sym_value
+
+
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
                            hint: int | None = None) -> tuple[int | None, str]:
     """The address S the base gives the relocation's symbol, or (None, why).
@@ -522,7 +608,14 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
                 tables.append(jt)
                 struct.pack_into("<i", out, r.offset, hint + r.addend - P)
                 continue
-        S, why = resolve_symbol_address(base, obj, r, hint)
+        const = rodata_constant(base, obj, code, r, P, ver) if ver is not None and not in_data else None
+        if isinstance(const, str):
+            errors.append(f"+0x{r.offset:x} {const}")
+            continue
+        if const is not None:
+            S, why = const, ""
+        else:
+            S, why = resolve_symbol_address(base, obj, r, hint)
         if S is None:
             errors.append(f"+0x{r.offset:x} {why}")
             continue
