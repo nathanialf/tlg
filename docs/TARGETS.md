@@ -55,7 +55,8 @@ The full survey, program header by program header and library by library, is
   of the 3.3 generation; the upper region, the game and its engine, is of the
   3.7-or-later generation (constant-store merging) with the PS4 behaviours
   upstream gained in 3.7 (`int 0x41`), 3.9 (`ud2` after noreturn calls) and
-  4.0 (no `vzeroupper` for the Jaguar). What looked like two Sony-only
+  4.0 (no `vzeroupper` for the Jaguar): a 3.7-based compiler with later
+  changes in it (`docs/DECISIONS.md` D81). What looked like two Sony-only
   code-generation traits in the first probe (the register order of 0x7180,
   the unshrunk `movsxd`) were LLVM 3.3 behaviours: every probe function of
   the lower region matches under upstream 3.3.
@@ -67,17 +68,18 @@ The full survey, program header by program header and library by library, is
   `tools/generation_census.py` prints the map and `docs/DECISIONS.md` D22
   rules on it (not claimable under `src/libs/` until their release is probed).
 
-- **Which public clang.** Two, one per region, both prebuilt upstream
-  releases (`tools/fetch_llvm.sh`), selected per source prefix in
-  `config/flags.base.txt` (`cxx=`):
+- **Which public clang.** Two, one per region, each an upstream release
+  built from source with a few patches (`tools/build_llvm.sh`,
+  `tools/patches/`), selected per source prefix in `config/flags.base.txt`
+  (`cxx=`):
 
   | region | prefix | compiler | tuning | probe |
   | --- | --- | --- | --- | --- |
-  | libraries, below 0x1a3e00 | `src/libs/` | LLVM 3.3 (`-target x86_64-pc-freebsd9`; 3.3 knows no PS4 triple) | `-march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections` (D38, D39), default schedulers | batch 1 and 2: 10 of 10 with the right source forms |
-  | game, from 0x1a3e00 | `src/game/` | LLVM 4.0.0 (`--target=x86_64-scei-ps4`) | `-march=btver2 -mllvm -pre-RA-sched=list-ilp` (no vzeroupper by 4.0.0's own btver2 feature, D38), `-fvisibility=protected -ffunction-sections`; built as one module, every unit's unoptimised bitcode linked with generated stand-ins before one `-O2` pipeline (`tools/game_module.py`, D50) | batch 3: 12 of 12 |
+  | libraries, below 0x1a3e00 | `src/libs/` | LLVM 3.3 (`-target x86_64-pc-freebsd9`; 3.3 knows no PS4 triple) with twelve backports | `-march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections` (D38, D39), default schedulers | batch 1 and 2: 10 of 10 with the right source forms |
+  | game, from 0x1a3e00 | `src/game/` | LLVM 3.7.1 (`--target=x86_64-scei-ps4`) with ten patches: four PS4 items and six forward ports of later upstream changes (D81) | `-march=btver2 -mllvm -x86-use-vzeroupper=false` (3.7.1 inserts `vzeroupper` for btver2 by default), the default schedulers, `-ffast-math` (not under `src/game/sndx/`), `-fvisibility=protected -ffunction-sections`; built as one module, every unit's unoptimised bitcode linked with generated stand-ins before one `-O2` pipeline (`tools/game_module.py`, D50) | the whole game module (D81): 5,302 of 5,497 game rows under 3.7.1 with the PS4 items alone, 4,893 under 3.8.1; every row with the ten patches |
 
-  The probe table that led here (`tools/compiler_probe.sh`, every prebuilt
-  release 3.3 to 9.0 and clang 19):
+  The first probe (`tools/compiler_probe.sh`, every prebuilt release 3.3 to
+  9.0 and clang 19, a few functions per region):
 
   | LLVM | batch 1+2, library region (14 fns) | batch 3, game region (12 fns) |
   | --- | ---: | ---: |
@@ -87,16 +89,18 @@ The full survey, program header by program header and library by library, is
   | 6.0.1 to 8.0.0 | 4 to 6 | 8 |
   | 9.0.0, clang 19 | 2 to 4 | 4 to 8 |
 
-  On the game region 3.6.2 through 5.0.2 tie; 4.0.0 is chosen because it is
-  the only one of them that also shows all three PS4 behaviours the region
-  has (no `vzeroupper`, `ud2` after noreturn, `int 0x41`) without a patch,
-  and because its generic behaviour (store merging, scheduling) matches where
-  3.6.2's does not. The pre-RA scheduler differs from upstream's x86 default
-  (source order): `list-ilp`, `list-burr` and `list-hybrid` all reproduce the
-  probe; `list-ilp` is used until a function tells them apart. Nothing in
-  the executable so far needs a change to the compiler itself; the
-  from-source build (`tools/build_llvm.sh`) stays as the instrument for the
-  day one does.
+  On the game region 3.6.2 through 5.0.2 tie in that probe. 4.0.0 was taken
+  first, as the only one of them that shows all three PS4 behaviours the
+  region has (no `vzeroupper`, `ud2` after noreturn, `int 0x41`) without a
+  patch, with `-mllvm -pre-RA-sched=list-ilp`; as the game rows grew that
+  line came to carry 36 patches and four `-mllvm` options, most of them
+  reversals of changes made in 3.8, 3.9 and 4.0 (D45 to D80). D81
+  (2026-11-15) measured the whole game module under the earlier releases
+  instead and moved the line to 3.7.1: it holds every row with ten patches,
+  one `-mllvm` option (no `vzeroupper`) and the default scheduler (the rows
+  that had needed `list-ilp` are written with their reads in the base's
+  order). The patches are listed in
+  `config/flags.base.txt`, each with its evidence in its file's header.
 - **What Sony's driver did by default.** Sony's 2013 LLVM developer meeting
   talk on the PS4 toolchain (Paul Robinson, "PS4 Toolchain", slide 23,
   https://llvm.org/devmtg/2013-11/slides/Robinson-PS4Toolchain.pdf) lists
@@ -109,7 +113,7 @@ The full survey, program header by program header and library by library, is
   toward living on trunk. The upstream PS4 driver that landed in 3.8 (clang
   `PS4CPU.cpp`) adds `-fno-math-errno`, PIC by default, stack protector
   level strong, `-fno-use-init-array`, and the SCE debugger tuning
-  (https://reviews.llvm.org/D13482). Upstream 3.6.2 predates that driver, so
+  (https://reviews.llvm.org/D13482). Upstream 3.3 and 3.7.1 predate that driver, so
   `config/flags.base.txt` passes those defaults explicitly; this executable
   confirms two of them itself: it imports `__stack_chk_fail` and
   `__stack_chk_guard` (stack protector) and is a position-independent
@@ -125,9 +129,9 @@ The full survey, program header by program header and library by library, is
 - **Fingerprints in the whole executable** (`llvm-objdump -d` over `.text`):
   32,321 `ymm` uses and no `vzeroupper` at all. Upstream omits `vzeroupper`
   for btver2 only from 4.0 (`fast-partial-ymm-write`) and never under generic
-  tuning, while 3.6.2 always emits it, so Sony's 3.5-era compiler carried a
-  Jaguar tuning upstream did not yet have; functions that touch `ymm`
-  registers will not match under 3.6.2 until that is reproduced. `cdqe`
+  tuning, while 3.3 and 3.7.1 emit it, so Sony's 3.5-era compiler carried a
+  Jaguar tuning upstream did not yet have; both lines pass
+  `-mllvm -x86-use-vzeroupper=false` for it (D38). `cdqe`
   appears 1,106 times and `movsxd rax, eax` 679 times, and the two never mix
   within a region: the `movsxd` form is the lower region's older compiler
   (above). The same split explains the constant-store merging.
