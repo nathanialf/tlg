@@ -1,36 +1,11 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
+#include "tlg_game_object00fe9c50.h"
 
-/* derived names: gives up what the owner holds: the two references at
- * +0x1d0 and +0x1d8 emptied, then the object at +0x1e8, the block at +0x220
- * and the object at +0x228 deleted, each pointer cleared behind its own
- * test. The classes are not traced. */
-class Target00fe9c50 : public Node00503fb0 /* derived name */
-{
-};
-
-/* deleted through slot 1 of its vtable */
-class Part00fe9c50 /* derived name */
-{
-  public:
-    virtual ~Part00fe9c50();
-};
-
-struct Block00fe9c50 { /* derived name */
-};
-
-struct Object00fe9c50 { /* derived name */
-    u8 unknown0[0x1d0];
-    AtomicRef0045c470<Target00fe9c50> first;  /* +0x1d0 */
-    AtomicRef0045c470<Target00fe9c50> second; /* +0x1d8 */
-    u8 unknown1e0[0x8];
-    Part00fe9c50 *part1e8; /* +0x1e8 */
-    u8 unknown1f0[0x30];
-    Block00fe9c50 *block220; /* +0x220 */
-    Part00fe9c50 *part228;   /* +0x228 */
-};
-
-void FUN_00fe9c50(Object00fe9c50 *self) /* derived name */
+/* derived name: gives up what the owner holds: the two references at +0x1d0
+ * and +0x1d8 emptied, then the object at +0x1e8, the block at +0x220 and the
+ * object at +0x228 deleted, each pointer cleared behind its own test */
+void FUN_00fe9c50(Object00fe9c50 *self)
 {
     self->first.clear();
     self->second.clear();
