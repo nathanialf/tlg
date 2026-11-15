@@ -946,14 +946,25 @@ def module_symbol(tu: str, sym: str, obj: Path, ver: str) -> str:
     return sym
 
 
-def renamed_note(tu: str, sym: str, ver: str) -> str:
+def renamed_note(tu: str, sym: str, ver: str, obj: Path | None = None) -> str:
     """A refusal's reason when `sym` is an internal name more than one game
-    file defines, or a compiler-given name with no proven module symbol,
-    else ""."""
+    file defines, a compiler-given name with no proven module symbol, or a
+    base-object destructor (D2) the unit defines and the module object
+    (`obj`, else the game module's) does not, beside its complete destructor
+    (D1): the link stage inlined the one into the other (docs/DECISIONS.md
+    D83); else ""."""
     if not is_module_tu(tu):
         return ""
     import game_module as gm
     by_tu, renamed = gm.load_symbols(ver)
+    d2 = re.fullmatch(r"(_ZN.+)D2Ev", sym)
+    if d2 and not gm.compiler_local(sym):
+        d1 = d2.group(1) + "D1Ev"
+        where = obj or object_path(tu, ver)
+        here = object_functions(where) if where.exists() else {}
+        if sym in by_tu.get(tu, set()) and sym not in here and d1 in here:
+            return (f" (the unit defines this base-object destructor and the link stage folded it into the "
+                    f"complete destructor: the module defines {d1}; the row's symbol is {d1})")
     if gm.compiler_local(sym):
         obj = object_path(tu, ver)
         if not obj.exists() or sym not in by_tu.get(tu, set()):
@@ -1455,7 +1466,7 @@ def main(argv=None) -> int:
             sym = resolve_symbol(objfuncs, fn, sym) or sym
             if sym not in objfuncs:
                 print(f"match_check: symbol {sym} not defined in {obj}"
-                      f"{renamed_note(a.tu, sym, ver) if a.tu else ''} "
+                      f"{renamed_note(a.tu, sym, ver, obj) if a.tu else ''} "
                       f"(have: {', '.join(sorted(objfuncs)[:8])}{'...' if len(objfuncs) > 8 else ''})",
                       file=sys.stderr)
                 return 2

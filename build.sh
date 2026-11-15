@@ -6,7 +6,8 @@
 #
 #   1. tools/setup.sh, when the venv, the tools under tools/ext/ or a
 #      compiler under tools/cc/ (LLVM 3.3 and 3.7.1, prebuilt and built from
-#      source) are missing.
+#      source, and the game module's llvm-link and opt built from 3.7.1's
+#      patched source) are missing.
 #   2. tools/extract_pkg.sh, when baserom/<slug>/eboot.elf or the recorded
 #      hashes (config/sha256sums.<slug>.txt) are missing. It
 #      reads the user's own package, baserom/TLG_BASE.pkg (a symlink is fine),
@@ -33,7 +34,7 @@ toolchain_ok() {
     [[ -x tools/ext/objdiff/objdiff-cli ]] &&
     [[ -x tools/cc/llvm-3.3/bin/clang && -x tools/cc/llvm-3.3-src/bin/clang ]] &&
     [[ -x tools/cc/llvm-3.7.1-src/bin/clang && -x tools/cc/llvm-3.7.1-src-tools/bin/llvm-link ]] &&
-    [[ -x tools/cc/llvm-3.7.1/bin/opt && -x tools/cc/llvm-3.7.1/bin/llvm-nm ]]
+    [[ -x tools/cc/llvm-3.7.1-src-tools/bin/opt && -x tools/cc/llvm-3.7.1/bin/llvm-nm ]]
 }
 
 if ! toolchain_ok; then

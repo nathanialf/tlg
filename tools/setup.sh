@@ -125,8 +125,7 @@ fi
 # --- 2a. The compilers: upstream LLVM 3.3 (library region) and 3.7.1 (game) ---
 # The two lines of config/flags.<slug>.txt (docs/TARGETS.md). tools/fetch_llvm.sh
 # pins each release's tarball and the libtinfo.so.5 its binaries link against;
-# the game module also runs the prebuilt 3.7.1's opt and llvm-nm
-# (tools/game_module.py).
+# the game module also runs the prebuilt 3.7.1's llvm-nm (tools/game_module.py).
 if [[ "${SKIP_TOOLCHAIN:-0}" == "1" ]]; then
     echo "==> SKIP_TOOLCHAIN=1; not fetching the project compiler"
 else
@@ -138,8 +137,9 @@ else
     bash tools/build_llvm.sh 3.3
     # The game prefix compiles with LLVM 3.7.1 built from source
     # (cxx=3.7.1-src, D81): the release plus tools/patches/llvm-3.7.1-*.patch,
-    # and llvm-link from the same tree for the game module
-    # (tools/cc/llvm-3.7.1-src-tools/bin). Skipped when the install is current.
+    # and llvm-link and opt from the same tree for the game module's link and
+    # link stage (tools/cc/llvm-3.7.1-src-tools/bin, D83). Skipped when the
+    # install is current.
     bash tools/build_llvm.sh 3.7.1
 fi
 

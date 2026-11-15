@@ -50,7 +50,7 @@ ln -s "/path/to/your/CUSA03745 base game.pkg" baserom/TLG_BASE.pkg
 
 1. runs `tools/setup.sh` when `.venv/`, PkgTool, objdiff or a compiler
    (LLVM 3.3 and 3.7.1, prebuilt and built from source, and 3.7.1's
-   `llvm-link`) are missing;
+   `llvm-link` and `opt`) are missing;
 2. runs `tools/extract_pkg.sh` when `baserom/base/eboot.elf` or
    `config/sha256sums.base.txt` is missing;
 3. runs `tools/build.sh verify` (the recorded SHA-256s of `eboot.bin` and
