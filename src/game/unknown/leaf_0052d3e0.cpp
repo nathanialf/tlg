@@ -52,7 +52,14 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-// NONMATCHING: the base rotates the loop (its first atomic take before the loop, the latch taking again: the unrotated-loop class) and computes the index as dec eax; cdqe (no nsw), the build folds the - 1 into the address
+// NONMATCHING: 20 of 41, 119 bytes for 135. The base's loop is this loop with the take written
+// twice (before the loop and at its end: `mov rcx, [rbx + 0x18]; mov eax, -1; lock xadd` at
+// 0x52d3fc..0x52d412 and at 0x52d420); the build has both until the code generator's tail
+// merge joins them (the two blocks end in the same three instructions; a `for` with the take as
+// its first and third expression gives the same). In the base the first copy's pointer load is
+// scheduled above the list's and the value's (`mov rcx, [rbx + 0x18]; mov r14, [rbx + 0x10];
+// vmovss xmm0, [rax + 0x19c]; mov eax, -1; vmovss [rbp - 0x14], xmm0; lock xadd`), so the two
+// tails share one instruction and stay apart: the residual is that block's order
 void FUN_0052d3e0(Work0052d3e0 *work) /* derived name */
 {
     __sync_fetch_and_add(work->started, 1);

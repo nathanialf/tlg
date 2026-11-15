@@ -27,8 +27,13 @@ extern Object057c9390 *D_57c9390;
 
 // NONMATCHING: 9/13: the registers are the base's with the header's pushBoolean; left, the stack
 // top's load, which the base has after the compare (`cmp qword [rax+0x148], 0; mov rcx,
-// [rdi+0x48]`) and the build second (the scheduler after register allocation takes it at once:
-// nothing it depends on precedes it)
+// [rdi+0x48]`) and the build second. Measured (round 284A): the function is the base's when the
+// pointer at +0x148 is declared `void *volatile`: the scheduler after register allocation takes
+// the top's load at once unless it follows a barrier, and a compare whose memory reference is
+// ordered is one (ScheduleDAGInstrs' BarrierChain, MachineInstr::hasOrderedMemoryRef); a
+// volatile read still folds into the `cmp`, an atomic one does not. Not written: this is the
+// field's only read in the executable, so nothing but this order says the program treats it as
+// volatile (a ruling)
 int FUN_0046fe10(lua_State *state) /* derived name */
 {
     pushBoolean(state, D_57c9390->unknown38->unknown900->unknown148 != 0);

@@ -34,13 +34,14 @@ struct Timer00b0ffe0 { /* derived name */
     float elapsed; /* +0x70 */
 };
 
-// NONMATCHING: the base computes both axes' tests (`setne; setne; or`) and
-// compares the 8-bit result with 1 at i32 (`movzx ecx, dl; cmp ecx, 1`, the
-// cmp-01 form); the build branches on each test; form not found
+/* the axes are read as a value, both of them before either is tested (`vucomiss; setne;
+ * vucomiss; setne; or dl, cl; movzx ecx, dl; cmp ecx, 1`: two tests against zero joined, which
+ * the code generator does not split into two branches) */
 bool FUN_00b0ffe0(Timer00b0ffe0 *timer) /* derived name */
 {
     Object05938c40 *object = D_5938c40;
-    if (object->axes0e38.active()) {
+    Axes05938c40 axes = object->axes0e38;
+    if (axes.active()) {
         timer->elapsed += object->frameTime194;
         if (timer->elapsed >= 1.0f) {
             timer->elapsed = 0;
@@ -50,13 +51,11 @@ bool FUN_00b0ffe0(Timer00b0ffe0 *timer) /* derived name */
     return false;
 }
 
-// NONMATCHING: the base computes both axes' tests (`setne; setne; or`) and
-// compares the 8-bit result with 1 at i32 (`movzx ecx, dl; cmp ecx, 1`, the
-// cmp-01 form); the build branches on each test; form not found
 bool FUN_00b10040(Timer00b0ffe0 *timer) /* derived name */
 {
     Object05938c40 *object = D_5938c40;
-    if (object->axes0e44.active()) {
+    Axes05938c40 axes = object->axes0e44;
+    if (axes.active()) {
         timer->elapsed += object->frameTime194;
         if (timer->elapsed >= 1.0f) {
             timer->elapsed = 0;

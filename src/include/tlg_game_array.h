@@ -209,6 +209,24 @@ template <class T> class Array05943280 /* derived name */
         --count;
     }
 
+    /* the element at `index` replaced by the last one (assigned, unless it
+     * is the last itself), the last one destroyed and the count lowered;
+     * returns 1 when an element was moved, as an int (0x1351240 over references another
+     * thread may replace: `mov eax, [r15+8]; dec eax; cmp eax, esi; jbe`,
+     * the assignment's exchange, `mov r14d, 1`, then the last element's
+     * release and `dec dword [r15+8]`) */
+    int removeSwap(unsigned index) /* derived name */
+    {
+        int moved = 0;
+        if (index < count - 1) {
+            data[index] = data[count - 1];
+            moved = 1;
+        }
+        data[count - 1].~T();
+        --count;
+        return moved;
+    }
+
     /* every element destroyed and the count cleared, the block and the
      * capacity kept (0x1343a80, 0x13544e0) */
     void removeAll() /* derived name */
@@ -216,6 +234,20 @@ template <class T> class Array05943280 /* derived name */
         for (unsigned i = 0; i < count; ++i)
             data[i].~T();
         count = 0;
+    }
+
+    /* every element destroyed and the count cleared, then the block given
+     * back and the block and the capacity cleared (0x1392310, a function of
+     * its own over an array of counted references: `mov dword [r14+8], 0`,
+     * the block's release, `mov qword [r14], 0; mov dword [r14+0xc], 0`) */
+    void release() /* derived name */
+    {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
+        count = 0;
+        releaseBlock(data);
+        data = 0;
+        capacity = 0;
     }
 
     /* every element destroyed, first to last, the count and the block left

@@ -28,6 +28,11 @@ struct Owner01211e00 { /* derived name */
     u8 unknown0[0x290];
     Entry01211e00 *unknown290; /* +0x290 */
     u32 unknown298;            /* +0x298: the count of +0x290 */
+
+    Entry01211e00 &at(int index)
+    {
+        return unknown290[index];
+    } /* derived name */
 };
 
 struct Object01211e00 {      /* derived name */
@@ -35,11 +40,10 @@ struct Object01211e00 {      /* derived name */
     Owner01211e00 *unknown8; /* +0x8 */
 };
 
-// NONMATCHING: the index: the base keeps the int counter 32 bits and
-// sign-extends it for each entry (`movsxd rbx, ebx`); this build widens it and
-// strength-reduces the entry's address (IndVarSimplify, round 164C's 0xf501a0).
+/* the counter is unsigned and the table's index an int: the index is sign-extended at each
+ * use (`movsxd`), not widened */
 void FUN_01211e00(Object01211e00 *self) /* derived name */
 {
-    for (int i = 0; i < self->unknown8->unknown298; i++)
-        self->unknown8->unknown290[i].unknown8->slot4(self);
+    for (u32 i = 0; i < self->unknown8->unknown298; i++)
+        self->unknown8->at(i).unknown8->slot4(self);
 }

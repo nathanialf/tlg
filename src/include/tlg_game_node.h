@@ -187,6 +187,15 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * body sets it) */
     AtomicRef0045c470() : object(0) {}
 
+    /* a copy holds its own reference (0x1391cd0: the first of two
+     * exchanged references copied, `mov r14, [rdi]; test r14, r14; je; cmp
+     * dword [r14+8], 0xdeadc0de; je; lea rax, [r14+8]; lock inc dword [rax]`) */
+    AtomicRef0045c470(const AtomicRef0045c470 &other) : object(other.object)
+    {
+        if (object)
+            addReference(object);
+    }
+
     /* an object of a class over T goes in: the pointer is converted where
      * it is exchanged and compared (`cmp rsi, rbx` at 0x45c494, the
      * argument first, where an argument of T's own type compares second) */
@@ -276,15 +285,22 @@ class Node00503fb0 /* derived name */
     virtual void unknown1();
     virtual void destroy(); /* derived name; slot 2 */
 
+    /* the component at a signed index (`movsxd` at each use under an unsigned
+     * counter: 0x9f54b0, 0x5065f0) */
+    Component00503fb0 *componentAt(int index) const /* derived name */
+    {
+        return components[index];
+    }
+
     /* the first component from `next` on whose type is `type` or derives
      * from it; `next` is left after it */
     Component00503fb0 *findComponent(const Type00503fb0 *type, unsigned &next) /* derived name */
     {
         FUN_01331c10(&readers);
         Component00503fb0 *found = 0;
-        for (int i = next; i < componentCount; ++i) {
-            if (isKindOf(components[i]->type, type)) {
-                found = components[i];
+        for (unsigned i = next; i < componentCount; ++i) {
+            if (isKindOf(componentAt(i)->type, type)) {
+                found = componentAt(i);
                 next = i + 1;
                 break;
             }
@@ -316,5 +332,16 @@ class Node00503fb0 /* derived name */
     Component00503fb0 **components; /* +0x58 */
     unsigned componentCount;        /* +0x60 */
 };
+
+/* two values exchanged through a copy of the first (0x1391cd0 over two
+ * references another thread may replace; inlined at 0xa055f0 over two
+ * members, both addresses formed first: `lea rdx, [rdi+0x10]; lea r15,
+ * [rdi+0x20]`) */
+template <class T> inline void exchange(T &first, T &second) /* derived name */
+{
+    T held(first);
+    first = second;
+    second = held;
+}
 
 #endif

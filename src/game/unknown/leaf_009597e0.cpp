@@ -28,19 +28,27 @@ struct Object009597e0 { /* derived name */
     u32 checkCount;             /* +0x188 */
     u8 unknown18c[0x68];
     u32 flags1f4; /* +0x1f4 */
+
+    Check009597e0 *checkAt(int index) const
+    {
+        return checks[index];
+    } /* derived name */
 };
 
 void FUN_009697f0(Record009597e0 *record); /* derived name */
 void FUN_00d243e0(Object009597e0 *self);   /* derived name */
 
-// NONMATCHING: the base keeps the check index int, sign-extended at each use (the parked
-// IndVarSimplify class), and the record in rsi
+// NONMATCHING: the index is the base's now (an unsigned counter, the checks' index an int:
+// `movsxd rax, ebx`). Left: the base runs the first check before the loop (`mov rax, [r15+0x180];
+// mov rdi, [rax]`, then `mov ebx, 1`), its loop tests the count at the top with the record at
+// +0x178 loaded again there and the check's result at the bottom (`inc ebx; test eax, eax; jne`);
+// the build's loop tests the result, then the count, and loads the record after the loop
 int FUN_009597e0(Object009597e0 *self) /* derived name */
 {
     if (!self->unknown178)
         return 1;
-    for (int i = 0; i < self->checkCount; i++) {
-        if (!self->checks[i]->slot0())
+    for (u32 i = 0; i < self->checkCount; i++) {
+        if (!self->checkAt(i)->slot0())
             return 0;
     }
     Record009597e0 *record = self->unknown178;

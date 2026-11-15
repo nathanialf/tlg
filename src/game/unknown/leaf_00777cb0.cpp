@@ -38,6 +38,10 @@ struct Object00777cb0 { /* derived name */
 // -1, 0) apart, the build merges them into one 16-byte `vmovups` of a constant; and the record
 // pointer is loaded before +0x160 in the base, after it here (with `self->record->unknown5110 =`
 // the order is the base's but the pointer is loaded again for the block)
+// Measured (round 284A, single unit): with +0x5104, +0x5108, +0x5110 each an int or a float (eight
+// forms) a pair is always merged (the -1 at +0x510c with a neighbour: `mov qword [rax + 0x5108],
+// rcx` for float, int, int; all four for int, int, int); -1 as two 16-bit stores stays two word
+// stores. The base's four stores are not consecutive stores of one type on one chain.
 void FUN_00777cb0(Object00777cb0 *self) /* derived name */
 {
     Record00777cb0 *record = self->record;

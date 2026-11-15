@@ -7,10 +7,15 @@
  * (a callback whose table is not traced); it reads no argument. */
 struct NameList0158ad13 { /* derived name */
 
+    const Name &at(int index) const
+    {
+        return names[index];
+    } /* derived name */
+
     bool contains(const Name &name) const
     {
-        for (int i = 0; i < count; i++)
-            if (names[i] == name)
+        for (unsigned i = 0; i < count; i++)
+            if (at(i) == name)
                 return true;
         return false;
     }
@@ -28,7 +33,8 @@ struct Object057c9390 { /* derived name: the object, seen from here */
 extern Object057c9390 *D_57c9390;
 extern const char D_158ad13[15];
 
-// NONMATCHING: the index kept int and sign-extended each iteration (`movsxd rdi, edx; inc edx`, IndVarSimplify), the build widens it; and the false result set before the count test (`mov ebx, 0`)
+/* the counter is unsigned and the table's index an int: the index is sign-extended at each
+ * use (`movsxd`), not widened */
 bool FUN_00645740() /* derived name */
 {
     Name name(D_158ad13);

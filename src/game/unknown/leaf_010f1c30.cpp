@@ -10,20 +10,26 @@
 struct FloatArray010f1c30 { /* derived name */
     float *data;
     unsigned count;
+
+    float &at(int index)
+    {
+        return data[index];
+    } /* derived name */
 };
 
-// NONMATCHING: IndVarSimplify: the base keeps the int index and sign-extends it each
-// iteration (`movsxd rcx, ecx`, `test r8d, r8d`), the build widens it (`test r8, r8`); 1 of 31
+/* the counter is unsigned and the table's index an int: the index is sign-extended at each
+ * use (`movsxd`), not widened */
 void FUN_010f1c30(FloatArray010f1c30 *current, FloatArray010f1c30 *previous,
                   FloatArray010f1c30 *term, float step) /* derived name */
 {
-    float scale = step * step * (13.0f / step);
+    float rate = 13.0f / step;
+    float scale = step * step * rate;
     unsigned count = current->count;
-    for (int i = 0; i < count; ++i) {
-        float value = current->data[i];
-        float change = value - previous->data[i];
-        float force = -value - change + term->data[i];
-        previous->data[i] = value;
-        current->data[i] += (scale * force + change) * 0.44f;
+    for (unsigned i = 0; i < count; ++i) {
+        float value = current->at(i);
+        float change = value - previous->at(i);
+        float force = term->at(i) - value - change;
+        previous->at(i) = value;
+        current->at(i) += (scale * force + change) * 0.44f;
     }
 }

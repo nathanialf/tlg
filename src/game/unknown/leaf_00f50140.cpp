@@ -24,6 +24,11 @@ struct Owner00f50140 /* derived name */
     u8 unknown0[0x290];
     Entry00f50140 *entries; /* +0x290 */
     unsigned count;         /* +0x298 */
+
+    Entry00f50140 &at(int index)
+    {
+        return entries[index];
+    } /* derived name */
 };
 
 struct Object00f50140 /* derived name */
@@ -40,12 +45,13 @@ void FUN_013cf950(Object00f50140 *self); /* derived name */
  * FUN_00f2c5d0): runs FUN_013cf950 on the object, hands it to the listener
  * of every entry of its owner's table (slot 2 of each, the table and its
  * count read again after each call), then clears the int at +0x70. */
-// NONMATCHING: IndVarSimplify, the base keeps the int index with movsxd in the loop where the build widens it (LSR then strides 0x18); 2 of 31
+/* the counter is unsigned and the table's index an int: the index is sign-extended at each
+ * use (`movsxd`), not widened */
 void FUN_00f50140(Object00f50140 *self) /* derived name */
 {
     FUN_013cf950(self);
-    for (int i = 0; i < self->owner->count; ++i) {
-        Listener00f50140 *listener = self->owner->entries[i].listener;
+    for (unsigned i = 0; i < self->owner->count; ++i) {
+        Listener00f50140 *listener = self->owner->at(i).listener;
         listener->vtable->notify(listener, self);
     }
     self->unknown70 = 0;

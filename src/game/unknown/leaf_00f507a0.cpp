@@ -31,6 +31,11 @@ struct Record00f507a0 /* derived name */
     u8 unknown0[0x290];
     Entry00f507a0 *entries; /* +0x290 */
     unsigned count;         /* +0x298 */
+
+    Entry00f507a0 &at(int index)
+    {
+        return entries[index];
+    } /* derived name */
 };
 
 struct Object00f507a0 /* derived name */
@@ -39,11 +44,10 @@ struct Object00f507a0 /* derived name */
     Record00f507a0 *record; /* +0x8 */
 };
 
-// NONMATCHING: the base keeps the int index sign-extended in the loop (`movsxd rbx, ebx; lea
-// rcx, [rbx + rbx*2]`, the truncated IV compared with `inc ebx; cmp ebx, [rax + 0x298]`); this
-// widens it and strength-reduces the address (`add r15, 24`): round 159C's IndVarSimplify lead
+/* the counter is unsigned and the table's index an int: the index is sign-extended at each
+ * use (`movsxd`), not widened */
 void FUN_00f507a0(Object00f507a0 *self) /* derived name */
 {
-    for (int i = 0; i < self->record->count; i++)
-        self->record->entries[i].child->slot5(self);
+    for (unsigned i = 0; i < self->record->count; i++)
+        self->record->at(i).child->slot5(self);
 }

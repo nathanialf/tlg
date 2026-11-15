@@ -14,6 +14,11 @@ struct Item00ce3dc0 { /* derived name */
 
 struct Array00ce3dc0 {    /* derived name */
     Item00ce3dc0 **items; /* derived name */
+
+    Item00ce3dc0 *at(int index) const
+    {
+        return items[index];
+    } /* derived name */
 };
 
 struct Job00ce3dc0 { /* derived name */
@@ -24,15 +29,16 @@ struct Job00ce3dc0 { /* derived name */
     int *done;            /* derived name */
 };
 
-// NONMATCHING: the int index kept sign-extended at each use in the loop where
-// the build widens and strength-reduces it (0xf501a0's IndVarSimplify class).
+// NONMATCHING: the indices are the base's now (unsigned counters, the array's index an int:
+// `movsxd`). Left: the base ends the loop on the index after the prefetched one's (`lea edx,
+// [rax + 8]` ... `add edx, -7; cmp edx, r8d`), the build on its own counter (`cmp ecx, eax`)
 void FUN_00ce3dc0(Job00ce3dc0 *job) /* derived name */
 {
     u32 end = job->end;
-    for (int i = job->begin; i < end; ++i) {
+    for (u32 i = job->begin; i < end; ++i) {
         if (i + 8 < end)
-            _mm_prefetch(reinterpret_cast<const char *>(job->array->items[i + 8]), _MM_HINT_NTA);
-        Item00ce3dc0 *item = job->array->items[i];
+            _mm_prefetch(reinterpret_cast<const char *>(job->array->at(i + 8)), _MM_HINT_NTA);
+        Item00ce3dc0 *item = job->array->at(i);
         item->flags = (item->flags << 1) & 2;
     }
     __sync_fetch_and_add(job->done, 1);

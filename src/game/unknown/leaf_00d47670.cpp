@@ -28,15 +28,20 @@ struct List00d47670 { /* derived name */
     u8 unknown0[0x268];
     Item00d47670 **items; /* derived name; +0x268 */
     u32 count;            /* derived name; +0x270 */
+
+    Item00d47670 *at(int index) const
+    {
+        return items[index];
+    } /* derived name */
 };
 
-// NONMATCHING: the int index kept 32-bit and sign-extended at each use where the
-// build widens it to 64 bits (0xf501a0's IndVarSimplify class).
+/* the counter is unsigned and the list's index an int: the index is sign-extended at each
+ * use (`movsxd rdx, ecx`), not widened */
 void FUN_00d47670(Object00d47670 *, List00d47670 *list) /* derived name */
 {
     u32 count = list->count;
-    for (int i = 0; i < count; ++i) {
-        Item00d47670 *item = list->items[i];
+    for (u32 i = 0; i < count; ++i) {
+        Item00d47670 *item = list->at(i);
         Source00d47670 *source = item->source;
         if (source) {
             item->unknown30 = source->unknownf0;
