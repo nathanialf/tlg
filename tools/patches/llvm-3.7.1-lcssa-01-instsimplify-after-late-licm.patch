@@ -1,0 +1,60 @@
+llvm-3.7.1 forward port: the loop-closed phis are removed after the late LICM
+
+This patch CHANGES THE -O2 PIPELINE: one more pass, the instruction
+simplifier, after the loop-invariant code motion that follows loop
+unrolling. It is the whole code change of upstream r271602 (a485984c0c88,
+2016-06-02, D20606, "[PM] Schedule InstSimplify after late LICM run, to
+clean up LCSSA nodes", first released in 3.9.0; its test left out): "LCSSA
+is implicitly run as a pass dependency of LICM. However no cleanup pass was
+run after this, so the LCSSA nodes ended in the optimized output." The
+upstream date is later than a 3.7 compiler, so the base's side is read from
+the base, not from the history.
+
+What the base shows. A value a loop leaves behind reaches code generation
+either through a one-entry phi in the exit block (3.7.1 and 3.8.1 as
+released) or directly (3.9.0 on), and loop strength reduction serves a use
+after the loop only in the second case:
+- 0xcb57e0 (a table of name and function pairs searched by name, the
+  function called after the loop): the base bases the walking register on
+  the function field (`add r13, 8` before the loop, `mov rsi, [r13 - 8]`
+  in it, `mov rax, [r13]` after); with the phi the register is based on
+  the entry (`mov rsi, [r13]`, `mov rax, [r13 + 8]`). Six source forms
+  (indexed, a reference to the entry, begin and end pointers, search then
+  use, locals) do not reach the base's bytes with the phi (round 276B).
+- 0xf1a950 and its thirteen copies (a destructor that finds an entry and
+  removes it): the base carries the byte offset through find()'s loop
+  (`add rbx, 0x10` beside `inc eax`) and uses it after; with the phi the
+  offset is recomputed after the loop and one more register is saved.
+The cause was found on 0xcb57e0 with the prebuilt releases (round 276B,
+b276/fam/): 3.9.1's llc over 3.7.1's optimised bitcode gives 3.7.1's code,
+so the difference is in the IR; `opt -O2 -debug-pass=Structure` has "Remove
+redundant instructions" after the last LICM from 3.9.1 on and not in 3.7.1
+or 3.8.1; the prebuilt 3.7.1's `opt -instsimplify` over its own optimised
+bitcode, then its llc, gives the base's three instructions.
+
+Swept alone over the game module built by the installed 3.7.1 with its
+eight patches (round 276B, 5,497 rows, 6,659 functions): 40 functions
+change; 15 rows become equal (5,476 to 5,491: 0xcb57e0 and the fourteen of
+the 0xf1a950 family) and none is lost.
+
+What stands against (drafts, not rows): 0x1af9d0 (a search loop returning
+the entry found) is equal WITH the phi (the base rebuilds the entry from the
+index after the loop: `shl rsi, 4; add r8, rsi`) and 1 of 22 without it;
+five source forms do not bring it back, and the prebuilt 3.9.1 does not
+give it either. 0x583bb0 is equal with the phi and 30 of 45 without (the
+state it has under 4.0.0, where it wants its reads reordered). 0xdacb80
+moves the other way, 43 to 76 of 78. So the base's rule may be narrower
+than upstream's pass; no upstream state between the two was found.
+
+--- a/lib/Transforms/IPO/PassManagerBuilder.cpp
++++ b/lib/Transforms/IPO/PassManagerBuilder.cpp
+@@ -389,6 +389,9 @@
+     // outer loop. LICM pass can help to promote the runtime check out if the
+     // checked value is loop invariant.
+     MPM.add(createLICMPass());
++
++    // Get rid of LCSSA nodes.
++    MPM.add(createInstructionSimplifierPass());
+   }
+ 
+   // After vectorization and unrolling, assume intrinsics may tell us more

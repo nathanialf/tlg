@@ -1,0 +1,58 @@
+llvm-3.7.1 forward port: a field of a struct declared with an alignment is aligned as the struct is
+
+This patch CHANGES THE ALIGNMENT clang gives a member access when the
+member's struct or class carries an alignment attribute (alignas,
+__attribute__((aligned))): the alignment of the load or store is the base
+object's alignment at the field's offset, where 3.7.1 takes the field
+type's own alignment. It is one number of upstream r246985 (7f416cc42638,
+2015-09-08, "Compute and preserve alignment more faithfully in
+IR-generation", first released in 3.8.0), which computes a field's address
+as the base Address's alignment at the field's offset for every struct
+(CodeGenFunction::EmitLValueForField through emitAddrOfFieldStorage and
+CGBuilder's CreateStructGEP). The commit itself is the Address type through
+all of clang's IR generation (110 files) and is NOT ported; this is its
+number for one case, written into 3.7.1's EmitLValueForField, and exists in
+no upstream state: a narrowing of this project.
+
+What the base shows. A 16-aligned vector of four floats copied or set
+field by field (0x13d01e0 and its three siblings, 0x13d90d0, 0x13544e0):
+the merged 16-byte move is `vmovaps`, which needs the first field's access
+to say align 16; 3.7.1 says align 4 and the move is `vmovups`. The
+prebuilt 3.8.1 and 3.9.1 give `vmovaps` (round 273B, b273/f3/).
+
+Why not upstream's rule for every struct. Built alone and swept (round
+276B, variant fieldalign_all: the same statement without the attribute
+test): the six rows become equal and 132 rows are lost, 148 functions
+change: an int member at an 8-aligned offset is loaded `align 8`, and
+3.7.1's GVN then widens that load to cover its neighbour (the load
+widening upstream removed in 4.0.0), which the base does not do. Round
+274D counted the same class under the prebuilt 3.8.1 (130 rows). So the
+base's compiler has neither 3.8's rule with 3.8's GVN nor 3.7.1's number
+for the aligned vector. Not measured: upstream's rule for every struct
+together with 4.0.0's removal of the load widening.
+
+Swept alone over the game module built by the installed 3.7.1 with its
+eight patches (round 276B, 5,497 rows, 6,659 functions): 7 functions
+change; 6 rows become equal (5,476 to 5,482: 0x13d01e0, 0x13d0210,
+0x13d0240, 0x13d0270, 0x13d90d0, 0x13544e0) and none is lost; the seventh
+function is the draft 0x4b32c0 (0 of 19 before and after).
+
+--- a/tools/clang/lib/CodeGen/CGExpr.cpp
++++ b/tools/clang/lib/CodeGen/CGExpr.cpp
+@@ -2709,6 +2709,16 @@
+   if (!base.getAlignment().isZero())
+     alignment = std::min(alignment, base.getAlignment());
+ 
++  // A field of a struct declared with an alignment is aligned as the struct
++  // is at the field's offset.
++  if (!rec->isUnion() && rec->hasAttr<AlignedAttr>() &&
++      !base.getAlignment().isZero()) {
++    CharUnits offset = getContext().toCharUnitsFromBits(
++        getContext().getASTRecordLayout(rec).getFieldOffset(
++            field->getFieldIndex()));
++    alignment = base.getAlignment().alignmentAtOffset(offset);
++  }
++
+   bool mayAlias = rec->hasAttr<MayAliasAttr>();
+ 
+   llvm::Value *addr = base.getAddress();

@@ -35,5 +35,6 @@ void *FUN_00cb3ce0(const Object00cb3ce0 *self) /* derived name */
     if (active && active->unknown50 && active->unknown30)
         return self->unknown48;
     const Object00cb3ce0_38 *other = self->unknown38;
-    return other->unknown88 ? other->unknown88 : other->unknown80;
+    void *const &chosen = other->unknown88 ? other->unknown88 : other->unknown80;
+    return chosen;
 }

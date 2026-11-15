@@ -18,5 +18,6 @@ struct Object008f08d0 { /* derived name */
 void *FUN_008f08d0(const Object008f08d0 *self) /* derived name */
 {
     const Record008f08d0 *record = self->unknown38;
-    return record->unknown88 ? record->unknown88 : record->unknown80;
+    void *const &chosen = record->unknown88 ? record->unknown88 : record->unknown80;
+    return chosen;
 }

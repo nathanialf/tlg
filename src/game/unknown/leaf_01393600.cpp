@@ -12,6 +12,6 @@ struct Object01393600 { /* derived name */
 
 void FUN_01393600(Object01393600 *self) /* derived name */
 {
-    self->unknown18 = self->unknown18 >= self->unknown14 ? self->unknown18 : self->unknown14;
+    self->unknown18 = self->unknown18 > self->unknown14 ? self->unknown18 : self->unknown14;
     self->unknown14 = 0;
 }
