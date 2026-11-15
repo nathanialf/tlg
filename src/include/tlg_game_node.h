@@ -34,15 +34,33 @@ void FUN_00c14bc0(Node00503fb0 *node); /* derived name: releases it later */
 
 /* the value at `value` replaced by `replacement` when it is `expected`;
  * returns the value found (`lock cmpxchg; cmove eax, ecx` at every site: the
- * expected value is returned when the exchange was made) */
+ * expected value is returned when the exchange was made).
+ *
+ * The statement after the exchange is a compiler barrier, and the base's
+ * bytes are the evidence that the developers' wrapper held one: 6,415 of the
+ * game's 20,959 `lock cmpxchg` are followed by `pushfq; pop rax; push rax;
+ * popfq` before the branch (0x2188f3, 0x81a967), every one a 32-bit exchange
+ * with a constant zero expected, in the wait loop of a spin lock: the
+ * exchange's flags are copied across a statement that clobbers them, and an
+ * assembly statement is the only one that does without emitting anything.
+ * With an expected value that is not a constant the same wrapper gives the
+ * other family's `lock cmpxchg; cmove; cmp; jne` (0xceaf25), where nothing
+ * is copied. 35 forms without the statement (the two __sync builtins, the
+ * __atomic strong and weak forms, wrappers returning the old value or a
+ * bool, 20 lock loops) branch on the exchange's flags at once. This is the
+ * one place the barrier is written (tools/dev_native_allow.txt). */
 inline int compareAndSwap(int *value, int expected, int replacement) /* derived name */
 {
     __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_SEQ_CST,
                                 __ATOMIC_SEQ_CST);
+    __asm__ __volatile__("" ::: "memory");
     return expected;
 }
 
-/* the same for a pointer (`lock cmpxchg qword; cmove rax, rbx` at 0x45c487) */
+/* the same for a pointer (`lock cmpxchg qword; cmove rax, rbx` at 0x45c487),
+ * without the barrier: a pointer exchanged against a known null branches on
+ * the exchange's flags at once (`xor eax, eax; lock cmpxchg qword [r14+0x30],
+ * rcx; je` at 0xc91f5c) */
 template <class T>
 inline T *compareAndSwap(T **value, T *expected, T *replacement) /* derived name */
 {
@@ -160,6 +178,10 @@ inline T *findNamed(const Name &name, const Type00503fb0 *type) /* derived name 
 template <class T> class AtomicRef0045c470 /* derived name */
 {
   public:
+    /* empty (`mov qword [r14+0x30], 0` at 0xc91f3b, before the constructor's
+     * body sets it) */
+    AtomicRef0045c470() : object(0) {}
+
     /* an object of a class over T goes in: the pointer is converted where
      * it is exchanged and compared (`cmp rsi, rbx` at 0x45c494, the
      * argument first, where an argument of T's own type compares second) */

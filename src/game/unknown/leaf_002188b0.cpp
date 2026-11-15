@@ -15,11 +15,6 @@ extern Type059458a8 *D_57ca3d0;
  * Object016b9108's constructor, and the object constructed in place. This
  * unit creates the object, so it emits the class's vtable and its two
  * destructors (FUN_0021bdf0 and FUN_0021bf10, defined in the header). */
-// NONMATCHING: after each of the two `lock cmpxchg` the base saves and restores the flags around nothing
-// (`pushfq; pop rax; push rax; popfq` before `je` at 0x2188f3 and before `jne` at 0x218999: the flags
-// copied to a register and back; 6,415 `lock cmpxchg` of the executable are followed by that pair), the
-// build branches at once (336 bytes against 343); the two spill slots (the name at -0x88, the time's
-// vector at -0x80) are the other way round in the build.
 Object016b9108 *FUN_002188b0(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016a7870));

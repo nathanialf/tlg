@@ -15,7 +15,9 @@ extern __thread SceKernelEqueue D_16dc0a8;
 /* derived names: the spin lock at 0x59458a4 (2,118 sites name it). A
  * creator takes it after allocating the object (`xor eax, eax; lock
  * cmpxchg [0x59458a4], r13d` with r13d 1, at 0x2188e9) and
- * Object016b9108's constructor releases it. */
+ * Object016b9108's constructor releases it. The same lock, with the same
+ * wait, is a member of other objects (the word after an array's fields at
+ * 0x81a961, 0x9f5a31 and 0x1331d51). */
 class Lock059458a4 /* derived name */
 {
   public:
@@ -40,8 +42,15 @@ class Lock059458a4 /* derived name */
         }
     }
 
+    /* gives the lock back: the word exchanged back to 0, the result not
+     * read (`xor ecx, ecx; mov eax, 1; lock cmpxchg [r13], ecx` at 0x81aab0) */
+    void unlock()
+    {
+        compareAndSwap(&locked, 1, 0);
+    }
+
   private:
-    int locked; /* +0x0: 1 while a creator holds it */
+    int locked; /* +0x0: 1 while a thread holds it */
 };
 
 extern Lock059458a4 D_59458a4;

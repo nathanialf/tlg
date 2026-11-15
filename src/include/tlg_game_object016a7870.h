@@ -3,33 +3,26 @@
 #ifndef TLG_GAME_OBJECT016A7870_H
 #define TLG_GAME_OBJECT016A7870_H
 
-#include "tlg_game_object016b9108.h"
+#include "tlg_game_object01343880.h"
 #include "tlg_game_node.h"
 
 /* derived names: the class whose vtable is at 0x16a7870
  * (config/vtables.derived.base.txt, stored by FUN_002188b0 FUN_0021bdf0
- * FUN_0021bf10), derived from Object016b9108: its slots 2 to 4 are the
- * base's, slots 5 to 8 its own (declared; their bodies are not written
- * here). 0x40 bytes (`mov edi, 0x40` before operator new at 0x2188c8). Its
- * own fields are traced where its creator FUN_002188b0 clears them and its
- * destructor FUN_0021bdf0 tears them down. */
-class Object016a7870 : public Object016b9108 /* derived name */
+ * FUN_0021bf10), derived from Object01343880: its slots 2 to 4 are
+ * Object016b9108's, slots 5 to 8 Object01343880's. 0x40 bytes (`mov edi,
+ * 0x40` before operator new at 0x2188c8). Its own field is traced where its
+ * creator FUN_002188b0 clears it and its destructor FUN_0021bdf0 tears it
+ * down. */
+class Object016a7870 : public Object01343880 /* derived name */
 {
   public:
-    /* inlined in the creator: the base built from the name, then `mov qword
-     * [r15+0x28], 0; mov dword [r15+0x30], 0`, the vptr, `mov qword
-     * [r15+0x38], 0` */
-    Object016a7870(const Name &name) : Object016b9108(name), unknown28(0), unknown30(0) {}
+    /* inlined in the creator: the base built from the name and its two
+     * fields cleared, then the vptr, then `mov qword [r15+0x38], 0` */
+    Object016a7870(const Name &name) : Object01343880(name) {}
 
     virtual ~Object016a7870();
-    virtual void slot5(); /* derived name; FUN_000058a0, not traced */
-    virtual void slot6(); /* derived name; FUN_01343880, not traced */
-    virtual void slot7(); /* derived name; FUN_001af750, not traced */
-    virtual void slot8(); /* derived name; FUN_001af750, not traced */
 
   private:
-    void *unknown28; /* +0x28: null from the constructor; not traced */
-    int unknown30;   /* +0x30: zero from the constructor; not traced */
     /* +0x38: a counted reference, empty from the constructor, released by
      * the destructor (the pointer cleared, `cmp dword [r+8], 0xdeadc0de`,
      * the count dropped) */
