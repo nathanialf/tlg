@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_locked_array.h"
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_node.h"
 
 /* derived names: an object counted by the references an array holds
@@ -14,7 +14,7 @@ void FUN_001b59d0(Array05943280<Ref00503fb0<Counted001b59d0>> *array,
 
 struct Object01331d20 { /* derived name */
     u8 unknown0[0x38];
-    LockedArray0081a930<Ref00503fb0<Counted001b59d0>> array38; /* +0x38 */
+    Array01343a80<Ref00503fb0<Counted001b59d0>> array38; /* +0x38 */
 };
 
 /* derived name: appends a reference to the object to the holder's array

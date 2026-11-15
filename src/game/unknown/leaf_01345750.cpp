@@ -24,7 +24,7 @@ void FUN_01345750(Object01345750 *self) /* derived name */
     self->unknown30.removeAll();
     self->unknown18.removeAll();
     self->unknown48.removeAll();
-    self->unknown30.release();
-    self->unknown18.release();
-    self->unknown48.release();
+    self->unknown30.lock.unlock();
+    self->unknown18.lock.unlock();
+    self->unknown48.lock.unlock();
 }
