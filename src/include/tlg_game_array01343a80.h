@@ -14,9 +14,18 @@
 template <class T> class Array01343a80 : public Array05943280<T> /* derived name */
 {
   public:
-    /* the state cleared after the array is made empty (0x12adade, 0xc1acc0:
-     * `mov dword [rbp-0x3c], 0` after the index's store at +0x10) */
-    Array01343a80() : state(0) {}
+    /* the state released after the array is made empty (0x12adade, 0xc1acc0:
+     * `mov dword [rbp-0x3c], 0` after the index's store at +0x10). The word
+     * is a lock's (release() below gives it back by compare-and-swap) and
+     * its first store is the lock's release, an atomic store, not a plain
+     * one: where a class holds two arrays the first's word stays a store of
+     * its own before the second's fields are cleared (0x995609: `mov dword
+     * [r15+0x3c], 0` then `vmovdqu [r15+0x40], xmm0`), and a plain zero
+     * store there joins the zero stores after it in one 20-byte clear. */
+    Array01343a80()
+    {
+        __sync_lock_release(&state);
+    }
 
     void release() /* derived name */
     {
