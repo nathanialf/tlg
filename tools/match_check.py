@@ -84,21 +84,36 @@ def generate_tables_of(tu: str, ver: str) -> None:
                            cwd=REPO_ROOT, check=True, env={**os.environ, "VERSION": ver})
 
 
-def _compilers_newest(link: bool = False) -> float:
-    """The newest installed compiler built from source (tools/build_llvm.sh
-    replaces tools/cc/llvm-*-src): a reinstalled one makes every older object
-    stale, whichever line built it (round 116A). With `link`, llvm-link beside
-    the game's too (tools/cc/llvm-*-src-tools), which the game's bitcode and
-    module pass through."""
-    cc = REPO_ROOT / "tools" / "cc"
-    paths = list(cc.glob("llvm-*-src/bin/clang")) + (list(cc.glob("llvm-*-src-tools/bin/llvm-link")) if link else [])
+_LINE_COMPILERS: dict[str, list[tuple[str, str]]] = {}     # version -> (prefix, compiler) per flags line
+
+
+def _compiler_mtime(tu: str, ver: str, link: bool = False) -> float:
+    """When the compiler of the unit's line was installed: the binary the
+    longest matching prefix of config/flags.<slug>.txt names with cxx=
+    (tools/compile_cpp.sh's choice, as tools/gen_ninja.py reads it for the
+    edge's implicit input). An object is stale when its own line's compiler
+    is newer than it (tools/build_llvm.sh replaces tools/cc/llvm-<v>-src);
+    another line's compiler, or one no line names, does not touch it (round
+    270B: installing any compiler made every tree's objects stale). With
+    `link`, llvm-link beside that compiler too
+    (tools/cc/llvm-<v>-src-tools/bin), which a game unit's bitcode and the
+    module pass through. 0 for a line that names no compiler under tools/cc."""
+    from gen_ninja import compiler_of, compilers
+    if ver not in _LINE_COMPILERS:
+        _LINE_COMPILERS[ver] = compilers(config_path(REPO_ROOT, ver, "flags", "txt"))
+    cc = REPO_ROOT / compiler_of(tu, _LINE_COMPILERS[ver])
+    paths = [cc]
+    if link:
+        prefix = cc.parent.parent
+        paths.append(prefix.with_name(prefix.name + "-tools") / "bin" / "llvm-link")
     return max([p.stat().st_mtime for p in paths if p.exists()] + [0.0])
 
 
-def _fresh(out: Path, src: Path, link: bool = False) -> bool:
-    """Whether `out` is newer than `src`, the compilers and every header its
-    depfile (<out>.d, written by tools/compile_cpp.sh) lists."""
-    if not out.exists() or out.stat().st_mtime < max(src.stat().st_mtime, _compilers_newest(link)):
+def _fresh(out: Path, tu: str, ver: str, link: bool = False) -> bool:
+    """Whether `out` is newer than the unit `tu`, its line's compiler and
+    every header its depfile (<out>.d, written by tools/compile_cpp.sh) lists."""
+    src = REPO_ROOT / tu
+    if not out.exists() or out.stat().st_mtime < max(src.stat().st_mtime, _compiler_mtime(tu, ver, link)):
         return False
     dep = out.with_name(out.name + ".d")
     # ninja (deps = gcc) consumes the depfile it was given, so an object
@@ -135,9 +150,8 @@ def compile_tu(tu: str, ver: str) -> Path:
     if is_module_tu(tu):
         return module_object(tu, ver)
     obj = object_path(tu, ver)
-    src = REPO_ROOT / tu
     generate_tables_of(tu, ver)
-    if _fresh(obj, src):
+    if _fresh(obj, tu, ver):
         return obj
     subprocess.run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), tu, str(obj.relative_to(REPO_ROOT))],
                    cwd=REPO_ROOT, check=True)
@@ -168,12 +182,12 @@ def module_stale(ver: str) -> str | None:
                                                                  "vtables.derived", "imports", "local_data")]):
         if p.exists() and p.stat().st_mtime > mt:
             return f"{p.relative_to(REPO_ROOT)} is newer"
-    if _compilers_newest(link=True) > mt:
-        return "a compiler is newer"
+    if _compiler_mtime(gm.MODULE_PREFIX, ver, link=True) > mt:
+        return "the game compiler is newer"
     for s in sources():
         if s.startswith(gm.MODULE_PREFIX):
             bc = gm.ir_path(s, ver)
-            if not _fresh(bc, REPO_ROOT / s, link=True) or bc.stat().st_mtime > mt:
+            if not _fresh(bc, s, ver, link=True) or bc.stat().st_mtime > mt:
                 return f"{s} changed"
     return None
 
@@ -211,7 +225,7 @@ def single_module(tu: str, ver: str, base=None) -> Path:
     import game_module as gm
     bc = gm.ir_path(tu, ver)
     generate_tables_of(tu, ver)
-    if not _fresh(bc, REPO_ROOT / tu, link=True):
+    if not _fresh(bc, tu, ver, link=True):
         bc.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), "--ir", tu, str(bc.relative_to(REPO_ROOT))],
                        cwd=REPO_ROOT, check=True)
