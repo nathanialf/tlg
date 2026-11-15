@@ -4,6 +4,8 @@
 #ifndef TLG_GAME_OBJECT00CA38F0_H
 #define TLG_GAME_OBJECT00CA38F0_H
 
+#include "tlg_game_name.h"
+
 /* derived names: the class whose complete destructor is 0xca38f0 (its row
  * named for it, D15). The classes derived from it tail-call that destructor
  * from their own (the files that include this header). The destructor is
@@ -12,6 +14,9 @@
 class Object00ca38f0 /* derived name */
 {
   public:
+    Object00ca38f0(
+        const Name &
+            name); /* 0xca34c0, its row named after it (D15): the derived classes' creators call it (FUN_00b1f270) */
     virtual ~Object00ca38f0();
 };
 

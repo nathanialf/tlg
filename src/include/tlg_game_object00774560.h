@@ -20,6 +20,9 @@
 class Object00774560 : public Object016b9108 /* derived name */
 {
   public:
+    Object00774560(
+        const Name &
+            name); /* 0x774370, its row named after it (D15): the derived classes' creators call it (FUN_00763020) */
     virtual ~Object00774560();
     virtual void slot5();  /* derived name; FUN_001af750, not traced */
     virtual void slot6();  /* derived name; FUN_00774760, not traced */
@@ -40,8 +43,12 @@ class Object00774560 : public Object016b9108 /* derived name */
     virtual void slot21(); /* derived name; FUN_00774b50, not traced */
     virtual void slot22(); /* derived name; FUN_000058a0, not traced */
 
+  protected:
+    u8 unknown24[0x58];
+    int unknown7c; /* +0x7c: zero from this constructor, and again in the body of FUN_00763020's (`mov dword [r15+0x7c], 0` last); not traced */
+
   private:
-    u8 unknown24[0xbc];
+    u8 unknown80[0x60];
     Name namee0; /* +0xe0: released by the destructor (`mov eax, [rbx+0xe0]; shl 5`) */
     Name namee4; /* +0xe4: released by the destructor (`mov eax, [rbx+0xe4]; shl 5`) */
 };

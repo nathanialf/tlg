@@ -6,7 +6,8 @@
 
 #include "tlg_types.h"
 #include "tlg_game_object016b9108.h"
-#include "tlg_game_object0134f620.h"
+#include "tlg_game_array01343a80.h"
+#include "tlg_game_node.h"
 
 /* derived names: the class whose vtable is at 0x16cb168
  * (config/vtables.derived.base.txt, stored by FUN_005aaa70 FUN_005ab240
@@ -19,12 +20,19 @@
 class Object016cb168 : public Object016b9108 /* derived name */
 {
   public:
+    /* inlined in the creators of the derived classes (FUN_005aaa70): the
+     * base built from the name, this class's vptr, the array cleared
+     * (`vmovdqu [r15+0x28], xmm0`), its owner index from the thread's heap
+     * and its state; the derived class's vptr is stored after them */
+    Object016cb168(const Name &name) : Object016b9108(name) {}
+
     virtual ~Object016cb168();
 
   private:
     u8 unknown24[0x4];
-    /* +0x28: torn down by the destructor (`lea rdi, [rbx+0x28]; call 0x134f620`) */
-    Object0134f620 record28;
+    /* +0x28: an array of counted references, torn down by the destructor
+     * (`lea rdi, [rbx+0x28]; call 0x134f620`) */
+    Array01343a80<Ref00503fb0<Node00503fb0>> record28;
 };
 
 #endif
