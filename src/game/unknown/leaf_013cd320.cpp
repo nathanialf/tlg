@@ -6,10 +6,6 @@
  * two arrays made with new[] are deleted and their pointers cleared, each
  * only where it is set (`test rdi, rdi; je` over the call and the store at
  * 0x13cd33d); the members follow, last first. */
-// NONMATCHING: an inline-cost margin under the one-stage module: the base holds the destructor of the array at
-// +0x108 inlined (659 bytes), the build calls the instantiation (393 bytes); with that destructor local to a
-// link stage (round 279C's form, measured on this unit alone) the function is the base's, instruction for
-// instruction
 Object013cd320::~Object013cd320()
 {
     FUN_013cd5c0();

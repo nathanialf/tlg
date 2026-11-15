@@ -5,6 +5,4 @@
  * destructor is inlined (its vptr store, then the two names). FUN_013b8e50, slot 1, is
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-// NONMATCHING (the deleting destructor FUN_013b8e50 only): an inline-cost margin: the build calls this
-// destructor where the base inlines it (its vptr store is in FUN_013b8e50 too)
 Object016d22b8::~Object016d22b8() {}

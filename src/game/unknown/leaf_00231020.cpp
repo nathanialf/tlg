@@ -17,9 +17,19 @@ struct Entry00231020 {                    /* derived name */
 };
 
 struct Object00231020 { /* derived name */
+    ~Object00231020();
+
     u8 unknown0[0x558];
     Array05943280<Entry00231020> entries; /* +0x558 */
 };
+
+// NONMATCHING: the object's destructor (FUN_0022fd60, 2,628 bytes; the
+// vtable 0x16a7988): only the entries at +0x558 are written: destroyed one
+// by one through the entry's destructor (`imul rdi, rax, 0xe0; add rdi,
+// [r14+0x558]; call 0x1347ab0` at 0x2302b0), then the block released. The
+// entry's destructor has five callers in the base; this is the second one
+// written.
+Object00231020::~Object00231020() {}
 
 void FUN_002307d0(Object00231020 *self); /* derived name */
 void FUN_00c57220(Node00503fb0 *node);   /* derived name */

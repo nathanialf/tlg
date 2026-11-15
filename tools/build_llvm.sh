@@ -25,8 +25,10 @@
 #      llvm source root). These only make the old sources build with a
 #      current host toolchain; none changes code generation.
 #   3. Apply the other patches, tools/patches/llvm-<version>-<what>-*.patch
-#      for every other <what>: 3.3's twelve backports and 3.7.1's ten patches
-#      (four PS4 items and six forward ports; each file's header has its
+#      for every other <what>: 3.3's twelve backports and 3.7.1's thirteen
+#      patches (four PS4 items, six forward ports, two local rules of the
+#      two-stage game module, D83, and lxadd, a scheduling model rule;
+#      each file's header has its
 #      evidence, config/flags.<slug>.txt lists them). These DO change code
 #      generation, so --verify is the check of a build made with the host
 #      patches alone: with the others applied it lists the objects they
@@ -34,9 +36,11 @@
 #   4. Configure (CMake + ninja, Release, X86 only, no assertions), build the
 #      `clang` target and install it with its resource headers
 #      (lib/clang/<version>/include, which -nostdlibinc relies on for xmmintrin.h).
-#   5. For 3.7.1 (and 4.0.0), build `llvm-link` from the same tree and configuration and
-#      install it into tools/cc/llvm-<version>-src-tools/bin: the game region
-#      is linked as one module before its -O2 pipeline (tools/game_module.py,
+#   5. For 3.7.1 (and 4.0.0), build `llvm-link` (and for 3.7.1 `opt`) from the
+#      same tree and configuration and install it into
+#      tools/cc/llvm-<version>-src-tools/bin: the game region's units are
+#      linked as one module and the link stage's pipeline is run over it by
+#      the compiler's own patched passes (tools/game_module.py,
 #      docs/DECISIONS.md D50). It sits beside the prefix, not in it, so the
 #      prefix stays the compiler alone that --verify compares with the
 #      prebuilt release. An install whose compiler is current but which has no
@@ -88,7 +92,7 @@ VERIFY_SUBST[3.3]='-fstack-protector-strong|-fstack-protector'
 # The IR tools a version's line needs beside its compiler (step 5)
 declare -A EXTRA_TOOLS
 EXTRA_TOOLS[4.0.0]='llvm-link'
-EXTRA_TOOLS[3.7.1]='llvm-link'
+EXTRA_TOOLS[3.7.1]='llvm-link opt'
 
 VER=3.7.1
 if [[ $# -gt 0 && "$1" != -* ]]; then VER="$1"; shift; fi

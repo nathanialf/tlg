@@ -11,12 +11,13 @@ Every row of config/data_schema.<slug>.txt gets a `gen_data` edge
 executable, an implicit input of the compile of the TU config/data.<slug>.txt
 names for it (docs/DECISIONS.md D18).
 The game region (src/game/, tools/game_module.py's MODULE_PREFIX) is one
-module (docs/DECISIONS.md D50): each of its sources has an `ir` edge
-(tools/compile_cpp.sh --ir) to build/<slug>/game/ir/<path>.bc (and .ll), and one
-`game_module` edge links them all with their stand-ins and compiles the
-module to build/<slug>/game/module.o, with the compiler, llvm-link, the
-boundary (config/modules.<slug>.txt) and the configuration the stand-ins read
-as implicit inputs. The library sources keep one object each.
+module built in two stages (tools/game_module.py): each of its sources has
+an `ir` edge (tools/compile_cpp.sh --ir) to build/<slug>/game/ir/<path>.bc
+(and .ll) and to the unit's stage 1 bitcode build/<slug>/game/unit/<path>.bc,
+and one `game_module` edge links the stage 1 units with their stand-ins,
+runs the link stage and compiles the module to build/<slug>/game/module.o,
+with the compiler, llvm-link, opt, the boundary (config/modules.<slug>.txt)
+and the configuration the stand-ins read as implicit inputs. The library sources keep one object each.
 `gate` is the default target. There is no link step: the original was linked
 by Sony's linker against its SDK, and the match is per function.
 
@@ -32,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tlg_version import baseelf_path, build_dir, config_path, detect_version  # noqa: E402
 from gen_data_inc import schema_rows  # noqa: E402
-from game_module import LLVM_LINK, MODULE_PREFIX  # noqa: E402
+from game_module import LLVM_LINK, LLVM_OPT, MODULE_PREFIX  # noqa: E402
 
 SRC_EXTS = (".cpp", ".cc", ".c")
 
@@ -150,7 +151,8 @@ def main() -> int:
             bc = f"{bd}/game/ir/{s}.bc"
             lls.append(bc)
             module_cc = ccdep
-            lines.append(f"build {esc(bc)} | {esc(bc[:-3] + '.ll')}: cxx_ir {esc(s)} | tools/compile_cpp.sh "
+            lines.append(f"build {esc(bc)} | {esc(bc[:-3] + '.ll')} {esc(f'{bd}/game/unit/{s}.bc')}: "
+                         f"cxx_ir {esc(s)} | tools/compile_cpp.sh "
                          f"{esc(str(flags))}{ccdep} {esc(LLVM_LINK)}{gen}")
             continue
         o = f"{bd}/obj/{s}.o"
@@ -164,7 +166,8 @@ def main() -> int:
         objs.append(mod)
         lines.append(f"build {esc(mod)}: game_module {' '.join(esc(x) for x in lls)} | tools/game_module.py "
                      f"tools/module_boundary.py tools/base_elf.py tools/compile_cpp.sh {esc(str(flags))} {cfg} "
-                     f"{esc(str(elf))} {esc(LLVM_LINK)}{module_cc}")
+                     f"{esc(str(elf))} {esc(LLVM_LINK)}{module_cc}"
+                     + (f" {esc(LLVM_OPT)}" if (REPO_ROOT / LLVM_OPT).exists() else ""))
     for tu in gen_of:
         print(f"gen_ninja: {tu} (config/data.{ver}.txt) is not a source under src/", file=sys.stderr)
         return 1

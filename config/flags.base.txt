@@ -36,7 +36,7 @@
 #               under the prebuilt 3.8.1 holds 4,893 of 5,497 game rows
 #               where 3.7.1 holds 5,302 with the PS4 items alone). Built
 #               from source (cxx=3.7.1-src, tools/build_llvm.sh 3.7.1) with
-#               ten patches (tools/patches/llvm-3.7.1-*.patch, each with
+#               thirteen patches (tools/patches/llvm-3.7.1-*.patch, each with
 #               its evidence and its sweep in its header). Four PS4 items:
 #               one nop after the stack check's failure call (sspnop, D26);
 #               a thread-local with local linkage kept general-dynamic
@@ -53,7 +53,13 @@
 #               (fpstore, r248168, r248169, r248190); the loop-closed phis
 #               are removed after the late LICM (lcssa, r271602); a field
 #               of a struct declared with an alignment is aligned as the
-#               struct is (fieldalign, one number of r246985).
+#               struct is (fieldalign, one number of r246985). Two
+#               local rules of the two-stage module (D83), no upstream
+#               state: SimplifyCFG's FoldBranchToCommonDest takes no load
+#               of a thread-local as its bonus instruction (tlsbonus); the
+#               link stage's GVN does no scalar PRE (ltopre). One local
+#               rule of the btver2 scheduling model, no upstream state: a
+#               locked exchange-add is one micro-op (lxadd).
 #               5,980 of its 16,344 functions load a stack canary, those that
 #               take a local's address or hold an array (tools/fingerprint.py
 #               --range 0x1a3e00:, D20): the Orbis default

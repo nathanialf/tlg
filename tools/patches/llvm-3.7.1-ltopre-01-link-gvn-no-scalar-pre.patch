@@ -1,0 +1,93 @@
+llvm-3.7.1 local rule: the link stage's GVN does no scalar PRE
+
+This patch CHANGES THE LINK STAGE ONLY (PassManagerBuilder::
+addLTOOptimizationPasses): its GVN runs without scalar PRE (GVN.cpp
+performPRE); load PRE and the rest of GVN are unchanged, and every per-unit
+pipeline is unchanged. 3.7.1 has no option for this (EnablePRE, GVN.cpp:67,
+gates load PRE as well, 1774 and 2361).
+
+Census (round 296C, a report of every scalar PRE per stage, c296/res/
+opt_ctl.err and u/ctl/err.txt): over the whole two-stage game module the
+units' own GVN performs 136 scalar PREs in 133 functions (their rows are
+equal: the base agrees); the link's GVN performs 3: 0x307330 and 0x402110
+(the address of the state's +0x40, which stage 1 left as a phi of two equal
+addresses: the base's `add rax, 0x40` in the join; the link hoists it and
+the store takes `[rax+0x40]`) and draft 0xc1ac70 (a bitcast, no change in
+its code). The base agrees with none of the link's three. Base context
+(joinadd.py): 15 functions keep a join-block address and a store through
+it, as the two rows do (0x4021a0 and 0x471a40 are unwritten siblings).
+
+Swept alone (probe option -tlg-scalar-pre=false on the link's opt): 2
+functions change, 0x307330 and 0x402110 become equal, no row lost, no
+draft or witness changed (c290's -enable-pre=false at the link moved draft
+0xc1ac70 from 81/97 to 43/97: load PRE; this rule leaves it at 81/97).
+
+diff -ru a/include/llvm/Transforms/Scalar.h b/include/llvm/Transforms/Scalar.h
+--- a/include/llvm/Transforms/Scalar.h
++++ b/include/llvm/Transforms/Scalar.h
+@@ -338,7 +338,7 @@
+ // GVN - This pass performs global value numbering and redundant load
+ // elimination cotemporaneously.
+ //
+-FunctionPass *createGVNPass(bool NoLoads = false);
++FunctionPass *createGVNPass(bool NoLoads = false, bool NoScalarPRE = false);
+ 
+ //===----------------------------------------------------------------------===//
+ //
+diff -ru a/lib/Transforms/Scalar/GVN.cpp b/lib/Transforms/Scalar/GVN.cpp
+--- a/lib/Transforms/Scalar/GVN.cpp
++++ b/lib/Transforms/Scalar/GVN.cpp
+@@ -590,6 +590,7 @@
+ 
+   class GVN : public FunctionPass {
+     bool NoLoads;
++    bool NoScalarPRE;
+     MemoryDependenceAnalysis *MD;
+     DominatorTree *DT;
+     const TargetLibraryInfo *TLI;
+@@ -616,8 +617,9 @@
+ 
+   public:
+     static char ID; // Pass identification, replacement for typeid
+-    explicit GVN(bool noloads = false)
+-        : FunctionPass(ID), NoLoads(noloads), MD(nullptr) {
++    explicit GVN(bool noloads = false, bool noscalarpre = false)
++        : FunctionPass(ID), NoLoads(noloads), NoScalarPRE(noscalarpre),
++          MD(nullptr) {
+       initializeGVNPass(*PassRegistry::getPassRegistry());
+     }
+ 
+@@ -729,8 +731,8 @@
+ }
+ 
+ // The public interface to this file...
+-FunctionPass *llvm::createGVNPass(bool NoLoads) {
+-  return new GVN(NoLoads);
++FunctionPass *llvm::createGVNPass(bool NoLoads, bool NoScalarPRE) {
++  return new GVN(NoLoads, NoScalarPRE);
+ }
+ 
+ INITIALIZE_PASS_BEGIN(GVN, "gvn", "Global Value Numbering", false, false)
+@@ -2358,7 +2360,7 @@
+     ++Iteration;
+   }
+ 
+-  if (EnablePRE) {
++  if (EnablePRE && !NoScalarPRE) {
+     // Fabricate val-num for dead-code in order to suppress assertion in
+     // performPRE().
+     assignValNumForDeadCode();
+diff -ru a/lib/Transforms/IPO/PassManagerBuilder.cpp b/lib/Transforms/IPO/PassManagerBuilder.cpp
+--- a/lib/Transforms/IPO/PassManagerBuilder.cpp
++++ b/lib/Transforms/IPO/PassManagerBuilder.cpp
+@@ -489,7 +489,9 @@
+   PM.add(createLICMPass());                 // Hoist loop invariants.
+   if (EnableMLSM)
+     PM.add(createMergedLoadStoreMotionPass()); // Merge ld/st in diamonds.
+-  PM.add(createGVNPass(DisableGVNLoadPRE)); // Remove redundancies.
++  // The link's GVN keeps what each unit's PRE left (no scalar PRE); loads
++  // are still made available across blocks.
++  PM.add(createGVNPass(DisableGVNLoadPRE, /*NoScalarPRE=*/true));
+   PM.add(createMemCpyOptPass());            // Remove dead memcpys.
+ 
+   // Nuke dead stores.

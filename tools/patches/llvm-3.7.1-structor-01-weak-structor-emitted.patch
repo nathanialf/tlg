@@ -9,9 +9,9 @@ built the game region kept clang 3.3's rule (CGCXX.cpp,
 TryEmitDefinitionAsAlias: no alias to a linker-weak target, no
 replacement): D1 is emitted as its own function that calls D2, which the
 optimizer inlines when D2 is small and leaves as a tail jump when it is
-not. A strong definition still becomes an alias. It is the 3.7.1 form of
-tools/patches/llvm-4.0.0-structor-01-weak-structor-emitted.patch
-(docs/DECISIONS.md D45: 507 strong aliases, 248 five-byte D1 thunks, 905
+not. A strong definition still becomes an alias. It is the 3.7.1 form of the
+4.0.0 line's structor-01 (retired with that line, docs/DECISIONS.md D81;
+D45: 507 strong aliases, 248 five-byte D1 thunks, 905
 D1 bodies of their own over every vtable of the game region). Swept
 alone over the game module, front end and code generation (round 270B,
 5,496 rows): 53 functions appear that the pristine module does not hold,

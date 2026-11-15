@@ -161,7 +161,7 @@ def _compiler_mtime(tu: str, ver: str, link: bool = False) -> float:
     is newer than it (tools/build_llvm.sh replaces tools/cc/llvm-<v>-src);
     another line's compiler, or one no line names, does not touch it (round
     270B: installing any compiler made every tree's objects stale). With
-    `link`, llvm-link beside that compiler too
+    `link`, llvm-link and opt beside that compiler too
     (tools/cc/llvm-<v>-src-tools/bin), which a game unit's bitcode and the
     module pass through. 0 for a line that names no compiler under tools/cc."""
     from gen_ninja import compiler_of, compilers
@@ -172,6 +172,7 @@ def _compiler_mtime(tu: str, ver: str, link: bool = False) -> float:
     if link:
         prefix = cc.parent.parent
         paths.append(prefix.with_name(prefix.name + "-tools") / "bin" / "llvm-link")
+        paths.append(prefix.with_name(prefix.name + "-tools") / "bin" / "opt")
     return max([p.stat().st_mtime for p in paths if p.exists()] + [0.0])
 
 
@@ -284,10 +285,11 @@ def module_object(tu: str, ver: str) -> Path:
 
 
 def single_module(tu: str, ver: str, base=None) -> Path:
-    """The inner loop's object for a game unit: the same pipeline over a
+    """The inner loop's object for a game unit: the same two stages over a
     module of that one file and its stand-ins (tools/game_module.py --single):
-    the unit's bitcode, recompiled when stale, its stand-ins, the -O2 pipeline
-    and code generation."""
+    the unit's bitcode and its stage 1, recompiled when stale, its stand-ins,
+    the link stage and code generation. A pre-screen: the link stage sees
+    nothing another file defines."""
     import game_module as gm
     bc = gm.ir_path(tu, ver)
     generate_tables_of(tu, ver)
@@ -315,7 +317,7 @@ def tu_functions(tu: str, obj: Path, ver: str) -> dict[str, tuple[bytes, list]]:
     funcs = object_functions(obj)
     if not is_module_tu(tu):
         return funcs
-    funcs = with_header_statics(tu, obj, ver, funcs)
+    funcs = with_split_statics(tu, obj, ver, with_header_statics(tu, obj, ver, funcs))
     if obj != object_path(tu, ver):
         return funcs
     import game_module as gm
@@ -351,7 +353,9 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
          `_GLOBAL__sub_I_` reaches every object its `__cxx_global_var_init`s
          initialise), against the same names among the candidate's
          relocations (D17 attributes a section-relative field to the named
-         local it lands in); the sets must be equal and not empty;
+         local it lands in; a piece of a static the link stage split,
+         `<name>.<i>...`, is that static); the sets must be equal and not
+         empty;
       2. who reaches it: every function of the unit with a stable name whose
          IR body references it (the owner's `__cxa_atexit` registration), and
          every compiler-named one already proven (by its module symbol),
@@ -394,7 +398,13 @@ def compiler_local_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str]
                if lk in gm.LOCAL and n not in renamed and not gm.compiler_local(n) and "." not in n}
         stable = {n for n in refs if not gm.compiler_local(n) and n not in renamed and "." not in n}
         funcs = object_functions(obj)
-        cands = {c: {r.symbol for r in rl} for c, (_b, rl) in funcs.items() if gm.compiler_local(c)}
+        # a piece of one of the unit's own statics the link stage split
+        # (`<name>.<i>...`, SPLIT_PIECE) is that static
+        def whole(symbol: str) -> str:
+            m = SPLIT_PIECE.match(symbol)
+            return m.group(1) if m and m.group(1) in own else symbol
+
+        cands = {c: {whole(r.symbol) for r in rl} for c, (_b, rl) in funcs.items() if gm.compiler_local(c)}
         ctors = init_array_targets(obj)
 
         def closure(n: str, seen: frozenset = frozenset()) -> set[str]:
@@ -782,6 +792,110 @@ def with_header_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
 
 _HEADER_UNITS: dict[tuple, tuple[dict, dict]] = {}
 _HEADER_RESULT: dict[tuple, tuple[dict, dict]] = {}
+
+
+# A piece of a file static the link stage split: GlobalOpt's SRA names piece
+# i of an internal array or struct `<name>.<i>` and splits a piece again
+# (`_ZL9D_57ca0e0.7.0.0`: element 7's first field's first field). Only a
+# static the tree names by its address (D17), at file scope or in a
+# function, is resolved.
+SPLIT_PIECE = re.compile(r"^(_ZL\d+D_[0-9a-fA-F]+|_ZZ.+E\d+D_[0-9a-fA-F]+(?:_\d+)?)((?:\.\d+)+)$")
+_SPLIT_TYPES: dict[tuple, tuple[str, dict[str, str]] | str] = {}
+
+
+def _static_type(tu: str, name: str, ver: str) -> tuple[str, dict[str, str]] | str:
+    """(the IR type of the internal variable `name` as the unit `tu` defines
+    it, the unit's named types), from the unit's own IR text; or why not."""
+    import game_module as gm
+    ll = gm.ir_path(tu, ver).with_suffix(".ll")
+    if not ll.exists():
+        return f"{tu} has no IR text"
+    key = (str(ll), ll.stat().st_mtime_ns, name)
+    if key in _SPLIT_TYPES:
+        return _SPLIT_TYPES[key]
+    types: dict[str, str] = {}
+    found: str | None = None
+    for line in ll.read_text().splitlines():
+        if line.startswith("%"):
+            m = gm.TYPE_LINE.match(line)
+            if m:
+                types[m.group(1)] = m.group(2)
+        elif line.startswith("@"):
+            m = gm.GLOBAL_LINE.match(line)
+            if m and gm.unquote(m.group(1)) == name:
+                w = re.match(r"^internal (?:unnamed_addr )?global (.*)$", m.group(2))
+                if w:
+                    found = w.group(1)
+    if found is None:
+        r: tuple[str, dict[str, str]] | str = f"{tu} defines no internal variable {name}"
+    else:
+        # the type is the first balanced token of what follows `global`
+        depth, end = 0, len(found)
+        for i, ch in enumerate(found):
+            if ch in "[{<":
+                depth += 1
+            elif ch in "]}>":
+                depth -= 1
+            elif ch == " " and depth == 0:
+                end = i
+                break
+        r = (found[:end], types)
+    _SPLIT_TYPES[key] = r
+    return r
+
+
+def with_split_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
+    """`funcs` with every reference to a piece of a split file static
+    (SPLIT_PIECE) resolved to `D_<hex>`: the static's own address plus the
+    offset of the element the piece's name spells, computed from the type the
+    defining unit's IR gives the static (tools/ir_layout.py), so the base's
+    field is checked against the address the element has in the whole object.
+    The defining unit is the row's own in a single-file module and the one
+    unit that defines the name in the whole module (symbols.txt; a name two
+    units define is renamed by the link and refused). A piece that cannot be
+    placed becomes a name BaseElf.address_of refuses with the reason."""
+    if not any(SPLIT_PIECE.match(r.symbol) for _c, relocs in funcs.values() for r in relocs):
+        return funcs
+    import game_module as gm
+    from ir_layout import LayoutError, offset_of
+    owners: dict[str, list[str]] = {}
+    renamed: set[str] = set()
+    if obj == object_path(tu, ver):
+        by_tu, renamed = gm.load_symbols(ver)
+        for u, names in by_tu.items():
+            for n in names:
+                if n.startswith(("_ZL", "_ZZ")) and "D_" in n:
+                    owners.setdefault(n, []).append(u)
+    memo: dict[str, str] = {}
+
+    def place(symbol: str) -> str:
+        if symbol in memo:
+            return memo[symbol]
+        m = SPLIT_PIECE.match(symbol)
+        name, path = m.group(1), [int(x) for x in m.group(2)[1:].split(".")]
+        us = owners.get(name, [tu]) if obj == object_path(tu, ver) else [tu]
+        if name in renamed or len(us) != 1:
+            out = f"!{symbol}: a piece of a static {len(us)} units define: its unit is not known"
+        else:
+            t = _static_type(us[0], name, ver)
+            ident = BaseElf.base_identifier(name)
+            if isinstance(t, str):
+                out = f"!{symbol}: a piece of a split static that cannot be placed: {t}"
+            else:
+                try:
+                    out = f"D_{int(ident[2:], 16) + offset_of(t[0], path, t[1]):x}"
+                except (LayoutError, ValueError) as e:
+                    out = f"!{symbol}: a piece of a split static that cannot be placed: {e}"
+        memo[symbol] = out
+        return out
+
+    out = {}
+    for k, (code, relocs) in funcs.items():
+        if any(SPLIT_PIECE.match(r.symbol) for r in relocs):
+            relocs = [Reloc(r.offset, r.width, r.type, place(r.symbol), r.addend, r.sym_section, r.sym_value,
+                            r.sym_size) if SPLIT_PIECE.match(r.symbol) else r for r in relocs]
+        out[k] = (code, relocs)
+    return out
 
 
 def init_array_targets(obj: Path) -> set[str]:
@@ -1315,7 +1429,8 @@ def main(argv=None) -> int:
             variants.append(("whole game module", compile_tu(a.tu, ver)))
         if not a.json:
             print(f"({a.tu}: " + " and ".join(f"{lab}" for lab, _ in variants)
-                  + (": the unit and its stand-ins alone; --module for the gate's whole module)"
+                  + (": a pre-screen, the unit and its stand-ins alone through both stages; "
+                     "--module for the gate's whole module, where a row is claimed)"
                      if not (a.module or a.both) else ")"))
     else:
         variants.append(("", compile_tu(a.tu, ver) if a.tu else Path(a.obj)))

@@ -23,6 +23,4 @@ class Object016d1e20 : public Object016b9108 /* derived name */
  * destructor is inlined (its vptr store, then the two names). FUN_013b28d0, slot 1, is
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-// NONMATCHING (the deleting destructor FUN_013b28d0 only): an inline-cost margin: the build calls this
-// destructor where the base inlines it (its vptr store is in FUN_013b28d0 too)
 Object016d1e20::~Object016d1e20() {}

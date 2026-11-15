@@ -5,10 +5,12 @@
 # function.
 #
 # A game unit (src/game/) is built as the gate builds the game, as a module
-# (tools/game_module.py, D50): by default a module of that one file and its
-# stand-ins, the same flags, -O2 pipeline and code generation (well under a
-# second); --module compiles it in the whole game module, the gate's object
-# (ninja rebuilds what changed); --both shows each and says whether the
+# in two stages (tools/game_module.py): by default a module of that one file
+# and its stand-ins, the same flags, the unit's -O2, the link stage and code
+# generation (about a second): a pre-screen, since the link stage sees
+# nothing another file defines; --module compiles it in the whole game
+# module, the gate's object (ninja rebuilds what changed), where a row is
+# claimed; --both shows each and says whether the
 # function differs between them, which is a cross-file effect (another file's
 # definition inlined or propagated) and real information. A function whose
 # name the compiler gave (`__cxx_global_array_dtor.2`) is named as the unit

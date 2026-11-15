@@ -1,0 +1,60 @@
+llvm-3.7.1 patch: a locked exchange-add is one micro-op on btver2 (local rule, no upstream state)
+
+This patch CHANGES CODE GENERATION through the machine scheduler's
+issue-width hazard. One InstRW in X86ScheduleBtVer2.td gives LXADD8, LXADD16,
+LXADD32 and LXADD64 one micro-op ([WriteALULd, a store write of zero
+micro-ops]) where 3.7.1's [WriteALULd, WriteRMW] gives two. Nothing else in
+the model changes.
+
+Mechanism: btver2's IssueWidth is 2. After a one-micro-op compare, a
+two-micro-op `lock xadd` is a hazard (1 + 2 > 2), so it goes pending and
+the bottom-up zone schedules the sunk address `add` first (round 287E's
+trace, e287/misched_101.txt). In the 0xa0-element Name loop of 0x101ece0,
+0x1271520 and 0x128ef90 (D1 and D2 each), that exchanges two registers: the
+base has the scaled index in rdx and the Name's id in rcx, and 3.7.1 has
+them the other way round.
+
+Swept over the game module (round 295E, 2026-11-15, main 273417a9). The
+installed clang's -O2 IR is built once, then code generation runs through an
+llc built from the patched 3.7.1 sources with this .td. The control llc
+differs from the tree's module.o in 0 of 6,794 functions. Result: 6
+functions change; 0 of 5,701 rows are lost, 0 gained; the three drafts
+become equal (0x101ece0 252/252, 0x1271520 252/252, 0x128ef90 264/264, D1
+and D2).
+
+Excluded, measured:
+  a compiler barrier after the atomic in Name's release: the three equal,
+    43 rows lost (inline cost +5 a site in deleting destructors; 287E);
+  -misched-topdown: 18 rows lost (blocks where the base is bottom-up; 292E);
+  -schedmodel=false: 12 rows lost (latency effects; 292E);
+  upstream r343671 as is (WriteRMW zero micro-ops): 4 rows lost, all
+    `cmp dword [mem], 0` (0x1b1040, 0xa44f70, 0x1b1790, 0x1b2700), and the
+    0x81a930 / 0x9f5a00 / 0x1331d20 family's `lea` moved across the `lock
+    cmpxchg`, away from the base (24 to 16 of 155);
+  the wider forms (r343671 with lock cmpxchg, cmp/test with memory and
+    bt[crs] to memory kept at two): every row holds, but `lock inc`
+    functions change against the base (FUN_008ac030 14 to 11 of 148,
+    FUN_008acb00 17 to 10 of 228: the argument spills move above the first
+    `lock inc`, where the base keeps them after it).
+
+NO upstream state. The nearest is r343671 (c68cc4efbe5f, 2018-10-03, first
+released in 8.0.0), which sets WriteRMW to zero micro-ops for every
+read-modify-write. The base keeps two micro-ops for `cmp [mem]`, for `lock
+cmpxchg` and, on weak evidence, for `lock inc`. Sony authorship of any of
+this is not shown.
+
+Trigger to revisit: a base block where a locked xadd is scheduled as two
+micro-ops, or a `lock inc` / `lock dec` block that needs one.
+
+diff -ru a/lib/Target/X86/X86ScheduleBtVer2.td b/lib/Target/X86/X86ScheduleBtVer2.td
+--- a/lib/Target/X86/X86ScheduleBtVer2.td
++++ b/lib/Target/X86/X86ScheduleBtVer2.td
+@@ -337,5 +337,8 @@
+ def : WriteRes<WriteMicrocoded, [JAny]> { let Latency = 100; }
+ def : WriteRes<WriteFence,  [JSAGU]>;
+ def : WriteRes<WriteNop, []>;
++// LOCK XADD: the store data needs no micro-op of its own.
++def JWriteRMW0 : SchedWriteRes<[JSAGU]> { let NumMicroOps = 0; }
++def : InstRW<[WriteALULd, JWriteRMW0], (instregex "LXADD(8|16|32|64)$")>;
+ } // SchedModel
+ 

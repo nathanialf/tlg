@@ -9,8 +9,8 @@ the executable's own (docs/DECISIONS.md D75): all 21,974 thread-local
 accesses of the base are general-dynamic and none is local-dynamic, while
 its four thread-local bools are read as masked single bits at 9,382
 sites, the form GlobalOpt gives only a variable with local linkage (D74).
-It is the 3.7.1 form of
-tools/patches/llvm-4.0.0-tlsprot-02-local-tls-general-dynamic.patch.
+It is the 3.7.1 form of the
+4.0.0 line's tlsprot-02 (D75; retired with that line, D81).
 4.0.0's tlsprot-01 is not needed: it restores 3.8's rule for a protected
 symbol, which 3.7.1 has (only a local or hidden symbol is local-dynamic,
 TargetMachine.cpp:120). Swept alone over the game module built by the

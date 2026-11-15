@@ -6,8 +6,8 @@
 # Run from the repo root (gen_ninja.py's commands are); paths are
 # repo-relative.
 #
-# The game region is built as one module (tools/game_module.py, D50), in two
-# steps that use the same flags line:
+# The game region is built as one module in two stages (tools/game_module.py),
+# in steps that use the same flags line:
 #   compile_cpp.sh --ir <source> <out.bc>   the unit's unoptimised bitcode:
 #       the front end at the line's -O2 with the pipeline off
 #       (`-Xclang -disable-llvm-optzns`; bitcode keeps the in-memory use-list
@@ -15,11 +15,15 @@
 #       (llvm-link -S), which tools/game_module.py reads for what the unit
 #       defines and declares. Text is not linked: its use-list directives on
 #       a constant count the constant's uses in every module of the context,
-#       so the second file that orders `i32 1` fails to parse
-#   compile_cpp.sh --codegen <prefix> <module.bc> <object>   the line's -O2
-#       pipeline and code generation over a linked module; the driver's
-#       front-end flags (-I, -std) have nothing to act on in an IR input and
-#       -Qunused-arguments keeps it from saying so
+#       so the second file that orders `i32 1` fails to parse. Then stage 1:
+#       the line's -O2 pipeline over that bitcode, to the same path with
+#       /game/unit/ for /game/ir/ (the unit as its own compile optimises
+#       it, before code generation)
+#   compile_cpp.sh --codegen <prefix> <module.bc> <object>   code generation
+#       alone over the linked module the link stage optimised (the IR
+#       pipeline off); the driver's front-end flags (-I, -std) have nothing
+#       to act on in an IR input and -Qunused-arguments keeps it from saying
+#       so
 set -euo pipefail
 mode=obj
 case "${1:-}" in
@@ -76,7 +80,11 @@ case "$mode" in
     ir) [[ -n "$LLVM_LINK" ]] || { echo "compile_cpp: no llvm-link beside the compiler of $match's line (tools/build_llvm.sh <version>)" >&2; exit 1; }
         "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -emit-llvm -Xclang -disable-llvm-optzns \
             -c "$src" -o "$obj"
-        exec "$LLVM_LINK" -S -o "${obj%.bc}.ll" "$obj" ;;
-    codegen) exec "$CXX" $best -Qunused-arguments -c "$src" -o "$obj" ;;
+        "$LLVM_LINK" -S -o "${obj%.bc}.ll" "$obj"
+        unit="${obj/\/game\/ir\///game/unit/}"
+        [[ "$unit" != "$obj" ]] || { echo "compile_cpp: --ir output $obj is not under game/ir/" >&2; exit 1; }
+        mkdir -p "$(dirname "$unit")"
+        exec "$CXX" $best -Qunused-arguments -emit-llvm -c "$obj" -o "$unit" ;;
+    codegen) exec "$CXX" $best -Qunused-arguments -Xclang -disable-llvm-optzns -c "$src" -o "$obj" ;;
     *) exec "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -c "$src" -o "$obj" ;;
 esac

@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
 """
-game_module.py: build the game region as one module (docs/DECISIONS.md D50).
+game_module.py: build the game region as one module, in two stages
+(docs/DECISIONS.md D50, whose one pipeline D83 supersedes).
 
-The game and engine (src/game/, 0x1a3e00 up) were compiled as one module:
-a function's code shows what other game files define (an empty member
-destructor in another file inlined, a callee that returns 1 in another file
-propagated) and reaches the game's own objects PC-relative while the
-libraries' stay behind the GOT. The gate builds it the same way:
+The game and engine (src/game/, 0x1a3e00 up) were compiled unit by unit and
+then optimised together at the link: a function's code shows what other game
+files define (an empty member destructor in another file inlined, a callee
+that returns 1 in another file propagated) and reaches the game's own
+objects PC-relative while the libraries' stay behind the GOT; and it shows
+what each unit's own optimiser had already decided before the link saw the
+rest (a deleting destructor that calls a complete destructor the one
+pipeline would inline, an inline member's unused argument dropped). The gate
+builds it the same way:
 
     1. Every game translation unit to unoptimised bitcode by the front end
        at -O2 (tools/compile_cpp.sh --ir: `-Xclang -disable-llvm-optzns`),
-       under the game line of config/flags.<slug>.txt
+       under the unit's line of config/flags.<slug>.txt
        (`-fvisibility=protected -ffunction-sections` among its flags), with
        the same module as text beside it, which this tool reads for what each
-       unit defines and declares and for the declared types.
+       unit defines and declares and for the declared types; and STAGE 1,
+       the unit's own -O2 pipeline over that bitcode by the same compiler
+       and flags line, to build/<slug>/game/unit/<path>.bc (the same edge
+       and script): what a compile of the unit alone gives before code
+       generation.
     2. The stand-ins: an object some file declares and no file defines gets a
        generated definition when config/modules.<slug>.txt
        (tools/module_boundary.py) puts its base address in the game's part of
@@ -26,26 +35,44 @@ libraries' stay behind the GOT. The gate builds it the same way:
        (the GOT and PLT forms). An opaque class (a declaration whose type no
        file completes) is completed as one byte.
     3. llvm-link (built from the game compiler's own source, tools/cc/
-       llvm-3.7.1-src-tools/bin) links every file and the stand-ins into one
-       module, in the sources' order.
-    3a. The local data (config/local_data.<slug>.txt, D74): a variable of a
-       row was local to the optimiser when the base was built (its reads take
-       one bit: GlobalOpt's shrink, which needs local linkage), though every
-       file declares it. Each row the module defines is proven from the
-       base's code (tools/module_boundary.py local_proof; a row that fails is
-       a refusal, with what the base shows) and then given internal linkage
-       in the linked module, the one thing the step changes: `opt
-       -internalize` with every other definition of the module on its
-       preserved list (the list is the module's own symbol table, and the
-       table is read again afterwards: exactly the rows went local). While
-       the variable's definition is a stand-in, the stand-in carries one
-       writer, `__standin_writer_<symbol>`, storing 1: the base's code stores
-       1 somewhere (the proof says so), the files written so far may not,
-       and a local variable nothing sets is folded to its initial value. The
-       writer is the gate's, like the stand-in, and goes when a file defines
-       the variable.
-    4. One -O2 pipeline and code generation over the module, to one object
-       (tools/compile_cpp.sh --codegen), build/<slug>/game/module.o.
+       llvm-<version>-src-tools/bin) links every unit's stage 1 bitcode and
+       the stand-ins into one module, in the sources' order.
+    3a. What the link made local, in one step (`opt -internalize` with
+       every other definition of the module on its preserved list; the
+       list is the module's own symbol table, and the table is read again
+       afterwards: exactly these names went local):
+       - The local data (config/local_data.<slug>.txt, D74): a variable of a
+         row was local to the optimiser when the base was built (its reads
+         take one bit: GlobalOpt's shrink, which needs local linkage),
+         though every file declares it. Each row the module defines is
+         proven from the base's code (tools/module_boundary.py local_proof;
+         a row that fails is a refusal, with what the base shows). While
+         the variable's definition is a stand-in, the stand-in carries one
+         writer, `__standin_writer_<symbol>`, storing 1: the base's code
+         stores 1 somewhere (the proof says so), the files written so far
+         may not, and a local variable nothing sets is folded to its initial
+         value. The writer is the gate's, like the stand-in, and goes when a
+         file defines the variable.
+       - The used inline definitions: a linkonce_odr or weak_odr definition
+         (an inline function, a template's instantiation, a class's inline
+         vtable) that another definition of the module names. Once every
+         unit is linked nothing outside the module can name one, and the
+         base shows them local (a container's clear(unsigned) with its
+         argument folded in, an inline destructor dropped after its last
+         call was inlined). One that nothing in the module names stays as it
+         is: the module is unfinished, and a claimed function whose callers
+         are not written yet would be deleted. A function the source
+         defines with external linkage is never made local (D50's addendum:
+         the base keeps returns no caller reads).
+    4. STAGE 2, the link's pipeline over the module: `opt -std-link-opts
+       -vectorize-loops -vectorize-slp` (PassManagerBuilder::
+       populateLTOPassManager at its stock thresholds, with the two
+       vectorisers on as libLTO's LTOCodeGenerator::optimize sets them)
+       by the opt built from the game compiler's own patched source
+       (tools/build_llvm.sh, beside llvm-link; TLG_OPT names another copy).
+    5. Code generation alone over the result, to one object
+       (tools/compile_cpp.sh --codegen: the IR pipeline off),
+       build/<slug>/game/module.o.
 
 It refuses, naming the files: a name two files define with external
 linkage (llvm-link would say only the name), and a thread-local a game file
@@ -66,8 +93,10 @@ tools/match_check.py compiler_local_aliases, from the unit's IR
 (function_refs) and the module object's relocations.
 
     game_module.py --out build/base/game/module.o <a.bc>... | @<list>   the module (ninja's edge)
-    game_module.py --out <obj> --single <a.bc>                 a module of one file and its stand-ins
-                                                               (the inner loop, tools/quick_diff.sh)
+    game_module.py --out <obj> --single <a.bc>                 a module of one file and its stand-ins,
+                                                               through both stages (the inner loop's
+                                                               pre-screen, tools/quick_diff.sh: it shows
+                                                               the unit nothing another file defines)
 
 The stand-ins, the linked module and the object are build products, never
 committed.
@@ -101,15 +130,17 @@ def _line_version() -> str:
     return "3.7.1"
 
 
-# llvm-link built from the line's own source (tools/build_llvm.sh); opt and
+# llvm-link and opt built from the line's own patched source
+# (tools/build_llvm.sh), so the link stage's passes are the compiler's own;
 # llvm-nm of the same release as fetched (tools/fetch_llvm.sh)
 LLVM_LINK = f"tools/cc/llvm-{_line_version()}-src-tools/bin/llvm-link"
-LLVM_OPT = f"tools/cc/llvm-{_line_version()}/bin/opt"
+LLVM_OPT = f"tools/cc/llvm-{_line_version()}-src-tools/bin/opt"
 LLVM_NM = f"tools/cc/llvm-{_line_version()}/bin/llvm-nm"
 STANDIN_WRITER = "__standin_writer_"
 LINKAGES = {"private", "internal", "available_externally", "linkonce", "weak", "common", "appending",
             "extern_weak", "linkonce_odr", "weak_odr", "external"}
 LOCAL = {"private", "internal"}
+ODR = {"linkonce_odr", "weak_odr"}
 SHARED = {"linkonce", "weak", "common", "linkonce_odr", "weak_odr", "appending"}
 NAME = r'(?:"(?:[^"\\]|\\.)*"|[-a-zA-Z$._0-9]+)'
 TYPE_LINE = re.compile(r'^(%' + NAME + r') = type (.*)$')
@@ -139,6 +170,7 @@ DECL = re.compile(r'^external ((?:hidden |protected |default )?)((?:dllimport )?
 COMPILER_LOCAL = re.compile(r"^(?:(?:__cxx_global_array_dtor|__cxx_global_var_init)(?:\.\d+)*|_GLOBAL__sub_I_.+)$")
 COMPILER_BASE = re.compile(r"(?:\.\d+)+$")
 REF = re.compile(r"@(" + NAME + r")")
+ALIAS = re.compile(r"^(?:[a-z_]+(?:\([a-z0-9]+\))? )*alias ")
 
 
 def compiler_local(name: str) -> bool:
@@ -182,6 +214,12 @@ def ir_path(tu: str, ver: str) -> Path:
     """The unoptimised bitcode of a game unit (tools/compile_cpp.sh --ir);
     the same module as text is beside it, with .ll for .bc."""
     return module_dir(ver) / "ir" / (tu + ".bc")
+
+
+def unit_path(tu: str, ver: str) -> Path:
+    """Stage 1 of a game unit: its bitcode after its own -O2 pipeline
+    (tools/compile_cpp.sh --ir writes it with the unoptimised one)."""
+    return module_dir(ver) / "unit" / (tu + ".bc")
 
 
 def module_object(ver: str) -> Path:
@@ -362,6 +400,52 @@ def run(cmd: list[str], what: str) -> None:
         raise Refusal(f"{what} failed ({' '.join(cmd[:2])} ...)")
 
 
+def opt_path() -> Path:
+    """The opt of the game line: built from the compiler's own patched
+    source beside llvm-link; TLG_OPT names another copy of it (a build
+    tree's own, before an install)."""
+    p = os.environ.get("TLG_OPT")
+    return Path(p) if p else REPO_ROOT / LLVM_OPT
+
+
+def used_odr(bc: Path) -> list[str]:
+    """The linkonce_odr and weak_odr definitions of the linked module `bc`
+    that another definition's body or initialiser names (step 3a). An alias
+    of a definition does not use it."""
+    ll = Path(str(bc) + ".ll")
+    run([str(REPO_ROOT / LLVM_LINK), "-S", "-o", str(ll), str(bc)], "llvm-link -S")
+    odr: set[str] = set()
+    used: set[str] = set()
+    cur = None
+    with open(ll, errors="replace") as f:
+        for line in f:
+            if line.startswith("define "):
+                m = DEFINE_LINE.match(line)
+                if not m:
+                    continue
+                cur = unquote(m.group(2))
+                words = m.group(1).split()
+                if words and words[0] in ODR:
+                    odr.add(cur)
+                used.update(x for x in map(unquote, REF.findall(line[m.end():])) if x != cur)
+            elif line.startswith("@"):
+                m = GLOBAL_LINE.match(line)
+                if not m:
+                    continue
+                name, rest = unquote(m.group(1)), m.group(2)
+                if rest.split(" ", 1)[0] in ODR:
+                    odr.add(name)
+                # an alias is another name of its definition, not a user of it
+                if not ALIAS.match(rest):
+                    used.update(x for x in map(unquote, REF.findall(rest)) if x != name)
+            elif line.startswith("}"):
+                cur = None
+            elif cur is not None and "@" in line:
+                used.update(x for x in map(unquote, REF.findall(line)) if x != cur)
+    ll.unlink()
+    return sorted(odr & used)
+
+
 def externals(bc: Path) -> set[str]:
     """The names a bitcode module defines with non-local linkage."""
     env = {**os.environ, "LD_LIBRARY_PATH": str(REPO_ROOT / "tools" / "cc" / "shim")}
@@ -386,19 +470,20 @@ def make_local(bc: Path, names: list[str]) -> None:
     before = externals(bc)
     missing = [n for n in names if n not in before]
     if missing:
-        raise Refusal(f"local data: the linked module does not define {' '.join(missing)} with external linkage")
+        raise Refusal(f"local data: the linked module does not define {' '.join(missing[:8])} with external linkage")
     api = Path(str(bc) + ".preserved")
     api.write_text("".join(f"{n}\n" for n in sorted(before - set(names))))
     tmp = Path(str(bc) + ".local")
     env = {**os.environ, "LD_LIBRARY_PATH": str(REPO_ROOT / "tools" / "cc" / "shim")}
-    r = subprocess.run([str(REPO_ROOT / LLVM_OPT), "-internalize", f"-internalize-public-api-file={api}",
-                        "-o", str(tmp), str(bc)], cwd=REPO_ROOT, capture_output=True, text=True, env=env)
+    r = subprocess.run([str(opt_path()), "-internalize", f"-internalize-public-api-file={api}",
+                        "-preserve-bc-uselistorder", "-o", str(tmp), str(bc)], cwd=REPO_ROOT, capture_output=True,
+                       text=True, env=env)
     if r.returncode != 0:
         sys.stderr.write(r.stderr)
         raise Refusal("opt -internalize failed on the linked module")
     after = externals(tmp)
     if before - after != set(names) or after - before:
-        raise Refusal("local data: the internalising step changed other definitions: "
+        raise Refusal("the internalising step did not change exactly the names asked: "
                       + " ".join(sorted((before - after) ^ set(names) | (after - before))[:8]))
     tmp.replace(bc)
 
@@ -425,15 +510,38 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
     sl.write_text(text)
     bc = Path(str(work) + ".bc")
     rsp = Path(str(work) + ".inputs")
+    if not opt_path().exists():
+        raise Refusal(f"no opt at {opt_path()}: tools/build_llvm.sh {_line_version()} builds it beside llvm-link "
+                      "(TLG_OPT names another copy)")
+    stage1 = [unit_path(u.tu, ver) for u in units]
+    for p, s1 in zip(bcs, stage1):
+        if not s1.exists() or s1.stat().st_mtime < p.stat().st_mtime:
+            raise Refusal(f"{s1.relative_to(REPO_ROOT)} (stage 1) is missing or older than the unit's bitcode: "
+                          "tools/compile_cpp.sh --ir writes both")
     rsp.write_text("".join(f"{p}\n" for p in bcs) + f"{sl}\n")
-    run([str(REPO_ROOT / LLVM_LINK), "-o", str(bc), f"@{rsp}"], "llvm-link")
+    s1rsp = Path(str(work) + ".units")
+    s1rsp.write_text("".join(f"{p}\n" for p in stage1) + f"{sl}\n")
+    run([str(REPO_ROOT / LLVM_LINK), "-o", str(bc), f"@{s1rsp}"], "llvm-link")
     defined = {n for u in units for n, (linkage, _t) in u.defs.items() if linkage not in LOCAL}
     defined |= {x.split()[1] for x in log if x.startswith("DEF ")}
     local = [n for n in local if n in defined]
-    if local:
-        make_local(bc, local)
+    odr = used_odr(bc)
+    if local or odr:
+        make_local(bc, local + odr)
         log += [f"LOCAL {proofs[n]}" for n in local]
-    run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), "--codegen", MODULE_PREFIX, str(bc), str(out)],
+        Path(str(work) + ".odr").write_text("".join(f"{n}\n" for n in odr))
+    lto = Path(str(work) + ".lto.bc")
+    env = {**os.environ, "LD_LIBRARY_PATH": str(REPO_ROOT / "tools" / "cc" / "shim")}
+    # the two vectorisers on, as the link's own driver sets them (libLTO,
+    # LTOCodeGenerator::optimize: PMB.LoopVectorize and PMB.SLPVectorize);
+    # opt's -std-link-opts leaves them at their options' defaults, off
+    r = subprocess.run([str(opt_path()), "-std-link-opts", "-vectorize-loops", "-vectorize-slp",
+                        "-preserve-bc-uselistorder", "-o", str(lto), str(bc)],
+                       cwd=REPO_ROOT, capture_output=True, text=True, env=env)
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        raise Refusal("opt -std-link-opts failed on the linked module")
+    run([str(REPO_ROOT / "tools" / "compile_cpp.sh"), "--codegen", MODULE_PREFIX, str(lto), str(out)],
         "code generation")
     Path(str(work) + ".standins.log").write_text("\n".join(log) + "\n")
     if not single:
