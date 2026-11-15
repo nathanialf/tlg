@@ -1,22 +1,18 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
-#include "tlg_game_object0134f620.h"
+#include "tlg_game_object016ce208.h"
 
-/* derived names: the class whose vtable is at 0x16ce208
- * (config/vtables.derived.base.txt, stored by FUN_00a17390 FUN_0138ae00 FUN_0138aea0), derived from
- * Object016b9108: its slots 2 to 4 are the base's. Its own fields
- * from +0x24 are traced only where its destructor FUN_0138ae00 tears them down
- * (the record at +0x28); the rest are not traced. */
-class Object016ce208 : public Object016b9108 /* derived name */
+/* derived name: the constructor (tlg_game_object016ce208.h): its base
+ * Object016b9108 is built from the name passed on, the array at +0x28
+ * starts empty; then two Names of the same string "dummySave" (the string at
+ * 0x15a39bf, its length 9 passed, not added), each a guarded static of this
+ * function registered with Name's destructor, are passed to FUN_00a174c0, a
+ * tail call. */
+Object016ce208::Object016ce208(const Name &name) : Object016b9108(name)
 {
-  public:
-    virtual ~Object016ce208();
-
-  private:
-    u8 unknown24[0x4];
-    /* +0x28: torn down by the destructor (`lea rdi, [rbx+0x28]; call 0x134f620`) */
-    Object0134f620 record28;
-};
+    static Name D_5826ee0("dummySave", false);
+    static Name D_5826ef0("dummySave", false);
+    FUN_00a174c0(D_5826ee0, D_5826ef0);
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_0138aea0, slot 1, is

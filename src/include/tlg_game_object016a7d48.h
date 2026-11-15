@@ -34,4 +34,12 @@ class Object016a7d48 : public Object016b9108 /* derived name */
     float unknown50; /* +0x50: 0.1 from the constructor; not traced */
 };
 
+/* derived name: the complete destructor: the body is empty; the array's
+ * block is released, then the base's destructor is inlined (its vptr store,
+ * then the two names). Defined inline after the class, it is still the key
+ * function: the units that include this header emit the vtable and both
+ * destructors; FUN_002a8b80, slot 1, the deleting one, holds the whole body
+ * (198 bytes, as round 294D's 0xa3- to 0xec-byte pairs). */
+inline Object016a7d48::~Object016a7d48() {}
+
 #endif

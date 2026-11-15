@@ -12,9 +12,3 @@ Object016a7d48::Object016a7d48(const Name &name) : Object016b9108(name)
     unknown40 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
     unknown50 = 0.1f;
 }
-
-/* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
- * is inlined (its vptr store, then the two names). FUN_002a8b80, slot 1, is
- * the deleting one. The destructor is the class's key function, so this file
- * emits the vtable. */
-Object016a7d48::~Object016a7d48() {}
