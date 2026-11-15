@@ -12,7 +12,7 @@ adapted to this target. `docs/DECISIONS.md` holds the standard it serves.
 
 Check the address first. Below 0x1a3e00 the function is library code of the
 LLVM 3.3 generation and goes under `src/libs/`; from 0x1a3e00 it is the game's,
-built by the 4.0 generation, and goes under `src/game/`. Each prefix has its
+built by the 3.7 generation, and goes under `src/game/`. Each prefix has its
 compiler and flags in `config/flags.base.txt` (`docs/TARGETS.md`, "Two
 compiler generations"). Then look the function up in `config/homes.base.txt`
 (`tools/source_homes.py`): where the function loads an assert or log string
