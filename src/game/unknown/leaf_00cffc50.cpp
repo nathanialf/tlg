@@ -17,9 +17,6 @@ struct Object00cffc50 { /* derived name */
     int unknown17cc; /* +0x17cc */
 };
 
-// NONMATCHING: list-ilp order: the base loads and converts the width before the height,
-// both to floats before either back (`cvtsi2ss xmm0, eax; cvtsi2ss xmm1, ecx; cvttss2si
-// eax, xmm0; cvttss2si ecx, xmm1`); the build takes the height first, one value at a time.
 void FUN_00cffc50(Object00cffc50 *self) /* derived name */
 {
     float halfWidth = self->width / 2;

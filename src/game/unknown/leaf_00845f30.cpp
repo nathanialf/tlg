@@ -57,14 +57,11 @@ struct Job00845f30 { /* derived name */
     u32 count;          /* +0x20 */
 };
 
-// NONMATCHING: 27/32: the first item's address: the base loads the item table into a register
-// and forms `lea rbx, [rax + rcx*8]`, the build shifts the index and adds the table from memory
-// (`shl rbx, 3; add rbx, [rax]`); the releases to 3.8.1 give the base's form from this source
 void FUN_00845f30(Job00845f30 *job) /* derived name */
 {
     const u32 count = job->count;
     const float value = job->value;
-    Item00845f30 **items = &job->list->items[job->first];
+    Item00845f30 **items = job->list->items + job->first;
     for (u32 i = 0; i < count; i++) {
         if (!(items[i]->slot34() & 2))
             items[i]->slot10(value);

@@ -6,11 +6,10 @@
  * string at 0x15c04b9, interned) when the index is out of range. */
 extern const char D_15c04b9[8];
 
-// NONMATCHING: list-ilp order, two places: before __cxa_atexit the base loads the
-// object's address before the destructor's (lea rsi; lea rdi), the build the other way;
-// and the base loads the static's address after the null test's operand, the build before
-// (`test rcx, rcx; lea rax` against `lea rax; test rcx, rcx`). Slots 3 of the other eight
-// tables (0x138d500 to 0x138d920, 0x138dab0) are this shape, not written.
+// NONMATCHING: the instructions are the base's; the static's guard is 0x68 above the object in
+// the base (0x5828b28 for 0x5828ac0), the module puts it 8 bytes below, and the layout refuses
+// the row. Slots 3 of the other eight tables (0x138d500 to 0x138d920, 0x138dab0) are this shape,
+// not written.
 const Name *Object016ce490::entry(int index) const
 {
     static Name D_5828ac0(D_15c04b9);

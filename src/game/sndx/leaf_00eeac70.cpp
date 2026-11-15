@@ -59,22 +59,26 @@ struct Result00eeac70 { /* derived name */
     s32 unknown30; /* +0x30 */
 };
 
-// NONMATCHING: FunctionAttrs infers `returned` on FUN_00eeadf0's code
-// (FunctionAttrs.cpp:482) and EarlyCSE's known bits (ValueTracking.cpp:1395)
-// put -7 in the result's phi, so the call is no tail call; the base jumps to
-// FUN_00eeadf0 and its other callers read eax (0xee7c6e).
-int FUN_00eeac70(const Player00eeac70 *player, u32 index, Result00eeac70 *result) /* derived name */
+/* derived name: the transition at an index of a player's table, null for a
+ * null player, an index out of range or an empty entry (the offset added to
+ * the slot's address as an integer, as leaf_00edffb0.cpp's findMorph) */
+static inline const Transition00eeac70 *findTransition(const Player00eeac70 *player, u32 index)
 {
     if (player && index < player->transitionCount) {
         s32 *slot = &player->transitions[index];
-        if (*slot != 0) {
-            const Transition00eeac70 *transition = reinterpret_cast<const Transition00eeac70 *>(
-                reinterpret_cast<const char *>(slot) + *slot);
-            if (transition) {
-                result->unknown30 = transition->unknown1c;
-                return 0;
-            }
-        }
+        if (*slot != 0)
+            return reinterpret_cast<const Transition00eeac70 *>(*slot +
+                                                                reinterpret_cast<s64>(slot));
+    }
+    return 0;
+}
+
+int FUN_00eeac70(const Player00eeac70 *player, u32 index, Result00eeac70 *result) /* derived name */
+{
+    const Transition00eeac70 *transition = findTransition(player, index);
+    if (transition) {
+        result->unknown30 = transition->unknown1c;
+        return 0;
     }
     return FUN_00eeadf0(-7, 0, 3767, D_15c3922, index);
 }

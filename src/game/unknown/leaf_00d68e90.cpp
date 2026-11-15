@@ -14,8 +14,6 @@ struct Object00d68e90 { /* derived name */
     Array01343a80<Ref00503fb0<Node00503fb0>> unknown40; /* +0x40 */
 };
 
-// NONMATCHING: two instructions in the other order (103/105): at 0xd68f5c the base tests `all` (`cmp dword
-// [rbp-0x2c], 0`) before the first array's count is cleared (`mov dword [r15+0x30], 0`), the build after.
 void FUN_00d68e90(Object00d68e90 *self, int all) /* derived name */
 {
     self->unknown28.removeAll();

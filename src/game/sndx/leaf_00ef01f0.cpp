@@ -47,9 +47,6 @@ static inline float clamp(float value, float low, float high)
     return value < low ? low : (high < value ? high : value);
 }
 
-// NONMATCHING: 32/34, 139 bytes of 139: the two bounds' loads exchanged in the shared clamp
-// block (the base loads the low bound first, as the source reads them); the build's order is
-// made by the scheduler after register allocation (the loads are low, high before it)
 void FUN_00ef01f0(Object00ef01f0 *self, unsigned index, float amount) /* derived name */
 {
     float &value = self->values[index];

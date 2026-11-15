@@ -19,6 +19,12 @@ struct Object00cb3ce0_38 /* derived name */
     unsigned char unknown0[0x80];
     void *unknown80; /* +0x80 */
     void *unknown88; /* +0x88 */
+
+    /* derived name: the pointer at +0x88 when it is set, else the one at +0x80 */
+    void *const &current() const
+    {
+        return unknown88 ? unknown88 : unknown80;
+    }
 };
 
 struct Object00cb3ce0 /* derived name */
@@ -34,7 +40,5 @@ void *FUN_00cb3ce0(const Object00cb3ce0 *self) /* derived name */
     const Object00cb3ce0_40 *active = self->unknown40;
     if (active && active->unknown50 && active->unknown30)
         return self->unknown48;
-    const Object00cb3ce0_38 *other = self->unknown38;
-    void *const &chosen = other->unknown88 ? other->unknown88 : other->unknown80;
-    return chosen;
+    return self->unknown38->current();
 }

@@ -25,12 +25,12 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: greedy's assignment, as FUN_001b1010's: the base gives the stack top rcx and the boolean eax, the build rax and ecx; every instruction else equal
+// NONMATCHING: 9/13: the registers are the base's with the header's pushBoolean; left, the stack
+// top's load, which the base has after the compare (`cmp qword [rax+0x148], 0; mov rcx,
+// [rdi+0x48]`) and the build second (the scheduler after register allocation takes it at once:
+// nothing it depends on precedes it)
 int FUN_0046fe10(lua_State *state) /* derived name */
 {
-    HksObject *top = state->top;
-    top->value.boolean = D_57c9390->unknown38->unknown900->unknown148 != 0;
-    top->type = 1;
-    state->top = top + 1;
+    pushBoolean(state, D_57c9390->unknown38->unknown900->unknown148 != 0);
     return 1;
 }

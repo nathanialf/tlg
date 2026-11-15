@@ -18,10 +18,17 @@ struct Object05827b50 { /* derived name */
 
 extern Object05827b50 *D_5827b50;
 
-// NONMATCHING: greedy's assignment: the base's selected pointer (`cmovae rax, rcx; jae`)
-// and the type in edx with the flag in cl are here in rcx, eax and ecx, two bytes longer;
-// the select and the branch on the range test are the base's (the type read under the
-// range test, not a null test of the pointer, which gives `test rcx, rcx; je`).
+/* derived name: sets the flag and marks it changed. The flag is its int
+ * argument and the object is read once inside (the base widens the flag
+ * before the object's one load: `mov rdx, [D_5827b50]; movzx eax, cl`, then
+ * both stores through rdx). */
+static void setDebugFlag(int flag)
+{
+    Object05827b50 *object = D_5827b50;
+    object->unknown9c = flag;
+    object->unknown98 = 1;
+}
+
 int FUN_00a44f20(lua_State *state) /* derived name */
 {
     const HksObject *value = state->base < state->top ? state->base : 0;
@@ -32,7 +39,6 @@ int FUN_00a44f20(lua_State *state) /* derived name */
         if (type == 1)
             flag = value->value.boolean != 0;
     }
-    D_5827b50->unknown9c = flag;
-    D_5827b50->unknown98 = 1;
+    setDebugFlag(flag);
     return 0;
 }

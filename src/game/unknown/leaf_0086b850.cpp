@@ -11,8 +11,6 @@ struct Text0086b850 {                     /* derived name */
     int length; /* +0x40 */
 };
 
-// NONMATCHING: list-ilp order, as leaf_00c831d0.cpp's: the base tests the length (`test
-// eax, eax`) before `mov ecx, 0x3f`, the build after
 void Text0086b850::format(const char *format, ...)
 {
     va_list args;

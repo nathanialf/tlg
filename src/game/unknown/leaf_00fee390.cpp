@@ -55,8 +55,6 @@ class Object00fee390 /* derived name */
     Record00fee390 *record; /* +0x18 */
 };
 
-// NONMATCHING: list-ilp order: the base loads the provider's vptr (`mov r8, [rdi]`) before the two
-// ints at +0x1c and +0x20, the build after them (the IR has the base's order); 15 of 37 before it
 void Object00fee390::slot9(void *argument)
 {
     Record00fee390 *record = this->record;

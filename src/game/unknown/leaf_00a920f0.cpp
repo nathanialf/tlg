@@ -27,7 +27,4 @@ class Object016b2a88 /* derived name */
     Entry00a925e0 entries[10]; /* +0x10 */
 };
 
-// NONMATCHING: the base computes the first entry's address before the first call and keeps
-// it in r14 across the nine others (`lea r14, [rbx + 0x10]`, then `add rbx, 0x5f0` for the
-// second entry), the build folds every address to rbx plus a constant (`add rbx, 0x10` last)
 Object016b2a88::~Object016b2a88() {}

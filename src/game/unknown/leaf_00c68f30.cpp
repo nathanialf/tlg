@@ -32,14 +32,11 @@ struct Argument00c68f30 { /* derived name */
 
 class Object00c29c00; /* derived name */
 
-// NONMATCHING: the count compare: the base compares the 32-bit count with the
-// truncated counter (`cmp eax, ecx; jbe`), this build widens the count and
-// compares 64 bits (IndVarSimplify's widenLoopCompare, absent in 3.6.2).
 void FUN_00c68f30(Object00c29c00 *, Argument00c68f30 *argument) /* derived name */
 {
     argument->unknown78 = 0;
-    for (u32 i = 0; i < 16; i++) {
-        if (i < argument->unknown68 && argument->unknown60[i] &&
+    for (int i = 0; i < 16; i++) {
+        if (argument->unknown68 > i && argument->unknown60[i] &&
             argument->unknown60[i] != D_5938c40->unknown38->unknown20)
             argument->unknown78 |= 1 << i;
     }

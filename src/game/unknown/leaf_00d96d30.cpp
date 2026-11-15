@@ -40,8 +40,6 @@ class Object00d96d30 /* derived name */
     size_t capacity;              /* +0xc18 */
 };
 
-// NONMATCHING: list-ilp order, the allocator (+0x8) and the size (+0xc18) loaded the other way
-// round (base: the allocator first, as FUN_00c36a80's inlined copy); the rest equal, D1 and D0
 Object00d96d30::~Object00d96d30()
 {
     if (data != storage)

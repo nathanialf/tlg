@@ -18,6 +18,12 @@ struct Component00644eb0 { /* derived name */
     Type00503fb0 *type; /* +0x18 */
     u8 unknown20[0x550];
     Flags00644eb0 *flags; /* +0x570 */
+
+    /* derived name: of the type or of one that derives from it */
+    bool isKindOf(const Type00503fb0 *wanted) const
+    {
+        return ::isKindOf(type, wanted);
+    }
 };
 
 struct Object00644eb0 { /* derived name */
@@ -41,12 +47,9 @@ static inline Component00644eb0 *firstComponent()
     if (object->componentCount == 0)
         return 0;
     Component00644eb0 *component = object->components[0];
-    return isKindOf(component->type, D_57d35a8) ? component : 0;
+    return component->isKindOf(D_57d35a8) ? component : 0;
 }
 
-// NONMATCHING: loop layout: the base tests the first type before the loop
-// and enters the loop at the parent's load (`mov rdx, [rdx]; cmp; je; test;
-// jne`), the build at the compare
 bool FUN_00644eb0() /* derived name */
 {
     Component00644eb0 *component = firstComponent();
@@ -55,9 +58,6 @@ bool FUN_00644eb0() /* derived name */
     return false;
 }
 
-// NONMATCHING: loop layout: the base tests the first type before the loop
-// and enters the loop at the parent's load (`mov rdx, [rdx]; cmp; je; test;
-// jne`), the build at the compare
 bool FUN_00644f10() /* derived name */
 {
     Component00644eb0 *component = firstComponent();

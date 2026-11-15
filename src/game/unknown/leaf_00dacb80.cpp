@@ -93,7 +93,7 @@ static inline u32 *instruction(FuncState00dacb80 *fs, u32 pc)
 {
     u32 slot = pc & 0xff;
     u32 pageIndex = pc >> 8;
-    if (pageIndex == fs->pc >> 8)
+    if (fs->pc >> 8 == pageIndex)
         return &fs->currentPage->code[slot];
     CodePage00dacb80 *page = fs->firstPage;
     for (u32 i = 0; i < pageIndex; ++i)
@@ -120,7 +120,6 @@ static void fixJump(Compiler00dacb80 *self, FuncState00dacb80 *fs, int pc, int d
     *word = (*word & 0xfe0000ff) | (((u32)(offset + 0xffff) << 8) & 0x1ffff00);
 }
 
-// NONMATCHING: the base materializes the instruction's address (lea; add [page+0x400]) where the build folds it into the load's addressing mode, in the walk and after it; list-ilp order of the offset and the target (the cmov tied the other way)
 void FUN_00dacb80(Compiler00dacb80 *self, int *list, int jump) /* derived name */
 {
     if (jump == -1)

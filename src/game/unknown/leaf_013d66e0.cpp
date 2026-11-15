@@ -21,7 +21,7 @@ class Object016d3b98 /* derived name */
     Object013d6840 unknown30; /* +0x30 */
 };
 
-// NONMATCHING: the complete destructor 0x13d66e0 is equal in the whole module only (the member's
-// destructor inlined from leaf_013d6840.cpp); the deleting one 0x13d6790 calls it there where the
-// base inlines it (an inline-cost margin); the single-file module keeps the member's call in both
+// NONMATCHING (the deleting destructor FUN_013d6790 only): an inline-cost margin: the build calls this
+// destructor where the base inlines it; the complete destructor holds the member's destructor inlined from
+// leaf_013d6840.cpp
 Object016d3b98::~Object016d3b98() {}

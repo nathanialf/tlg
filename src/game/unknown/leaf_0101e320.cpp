@@ -6,9 +6,6 @@
  * is set to the target when the two are closer than 1e-10. Called once, from 0x10198c8;
  * FUN_01063f20 (leaf_01063f20.cpp) has the same bytes over its own
  * constants. */
-// NONMATCHING: 27/30, 128 bytes of 128: the conversion's pass-through register (xmm0 in the
-// base, xmm6 in the build) and both adds with the value as the second operand in the base
-// (`vaddss xmm2, xmm4, xmm2`), either spelling of the sum giving the first
 void FUN_0101e320(float *value, float target, float step) /* derived name */
 {
     float distance = target - *value > 0.0f ? target - *value : *value - target;

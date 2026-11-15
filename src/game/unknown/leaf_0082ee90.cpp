@@ -17,9 +17,6 @@ struct Object0082ee90 /* derived name */
 
 void FUN_0082e290(Object0082ee90 *self, int a, int b); /* derived name */
 
-// NONMATCHING: block placement: the build lays the shared return after the default block
-// (and its copy at the end), the base after case 3 with the default jumping to it: the switch
-// weights' class (r246104 to r246522, held; NOTES round 219C)
 int FUN_0082ee90(Object0082ee90 *self) /* derived name */
 {
     switch (self->state) {

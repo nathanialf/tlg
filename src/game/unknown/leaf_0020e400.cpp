@@ -22,14 +22,9 @@ struct Object057c9390 /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: 9/16, the instructions and their order are the base's; the registers are not (the
-// base keeps the stack top in rdx and the first compare's byte in cl, the build rcx and dl)
 int FUN_0020e400(lua_State *state) /* derived name */
 {
     int phase = D_57c9390->unknown128->unknownFc;
-    HksObject *top = state->top;
-    top->value.boolean = phase == 0 || phase == 7;
-    top->type = 1;
-    state->top = top + 1;
+    pushBoolean(state, phase == 0 || phase == 7);
     return 1;
 }

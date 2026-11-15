@@ -21,9 +21,6 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-// NONMATCHING: greedy's assignment as FUN_00a44f20's: the frame's top, base and
-// count are in rsi, rcx and rax in the base, rcx, rax and rdx here, the flag's
-// true set before the boolean test there; the order of the reads is the base's.
 int FUN_001b2960(lua_State *state) /* derived name */
 {
     int count = state->top - state->base;

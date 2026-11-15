@@ -8,6 +8,12 @@ struct Record008f08d0 { /* derived name */
     u8 unknown0[0x80];
     void *unknown80;
     void *unknown88;
+
+    /* derived name: the pointer at +0x88 when it is set, else the one at +0x80 */
+    void *const &current() const
+    {
+        return unknown88 ? unknown88 : unknown80;
+    }
 };
 
 struct Object008f08d0 { /* derived name */
@@ -17,7 +23,5 @@ struct Object008f08d0 { /* derived name */
 
 void *FUN_008f08d0(const Object008f08d0 *self) /* derived name */
 {
-    const Record008f08d0 *record = self->unknown38;
-    void *const &chosen = record->unknown88 ? record->unknown88 : record->unknown80;
-    return chosen;
+    return self->unknown38->current();
 }

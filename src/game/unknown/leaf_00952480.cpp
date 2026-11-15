@@ -30,6 +30,11 @@ struct Item00952480 : Node00503fb0 { /* derived name */
 
 struct List00952480 {                 /* derived name */
     Ref00503fb0<Item00952480> *items; /* +0x0 */
+
+    const Ref00503fb0<Item00952480> &at(int index) const /* derived name */
+    {
+        return items[index];
+    }
 };
 
 struct Object00952480 { /* derived name */
@@ -40,16 +45,13 @@ struct Object00952480 { /* derived name */
     float value;        /* +0x20 */
 };
 
-// NONMATCHING: block placement: every instruction is the base's, the block that calls FUN_00c14bc0 is laid
-// out before the loop's header where the base has it before the latch, and the three spill slots are taken in
-// another order (274 bytes for 268)
 void FUN_00952480(Object00952480 *self) /* derived name */
 {
     int index = self->first;
     unsigned end = self->end;
     float value = self->value;
     while (index < end) {
-        Ref00503fb0<Item00952480> item(self->list->items[index]);
+        Ref00503fb0<Item00952480> item(self->list->at(index));
         if (!item.get()) {
             ++index;
             continue;

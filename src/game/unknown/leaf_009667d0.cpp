@@ -29,9 +29,6 @@ struct Object009667d0 { /* derived name */
     unsigned itemCount;               /* +0x50 */
 };
 
-// NONMATCHING: a register exchange (66/75: the counter in r13 and the mark in r12 in the base, the other way
-// round in the build) and the two spill slots' order (the object at [rbp-0x30] and the count at [rbp-0x34] in
-// the base; [rbp-0x38] and [rbp-0x2c] in the build)
 bool FUN_009667d0(Object009667d0 *self) /* derived name */
 {
     unsigned count = self->itemCount;

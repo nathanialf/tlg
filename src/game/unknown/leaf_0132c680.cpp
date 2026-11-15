@@ -22,11 +22,11 @@ struct Object0132c680 { /* derived name */
     void *unknowne488;
 };
 
-// NONMATCHING: the base computes the position in 64 bits and masks it with 0xffffffff built as
-// `mov ecx, 0xfffffff0; or rcx, 0xf` (a hoisted constant rebased, ConstantHoisting's form), the
-// compile gives `add eax, -0x10` in 32 bits; the IR that holds two 64-bit masks is not found
 void FUN_0132c680(Object0132c680 *self, u32 index, Record0132c680 *record) /* derived name */
 {
-    u32 position = record->unknown0[index].unknown2 - 16u;
-    *reinterpret_cast<void **>(&record->unknown18[position]) = self->unknowne488;
+    const Entry0132c680 *entry = &record->unknown0[index];
+    u32 *words = record->unknown18;
+    void *value = self->unknowne488;
+    u32 position = entry->unknown2 - 16u;
+    *reinterpret_cast<void **>(&words[position]) = value;
 }

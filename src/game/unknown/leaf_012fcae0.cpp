@@ -37,10 +37,6 @@ struct Descriptor012fcae0 /* derived name */
     u32 unknownc_12 : 20;
 };
 
-// NONMATCHING: the or of the six fields, the base a chain in field order (the
-// 4-bit field with the 6-bit one first, then the four 3-bit ones, each masked
-// apart), the build a balanced tree (Reassociate), the load of +0xc after +0x4;
-// written also as one expression: the same.
 Format012fcae0 FUN_012fcae0(const Descriptor012fcae0 *self) /* derived name */
 {
     Format012fcae0 format;

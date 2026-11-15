@@ -12,11 +12,6 @@
  * 0x12cf0d0, 0x12e0750), each called only from its own unit. */
 extern const float D_15251c0[11]; /* derived: the rates by speed */
 
-// NONMATCHING: greedy's assignment and list-ilp order, as leaf_0101e320.cpp's: the base's
-// difference pair in xmm6/xmm7 the other way at the entry, and the base takes the clamp's
-// `vminss` before the `vcmpltss` and converts the index after `inc` (two registers for the
-// index and the next one, the build one); every operation else the same (4 of 46 by position)
-
 void FUN_00fbcff0(float *value, float target, float speed, float step) /* derived name */
 {
     float distance = target - *value > 0.0f ? target - *value : *value - target;

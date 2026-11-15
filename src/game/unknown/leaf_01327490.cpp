@@ -10,12 +10,13 @@ struct Format01327490 { /* derived name */
     u8 bits[4]; /* +0x6 */
 };
 
-// NONMATCHING: 34 of 37: the base loads the fourth value (`mov eax, [rsi+0xc]`) before the third
-// store, the build after it. A source question (the releases 3.7.1 to 3.9.1 give the build's
-// order from this loop): a load is chained behind the store before it, so the fourth value is
-// read before the third result is stored, and only the fourth (`__restrict` on the output
-// vectorizes the loop instead)
-void FUN_01327490(u32 *out, const u32 *in, const Format01327490 *format) /* derived name */
+/* The output and the input do not overlap (restrict): the base reads the
+ * fourth value above the third store (`mov eax, [rsi+0xc]; mov [rdi+8], ecx`),
+ * which the scheduler after register allocation does only for a load and a
+ * store whose objects are both identified (ScheduleDAGInstrs.cpp,
+ * getUnderlyingObjectsForInstr: an argument is one when it is noalias). */
+void FUN_01327490(u32 *__restrict out, const u32 *__restrict in,
+                  const Format01327490 *format) /* derived name */
 {
     for (int i = 0; i < 4; ++i) {
         u32 largest = (1ull << format->bits[i]) - 1;

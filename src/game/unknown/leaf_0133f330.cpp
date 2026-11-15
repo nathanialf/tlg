@@ -22,9 +22,12 @@ int FUN_0082fbe0(Entry0082fbe0 *entry, const float *value); /* derived name */
 void FUN_00cb8490(List0581c720 *list, int (*callback)(Entry0082fbe0 *entry, const float *value),
                   const float *value); /* derived name */
 
-// NONMATCHING: frame layout: the float whose address is passed sits at [rbp-0x28] in the base,
-// a 4-byte hole between it and the canary at [rbp-0x20]; the build puts it at [rbp-0x24]
-// (everything else equal)
+// NONMATCHING: frame layout: the value whose address is passed sits at [rbp-0x28] in the base, a
+// 4-byte hole between it and the canary at [rbp-0x20]; the build puts the float at [rbp-0x24]
+// (everything else equal). The base's object is 8 bytes wide or 8-aligned: the function is equal
+// with the local an 8-byte union of the float and a pointer (measured, not kept: the argument's
+// real type is not traced). The int sibling 0x1331f60 and 0x1340240, 0x1340310, 0x1342d50 have
+// the same slot.
 void FUN_0133f330() /* derived name */
 {
     if (D_5938c40->unknown19c < 0.00001f)

@@ -14,14 +14,16 @@ struct UInt4 { /* derived name */
     u32 w;
 };
 
-// NONMATCHING: the base converts the four values with the back end's lowering of a vector unsigned
-// conversion (uitofp <4 x i32>: blends with the magic exponents, a shift, two adds); the four
-// scalar conversions are not vectorised (four `vcvtsi2ss` of the zero-extended values); the vector
-// type of the source not found
+/* The four are converted before the first is stored (the base converts them
+ * as one vector). */
 void FUN_01328620(Float4 *out, const UInt4 *in) /* derived name */
 {
-    out->x = in->x;
-    out->y = in->y;
-    out->z = in->z;
-    out->w = in->w;
+    float x = in->x;
+    float y = in->y;
+    float z = in->z;
+    float w = in->w;
+    out->x = x;
+    out->y = y;
+    out->z = z;
+    out->w = w;
 }

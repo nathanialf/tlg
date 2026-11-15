@@ -17,9 +17,6 @@ struct Object00afd570 { /* derived name */
     u8 *unknown50;          /* +0x50 */
 };
 
-// NONMATCHING: the two spill slots' order and nothing else (70/74): the base keeps the object at [rbp-0x30]
-// and the block's address at [rbp-0x38], the build the other way round (the frame objects' ordering, held
-// without a witness since round 198B)
 void FUN_00afd570(Object00afd570 *self) /* derived name */
 {
     if (self->entries) {

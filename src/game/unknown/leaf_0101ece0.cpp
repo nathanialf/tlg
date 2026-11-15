@@ -43,9 +43,10 @@ class Object016c0d60 : public Object00c1b7f0 /* derived name */
  * FUN_00c1b7f0 runs as a tail call. FUN_0101f0e0, slot 1, is the deleting one.
  * The destructor is the class's key function, so this file emits the
  * vtable. */
-// NONMATCHING: greedy's register assignment: 7 instructions of the element array's destructor loop, rcx and
+// NONMATCHING: the complete destructor: greedy's register assignment: 7 instructions of the element array's destructor loop, rcx and
 // rdx exchanged (base `lea rdx, [rcx+rcx*4]; shl rdx, 5; mov ecx, [r13+rdx]`, build `lea rcx; shl rcx; mov edx,
-// [r13+rcx]`), same size
+// [r13+rcx]`), same size; the deleting destructor is equal and waits for it (the layout places its call's
+// target from this one's row)
 Object016c0d60::~Object016c0d60()
 {
     if (registry)

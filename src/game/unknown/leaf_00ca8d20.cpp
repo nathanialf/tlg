@@ -39,9 +39,6 @@ class Object00ca8d20 : public Node00503fb0 /* derived name */
  * int at +0x30 is not zero, slot 13 of the object at +0x98 of the node is
  * called with a reference to the node, and slot 14 when it returns a value
  * that is not zero. The array's owner is not traced. */
-// NONMATCHING: 86/92, 337 bytes against 337: the two spill slots exchanged (the base keeps the array at
-// [rbp-0x40] and the count at [rbp-0x44], the build at [rbp-0x48] and [rbp-0x3c]) and the array's spill
-// stored before the canary's load in the base: the frame objects' order (r260917, round 260A's candidate 3)
 void FUN_00ca8d20(Array05943280<Object00ca8d20 *> *objects) /* derived name */
 {
     unsigned count = objects->size();
