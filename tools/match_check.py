@@ -69,19 +69,68 @@ def load_functions(ver: str) -> dict[str, tuple[int, int]]:
     return out
 
 
+_TABLES_DONE: set[tuple[str, str]] = set()     # (unit, version) whose tables this process wrote
+
+
 def generate_tables_of(tu: str, ver: str) -> None:
     """Write build/<slug>/gen/D_<hex>.inc for every table the TU claims
     (config/data_schema.<slug>.txt, tools/gen_data_inc.py, D18), so a compile
-    outside ninja sees the current rows."""
+    outside ninja sees the current rows. Once per unit and process (the
+    gate asks for each unit twice, its rows and its layout; nothing between
+    changes the tool's inputs). With the gate's cache on, a table whose
+    file holds the text the same inputs gave before is not written again
+    (_table_inputs)."""
+    if (tu, ver) in _TABLES_DONE:
+        return
     try:
         from gen_data_inc import schema_rows
         rows = schema_rows(ver)
     except Exception:  # noqa: BLE001  (no schema file, or an error ninja will report)
         return
+    from base_elf import _MISS, file_digest, gate_cache_get, gate_cache_key, gate_cache_on, gate_cache_put
     for ident, row in rows.items():
         if row.get("tu") == tu:
+            out = build_dir(REPO_ROOT, ver) / "gen" / f"{ident}.inc"
+            ck = None
+            if gate_cache_on():
+                inputs = _table_inputs(row, ver)
+                if inputs is not None:
+                    ck = gate_cache_key("table", (ident, inputs))
+                    have = gate_cache_get("table", ck)
+                    if have is not _MISS and have == file_digest(out):
+                        continue
             subprocess.run([sys.executable, "-I", str(REPO_ROOT / "tools" / "gen_data_inc.py"), ident],
                            cwd=REPO_ROOT, check=True, env={**os.environ, "VERSION": ver})
+            if ck is not None:
+                gate_cache_put("table", ck, file_digest(out))
+    _TABLES_DONE.add((tu, ver))
+
+
+_TABLE_INPUTS: dict[str, tuple] = {}
+
+
+def _table_inputs(row: dict, ver: str) -> tuple | None:
+    """What tools/gen_data_inc.py's text for a schema row is a function of,
+    besides the row and the tools: the base executable's bytes, the
+    configuration it reads (the schema and data rows; the function table,
+    the vtables and the imports, through BaseElf), every header under
+    src/include/ (the row's header and what it includes are read from there)
+    and the c++filt it runs. None when the row's header is not under
+    src/include/ (then the tool runs every time)."""
+    if not row.get("header", "").startswith("src/include/"):
+        return None
+    if ver not in _TABLE_INPUTS:
+        import shutil
+        from base_elf import file_digest
+        cfg = tuple((st, file_digest(config_path(REPO_ROOT, ver, st, "txt")))
+                    for st in ("data_schema", "data", "functions", "vtables", "vtables.derived", "imports"))
+        inc = REPO_ROOT / "src" / "include"
+        headers = tuple(sorted((p.relative_to(REPO_ROOT).as_posix(), file_digest(p))
+                               for p in inc.rglob("*") if p.is_file()))
+        cxxfilt = shutil.which("c++filt")
+        _TABLE_INPUTS[ver] = (file_digest(baseelf_path(REPO_ROOT, ver)), cfg, headers,
+                              (cxxfilt, file_digest(Path(cxxfilt)) if cxxfilt else ""))
+    return _TABLE_INPUTS[ver] + (tuple(sorted(row.items())),)
 
 
 _LINE_COMPILERS: dict[str, list[tuple[str, str]]] = {}     # version -> (prefix, compiler) per flags line
@@ -502,6 +551,22 @@ def local_objects(obj: Path) -> set[str]:
 _LOCAL_OBJECTS: dict[tuple, set[str]] = {}
 
 
+def _local_objects_by_name(obj: Path) -> dict[str, frozenset[str]]:
+    """local_objects(obj) by the name less any link suffix `.N`
+    (HEADER_STATIC_SUFFIX): {name: every local object spelled name[.N]}."""
+    st = obj.stat()
+    key = (str(obj), st.st_mtime_ns, st.st_size)
+    if key not in _LOCAL_BY_NAME:
+        out: dict[str, set[str]] = {}
+        for c in local_objects(obj):
+            out.setdefault(HEADER_STATIC_SUFFIX.sub("", c), set()).add(c)
+        _LOCAL_BY_NAME[key] = {k: frozenset(v) for k, v in out.items()}
+    return _LOCAL_BY_NAME[key]
+
+
+_LOCAL_BY_NAME: dict[tuple, dict[str, frozenset[str]]] = {}
+
+
 def header_static_aliases(tu: str, obj: Path, ver: str) -> tuple[dict[str, str], dict[str, str]]:
     """({object symbol: unit symbol}, {unit symbol: why none}) for the header
     statics (the symbols config/header_statics names) the game unit `tu`
@@ -570,8 +635,9 @@ def _header_static_proofs(tu: str, obj: Path, ver: str) -> tuple[dict[str, str],
                 elif lk and lk not in gm.SHARED and f not in renamed and f in funcs:
                     anchors_of[f] = f
             reach = {f: closure(f) for f in anchors_of}
+            by_name = _local_objects_by_name(obj)
             for n in mine:
-                cands = {c for c in have if HEADER_STATIC_SUFFIX.sub("", c) == n}
+                cands = set(by_name.get(n, ()))
                 anchors = sorted(anchors_of[f] for f in anchors_of if n in reach[f])
                 if not anchors:
                     why[n] = ("no function of the unit that references it has a module symbol the gate can "
@@ -846,19 +912,38 @@ _OBJECT_FUNCTIONS: dict[tuple[str, int, int], dict] = {}
 def object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
     """symbol -> (bytes, [Reloc]) for every STT_FUNC the object defines;
     read once per object state (the game module's object serves every game
-    unit)."""
+    unit). With the gate's cache on (base_elf.gate_cache_enable), the answer
+    is kept under the SHA-256 of the object's bytes: it is a function of
+    those bytes and the tools alone."""
     st = obj.stat()
     key = (str(obj), st.st_mtime_ns, st.st_size)
     if key not in _OBJECT_FUNCTIONS:
-        _OBJECT_FUNCTIONS[key] = _object_functions(obj)
+        _OBJECT_FUNCTIONS[key] = cached_object_parse("objfuncs", obj, _object_functions)
     return _OBJECT_FUNCTIONS[key]
 
 
-def _object_functions(obj: Path) -> dict[str, tuple[bytes, list[Reloc]]]:
+def cached_object_parse(kind: str, obj: Path, parse):
+    """parse(obj), through the gate's cache when it is on, keyed by the
+    object's bytes (read once here, hashed, and the same bytes parsed)."""
+    from base_elf import _MISS, content_digest, gate_cache_get, gate_cache_key, gate_cache_on, gate_cache_put
+    if not gate_cache_on():
+        return parse(obj)
+    import io
+    data = obj.read_bytes()
+    ck = gate_cache_key(kind, content_digest(data))
+    v = gate_cache_get(kind, ck)
+    if v is not _MISS:
+        return v
+    v = parse(obj, io.BytesIO(data))
+    gate_cache_put(kind, ck, v)
+    return v
+
+
+def _object_functions(obj: Path, stream=None) -> dict[str, tuple[bytes, list[Reloc]]]:
     from elftools.elf.elffile import ELFFile
     from elftools.elf.relocation import RelocationSection
     out = {}
-    with obj.open("rb") as f:
+    with (stream or obj.open("rb")) as f:
         elf = ELFFile(f)
         symtab = elf.get_section_by_name(".symtab")
         syms = list(symtab.iter_symbols())
@@ -895,17 +980,38 @@ def object_symbol(obj: Path, name: str) -> tuple[int, int, int] | None:
     return None
 
 
+class _Sym:
+    """A symbol of _ObjectView as plain values (the gate's cache keeps the
+    view): its name, and the fields the tools read by key (st_value,
+    st_size, st_shndx, st_info's bind and type); any other key raises."""
+    __slots__ = ("name", "entry")
+
+    def __init__(self, s):
+        self.name = s.name
+        self.entry = {"st_value": s["st_value"], "st_size": s["st_size"], "st_shndx": s["st_shndx"],
+                      "st_info": {"bind": s["st_info"]["bind"], "type": s["st_info"]["type"]}}
+
+    def __getitem__(self, k):
+        return self.entry[k]
+
+    def __getstate__(self):
+        return (self.name, self.entry)
+
+    def __setstate__(self, st):
+        self.name, self.entry = st
+
+
 class _ObjectView:
     """One object file read once: its symbols, its named locals, every
     section's bytes, flags and size, and its relocations by the section they
     apply to. The game module's object serves thousands of lookups a gate."""
 
-    def __init__(self, obj: Path):
+    def __init__(self, obj: Path, stream=None):
         from elftools.elf.elffile import ELFFile
         from elftools.elf.relocation import RelocationSection
-        with obj.open("rb") as f:
+        with (stream or obj.open("rb")) as f:
             elf = ELFFile(f)
-            self.syms = list(elf.get_section_by_name(".symtab").iter_symbols())
+            self.syms = [_Sym(s) for s in elf.get_section_by_name(".symtab").iter_symbols()]
             self.locs = named_locals(self.syms)
             self.sections = {}
             self.relocs: dict[int, list] = {}
@@ -935,7 +1041,7 @@ def object_view(obj: Path) -> _ObjectView:
     st = obj.stat()
     key = (str(obj), st.st_mtime_ns, st.st_size)
     if key not in _OBJECT_VIEWS:
-        _OBJECT_VIEWS[key] = _ObjectView(obj)
+        _OBJECT_VIEWS[key] = cached_object_parse("objview", obj, _ObjectView)
     return _OBJECT_VIEWS[key]
 
 

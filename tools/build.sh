@@ -16,7 +16,10 @@
 #   progress      Regenerate the progress files (docs/<slug>/PROGRESS.md,
 #                 docs/<slug>/progress.json, README's progress block).
 #   gate-all      For every configured target: require its base files, then
-#                 setup, ninja and the gate.
+#                 setup, ninja and the gate. The gate reuses the answers kept
+#                 in build/<slug>/gate-cache/ whose inputs hash the same
+#                 (tools/README.md); `gate-all --full` computes everything
+#                 and neither reads nor writes the cache.
 #   progress-all  progress for every configured target.
 
 set -eu
@@ -131,7 +134,13 @@ case "$cmd" in
     clean)        rm -rf "${TLG_BUILD_DIR}" ;;
     distclean)    rm -rf build; rm -f build.ninja .ninja_log .ninja_deps ;;
     progress)     do_progress ;;
-    gate-all)     gate_all ;;
+    gate-all)
+        case "${2:-}" in
+            "") ;;
+            --full) export TLG_GATE_FULL=1 ;;
+            *) echo "build.sh gate-all: unknown option ${2} (--full)" >&2; exit 2 ;;
+        esac
+        gate_all ;;
     progress-all) progress_all ;;
     help|*)
         cat <<USAGE
@@ -144,6 +153,7 @@ usage: [VERSION=<slug>] $0 <subcommand>      (configured: ${TLG_VERSIONS:-none};
   distclean     rm -rf build/ and delete build.ninja
   progress      regenerate ${TLG_DOCS_DIR}/PROGRESS.md, ${TLG_DOCS_DIR}/progress.json and README's block
   gate-all      every configured target: its base files required, then setup, ninja, gate
+                (--full: the gate computes everything, its cache neither read nor written)
   progress-all  progress for every configured target
 USAGE
         ;;

@@ -31,6 +31,195 @@ PT_TLS = 7
 _VPTR_STORES: dict[tuple[str, int], frozenset[int]] = {}
 
 
+# --- the gate's cache ----------------------------------------------------------
+#
+# tools/check_elf.py --gate (and --progress) turn it on, under
+# build/<slug>/gate-cache/; `--full` and every other tool leave it off. It holds
+# the answers of computations that are pure functions of what their key hashes,
+# and nothing else: every key is the SHA-256 of the tools' digest (every file
+# under tools/ but the fetched compilers and tools, the Python version and the
+# versions of capstone and pyelftools), the kind of answer, and the inputs
+# themselves (file contents, never a path's size or time). A key is the repr
+# of a tuple of plain values (str, int, bytes, None, tuples), which is one
+# text per value, so two different inputs never share a key. The cache is advisory: deleting it changes nothing
+# but time. Entries no run used are dropped when the gate writes it back.
+
+import hashlib  # noqa: E402
+import os  # noqa: E402
+import pickle  # noqa: E402
+
+_GC: dict = {"dir": None, "tables": {}, "used": {}, "dirty": set(), "files_used": {},
+             "hits": {}, "misses": {}}
+# kinds whose answers are large (an object file's every function): one file each
+_GC_FILE_KINDS = ("objfuncs", "objdata", "objview")
+
+
+def gate_cache_enable(path: Path | None) -> None:
+    """Turn the cache on under `path` (None: off)."""
+    _GC.update({"dir": path, "tables": {}, "used": {}, "dirty": set(), "files_used": {},
+                "hits": {}, "misses": {}})
+
+
+def gate_cache_on() -> bool:
+    return _GC["dir"] is not None
+
+
+_TOOLS_DIGEST: list[str] = []
+
+
+def tools_digest() -> str:
+    """SHA-256 over every file under tools/ (path and bytes; not the
+    compilers under tools/cc, the fetched tools/ext and tools/ghidra, or
+    __pycache__), the Python version and the capstone and pyelftools
+    versions: a change to any tool invalidates every entry."""
+    if not _TOOLS_DIGEST:
+        import capstone
+        import elftools
+        root = Path(__file__).resolve().parent
+        h = hashlib.sha256()
+        h.update(f"{sys.version}\0capstone {capstone.__version__}\0pyelftools {elftools.__version__}\0".encode())
+        for d, dirs, files in os.walk(root):
+            rel = Path(d).relative_to(root)
+            dirs[:] = sorted(x for x in dirs if not (rel == Path(".") and x in ("cc", "ext", "ghidra"))
+                             and x != "__pycache__")
+            for f in sorted(files):
+                p = Path(d) / f
+                h.update(f"{(rel / f).as_posix()}\0{p.stat().st_size}\0".encode())
+                h.update(p.read_bytes())
+        _TOOLS_DIGEST.append(h.hexdigest())
+    return _TOOLS_DIGEST[0]
+
+
+def content_digest(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+_FILE_DIGESTS: dict[tuple, str] = {}
+
+
+def file_digest(path: Path) -> str:
+    """SHA-256 of the file's bytes ("" when it does not exist); read once per
+    process and file state."""
+    try:
+        st = path.stat()
+    except FileNotFoundError:
+        return ""
+    k = (str(path), st.st_mtime_ns, st.st_size, st.st_ino)
+    if k not in _FILE_DIGESTS:
+        _FILE_DIGESTS[k] = content_digest(path.read_bytes())
+    return _FILE_DIGESTS[k]
+
+
+def gate_cache_key(kind: str, payload) -> str:
+    """The key of an answer: the SHA-256 of the repr of (the tools' digest,
+    the kind, the inputs), the inputs plain values (str, int, bytes, None and
+    tuples of them), whose repr is one text per value and differs between
+    any two values."""
+    return hashlib.sha256(repr((tools_digest(), kind, payload)).encode()).hexdigest()
+
+
+_MISS = object()
+
+
+def _gc_table(kind: str) -> dict:
+    t = _GC["tables"].get(kind)
+    if t is None:
+        t = {}
+        try:
+            with open(_GC["dir"] / f"{kind}.pickle", "rb") as f:
+                t = pickle.load(f)
+            if not isinstance(t, dict):
+                t = {}
+        except Exception:  # noqa: BLE001  (missing or unreadable: an empty table)
+            t = {}
+        _GC["tables"][kind] = t
+        _GC["used"][kind] = {}
+    return t
+
+
+def gate_cache_get(kind: str, key: str):
+    """The answer stored under `key`, or base_elf._MISS."""
+    if _GC["dir"] is None:
+        return _MISS
+    if kind in _GC_FILE_KINDS:
+        p = _GC["dir"] / kind / f"{key}.pickle"
+        try:
+            with open(p, "rb") as f:
+                v = pickle.load(f)
+        except Exception:  # noqa: BLE001
+            _GC["misses"][kind] = _GC["misses"].get(kind, 0) + 1
+            return _MISS
+        _GC["files_used"].setdefault(kind, set()).add(p.name)
+        _GC["hits"][kind] = _GC["hits"].get(kind, 0) + 1
+        return v
+    t = _gc_table(kind)
+    if key in t:
+        _GC["used"][kind][key] = t[key]
+        _GC["hits"][kind] = _GC["hits"].get(kind, 0) + 1
+        return t[key]
+    _GC["misses"][kind] = _GC["misses"].get(kind, 0) + 1
+    return _MISS
+
+
+def _atomic_write(p: Path, blob: bytes) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_name(f".{p.name}.{os.getpid()}.tmp")
+    tmp.write_bytes(blob)
+    os.replace(tmp, p)
+
+
+def gate_cache_put(kind: str, key: str, value) -> None:
+    if _GC["dir"] is None:
+        return
+    if kind in _GC_FILE_KINDS:
+        p = _GC["dir"] / kind / f"{key}.pickle"
+        try:
+            _atomic_write(p, pickle.dumps(value, protocol=4))
+            _GC["files_used"].setdefault(kind, set()).add(p.name)
+        except OSError:
+            pass
+        return
+    _gc_table(kind)
+    _GC["used"][kind][key] = value
+    _GC["dirty"].add(kind)
+
+
+def gate_cache_flush(prune: bool) -> str:
+    """Write the tables back. With `prune` (a whole gate ran), keep only the
+    entries this run used, and remove the per-object files it did not use.
+    Returns one summary line."""
+    if _GC["dir"] is None:
+        return "gate cache: off"
+    for kind, used in _GC["used"].items():
+        if kind in _GC["dirty"] or (prune and len(used) != len(_GC["tables"].get(kind, {}))):
+            keep = used if prune else {**_GC["tables"].get(kind, {}), **used}
+            try:
+                _atomic_write(_GC["dir"] / f"{kind}.pickle", pickle.dumps(keep, protocol=4))
+            except OSError:
+                pass
+    if prune:
+        for kind in _GC_FILE_KINDS:
+            d = _GC["dir"] / kind
+            if d.is_dir():
+                keep = _GC["files_used"].get(kind, set())
+                for p in d.iterdir():
+                    if p.name not in keep:
+                        try:
+                            p.unlink()
+                        except OSError:
+                            pass
+    kinds = sorted(set(_GC["hits"]) | set(_GC["misses"]))
+    return "gate cache: " + (", ".join(f"{k} {_GC['hits'].get(k, 0)} reused / {_GC['misses'].get(k, 0)} computed"
+                                       for k in kinds) or "empty")
+
+
+def base_digest(base: "BaseElf") -> str:
+    """SHA-256 of the base executable's bytes as this BaseElf read them."""
+    if getattr(base, "_digest", None) is None:
+        base._digest = content_digest(base.data)
+    return base._digest
+
+
 class BaseElf:
     def __init__(self, repo_root: Path, version: str | None = None):
         self.root = repo_root
@@ -413,12 +602,39 @@ class BaseElf:
         self._dso = max(found, key=found.get) if len(found) == 1 else 0
         return self._dso or None
 
+    def vptr_stores(self, fn: int) -> frozenset[int]:
+        """tools/vtable_names.py Walker.vptr_stores(fn): a function of the
+        base's bytes and of the function's address and size in the table
+        alone. The gate asks it of two BaseElf objects (check_elf.check_all's
+        and layout_link.build_image's): answered once per process, and kept in
+        the gate's cache under the base's digest, the address and the size."""
+        key = (str(self.path), fn)
+        stored = _VPTR_STORES.get(key)
+        if stored is not None:
+            return stored
+        ck = None
+        if gate_cache_on():
+            sizes = getattr(self, "_size_at", None)
+            if sizes is None:
+                sizes = self._size_at = {a: sz for a, sz, _n in self.functions}
+            ck = gate_cache_key("vptr", (base_digest(self), fn, sizes.get(fn)))
+            v = gate_cache_get("vptr", ck)
+            if v is not _MISS:
+                stored = v
+        if stored is None:
+            from vtable_names import Walker
+            stored = frozenset(Walker(self).vptr_stores(fn))
+            if ck is not None:
+                gate_cache_put("vptr", ck, stored)
+        _VPTR_STORES[key] = stored
+        return stored
+
     def _verify_derived(self, sym: str) -> int:
         """A derived vtable row holds when its symbol is the mangling of its
         class name and the constructor it cites stores the vtable's address
         point into its object (tools/vtable_names.py, D14)."""
         addr, cls, ctor = self._derived[sym]
-        from vtable_names import Walker, mangle_vtable
+        from vtable_names import mangle_vtable
         expected = mangle_vtable(cls)
         # a class of an anonymous namespace: its vtable is the file's own
         # (the base stores the address point with one direct lea)
@@ -434,13 +650,7 @@ class BaseElf:
                 fn = None
             if fn is None or fn not in {a for a, _s in self.func_by_name.values()}:
                 raise ValueError(f"vtables.derived: {sym}: {ctor} is not a function of the table")
-        # the walk is a function of the base's bytes and the function alone,
-        # and the gate asks it of two BaseElf objects (check_elf.check_all's
-        # and layout_link.build_image's): answered once per process
-        key = (str(self.path), fn)
-        stored = _VPTR_STORES.get(key)
-        if stored is None:
-            stored = _VPTR_STORES[key] = frozenset(Walker(self).vptr_stores(fn))
+        stored = self.vptr_stores(fn)
         if addr + 0x10 not in stored:
             raise ValueError(f"vtables.derived: {sym}: {ctor} stores "
                              f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")
@@ -603,8 +813,7 @@ class BaseElf:
         if 0 not in rows:
             raise ValueError(f"{sym}: the vtable at 0x{addr:x} holds its claimed rows, but its slot-0 row "
                              "is not claimed (slot 0 stores the vtable and is its evidence)")
-        from vtable_names import Walker
-        stored = Walker(self).vptr_stores(rows[0][1])
+        stored = self.vptr_stores(rows[0][1])
         if addr + 0x10 not in stored:
             raise ValueError(f"{sym}: its slot-0 row {rows[0][0]} stores "
                              f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")

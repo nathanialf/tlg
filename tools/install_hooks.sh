@@ -29,7 +29,10 @@ cat > "$HOOK" <<'EOF2'
 #   3. tools/format.sh --check      staged C/C++ must be clang-formatted
 #   4. tools/build.sh gate-all      for EVERY configured target: its base files
 #                                   are required, then setup, ninja and the
-#                                   match gate (tools/check_elf.py --gate)
+#                                   match gate (tools/check_elf.py --gate, with
+#                                   its cache of answers keyed by the hashes of
+#                                   their inputs, build/<slug>/gate-cache/;
+#                                   tools/README.md; `gate-all --full` without)
 #   5. tools/build.sh progress-all  refresh docs/<slug>/PROGRESS.md,
 #                                   docs/<slug>/progress.json and README.md's
 #                                   progress block, then `git add` them
@@ -121,6 +124,26 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     tree="$(git -C "$ROOT" rev-parse "$local_sha^{tree}")"
     if [[ -f "$GITDIR/gated-trees" ]] && grep -q "^$tree " "$GITDIR/gated-trees"; then
         echo "pre-push: tree $tree of $local_ref passed the gate at commit time; not run again"
+        continue
+    fi
+    # The pushing worktree itself, when it is exactly this commit with nothing
+    # changed or untracked in a build-sensitive path: its working tree IS the
+    # commit's tree, so the gate runs there, on the objects already built (a
+    # rebased branch then costs an incremental build, not every unit again).
+    if [[ "$(git -C "$ROOT" rev-parse HEAD)" == "$local_sha" ]] &&
+        [[ -z "$(git -C "$ROOT" status --porcelain=v1 --untracked-files=all -- src config tools)" ]]; then
+        echo "pre-push: gate-all in place on $local_ref ($local_sha): the worktree is this commit, clean"
+        if ! (cd "$ROOT" && tools/build.sh gate-all); then
+            echo "pre-push: GATE FAILED on $local_ref; refusing to push" >&2
+            exit 1
+        fi
+        # the gate may not have left the tree other than it found it
+        if [[ "$(git -C "$ROOT" rev-parse HEAD)" != "$local_sha" ]] ||
+            [[ -n "$(git -C "$ROOT" status --porcelain=v1 --untracked-files=all -- src config tools)" ]]; then
+            echo "pre-push: the worktree changed while the gate ran; refusing to push" >&2
+            exit 1
+        fi
+        echo "$tree $(date -u +%Y-%m-%dT%H:%M:%SZ) pre-push in place" >> "$GITDIR/gated-trees"
         continue
     fi
     tmp="$(mktemp -d)"

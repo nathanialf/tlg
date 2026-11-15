@@ -100,13 +100,13 @@ def load_data_rows(ver: str) -> list[tuple[str, str, str]]:
     return rows
 
 
-def object_data_symbols(obj: Path) -> dict[str, tuple[bytes, list[mc.Reloc], bool]]:
+def object_data_symbols(obj: Path, stream=None) -> dict[str, tuple[bytes, list[mc.Reloc], bool]]:
     """symbol -> (bytes, [Reloc], is_nobits) for every STT_OBJECT the object
     defines (its initialised bytes from .data/.rodata, or zeros for .bss)."""
     from elftools.elf.elffile import ELFFile
     from elftools.elf.relocation import RelocationSection
     out = {}
-    with obj.open("rb") as f:
+    with (stream or obj.open("rb")) as f:
         elf = ELFFile(f)
         symtab = elf.get_section_by_name(".symtab")
         syms = list(symtab.iter_symbols())
@@ -146,7 +146,7 @@ def tu_data_symbols(tu: str, obj: Path, ver: str) -> dict:
     reference to one resolves by its name's address like any declaration."""
     key = (str(obj), obj.stat().st_mtime_ns)
     if key not in _OBJ_DATA:
-        _OBJ_DATA[key] = object_data_symbols(obj)
+        _OBJ_DATA[key] = mc.cached_object_parse("objdata", obj, object_data_symbols)
     objs = _OBJ_DATA[key]
     if not mc.is_module_tu(tu) or obj != mc.object_path(tu, ver):
         return objs
@@ -746,6 +746,37 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
 SEGMENT_NAMES = {5: ".text", 4: ".relro", 6: ".data"}   # by p_flags of the loaded segments
 
 
+def _differing_offsets(img: bytearray, orig: bytes, chunk: int = 1 << 16):
+    """Every offset at which `img` and `orig` (of one length) differ, in
+    order: every byte is compared, a chunk at a time, and only a chunk that
+    differs is walked byte by byte."""
+    n = len(img)
+    view = memoryview(img)
+    for lo in range(0, n, chunk):
+        hi = min(lo + chunk, n)
+        if view[lo:hi] == orig[lo:hi]:
+            continue
+        for i in range(lo, hi):
+            if img[i] != orig[i]:
+                yield i
+
+
+def _local_proof(base: BaseElf, rows: list[str]) -> tuple[dict[str, str], list[str]]:
+    """module_boundary.local_proof, through the gate's cache when it is on:
+    a function of the base's bytes, its function table and the rows."""
+    from module_boundary import local_proof
+    from base_elf import _MISS, base_digest, gate_cache_get, gate_cache_key, gate_cache_on, gate_cache_put
+    if not gate_cache_on():
+        return local_proof(base, rows)
+    ck = gate_cache_key("local", (base_digest(base), tuple(base.functions), tuple(rows)))
+    v = gate_cache_get("local", ck)
+    if v is not _MISS:
+        return v
+    v = local_proof(base, rows)
+    gate_cache_put("local", ck, v)
+    return v
+
+
 def build_image(ver: str, log=print) -> dict:
     base = BaseElf(REPO_ROOT, ver)
     segs = []
@@ -970,10 +1001,10 @@ def build_image(ver: str, log=print) -> dict:
     # every row of config/local_data.<slug>.txt (a variable tools/game_module.py makes
     # local before the pipeline, D74), used by a source yet or not: the base's code
     # must show a variable the optimiser shrank to one bit (module_boundary.local_proof).
-    from module_boundary import local_proof, local_rows
+    from module_boundary import local_rows
     rows_local = local_rows(ver)
     if rows_local:
-        proofs, refusals = local_proof(base, rows_local)
+        proofs, refusals = _local_proof(base, rows_local)
         for n in sorted(proofs):
             log(f"local data: {proofs[n]}")
         for e in refusals:      # "local data row <symbol> ..."
@@ -991,11 +1022,7 @@ def build_image(ver: str, log=print) -> dict:
         gap = 0
         claims = sorted(sg["claims"])
         cstarts = [c[0] for c in claims]
-        i = 0
-        while i < len(img):
-            if img[i] == orig[i]:
-                i += 1
-                continue
+        for i in _differing_offsets(img, orig):
             va = sg["vaddr"] + i
             k = bisect.bisect_right(cstarts, va) - 1
             if k >= 0 and va < claims[k][1]:
@@ -1006,7 +1033,6 @@ def build_image(ver: str, log=print) -> dict:
                     diffs[base.functions[k][2]] = diffs.get(base.functions[k][2], 0) + 1
                 else:
                     gap += 1
-            i += 1
         if diffs or gap:
             identical = False
         (bd / f"{sg['name'].lstrip('.')}.bin").write_bytes(img)

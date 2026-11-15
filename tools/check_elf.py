@@ -15,6 +15,12 @@ check_elf.py: the match gate and the progress files.
               base, and compared with the base byte for byte. Any row below
               1.0, any wrong target, any differing byte, any row naming an
               unknown function or symbol fails the gate. Exit 1 on failure.
+              The computations whose answers are pure functions of hashed
+              inputs are kept in build/<slug>/gate-cache/ (base_elf.py "the
+              gate's cache"; tools/README.md says what it trusts) and reused
+              when every input hashes the same; --full neither reads nor
+              writes it (nor does TLG_GATE_FULL=1, tools/build.sh gate-all
+              --full).
 
   --progress  The same comparison, then docs/<slug>/progress.json (the
               dashboard's data, schema 2), the table between the
@@ -32,6 +38,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pickle
 import re
 import subprocess
@@ -117,7 +124,7 @@ def check_all() -> tuple[dict[str, dict], bool]:
                 continue
             addr, size = funcs[fn]
             off = vaddr_to_off(phdrs, addr)
-            r = mc.compare(*objfuncs[sym], data[off:off + size], addr, base)
+            r = compare_row(*objfuncs[sym], data[off:off + size], addr, base)
             results[fn] = {"tu": tu, "symbol": sym, "score": r["score"], "equal": r["equal"],
                            "insns": max(r["obj_insns"], r["base_insns"]), "size": size,
                            "targets_ok": r["targets_ok"], "bad_targets": r["bad_targets"]}
@@ -126,19 +133,73 @@ def check_all() -> tuple[dict[str, dict], bool]:
     return results, ok
 
 
-def gate_cache_key() -> str:
-    """What the gate's result is a function of: the configuration rows and the
-    objects of the claimed translation units (path, size, mtime), so a progress
-    run right after a gate on the same tree reuses the gate's layout instead of
-    rebuilding the image a second time."""
+def _resolution(base: BaseElf, sym: str, tls: bool) -> tuple:
+    """Everything match_check.compare reads of the base for a relocation's
+    symbol: where address_of places it (or the refusal it raises), its GOT
+    slot (whose presence decides the mov-to-lea relaxation, D10) and, for a
+    thread-local access, the GOT slot holding its offset (D23)."""
+    try:
+        a = ("at", base.address_of(sym))
+    except ValueError as e:
+        a = ("refused", str(e))
+    t = None
+    if tls and a[0] == "at":
+        try:
+            t = ("at", base.tls_got_slot(sym))
+        except ValueError as e:
+            t = ("refused", str(e))
+    return a, base.got_slots().get(sym), t
+
+
+ROW_FIELDS = ("score", "equal", "obj_insns", "base_insns", "targets_ok", "bad_targets")
+
+
+def compare_row(code: bytes, relocs: list, base_bytes: bytes, addr: int, base: BaseElf) -> dict:
+    """match_check.compare for one row, through the gate's cache when it is
+    on. compare is a function of the object's bytes and relocations, the
+    base's bytes and address, and what the base answers for each symbol the
+    relocations name (_resolution); the key is all of them, the symbols'
+    resolutions computed afresh every run (a row of config/*.txt the row's
+    relocations do not name changes nothing in its key)."""
+    from base_elf import _MISS, gate_cache_get, gate_cache_key, gate_cache_on, gate_cache_put
+    if not gate_cache_on():
+        return mc.compare(code, relocs, base_bytes, addr, base)
+    tls_syms = {r.symbol for r in relocs if r.type in (mc.R_X86_64_TLSGD, mc.R_X86_64_GOTTPOFF)}
+    res = tuple((s, _resolution(base, s, s in tls_syms)) for s in sorted({r.symbol for r in relocs}))
+    rl = tuple((r.offset, r.width, r.type, r.symbol, r.addend, r.sym_section, r.sym_value, r.sym_size)
+               for r in relocs)
+    ck = gate_cache_key("row", (code, rl, base_bytes, addr, res))
+    v = gate_cache_get("row", ck)
+    if v is not _MISS:
+        return dict(v)
+    r = mc.compare(code, relocs, base_bytes, addr, base)
+    gate_cache_put("row", ck, {k: r[k] for k in ROW_FIELDS})
+    return r
+
+
+def gate_result_key() -> str:
+    """What the gate's whole answer is a function of, by content: the tools
+    (base_elf.tools_digest), the base executable, every file of config/ for
+    this target, the object of every claimed unit, and for the game module
+    the files beside its object the gate reads (build/<slug>/game/symbols.txt
+    and every unit's .ll). A progress run right after a gate on the same tree
+    reuses the gate's rows and layout instead of computing them again."""
+    from base_elf import file_digest, tools_digest
     h = hashlib.sha256()
-    for stem in ("matched", "functions", "data", "data_schema", "vtables", "vtables.derived"):
-        p = config_path(REPO_ROOT, VERSION, stem, "txt")
-        h.update(p.read_bytes() if p.exists() else b"")
+    h.update(f"tools {tools_digest()}\n".encode())
+    h.update(f"base {file_digest(baseelf_path(REPO_ROOT, VERSION))}\n".encode())
+    for p in sorted((REPO_ROOT / "config").glob(f"*.{VERSION}.txt")):
+        h.update(f"{p.name} {file_digest(p)}\n".encode())
+    module = False
     for tu in sorted({tu for _fn, tu, _sym in load_matched()}):
-        obj = mc.object_path(tu, VERSION)
-        st = obj.stat() if obj.exists() else None
-        h.update(f"{tu} {st.st_size if st else -1} {st.st_mtime_ns if st else -1}\n".encode())
+        module |= mc.is_module_tu(tu)
+        h.update(f"{tu} {file_digest(mc.object_path(tu, VERSION))}\n".encode())
+    if module:
+        import game_module as gm
+        game = gm.module_object(VERSION).parent
+        h.update(f"symbols {file_digest(game / 'symbols.txt')}\n".encode())
+        for ll in sorted((game / "ir").rglob("*.ll")):
+            h.update(f"{ll.relative_to(game).as_posix()} {file_digest(ll)}\n".encode())
     return h.hexdigest()
 
 
@@ -146,8 +207,13 @@ def gate_cache_path() -> Path:
     return build_dir(REPO_ROOT, VERSION) / "gate.pickle"
 
 
-def run_gate(_args) -> int:
-    key = gate_cache_key()
+def gate_cache_dir() -> Path:
+    return build_dir(REPO_ROOT, VERSION) / "gate-cache"
+
+
+def run_gate(args) -> int:
+    from base_elf import gate_cache_enable, gate_cache_flush
+    gate_cache_enable(None if args.full else gate_cache_dir())
     results, ok = check_all()
     print(f"gate ({VERSION}): {len(results)} claimed function(s)")
     for fn, r in sorted(results.items(), key=lambda kv: kv[1]["tu"]):
@@ -162,6 +228,9 @@ def run_gate(_args) -> int:
     # its relocations resolved, the rest of the segment from the base, and the
     # image compared with the base byte for byte (tools/layout_link.py)
     lay = layout_link.build_image(VERSION)
+    print(gate_cache_flush(prune=True), file=sys.stderr)
+    # the key after the run: the run may have built the objects it reads
+    key = gate_result_key()
     try:
         gate_cache_path().parent.mkdir(parents=True, exist_ok=True)
         with open(gate_cache_path(), "wb") as f:
@@ -191,7 +260,7 @@ def run_gate(_args) -> int:
 
 def cached_gate() -> dict | None:
     """The last gate's results and layout, when nothing they depend on has
-    changed since (gate_cache_key); else None."""
+    changed since (gate_result_key); else None."""
     p = gate_cache_path()
     if not p.exists():
         return None
@@ -200,7 +269,7 @@ def cached_gate() -> dict | None:
             c = pickle.load(f)
     except Exception:  # noqa: BLE001
         return None
-    return c if c.get("key") == gate_cache_key() else None
+    return c if c.get("key") == gate_result_key() else None
 
 
 def build_tree(results: dict[str, dict], lay: dict | None = None) -> dict:
@@ -386,7 +455,9 @@ def _splice(path: Path, body: str) -> bool:
 
 
 def run_progress(args) -> int:
-    c = cached_gate()
+    from base_elf import gate_cache_enable, gate_cache_flush
+    gate_cache_enable(None if args.full else gate_cache_dir())
+    c = None if args.full else cached_gate()
     if c is not None:
         results, lay = c["results"], c["lay"]
         print(f"progress ({VERSION}): the gate's results and layout reused ({gate_cache_path().relative_to(REPO_ROOT)})")
@@ -394,6 +465,7 @@ def run_progress(args) -> int:
         results, _ok = check_all()
         lay = None
     tree = build_tree(results, lay)
+    gate_cache_flush(prune=False)
     t = tree["totals"]
     print(f"progress ({VERSION}): {t['matched_funcs']}/{t['total_funcs']} functions, "
           f"{t['matched_bytes']}/{t['total_bytes']} .text bytes "
@@ -423,7 +495,12 @@ def main() -> int:
     mode.add_argument("--gate", action="store_true")
     mode.add_argument("--progress", action="store_true")
     ap.add_argument("--out-dir", help="--progress: write the three files here instead")
+    ap.add_argument("--full", action="store_true",
+                    help="compute everything: neither read nor write the gate's cache (build/<slug>/gate-cache/)")
     args = ap.parse_args()
+    # tools/build.sh gate-all --full: the gate runs as ninja's edge, which
+    # passes the environment through
+    args.full = args.full or os.environ.get("TLG_GATE_FULL") == "1"
     if not baseelf_path(REPO_ROOT, VERSION).exists():
         sys.exit(f"check_elf: {baseelf_path(REPO_ROOT, VERSION)} not found; run ./build.sh")
     return run_gate(args) if args.gate else run_progress(args)
