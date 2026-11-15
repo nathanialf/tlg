@@ -15,8 +15,6 @@ extern Type059458a8 *D_5822328;
  * Object016b9108's constructor, and the object constructed in place. This
  * unit creates the object, so it emits the class's vtable and its two
  * destructors (FUN_01387a00 and FUN_01387b20, defined in the header). */
-// NONMATCHING: 331 bytes for 588: an inline-cost margin: the build calls the class's constructor
-// (the exchange and the two counts) where the base holds it
 Object016b9108 *FUN_00995b40(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016cdf58));

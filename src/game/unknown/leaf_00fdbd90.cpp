@@ -66,10 +66,6 @@ class Object016c02b0 : public Object00c1b7f0 /* derived name */
  * FUN_00c1b7f0 runs as a tail call. FUN_00fdc310, slot 1, is the deleting one.
  * The destructor is the class's key function, so this file emits the
  * vtable. */
-// NONMATCHING: an inline-cost margin under the one-stage module: the base holds the destructor of the array at
-// +0x3d0 inlined (1403 bytes), the build calls the instantiation (1227 bytes; equal up to the call, 118 of 355
-// instructions); with that destructor local to a link stage (round 279C's form, measured on this unit alone)
-// the function is the base's, instruction for instruction
 Object016c02b0::~Object016c02b0()
 {
     if (registry)

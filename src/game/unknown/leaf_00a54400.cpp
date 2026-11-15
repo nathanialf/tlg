@@ -15,10 +15,6 @@ extern Type059458a8 *D_5827ec0;
  * Object016b9108's constructor, and the object constructed in place. This
  * unit creates the object, so it emits the class's vtable and its two
  * destructors (FUN_0138cf00 and FUN_0138d020, defined in the header). */
-// NONMATCHING: 373 bytes for 355: the last four floats (+0x44 to +0x50) are four scalar stores
-// where the base has one 16-byte store from the constants at 0x153cd40: the vectoriser takes a
-// chain at its first width that fits and leaves the rest (twelve floats: eight, then four
-// scalars); a second run over what the first left would take the four
 Object016b9108 *FUN_00a54400(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016ce378));

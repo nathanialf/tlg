@@ -21,7 +21,4 @@ class Object016d3b98 /* derived name */
     Object013d6840 unknown30; /* +0x30 */
 };
 
-// NONMATCHING (the deleting destructor FUN_013d6790 only): an inline-cost margin: the build calls this
-// destructor where the base inlines it; the complete destructor holds the member's destructor inlined from
-// leaf_013d6840.cpp
 Object016d3b98::~Object016d3b98() {}
