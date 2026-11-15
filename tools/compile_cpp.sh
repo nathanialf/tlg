@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # tools/compile_cpp.sh <source> <object>: compile one C/C++ source with the
 # flags config/flags.<slug>.txt gives its prefix (longest match wins), into
-# <object>. The compiler is the prefix line's cxx=<version>, else $TLG_CXX, else
-# tools/cc/llvm-4.0.0/bin/clang. Run from the repo root
-# (gen_ninja.py's commands are); paths are repo-relative.
+# <object>. The compiler is the prefix line's cxx=<version> (every line of
+# config/flags.base.txt names one), else $TLG_CXX, else the host's clang-19.
+# Run from the repo root (gen_ninja.py's commands are); paths are
+# repo-relative.
 #
 # The game region is built as one module (tools/game_module.py, D50), in two
 # steps that use the same flags line:
@@ -32,14 +33,14 @@ cd "$ROOT"
 tlg_version_init "$ROOT"
 src="$1"; obj="$2"
 match="${prefix_of:-$src}"
-# The project default is the prebuilt LLVM 4.0.0 under tools/cc/ (tools/setup.sh,
-# docs/TARGETS.md); a prefix's cxx=<version> or TLG_CXX overrides it.
-DEFAULT_CXX="$ROOT/tools/cc/llvm-4.0.0/bin/clang"
+# A prefix's cxx=<version> names its compiler (tools/setup.sh,
+# docs/TARGETS.md); a line without one compiles with TLG_CXX, else with the
+# host's clang-19.
 # llvm-link of the compiler's own release (bitcode is read only by its own
-# release's tools): tools/cc/llvm-<version>-src-tools/bin, 4.0.0's otherwise
-LLVM_LINK="$ROOT/tools/cc/llvm-4.0.0-src-tools/bin/llvm-link"
-[[ -x "$DEFAULT_CXX" ]] || DEFAULT_CXX=clang-19
-CXX="${TLG_CXX:-$DEFAULT_CXX}"
+# release's tools): tools/cc/llvm-<version>-src-tools/bin, beside the
+# compiler the line names
+LLVM_LINK=""
+CXX="${TLG_CXX:-clang-19}"
 # A prebuilt LLVM release under tools/cc/ links against libtinfo.so.5, which
 # tools/cc/shim/ provides (tools/setup.sh); put it on the library path.
 case "$CXX" in */tools/cc/*|tools/cc/*) export LD_LIBRARY_PATH="$ROOT/tools/cc/shim${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ;; esac
@@ -72,7 +73,8 @@ mkdir -p "$(dirname "$obj")"
 # defines the table as "gen/D_<hex>.inc". It emits nothing of its own.
 # shellcheck disable=SC2086
 case "$mode" in
-    ir) "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -emit-llvm -Xclang -disable-llvm-optzns \
+    ir) [[ -n "$LLVM_LINK" ]] || { echo "compile_cpp: no llvm-link beside the compiler of $match's line (tools/build_llvm.sh <version>)" >&2; exit 1; }
+        "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -emit-llvm -Xclang -disable-llvm-optzns \
             -c "$src" -o "$obj"
         exec "$LLVM_LINK" -S -o "${obj%.bc}.ll" "$obj" ;;
     codegen) exec "$CXX" $best -Qunused-arguments -c "$src" -o "$obj" ;;

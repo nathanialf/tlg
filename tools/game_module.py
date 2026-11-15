@@ -26,7 +26,7 @@ libraries' stay behind the GOT. The gate builds it the same way:
        (the GOT and PLT forms). An opaque class (a declaration whose type no
        file completes) is completed as one byte.
     3. llvm-link (built from the game compiler's own source, tools/cc/
-       llvm-4.0.0-src-tools/bin) links every file and the stand-ins into one
+       llvm-3.7.1-src-tools/bin) links every file and the stand-ins into one
        module, in the sources' order.
     3a. The local data (config/local_data.<slug>.txt, D74): a variable of a
        row was local to the optimiser when the base was built (its reads take
@@ -91,14 +91,14 @@ MODULE_PREFIX = "src/game/"
 
 def _line_version() -> str:
     """The LLVM release of the game line's compiler: the `cxx=<version>-src`
-    of the src/game/ line of config/flags.<slug>.txt (4.0.0 when it names
-    none). Bitcode is read only by its own release's tools."""
+    of the src/game/ line of config/flags.<slug>.txt (3.7.1, the game line's
+    release since D81, when it names none). Bitcode is read only by its own release's tools."""
     flags = REPO_ROOT / "config" / f"flags.{detect_version(REPO_ROOT)}.txt"
     for line in flags.read_text().splitlines():
         parts = line.split()
         if len(parts) >= 2 and parts[0] == MODULE_PREFIX and parts[1].startswith("cxx="):
             return parts[1][len("cxx="):].removesuffix("-src")
-    return "4.0.0"
+    return "3.7.1"
 
 
 # llvm-link built from the line's own source (tools/build_llvm.sh); opt and
@@ -122,9 +122,9 @@ DECL = re.compile(r'^external ((?:hidden |protected |default )?)((?:dllimport )?
 
 
 # The internal function names the compiler gives, not the developer: clang
-# 4.0.0's destroy helper of a static array of a class with a destructor
-# (CGDeclCXX.cpp:613, generateDestroyHelper), which the unit's module numbers
-# `.1`, `.2` on a second and third (ValueSymbolTable::makeUniqueName), and
+# 3.7.1's destroy helper of a static array of a class with a destructor
+# (CGDeclCXX.cpp:595, generateDestroyHelper), which the unit's module numbers
+# `.1`, `.2` on a second and third (ValueSymbolTable::reinsertValue), and
 # which llvm-link renames again, by one counter over the whole link, when an
 # earlier unit holds the name; and the static initializer of a namespace-scope
 # object, `__cxx_global_var_init` (`.1`, ... in the unit's order,

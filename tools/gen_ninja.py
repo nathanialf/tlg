@@ -62,7 +62,9 @@ def compilers(flags: Path) -> list[tuple[str, str]]:
     return out
 
 
-DEFAULT_CXX = "tools/cc/llvm-4.0.0/bin/clang"
+# a line that names no compiler: tools/compile_cpp.sh's default, the host's
+# clang-19 (not a file of the tree, so not an input of the edge)
+DEFAULT_CXX = "clang-19"
 
 
 def compiler_of(src: str, table: list[tuple[str, str]]) -> str:

@@ -56,8 +56,8 @@ hand with the variable): a game variable that was local to the optimiser when
 the base was built, though the source declares it for every file. GlobalOpt
 turns a variable into a one-bit value only when it has local linkage and every
 store is the initial value, one other constant, or a value loaded from the
-variable itself (lib/Transforms/IPO/GlobalOpt.cpp of 4.0.0: processGlobal
-returns before processInternalGlobal unless hasLocalLinkage; the shrink is
+variable itself (lib/Transforms/IPO/GlobalOpt.cpp of 3.7.1: ProcessGlobal
+returns before ProcessInternalGlobal unless hasLocalLinkage; the shrink is
 TryToShrinkGlobalToBoolean), and the base's code shows which variables it
 did that to: a one-bit load is masked (`movzx; and 1`, `mov; xor 1; test 1`,
 `test byte, 1`), where a bool that kept its byte is compared whole

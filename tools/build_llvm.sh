@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # tools/build_llvm.sh [<version>] [--verify] [--force]: build upstream LLVM +
-# clang <version> (default 4.0.0; 3.3, 3.6.2 and 3.7.1 also known) from the release
-# sources on this host, into tools/cc/llvm-<version>-src/. Built with the host
-# patches alone it is the pristine baseline, and it must compile every probe
+# clang <version> from the release sources on this host, into
+# tools/cc/llvm-<version>-src/. The versions the gate needs are 3.3 (the
+# library line, src/libs/) and 3.7.1 (the game line, src/game/, and the
+# default; docs/DECISIONS.md D81); 3.6.2 and 4.0.0 are also known and build
+# with their host patch alone (4.0.0 was the game line until D81; its
+# patches are in the history, not in the tree). Built with the host patches
+# alone a version is the pristine baseline, and it must compile every probe
 # TU and every file under src/ to the same code as the prebuilt release under
 # tools/cc/llvm-<version>/ (tools/fetch_llvm.sh), which --verify checks.
-# Backport patches (below) are applied on top of that baseline.
+# The other patches (below) are applied on top of that baseline.
 #
 #   1. Fetch llvm-<version>.src.tar.{xz,gz} and cfe-<version>.src.tar.{xz,gz}
 #      from releases.llvm.org, pinned by SHA-256 (the release signatures were
@@ -20,15 +24,17 @@
 #   2. Apply tools/patches/llvm-<version>-host-*.patch in order (-p1 from the
 #      llvm source root). These only make the old sources build with a
 #      current host toolchain; none changes code generation.
-#   3. Apply the backport patches, tools/patches/llvm-<version>-<what>-*.patch
-#      for every other <what> (3.3: sspstrong, the clang 3.5
-#      -fstack-protector-strong frontend, docs/DECISIONS.md D20). These DO
-#      change code generation, but only under the flag they add: --verify
-#      without that flag must still find every object identical.
+#   3. Apply the other patches, tools/patches/llvm-<version>-<what>-*.patch
+#      for every other <what>: 3.3's twelve backports and 3.7.1's ten patches
+#      (four PS4 items and six forward ports; each file's header has its
+#      evidence, config/flags.<slug>.txt lists them). These DO change code
+#      generation, so --verify is the check of a build made with the host
+#      patches alone: with the others applied it lists the objects they
+#      change.
 #   4. Configure (CMake + ninja, Release, X86 only, no assertions), build the
 #      `clang` target and install it with its resource headers
 #      (lib/clang/<version>/include, which -nostdlibinc relies on for xmmintrin.h).
-#   5. For 4.0.0 and 3.7.1, build `llvm-link` from the same tree and configuration and
+#   5. For 3.7.1 (and 4.0.0), build `llvm-link` from the same tree and configuration and
 #      install it into tools/cc/llvm-<version>-src-tools/bin: the game region
 #      is linked as one module before its -O2 pipeline (tools/game_module.py,
 #      docs/DECISIONS.md D50). It sits beside the prefix, not in it, so the
@@ -42,9 +48,8 @@
 # compiles tools/probe/batch*.cpp and src/**/*.cpp with the prebuilt and the
 # built clang under every flag line of config/flags.<slug>.txt (prefix and
 # cxx= dropped; VERIFY_SUBST rewrites a flag the version spells otherwise:
-# for 4.0.0 `-mllvm -pre-RA-sched=list-ilp` replaces any `-mllvm
-# -disable-post-ra`; for 3.3 `-fstack-protector` replaces
-# `-fstack-protector-strong`, which the prebuilt does not know) and requires
+# for 3.3 `-fstack-protector` replaces `-fstack-protector-strong`, which the
+# prebuilt does not know) and requires
 # `llvm-objdump-19 -d` (and -dr) of every object to be identical. VERBOSE=1
 # lists each identical object too.
 #
@@ -78,7 +83,6 @@ HOST_CXXFLAGS[3.3]='-std=gnu++98 -fno-lifetime-dse -fno-delete-null-pointer-chec
 # runs (lib/IR/User.cpp), the store -fno-lifetime-dse keeps.
 HOST_CXXFLAGS[3.7.1]='-fno-lifetime-dse'
 # --verify: "<from>|<to>" applied to every flags line for this version
-VERIFY_SUBST[4.0.0]='-mllvm -disable-post-ra|-mllvm -pre-RA-sched=list-ilp'
 VERIFY_SUBST[3.3]='-fstack-protector-strong|-fstack-protector'
 
 # The IR tools a version's line needs beside its compiler (step 5)
@@ -86,7 +90,7 @@ declare -A EXTRA_TOOLS
 EXTRA_TOOLS[4.0.0]='llvm-link'
 EXTRA_TOOLS[3.7.1]='llvm-link'
 
-VER=4.0.0
+VER=3.7.1
 if [[ $# -gt 0 && "$1" != -* ]]; then VER="$1"; shift; fi
 [[ -n "${LLVM_SHA[$VER]:-}" ]] || { echo "build_llvm: unknown version $VER (known: ${!LLVM_SHA[*]})" >&2; exit 2; }
 X="${EXT[$VER]:-tar.xz}"
@@ -109,7 +113,7 @@ for a in "$@"; do
     case "$a" in
         --verify) do_verify=1 ;;
         --force) force=1 ;;
-        -h|--help) sed -n '2,52p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,59p' "$0"; exit 0 ;;
         *) echo "usage: $0 [<version>] [--verify] [--force]" >&2; exit 2 ;;
     esac
 done
@@ -186,7 +190,7 @@ build() {
         patch -d "$SRC.tmp" -p1 --forward --batch --silent < "$p"
     done
     for p in "${BACKPORT_PATCHES[@]}"; do
-        echo "==> applying backport patch $(basename "$p")"
+        echo "==> applying patch $(basename "$p")"
         patch -d "$SRC.tmp" -p1 --forward --batch --silent < "$p"
     done
     mv "$SRC.tmp" "$SRC"
@@ -250,9 +254,8 @@ verify() {
     [[ -x "$PREBUILT/bin/clang" ]] || { echo "build_llvm: no prebuilt at $PREBUILT (tools/fetch_llvm.sh $VER)" >&2; exit 1; }
     # Flag sets: every prefix line of config/flags.<slug>.txt, prefix and any
     # cxx= token removed (so each TU is compiled under every configured flag
-    # set, not only its own prefix's: more codegen paths compared). A line
-    # still carrying -mllvm -disable-post-ra gets VERIFY_SUBST for versions
-    # that use another scheduler flag.
+    # set, not only its own prefix's: more codegen paths compared), with
+    # the version's VERIFY_SUBST applied.
     local -a sets=()
     local line rest
     while IFS= read -r line; do
