@@ -1,0 +1,229 @@
+llvm-3.7.1 forward port: a store of a floating-point constant becomes an integer store only after the merge attempt
+
+This patch CHANGES CODE GENERATION for consecutive stores of constants
+where some are floating-point: 3.7.1's DAGCombiner::visitSTORE turns
+`store float C` into `store i32 bits(C)` before it tries
+MergeConsecutiveStores, so which stores are still floating-point when their
+neighbour is visited depends on visit order and a run merges in the wrong
+pairs. The base merges the floats of a run with each other: an int 0, a
+float 0 and a float 0 at +0x30, +0x34, +0x38 are `mov dword [rsi + 0x30], 0`
+then one 8-byte store (0xe903a0; 3.7.1's object merges the int with the
+first float); three float zeros are an 8-byte store then a 4-byte one
+(0x57fc10; 3.7.1's object has the 4-byte one first).
+
+Three upstream commits, each whole (tests left out), first released in
+3.8.0, applied with offsets (fuzz 3 and 1 on two hunks of the first):
+  r248168 (a30ddb652419, 2015-09-21) "Factor replacement of stores of FP
+    constants into new function": the block of visitSTORE becomes
+    replaceStoreOfFPConstant, no change of behaviour;
+  r248169 (b77483442943, 2015-09-21) "DAGCombiner: Replace store of FP
+    constant after attemping store merges": the call moves below the merge
+    attempt: the change itself;
+  r248190 (8fb9b94f7f0d, 2015-09-21) "Fix accidentally committed debug
+    printing": removes the dbgs() lines r248168 left in the new function.
+
+Swept alone over the game module built by the installed 3.7.1 (round 273B,
+5,496 rows, 6,656 functions): 3 functions change; the 3 rows become equal
+(5,297 to 5,300: 0x57fc10, 0xe903a0, and 0xacd590, whose 8-byte store
+is the pair at +0x18 and not the pair at +0x1c) and none is lost.
+
+diff -ru a/lib/CodeGen/SelectionDAG/DAGCombiner.cpp b/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+--- a/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
++++ b/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+@@ -301,6 +301,7 @@
+     SDValue visitSTORE(SDNode *N);
+     SDValue visitINSERT_VECTOR_ELT(SDNode *N);
+     SDValue visitEXTRACT_VECTOR_ELT(SDNode *N);
++    SDValue replaceStoreOfFPConstant(StoreSDNode *ST);
+     SDValue visitBUILD_VECTOR(SDNode *N);
+     SDValue visitCONCAT_VECTORS(SDNode *N);
+     SDValue visitEXTRACT_SUBVECTOR(SDNode *N);
+@@ -11200,6 +11201,89 @@
+   return true;
+ }
+ 
++SDValue DAGCombiner::replaceStoreOfFPConstant(StoreSDNode *ST) {
++  SDValue Value = ST->getValue();
++  if (Value.getOpcode() == ISD::TargetConstantFP)
++    return SDValue();
++
++  SDLoc DL(ST);
++
++  SDValue Chain = ST->getChain();
++  SDValue Ptr = ST->getBasePtr();
++
++  const ConstantFPSDNode *CFP = cast<ConstantFPSDNode>(Value);
++
++  // NOTE: If the original store is volatile, this transform must not increase
++  // the number of stores.  For example, on x86-32 an f64 can be stored in one
++  // processor operation but an i64 (which is not legal) requires two.  So the
++  // transform should not be done in this case.
++
++  SDValue Tmp;
++  switch (CFP->getSimpleValueType(0).SimpleTy) {
++  default:
++    llvm_unreachable("Unknown FP type");
++  case MVT::f16:    // We don't do this for these yet.
++  case MVT::f80:
++  case MVT::f128:
++  case MVT::ppcf128:
++    return SDValue();
++  case MVT::f32:
++    if ((isTypeLegal(MVT::i32) && !LegalOperations && !ST->isVolatile()) ||
++        TLI.isOperationLegalOrCustom(ISD::STORE, MVT::i32)) {
++      ;
++      Tmp = DAG.getConstant((uint32_t)CFP->getValueAPF().
++                            bitcastToAPInt().getZExtValue(), SDLoc(CFP),
++                            MVT::i32);
++      return DAG.getStore(Chain, DL, Tmp, Ptr, ST->getMemOperand());
++    }
++
++    return SDValue();
++  case MVT::f64:
++    if ((TLI.isTypeLegal(MVT::i64) && !LegalOperations &&
++         !ST->isVolatile()) ||
++        TLI.isOperationLegalOrCustom(ISD::STORE, MVT::i64)) {
++      ;
++      Tmp = DAG.getConstant(CFP->getValueAPF().bitcastToAPInt().
++                            getZExtValue(), SDLoc(CFP), MVT::i64);
++      return DAG.getStore(Chain, DL, Tmp,
++                          Ptr, ST->getMemOperand());
++    }
++
++    if (!ST->isVolatile() &&
++        TLI.isOperationLegalOrCustom(ISD::STORE, MVT::i32)) {
++      // Many FP stores are not made apparent until after legalize, e.g. for
++      // argument passing.  Since this is so common, custom legalize the
++      // 64-bit integer store into two 32-bit stores.
++      uint64_t Val = CFP->getValueAPF().bitcastToAPInt().getZExtValue();
++      SDValue Lo = DAG.getConstant(Val & 0xFFFFFFFF, SDLoc(CFP), MVT::i32);
++      SDValue Hi = DAG.getConstant(Val >> 32, SDLoc(CFP), MVT::i32);
++      if (DAG.getDataLayout().isBigEndian())
++        std::swap(Lo, Hi);
++
++      unsigned Alignment = ST->getAlignment();
++      bool isVolatile = ST->isVolatile();
++      bool isNonTemporal = ST->isNonTemporal();
++      AAMDNodes AAInfo = ST->getAAInfo();
++
++      SDValue St0 = DAG.getStore(Chain, DL, Lo,
++                                 Ptr, ST->getPointerInfo(),
++                                 isVolatile, isNonTemporal,
++                                 ST->getAlignment(), AAInfo);
++      Ptr = DAG.getNode(ISD::ADD, DL, Ptr.getValueType(), Ptr,
++                        DAG.getConstant(4, DL, Ptr.getValueType()));
++      Alignment = MinAlign(Alignment, 4U);
++      SDValue St1 = DAG.getStore(Chain, DL, Hi,
++                                 Ptr, ST->getPointerInfo().getWithOffset(4),
++                                 isVolatile, isNonTemporal,
++                                 Alignment, AAInfo);
++      return DAG.getNode(ISD::TokenFactor, DL, MVT::Other,
++                         St0, St1);
++    }
++
++    return SDValue();
++  }
++}
++
+ SDValue DAGCombiner::visitSTORE(SDNode *N) {
+   StoreSDNode *ST  = cast<StoreSDNode>(N);
+   SDValue Chain = ST->getChain();
+@@ -11227,81 +11311,6 @@
+   if (Value.getOpcode() == ISD::UNDEF && ST->isUnindexed())
+     return Chain;
+ 
+-  // Turn 'store float 1.0, Ptr' -> 'store int 0x12345678, Ptr'
+-  if (ConstantFPSDNode *CFP = dyn_cast<ConstantFPSDNode>(Value)) {
+-    // NOTE: If the original store is volatile, this transform must not increase
+-    // the number of stores.  For example, on x86-32 an f64 can be stored in one
+-    // processor operation but an i64 (which is not legal) requires two.  So the
+-    // transform should not be done in this case.
+-    if (Value.getOpcode() != ISD::TargetConstantFP) {
+-      SDValue Tmp;
+-      switch (CFP->getSimpleValueType(0).SimpleTy) {
+-      default: llvm_unreachable("Unknown FP type");
+-      case MVT::f16:    // We don't do this for these yet.
+-      case MVT::f80:
+-      case MVT::f128:
+-      case MVT::ppcf128:
+-        break;
+-      case MVT::f32:
+-        if ((isTypeLegal(MVT::i32) && !LegalOperations && !ST->isVolatile()) ||
+-            TLI.isOperationLegalOrCustom(ISD::STORE, MVT::i32)) {
+-          ;
+-          Tmp = DAG.getConstant((uint32_t)CFP->getValueAPF().
+-                              bitcastToAPInt().getZExtValue(), SDLoc(CFP),
+-                              MVT::i32);
+-          return DAG.getStore(Chain, SDLoc(N), Tmp,
+-                              Ptr, ST->getMemOperand());
+-        }
+-        break;
+-      case MVT::f64:
+-        if ((TLI.isTypeLegal(MVT::i64) && !LegalOperations &&
+-             !ST->isVolatile()) ||
+-            TLI.isOperationLegalOrCustom(ISD::STORE, MVT::i64)) {
+-          ;
+-          Tmp = DAG.getConstant(CFP->getValueAPF().bitcastToAPInt().
+-                                getZExtValue(), SDLoc(CFP), MVT::i64);
+-          return DAG.getStore(Chain, SDLoc(N), Tmp,
+-                              Ptr, ST->getMemOperand());
+-        }
+-
+-        if (!ST->isVolatile() &&
+-            TLI.isOperationLegalOrCustom(ISD::STORE, MVT::i32)) {
+-          // Many FP stores are not made apparent until after legalize, e.g. for
+-          // argument passing.  Since this is so common, custom legalize the
+-          // 64-bit integer store into two 32-bit stores.
+-          uint64_t Val = CFP->getValueAPF().bitcastToAPInt().getZExtValue();
+-          SDValue Lo = DAG.getConstant(Val & 0xFFFFFFFF, SDLoc(CFP), MVT::i32);
+-          SDValue Hi = DAG.getConstant(Val >> 32, SDLoc(CFP), MVT::i32);
+-          if (DAG.getDataLayout().isBigEndian())
+-            std::swap(Lo, Hi);
+-
+-          unsigned Alignment = ST->getAlignment();
+-          bool isVolatile = ST->isVolatile();
+-          bool isNonTemporal = ST->isNonTemporal();
+-          AAMDNodes AAInfo = ST->getAAInfo();
+-
+-          SDLoc DL(N);
+-
+-          SDValue St0 = DAG.getStore(Chain, SDLoc(ST), Lo,
+-                                     Ptr, ST->getPointerInfo(),
+-                                     isVolatile, isNonTemporal,
+-                                     ST->getAlignment(), AAInfo);
+-          Ptr = DAG.getNode(ISD::ADD, DL, Ptr.getValueType(), Ptr,
+-                            DAG.getConstant(4, DL, Ptr.getValueType()));
+-          Alignment = MinAlign(Alignment, 4U);
+-          SDValue St1 = DAG.getStore(Chain, SDLoc(ST), Hi,
+-                                     Ptr, ST->getPointerInfo().getWithOffset(4),
+-                                     isVolatile, isNonTemporal,
+-                                     Alignment, AAInfo);
+-          return DAG.getNode(ISD::TokenFactor, DL, MVT::Other,
+-                             St0, St1);
+-        }
+-
+-        break;
+-      }
+-    }
+-  }
+-
+   // Try to infer better alignment information than the store already has.
+   if (OptLevel != CodeGenOpt::None && ST->isUnindexed()) {
+     if (unsigned Align = DAG.InferPtrAlignment(Ptr)) {
+@@ -11440,6 +11449,16 @@
+       return SDValue(N, 0);
+   }
+ 
++  // Turn 'store float 1.0, Ptr' -> 'store int 0x12345678, Ptr'
++  //
++  // Make sure to do this only after attempting to merge stores in order to
++  //  avoid changing the types of some subset of stores due to visit order,
++  //  preventing their merging.
++  if (isa<ConstantFPSDNode>(Value)) {
++    if (SDValue NewSt = replaceStoreOfFPConstant(ST))
++      return NewSt;
++  }
++
+   return ReduceLoadOpStoreWidth(N);
+ }
+ 

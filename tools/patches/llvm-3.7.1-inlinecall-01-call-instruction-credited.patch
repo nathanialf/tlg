@@ -1,0 +1,54 @@
+llvm-3.7.1 forward port: the inliner credits the call instruction it removes
+
+This patch CHANGES INLINING at every call site: the cost of inlining starts
+30 lower (InlineConstants::InstrCost + InlineConstants::CallPenalty, 5 + 25),
+"the call instruction also disappears after inlining". It is the whole code
+change of upstream r286814 (6df8f27c95a5, 2016-11-14, "[InlineCost] Remove
+skew when calculating call costs", first released in 4.0.0; tests left out),
+the one statement in CallAnalyzer::analyzeCall at the place 4.0.0 has it
+(lib/Analysis/InlineCost.cpp:1255 there), and nothing else. The upstream
+date is later than the game's compiler, so the base's term is read from the
+base, not from the history:
+
+Round 275C's census of the base (c275/notes_entry.txt; d0.tsv, rel.tsv,
+join_all.tsv), in 3.7.1's own cost units (-pass-remarks-analysis=inline over
+the module): a deleting destructor holds its complete destructor at every
+cost up to 250 (349 classes) and calls it at 265 (three: 0x794470, 0x79cbc0,
+0xd88690) and from 335 up (65); a callee with the inline hint (the keyword,
+or an implicitly declared destructor) is inlined at 305, 315 and 325 and
+called at 375. So the base's two thresholds are in (250, 265] and
+(325, 375]: the stock 225 and 325 with each cost 30 lower. 3.7.1 as
+released stops at 225 and 325 ("too costly (cost=325, threshold=325)" for
+Object016cbd80's destructor, which the base inlines).
+
+The row-equivalent alternative NOT taken: `-mllvm -inline-threshold=255
+-mllvm -inlinehint-threshold=355`. A developer's build carries no such
+options, and upstream's own term gives the same code: the game module built
+with this patch and the module built by the installed 3.7.1 with the two
+options are equal function for function (round 273B: 6,645 functions, 0
+differ). Where the two would differ, and no call site of the module does:
+the 50% single-block bonus (and the vector bonuses) scale with the
+threshold, so the options inline a single-block callee up to 382 (532 with
+the hint) in 3.7.1's units where the term stops at 367 (517): a single-block
+callee costing 368 to 382, or 518 to 532 hinted; and an explicit
+-inline-threshold replaces the optimize-for-size and cold-callee thresholds
+(Inliner::getInlineThreshold), which the term leaves in force, 30 higher.
+
+Swept alone over the game module built by the installed 3.7.1 (round 273B,
+5,496 rows, 6,656 functions): 323 functions change (156 in bytes, the rest
+in relocation names; 11 more in one module only); 93 rows become equal (5,297 to
+5,390: the 79 deleting destructors equal at a threshold of 250 and the 14
+that needed more) and none is lost.
+
+diff -ru a/lib/Analysis/IPA/InlineCost.cpp b/lib/Analysis/IPA/InlineCost.cpp
+--- a/lib/Analysis/IPA/InlineCost.cpp
++++ b/lib/Analysis/IPA/InlineCost.cpp
+@@ -1106,6 +1106,8 @@
+       Cost -= InlineConstants::InstrCost;
+     }
+   }
++  // The call instruction also disappears after inlining.
++  Cost -= InlineConstants::InstrCost + InlineConstants::CallPenalty;
+ 
+   // If there is only one call of the function, and it has internal linkage,
+   // the cost of inlining it drops dramatically.

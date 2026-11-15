@@ -1,0 +1,384 @@
+llvm-3.7.1 forward port: the compiler-made init and destroy functions get a definition's attributes
+
+This patch CHANGES CODE GENERATION for every function clang makes through
+CodeGenModule::CreateGlobalInitOrDestructFunction (`__cxx_global_array_dtor`,
+`__cxx_global_var_init`, `_GLOBAL__sub_I_<file>`, `__dtor_<var>`,
+`__tls_init`): 3.7.1 gives them the attributes of a declaration
+(SetLLVMFunctionAttributes), so under -fstack-protector-strong and with
+unwind tables they have neither `sspstrong` nor `uwtable`; upstream gives
+them a definition's (SetInternalFunctionAttributes). The base's array-destroy
+helpers are a definition's code (68 rows of the game module: `push rbp;
+mov rbp, rsp` first, as in a function with unwind tables, where 3.7.1's
+object has the body's first load between the two).
+
+Three upstream commits, each whole (tests left out), all first released in
+3.8.0, applied with offsets only (fuzz 1 on two CGBlocks.cpp hunks):
+  r249722 (200500d6d3bf, 2015-10-08) "[CodeGen] Check if the Decl pointer
+    passed is null, and if so, return early": the prerequisite:
+    SetLLVMFunctionAttributesForDefinition takes a null declaration (the
+    stack protector attributes move above the early return);
+  r249735 (aec6b2c20e48, 2015-10-08) "[CodeGen] Attach function attributes
+    to functions created in CGBlocks.cpp": the prerequisite's other half:
+    SetCommonAttributes, setNonAliasAttributes and every target's
+    setTargetAttributes take a null declaration (without it r251734
+    dereferences one: round 270B's crash); its four block-helper call sites
+    come with it and no C++ unit reaches them;
+  r251734 (7791f1a4a952, 2015-10-31) "[CodeGen] Call
+    SetInternalFunctionAttributes to attach function attributes to internal
+    functions": the change itself, with the CGFunctionInfo passed in by each
+    of the eleven callers.
+
+Swept alone over the game module built by the installed 3.7.1 (round 273B,
+5,496 rows, 6,656 functions): 75 functions change; 68 rows become equal
+(5,297 to 5,365), the 68 array-destroy helper rows, and none is lost.
+
+diff -ru a/tools/clang/lib/CodeGen/CGBlocks.cpp b/tools/clang/lib/CodeGen/CGBlocks.cpp
+--- a/tools/clang/lib/CodeGen/CGBlocks.cpp
++++ b/tools/clang/lib/CodeGen/CGBlocks.cpp
+@@ -1330,6 +1330,9 @@
+                                           nullptr, SC_Static,
+                                           false,
+                                           false);
++
++  CGM.SetInternalFunctionAttributes(nullptr, Fn, FI);
++
+   auto NL = ApplyDebugLocation::CreateEmpty(*this);
+   StartFunction(FD, C.VoidTy, Fn, FI, args);
+   // Create a scope with an artificial location for the body of this function.
+@@ -1502,6 +1505,9 @@
+                                           SourceLocation(), II, C.VoidTy,
+                                           nullptr, SC_Static,
+                                           false, false);
++
++  CGM.SetInternalFunctionAttributes(nullptr, Fn, FI);
++
+   // Create a scope with an artificial location for the body of this function.
+   auto NL = ApplyDebugLocation::CreateEmpty(*this);
+   StartFunction(FD, C.VoidTy, Fn, FI, args);
+@@ -1796,6 +1802,8 @@
+                                           SC_Static,
+                                           false, false);
+ 
++  CGF.CGM.SetInternalFunctionAttributes(nullptr, Fn, FI);
++
+   CGF.StartFunction(FD, R, Fn, FI, args);
+ 
+   if (byrefInfo.needsCopy()) {
+@@ -1868,6 +1876,9 @@
+                                           SourceLocation(), II, R, nullptr,
+                                           SC_Static,
+                                           false, false);
++
++  CGF.CGM.SetInternalFunctionAttributes(nullptr, Fn, FI);
++
+   CGF.StartFunction(FD, R, Fn, FI, args);
+ 
+   if (byrefInfo.needsDispose()) {
+diff -ru a/tools/clang/lib/CodeGen/CGDeclCXX.cpp b/tools/clang/lib/CodeGen/CGDeclCXX.cpp
+--- a/tools/clang/lib/CodeGen/CGDeclCXX.cpp
++++ b/tools/clang/lib/CodeGen/CGDeclCXX.cpp
+@@ -195,13 +195,15 @@
+     llvm::raw_svector_ostream Out(FnName);
+     CGM.getCXXABI().getMangleContext().mangleDynamicAtExitDestructor(&VD, Out);
+   }
++
++  const CGFunctionInfo &FI = CGM.getTypes().arrangeNullaryFunction();
+   llvm::Function *fn = CGM.CreateGlobalInitOrDestructFunction(ty, FnName.str(),
++                                                              FI,
+                                                               VD.getLocation());
+ 
+   CodeGenFunction CGF(CGM);
+ 
+-  CGF.StartFunction(&VD, CGM.getContext().VoidTy, fn,
+-                    CGM.getTypes().arrangeNullaryFunction(), FunctionArgList());
++  CGF.StartFunction(&VD, CGM.getContext().VoidTy, fn, FI, FunctionArgList());
+ 
+   llvm::CallInst *call = CGF.Builder.CreateCall(dtor, addr);
+  
+@@ -249,7 +251,8 @@
+ }
+ 
+ llvm::Function *CodeGenModule::CreateGlobalInitOrDestructFunction(
+-    llvm::FunctionType *FTy, const Twine &Name, SourceLocation Loc, bool TLS) {
++    llvm::FunctionType *FTy, const Twine &Name, const CGFunctionInfo &FI,
++    SourceLocation Loc, bool TLS) {
+   llvm::Function *Fn =
+     llvm::Function::Create(FTy, llvm::GlobalValue::InternalLinkage,
+                            Name, &getModule());
+@@ -259,7 +262,7 @@
+       Fn->setSection(Section);
+   }
+ 
+-  SetLLVMFunctionAttributes(nullptr, getTypes().arrangeNullaryFunction(), Fn);
++  SetInternalFunctionAttributes(nullptr, Fn, FI);
+ 
+   Fn->setCallingConv(getRuntimeCC());
+ 
+@@ -317,7 +320,9 @@
+ 
+   // Create a variable initialization function.
+   llvm::Function *Fn =
+-      CreateGlobalInitOrDestructFunction(FTy, FnName.str(), D->getLocation());
++      CreateGlobalInitOrDestructFunction(FTy, FnName.str(),
++                                         getTypes().arrangeNullaryFunction(),
++                                         D->getLocation());
+ 
+   auto *ISA = D->getAttr<InitSegAttr>();
+   CodeGenFunction(*this).GenerateCXXGlobalVarDeclInitFunc(Fn, D, Addr,
+@@ -392,7 +397,7 @@
+     return;
+ 
+   llvm::FunctionType *FTy = llvm::FunctionType::get(VoidTy, false);
+-
++  const CGFunctionInfo &FI = getTypes().arrangeNullaryFunction();
+ 
+   // Create our global initialization function.
+   if (!PrioritizedCXXGlobalInits.empty()) {
+@@ -416,7 +421,7 @@
+       // Priority is always <= 65535 (enforced by sema).
+       PrioritySuffix = std::string(6-PrioritySuffix.size(), '0')+PrioritySuffix;
+       llvm::Function *Fn = CreateGlobalInitOrDestructFunction(
+-          FTy, "_GLOBAL__I_" + PrioritySuffix);
++          FTy, "_GLOBAL__I_" + PrioritySuffix, FI);
+ 
+       for (; I < PrioE; ++I)
+         LocalCXXGlobalInits.push_back(I->second);
+@@ -446,7 +451,7 @@
+   }
+ 
+   llvm::Function *Fn = CreateGlobalInitOrDestructFunction(
+-      FTy, llvm::Twine("_GLOBAL__sub_I_", FileName));
++      FTy, llvm::Twine("_GLOBAL__sub_I_", FileName), FI);
+ 
+   CodeGenFunction(*this).GenerateCXXGlobalInitFunc(Fn, CXXGlobalInits);
+   AddGlobalCtor(Fn);
+@@ -461,7 +466,9 @@
+   llvm::FunctionType *FTy = llvm::FunctionType::get(VoidTy, false);
+ 
+   // Create our global destructor function.
+-  llvm::Function *Fn = CreateGlobalInitOrDestructFunction(FTy, "_GLOBAL__D_a");
++  const CGFunctionInfo &FI = getTypes().arrangeNullaryFunction();
++  llvm::Function *Fn =
++      CreateGlobalInitOrDestructFunction(FTy, "_GLOBAL__D_a", FI);
+ 
+   CodeGenFunction(*this).GenerateCXXGlobalDtorsFunc(Fn, CXXGlobalDtors);
+   AddGlobalDtor(Fn);
+@@ -585,7 +592,7 @@
+       getContext().VoidTy, args, FunctionType::ExtInfo(), /*variadic=*/false);
+   llvm::FunctionType *FTy = CGM.getTypes().GetFunctionType(FI);
+   llvm::Function *fn = CGM.CreateGlobalInitOrDestructFunction(
+-      FTy, "__cxx_global_array_dtor", VD->getLocation());
++      FTy, "__cxx_global_array_dtor", FI, VD->getLocation());
+ 
+   CurEHLocation = VD->getLocStart();
+ 
+diff -ru a/tools/clang/lib/CodeGen/CGOpenMPRuntime.cpp b/tools/clang/lib/CodeGen/CGOpenMPRuntime.cpp
+--- a/tools/clang/lib/CodeGen/CGOpenMPRuntime.cpp
++++ b/tools/clang/lib/CodeGen/CGOpenMPRuntime.cpp
+@@ -1001,7 +1001,7 @@
+           /*isVariadic=*/false);
+       auto FTy = CGM.getTypes().GetFunctionType(FI);
+       auto Fn = CGM.CreateGlobalInitOrDestructFunction(
+-          FTy, ".__kmpc_global_ctor_.", Loc);
++          FTy, ".__kmpc_global_ctor_.", FI, Loc);
+       CtorCGF.StartFunction(GlobalDecl(), CGM.getContext().VoidPtrTy, Fn, FI,
+                             Args, SourceLocation());
+       auto ArgVal = CtorCGF.EmitLoadOfScalar(
+@@ -1035,7 +1035,7 @@
+           /*isVariadic=*/false);
+       auto FTy = CGM.getTypes().GetFunctionType(FI);
+       auto Fn = CGM.CreateGlobalInitOrDestructFunction(
+-          FTy, ".__kmpc_global_dtor_.", Loc);
++          FTy, ".__kmpc_global_dtor_.", FI, Loc);
+       DtorCGF.StartFunction(GlobalDecl(), CGM.getContext().VoidTy, Fn, FI, Args,
+                             SourceLocation());
+       auto ArgVal = DtorCGF.EmitLoadOfScalar(
+@@ -1074,7 +1074,8 @@
+       auto InitFunctionTy =
+           llvm::FunctionType::get(CGM.VoidTy, /*isVarArg*/ false);
+       auto InitFunction = CGM.CreateGlobalInitOrDestructFunction(
+-          InitFunctionTy, ".__omp_threadprivate_init_.");
++          InitFunctionTy, ".__omp_threadprivate_init_.",
++          CGM.getTypes().arrangeNullaryFunction());
+       CodeGenFunction InitCGF(CGM);
+       FunctionArgList ArgList;
+       InitCGF.StartFunction(GlobalDecl(), CGM.getContext().VoidTy, InitFunction,
+diff -ru a/tools/clang/lib/CodeGen/CodeGenModule.cpp b/tools/clang/lib/CodeGen/CodeGenModule.cpp
+--- a/tools/clang/lib/CodeGen/CodeGenModule.cpp
++++ b/tools/clang/lib/CodeGen/CodeGenModule.cpp
+@@ -737,6 +737,21 @@
+   if (!hasUnwindExceptions(LangOpts))
+     B.addAttribute(llvm::Attribute::NoUnwind);
+ 
++  if (LangOpts.getStackProtector() == LangOptions::SSPOn)
++    B.addAttribute(llvm::Attribute::StackProtect);
++  else if (LangOpts.getStackProtector() == LangOptions::SSPStrong)
++    B.addAttribute(llvm::Attribute::StackProtectStrong);
++  else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
++    B.addAttribute(llvm::Attribute::StackProtectReq);
++
++  if (!D) {
++    F->addAttributes(llvm::AttributeSet::FunctionIndex,
++                     llvm::AttributeSet::get(
++                         F->getContext(),
++                         llvm::AttributeSet::FunctionIndex, B));
++    return;
++  }
++
+   if (D->hasAttr<NakedAttr>()) {
+     // Naked implies noinline: we should not be inlining such functions.
+     B.addAttribute(llvm::Attribute::Naked);
+@@ -761,13 +776,6 @@
+   if (D->hasAttr<MinSizeAttr>())
+     B.addAttribute(llvm::Attribute::MinSize);
+ 
+-  if (LangOpts.getStackProtector() == LangOptions::SSPOn)
+-    B.addAttribute(llvm::Attribute::StackProtect);
+-  else if (LangOpts.getStackProtector() == LangOptions::SSPStrong)
+-    B.addAttribute(llvm::Attribute::StackProtectStrong);
+-  else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
+-    B.addAttribute(llvm::Attribute::StackProtectReq);
+-
+   F->addAttributes(llvm::AttributeSet::FunctionIndex,
+                    llvm::AttributeSet::get(
+                        F->getContext(), llvm::AttributeSet::FunctionIndex, B));
+@@ -807,12 +815,12 @@
+ 
+ void CodeGenModule::SetCommonAttributes(const Decl *D,
+                                         llvm::GlobalValue *GV) {
+-  if (const auto *ND = dyn_cast<NamedDecl>(D))
++  if (const auto *ND = dyn_cast_or_null<NamedDecl>(D))
+     setGlobalVisibility(GV, ND);
+   else
+     GV->setVisibility(llvm::GlobalValue::DefaultVisibility);
+ 
+-  if (D->hasAttr<UsedAttr>())
++  if (D && D->hasAttr<UsedAttr>())
+     addUsedGlobal(GV);
+ }
+ 
+@@ -830,8 +838,9 @@
+                                           llvm::GlobalObject *GO) {
+   SetCommonAttributes(D, GO);
+ 
+-  if (const SectionAttr *SA = D->getAttr<SectionAttr>())
+-    GO->setSection(SA->getName());
++  if (D)
++    if (const SectionAttr *SA = D->getAttr<SectionAttr>())
++      GO->setSection(SA->getName());
+ 
+   getTargetCodeGenInfo().setTargetAttributes(D, GO, *this);
+ }
+diff -ru a/tools/clang/lib/CodeGen/CodeGenModule.h b/tools/clang/lib/CodeGen/CodeGenModule.h
+--- a/tools/clang/lib/CodeGen/CodeGenModule.h
++++ b/tools/clang/lib/CodeGen/CodeGenModule.h
+@@ -706,6 +706,7 @@
+ 
+   llvm::Function *
+   CreateGlobalInitOrDestructFunction(llvm::FunctionType *ty, const Twine &name,
++                                     const CGFunctionInfo &FI,
+                                      SourceLocation Loc = SourceLocation(),
+                                      bool TLS = false);
+ 
+diff -ru a/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp b/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
+--- a/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
++++ b/tools/clang/lib/CodeGen/ItaniumCXXABI.cpp
+@@ -2036,7 +2036,8 @@
+     // Generate a guarded initialization function.
+     llvm::FunctionType *FTy =
+         llvm::FunctionType::get(CGM.VoidTy, /*isVarArg=*/false);
+-    InitFunc = CGM.CreateGlobalInitOrDestructFunction(FTy, "__tls_init",
++    const CGFunctionInfo &FI = CGM.getTypes().arrangeNullaryFunction();
++    InitFunc = CGM.CreateGlobalInitOrDestructFunction(FTy, "__tls_init", FI,
+                                                       SourceLocation(),
+                                                       /*TLS=*/true);
+     llvm::GlobalVariable *Guard = new llvm::GlobalVariable(
+diff -ru a/tools/clang/lib/CodeGen/MicrosoftCXXABI.cpp b/tools/clang/lib/CodeGen/MicrosoftCXXABI.cpp
+--- a/tools/clang/lib/CodeGen/MicrosoftCXXABI.cpp
++++ b/tools/clang/lib/CodeGen/MicrosoftCXXABI.cpp
+@@ -2166,8 +2166,8 @@
+     llvm::FunctionType *FTy =
+         llvm::FunctionType::get(CGM.VoidTy, /*isVarArg=*/false);
+     llvm::Function *InitFunc = CGM.CreateGlobalInitOrDestructFunction(
+-        FTy, "__tls_init", SourceLocation(),
+-        /*TLS=*/true);
++        FTy, "__tls_init", CGM.getTypes().arrangeNullaryFunction(),
++        SourceLocation(), /*TLS=*/true);
+     CodeGenFunction(CGM).GenerateCXXGlobalInitFunc(InitFunc, NonComdatInits);
+ 
+     AddToXDU(InitFunc);
+diff -ru a/tools/clang/lib/CodeGen/TargetInfo.cpp b/tools/clang/lib/CodeGen/TargetInfo.cpp
+--- a/tools/clang/lib/CodeGen/TargetInfo.cpp
++++ b/tools/clang/lib/CodeGen/TargetInfo.cpp
+@@ -1334,7 +1334,7 @@
+ void X86_32TargetCodeGenInfo::setTargetAttributes(const Decl *D,
+                                                   llvm::GlobalValue *GV,
+                                             CodeGen::CodeGenModule &CGM) const {
+-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
++  if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D)) {
+     if (FD->hasAttr<X86ForceAlignArgPointerAttr>()) {
+       // Get the LLVM function.
+       llvm::Function *Fn = cast<llvm::Function>(GV);
+@@ -1701,7 +1701,7 @@
+ static void addStackProbeSizeTargetAttribute(const Decl *D,
+                                              llvm::GlobalValue *GV,
+                                              CodeGen::CodeGenModule &CGM) {
+-  if (isa<FunctionDecl>(D)) {
++  if (D && isa<FunctionDecl>(D)) {
+     if (CGM.getCodeGenOpts().StackProbeSize != 4096) {
+       llvm::Function *Fn = cast<llvm::Function>(GV);
+ 
+@@ -4561,7 +4561,7 @@
+ 
+   void setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
+                            CodeGen::CodeGenModule &CGM) const override {
+-    const FunctionDecl *FD = dyn_cast<FunctionDecl>(D);
++    const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D);
+     if (!FD)
+       return;
+ 
+@@ -5138,7 +5138,7 @@
+ void NVPTXTargetCodeGenInfo::
+ setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
+                     CodeGen::CodeGenModule &M) const{
+-  const FunctionDecl *FD = dyn_cast<FunctionDecl>(D);
++  const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D);
+   if (!FD) return;
+ 
+   llvm::Function *F = cast<llvm::Function>(GV);
+@@ -5557,7 +5557,7 @@
+ void MSP430TargetCodeGenInfo::setTargetAttributes(const Decl *D,
+                                                   llvm::GlobalValue *GV,
+                                              CodeGen::CodeGenModule &M) const {
+-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
++  if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D)) {
+     if (const MSP430InterruptAttr *attr = FD->getAttr<MSP430InterruptAttr>()) {
+       // Handle 'interrupt' attribute:
+       llvm::Function *F = cast<llvm::Function>(GV);
+@@ -5616,7 +5616,7 @@
+ 
+   void setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
+                            CodeGen::CodeGenModule &CGM) const override {
+-    const FunctionDecl *FD = dyn_cast<FunctionDecl>(D);
++    const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D);
+     if (!FD) return;
+     llvm::Function *Fn = cast<llvm::Function>(GV);
+     if (FD->hasAttr<Mips16Attr>()) {
+@@ -5960,7 +5960,7 @@
+ 
+ void TCETargetCodeGenInfo::setTargetAttributes(
+     const Decl *D, llvm::GlobalValue *GV, CodeGen::CodeGenModule &M) const {
+-  const FunctionDecl *FD = dyn_cast<FunctionDecl>(D);
++  const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D);
+   if (!FD) return;
+ 
+   llvm::Function *F = cast<llvm::Function>(GV);
+@@ -6156,7 +6156,7 @@
+   const Decl *D,
+   llvm::GlobalValue *GV,
+   CodeGen::CodeGenModule &M) const {
+-  const FunctionDecl *FD = dyn_cast<FunctionDecl>(D);
++  const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D);
+   if (!FD)
+     return;
+ 

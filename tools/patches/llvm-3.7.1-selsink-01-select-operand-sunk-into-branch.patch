@@ -1,0 +1,276 @@
+llvm-3.7.1 forward port: a select's expensive operand is sunk into a branch (the guarded division)
+
+This patch CHANGES CODE GENERATION where one arm of a two-way choice is a
+division or remainder: `v != 0 ? 1 / v : 0`. 3.7.1's SimplifyCFG speculates
+the division into a select and its code generation keeps the select
+(`vdivss` first, then `vcmpneqss`/`vcmpltss` and `vandps`); the base tests
+first and divides in the arm (`vucomiss; je`, `vdivss` behind the branch).
+Upstream reached that in three commits, all first released in 3.8.0, each
+ported whole (tests left out):
+  r248439 (13e8bbc23735, 2015-09-23) "set div/rem default values to
+    'expensive' in TargetTransformInfo's cost model": FDiv, FRem, SDiv, SRem,
+    UDiv and URem cost TCC_Expensive in getOperationCost (applies as is);
+  r250743 (69a50a1e17c9, 2015-10-19) "[CGP] transform select instructions
+    into branches and sink expensive operands": CodeGenPrepare forms a branch
+    from a select with a single-use, safe-to-speculate operand of that cost
+    and moves the operand into the arm. Its include hunk applies as is; the
+    other three are written in by hand against 3.7.1's text, which lacks
+    upstream's intervening NFC tidy-ups (the one-use test of the compare as
+    an early return; `optimizeSelectInst`'s lower-case name; the iterator
+    passed to PHINode::Create): the statements are upstream's;
+  r255660 (38a022623a6b, 2015-12-15) "[SimplifyCFG] allow speculation of
+    exactly one expensive instruction (PR24818)": SimplifyCFG still makes the
+    select (as 3.7.1 does today), now that the cost says expensive, so the
+    IR up to CodeGenPrepare is unchanged (applies with offsets, fuzz 2 on
+    the option's hunk).
+Not ported, same sequence: r253573 (4699b8ab6acf, 2015-11-19, "[CGP]
+despeculate expensive cttz/ctlz intrinsics"): a separate transform for
+targets where the count is not cheap to speculate; no row asks for it.
+
+Swept alone over the game module built by the installed 3.7.1 (round 273B,
+5,496 rows, 6,656 functions): 10 functions change; 7 rows become equal
+(5,297 to 5,304: 0x1b1090, 0x4ada80, 0x1064290, 0x13d29d0, 0x13d2a40,
+0x13d6330, 0x13d63a0) and none is lost.
+
+diff -ru a/include/llvm/Analysis/TargetTransformInfoImpl.h b/include/llvm/Analysis/TargetTransformInfoImpl.h
+--- a/include/llvm/Analysis/TargetTransformInfoImpl.h
++++ b/include/llvm/Analysis/TargetTransformInfoImpl.h
+@@ -60,6 +60,14 @@
+       // Otherwise, the default basic cost is used.
+       return TTI::TCC_Basic;
+ 
++    case Instruction::FDiv:
++    case Instruction::FRem:
++    case Instruction::SDiv:
++    case Instruction::SRem:
++    case Instruction::UDiv:
++    case Instruction::URem:
++      return TTI::TCC_Expensive;
++
+     case Instruction::IntToPtr: {
+       // An inttoptr cast is free so long as the input is a legal integer type
+       // which doesn't contain values outside the range of a pointer.
+diff -ru a/lib/CodeGen/CodeGenPrepare.cpp b/lib/CodeGen/CodeGenPrepare.cpp
+--- a/lib/CodeGen/CodeGenPrepare.cpp
++++ b/lib/CodeGen/CodeGenPrepare.cpp
+@@ -20,6 +20,7 @@
+ #include "llvm/Analysis/InstructionSimplify.h"
+ #include "llvm/Analysis/TargetLibraryInfo.h"
+ #include "llvm/Analysis/TargetTransformInfo.h"
++#include "llvm/Analysis/ValueTracking.h"
+ #include "llvm/IR/CallSite.h"
+ #include "llvm/IR/Constants.h"
+ #include "llvm/IR/DataLayout.h"
+@@ -3851,9 +3852,23 @@
+   return MadeChange;
+ }
+ 
++/// Check if V (an operand of a select instruction) is an expensive instruction
++/// that is only used once.
++static bool sinkSelectOperand(const TargetTransformInfo *TTI, Value *V) {
++  auto *I = dyn_cast<Instruction>(V);
++  // If it's safe to speculatively execute, then it should not have side
++  // effects; therefore, it's safe to sink and possibly *not* execute.
++  if (I && I->hasOneUse() && isSafeToSpeculativelyExecute(I) &&
++      TTI->getUserCost(I) >= TargetTransformInfo::TCC_Expensive)
++    return true;
++
++  return false;
++}
++
+ /// isFormingBranchFromSelectProfitable - Returns true if a SelectInst should be
+ /// turned into an explicit branch.
+-static bool isFormingBranchFromSelectProfitable(SelectInst *SI) {
++static bool isFormingBranchFromSelectProfitable(const TargetTransformInfo *TTI,
++                                                SelectInst *SI) {
+   // FIXME: This should use the same heuristics as IfConversion to determine
+   // whether a select is better represented as a branch.  This requires that
+   // branch probability metadata is preserved for the select, which is not the
+@@ -3874,9 +3889,20 @@
+ 
+   // We check that the memory operand has one use to avoid uses of the loaded
+   // value directly after the compare, making branches unprofitable.
+-  return Cmp->hasOneUse() &&
+-         ((isa<LoadInst>(CmpOp0) && CmpOp0->hasOneUse()) ||
+-          (isa<LoadInst>(CmpOp1) && CmpOp1->hasOneUse()));
++  if (!Cmp->hasOneUse())
++    return false;
++
++  if ((isa<LoadInst>(CmpOp0) && CmpOp0->hasOneUse()) ||
++      (isa<LoadInst>(CmpOp1) && CmpOp1->hasOneUse()))
++    return true;
++
++  // If either operand of the select is expensive and only needed on one side
++  // of the select, we should form a branch.
++  if (sinkSelectOperand(TTI, SI->getTrueValue()) ||
++      sinkSelectOperand(TTI, SI->getFalseValue()))
++    return true;
++
++  return false;
+ }
+ 
+ 
+@@ -3902,34 +3928,97 @@
+     // We have efficient codegen support for the select instruction.
+     // Check if it is profitable to keep this 'select'.
+     if (!TLI->isPredictableSelectExpensive() ||
+-        !isFormingBranchFromSelectProfitable(SI))
++        !isFormingBranchFromSelectProfitable(TTI, SI))
+       return false;
+   }
+ 
+   ModifiedDT = true;
+ 
++  // Transform a sequence like this:
++  //    start:
++  //       %cmp = cmp uge i32 %a, %b
++  //       %sel = select i1 %cmp, i32 %c, i32 %d
++  //
++  // Into:
++  //    start:
++  //       %cmp = cmp uge i32 %a, %b
++  //       br i1 %cmp, label %select.true, label %select.false
++  //    select.true:
++  //       br label %select.end
++  //    select.false:
++  //       br label %select.end
++  //    select.end:
++  //       %sel = phi i32 [ %c, %select.true ], [ %d, %select.false ]
++  //
++  // In addition, we may sink instructions that produce %c or %d from
++  // the entry block into the destination(s) of the new branch.
++  // If the true or false blocks do not contain a sunken instruction, that
++  // block and its branch may be optimized away. In that case, one side of the
++  // first branch will point directly to select.end, and the corresponding PHI
++  // predecessor block will be the start block.
++
+   // First, we split the block containing the select into 2 blocks.
+   BasicBlock *StartBlock = SI->getParent();
+   BasicBlock::iterator SplitPt = ++(BasicBlock::iterator(SI));
+-  BasicBlock *NextBlock = StartBlock->splitBasicBlock(SplitPt, "select.end");
+-
+-  // Create a new block serving as the landing pad for the branch.
+-  BasicBlock *SmallBlock = BasicBlock::Create(SI->getContext(), "select.mid",
+-                                             NextBlock->getParent(), NextBlock);
++  BasicBlock *EndBlock = StartBlock->splitBasicBlock(SplitPt, "select.end");
+ 
+-  // Move the unconditional branch from the block with the select in it into our
+-  // landing pad block.
++  // Delete the unconditional branch that was just created by the split.
+   StartBlock->getTerminator()->eraseFromParent();
+-  BranchInst::Create(NextBlock, SmallBlock);
++
++  // These are the new basic blocks for the conditional branch.
++  // At least one will become an actual new basic block.
++  BasicBlock *TrueBlock = nullptr;
++  BasicBlock *FalseBlock = nullptr;
++
++  // Sink expensive instructions into the conditional blocks to avoid executing
++  // them speculatively.
++  if (sinkSelectOperand(TTI, SI->getTrueValue())) {
++    TrueBlock = BasicBlock::Create(SI->getContext(), "select.true.sink",
++                                   EndBlock->getParent(), EndBlock);
++    auto *TrueBranch = BranchInst::Create(EndBlock, TrueBlock);
++    auto *TrueInst = cast<Instruction>(SI->getTrueValue());
++    TrueInst->moveBefore(TrueBranch);
++  }
++  if (sinkSelectOperand(TTI, SI->getFalseValue())) {
++    FalseBlock = BasicBlock::Create(SI->getContext(), "select.false.sink",
++                                    EndBlock->getParent(), EndBlock);
++    auto *FalseBranch = BranchInst::Create(EndBlock, FalseBlock);
++    auto *FalseInst = cast<Instruction>(SI->getFalseValue());
++    FalseInst->moveBefore(FalseBranch);
++  }
++
++  // If there was nothing to sink, then arbitrarily choose the 'false' side
++  // for a new input value to the PHI.
++  if (TrueBlock == FalseBlock) {
++    assert(TrueBlock == nullptr &&
++           "Unexpected basic block transform while optimizing select");
++
++    FalseBlock = BasicBlock::Create(SI->getContext(), "select.false",
++                                    EndBlock->getParent(), EndBlock);
++    BranchInst::Create(EndBlock, FalseBlock);
++  }
+ 
+   // Insert the real conditional branch based on the original condition.
+-  BranchInst::Create(NextBlock, SmallBlock, SI->getCondition(), SI);
++  // If we did not create a new block for one of the 'true' or 'false' paths
++  // of the condition, it means that side of the branch goes to the end block
++  // directly and the path originates from the start block from the point of
++  // view of the new PHI.
++  if (TrueBlock == nullptr) {
++    BranchInst::Create(EndBlock, FalseBlock, SI->getCondition(), SI);
++    TrueBlock = StartBlock;
++  } else if (FalseBlock == nullptr) {
++    BranchInst::Create(TrueBlock, EndBlock, SI->getCondition(), SI);
++    FalseBlock = StartBlock;
++  } else {
++    BranchInst::Create(TrueBlock, FalseBlock, SI->getCondition(), SI);
++  }
+ 
+   // The select itself is replaced with a PHI Node.
+-  PHINode *PN = PHINode::Create(SI->getType(), 2, "", NextBlock->begin());
++  PHINode *PN = PHINode::Create(SI->getType(), 2, "", EndBlock->begin());
+   PN->takeName(SI);
+-  PN->addIncoming(SI->getTrueValue(), StartBlock);
+-  PN->addIncoming(SI->getFalseValue(), SmallBlock);
++  PN->addIncoming(SI->getTrueValue(), TrueBlock);
++  PN->addIncoming(SI->getFalseValue(), FalseBlock);
++
+   SI->replaceAllUsesWith(PN);
+   SI->eraseFromParent();
+ 
+diff -ru a/lib/Transforms/Utils/SimplifyCFG.cpp b/lib/Transforms/Utils/SimplifyCFG.cpp
+--- a/lib/Transforms/Utils/SimplifyCFG.cpp
++++ b/lib/Transforms/Utils/SimplifyCFG.cpp
+@@ -73,6 +73,11 @@
+     "simplifycfg-hoist-cond-stores", cl::Hidden, cl::init(true),
+     cl::desc("Hoist conditional stores if an unconditional store precedes"));
+ 
++static cl::opt<bool> SpeculateOneExpensiveInst(
++    "speculate-one-expensive-inst", cl::Hidden, cl::init(true),
++    cl::desc("Allow exactly one expensive instruction to be speculatively "
++             "executed"));
++
+ STATISTIC(NumBitMaps, "Number of switch instructions turned into bitmaps");
+ STATISTIC(NumLinearMaps, "Number of switch instructions turned into linear mapping");
+ STATISTIC(NumLookupTables, "Number of switch instructions turned into lookup tables");
+@@ -246,7 +251,8 @@
+ static bool DominatesMergePoint(Value *V, BasicBlock *BB,
+                                 SmallPtrSetImpl<Instruction*> *AggressiveInsts,
+                                 unsigned &CostRemaining,
+-                                const TargetTransformInfo &TTI) {
++                                const TargetTransformInfo &TTI,
++                                unsigned Depth = 0) {
+   Instruction *I = dyn_cast<Instruction>(V);
+   if (!I) {
+     // Non-instructions all dominate instructions, but not all constantexprs
+@@ -284,15 +290,24 @@
+ 
+   unsigned Cost = ComputeSpeculationCost(I, TTI);
+ 
+-  if (Cost > CostRemaining)
++  // Allow exactly one instruction to be speculated regardless of its cost
++  // (as long as it is safe to do so).
++  // This is intended to flatten the CFG even if the instruction is a division
++  // or other expensive operation. The speculation of an expensive instruction
++  // is expected to be undone in CodeGenPrepare if the speculation has not
++  // enabled further IR optimizations.
++  if (Cost > CostRemaining &&
++      (!SpeculateOneExpensiveInst || !AggressiveInsts->empty() || Depth > 0))
+     return false;
+ 
+-  CostRemaining -= Cost;
++  // Avoid unsigned wrap.
++  CostRemaining = (Cost > CostRemaining) ? 0 : CostRemaining - Cost;
+ 
+   // Okay, we can only really hoist these out if their operands do
+   // not take us over the cost threshold.
+   for (User::op_iterator i = I->op_begin(), e = I->op_end(); i != e; ++i)
+-    if (!DominatesMergePoint(*i, BB, AggressiveInsts, CostRemaining, TTI))
++    if (!DominatesMergePoint(*i, BB, AggressiveInsts, CostRemaining, TTI,
++                             Depth + 1))
+       return false;
+   // Okay, it's safe to do this!  Remember this instruction.
+   AggressiveInsts->insert(I);
