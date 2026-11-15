@@ -42,6 +42,11 @@ out here.
        as many as its operand is wide, at the offset its relocation gives,
        must equal the base's bytes where the base's own instruction points,
        inside the game's rodata, or the row fails with both.
+    2e. The guard of a game function's local static has no row and no name
+       the source can write: its address is the base's own reference at the
+       site, proven by the function's test of it, the guard calls after its
+       `lea`, the game's .bss, one address per guard over every reference
+       and no overlap with its static or any claimed object (static_guard).
     3. Compare every segment with the base, whole. Any differing byte names
        the function or data object it falls in (or the gap, which would mean
        a claimed object overran its size).
@@ -252,6 +257,21 @@ def game_rodata(ver: str) -> list[tuple[int, int]]:
     return _GAME_RODATA
 
 
+_GAME_BSS: list[tuple[int, int]] = []
+
+
+def game_bss(ver: str) -> list[tuple[int, int]]:
+    """The game's zero-initialised data ranges of config/modules.<slug>.txt
+    (the rows `<lo> <hi> game bss ...`), where the guards of the game's
+    function-local statics lie."""
+    if not _GAME_BSS:
+        for line in config_path(REPO_ROOT, ver, "modules", "txt").read_text().splitlines():
+            f = line.split("#", 1)[0].split()
+            if len(f) >= 4 and f[2] == "game" and f[3] == "bss":
+                _GAME_BSS.append((int(f[0], 16), int(f[1], 16)))
+    return _GAME_BSS
+
+
 def jump_table(base: BaseElf, obj: Path, r: mc.Reloc, own: str, addr: int, size: int,
                hint: int | None, ver: str):
     """A claimed function's own jump table (the game line, x86_64-scei-ps4 PIC:
@@ -384,6 +404,91 @@ def rodata_constant(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, 
     if have != want:
         return f"{where}: the object holds {want.hex()}, the base's instruction reads {have.hex()} at 0x{T:x}"
     return T - start + r.sym_value
+
+
+GUARD_CALLS = ("__cxa_guard_acquire", "__cxa_guard_release", "__cxa_guard_abort")
+GUARD_LEA_WINDOW = 8     # instructions from the `lea rdi` of a guard to its call
+_GUARDS: dict[str, tuple[int, str]] = {}    # guard symbol -> (address, the first site that placed it)
+_GUARD_AT: dict[int, str] = {}              # address -> guard symbol
+
+
+def guard_reads(code: bytes, relocs: list[mc.Reloc]) -> set[str]:
+    """The guards of function-local statics (`_ZGVZ...`) a function tests: the
+    symbols it reads one byte of through a RIP-relative operand (`cmp byte
+    ptr [rip + guard], 0`, or the byte loaded and tested), the check of the
+    guard's first byte the Itanium ABI (3.3.2) gives every such static."""
+    out = set()
+    for r in relocs:
+        if r.symbol.startswith("_ZGVZ") and r.type == R_X86_64_PC32:
+            acc = rip_access(code, r.offset)
+            if acc is not None and acc[1] == 1 and acc[2] in ("cmp", "mov", "movzx"):
+                out.add(r.symbol)
+    return out
+
+
+def static_guard(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, hint: int | None,
+                 tested: set[str], ver: str):
+    """The guard variable of a function-local static of the game module
+    (`_ZGVZ<function>E<object>`, docs/DECISIONS.md D17's addendum): the
+    address to resolve it to, or a string naming why the row fails; None for
+    any other symbol or object. The guard has no name the source can write
+    and no row: its address is derived every run from the base's own
+    reference at the site (as a jump table's, D73), since the module's .bss
+    order is the module's, not the unit's the base was linked from (the old
+    rule, the object's address plus the distance in the object file, holds
+    for the library line's per-unit objects and stays for them). Nothing is
+    trusted: the function must test the guard (guard_reads: a one-byte read
+    of it); a reference that only takes its address must be `lea rdi` with
+    a call of __cxa_guard_acquire, _release or _abort the base's next call
+    after it, rdi unwritten between; the
+    address must lie in the game's .bss (config/modules.<slug>.txt), in the
+    zero-initialised tail of a loaded segment; every reference to one guard, in every
+    claimed function, must give one address, and no two guards the same;
+    build_image then refuses a guard whose eight bytes overlap its own
+    static, a claimed data object, a header static's row or another guard."""
+    if not r.symbol.startswith("_ZGVZ") or r.type != R_X86_64_PC32:
+        return None
+    import game_module as gm
+    if obj != gm.module_object(ver):
+        return None
+    where = f"guard {r.symbol}"
+    if hint is None:
+        return f"{where}: the base's field at 0x{P:x} cannot be read"
+    if r.symbol not in tested:
+        return f"{where}: the function never tests it (no one-byte read of the guard)"
+    if rip_access(code, r.offset) is None:
+        # the address taken: lea rdi, [rip + guard], then the base's next call
+        # or jump (rdi not written between: the scheduler may put a few
+        # instructions of the initialiser there) is to a guard routine
+        stubs = {base.plt_stubs().get(n) for n in GUARD_CALLS} - {None}
+        target = None
+        try:
+            for ins in mc.disasm(base.read(P + 4, 64), P + 4)[:GUARD_LEA_WINDOW]:
+                if ins.mnemonic in ("call", "jmp"):
+                    target = int(ins.op_str, 16) if ins.op_str.startswith("0x") else None
+                    break
+                if ins.mnemonic == "ret" or ins.op_str.split(",")[0] in ("rdi", "edi", "di", "dil"):
+                    break
+        except Exception:  # noqa: BLE001
+            target = None
+        if code[r.offset - 3:r.offset] != b"\x48\x8d\x3d" or target not in stubs:
+            return (f"{where}: its address is taken at 0x{P:x} by something other than `lea rdi` before a call of "
+                    + ", ".join(GUARD_CALLS))
+    S = hint
+    lo_bss = [(sg["vaddr"] + sg["filesz"], sg["vaddr"] + sg["memsz"]) for sg in base.loaded_segments()]
+    if not any(lo <= S and S + 8 <= hi for lo, hi in lo_bss) \
+            or not any(lo <= S and S + 8 <= hi for lo, hi in game_bss(ver)):
+        return f"{where}: the base's reference at 0x{P:x} points at 0x{S:x}, not in the game's .bss"
+    have = _GUARDS.get(r.symbol)
+    if have is not None and have[0] != S:
+        return (f"{where}: the base's reference at 0x{P:x} points at 0x{S:x}, the one at {have[1]} at 0x{have[0]:x}: "
+                "one guard has one address")
+    other = _GUARD_AT.get(S)
+    if other is not None and other != r.symbol:
+        return f"{where}: the base's reference at 0x{P:x} points at 0x{S:x}, which is the guard {other}"
+    _GUARDS.setdefault(r.symbol, (S, f"0x{P:x}"))
+    _GUARD_AT[S] = r.symbol
+    return S
 
 
 def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
@@ -535,6 +640,7 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
     out = bytearray(code)
     errors = []
     dyn = base_dynamic_relocs(base) if in_data else {}
+    tested = set() if in_data else guard_reads(code, relocs)
     for r in relocs:
         P = addr + r.offset
         if r.type == mc.R_X86_64_GOTTPOFF:
@@ -609,6 +715,8 @@ def apply_relocs(base: BaseElf, obj: Path, code: bytes, relocs: list[mc.Reloc], 
                 struct.pack_into("<i", out, r.offset, hint + r.addend - P)
                 continue
         const = rodata_constant(base, obj, code, r, P, ver) if ver is not None and not in_data else None
+        if const is None and ver is not None and not in_data:
+            const = static_guard(base, obj, code, r, P, hint, tested, ver)
         if isinstance(const, str):
             errors.append(f"+0x{r.offset:x} {const}")
             continue
@@ -681,6 +789,8 @@ def build_image(ver: str, log=print) -> dict:
     # through the row whatever the order: a wrong alias puts the owner's field
     # at another address and the segment differs from the base
     _ROW_BY_SYMBOL.clear()
+    _GUARDS.clear()
+    _GUARD_AT.clear()
     for tu, pairs in sorted(by_tu.items()):
         obj = compiled(tu)
         for fn, sym in pairs:
@@ -820,6 +930,41 @@ def build_image(ver: str, log=print) -> dict:
             elif addr in seen_at:
                 report["errors"][key] = f"0x{addr:x} is also the row of {seen_at[addr]}"
             seen_at.setdefault(addr, f"{tu} {sym}")
+
+    # --- guards -----------------------------------------------------------------------
+    # every guard of a function-local static the claimed game functions placed
+    # (static_guard: derived from the base's own references, one address per
+    # guard): its eight bytes may overlap neither its own static, nor a claimed
+    # data object, nor a header static's row; two guards are eight bytes apart
+    # at least. The bytes are .bss: there is nothing to lay out or compare.
+    report["guards"] = {}
+    gm_obj = None
+    if _GUARDS:
+        import game_module as gm
+        gm_obj = gm.module_object(ver)
+    places = sorted((a, g) for g, (a, _site) in _GUARDS.items())
+    for i, (S, g) in enumerate(places):
+        key = f"guard {g}"
+        report["guards"][g] = S
+        why = []
+        if i and places[i - 1][0] + 8 > S:
+            why.append(f"0x{S:x} overlaps the guard {places[i - 1][1]} at 0x{places[i - 1][0]:x}")
+        static = "_ZZ" + g[len("_ZGVZ"):]
+        a = base.address_of(static)
+        here = mc.object_symbol(gm_obj, static)
+        if a is None or here is None:
+            why.append(f"its static {static} has no address in the base (a D_<hex> name, D17) or is not in the module")
+        elif a < S + 8 and S < a + max(here[2], 1):
+            why.append(f"0x{S:x} lies inside its own static (0x{a:x}, {here[2]} bytes)")
+        sg = seg_for(S)
+        clash = [c for c in (sg["claims"] if sg else []) if c[0] < S + 8 and S < c[1]]
+        if clash:
+            why.append(f"0x{S:x} overlaps " + ", ".join(f"{c[2]} (0x{c[0]:x}..0x{c[1]:x})" for c in clash))
+        hs = [n for a2, n in seen_at.items() if S <= a2 < S + 8]
+        if hs:
+            why.append(f"0x{S:x} is the row of the header static {hs[0]}")
+        if why:
+            report["errors"][key] = "; ".join(why)
 
     # --- local data -----------------------------------------------------------------
     # every row of config/local_data.<slug>.txt (a variable tools/game_module.py makes
