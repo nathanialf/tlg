@@ -1,26 +1,16 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
-#include "tlg_game_object0134f620.h"
-#include "tlg_game_block.h"
+#include "tlg_game_object016a9290.h"
 
-/* derived names: the class whose vtable is at 0x16a9290
- * (config/vtables.derived.base.txt, stored by FUN_003ea9b0 FUN_003eac20 FUN_003eacf0), derived from
- * Object016b9108: its slots 2 to 4 are the base's. Its own fields
- * from +0x24 are traced only where its destructor FUN_003eac20 tears them down
- * (the block at +0x28, the record at +0x40); the rest are not traced. */
-class Object016a9290 : public Object016b9108 /* derived name */
+/* derived name: the constructor (tlg_game_object016a9290.h): its base
+ * Object016b9108 is built from the name passed on, the arrays start empty
+ * and every cell is built; then the body: three null pointers appended to
+ * the array at +0x28. */
+Object016a9290::Object016a9290(const Name &name) : Object016b9108(name)
 {
-  public:
-    virtual ~Object016a9290();
-
-  private:
-    u8 unknown24[0x4];
-    /* +0x28: an owned block, released by the destructor (`mov rax, [rbx+0x28]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block28;
-    u8 unknown30[0x10];
-    /* +0x40: torn down by the destructor (`lea rdi, [rbx+0x40]; call 0x134f620`) */
-    Object0134f620 record40;
-};
+    array28.push(0);
+    array28.push(0);
+    array28.push(0);
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_003eacf0, slot 1, is
