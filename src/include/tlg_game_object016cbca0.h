@@ -5,6 +5,7 @@
 #define TLG_GAME_OBJECT016CBCA0_H
 
 #include "tlg_game_object016b9108.h"
+#include "tlg_math.h"
 
 /* derived names: the class whose vtable is at 0x16cbca0
  * (config/vtables.derived.base.txt, stored by FUN_007adf30 FUN_0136d4c0 FUN_0136d610 and 4 more), derived from
@@ -14,12 +15,28 @@
 class Object016cbca0 : public Object016b9108 /* derived name */
 {
   public:
+    /* inlined in the creator FUN_007adf30: the int at +0x24, the two values
+     * of ones at +0x30 (one 32-byte store), the box from the lowest to the
+     * highest point and the origin (Float4 copies of the points of
+     * tlg_math.h: one 16-byte integer vector each), the two names */
+    Object016cbca0(const Name &name)
+        : Object016b9108(name), unknown24(0), unknown30(1.0f, 1.0f, 1.0f, 1.0f),
+          unknown40(1.0f, 1.0f, 1.0f, 1.0f), minimum50(FLOAT4_POINT_MIN),
+          maximum60(FLOAT4_POINT_MAX), origin70(FLOAT4_POINT_ORIGIN)
+    {
+    }
+
     virtual ~Object016cbca0();
 
   private:
-    u8 unknown24[0x5c];
-    Name name80; /* +0x80: released by the destructor (`mov eax, [rbx+0x80]; shl 5`) */
-    Name name84; /* +0x84: released by the destructor (`mov eax, [rbx+0x84]; shl 5`) */
+    int unknown24;     /* +0x24: zero from the constructor; not traced */
+    Float4A unknown30; /* +0x30: ones from the constructor; not traced */
+    Float4 unknown40;  /* +0x40: ones from the constructor; not traced */
+    Float4 minimum50;  /* +0x50: the lowest point from the constructor; derived name */
+    Float4 maximum60;  /* +0x60: the highest point from the constructor; derived name */
+    Float4 origin70;   /* +0x70: the origin from the constructor; derived name */
+    Name name80;       /* +0x80: released by the destructor (`mov eax, [rbx+0x80]; shl 5`) */
+    Name name84;       /* +0x84: released by the destructor (`mov eax, [rbx+0x84]; shl 5`) */
 };
 
 /* derived name: the complete destructor (slot 0 of 0x16cbca0, FUN_0136da00): the

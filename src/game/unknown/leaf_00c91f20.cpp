@@ -30,13 +30,6 @@ extern Object05938c40 *D_5938c40;
  * +0x38 of the object at 0x5938c40. This unit defines the constructor, so it
  * emits the class's vtable and its two destructors (FUN_013abbe0 and
  * FUN_013abd00, defined in the header). */
-// NONMATCHING: 16/74, 255 bytes for 255: the first attempt of the exchange, peeled by the late loop
-// rotation with the reference known null, branches in the base on the exchange's flags at once
-// (`lock cmpxchg qword [r14+0x30], rcx; je` at 0xc91f5c); the build tests the success bit twice
-// (`sete al; je; test al, al; jne`): its IR holds `or i1 %15, %16`, two extractions of the one
-// success bit (the second made by the instruction combiner's fold of the old value compared with the
-// expected null after the last pass that would merge them), and the branch on an `or` is split.
-// With the two as one value the function is equal (71 instructions). A pipeline question.
 Object016d1668::Object016d1668(const Name &name) : Object016b9108(name)
 {
     Member05938c40_38 *member = D_5938c40->unknown38;

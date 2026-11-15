@@ -15,10 +15,6 @@ struct Value00d63f10 : Node00503fb0 {};
  * 0x59459e8 is made under the empty name (FUN_00cbc5a0, mode 0) and the
  * reference at +0x240 set to it. The empty name is not released: the module
  * knows the callee only reads it. */
-// NONMATCHING: 338 bytes for 302: the build ends in two tail calls (`jmp [rax+0x10]`, `jmp
-// FUN_00c14bc0`) where the base calls and returns. The base's calls are not tail calls, as when
-// the empty name's address had escaped into FUN_00cbc5a0 (the callee's body unknown where tail
-// calls were marked), yet the name's release is gone (the body known where loads were forwarded)
 Object016d24f8::Object016d24f8(const Name &name) : Object00c55550(name)
 {
     Value00d63f10 *made =

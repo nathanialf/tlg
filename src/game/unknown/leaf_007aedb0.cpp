@@ -16,10 +16,6 @@ struct Value007aedb0 : Node00503fb0 {};
  * set to it. The empty name is not released: the module knows the callee
  * only reads it, and the name's scope ends before the exchange (an atomic
  * operation between the two would keep the release). */
-// NONMATCHING: 338 bytes for 302: the build ends in two tail calls (`jmp [rax+0x10]`, `jmp
-// FUN_00c14bc0`) where the base calls and returns. The base's calls are not tail calls, as when
-// the empty name's address had escaped into FUN_00cbc5a0 (the callee's body unknown where tail
-// calls were marked), yet the name's release is gone (the body known where loads were forwarded)
 Object016cbe60::Object016cbe60(const Name &name) : Object016b9108(name)
 {
     Value007aedb0 *made =

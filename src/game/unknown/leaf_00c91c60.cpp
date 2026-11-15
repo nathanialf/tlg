@@ -13,9 +13,7 @@ extern Type059458a8 *D_593aa90;
  * signature (the first argument is not used): the object's 0x38 bytes are
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place by its
- * constructor FUN_00c91f20, which is not inlined. Equal, not claimed: that
- * constructor is a draft (NONMATCHING), so the gate cannot place the
- * call's target. */
+ * constructor FUN_00c91f20, which is not inlined. */
 Object016b9108 *FUN_00c91c60(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016d1668));
