@@ -23,7 +23,7 @@ class Object016ac990 : public Object00774560 /* derived name */
      * +0x154, then the body's `mov dword [r15+0x7c], 0` (the base's field) */
     Object016ac990(const Name &name) : Object00774560(name), unknown154(1)
     {
-        unknown7c = 0;
+        unknown7c = 0.0f;
     }
 
     virtual ~Object016ac990();

@@ -1,26 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object01343880.h"
-#include "tlg_game_node.h"
-#include "tlg_game_object0134f620.h"
-
-/* derived names: the class whose vtable is at 0x16d1520
- * (config/vtables.derived.base.txt, stored by FUN_00c5fb80 FUN_013a9670 FUN_013a9790), derived from
- * Object01343880 (tlg_game_object01343880.h: slots 5 to 8 are that class's).
- * Its own fields are traced only where its destructor FUN_013a9670 tears them
- * down (the counted reference at +0x48, the record at +0x50); the rest are not traced. */
-class Object016d1520 : public Object01343880 /* derived name */
-{
-  public:
-    virtual ~Object016d1520();
-
-  private:
-    u8 unknown34[0x14];
-    /* +0x48: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held48;
-    /* +0x50: torn down by the destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
-    Object0134f620 record50;
-};
+#include "tlg_game_object016d1520.h"
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's
  * destructor is inlined (its vptr store, then the two names). FUN_013a9790, slot 1, is

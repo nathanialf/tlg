@@ -45,7 +45,10 @@ class Object00774560 : public Object016b9108 /* derived name */
 
   protected:
     u8 unknown24[0x58];
-    int unknown7c; /* +0x7c: zero from this constructor, and again in the body of FUN_00763020's (`mov dword [r15+0x7c], 0` last); not traced */
+    /* +0x7c: zero from this constructor, and again in the body of FUN_00763020's
+     * (`mov dword [r15+0x7c], 0` last); 0.2 in FUN_00794290's (`mov dword
+     * [rbx+0x7c], 0x3e4ccccd`): a float; not traced */
+    float unknown7c;
 
   private:
     u8 unknown80[0x60];

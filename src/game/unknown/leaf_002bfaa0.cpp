@@ -1,19 +1,39 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
+#include "tlg_game_object016a8030.h"
 
-/* derived names: the class whose vtable is at 0x16a8030
- * (config/vtables.derived.base.txt, stored by FUN_002bf920 FUN_002bfaa0 FUN_002bfb60), derived from
- * Object016b9108: its slots 2 to 4 are the base's. Its own fields
- * from +0x24 are traced only where its destructor FUN_002bfaa0 tears them down
- * (the Name at +0x24); the rest are not traced. */
-class Object016a8030 : public Object016b9108 /* derived name */
+/* derived name: the constructor (tlg_game_object016a8030.h): its base
+ * Object016b9108 is built from the name passed on, the Name at +0x24 starts
+ * empty; then the body: the Name set to "default" (`mov edx, 7`), the
+ * fields from +0x28 in order. */
+Object016a8030::Object016a8030(const Name &name) : Object016b9108(name)
 {
-  public:
-    virtual ~Object016a8030();
-
-  private:
-    Name name24; /* +0x24: released by the destructor (`mov eax, [rbx+0x24]; shl 5`) */
-};
+    name24 = Name("default");
+    unknown28 = 10;
+    unknown2c = 2.6f;
+    unknown30 = 2.4f;
+    unknown34 = 0.0f;
+    unknown38 = 0.0f;
+    unknown3c = 0.0f;
+    unknown40 = 0.0f;
+    unknown44 = 3.8f;
+    unknown48 = 2.0f;
+    unknown70 = Float4A(0.3f, 0.4f, 0.3f, 1.0f);
+    unknown4c = 0;
+    unknown50 = 0;
+    unknown54 = 1;
+    unknown58 = 1.5f;
+    unknown5c = 1.25f;
+    unknown60 = 6;
+    unknown64 = -1;
+    unknown68 = 1;
+    unknown90 = 0;
+    unknown80 = 0.65f;
+    unknown84 = 0.125f;
+    unknown88 = 0;
+    unknown8c = 60.0f;
+    unknown94 = 3.0f;
+    unknown98 = 3.0f;
+}
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
  * is inlined (its vptr store, then the two names). FUN_002bfb60, slot 1, is

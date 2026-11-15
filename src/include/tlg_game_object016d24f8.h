@@ -25,6 +25,7 @@ class Object016d24f8 : public Object00c55550 /* derived name */
     Name name238; /* +0x238: empty from the constructor */
     u8 unknown23c[0x4];
     AtomicRef0045c470<Node00503fb0> held240; /* +0x240 */
+    u8 unknown248[0x8]; /* the rest of the 0x250 bytes the creator allocates; not traced */
 };
 
 /* derived name: the complete destructor FUN_013ba440: the body is empty; the
