@@ -44,8 +44,8 @@ class Object016c2ef8 : public Object00c1b7f0 /* derived name */
  * vtable. */
 // NONMATCHING: the complete destructor: greedy's register assignment: 7 instructions of the element array's destructor loop, rcx and
 // rdx exchanged (base `lea rdx, [rcx+rcx*4]; shl rdx, 5; mov ecx, [r13+rdx]`, build `lea rcx; shl rcx; mov edx,
-// [r13+rcx]`), same size; the deleting destructor is equal and waits for it (the layout places its call's
-// target from this one's row)
+// [r13+rcx]`), same size; the deleting destructor is equal and claimed (its call is checked against the
+// vtable's slot 0, this one's address)
 Object016c2ef8::~Object016c2ef8()
 {
     if (registry)

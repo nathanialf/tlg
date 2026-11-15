@@ -306,12 +306,20 @@ class BaseElf:
         """A destructor symbol no row names, resolved by its class's vtable
         (D15): the linker folded the identical destructor bodies of
         different classes into one function, which carries one name, and
-        every other class's vtable still points at that body. Slot 0 of the
-        class's primary vtable is its complete destructor (D1, and D2 with
-        it), slot 1 its deleting destructor (D0). The vtable is one the
-        executable names or a ruled derived row, and the body it points at
-        must already carry a class's name (a FUN_ row is unresolved, so the
-        body gets its name when it is claimed, never through a fold)."""
+        every other class's vtable still points at that body; or the
+        destructor is not claimed yet and its row is still FUN_<addr>.
+        Slot 0 of the class's primary vtable is its complete destructor
+        (D1, and D2 with it), slot 1 its deleting destructor (D0). The
+        vtable is one the executable names or a ruled derived row, and the
+        slot must hold the first address of a row of the function table,
+        whatever the row's name: the callee of a claimed function need not
+        be claimed for the call to be proven, as a call to FUN_<addr> is
+        proven by FUN_<addr>'s row alone. The address is what the class's
+        vtable says, read from the base every run; every reference is then
+        checked against the base's own field like any other (a deleting
+        destructor's call of its complete destructor must be, in the base,
+        a call of its vtable's slot 0), and the row gets the destructor's
+        name when the destructor itself is claimed (D15), not here."""
         import re
         m = re.fullmatch(r"_ZN(.+)D([012])Ev", sym)
         if not m:
@@ -332,8 +340,7 @@ class BaseElf:
                 return None
             if self._fold_starts is None:
                 self._fold_starts = {a: n for n, (a, _s) in self.func_by_name.items()}
-            owner = self._fold_starts.get(target)
-            if owner is not None and not owner.startswith("FUN_"):
+            if target in self._fold_starts:
                 return target
         return None
 
