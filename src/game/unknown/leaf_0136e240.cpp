@@ -12,7 +12,6 @@ class Object016cbb50 : public Object016cbae0 /* derived name */
     virtual ~Object016cbb50();
 
   private:
-    u8 unknown98[0x4];
     Name name9c; /* +0x9c: released by the destructor (`mov eax, [rbx+0x9c]; shl 5`) */
 };
 

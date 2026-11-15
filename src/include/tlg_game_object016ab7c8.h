@@ -7,9 +7,6 @@
 #include "tlg_game_pair0057e850.h"
 #include "tlg_game_object016b9108.h"
 
-/* derived name: two floats assigned as one value (0x57e96b: `movabs rdx,
- * 0xbf800000bf800000` stored at +0x3c, the float store at +0x38 before it
- * left alone: three float members would give the first two as the pair) */
 /* derived names: the class whose vtable is at 0x16ab7c8
  * (config/vtables.derived.base.txt, stored by FUN_0057e850 FUN_0057e9d0
  * FUN_0057eaf0), derived from Object016b9108: slots 5 and 6 are its own

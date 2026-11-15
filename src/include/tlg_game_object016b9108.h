@@ -44,9 +44,14 @@ class Object016b9108 /* derived name */
     Name name0c;   /* +0xc: assigned from the constructor's argument */
     Name name10;   /* +0x10: zero in the constructor */
     u16 unknown14; /* +0x14: zero in the constructor */
+
+  protected:
     /* +0x16: the constructor keeps bit 6 (`and 0x40`), the release clears
-     * bit 1 (`and -3`) */
+     * bit 1 (`and -3`), a derived constructor sets bit 0 (`or byte
+     * [r15+0x16], 1` at 0x8c22a4) */
     u8 flags16;
+
+  private:
     /* +0x18: the record whose function at +0x10 frees this object
      * (FUN_00cb66f0: `mov rax, [rbx+0x18]; mov rdi, rbx; jmp [rax+0x10]`) */
     void *allocator18;

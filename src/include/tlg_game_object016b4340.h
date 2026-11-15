@@ -4,7 +4,7 @@
 #define TLG_GAME_OBJECT016B4340_H
 
 #include "tlg_game_array01343a80.h"
-#include "tlg_game_base016b4560.h"
+#include "tlg_game_base016b4340.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 

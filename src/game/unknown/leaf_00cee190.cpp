@@ -1,7 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object016b9108.h"
-
-class Object016b9720;
+#include "tlg_game_object016b9720.h"
 
 /* derived names: the object the holder's pointer at +0x38 names; its
  * pointer at +0x18 names the holder back. Only that field is traced
@@ -12,23 +10,6 @@ struct Peer016b9720 /* derived name */
 
     u8 unknown0[0x18];
     Object016b9720 *holder18; /* +0x18 */
-};
-
-/* derived names: the class whose vtable is at 0x16b9720
- * (config/vtables.derived.base.txt, stored by FUN_00ced790 FUN_00cee190 FUN_00cee240),
- * derived from Object016b9108: its slots 2 to 4 are the base's. Its
- * own fields from +0x24 are traced only where its destructor FUN_00cee190
- * reads them (the linked object at +0x38); the rest are not traced. */
-class Object016b9720 : public Object016b9108 /* derived name */
-{
-  public:
-    virtual ~Object016b9720();
-
-  private:
-    friend struct Peer016b9720;
-
-    u8 unknown24[0x14];
-    Peer016b9720 *peer38; /* +0x38: detached by the destructor */
 };
 
 /* derived name: cuts the link from both ends where a holder is attached
