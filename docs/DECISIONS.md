@@ -1411,3 +1411,86 @@ equal); or 0xdacb80 equal but for that block.
 The option is on both game prefixes (src/game/ and src/game/sndx/): Sony's sound runtime was
 built by the same SDK-era compiler, which predates the 3.9 behaviour; its 26 rows are equal
 with and without it.
+
+## D81. The game region is built with LLVM 3.7.1 and ten patches; the 4.0.0 line and its 36 patches are retired (2026-11-15)
+
+**Question.** The game line (src/game/, src/game/sndx/) was upstream 4.0.0 with 36 patches and four -mllvm options, most of
+them reversals of 3.8, 3.9 and 4.0 changes (D45 to D80). Is the developers' compiler an earlier release with a few later
+changes, and which release holds the rows with the fewest items?
+
+**Evidence (by round; scratch under .claude/handoff/scratch-archive/).**
+- 268B (b268/): the game module under the prebuilt 3.7.1: 5,342 to 5,378 rows of the game rows without any patch (built
+  without -ffast-math: optimistic, 271A).
+- 270B (b270/): 3.7.1 built from source (tools/build_llvm.sh 3.7.1; equal to the prebuilt function for function, 6,641
+  functions) with four PS4 items (sspnop, tlsprot, structor, trap) and one flag (no vzeroupper): the gate under the switched
+  line holds 8,173 of 8,372 rows; the 199 lost fall into named causes.
+- 274D (d274/): the same module under the prebuilt 3.8.1 with the same PS4 items: 4,893 of 5,497 game rows against 5,302
+  for 3.7.1; a 3.8.1 line would need about 20 items (12 reversals) where 3.7.1 needs about 11, for the same ceiling; eleven
+  drafts are equal under 3.7.1 only, none under 3.8.1 only.
+- 275C (c275/): the base's 1,386 deleting destructors read against 3.7.1's own inline costs: the stock thresholds with each
+  cost 30 lower, which is r286814's one statement.
+- 273B (b273/): four forward ports, each built alone and swept alone, none losing a row: inlinecall (+93), initattrs (+68),
+  selsink (+7), fpstore (+3): the gate holds 8,344 of 8,372.
+- 276B (b276/): on main's 5a9527f6 the switched gate loses 24 rows. Three by source forms equal under both compilers
+  (0x8f08d0, 0xcb3ce0, 0x1393600). lcssa (+15: 0xcb57e0 and the fourteen of the 0xf1a950 family; 40 functions change; 0
+  lost). fieldalign (+6; 7 functions change; 0 lost). Installed together (b270/build37.sh): gate: OK, 8,373 of 8,373 rows,
+  the text segment identical to the base (b276/gate_step5.log).
+
+**Decision.** config/flags.base.txt: both game prefixes take `cxx=3.7.1-src` and the one option
+`-mllvm -x86-use-vzeroupper=false`. The four options of the 4.0.0 line go with it: each switched off something 3.7.1 does
+not have (D55 the 64-bit call-frame pushes: X86CallFrameOptimization.cpp:128 in 3.7.1 returns for a 64-bit target; D61
+r283934, 4.0; D80 r265397, 3.9; D72 the jump-table density: SelectionDAGBuilder.h:304 in 3.7.1 is 40).
+The ten patches (tools/patches/llvm-3.7.1-*.patch; a host patch besides), each with its evidence and its sweep in its header:
+  PS4 items, no upstream state or a PS4 commit:
+   1. sspnop-01      one nop after the stack check's failure call (D26; no upstream state)
+   2. tlsprot-01     a local thread-local stays general-dynamic (D75; no upstream state)
+   3. structor-01    a weak-linkage structor is its own function (D45; clang 3.3's rule)
+   4. trap-01        ud2 after a noreturn call: r264224 (f81836bd18be, 3.9.0)
+  forward ports of upstream changes the base shows:
+   5. inlinecall-01  r286814 (6df8f27c95a5, 4.0.0), its one statement
+   6. initattrs-01   r249722 (200500d6d3bf), r249735 (aec6b2c20e48), r251734 (7791f1a4a952), 3.8.0
+   7. selsink-01     r248439 (13e8bbc23735), r250743 (69a50a1e17c9), r255660 (38a022623a6b), 3.8.0
+   8. fpstore-01     r248168 (a30ddb652419), r248169 (b77483442943), r248190 (8fb9b94f7f0d), 3.8.0
+   9. lcssa-01       r271602 (a485984c0c88, 3.9.0), whole: InstSimplify after the late LICM
+  10. fieldalign-01  one number of r246985 (7f416cc42638, 3.8.0): the alignment of a field access in a struct declared with
+                     an alignment; NOT the commit (the Address type, 110 files); a narrowing of this project
+Retired with the 4.0.0 line: its 36 patches (tools/patches/llvm-4.0.0-*.patch less the host patch): andncmp, antidepkeep,
+baapos, cgpload, cmp, condjumpdeps, dsebegin, fixupbw, gvnpre, i1load, lftrwidth, lsroffsets, mbpfwd, movddomain, msinksplit,
+msinksubreg, newalign, opnew, orlea, reassoc, scevaddflags, schedops, sdichain, setcc, sextadd, shrinkwrap, sinkcond, sspnop,
+structor, subscript, switchjt, switchunh, switchwidth, tlsprot-01, tlsprot-02, twoaddr; three of them live on as 3.7.1 forms
+(sspnop, structor, tlsprot-02). Their decisions (D45 to D80) stand as the record of what the base does NOT have from 3.8 on.
+
+**Forms excluded (source forms measured before a compiler change was taken; b276/q/).**
+- 0xcb57e0 (lcssa): the tree's form and six more (indexed, a reference to the entry, begin and end pointers, search then use,
+  locals, locals with a reference): none equal under 3.7.1 without the pass; five of them equal under 4.0.0.
+- the 0xf1a950 family (lcssa): round 271A's forms (the earlier removeAt, the size typed in the call).
+- F3 (fieldalign): the copy is Float4A's member-wise copy constructor; no source statement carries an alignment.
+- 0x8f08d0, 0xcb3ce0 took a source form, not a patch: the plain conditional, if-return, local-then-if and if-else-assign are
+  not equal under 3.7.1 (the last three under neither compiler); `*(c ? &a : &b)`, a pointer local and a const reference are
+  equal under both: the reference is the one a developer writes (a getter's result bound and returned).
+
+**What stands against.**
+- lcssa: the drafts 0x1af9d0 (equal without the pass: the base rebuilds the found entry from the index after the loop;
+  1 of 22 with it; five forms; the prebuilt 3.9.1 does not give it either) and 0x583bb0 (equal without, 30 of 45 with: its
+  4.0.0 state). 0xdacb80 moves 43 to 76 of 78 with it. The base's rule may be narrower than upstream's pass.
+- fieldalign has no upstream state: upstream's rule for every struct (the same statement without the attribute test) gains
+  the six rows and loses 132 to 3.7.1's GVN load widening. Upstream's rule together with 4.0.0's removal of the widening was
+  not measured.
+- inlinecall: Object016cba00's family at cost 395 and five D1s of 401 to 588 bytes are inlined by the base (275C).
+- tools/setup.sh builds 3.3 alone: a fresh checkout needs `tools/build_llvm.sh 3.7.1` (docs/BUILDING.md says so).
+
+**Trigger to revisit.** A row or draft whose base bytes need a loop-closed phi kept (0x1af9d0's shape) beside one that needs
+it gone, in one function; an int member load widened or not by its alignment in a struct with no alignment attribute; a
+single-block callee costing 368 to 382 in 3.7 units (inlinecall against the two thresholds).
+
+**Supervisor's rulings (the maintainer's yardstick, 2026-11-14: "make what the devs made";
+"are we minimizing patching as crutches").** The whole game module was measured under 3.7.1
+and 3.8.1 with the same PS4 items (rounds 268B, 270B, 274D): 3.7.1 is nearer by 5,302 rows to
+4,893 and needs half the items. Two of the ten patches are flagged as the weakest and carry
+their own triggers: `fieldalign-01` is a narrow rule that exists in no upstream state (the
+upstream rule for every struct loses 132 rows to 3.7.1's load widening), and `lcssa-01`
+(r271602, whole) has two drafts equal without it (0x1af9d0, 0x583bb0) against one far nearer
+with it (0xdacb80). The four reversals drafted for the 4.0.0 line on 2026-11-14 (round 265B)
+were never installed: 3.7.1 has those behaviours. D80's counter-witness 0x13e8670 and the
+counter-witness of the D66/D77 pair (0x82ee90, equal under 3.7.1) are to be re-read under this
+line. The 4.0.0 patch files stay in the tree until a separate commit retires them.
