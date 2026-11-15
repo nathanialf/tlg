@@ -6,9 +6,12 @@
 #
 #   1. Create a Python venv at .venv and install tools/requirements.txt.
 #   2. Fetch the pinned external tools into tools/ext/ and tools/ghidra/:
-#        LLVM 3.3, 4.0.0 the compilers (tools/fetch_llvm.sh; docs/TARGETS.md),
-#                       and LLVM 3.3 built from source for the library
-#                       prefix (tools/build_llvm.sh 3.3; docs/DECISIONS.md D20)
+#        LLVM 3.3, 3.7.1 the two compilers' releases, prebuilt
+#                       (tools/fetch_llvm.sh; docs/TARGETS.md), and each
+#                       built from source with its patches
+#                       (tools/build_llvm.sh): 3.3 for the library prefix
+#                       (docs/DECISIONS.md D20), 3.7.1 for the game prefix
+#                       (D81)
 #        .NET 8         runtime, user-local via dotnet-install.sh, to run:
 #        PkgTool.Core   LibOrbisPkg 0.2.231 (MIT): extracts the user's own
 #                       PKG (tools/extract_pkg.py)
@@ -119,19 +122,25 @@ else
     fi
 fi
 
-# --- 2a. The compilers: upstream LLVM 3.3 (library region) and 4.0.0 (game) ---
-# The compiler that reproduces the most of the executable's functions in the
-# probe (tools/compiler_probe.sh; docs/TARGETS.md). tools/fetch_llvm.sh pins
-# the tarball and the libtinfo.so.5 it links against.
+# --- 2a. The compilers: upstream LLVM 3.3 (library region) and 3.7.1 (game) ---
+# The two lines of config/flags.<slug>.txt (docs/TARGETS.md). tools/fetch_llvm.sh
+# pins each release's tarball and the libtinfo.so.5 its binaries link against;
+# the game module also runs the prebuilt 3.7.1's opt and llvm-nm
+# (tools/game_module.py).
 if [[ "${SKIP_TOOLCHAIN:-0}" == "1" ]]; then
     echo "==> SKIP_TOOLCHAIN=1; not fetching the project compiler"
 else
-    bash tools/fetch_llvm.sh 3.3 4.0.0
+    bash tools/fetch_llvm.sh 3.3 3.7.1
     # The library prefix compiles with LLVM 3.3 built from source (cxx=3.3-src,
-    # docs/DECISIONS.md D20): the release plus the one backport the prefix's
-    # flags need, verified against the prebuilt it was just fetched next to.
-    # About 15 minutes on 3 cores; skipped when the install is current.
+    # docs/DECISIONS.md D20): the release plus the patches under
+    # tools/patches/llvm-3.3-*.patch. About 15 minutes on 3 cores; skipped
+    # when the install is current.
     bash tools/build_llvm.sh 3.3
+    # The game prefix compiles with LLVM 3.7.1 built from source
+    # (cxx=3.7.1-src, D81): the release plus tools/patches/llvm-3.7.1-*.patch,
+    # and llvm-link from the same tree for the game module
+    # (tools/cc/llvm-3.7.1-src-tools/bin). Skipped when the install is current.
+    bash tools/build_llvm.sh 3.7.1
 fi
 
 # --- 2b. Host packages: LLVM 19 (disassembly, the tooling clang) and JDK 25 ---

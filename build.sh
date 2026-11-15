@@ -4,16 +4,18 @@
 # The target is the one tools/tlg_version.sh detects: VERSION=<slug>, or the
 # first configured one (a config/sha256sums.<slug>.txt exists; base on main).
 #
-#   1. tools/setup.sh, when the venv or the tools under tools/ext/ are missing.
+#   1. tools/setup.sh, when the venv, the tools under tools/ext/ or a
+#      compiler under tools/cc/ (LLVM 3.3 and 3.7.1, prebuilt and built from
+#      source) are missing.
 #   2. tools/extract_pkg.sh, when baserom/<slug>/eboot.elf or the recorded
 #      hashes (config/sha256sums.<slug>.txt) are missing. It
 #      reads the user's own package, baserom/TLG_BASE.pkg (a symlink is fine),
 #      extracts it, converts the executable to a plain ELF and records (or
 #      verifies) the SHA-256s.
 #   3. tools/build.sh verify: the recorded SHA-256s of the base files.
-#   4. tools/build.sh setup + ninja, once tools/gen_ninja.py exists (the
-#      compile and match stage; not yet, during the survey stage).
-#   5. tools/check_elf.py --gate, when it exists.
+#   4. tools/build.sh setup when there is no build.ninja, then ninja, whose
+#      default target compiles every source and ends with the gate.
+#   5. tools/check_elf.py --gate.
 #
 # Exits non-zero when any step fails.
 set -euo pipefail
@@ -29,8 +31,9 @@ toolchain_ok() {
     [[ -x .venv/bin/python && -x .venv/bin/ninja ]] &&
     [[ -f tools/ext/pkgtool/PkgTool.Core.dll && -x tools/ext/dotnet/dotnet ]] &&
     [[ -x tools/ext/objdiff/objdiff-cli ]] &&
-    [[ -x tools/cc/llvm-3.3/bin/clang && -x tools/cc/llvm-4.0.0/bin/clang ]] &&
-    [[ -x tools/cc/llvm-3.3-src/bin/clang ]]
+    [[ -x tools/cc/llvm-3.3/bin/clang && -x tools/cc/llvm-3.3-src/bin/clang ]] &&
+    [[ -x tools/cc/llvm-3.7.1-src/bin/clang && -x tools/cc/llvm-3.7.1-src-tools/bin/llvm-link ]] &&
+    [[ -x tools/cc/llvm-3.7.1/bin/opt && -x tools/cc/llvm-3.7.1/bin/llvm-nm ]]
 }
 
 if ! toolchain_ok; then
