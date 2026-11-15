@@ -26,6 +26,11 @@ R_X86_64_TLSGD, R_X86_64_GOTTPOFF = 19, 22
 PT_TLS = 7
 
 
+# {(base file, function address): the vtable address points the function
+# stores (tools/vtable_names.py Walker.vptr_stores)}, for _verify_derived
+_VPTR_STORES: dict[tuple[str, int], frozenset[int]] = {}
+
+
 class BaseElf:
     def __init__(self, repo_root: Path, version: str | None = None):
         self.root = repo_root
@@ -422,8 +427,13 @@ class BaseElf:
                 fn = None
             if fn is None or fn not in {a for a, _s in self.func_by_name.values()}:
                 raise ValueError(f"vtables.derived: {sym}: {ctor} is not a function of the table")
-        w = Walker(self)
-        stored = w.vptr_stores(fn)
+        # the walk is a function of the base's bytes and the function alone,
+        # and the gate asks it of two BaseElf objects (check_elf.check_all's
+        # and layout_link.build_image's): answered once per process
+        key = (str(self.path), fn)
+        stored = _VPTR_STORES.get(key)
+        if stored is None:
+            stored = _VPTR_STORES[key] = frozenset(Walker(self).vptr_stores(fn))
         if addr + 0x10 not in stored:
             raise ValueError(f"vtables.derived: {sym}: {ctor} stores "
                              f"{', '.join(hex(v) for v in sorted(stored)) or 'no vtable'}, not 0x{addr + 0x10:x}")

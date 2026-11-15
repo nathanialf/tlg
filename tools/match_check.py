@@ -449,6 +449,13 @@ def header_static_names(ver: str, obj: Path | None = None) -> set[str]:
     define under one name (the link renamed all but one: a header static
     whether or not a row names it yet; a name of the D_<hex> or FUN_<hex> form
     is a file's own and is left out)."""
+    # asked once per unit of the module with the same object: kept per object
+    # state (the rows and build/<slug>/game/symbols.txt are the object's own
+    # inputs); callers read the set and never change it
+    st = obj.stat() if obj is not None else None
+    key = (ver, str(obj), st.st_mtime_ns if st else None, st.st_size if st else None)
+    if key in _HEADER_NAMES:
+        return _HEADER_NAMES[key]
     names = {s for rows in load_header_statics(ver).values() for s in rows}
     if obj is not None:
         import game_module as gm
@@ -456,7 +463,11 @@ def header_static_names(ver: str, obj: Path | None = None) -> set[str]:
         objs = {HEADER_STATIC_SUFFIX.sub("", c) for c in local_objects(obj)}
         names |= {n for n in renamed if n in objs and not gm.compiler_local(n)
                   and not BaseElf.base_identifier(n).startswith(("D_", "FUN_"))}
+    _HEADER_NAMES[key] = names
     return names
+
+
+_HEADER_NAMES: dict[tuple, set[str]] = {}
 
 
 def local_objects(obj: Path) -> set[str]:
@@ -581,24 +592,63 @@ def with_header_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
     if not names:
         return funcs
     rows = load_header_statics(ver)
-    # every unit's proven copies in this object (a function may reach another
-    # unit's copy through a body the module shares), then this unit's
-    resolved: dict[str, int | str] = {}
-    module = obj == object_path(tu, ver)
-    units = sorted(set(rows) | {tu}) if module else [tu]
-    for u in units:
-        if not (REPO_ROOT / u).exists():
-            continue
+    st = obj.stat()
+    okey = (str(obj), st.st_mtime_ns, st.st_size, ver)
+
+    def copies(u: str) -> tuple[dict[str, int | str], dict[str, str]]:
+        """What the unit's proof places: {candidate: its row's address, or the
+        refusal naming the row it needs}, and {unit symbol: why not proven}."""
+        placed: dict[str, int | str] = {}
         al, why = header_static_aliases(u, obj, ver)
         for c, n in al.items():
             if n in rows.get(u, {}):
-                resolved[c] = rows[u][n]
+                placed[c] = rows[u][n]
             else:
-                resolved[c] = (f"!{n}: a header static of {u} with no row: add `{u} {n} 0x<addr>` to "
-                               f"config/header_statics.{ver}.txt, the address of the unit's copy")
-        if u == tu:
-            for n, w in why.items():
-                resolved.setdefault(n, f"!{n}: a header static of {u} whose copy is not proven: {w}")
+                placed[c] = (f"!{n}: a header static of {u} with no row: add `{u} {n} 0x<addr>` to "
+                             f"config/header_statics.{ver}.txt, the address of the unit's copy")
+        return placed, why
+
+    # every unit's proven copies in this object (a function may reach another
+    # unit's copy through a body the module shares), then this unit's: the
+    # units are taken in sorted order, a later one's copy replacing an
+    # earlier one's, and this unit's unproven names fill in where no unit
+    # before it placed one. In the whole module the units with rows are the
+    # same for every unit asking, so their part is built once per object
+    # state (`every`, with the unit that placed each candidate last), and the
+    # asking unit adds what differs (`own`): its copies when it has no row
+    # (they replace an earlier unit's, a later unit's replaces them) and its
+    # unproven names no unit places.
+    module = obj == object_path(tu, ver)
+    own: dict[str, int | str] = {}
+    if module:
+        if okey not in _HEADER_UNITS:
+            every: dict[str, int | str] = {}
+            placer: dict[str, str] = {}
+            for u in sorted(rows):
+                if not (REPO_ROOT / u).exists():
+                    continue
+                for c, t in copies(u)[0].items():
+                    every[c] = t
+                    placer[c] = u
+            _HEADER_UNITS[okey] = (every, placer)
+        every, placer = _HEADER_UNITS[okey]
+        placed, why = copies(tu)
+        if tu not in rows:
+            own = {c: t for c, t in placed.items() if c not in every or placer[c] < tu}
+    else:
+        every = {}
+        placed, why = copies(tu)
+        own = dict(placed)
+    for n, w in why.items():
+        if n not in every and n not in placed:
+            own[n] = f"!{n}: a header static of {tu} whose copy is not proven: {w}"
+    # the answer is a function of the object, its functions and what this
+    # unit adds: one answer serves every unit that adds the same (nothing,
+    # for a unit whose copies are proven and have rows)
+    rkey = (okey, id(funcs), frozenset(own.items()))
+    if rkey in _HEADER_RESULT:
+        return _HEADER_RESULT[rkey][1]
+    resolved = {**every, **own} if own else every
     # whether a symbol names a header static: asked for every relocation of
     # every function of the object once per unit, so answered once per symbol
     nkey = frozenset(names)
@@ -628,7 +678,13 @@ def with_header_statics(tu: str, obj: Path, ver: str, funcs: dict) -> dict:
                 r = Reloc(r.offset, r.width, r.type, sym, r.addend, r.sym_section, r.sym_value, r.sym_size)
             new.append(r)
         out[k] = (code, new)
-    return out if hit else funcs
+    # `funcs` is kept with the answer, so its id names it while the key lives
+    _HEADER_RESULT[rkey] = (funcs, out if hit else funcs)
+    return _HEADER_RESULT[rkey][1]
+
+
+_HEADER_UNITS: dict[tuple, tuple[dict, dict]] = {}
+_HEADER_RESULT: dict[tuple, tuple[dict, dict]] = {}
 
 
 def init_array_targets(obj: Path) -> set[str]:
