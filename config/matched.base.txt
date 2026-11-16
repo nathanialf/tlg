@@ -8902,3 +8902,4 @@ _ZN14Object016c3300C1ERK4Name src/game/unknown/func_012b3e30.cpp
 _ZN14Object016c3380C1ERK4Name src/game/unknown/func_012b95f0.cpp
 _ZN14Object016bedd8C1ERK4Name src/game/unknown/func_00f2b350.cpp
 _ZN14Object016c1bf8C1ERK4Name src/game/unknown/func_011f70a0.cpp
+FUN_011e5830 src/game/unknown/leaf_011e5830.cpp _ZN14Object016c1b78D1Ev

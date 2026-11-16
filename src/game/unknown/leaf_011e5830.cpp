@@ -77,19 +77,19 @@ class Object016c1b78 : public Object00c1b7f0, public Object013cd320 /* derived n
  * FUN_00c1b7f0 runs as a tail call. FUN_011e5e30, slot 1, is the deleting one.
  * The destructor is the class's key function, so this file emits the
  * vtable. */
-// NONMATCHING: the complete destructor: 1527 bytes in the base, 1559 here; the first difference is the extent of the
-// active branch (the register assignment around the five references' loop: the base keeps `this` in rdi and on the
-// stack)
 Object016c1b78::~Object016c1b78()
 {
     if (registry)
         registry->remove(this);
     if (active1e8 != 0) {
         ref290.clear();
-        delete world220->flagaf30;
-        world220->flagaf30 = 0;
-        delete world220->ownedaf20;
-        world220->ownedaf20 = 0;
+        /* the pointer read once: the base keeps it in r15 across both
+         * deletes (0x11e5997 to 0x11e5a31) */
+        World011e5830 *world = world220;
+        delete world->flagaf30;
+        world->flagaf30 = 0;
+        delete world->ownedaf20;
+        world->ownedaf20 = 0;
         for (int i = 0; i < 5; ++i)
             owner218->refs270[i].clear();
         active1e8 = 0;

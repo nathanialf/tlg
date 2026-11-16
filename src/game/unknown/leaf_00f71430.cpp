@@ -60,10 +60,11 @@ class Object016bfba8 : public Object00c1b7f0, public Object013cd320 /* derived n
     u8 unknown35c[0x104];
     Object013da160 part460; /* +0x460: a member whose destructor is inlined (FUN_013da160) */
     u8 unknown480[0x30];
-    Object013d6ba0
-        part4b0; /* +0x4b0: a member destroyed by FUN_013d6ba0; FUN_013d6920 is called on it while the object is active */
-    Object013d6ba0
-        part590; /* +0x590: a member destroyed by FUN_013d6ba0; FUN_013d6920 is called on it while the object is active */
+    /* +0x4b0: two members destroyed by FUN_013d6ba0, an array: destroyed last
+     * first with the array's start formed before the first destructor (`lea
+     * rdi, [r14+0x590]; lea rbx, [r14+0x4b0]; call 0x13d6ba0` at 0xf71817);
+     * FUN_013d6920 is called on each while the object is active */
+    Object013d6ba0 parts4b0[2];
     u8 unknown670[0x10];
     Owned00f71430 *object680; /* +0x680: deleted while the object is active */
     u8 unknown688[0x8];
@@ -78,9 +79,10 @@ class Object016bfba8 : public Object00c1b7f0, public Object013cd320 /* derived n
  * The destructor is the class's key function, so this file emits the
  * vtable. */
 // NONMATCHING: the complete destructor (1889 bytes, as the base): the array's emptying in the loop reallocates
-// through an owner looked up from the block's tag (`mov edi, 0; cmp eax, 0xa; jne`, 39 such sites in the base,
-// none claimed), where Array05943280::clear() indexes the table directly; and the base forms the address of the
-// part at +0x4b0 in rbx before the destructor of the one at +0x590. The deleting destructor is equal and claimed
+// through an owner looked up from the block's tag with a null default (`mov edi, 0; cmp eax, 0xa; jne`), where
+// reallocateBlock() indexes the table directly. With the lookup written in reallocateBlock() the function is equal
+// (464 instructions), but 143 claimed rows (the appends, clear() and constructors over counted references) lose the
+// direct form. The deleting destructor is equal and claimed
 Object016bfba8::~Object016bfba8()
 {
     if (registry)
@@ -92,8 +94,8 @@ Object016bfba8::~Object016bfba8()
         if (object2c0)
             object2c0->release();
         object2c0 = 0;
-        part4b0.FUN_013d6920();
-        part590.FUN_013d6920();
+        parts4b0[0].FUN_013d6920();
+        parts4b0[1].FUN_013d6920();
         if (object680) {
             delete object680;
             object680 = 0;
