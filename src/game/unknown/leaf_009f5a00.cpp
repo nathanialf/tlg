@@ -21,9 +21,10 @@ struct Object009f5a00 { /* derived name */
  * under the array's lock: the lock taken (`xor eax, eax; lock cmpxchg
  * [r15+0x3c], r14d` at 0x9f5a31, the creation lock's wait), the reference, held
  * for the call, appended by FUN_009f5bc0, the lock given back. */
-// NONMATCHING: an inline-cost margin: the base calls FUN_009f5bc0 (192 bytes), the whole module inlines
-// it (564 bytes against 434). Built alone the function is the base's through the lock's loop (the
-// first 57 instructions, both `pushfq; pop rax; push rax; popfq` pairs among them).
+// NONMATCHING: an inline-cost margin at the link stage: the base calls FUN_009f5bc0 (192 bytes), the
+// link's inliner takes it: the call costs 210 to 214 against the threshold 225 (opt -std-link-opts
+// -inline-threshold over this unit and the append's linked). Built alone the function is the base's
+// through the lock's loop (both `pushfq; pop rax; push rax; popfq` pairs among them).
 void FUN_009f5a00(Object009f5a00 *holder, Counted009f5bc0 *object)
 {
     holder->array28.lock.lock();
