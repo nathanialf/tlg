@@ -7,6 +7,8 @@
 
 #include "tlg_types.h"
 #include "tlg_game_array.h"
+#include "tlg_game_name.h"
+#include "tlg_math.h"
 
 struct Device583950Vtable {
     void *(*method0)(void *self, void *arg, int mode);
@@ -324,7 +326,23 @@ struct ParentNode583950Kind31 {
 /* A node of kind 32 with a list of children at +0x80 (FUN_0058fa80).
  * derived name */
 struct ParentNode583950Kind32 {
-    u8 unknown0[0x80];
+    u8 unknown0[0xc];
+    Name name; /* +0xc */
+    u8 unknown10[0x18];
+    unsigned debugFlags; /* +0x28: bit 0 writes a message (FUN_0058fc10) */
+    /* +0x2c: bit 0 the record takes the default first, bit 1 it is kept
+     * at the minimum or above, bit 2 at the maximum or below */
+    unsigned flags;
+    int kind;              /* +0x30: 0 a float, 1 an int, 2 a vector */
+    float floatDefault;    /* +0x34 */
+    float floatMinimum;    /* +0x38 */
+    float floatMaximum;    /* +0x3c */
+    int intDefault;        /* +0x40 */
+    int intMinimum;        /* +0x44 */
+    int intMaximum;        /* +0x48 */
+    Float4A vectorDefault; /* +0x50 */
+    Float4A vectorMinimum; /* +0x60 */
+    Float4A vectorMaximum; /* +0x70 */
     Node583950 **children; /* +0x80 */
     unsigned count;        /* +0x88 */
 };
@@ -372,7 +390,12 @@ struct ParentNode583950Kind37 {
 /* A node of kind 38 with a list of children at +0x68 (FUN_00592f10).
  * derived name */
 struct ParentNode583950Kind38 {
-    u8 unknown0[0x68];
+    u8 unknown0[0x30];
+    int unknown30; /* +0x30: copied to its record (FUN_00592d90) */
+    int unknown34; /* +0x34 */
+    u8 unknown38[8];
+    int unknown40[4]; /* +0x40: copied to its record */
+    u8 unknown50[0x18];
     Node583950 **children; /* +0x68 */
     unsigned count;        /* +0x70 */
 };
@@ -425,6 +448,35 @@ struct ParentNode583950Kind44 {
     unsigned count;        /* +0x40 */
 };
 
+/* The records the device returns for a node of kinds 32, 38, 40 and 44 (the
+ * handlers of the table at +0x17a0, FUN_0058f910, FUN_00592d90,
+ * FUN_00593b30 and FUN_00590130: each asks the device for its record's size
+ * and fills what it returns). derived names */
+struct Record583950Kind32 {
+    int unknown0;
+    float floatValue; /* +0x4 */
+    int unknown8;
+    int intValue; /* +0xc */
+    u8 unknown10[0x10];
+    Float4A vector; /* +0x20: (0, 0, 0, 1) when made */
+};
+
+struct Record583950Kind38 {
+    int unknown0;
+    int unknown4; /* +0x4 */
+    int unknown8; /* +0x8 */
+    int unknownc;
+    int unknown10[4]; /* +0x10 */
+};
+
+struct Record583950Kind40 {
+    Float4 unknown0;  /* +0x0 */
+    Float4 unknown10; /* +0x10 */
+    int unknown20;    /* +0x20 */
+    u8 unknown24[0xc];
+    Float4 unknown30; /* +0x30 */
+};
+
 /* An owner with a current value ('XFIT', built by FUN_00588200 from an
  * 'XAIT' owner's +0x158): the handlers of the tables at +0x42a0 and +0x44a0
  * of FUN_00525530's object (the value at +0xf0 read by its type at +0x100:
@@ -433,10 +485,9 @@ struct ValueOwner583950 : Owner583950 {
     union {
         int intValue;
         float floatValue;
-        float vector[3];
+        Float4A vector; /* a copy of it is one aligned 16-byte move (FUN_0058fc10) */
     }; /* +0xf0 */
 
-    u8 unknownfc[4];
     int valueType; /* +0x100 */
 };
 
