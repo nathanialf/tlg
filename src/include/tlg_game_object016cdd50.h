@@ -26,10 +26,10 @@ class Object016cdd50 : public Object016b9108 /* derived name */
     virtual ~Object016cdd50();
 
   private:
-    Array01343a80<Ref00503fb0<Node00503fb0>> record28; /* +0x28: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record28; /* +0x28: an array of counted references */
     /* +0x40: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held40;
+    Ref00503fb0<Object016b9108> held40;
 };
 
 #endif

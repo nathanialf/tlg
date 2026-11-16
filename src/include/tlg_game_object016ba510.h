@@ -15,7 +15,7 @@ extern Type00503fb0 *D_5948890;
  * making as its own inline function: the name's temporary ends inside it,
  * so its release is gone once the call is known not to change it (the base
  * has none after the call at 0xd487db) */
-struct Value00d48670 : Node00503fb0 {
+struct Value00d48670 : Object016b9108 {
     static Value00d48670 *make()
     {
         return static_cast<Value00d48670 *>(FUN_00cbc5a0(D_5945a38, D_5948890, Name(), 0));
@@ -55,19 +55,19 @@ class Object016ba510 : public Object00c55550 /* derived name */
     u8 unknown23c[0x4];
     /* +0x240: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held240;
+    Ref00503fb0<Object016b9108> held240;
     /* +0x248: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held248;
+    Ref00503fb0<Object016b9108> held248;
     /* +0x250: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held250;
+    Ref00503fb0<Object016b9108> held250;
     /* +0x258: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held258;
+    Ref00503fb0<Object016b9108> held258;
     /* +0x260: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held260;
+    Ref00503fb0<Object016b9108> held260;
     u8 unknown268[0x4];
     float unknown26c; /* +0x26c: zero from the constructor; not traced */
     float unknown270; /* +0x270: zero from the constructor; not traced */
@@ -76,7 +76,7 @@ class Object016ba510 : public Object00c55550 /* derived name */
     void *unknown280; /* +0x280: null from the constructor; not traced */
     /* +0x288: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held288;
+    Ref00503fb0<Object016b9108> held288;
 };
 
 #endif

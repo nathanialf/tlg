@@ -28,10 +28,10 @@ class Object016d06d0 : public Object016b9108 /* derived name */
     /* +0x38: an array of references with its lock (+0x4c), emptied by the
      * constructor with a capacity of 0, torn down by the destructor (`lea
      * rdi, [rbx+0x38]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> array38;
+    Array01343a80<Ref00503fb0<Object016b9108>> array38;
     /* +0x50: the same (its lock at +0x64), emptied after the first, torn
      * down by the destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> array50;
+    Array01343a80<Ref00503fb0<Object016b9108>> array50;
     int unknown68; /* +0x68: zero from the constructor's body, last; not traced */
     u8 unknown6c[0x4];
 };

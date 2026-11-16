@@ -31,8 +31,8 @@ class Object016ae740 : public Object01343880 /* derived name */
     Name name34;   /* +0x34: empty from the constructor, released by the destructor */
     int unknown38; /* +0x38: zero from the constructor; not traced */
     u8 unknown3c[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record40; /* +0x40: an array of counted references */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record58; /* +0x58: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record40; /* +0x40: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record58; /* +0x58: an array of counted references */
 };
 
 #endif

@@ -32,9 +32,9 @@ struct Member057c9390_38_900 { /* derived name */
 
 struct Member057c9390_38_8d8 { /* derived name */
     u8 unknown0[0x28];
-    Ref00503fb0<Node00503fb0> unknown28; /* +0x28 */
+    Ref00503fb0<Object016b9108> unknown28; /* +0x28 */
 
-    Ref00503fb0<Node00503fb0> node() const /* derived name */
+    Ref00503fb0<Object016b9108> node() const /* derived name */
     {
         return unknown28;
     }
@@ -73,7 +73,7 @@ bool FUN_00aba610(const Object00aba610 *self) /* derived name */
     if (member->unknown8d8) {
         Item00aba610 *item = self->unknown28;
         Owner00aba610 *owner = member->unknown900->unknown10;
-        Node00503fb0 *node = member->unknown8d8->node().get();
+        Object016b9108 *node = member->unknown8d8->node().get();
         if (owner && node &&
             FUN_002c2580(owner, reinterpret_cast<u8 *>(node) + 0x60,
                          reinterpret_cast<u8 *>(item) + 0xc)) {

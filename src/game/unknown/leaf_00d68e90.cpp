@@ -10,8 +10,8 @@ struct Object00d68e90 { /* derived name */
     u8 unknown0[0x20];
     u8 flags20; /* +0x20: bit 0 set when the arrays change */
     u8 unknown21[0x7];
-    Array01343a80<Ref00503fb0<Node00503fb0>> unknown28; /* +0x28 */
-    Array01343a80<Ref00503fb0<Node00503fb0>> unknown40; /* +0x40 */
+    Array01343a80<Ref00503fb0<Object016b9108>> unknown28; /* +0x28 */
+    Array01343a80<Ref00503fb0<Object016b9108>> unknown40; /* +0x40 */
 };
 
 void FUN_00d68e90(Object00d68e90 *self, int all) /* derived name */

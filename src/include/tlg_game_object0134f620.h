@@ -21,6 +21,6 @@
  * clear(unsigned) over it: the same releases, the count cleared, the block
  * reallocated to the argument's capacity through the owner at +0x10 (`mov
  * ecx, [r15+0x10]` ... `mov rdi, [rax+rcx*8]`). */
-typedef Array05943280<Ref00503fb0<Node00503fb0>> Object0134f620; /* derived name */
+typedef Array05943280<Ref00503fb0<Object016b9108>> Object0134f620; /* derived name */
 
 #endif

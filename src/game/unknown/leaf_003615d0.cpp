@@ -16,58 +16,58 @@ class Object016a8a90 : public Object016b9108 /* derived name */
     u8 unknown24[0x24];
     /* +0x48: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held48;
+    Ref00503fb0<Object016b9108> held48;
     /* +0x50: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held50;
+    Ref00503fb0<Object016b9108> held50;
     u8 unknown58[0x48];
     /* +0xa0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helda0;
+    Ref00503fb0<Object016b9108> helda0;
     /* +0xa8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helda8;
+    Ref00503fb0<Object016b9108> helda8;
     /* +0xb0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldb0;
+    Ref00503fb0<Object016b9108> heldb0;
     /* +0xb8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldb8;
+    Ref00503fb0<Object016b9108> heldb8;
     /* +0xc0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldc0;
+    Ref00503fb0<Object016b9108> heldc0;
     /* +0xc8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldc8;
+    Ref00503fb0<Object016b9108> heldc8;
     /* +0xd0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldd0;
+    Ref00503fb0<Object016b9108> heldd0;
     /* +0xd8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldd8;
+    Ref00503fb0<Object016b9108> heldd8;
     /* +0xe0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helde0;
+    Ref00503fb0<Object016b9108> helde0;
     u8 unknowne8[0x40];
     /* +0x128: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held128;
+    Ref00503fb0<Object016b9108> held128;
     /* +0x130: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held130;
+    Ref00503fb0<Object016b9108> held130;
     u8 unknown138[0x8];
     /* +0x140: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held140;
+    Ref00503fb0<Object016b9108> held140;
     /* +0x148: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held148;
+    Ref00503fb0<Object016b9108> held148;
     /* +0x150: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held150;
+    Ref00503fb0<Object016b9108> held150;
     /* +0x158: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held158;
+    Ref00503fb0<Object016b9108> held158;
 };
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's

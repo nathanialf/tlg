@@ -24,10 +24,10 @@ class Object016d1f68 : public Object00cf7fb0 /* derived name */
 
   private:
     /* +0xc8: torn down by the destructor (`lea rdi, [rbx+0xc8]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> recordc8;
+    Array01343a80<Ref00503fb0<Object016b9108>> recordc8;
     /* +0xe0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helde0;
+    Ref00503fb0<Object016b9108> helde0;
     u8 unknowne8[0x8]; /* the rest of the 0xf0 bytes the creator allocates; not traced */
 };
 

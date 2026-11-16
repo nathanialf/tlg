@@ -3,7 +3,7 @@
 
 /* derived names: the object a name names, of a class over the reference's
  * (AtomicRef0045c470::set compares it first, `cmp r12, rbx` at 0xd48584) */
-struct Value00d48470 : Node00503fb0 {};
+struct Value00d48470 : Object016b9108 {};
 
 /* derived names: the record the pointer at 0x5938c40 holds, and the record
  * at its +0x38: the owner the lookup asks, its object at +0x30 the default */

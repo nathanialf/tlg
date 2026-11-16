@@ -13,7 +13,7 @@ extern Type00503fb0 *D_5822318;
 
 /* derived name: the made object's class, one over the reference's (`cmp
  * rcx, rbx` at 0x995cd6, the new pointer first); not traced */
-struct Value00995b40 : Node00503fb0 {};
+struct Value00995b40 : Object016b9108 {};
 
 /* derived names: the class whose vtable is at 0x16cdf58
  * (config/vtables.derived.base.txt, stored by FUN_00995b40 FUN_01387a00
@@ -51,11 +51,11 @@ class Object016cdf58 : public Object016b9108 /* derived name */
     int unknown60;   /* +0x60: zero from the constructor; not traced */
     /* +0x68: a counted reference, set by the constructor, released by the
      * destructor */
-    AtomicRef0045c470<Node00503fb0> held68;
+    AtomicRef0045c470<Object016b9108> held68;
     /* +0x70: null from the constructor, cleared with the reference in one
      * 16-byte store with an int store after it (the vectoriser pairs two
      * pointers of one type); not traced */
-    Node00503fb0 *unknown70;
+    Object016b9108 *unknown70;
     int unknown78; /* +0x78: zero from the constructor; not traced */
 };
 

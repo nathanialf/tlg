@@ -9,7 +9,7 @@
  * (`lock xadd; inc ecx`). The made object's class is one over the
  * reference's (`cmp rcx, rbx` at 0x8a94a4, the new pointer first). The
  * classes are not traced. */
-struct Made008a9440 : Node00503fb0 { /* derived name */
+struct Made008a9440 : Object016b9108 { /* derived name */
 };
 
 struct Type008a9440 { /* derived name */
@@ -24,7 +24,7 @@ struct Source008a9440 { /* derived name */
 
 struct Holder008a9440 { /* derived name */
     u8 unknown0[0x8];
-    AtomicRef0045c470<Node00503fb0> reference; /* +0x8 */
+    AtomicRef0045c470<Object016b9108> reference; /* +0x8 */
     u8 unknown10[0x8];
     int pending; /* +0x18 */
 };

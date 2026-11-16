@@ -21,7 +21,8 @@ class Object016b6d10 : public Object016aef90 /* derived name */
     Name name1d4; /* +0x1d4: released by the destructor */
     Name name1d8; /* +0x1d8: released by the destructor */
     u8 unknown1dc[0x34];
-    Ref00503fb0<Node00503fb0> held210; /* +0x210: a counted reference, released by the destructor */
+    Ref00503fb0<Object016b9108>
+        held210; /* +0x210: a counted reference, released by the destructor */
 };
 
 Object016b6d10::~Object016b6d10() {}

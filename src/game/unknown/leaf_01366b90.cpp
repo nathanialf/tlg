@@ -6,10 +6,10 @@
  * released. The classes are not traced. */
 struct Object01366b90 { /* derived name */
     u8 unknown0[0x20];
-    int unknown20;                             /* +0x20 */
-    AtomicRef0045c470<Node00503fb0> unknown28; /* +0x28 */
-    AtomicRef0045c470<Node00503fb0> unknown30; /* +0x30 */
-    Name unknown38;                            /* +0x38 */
+    int unknown20;                               /* +0x20 */
+    AtomicRef0045c470<Object016b9108> unknown28; /* +0x28 */
+    AtomicRef0045c470<Object016b9108> unknown30; /* +0x30 */
+    Name unknown38;                              /* +0x38 */
 };
 
 void FUN_01366b90(Object01366b90 *self) /* derived name */

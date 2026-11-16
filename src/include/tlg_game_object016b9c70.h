@@ -24,7 +24,7 @@ class Object016b9c70 : public Object00cf7fb0 /* derived name */
   private:
     /* +0xc8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> heldc8;
+    Ref00503fb0<Object016b9108> heldc8;
     int unknownd0; /* +0xd0: zero from the constructor; not traced */
     int unknownd4; /* +0xd4: zero from the constructor; not traced */
     u8 unknownd8[0x8];

@@ -36,7 +36,7 @@ struct World011e5830 { /* derived name */
  * each (0x11e5a50). The rest is not traced. */
 struct RefsOwner011e5830 { /* derived name */
     u8 unknown0[0x270];
-    AtomicRef0045c470<Node00503fb0> *refs270; /* +0x270 */
+    AtomicRef0045c470<Object016b9108> *refs270; /* +0x270 */
 };
 
 /* derived names: the class whose vtable is at 0x16c1b78
@@ -52,23 +52,23 @@ class Object016c1b78 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
-    OwnedBlock05943280 block1c0;           /* +0x1c0: a block released by the destructor */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
+    OwnedBlock05943280 block1c0;             /* +0x1c0: a block released by the destructor */
     u8 unknown1c8[0x10];
     Name name1d8; /* +0x1d8: released by the destructor */
     u8 unknown1dc[0xc];
     int active1e8; /* +0x1e8: cleared by the destructor where it is set */
     u8 unknown1ec[0x4];
-    Registry00f516f0 *registry;           /* +0x1f0: the array this object is entered in, or null */
-    void *unknown1f8;                     /* +0x1f8: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x200: a counted reference */
+    Registry00f516f0 *registry; /* +0x1f0: the array this object is entered in, or null */
+    void *unknown1f8;           /* +0x1f8: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x200: a counted reference */
     u8 unknown208[0x10];
     RefsOwner011e5830 *
         owner218; /* +0x218: the object whose five references are emptied while this one is active */
     World011e5830 *world220; /* +0x220: what the object gives up while it is active */
     u8 unknown228[0x68];
-    AtomicRef0045c470<Node00503fb0> ref290; /* +0x290: a counted reference */
-    Name name298;                           /* +0x298: released by the destructor */
+    AtomicRef0045c470<Object016b9108> ref290; /* +0x290: a counted reference */
+    Name name298;                             /* +0x298: released by the destructor */
 };
 
 /* derived name: the complete destructor: the object takes itself out of the

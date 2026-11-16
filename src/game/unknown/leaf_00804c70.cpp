@@ -8,7 +8,7 @@
  * and the objects' class are not traced. */
 struct Item00804c70 { /* derived name */
     u8 unknown0[0x80];
-    AtomicRef0045c470<Node00503fb0> unknown80; /* +0x80 */
+    AtomicRef0045c470<Object016b9108> unknown80; /* +0x80 */
 };
 
 struct Object00804c70 { /* derived name */

@@ -40,7 +40,7 @@ class Object016c19c8 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x8];
     OwnedBlock05943280 block1c8; /* +0x1c8: a block released by the destructor */
     u8 unknown1d0[0x18];
@@ -48,9 +48,9 @@ class Object016c19c8 : public Object00c1b7f0, public Object013cd320 /* derived n
     u8 unknown1ec[0xc];
     int active1f8; /* +0x1f8: cleared by the destructor where it is set */
     u8 unknown1fc[0x4];
-    Registry00f516f0 *registry;           /* +0x200: the array this object is entered in, or null */
-    void *unknown208;                     /* +0x208: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x210: a counted reference */
+    Registry00f516f0 *registry; /* +0x200: the array this object is entered in, or null */
+    void *unknown208;           /* +0x208: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x210: a counted reference */
     u8 unknown218[0x20];
     Array05943280<Item011b22a0 *>
         array238; /* +0x238: an array whose first four objects are deleted while the object is active */

@@ -7,8 +7,8 @@
  * traced. */
 struct Object0134df00 { /* derived name */
     u8 unknown0[0x10];
-    AtomicRef0045c470<Node00503fb0> unknown10; /* +0x10 */
-    AtomicRef0045c470<Node00503fb0> unknown18; /* +0x18 */
+    AtomicRef0045c470<Object016b9108> unknown10; /* +0x10 */
+    AtomicRef0045c470<Object016b9108> unknown18; /* +0x18 */
 };
 
 void FUN_0134df00(Object0134df00 *self) /* derived name */

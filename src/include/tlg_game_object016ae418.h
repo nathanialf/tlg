@@ -29,7 +29,7 @@ class Object016ae418 : public Object00c55550 /* derived name */
     void *unknown238; /* +0x238: null from the constructor; not traced */
     /* +0x240: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held240;
+    Ref00503fb0<Object016b9108> held240;
     u8 unknown248[0x8];
 };
 

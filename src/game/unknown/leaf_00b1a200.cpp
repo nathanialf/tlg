@@ -9,7 +9,7 @@
  * compare-and-swap; then the byte is set. The named object's class is one
  * over the reference's (`cmp r15, rbx` at 0xb1a284, the new pointer
  * first). The owner is not traced. */
-struct Value00b1a200 : Node00503fb0 { /* derived name */
+struct Value00b1a200 : Object016b9108 { /* derived name */
 };
 
 struct Object00b1a200 { /* derived name */
@@ -18,7 +18,7 @@ struct Object00b1a200 { /* derived name */
     u8 unknownd[0x2b];
     Name name; /* +0x38 */
     u8 unknown3c[0xc];
-    AtomicRef0045c470<Node00503fb0> reference; /* +0x48 */
+    AtomicRef0045c470<Object016b9108> reference; /* +0x48 */
 };
 
 void FUN_00b1a200(Object00b1a200 *self) /* derived name */

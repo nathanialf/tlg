@@ -8,7 +8,7 @@
  * traced. */
 struct Record00764ef0 { /* derived name */
     u8 unknown0[0xc10];
-    AtomicRef0045c470<Node00503fb0> unknownc10; /* +0xc10 */
+    AtomicRef0045c470<Object016b9108> unknownc10; /* +0xc10 */
 };
 
 struct Object00764ef0 { /* derived name */
@@ -17,7 +17,7 @@ struct Object00764ef0 { /* derived name */
     u8 unknown70[0x98];
     int unknown108; /* +0x108 */
     u8 unknown10c[0x14];
-    AtomicRef0045c470<Node00503fb0> unknown120; /* +0x120 */
+    AtomicRef0045c470<Object016b9108> unknown120; /* +0x120 */
 };
 
 void FUN_00763d70(Object00764ef0 *self, void *argument); /* derived name */

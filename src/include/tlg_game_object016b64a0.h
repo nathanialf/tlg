@@ -43,8 +43,8 @@ class Object016b64a0 : public Base016b64a0 /* derived name */
   private:
     /* +0x48: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held48;
-    Array01343a80<Ref00503fb0<Node00503fb0>> record50; /* +0x50: an array of counted references */
+    Ref00503fb0<Object016b9108> held48;
+    Array01343a80<Ref00503fb0<Object016b9108>> record50; /* +0x50: an array of counted references */
 };
 
 #endif

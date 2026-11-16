@@ -25,10 +25,10 @@ struct Link0079ab40 /* derived name */
         unknown20.set(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
-    void *unknown0;                        /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> held8; /* +0x8: released by the holder's destructor */
-    int unknown10;                         /* +0x10 */
-    Float4A unknown20;                     /* +0x20 */
+    void *unknown0;                          /* +0x0 */
+    AtomicRef0045c470<Object016b9108> held8; /* +0x8: released by the holder's destructor */
+    int unknown10;                           /* +0x10 */
+    Float4A unknown20;                       /* +0x20 */
 };
 
 #endif

@@ -16,10 +16,10 @@ class Object016b82c8 : public Object016b9108 /* derived name */
     u8 unknown24[0x4c];
     /* +0x70: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     /* +0x78: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held78;
+    Ref00503fb0<Object016b9108> held78;
 };
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's

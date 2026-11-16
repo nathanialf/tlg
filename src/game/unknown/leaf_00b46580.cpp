@@ -7,9 +7,9 @@
  * the file's own object (D17). The array is destroyed at exit, so the
  * counted class is one the references can release: the node's interface
  * (tlg_game_node.h; the real class is not traced). */
-static Array05943280<Ref00503fb0<Node00503fb0>> D_58339c0;
+static Array05943280<Ref00503fb0<Object016b9108>> D_58339c0;
 
-void FUN_00b46580(const Ref00503fb0<Node00503fb0> &value) /* derived name */
+void FUN_00b46580(const Ref00503fb0<Object016b9108> &value) /* derived name */
 {
     D_58339c0.push(value);
 }

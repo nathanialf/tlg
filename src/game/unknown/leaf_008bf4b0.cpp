@@ -8,7 +8,7 @@
 
 /* derived name: the counted object the array of references of the class
  * below refers to; nothing of it is traced but its base. */
-class Node008bf4b0 : public Node00503fb0 /* derived name */
+class Node008bf4b0 : public Object016b9108 /* derived name */
 {
 };
 
@@ -27,19 +27,19 @@ class Object016b0060 : public Object016b9108 /* derived name */
     u8 unknown24[0x8];
     Name name2c;           /* +0x2c */
     Object0134f620 refs30; /* +0x30: an array of counted references, destroyed by FUN_0134f620 */
-    Array05943280<Name> names48;            /* +0x48: an array of Names */
-    AtomicRef0045c470<Node00503fb0> held60; /* +0x60: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held68; /* +0x68: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held70; /* +0x70: a counted reference */
+    Array05943280<Name> names48;              /* +0x48: an array of Names */
+    AtomicRef0045c470<Object016b9108> held60; /* +0x60: a counted reference */
+    AtomicRef0045c470<Object016b9108> held68; /* +0x68: a counted reference */
+    AtomicRef0045c470<Object016b9108> held70; /* +0x70: a counted reference */
     Array05943280<AtomicRef0045c470<Node008bf4b0>>
         refs78; /* +0x78: an array of counted references (references to a class of its own: the instantiation has this one caller, and its destructor is inlined, where the one at +0x30 is called) */
-    AtomicRef0045c470<Node00503fb0> held90; /* +0x90: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held98; /* +0x98: a counted reference */
-    AtomicRef0045c470<Node00503fb0> helda0; /* +0xa0: a counted reference */
-    AtomicRef0045c470<Node00503fb0> helda8; /* +0xa8: a counted reference */
-    AtomicRef0045c470<Node00503fb0> heldb0; /* +0xb0: a counted reference */
-    AtomicRef0045c470<Node00503fb0> heldb8; /* +0xb8: a counted reference */
-    AtomicRef0045c470<Node00503fb0> heldc0; /* +0xc0: a counted reference */
+    AtomicRef0045c470<Object016b9108> held90; /* +0x90: a counted reference */
+    AtomicRef0045c470<Object016b9108> held98; /* +0x98: a counted reference */
+    AtomicRef0045c470<Object016b9108> helda0; /* +0xa0: a counted reference */
+    AtomicRef0045c470<Object016b9108> helda8; /* +0xa8: a counted reference */
+    AtomicRef0045c470<Object016b9108> heldb0; /* +0xb0: a counted reference */
+    AtomicRef0045c470<Object016b9108> heldb8; /* +0xb8: a counted reference */
+    AtomicRef0045c470<Object016b9108> heldc0; /* +0xc0: a counted reference */
 };
 
 /* derived name: the complete destructor: nothing of its own; the members

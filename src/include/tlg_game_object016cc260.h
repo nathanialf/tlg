@@ -40,7 +40,7 @@ class Object016cc260 : public Object016b9108 /* derived name */
     /* +0x40: an array whose elements need no destructor: the destructor
      * only releases its block (`mov rax, [rbx+0x40]; ... cmp ecx, 0xa`) */
     Array01343a80<u32> array40;
-    Array01343a80<Ref00503fb0<Node00503fb0>> record58; /* +0x58: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record58; /* +0x58: an array of counted references */
     void *unknown70; /* +0x70: null from the constructor; not traced */
     u8 unknown78[0x8];
     int unknown80; /* +0x80: zero from the constructor; not traced */

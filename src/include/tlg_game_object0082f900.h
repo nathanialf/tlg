@@ -24,7 +24,7 @@ class Object0082f900 : public Object01343880 /* derived name */
     u8 unknown34[0xc];
     /* +0x40: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held40;
+    Ref00503fb0<Object016b9108> held40;
 };
 
 #endif

@@ -31,19 +31,19 @@ class Object016ab4e8 : public Object01343880 /* derived name */
     Object0134f620 record178;
     /* +0x190: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held190;
+    Ref00503fb0<Object016b9108> held190;
     /* +0x198: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held198;
+    Ref00503fb0<Object016b9108> held198;
     /* +0x1a0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held1a0;
+    Ref00503fb0<Object016b9108> held1a0;
     /* +0x1a8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held1a8;
+    Ref00503fb0<Object016b9108> held1a8;
     /* +0x1b0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held1b0;
+    Ref00503fb0<Object016b9108> held1b0;
     /* +0x1b8: torn down by the destructor (`lea rdi, [rbx+0x1b8]; call 0x134f620`) */
     Object0134f620 record1b8;
 };

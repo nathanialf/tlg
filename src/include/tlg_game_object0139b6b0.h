@@ -20,7 +20,7 @@
 struct Entry0139b6b0 /* derived name */
 {
     u8 unknown0[0x8];
-    Ref00503fb0<Node00503fb0> unknown8; /* +0x8 */
+    Ref00503fb0<Object016b9108> unknown8; /* +0x8 */
 };
 
 typedef Array05943280<Entry0139b6b0> Object0139b6b0; /* derived name */
@@ -30,7 +30,7 @@ typedef Array05943280<Entry0139b6b0> Object0139b6b0; /* derived name */
 struct Entry0135f4e0 /* derived name */
 {
     u8 unknown0[0x38];
-    Ref00503fb0<Node00503fb0> unknown38; /* +0x38 */
+    Ref00503fb0<Object016b9108> unknown38; /* +0x38 */
 };
 
 typedef Array05943280<Entry0135f4e0> Object0135f4e0; /* derived name */
@@ -40,7 +40,7 @@ typedef Array05943280<Entry0135f4e0> Object0135f4e0; /* derived name */
 struct Entry013e9b40 /* derived name */
 {
     u8 unknown0[0x30];
-    Ref00503fb0<Node00503fb0> unknown30; /* +0x30 */
+    Ref00503fb0<Object016b9108> unknown30; /* +0x30 */
     u8 unknown38[0x8];
 };
 
@@ -51,7 +51,7 @@ typedef Array05943280<Entry013e9b40> Object013e9b40; /* derived name */
 struct Entry013e9a00 /* derived name */
 {
     u8 unknown0[0x48];
-    Ref00503fb0<Node00503fb0> unknown48; /* +0x48 */
+    Ref00503fb0<Object016b9108> unknown48; /* +0x48 */
 };
 
 typedef Array05943280<Entry013e9a00> Object013e9a00; /* derived name */
@@ -61,7 +61,7 @@ typedef Array05943280<Entry013e9a00> Object013e9a00; /* derived name */
 struct Entry01347230 /* derived name */
 {
     u8 unknown0[0x58];
-    Ref00503fb0<Node00503fb0> unknown58; /* +0x58 */
+    Ref00503fb0<Object016b9108> unknown58; /* +0x58 */
 };
 
 typedef Array05943280<Entry01347230> Object01347230; /* derived name */

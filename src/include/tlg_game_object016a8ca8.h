@@ -22,7 +22,7 @@ class Object016a8ca8 : public Object016b9108 /* derived name */
     u8 unknown24[0xc4];
     /* +0xe8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helde8;
+    Ref00503fb0<Object016b9108> helde8;
     u8 unknownf0[0x30]; /* the rest of the 0x120 bytes the creator allocates; not traced */
 };
 

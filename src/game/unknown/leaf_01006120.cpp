@@ -13,9 +13,9 @@
  * traced. */
 struct Refs01006120 { /* derived name */
     u8 unknown0[0x28];
-    AtomicRef0045c470<Node00503fb0> ref28; /* +0x28 */
-    AtomicRef0045c470<Node00503fb0> ref30; /* +0x30 */
-    AtomicRef0045c470<Node00503fb0> ref38; /* +0x38 */
+    AtomicRef0045c470<Object016b9108> ref28; /* +0x28 */
+    AtomicRef0045c470<Object016b9108> ref30; /* +0x30 */
+    AtomicRef0045c470<Object016b9108> ref38; /* +0x38 */
 };
 
 struct Owner01006120 { /* derived name */
@@ -36,8 +36,8 @@ class Object016c0b40 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
-    OwnedBlock05943280 block1c0;           /* +0x1c0: a block released by the destructor */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
+    OwnedBlock05943280 block1c0;             /* +0x1c0: a block released by the destructor */
     u8 unknown1c8[0x34];
     Name name1fc; /* +0x1fc: released by the destructor */
     u8 unknown200[0xc];
@@ -46,7 +46,7 @@ class Object016c0b40 : public Object00c1b7f0, public Object013cd320 /* derived n
     Registry00f516f0 *registry; /* +0x218: the array this object is entered in, or null */
     Owner01006120
         *owner220; /* +0x220: the object whose references are emptied while this one is active */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x228: a counted reference */
+    AtomicRef0045c470<Object016b9108> held; /* +0x228: a counted reference */
     u8 unknown230[0x20];
     Array05943280<Element0101ece0> array250; /* +0x250: an array of named elements */
     u8 unknown268[0x10];

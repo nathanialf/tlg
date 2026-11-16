@@ -46,10 +46,10 @@ class Object016aa0d0 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held28;
+    Ref00503fb0<Object016b9108> held28;
     /* +0x30: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held30;
+    Ref00503fb0<Object016b9108> held30;
     int unknown38;           /* +0x38: -1 from the constructor; not traced */
     bool unknown3c;          /* +0x3c: false from the constructor; not traced */
     Float4A unknown40;       /* +0x40: zero from the constructor; not traced */

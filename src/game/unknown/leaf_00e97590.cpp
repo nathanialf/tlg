@@ -24,7 +24,7 @@ class Object016be338 : public Object016b9108 /* derived name */
     u8 unknown48[0x10];
     Buffer00d650e0 buffer58; /* +0x58: a buffer (tlg_game_buffer00d650e0.h) */
     u8 unknown70[0x20];
-    AtomicRef0045c470<Node00503fb0> held90; /* +0x90: a counted reference */
+    AtomicRef0045c470<Object016b9108> held90; /* +0x90: a counted reference */
 };
 
 /* derived name: the complete destructor: nothing of its own; the members

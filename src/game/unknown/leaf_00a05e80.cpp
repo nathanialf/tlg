@@ -11,13 +11,13 @@ extern Type00503fb0 *D_5946cb0;
 extern Type00503fb0 *D_5946cc8;
 extern Type00503fb0 *D_5946d10;
 
-void FUN_00cf8120(Node00503fb0 *object); /* derived name */
+void FUN_00cf8120(Object016b9108 *object); /* derived name */
 
 /* each call keeps its own empty name and none is released: the module knows
  * FUN_00cbc5a0 only reads its name (it copies it at 0xcbc5d4) */
-Node00503fb0 *FUN_00a05e80(int kind) /* derived name */
+Object016b9108 *FUN_00a05e80(int kind) /* derived name */
 {
-    Node00503fb0 *object;
+    Object016b9108 *object;
     switch (kind) {
     case 0:
         object = FUN_00cbc5a0(D_5945a38, D_5946d70, Name(), 0);

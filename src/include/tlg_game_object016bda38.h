@@ -10,7 +10,7 @@
  * at its +0x38, whose object at +0x30 the constructor below takes. */
 struct Member05938c40_38 {
     u8 unknown0[0x30];
-    Node00503fb0 *unknown30;
+    Object016b9108 *unknown30;
 };
 
 struct Object05938c40 {
@@ -63,13 +63,13 @@ class Object016bda38 : public Object00c55550 /* derived name */
     u8 unknown24c[0x4];
     /* +0x250: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held250;
+    Ref00503fb0<Object016b9108> held250;
     /* +0x258: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held258;
+    Ref00503fb0<Object016b9108> held258;
     /* +0x260: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held260;
+    Ref00503fb0<Object016b9108> held260;
     u8 unknown268[0x18];
     void *unknown280; /* +0x280: null from the constructor's body; not traced */
     void *unknown288; /* +0x288: null from the constructor's body; not traced */

@@ -58,12 +58,13 @@ extern Object05945a38 *D_5945a38;
  * thread's flag at 0x16dc089 set, the type's listener is told, and the
  * object is registered (FUN_00cbb990). Null for a null type and for a type
  * that makes nothing. */
-Node00503fb0 *FUN_00cbc5a0(Object05945a38 *owner, Type00503fb0 *type, const Name &name,
-                           int mode); /* derived name */
+Object016b9108 *FUN_00cbc5a0(Object05945a38 *owner, Type00503fb0 *type, const Name &name,
+                             int mode); /* derived name */
 /* gives the object the name; the result is not read where it is called */
-int FUN_00cbc2d0(Object05945a38 *owner, Node00503fb0 *object, const Name &name); /* derived name */
+int FUN_00cbc2d0(Object05945a38 *owner, Object016b9108 *object,
+                 const Name &name); /* derived name */
 /* registers a new object of the type under the name at +0xc of it */
-void FUN_00cbb990(Object05945a38 *owner, Type00503fb0 *type, Node00503fb0 *object,
+void FUN_00cbb990(Object05945a38 *owner, Type00503fb0 *type, Object016b9108 *object,
                   const Name *name); /* derived name */
 
 #endif

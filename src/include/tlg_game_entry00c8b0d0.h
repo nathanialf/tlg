@@ -24,8 +24,8 @@ struct Entry00c8b0d0 { /* derived name */
     u8 unknown38[0x48];
     void *unknown80; /* +0x80 */
     u8 unknown88[0x10];
-    AtomicRef0045c470<Node00503fb0> unknown98; /* +0x98 */
-    void *unknowna0;                           /* +0xa0 */
+    AtomicRef0045c470<Object016b9108> unknown98; /* +0x98 */
+    void *unknowna0;                             /* +0xa0 */
     u8 unknowna8[0x8];
 };
 

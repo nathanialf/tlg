@@ -25,12 +25,12 @@ class Object016b8a80 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held28;
+    Ref00503fb0<Object016b9108> held28;
     /* +0x30: a counted reference another thread may replace, set by the
      * constructor by compare-and-swap (`lock cmpxchg [r14+0x30], rcx`),
      * released by the destructor (the pointer cleared, `cmp dword [r+8],
      * 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Node00503fb0> held30;
+    AtomicRef0045c470<Object016b9108> held30;
     u8 unknown38[0x8];
     /* +0x40: (1.0, 1.0, 0, 0) from the constructor, one aligned store
      * (`vmovaps [r14+0x40]`); not traced */

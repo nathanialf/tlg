@@ -42,7 +42,7 @@ class Object016d1728 : public Object016b9108 /* derived name */
     float unknown48; /* +0x48: 0.1 from the constructor; not traced */
     /* +0x50: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held50;
+    Ref00503fb0<Object016b9108> held50;
     float unknown58; /* +0x58: 0.1 from the constructor; not traced */
     float unknown5c; /* +0x5c: 0.5 from the constructor; not traced */
     float unknown60; /* +0x60: 0.95 from the constructor; not traced */

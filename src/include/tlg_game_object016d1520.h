@@ -23,7 +23,7 @@ class Object016d1520 : public Object01343880 /* derived name */
     u8 unknown34[0x14];
     /* +0x48: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held48;
+    Ref00503fb0<Object016b9108> held48;
     /* +0x50: torn down by the destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
     Object0134f620 record50;
     u8 unknown68[0x10]; /* the rest of the 0x78 bytes the creator allocates; not traced */

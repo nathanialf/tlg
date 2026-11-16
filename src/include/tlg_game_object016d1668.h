@@ -25,7 +25,7 @@ class Object016d1668 : public Object016b9108 /* derived name */
      * (`lock cmpxchg qword [r14+0x30], rcx` at 0xc91f5c), released by the
      * destructor (the pointer cleared, `cmp dword [r+8], 0xdeadc0de`, the
      * count dropped) */
-    AtomicRef0045c470<Node00503fb0> held30;
+    AtomicRef0045c470<Object016b9108> held30;
 };
 
 /* derived name: the complete destructor FUN_013abbe0: the body is empty; the

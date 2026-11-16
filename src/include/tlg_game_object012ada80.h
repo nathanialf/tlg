@@ -11,7 +11,7 @@
 
 /* the class the arrays refer to; not traced (FUN_00f2b550 is the arrays'
  * clear) */
-class Value00f2b550 : public Node00503fb0 /* derived name */
+class Value00f2b550 : public Object016b9108 /* derived name */
 {
 };
 

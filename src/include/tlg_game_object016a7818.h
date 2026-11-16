@@ -33,8 +33,8 @@ class Object016a7818 : public Object01343880 /* derived name */
     Array01343a80<Name> names38; /* +0x38: an array of Names, each released by the destructor */
     Name name50;                 /* +0x50: empty from the constructor, released by the destructor */
     u8 unknown54[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record58; /* +0x58: an array of counted references */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record70; /* +0x70: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record58; /* +0x58: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record70; /* +0x70: an array of counted references */
 };
 
 #endif

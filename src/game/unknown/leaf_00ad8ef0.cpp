@@ -17,14 +17,14 @@ class Object016b3b08 : public Object01358d70 /* derived name */
     u8 unknown8[0x188];
     /* +0x190: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held190;
+    Ref00503fb0<Object016b9108> held190;
     Name name198; /* +0x198: released by the destructor (`mov eax, [rbx+0x198]; shl 5`) */
     u8 unknown19c[0x8];
     Name name1a4; /* +0x1a4: released by the destructor (`mov eax, [rbx+0x1a4]; shl 5`) */
     u8 unknown1a8[0x8];
     /* +0x1b0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held1b0;
+    Ref00503fb0<Object016b9108> held1b0;
 };
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's

@@ -24,11 +24,11 @@ class Object016b4e70 : public Object016b9108 /* derived name */
     Array05943280<Name> names58; /* +0x58: an array of Names */
     OwnedBlock05943280 block70;  /* +0x70: a block released by the destructor */
     u8 unknown78[0x10];
-    AtomicRef0045c470<Node00503fb0> held88; /* +0x88: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held90; /* +0x90: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held98; /* +0x98: a counted reference */
+    AtomicRef0045c470<Object016b9108> held88; /* +0x88: a counted reference */
+    AtomicRef0045c470<Object016b9108> held90; /* +0x90: a counted reference */
+    AtomicRef0045c470<Object016b9108> held98; /* +0x98: a counted reference */
     u8 unknowna0[0x8];
-    AtomicRef0045c470<Node00503fb0> helda8; /* +0xa8: a counted reference */
+    AtomicRef0045c470<Object016b9108> helda8; /* +0xa8: a counted reference */
 };
 
 /* derived name: the complete destructor: nothing of its own; the members

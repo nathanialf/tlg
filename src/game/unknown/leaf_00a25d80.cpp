@@ -17,13 +17,13 @@ class Object016b1c18 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held28;
+    Ref00503fb0<Object016b9108> held28;
     /* +0x30: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held30;
+    Ref00503fb0<Object016b9108> held30;
     /* +0x38: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held38;
+    Ref00503fb0<Object016b9108> held38;
     /* +0x40: an owned block, released by the destructor (`mov rax, [rbx+0x40]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block40;
 };

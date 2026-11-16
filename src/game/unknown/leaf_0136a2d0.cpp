@@ -12,9 +12,9 @@ struct Object0136a2d0 /* derived name */
     ~Object0136a2d0();
 
     u8 unknown0[0xc8];
-    Ref00503fb0<Node00503fb0> unknownc8; /* +0xc8 */
+    Ref00503fb0<Object016b9108> unknownc8; /* +0xc8 */
     u8 unknownd0[0xa8];
-    Ref00503fb0<Node00503fb0> unknown178; /* +0x178 */
+    Ref00503fb0<Object016b9108> unknown178; /* +0x178 */
 };
 
 Object0136a2d0::~Object0136a2d0() {}

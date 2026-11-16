@@ -12,9 +12,9 @@ struct Object013b58e0 /* derived name */
     ~Object013b58e0();
 
     u8 unknown0[0x1d0];
-    Ref00503fb0<Node00503fb0> unknown1d0; /* +0x1d0 */
+    Ref00503fb0<Object016b9108> unknown1d0; /* +0x1d0 */
     u8 unknown1d8[0x8];
-    Ref00503fb0<Node00503fb0> unknown1e0; /* +0x1e0 */
+    Ref00503fb0<Object016b9108> unknown1e0; /* +0x1e0 */
 };
 
 Object013b58e0::~Object013b58e0() {}

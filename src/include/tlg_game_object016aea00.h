@@ -29,7 +29,7 @@ class Object016aea00 : public Object016b9108 /* derived name */
     virtual void slot5(); /* derived name; FUN_0081e140, not traced */
 
   private:
-    Array01343a80<Ref00503fb0<Node00503fb0>> record28; /* +0x28: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record28; /* +0x28: an array of counted references */
 };
 
 #endif

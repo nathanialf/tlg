@@ -26,8 +26,8 @@ extern Object05989c08 *D_5989c08;
 
 struct Object00881c80 { /* derived name */
     u8 unknown0[0x1a0];
-    AtomicRef0045c470<Node00503fb0> unknown1a0;          /* +0x1a0 */
-    Array05943280<Ref00503fb0<Node00503fb0>> unknown1a8; /* +0x1a8 */
+    AtomicRef0045c470<Object016b9108> unknown1a0;          /* +0x1a0 */
+    Array05943280<Ref00503fb0<Object016b9108>> unknown1a8; /* +0x1a8 */
 };
 
 void FUN_00881d80(Object00881c80 *self);                            /* derived name */

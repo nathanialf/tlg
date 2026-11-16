@@ -28,9 +28,9 @@ class Object016c7cb8 : public Object016b9108 /* derived name */
     virtual ~Object016c7cb8();
 
   private:
-    AtomicRef0045c470<Node00503fb0> held28; /* +0x28: a counted reference */
-    Array01343a80<Name> names30;            /* +0x30 */
-    Array01343a80<Name> names48;            /* +0x48 */
+    AtomicRef0045c470<Object016b9108> held28; /* +0x28: a counted reference */
+    Array01343a80<Name> names30;              /* +0x30 */
+    Array01343a80<Name> names48;              /* +0x48 */
 };
 
 #endif

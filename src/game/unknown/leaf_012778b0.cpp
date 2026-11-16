@@ -17,7 +17,7 @@ class Object016c2da8 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x8];
     OwnedBlock05943280 block1c8; /* +0x1c8: a block released by the destructor */
     u8 unknown1d0[0x10];
@@ -29,9 +29,9 @@ class Object016c2da8 : public Object00c1b7f0, public Object013cd320 /* derived n
     u8 unknown230[0xc];
     int active23c; /* +0x23c: cleared by the destructor where it is set */
     u8 unknown240[0x8];
-    Registry00f516f0 *registry;           /* +0x248: the array this object is entered in, or null */
-    void *unknown250;                     /* +0x250: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x258: a counted reference */
+    Registry00f516f0 *registry; /* +0x248: the array this object is entered in, or null */
+    void *unknown250;           /* +0x250: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x258: a counted reference */
     u8 unknown260[0x100];
     OwnedBlock05943280 block360; /* +0x360: a block released by the destructor */
     u8 unknown368[0x10];

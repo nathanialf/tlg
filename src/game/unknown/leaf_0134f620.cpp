@@ -6,5 +6,5 @@
  * called at 134 sites and inlined with 0 in other holders' destructors) as
  * functions of their own in the executable: the two members instantiated
  * here. */
-template Array05943280<Ref00503fb0<Node00503fb0>>::~Array05943280();
-template void Array05943280<Ref00503fb0<Node00503fb0>>::clear(unsigned);
+template Array05943280<Ref00503fb0<Object016b9108>>::~Array05943280();
+template void Array05943280<Ref00503fb0<Object016b9108>>::clear(unsigned);

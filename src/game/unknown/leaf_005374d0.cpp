@@ -19,13 +19,13 @@ class Joint005374d0 : public Node00503fb0 /* derived name */
 extern const char D_15caf07[20];
 extern const char D_15caf5e[20];
 
-void FUN_005374d0(Joint005374d0 *joint, AtomicRef0045c470<Node00503fb0> *found) /* derived name */
+void FUN_005374d0(Joint005374d0 *joint, AtomicRef0045c470<Object016b9108> *found) /* derived name */
 {
     if (joint->name210 == Name(D_15caf07, false))
         found->set(joint);
 }
 
-void FUN_00537600(Joint005374d0 *joint, AtomicRef0045c470<Node00503fb0> *found) /* derived name */
+void FUN_00537600(Joint005374d0 *joint, AtomicRef0045c470<Object016b9108> *found) /* derived name */
 {
     if (joint->name210 == Name(D_15caf5e, false))
         found->set(joint);

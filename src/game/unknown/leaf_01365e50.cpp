@@ -12,7 +12,7 @@ struct Object01365e50 { /* derived name */
     u8 unknown60[0x30];
     Name unknown90; /* +0x90 */
     u8 unknown94[0xc];
-    Ref00503fb0<Node00503fb0> unknowna0; /* +0xa0 */
+    Ref00503fb0<Object016b9108> unknowna0; /* +0xa0 */
 };
 
 void FUN_01365e50(Object01365e50 *self) /* derived name */

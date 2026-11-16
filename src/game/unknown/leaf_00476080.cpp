@@ -16,37 +16,37 @@ class Object016a9d90 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held28;
+    Ref00503fb0<Object016b9108> held28;
     /* +0x30: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held30;
+    Ref00503fb0<Object016b9108> held30;
     /* +0x38: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held38;
+    Ref00503fb0<Object016b9108> held38;
     /* +0x40: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held40;
+    Ref00503fb0<Object016b9108> held40;
     /* +0x48: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held48;
+    Ref00503fb0<Object016b9108> held48;
     /* +0x50: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held50;
+    Ref00503fb0<Object016b9108> held50;
     /* +0x58: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held58;
+    Ref00503fb0<Object016b9108> held58;
     /* +0x60: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held60;
+    Ref00503fb0<Object016b9108> held60;
     /* +0x68: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held68;
+    Ref00503fb0<Object016b9108> held68;
     /* +0x70: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     /* +0x78: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held78;
+    Ref00503fb0<Object016b9108> held78;
 };
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's

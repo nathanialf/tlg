@@ -28,8 +28,8 @@ class Object016cebb0 : public Object016b9108 /* derived name */
   private:
     /* +0x28: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held28;
-    Array01343a80<Ref00503fb0<Node00503fb0>> record30; /* +0x30: an array of counted references */
+    Ref00503fb0<Object016b9108> held28;
+    Array01343a80<Ref00503fb0<Object016b9108>> record30; /* +0x30: an array of counted references */
 };
 
 #endif

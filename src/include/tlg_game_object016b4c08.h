@@ -20,8 +20,8 @@ class Object016b4c08 : public Object01343880 /* derived name */
     virtual ~Object016b4c08();
 
   private:
-    AtomicRef0045c470<Node00503fb0> held38; /* +0x38 */
-    void *unknown40;                        /* +0x40: null from the constructor; not traced */
+    AtomicRef0045c470<Object016b9108> held38; /* +0x38 */
+    void *unknown40;                          /* +0x40: null from the constructor; not traced */
 };
 
 /* derived name: the complete destructor FUN_00b0e650: the body is empty; the

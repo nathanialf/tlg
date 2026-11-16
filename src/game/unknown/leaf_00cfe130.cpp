@@ -7,7 +7,7 @@
  * leaf_00cfe1f0.cpp, which reads the same field as a plain pointer. The referenced object's class is not traced. */
 struct Object00cfe1f0 { /* derived name */
     u8 unknown0[0xc8];
-    AtomicRef0045c470<Node00503fb0> unknownc8; /* +0xc8 */
+    AtomicRef0045c470<Object016b9108> unknownc8; /* +0xc8 */
 };
 
 void FUN_00cfe130(void *, const Object00cfe1f0 *source, Object00cfe1f0 *target) /* derived name */

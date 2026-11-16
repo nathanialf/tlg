@@ -29,7 +29,7 @@ class Object016b1d40 : public Object01343880 /* derived name */
 
   private:
     u8 unknown34[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record38; /* +0x38: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record38; /* +0x38: an array of counted references */
     int unknown50; /* +0x50: zero from the constructor; not traced */
     u8 unknown54[0x4];
 };

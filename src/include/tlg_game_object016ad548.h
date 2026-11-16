@@ -33,9 +33,9 @@ struct Link0078de30 /* derived name */
         unknown34 = 0.5f;
     }
 
-    void *unknown0;                        /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> held8; /* +0x8: released by the holder's destructor */
-    int unknown10;                         /* +0x10 */
+    void *unknown0;                          /* +0x0 */
+    AtomicRef0045c470<Object016b9108> held8; /* +0x8: released by the holder's destructor */
+    int unknown10;                           /* +0x10 */
     u8 unknown14[0xc];
     Value004af700 unknown20; /* +0x20 */
     int unknown30;           /* +0x30 */

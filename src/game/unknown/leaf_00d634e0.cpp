@@ -10,9 +10,9 @@
 struct Record00d634e0 { /* derived name */
     void operator=(const Record00d634e0 &other);
 
-    AtomicRef0045c470<Node00503fb0> unknown0; /* +0x0 */
-    Name unknown8;                            /* +0x8 */
-    Float4 unknownc;                          /* +0xc */
+    AtomicRef0045c470<Object016b9108> unknown0; /* +0x0 */
+    Name unknown8;                              /* +0x8 */
+    Float4 unknownc;                            /* +0xc */
 };
 
 void Record00d634e0::operator=(const Record00d634e0 &other)

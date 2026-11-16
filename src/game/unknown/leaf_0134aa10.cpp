@@ -9,7 +9,7 @@
  * (tlg_game_array.h), out of line: the array's own members, instantiated
  * here until a holder of the array is written. The element's other members
  * and the referenced class are not traced. */
-class Value0134aa10 : public Node00503fb0 /* derived name */
+class Value0134aa10 : public Object016b9108 /* derived name */
 {
 };
 

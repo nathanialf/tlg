@@ -28,7 +28,7 @@ class Object016b1d00 : public Object016c7c78 /* derived name */
     /* +0x50: an array of counted references with its lock at +0x64 (the
      * creator's `mov dword [r15+0x64], 0` after the owner's index), torn
      * down by the destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record50;
+    Array01343a80<Ref00503fb0<Object016b9108>> record50;
     int unknown68; /* +0x68: zero from the constructor; not traced */
     u8 unknown6c[0x4];
 };

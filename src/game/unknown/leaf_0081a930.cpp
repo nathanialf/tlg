@@ -5,7 +5,7 @@
 /* derived names: an object counted by the references an array holds
  * (leaf_00751ca0.cpp's, here with the node's slots: its last reference
  * destroys it through slot 2, `call [rax+0x10]` at 0x81aa95) */
-class Counted00751ca0 : public Node00503fb0 /* derived name */
+class Counted00751ca0 : public Object016b9108 /* derived name */
 {
 };
 

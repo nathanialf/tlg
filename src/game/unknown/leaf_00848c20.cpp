@@ -41,7 +41,7 @@ struct Object00848c20 { /* derived name */
 
 extern const Type00503fb0 *D_581fa48;
 
-void FUN_008f2f80(Node00503fb0 *node, Target00848c20 *target, float x, float y,
+void FUN_008f2f80(Object016b9108 *node, Target00848c20 *target, float x, float y,
                   float scale); /* derived name */
 
 void FUN_00848c20(Object00848c20 *self, Target00848c20 *target, float x, float y,
@@ -50,9 +50,9 @@ void FUN_00848c20(Object00848c20 *self, Target00848c20 *target, float x, float y
     if (!self->callback.context)
         return;
     self->callback.update(target, x, y, self->scale);
-    Node00503fb0 *node = static_cast<Node00503fb0 *>(D_17ac870[self->name.index].record18);
+    Object016b9108 *node = static_cast<Object016b9108 *>(D_17ac870[self->name.index].record18);
     if (node && ((node->flags16 & 4) || threadMayUse()) && node->isKindOf(D_581fa48)) {
-        Ref00503fb0<Node00503fb0> reference(node);
+        Ref00503fb0<Object016b9108> reference(node);
         FUN_008f2f80(node, target, x * z, y, self->scale);
     }
 }

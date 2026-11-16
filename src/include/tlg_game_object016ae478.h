@@ -31,40 +31,40 @@ class Object016ae478 : public Object01343880 /* derived name */
   private:
     /* +0x38: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held38;
+    Ref00503fb0<Object016b9108> held38;
     /* +0x40: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held40;
+    Ref00503fb0<Object016b9108> held40;
     /* +0x48: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held48;
+    Ref00503fb0<Object016b9108> held48;
     /* +0x50: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held50;
+    Ref00503fb0<Object016b9108> held50;
     /* +0x58: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held58;
+    Ref00503fb0<Object016b9108> held58;
     /* +0x60: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held60;
+    Ref00503fb0<Object016b9108> held60;
     /* +0x68: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held68;
+    Ref00503fb0<Object016b9108> held68;
     /* +0x70: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     /* +0x78: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held78;
+    Ref00503fb0<Object016b9108> held78;
     /* +0x80: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held80;
+    Ref00503fb0<Object016b9108> held80;
     /* +0x88: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held88;
+    Ref00503fb0<Object016b9108> held88;
     /* +0x90: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held90;
+    Ref00503fb0<Object016b9108> held90;
 };
 
 #endif

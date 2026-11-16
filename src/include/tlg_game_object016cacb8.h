@@ -59,7 +59,7 @@ class Object016cacb8 : public Object016b9108 /* derived name */
   private:
     /* +0x28: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held28;
+    Ref00503fb0<Object016b9108> held28;
     Pair00421900 unknown30; /* +0x30: the value at 0x57d3f20 twice; not traced */
 };
 

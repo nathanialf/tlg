@@ -30,7 +30,7 @@ class Object016b6c98 : public Object016b6c20 /* derived name */
     /* +0x70: a counted reference, empty from the constructor, released by
      * the destructor first (the pointer cleared, `cmp dword [r14+8],
      * 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     u8 unknown78[0x8];
 };
 

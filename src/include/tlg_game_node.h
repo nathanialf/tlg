@@ -10,6 +10,7 @@
 #include "tlg_types.h"
 #include "tlg_game_name.h"
 #include "tlg_game_type.h"
+#include "tlg_game_object016b9108.h"
 
 struct Component00503fb0 { /* derived name */
     u8 unknown0[0x18];
@@ -33,9 +34,7 @@ extern __thread bool D_16dc088; /* derived name: the thread destroys released ob
  * its readers are not traced */
 extern __thread bool D_16dc089; /* derived name */
 
-class Node00503fb0; /* derived name */
-
-void FUN_00c14bc0(Node00503fb0 *node); /* derived name: releases it later */
+void FUN_00c14bc0(Object016b9108 *object); /* derived name: releases it later */
 
 /* the value at `value` replaced by `replacement` when it is `expected`;
  * returns the value found (`lock cmpxchg; cmove eax, ecx` at every site: the
@@ -285,13 +284,12 @@ template <class T> class AtomicRef0045c470 /* derived name */
     T *object;
 };
 
-class Node00503fb0 /* derived name */
+/* the scene node: the root class's object with its components (+0x58,
+ * count +0x60) and its children (+0x40, count +0x48), its own members from
+ * the root class's end on */
+class Node00503fb0 : public Object016b9108 /* derived name */
 {
   public:
-    virtual void unknown0();
-    virtual void unknown1();
-    virtual void destroy(); /* derived name; slot 2 */
-
     /* the component at a signed index (`movsxd` at each use under an unsigned
      * counter: 0x9f54b0, 0x5065f0) */
     Component00503fb0 *componentAt(int index) const /* derived name */
@@ -323,19 +321,6 @@ class Node00503fb0 /* derived name */
         return findComponent(type, next);
     }
 
-    /* whether the node's own type is `wanted` or derives from it: the wanted
-     * type is read before the node's (0x848cce, FUN_00848c20) */
-    bool isKindOf(const Type00503fb0 *wanted) const /* derived name */
-    {
-        return ::isKindOf(type, wanted);
-    }
-
-    int references; /* +0x8 */
-    u8 unknownc[0xa];
-    u16 flags16;              /* +0x16: bit 2 lets any thread use the node (FUN_00618b00) */
-    const Type00503fb0 *type; /* +0x18: the node's own type (FUN_00858390) */
-    u8 flags20;               /* +0x20: bit 1 set when a child is taken out (FUN_00c57120) */
-    u8 unknown21[0x3];
     int unknown24; /* +0x24: the index of the object's handler in a visitor's table (FUN_00589590) */
     u8 unknown28[0x8];
     int readers;                         /* +0x30 */

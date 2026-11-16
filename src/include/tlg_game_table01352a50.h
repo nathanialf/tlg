@@ -13,11 +13,11 @@
 /* one entry, 0x18 bytes: the key's hash at +0x0 (its low bits pick the
  * bucket: `and eax, 0x1f` at 0x72d13f), the name at +0x4, the reference at
  * +0x8, the next entry of the bucket (or of the free list) at +0x10. */
-struct TableEntry01352a50 {          /* derived name */
-    u32 hash;                        /* +0x0 */
-    Name name;                       /* +0x4 */
-    Ref00503fb0<Node00503fb0> value; /* +0x8 */
-    TableEntry01352a50 *next;        /* +0x10 */
+struct TableEntry01352a50 {            /* derived name */
+    u32 hash;                          /* +0x0 */
+    Name name;                         /* +0x4 */
+    Ref00503fb0<Object016b9108> value; /* +0x8 */
+    TableEntry01352a50 *next;          /* +0x10 */
 };
 
 /* the buckets at +0x0, the free entries' list 8 bytes after them and the

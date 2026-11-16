@@ -9,9 +9,9 @@
  * subtitle system; the classes are not traced. */
 struct Object00b72dd0 { /* derived name */
     u8 unknown0[0x78];
-    AtomicRef0045c470<Node00503fb0> unknown78;          /* +0x78 */
-    int unknown80;                                      /* +0x80 */
-    Array01343a80<Ref00503fb0<Node00503fb0>> unknown88; /* +0x88 */
+    AtomicRef0045c470<Object016b9108> unknown78;          /* +0x78 */
+    int unknown80;                                        /* +0x80 */
+    Array01343a80<Ref00503fb0<Object016b9108>> unknown88; /* +0x88 */
 };
 
 void FUN_00b72dd0(Object00b72dd0 *self) /* derived name */

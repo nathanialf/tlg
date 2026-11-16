@@ -5,7 +5,7 @@
  * at +0x0, +0x8, +0x10: each dropped, the last declared first. A function of its own in
  * the executable (no vtable pointer is stored: not a virtual destructor).
  * The object's other members and the referenced class are not traced. */
-class Value01387dd0 : public Node00503fb0 /* derived name */
+class Value01387dd0 : public Object016b9108 /* derived name */
 {
 };
 

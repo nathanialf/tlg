@@ -28,7 +28,7 @@ class Object016ad2f0 : public Object00774560 /* derived name */
     /* +0x108: a counted reference another thread may replace, emptied by
      * compare-and-swap by the constructor, released by the destructor (the
      * pointer cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Node00503fb0> held108;
+    AtomicRef0045c470<Object016b9108> held108;
     int unknown110; /* +0x110: zero from the constructor; not traced */
     u8 unknown114[0xc];
     /* +0x120: (0, 0, 0, 1.0) from the constructor, one aligned store
@@ -38,7 +38,7 @@ class Object016ad2f0 : public Object00774560 /* derived name */
     /* +0x138: a counted reference another thread may replace, emptied by
      * compare-and-swap by the constructor, released by the destructor (the
      * pointer cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Node00503fb0> held138;
+    AtomicRef0045c470<Object016b9108> held138;
     int unknown140; /* +0x140: zero from the constructor; not traced */
 };
 

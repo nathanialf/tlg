@@ -8,7 +8,7 @@
  * line: the array's own member, instantiated here until a holder of the
  * array is written. The element's other members and the referenced class
  * are not traced. */
-class Value013aec80 : public Node00503fb0 /* derived name */
+class Value013aec80 : public Object016b9108 /* derived name */
 {
 };
 

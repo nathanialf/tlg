@@ -5,7 +5,7 @@
  * +0x180, both or neither: nothing is done unless the two are given. The
  * classes are not traced; each object's class is one over the reference's
  * (`cmp rsi, rbx` at 0x488886, the argument first). */
-class Base00488840 : public Node00503fb0 /* derived name */
+class Base00488840 : public Object016b9108 /* derived name */
 {
 };
 

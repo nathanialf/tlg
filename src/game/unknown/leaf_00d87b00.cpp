@@ -8,7 +8,7 @@
  * are not traced. */
 struct Holder00d87b00; /* derived name */
 
-class Base00d87b00 : public Node00503fb0 /* derived name */
+class Base00d87b00 : public Object016b9108 /* derived name */
 {
 };
 

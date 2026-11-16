@@ -29,8 +29,8 @@ class Object016cdb58 : public Object016b9108 /* derived name */
 
   private:
     u8 unknown24[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record28; /* +0x28: an array of counted references */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record40; /* +0x40: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record28; /* +0x28: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record40; /* +0x40: an array of counted references */
     int unknown58; /* +0x58: zero from the constructor; not traced */
     u8 unknown5c[0x4];
 };

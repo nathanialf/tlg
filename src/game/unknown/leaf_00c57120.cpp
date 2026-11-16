@@ -24,7 +24,7 @@ void FUN_00c57120(Node00c57120 *self) /* derived name */
     if (parent) {
         addReference(self);
         FUN_00c56780(self);
-        parent->flags20 |= 2;
+        parent->flags |= 2;
         int index = self->index;
         if (FUN_01351240(&parent->children, index))
             static_cast<Node00c57120 *>(parent->children[index].get())->index = index;

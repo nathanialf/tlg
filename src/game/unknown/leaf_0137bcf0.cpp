@@ -12,8 +12,8 @@ struct Object0137bcf0 /* derived name */
     ~Object0137bcf0();
 
     u8 unknown0[0x80];
-    Ref00503fb0<Node00503fb0> unknown80; /* +0x80 */
-    Ref00503fb0<Node00503fb0> unknown88; /* +0x88 */
+    Ref00503fb0<Object016b9108> unknown80; /* +0x80 */
+    Ref00503fb0<Object016b9108> unknown88; /* +0x88 */
 };
 
 Object0137bcf0::~Object0137bcf0() {}

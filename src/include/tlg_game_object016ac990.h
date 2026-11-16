@@ -35,13 +35,13 @@ class Object016ac990 : public Object00774560 /* derived name */
     u8 unknown104[0xc];
     /* +0x110: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held110;
+    Ref00503fb0<Object016b9108> held110;
     /* +0x118: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held118;
+    Ref00503fb0<Object016b9108> held118;
     /* +0x120: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held120;
+    Ref00503fb0<Object016b9108> held120;
     u8 unknown128[0x2c];
     int unknown154; /* +0x154: 1 from the constructor; not traced */
     u8 unknown158[0x8];

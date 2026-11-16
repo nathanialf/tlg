@@ -6,12 +6,12 @@
  * referenced object's class are not traced. */
 struct Object004aeee0 { /* derived name */
     u8 unknown0[0xa8];
-    AtomicRef0045c470<Node00503fb0> unknowna8; /* +0xa8 */
+    AtomicRef0045c470<Object016b9108> unknowna8; /* +0xa8 */
 };
 
 /* the object set: a class of its own over the counted one (the pointer is
  * converted before the exchange: AtomicRef0045c470's set) */
-class Value004aeee0 : public Node00503fb0 /* derived name */
+class Value004aeee0 : public Object016b9108 /* derived name */
 {
 };
 

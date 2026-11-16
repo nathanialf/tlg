@@ -7,7 +7,7 @@
  * (tlg_game_array0081aaf0.h's removeUnordered) over another referenced
  * class, out of line: instantiated here until a caller of it is written.
  * The referenced class is not traced. */
-class Value00d703b0 : public Node00503fb0 /* derived name */
+class Value00d703b0 : public Object016b9108 /* derived name */
 {
 };
 

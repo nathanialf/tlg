@@ -50,10 +50,10 @@ class Object016b6f48 : public Object01343880 /* derived name */
     u8 unknown4c[0x4];
     /* +0x50: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held50;
+    Ref00503fb0<Object016b9108> held50;
     /* +0x58: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held58;
+    Ref00503fb0<Object016b9108> held58;
 };
 
 #endif

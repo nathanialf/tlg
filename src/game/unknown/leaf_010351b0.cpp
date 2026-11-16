@@ -19,15 +19,15 @@ class Object016c0ed8 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x5c];
     Name name21c; /* +0x21c: released by the destructor */
     u8 unknown220[0xc];
     int active22c; /* +0x22c: cleared by the destructor where it is set */
     u8 unknown230[0x8];
-    Registry00f516f0 *registry;           /* +0x238: the array this object is entered in, or null */
-    void *unknown240;                     /* +0x240: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x248: a counted reference */
+    Registry00f516f0 *registry; /* +0x238: the array this object is entered in, or null */
+    void *unknown240;           /* +0x240: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x248: a counted reference */
     u8 unknown250[0x20];
     Object016d54f8
         part270; /* +0x270: a member whose destructor is inlined (tlg_game_object016d7a28.h) */

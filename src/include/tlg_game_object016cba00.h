@@ -22,8 +22,8 @@ class Object016cba00 : public Object016b9108 /* derived name */
     virtual ~Object016cba00();
 
   private:
-    Name name24;                            /* +0x24: empty from the constructor */
-    AtomicRef0045c470<Node00503fb0> held28; /* +0x28 */
+    Name name24;                              /* +0x24: empty from the constructor */
+    AtomicRef0045c470<Object016b9108> held28; /* +0x28 */
 };
 
 #endif

@@ -28,7 +28,7 @@ class Object016b0a20 : public Object00ca38f0 /* derived name */
     u8 unknown8[0x50];
     /* +0x58: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held58;
+    Ref00503fb0<Object016b9108> held58;
     float unknown60; /* +0x60: 1.0 from the constructor; not traced */
     float unknown64; /* +0x64: zero from the constructor; not traced */
 };

@@ -8,11 +8,11 @@
  * counted reference at +0xb8. Its destructor is a function of its own
  * (0x1347ab0): the reference at +0xb8 released, then the one at +0x8, then
  * the name. The rest is not traced. */
-struct Entry00231020 {                    /* derived name */
-    Name name;                            /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> node; /* +0x8 */
+struct Entry00231020 {                      /* derived name */
+    Name name;                              /* +0x0 */
+    AtomicRef0045c470<Object016b9108> node; /* +0x8 */
     u8 unknown10[0xa8];
-    Ref00503fb0<Node00503fb0> unknownb8; /* +0xb8 */
+    Ref00503fb0<Object016b9108> unknownb8; /* +0xb8 */
     u8 unknownc0[0x20];
 };
 
@@ -32,7 +32,7 @@ struct Object00231020 { /* derived name */
 Object00231020::~Object00231020() {}
 
 void FUN_002307d0(Object00231020 *self); /* derived name */
-void FUN_00c57220(Node00503fb0 *node);   /* derived name */
+void FUN_00c57220(Object016b9108 *node); /* derived name */
 
 /* derived names: after FUN_002307d0, each entry that holds a node hands it
  * to FUN_00c57220 and empties its reference by compare-and-swap (the array

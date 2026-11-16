@@ -23,12 +23,12 @@ extern Object057d74b4 D_57d74b4;
 
 struct Object004ab640 { /* derived name */
     u8 unknown0[0x38];
-    AtomicRef0045c470<Node00503fb0> reference; /* +0x38 */
-    Name name;                                 /* +0x40 */
+    AtomicRef0045c470<Object016b9108> reference; /* +0x38 */
+    Name name;                                   /* +0x40 */
 };
 
 void FUN_00c63970(Member05938c40_d0 *member, Object057d74b4 *object, Name *name,
-                  AtomicRef0045c470<Node00503fb0> *reference); /* derived name */
+                  AtomicRef0045c470<Object016b9108> *reference); /* derived name */
 
 void FUN_004ab640(Object004ab640 *self) /* derived name */
 {

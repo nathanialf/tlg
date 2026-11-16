@@ -31,7 +31,7 @@ class Object016cec20 : public Object016b9108 /* derived name */
     /* +0x28: a counted reference, empty from the constructor, released by
      * the destructor (the pointer cleared, `cmp dword [r+8], 0xdeadc0de`,
      * the count dropped) */
-    Ref00503fb0<Node00503fb0> held28;
+    Ref00503fb0<Object016b9108> held28;
     float unknown30; /* +0x30: 2.0 from the constructor; not traced */
     float unknown34; /* +0x34: 10.0 from the constructor; not traced */
 };

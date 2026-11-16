@@ -35,7 +35,7 @@ class Object016b4340 : public Base016b4340 /* derived name */
 
   private:
     int unknown2c; /* +0x2c: zero from the constructor; not traced */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record30; /* +0x30: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record30; /* +0x30: an array of counted references */
     Name name48; /* +0x48: empty from the constructor, released by the destructor */
     u8 unknown4c[0x4];
 };

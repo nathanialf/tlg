@@ -9,13 +9,13 @@
 struct Argument00d641e0 { /* derived name */
     u8 unknown0[0x34];
     u8 unknown34[4];
-    AtomicRef0045c470<Node00503fb0> unknown38; /* +0x38 */
+    AtomicRef0045c470<Object016b9108> unknown38; /* +0x38 */
 };
 
 /* the object found: a class of its own over the counted one (the pointer
  * is converted where the reference compares it, first: `cmp rcx, rbx` at
  * 0xd64234) */
-class Value00d44120 : public Node00503fb0 /* derived name */
+class Value00d44120 : public Object016b9108 /* derived name */
 {
 };
 

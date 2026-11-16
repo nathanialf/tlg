@@ -33,7 +33,7 @@ class Object016b42b0 : public Base016b4340 /* derived name */
 
   private:
     int unknown2c; /* +0x2c: zero from the constructor; not traced */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record30; /* +0x30: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record30; /* +0x30: an array of counted references */
     float unknown48; /* +0x48: 1.0 from the constructor; not traced */
     u8 unknown4c[0x4];
 };

@@ -18,16 +18,16 @@ class Object016c2098 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
-    OwnedBlock05943280 block1c0;           /* +0x1c0: a block released by the destructor */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
+    OwnedBlock05943280 block1c0;             /* +0x1c0: a block released by the destructor */
     u8 unknown1c8[0x9c];
     Name name264; /* +0x264: released by the destructor */
     u8 unknown268[0xc];
     int active274; /* +0x274: cleared by the destructor where it is set */
     u8 unknown278[0x8];
-    Registry00f516f0 *registry;           /* +0x280: the array this object is entered in, or null */
-    void *unknown288;                     /* +0x288: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x290: a counted reference */
+    Registry00f516f0 *registry; /* +0x280: the array this object is entered in, or null */
+    void *unknown288;           /* +0x288: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x290: a counted reference */
     u8 unknown298[0x20];
     Array05943280<Element0101ece0> array2b8; /* +0x2b8: an array of named elements */
     u8 unknown2d0[0x10];

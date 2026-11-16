@@ -18,7 +18,7 @@ class Object016c0f78 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x20];
     Name name1e0; /* +0x1e0: released by the destructor */
     Name name1e4; /* +0x1e4: released by the destructor */
@@ -29,9 +29,9 @@ class Object016c0f78 : public Object00c1b7f0, public Object013cd320 /* derived n
     u8 unknown200[0xc];
     int active20c; /* +0x20c: cleared by the destructor where it is set */
     u8 unknown210[0x8];
-    Registry00f516f0 *registry;           /* +0x218: the array this object is entered in, or null */
-    void *unknown220;                     /* +0x220: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x228: a counted reference */
+    Registry00f516f0 *registry; /* +0x218: the array this object is entered in, or null */
+    void *unknown220;           /* +0x220: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x228: a counted reference */
     u8 unknown230[0x20];
     Array05943280<Element0101ece0> array250; /* +0x250: an array of named elements */
     u8 unknown268[0x10];

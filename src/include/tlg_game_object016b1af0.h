@@ -44,7 +44,7 @@ class Object016b1af0 : public Object01343880 /* derived name */
     void *unknown48; /* +0x48: null from the constructor; not traced */
     /* +0x50: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held50;
+    Ref00503fb0<Object016b9108> held50;
     u8 unknown58[0x8];
 };
 

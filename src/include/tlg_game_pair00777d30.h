@@ -8,9 +8,9 @@
 
 #include "tlg_game_node.h"
 
-struct Pair00777d30 {                         /* derived name */
-    u64 unknown0;                             /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> unknown8; /* +0x8 */
+struct Pair00777d30 {                           /* derived name */
+    u64 unknown0;                               /* +0x0 */
+    AtomicRef0045c470<Object016b9108> unknown8; /* +0x8 */
 };
 
 void FUN_00777d30(Pair00777d30 *self, const Pair00777d30 *other); /* derived name */

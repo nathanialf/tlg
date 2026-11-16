@@ -5,7 +5,7 @@
  * at +0x38 of it, whose node at +0x30 the constructor takes a reference to
  * (`mov rax, [0x5938c40]; mov rax, [rax+0x38]; mov rcx, [rax+0x30]` at
  * 0xc91f43). The classes are not traced. */
-class Value00c91f20 : public Node00503fb0 /* derived name */
+class Value00c91f20 : public Object016b9108 /* derived name */
 {
 };
 

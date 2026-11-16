@@ -26,7 +26,7 @@ class Object016ce208 : public Object016b9108 /* derived name */
     /* +0x28: an array of references with its lock (`mov dword [rbx+0x3c],
      * 0` after the owner's index), torn down by the destructor (`lea rdi,
      * [rbx+0x28]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> array28;
+    Array01343a80<Ref00503fb0<Object016b9108>> array28;
 };
 
 #endif

@@ -8,10 +8,10 @@
 struct Record006df470 { /* derived name */
     void operator=(const Record006df470 &other);
 
-    int unknown0;                           /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> object; /* +0x8 */
-    Name unknown10;                         /* +0x10 */
-    Name unknown14;                         /* +0x14 */
+    int unknown0;                             /* +0x0 */
+    AtomicRef0045c470<Object016b9108> object; /* +0x8 */
+    Name unknown10;                           /* +0x10 */
+    Name unknown14;                           /* +0x14 */
 };
 
 void Record006df470::operator=(const Record006df470 &other)

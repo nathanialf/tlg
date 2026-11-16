@@ -23,7 +23,7 @@ class Object016d5050 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    Ref00503fb0<Node00503fb0> held10; /* +0x10: released by the destructor */
+    Ref00503fb0<Object016b9108> held10; /* +0x10: released by the destructor */
 };
 
 /* derived name: the complete destructor: the body is empty; the reference is

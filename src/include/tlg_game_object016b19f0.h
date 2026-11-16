@@ -37,7 +37,7 @@ class Object016b19f0 : public Object01343880 /* derived name */
     int unknown38; /* +0x38: zero from the constructor; not traced */
     /* +0x40: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held40;
+    Ref00503fb0<Object016b9108> held40;
 };
 
 /* derived name: the complete destructor FUN_009f6990: the body is empty; the

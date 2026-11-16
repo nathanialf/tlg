@@ -9,8 +9,8 @@
  * reported instead (the message at 0x15b1b05). The owner is not traced. */
 struct Object00c29d60 { /* derived name */
     u8 unknown0[0x238];
-    Ref00503fb0<Node00503fb0> *references; /* +0x238 */
-    unsigned referenceCount;               /* +0x240 */
+    Ref00503fb0<Object016b9108> *references; /* +0x238 */
+    unsigned referenceCount;                 /* +0x240 */
 };
 
 void FUN_00c29d60(Object00c29d60 *self, unsigned index) /* derived name */
@@ -18,7 +18,7 @@ void FUN_00c29d60(Object00c29d60 *self, unsigned index) /* derived name */
     if (index < self->referenceCount) {
         self->references[index].release();
         memmove(self->references + index, self->references + index + 1,
-                (self->referenceCount - index - 1) * unsigned(sizeof(Ref00503fb0<Node00503fb0>)));
+                (self->referenceCount - index - 1) * unsigned(sizeof(Ref00503fb0<Object016b9108>)));
         --self->referenceCount;
     } else {
         FUN_00c831d0(self, "index out of range\n");

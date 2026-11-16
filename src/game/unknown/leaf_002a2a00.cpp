@@ -17,7 +17,7 @@ class Object016a7c38 : public Object01343880 /* derived name */
     Name name34; /* +0x34: released by the destructor (`mov eax, [rbx+0x34]; shl 5`) */
     /* +0x38: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held38;
+    Ref00503fb0<Object016b9108> held38;
     Name name40; /* +0x40: released by the destructor (`mov eax, [rbx+0x40]; shl 5`) */
     Name name44; /* +0x44: released by the destructor (`mov eax, [rbx+0x44]; shl 5`) */
     u8 unknown48[0x18];
@@ -25,14 +25,14 @@ class Object016a7c38 : public Object01343880 /* derived name */
     u8 unknown64[0x4];
     /* +0x68: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held68;
+    Ref00503fb0<Object016b9108> held68;
     u8 unknown70[0x8];
     /* +0x78: an owned block, released by the destructor (`mov rax, [rbx+0x78]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block78;
     u8 unknown80[0x80];
     /* +0x100: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held100;
+    Ref00503fb0<Object016b9108> held100;
     /* +0x108: an owned block, released by the destructor (`mov rax, [rbx+0x108]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block108;
     u8 unknown110[0x10];

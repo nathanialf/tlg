@@ -34,10 +34,10 @@ class Object016aa290 : public Object016aa0d0 /* derived name */
     int unknown6c; /* +0x6c: zero from the constructor; not traced */
     /* +0x70: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     /* +0x78: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held78;
+    Ref00503fb0<Object016b9108> held78;
 };
 
 #endif

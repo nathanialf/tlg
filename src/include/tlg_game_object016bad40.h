@@ -35,7 +35,7 @@ class Object016bad40 : public Object01343880 /* derived name */
 
   private:
     u8 unknown34[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record38; /* +0x38: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record38; /* +0x38: an array of counted references */
     /* +0x50: an array whose elements need no destructor: the destructor
      * only releases its block (`mov rax, [rbx+0x50]; ... cmp ecx, 0xa`) */
     Array01343a80<u32> array50;

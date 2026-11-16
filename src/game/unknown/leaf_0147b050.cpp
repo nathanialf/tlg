@@ -5,7 +5,7 @@
  * reference at +0x17b8 of the object takes the value of another one, by
  * compare-and-swap. */
 void FUN_0147b050(Object01476130 *self,
-                  const AtomicRef0045c470<Node00503fb0> &value) /* derived name */
+                  const AtomicRef0045c470<Object016b9108> &value) /* derived name */
 {
     self->unknown17b8 = value;
 }

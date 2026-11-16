@@ -39,12 +39,12 @@ class Object016a9d18 : public Object016b9108 /* derived name */
 
   private:
     u8 unknown24[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record28; /* +0x28: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record28; /* +0x28: an array of counted references */
     float unknown40; /* +0x40: -1.0 from the constructor; not traced */
     float unknown44; /* +0x44: -1.0 from the constructor; not traced */
     int unknown48;   /* +0x48: 5 from the constructor; not traced */
     u8 unknown4c[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record50; /* +0x50: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record50; /* +0x50: an array of counted references */
     float unknown68; /* +0x68: zero from the constructor; not traced */
     float unknown6c; /* +0x6c: 3.5 from the constructor; not traced */
 };

@@ -8,10 +8,10 @@
  * traced (no element is destroyed: ints here). */
 struct Object01343a80 { /* derived name */
     u8 unknown0[0x10];
-    Array01343a80<int> unknown10;                       /* +0x10 */
-    Array01343a80<Ref00503fb0<Node00503fb0>> unknown28; /* +0x28 */
-    void *unknown40;                                    /* +0x40 */
-    Array01343a80<int> unknown48;                       /* +0x48 */
+    Array01343a80<int> unknown10;                         /* +0x10 */
+    Array01343a80<Ref00503fb0<Object016b9108>> unknown28; /* +0x28 */
+    void *unknown40;                                      /* +0x40 */
+    Array01343a80<int> unknown48;                         /* +0x48 */
 };
 
 void FUN_013442d0(Object01343a80 *self); /* derived name */

@@ -26,18 +26,18 @@ class Object016a7e28 : public Object016b9108 /* derived name */
     /* +0x30: an array of references with its lock (the word at +0x44 stored
      * apart from the clears around it), torn down by the destructor (`lea
      * rdi, [rbx+0x30]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> array30;
+    Array01343a80<Ref00503fb0<Object016b9108>> array30;
     /* +0x48: a counted reference another thread may replace, emptied by
      * compare-and-swap by the constructor, released by the destructor (the
      * pointer cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Node00503fb0> held48;
+    AtomicRef0045c470<Object016b9108> held48;
     /* +0x50: the same kind of array (its lock at +0x64), torn down by the
      * destructor (`lea rdi, [rbx+0x50]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> array50;
+    Array01343a80<Ref00503fb0<Object016b9108>> array50;
     /* +0x68: a counted reference another thread may replace, emptied by
      * compare-and-swap by the constructor, released by the destructor (the
      * pointer cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Node00503fb0> held68;
+    AtomicRef0045c470<Object016b9108> held68;
 };
 
 #endif

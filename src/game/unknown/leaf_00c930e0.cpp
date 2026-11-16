@@ -2,10 +2,10 @@
 #include "tlg_game_object016b8a80.h"
 
 /* the object at the record's +0x30, of a class over
- * Node00503fb0 (not traced): the constructor compares it first with the
+ * Object016b9108 (not traced): the constructor compares it first with the
  * reference's old object after the exchange (`cmp rcx, rbx` at 0xc93034), as
  * AtomicRef0045c470::set compares a pointer converted from a class over T */
-class Node05938c40_38_30 : public Node00503fb0 /* derived name */
+class Node05938c40_38_30 : public Object016b9108 /* derived name */
 {
 };
 

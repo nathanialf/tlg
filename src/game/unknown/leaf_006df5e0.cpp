@@ -16,13 +16,13 @@ struct Pair006df5e0 { /* derived name */
 struct Record006df5e0 { /* derived name */
     void operator=(const Record006df5e0 &other);
 
-    int unknown0;                             /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> unknown8; /* +0x8 */
-    Float4A unknown10;                        /* +0x10 */
-    Float4A unknown20;                        /* +0x20 */
-    Name unknown30;                           /* +0x30 */
-    Pair006df5e0 unknown34;                   /* +0x34 */
-    Float4A unknown40;                        /* +0x40 */
+    int unknown0;                               /* +0x0 */
+    AtomicRef0045c470<Object016b9108> unknown8; /* +0x8 */
+    Float4A unknown10;                          /* +0x10 */
+    Float4A unknown20;                          /* +0x20 */
+    Name unknown30;                             /* +0x30 */
+    Pair006df5e0 unknown34;                     /* +0x34 */
+    Float4A unknown40;                          /* +0x40 */
 };
 
 void Record006df5e0::operator=(const Record006df5e0 &other)

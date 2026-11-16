@@ -26,9 +26,9 @@ struct SubtitleSystem00b753d0 { /* derived name */
     int unknownc;               /* +0xc */
     int unknown10;              /* +0x10 */
     u8 unknown14[0xc];
-    AtomicRef0045c470<Node00503fb0> unknown20; /* +0x20 */
-    void *unknown28;                           /* +0x28 */
-    AtomicRef0045c470<Node00503fb0> unknown30; /* +0x30 */
+    AtomicRef0045c470<Object016b9108> unknown20; /* +0x20 */
+    void *unknown28;                             /* +0x28 */
+    AtomicRef0045c470<Object016b9108> unknown30; /* +0x30 */
 };
 
 void FUN_00b753d0(SubtitleSystem00b753d0 *self) /* derived name */

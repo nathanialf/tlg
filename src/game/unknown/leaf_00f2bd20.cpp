@@ -18,15 +18,15 @@ class Object016beeb0 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x50];
     Name name210; /* +0x210: released by the destructor */
     u8 unknown214[0xc];
     int active220; /* +0x220: cleared by the destructor where it is set */
     u8 unknown224[0x4];
-    Registry00f516f0 *registry;           /* +0x228: the array this object is entered in, or null */
-    void *unknown230;                     /* +0x230: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x238: a counted reference */
+    Registry00f516f0 *registry; /* +0x228: the array this object is entered in, or null */
+    void *unknown230;           /* +0x230: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x238: a counted reference */
     u8 unknown240[0x28];
     AtomicRef0045c470<Node011f7800> refs268
         [4]; /* +0x268: four counted references, each node's pointer at +0xa0 cleared and the reference emptied while the object is active */

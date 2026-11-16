@@ -28,7 +28,7 @@ class Object016cebe8 : public Object00c298a0 /* derived name */
     int unknown94; /* +0x94: zero from the constructor; not traced */
     /* +0x98: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held98;
+    Ref00503fb0<Object016b9108> held98;
 };
 
 #endif

@@ -49,7 +49,7 @@ class Object016a9290 : public Object016b9108 /* derived name */
     Array01343a80<void *> array28;
     /* +0x40: an array of references with its lock (+0x54), torn down by the
      * destructor (`lea rdi, [rbx+0x40]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> array40;
+    Array01343a80<Ref00503fb0<Object016b9108>> array40;
     u8 unknown58[0x8];
     Cell003ea9b0 cells[0x180]; /* +0x60 */
     u8 unknown6060[0x10];

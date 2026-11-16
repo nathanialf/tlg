@@ -9,7 +9,7 @@
  * member at +0x1c0 and the elements' first eight bytes are not traced. */
 struct Element01367690 { /* derived name */
     u8 unknown0[0x8];
-    Ref00503fb0<Node00503fb0> reference; /* +0x8 */
+    Ref00503fb0<Object016b9108> reference; /* +0x8 */
 };
 
 struct Member01367690; /* derived name */

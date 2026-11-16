@@ -25,7 +25,7 @@ class Object016bedd8 : public Object00c1b7f0, public Object013cd320 /* derived n
   private:
     u8 unknown194
         [0x24]; /* +0x194: in the tail padding of Object013cd320; zero from the constructor; not traced */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         owner;       /* +0x1b8: the owner, a counted reference set by compare-and-swap (0xfc5877) */
     Name name1c0;    /* +0x1c0: released by the destructor */
     bool unknown1c4; /* +0x1c4: false from the constructor; not traced */
@@ -34,7 +34,7 @@ class Object016bedd8 : public Object00c1b7f0, public Object013cd320 /* derived n
     int unknown1d4;  /* +0x1d4: zero from the constructor; not traced */
     Registry00f516f0 *registry; /* +0x1d8: the owner's array this object is entered in, or null */
     void *unknown1e0;           /* +0x1e0: set with the array (0xfc578f) */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         held1e8;      /* +0x1e8: a counted reference set by compare-and-swap (0xfc57a7) */
     void *unknown1f0; /* +0x1f0: null from the constructor; not traced */
     void *unknown1f8; /* +0x1f8: null from the constructor; not traced */

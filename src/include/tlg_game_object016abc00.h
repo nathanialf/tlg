@@ -17,7 +17,7 @@ extern Type00503fb0 *D_598a628;
  * (0x5c1068) BEFORE the name is made and the type (0x5c1088) AFTER it, so
  * the type is read inside a function the name is an argument of. Not traced
  * beyond that. */
-struct Value005c0fe0 : Node00503fb0 {
+struct Value005c0fe0 : Object016b9108 {
     static Value005c0fe0 *find(Object05945a38 *owner, const Name &name)
     {
         return static_cast<Value005c0fe0 *>(FUN_00cbc5a0(owner, D_598a628, name, 0));
@@ -47,10 +47,10 @@ class Object016abc00 : public Object01343880 /* derived name */
     virtual void slot8();
 
   private:
-    Array01343a80<Ref00503fb0<Node00503fb0>> record38; /* +0x38: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record38; /* +0x38: an array of counted references */
     /* +0x50: a counted reference, set by the constructor, released by the
      * destructor */
-    AtomicRef0045c470<Node00503fb0> held50;
+    AtomicRef0045c470<Object016b9108> held50;
 };
 
 #endif

@@ -18,15 +18,15 @@ class Object016c3580 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
+    AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x30];
     Name name1f0; /* +0x1f0: released by the destructor */
     u8 unknown1f4[0xc];
     int active200; /* +0x200: cleared by the destructor where it is set */
     u8 unknown204[0x4];
-    Registry00f516f0 *registry;           /* +0x208: the array this object is entered in, or null */
-    void *unknown210;                     /* +0x210: not traced */
-    AtomicRef0045c470<Node00503fb0> held; /* +0x218: a counted reference */
+    Registry00f516f0 *registry; /* +0x208: the array this object is entered in, or null */
+    void *unknown210;           /* +0x210: not traced */
+    AtomicRef0045c470<Object016b9108> held; /* +0x218: a counted reference */
     u8 unknown220[0x20];
     Object016d7d90 part240; /* +0x240: a member whose destructor is held inlined */
     Object016d7de8 parts740

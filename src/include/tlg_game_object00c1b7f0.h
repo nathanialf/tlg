@@ -48,7 +48,7 @@ class Object00c1b7f0 : public Object016b9108 /* derived name */
 struct Element013cd320 { /* derived name */
     void *unknown0;
     u8 unknown8[0x10];
-    Ref00503fb0<Node00503fb0> ref18; /* +0x18 */
+    Ref00503fb0<Object016b9108> ref18; /* +0x18 */
     u8 unknown20[0x8];
 };
 

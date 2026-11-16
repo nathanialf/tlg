@@ -9,17 +9,17 @@
 struct Source00abcf40 { /* derived name */
     unsigned kind;      /* +0x0 */
     u8 unknown4[0x4];
-    AtomicRef0045c470<Node00503fb0> object; /* +0x8 */
+    AtomicRef0045c470<Object016b9108> object; /* +0x8 */
 };
 
 struct Object00abcf40 { /* derived name */
     int unknown0;       /* +0x0 */
     u8 unknown4[0x4];
-    void *unknown8;                         /* +0x8 */
-    AtomicRef0045c470<Node00503fb0> object; /* +0x10 */
-    int unknown18;                          /* +0x18 */
-    int unknown1c;                          /* +0x1c */
-    bool unknown20;                         /* +0x20 */
+    void *unknown8;                           /* +0x8 */
+    AtomicRef0045c470<Object016b9108> object; /* +0x10 */
+    int unknown18;                            /* +0x18 */
+    int unknown1c;                            /* +0x1c */
+    bool unknown20;                           /* +0x20 */
     u8 unknown21[0x3];
     int unknown24; /* +0x24 */
 };

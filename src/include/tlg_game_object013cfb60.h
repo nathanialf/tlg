@@ -11,21 +11,21 @@
 
 struct Object013cfb60 { /* derived name */
     u8 unknown0[0x1d18];
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d18; /* +0x1d18: set by FUN_013cfaa0, its address returned by FUN_013cfb60 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d20; /* +0x1d20: set by FUN_013cfb70, its address returned by FUN_013cfc30 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d28; /* +0x1d28: set by FUN_013cfc40, its address returned by FUN_013cfd00 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d30; /* +0x1d30: set by FUN_013cfd10, its address returned by FUN_013cfdd0 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d38; /* +0x1d38: set by FUN_013df0c0, its address returned by FUN_013dd790 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d40; /* +0x1d40: set by FUN_013df180, its address returned by FUN_013dd7a0 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d48; /* +0x1d48: set by FUN_013df240, its address returned by FUN_013dd7b0 */
-    AtomicRef0045c470<Node00503fb0>
+    AtomicRef0045c470<Object016b9108>
         unknown1d50; /* +0x1d50: set by FUN_013df300, its address returned by FUN_013dd7c0 */
 };
 

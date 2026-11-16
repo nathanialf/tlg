@@ -5,7 +5,7 @@
  * and +0x5b50 and marks them set (the int at +0x5b40 becomes 1). The
  * classes are not traced; each object's class is one over the reference's
  * (`cmp rsi, rbx` at 0x725096, the argument first). */
-class Base00725050 : public Node00503fb0 /* derived name */
+class Base00725050 : public Object016b9108 /* derived name */
 {
 };
 

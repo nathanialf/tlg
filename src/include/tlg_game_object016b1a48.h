@@ -42,7 +42,7 @@ class Object016b1a48 : public Object01343880 /* derived name */
     float unknown44; /* +0x44: 2.0 from the constructor; not traced */
     /* +0x48: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held48;
+    Ref00503fb0<Object016b9108> held48;
     void *unknown50; /* +0x50: null from the constructor; not traced */
     void *unknown58; /* +0x58: null from the constructor; not traced */
     float unknown60; /* +0x60: -1.0 from the constructor; not traced */
@@ -55,7 +55,7 @@ class Object016b1a48 : public Object01343880 /* derived name */
     bool unknown7c;  /* +0x7c: false from the constructor; not traced */
     /* +0x80: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held80;
+    Ref00503fb0<Object016b9108> held80;
     u8 unknown88[0x8];
 };
 

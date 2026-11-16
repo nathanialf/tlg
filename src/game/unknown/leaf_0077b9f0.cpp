@@ -6,8 +6,8 @@
  * and the referenced object's class are not traced. */
 struct Object0077b9f0 { /* derived name */
     u8 unknown0[0x100];
-    void *unknown100;                           /* +0x100 */
-    AtomicRef0045c470<Node00503fb0> unknown108; /* +0x108 */
+    void *unknown100;                             /* +0x100 */
+    AtomicRef0045c470<Object016b9108> unknown108; /* +0x108 */
 };
 
 void FUN_0077b9f0(Object0077b9f0 *self) /* derived name */

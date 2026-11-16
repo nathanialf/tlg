@@ -10,11 +10,11 @@
  * of the first and third arrays are not traced. */
 struct Object013544e0 { /* derived name */
     u8 unknown0[0x10];
-    Array01343a80<int> unknown10;                       /* +0x10 */
-    Array01343a80<Ref00503fb0<Node00503fb0>> unknown28; /* +0x28 */
-    Float4A unknown40;                                  /* +0x40 */
-    void *unknown50;                                    /* +0x50 */
-    Array01343a80<int> unknown58;                       /* +0x58 */
+    Array01343a80<int> unknown10;                         /* +0x10 */
+    Array01343a80<Ref00503fb0<Object016b9108>> unknown28; /* +0x28 */
+    Float4A unknown40;                                    /* +0x40 */
+    void *unknown50;                                      /* +0x50 */
+    Array01343a80<int> unknown58;                         /* +0x58 */
 };
 
 void FUN_01354250(Object013544e0 *self); /* derived name */

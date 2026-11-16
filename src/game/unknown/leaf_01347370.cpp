@@ -9,7 +9,7 @@
  * of line: the array's own member, instantiated here until a caller of it
  * is written. The element's other members and the referenced class are not
  * traced. */
-class Value01347370 : public Node00503fb0 /* derived name */
+class Value01347370 : public Object016b9108 /* derived name */
 {
 };
 

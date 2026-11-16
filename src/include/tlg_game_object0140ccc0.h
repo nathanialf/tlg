@@ -14,7 +14,7 @@
  * traced. */
 struct Element0140ccc0 { /* derived name */
     u8 unknown0[0x98];
-    Ref00503fb0<Node00503fb0> ref98; /* +0x98 */
+    Ref00503fb0<Object016b9108> ref98; /* +0x98 */
     u8 unknowna0[0x10];
 };
 
@@ -29,7 +29,7 @@ class Object0140ccc0 /* derived name */
 
   private:
     u8 unknown0[0x18];
-    Ref00503fb0<Node00503fb0> ref18; /* +0x18 */
+    Ref00503fb0<Object016b9108> ref18; /* +0x18 */
     u8 unknown20[0x10];
     Element0140ccc0 elements[24]; /* +0x30 */
 };
@@ -48,7 +48,7 @@ class Object013e8670 /* derived name */
 
   private:
     u8 unknown0[0x18];
-    Ref00503fb0<Node00503fb0> ref18; /* +0x18 */
+    Ref00503fb0<Object016b9108> ref18; /* +0x18 */
     u8 unknown20[0x10];
     Element0140ccc0 element30;  /* +0x30 */
     Element0140ccc0 elemente0;  /* +0xe0 */

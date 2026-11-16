@@ -9,9 +9,9 @@
  * userdata, tag 7, its data 0x20 bytes in) loses its node's reference, the
  * pointer cleared after, and its name is emptied (`lock inc` of entry 0's
  * count: the empty name assigned). Returns no value. */
-struct Record00e76f80 { /* derived name */
-    Node00503fb0 *node; /* +0x0: never null here (the count is read unguarded) */
-    Name name;          /* +0x8 */
+struct Record00e76f80 {   /* derived name */
+    Object016b9108 *node; /* +0x0: never null here (the count is read unguarded) */
+    Name name;            /* +0x8 */
 };
 
 /* derived name: the record an argument holds as userdata, null for another

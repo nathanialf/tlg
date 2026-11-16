@@ -6,7 +6,7 @@
  * gives its block back (tlg_game_array.h's clear), out of line: the array's
  * own member, instantiated here until a caller of it is written. The
  * referenced class is not traced. */
-class Value00a93d40 : public Node00503fb0 /* derived name */
+class Value00a93d40 : public Object016b9108 /* derived name */
 {
 };
 

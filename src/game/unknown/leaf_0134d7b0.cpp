@@ -6,7 +6,7 @@
  * each reference dropped, the last declared first. A function of its own in
  * the executable (no vtable pointer is stored). The other members and the
  * referenced class are not traced. */
-class Value0134d7b0 : public Node00503fb0 /* derived name */
+class Value0134d7b0 : public Object016b9108 /* derived name */
 {
 };
 

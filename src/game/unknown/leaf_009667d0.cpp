@@ -6,15 +6,15 @@
  * reference to the object is held for the call. The counter is unsigned
  * (`inc r13d; cmp r13d, [rbp-0x34]; jb`) and the array's index a signed
  * int (`movsxd rax, r13d`). The classes are not traced. */
-struct Item009667d0 : Node00503fb0 { /* derived name */
-    virtual void slot3();            /* derived name; not traced */
-    virtual void slot4();            /* derived name; not traced */
-    virtual void slot5();            /* derived name; not traced */
-    virtual void slot6();            /* derived name; not traced */
-    virtual void slot7();            /* derived name; not traced */
-    virtual void slot8();            /* derived name; not traced */
-    virtual void slot9();            /* derived name; not traced */
-    virtual bool slot10();           /* derived name */
+struct Item009667d0 : Object016b9108 { /* derived name */
+    virtual void slot3();              /* derived name; not traced */
+    virtual void slot4();              /* derived name; not traced */
+    virtual void slot5();              /* derived name; not traced */
+    virtual void slot6();              /* derived name; not traced */
+    virtual void slot7();              /* derived name; not traced */
+    virtual void slot8();              /* derived name; not traced */
+    virtual void slot9();              /* derived name; not traced */
+    virtual bool slot10();             /* derived name */
 };
 
 struct Object009667d0 { /* derived name */

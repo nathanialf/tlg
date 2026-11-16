@@ -8,7 +8,7 @@ extern Type00503fb0 *D_59459e8;
 
 /* derived name: the made object's class, one over the reference's (the new
  * pointer compared first after the exchange); not traced */
-struct Value007a27a0 : Node00503fb0 {};
+struct Value007a27a0 : Object016b9108 {};
 
 /* derived name: the constructor of Object016cba00: the base built from the
  * name, the members cleared, then an object of the type at 0x59459e8 is made

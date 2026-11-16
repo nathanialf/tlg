@@ -36,7 +36,7 @@ class Object016b6a70 : public Object01343880 /* derived name */
 
   private:
     Name name34; /* +0x34: empty from the constructor, released by the destructor */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record38; /* +0x38: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record38; /* +0x38: an array of counted references */
 };
 
 /* derived name: the complete destructor FUN_00b56000: the body is empty; the

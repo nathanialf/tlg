@@ -14,12 +14,12 @@ struct Element00b43600 { /* derived name */
     u8 unknown0[0x20];
     OwnedBlock05943280 block20; /* +0x20 */
     u8 unknown28[0x10];
-    Ref00503fb0<Node00503fb0> ref38; /* +0x38 */
+    Ref00503fb0<Object016b9108> ref38; /* +0x38 */
 };
 
 /* derived name: the counted object the array at +0x38 of the class below
  * refers to; nothing of it is traced but its base. */
-class Node00b43600 : public Node00503fb0 /* derived name */
+class Node00b43600 : public Object016b9108 /* derived name */
 {
 };
 
@@ -42,9 +42,9 @@ class Object016b5f18 : public Object016b9108 /* derived name */
     u8 unknown68[0x8];
     Array05943280<Name> names70; /* +0x70: an array of Names */
     u8 unknown88[0x8];
-    AtomicRef0045c470<Node00503fb0> held90; /* +0x90: a counted reference */
-    Name name98;                            /* +0x98 */
-    AtomicRef0045c470<Node00503fb0> helda0; /* +0xa0: a counted reference */
+    AtomicRef0045c470<Object016b9108> held90; /* +0x90: a counted reference */
+    Name name98;                              /* +0x98 */
+    AtomicRef0045c470<Object016b9108> helda0; /* +0xa0: a counted reference */
 };
 
 /* derived name: the complete destructor: nothing of its own; the members

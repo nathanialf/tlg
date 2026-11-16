@@ -38,7 +38,7 @@ class Object016ad9f8 : public Object00774560 /* derived name */
     u8 unknown14c[0xc];
     /* +0x158: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Node00503fb0> held158;
+    AtomicRef0045c470<Object016b9108> held158;
     float unknown160;   /* +0x160: -1.0 from the constructor; not traced */
     u8 unknown164[0xc]; /* the rest of the 0x170 bytes the creator allocates; not traced */
 };

@@ -19,8 +19,8 @@ struct Object01345900 { /* derived name */
     u8 unknown48[0x48];
     void *unknown90; /* +0x90 */
     u8 unknown98[0x10];
-    AtomicRef0045c470<Node00503fb0> unknowna8; /* +0xa8 */
-    void *unknownb0;                           /* +0xb0 */
+    AtomicRef0045c470<Object016b9108> unknowna8; /* +0xa8 */
+    void *unknownb0;                             /* +0xb0 */
 };
 
 void FUN_01345900(Object01345900 *self) /* derived name */

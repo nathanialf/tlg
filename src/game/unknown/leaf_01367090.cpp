@@ -11,8 +11,8 @@ struct Object01367090 /* derived name */
 {
     ~Object01367090();
 
-    Ref00503fb0<Node00503fb0> unknown0; /* +0x0 */
-    Ref00503fb0<Node00503fb0> unknown8; /* +0x8 */
+    Ref00503fb0<Object016b9108> unknown0; /* +0x0 */
+    Ref00503fb0<Object016b9108> unknown8; /* +0x8 */
 };
 
 Object01367090::~Object01367090() {}

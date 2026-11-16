@@ -12,7 +12,7 @@
 #include "tlg_game_node.h"
 
 /* what a slot refers to */
-class Base009690d0 : public Node00503fb0 /* derived name */
+class Base009690d0 : public Object016b9108 /* derived name */
 {
 };
 

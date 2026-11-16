@@ -39,7 +39,7 @@ class Object016c7fb0 : public Object016b9108 /* derived name */
     Name name24; /* +0x24: released by the destructor (`mov eax, [rbx+0x24]; shl 5`) */
     /* +0x28: an array of counted references, torn down by the destructor
      * (`lea rdi, [rbx+0x28]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record28;
+    Array01343a80<Ref00503fb0<Object016b9108>> record28;
     int unknown40; /* +0x40: zero from the constructor; not traced */
     int unknown44; /* +0x44: zero from the constructor; not traced */
     int unknown48; /* +0x48: zero from the constructor; not traced */

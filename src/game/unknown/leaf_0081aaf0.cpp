@@ -6,7 +6,7 @@
  * references without keeping the order (tlg_game_array0081aaf0.h's
  * removeUnordered), out of line: the array's own member, instantiated here
  * until a caller of it is written. The referenced class is not traced. */
-class Value0081aaf0 : public Node00503fb0 /* derived name */
+class Value0081aaf0 : public Object016b9108 /* derived name */
 {
 };
 

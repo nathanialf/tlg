@@ -7,9 +7,9 @@
 struct Record00f54b50 { /* derived name */
     void operator=(const Record00f54b50 &other);
 
-    int unknown0;                           /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> first;  /* +0x8 */
-    AtomicRef0045c470<Node00503fb0> second; /* +0x10 */
+    int unknown0;                             /* +0x0 */
+    AtomicRef0045c470<Object016b9108> first;  /* +0x8 */
+    AtomicRef0045c470<Object016b9108> second; /* +0x10 */
 };
 
 void Record00f54b50::operator=(const Record00f54b50 &other)

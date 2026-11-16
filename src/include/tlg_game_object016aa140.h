@@ -29,16 +29,16 @@ class Object016aa140 : public Object016aa0d0 /* derived name */
     bool unknown64; /* +0x64: false from the constructor; not traced */
     /* +0x68: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held68;
+    Ref00503fb0<Object016b9108> held68;
     /* +0x70: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     /* +0x78: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held78;
+    Ref00503fb0<Object016b9108> held78;
     /* +0x80: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held80;
+    Ref00503fb0<Object016b9108> held80;
     u8 unknown88[0x8];
 };
 

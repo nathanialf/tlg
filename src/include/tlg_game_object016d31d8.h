@@ -57,7 +57,7 @@ class Object016d31d8 : public Object00ccfd00, public Base016d31d8 /* derived nam
   private:
     /* +0x80: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held80;
+    Ref00503fb0<Object016b9108> held80;
     int unknown88; /* +0x88: zero from the constructor; not traced */
     u8 unknown8c[0x4];
     /* +0x90: the x axis from the constructor, one aligned store

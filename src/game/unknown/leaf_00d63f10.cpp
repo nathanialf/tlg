@@ -8,7 +8,7 @@ extern Type00503fb0 *D_59459e8;
 
 /* derived name: the made object's class, one over the reference's (`cmp
  * rcx, rbx` at 0xd63f94, the new pointer first); not traced */
-struct Value00d63f10 : Node00503fb0 {};
+struct Value00d63f10 : Object016b9108 {};
 
 /* derived name: the constructor of Object016d24f8: the base built from the
  * name (FUN_00c55320), the members cleared, then an object of the type at

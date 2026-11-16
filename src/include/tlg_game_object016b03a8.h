@@ -27,10 +27,10 @@ class Object016b03a8 : public Object00c55550 /* derived name */
     u8 unknown8[0x230];
     /* +0x238: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held238;
+    Ref00503fb0<Object016b9108> held238;
     /* +0x240: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held240;
+    Ref00503fb0<Object016b9108> held240;
     u8 unknown248[0x8];
 };
 

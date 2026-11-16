@@ -9,7 +9,7 @@
  * Called through a table not traced; the classes are not traced. */
 struct Record05938c40_108 { /* derived name */
     u8 unknown0[0x2d8];
-    AtomicRef0045c470<Node00503fb0> unknown2d8; /* +0x2d8 */
+    AtomicRef0045c470<Object016b9108> unknown2d8; /* +0x2d8 */
 };
 
 struct Member05938c40_f30; /* derived name */
@@ -29,7 +29,7 @@ extern Object05989c08 *D_5989c08;
 
 struct Object0060d9d0 { /* derived name */
     u8 unknown0[0xff8];
-    Node00503fb0 *unknownff8; /* +0xff8 */
+    Object016b9108 *unknownff8; /* +0xff8 */
 };
 
 void FUN_00609480(Object0060d9d0 *self);                          /* derived name */

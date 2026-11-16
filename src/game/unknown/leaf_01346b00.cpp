@@ -3,7 +3,7 @@
 
 /* derived names: a counted reference's release, out of line: the reference
  * is left empty. */
-void FUN_01346b00(Ref00503fb0<Node00503fb0> *reference) /* derived name */
+void FUN_01346b00(Ref00503fb0<Object016b9108> *reference) /* derived name */
 {
     reference->release();
 }

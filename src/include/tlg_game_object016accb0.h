@@ -48,10 +48,10 @@ class Object016accb0 : public Object00774560 /* derived name */
     u8 unknown17c[0x4];
     /* +0x180: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held180;
+    Ref00503fb0<Object016b9108> held180;
     /* +0x188: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held188;
+    Ref00503fb0<Object016b9108> held188;
     u8 unknown190[0x10]; /* the rest of the 0x1a0 bytes the creator allocates; not traced */
 };
 

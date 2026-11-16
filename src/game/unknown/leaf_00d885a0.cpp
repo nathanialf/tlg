@@ -17,7 +17,7 @@ class Object016bae38 : public Object0139d760 /* derived name */
     u8 unknown8[0x168];
     /* +0x170: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held170;
+    Ref00503fb0<Object016b9108> held170;
     u8 unknown178[0x4c];
     Name name1c4; /* +0x1c4: released by the destructor (`mov eax, [rbx+0x1c4]; shl 5`) */
 };

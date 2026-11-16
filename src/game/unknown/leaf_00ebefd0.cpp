@@ -14,13 +14,13 @@ struct Object00ebefd0 { /* derived name */
     {
         references[index].release();
         memmove(references + index, references + index + 1,
-                (referenceCount - index - 1) * unsigned(sizeof(Ref00503fb0<Node00503fb0>)));
+                (referenceCount - index - 1) * unsigned(sizeof(Ref00503fb0<Object016b9108>)));
         --referenceCount;
     }
 
     u8 unknown0[0x2c8];
-    Ref00503fb0<Node00503fb0> *references; /* +0x2c8 */
-    unsigned referenceCount;               /* +0x2d0 */
+    Ref00503fb0<Object016b9108> *references; /* +0x2c8 */
+    unsigned referenceCount;                 /* +0x2d0 */
 };
 
 void FUN_00ebefd0(Object00ebefd0 *self) /* derived name */

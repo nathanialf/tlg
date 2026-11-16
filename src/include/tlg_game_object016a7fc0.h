@@ -33,7 +33,7 @@ class Object016a7fc0 : public Object016b9108 /* derived name */
   private:
     /* +0x28: a counted reference, empty from the constructor, cleared by
      * FUN_002bc040, released by the destructor */
-    AtomicRef0045c470<Node00503fb0> held28;
+    AtomicRef0045c470<Object016b9108> held28;
     Name name30;   /* +0x30: empty from the constructor, released by the destructor */
     int unknown34; /* +0x34: cleared by FUN_002bc040 */
     u8 unknown38[0x8];

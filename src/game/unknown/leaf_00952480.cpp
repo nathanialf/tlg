@@ -8,24 +8,24 @@
  * moves on by the int it returns; a null entry moves it by one. The index
  * is a signed int (`movsxd rcx, r15d`) compared unsigned with the end. The
  * classes are not traced. */
-struct Item00952480 : Node00503fb0 { /* derived name */
-    virtual void slot3();            /* derived name; not traced */
-    virtual void slot4();            /* derived name; not traced */
-    virtual void slot5();            /* derived name; not traced */
-    virtual void slot6();            /* derived name; not traced */
-    virtual void slot7();            /* derived name; not traced */
-    virtual void slot8();            /* derived name; not traced */
-    virtual void slot9();            /* derived name; not traced */
-    virtual void slot10();           /* derived name; not traced */
-    virtual void slot11();           /* derived name; not traced */
-    virtual void slot12();           /* derived name; not traced */
-    virtual void slot13();           /* derived name; not traced */
-    virtual void slot14();           /* derived name; not traced */
-    virtual void slot15();           /* derived name; not traced */
-    virtual void slot16();           /* derived name; not traced */
-    virtual void slot17();           /* derived name; not traced */
-    virtual void slot18();           /* derived name; not traced */
-    virtual int slot19(float value); /* derived name */
+struct Item00952480 : Object016b9108 { /* derived name */
+    virtual void slot3();              /* derived name; not traced */
+    virtual void slot4();              /* derived name; not traced */
+    virtual void slot5();              /* derived name; not traced */
+    virtual void slot6();              /* derived name; not traced */
+    virtual void slot7();              /* derived name; not traced */
+    virtual void slot8();              /* derived name; not traced */
+    virtual void slot9();              /* derived name; not traced */
+    virtual void slot10();             /* derived name; not traced */
+    virtual void slot11();             /* derived name; not traced */
+    virtual void slot12();             /* derived name; not traced */
+    virtual void slot13();             /* derived name; not traced */
+    virtual void slot14();             /* derived name; not traced */
+    virtual void slot15();             /* derived name; not traced */
+    virtual void slot16();             /* derived name; not traced */
+    virtual void slot17();             /* derived name; not traced */
+    virtual void slot18();             /* derived name; not traced */
+    virtual int slot19(float value);   /* derived name */
 };
 
 struct List00952480 {                 /* derived name */

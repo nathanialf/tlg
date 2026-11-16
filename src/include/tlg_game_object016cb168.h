@@ -36,7 +36,7 @@ class Object016cb168 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: an array of counted references, torn down by the destructor
      * (`lea rdi, [rbx+0x28]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record28;
+    Array01343a80<Ref00503fb0<Object016b9108>> record28;
 };
 
 #endif

@@ -19,11 +19,11 @@ class Object016a8710 : public Object016b9108 /* derived name */
 
   private:
     u8 unknown24[0x54];
-    AtomicRef0045c470<Node00503fb0> held78; /* +0x78: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held80; /* +0x80: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held88; /* +0x88: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held90; /* +0x90: a counted reference */
-    Array05943280<Name> names98;            /* +0x98: an array of Names */
+    AtomicRef0045c470<Object016b9108> held78; /* +0x78: a counted reference */
+    AtomicRef0045c470<Object016b9108> held80; /* +0x80: a counted reference */
+    AtomicRef0045c470<Object016b9108> held88; /* +0x88: a counted reference */
+    AtomicRef0045c470<Object016b9108> held90; /* +0x90: a counted reference */
+    Array05943280<Name> names98;              /* +0x98: an array of Names */
 };
 
 /* derived name: the complete destructor: nothing of its own; the members

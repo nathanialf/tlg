@@ -20,7 +20,7 @@ struct Part013a2620 /* derived name */
     int unknown10;
     u8 unknown14[0x4];
     /* +0x18: torn down by the holder's destructor (`lea rdi, [rbx+0x40]; call 0x134f620`) */
-    Array01343a80<Ref00503fb0<Node00503fb0>> records;
+    Array01343a80<Ref00503fb0<Object016b9108>> records;
 };
 
 /* derived names: the class whose vtable is at 0x16b8300

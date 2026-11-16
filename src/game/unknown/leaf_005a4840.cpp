@@ -9,10 +9,10 @@
 struct Record005a4840 { /* derived name */
     void operator=(const Record005a4840 &other);
 
-    AtomicRef0045c470<Node00503fb0> first;  /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> second; /* +0x8 */
-    u64 unknown10;                          /* +0x10 */
-    int unknown18;                          /* +0x18 */
+    AtomicRef0045c470<Object016b9108> first;  /* +0x0 */
+    AtomicRef0045c470<Object016b9108> second; /* +0x8 */
+    u64 unknown10;                            /* +0x10 */
+    int unknown18;                            /* +0x18 */
 };
 
 void Record005a4840::operator=(const Record005a4840 &other)

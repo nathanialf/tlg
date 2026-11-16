@@ -24,7 +24,7 @@ class Object00cbdb30 : public Object00c55550 /* derived name */
     u8 unknown8[0x230];
     /* +0x238: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held238;
+    Ref00503fb0<Object016b9108> held238;
     u8 unknown240[0x8];
     /* +0x248: an owned block, released by the destructor (`mov rax, [rbx+0x248]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block248;

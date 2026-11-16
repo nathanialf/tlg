@@ -28,7 +28,7 @@ class Object016b2d10 : public Object016b9108 /* derived name */
 
   private:
     Array01343a80<Name> names28; /* +0x28: an array of Names, each released by the destructor */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record40; /* +0x40: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record40; /* +0x40: an array of counted references */
 };
 
 #endif

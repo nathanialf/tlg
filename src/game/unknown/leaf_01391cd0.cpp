@@ -6,7 +6,7 @@
  * first held, the first assigned from the second, the second from the
  * copy), out of line: the function template instantiated here until a
  * caller of it is written. The referenced class is not traced. */
-class Value01391cd0 : public Node00503fb0 /* derived name */
+class Value01391cd0 : public Object016b9108 /* derived name */
 {
 };
 

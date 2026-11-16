@@ -17,7 +17,7 @@ struct Object00794fb0 { /* derived name */
     u8 unknown0[0x68];
     Record00794fb0 *unknown68; /* +0x68 */
     u8 unknown70[0x90];
-    AtomicRef0045c470<Node00503fb0> unknown100; /* +0x100 */
+    AtomicRef0045c470<Object016b9108> unknown100; /* +0x100 */
 };
 
 void FUN_00794fb0(Object00794fb0 *self) /* derived name */

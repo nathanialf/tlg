@@ -18,10 +18,10 @@ struct Record00503860 { /* derived name */
     int unknown10;    /* +0x10 */
     int unknown14;    /* +0x14 */
     u8 unknown18[0x8];
-    Block00503860 unknown20;                   /* +0x20 */
-    void *unknown60;                           /* +0x60 */
-    Float4 unknown68;                          /* +0x68 */
-    AtomicRef0045c470<Node00503fb0> unknown78; /* +0x78 */
+    Block00503860 unknown20;                     /* +0x20 */
+    void *unknown60;                             /* +0x60 */
+    Float4 unknown68;                            /* +0x68 */
+    AtomicRef0045c470<Object016b9108> unknown78; /* +0x78 */
 };
 
 void Record00503860::operator=(const Record00503860 &other)

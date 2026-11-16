@@ -20,7 +20,7 @@ class Object016a7ea8 /* derived name */
 
 /* derived name: the counted object the array of references of the class
  * below refers to; nothing of it is traced but its base. */
-class Node002b5080 : public Node00503fb0 /* derived name */
+class Node002b5080 : public Object016b9108 /* derived name */
 {
 };
 
@@ -38,12 +38,12 @@ class Object016a7f18 : public Object016a7ea8 /* derived name */
     virtual ~Object016a7f18();
 
   private:
-    Array05943280<Name> names420;            /* +0x420 */
-    Array05943280<Name> names438;            /* +0x438 */
-    AtomicRef0045c470<Node00503fb0> held450; /* +0x450 */
+    Array05943280<Name> names420;              /* +0x420 */
+    Array05943280<Name> names438;              /* +0x438 */
+    AtomicRef0045c470<Object016b9108> held450; /* +0x450 */
     u8 unknown458[0x28];
     Array05943280<AtomicRef0045c470<Node002b5080>> refs480; /* +0x480 */
-    AtomicRef0045c470<Node00503fb0> held498;                /* +0x498 */
+    AtomicRef0045c470<Object016b9108> held498;              /* +0x498 */
     Object0134f620 refs4a0;                                 /* +0x4a0 */
     u8 unknown4b8[0x80];
     OwnedBlock05943280 block538; /* +0x538 */

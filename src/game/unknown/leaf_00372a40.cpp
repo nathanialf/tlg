@@ -17,56 +17,56 @@ class Object016a8c38 : public Object016b9108 /* derived name */
     u8 unknown24[0x34];
     /* +0x58: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held58;
+    Ref00503fb0<Object016b9108> held58;
     /* +0x60: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held60;
+    Ref00503fb0<Object016b9108> held60;
     /* +0x68: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held68;
+    Ref00503fb0<Object016b9108> held68;
     /* +0x70: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held70;
+    Ref00503fb0<Object016b9108> held70;
     /* +0x78: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held78;
+    Ref00503fb0<Object016b9108> held78;
     u8 unknown80[0x18];
     /* +0x98: an owned block, released by the destructor (`mov rax, [rbx+0x98]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block98;
     u8 unknowna0[0xb8];
     /* +0x158: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held158;
+    Ref00503fb0<Object016b9108> held158;
     u8 unknown160[0xa8];
     /* +0x208: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held208;
+    Ref00503fb0<Object016b9108> held208;
     u8 unknown210[0xa8];
     /* +0x2b8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held2b8;
+    Ref00503fb0<Object016b9108> held2b8;
     u8 unknown2c0[0xa8];
     /* +0x368: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held368;
+    Ref00503fb0<Object016b9108> held368;
     u8 unknown370[0x60];
     Name name3d0; /* +0x3d0: released by the destructor (`mov eax, [rbx+0x3d0]; shl 5`) */
     u8 unknown3d4[0xa4];
     /* +0x478: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held478;
+    Ref00503fb0<Object016b9108> held478;
     u8 unknown480[0xa8];
     /* +0x528: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held528;
+    Ref00503fb0<Object016b9108> held528;
     u8 unknown530[0xa8];
     /* +0x5d8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held5d8;
+    Ref00503fb0<Object016b9108> held5d8;
     u8 unknown5e0[0xa8];
     /* +0x688: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held688;
+    Ref00503fb0<Object016b9108> held688;
 };
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's

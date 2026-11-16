@@ -9,14 +9,14 @@ struct Target00481980; /* derived name */
 
 struct Object00481980 { /* derived name */
     u8 unknown0[0x10];
-    AtomicRef0045c470<Node00503fb0> unknown10; /* +0x10 */
+    AtomicRef0045c470<Object016b9108> unknown10; /* +0x10 */
     u8 unknown18[0x38];
     Target00481980 *unknown50; /* +0x50 */
 };
 
 /* the object set: a class of its own over the counted one (the pointer is
  * converted before the exchange: AtomicRef0045c470's set) */
-class Value00481980 : public Node00503fb0 /* derived name */
+class Value00481980 : public Object016b9108 /* derived name */
 {
 };
 

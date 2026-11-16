@@ -26,7 +26,7 @@ class Object016d1e90 : public Object00ced570 /* derived name */
   private:
     /* +0x60: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> held60;
+    Ref00503fb0<Object016b9108> held60;
 };
 
 #endif

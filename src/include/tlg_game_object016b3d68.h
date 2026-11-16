@@ -23,7 +23,7 @@ class Object016b3d68 : public Object016b9108 /* derived name */
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped); the
      * constructor sets it by exchange (`lock cmpxchg` at 0xae78f6) */
-    AtomicRef0045c470<Node00503fb0> held28;
+    AtomicRef0045c470<Object016b9108> held28;
 };
 
 #endif

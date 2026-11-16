@@ -23,11 +23,11 @@ class Object016ae258 : public Object016b9108 /* derived name */
     Name name2c; /* +0x2c */
     Name name30; /* +0x30 */
     u8 unknown34[0x14];
-    AtomicRef0045c470<Node00503fb0> held48; /* +0x48: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held50; /* +0x50: a counted reference */
-    AtomicRef0045c470<Node00503fb0> held58; /* +0x58: a counted reference */
-    Name name60;                            /* +0x60 */
-    Array05943280<Name> names68;            /* +0x68: an array of Names */
+    AtomicRef0045c470<Object016b9108> held48; /* +0x48: a counted reference */
+    AtomicRef0045c470<Object016b9108> held50; /* +0x50: a counted reference */
+    AtomicRef0045c470<Object016b9108> held58; /* +0x58: a counted reference */
+    Name name60;                              /* +0x60 */
+    Array05943280<Name> names68;              /* +0x68: an array of Names */
     u8 unknown80[0x20];
     Name namea0; /* +0xa0 */
 };

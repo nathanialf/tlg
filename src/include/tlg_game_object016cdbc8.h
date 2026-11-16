@@ -38,8 +38,8 @@ class Object016cdbc8 : public Object016b9108 /* derived name */
     float unknown34; /* +0x34: 0.2 from the constructor; not traced */
     float unknown38; /* +0x38: 0.4 from the constructor; not traced */
     float unknown3c; /* +0x3c: 1.0 from the constructor; not traced */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record40; /* +0x40: an array of counted references */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record58; /* +0x58: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record40; /* +0x40: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record58; /* +0x58: an array of counted references */
     int unknown70; /* +0x70: zero from the constructor; not traced */
     u8 unknown74[0xc];
 };

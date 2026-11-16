@@ -40,15 +40,15 @@ class Object016abab8 : public Base016b4340 /* derived name */
 
   private:
     u8 unknown2c[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record30; /* +0x30: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record30; /* +0x30: an array of counted references */
     int unknown48;   /* +0x48: 5 from the constructor; not traced */
     int unknown4c;   /* +0x4c: zero from the constructor; not traced */
     int unknown50;   /* +0x50: zero from the constructor; not traced */
     float unknown54; /* +0x54: zero from the constructor; not traced */
-    Array01343a80<Ref00503fb0<Node00503fb0>> record58; /* +0x58: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record58; /* +0x58: an array of counted references */
     int unknown70; /* +0x70: zero from the constructor; not traced */
     u8 unknown74[0x4];
-    Array01343a80<Ref00503fb0<Node00503fb0>> record78; /* +0x78: an array of counted references */
+    Array01343a80<Ref00503fb0<Object016b9108>> record78; /* +0x78: an array of counted references */
 };
 
 #endif

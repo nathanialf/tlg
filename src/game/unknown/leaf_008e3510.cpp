@@ -12,9 +12,9 @@ struct Block008e3510 { /* derived name */
 struct Record008e3510 { /* derived name */
     void operator=(const Record008e3510 &other);
 
-    AtomicRef0045c470<Node00503fb0> first;  /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> second; /* +0x8 */
-    Block008e3510 block;                    /* +0x10 */
+    AtomicRef0045c470<Object016b9108> first;  /* +0x0 */
+    AtomicRef0045c470<Object016b9108> second; /* +0x8 */
+    Block008e3510 block;                      /* +0x10 */
 };
 
 void Record008e3510::operator=(const Record008e3510 &other)

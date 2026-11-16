@@ -4,11 +4,11 @@
 /* derived names: a record put back to empty: the int at +0x0 cleared, the
  * two exchanged references behind it emptied and the name after them
  * released. The classes are not traced. */
-struct Object01362440 {                        /* derived name */
-    int unknown0;                              /* +0x0 */
-    AtomicRef0045c470<Node00503fb0> unknown8;  /* +0x8 */
-    AtomicRef0045c470<Node00503fb0> unknown10; /* +0x10 */
-    Name unknown18;                            /* +0x18 */
+struct Object01362440 {                          /* derived name */
+    int unknown0;                                /* +0x0 */
+    AtomicRef0045c470<Object016b9108> unknown8;  /* +0x8 */
+    AtomicRef0045c470<Object016b9108> unknown10; /* +0x10 */
+    Name unknown18;                              /* +0x18 */
 };
 
 void FUN_01362440(Object01362440 *self) /* derived name */

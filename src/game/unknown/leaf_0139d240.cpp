@@ -9,13 +9,13 @@
  * traced. */
 struct Object0139d240 { /* derived name */
     u8 unknown0[0xc];
-    Name name;                                 /* +0xc */
-    void *unknown10;                           /* +0x10 */
-    int unknown18;                             /* +0x18 */
-    u8 unknown1c;                              /* +0x1c */
-    u8 unknown1d;                              /* +0x1d */
-    u8 unknown1e;                              /* +0x1e */
-    AtomicRef0045c470<Node00503fb0> unknown20; /* +0x20 */
+    Name name;                                   /* +0xc */
+    void *unknown10;                             /* +0x10 */
+    int unknown18;                               /* +0x18 */
+    u8 unknown1c;                                /* +0x1c */
+    u8 unknown1d;                                /* +0x1d */
+    u8 unknown1e;                                /* +0x1e */
+    AtomicRef0045c470<Object016b9108> unknown20; /* +0x20 */
 };
 
 void FUN_0139d240(Object0139d240 *self) /* derived name */

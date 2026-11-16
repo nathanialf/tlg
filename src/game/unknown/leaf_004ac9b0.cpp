@@ -12,7 +12,7 @@ class Object004ac9b0 /* derived name */
     ~Object004ac9b0();
 
   private:
-    AtomicRef0045c470<Node00503fb0> held; /* +0x0 */
+    AtomicRef0045c470<Object016b9108> held; /* +0x0 */
 };
 
 Object004ac9b0::~Object004ac9b0()

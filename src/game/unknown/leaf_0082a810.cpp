@@ -20,11 +20,11 @@ class Object016aeb70 : public Object016b9108 /* derived name */
     virtual ~Object016aeb70();
 
   private:
-    AtomicRef0045c470<Node00503fb0> held28; /* +0x28: a counted reference */
-    Object0134f620 array30;                 /* +0x30 */
-    Array05943280<Name> names48;            /* +0x48 */
-    Array05943280<Name> names60;            /* +0x60 */
-    Object0134f620 array78;                 /* +0x78 */
+    AtomicRef0045c470<Object016b9108> held28; /* +0x28: a counted reference */
+    Object0134f620 array30;                   /* +0x30 */
+    Array05943280<Name> names48;              /* +0x48 */
+    Array05943280<Name> names60;              /* +0x60 */
+    Object0134f620 array78;                   /* +0x78 */
 };
 
 /* derived name: the one object of the class, cleared by its destructor

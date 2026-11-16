@@ -57,7 +57,7 @@ class Object016d25b0 : public Object01343880 /* derived name */
     u8 unknownb0[0x8];
     /* +0xb8: a counted reference, empty from the constructor, released by
      * the destructor */
-    Ref00503fb0<Node00503fb0> heldb8;
+    Ref00503fb0<Object016b9108> heldb8;
 };
 
 /* derived name: the complete destructor FUN_013bb900: the body is empty; the

@@ -25,10 +25,10 @@ class Object016adb88 : public Object00774560 /* derived name */
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
     /* +0x100: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held100;
+    Ref00503fb0<Object016b9108> held100;
     /* +0x108: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held108;
+    Ref00503fb0<Object016b9108> held108;
 };
 
 #endif

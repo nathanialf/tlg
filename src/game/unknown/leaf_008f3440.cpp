@@ -11,14 +11,15 @@
  * dynamic initialization): its read is scheduled after the Name is built. */
 extern Type00503fb0 *const D_59385b8;
 
-void FUN_00c89360(lua_State *state, Node00503fb0 *object); /* derived name */
+void FUN_00c89360(lua_State *state, Object016b9108 *object); /* derived name */
 
 // NONMATCHING: the frame: the build saves r13 and a 0x18-byte area (the class pointer read before
 // the Name is built is held across the calls); the base reads it after them. The const
 // declaration, meant to free the load, does not move it
 int FUN_008f3440(lua_State *state) /* derived name */
 {
-    Node00503fb0 *object = FUN_00cbc5a0(D_5945a38, D_59385b8, Name("CustomWaterTool_DebugMesh"), 0);
+    Object016b9108 *object =
+        FUN_00cbc5a0(D_5945a38, D_59385b8, Name("CustomWaterTool_DebugMesh"), 0);
     FUN_00c89360(state, object);
     return 1;
 }

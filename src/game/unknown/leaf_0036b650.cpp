@@ -17,24 +17,24 @@ class Object016a8b90 : public Object016b9108 /* derived name */
     u8 unknown24[0x44];
     /* +0x68: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held68;
+    Ref00503fb0<Object016b9108> held68;
     /* +0x70: torn down by the destructor (`lea rdi, [rbx+0x70]; call 0x134f620`) */
     Object0134f620 record70;
     /* +0x88: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held88;
+    Ref00503fb0<Object016b9108> held88;
     /* +0x90: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held90;
+    Ref00503fb0<Object016b9108> held90;
     /* +0x98: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held98;
+    Ref00503fb0<Object016b9108> held98;
     /* +0xa0: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helda0;
+    Ref00503fb0<Object016b9108> helda0;
     /* +0xa8: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> helda8;
+    Ref00503fb0<Object016b9108> helda8;
 };
 
 /* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's

@@ -11,7 +11,7 @@
  * that position are stored. The square root is the estimated reciprocal
  * refined once and multiplied by the argument, 0 for 0. The classes are not
  * traced. */
-class Value0079b7b0 : public Node00503fb0 /* derived name */
+class Value0079b7b0 : public Object016b9108 /* derived name */
 {
 };
 

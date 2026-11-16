@@ -12,7 +12,7 @@
  * block at +0x220 it deletes. Polymorphic: the holder at +0x2c8 of the
  * class whose destructor is 0xfe2200 deletes it through slot 1 after the
  * call. The classes are not traced. */
-class Target00fe9c50 : public Node00503fb0 /* derived name */
+class Target00fe9c50 : public Object016b9108 /* derived name */
 {
 };
 
@@ -48,7 +48,7 @@ void FUN_00fe9c50(Object00fe9c50 *self); /* derived name */
  * block at +0x220 it deletes. Polymorphic: the holder at +0x2c8 of the
  * class whose destructor is 0x124eb70 deletes it through slot 1 after the
  * call. The classes are not traced. */
-class Target01256320 : public Node00503fb0 /* derived name */
+class Target01256320 : public Object016b9108 /* derived name */
 {
 };
 
