@@ -17,7 +17,11 @@ struct Component00503fb0 { /* derived name */
     Type00503fb0 *type; /* +0x18 */
     u8 unknown20[0x34];
     Name name; /* +0x54 */
-    u8 unknown58[0x30];
+    /* +0x58: a second name, which the scripts
+     * Soldier_SoldierHelmet_TractionInvalidArea_Enter and _Leave assign
+     * (FUN_0046f770, FUN_0046f980) */
+    Name name58;
+    u8 unknown5c[0x2c];
     int kind; /* +0x88 */
 };
 

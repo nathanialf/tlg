@@ -129,6 +129,25 @@ inline int typeOf(lua_State *state, int argument)
     return type == 9 || type == 10 ? 6 : type;
 }
 
+/* derived name: an argument's truth: false past the frame's top, for nil
+ * (tag 0) and for a false boolean (tag 1), true for any other value (0x46b0d0
+ * to 0x46b0fa: the slot made null past the top, `and 0xf; je`, `cmp 1; jne`,
+ * `cmp [rcx+8], 0; setne`) */
+inline bool toBoolean(lua_State *state, int argument)
+{
+    const HksObject *value = state->base + (argument - 1);
+    if (!(value < state->top))
+        value = 0;
+    if (!value)
+        return false;
+    const int type = value->type & 0xf;
+    if (type == 0)
+        return false;
+    if (type == 1)
+        return value->value.boolean != 0;
+    return true;
+}
+
 /* derived name: the count of the running function's arguments (the frame's
  * top less its base, `sub; shr 4` at 0xe73a57) */
 inline int argumentCount(lua_State *state)

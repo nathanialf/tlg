@@ -9151,3 +9151,11 @@ FUN_00c03650 src/game/unknown/leaf_00c03650.cpp _Z12FUN_00c03650P11Owner583950P1
 FUN_00c03ee0 src/game/unknown/leaf_00c03ee0.cpp _Z12FUN_00c03ee0P11Owner583950P10Node583950
 FUN_005995c0 src/game/unknown/leaf_005995c0.cpp _Z12FUN_005995c0P11Owner583950P15StateNode583950
 FUN_0059a040 src/game/unknown/leaf_0059a040.cpp _Z12FUN_0059a040P11Owner583950P15StateNode583950
+FUN_0042db40 src/game/unknown/leaf_0042db40.cpp _Z12FUN_0042db40P9lua_State
+FUN_00296ed0 src/game/unknown/leaf_00296ed0.cpp _Z12FUN_00296ed0P9lua_State
+FUN_00421840 src/game/unknown/leaf_00421840.cpp _Z12FUN_00421840P9lua_State
+FUN_001b2f20 src/game/unknown/leaf_001b2f20.cpp _Z12FUN_001b2f20P9lua_State
+FUN_005f3770 src/game/unknown/leaf_005f3770.cpp _Z12FUN_005f3770P9lua_State
+FUN_0046a770 src/game/unknown/leaf_0046a770.cpp _Z12FUN_0046a770P9lua_State
+FUN_005f3280 src/game/unknown/leaf_005f3280.cpp _Z12FUN_005f3280P9lua_State
+FUN_003e7120 src/game/unknown/leaf_003e7120.cpp _Z12FUN_003e7120P9lua_State
