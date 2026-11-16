@@ -5,8 +5,10 @@
 #define TLG_SCE_PAD_H
 
 extern "C" {
-int scePadResetLightBar(int handle);    /* FUN_00c87690 */
-int scePadResetOrientation(int handle); /* FUN_00c87800 */
+int scePadResetLightBar(int handle);                                /* FUN_00c87690 */
+int scePadResetOrientation(int handle);                             /* FUN_00c87800 */
+int scePadSetTiltCorrectionState(int handle, bool enable);          /* FUN_00c876e0 */
+int scePadSetAngularVelocityDeadbandState(int handle, bool enable); /* FUN_00c87770 */
 }
 
 #endif

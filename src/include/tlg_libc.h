@@ -92,6 +92,43 @@ float asinf(float x);
 float atanf(float x);
 float tanf(float x);
 float expf(float x);
+/* NIDs verified as "atan2f", "fmodf", "powf", "tanhf" (FUN_00de6ee0,
+ * FUN_00de7490, FUN_00de77a0, FUN_00de7c90). */
+float atan2f(float y, float x);
+float fmodf(float x, float y);
+float powf(float x, float y);
+float tanhf(float x);
+/* Imports too, but under the game's -ffast-math the compiler lowers them to
+ * the SSE4.1 round (`vroundss` modes 2 and 1, FUN_00de7030 and FUN_00de73b0). */
+float ceilf(float x);
+float floorf(float x);
+/* Dinkumware's kernels behind the hyperbolic functions and the logarithms
+ * (their NIDs verified as "_FCosh", "_FSinh" and "_FLog"): the hyperbolic
+ * functions times y, the logarithm in base e for 0 and base 10 for 1. */
+float _FCosh(float x, float y);
+float _FSinh(float x, float y);
+float _FLog(float x, int base);
+
+inline float coshf(float x)
+{
+    return _FCosh(x, 1.0f);
+}
+
+inline float sinhf(float x)
+{
+    return _FSinh(x, 1.0f);
+}
+
+inline float logf(float x)
+{
+    return _FLog(x, 0);
+}
+
+inline float log10f(float x)
+{
+    return _FLog(x, 1);
+}
+
 /* The C library's float sine and cosine kernel (Dinkumware's; its NID
  * verified as "_FSin"): the sine for a quadrant offset of 0, the cosine for
  * 1; the third argument is 0 at every one of the executable's 1,709 calls. */

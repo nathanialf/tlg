@@ -1,10 +1,12 @@
 /* src/include/tlg_game_object05945a38.h: the object the pointer at
  * 0x5945a38 holds (757 functions read it), as far as the four update
  * functions FUN_0133f330, FUN_01340240, FUN_01340310 and FUN_01342d50 read
- * it: the recursive lock at +0x201028. derived names throughout. */
+ * it: the recursive lock at +0x201028 and the list of released objects at
+ * +0x201040. derived names throughout. */
 #ifndef TLG_GAME_OBJECT05945A38_H
 #define TLG_GAME_OBJECT05945A38_H
 
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_node.h"
 #include "tlg_sce_kernel.h"
 #include "tlg_types.h"
@@ -45,6 +47,11 @@ struct RecursiveLock05945a38 { /* derived name */
 struct Object05945a38 { /* derived name */
     u8 unknown0[0x201028];
     RecursiveLock05945a38 lock201028; /* +0x201028 */
+    /* +0x201040: the objects whose last reference was dropped on a thread
+     * that does not destroy them, appended under the list's lock while the
+     * word at +0x1024 is set (0xcb643f, FUN_00cb6310); FUN_00cbd050 marks
+     * each with the flag 2 at +0x16 and empties it */
+    Array01343a80<Ref00503fb0<Object016b9108>> released;
 };
 
 extern Object05945a38 *D_5945a38;

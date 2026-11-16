@@ -399,12 +399,12 @@ MUjC4lbHrK4 V V func fflush
 MZO7FXyAPU8 V V func ?
 MpxhMh8QFro V V func fwrite
 NesIgTmfF0Q V V func bsearch
-O4L+0oCN9zA V V func ?
+O4L+0oCN9zA V V func _FSinh
 OGybVuPAhAY V V func ?
 OJjm-QOIHlI V V func sceLibcMspaceMalloc
 Ovb2dSJOAuE V V func strcmp
 P330P3dFF68 V V obj ?
-PdnFCFqKGqA V V func ?
+PdnFCFqKGqA V V func _FCosh
 PtsB1Q9wsFA V V func ?
 Q+xU11-h0xQ V V func sqrtf
 Q2V+iqvjgC0 V V func vsnprintf
@@ -415,7 +415,7 @@ QNyUWGXmXNc V V func ?
 QZP6I9ZZxpE V V func clock
 Qazy8LmXTvw V V func ftell
 RIa6GnWp+iU V V func ?
-SAd0Z3wKwLA V V func ?
+SAd0Z3wKwLA V V func tanhf
 SHlt7EhOtqA V V func ?
 SfQIZcqvvms V V func ?
 St9nbxSoezk V V func ?
@@ -452,7 +452,7 @@ iF1iQHzxBJU V V func sceLibcMspaceMemalign
 iU0z6SdUNbI V V func ?
 j4ViWNHEgww V V func strlen
 jbz9I9vkqkk V V func vsprintf
-jjjRS7l1MPM V V func ?
+jjjRS7l1MPM V V func _FLog
 k04jLXu3+Ic V V func ?
 kDZvoVssCgQ V V func ?
 kHg45qPC6f0 V V func strncat

@@ -32,6 +32,39 @@ int FUN_00c87690(lua_State *state) /* derived name */
     return 0;
 }
 
+/* "SetTiltCorrectionState" (lea at 0xc850f3) and
+ * "SetAngularVelocityDeadbandState" (lea at 0xc8519b): with exactly two
+ * arguments, the first's number as an int selects the pad record as above
+ * and the second's truth goes to the pad library with the record's handle;
+ * they return 0. */
+// NONMATCHING: the second argument's truth, as leaf_0046b050.cpp's: the base keeps the slot a
+// select of null past the top (`cmovae rsi, rdx; jae`) and reads the tag through it, the build
+// folds the select into the branch (`lea rdx, [rsi + 0x10]; cmp; jae`)
+int FUN_00c876e0(lua_State *state) /* derived name */
+{
+    int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);
+    if (count == 2) {
+        int pad = toNumber(state, 1);
+        bool enable = toBoolean(state, 2);
+        scePadSetTiltCorrectionState(D_5938c40->pads[pad]->handle, enable);
+    }
+    return 0;
+}
+
+// NONMATCHING: the second argument's truth, as leaf_0046b050.cpp's: the base keeps the slot a
+// select of null past the top (`cmovae rsi, rdx; jae`) and reads the tag through it, the build
+// folds the select into the branch (`lea rdx, [rsi + 0x10]; cmp; jae`)
+int FUN_00c87770(lua_State *state) /* derived name */
+{
+    int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);
+    if (count == 2) {
+        int pad = toNumber(state, 1);
+        bool enable = toBoolean(state, 2);
+        scePadSetAngularVelocityDeadbandState(D_5938c40->pads[pad]->handle, enable);
+    }
+    return 0;
+}
+
 int FUN_00c87800(lua_State *state) /* derived name */
 {
     int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);
