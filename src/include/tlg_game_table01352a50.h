@@ -10,11 +10,11 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 
-/* one entry, 0x18 bytes: the name at +0x4, the reference at +0x8, the next
- * entry of the bucket (or of the free list) at +0x10. The word at +0x0 is
- * not traced. */
-struct TableEntry01352a50 { /* derived name */
-    u32 unknown0;
+/* one entry, 0x18 bytes: the key's hash at +0x0 (its low bits pick the
+ * bucket: `and eax, 0x1f` at 0x72d13f), the name at +0x4, the reference at
+ * +0x8, the next entry of the bucket (or of the free list) at +0x10. */
+struct TableEntry01352a50 {          /* derived name */
+    u32 hash;                        /* +0x0 */
     Name name;                       /* +0x4 */
     Ref00503fb0<Node00503fb0> value; /* +0x8 */
     TableEntry01352a50 *next;        /* +0x10 */
@@ -41,6 +41,25 @@ template <size_t N> class Table01352a50 /* derived name */
             buckets[i] = 0;
         }
         count = 0;
+    }
+
+    /* the entry of a name and hash taken out of its bucket and released,
+     * nothing done when there is none */
+    void remove(unsigned name, u32 hash) /* derived name */
+    {
+        TableEntry01352a50 *previous = 0;
+        for (TableEntry01352a50 *entry = buckets[hash % N]; entry; entry = entry->next) {
+            if (entry->hash == hash && entry->name.index == name) {
+                if (previous)
+                    previous->next = entry->next;
+                else
+                    buckets[hash % N] = entry->next;
+                release(entry);
+                --count;
+                return;
+            }
+            previous = entry;
+        }
     }
 
   private:

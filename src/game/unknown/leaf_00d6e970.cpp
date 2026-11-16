@@ -8,6 +8,7 @@
  * FUN_00d44120 (as FUN_00d6e930, leaf_00d6e930.cpp). The object itself is not
  * read; the classes and the callees' return types are not traced. */
 struct Member05938c40_38; /* derived name */
+class Value00d44120;      /* derived name: the object found (leaf_00d641e0.cpp) */
 
 struct Object05938c40 { /* derived name */
     u8 unknown0[0x38];
@@ -24,8 +25,9 @@ struct Argument00d6e930 { /* derived name */
     u8 unknown70;
 };
 
-void FUN_00d44120(Member05938c40_38 *record, int value, void *entry, int mode); /* derived name */
-void FUN_00d6e9b0(Argument00d6e930 *argument);                                  /* derived name */
+void FUN_00d44120(Member05938c40_38 *record, Value00d44120 **found, void *entry,
+                  int mode);                   /* derived name */
+void FUN_00d6e9b0(Argument00d6e930 *argument); /* derived name */
 
 struct Object00d6e970; /* derived name */
 

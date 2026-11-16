@@ -9,6 +9,7 @@
  * +0x70) is its sibling. The object itself is not read; the classes and the
  * callee's return type are not traced. */
 struct Member05938c40_38; /* derived name */
+class Value00d44120;      /* derived name: the object found (leaf_00d641e0.cpp) */
 
 struct Object05938c40 { /* derived name */
     u8 unknown0[0x38];
@@ -25,7 +26,8 @@ struct Argument00d6e930 { /* derived name */
     u8 unknown70;
 };
 
-void FUN_00d44120(Member05938c40_38 *record, int value, void *entry, int mode); /* derived name */
+void FUN_00d44120(Member05938c40_38 *record, Value00d44120 **found, void *entry,
+                  int mode); /* derived name */
 
 struct Object00d6e930; /* derived name */
 
