@@ -10,13 +10,13 @@
  * destructor FUN_010271a0 uses them: the shape of FUN_00f1a950
  * (leaf_00f1a950.cpp) with the members at this class's offsets;
  * eleven blocks are released: the eight from +0x360 first of the members, the three from +0x1c8 after the Name. */
-class Object016c0e28 : public Object00c1b7f0 /* derived name */
+class Object016c0e28 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
     virtual ~Object016c0e28();
 
   private:
-    Object013cd320 part40;                 /* +0x40 */
+    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
     AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x8];
     OwnedBlock05943280 block1c8; /* +0x1c8: a block released by the destructor */

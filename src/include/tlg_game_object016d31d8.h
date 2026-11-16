@@ -34,20 +34,19 @@ class Object016d31d8 : public Object00ccfd00, public Base016d31d8 /* derived nam
      * (FUN_00ccfbe0, with 4) and the second base's: the vptr, the
      * reference, the int and the three floats from +0xd0; then the body: the
      * x axis at +0x90, the floats from +0xa0, the x axis at +0xb4, the floats
-     * after it (each a copy constructed member by member, then assigned: the
-     * copies are integer moves until the link folds them; a plain assignment
-     * is one 16-byte copy from the constant's address) */
+     * after it (each assigned from the constant lane by lane: the copies are
+     * integer moves until the link folds them) */
     Object016d31d8(const Name &name)
         : Object00ccfd00(name, 4), unknown88(0), unknownd0(-90.0f), unknownd4(90.0f),
           unknownd8(0.0f)
     {
-        unknown90 = Float4A(FLOAT4A_X);
+        unknown90 = FLOAT4_X;
         unknowna0 = 1.0f;
         unknowna4 = 0.0f;
         unknowna8 = 0.0f;
         unknownac = 0.0f;
         unknownb0 = 0.0f;
-        unknownb4 = Float4(FLOAT4_X);
+        unknownb4 = FLOAT4_X;
         unknownc4 = 1.0f;
         unknownc8 = 0.0f;
         unknowncc = 0.0f;

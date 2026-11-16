@@ -7,10 +7,12 @@
 
 #include "tlg_types.h"
 #include "tlg_game_array.h"
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_block.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_simd.h"
 
 /* derived names: the class whose complete destructor is 0xc1b7f0 (its row
  * named for it, D15; its vtable is at 0x16b8118, stored by FUN_00c1b680 and
@@ -22,12 +24,19 @@
 class Object00c1b7f0 : public Object016b9108 /* derived name */
 {
   public:
+    /* inlined in the constructors of its derived classes (FUN_012a7b10):
+     * the base's constructor, the vptr, then the int, the Name and the
+     * pointer, each zero */
+    Object00c1b7f0(const Name &name) : Object016b9108(name), unknown24(0), unknown30(0) {}
+
     virtual ~Object00c1b7f0();
 
   private:
-    u8 unknown24[0x4];
-    Name name28; /* +0x28: released by the destructor (`mov eax, [rbx+0x28]; shl 5`) */
-    u8 unknown2c[0x14];
+    int unknown24; /* +0x24: zero from the constructor; not traced */
+    Name name28;   /* +0x28: released by the destructor (`mov eax, [rbx+0x28]; shl 5`) */
+    u8 unknown2c[0x4];
+    void *unknown30; /* +0x30: null from the constructor; not traced */
+    u8 unknown38[0x8];
 };
 
 /* derived names: the 0x28-byte element of the array at +0x108 of
@@ -42,18 +51,27 @@ struct Element013cd320 { /* derived name */
     u8 unknown20[0x8];
 };
 
-/* derived names: the 0x178-byte part at +0x40 of the 59 classes over
+/* derived names: the second base, at +0x40, of the 59 classes over
  * Object00c1b7f0 whose destructors call 0x13cd320 on it (`lea rdi,
  * [r14+0x40]; call 0x13cd320`, 59 sites and no other caller: the row named
- * as its destructor, D15). No vptr. The destructor calls FUN_013cd5c0 on
- * the object, deletes the arrays at +0x130 and +0x138 and clears the two
- * pointers; then the members go: the array at +0x108, the blocks of the
- * four arrays at +0xa8, +0x90, +0x78 and +0x60 (0x18 bytes each; their
- * elements are not traced) and the Name at +0x30. The rest is not
- * traced. */
+ * as its destructor, D15). No vptr. A base, not a member: its vectors make
+ * it 16-byte aligned, its 0x154 bytes end at +0x194 and the derived class's
+ * fields begin there, in its tail padding; the derived vptr is stored after
+ * it is built and before those fields are (FUN_012a7b10: the fields' zeros
+ * from +0x194 one clear with the ints after the vptr). The destructor calls
+ * FUN_013cd5c0 on the object, deletes the arrays at +0x130 and +0x138 and
+ * clears the two pointers; then the members go: the array at +0x108, the
+ * blocks of the four arrays at +0xa8, +0x90, +0x78 and +0x60 (0x18 bytes
+ * each; their elements are not traced) and the Name at +0x30. The rest is
+ * not traced. */
 class Object013cd320 /* derived name */
 {
   public:
+    /* inlined in the constructors of the classes that hold it, in the unit
+     * of each (tlg_game_object013cd320_inline.h: the vector at +0x50 is the
+     * unit's own copy of VECTOR_W) */
+    Object013cd320();
+
     ~Object013cd320();
 
     void FUN_013cd5c0(); /* derived name: called first by the destructor; not traced */
@@ -61,20 +79,22 @@ class Object013cd320 /* derived name */
   private:
     u8 unknown0[0x30];
     Name name30; /* +0x30 */
-    u8 unknown34[0x2c];
-    OwnedBlock05943280 block60; /* +0x60 */
-    u8 unknown68[0x10];
-    OwnedBlock05943280 block78; /* +0x78 */
-    u8 unknown80[0x10];
-    OwnedBlock05943280 block90; /* +0x90 */
-    u8 unknown98[0x10];
-    OwnedBlock05943280 blocka8; /* +0xa8 */
-    u8 unknownb0[0x58];
-    Array05943280<Element013cd320> array108; /* +0x108 */
-    u8 unknown120[0x10];
+    u8 unknown34[0xc];
+    Vec4 unknown40; /* +0x40: zero from the constructor; not traced */
+    Vec4 unknown50; /* +0x50: VECTOR_W from the constructor; not traced */
+    /* +0x60, +0x78, +0x90, +0xa8: four arrays, each with its lock; their
+     * blocks released by the destructor, their elements not traced */
+    Array01343a80<u8> array60;
+    Array01343a80<u8> array78;
+    Array01343a80<u8> array90;
+    Array01343a80<u8> arraya8;
+    u8 unknownc0[0x48];
+    Array01343a80<Element013cd320> array108; /* +0x108 */
+    void *unknown120;                        /* +0x120: null from the constructor; not traced */
+    u8 unknown128[0x8];
     u8 *array130; /* +0x130: made with new[]; the element is not traced */
     u8 *array138; /* +0x138: made with new[]; the element is not traced */
-    u8 unknown140[0x38];
+    u8 unknown140[0x14];
 };
 
 /* derived names: an object of those classes under the name it was made for:

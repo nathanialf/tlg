@@ -36,7 +36,7 @@ class Object016a93c0 : public Object016b9108 /* derived name */
         unknown70 = 0.0f;
         unknown74 = 0.0f;
         unknown78 = 0.0f;
-        unknown7c = Float4(FLOAT4_X);
+        unknown7c = FLOAT4_X;
         unknown8c = 1.0f;
         unknown90 = 0;
         unknown94 = 0;

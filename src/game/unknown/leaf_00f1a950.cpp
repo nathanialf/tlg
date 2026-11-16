@@ -8,13 +8,13 @@
  * destructor FUN_00f1a950 and the function that enters an object of this
  * layout in its owner's array (FUN_00fc5680, 0xfc5781 to 0xfc5877) use
  * them; the rest are not traced. */
-class Object016bedd8 : public Object00c1b7f0 /* derived name */
+class Object016bedd8 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
     virtual ~Object016bedd8();
 
   private:
-    Object013cd320 part40; /* +0x40 */
+    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
     /* +0x1b8: the owner, a counted reference set by compare-and-swap
      * (0xfc5877) */
     AtomicRef0045c470<Node00503fb0> owner;

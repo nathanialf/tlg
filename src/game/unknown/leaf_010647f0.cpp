@@ -11,13 +11,13 @@
  * (0x10648a3), the reference emptied is at +0x1f0 (0x10648b8) and the Name
  * released is at +0x1c4 (0x10649d9). Its fields are traced only where the
  * destructor uses them. */
-class Object016c1128 : public Object00c1b7f0 /* derived name */
+class Object016c1128 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
     virtual ~Object016c1128();
 
   private:
-    Object013cd320 part40;                 /* +0x40 */
+    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
     AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x4];
     Name name1c4; /* +0x1c4: released by the destructor */

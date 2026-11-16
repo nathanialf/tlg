@@ -13,9 +13,6 @@ extern Type059458a8 *D_5946ce0;
  * signature (the first argument is not used): the object's 0xf0 bytes are
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place. */
-// NONMATCHING: 75/113, 518 bytes for 527: with the origin at +0xa0 assigned as `Float4(FLOAT4_POINT_ORIGIN)` the copy and the w
-// before it reach the link apart (the base builds one 16-byte integer vector at +0x9c, `mov eax, 0x3f800000; vmovd`); a plain
-// assignment is a 16-byte copy from the constant's address, and a user copy assignment on Float4 moves claimed rows (round 303D)
 Object016b9108 *FUN_00cf9470(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016d1f68));

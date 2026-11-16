@@ -13,14 +13,14 @@
  * (leaf_00f1a950.cpp) instruction for instruction but for the vtable, so
  * the fields that destructor uses are Object016bedd8's, at the same
  * offsets; the rest are not traced. */
-class Object016c3680 : public Object00c1b7f0 /* derived name */
+class Object016c3680 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
     Object016c3680(const Name &name); /* FUN_012f5a40 */
     virtual ~Object016c3680();
 
   private:
-    Object013cd320 part40;                 /* +0x40 */
+    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
     AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
     Name name1c0;                          /* +0x1c0: released by the destructor */
     u8 unknown1c4[0x14];

@@ -34,7 +34,7 @@ class Object00cf7fb0 : public Object016b9108 /* derived name */
         unknown94 = -0.0f;
         unknown98 = -0.0f;
         unknown9c = FLOAT_ONE;
-        unknowna0 = Float4(FLOAT4_POINT_ORIGIN);
+        unknowna0 = FLOAT4_POINT_ORIGIN;
     }
 
     virtual ~Object00cf7fb0();
