@@ -41,6 +41,14 @@ template <class T> class Array01343a80 : public Array05943280<T> /* derived name
         }
     }
 
+    /* the elements copied, never the lock word (FUN_00464d20, FUN_004bb5f0:
+     * nothing stored at +0x14) */
+    Array01343a80 &operator=(const Array01343a80 &other)
+    {
+        Array05943280<T>::operator=(other);
+        return *this;
+    }
+
     Lock059458a4 lock; /* +0x14 */
 };
 

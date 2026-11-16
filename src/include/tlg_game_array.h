@@ -76,24 +76,40 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
+    /* appends a copy of the value unless an element equals it, growing the
+     * block first when it is full (FUN_002db990 and FUN_005a42c0 over
+     * counted references: the elements compared first, `cmp [rcx+rsi*8],
+     * rdx; je` with the value read once, then the count raised, the growth
+     * and the value read again for the copy; the new slot is where the
+     * search stopped: `xor r15d, r15d` before the search and `mov r15d,
+     * eax` after it) */
+    void addUnique(const T &value) /* derived name */
+    {
+        unsigned index = 0;
+        for (; index < count; ++index)
+            if (data[index] == value)
+                return;
+        count = index + 1;
+        if (count > capacity)
+            grow(count);
+        new (&data[index]) T(value);
+    }
+
     /* copies another array: the array is emptied, the capacity made the
      * other's count exactly and, for a count that is not zero, the count
      * stored and the elements copy-constructed one by one from the other's
      * block, read once (FUN_003431f0: `cmp rbx, r14; je`, `mov r15d,
      * [r14+8]; mov [rbx+8], 0`, the reallocation, `test r15d, r15d; je; mov
      * [rbx+8], r15d; xor ecx, ecx; mov rax, [r14]`, then the loop up to the
-     * count read again). */
+     * count read again). The emptying is clear(size): over Names the
+     * elements are released first, by the out-of-line FUN_01344d90
+     * (FUN_00464d20, FUN_004bb5f0). */
     void operator=(const Array05943280 &other)
     {
         if (this == &other)
             return;
         unsigned size = other.count;
-        count = 0;
-        if (capacity != size) {
-            capacity = size;
-            data = static_cast<T *>(
-                reallocateBlock(data, size * sizeof(T), alignof(T), D_5943280[allocator]));
-        }
+        clear(size);
         if (size) {
             count = size;
             const T *values = other.data;

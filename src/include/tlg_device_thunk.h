@@ -158,6 +158,9 @@ struct CallFrame583950 {
 /* A list of nodes with its current index: the owner has two, at +0x38 and
  * +0x190 (FUN_00af09d0 and its three copies search both). derived names */
 struct NodeCursor583950 {
+    /* the first node of a list current (derived name) */
+    explicit NodeCursor583950(NodeList583950 *list_) : current(0), list(list_) {}
+
     /* finds a node of the list, searched from the current index to the
      * end, then from the start up to the current index: false when it is
      * not in the list, else its index in the argument (derived name) */
@@ -230,6 +233,14 @@ struct NodeCursor583950 {
     NodeList583950 *list; /* +0x8 */
 };
 
+/* a four-character code as its characters lie in memory, the first at the
+ * lowest address (derived name) */
+inline unsigned fourCharCode(char a, char b, char c, char d)
+{
+    return (unsigned)(unsigned char)a | (unsigned)(unsigned char)b << 8 |
+           (unsigned)(unsigned char)c << 16 | (unsigned)(unsigned char)d << 24;
+}
+
 /* What every handler of the tables FUN_00525530, FUN_00be6da0 and their
  * callers fill is given: the list with its current index and the table of
  * handlers by kind. The owner is not the object that holds the tables: each
@@ -241,6 +252,15 @@ struct NodeCursor583950 {
  * FUN_00591f30). What follows +0xf0 differs by code: an owner of each kind
  * derives from this one. derived name */
 struct Owner583950 {
+    /* an owner of the given codes over a list, with its handlers (the
+     * 'XFIT' owners of FUN_00588200 and FUN_005890d0). derived name */
+    Owner583950(unsigned code_, unsigned parentCode_, NodeList583950 *list, void *unknown18_,
+                void *unknown28_, Handler583950 *table)
+        : code(code_), parentCode(parentCode_), unknown8(-1), unknown10(0), unknown18(unknown18_),
+          unknown28(unknown28_), unknown30(0), cursor(list), handlers(table), unknownd8(0)
+    {
+    }
+
     /* finds a node of the list (derived name) */
     bool find(void *node, unsigned &index) const
     {
@@ -291,7 +311,17 @@ struct Owner583950 {
         }
     }
 
-    u8 unknown0[0x38];
+    /* +0x0: the four-character codes of the owner and of the owner it was
+     * built from ('XFIT' and 'XAIT', FUN_00588200). derived names */
+    unsigned code;
+    unsigned parentCode; /* +0x4 */
+    int unknown8;        /* +0x8: -1 when built */
+    int unknownc;        /* +0xc: the builder's */
+    void *unknown10;     /* +0x10: 0 when built */
+    void *unknown18;     /* +0x18: the builder's */
+    u8 unknown20[8];
+    void *unknown28;         /* +0x28: the builder's */
+    void *unknown30;         /* +0x30: 0 when built */
     NodeCursor583950 cursor; /* +0x38: the current index, the list at +0x40 */
     Handler583950 *handlers; /* +0x48, indexed by a node's kind */
     u8 unknown50[0x88];
@@ -303,6 +333,8 @@ struct Owner583950 {
  * the tables at +0x5a0 and +0x7a0 of FUN_00be6da0's and FUN_00525530's
  * object, of FUN_0058c760's and of FUN_00be6da0's (FUN_00583950 and its
  * siblings). derived name */
+struct FrameOwner583950;
+
 struct DeviceOwner583950 : Owner583950 {
     Device583950 *device; /* +0xf0 */
 };
@@ -482,6 +514,10 @@ struct Record583950Kind40 {
  * of FUN_00525530's object (the value at +0xf0 read by its type at +0x100:
  * 0 an int, 4 a float, 7 three floats, FUN_0058fc10). derived name */
 struct ValueOwner583950 : Owner583950 {
+    /* an owner built from an 'XAIT' one, to walk its nodes with the given
+     * handlers (FUN_00588200, FUN_005890d0). derived name */
+    inline ValueOwner583950(const FrameOwner583950 &builder, Handler583950 *table, int depth);
+
     union {
         int intValue;
         float floatValue;
@@ -489,6 +525,47 @@ struct ValueOwner583950 : Owner583950 {
     }; /* +0xf0 */
 
     int valueType; /* +0x100 */
+    u8 unknown104[4];
+    void *unknown108; /* +0x108: the 'XAIT' builder's +0x100 */
+    void *unknown110; /* +0x110: the 'XAIT' builder's +0x120 */
+    int unknown118;   /* +0x118: 0 when built */
+    int depth;        /* +0x11c: the count the builder's node value keeps (derived name) */
+    void *unknown120; /* +0x120: the 'XAIT' builder's +0x180 */
+    void *unknown128; /* +0x128: the 'XAIT' builder's +0x1b0 */
+};
+
+/* The handlers of the default table of the 'XFIT' owners (FUN_00525530
+ * stores the same at +0x42a0 of its object). derived names */
+int FUN_00c05e90(ValueOwner583950 *self, void *arg);
+int FUN_00c65c00(ValueOwner583950 *self, void *arg);
+int FUN_00c65ce0(ValueOwner583950 *self, void *arg);
+int FUN_00c65ff0(ValueOwner583950 *self, void *arg);
+int FUN_00c05d90(ValueOwner583950 *self, void *arg);
+int FUN_00c05e10(ValueOwner583950 *self, void *arg);
+
+/* A table of handlers by kind, cleared when made; the walk handlers make
+ * one on their stack (FUN_00588200, FUN_005890d0: the stores the 16 bytes
+ * at a time to it are unaligned, so it is not the bare array). derived name */
+struct HandlerTable583950 {
+    HandlerTable583950()
+    {
+        memset(handlers, 0, sizeof(handlers));
+    }
+
+    /* the default table of the 'XFIT' owners, used when the 'XAIT' owner
+     * has none (derived name) */
+    void setValueDefaults()
+    {
+        memset(handlers, 0, sizeof(handlers));
+        handlers[17] = reinterpret_cast<Handler583950>(FUN_00c65c00);
+        handlers[18] = reinterpret_cast<Handler583950>(FUN_00c65ce0);
+        handlers[19] = reinterpret_cast<Handler583950>(FUN_00c65ff0);
+        handlers[38] = reinterpret_cast<Handler583950>(FUN_00c05d90);
+        handlers[39] = reinterpret_cast<Handler583950>(FUN_00c05e10);
+        handlers[1] = reinterpret_cast<Handler583950>(FUN_00c05e90);
+    }
+
+    Handler583950 handlers[128];
 };
 
 /* An owner with the call frame and a second list ('XAIT', FUN_005269a0
@@ -502,18 +579,44 @@ struct FrameOwner583950 : Owner583950 {
     float unknownf0; /* +0xf0 */
     float unknownf4; /* +0xf4: -1 when FUN_0059ab60 is done */
     int unknownf8;   /* +0xf8 */
-    u8 unknownfc[0x14];
+    u8 unknownfc[4];
+    void *unknown100; /* +0x100: kept by the 'XFIT' owners it builds at +0x108 */
+    u8 unknown108[8];
     CallFrame583950 *frame; /* +0x110 */
-    u8 unknown118[0x78];
+    u8 unknown118[8];
+    void *unknown120; /* +0x120 */
+    u8 unknown128[0x30];
+    /* +0x158: the handlers of the 'XFIT' owners it builds (the table at
+     * +0x42a0 of FUN_00525530's object); when null, FUN_00588200 makes the
+     * default table on its stack. derived name */
+    Handler583950 *valueHandlers;
+    u8 unknown160[0x20];
+    void *unknown180; /* +0x180 */
+    u8 unknown188[8];
     /* +0x190: a second list of the same nodes with its own current index,
      * whose state byte FUN_00af09d0 and its three copies set from the
      * first's. derived name */
     NodeCursor583950 cursor190;
-    u8 unknown1a0[0x38];
+    u8 unknown1a0[0x10];
+    void *unknown1b0; /* +0x1b0 */
+    u8 unknown1b8[0x20];
     /* +0x1d8: a flag the handler FUN_00589500 raises from its node's bit
      * while +0x1dc is set, then restores. derived names */
     int unknown1d8;
     int unknown1dc; /* +0x1dc */
 };
+
+inline ValueOwner583950::ValueOwner583950(const FrameOwner583950 &builder, Handler583950 *table,
+                                          int depth_)
+    : Owner583950(fourCharCode('X', 'F', 'I', 'T'), fourCharCode('X', 'A', 'I', 'T'),
+                  builder.cursor.list, builder.unknown18, builder.unknown28, table),
+      unknown118(0), depth(depth_)
+{
+    unknownc = builder.unknownc;
+    unknown108 = builder.unknown100;
+    unknown110 = builder.unknown120;
+    unknown120 = builder.unknown180;
+    unknown128 = builder.unknown1b0;
+}
 
 #endif

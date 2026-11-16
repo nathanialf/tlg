@@ -43,10 +43,6 @@ class Object002b0f60 : public Object016b9108 /* derived name */
 extern Type00503fb0 *D_57cb390; /* derived name: the object's type */
 
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
-/* derived names: Lua's lua_createtable and the VM's table store (the
- * table, the key, the value) by their arguments */
-void FUN_00d91880(lua_State *state, int arrayCount, int recordCount);
-void FUN_00db84e0(lua_State *state, HksObject *table, HksObject *key, HksObject *value);
 
 int FUN_002b0f60(lua_State *state) /* derived name */
 {
@@ -58,9 +54,7 @@ int FUN_002b0f60(lua_State *state) /* derived name */
         FUN_00d91880(state, 0, 0);
         pushString(state, "isHit");
         pushNumber(state, volume->slot10());
-        HksObject *top = state->top;
-        FUN_00db84e0(state, top - 3, top - 2, top - 1);
-        state->top -= 2;
+        setTable(state);
         return 1;
     }
     return 0;

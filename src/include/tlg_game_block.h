@@ -40,6 +40,32 @@ extern Owner05943280 *D_5943280[];
 
 extern __thread Owner05943280 *D_16dc090; /* derived name: the calling thread's heap */
 
+/* derived names: the calling thread's heap (the table's first when the
+ * thread has none yet, kept from then on) replaced by another for a scope,
+ * put back when the scope ends (FUN_00301db0 and FUN_003fcfb0: the new heap
+ * is read before the thread's, as the constructor's argument) */
+class ThreadHeapScope05943280
+{
+  public:
+    explicit ThreadHeapScope05943280(Owner05943280 *heap)
+    {
+        saved = D_16dc090;
+        if (!saved) {
+            saved = D_5943280[0];
+            D_16dc090 = saved;
+        }
+        D_16dc090 = heap;
+    }
+
+    ~ThreadHeapScope05943280()
+    {
+        D_16dc090 = saved;
+    }
+
+  private:
+    Owner05943280 *saved;
+};
+
 inline void releaseBlock(void *block) /* derived name */
 {
     if (!block)

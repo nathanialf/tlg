@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
 #include "tlg_game_creation.h"
+#include "tlg_game_name.h"
 
 /* derived names: an object whose table at +0xa0 is used under its spin lock
  * at +0x30c (both reached from the object at +0x38 of the one at +0x108 of
@@ -29,11 +30,11 @@ struct Object00a18070 { /* derived name */
     Lock059458a4 lock; /* +0x30c */
 };
 
-void FUN_00a174c0(Table00a18070 *table, const Value00a18070 *value,
-                  const int &id); /* derived name */
+void FUN_00a174c0(Table00a18070 *table, const Name &value, const Name &id); /* derived name */
 
-void FUN_00a17f20(Object00a18070 *self, const Value00a18070 *value,
-                  const int &id) /* derived name */
+/* the value and the id are Names: SetBreakableState and SetBreakableStatus
+ * (FUN_001b3e80, FUN_001b41c0) pass the Names of their two string arguments */
+void FUN_00a17f20(Object00a18070 *self, const Name &value, const Name &id) /* derived name */
 {
     self->lock.lock();
     FUN_00a174c0(self->table, value, id);
