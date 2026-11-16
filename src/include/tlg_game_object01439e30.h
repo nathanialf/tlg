@@ -20,6 +20,12 @@ struct Element01439e30 {      /* derived name */
     u8 unknown8[0x10];
 };
 
+/* derived name: the same element in Object016d7dc0's array: its own type,
+ * as the base holds the array's destructor inlined into each class's
+ * destructor (one instantiation for each, with one caller) */
+struct Element01491e40 : Element01439e30 { /* derived name */
+};
+
 /* derived names: the 32-byte element of the array at +0x40: two 16-byte
  * values stored aligned by the constructor (0x1439a2c: `vmovaps [rdx+rcx],
  * xmm0; vmovaps [rdx+rcx+0x10], xmm1` over `shl rcx, 5`). */
@@ -95,7 +101,7 @@ class Object016d7dc0 /* derived name */
   private:
     u8 unknown8[0x8];
     Array05943280<int> array10;             /* +0x10 */
-    Array05943280<Element01439e30> array28; /* +0x28 */
+    Array05943280<Element01491e40> array28; /* +0x28 */
     Array05943280<Element01439a20> array40; /* +0x40 */
     u8 unknown58[0x28];
     Array05943280<int> array80; /* +0x80 */

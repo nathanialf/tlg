@@ -17,7 +17,7 @@ class Object016bfc70 : public Object016d3d88 /* derived name */
     virtual ~Object016bfc70();
     virtual void slot2(); /* derived name; FUN_013d90d0, not traced */
     virtual void slot4(); /* derived name; FUN_00f7d610, not traced */
-    virtual void slot5(); /* derived name; FUN_013d8910, not traced */
+    virtual void slot5(); /* derived name; FUN_013d8910 (leaf_013d8910.cpp) */
     virtual void slot6(); /* derived name; FUN_013d89f0, not traced */
 
   private:

@@ -1,8 +1,13 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_array.h"
+#include "tlg_game_fade013d2490.h"
 #include "tlg_game_name.h"
+#include "tlg_game_vector.h"
 
-/* derived names: FUN_0126c7f0 is this file's static initializer. Among its
+/* derived names: FUN_0126c7f0 is this file's static initializer. It builds
+ * the vector constants of tlg_game_vector.h into the file's own copies
+ * (config/header_statics.base.txt) that the fade entries' resize reads. Among its
  * objects are 1 list of names built from strings, each destroyed by the array
  * destructor the compiler writes for it (0x1270590, registered with
  * __cxa_atexit in that order). Only the lists are written. */
@@ -25,3 +30,11 @@ extern const char D_15c9ee5[6];
 // NONMATCHING: the file's initializer (FUN_0126c7f0): only the lists are
 // written; its other objects are not.
 static Entry0126c7f0 D_5ad7cc0[] = {Name(D_15c9ed8), Name(D_15c9ede), Name(D_15c9ee5)};
+
+/* derived name: this file's fade entry (tlg_game_fade013d2490.h): one
+ * element type per file, as the base holds one resize of them per file */
+struct FadeEntry0126c7f0 : FadeEntry013d2490 { /* derived name */
+};
+
+/* FUN_01480670 */
+template void Array05943280<FadeEntry0126c7f0>::resize(unsigned);

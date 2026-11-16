@@ -7017,8 +7017,8 @@ FUN_01263020 src/game/unknown/leaf_01263020.cpp _ZN14Object016d7840D1Ev
 FUN_012630c0 src/game/unknown/leaf_01263020.cpp _ZN14Object016d7840D0Ev
 FUN_013d2b70 src/game/unknown/leaf_013d2b70.cpp _ZN14Object016d3908D1Ev
 FUN_013d2c10 src/game/unknown/leaf_013d2b70.cpp _ZN14Object016d3908D0Ev
-FUN_013d65a0 src/game/unknown/leaf_013d65a0.cpp _ZN14Object016d3ad0D1Ev
-FUN_013d6640 src/game/unknown/leaf_013d65a0.cpp _ZN14Object016d3ad0D0Ev
+FUN_013d65a0 src/game/unknown/leaf_00f66e00.cpp _ZN14Object016d3ad0D1Ev
+FUN_013d6640 src/game/unknown/leaf_00f66e00.cpp _ZN14Object016d3ad0D0Ev
 FUN_013da020 src/game/unknown/leaf_013da020.cpp _ZN14Object016d3d88D1Ev
 FUN_013da0c0 src/game/unknown/leaf_013da020.cpp _ZN14Object016d3d88D0Ev
 FUN_013dc380 src/game/unknown/leaf_013dc380.cpp _ZN14Object016d3e80D1Ev
@@ -9159,3 +9159,23 @@ FUN_005f3770 src/game/unknown/leaf_005f3770.cpp _Z12FUN_005f3770P9lua_State
 FUN_0046a770 src/game/unknown/leaf_0046a770.cpp _Z12FUN_0046a770P9lua_State
 FUN_005f3280 src/game/unknown/leaf_005f3280.cpp _Z12FUN_005f3280P9lua_State
 FUN_003e7120 src/game/unknown/leaf_003e7120.cpp _Z12FUN_003e7120P9lua_State
+FUN_013ea7b0 src/game/unknown/func_01000ba0.cpp _ZN13Array05943280I17FadeEntry01000ba0E6resizeEj
+FUN_01480670 src/game/unknown/func_0126c7f0.cpp _ZN13Array05943280I17FadeEntry0126c7f0E6resizeEj
+FUN_00f66e00 src/game/unknown/leaf_00f66e00.cpp _ZN14Object016ca148D1Ev
+FUN_013d8910 src/game/unknown/leaf_013d8910.cpp _Z12FUN_013d8910P12Fade013d2490
+_ZN14Object016d5eb8D1Ev src/game/unknown/leaf_01439e30.cpp
+_ZN14Object016d7de8D1Ev src/game/unknown/leaf_01491e40.cpp
+FUN_013ed4f0 src/game/unknown/leaf_013ed4f0.cpp _ZN14Object016d4ed0D1Ev
+FUN_013ed580 src/game/unknown/leaf_013ed4f0.cpp _ZN14Object016d4ed0D0Ev
+FUN_013ed630 src/game/unknown/leaf_013ed630.cpp _ZN14Object016d4e10D1Ev
+FUN_013ed6c0 src/game/unknown/leaf_013ed630.cpp _ZN14Object016d4e10D0Ev
+FUN_01483270 src/game/unknown/leaf_01483270.cpp _ZN14Object016d75d0D1Ev
+FUN_01483300 src/game/unknown/leaf_01483270.cpp _ZN14Object016d75d0D0Ev
+FUN_014833b0 src/game/unknown/leaf_014833b0.cpp _ZN14Object016d7510D1Ev
+FUN_01483440 src/game/unknown/leaf_014833b0.cpp _ZN14Object016d7510D0Ev
+FUN_0139ef10 src/game/unknown/leaf_013a0450.cpp _ZN14Object016d0338D1Ev
+FUN_0139f1d0 src/game/unknown/leaf_013a0450.cpp _ZN14Object016d03a8D1Ev
+FUN_0139f490 src/game/unknown/leaf_013a0450.cpp _ZN14Object016d0418D1Ev
+FUN_0139f750 src/game/unknown/leaf_013a0450.cpp _ZN14Object016d0488D1Ev
+FUN_0139fa10 src/game/unknown/leaf_013a0450.cpp _ZN14Object016d04f8D1Ev
+FUN_0139ff30 src/game/unknown/leaf_013a0450.cpp _ZN14Object016d0568D1Ev
