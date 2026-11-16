@@ -35,7 +35,7 @@ static inline Value00d48470 *findNamed(Member05938c40_38 *owner, Value00d48470 *
                                        const Name &name)
 {
     Value00d48470 *object = static_cast<Value00d48470 *>(D_17ac870[name.index].record18);
-    if (object && ((object->flags16 & 4) || D_16dc098)) {
+    if (object && ((object->flags16 & 4) || threadMayUse())) {
         found = object;
         return found;
     }
