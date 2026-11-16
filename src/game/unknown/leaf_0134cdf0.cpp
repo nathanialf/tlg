@@ -11,11 +11,6 @@ struct Counted003441e0;
 void FUN_003441e0(Array05943280<Ref00503fb0<Counted003441e0>> *array,
                   const Ref00503fb0<Counted003441e0> &value); /* derived name */
 
-// NONMATCHING: the growth is the base's; the loop's count: the base tests the 32-bit count,
-// loads the other array's block and only then widens the count into the register that held
-// the other array (`test ecx, ecx; je; mov rbx, [r14]; mov r14d, ecx; shl r14, 3`); the build
-// widens it above the test into a fifth saved register (`mov r12d, ecx; test ecx, ecx`). An
-// index loop over a local count gives a 32-bit countdown (`dec r12d`), further away.
 void FUN_0134cdf0(Array05943280<Ref00503fb0<Counted003441e0>> *self,
                   const Array05943280<Ref00503fb0<Counted003441e0>> *other) /* derived name */
 {

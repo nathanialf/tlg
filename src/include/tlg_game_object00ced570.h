@@ -6,12 +6,25 @@
 
 #include "tlg_game_object01343880.h"
 
+class Object00ced570;
+
+/* derived names: the object the pointer at +0x48 names; its pointer at
+ * +0x20 names the holder back. Only that field is traced (the holder's
+ * destructor clears both ends). */
+struct Peer00ced570 /* derived name */
+{
+    inline void detach(); /* derived name */
+
+    u8 unknown0[0x20];
+    Object00ced570 *holder20; /* +0x20 */
+};
+
 /* derived names: the class whose complete destructor is 0xced570 (its row
  * named for it, D15) and whose vtable is 0x16b96c8: slots 5 and 6 are
  * Object01343880's, 7 and 8 its own (FUN_00cebe40, FUN_00cebf30). The
  * classes derived from it tail-call that destructor from their own (the
- * files that include this header). The destructor is not written, so
- * nothing here emits the vtable. Its constructor, inlined in the creators of
+ * files that include this header). The destructor is the key function
+ * (leaf_00ced570.cpp). Its constructor, inlined in the creators of
  * the derived classes, sets its fields BEFORE the derived class's vptr
  * store (0xceeb1f to 0xceeb4d: the base's pointer and int, the 24 bytes from
  * +0x38 cleared in `vmovdqu [r15+0x38], xmm0; mov qword [r15+0x48], 0`, a run
@@ -22,8 +35,8 @@ class Object00ced570 : public Object01343880 /* derived name */
 {
   public:
     Object00ced570(const Name &name)
-        : Object01343880(name), unknown38(0), unknown40(0), unknown48(0), unknown50(8),
-          unknown54(-1), unknown58(1)
+        : Object01343880(name), unknown38(0), unknown40(0), peer48(0), unknown50(8), unknown54(-1),
+          unknown58(1)
     {
     }
 
@@ -36,9 +49,11 @@ class Object00ced570 : public Object01343880 /* derived name */
     virtual void slot8();
 
   private:
-    void *unknown38; /* +0x38: null from the constructor; not traced */
-    void *unknown40; /* +0x40: null from the constructor; not traced */
-    void *unknown48; /* +0x48: null from the constructor; not traced */
+    friend struct Peer00ced570;
+
+    void *unknown38;      /* +0x38: null from the constructor; not traced */
+    void *unknown40;      /* +0x40: null from the constructor; not traced */
+    Peer00ced570 *peer48; /* +0x48: null from the constructor; detached by the destructor */
 
   protected:
     int unknown50; /* +0x50: 8 from the constructor; not traced */
@@ -46,5 +61,16 @@ class Object00ced570 : public Object01343880 /* derived name */
     int unknown58; /* +0x58: 1 from the constructor; not traced */
     int unknown5c; /* +0x5c: not written by the constructor; not traced */
 };
+
+/* derived name: cuts the link from both ends where a holder is attached
+ * (`mov rcx, [rax+0x20]; test rcx, rcx; je; mov qword [rcx+0x48], 0;
+ * mov qword [rax+0x20], 0`). */
+inline void Peer00ced570::detach()
+{
+    if (holder20 != 0) {
+        holder20->peer48 = 0;
+        holder20 = 0;
+    }
+}
 
 #endif

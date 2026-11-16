@@ -17,7 +17,7 @@
  * that destructor). The destructor stores that vtable, releases the Name at
  * +0x28, then stores 0x16b9118 and releases the Names at +0x10 and +0xc: the
  * class is over Object016b9108, whose slots 2 to 4 its vtable repeats. The
- * destructor is not written, so nothing here emits the vtable; the fields
+ * destructor is the key function (leaf_00c1b7f0.cpp); the fields
  * from +0x2c are not traced. */
 class Object00c1b7f0 : public Object016b9108 /* derived name */
 {

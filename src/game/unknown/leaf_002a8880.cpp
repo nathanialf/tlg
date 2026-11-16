@@ -14,7 +14,6 @@ extern Type059458a8 *D_57cb368;
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place by its
  * constructor FUN_002a89e0, which is not inlined. */
-// NONMATCHING: the whole module inlines the constructor FUN_002a89e0 (195 bytes) here, the base calls it: a call inlined across units where the base keeps it (the two-stage question)
 Object016b9108 *FUN_002a8880(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016a7d48));

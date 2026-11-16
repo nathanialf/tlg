@@ -14,7 +14,9 @@ extern Type059458a8 *D_59383f8;
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place by its
  * constructor FUN_00c24000, which is not inlined. */
-// NONMATCHING: the whole module inlines the constructor FUN_00c24000 here, the base calls it (the two-stage question)
+// NONMATCHING: equal under the link stage at 175 (D85), unclaimed: its constructor
+// FUN_00c24000 (leaf_013a2770.cpp) is not matched, and the layout finds an unclaimed
+// callee by its bytes in the base
 Object016b9108 *FUN_00c23ea0(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016d06d0));

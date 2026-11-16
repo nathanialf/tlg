@@ -65,9 +65,10 @@ builds it the same way:
          defines with external linkage is never made local (D50's addendum:
          the base keeps returns no caller reads).
     4. STAGE 2, the link's pipeline over the module: `opt -std-link-opts
-       -vectorize-loops -vectorize-slp` (PassManagerBuilder::
-       populateLTOPassManager at its stock thresholds, with the two
-       vectorisers on as libLTO's LTOCodeGenerator::optimize sets them)
+       -vectorize-loops -vectorize-slp -inline-threshold=175`
+       (PassManagerBuilder::populateLTOPassManager, with the two
+       vectorisers on as libLTO's LTOCodeGenerator::optimize sets them
+       and the inliner at the threshold the base shows, D85)
        by the opt built from the game compiler's own patched source
        (tools/build_llvm.sh, beside llvm-link; TLG_OPT names another copy).
     5. Code generation alone over the result, to one object
@@ -536,8 +537,14 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
     env = {**os.environ, "LD_LIBRARY_PATH": str(REPO_ROOT / "tools" / "cc" / "shim")}
     # the two vectorisers on, as the link's own driver sets them (libLTO,
     # LTOCodeGenerator::optimize: PMB.LoopVectorize and PMB.SLPVectorize);
-    # opt's -std-link-opts leaves them at their options' defaults, off
+    # opt's -std-link-opts leaves them at their options' defaults, off.
+    # The link's inliner at 175, read from the base (docs/DECISIONS.md D85):
+    # the census of the link's call sites gives cross-unit callees inlined
+    # at a cost of 130 or less and kept from 175; every stock 3.7.1 link
+    # driver builds its inliner at 225, so the value is the link driver's
+    # own, not a default
     r = subprocess.run([str(opt_path()), "-std-link-opts", "-vectorize-loops", "-vectorize-slp",
+                        "-inline-threshold=175",
                         "-preserve-bc-uselistorder", "-o", str(lto), str(bc)],
                        cwd=REPO_ROOT, capture_output=True, text=True, env=env)
     if r.returncode != 0:

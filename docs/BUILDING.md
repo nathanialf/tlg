@@ -122,7 +122,9 @@ stand-ins with `llvm-link` (the stage 1 units), gives internal linkage to
 the rows of `config/local_data.base.txt` and to every inline definition
 (linkonce_odr, weak_odr) another definition of the module names, runs the
 link stage's pipeline over the module (`opt -std-link-opts` with the two
-vectorisers on, as libLTO runs it) and then code
+vectorisers on, as libLTO runs it, and the inliner at a threshold of 175,
+the value the base's call sites show where every stock link driver uses 225:
+`docs/DECISIONS.md` D85) and then code
 generation alone (`tools/compile_cpp.sh --codegen`), to
 `build/base/game/module.o`. It refuses a name two game files define, naming
 both. `build/base/game/symbols.txt`
