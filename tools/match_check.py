@@ -1349,6 +1349,61 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
     return bad, unverified
 
 
+def constant_reads(obj: Path, code: bytes, relocs, base_bytes: bytes, base_addr: int, base) -> tuple[list[str], int]:
+    """Every constant the function reads from the object's read-only data
+    (a constant-pool entry of .rodata.cst4/8/16 or a constant in plain
+    .rodata: a PC-relative read of a section symbol plus an addend),
+    compared with the base's bytes where the base's own instruction at the
+    site points, as many bytes as the operand is wide: the same resolution
+    the gate's layout uses (tools/layout_link.py rodata_constant,
+    docs/DECISIONS.md D82). The relocated field is masked in the
+    instruction compare, so without this a pool value that differs (1e-20f
+    against 1e-10f * 1e-10f) would read as equal. Returns one line per
+    difference, naming the instruction and both values, and the count of
+    constants checked; a `lea` (no width), a string section or bytes that
+    hold a relocation are left to the gate. main() runs it for a game unit
+    only: five library rows (0x523b0, 0x52630, 0x528b0, 0x52b30, 0x52db0)
+    read a sign mask whose fourth lane the base holds as 0 and the object as
+    -0.0 (round 350D), which the gate's run-to-NUL placement of a library
+    pool entry does not see; that is a question for the library line."""
+    import struct as _st
+    from layout_link import rip_access
+    if base is None:
+        return [], 0
+    view = object_view(obj)
+    out, checked = [], 0
+    for r in relocs:
+        if r.type != 2 or r.sym_size != 0 or not r.symbol.startswith(".") \
+                or not isinstance(r.sym_section, int) or r.sym_section not in view.sections:
+            continue
+        data, flags, _size = view.sections[r.sym_section]
+        if flags & 0x27 != 0x2:     # allocated; not writable, executable or strings
+            continue
+        acc = rip_access(code, r.offset)
+        if acc is None or r.offset + 4 > len(base_bytes):
+            continue
+        tail, width, mnemonic = acc
+        start = r.sym_value + r.addend + tail
+        if start < 0 or start + width > len(data):
+            continue
+        if any(start < off + RELOC_WIDTH.get(ty, 4) and off < start + width
+               for off, ty, _si, _a in view.relocs.get(r.sym_section, [])):
+            continue
+        P = base_addr + r.offset
+        T = _st.unpack_from("<i", base_bytes, r.offset)[0] + P + tail
+        where = f"CONSTANT {r.symbol}+{start:#x} read by {mnemonic} (field at +0x{r.offset:x}, {width} bytes)"
+        want = bytes(data[start:start + width])
+        try:
+            have = base.read(T, width)
+        except Exception:  # noqa: BLE001
+            out.append(f"{where}: the base's 0x{T & 0xFFFFFFFFFFFFFFFF:x} cannot be read")
+            continue
+        checked += 1
+        if have != want:
+            out.append(f"{where}: the object holds {want.hex()}, the base reads {have.hex()} at 0x{T:x}")
+    return out, checked
+
+
 def compare(obj_bytes: bytes, relocs, base_bytes: bytes, base_addr: int, base=None) -> dict:
     obj_bytes, relocs = relax_tls_gd(obj_bytes, relocs)
     obj_bytes, relaxed = relax_got_loads(obj_bytes, relocs, base)
@@ -1392,9 +1447,11 @@ def print_diff(name: str, r: dict) -> None:
     fd = r["first_diff"]
     for t in r.get("bad_targets", []):
         print(f"{name}: WRONG TARGET {t}")
+    for t in r.get("bad_constants", []):
+        print(f"{name}: WRONG {t}")
     if fd is None:
         extra = f", {r['unverified_relocs']} relocation(s) unverified" if r.get("unverified_relocs") else ""
-        print(f"{name}: {'equal' if r.get('targets_ok', True) else 'equal bytes, wrong targets'} "
+        print(f"{name}: {'equal' if r.get('targets_ok', True) else 'equal bytes, wrong targets or constants'} "
               f"({r['equal']} instructions, {r['obj_size']} bytes{extra})")
         return
     print(f"{name}: {r['equal']}/{max(r['obj_insns'], r['base_insns'])} instructions equal "
@@ -1476,6 +1533,13 @@ def main(argv=None) -> int:
             base_bytes = data[off:off + size]
             ob, rl = objfuncs[sym]
             r = compare(ob, rl, base_bytes, addr, base)
+            # the game module's constants (D82); the library line's pool entries are left to the gate
+            consts, checked = (constant_reads(obj, ob, rl, base_bytes, addr, base)
+                               if a.tu and is_module_tu(a.tu) else ([], 0))
+            r["unverified_relocs"] = max(0, r["unverified_relocs"] - checked)
+            if consts:      # a pool value that differs: not equal (the gate's layout refuses it too)
+                r["bad_constants"] = consts
+                r["targets_ok"] = False
             seen.setdefault(fn, []).append((label, ob, r["score"] if r["targets_ok"] else 0.0))
             worst = min(worst, r["score"] if r["targets_ok"] else 0.0)
             if a.json:
@@ -1483,7 +1547,8 @@ def main(argv=None) -> int:
                                   "score": r["score"], "equal": r["equal"],
                                   "obj_insns": r["obj_insns"], "base_insns": r["base_insns"],
                                   "obj_size": r["obj_size"], "base_size": r["base_size"],
-                                  "targets_ok": r["targets_ok"], "bad_targets": r["bad_targets"],
+                                  "targets_ok": r["targets_ok"],
+                                  "bad_targets": r["bad_targets"] + r.get("bad_constants", []),
                                   "unverified_relocs": r["unverified_relocs"]}
                                  | ({"build": label} if label else {})))
             elif a.diff or r["first_diff"] is not None or not r["targets_ok"]:
