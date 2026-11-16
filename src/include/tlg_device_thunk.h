@@ -17,6 +17,14 @@ struct Device583950 {
 
 struct Owner583950;
 
+/* A value of three floats, as the owner holds one of type 7 and
+ * FUN_0057fd20 copies one between its two lists. derived name */
+struct Vector583950 {
+    float x;
+    float y;
+    float z;
+};
+
 /* An entry of the handler tables FUN_00525530 fills: the owner and a node. */
 typedef int (*Handler583950)(Owner583950 *self, void *arg);
 
@@ -62,14 +70,22 @@ struct StateNode583950 {
     u8 flags; /* +0x28 */
 };
 
+/* What a call is given: a node, and the node's value where the call needs
+ * it (FUN_005995c0 copies both in one assignment: `mov [rcx+r11+0x18],
+ * rsi; mov [rcx+r11+0x20], r8` with the queue read once). derived names */
+struct CallArguments583950 {
+    void *node;
+    void *value; /* +0x8 */
+};
+
 /* An entry of the call queue: the function at +0x0, the node it is given at
  * +0x10 (FUN_0059d3f0 and its four copies) and 0x58 bytes after the
  * function. derived names */
 struct Call583950 {
     void (*function)(void *vm);
     u8 unknown8[8];
-    void *argument; /* +0x10 */
-    u8 unknown18[0x48];
+    CallArguments583950 arguments; /* +0x10 */
+    u8 unknown20[0x40];
 };
 
 /* A queue of calls: its capacity, its size and the entries from +0x8.
@@ -105,7 +121,21 @@ struct CallFrame583950 {
         if (next >= queue->capacity)
             return false;
         queue->calls[size].function = function;
-        queue->calls[size].argument = argument;
+        queue->calls[size].arguments.node = argument;
+        queue->size = next;
+        return true;
+    }
+
+    /* appends a call with the node and its value, the same way
+     * (FUN_005995c0). derived name */
+    bool push(void (*function)(void *vm), const CallArguments583950 &arguments)
+    {
+        const unsigned size = queue->size;
+        const unsigned next = size + 1;
+        if (next >= queue->capacity)
+            return false;
+        queue->calls[size].function = function;
+        queue->calls[size].arguments = arguments;
         queue->size = next;
         return true;
     }
@@ -154,6 +184,44 @@ struct NodeCursor583950 {
         return found;
     }
 
+    /* makes a node of the list the current one: false when it is not in
+     * the list (derived name) */
+    bool select(void *node)
+    {
+        unsigned index;
+        if (!find(node, index))
+            return false;
+        current = index;
+        return true;
+    }
+
+    /* the storage of the current node: the first node's value is at the
+     * start of the list's storage, each later one's at its offset (derived
+     * name) */
+    char *value() const
+    {
+        const NodeList583950 *nodes = list;
+        const int offset = current != 0 && current < nodes->count ? nodes->offsets[current - 1] : 0;
+        return nodes->values + offset;
+    }
+
+    /* the state byte of the current node, null when the index is past the
+     * list's end (derived name) */
+    u8 *state() const
+    {
+        const NodeList583950 *nodes = list;
+        return current < nodes->count ? &nodes->states[current] : 0;
+    }
+
+    /* makes a node of the list the current one and returns its state byte;
+     * null when the node is not in the list (derived name) */
+    u8 *selectState(void *node)
+    {
+        if (!select(node))
+            return 0;
+        return state();
+    }
+
     unsigned current; /* the index of the current node in the list */
     u8 unknown4[4];
     NodeList583950 *list; /* +0x8 */
@@ -171,9 +239,7 @@ struct Owner583950 {
      * body). derived name */
     void select(void *node)
     {
-        unsigned index;
-        if (find(node, index))
-            cursor.current = index;
+        cursor.select(node);
     }
 
     /* the storage of the current node: the first node's value is at the
@@ -182,30 +248,21 @@ struct Owner583950 {
      * the same fields). derived name */
     char *currentValue() const
     {
-        const NodeList583950 *nodes = cursor.list;
-        const int offset = cursor.current != 0 && cursor.current < nodes->count
-                               ? nodes->offsets[cursor.current - 1]
-                               : 0;
-        return nodes->values + offset;
+        return cursor.value();
     }
 
     /* the state byte of the current node, null when the index is past the
      * list's end. derived name */
     u8 *currentState() const
     {
-        const NodeList583950 *nodes = cursor.list;
-        return cursor.current < nodes->count ? nodes->states + cursor.current : 0;
+        return cursor.state();
     }
 
     /* makes a node of the list the current one and returns its state byte;
      * null when the node is not in the list (FUN_00583bb0). derived name */
     u8 *selectState(void *node)
     {
-        unsigned index;
-        if (!find(node, index))
-            return 0;
-        cursor.current = index;
-        return currentState();
+        return cursor.selectState(node);
     }
 
     /* hands a node to the handler of its kind, when it has a kind and the

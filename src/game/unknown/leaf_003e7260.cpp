@@ -44,7 +44,7 @@ void FUN_003ebc90(Object003ebc90 *object);                     /* derived name *
 
 // NONMATCHING: the Name's release: the base passes the index it loaded for the test to
 // FUN_00d66e30 (`mov edi, [rbp-0x40]; test rdi, rdi; mov rax, rdi`), the header's release reads
-// it again after the atomic; and the Name's zero store between the reader's stores (list-ilp)
+// it again after the atomic (the reader's stores in the base's order with the Name declared first)
 int FUN_003e7260(lua_State *state) /* derived name */
 {
     Member057c9390_38 *member = D_57c9390->unknown38;
@@ -53,8 +53,8 @@ int FUN_003e7260(lua_State *state) /* derived name */
     Object003ebc90 *object = member->unknown8c0;
     if (!object)
         return 1;
-    ArgumentReader00c8c290 reader(state);
     Name name;
+    ArgumentReader00c8c290 reader(state);
     FUN_00c91140(&reader, &name);
     FUN_003ebc90(object);
     return 0;

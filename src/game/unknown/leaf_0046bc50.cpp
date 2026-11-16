@@ -69,12 +69,12 @@ extern const Class0046bc50 *D_57d4a68; /* derived name: the class asked for */
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object0046bc50 **object); /* derived name */
 void FUN_00c89360(lua_State *state, void *value);                           /* derived name */
 
-// NONMATCHING: the class walk as leaf_0048fd50.cpp's (the parked unrotated loop) and the reader's
-// stores as leaf_003e7260.cpp's (list-ilp)
+// NONMATCHING: the class walk as leaf_0048fd50.cpp's (the parked unrotated loop); the reader's
+// stores are the base's with the object declared first
 int FUN_0046bc50(lua_State *state) /* derived name */
 {
-    ArgumentReader00c8c290 reader(state);
     Object0046bc50 *object = 0;
+    ArgumentReader00c8c290 reader(state);
     FUN_00c8c290(&reader, &object);
     void *value = 0;
     if (object && object->isKindOf(D_57d4a68) && object->unknown30 != 0) {
