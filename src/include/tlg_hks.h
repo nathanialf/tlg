@@ -251,4 +251,102 @@ inline void pushNumber(lua_State *state, float number)
     state->top = top + 1;
 }
 
+/* derived names: the block a full userdata's value follows (0x20 bytes,
+ * not traced), Lua's lua_touserdata: an argument's light userdata (tag 2)
+ * as it is, a full userdata's (tag 7) value past its block, else null
+ * (null past the frame's top: 0xe7f3e2 to 0xe7f3f9) */
+struct HksUserdata { /* derived name */
+    u8 unknown0[0x20];
+};
+
+/* derived name: Lua's lua_isuserdata: whether an argument holds a full
+ * (tag 7) or a light (tag 2) userdata (false past the frame's top) */
+inline bool isUserdata(lua_State *state, int argument)
+{
+    const HksObject *value = state->base + (argument - 1);
+    if (!(value < state->top))
+        return false;
+    const int type = value->type & 0xf;
+    return type == 7 || type == 2;
+}
+
+inline void *toUserdata(lua_State *state, int argument) /* derived name */
+{
+    const HksObject *value = state->base + (argument - 1);
+    if (!(value < state->top))
+        return 0;
+    const int type = value->type & 0xf;
+    if (type == 7)
+        return static_cast<HksUserdata *>(value->value.pointer) + 1;
+    if (type == 2)
+        return value->value.pointer;
+    return 0;
+}
+
+/* derived name: Lua's lua_tolstring by its arguments: the string a value
+ * reads as (FUN_00db6b20; a null value for an argument past the frame's
+ * top, `cmovae rsi, rbx` at 0xe7f2eb) */
+const char *FUN_00db6b20(lua_State *state, const HksObject *value, size_t *length);
+
+inline const char *stringOf(lua_State *state, int argument) /* derived name */
+{
+    const HksObject *value = state->base + (argument - 1);
+    if (!(value < state->top))
+        value = 0;
+    return FUN_00db6b20(state, value, 0);
+}
+
+/* derived names: Lua's lua_getmetatable by its arguments: whether an object
+ * has a metatable, which is written to `metatable` (FUN_00d96dd0), and the
+ * metatable of an argument pushed (1), else nothing pushed (0; nothing asked
+ * past the frame's top) */
+int FUN_00d96dd0(lua_State *state, const HksObject *object, HksObject *metatable);
+
+inline int getMetatable(lua_State *state, int argument) /* derived name */
+{
+    const HksObject *object = state->base + (argument - 1);
+    if (!(object < state->top))
+        return 0;
+    HksObject *top = state->top;
+    if (!FUN_00d96dd0(state, object, top))
+        return 0;
+    state->top = top + 1;
+    return 1;
+}
+
+/* derived name: Lua's lua_pushvalue: a copy of an argument pushed */
+inline void pushValue(lua_State *state, int argument)
+{
+    HksObject *top = state->top;
+    *top = state->base[argument - 1];
+    state->top = top + 1;
+}
+
+/* derived names: Lua's luaV_gettable by its arguments: table[key] written to
+ * `value` (FUN_00db8650), and lua_gettable(state, -2): the table under the
+ * key on the stack's top indexed by it, the key replaced by the value */
+void FUN_00db8650(lua_State *state, const HksObject *table, const HksObject *key, HksObject *value);
+
+inline void getTableBelow(lua_State *state) /* derived name */
+{
+    HksObject *top = state->top;
+    FUN_00db8650(state, top - 2, top - 1, top - 1);
+}
+
+/* derived name: whether the stack's top value is a C function (tag 10;
+ * false for an empty frame) */
+inline bool topIsCFunction(lua_State *state)
+{
+    const HksObject *value = state->top - 1;
+    if (!(value >= state->base))
+        return false;
+    return (value->type & 0xf) == 10;
+}
+
+/* derived name: Lua's lua_pop */
+inline void pop(lua_State *state, int count)
+{
+    state->top -= count;
+}
+
 #endif

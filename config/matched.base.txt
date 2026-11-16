@@ -9617,3 +9617,15 @@ FUN_013dfc20 src/game/unknown/func_00fba4b0.cpp _ZN16TreeNode013dfc20D1Ev
 FUN_0147ba30 src/game/unknown/func_01249ca0.cpp _ZN16TreeNode0147ba30D1Ev
 FUN_013e2e70 src/game/unknown/leaf_013e2e70.cpp _Z12FUN_013e2e70P15Stepper00fb5c50
 FUN_013e2f20 src/game/unknown/leaf_013e2f20.cpp _Z12FUN_013e2f20P15Stepper00fb5c50
+FUN_00e7f1d0 src/game/unknown/leaf_00e7f1d0.cpp _ZN11LuaBindings13Vector4IndexMEP9lua_State
+FUN_00e7f350 src/game/unknown/leaf_00e7f350.cpp _ZN11LuaBindings16Vector4NewIndexMEP9lua_State
+FUN_00e800f0 src/game/unknown/leaf_00e800f0.cpp _ZN11LuaBindings10QuatIndexMEP9lua_State
+FUN_00e80270 src/game/unknown/leaf_00e80270.cpp _ZN11LuaBindings13QuatNewIndexMEP9lua_State
+FUN_00e82450 src/game/unknown/leaf_00e82450.cpp _ZN14Object016be018D1Ev
+FUN_00e824e0 src/game/unknown/leaf_00e82450.cpp _ZN14Object016be018D0Ev
+FUN_00e825d0 src/game/unknown/leaf_00e825d0.cpp _ZN14Object016be0b0D1Ev
+FUN_00e82660 src/game/unknown/leaf_00e825d0.cpp _ZN14Object016be0b0D0Ev
+FUN_00f6b880 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6b880P14Object016bf8f0
+FUN_00f6b8e0 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6b8e0P14Object016bf940
+FUN_00f6c0c0 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6c0c0P14Object016bf990
+FUN_00f6c190 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6c190P14Object016bf9e0

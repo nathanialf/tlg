@@ -176,6 +176,17 @@ const short *_Getptolower(void);
 const short *_Getptoupper(void);
 }
 
+/* derived name: the C library's tolower as the units inline it: EOF kept,
+ * any other character the entry of the locale's table for it as an unsigned
+ * char (0xe5db40 to 0xe5db54: `cmp r15, 0xff; je`, then `_Getptolower` and
+ * the entry; FUN_00de2e60 is the same body out of line) */
+inline int tolower(int c)
+{
+    if (c == -1)
+        return -1;
+    return _Getptolower()[static_cast<unsigned char>(c)];
+}
+
 /* The C++ library's float overloads of sin and cos (Dinkumware's <cmath>
  * calls the kernel from them directly). The compiler knows sinf and cosf as
  * pure library functions and drops a call whose result is unused; these

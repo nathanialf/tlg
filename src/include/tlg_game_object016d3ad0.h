@@ -15,13 +15,18 @@
  * is FUN_013d4610. The other members are not traced. Its destructor
  * is inline here: the base's (in the linkonce stretch) is inlined into the
  * derived destructors of other units. */
+struct FadeModel013d4610; /* derived name: tlg_game_fade013d2490.h */
+struct FadeOwner013d2490; /* derived name: tlg_game_fade013d2490.h */
+
 class Object016d3ad0 /* derived name */
 {
   public:
     virtual ~Object016d3ad0() {}
 
+    FadeModel013d4610 *model; /* +0x8: Fade013d2490's model (FUN_00f6b880) */
+    FadeOwner013d2490 *owner; /* +0x10: Fade013d2490's owner (FUN_00f6c0c0) */
+
   private:
-    u8 unknown8[0x10];
     OwnedBlock05943280 unknown18; /* +0x18 */
     u8 unknown20[0x10];
     Name unknown30; /* +0x30 */

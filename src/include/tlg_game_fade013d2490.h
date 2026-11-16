@@ -31,12 +31,15 @@ struct FadeEntry013d2490 { /* derived name */
 };
 
 /* derived names: an entry of the target's array, 0xa0 bytes, whose int at
- * +0x90 the update clears */
+ * +0x90 the update clears; a vector at +0x20 (FUN_00f6c0c0 copies the 12th
+ * entry's, FUN_00f6c190 the 16th's, `vmovaps`) */
 struct FadeTargetEntry013d2490 { /* derived name */
     u8 unknown0[0x8];
     float length; /* +0x8: the length of its pose's position (the rigs' constructors) */
     int parent;   /* +0xc: the target's index of its bone's parent, the count for a root */
-    u8 unknown10[0x40];
+    u8 unknown10[0x10];
+    Vec4 unknown20; /* +0x20: FUN_00f6c0c0 copies the 12th entry's, FUN_00f6c190 the 16th's */
+    u8 unknown30[0x20];
     Vec4 unknown50;          /* +0x50: written by FUN_013ce2d0 (FUN_013d1440) */
     Vec4 unknown60;          /* +0x60: written by FUN_013ce660 (FUN_013d1440) */
     Frame016c1128 unknown70; /* +0x70: a pose, its rotation turned to w not negative (takePose) */
@@ -87,6 +90,35 @@ struct FadeSkeleton013ce2d0 { /* derived name */
     FadePose013d4610 *poses; /* +0x100 (the model's +0x140) */
 };
 
+/* derived names: the object at +0x2f0 of the model: its second base, at
+ * +0x190 (the call goes through that base's vtable, `add rdi, 0x190; call
+ * [rax+8]`), answers by its slot 1 whether the fade is held; two lengths
+ * (FUN_00f6b880, FUN_00f6b8e0). Its first base is not traced. */
+class FadeSourceBase00f6b880 /* derived name */
+{
+  public:
+    virtual ~FadeSourceBase00f6b880();
+
+  private:
+    u8 unknown8[0x188];
+};
+
+class FadeHold00f6b880 /* derived name */
+{
+  public:
+    virtual void unknown0();
+    virtual int unknown1();
+};
+
+class FadeSource00f6b880 : public FadeSourceBase00f6b880, public FadeHold00f6b880 /* derived name */
+{
+  public:
+    u8 unknown198[0x388];
+    float unknown520; /* +0x520 */
+    u8 unknown524[0x34];
+    float unknown558; /* +0x558 */
+};
+
 struct FadeModel013d4610 { /* derived name */
 
     /* the pose of an index, the model read before the index (FUN_013ce050:
@@ -98,6 +130,8 @@ struct FadeModel013d4610 { /* derived name */
 
     u8 unknown0[0x40];
     FadeSkeleton013ce2d0 skeleton; /* +0x40 */
+    u8 unknown148[0x2f0 - 0x40 - sizeof(FadeSkeleton013ce2d0)];
+    FadeSource00f6b880 *source; /* +0x2f0 */
 };
 
 /* derived names: the position and rotation of a skeleton's pose, each
