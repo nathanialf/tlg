@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_debug_draw.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_libc.h"
@@ -63,12 +64,10 @@ static bool hasCount(const Object003447b0 &object)
     return object.unknown290 || object.unknown28c;
 }
 
-// NONMATCHING: the last call (the sine of -pi/2) is a tail call here and the
-// base keeps it a call with one shared epilogue: TailCallElim at the unit's
-// stage did not mark the four calls, so a local's address escaped before
-// them, through a call the link removed (probe: the sine passed by const
-// reference to an empty function of another unit gives the base's bytes).
-void FUN_003447b0(Object003447b0 *self) /* derived name */
+/* derived name: the method sets its part's level and, where this thread may
+ * use the holder's named record, draws the holder's angle and the two
+ * quarter-turn directions (a debug draw, empty in the retail build) */
+void updateDebugDraw(Object003447b0 *self)
 {
     if (Part003447b0 *part = self->part)
         part->unknown48 = 16 - ((part->flags100 >> 1) & 1);
@@ -79,18 +78,20 @@ void FUN_003447b0(Object003447b0 *self) /* derived name */
             static_cast<const Record003447b0 *>(D_17ac870[named->name.index].record18);
         if (record && ((record->flags16 & 4) || threadMayUse()) && self->unknown238 &&
             self->unknown240) {
-            /* the readers of these sines and cosines were a debug draw
-             * compiled out of the retail build; the calls to the C library
-             * stay */
             if (hasCount(*self)) {
                 float sine = sin(holder ? holder->unknownd0 * 2.1f : 0.0f);
+                debugDrawValue(sine);
             }
             if (self->unknown288 < 0.0f)
                 return;
             float upX = cos(1.57079637f);
+            debugDrawValue(upX);
             float upY = sin(1.57079637f);
+            debugDrawValue(upY);
             float downX = cos(-1.57079637f);
+            debugDrawValue(downX);
             float downY = sin(-1.57079637f);
+            debugDrawValue(downY);
         }
     }
 }
