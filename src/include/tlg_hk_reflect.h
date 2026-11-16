@@ -12468,6 +12468,9 @@ struct hknpWorld {
      * signal at +0x5e0 fired with the world and its id (0x4fcf0; the game
      * calls it from 0xeadb24). derived name. */
     void FUN_0004fcf0(u32 constraintId);
+    /* Called by the game with one body id, 1 and 2 (0xea121f); its body
+     * (0x4f000) is not traced. derived name. */
+    void FUN_0004f000(const hknpBodyId *bodyIds, int numBodyIds, int mode);
     /* Constraints destroyed by id (0x4d4b0): for each, the removed signal
      * fired when it is enabled, then the destroyed signal, then its
      * removal from the manager (0x16df30). derived name. */

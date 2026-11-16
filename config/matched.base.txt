@@ -9629,3 +9629,11 @@ FUN_00f6b880 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6b880P14Object016bf8f
 FUN_00f6b8e0 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6b8e0P14Object016bf940
 FUN_00f6c0c0 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6c0c0P14Object016bf990
 FUN_00f6c190 src/game/unknown/leaf_00f6b880.cpp _Z12FUN_00f6c190P14Object016bf9e0
+FUN_00ea8480 src/game/unknown/leaf_00ea8480.cpp _Z12FUN_00ea8480P14Object016be610P14Target00ea8480
+FUN_00f4ee40 src/game/unknown/leaf_00f4ee40.cpp _Z12FUN_00f4ee40P14Object00f4ee40f
+FUN_00f84460 src/game/unknown/leaf_00f84460.cpp _Z12FUN_00f84460P14Object00f84460
+FUN_00ea11c0 src/game/unknown/leaf_00ea11c0.cpp _Z12FUN_00ea11c0P14Object00ea11c0P16Argument00ea11c0
+FUN_00ea2dd0 src/game/unknown/leaf_00ea2dd0.cpp _Z12FUN_00ea2dd0PKc
+FUN_00edcf70 src/game/sndx/leaf_00edcf70.cpp _Z12FUN_00edcf70P13Group00edcf70
+FUN_00edbf60 src/game/sndx/leaf_00edbf60.cpp _Z12FUN_00edbf60v
+FUN_00ecc780 src/game/sndx/leaf_00ecc780.cpp _Z12FUN_00ecc780PK13Voice00ecc780i
