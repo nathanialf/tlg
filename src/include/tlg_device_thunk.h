@@ -6,6 +6,7 @@
 #define TLG_DEVICE_THUNK_H
 
 #include "tlg_types.h"
+#include "tlg_game_array.h"
 
 struct Device583950Vtable {
     void *(*method0)(void *self, void *arg, int mode);
@@ -296,6 +297,126 @@ struct Owner583950 {
  * siblings). derived name */
 struct DeviceOwner583950 : Owner583950 {
     Device583950 *device; /* +0xf0 */
+};
+
+/* An owner that keeps the nodes it has handed on, each once: the handlers
+ * of the tables at +0x17a0 and +0x1ba0 of FUN_00525530's object
+ * (FUN_00595220, FUN_00590910 and their siblings: the list at +0xf8
+ * searched, then appended to). derived name */
+struct NodesOwner583950 : DeviceOwner583950 {
+    Array05943280<void *> nodes; /* +0xf8 */
+};
+
+/* A node of kind 31 with a list of children at +0x50 (FUN_00594920, FUN_00594a80).
+ * derived name */
+struct ParentNode583950Kind31 {
+    u8 unknown0[0x50];
+    Node583950 **children; /* +0x50 */
+    unsigned count;        /* +0x58 */
+};
+
+/* A node of kind 32 with a list of children at +0x80 (FUN_0058fa80).
+ * derived name */
+struct ParentNode583950Kind32 {
+    u8 unknown0[0x80];
+    Node583950 **children; /* +0x80 */
+    unsigned count;        /* +0x88 */
+};
+
+/* A node of kind 33 with a list of children at +0x40 (FUN_00596360, FUN_005964c0).
+ * derived name */
+struct ParentNode583950Kind33 {
+    u8 unknown0[0x40];
+    Node583950 **children; /* +0x40 */
+    unsigned count;        /* +0x48 */
+};
+
+/* A node of kind 34 with a list of children at +0x78 (FUN_00595990, FUN_00595af0).
+ * derived name */
+struct ParentNode583950Kind34 {
+    u8 unknown0[0x78];
+    Node583950 **children; /* +0x78 */
+    unsigned count;        /* +0x80 */
+};
+
+/* A node of kind 35 with a list of children at +0x88 (FUN_00595dc0, FUN_00595f20).
+ * derived name */
+struct ParentNode583950Kind35 {
+    u8 unknown0[0x88];
+    Node583950 **children; /* +0x88 */
+    unsigned count;        /* +0x90 */
+};
+
+/* A node of kind 36 with a list of children at +0x78 (FUN_00595220, FUN_00595380).
+ * derived name */
+struct ParentNode583950Kind36 {
+    u8 unknown0[0x78];
+    Node583950 **children; /* +0x78 */
+    unsigned count;        /* +0x80 */
+};
+
+/* A node of kind 37 with a list of children at +0x30 (FUN_00594d90, FUN_00594ef0).
+ * derived name */
+struct ParentNode583950Kind37 {
+    u8 unknown0[0x30];
+    Node583950 **children; /* +0x30 */
+    unsigned count;        /* +0x38 */
+};
+
+/* A node of kind 38 with a list of children at +0x68 (FUN_00592f10).
+ * derived name */
+struct ParentNode583950Kind38 {
+    u8 unknown0[0x68];
+    Node583950 **children; /* +0x68 */
+    unsigned count;        /* +0x70 */
+};
+
+/* A node of kind 39 with a list of children at +0x48 (FUN_005935c0, FUN_00593720).
+ * derived name */
+struct ParentNode583950Kind39 {
+    u8 unknown0[0x48];
+    Node583950 **children; /* +0x48 */
+    unsigned count;        /* +0x50 */
+};
+
+/* A node of kind 40 with a list of children at +0x58 (FUN_00593ca0).
+ * derived name */
+struct ParentNode583950Kind40 {
+    u8 unknown0[0x58];
+    Node583950 **children; /* +0x58 */
+    unsigned count;        /* +0x60 */
+};
+
+/* A node of kind 41 with a list of children at +0x50 (FUN_00594260, FUN_005943c0).
+ * derived name */
+struct ParentNode583950Kind41 {
+    u8 unknown0[0x50];
+    Node583950 **children; /* +0x50 */
+    unsigned count;        /* +0x58 */
+};
+
+/* A node of kind 42 with a list of children at +0x50 (FUN_005907b0, FUN_00590910).
+ * derived name */
+struct ParentNode583950Kind42 {
+    u8 unknown0[0x50];
+    Node583950 **children; /* +0x50 */
+    unsigned count;        /* +0x58 */
+};
+
+/* A node of kind 43 with a list of children at +0x60 (FUN_00591c40, FUN_00591da0).
+ * derived name */
+struct ParentNode583950Kind43 {
+    u8 unknown0[0x60];
+    Node583950 **children; /* +0x60 */
+    unsigned count;        /* +0x68 */
+};
+
+/* A node of kind 44 with a list of children at +0x38 (FUN_00590290).
+ * derived name */
+struct ParentNode583950Kind44 {
+    u8 unknown0[0x38];
+    Node583950 **children; /* +0x38 */
+    unsigned count;        /* +0x40 */
 };
 
 /* An owner with a current value, the call frame and a second list: the

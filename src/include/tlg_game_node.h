@@ -15,7 +15,13 @@
 struct Component00503fb0 { /* derived name */
     u8 unknown0[0x18];
     Type00503fb0 *type; /* +0x18 */
-    u8 unknown20[0x34];
+    u8 unknown20[0x1a];
+    /* +0x3a: flags; FUN_00cf56b0 clears flag 2 of the component of the
+     * type the pointer at 0x5948180 holds */
+    u8 flags3a;
+    u8 unknown3b[5];
+    int unknown40; /* +0x40: set to 1 where it is 0 by FUN_00cf56b0 */
+    u8 unknown44[0x10];
     Name name; /* +0x54 */
     /* +0x58: a second name, which the scripts
      * Soldier_SoldierHelmet_TractionInvalidArea_Enter and _Leave assign

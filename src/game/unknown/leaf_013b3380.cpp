@@ -9,14 +9,10 @@
  * Its own fields are traced only where its destructor FUN_013b3380 tears them
  * down (the counted reference at +0x100); the rest are not traced. */
 /* derived names: the component of the type the pointer at 0x5948180 holds,
- * as slot 8 below reads it: a flag byte at +0x3a and an int at +0x40 */
-struct Component05948180 /* derived name */
-{
-    u8 unknown0[0x3a];
-    u8 flags3a; /* +0x3a */
-    u8 unknown3b[5];
-    int unknown40; /* +0x40 */
-};
+ * as slot 8 below reads it: the component's flag byte at +0x3a and its int
+ * at +0x40 */
+struct Component05948180 : Component00503fb0 /* derived name */
+{};
 
 extern Type00503fb0 *D_5948180;
 
@@ -63,7 +59,7 @@ void Object016b9a30::FUN_00cf56b0() /* derived name */
         }
     }
     if (found) {
-        Component05948180 *component = reinterpret_cast<Component05948180 *>(found);
+        Component05948180 *component = static_cast<Component05948180 *>(found);
         component->flags3a &= ~2;
         if (component->unknown40 == 0)
             component->unknown40 = 1;
