@@ -1,27 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_block.h"
+#include "tlg_game_buffer00d650e0.h"
 #include "tlg_game_object00d30550.h"
-
-/* derived names: a buffer member: its block at +0x0, a count at +0x8, flags
- * at +0xc (bit 0: the block is not its own; bit 4 survives a reset) and an
- * int at +0x10. Its destructor releases an owned block and resets the rest. */
-struct Buffer00d650e0 { /* derived name */
-
-    ~Buffer00d650e0()
-    {
-        if (!(flags & 1))
-            releaseBlock(block);
-        block = 0;
-        count = 0;
-        flags &= 0x10;
-        unknown10 = 0;
-    }
-
-    void *block;    /* +0x0 */
-    int count;      /* +0x8 */
-    unsigned flags; /* +0xc */
-    int unknown10;  /* +0x10 */
-};
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16baa48 (config/vtables.derived.base.txt; made by FUN_00d64f10): it

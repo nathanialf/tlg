@@ -92,7 +92,9 @@ class PoolRef01343090 /* derived name */
  * of the class whose destructor is 0x1216120) and 0x13d3970 (vtable
  * 0x16d39f0; at +0x390 of the one whose destructor is 0xf59820). Each
  * destructor gives up the pool its reference at +0x168 holds
- * (PoolRef01343090::shutdown()). Not written; the rest is not traced. */
+ * (PoolRef01343090::shutdown()). Not written (a definition in the module is
+ * inlined into its holder by the link stage while shutdown() stays a
+ * call). The rest is not traced. */
 class Object016d6a50 /* derived name */
 {
   public:
