@@ -12,13 +12,13 @@
  * destructor FUN_010351b0 uses them: the shape of FUN_00f1a950
  * (leaf_00f1a950.cpp) with the members at this class's offsets;
  * the collections at +0x14b8 and +0x1188, the Name at +0x1180, the parts at +0xe90, +0xd50 and +0xc60, six blocks from +0xc40 and the part at +0x270 go first of the members. */
-class Object016c0ed8 : public Object00c1b7f0 /* derived name */
+class Object016c0ed8 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
     virtual ~Object016c0ed8();
 
   private:
-    Object013cd320 part40;                 /* +0x40 */
+    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
     AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
     u8 unknown1c0[0x5c];
     Name name21c; /* +0x21c: released by the destructor */

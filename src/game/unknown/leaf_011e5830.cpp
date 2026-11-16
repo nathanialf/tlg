@@ -45,13 +45,13 @@ struct RefsOwner011e5830 { /* derived name */
  * destructor FUN_011e5830 uses them: the shape of FUN_00f1a950
  * (leaf_00f1a950.cpp) with the members at this class's offsets;
  * while the int at +0x1e8 is set the reference at +0x290 is emptied, the objects at +0xaf30 and +0xaf20 of the one at +0x220 deleted and five references the one at +0x218 leads to emptied; the Name at +0x298 and the reference at +0x290 go first of the members. */
-class Object016c1b78 : public Object00c1b7f0 /* derived name */
+class Object016c1b78 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
     virtual ~Object016c1b78();
 
   private:
-    Object013cd320 part40;                 /* +0x40 */
+    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
     AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
     OwnedBlock05943280 block1c0;           /* +0x1c0: a block released by the destructor */
     u8 unknown1c8[0x10];
