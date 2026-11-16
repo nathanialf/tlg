@@ -1361,11 +1361,11 @@ def constant_reads(obj: Path, code: bytes, relocs, base_bytes: bytes, base_addr:
     against 1e-10f * 1e-10f) would read as equal. Returns one line per
     difference, naming the instruction and both values, and the count of
     constants checked; a `lea` (no width), a string section or bytes that
-    hold a relocation are left to the gate. main() runs it for a game unit
-    only: five library rows (0x523b0, 0x52630, 0x528b0, 0x52b30, 0x52db0)
-    read a sign mask whose fourth lane the base holds as 0 and the object as
-    -0.0 (round 350D), which the gate's run-to-NUL placement of a library
-    pool entry does not see; that is a question for the library line."""
+    hold a relocation are left to the gate. main() runs it for every unit,
+    library and game: the library's pool entries are compared at full width
+    by the gate's layout too (round 356D: five library rows read a sign mask
+    whose fourth lane the object held as -0.0 and the base as 0, which a
+    placement by the run to the first NUL did not see)."""
     import struct as _st
     from layout_link import rip_access
     if base is None:
@@ -1533,10 +1533,10 @@ def main(argv=None) -> int:
             base_bytes = data[off:off + size]
             ob, rl = objfuncs[sym]
             r = compare(ob, rl, base_bytes, addr, base)
-            # the game module's constants (D82), once every instruction is equal (a field of a
-            # differing instruction points nowhere); the library line's pool entries are left to the gate
+            # every constant the function reads (D82), library or game, once every instruction is
+            # equal (a field of a differing instruction points nowhere)
             consts, checked = (constant_reads(obj, ob, rl, base_bytes, addr, base)
-                               if a.tu and is_module_tu(a.tu) and r["first_diff"] is None else ([], 0))
+                               if r["first_diff"] is None else ([], 0))
             r["unverified_relocs"] = max(0, r["unverified_relocs"] - checked)
             if consts:      # a pool value that differs: not equal (the gate's layout refuses it too)
                 r["bad_constants"] = consts

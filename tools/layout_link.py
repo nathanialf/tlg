@@ -41,7 +41,10 @@ out here.
        has no row either (rodata_constant): the bytes the instruction reads,
        as many as its operand is wide, at the offset its relocation gives,
        must equal the base's bytes where the base's own instruction points,
-       inside the game's rodata, or the row fails with both.
+       inside the game's rodata, or the row fails with both. A constant-pool
+       entry (.rodata.cst4/8/16) any claimed function reads, library or
+       game, is compared the same way at its operand's full width, inside a
+       read-only segment of the base.
     2e. The guard of a game function's local static has no row and no name
        the source can write: its address is the base's own reference at the
        site, proven by the function's test of it, the guard calls after its
@@ -365,20 +368,26 @@ def rodata_constant(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, 
     the base's constant is where the base's own instruction at this site
     points, inside the game's rodata (config/modules.<slug>.txt); and the two
     must be equal byte for byte, as a merged constant-pool entry is proven
-    (round 157A). The game module's object only: the library line's
-    constants are all in merged sections."""
+    (round 157A).
+    A constant-pool entry of a merged section (.rodata.cst4/8/16, either
+    line, the library's every constant) is read the same way, at the full
+    width of the operand: placed by its run to the first NUL (as
+    resolve_symbol_address does for a string) a sign mask whose last lane is
+    0 against the base's -0.0 compared one lane and read as equal (round
+    356D: 0x523b0's family). The base's constant must then lie in a loaded
+    segment that is not writable (the library's pools share the text
+    segment)."""
     if r.type != R_X86_64_PC32 or r.sym_size != 0 or not r.symbol.startswith(".") \
             or not isinstance(r.sym_section, int) or r.sym_section <= 0:
         return None
     import game_module as gm
-    if obj != gm.module_object(ver):    # the library line merges its constants (.rodata.cst*): no such read
-        return None
     view = mc.object_view(obj)
     if r.sym_section not in view.sections:
         return None
     data, flags, _size = view.sections[r.sym_section]
-    if flags & 0x37 != 0x2:     # SHF_ALLOC alone of WRITE, ALLOC, EXECINSTR, MERGE, STRINGS
-        return None
+    merged = flags & 0x37 == 0x12   # SHF_ALLOC and SHF_MERGE, not STRINGS: a constant pool
+    if not merged and (flags & 0x37 != 0x2 or obj != gm.module_object(ver)):
+        return None     # plain .rodata: the game module's only (LLVM 3.3 merges every library constant)
     acc = rip_access(code, r.offset)
     if acc is None:
         return None
@@ -394,7 +403,11 @@ def rodata_constant(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, 
         T = struct.unpack("<i", base.read(P, 4))[0] + P + tail
     except Exception:  # noqa: BLE001
         return f"{where}: the base's field at 0x{P:x} cannot be read"
-    if not any(lo <= T and T + width <= hi for lo, hi in game_rodata(ver)):
+    if merged:
+        seg = base.segment_of(T)
+        if seg is None or seg["flags"] & 2 or T + width > seg["vaddr"] + seg["filesz"]:
+            return f"{where}: the base's instruction reads 0x{T & 0xFFFFFFFFFFFFFFFF:x}, not inside read-only data"
+    elif not any(lo <= T and T + width <= hi for lo, hi in game_rodata(ver)):
         return f"{where}: the base's instruction reads 0x{T & 0xFFFFFFFFFFFFFFFF:x}, not inside the game's rodata"
     want = bytes(data[start:start + width])
     try:

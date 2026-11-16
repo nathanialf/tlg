@@ -34,7 +34,10 @@ void shapeCastFlipped(hknpCollisionQueryContext *context, const hknpShapeCastQue
                   _mm_dp_ps(query.ray.direction, rotation.getColumn(2), 0x74));
     hknpShapeCastQuery flippedQuery = query;
     flippedQuery.filterData = targetShapeFilterData;
-    flippedQuery.ray.direction = _mm_xor_ps(direction, _mm_set1_ps(-0.0f));
+    /* the direction negated in its first three lanes, the fourth kept (the
+     * mask's last lane is 0 in the base's pool, 0x14bd840 and on: a
+     * three-lane negate, as hknpBody::FUN_0003a920's) */
+    flippedQuery.ray.direction = _mm_xor_ps(direction, _mm_setr_ps(-0.0f, -0.0f, -0.0f, 0.0f));
     flippedQuery.body = targetShapeInfo.body;
     flippedQuery.shape = &targetShape;
     const hknpQueryFilterData queryFilterData = query.filterData;
