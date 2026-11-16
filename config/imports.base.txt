@@ -400,7 +400,7 @@ MZO7FXyAPU8 V V func ?
 MpxhMh8QFro V V func fwrite
 NesIgTmfF0Q V V func bsearch
 O4L+0oCN9zA V V func _FSinh
-OGybVuPAhAY V V func ?
+OGybVuPAhAY V V func reallocalign
 OJjm-QOIHlI V V func sceLibcMspaceMalloc
 Ovb2dSJOAuE V V func strcmp
 P330P3dFF68 V V obj ?

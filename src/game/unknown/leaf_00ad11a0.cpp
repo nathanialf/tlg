@@ -95,3 +95,68 @@ void FUN_00ad1870(
     if (event)
         markerComponent(event);
 }
+
+/* derived names: the trophy counters of the same table (lea at 0xad43c8 and
+ * 0xad43fc): the count at +0xb4 or +0xb8 of the record at +0x30 of the
+ * perpetual data (+0x108 of the object at 0x57c9390) is raised; at the
+ * threshold the record FUN_00a285e0 returns holds (+0x34, +0x40) the trophy
+ * is unlocked (FUN_00cb5f90, as the script's "UnlockTrophy" does); the
+ * progress is reported (FUN_00a1cd10) and the data saved (FUN_00a26130, as
+ * "SavePerpetual" does). */
+struct Counts00ad2cf0 { /* derived name */
+    u8 unknown0[0xb4];
+    int helmetsPulledOff; /* +0xb4, derived name */
+    int pulseDefeats;     /* +0xb8, derived name */
+};
+
+struct Member057c9390_108 { /* derived name */
+    u8 unknown0[0x30];
+    Counts00ad2cf0 *counts; /* +0x30, derived name */
+};
+
+struct Object057c9390 { /* derived name */
+    u8 unknown0[0x108];
+    Member057c9390_108 *unknown108;
+};
+
+struct Thresholds00a285e0 { /* derived name */
+    u8 unknown0[0x34];
+    int helmetsPulledOff; /* +0x34, derived name */
+    u8 unknown38[0x8];
+    int pulseDefeats; /* +0x40, derived name */
+};
+
+struct Member05938c40_f68; /* derived name */
+
+struct Object05938c40 { /* derived name */
+    u8 unknown0[0xf68];
+    Member05938c40_f68 *unknownf68;
+};
+
+extern Object057c9390 *D_57c9390;
+extern Object05938c40 *D_5938c40;
+
+Thresholds00a285e0 *FUN_00a285e0();                              /* derived name */
+void FUN_00cb5f90(Member05938c40_f68 *member, const char *name); /* derived name */
+void FUN_00a1cd10(const char *name, int progress);               /* derived name */
+void FUN_00a26130(Member057c9390_108 *member);                   /* derived name */
+
+void FUN_00ad2cf0(MarkerEvent00ad3090 *) /* derived name */
+{
+    Counts00ad2cf0 *counts = D_57c9390->unknown108->counts;
+    int count = ++counts->helmetsPulledOff;
+    if (count >= FUN_00a285e0()->helmetsPulledOff)
+        FUN_00cb5f90(D_5938c40->unknownf68, "TROPHY_Pull_off_Soldier_Helmet");
+    FUN_00a1cd10("TROPHY_Pull_off_Soldier_Helmet", counts->helmetsPulledOff);
+    FUN_00a26130(D_57c9390->unknown108);
+}
+
+void FUN_00ad2d70(MarkerEvent00ad3090 *) /* derived name */
+{
+    Counts00ad2cf0 *counts = D_57c9390->unknown108->counts;
+    int count = ++counts->pulseDefeats;
+    if (count >= FUN_00a285e0()->pulseDefeats)
+        FUN_00cb5f90(D_5938c40->unknownf68, "TROPHY_Pulse_Soldier_Defeat");
+    FUN_00a1cd10("TROPHY_Pulse_Soldier_Defeat", counts->pulseDefeats);
+    FUN_00a26130(D_57c9390->unknown108);
+}

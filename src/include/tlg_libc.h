@@ -154,6 +154,9 @@ inline float cosf(float x)
 }
 
 void *memalign(size_t alignment, size_t size);
+/* NIDs verified as "realloc" and "reallocalign" (FUN_00ca25c0). */
+void *realloc(void *p, size_t size);
+void *reallocalign(void *p, size_t size, size_t alignment);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
 unsigned long _Stoul(const char *s, char **endptr, int base);

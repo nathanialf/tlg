@@ -31,6 +31,7 @@ calloc
 realloc
 free
 memalign
+reallocalign
 posix_memalign
 memcpy
 memmove

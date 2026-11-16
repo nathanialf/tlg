@@ -16,7 +16,9 @@ struct BlockHeader05943280 { /* derived name */
     u8 tag;
     u8 unknown1;
     u16 owner;
-    u8 unknown4[0xc];
+    u32 size;  /* +0x4: the block's size rounded to its alignment (FUN_00ca2540) */
+    u32 total; /* +0x8: that size and the header's 16 bytes (FUN_00ca2540) */
+    u8 unknownc[0x4];
 };
 
 class Owner05943280 /* derived name */
