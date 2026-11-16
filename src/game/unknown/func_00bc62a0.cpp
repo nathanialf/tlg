@@ -17,11 +17,9 @@
  * tests that string, not the second, before deleting it). The third job
  * (0xbd2190) loads a compute shader from the shader cache: its file name is
  * the job's two strings, the profile and a hash of the table's strings.
- * NONMATCHING (slots 2 of 0x16b76d0 and 0x16b7720, 0xbd1fc0 and 0xbd20a0): the
- * base loads the call's arguments from the closure in ascending offset order,
- * the implementation in rbx; this source gives the reverse order, in r14.
- * Slots 0 and 1: the base copies the closure's last 8 bytes before its first
- * 32, this source the other way round. */
+ * NONMATCHING, slots 0 and 1 of 0x16b76d0 and 0x16b7720: the base copies the
+ * closure's last 8 bytes before its first 32, this source the other way
+ * round. */
 struct Pair00bc62a0 { /* derived name */
     char *first;
     char *second;

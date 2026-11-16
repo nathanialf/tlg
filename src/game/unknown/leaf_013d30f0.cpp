@@ -22,8 +22,6 @@ Object013d30f0::~Object013d30f0() {}
 
 /* derived name: slot 2 (FUN_013ce230): 28 entries, all zero (the array's
  * resize, then the entries cleared). */
-// NONMATCHING: a register exchange (the parked class): in the clearing loop the base holds
-// the block in rdx and the index in rcx, the build the reverse; the growth is the base's (39 of 42)
 void Object013d30f0::reset()
 {
     values.resize(28);

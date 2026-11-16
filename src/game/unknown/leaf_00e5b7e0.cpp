@@ -91,10 +91,6 @@ int Object00e5b7e0::slot12(void *key, Record00e5b7e0 *record)
     return result;
 }
 
-// NONMATCHING: block placement: the build duplicates the -1 block into stat's
-// failure arm (`je` over `mov eax, -1; jmp`), the base falls through to the mode
-// tests and keeps one -1 block at the end (placement's tail duplication; the
-// shape -tail-dup-placement=false gives, which this branch's flags do not have)
 int Object00e5b7e0::slot14(const char *path)
 {
     struct stat status;

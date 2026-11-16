@@ -64,9 +64,7 @@ class Object013606c0 /* derived name */
     u8 unknown48[8];
 };
 
-// NONMATCHING: 0x1360680 and 0x13606c0 (15 of 21): the base loads the
-// implementation's vtable before the deallocate flag (`mov rcx, [rdi]` first,
-// as at all 18 such calls in the base); this build computes the flag first
+// 0x1360680, and the deleting one 0x13606c0
 Object013606c0::~Object013606c0() {}
 
 // NONMATCHING: not written beyond the lambda

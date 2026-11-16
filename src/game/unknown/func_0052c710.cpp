@@ -167,9 +167,7 @@ void FUN_0052c710(Owner0052c710 *) /* derived name */
     }));
     FUN_01357df0(
         CallbackB0052c710([](TargetB0052c710 &target) { target.slot11(D_5938c40->unknown19c); }));
-    // NONMATCHING: slot 2 of 0x16ab3f8 (FUN_0052dc20) and, below, of 0x16ab498 (FUN_0052dde0):
-    // equal in the single-file module; in the whole game module the slot's address takes rcx where
-    // the base reuses rax (round 146C's greedy residual, 11 of 13 instructions)
+    // slot 2 of 0x16ab3f8 (FUN_0052dc20) and, below, of 0x16ab498 (FUN_0052dde0)
     FUN_01357df0(CallbackB0052c710([](TargetB0052c710 &target) {
         float value =
             (target.unknown40 & 2) ? D_57c9390->unknown98->unknown24 : D_5938c40->unknown19c;

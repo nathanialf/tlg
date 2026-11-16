@@ -10,10 +10,15 @@
  * deleted while it is active: an array at +0x8 of 24-byte elements, each
  * an array whose block is released (0xf71610: `mov eax, r12d; lea rax,
  * [rax+rax*2]` and the release of the block at [rcx+rax*8]). The rest is
- * not traced. */
+ * not traced. The inner arrays hold entries of this holder's own kind
+ * (an instantiation of its own: the base has its destructor inlined). */
+struct Entry00f71430 { /* derived name: nothing of it is traced */
+    int unknown0;
+};
+
 struct Holder00f71430 { /* derived name */
     u8 unknown0[0x8];
-    Array05943280<Array05943280<int>> lists8; /* +0x8 */
+    Array05943280<Array05943280<Entry00f71430>> lists8; /* +0x8 */
 };
 
 /* derived names: the class whose vtable is at 0x16bfba8
@@ -72,8 +77,10 @@ class Object016bfba8 : public Object00c1b7f0 /* derived name */
  * FUN_00c1b7f0 runs as a tail call. FUN_00f71ba0, slot 1, is the deleting one.
  * The destructor is the class's key function, so this file emits the
  * vtable. */
-// NONMATCHING: the complete destructor: the register assignment differs from the start (`this` in r13, the base's
-// in r14; 1857 bytes for 1889). The deleting destructor is equal and claimed
+// NONMATCHING: the complete destructor (1889 bytes, as the base): the array's emptying in the loop reallocates
+// through an owner looked up from the block's tag (`mov edi, 0; cmp eax, 0xa; jne`, 39 such sites in the base,
+// none claimed), where Array05943280::clear() indexes the table directly; and the base forms the address of the
+// part at +0x4b0 in rbx before the destructor of the one at +0x590. The deleting destructor is equal and claimed
 Object016bfba8::~Object016bfba8()
 {
     if (registry)
@@ -87,11 +94,17 @@ Object016bfba8::~Object016bfba8()
         object2c0 = 0;
         part4b0.FUN_013d6920();
         part590.FUN_013d6920();
-        delete object680;
-        object680 = 0;
-        for (Holder00f71430 *holder : array690)
+        if (object680) {
+            delete object680;
+            object680 = 0;
+        }
+        /* the array is emptied inside the loop, after each delete (the
+         * base's clear sits in the loop body; the loop's end is the one
+         * read before it). */
+        for (Holder00f71430 *holder : array690) {
             delete holder;
-        array690.clear();
+            array690.clear();
+        }
         active234 = 0;
     }
     held.clear();
