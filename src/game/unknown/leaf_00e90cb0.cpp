@@ -14,7 +14,6 @@ extern Type059458a8 *D_5a8d780;
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place (its
  * base's constructor FUN_00ccfbe0 called with 4, its own inlined). */
-// NONMATCHING: every store is the base's, but the value (1.0, 0, 0, 0) shared by +0x90 and +0xb4 is loaded from the constant pool (`vmovss`) where the base builds it as an integer vector (`mov edx, 0x3f800000; vmovd xmm0, edx`) and stores +0x90 after the floats at +0xd0: the stores from +0x90 reach the vectoriser as ints in the base; the source form not found
 Object00ccfd00 *FUN_00e90cb0(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016d31d8));

@@ -50,7 +50,7 @@ struct alignas(16) Float4A { /* derived name */
 
     Float4A() {}
 
-    Float4A(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
+    constexpr Float4A(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
 
     Float4A(const Float4A &o) : x(o.x), y(o.y), z(o.z), w(o.w) {}
 
@@ -62,5 +62,11 @@ struct alignas(16) Float4A { /* derived name */
         w = w_;
     }
 };
+
+/* derived names: the x axis, defined with the points (float4_points.cpp):
+ * assigned at +0x90 and +0xb4 by FUN_00e90cb0 and FUN_00e91f20 (`mov edx,
+ * 0x3f800000; vmovd xmm0, edx`: the value reaches the link as integers) */
+extern const Float4A FLOAT4A_X; /* derived name */
+extern const Float4 FLOAT4_X;   /* derived name */
 
 #endif

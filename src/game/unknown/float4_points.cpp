@@ -11,3 +11,5 @@ const Float4 FLOAT4_POINT_MAX(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
 const Float4 FLOAT4_POINT_ORIGIN(0.0f, 0.0f, 0.0f, 1.0f);
 const Float4 FLOAT4_ONE(1.0f, 1.0f, 1.0f, 1.0f);
 const float FLOAT_ONE = 1.0f;
+const Float4A FLOAT4A_X(1.0f, 0.0f, 0.0f, 0.0f);
+const Float4 FLOAT4_X(1.0f, 0.0f, 0.0f, 0.0f);

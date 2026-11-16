@@ -4,6 +4,8 @@
 #ifndef TLG_GAME_OBJECT00CCFD00_H
 #define TLG_GAME_OBJECT00CCFD00_H
 
+#include "tlg_types.h"
+
 #include "tlg_game_name.h"
 
 /* derived names: the class whose complete destructor is 0xccfd00 (its row
@@ -18,6 +20,11 @@ class Object00ccfd00 /* derived name */
         const Name &name,
         int kind); /* 0xccfbe0, its row named after it (D15): the derived classes' creators call it (FUN_00e90cb0 passes 4) */
     virtual ~Object00ccfd00();
+
+  private:
+    /* 0x60 bytes: the derived classes' second base starts at +0x60
+     * (FUN_00e90cb0, FUN_00e91f20); the fields are not traced */
+    u8 unknown8[0x58];
 };
 
 #endif
