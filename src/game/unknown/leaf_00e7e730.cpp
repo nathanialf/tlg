@@ -17,7 +17,7 @@ int VectorAdd3(lua_State *state)
     if (count >= 2 && typeOf(state, 1) == 7 && typeOf(state, 2) == 7) {
         const Float4 &a = userdataValue(state, 1);
         const Float4 &b = userdataValue(state, 2);
-        Float4 r(b.x + a.x, b.y + a.y, b.z + a.z, a.w);
+        Float4A r(b.x + a.x, b.y + a.y, b.z + a.z, a.w);
         FUN_00c8aa70(state, &r);
         return 1;
     }

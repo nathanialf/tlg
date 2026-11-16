@@ -14,7 +14,9 @@
  * "SoundSetCategoryVolume" (FUN_00e7cf20, lea at 0xe7d896),
  * "SoundGetCategoryVolume" (FUN_00e7d0b0, 0xe7d925), "SoundSetSlowDisabled"
  * (FUN_00e7cfa0, 0xe7dad2) and "SoundGetNumActiveInstance" (FUN_00e7d530,
- * 0xe7dd9d). "SoundSetVariable" (FUN_00e7d120, lea at 0xe7d9b4) passes the
+ * 0xe7dd9d). "SoundToolGetNumSoundFx" (FUN_00e7d3d0, lea at 0xe7dbf0) pushes
+ * the number slot 27 answers for the first argument's string, 0 without
+ * one. "SoundSetVariable" (FUN_00e7d120, lea at 0xe7d9b4) passes the
  * first argument's string and the second's number to slot 24.
  * The classes are not traced. */
 class Sound00e7d320 /* derived name */
@@ -47,10 +49,10 @@ class Sound00e7d320 /* derived name */
     virtual void setVariable(const char *name, float value);    /* derived name */
     virtual const char *slot25(const char *first, const char *second); /* derived name */
     virtual void setSlowDisabled(int disabled);                        /* derived name */
-    virtual void slot27();                                     /* derived name; not traced */
-    virtual const char *slot28(const char *first, int second); /* derived name */
-    virtual void slot29();                                     /* derived name; not traced */
-    virtual int activeInstanceCount();                         /* derived name */
+    virtual int soundFxCount(const char *name);                        /* derived name */
+    virtual const char *slot28(const char *first, int second);         /* derived name */
+    virtual void slot29();             /* derived name; not traced */
+    virtual int activeInstanceCount(); /* derived name */
 };
 
 struct Object05938c40 { /* derived name */
@@ -159,4 +161,16 @@ int FUN_00e7d120(lua_State *state) /* derived name */
     float value = toNumber(state, 2);
     D_5938c40->unknown100->setVariable(name, value);
     return 0;
+}
+
+int FUN_00e7d3d0(lua_State *state) /* derived name */
+{
+    int count = state->top - state->base;
+    if (count > 0) {
+        const char *name = toString(state, 1);
+        pushNumber(state, D_5938c40->unknown100->soundFxCount(name));
+    } else {
+        pushNumber(state, 0);
+    }
+    return 1;
 }

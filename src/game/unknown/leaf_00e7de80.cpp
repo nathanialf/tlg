@@ -23,14 +23,14 @@ struct ArgumentReader00c8edb0 { /* derived name */
     int unknown18;    /* +0x18 */
 };
 
-void FUN_00c8edb0(ArgumentReader00c8edb0 *reader, Float4 *vector); /* derived name */
+void FUN_00c8edb0(ArgumentReader00c8edb0 *reader, Float4A *vector); /* derived name */
 
 namespace LuaBindings
 {
 
 int Vec4(lua_State *state)
 {
-    Float4 vector(0.0f, 0.0f, 0.0f, 1.0f);
+    Float4A vector(0.0f, 0.0f, 0.0f, 1.0f);
     ArgumentReader00c8edb0 reader(state);
     FUN_00c8edb0(&reader, &vector);
     FUN_00c8aa70(state, &vector);

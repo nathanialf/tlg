@@ -14,9 +14,11 @@ struct LuaVectorUserdata { /* derived name */
 };
 
 /* derived names: push a vector and a rotation as new userdata; their bodies
- * are not written */
-void FUN_00c8aa70(lua_State *state, const Float4 *vector);
-void FUN_00c8ab10(lua_State *state, const Float4 *rotation);
+ * are not written. The value they copy is a 16-byte aligned four-float
+ * (every caller's local lies at a multiple of 16 from the frame, 0xe7fc50's
+ * and 0xe7eee0's with an 8-byte hole below the stack guard). */
+void FUN_00c8aa70(lua_State *state, const Float4A *vector);
+void FUN_00c8ab10(lua_State *state, const Float4A *rotation);
 
 /* derived name: the value of the userdata an argument holds (its type
  * tested before) */

@@ -23,18 +23,18 @@ struct ArgumentReader00e7ff00 { /* derived name */
     int unknown18;    /* +0x18 */
 };
 
-void FUN_00c8edb0(ArgumentReader00e7ff00 *reader, Float4 *vector); /* derived name */
-void FUN_0020c3b0(Float4 *rotation, float x, float y, float z);    /* derived name */
+void FUN_00c8edb0(ArgumentReader00e7ff00 *reader, Float4A *vector); /* derived name */
+void FUN_0020c3b0(Float4A *rotation, float x, float y, float z);    /* derived name */
 
 namespace LuaBindings
 {
 
 int Quat(lua_State *state)
 {
-    Float4 angles;
+    Float4A angles;
     ArgumentReader00e7ff00 reader(state);
     FUN_00c8edb0(&reader, &angles);
-    Float4 rotation;
+    Float4A rotation;
     FUN_0020c3b0(&rotation, angles.x, angles.y, angles.z);
     FUN_00c8ab10(state, &rotation);
     return 1;
