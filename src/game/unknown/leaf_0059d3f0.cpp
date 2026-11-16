@@ -24,7 +24,7 @@ void FUN_0059d4e0(void *vm);                                     /* derived name
 // reads the node's +0x28 before +0x30 and +0x38 (the build in argument order), and forms the
 // entry's index (`shl rsi, 5`) before the function's address (`lea rdi`), as 0xc0bc10.
 // The four copies (0x5a4a10, 0x5a4d80, 0x5a5aa0, 0x5a6020) are not written.
-int FUN_0059d3f0(ValueOwner583950 *self, CallNode0059d3f0 *node) /* derived name */
+int FUN_0059d3f0(FrameOwner583950 *self, CallNode0059d3f0 *node) /* derived name */
 {
     u8 *state = self->selectState(node);
     switch (*state) {

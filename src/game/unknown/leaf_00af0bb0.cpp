@@ -4,7 +4,7 @@
 /* derived names: a handler whose address FUN_00aec5d0 takes (lea at
  * 0xaec7a0), the body of FUN_00af09d0 (leaf_00af09d0.cpp, where it is
  * described). Handler unknown. */
-int FUN_00af0bb0(ValueOwner583950 *self, Node583950 *node) /* derived name */
+int FUN_00af0bb0(FrameOwner583950 *self, Node583950 *node) /* derived name */
 {
     unsigned index;
     if (self->cursor.find(node, index)) {

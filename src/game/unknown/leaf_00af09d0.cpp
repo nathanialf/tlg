@@ -6,7 +6,7 @@
  * body): the node made the current one of the owner's list and, when it is
  * there, of the second list at +0x190 too, whose state byte then takes the
  * first's; the node's child is dispatched. Returns 0. Handler unknown. */
-int FUN_00af09d0(ValueOwner583950 *self, Node583950 *node) /* derived name */
+int FUN_00af09d0(FrameOwner583950 *self, Node583950 *node) /* derived name */
 {
     unsigned index;
     if (self->cursor.find(node, index)) {

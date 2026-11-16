@@ -230,8 +230,14 @@ struct NodeCursor583950 {
 
 /* What every handler of the tables FUN_00525530, FUN_00be6da0 and their
  * callers fill is given: the list with its current index and the table of
- * handlers by kind. What follows +0xf0 differs by table: an owner of each
- * kind derives from this one. derived name */
+ * handlers by kind. The owner is not the object that holds the tables: each
+ * walk builds one on its stack, a four-character code at +0x0 ('XAOC',
+ * 'XAER', 'XAIT', 'XAAS', 'XFIT'), with +0x48 pointing at one table of
+ * FUN_00525530's object or at a table on the same stack (FUN_005269a0
+ * builds them, then calls the handler with the stack object in rdi; a
+ * handler that walks further builds the next one, FUN_00588200,
+ * FUN_00591f30). What follows +0xf0 differs by code: an owner of each kind
+ * derives from this one. derived name */
 struct Owner583950 {
     /* finds a node of the list (derived name) */
     bool find(void *node, unsigned &index) const
@@ -419,13 +425,10 @@ struct ParentNode583950Kind44 {
     unsigned count;        /* +0x40 */
 };
 
-/* An owner with a current value, the call frame and a second list: the
- * handlers of the tables at +0x9a0, +0x42a0 and +0x44a0 of FUN_00525530's
- * object (the value at +0xf0 read by its type at +0x100: 0 an int, 4 a
- * float, 7 three floats, FUN_0058fc10; the frame FUN_0059ab60 appends to),
- * of the table FUN_00525530's caller builds on its stack (the copies between
- * the two lists, FUN_005839e0) and of FUN_00aec5d0's and FUN_005f2b90's.
- * derived name */
+/* An owner with a current value ('XFIT', built by FUN_00588200 from an
+ * 'XAIT' owner's +0x158): the handlers of the tables at +0x42a0 and +0x44a0
+ * of FUN_00525530's object (the value at +0xf0 read by its type at +0x100:
+ * 0 an int, 4 a float, 7 three floats, FUN_0058fc10). derived name */
 struct ValueOwner583950 : Owner583950 {
     union {
         int intValue;
@@ -433,8 +436,22 @@ struct ValueOwner583950 : Owner583950 {
         float vector[3];
     }; /* +0xf0 */
 
+    u8 unknownfc[4];
     int valueType; /* +0x100 */
-    u8 unknown104[0xc];
+};
+
+/* An owner with the call frame and a second list ('XAIT', FUN_005269a0
+ * builds it with -1.0f at +0xf0 and +0xf4 and -1 at +0xf8, its +0x100 a
+ * pointer the 'XFIT' owners it builds keep at +0x108): the handlers of the
+ * tables at +0x9a0 and +0xba0 of FUN_00525530's object (the frame
+ * FUN_0059ab60 appends to), of the table FUN_005269a0 builds on its stack
+ * (the copies between the two lists, FUN_005839e0) and of FUN_00aec5d0's and
+ * FUN_005f2b90's. derived name */
+struct FrameOwner583950 : Owner583950 {
+    float unknownf0; /* +0xf0 */
+    float unknownf4; /* +0xf4: -1 when FUN_0059ab60 is done */
+    int unknownf8;   /* +0xf8 */
+    u8 unknownfc[0x14];
     CallFrame583950 *frame; /* +0x110 */
     u8 unknown118[0x78];
     /* +0x190: a second list of the same nodes with its own current index,

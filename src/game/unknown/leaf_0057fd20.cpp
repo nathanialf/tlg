@@ -5,7 +5,7 @@
  * 0x527cdd): FUN_005839e0's copy of the state byte from the owner's first
  * list to its second, with the node's value of three floats copied after
  * it, then the node's child dispatched. Returns 0. Handler unknown. */
-int FUN_0057fd20(ValueOwner583950 *self, Node583950 *node) /* derived name */
+int FUN_0057fd20(FrameOwner583950 *self, Node583950 *node) /* derived name */
 {
     Vector583950 *from =
         self->cursor.select(node) ? reinterpret_cast<Vector583950 *>(self->cursor.value()) : 0;

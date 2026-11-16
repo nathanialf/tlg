@@ -11,7 +11,7 @@ void FUN_00c09610(void *vm);                    /* derived name */
  * deeper when appended). Sets the float at +0xf4 to -1; returns 0. Handler
  * unknown. */
 // NONMATCHING: waits for FUN_00c09610 (0x365 bytes) defined in the module: the base computes the entry's index (lea rsi, [rsi + rsi*2]) before the function's address, a protected definition's `lea rdi, [rip]`; a declaration's GOT load is scheduled first (a throwaway single-file compile with the declaration protected was equal, 45/45)
-int FUN_00c0bcb0(ValueOwner583950 *self, void *arg) /* derived name */
+int FUN_00c0bcb0(FrameOwner583950 *self, void *arg) /* derived name */
 {
     const unsigned current = self->cursor.current;
     const int depth = self->frame->depth;
@@ -23,6 +23,6 @@ int FUN_00c0bcb0(ValueOwner583950 *self, void *arg) /* derived name */
             self->frame->pushDeeper(FUN_00c09610);
         }
     }
-    self->vector[1] = -1.0f;
+    self->unknownf4 = -1.0f;
     return 0;
 }
