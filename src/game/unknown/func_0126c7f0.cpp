@@ -2,6 +2,7 @@
 #include "tlg_types.h"
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
+#include "tlg_game_joint013eb0a0.h"
 #include "tlg_game_name.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
@@ -52,4 +53,10 @@ void FUN_01480760(Fade013d2490 *self) /* derived name */
         makeWPositive(entry.unknown50);
         setLanes(entry.unknown60, VECTOR_W);
     }
+}
+
+/* derived name: a virtual method of this file (nodeFrame) */
+JointFrame013eb0a0 FUN_01481020(const Placed013eb210 *self) /* derived name */
+{
+    return nodeFrame(self);
 }

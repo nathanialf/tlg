@@ -8,6 +8,10 @@
 #include "tlg_simd.h"
 #include "tlg_game_vector.h"
 
+/* derived name: the product of two rotations, written to its first
+ * argument (1,442 calls) */
+void FUN_013439c0(Float4A *product, const Float4A *first, const Float4A *second); /* derived name */
+
 /* derived name: the rotation turned to the half where w is not negative,
  * lane by lane against the including unit's VECTOR_ZERO: the lanes read
  * once into a plain copy (one unaligned vector load, w its lane 3 by

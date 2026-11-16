@@ -2,6 +2,7 @@
 #include "tlg_types.h"
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
+#include "tlg_game_joint013eb0a0.h"
 #include "tlg_game_name.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
@@ -52,4 +53,22 @@ void FUN_013ea8a0(Fade013d2490 *self) /* derived name */
         makeWPositive(entry.unknown50);
         setLanes(entry.unknown60, VECTOR_W);
     }
+}
+
+/* derived name: slot 2 of a vtable of this file (jointFrame; its copies
+ * 0x13eb510, 0x13eb6f0 here and 0x1480ed0, 0x1481320, 0x1481470 in
+ * func_0126c7f0.cpp wait on it) */
+// NONMATCHING: every instruction but the registers: the base forms the
+// negation's address (`lea r15, [rbp-0x40]`) before the call and holds it in
+// a saved register (r12 pushed, `sub rsp, 0x30`); the build forms it after
+// the call (75/79 by position)
+JointFrame013eb0a0 FUN_013eb0a0(void *self, const Joint013eb0a0 *joint) /* derived name */
+{
+    return jointFrame(joint);
+}
+
+/* derived name: a virtual method of this file (nodeFrame) */
+JointFrame013eb0a0 FUN_013eb210(const Placed013eb210 *self) /* derived name */
+{
+    return nodeFrame(self);
 }
