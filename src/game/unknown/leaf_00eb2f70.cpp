@@ -58,3 +58,39 @@ int FUN_00eb2f20(Object00eb2f70 *self) /* derived name */
     }
     return 1;
 }
+
+/* derived names: slot 8 of the class whose vtable is 0x16be8f8 (constructed
+ * by FUN_00eb2af0): 0 when the argument's index at +0xc is below the
+ * count at +0x30; otherwise false when its body id is the invalid one, else whether that
+ * body is valid in the index's world and is in its broad phase (the test
+ * FUN_00eb2f70 stores at +0x3c). */
+int FUN_00eb3470(const Object00eb2f70 *self, const Argument00eb2f70 *argument) /* derived name */
+{
+    if (argument->unknownC < self->unknown30) {
+        return 0;
+    }
+    bool valid = false;
+    int bodyId = self->unknown34[argument->unknownC];
+    if (bodyId != 0x7fffffff) {
+        hknpWorld &world = self->unknown28->unknown38[argument->unknownC];
+        valid =
+            world.isBodyValid(bodyId) && world.bodyManager.bodies[bodyId].broadPhaseId != u32(-1);
+    }
+    return valid;
+}
+
+/* Object016c9f40 (vtable row; constructed by FUN_00eaffe0, FUN_00eb00b0 and
+ * FUN_00eb0180) adds a pointer at +0x50; its slot 2 is 0 while that pointer
+ * is null, else the base's slot 2 (FUN_00eb2f20). */
+struct Object016c9f40 : Object00eb2f70 {
+    u8 unknown40[0x10];
+    void *unknown50;
+};
+
+int FUN_00eb0290(Object016c9f40 *self) /* derived name */
+{
+    if (self->unknown50 == 0) {
+        return 0;
+    }
+    return FUN_00eb2f20(self);
+}
