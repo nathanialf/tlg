@@ -48,6 +48,26 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
+    /* puts a copy of the value before the first element: an empty array
+     * appends it, else the count is raised, the block grown when it is full
+     * and the elements moved up one (FUN_006e0240, over floats: the bytes
+     * moved worked out from the old count before it is raised, `lea r15d,
+     * [rax*4]; inc eax`, the value read after the move and assigned, read
+     * before the block: `mov eax, [r14]; mov rcx, [rbx]`) */
+    void pushFront(const T &value) /* derived name */
+    {
+        if (count == 0) {
+            push(value);
+            return;
+        }
+        const unsigned size = count * unsigned(sizeof(T));
+        ++count;
+        if (count > capacity)
+            grow(count);
+        memmove(&data[1], &data[0], size);
+        data[0] = value;
+    }
+
     /* the count raised and the block grown when it is full, the new last
      * slot returned unconstructed for the caller's placement new (0x8e848a
      * to 0x8e8578: `lea eax, [rbx+1]; mov [r12+0xa0], eax; cmp eax,

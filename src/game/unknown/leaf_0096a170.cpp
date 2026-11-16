@@ -14,7 +14,7 @@ class Child0096a170 /* derived name */
     virtual void destroy(); /* derived name; slot 2 */
     virtual void unknown3();
     virtual void unknown4();
-    virtual void unknown5();
+    virtual void slot5();            /* derived name */
     virtual int slot6(int argument); /* derived name */
 
     int references; /* +0x8 */
@@ -45,4 +45,18 @@ int FUN_0096a170(Object0096a170 *self, int argument) /* derived name */
             result |= child.get()->slot6(argument);
     }
     return result;
+}
+
+/* derived names: slot 5 of the object's class: bits 4 and 5 of the int at
+ * +0x20 cleared, then slot 5 of each child, each held by a reference of its
+ * own during its call. */
+void FUN_0096a290(Object0096a170 *self) /* derived name */
+{
+    self->unknown20 &= ~0x30;
+    unsigned count = self->childCount;
+    for (unsigned i = 0; i < count; ++i) {
+        Ref00503fb0<Child0096a170> child(self->childAt(i));
+        if (child.get())
+            child.get()->slot5();
+    }
 }
