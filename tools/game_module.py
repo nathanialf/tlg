@@ -22,7 +22,10 @@ builds it the same way:
        the unit's own -O2 pipeline over that bitcode by the same compiler
        and flags line, to build/<slug>/game/unit/<path>.bc (the same edge
        and script): what a compile of the unit alone gives before code
-       generation.
+       generation, written without the use-list order as the original's
+       `-flto -c` wrote it (the driver's lines in tools/compile_cpp.sh);
+       llvm-link and both opt steps below keep the order, standing for
+       the link's one in-memory run.
     2. The stand-ins: an object some file declares and no file defines gets a
        generated definition when config/modules.<slug>.txt
        (tools/module_boundary.py) puts its base address in the game's part of

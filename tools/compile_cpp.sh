@@ -18,7 +18,13 @@
 #       so the second file that orders `i32 1` fails to parse. Then stage 1:
 #       the line's -O2 pipeline over that bitcode, to the same path with
 #       /game/unit/ for /game/ir/ (the unit as its own compile optimises
-#       it, before code generation)
+#       it, before code generation), written WITHOUT the use-list order, as
+#       the original's `-flto -c` wrote a unit's bitcode (clang 3.7.1: the
+#       backend action's output is TY_LTO_BC, Driver.cpp:1554-1557, and the
+#       driver passes -emit-llvm-uselists only for TY_LLVM_BC,
+#       Tools.cpp:3057-3062; EmitLLVMUseLists is 0 by default,
+#       CodeGenOptions.def:159); the later boundaries (llvm-link, opt) keep
+#       it, standing for the one in-memory run of the link
 #   compile_cpp.sh --codegen <prefix> <module.bc> <object>   code generation
 #       alone over the linked module the link stage optimised (the IR
 #       pipeline off); the driver's front-end flags (-I, -std) have nothing
@@ -84,7 +90,7 @@ case "$mode" in
         unit="${obj/\/game\/ir\///game/unit/}"
         [[ "$unit" != "$obj" ]] || { echo "compile_cpp: --ir output $obj is not under game/ir/" >&2; exit 1; }
         mkdir -p "$(dirname "$unit")"
-        exec "$CXX" $best -Qunused-arguments -emit-llvm -c "$obj" -o "$unit" ;;
+        exec "$CXX" $best -Qunused-arguments -emit-llvm -Xclang -no-emit-llvm-uselists -c "$obj" -o "$unit" ;;
     codegen) exec "$CXX" $best -Qunused-arguments -Xclang -disable-llvm-optzns -c "$src" -o "$obj" ;;
     *) exec "$CXX" $best -I"$TLG_BUILD_DIR" -MD -MF "$obj.d" -c "$src" -o "$obj" ;;
 esac
