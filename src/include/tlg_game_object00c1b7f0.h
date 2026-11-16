@@ -12,6 +12,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_vector.h"
 #include "tlg_simd.h"
 
 /* derived names: the class whose complete destructor is 0xc1b7f0 (its row
@@ -67,10 +68,17 @@ struct Element013cd320 { /* derived name */
 class Object013cd320 /* derived name */
 {
   public:
-    /* inlined in the constructors of the classes that hold it, in the unit
-     * of each (tlg_game_object013cd320_inline.h: the vector at +0x50 is the
-     * unit's own copy of VECTOR_W) */
-    Object013cd320();
+    /* inlined in the constructors of the classes over it, in the unit of
+     * each: the Name at +0x30 empty, the vector at +0x40 zero, the one at
+     * +0x50 the w axis (the including unit's own copy of VECTOR_W:
+     * FUN_012a7b10's `vmovaps xmm0, [0x5ad8dc0]`, func_012a9c00.cpp's), the
+     * five arrays empty (each with the calling thread's heap and its lock
+     * free), the pointers null */
+    Object013cd320()
+        : unknown40(_mm_setzero_ps()), unknown50(VECTOR_W.v), unknown120(0), array130(0),
+          array138(0)
+    {
+    }
 
     ~Object013cd320();
 
