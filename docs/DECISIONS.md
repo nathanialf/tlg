@@ -1681,3 +1681,52 @@ forms except by two far drafts.
 
 **Trigger to revisit.** A base block where a locked exchange-add is scheduled as two
 micro-ops; or a `lock inc` or `lock dec` block that needs one.
+
+## D85. The link stage's inliner runs at a threshold of 175 (2026-11-16)
+
+**Question.** D83 builds the game module in two stages; its link stage (`opt -std-link-opts`) builds the inliner at the
+stock threshold, 225. Does the base show the link's inliner at another threshold, and which?
+
+**Census (round 305C, c305/: parse.py, join.py, basechk.py, link_sites.tsv).** The gate's own link command over a copy of
+build/base/game/module.bc with the inliner's remarks (output identical to module.lto.bc): 1,362 decisions (514 inlined,
+823 too costly, 16 never, 9 varargs). Joined to the base (a claimed caller's row, else the base read: does the caller's
+base code call or jump to the callee's address): 1,190 sites with a known base decision. Far callees (out of line below
+the linkonce stretch 0x1323040 and more than 0x2000 from the caller: a cross-unit call only the link can inline): the
+base inlines 463 sites at a credited cost of 130 or less (Object016b9108's D2, 455 sites at 130; 0xb20610 130; 0xc29c00
+75; 0xc9cf90 10) and keeps 69 at 175 or more (the witness bases Object00ccfd00 and Object00ced570 175; 0xc23ea0's
+constructor 175; 0x777d30 195; 0x751ca0 and 0x1b59d0 210; Object00c1b7f0 215; 0x3441e0 215). The window is (130, 175]
+(credited costs; LLVM inlines when cost < threshold); without the call credit (160, 205]. No hinted callee has a known
+cross-unit decision; every far callee contains a call and is external before internalisation; no noreturn or cold caller.
+
+**No stock setting gives it (tools/cc/src/llvm-3.7.1.src).** Every 3.7.1 link driver builds the inliner
+default-constructed: LTOCodeGenerator.cpp:542, tools/gold/gold-plugin.cpp:727, opt.cpp:248 (-std-link-opts),
+PassManagerBuilder.cpp:647: `createFunctionInliningPass()` = SimpleInliner() (InlineSimple.cpp:85) = Inliner(ID) with
+InlineLimit, cl::init(225) (Inliner.cpp:50, 67-68). -O2 is computeThresholdFromOptLevels(2, 0) = 225 (InlineSimple.cpp:
+62-72; -O3 275, -Os 75, -Oz 25). No stock value lies in the window; only the C API's
+LLVMPassManagerBuilderUseInlinerWithThreshold (PassManagerBuilder.cpp:616-619) or the option takes another number: a
+value the link's driver chose.
+
+**Decision.** tools/game_module.py runs the link stage with `-inline-threshold=175` (one option; stage 1 unchanged).
+
+**Measured (round 306C, c306/).** Gate on cd087bd2 with the option alone: every row equal but the four derived
+destructors whose base destructor lies at the adjacent address in its own tree file (0xa2a670, 0xa2b360, 0x13e3d40,
+0x147ea40). Each adjacent pair written as one unit (leaf_00a2a290.cpp with the two derived classes, leaf_013e3c00.cpp,
+leaf_0147e900.cpp; rows re-pointed, four files removed): equal (the unit's own pipeline inlines its own destructor, as
+an adjacent base address says it did). The three witness bases Object00c1b7f0, Object00ccfd00, Object00ced570 with
+their destructors in their own files (6 rows) and the vtable rows 0x16b8118, 0x16b92f8, 0x16b96c8 named for them: at
+225 that lost 44 derived destructors (round 302C); at 175 every row equal. Opened besides: 0x2a8880 (a creator whose constructor the base
+calls), 0x134cdf0; 0xc23ea0 is equal by quick_diff --module but not claimed: its constructor 0xc24000 is unmatched and
+the layout cannot place the call. Object016cb168's destructor (0x13ada50,
+in the linkonce stretch) written inline in its header: its two rows and its four derived destructors equal, and the
+linked module through the link stage at 131 and at 175 gives identical IR (5,847 rows equal by the sweep); 130 loses
+487 rows (Object016b9108's D2 at 130), 176 loses 13 (the witnesses at 175), 225 loses 47. The tree is indifferent to
+any value in the base's window (130, 175]; 175 is its top.
+
+**Against.** The exact value inside the window is not determined by the base (any of 131 to 175 gives the same module).
+The window rests on 4 inlined and 7 kept far callees at its edges. The three adjacent merges are unit claims read from
+adjacency (the pattern of src/game/user_malloc.cpp), not from a string.
+
+**Trigger to revisit.** A far call site the base inlines at a credited cost above 130 that the tree keeps at 175, or one
+it keeps at a cost of 175 or less: either moves or refutes the window; a link driver source naming a threshold.
+
+**Addendum (the rebase onto main, same day).** Two deleting destructors main had claimed meanwhile (0x13e3e20, 0x147eb20) call their complete destructor in the merged units (cost 305 over stage 1's 225): the two classes' destructors are the implicit ones (the member at +0x70 a growable array, slot 2 the key function), which carry the inline hint: equal, with the base's and both slot 2 bodies.
