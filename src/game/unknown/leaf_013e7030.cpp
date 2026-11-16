@@ -52,6 +52,12 @@ static inline float easeOutSine(float x) /* derived name */
 // vmovd`), and the time below 0 is not threaded into the ease-in's tests as the
 // base does; 21/91. Forms that use the value (a returned assignment, a local,
 // a ternary) let the load be speculated (vminss or a constant 1 store).
+// Round 348E, two-stage: this form still keeps the select (the 1.0's slot is
+// stored in the else block, the base's before the `< 0` test). A clamp taking
+// the value by reference and its bounds by value (`if (value < low) return
+// low; return std::min(high, value);`, or the conditional form) is speculated
+// inside the clamp (the reference argument is dereferenceable(4)): vminss; a
+// local 1.0 in a conditional of lvalues is speculated likewise.
 void FUN_013e7030(Object013e7030 *self) /* derived name */
 {
     if (self->control->restart) {
