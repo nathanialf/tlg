@@ -17,8 +17,7 @@
 class Object016c3380 : public Object00c1b7f0, public Object013cd320 /* derived name */
 {
   public:
-    /* FUN_012b41b0: not written; it reads the VECTOR_W at 0x5ad9250, the
-     * copy of the unit whose initializer is FUN_012b95f0 (not in the tree) */
+    /* FUN_012b41b0 (func_012b95f0.cpp, the unit whose VECTOR_W it reads) */
     Object016c3380(const Name &name);
 
     virtual ~Object016c3380();

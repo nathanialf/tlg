@@ -1,27 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_node.h"
-#include "tlg_game_object00c1b7f0.h"
-
-/* derived names: the class whose vtable is at 0x16c1bf8
- * (config/vtables.derived.base.txt, stored by FUN_011edd30 FUN_011edfc0),
- * derived from Object00c1b7f0. Its destructor FUN_011edfc0 is FUN_00f1a950
- * (leaf_00f1a950.cpp) instruction for instruction but for the vtable, so
- * the fields that destructor uses are Object016bedd8's, at the same
- * offsets; the rest are not traced. */
-class Object016c1bf8 : public Object00c1b7f0, public Object013cd320 /* derived name */
-{
-  public:
-    virtual ~Object016c1bf8();
-
-  private:
-    u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
-    AtomicRef0045c470<Node00503fb0> owner; /* +0x1b8: a counted reference */
-    Name name1c0;                          /* +0x1c0: released by the destructor */
-    u8 unknown1c4[0x14];
-    Registry00f516f0 *registry; /* +0x1d8: the array this object is entered in, or null */
-    void *unknown1e0;
-    AtomicRef0045c470<Node00503fb0> held1e8; /* +0x1e8: a counted reference */
-};
+#include "tlg_game_object016c1bf8.h"
 
 /* derived name: the complete destructor: the object takes itself out of the
  * array it is entered in and empties the reference at +0x1e8; then the
