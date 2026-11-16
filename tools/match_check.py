@@ -1533,9 +1533,10 @@ def main(argv=None) -> int:
             base_bytes = data[off:off + size]
             ob, rl = objfuncs[sym]
             r = compare(ob, rl, base_bytes, addr, base)
-            # the game module's constants (D82); the library line's pool entries are left to the gate
+            # the game module's constants (D82), once every instruction is equal (a field of a
+            # differing instruction points nowhere); the library line's pool entries are left to the gate
             consts, checked = (constant_reads(obj, ob, rl, base_bytes, addr, base)
-                               if a.tu and is_module_tu(a.tu) else ([], 0))
+                               if a.tu and is_module_tu(a.tu) and r["first_diff"] is None else ([], 0))
             r["unverified_relocs"] = max(0, r["unverified_relocs"] - checked)
             if consts:      # a pool value that differs: not equal (the gate's layout refuses it too)
                 r["bad_constants"] = consts
