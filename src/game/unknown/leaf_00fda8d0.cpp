@@ -1,73 +1,92 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_array.h"
 #include "tlg_libc.h"
 #include "tlg_math.h"
+#include "tlg_types.h"
 
-/* derived names: a bone of a track, two aligned rows */
-struct Bone00fda8d0 { /* derived name */
-    Float4A row0;     /* +0x0 */
-    Float4A row1;     /* +0x10 */
+/* derived names: an entry of the source's array (+0x250), 0x40 bytes, two
+ * vectors at +0x10 and +0x20 */
+struct Element00fda8d0 { /* derived name */
+    u8 unknown0[0x10];
+    Float4A unknown10; /* +0x10 */
+    Float4A unknown20; /* +0x20 */
+    u8 unknown30[0x10];
 };
 
-/* derived names: a 64-byte transform of the pose, its rows at +0x10 and +0x20 copied */
-struct Transform00fda8d0 { /* derived name */
-    Float4A row0;
-    Float4A row1; /* +0x10 */
-    Float4A row2; /* +0x20 */
-    Float4A row3;
-};
-
-struct Pose00fda8d0 { /* derived name */
+struct Holder00fda8d0 { /* derived name */
     u8 unknown0[0x250];
-    Transform00fda8d0 *transforms; /* +0x250 */
+    Element00fda8d0 *elements; /* +0x250 */
 };
 
-struct Owner00fda8d0 { /* derived name */
+struct Source00fda8d0 { /* derived name */
     u8 unknown0[0x40];
-    Pose00fda8d0 *pose; /* +0x40 */
+    Holder00fda8d0 *holder; /* +0x40 */
 };
 
-/* derived names: copies, for each of its tracks, two rows of the pose's
- * transform of the track's joint into the track's bone at the object's
- * index, then keeps the lengths of the first rows of tracks 1 and 2 at that
- * index, summed, at +0x134. One of four byte-identical functions (0xfda8d0,
- * 0x101e120, 0x1047010, 0x128e090), each called twice by its neighbours.
- * The classes are not traced. */
+/* derived names: an entry of a channel's array, two vectors */
+struct Pair00fda8d0 {  /* derived name */
+    Float4A unknown0;  /* +0x0 */
+    Float4A unknown10; /* +0x10 */
+};
+
+/* derived names: a channel, 0x18 bytes, its array first */
+struct Channel00fda8d0 { /* derived name */
+    Pair00fda8d0 *data;  /* +0x0 */
+    u8 unknown8[0x10];
+};
+
 struct Object00fda8d0 { /* derived name */
+
+    /* a channel and its source index by a signed index (`movsxd` under the
+     * unsigned counter) */
+    Channel00fda8d0 &channelAt(int i) const /* derived name */
+    {
+        return channels[i];
+    }
+
+    int sourceIndexAt(int i) const /* derived name */
+    {
+        return indices[i];
+    }
+
     u8 unknown0[0x8];
-    Owner00fda8d0 *owner;                              /* +0x8 */
-    Array05943280<int> joints;                         /* +0x10 */
-    Array05943280<Array05943280<Bone00fda8d0>> tracks; /* +0x28 */
-    u8 unknown40[0x58];
-    u32 trackCount; /* +0x98 */
+    Source00fda8d0 *source; /* +0x8 */
+    int *indices;           /* +0x10: an index into the source's array per channel */
+    u8 unknown18[0x10];
+    Channel00fda8d0 *channels; /* +0x28 */
+    u8 unknown30[0x68];
+    unsigned channelCount; /* +0x98 */
     u8 unknown9c[0x8];
-    int index; /* +0xa4 */
+    int index; /* +0xa4: the entry of every channel's array written */
     u8 unknowna8[0x8c];
     float length; /* +0x134 */
 };
 
-static inline float lengthOf(const Float4A &v) /* derived name */
+static inline float length3(const Float4A &v) /* derived name */
 {
     return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-/* derived name: the pose's rows copied into each track's bone at the index */
-static inline void copyPose(Object00fda8d0 *self, int index) /* derived name */
-{
-    for (unsigned i = 0; i < self->trackCount; ++i) {
-        Owner00fda8d0 *owner = self->owner;
-        Bone00fda8d0 &bone = self->tracks.at(i).at(index);
-        const int joint = self->joints.at(i);
-        bone.row1 = owner->pose->transforms[joint].row2;
-        bone.row0 = owner->pose->transforms[joint].row1;
-    }
-}
-
-// NONMATCHING: instruction order in the loop: the base loads the pose's transforms
-// (`mov r9, [rdx+0x250]`) before the joint's index, the build after; 56/71
+/* derived names: each channel's entry at the object's index set from the
+ * source's entry the channel's index names (the vectors at +0x20 and +0x10
+ * into +0x10 and +0); then the length is the sum of the lengths of the
+ * first vectors of channels 1 and 2 at that index. Three other units hold
+ * a copy of these bytes (0x101e120, 0x1047010, 0x128e090).
+ * NONMATCHING: instruction order and register assignment in the loop only
+ * (71 instructions both): the base reads the holder, the channel's array,
+ * the holder's entries and then the source index; here the source index
+ * comes second (the statement order does not move it). */
 void FUN_00fda8d0(Object00fda8d0 *self) /* derived name */
 {
-    copyPose(self, self->index);
-    self->length = lengthOf(self->tracks.at(1).at(self->index).row0);
-    self->length += lengthOf(self->tracks.at(2).at(self->index).row0);
+    const int index = self->index;
+    for (unsigned i = 0; i < self->channelCount; ++i) {
+        Source00fda8d0 *source = self->source;
+        Pair00fda8d0 &entry = self->channelAt(i).data[index];
+        const int k = self->sourceIndexAt(i);
+        entry.unknown10 = source->holder->elements[k].unknown20;
+        entry.unknown0 = source->holder->elements[k].unknown10;
+    }
+    Channel00fda8d0 *channels = self->channels;
+    const int at = self->index;
+    self->length = length3(channels[1].data[at].unknown0);
+    self->length += length3(channels[2].data[at].unknown0);
 }
