@@ -2,7 +2,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_type.h"
-#include "tlg_hks.h"
+#include "tlg_hks_string.h"
 
 /* derived name: a script function: called with one argument, the name of
  * the type of the node the argument names, when this thread may use the
