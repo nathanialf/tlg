@@ -1,31 +1,17 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_libc.h"
 #include "tlg_types.h"
+#include "tlg_game_module00cb57e0.h"
 
 /* derived names: opens a module of the list at 0x5945880 by its name: a new
  * 16-byte handle holding the module, after the module's function named
  * "ModuleInitialize" (its table of names and functions at +0x18, the count
  * at +0x20) is called when it has one; null for an empty name or a name no
  * module has. */
-struct ModuleFunction00cb57e0 { /* derived name */
-    const char *name;
-    void (*function)();
-};
-
-struct Module00cb57e0 {   /* derived name */
-    Module00cb57e0 *next; /* +0x0 */
-    u8 unknown8[8];
-    const char *name;                  /* +0x10 */
-    ModuleFunction00cb57e0 *functions; /* +0x18 */
-    u32 functionCount;                 /* +0x20 */
-};
-
 struct ModuleHandle00cb57e0 { /* derived name */
     Module00cb57e0 *module;   /* +0x0 */
     int unknown8;             /* +0x8 */
 };
-
-extern Module00cb57e0 *D_5945880; /* derived name: the first module */
 
 ModuleHandle00cb57e0 *FUN_00cb57e0(const char *name) /* derived name */
 {
@@ -36,7 +22,7 @@ ModuleHandle00cb57e0 *FUN_00cb57e0(const char *name) /* derived name */
             ModuleHandle00cb57e0 *handle = new ModuleHandle00cb57e0;
             handle->module = module;
             handle->unknown8 = 0;
-            ModuleFunction00cb57e0 *function = module->functions;
+            const ModuleFunction00cb57e0 *function = module->functions;
             for (size_t i = 0; i < module->functionCount; i++, function++) {
                 if (strcmp("ModuleInitialize", function->name) == 0) {
                     if (function->function)

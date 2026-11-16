@@ -1,22 +1,19 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_module00cb57e0.h"
 
-/* derived names: unlinks a node of a doubly linked list (the previous node at
- * +0x0, the next at +0x8) and clears both links. Its address is taken at 19
- * sites, the first in FUN_002030d0. */
-struct Link00cb57b0 { /* derived name */
-    Link00cb57b0 *previous;
-    Link00cb57b0 *next;
-};
-
-void FUN_00cb57b0(Link00cb57b0 *link) /* derived name */
+/* derived names: the module's complete destructor: takes the module out of
+ * the list (the next module's back link set to the module's, the field the
+ * back link points at set to the next module) and clears both links. Its
+ * address is registered at exit by the 11 static initializers that make a
+ * module, and taken nowhere else. */
+Module00cb57e0::~Module00cb57e0()
 {
-    if (link->previous) {
-        link->previous->next = link->next;
+    if (next) {
+        next->pprev = pprev;
     }
-    if (link->next) {
-        link->next->previous = link->previous;
+    if (pprev) {
+        *pprev = next;
     }
-    link->previous = 0;
-    link->next = 0;
+    next = 0;
+    pprev = 0;
 }
