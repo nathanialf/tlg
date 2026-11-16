@@ -74,6 +74,24 @@ inline void *reallocateBlock(void *block, unsigned size, unsigned alignment,
     return first->slot4(size, alignment, 1);
 }
 
+/* derived name: the same where the block's owner is looked up with a
+ * null default: an owner only for a header tagged 10, else null (0xce237d:
+ * `movzx edx, byte [rsi-0x10]; xor edi, edi; cmp edx, 0xa; jne; movzx edx,
+ * word [rsi-0xe]; mov rdi, [rcx+rdx*8]`, then slot 5 of what was found;
+ * 312E counted 39 such sites) */
+inline void *reallocateOwnedBlock(void *block, unsigned size, unsigned alignment,
+                                  Owner05943280 *first) /* derived name */
+{
+    if (block) {
+        const BlockHeader05943280 *header = static_cast<BlockHeader05943280 *>(block) - 1;
+        Owner05943280 *owner = 0;
+        if (header->tag == 10)
+            owner = D_5943280[header->owner];
+        return owner->slot5(block, size, alignment, 1);
+    }
+    return first->slot4(size, alignment, 1);
+}
+
 /* derived name: a member that owns a block and releases it when its holder
  * is destroyed, after the members declared below it (FUN_013e4b40 releases
  * its block at +0x18 after the destructor of its member at +0x30). */

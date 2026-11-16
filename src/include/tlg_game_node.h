@@ -146,6 +146,11 @@ template <class T> class Ref00503fb0 /* derived name */
         return object;
     }
 
+    bool operator==(const Ref00503fb0 &other) const
+    {
+        return object == other.object;
+    }
+
   private:
     T *object;
 };

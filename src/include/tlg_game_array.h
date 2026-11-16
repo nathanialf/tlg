@@ -48,6 +48,21 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
+    /* appends a copy of the value unless an element equals it; the block
+     * grows through the owner its header names (FUN_00ce22e0: the elements
+     * compared first, `cmp [rax+rcx*8], r15; je`, then the count raised and
+     * the growth's reallocation with the owner looked up with a null
+     * default) */
+    void pushUnique(T value) /* derived name */
+    {
+        if (contains(value))
+            return;
+        unsigned index = count++;
+        if (count > capacity)
+            growOwned(count);
+        new (&data[index]) T(value);
+    }
+
     /* copies another array: the array is emptied, the capacity made the
      * other's count exactly and, for a count that is not zero, the count
      * stored and the elements copy-constructed one by one from the other's
@@ -197,6 +212,16 @@ template <class T> class Array05943280 /* derived name */
         return -1;
     }
 
+    /* whether an element equals `key` (the elements indexed unsigned:
+     * `cmp [rax+rcx*8], r15; je; inc rcx` at 0xce2320) */
+    template <class K> bool contains(const K &key) const /* derived name */
+    {
+        for (unsigned i = 0; i < count; ++i)
+            if (data[i] == key)
+                return true;
+        return false;
+    }
+
     /* the element at `index` destroyed and the ones after it moved down
      * (0xf1a9ad to 0xf1a9ff: the size in 32 bits, `shl edx, 4; sub edx,
      * ebx`, and worked out before the two addresses: the source is a `lea`
@@ -285,6 +310,18 @@ template <class T> class Array05943280 /* derived name */
         capacity = target;
         data = static_cast<T *>(
             reallocateBlock(data, target * sizeof(T), alignof(T), D_5943280[allocator]));
+    }
+
+    /* grow() through reallocateOwnedBlock */
+    void growOwned(unsigned size) /* derived name */
+    {
+        unsigned step = size / 2 + 1;
+        step = step < unsigned(0x400000 / sizeof(T)) ? step : unsigned(0x400000 / sizeof(T));
+        unsigned target = size + step;
+        target = target < 0x1fffffffu ? target : 0x1fffffffu;
+        capacity = target;
+        data = static_cast<T *>(
+            reallocateOwnedBlock(data, target * sizeof(T), alignof(T), D_5943280[allocator]));
     }
 
     T *data;            /* +0x0 */
