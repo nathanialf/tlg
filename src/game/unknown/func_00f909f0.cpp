@@ -1,4 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_array.h"
+#include "tlg_game_fade013d2490.h"
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
 
@@ -24,3 +26,11 @@ Name D_5acee10(D_15c5763, false);
 Name D_5acee14(D_15c5775, false);
 Name D_5acee18(D_15c5787, false);
 Name D_5acee1c(D_15c5799, false);
+
+/* derived name: this file's fade entry (tlg_game_fade013d2490.h): one
+ * element type per file, as the base holds one resize of them per file */
+struct FadeEntry00f909f0 : FadeEntry013d2490 { /* derived name */
+};
+
+/* FUN_013dc290 */
+template void Array05943280<FadeEntry00f909f0>::resize(unsigned);

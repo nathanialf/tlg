@@ -3,21 +3,10 @@
 #ifndef TLG_GAME_OBJECT016C1128_H
 #define TLG_GAME_OBJECT016C1128_H
 
+#include "tlg_game_frame.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object00c1b7f0.h"
 #include "tlg_simd.h"
-
-/* derived names: two vectors, the first zero and the second the w axis
- * from the constructor (FUN_010644d0: `vmovaps [rbx+0x250], xmm1` of the
- * cleared register, then the unit's VECTOR_W at +0x260); the constructor is
- * defined in the unit that builds them (func_01067d40.cpp), as it reads that
- * unit's VECTOR_W. Not traced further. */
-struct Frame016c1128 { /* derived name */
-    Frame016c1128();
-
-    Vec4 unknown0;  /* +0x0: zero from the constructor */
-    Vec4 unknown10; /* +0x10: VECTOR_W from the constructor */
-};
 
 /* derived names: 0x70 bytes, at +0x230 and +0x2a0 of the class below: a
  * pointer cleared by the constructor, two of them from +0x20 and an int

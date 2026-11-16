@@ -5,13 +5,26 @@
 #define TLG_GAME_FADE013D2490_H
 
 #include "tlg_types.h"
+#include "tlg_game_frame.h"
 
 /* derived names: an entry of the fader's own array at +0x18, 0x80 bytes,
- * whose int at +0x40 the update clears */
+ * whose int at +0x40 the update clears. Its constructor (inlined into each
+ * unit's resize of an array of them, FUN_013d28a0 and its copies) stores
+ * every field but the padding in member order: two frames, the int, two
+ * copies of the unit's VECTOR_W and 1.0f at +0x70. */
 struct FadeEntry013d2490 { /* derived name */
-    u8 unknown0[0x40];
-    int unknown40; /* +0x40 */
-    u8 unknown44[0x3c];
+
+    FadeEntry013d2490()
+        : unknown40(0), unknown50(VECTOR_W.v), unknown60(VECTOR_W.v), unknown70(1.0f)
+    {
+    }
+
+    Frame016c1128 unknown0;  /* +0x0 */
+    Frame016c1128 unknown20; /* +0x20 */
+    int unknown40;           /* +0x40 */
+    Vec4 unknown50;          /* +0x50: VECTOR_W from the constructor */
+    Vec4 unknown60;          /* +0x60: VECTOR_W from the constructor */
+    float unknown70;         /* +0x70: 1.0f from the constructor */
 };
 
 /* derived names: an entry of the target's array, 0xa0 bytes, whose int at

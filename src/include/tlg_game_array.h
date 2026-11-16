@@ -97,14 +97,18 @@ template <class T> class Array05943280 /* derived name */
      * `mov [rbx+8], r14d` and the constructors' loop up to the count read
      * again. Over ints the loop is nothing and the caller clears them itself
      * (FUN_00a18a70: `test r14d, r14d; je; mov [rbx+0x90], r14d`, and on the
-     * other path `cmp [rbx+0x90], 0` before its own loop). */
+     * other path `cmp [rbx+0x90], 0` before its own loop). The byte count
+     * and the array's owner are worked out before the block is read (the
+     * base's `lea eax, [r14*4]` before the table's `lea` at 0xa18aa4, and the
+     * owner's index read before the block at 0x13d28c8 and 0x13fb338). */
     void resize(unsigned size)
     {
         count = 0;
         if (capacity != size) {
             capacity = size;
-            data = static_cast<T *>(
-                reallocateBlock(data, size * sizeof(T), alignof(T), D_5943280[allocator]));
+            const unsigned bytes = size * sizeof(T);
+            Owner05943280 *first = D_5943280[allocator];
+            data = static_cast<T *>(reallocateBlock(data, bytes, alignof(T), first));
         }
         if (size) {
             count = size;

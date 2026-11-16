@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
+#include "tlg_game_frames013fb310.h"
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
 
@@ -42,4 +43,23 @@ struct Element0141d000 { /* derived name */
 void FUN_0141d000(Array05943280<Element0141d000> *array, unsigned size) /* derived name */
 {
     array->resize(size);
+}
+
+/* derived name: this file's frame entry (tlg_game_frames013fb310.h): one
+ * element type per file, as the base holds one resize of them per file */
+struct FrameEntry0113d440 : FrameEntry013fb310 { /* derived name */
+};
+
+/* FUN_0141d310 */
+template void Array05943280<FrameEntry0113d440>::resize(unsigned);
+
+/* derived name: this file's frame set (tlg_game_frames013fb310.h) */
+struct FrameSet0113d440 : FrameSet013fa8d0 { /* derived name */
+    FrameSet0113d440();
+};
+
+/* FUN_0141d410 */
+FrameSet0113d440::FrameSet0113d440()
+{
+    frames.resize(4);
 }

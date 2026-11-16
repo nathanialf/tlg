@@ -32,9 +32,6 @@ Name D_5ad08f8(D_15caff8, false);
 Name D_5ad08fc(D_15cb254, false);
 Name D_5ad0900(D_15cb21f, false);
 
-/* derived name: the vector zero, the second the w axis of this unit */
-inline Frame016c1128::Frame016c1128() : unknown0(_mm_setzero_ps()), unknown10(VECTOR_W.v) {}
-
 /* derived name: the name the object is made under (15 characters) */
 extern const char D_15c6b1d[16];
 
