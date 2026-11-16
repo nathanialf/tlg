@@ -17,3 +17,12 @@ Object016ad6d8::Object016ad6d8(const Name &name) : Object00774560(name)
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
 Object016ad6d8::~Object016ad6d8() {}
+
+/* derived name: slot 14: the body put back home, then turned and moved by
+ * the pose unless it is held (Object00774560::followFromHome); then the
+ * body's int at +0x1b0c copied to +0x3c */
+void Object016ad6d8::slot14(Pose0077bac0 *pose)
+{
+    followFromHome(pose);
+    unknown3c = unknown68->unknown1b0c;
+}

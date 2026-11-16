@@ -11,6 +11,7 @@ class Object016ad3b8 : public Object00774560 /* derived name */
 {
   public:
     virtual ~Object016ad3b8();
+    virtual void slot14(Pose0077bac0 *pose); /* FUN_0077c5a0 */
 
   private:
     u8 unknowne8[0x14];
@@ -18,3 +19,11 @@ class Object016ad3b8 : public Object00774560 /* derived name */
 };
 
 Object016ad3b8::~Object016ad3b8() {}
+
+/* derived name: slot 14: the body at +0x68 turned by the pose's rotation (the
+ * body read once for the product and its store) and moved by the pose's
+ * position (the body read again); FUN_0077bac0's body */
+void Object016ad3b8::slot14(Pose0077bac0 *pose)
+{
+    follow(pose);
+}

@@ -17,6 +17,7 @@ class Object016ad9f8 : public Object00774560 /* derived name */
   public:
     Object016ad9f8(const Name &name); /* FUN_0079c900 */
     virtual ~Object016ad9f8();
+    virtual void slot14(Pose0077bac0 *pose); /* FUN_0079d4a0 */
 
   private:
     u8 unknowne8[0x8];

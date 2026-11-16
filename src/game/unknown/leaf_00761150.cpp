@@ -11,10 +11,26 @@ class Object016ac8c8 : public Object00774560 /* derived name */
 {
   public:
     virtual ~Object016ac8c8();
+    virtual void slot14(Pose0077bac0 *pose); /* FUN_00762b30 */
 
   private:
-    u8 unknowne8[0x100];
-    Name name1e8; /* +0x1e8 */
+    u8 unknowne8[0x28];
+    Vector0077bac0 unknown110; /* +0x110: scaled by +0x174 in slot 14 */
+    u8 unknown11c[0x58];
+    float unknown174; /* +0x174 */
+    u8 unknown178[0x6c];
+    int unknown1e4; /* +0x1e4: slot 14 scales +0x110 when it is 1 */
+    Name name1e8;   /* +0x1e8 */
 };
 
 Object016ac8c8::~Object016ac8c8() {}
+
+/* derived name: slot 14: the body put back home (Object00774560::goHome),
+ * then, when the int at +0x1e4 is 1 and the body is held (+0x1330), the
+ * vector at +0x110 scaled by the float at +0x174; the pose is not read */
+void Object016ac8c8::slot14(Pose0077bac0 *)
+{
+    goHome();
+    if (unknown1e4 == 1 && unknown68->unknown1330)
+        unknown110 = unknown174 * unknown110;
+}

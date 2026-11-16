@@ -312,6 +312,20 @@ template <class T> class Array05943280 /* derived name */
         return data + count;
     }
 
+  protected:
+    /* the fields of a copy of another array, its block not made yet: no
+     * block, the count and the capacity the other's count, read once for
+     * each, and the owner the calling thread's (0x8e3910 to 0x8e394f: `mov
+     * qword [rbx], 0; mov eax, [r14+8]; mov [rbx+8], eax; mov eax, [r14+8];
+     * mov [rbx+0xc], eax`, then the owner's index). The block is made and
+     * the elements copied by the derived array once it has made its own
+     * members (tlg_game_array01343a80.h). */
+    Array05943280(const Array05943280 &other)
+        : data(0), count(other.count), capacity(other.count),
+          allocator(D_16dc090 ? D_16dc090->index : 0)
+    {
+    }
+
   private:
     /* the capacity is stored first, then the block and the array's owner
      * are read for the reallocation (FUN_001b59d0: `mov [rbx+0xc], eax` at
@@ -342,6 +356,7 @@ template <class T> class Array05943280 /* derived name */
             reallocateOwnedBlock(data, target * sizeof(T), alignof(T), D_5943280[allocator]));
     }
 
+  protected:
     T *data;            /* +0x0 */
     unsigned count;     /* +0x8 */
     unsigned capacity;  /* +0xc */

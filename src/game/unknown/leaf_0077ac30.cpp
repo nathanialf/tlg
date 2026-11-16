@@ -28,3 +28,11 @@ Object016ad2f0::Object016ad2f0(const Name &name)
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
 Object016ad2f0::~Object016ad2f0() {}
+
+/* derived name: slot 14: the body at +0x68 turned by the pose's rotation (the
+ * body read once for the product and its store) and moved by the pose's
+ * position (the body read again); Object016ad3b8's FUN_0077c5a0 is the same */
+void Object016ad2f0::slot14(Pose0077bac0 *pose)
+{
+    follow(pose);
+}

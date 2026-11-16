@@ -19,6 +19,28 @@
 template <class T> class Array01343a80 : public Array05943280<T> /* derived name */
 {
   public:
+    Array01343a80() = default;
+
+    /* a copy: the array's fields from the other's, the lock made free,
+     * then the block made and the elements copied (0x8e3910: the lock's
+     * release store at +0x14 after the four fields and before the
+     * allocation; the byte count and the owner worked out before the block
+     * is read, as resize() does: `mov eax, [rbx+0xc]; mov edx, [rbx+0x10];
+     * mov rsi, [rbx]`; the count read again after it and at each element,
+     * the other's block read once: `cmp dword [rbx+8], 0; je; mov rcx,
+     * [r14]`) */
+    Array01343a80(const Array01343a80 &other) : Array05943280<T>(other)
+    {
+        if (this->count) {
+            const unsigned bytes = this->capacity * sizeof(T);
+            Owner05943280 *first = D_5943280[this->allocator];
+            this->data = static_cast<T *>(reallocateBlock(this->data, bytes, alignof(T), first));
+            const T *values = other.data;
+            for (unsigned i = 0; i < this->count; ++i)
+                new (&this->data[i]) T(values[i]);
+        }
+    }
+
     Lock059458a4 lock; /* +0x14 */
 };
 
