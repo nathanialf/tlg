@@ -68,8 +68,42 @@ void FUN_013cf950(Fade013d2490 *self) /* derived name */
     for (int i = 0; i < target->count; ++i) {
         FadeEntry013d2490 &entry = self->entries[i];
         reinterpret_cast<Vector4 &>(entry.unknown50) =
-            self->model->poses[target->unknown28[i]].rotation;
+            self->model->skeleton.poses[target->unknown28[i]].rotation;
         makeWPositive(entry.unknown50);
         setLanes(entry.unknown60, VECTOR_W);
+    }
+}
+
+/* derived name: this file's copy of the fade's large update (0xfcc bytes;
+ * nonzero when it has run) */
+int FUN_013d0470(Fade013d2490 *self); /* derived name */
+
+/* derived name: while the fade runs, its int at +0x6c is set and its update
+ * has run, each of its target's entries takes the model's pose for it */
+void FUN_013d2570(Fade013d2490 *self) /* derived name */
+{
+    if (self->state != 0 && self->unknown6c != 0 && FUN_013d0470(self) != 0) {
+        FadeTarget013d2490 *target = self->owner->target;
+        for (int i = 0; i < target->count; ++i)
+            takePose(target->entries[i].unknown70, self->model, target->unknown28[i]);
+    }
+}
+
+/* derived name: the class whose slot 1 (FUN_013d0450) calls FUN_013d1440 */
+struct Object013d1600 : FadeRig013d1440 { /* derived name */
+};
+
+/* derived name: each of the target's entries gets its pose's position and
+ * rotation computed from the skeleton, then takes the pose itself */
+void FUN_013d1440(Object013d1600 *self) /* derived name */
+{
+    FadeTarget013d2490 *target = self->target;
+    for (int i = 0; i < target->count; ++i) {
+        FadeTargetEntry013d2490 &entry = target->entries[i];
+        FadeModel013d4610 *model = self->model;
+        const int index = target->unknown28[i];
+        FUN_013ce2d0(&model->skeleton, &entry.unknown50, index, model->skeleton.poses);
+        FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
+        takePose(entry.unknown70, self->model, target->unknown28[i]);
     }
 }

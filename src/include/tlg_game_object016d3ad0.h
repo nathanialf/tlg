@@ -39,6 +39,9 @@ class Object016ca148 : public Object016d3ad0 /* derived name */
 {
   public:
     virtual void slot2(); /* derived name: FUN_00f66fd0 */
+    /* derived name: pure here (the vtable's slot 4 holds __cxa_pure_virtual);
+     * each class derived from this one gives its own */
+    virtual void slot4() = 0;
 
   private:
     u8 unknown38[0xd8];

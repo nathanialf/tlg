@@ -6,6 +6,7 @@
 
 #include "tlg_game_array.h"
 #include "tlg_game_array01343a80.h"
+#include "tlg_game_fade013d2490.h"
 #include "tlg_game_frame.h"
 
 /* derived names: 0x90 bytes, four frames and an int cleared after them, in
@@ -25,6 +26,20 @@ struct FrameEntry013fb310 { /* derived name */
  * built from the file's own VECTOR_W) */
 struct FrameSet013fa8d0 {                /* derived name */
     Array01343a80<Frame016c1128> frames; /* +0x0 */
+};
+
+/* derived names: an object holding a frame set per pose of a model: the
+ * model at +0x8, each set's pose index (an array at +0x10), the sets (an
+ * array at +0x28) and their count at +0x98 (FUN_013fccf0 and its copies,
+ * one per file: an unsigned counter passed to at(int), each element's
+ * index sign-extended in the loop) */
+struct FramePoser013fccf0 { /* derived name */
+    u8 unknown0[0x8];
+    FadeModel013d4610 *model;             /* +0x8 */
+    Array05943280<int> indices;           /* +0x10 */
+    Array05943280<FrameSet013fa8d0> sets; /* +0x28 */
+    u8 unknown40[0x58];
+    unsigned count; /* +0x98 */
 };
 
 #endif

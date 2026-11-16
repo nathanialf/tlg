@@ -7,6 +7,7 @@
 #include "tlg_types.h"
 #include "tlg_game_frame.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_rotation.h"
 
 /* derived names: an entry of the fader's own array at +0x18, 0x80 bytes,
  * whose int at +0x40 the update clears. Its constructor (inlined into each
@@ -31,8 +32,11 @@ struct FadeEntry013d2490 { /* derived name */
 /* derived names: an entry of the target's array, 0xa0 bytes, whose int at
  * +0x90 the update clears */
 struct FadeTargetEntry013d2490 { /* derived name */
-    u8 unknown0[0x90];
-    int unknown90; /* +0x90 */
+    u8 unknown0[0x50];
+    Vec4 unknown50;          /* +0x50: written by FUN_013ce2d0 (FUN_013d1440) */
+    Vec4 unknown60;          /* +0x60: written by FUN_013ce660 (FUN_013d1440) */
+    Frame016c1128 unknown70; /* +0x70: a pose, its rotation turned to w not negative (takePose) */
+    int unknown90;           /* +0x90 */
     u8 unknown94[0xc];
 };
 
@@ -48,15 +52,30 @@ struct FadeTarget013d2490 {           /* derived name */
  * (FUN_013d4610 copies it into an entry as a whole object: a copy the lane
  * reads after it are not forwarded from, so they load it again) */
 struct FadePose013d4610 { /* derived name */
-    u8 unknown0[0x10];
-    Vector4 rotation; /* +0x10 */
+    Vector4 position;     /* +0x0 */
+    Vector4 rotation;     /* +0x10 */
     u8 unknown20[0x20];
 };
 
-struct FadeModel013d4610 { /* derived name */
-    u8 unknown0[0x140];
-    FadePose013d4610 *poses; /* +0x140 */
+/* derived names: the model's skeleton at +0x40, whose poses FUN_013ce2d0
+ * and FUN_013ce660 (each taking the skeleton, the vector to write, a pose
+ * index and the poses) read; the int at +0x130 is not traced */
+struct FadeSkeleton013ce2d0 { /* derived name */
+    u8 unknown0[0x100];
+    FadePose013d4610 *poses; /* +0x100 (the model's +0x140) */
 };
+
+struct FadeModel013d4610 { /* derived name */
+    u8 unknown0[0x40];
+    FadeSkeleton013ce2d0 skeleton; /* +0x40 */
+};
+
+/* derived names: the position and rotation of a skeleton's pose, each
+ * computed into a vector (FUN_013d1440 and its copies) */
+void FUN_013ce2d0(FadeSkeleton013ce2d0 *skeleton, Vec4 *position, int index,
+                  const FadePose013d4610 *poses); /* derived name */
+void FUN_013ce660(FadeSkeleton013ce2d0 *skeleton, Vec4 *rotation, int index,
+                  const FadePose013d4610 *poses); /* derived name */
 
 struct FadeClock013d2490 { /* derived name */
     u8 unknown0[0x14];
@@ -85,6 +104,28 @@ struct Fade013d2490 { /* derived name */
     float fadeIn;  /* +0x64: the fade-in's length */
     float fadeOut; /* +0x68: the fade-out's length */
     int unknown6c; /* +0x6c: cleared by the update */
+};
+
+/* derived name: a frame takes the model's pose of the index, position then
+ * rotation (each read again from the skeleton's poses: a vector stored may
+ * alias the pointer), the rotation turned to w not negative (FUN_013d2570,
+ * FUN_013d1440, FUN_013fccf0 and their copies) */
+inline void takePose(Frame016c1128 &frame, const FadeModel013d4610 *model,
+                     int index) /* derived name */
+{
+    reinterpret_cast<Vector4 &>(frame.unknown0) = model->skeleton.poses[index].position;
+    reinterpret_cast<Vector4 &>(frame.unknown10) = model->skeleton.poses[index].rotation;
+    makeWPositive(frame.unknown10);
+}
+
+/* derived names: the layout of the fifteen classes whose slot 1 (FUN_013d0450
+ * and its copies) calls FUN_013d1440 or its unit's copy, one class per unit:
+ * the model at +0x8 and the target at +0x40 */
+struct FadeRig013d1440 { /* derived name */
+    u8 unknown0[0x8];
+    FadeModel013d4610 *model; /* +0x8 */
+    u8 unknown10[0x30];
+    FadeTarget013d2490 *target; /* +0x40 */
 };
 
 #endif

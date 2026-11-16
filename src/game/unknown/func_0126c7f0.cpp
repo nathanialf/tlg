@@ -49,7 +49,7 @@ void FUN_01480760(Fade013d2490 *self) /* derived name */
     for (int i = 0; i < target->count; ++i) {
         FadeEntry013d2490 &entry = self->entries[i];
         reinterpret_cast<Vector4 &>(entry.unknown50) =
-            self->model->poses[target->unknown28[i]].rotation;
+            self->model->skeleton.poses[target->unknown28[i]].rotation;
         makeWPositive(entry.unknown50);
         setLanes(entry.unknown60, VECTOR_W);
     }
@@ -59,4 +59,35 @@ void FUN_01480760(Fade013d2490 *self) /* derived name */
 JointFrame013eb0a0 FUN_01481020(const Placed013eb210 *self) /* derived name */
 {
     return nodeFrame(self);
+}
+
+/* derived name: this file's copy of FUN_013d0470 (func_00f509e0.cpp) */
+int FUN_01481a90(Fade013d2490 *self); /* derived name */
+
+/* derived name: this file's copy of FUN_013d2570 (func_00f509e0.cpp) */
+void FUN_01482e50(Fade013d2490 *self) /* derived name */
+{
+    if (self->state != 0 && self->unknown6c != 0 && FUN_01481a90(self) != 0) {
+        FadeTarget013d2490 *target = self->owner->target;
+        for (int i = 0; i < target->count; ++i)
+            takePose(target->entries[i].unknown70, self->model, target->unknown28[i]);
+    }
+}
+
+/* derived name: the class whose slot 1 calls FUN_01482a60 */
+struct Object01482c20 : FadeRig013d1440 { /* derived name */
+};
+
+/* derived name: this file's copy of FUN_013d1440 (func_00f509e0.cpp) */
+void FUN_01482a60(Object01482c20 *self) /* derived name */
+{
+    FadeTarget013d2490 *target = self->target;
+    for (int i = 0; i < target->count; ++i) {
+        FadeTargetEntry013d2490 &entry = target->entries[i];
+        FadeModel013d4610 *model = self->model;
+        const int index = target->unknown28[i];
+        FUN_013ce2d0(&model->skeleton, &entry.unknown50, index, model->skeleton.poses);
+        FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
+        takePose(entry.unknown70, self->model, target->unknown28[i]);
+    }
 }

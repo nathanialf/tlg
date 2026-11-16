@@ -32,3 +32,24 @@ FrameSet0108cf60::FrameSet0108cf60()
 {
     frames.resize(4);
 }
+
+/* derived name: each frame set's first frame takes the model's pose for it,
+ * then each set's second frame takes its first, position and rotation */
+// NONMATCHING: instruction order only, the first loop's head: the base loads
+// the sets' block first (`mov rdx, [rdi+0x28]; movsxd rax, ecx`), the build
+// the model first (`mov r10, [rdi+8]`); the IR's order is the base's
+void FUN_013fccf0(FramePoser013fccf0 *self) /* derived name */
+{
+    for (unsigned i = 0; i < self->count; ++i) {
+        Frame016c1128 &frame = self->sets.at(i).frames.at(0);
+        const int index = self->indices.at(i);
+        takePose(frame, self->model, index);
+    }
+    for (unsigned i = 0; i < self->count; ++i) {
+        Array01343a80<Frame016c1128> &frames = self->sets.at(i).frames;
+        Frame016c1128 &previous = frames.at(1);
+        const Frame016c1128 &current = frames.at(0);
+        previous.unknown0 = current.unknown0;
+        previous.unknown10 = current.unknown10;
+    }
+}
