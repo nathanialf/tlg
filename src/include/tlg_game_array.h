@@ -312,7 +312,8 @@ template <class T> class Array05943280 /* derived name */
             reallocateBlock(data, target * sizeof(T), alignof(T), D_5943280[allocator]));
     }
 
-    /* grow() through reallocateOwnedBlock */
+    /* grow() through reallocateOwnedBlock (provisional: see its comment;
+     * pushUnique, FUN_00ce22e0, is its only user) */
     void growOwned(unsigned size) /* derived name */
     {
         unsigned step = size / 2 + 1;

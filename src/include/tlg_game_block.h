@@ -78,7 +78,12 @@ inline void *reallocateBlock(void *block, unsigned size, unsigned alignment,
  * null default: an owner only for a header tagged 10, else null (0xce237d:
  * `movzx edx, byte [rsi-0x10]; xor edi, edi; cmp edx, 0xa; jne; movzx edx,
  * word [rsi-0xe]; mov rdi, [rcx+rdx*8]`, then slot 5 of what was found;
- * 312E counted 39 such sites) */
+ * 312E counted 39 such sites). PROVISIONAL: a second spelling of the one
+ * lookup the base has (`tag == 10 ? D_5943280[owner] : 0`, whose null arm
+ * the compiler folds at 1,955 sites and keeps at 1,215: rounds 315E and
+ * 321E); what splits the two is open (round 324E). Kept only so that
+ * FUN_00ce22e0's row holds; to be removed when the split is explained, and
+ * no other function uses it. */
 inline void *reallocateOwnedBlock(void *block, unsigned size, unsigned alignment,
                                   Owner05943280 *first) /* derived name */
 {
