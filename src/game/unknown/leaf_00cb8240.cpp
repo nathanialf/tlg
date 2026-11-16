@@ -19,7 +19,7 @@ int FUN_00cb8240(Registry00cb8240 *self, Array05943280<Object00cb8240 *> *object
         Object00cb8240 *object = iterator.next();
         const Object00cb8240 *record =
             static_cast<const Object00cb8240 *>(D_17ac870[object->name.index].record18);
-        if (record && ((record->flags16 & 4) || D_16dc098))
+        if (record && ((record->flags16 & 4) || threadMayUse()))
             objects->push(object);
     }
     return objects->size();

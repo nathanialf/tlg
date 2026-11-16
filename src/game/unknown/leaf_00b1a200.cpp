@@ -28,7 +28,7 @@ void FUN_00b1a200(Object00b1a200 *self) /* derived name */
             Value00b1a200 *found = 0;
             Value00b1a200 *object =
                 static_cast<Value00b1a200 *>(D_17ac870[self->name.index].record18);
-            if (object && ((object->flags16 & 4) || D_16dc098))
+            if (object && ((object->flags16 & 4) || threadMayUse()))
                 found = object;
             self->reference.set(found);
         }

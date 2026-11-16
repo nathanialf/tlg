@@ -152,6 +152,10 @@ template <class T> class Ref00503fb0 /* derived name */
  * whatever the object's own flags say (1,158 sites read it) */
 extern __thread bool D_16dc098; /* derived name */
 
+/* the flag read out of line (func_00cbb000.cpp); the link inlines it at
+ * every call, and the executable keeps no copy of it */
+bool threadMayUse(); /* derived name */
+
 /* whether this thread may use an object a name names: any thread when the
  * object's flag 4 at +0x16 is set, else a thread whose own flag is. T has
  * the field `flags16`. */
@@ -299,7 +303,7 @@ class Node00503fb0 /* derived name */
         FUN_01331c10(&readers);
         Component00503fb0 *found = 0;
         for (unsigned i = next; i < componentCount; ++i) {
-            if (isKindOf(componentAt(i)->type, type)) {
+            if (::isKindOf(componentAt(i)->type, type)) {
                 found = componentAt(i);
                 next = i + 1;
                 break;
@@ -314,6 +318,13 @@ class Node00503fb0 /* derived name */
     {
         unsigned next = 0;
         return findComponent(type, next);
+    }
+
+    /* whether the node's own type is `wanted` or derives from it: the wanted
+     * type is read before the node's (0x848cce, FUN_00848c20) */
+    bool isKindOf(const Type00503fb0 *wanted) const /* derived name */
+    {
+        return ::isKindOf(type, wanted);
     }
 
     int references; /* +0x8 */

@@ -25,7 +25,7 @@ bool FUN_00508410(const Point00508410 *point, float radius) /* derived name */
     Name name(D_15c8db4);
     Named00508410 *record = static_cast<Named00508410 *>(D_17ac870[name.index].record18);
     Named00508410 *object = 0;
-    if (record && ((record->flags16 & 4) || D_16dc098))
+    if (record && ((record->flags16 & 4) || threadMayUse()))
         object = record;
     name.release();
     if (object) {
