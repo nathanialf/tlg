@@ -6,6 +6,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_pair0057e850.h"
 
 /* derived names: the class whose vtable is at 0x16d22b8
  * (config/vtables.derived.base.txt, stored by FUN_00d48470 FUN_013b8d30 FUN_013b8e50), derived from
@@ -19,10 +20,12 @@ class Object016d22b8 : public Object016b9108 /* derived name */
     virtual ~Object016d22b8();
 
   private:
-    u8 unknown24[0xc];
-    /* +0x30: a counted reference, released by the destructor (the pointer
-     * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Node00503fb0> held30;
+    float unknown24;        /* +0x24: 0.5 from the constructor; not traced */
+    Pair0057e850 unknown28; /* +0x28: (0.5, 1.0) from the constructor; not traced */
+    /* +0x30: a counted reference, set by the constructor (an exchange),
+     * released by the destructor (the pointer cleared, `cmp dword [r+8],
+     * 0xdeadc0de`, the count dropped) */
+    AtomicRef0045c470<Node00503fb0> held30;
 };
 
 #endif
