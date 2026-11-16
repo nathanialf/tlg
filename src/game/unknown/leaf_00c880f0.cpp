@@ -36,16 +36,6 @@ static inline bool isNil(lua_State *state, int argument)
     return value < state->top && (value->type & 0xf) == 0;
 }
 
-/* derived name: pushes an integer as a number (tag 3), Lua's
- * lua_pushinteger */
-static inline void pushInteger(lua_State *state, int integer)
-{
-    HksObject *top = state->top;
-    top->value.number = integer;
-    top->type = 3;
-    state->top = top + 1;
-}
-
 int FUN_00c87db0(lua_State *state) /* derived name */
 {
     int **keys = static_cast<int **>(FUN_00dd3dd0(state, "keys_array"));

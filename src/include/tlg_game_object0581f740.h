@@ -37,6 +37,20 @@ struct State0581f740 { /* derived name */
     u8 unknown2c[0x8];
 };
 
+/* derived names: one timer the script C function "MSC_CreateTime" adds, 12
+ * bytes: its Name, its time and whether it repeats (the script's third
+ * argument's truth, stored as an int) */
+struct Timer0581f740 { /* derived name */
+
+    Timer0581f740(const Name &name_, float time_, int loop_) : name(name_), time(time_), loop(loop_)
+    {
+    }
+
+    Name name;  /* +0x0 */
+    float time; /* +0x4 */
+    int loop;   /* +0x8 */
+};
+
 struct Object0581f740 { /* derived name */
     u8 unknown0[0x8];
     /* +0x8: given to FUN_008db510 when MSC_SetFlagGameover sets the flag */
@@ -62,6 +76,7 @@ struct Object0581f740 { /* derived name */
     float patSpeedFade[2];   /* +0x5c: the two numbers MSC_SetPatSpeedFade stores */
     u8 unknown64[0x1c];
     Array05943280<State0581f740> states; /* +0x80 */
+    Array05943280<Timer0581f740> timers; /* +0x98: MSC_CreateTime adds one */
 };
 
 extern Object0581f740 *D_581f740;

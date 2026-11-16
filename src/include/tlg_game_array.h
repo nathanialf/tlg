@@ -48,6 +48,19 @@ template <class T> class Array05943280 /* derived name */
         new (&data[index]) T(value);
     }
 
+    /* the count raised and the block grown when it is full, the new last
+     * slot returned unconstructed for the caller's placement new (0x8e848a
+     * to 0x8e8578: `lea eax, [rbx+1]; mov [r12+0xa0], eax; cmp eax,
+     * [r12+0xa4]; jbe`, the growth, then the element's constructor in the
+     * slot with no temporary) */
+    T *append() /* derived name */
+    {
+        unsigned index = count++;
+        if (count > capacity)
+            grow(count);
+        return &data[index];
+    }
+
     /* appends a copy of the value unless an element equals it; the block
      * grows through the owner its header names (FUN_00ce22e0: the elements
      * compared first, `cmp [rax+rcx*8], r15; je`, then the count raised and

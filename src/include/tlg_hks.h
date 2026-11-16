@@ -172,6 +172,35 @@ inline void pushBoolean(lua_State *state, bool b)
     state->top = top + 1;
 }
 
+/* derived name: pushes an integer as a number (tag 3), Lua's
+ * lua_pushinteger */
+inline void pushInteger(lua_State *state, int integer)
+{
+    HksObject *top = state->top;
+    top->value.number = integer;
+    top->type = 3;
+    state->top = top + 1;
+}
+
+/* derived name: Lua's lua_createtable by its arguments: pushes a new table
+ * with room for `arrayCount` array and `hashCount` hash entries
+ * (FUN_00d91880) */
+void FUN_00d91880(lua_State *state, int arrayCount, int hashCount);
+
+/* derived name: Lua's luaV_settable by its arguments: table[key] = value
+ * (FUN_00db84e0) */
+void FUN_00db84e0(lua_State *state, HksObject *table, HksObject *key, HksObject *value);
+
+/* derived name: Lua's lua_settable(state, -3): the table under the key and
+ * the value on the stack's top gets the value at the key, then the key and
+ * the value are popped (0x8eb424 to 0x8eb438) */
+inline void setTable(lua_State *state)
+{
+    HksObject *top = state->top;
+    FUN_00db84e0(state, top - 3, top - 2, top - 1);
+    state->top -= 2;
+}
+
 /* derived name: pushes a number (tag 3) on the stack */
 inline void pushNumber(lua_State *state, float number)
 {
