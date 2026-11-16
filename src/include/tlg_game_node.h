@@ -75,11 +75,14 @@ inline T *compareAndSwap(T **value, T *expected, T *replacement) /* derived name
 }
 
 /* one more reference to a counted object; the count is left alone once it
- * holds the released mark */
+ * holds the released mark. The raise is a relaxed add: a caller already
+ * holds a reference, so nothing is ordered by it (the base keeps a pointer
+ * it stored before the `lock inc` in a register after a call, 0xa07550,
+ * where an ordered add would make it read the pointer again) */
 template <class T> inline void addReference(T *object) /* derived name */
 {
     if (object->references != RELEASED)
-        __sync_fetch_and_add(&object->references, 1);
+        __atomic_fetch_add(&object->references, 1, __ATOMIC_RELAXED);
 }
 
 /* one reference less: the last one destroys the object at once on a thread

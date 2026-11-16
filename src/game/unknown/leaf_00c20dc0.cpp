@@ -21,10 +21,11 @@ struct Object00c20dc0 { /* derived name */
  * under the array's lock: the lock taken (`xor eax, eax; lock cmpxchg
  * [r15+0x44], r14d` at 0xc20df1, the creation lock's wait), the reference, held
  * for the call, appended by FUN_00c23980, the lock given back. */
-// NONMATCHING: an inline-cost margin at the link stage: the base calls FUN_00c23980 (192 bytes), the
-// link's inliner takes it: the call costs 210 to 214 against the threshold 225 (opt -std-link-opts
-// -inline-threshold over this unit and the append's linked). Built alone the function is the base's
-// through the lock's loop (both `pushfq; pop rax; push rax; popfq` pairs among them).
+// NONMATCHING: 112 of 118 equal under the link at 175 (D85: the call kept) with the count raised by a
+// relaxed add (tlg_game_node.h): the release's count compared at `[r14+8]` where the base reuses the
+// raise's address (`cmp [rbx], 0xdeadc0de`): two GEPs of the count survive the link (the reference's
+// reload folded by the link's one GVN, the phi left for InstCombine), so the near `je` and the loop's
+// padding follow. The append in this unit is inlined at stage 1 (225), so it is not one unit.
 void FUN_00c20dc0(Object00c20dc0 *holder, Counted00c23980 *object)
 {
     holder->array30.lock.lock();

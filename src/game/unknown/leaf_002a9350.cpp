@@ -21,3 +21,32 @@ Object016b9108 *FUN_002a9350(void *, const Name &name)
     D_59458a8 = D_57cb378;
     return new (memory) Object016a7db8(name);
 }
+
+/* derived name: the constructor (tlg_game_object016a7db8.h): its base
+ * Object016b9108 is built from the name passed on, the seven arrays start
+ * empty; then the body sets the fields and empties the arrays again (their
+ * counts cleared), in this order. */
+Object016a7db8::Object016a7db8(const Name &name) : Object016b9108(name)
+{
+    unknown30.set(0.0f, 0.0f, 0.0f, 1.0f);
+    unknown40.set(0.0f, 0.0f, 0.0f, 1.0f);
+    unknown50.set(0.0f, 0.0f, 0.0f, 1.0f);
+    unknown60 = 0;
+    array68.removeAll();
+    array80.removeAll();
+    array98.removeAll();
+    arrayb0.removeAll();
+    arrayc8.removeAll();
+    unknowne0 = 0;
+    unknownf0.set(0.0f, 0.0f, 0.0f, 1.0f);
+    unknown100 = 0;
+    unknown104 = 0.0f;
+    unknown108 = 0.0f;
+    unknown10c = 1.0f;
+    unknown110 = 0.0f;
+    unknown114 = 0;
+    unknown118 = 0;
+    unknown11c = 1.0f;
+    array120.removeAll();
+    array138.removeAll();
+}
