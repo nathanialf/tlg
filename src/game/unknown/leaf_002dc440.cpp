@@ -5,6 +5,22 @@
  * +0x0 and its value at +0x8 (cookbook: FUN_00b10da0's form; here a pointer,
  * the object itself and a float). */
 struct ScriptArgument00a2efa0 {
+    /* the value read before the type is stored (`mov eax,
+     * [rdi+0x74]` before `mov dword [rbp-0x30], 3` at 0xb10dcb; `mov rax,
+     * [rbx+0x28]` before the first type at 0x2dc470): both are the setter's
+     * arguments, evaluated before its stores */
+    void set(int type_, void *pointer) /* derived name */
+    {
+        type = type_;
+        value.pointer = pointer;
+    }
+
+    void set(int type_, float number) /* derived name */
+    {
+        type = type_;
+        value.number = number;
+    }
+
     int type;
     u8 unknown4[4];
 
@@ -52,17 +68,13 @@ class Object016a8178 /* derived name */
     void *unknown28; /* +0x28 */
 };
 
-// NONMATCHING: instruction order (list-ilp): the base loads +0x28 before the first argument's type and stores the result's 0 after it, the build stores the 0 first (FUN_00b10da0's class)
 void Object016a8178::slot19(float value)
 {
-    int result = 0;
     ScriptArgument00a2efa0 arguments[3];
-    arguments[0].type = 1;
-    arguments[0].value.pointer = unknown28;
-    arguments[1].type = 1;
-    arguments[1].value.pointer = this;
-    arguments[2].type = 4;
-    arguments[2].value.number = value;
+    arguments[0].set(1, unknown28);
+    arguments[1].set(1, this);
+    arguments[2].set(4, value);
+    int result = 0;
     FUN_00a2efa0("Ai2.CondorUtils.CondorLightPrepareTick", 3, arguments, &result);
     slot16();
 }

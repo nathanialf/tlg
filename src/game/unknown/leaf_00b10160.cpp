@@ -15,9 +15,20 @@ struct Object00b10180 { /* derived name */
 
 /* derived names: a script call's argument, a 32-bit type code and its value. */
 struct ScriptArgument00a2efa0 {
+    /* the value read before the type is stored (`mov eax,
+     * [rdi+0x74]` before `mov dword [rbp-0x30], 3` at 0xb10dcb; `mov rax,
+     * [rbx+0x28]` before the first type at 0x2dc470): both are the setter's
+     * arguments, evaluated before its stores */
+    void set(int type_, int value_) /* derived name */
+    {
+        type = type_;
+        value = value_;
+    }
+
     int type;
+    u8 unknown4[4];
     int value;
-    u8 unknown8[8];
+    u8 unknownc[4];
 };
 
 /* derived names: the record the pointer at 0x5938c40 holds. */
@@ -49,7 +60,6 @@ void FUN_00b10170(Object00b10180 *) /* derived name */
  * of the record at 0x5938c40 (type 4); false otherwise. Not a row of this
  * round: written so the flag's loads keep the setters' stores (GlobalOpt
  * deletes the stores of a never-loaded bool). */
-// NONMATCHING: not worked; first divergence at instruction 7, the flag test (base movzx, and 1, cmp 1, jne; compiled cmp byte, 1, jne), and the base reads the pointer at 0x5938c40 with one direct load where an extern compiles to a GOT load
 bool FUN_00b10180(const Object00b10180 *self) /* derived name */
 {
     if (!D_58325ea) {
@@ -57,10 +67,8 @@ bool FUN_00b10180(const Object00b10180 *self) /* derived name */
     }
     int result = 0;
     ScriptArgument00a2efa0 arguments[2];
-    arguments[0].type = 3;
-    arguments[0].value = self->unknown74;
-    arguments[1].type = 4;
-    arguments[1].value = D_5938c40->unknown19c;
+    arguments[0].set(3, self->unknown74);
+    arguments[1].set(4, D_5938c40->unknown19c);
     int ok = FUN_00a2efa0("GuideSystem.checkDisp", 2, arguments, &result);
-    return ok != 0 && result != 0;
+    return result != 0 && ok != 0;
 }

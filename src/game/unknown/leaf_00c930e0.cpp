@@ -1,12 +1,20 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_object016b8a80.h"
 
+/* the object at the record's +0x30, of a class over
+ * Node00503fb0 (not traced): the constructor compares it first with the
+ * reference's old object after the exchange (`cmp rcx, rbx` at 0xc93034), as
+ * AtomicRef0045c470::set compares a pointer converted from a class over T */
+class Node05938c40_38_30 : public Node00503fb0 /* derived name */
+{
+};
+
 /* derived names: the record the pointer at 0x5938c40 holds, and the record
  * at its +0x38, whose object at +0x30 the constructor below takes (`mov
  * rax, [rax+0x38]; mov rcx, [rax+0x30]`). */
 struct Member05938c40_38 {
     u8 unknown0[0x30];
-    Node00503fb0 *unknown30;
+    Node05938c40_38_30 *unknown30;
 };
 
 struct Object05938c40 {
@@ -21,7 +29,6 @@ extern Object05938c40 *D_5938c40;
  * empty (one 16-byte clear at +0x28); then the body: the reference at +0x30
  * set to the object the global record's member at +0x38 holds at +0x30, and
  * the value at +0x40. */
-// NONMATCHING: the peeled first exchange (`xor eax, eax; lock cmpxchg; je`) is kept with `sete al; test al, al` where the base folds it (round 280D's 0xc91f20: a CSE after the late instcombine, the two-stage question); the old pointer compared second (`cmp rbx, rcx`, base `cmp rcx, rbx`)
 Object016b8a80::Object016b8a80(const Name &name) : Object016b9108(name)
 {
     held30.set(D_5938c40->unknown38->unknown30);
