@@ -35,17 +35,10 @@ struct Type00503fb0 {     /* derived name */
 /* the type itself or one it derives from: the type is compared first, then
  * each parent as it is read and before it is tested for the end (0xc1ad02 to
  * 0xc1ad1b: `cmp rax, rcx; je`, then `mov rdx, [rdx]; cmp rdx, rcx; je; test
- * rdx, rdx; jne`) */
-inline bool isKindOf(const Type00503fb0 *t, const Type00503fb0 *type) /* derived name */
-{
-    if (t == type)
-        return true;
-    do {
-        t = t->parent;
-        if (t == type)
-            return true;
-    } while (t);
-    return false;
-}
+ * rdx, rdx; jne`). Defined in func_00503fb0.cpp, not inline: the link
+ * inlines it at every site, and the shape of 0x9f54b0 (the found arm's
+ * `test rdi, rdi; sete al` before the merge) is what the link's passes
+ * give over the inlined walk, never what the unit's own pipeline gives. */
+bool isKindOf(const Type00503fb0 *t, const Type00503fb0 *type); /* derived name */
 
 #endif

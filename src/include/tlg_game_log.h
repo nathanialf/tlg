@@ -12,14 +12,17 @@
 /* The output's interface as the vtable at 0x16b8980 lays it out (the object
  * at 0x17ac798 holds its address point 0x16b8990): slots 0 and 1 the
  * destructors (an empty one at 0x1af750, PlainPolymorphic's deleting one at
- * 0x21a00), slot 2 returns the address of a float table (FUN_013aab40),
+ * 0x21a00), slot 2 answers a text for an int (the script C function "Log",
+ * FUN_00c86250, passes the number of its argument and pushes the text; the
+ * one body listed, FUN_013aab40, returns the table at 0x15251ec, whose
+ * first byte is 0, and reads no argument),
  * slots 3 to 5 empty (0x1af750), slot 6 writes text with its length
  * (FUN_00c831c0). The class of the object itself is not traced. */
 class DebugOutput /* derived name */
 {
   public:
     virtual ~DebugOutput();
-    virtual const float *unknown2() const;
+    virtual const char *unknown2(int) const;
     virtual void unknown3();
     virtual void unknown4();
     virtual void unknown5();

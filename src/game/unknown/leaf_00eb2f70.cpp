@@ -41,3 +41,20 @@ int FUN_00eb2f70(Object00eb2f70 *self, const Argument00eb2f70 *argument) /* deri
     }
     return 1;
 }
+
+/* derived names: slot 2 of the same four vtables: 0 when a body id below the
+ * count at +0x30 is not the invalid id, or when an id from the count up to
+ * one is (the first id, tested when the count is 0: `cmp dword [rdi +
+ * 0x34], 0x7fffffff` after the loop); 1 otherwise. */
+int FUN_00eb2f20(Object00eb2f70 *self) /* derived name */
+{
+    for (unsigned i = 0; i < self->unknown30; ++i) {
+        if (self->unknown34[i] != 0x7fffffff)
+            return 0;
+    }
+    for (unsigned i = self->unknown30; i < 1; ++i) {
+        if (self->unknown34[i] == 0x7fffffff)
+            return 0;
+    }
+    return 1;
+}

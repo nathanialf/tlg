@@ -8,14 +8,12 @@ struct Object009f54b0; /* derived name */
 
 extern Type00503fb0 *D_58237e8; /* derived name */
 
-// NONMATCHING: the loop and its index are the base's now (an unsigned counter, the components'
-// index an int). Left: the base forms the count's address twice (`lea rdi, [r14 + 0x30]` for
-// FUN_01331c10, `lock dec dword [r14 + 0x30]`) where the build keeps it in r14 (the atomic
-// decrement's address is one value with the call's argument and is in another block: a count
-// in a struct of its own, its address formed from the struct's, is still one value); and the
-// base tests the found component before the decrement (`test rdi, rdi; sete al` in the found
-// arm, `mov al, 1` set before the loop), the build after it
-bool FUN_009f54b0(Object009f54b0 *, Node00503fb0 *node) /* derived name */
+// NONMATCHING: with isKindOf defined out of line (tlg_game_type.h) the control flow is the base's
+// (`mov al, 1` before the loop, `test rdi, rdi; sete al` in the found arm) and the result an int
+// (`movzx eax, al`). Left: the base forms the count's address twice (`lea rdi, [r14 + 0x30]` for
+// FUN_01331c10, `lock dec dword [r14 + 0x30]`) where the build keeps it in r14 (one push more):
+// CodeGenPrepare does not sink an address into an atomic user (round 325C's class, region-wide)
+int FUN_009f54b0(Object009f54b0 *, Node00503fb0 *node) /* derived name */
 {
     return node->findComponent(D_58237e8) == 0;
 }

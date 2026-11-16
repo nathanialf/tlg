@@ -80,3 +80,16 @@ void FUN_00503fb0(Owner00503fb0 *owner) /* derived name */
     }
     FUN_00503fb0_rest(node, component);
 }
+
+/* the type itself or one it derives from (tlg_game_type.h) */
+bool isKindOf(const Type00503fb0 *t, const Type00503fb0 *type) /* derived name */
+{
+    if (t == type)
+        return true;
+    do {
+        t = t->parent;
+        if (t == type)
+            return true;
+    } while (t);
+    return false;
+}
