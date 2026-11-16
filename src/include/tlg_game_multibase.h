@@ -321,15 +321,19 @@ class Object01395de0 /* derived name */
 /* The class whose vtable is at 0x16c7b78 (stored by FUN_00958460 and
  * FUN_0137e6e0): secondary vtables whose pointers are at 0x16c7c28 (offset to
  * top -0x128; slot 0 the thunk 0x95b980 of FUN_0095b960) and beside it one
- * slot each (offsets to top -0x120: 0x95a1b0; -0x130). The bases' sizes
- * between their vptrs are those offsets; their other slots and fields are not
- * traced. */
-class Base0095b960_0 /* derived name */
+ * slot each (offsets to top -0x120: 0x95a1b0), two slots (-0x130, both
+ * pure) and three (-0x140: slot 0 pure, FUN_0137bfe0, FUN_0137e0f0). The
+ * bases' sizes between their vptrs are those offsets; their other slots and
+ * fields are not traced. Slots 2 to 4 of the primary vtable are
+ * Object016b9108's (FUN_00cb66f0 and the two empty ones), 13 and 14 pure. */
+class Base0095b960_0 : public Object016b9108 /* derived name */
 {
   public:
-    virtual ~Base0095b960_0();
+    /* Slots 5 and 6: 0x58a0, FUN_01343880. */
+    virtual void slot5(); /* derived name; not traced */
+    virtual void slot6(); /* derived name; not traced */
 
-    u8 unknown8[0x118];
+    u8 unknown24[0x120 - 0x24];
 };
 
 class Base0095b960_120 /* derived name */
@@ -344,17 +348,77 @@ class Base0095b960_128 /* derived name */
     virtual void FUN_0095b960() = 0; /* derived name */
 };
 
+class Base0095b960_130 /* derived name */
+{
+  public:
+    virtual void slot0() = 0; /* derived name; not traced */
+    virtual void slot1() = 0; /* derived name; not traced */
+
+    u8 unknown8[8];
+};
+
+/* The object at +0x8 of the base at +0x140 (+0x148 of the class): slot 11
+ * (FUN_0137e150) calls its slot 5, the overrider in 0x16b0fb0 its slot 7. */
+class Member0095b960_148 /* derived name */
+{
+  public:
+    virtual void slot0(); /* derived name; not traced */
+    virtual void slot1(); /* derived name; not traced */
+    virtual void slot2(); /* derived name; not traced */
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
+    virtual void slot5(); /* derived name; not traced */
+    virtual void slot6(); /* derived name; not traced */
+    virtual int slot7();  /* derived name */
+};
+
+class Base0095b960_140 /* derived name */
+{
+  public:
+    /* Overridden by FUN_0137e1e0 in the class at 0x16b0fb0 (its thunk
+     * 0x137e100). */
+    virtual int FUN_0137e100() = 0; /* derived name, after its thunk */
+    virtual void slot1();           /* derived name; FUN_0137bfe0, not traced */
+    virtual void slot2();           /* derived name; FUN_0137e0f0, not traced */
+
+    Member0095b960_148 *member8; /* +0x8 */
+};
+
 class Object0095b960 /* derived name */
     : public Base0095b960_0,
       public Base0095b960_120,
-      public Base0095b960_128
+      public Base0095b960_128,
+      public Base0095b960_130,
+      public Base0095b960_140
 {
   public:
+    /* Slots 7 to 9: FUN_00958920, FUN_00958c20, FUN_00959ad0. */
+    virtual void slot7(); /* derived name; not traced */
+    virtual void slot8(); /* derived name; not traced */
+    virtual void slot9(); /* derived name; not traced */
     /* Slot 10 of the primary vtable (its pointer at 0x16c7bd8). */
     void FUN_0095b960();
+    /* Slots 11 and 12: FUN_0137e150, FUN_0137e170; 13 and 14 pure (in the
+     * class at 0x16b0fb0 FUN_0137e180 and FUN_0137e190). */
+    virtual void slot11();     /* derived name; not traced */
+    virtual void slot12();     /* derived name; not traced */
+    virtual void slot13() = 0; /* derived name; not traced */
+    virtual void slot14() = 0; /* derived name; not traced */
 
-    u8 unknown130[0x1f0 - 0x130];
+    u8 unknown150[0x1f0 - 0x150];
     int unknown1f0;
+};
+
+/* The class whose vtable is at 0x16b0fb0 (stored by FUN_00958460 after the
+ * vtable of its base at 0x16c7b78): slots 15 and 16 its own (FUN_0095c380,
+ * FUN_0095d150), slot 17 FUN_0137e1e0, the overrider of the base at
+ * +0x140's slot 0. */
+class Object016b0fb0 : public Object0095b960 /* derived name */
+{
+  public:
+    virtual void slot15(); /* derived name; not traced */
+    virtual void slot16(); /* derived name; not traced */
+    int FUN_0137e100();    /* slot 17 */
 };
 
 #endif

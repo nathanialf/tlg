@@ -74,12 +74,68 @@ void FUN_01482e50(Fade013d2490 *self) /* derived name */
     }
 }
 
-/* derived name: the class whose slot 1 calls FUN_01482a60 */
-struct Object01482c20 : FadeRig013d1440 { /* derived name */
+/* derived name: the class whose vtable is at 0x16d7888 (config/vtables.derived.base.txt),
+ * whose slot 1 calls FUN_01482a60 */
+class Object016d7888 : public FadeRig013d1440 /* derived name */
+{
+  public:
+    Object016d7888(FadeModel013d4610 *model, FadeTarget013d2490 *target);
+    FadeElement016d7b30 *findElement(const int *id);
+    void slot1(void *argument);
+    ~Object016d7888();
+
+    int unknown48; /* +0x48: zero from the constructor, after the vptr */
 };
 
+/* FUN_0147f600: each of the target's entries takes the length of its pose's
+ * position, then the target's index of its bone's parent (the count for a
+ * root, -1 for a parent the target lacks) */
+Object016d7888::Object016d7888(FadeModel013d4610 *model, FadeTarget013d2490 *target)
+    : FadeRig013d1440(model, target), unknown48(0)
+{
+    const int count = target->count;
+    for (int i = 0; i < count; ++i) {
+        const Vec4 &position = this->model->pose(target->unknown28[i]).position.v;
+        const float x = lane(position, 0);
+        const float y = lane(position, 1);
+        const float z = lane(position, 2);
+        this->target->entries[i].length = sqrtf(x * x + y * y + z * z);
+    }
+    for (int i = 0; i < count; ++i) {
+        const int parent = this->model->skeleton.bone(target->unknown28[i])->parent;
+        if (parent == -1) {
+            this->target->entries[i].parent = count;
+        } else {
+            int index = -1;
+            for (unsigned j = 0; j < target->indexCount; ++j) {
+                if (target->unknown28[j] == parent) {
+                    index = j;
+                    break;
+                }
+            }
+            this->target->entries[i].parent = index;
+        }
+    }
+    unknown1c = 0;
+}
+
+/* FUN_01482c20 (the executable's base-object destructor, folded into the
+ * complete one here; its complete one, a jump to it, is FUN_01482c10): each
+ * element deleted and its slot cleared, then the array emptied, before the
+ * base class's destructor releases its block */
+Object016d7888::~Object016d7888()
+{
+    for (unsigned i = 0; i < elements.size(); ++i) {
+        if (elements.at(i)) {
+            delete elements.at(i);
+            elements.at(i) = 0;
+        }
+    }
+    elements.clear();
+}
+
 /* derived name: this file's copy of FUN_013d1440 (func_00f509e0.cpp) */
-void FUN_01482a60(Object01482c20 *self) /* derived name */
+void FUN_01482a60(Object016d7888 *self) /* derived name */
 {
     FadeTarget013d2490 *target = self->target;
     for (int i = 0; i < target->count; ++i) {

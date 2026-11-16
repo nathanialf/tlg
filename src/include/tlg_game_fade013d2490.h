@@ -5,6 +5,7 @@
 #define TLG_GAME_FADE013D2490_H
 
 #include "tlg_types.h"
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_frame.h"
 #include "tlg_game_vector.h"
 #include "tlg_game_rotation.h"
@@ -32,7 +33,10 @@ struct FadeEntry013d2490 { /* derived name */
 /* derived names: an entry of the target's array, 0xa0 bytes, whose int at
  * +0x90 the update clears */
 struct FadeTargetEntry013d2490 { /* derived name */
-    u8 unknown0[0x50];
+    u8 unknown0[0x8];
+    float length; /* +0x8: the length of its pose's position (the rigs' constructors) */
+    int parent;   /* +0xc: the target's index of its bone's parent, the count for a root */
+    u8 unknown10[0x40];
     Vec4 unknown50;          /* +0x50: written by FUN_013ce2d0 (FUN_013d1440) */
     Vec4 unknown60;          /* +0x60: written by FUN_013ce660 (FUN_013d1440) */
     Frame016c1128 unknown70; /* +0x70: a pose, its rotation turned to w not negative (takePose) */
@@ -45,7 +49,8 @@ struct FadeTarget013d2490 {           /* derived name */
     u8 unknown8[0x10];
     int count; /* +0x18: read again each pass (`movsxd rax, [r8+0x18]`) */
     u8 unknown1c[0xc];
-    int *unknown28; /* +0x28: per entry, the index of its pose (FUN_013d4610) */
+    int *unknown28;      /* +0x28: per entry, the index of its pose (FUN_013d4610) */
+    unsigned indexCount; /* +0x30: the indices' count, searched unsigned (FUN_013ce050) */
 };
 
 /* derived names: a pose of the model, 0x40 bytes, its rotation at +0x10
@@ -60,12 +65,37 @@ struct FadePose013d4610 { /* derived name */
 /* derived names: the model's skeleton at +0x40, whose poses FUN_013ce2d0
  * and FUN_013ce660 (each taking the skeleton, the vector to write, a pose
  * index and the poses) read; the int at +0x130 is not traced */
+struct FadeBone013ce050 { /* derived name */
+    u8 unknown0[0x27a];
+    s16 parent; /* +0x27a: the parent's pose index, -1 for a root */
+};
+
+struct FadeSkeletonData013ce050 { /* derived name */
+    u8 unknown0[0x238];
+    FadeBone013ce050 **bones; /* +0x238: one per pose */
+};
+
 struct FadeSkeleton013ce2d0 { /* derived name */
-    u8 unknown0[0x100];
+
+    const FadeBone013ce050 *bone(int index) const /* derived name */
+    {
+        return data->bones[index];
+    }
+
+    FadeSkeletonData013ce050 *data; /* +0x0 (the rigs' constructors) */
+    u8 unknown8[0xf8];
     FadePose013d4610 *poses; /* +0x100 (the model's +0x140) */
 };
 
 struct FadeModel013d4610 { /* derived name */
+
+    /* the pose of an index, the model read before the index (FUN_013ce050:
+     * `mov rcx, [r15+8]` before `mov rbx, [r14+0x28]`) */
+    const FadePose013d4610 &pose(int index) const /* derived name */
+    {
+        return skeleton.poses[index];
+    }
+
     u8 unknown0[0x40];
     FadeSkeleton013ce2d0 skeleton; /* +0x40 */
 };
@@ -118,13 +148,64 @@ inline void takePose(Frame016c1128 &frame, const FadeModel013d4610 *model,
     makeWPositive(frame.unknown10);
 }
 
+/* derived names: an element of the rig's array at +0x28: deleted through
+ * its slot 1 (the deleting destructor) by the rig's destructor, found by the
+ * int at +0x30 (FUN_013d4a40) */
+class FadeElement016d7b30 /* derived name */
+{
+  public:
+    virtual ~FadeElement016d7b30();
+
+    u8 unknown8[0x28];
+    int id; /* +0x30 */
+};
+
+/* derived names: the class whose vtable is at 0x16d7b30 (its four slots
+ * pure; config/vtables.derived.base.txt names it), the base of the fifteen
+ * rigs: its constructor is inlined into theirs (FUN_013ce050: the model at
+ * +0x8, 0 at +0x10, 0.5f twice from +0x14, the ints from +0x1c and the array
+ * cleared as one 28-byte zero, the array's lock word made free at +0x3c), its
+ * destructor releases the array's block after its vptr store (FUN_013d1600).
+ * The ints at +0x10 and +0x1c to +0x24 are not traced. */
+class Object016d7b30 /* derived name */
+{
+  public:
+    explicit Object016d7b30(FadeModel013d4610 *model)
+        : model(model), unknown10(0), unknown14(0.5f), unknown18(0.5f), unknown1c(0), unknown20(0),
+          unknown24(0)
+    {
+    }
+
+    /* the rigs' slot 0 (FUN_013d4a40, one body in every vtable): the element
+     * whose id is the one pointed at, or null */
+    virtual FadeElement016d7b30 *findElement(const int *id) = 0; /* derived name */
+    /* the rigs' slot 1 (FUN_013d0450 and its copies) */
+    virtual void slot1(void *argument) = 0; /* derived name */
+    virtual ~Object016d7b30() = 0;
+
+    FadeModel013d4610 *model; /* +0x8 */
+    int unknown10;
+    float unknown14;
+    float unknown18;
+    int unknown1c; /* +0x1c: cleared again at the end of the rig's constructor */
+    int unknown20;
+    int unknown24;
+    Array01343a80<FadeElement016d7b30 *> elements; /* +0x28 */
+};
+
+inline Object016d7b30::~Object016d7b30() {}
+
 /* derived names: the layout of the fifteen classes whose slot 1 (FUN_013d0450
  * and its copies) calls FUN_013d1440 or its unit's copy, one class per unit:
  * the model at +0x8 and the target at +0x40 */
-struct FadeRig013d1440 { /* derived name */
-    u8 unknown0[0x8];
-    FadeModel013d4610 *model; /* +0x8 */
-    u8 unknown10[0x30];
+class FadeRig013d1440 : public Object016d7b30 /* derived name */
+{
+  public:
+    FadeRig013d1440(FadeModel013d4610 *model, FadeTarget013d2490 *target)
+        : Object016d7b30(model), target(target)
+    {
+    }
+
     FadeTarget013d2490 *target; /* +0x40 */
 };
 

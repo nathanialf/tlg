@@ -57,12 +57,35 @@ void FUN_013e16d0(Fade013d2490 *self) /* derived name */
     }
 }
 
-/* derived name: the class whose slot 1 calls FUN_013e12e0 */
-struct Object013e14a0 : FadeRig013d1440 { /* derived name */
+/* derived name: the class whose vtable is at 0x16d4318 (config/vtables.derived.base.txt),
+ * whose slot 1 calls FUN_013e12e0 */
+class Object016d4318 : public FadeRig013d1440 /* derived name */
+{
+  public:
+    FadeElement016d7b30 *findElement(const int *id);
+    void slot1(void *argument);
+    ~Object016d4318();
+
+    int unknown48; /* +0x48: zero from the constructor, after the vptr (inlined into FUN_00f9ab50 here) */
 };
 
+/* FUN_013e14a0 (the executable's base-object destructor, folded into the
+ * complete one here; its complete one, a jump to it, is FUN_013e1490): each
+ * element deleted and its slot cleared, then the array emptied, before the
+ * base class's destructor releases its block */
+Object016d4318::~Object016d4318()
+{
+    for (unsigned i = 0; i < elements.size(); ++i) {
+        if (elements.at(i)) {
+            delete elements.at(i);
+            elements.at(i) = 0;
+        }
+    }
+    elements.clear();
+}
+
 /* derived name: this file's copy of FUN_013d1440 (func_00f509e0.cpp) */
-void FUN_013e12e0(Object013e14a0 *self) /* derived name */
+void FUN_013e12e0(Object016d4318 *self) /* derived name */
 {
     FadeTarget013d2490 *target = self->target;
     for (int i = 0; i < target->count; ++i) {
