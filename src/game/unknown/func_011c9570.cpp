@@ -42,7 +42,6 @@ void FUN_01467950(Array05943280<Element01467950> *array, unsigned size) /* deriv
 {
     array->resize(size);
 }
-}
 
 /* derived name: this file's frame entry (tlg_game_frames013fb310.h): one
  * element type per file, as the base holds one resize of them per file */
