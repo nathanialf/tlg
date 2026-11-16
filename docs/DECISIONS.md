@@ -1730,3 +1730,41 @@ adjacency (the pattern of src/game/user_malloc.cpp), not from a string.
 it keeps at a cost of 175 or less: either moves or refutes the window; a link driver source naming a threshold.
 
 **Addendum (the rebase onto main, same day).** Two deleting destructors main had claimed meanwhile (0x13e3e20, 0x147eb20) call their complete destructor in the merged units (cost 305 over stage 1's 225): the two classes' destructors are the implicit ones (the member at +0x70 a growable array, slot 2 the key function), which carry the inline hint: equal, with the base's and both slot 2 bodies.
+
+## D86. Stage 1's bitcode is written without the use-list order (2026-11-16)
+
+
+Question. The tree keeps the use-list order at every bitcode boundary of the two-stage game module (D83): stage 1's
+unit bitcode, llvm-link, opt -internalize, the link's opt. Which boundaries did the original's build write it at?
+
+Evidence (sources: tools/cc/src/llvm-3.7.1.src/tools/clang).
+- lib/Driver/Driver.cpp:1554-1557: with -flto the backend action's output type is TY_LTO_BC (TY_LTO_IR under -S).
+- lib/Driver/Tools.cpp:3057-3062: the driver passes -emit-llvm-uselists only when the action's type is TY_LLVM_BC
+  ("For LTO, we don't need to preserve the use-list order, since serialization to bitcode is part of the flow").
+- include/clang/Frontend/CodeGenOptions.def:159: EmitLLVMUseLists defaults to 0.
+So a 2016 `clang -flto -c` wrote each unit's bitcode without the order; libLTO then read the units, linked, optimised
+and generated code in one process, with no bitcode written in between. The tree's llvm-link, opt -internalize and the
+link's opt keep the order (llvm-link.cpp:66-69 and opt.cpp:183-186, -preserve-bc-uselistorder cl::init(true)),
+standing for that one in-memory run.
+
+Measured (scratch e324/). Every one of the 4,767 units' stage 1 rewritten with `-Xclang -no-emit-llvm-uselists`
+(s1one.sh: the command of tools/compile_cpp.sh --ir; without the option it reproduces the tree's unit bitcode byte for
+byte), the module built by tools/game_module.build itself (mod.py). Control (the tree's own stage 1 through mod.py):
+0 of 7,122 functions differ from build/base/game/module.o. With the order dropped, 5 of 7,122 functions differ
+(q1_fdiff.txt; again on HEAD's sources, q1_fdiff_head.txt, 7,125 functions, the same 5), none a row: 0 rows lost,
+0 gained. Drafts: 0x13d2490 43/52 -> 49/52 (the loop's two induction variables now in the base's order: 0x90 in edx,
+0x40 in esi, the stores in the base's order); 0xf2bd20 (D1, D2) 51/544 and 0x11f7800 (D1, D2) 51/502 unchanged (one
+add scheduled one place later). `tools/build.sh gate-all --full` with the change: gate OK, .text .relro .data
+identical to the base (gate.txt).
+
+Decision. tools/compile_cpp.sh --ir writes stage 1 with `-Xclang -no-emit-llvm-uselists`; every later boundary keeps
+the order. The unoptimised bitcode (game/ir/) keeps it: it stands for the front end's in-memory module of the same
+process that runs stage 1.
+
+Against. The sweep moves five functions only; the evidence for the change is the driver's source, not the bytes, apart
+from one draft moving toward the base. The tree's later boundaries keeping the order is an emulation of one process
+and is exact only if reading a module back with its order reproduces the in-memory lists (the order's purpose,
+Tools.cpp:3057-3060).
+
+Trigger to revisit. A row lost or a draft moved away that traces to a use list read back at stage 1's boundary; a
+driver of the original's link known to write bitcode between the link's steps.
