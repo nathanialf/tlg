@@ -62,6 +62,47 @@ struct StateNode583950 {
     u8 flags; /* +0x28 */
 };
 
+/* An entry of the call queue: the function at +0x0 and 0x58 bytes after it.
+ * derived names */
+struct Call583950 {
+    void (*function)(void *vm);
+    u8 unknown8[0x58];
+};
+
+/* A queue of calls: its capacity, its size and the entries from +0x8.
+ * derived names */
+struct CallQueue583950 {
+    unsigned capacity;
+    unsigned size;       /* +0x4 */
+    Call583950 calls[1]; /* +0x8 */
+};
+
+/* The owner's frame at +0x110: a depth and the call queue (FUN_0059ab60,
+ * FUN_00c0bc10 and FUN_00c0bcb0 append a call to it). derived names */
+struct CallFrame583950 {
+    /* appends a call when a slot after it is left (derived name) */
+    bool push(void (*function)(void *vm))
+    {
+        const unsigned next = queue->size + 1;
+        if (next >= queue->capacity)
+            return false;
+        queue->calls[queue->size].function = function;
+        queue->size = next;
+        return true;
+    }
+
+    /* appends a call one level deeper (FUN_00c0bc10, FUN_00c0bcb0). derived
+     * name */
+    void pushDeeper(void (*function)(void *vm))
+    {
+        if (push(function))
+            ++depth;
+    }
+
+    int depth;
+    CallQueue583950 *queue; /* +0x8 */
+};
+
 struct Owner583950 {
     /* finds a node of the list, searched from the current index to the
      * end, then from the start up to the current index: false when it is not
@@ -165,6 +206,13 @@ struct Owner583950 {
     };
 
     int valueType; /* +0x100 */
+    u8 unknown104[0xc];
+    CallFrame583950 *frame; /* +0x110 */
+    u8 unknown118[0xc0];
+    /* +0x1d8: a flag the handler FUN_00589500 raises from its node's bit
+     * while +0x1dc is set, then restores. derived names */
+    int unknown1d8;
+    int unknown1dc; /* +0x1dc */
 };
 
 #endif
