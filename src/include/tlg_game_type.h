@@ -6,8 +6,9 @@
 /* derived names: a type is a chain of types linked by their first field;
  * an object's type pointer is compared along the chain with the address a
  * global holds (FUN_00503fb0, FUN_00644eb0, FUN_013937c0) */
+#include "tlg_game_name.h"
+
 class Object016b9108; /* derived name */
-class Name;           /* derived name */
 
 /* what a type is told of each object made of it (slot 0, called with the
  * new object or null by FUN_00cbc5a0 at 0xcbc775); the other slots are not
@@ -28,6 +29,7 @@ struct Type00503fb0 {     /* derived name */
      * [rbx+0x18]; mov rdi, rbx; jmp [rax+0x10]`) */
     void (*destroy)(Object016b9108 *object);
     TypeListener00cbc5a0 *listener; /* +0x18 */
+    Name name; /* +0x20: the type's name (FUN_00e73a30 hands its string to a script) */
 };
 
 /* the type itself or one it derives from: the type is compared first, then

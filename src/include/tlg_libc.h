@@ -124,4 +124,19 @@ const short *_Getptolower(void);
 const short *_Getptoupper(void);
 }
 
+/* The C++ library's float overloads of sin and cos (Dinkumware's <cmath>
+ * calls the kernel from them directly). The compiler knows sinf and cosf as
+ * pure library functions and drops a call whose result is unused; these
+ * overloads are ordinary functions to it, and the calls stay (0x344450,
+ * 0x3447b0). */
+inline float sin(float x)
+{
+    return _FSin(x, 0, 0);
+}
+
+inline float cos(float x)
+{
+    return _FSin(x, 1, 0);
+}
+
 #endif

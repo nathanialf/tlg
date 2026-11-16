@@ -31,6 +31,23 @@ unsigned FUN_013baad0(const char *string, unsigned hash, size_t length,
                       bool add);   /* derived name */
 void FUN_00d66e30(unsigned index); /* derived name */
 
+struct lua_State;
+
+/* derived names: a string as the script VM hands an argument over: the
+ * string, its hash and length, and a mark set when the argument held no
+ * string (the string then null). FUN_00e81bd0 fills one from an argument of
+ * a state (the string at +0x14 of the VM's string object, the hash at +0x10,
+ * the length at +0x8). 16 bytes. */
+struct HashedString /* derived name */
+{
+    const char *string; /* +0x0 */
+    u32 hash;           /* +0x8 */
+    u16 length;         /* +0xc */
+    u16 unknownE;       /* +0xe */
+};
+
+void FUN_00e81bd0(HashedString *string, lua_State *state, int argument); /* derived name */
+
 /* derived names: an interned name, the 4-byte index of its entry. Built from
  * a string array its length is the array's (the callers pass a constant,
  * `mov edx, 5` for "FALSE" in FUN_00a653b0); the destructor drops the
@@ -43,6 +60,14 @@ class Name /* derived name */
     template <size_t N>
     Name(const char (&string)[N], bool add = true)
         : index(FUN_013baad0(string, FUN_013bad90(string), N - 1, add))
+    {
+    }
+
+    /* from a string with its hash and length, taken by value (the two
+     * words read back whole, the length and the mark split out of the
+     * second, `bextr` at 0xe70d00); the mark is the last argument */
+    explicit Name(HashedString string)
+        : index(FUN_013baad0(string.string, string.hash, string.length, string.unknownE))
     {
     }
 

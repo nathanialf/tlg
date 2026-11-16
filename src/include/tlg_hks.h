@@ -129,6 +129,34 @@ inline int typeOf(lua_State *state, int argument)
     return type == 9 || type == 10 ? 6 : type;
 }
 
+/* derived name: the count of the running function's arguments (the frame's
+ * top less its base, `sub; shr 4` at 0xe73a57) */
+inline int argumentCount(lua_State *state)
+{
+    return state->top - state->base;
+}
+
+/* derived name: pushes nil (tag 0) on the stack, its value left alone */
+inline void pushNil(lua_State *state)
+{
+    HksObject *top = state->top;
+    top->type = 0;
+    state->top = top + 1;
+}
+
+/* derived name: pushes a copy of a string of a length (FUN_013aacc0, its
+ * body not written) */
+void FUN_013aacc0(lua_State *state, const char *string, size_t length);
+
+/* derived name: pushes a string, nil for none */
+inline void pushString(lua_State *state, const char *string)
+{
+    if (string)
+        FUN_013aacc0(state, string, strlen(string));
+    else
+        pushNil(state);
+}
+
 /* derived name: pushes a boolean (tag 1) on the stack */
 inline void pushBoolean(lua_State *state, bool b)
 {
