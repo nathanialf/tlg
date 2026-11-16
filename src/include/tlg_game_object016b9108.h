@@ -64,8 +64,8 @@ class Object016b9108 /* derived name */
     /* +0x16: the constructor keeps bit 6 (`and 0x40`), the release clears
      * bit 1 (`and -3`), a derived constructor sets bit 0 (`or byte
      * [r15+0x16], 1` at 0x8c22a4); bit 2 lets any thread use the object
-     * (FUN_00618b00) */
-    u8 flags16;
+     * (FUN_00618b00); a word: FUN_00cbd050 ors a 16-bit value into it */
+    u16 flags16;
 
     /* +0x18: the object's type (FUN_00858390), whose function at +0x10
      * frees this object (FUN_00cb66f0: `mov rax, [rbx+0x18]; mov rdi, rbx;
