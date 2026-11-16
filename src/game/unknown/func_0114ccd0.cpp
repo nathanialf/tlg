@@ -35,9 +35,6 @@ struct Element01439d50 { /* derived name */
     void *unknown60; /* +0x60 */
 };
 
-/* derived name: sets the count of an array of them (tlg_game_array.h's
+/* FUN_01439d50: sets the count of an array of them (tlg_game_array.h's
  * resize). Called from 3 sites in 2 functions (FUN_01142c80, FUN_014397e0). */
-void FUN_01439d50(Array05943280<Element01439d50> *array, unsigned size) /* derived name */
-{
-    array->resize(size);
-}
+template void Array05943280<Element01439d50>::resize(unsigned);

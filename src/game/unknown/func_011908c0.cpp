@@ -36,12 +36,9 @@ struct Element01449630 { /* derived name */
     void *unknown60; /* +0x60 */
 };
 
-/* derived name: sets the count of an array of them (tlg_game_array.h's
+/* FUN_01449630: sets the count of an array of them (tlg_game_array.h's
  * resize). Called from 3 sites in 2 functions (FUN_01175460, FUN_01449250). */
-void FUN_01449630(Array05943280<Element01449630> *array, unsigned size) /* derived name */
-{
-    array->resize(size);
-}
+template void Array05943280<Element01449630>::resize(unsigned);
 
 /* derived name: this file's frame entry (tlg_game_frames013fb310.h): one
  * element type per file, as the base holds one resize of them per file */
