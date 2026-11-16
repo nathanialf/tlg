@@ -38,7 +38,9 @@ int FUN_00a2efa0(const char *name, int count, const ScriptArgument00a2efa0 *argu
  * stores no vptr; the vtable is stored by FUN_002dba90 and FUN_002dbc50):
  * calls the script function "Ai2.CondorUtils.CondorLightPrepareTick" with
  * the pointer at +0x28 and the object (both type 1) and its float argument
- * (type 4), then its own slot 16. The class is not traced. */
+ * (type 4), then its own slot 16. Slot 11 (FUN_002dc4d0) calls
+ * "Ai2.CondorUtils.CondorLightTick" with the same three and nothing after.
+ * The class is not traced. */
 class Object016a8178 /* derived name */
 {
   public:
@@ -53,7 +55,7 @@ class Object016a8178 /* derived name */
     virtual void slot8();             /* derived name; not traced */
     virtual void slot9();             /* derived name; not traced */
     virtual void slot10();            /* derived name; not traced */
-    virtual void slot11();            /* derived name; not traced */
+    virtual void slot11(float value); /* derived name: FUN_002dc4d0 */
     virtual void slot12();            /* derived name; not traced */
     virtual void slot13();            /* derived name; not traced */
     virtual void slot14();            /* derived name; not traced */
@@ -77,4 +79,14 @@ void Object016a8178::slot19(float value)
     int result = 0;
     FUN_00a2efa0("Ai2.CondorUtils.CondorLightPrepareTick", 3, arguments, &result);
     slot16();
+}
+
+void Object016a8178::slot11(float value)
+{
+    ScriptArgument00a2efa0 arguments[3];
+    arguments[0].set(1, unknown28);
+    arguments[1].set(1, this);
+    arguments[2].set(4, value);
+    int result = 0;
+    FUN_00a2efa0("Ai2.CondorUtils.CondorLightTick", 3, arguments, &result);
 }

@@ -16,7 +16,8 @@ struct NameTableEntry017ac870 /* derived name */
     const char *string0; /* +0x0 */
     u8 unknown8[8];
     int references10; /* +0x10 */
-    u8 unknown14[4];
+    u16 length14;     /* +0x14: the string's length (`movzx` at 0x88171b) */
+    u8 unknown16[2];
     void *record18; /* +0x18: a record of the name's, null for none (FUN_00618b00) */
 };
 

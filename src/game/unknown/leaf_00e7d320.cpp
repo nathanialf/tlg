@@ -14,7 +14,8 @@
  * "SoundSetCategoryVolume" (FUN_00e7cf20, lea at 0xe7d896),
  * "SoundGetCategoryVolume" (FUN_00e7d0b0, 0xe7d925), "SoundSetSlowDisabled"
  * (FUN_00e7cfa0, 0xe7dad2) and "SoundGetNumActiveInstance" (FUN_00e7d530,
- * 0xe7dd9d).
+ * 0xe7dd9d). "SoundSetVariable" (FUN_00e7d120, lea at 0xe7d9b4) passes the
+ * first argument's string and the second's number to slot 24.
  * The classes are not traced. */
 class Sound00e7d320 /* derived name */
 {
@@ -43,7 +44,7 @@ class Sound00e7d320 /* derived name */
     virtual void slot21();                                      /* derived name; not traced */
     virtual void slot22();                                      /* derived name; not traced */
     virtual void slot23();                                      /* derived name; not traced */
-    virtual void slot24();                                      /* derived name; not traced */
+    virtual void setVariable(const char *name, float value);    /* derived name */
     virtual const char *slot25(const char *first, const char *second); /* derived name */
     virtual void setSlowDisabled(int disabled);                        /* derived name */
     virtual void slot27();                                     /* derived name; not traced */
@@ -146,4 +147,16 @@ int FUN_00e7d530(lua_State *state) /* derived name */
     else
         pushNumber(state, 0);
     return 1;
+}
+
+int FUN_00e7d120(lua_State *state) /* derived name */
+{
+    int count = state->top - state->base;
+    if (count < 2) {
+        return 0;
+    }
+    const char *name = toString(state, 1);
+    float value = toNumber(state, 2);
+    D_5938c40->unknown100->setVariable(name, value);
+    return 0;
 }
