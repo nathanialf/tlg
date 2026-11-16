@@ -6,6 +6,7 @@
 
 #include "tlg_types.h"
 #include "tlg_game_frame.h"
+#include "tlg_game_vector.h"
 
 /* derived names: an entry of the fader's own array at +0x18, 0x80 bytes,
  * whose int at +0x40 the update clears. Its constructor (inlined into each
@@ -22,9 +23,9 @@ struct FadeEntry013d2490 { /* derived name */
     Frame016c1128 unknown0;  /* +0x0 */
     Frame016c1128 unknown20; /* +0x20 */
     int unknown40;           /* +0x40 */
-    Vec4 unknown50;          /* +0x50: VECTOR_W from the constructor */
-    Vec4 unknown60;          /* +0x60: VECTOR_W from the constructor */
-    float unknown70;         /* +0x70: 1.0f from the constructor */
+    Vec4 unknown50;  /* +0x50: VECTOR_W from the constructor, a rotation from FUN_013d4610 */
+    Vec4 unknown60;  /* +0x60: VECTOR_W from the constructor */
+    float unknown70; /* +0x70: 1.0f from the constructor */
 };
 
 /* derived names: an entry of the target's array, 0xa0 bytes, whose int at
@@ -39,6 +40,22 @@ struct FadeTarget013d2490 {           /* derived name */
     FadeTargetEntry013d2490 *entries; /* +0x0 */
     u8 unknown8[0x10];
     int count; /* +0x18: read again each pass (`movsxd rax, [r8+0x18]`) */
+    u8 unknown1c[0xc];
+    int *unknown28; /* +0x28: per entry, the index of its pose (FUN_013d4610) */
+};
+
+/* derived names: a pose of the model, 0x40 bytes, its rotation at +0x10
+ * (FUN_013d4610 copies it into an entry as a whole object: a copy the lane
+ * reads after it are not forwarded from, so they load it again) */
+struct FadePose013d4610 { /* derived name */
+    u8 unknown0[0x10];
+    Vector4 rotation; /* +0x10 */
+    u8 unknown20[0x20];
+};
+
+struct FadeModel013d4610 { /* derived name */
+    u8 unknown0[0x140];
+    FadePose013d4610 *poses; /* +0x140 */
 };
 
 struct FadeClock013d2490 { /* derived name */
@@ -57,7 +74,8 @@ struct FadeOwner013d2490 { /* derived name */
  * fading in, 2 full, 3 fading out, 0 off) and level at +0x5c are stored as
  * one qword when a fade ends (`movabs rax, 0x3f80000000000002`) */
 struct Fade013d2490 { /* derived name */
-    u8 unknown0[0x10];
+    u8 unknown0[0x8];
+    FadeModel013d4610 *model;   /* +0x8 */
     FadeOwner013d2490 *owner;   /* +0x10 */
     FadeEntry013d2490 *entries; /* +0x18 */
     u8 unknown20[0x38];

@@ -2,6 +2,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
 #include "tlg_game_name.h"
+#include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
 
 /* derived names: FUN_00f6d1a0 is this file's static initializer. It builds
@@ -30,3 +31,19 @@ struct FadeEntry00f6d1a0 : FadeEntry013d2490 { /* derived name */
 
 /* FUN_013d4760 */
 template void Array05943280<FadeEntry00f6d1a0>::resize(unsigned);
+
+/* derived name: the fade's entries take their target's rotations (the
+ * model's pose for each, +0x10 of a 0x40-byte pose), turned to w not
+ * negative, and VECTOR_W at +0x60 */
+void FUN_013d4610(Fade013d2490 *self) /* derived name */
+{
+    self->state = 1;
+    FadeTarget013d2490 *target = self->owner->target;
+    for (int i = 0; i < target->count; ++i) {
+        FadeEntry013d2490 &entry = self->entries[i];
+        reinterpret_cast<Vector4 &>(entry.unknown50) =
+            self->model->poses[target->unknown28[i]].rotation;
+        makeWPositive(entry.unknown50);
+        setLanes(entry.unknown60, VECTOR_W);
+    }
+}
