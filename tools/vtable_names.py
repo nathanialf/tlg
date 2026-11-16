@@ -31,6 +31,17 @@ a name two sites give different vtables, and a registration whose
 constructor's vptr the walk cannot find, are listed in the comment block and
 not written.
 
+A game vtable no type info and no ruling names, that only game functions
+store (a vptr store in the walk's sense, `Walker.vptr_stores`, including a
+register holding the address point stored anywhere: a constructor inlined
+into a placement construction in a buffer, 0x7aa154) and that has no
+hkClass getter of its own, is written as
+
+    <vtable symbol> <vtable address> Object<address> stored <functions>
+
+the class named for its address as the derived rows are; a ruling or fact
+for the address (vtables.derived.<slug>.txt) drops the row at the next run.
+
 The rows are facts about the base and are regenerated, never edited. The
 gate reads them (tools/base_elf.py `address_of`): a relocation against
 `_ZTV<class>` resolves to the row's address, and the base's operand must
@@ -53,6 +64,7 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 from base_elf import BaseElf  # noqa: E402
 from tlg_version import config_path  # noqa: E402
 
+GAME_START = 0x1a3e00      # the game region's first address (docs/TARGETS.md)
 CALLER_SAVED = {"rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11"}
 NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$")
 
@@ -97,7 +109,15 @@ class Walker:
         self.funcs = {a: (sz, n) for a, sz, n in elf.functions}
         self._vptr: dict[int, int | None] = {}
         self._hkclass: dict[int, str] | None = None
+        self._got_values: dict[int, int] | None = None
         self.parents: dict[int, int] = {}
+
+    def got_values(self) -> dict[int, int]:
+        """GOT slot -> the address the linker's RELATIVE relocation fills it
+        with (tools/base_elf.py relative_got_slots)."""
+        if self._got_values is None:
+            self._got_values = {slot: int(lbl[2:], 16) for lbl, slot in self.elf.relative_got_slots().items()}
+        return self._got_values
 
     def in_relro(self, v: int) -> bool:
         return self.relro[0] <= v < self.relro[1]
@@ -121,7 +141,10 @@ class Walker:
         object along the fall-through path (a constructor: its bases' then
         its own), or into a member of it built in place (`mov [this+0x138],
         vptr`: hkLargeBlockAllocator's constructor 0x12160 builds its
-        SingleBlockAllocator member, D14's round 63B row)."""
+        SingleBlockAllocator member, D14's round 63B row), or anywhere else
+        through a register that holds it (`lea`, an immediate `mov` or a GOT
+        load): a constructor inlined into a placement construction in a
+        buffer, 0x7aa154's command in its owner's array (round 359B)."""
         return set(self._walk(fn, fresh=True, members=True, branches=True))
 
     def _walk(self, ctor: int, fresh: bool = False, members: bool = False,
@@ -199,6 +222,15 @@ class Walker:
                         this.discard(d)
                     elif m == "add" and src.type == X86_OP_IMM and d in regs:
                         regs[d] += src.imm
+                    elif members and m == "mov" and src.type == X86_OP_IMM:
+                        # the address point as an immediate
+                        regs[d] = src.imm
+                        this.discard(d)
+                    elif members and m == "mov" and src.type == X86_OP_MEM and src.mem.base == X86_REG_RIP \
+                            and ins.address + ins.size + src.mem.disp in self.got_values():
+                        # the address point read from a GOT slot the linker filled with it
+                        regs[d] = self.got_values()[ins.address + ins.size + src.mem.disp]
+                        this.discard(d)
                     else:
                         regs.pop(d, None)
                         this.discard(d)
@@ -223,7 +255,13 @@ class Walker:
                     # with `members`, a store at an offset of `this` is a member
                     # object built in place (vptr_stores); vptr_of keeps offset 0
                     # so a member built after the own vptr store cannot name it
-                    if (base in this and (dst.mem.disp == 0 or members) or static or local) and not dst.mem.index \
+                    # with `members`, a register holding an address point stored
+                    # anywhere is a vptr store by this function: a constructor
+                    # inlined into a placement construction in a buffer
+                    # (`lea rsi, [rip+0x16cb840]; mov [rdx+rax], rsi` at 0x7aa154,
+                    # a command appended to the array at +0x388 of its owner)
+                    if (((base in this and (dst.mem.disp == 0 or members) or static or local)
+                         and not dst.mem.index) or members) \
                             and v is not None and self.in_relro(v) and self.is_address_point(v):
                         seq.append(v)
                 elif ops and ops[0].type == X86_OP_REG and m not in ("cmp", "test"):
@@ -586,6 +624,22 @@ def main(argv=None) -> int:
         shared[vt].append(name)
     named_points = {vt + 0x10 for _, vt, _, _ in rows} | {v + 0x10 for v, _, _ in elf._derived.values()}
     unnamed = unnamed_vtables(elf, w, named_points)
+    # a game vtable no type info and no ruling names, stored only by game
+    # functions and with no hkClass getter of its own, is named for its
+    # address as the derived rows are (Object<address>), the row listing the
+    # functions that store it (round 359B): the store is the fact the walk
+    # read, nothing is typed by hand; a later fact or ruling for the address
+    # removes the row at the next run (a ruling's address is `named_points`)
+    addr_of = {n: a for a, (_sz, n) in w.funcs.items()}
+    stored_rows, unnamed_left = [], []
+    for vt, fs, ev in unnamed:
+        cls = f"Object{vt:08x}"
+        if all(addr_of.get(f, 0) >= GAME_START for f in fs) and not any(e.startswith("hkClass") for e in ev) \
+                and cls not in {name for _, _, name, _ in rows} and cls not in {c for _a, c, _f in elf._derived.values()}:
+            stored_rows.append((mangle_vtable(cls), vt, cls, "stored " + " ".join(fs)))
+        else:
+            unnamed_left.append((vt, fs, ev))
+    unnamed = unnamed_left
     derived_errors = check_derived(elf)
     out = config_path(REPO_ROOT, elf.version, "vtables", "txt")
     lines = [
@@ -600,7 +654,10 @@ def main(argv=None) -> int:
         f"# {len(conflicts)} names registered with two vtables (below, not written);",
         f"# {len(untraced)} registrations whose constructor's vptr store the walk cannot find (below);",
         f"# {sum(1 for v in shared.values() if len(v) > 1)} vtables registered by more than one class;",
-        f"# {len(unnamed)} vtables stored by a function (its object, a static instance or a local) that no type info names (below, with",
+        f"# {len(stored_rows)} game vtables no type info or ruling names, stored only by game functions: rows",
+        "# `<vtable symbol> <vtable address> Object<address> stored <functions>`, the class named for its",
+        "# address as the derived rows are (a fact or a ruling for the address replaces the row);",
+        f"# {len(unnamed)} other vtables stored by a function (its object, a static instance or a local) that no type info names (below, with",
         "# the evidence at hand; a ruling names one in vtables.derived.<slug>.txt).",
         "#",
         "# Vtables registered by more than one class (the derived class keeps the base's):",
@@ -615,7 +672,7 @@ def main(argv=None) -> int:
     lines += ["#", "# Vtables no type info names: `<vtable address> stored by <functions> [hkClass <name>",
               "# (slot 3 <getter>)] [home <files>]`:"]
     lines += [f"#   0x{vt:x} stored by {' '.join(fs)}" + (f" | {'; '.join(ev)}" if ev else "") for vt, fs, ev in unnamed]
-    lines += [f"{sym} 0x{vt:x} {name} {ev}" for sym, vt, name, ev in rows]
+    lines += [f"{sym} 0x{vt:x} {name} {ev}" for sym, vt, name, ev in rows + stored_rows]
     if not a.no_write:
         out.write_text("\n".join(lines) + "\n")
     for e in derived_errors:
@@ -627,10 +684,11 @@ def main(argv=None) -> int:
         print(f"| names with two vtables | {len(conflicts)} |")
         print(f"| constructor vptr not traced | {len(untraced)} |")
         print(f"| vtables named by ruling | {len(elf._derived)} |")
+        print(f"| game vtables named for their address from the stores | {len(stored_rows)} |")
         print(f"| vtables stored by a function, unnamed | {len(unnamed)} |")
     else:
         print(f"vtable_names: {len(rows)} rows, {len(unmangled)} unmangled, {len(conflicts)} conflicts, "
-              f"{len(untraced)} untraced, {len(elf._derived)} derived, {len(unnamed)} unnamed -> {out.relative_to(REPO_ROOT)}")
+              f"{len(untraced)} untraced, {len(stored_rows)} stored, {len(elf._derived)} derived, {len(unnamed)} unnamed -> {out.relative_to(REPO_ROOT)}")
     return 1 if derived_errors else 0
 
 
