@@ -111,10 +111,13 @@ struct CommandQueue05938c40 { /* derived name */
 };
 
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
- * queue at +0xb0 */
+ * queue at +0xb0 and the pointer at +0x108 (handed to FUN_00c55dd0 by
+ * FUN_0082de00) */
 struct Object05938c40 { /* derived name */
     u8 unknown0[0xb0];
     CommandQueue05938c40 *queue; /* +0xb0 */
+    u8 unknownb8[0x50];
+    void *unknown108; /* +0x108 */
 };
 
 extern Object05938c40 *D_5938c40;

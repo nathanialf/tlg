@@ -60,8 +60,6 @@ class Pool01343090 : public Node00503fb0 /* derived name */
     Table01343090 table; /* +0x108 */
 };
 
-void FUN_00c5a160(Pool01343090 *pool); /* derived name: not traced */
-
 /* derived names: a counted reference to such an object, given up by
  * shutdown(): every entry of the table handed to FUN_002049f0, the table
  * passed to FUN_01343090, the object to FUN_00c5a160, then the reference

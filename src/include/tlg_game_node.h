@@ -337,7 +337,9 @@ class Node00503fb0 : public Object016b9108 /* derived name */
     }
 
     int unknown24; /* +0x24: the index of the object's handler in a visitor's table (FUN_00589590) */
-    u8 unknown28[0x8];
+    /* +0x28: FUN_00c5a160 reads it first, and a caller hands it the node
+     * only while it is set (0x7a9ba2) */
+    void *unknown28;
     int readers;                         /* +0x30 */
     Node00503fb0 *parent;                /* +0x38 */
     Ref00503fb0<Node00503fb0> *children; /* +0x40 */
@@ -346,6 +348,10 @@ class Node00503fb0 : public Object016b9108 /* derived name */
     Component00503fb0 **components; /* +0x58 */
     unsigned componentCount;        /* +0x60 */
 };
+
+/* derived name: not traced; reads the node's +0x28 and calls its slot 6
+ * with the node */
+void FUN_00c5a160(Node00503fb0 *node);
 
 /* two values exchanged through a copy of the first (0x1391cd0 over two
  * references another thread may replace; inlined at 0xa055f0 over two

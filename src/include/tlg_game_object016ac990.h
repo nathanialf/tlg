@@ -27,18 +27,23 @@ class Object016ac990 : public Object00774560 /* derived name */
     }
 
     virtual ~Object016ac990();
+    virtual void slot17(Context0079c700 *context); /* FUN_00765280 */
 
   private:
     u8 unknowne8[0x14];
     Name namefc;  /* +0xfc: empty from the constructor, released by the destructor */
     Name name100; /* +0x100: empty from the constructor, released by the destructor */
-    u8 unknown104[0xc];
-    /* +0x110: a counted reference, empty from the constructor, released by
-     * the destructor */
-    Ref00503fb0<Object016b9108> held110;
+    /* +0x104: slot 17 hands the two references below to the body when it
+     * is 1 (FUN_00765280) */
+    int unknown104;
+    u8 unknown108[0x8];
+    /* +0x110: a counted reference to a node, empty from the constructor,
+     * released by the destructor; slot 17 copies it into the body's at
+     * +0x62e0 */
+    AtomicRef0045c470<Node00503fb0> held110;
     /* +0x118: a counted reference, empty from the constructor, released by
-     * the destructor */
-    Ref00503fb0<Object016b9108> held118;
+     * the destructor; slot 17 copies it into the body's at +0x62e8 */
+    AtomicRef0045c470<Node00503fb0> held118;
     /* +0x120: a counted reference, empty from the constructor, released by
      * the destructor */
     Ref00503fb0<Object016b9108> held120;

@@ -10,6 +10,7 @@
 #include "tlg_game_name.h"
 #include "tlg_math.h"
 #include "tlg_game_array.h"
+#include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
 
 /* derived names: a three-float vector, added lane by lane into a new value
@@ -184,6 +185,15 @@ struct Body0077bac0 { /* derived name */
     u8 unknown5120[0x60];
     TrackerB0079c700 trackerB1; /* +0x5180 */
     TrackerB0079c700 trackerB2; /* +0x51e0 */
+    u8 unknown5240[0x1090];
+    /* +0x62d0: the int at +0x3e0 of the component Object016ac990's slot 17
+     * finds (FUN_00765280) */
+    int unknown62d0;
+    u8 unknown62d4[0xc];
+    /* +0x62e0, +0x62e8: counted references another thread may replace,
+     * set from Object016ac990's at +0x110 and +0x118 by its slot 17 */
+    AtomicRef0045c470<Node00503fb0> unknown62e0;
+    AtomicRef0045c470<Node00503fb0> unknown62e8;
 };
 
 /* derived names: a member of a pose's group: a Name at +0x34; the rest is
@@ -231,9 +241,10 @@ class Object00774560 : public Object016b9108 /* derived name */
         const Name &
             name); /* 0x774370, its row named after it (D15): the derived classes' creators call it (FUN_00763020) */
     virtual ~Object00774560();
-    virtual void slot5();  /* derived name; FUN_001af750, not traced */
-    virtual void slot6();  /* derived name; FUN_00774760, not traced */
-    virtual void slot7();  /* derived name; FUN_00774820, not traced */
+    virtual void slot5(); /* derived name; FUN_001af750, not traced */
+    virtual void
+    slot6(); /* derived name; FUN_00774760 (func_00775420.cpp, a free function there) */
+    virtual void slot7();  /* derived name; FUN_00774820 (func_00775420.cpp) */
     virtual void slot8();  /* derived name; FUN_00774890, not traced */
     virtual void slot9();  /* derived name; FUN_007748a0, not traced */
     virtual void slot10(); /* derived name; FUN_007748b0, not traced */

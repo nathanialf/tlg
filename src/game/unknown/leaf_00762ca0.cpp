@@ -26,8 +26,14 @@ struct Source00762ca0 { /* derived name */
 };
 
 struct Record00762ca0 { /* derived name */
-    u8 unknown0[0x2130];
-    Float4_00762ca0 offset; /* +0x2130 */
+    u8 unknown0[0x678];
+    int unknown678; /* +0x678: 3 has FUN_0079a610 add the offset to the point */
+    u8 unknown67c[0x1a64];
+    int unknown20e0; /* +0x20e0 */
+    u8 unknown20e4[0x4c];
+    Float4A offset; /* +0x2130 */
+    u8 unknown2140[0x188];
+    int unknown22c8; /* +0x22c8 */
 };
 
 struct Object00762ca0 { /* derived name */
@@ -70,4 +76,24 @@ void FUN_0079a960(Object0079a960 *self, const Source00762ca0 *source) /* derived
         const float z = self->point.z - self->position.z;
         self->record->offset.set(x, y, z, self->point.w);
     }
+}
+
+/* derived names: slot 16 of the vtable at 0x16ad868, on the second layout:
+ * with the record's int at +0x678 at 3 the point takes the record's offset
+ * in x, y and z, else, unless its int at +0x20e0 is set, the record's int
+ * at +0x22c8 is cleared; then the offset is reset to (0, 0, 0, 1) */
+void FUN_0079a610(Object0079a960 *self) /* derived name */
+{
+    Record00762ca0 *record = self->record;
+    if (record->unknown678 == 3) {
+        const float x = self->point.x + record->offset.x;
+        const float y = self->point.y + record->offset.y;
+        const float z = self->point.z + record->offset.z;
+        self->point.x = x;
+        self->point.y = y;
+        self->point.z = z;
+    } else if (!record->unknown20e0) {
+        record->unknown22c8 = 0;
+    }
+    record->offset.set(0.0f, 0.0f, 0.0f, 1.0f);
 }
