@@ -6,7 +6,7 @@
  * FUN_00584330 does), then dispatches the nodes at +0x30 and +0x38 of its
  * argument through the owner's handler table, in that order (as
  * FUN_00583d20); returns 0. Handler unknown. */
-int FUN_00583cb0(Owner583950 *self, void *arg) /* derived name */
+int FUN_00583cb0(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     self->device->vtable->method0(self->device, arg, 1);
     self->dispatch(static_cast<Node583950 *>(arg)->child30);

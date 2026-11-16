@@ -7,7 +7,7 @@
  * FUN_0058d6f0's 4-byte slot holds one; the type is not traced),
  * then dispatches the node at +0x28 of its argument through the owner's
  * handler table; returns 0. Handler unknown. */
-int FUN_0057fc10(Owner583950 *self, void *arg) /* derived name */
+int FUN_0057fc10(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     float *value = static_cast<float *>(self->device->vtable->method0(self->device, arg, 12));
     if (value) {

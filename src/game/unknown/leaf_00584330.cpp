@@ -14,7 +14,7 @@ struct NodeArray5843b0 /* derived name */
  * 0x525a1d): gives its argument to the device at
  * +0xf0 (method 0 with 1, its answer unused), then dispatches each node of its argument's list through the
  * owner's handler table; returns 0. Handler unknown. */
-int FUN_00584330(Owner583950 *self, void *arg) /* derived name */
+int FUN_00584330(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     self->device->vtable->method0(self->device, arg, 1);
     NodeArray5843b0 *list = static_cast<NodeArray5843b0 *>(arg);

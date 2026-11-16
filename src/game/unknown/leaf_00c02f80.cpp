@@ -13,7 +13,7 @@ struct Slot00c02f80 { /* derived name */
     int unknown8;
 };
 
-int FUN_00c02f80(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c02f80(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     Slot00c02f80 *slot =
         static_cast<Slot00c02f80 *>(self->device->vtable->method0(self->device, arg, 12));

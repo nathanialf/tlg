@@ -7,7 +7,7 @@
  * take: asks the device at +0xf0 for a 4-byte slot for its argument (method 0
  * with 4, as FUN_0059d3b0) and stores 1.0f there when it gets one; returns 0.
  * Handler unknown. */
-int FUN_00c02790(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c02790(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     float *value = static_cast<float *>(self->device->vtable->method0(self->device, arg, 4));
     if (value) {

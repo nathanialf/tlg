@@ -7,7 +7,7 @@
  * then dispatches the node at +0x30 of its argument through the owner's
  * handler table by the node's kind (as FUN_0058d750); returns 0. Handler
  * unknown. */
-int FUN_0058d6f0(Owner583950 *self, void *arg) /* derived name */
+int FUN_0058d6f0(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     float *value = static_cast<float *>(self->device->vtable->method0(self->device, arg, 4));
     if (value) {

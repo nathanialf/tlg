@@ -14,7 +14,7 @@ struct Record00c03000 { /* derived name */
  * +0xf0 for a slot of the record's size rounded up to 8 (0x1d8) for its argument (method 0) and clears a
  * Record00c03000 in it (placement new, the slot tested first); returns 0.
  * Handler unknown. */
-int FUN_00c03000(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c03000(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     void *slot =
         self->device->vtable->method0(self->device, arg, (sizeof(Record00c03000) + 7) & ~7);

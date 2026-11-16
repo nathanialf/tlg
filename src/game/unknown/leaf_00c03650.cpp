@@ -5,7 +5,7 @@
  * 0x527b17): FUN_00596820's copies of the state byte and the int value from
  * the owner's first list to its second, then, when both lists hold a value
  * for the node, the node's child dispatched. Returns 0. Handler unknown. */
-int FUN_00c03650(Owner583950 *self, Node583950 *node) /* derived name */
+int FUN_00c03650(ValueOwner583950 *self, Node583950 *node) /* derived name */
 {
     int *from = self->cursor.select(node) ? reinterpret_cast<int *>(self->cursor.value()) : 0;
     int *to = self->cursor190.select(node) ? reinterpret_cast<int *>(self->cursor190.value()) : 0;

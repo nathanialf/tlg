@@ -14,7 +14,7 @@ struct Record00c0a9d0 { /* derived name */
 
 void FUN_00c0a830(Device583950 *device, void *field); /* derived name */
 
-int FUN_00c0a9d0(Owner583950 *self, Record00c0a9d0 *arg) /* derived name */
+int FUN_00c0a9d0(DeviceOwner583950 *self, Record00c0a9d0 *arg) /* derived name */
 {
     if (self->device) {
         FUN_00c0a830(self->device, &arg->unknown38);

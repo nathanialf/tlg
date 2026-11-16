@@ -18,7 +18,7 @@ struct FlagNode589500 /* derived name */
  * owner's +0x1d8; sets the node's flag to whether +0x1d8 is set, dispatches
  * the node at +0x58 through the owner's handler table and restores +0x1d8;
  * returns 0. Handler unknown. */
-int FUN_00589500(Owner583950 *self, void *arg) /* derived name */
+int FUN_00589500(ValueOwner583950 *self, void *arg) /* derived name */
 {
     FlagNode589500 *node = static_cast<FlagNode589500 *>(arg);
     const int saved = self->unknown1d8;

@@ -10,7 +10,7 @@ void FUN_005997c0(void *vm); /* derived name */
  * the node's flags is set, a call of FUN_005997c0 with the node and its
  * value appended to the frame and the state left at +0xd8. Returns 0.
  * Handler unknown. */
-int FUN_005995c0(Owner583950 *self, StateNode583950 *node) /* derived name */
+int FUN_005995c0(ValueOwner583950 *self, StateNode583950 *node) /* derived name */
 {
     int *value = self->cursor.select(node) ? reinterpret_cast<int *>(self->cursor.value()) : 0;
     u8 *state = self->selectState(node);

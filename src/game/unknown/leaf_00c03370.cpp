@@ -14,7 +14,7 @@ struct NodeArray5843b0 /* derived name */
  * FUN_00c0aeb0 and FUN_00c0e890 take: has the device at +0xf0 give
  * its argument eight bytes (method 0 with 8) and sets them to -1, then dispatches each node of its argument's
  * list through the owner's handler table; returns 0. Handler unknown. */
-int FUN_00c03370(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c03370(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     s64 *value = static_cast<s64 *>(self->device->vtable->method0(self->device, arg, 8));
     if (value) {

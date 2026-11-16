@@ -42,7 +42,7 @@ class Object00c03260 : public Object013a1e00 /* derived name */
  * FUN_00c02f80): asks the device at +0xf0 for a 0x30-byte slot for its
  * argument (method 0) and constructs an Object00c03260 in it (placement new,
  * the slot tested first); returns 0. Handler unknown. */
-int FUN_00c03260(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c03260(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     void *slot = self->device->vtable->method0(self->device, arg, sizeof(Object00c03260));
     if (slot)

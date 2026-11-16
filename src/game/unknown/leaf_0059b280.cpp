@@ -30,7 +30,7 @@ struct NodeArray59b280 /* derived name */
  * (method 0) and clears it when it gets one, then dispatches each node of its
  * argument's list and the node at +0x28 through the owner's handler table
  * (as FUN_0059b340); returns 0. Handler unknown. */
-int FUN_0059b280(Owner583950 *self, void *arg) /* derived name */
+int FUN_0059b280(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     Slot59b280 *slot = static_cast<Slot59b280 *>(
         self->device->vtable->method0(self->device, arg, sizeof(Slot59b280)));

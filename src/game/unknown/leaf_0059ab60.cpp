@@ -9,7 +9,7 @@ void FUN_0059ae50(void *vm);                    /* derived name */
  * as long as it answers; each pass that left the frame one deeper restores
  * the depth and appends FUN_0059ae50 to the frame's calls. Sets the float at
  * +0xf4 to -1; returns 0. Handler unknown. */
-int FUN_0059ab60(Owner583950 *self, void *arg) /* derived name */
+int FUN_0059ab60(ValueOwner583950 *self, void *arg) /* derived name */
 {
     const unsigned current = self->cursor.current;
     const int depth = self->frame->depth;

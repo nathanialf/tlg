@@ -14,7 +14,7 @@ struct NodeArray588580 /* derived name */
  * FUN_00c0aeb0 and FUN_00c0e890 take: has the device at +0xf0 give
  * its argument an int (method 0 with 4) and sets it to 0, then dispatches each node of its argument's list
  * through the owner's handler table; returns 0. Handler unknown. */
-int FUN_00c032f0(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c032f0(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     int *value = static_cast<int *>(self->device->vtable->method0(self->device, arg, 4));
     if (value) {

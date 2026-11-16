@@ -8,7 +8,7 @@
  * the current index to the end, then from the start), makes it the current
  * one, and when the argument's Name contains "scale" stores the owner's int
  * value in that node's value; returns 0. Handler unknown. */
-int FUN_0059a180(Owner583950 *self, void *arg) /* derived name */
+int FUN_0059a180(ValueOwner583950 *self, void *arg) /* derived name */
 {
     NamedNode583950 *node = static_cast<NamedNode583950 *>(arg);
     unsigned found;

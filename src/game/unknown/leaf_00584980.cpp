@@ -16,7 +16,7 @@ struct NodeArray584980 /* derived name */
  * (method 0 with 4, as FUN_00c02790) and stores 1.0f there when it gets one,
  * then dispatches the node at +0x28 of its argument and each node of its list
  * through the owner's handler table; returns 0. Handler unknown. */
-int FUN_00584980(Owner583950 *self, void *arg) /* derived name */
+int FUN_00584980(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     float *value = static_cast<float *>(self->device->vtable->method0(self->device, arg, 4));
     if (value)

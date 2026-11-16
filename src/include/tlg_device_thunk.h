@@ -227,6 +227,10 @@ struct NodeCursor583950 {
     NodeList583950 *list; /* +0x8 */
 };
 
+/* What every handler of the tables FUN_00525530, FUN_00be6da0 and their
+ * callers fill is given: the list with its current index and the table of
+ * handlers by kind. What follows +0xf0 differs by table: an owner of each
+ * kind derives from this one. derived name */
 struct Owner583950 {
     /* finds a node of the list (derived name) */
     bool find(void *node, unsigned &index) const
@@ -284,16 +288,29 @@ struct Owner583950 {
     u8 unknown50[0x88];
     int unknownd8; /* +0xd8: the state FUN_00583bb0 leaves */
     u8 unknowndc[0x14];
+};
 
-    /* +0xf0: the owner's current value, read by its type at +0x100 (0 an
-     * int, 4 a float, 7 three floats: FUN_0058fc10) or as the object the
-     * handlers FUN_00583950 and its siblings call through. derived names */
+/* An owner whose handlers call through a device at +0xf0: the handlers of
+ * the tables at +0x5a0 and +0x7a0 of FUN_00be6da0's and FUN_00525530's
+ * object, of FUN_0058c760's and of FUN_00be6da0's (FUN_00583950 and its
+ * siblings). derived name */
+struct DeviceOwner583950 : Owner583950 {
+    Device583950 *device; /* +0xf0 */
+};
+
+/* An owner with a current value, the call frame and a second list: the
+ * handlers of the tables at +0x9a0, +0x42a0 and +0x44a0 of FUN_00525530's
+ * object (the value at +0xf0 read by its type at +0x100: 0 an int, 4 a
+ * float, 7 three floats, FUN_0058fc10; the frame FUN_0059ab60 appends to),
+ * of the table FUN_00525530's caller builds on its stack (the copies between
+ * the two lists, FUN_005839e0) and of FUN_00aec5d0's and FUN_005f2b90's.
+ * derived name */
+struct ValueOwner583950 : Owner583950 {
     union {
-        Device583950 *device;
         int intValue;
         float floatValue;
         float vector[3];
-    };
+    }; /* +0xf0 */
 
     int valueType; /* +0x100 */
     u8 unknown104[0xc];

@@ -6,7 +6,7 @@
  * device at +0xf0 (method 0 with 1, its answer unused), then dispatches the
  * node at +0x38 of the argument through the owner's handler table, as
  * FUN_00c020a0 does; returns 0. Handler unknown. */
-int FUN_00c02fb0(Owner583950 *self, void *arg) /* derived name */
+int FUN_00c02fb0(DeviceOwner583950 *self, void *arg) /* derived name */
 {
     self->device->vtable->method0(self->device, arg, 1);
     Node583950 *node = static_cast<Node583950 *>(arg)->child38;
