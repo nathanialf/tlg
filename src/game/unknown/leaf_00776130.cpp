@@ -44,3 +44,14 @@ void Object016ace40::slot14(Pose0077bac0 *pose)
             pose->pointe0 + Vector0077bac0(unknown68->position) + FUN_01343bb0(unknown150, turn);
     }
 }
+
+/* derived name: slot 17: the int at +0x160 handed to the body's tracker at
+ * +0x50e0 (the body read once), which is cleared when the held object at
+ * +0x108 has a zero at +0x58; the argument is not read */
+void Object016ace40::slot17(Context0079c700 *)
+{
+    TrackerA00777cb0 &tracker = unknown68->trackerA;
+    tracker.unknown30 = unknown160;
+    if (held108.get() && held108.get()->unknown58 == 0)
+        tracker.reset();
+}

@@ -17,7 +17,8 @@ class Object016ad930 : public Object00774560 /* derived name */
   public:
     Object016ad930(const Name &name); /* FUN_0079ab40 */
     virtual ~Object016ad930();
-    virtual void slot14(Pose0077bac0 *pose); /* FUN_0079c560 */
+    virtual void slot14(Pose0077bac0 *pose);       /* FUN_0079c560 */
+    virtual void slot17(Context0079c700 *context); /* FUN_0079c700 */
 
   private:
     u8 unknowne8[0x14];
@@ -25,7 +26,8 @@ class Object016ad930 : public Object00774560 /* derived name */
     /* +0x100, +0x130: two links, each reset by the constructor's body */
     Link0079ab40 link100;
     Link0079ab40 link130;
-    u8 unknown160[0x10]; /* the rest of the 0x170 bytes the creator allocates; not traced */
+    int unknown160;     /* +0x160: handed to the body's tracker by slot 17 */
+    u8 unknown164[0xc]; /* the rest of the 0x170 bytes the creator allocates; not traced */
 };
 
 #endif

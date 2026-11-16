@@ -4,6 +4,8 @@
 #ifndef TLG_GAME_OBJECT00774560_H
 #define TLG_GAME_OBJECT00774560_H
 
+#include <float.h>
+
 #include "tlg_types.h"
 #include "tlg_game_name.h"
 #include "tlg_math.h"
@@ -35,6 +37,11 @@ inline Vector0077bac0 operator+(const Vector0077bac0 &a, const Vector0077bac0 &b
     return Vector0077bac0(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
+inline Vector0077bac0 operator-(const Vector0077bac0 &a, const Vector0077bac0 &b)
+{
+    return Vector0077bac0(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
 /* derived name: a vector scaled, the factor read first (0x762b6e) */
 inline Vector0077bac0 operator*(float s, const Vector0077bac0 &v)
 {
@@ -55,6 +62,86 @@ Float4A FUN_013439c0(const Float4A &first, const Float4A &second);
 /* derived name: a point turned by a rotation, the vector returned through
  * the hidden pointer (0x777c36) */
 Vector0077bac0 FUN_01343bb0(const Float4A &point, const Float4A &rotation);
+
+/* derived names: a tracker of the body's (+0x50e0): its value at +0x30
+ * set by slot 17 of the holders, the whole cleared to its start when the
+ * held object's int at +0x58 is zero (FUN_00777cb0) */
+struct alignas(16) TrackerA00777cb0 { /* derived name */
+
+    void reset() /* derived name */
+    {
+        unknown0 = 0;
+        unknown10 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown20 = FLT_MAX;
+        unknown24 = 0.0f;
+        unknown28 = 0.0f;
+        unknown2c = -1;
+        unknown30 = 0;
+    }
+
+    int unknown0; /* +0x0 */
+    u8 unknown4[0xc];
+    Float4A unknown10; /* +0x10 */
+    float unknown20;   /* +0x20 */
+    /* +0x24, +0x28: floats, their zero stores kept apart from the ints'
+     * (four int stores in a row are one vector store) */
+    float unknown24;
+    float unknown28;
+    int unknown2c; /* +0x2c */
+    int unknown30; /* +0x30 */
+};
+
+/* derived names: the body's other trackers (+0x5180 and +0x51e0, 0x60
+ * bytes each): the value at +0x5c set by slot 17 of the holders, the whole
+ * cleared when the held object's int at +0x58 is zero (FUN_0079c700) */
+struct alignas(16) TrackerB0079c700 { /* derived name */
+
+    void reset() /* derived name */
+    {
+        unknown0 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown10 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown20 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown30 = 0;
+        unknown34 = FLT_MAX;
+        unknown38 = FLT_MAX;
+        unknown3c = FLT_MAX;
+        unknown44 = -1;
+        unknown48 = 0;
+        unknown4c = 0;
+        unknown50 = 0;
+        unknown54 = 0;
+        unknown58 = 0;
+        unknown5c = 0;
+    }
+
+    Float4A unknown0;  /* +0x0 */
+    Float4A unknown10; /* +0x10 */
+    Float4A unknown20; /* +0x20 */
+    int unknown30;     /* +0x30 */
+    float unknown34;   /* +0x34 */
+    float unknown38;   /* +0x38 */
+    float unknown3c;   /* +0x3c */
+    int unknown40;     /* +0x40: not cleared */
+    int unknown44;     /* +0x44 */
+    int unknown48;     /* +0x48 */
+    int unknown4c;     /* +0x4c */
+    int unknown50;     /* +0x50 */
+    int unknown54;     /* +0x54 */
+    int unknown58;     /* +0x58 */
+    int unknown5c;     /* +0x5c */
+};
+
+/* derived names: slot 17's argument: at +0x58 an object whose int at
+ * +0x120 picks the body's second tracker when it is 1 (FUN_0079c700) */
+struct Chooser0079c700 { /* derived name */
+    u8 unknown0[0x120];
+    int unknown120; /* +0x120 */
+};
+
+struct Context0079c700 { /* derived name */
+    u8 unknown0[0x58];
+    Chooser0079c700 *unknown58; /* +0x58 */
+};
 
 /* derived names: what the pointer at +0x68 of the class below holds: a
  * rotation at +0xb90, a point at +0xba0 and where they are put back to
@@ -86,8 +173,17 @@ struct Body0077bac0 { /* derived name */
     Float4A unknown13c0; /* +0x13c0: the point the body is put back to */
     u8 unknown13d0[0x10];
     Float4A unknown13e0; /* +0x13e0: the rotation the body is put back to */
-    u8 unknown13f0[0x71c];
+    u8 unknown13f0[0x50];
+    Vector0077bac0 unknown1440; /* +0x1440: taken off the pose's position by FUN_00799350 */
+    u8 unknown144c[0x6c0];
     int unknown1b0c; /* +0x1b0c: copied to +0x3c of the object by FUN_007950a0 */
+    u8 unknown1b10[0x3550];
+    Float4A unknown5060; /* +0x5060: a copy of the point FUN_00799350 sets */
+    u8 unknown5070[0x70];
+    TrackerA00777cb0 trackerA; /* +0x50e0 */
+    u8 unknown5120[0x60];
+    TrackerB0079c700 trackerB1; /* +0x5180 */
+    TrackerB0079c700 trackerB2; /* +0x51e0 */
 };
 
 /* derived names: a member of a pose's group: a Name at +0x34; the rest is
@@ -146,14 +242,14 @@ class Object00774560 : public Object016b9108 /* derived name */
     virtual void slot13(); /* derived name; FUN_007748e0, not traced */
     /* FUN_007748f0, empty; the derived classes' FUN_0077bac0 and
      * FUN_0077c5a0 turn the body at +0x68 by the pose and move it */
-    virtual void slot14(Pose0077bac0 *pose); /* derived name */
-    virtual void slot15();                   /* derived name; FUN_00774900, not traced */
-    virtual void slot16();                   /* derived name; FUN_00774910, not traced */
-    virtual void slot17();                   /* derived name; FUN_00774920, not traced */
-    virtual void slot18();                   /* derived name; FUN_00774930, not traced */
-    virtual void slot19();                   /* derived name; FUN_00774940, not traced */
-    virtual void slot20();                   /* derived name; FUN_00774950, not traced */
-    virtual void slot21();                   /* derived name; FUN_00774b50, not traced */
+    virtual void slot14(Pose0077bac0 *pose);       /* derived name */
+    virtual void slot15();                         /* derived name; FUN_00774900, not traced */
+    virtual void slot16();                         /* derived name; FUN_00774910, not traced */
+    virtual void slot17(Context0079c700 *context); /* derived name; FUN_00774920, not traced */
+    virtual void slot18();                         /* derived name; FUN_00774930, not traced */
+    virtual void slot19();                         /* derived name; FUN_00774940, not traced */
+    virtual void slot20();                         /* derived name; FUN_00774950, not traced */
+    virtual void slot21();                         /* derived name; FUN_00774b50, not traced */
     /* FUN_000058a0 returns 1; tested `test eax, eax` before slot 14's work
      * (FUN_00777b10) */
     virtual int slot22(); /* derived name */

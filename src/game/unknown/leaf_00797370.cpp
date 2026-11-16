@@ -24,3 +24,25 @@ Object016ad7a0::Object016ad7a0(const Name &name) : Object00774560(name)
  * the deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
 Object016ad7a0::~Object016ad7a0() {}
+
+/* derived name: slot 14: when slot 22 allows it, the body put back home
+ * (Object00774560::goHome); held, the int at +0x160 set to 1, else turned
+ * by the pose and moved by the pose's position less the body's vector at
+ * +0x1440; then the first link's point set as Object016ace40's slot 14 sets
+ * its own (FUN_00777b10) and copied to the body's +0x5060 */
+void Object016ad7a0::slot14(Pose0077bac0 *pose)
+{
+    if (slot22()) {
+        goHome();
+        if (unknown68->unknown1330) {
+            unknown160 = 1;
+        } else {
+            unknown68->turn(pose->rotation);
+            unknown68->move(pose->position - unknown68->unknown1440);
+        }
+        const Float4A turn = FUN_013439c0(pose->rotationd0, unknown68->rotation);
+        link100.unknown20 = pose->pointe0 + Vector0077bac0(unknown68->position) +
+                            FUN_01343bb0(link130.unknown20, turn);
+        unknown68->unknown5060 = link100.unknown20;
+    }
+}

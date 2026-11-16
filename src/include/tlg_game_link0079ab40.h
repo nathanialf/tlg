@@ -6,6 +6,15 @@
 #include "tlg_game_node.h"
 #include "tlg_math.h"
 
+/* derived names: what a link holds: an object of the root class with an
+ * int at +0x58 that slot 17 of the holders tests for zero (`cmp dword
+ * [rcx+0x58], 0` at 0x777ccc and 0x79c739); the rest is not traced */
+struct Target00777cb0 : public Object016b9108 /* derived name */
+{
+    u8 unknown24[0x34];
+    int unknown58; /* +0x58 */
+};
+
 /* derived names: a 0x30-byte member of Object016ad930 and Object016ad7a0 (reset at
  * +0x100 and +0x130 by their constructors FUN_0079ab40 and FUN_007970d0),
  * 16-byte aligned: a pointer and a counted reference, null from its
@@ -26,7 +35,7 @@ struct Link0079ab40 /* derived name */
     }
 
     void *unknown0;                          /* +0x0 */
-    AtomicRef0045c470<Object016b9108> held8; /* +0x8: released by the holder's destructor */
+    AtomicRef0045c470<Target00777cb0> held8; /* +0x8: released by the holder's destructor */
     int unknown10;                           /* +0x10 */
     Float4A unknown20;                       /* +0x20 */
 };

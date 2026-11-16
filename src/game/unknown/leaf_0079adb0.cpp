@@ -34,3 +34,18 @@ void Object016ad930::slot14(Pose0077bac0 *pose)
                             FUN_01343bb0(link130.unknown20, turn);
     }
 }
+
+/* derived name: slot 17: the body's tracker at +0x51e0 when the argument's
+ * object at +0x58 has 1 at +0x120, else the one at +0x5180; the int at
+ * +0x160 handed to it, and the tracker cleared when the first link's held
+ * object has a zero at +0x58 */
+void Object016ad930::slot17(Context0079c700 *context)
+{
+    Body0077bac0 *body = unknown68;
+    TrackerB0079c700 &tracker = context->unknown58 && context->unknown58->unknown120 == 1
+                                    ? body->trackerB2
+                                    : body->trackerB1;
+    tracker.unknown5c = unknown160;
+    if (link100.held8.get() && link100.held8.get()->unknown58 == 0)
+        tracker.reset();
+}

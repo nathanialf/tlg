@@ -6,6 +6,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object00774560.h"
+#include "tlg_game_link0079ab40.h"
 #include "tlg_math.h"
 
 /* derived names: the class whose vtable is at 0x16ace40
@@ -20,7 +21,8 @@ class Object016ace40 : public Object00774560 /* derived name */
   public:
     Object016ace40(const Name &name); /* FUN_00775ec0 */
     virtual ~Object016ace40();
-    virtual void slot14(Pose0077bac0 *pose); /* FUN_00777b10 */
+    virtual void slot14(Pose0077bac0 *pose);       /* FUN_00777b10 */
+    virtual void slot17(Context0079c700 *context); /* FUN_00777cb0 */
 
   private:
     u8 unknowne8[0x14];
@@ -29,7 +31,7 @@ class Object016ace40 : public Object00774560 /* derived name */
     /* +0x108: a counted reference another thread may replace, emptied by
      * compare-and-swap by the constructor, released by the destructor (the
      * pointer cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    AtomicRef0045c470<Object016b9108> held108;
+    AtomicRef0045c470<Target00777cb0> held108;
     int unknown110; /* +0x110: zero from the constructor; not traced */
     u8 unknown114[0xc];
     /* +0x120: (0, 0, 0, 1.0) from the constructor, one aligned store
@@ -45,7 +47,8 @@ class Object016ace40 : public Object00774560 /* derived name */
     /* +0x150: (0, 0, 0, 1.0) from the constructor, one aligned store
      * (`vmovaps [r15+0x150]`); not traced */
     Float4A unknown150;
-    u8 unknown160[0x10]; /* the rest of the 0x170 bytes the creator allocates; not traced */
+    int unknown160;     /* +0x160: handed to the body's tracker by slot 17 */
+    u8 unknown164[0xc]; /* the rest of the 0x170 bytes the creator allocates; not traced */
 };
 
 #endif
