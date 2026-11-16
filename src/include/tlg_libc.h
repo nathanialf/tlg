@@ -83,6 +83,9 @@ int fclose(FILE *stream);
 /* NID verified as "stat" (E6ao34wPw+U). */
 int stat(const char *path, struct stat *status);
 float fabsf(float x);
+/* Not an import: under the game's -ffast-math the compiler lowers it to the
+ * reciprocal square root estimate and its Newton step (FUN_00f51880). */
+float sqrtf(float x);
 /* NIDs verified as "acosf", "asinf", "atanf", "tanf", "expf". */
 float acosf(float x);
 float asinf(float x);
