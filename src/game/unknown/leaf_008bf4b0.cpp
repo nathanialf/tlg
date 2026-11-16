@@ -6,6 +6,12 @@
 #include "tlg_game_object0134f620.h"
 #include "tlg_game_object016b9108.h"
 
+/* derived name: the counted object the array of references of the class
+ * below refers to; nothing of it is traced but its base. */
+class Node008bf4b0 : public Node00503fb0 /* derived name */
+{
+};
+
 /* derived names: the class whose vtable is at 0x16b0060
  * (config/vtables.derived.base.txt, stored by FUN_008bf290 FUN_008bf4b0),
  * derived from Object016b9108: its destructor FUN_008bf4b0 ends with that
@@ -25,8 +31,8 @@ class Object016b0060 : public Object016b9108 /* derived name */
     AtomicRef0045c470<Node00503fb0> held60; /* +0x60: a counted reference */
     AtomicRef0045c470<Node00503fb0> held68; /* +0x68: a counted reference */
     AtomicRef0045c470<Node00503fb0> held70; /* +0x70: a counted reference */
-    Array05943280<AtomicRef0045c470<Node00503fb0>>
-        refs78; /* +0x78: an array of counted references (an instantiation of its own: its destructor is inlined, where the one at +0x30 is called) */
+    Array05943280<AtomicRef0045c470<Node008bf4b0>>
+        refs78; /* +0x78: an array of counted references (references to a class of its own: the instantiation has this one caller, and its destructor is inlined, where the one at +0x30 is called) */
     AtomicRef0045c470<Node00503fb0> held90; /* +0x90: a counted reference */
     AtomicRef0045c470<Node00503fb0> held98; /* +0x98: a counted reference */
     AtomicRef0045c470<Node00503fb0> helda0; /* +0xa0: a counted reference */
@@ -40,6 +46,4 @@ class Object016b0060 : public Object016b9108 /* derived name */
  * are released, last first, then the base's. FUN_008bfc10, slot 1, is the
  * deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-// NONMATCHING: the complete destructor: 1886 bytes in the base, 1640 here: the array of references at +0x78 is
-// destroyed by a call (the same instantiation has other callers in the module); the base has it inlined
 Object016b0060::~Object016b0060() {}

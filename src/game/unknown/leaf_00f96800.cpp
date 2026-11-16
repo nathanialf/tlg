@@ -46,10 +46,6 @@ class Object016bfea0 : public Object00c1b7f0 /* derived name */
  * FUN_00c1b7f0 runs as a tail call. FUN_00f96d30, slot 1, is the deleting one.
  * The destructor is the class's key function, so this file emits the
  * vtable. */
-// NONMATCHING: the complete destructor: the module keeps PoolRef01343090::shutdown() out of line (one inline
-// function, two callers: no single-caller credit; the base has it inlined here and in FUN_014785c0 and FUN_013d3970).
-// Lead: the holders are instances of one template (identical layouts, distinct vtables), each instance's method
-// single-use. The deleting destructor is equal and claimed
 Object016bfea0::~Object016bfea0()
 {
     if (registry)

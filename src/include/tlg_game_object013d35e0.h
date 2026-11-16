@@ -67,13 +67,15 @@ void FUN_00c5a160(Pool01343090 *pool); /* derived name: not traced */
  * passed to FUN_01343090, the object to FUN_00c5a160, then the reference
  * emptied, all behind a test of the reference (the destructors 0x14785c0
  * and 0x13d3970 begin with it; 0x1227c70 and 0xf96800 run it on a member's
- * at +0x8d0 while their object is active). */
-class PoolRef01343090 /* derived name */
+ * at +0x8d0 while their object is active). A reference to one kind of pool:
+ * each holder's is an instantiation of its own, with one caller, and the
+ * base has it inlined at all four. */
+template <class P> class PoolRef01343090 /* derived name */
 {
   public:
     void shutdown() /* derived name */
     {
-        if (Pool01343090 *held = pool.get()) {
+        if (P *held = pool.get()) {
             for (int i = 0; i < 0x80; ++i)
                 for (Entry01343090 *entry = held->table.buckets[i]; entry; entry = entry->next)
                     FUN_002049f0(2, false, entry->unknown0, entry->unknown10);
@@ -84,7 +86,25 @@ class PoolRef01343090 /* derived name */
     }
 
   private:
-    AtomicRef0045c470<Pool01343090> pool;
+    AtomicRef0045c470<P> pool;
+};
+
+/* derived names: the kinds of pool the members below refer to; nothing of
+ * them is traced but their base. */
+class Pool016d6a50 : public Pool01343090 /* derived name */
+{
+};
+
+class Pool016d39f0 : public Pool01343090 /* derived name */
+{
+};
+
+class Pool0147a620 : public Pool01343090 /* derived name */
+{
+};
+
+class Pool013dc6c0 : public Pool01343090 /* derived name */
+{
 };
 
 /* derived names: the polymorphic members whose complete destructors are
@@ -93,8 +113,8 @@ class PoolRef01343090 /* derived name */
  * 0x16d39f0; at +0x390 of the one whose destructor is 0xf59820). Each
  * destructor gives up the pool its reference at +0x168 holds
  * (PoolRef01343090::shutdown()). Not written (a definition in the module is
- * inlined into its holder by the link stage while shutdown() stays a
- * call). The rest is not traced. */
+ * inlined into its holder by the link stage, where the base calls it). The
+ * rest is not traced. */
 class Object016d6a50 /* derived name */
 {
   public:
@@ -102,7 +122,7 @@ class Object016d6a50 /* derived name */
 
   private:
     u8 unknown8[0x160];
-    PoolRef01343090 pool; /* +0x168 */
+    PoolRef01343090<Pool016d6a50> pool; /* +0x168 */
 };
 
 class Object016d39f0 /* derived name */
@@ -112,7 +132,7 @@ class Object016d39f0 /* derived name */
 
   private:
     u8 unknown8[0x160];
-    PoolRef01343090 pool; /* +0x168 */
+    PoolRef01343090<Pool016d39f0> pool; /* +0x168 */
 };
 
 /* derived names: the polymorphic members whose complete destructors are
@@ -127,7 +147,7 @@ class Object0147a620 /* derived name */
     virtual ~Object0147a620();
 
     u8 unknown8[0x8c8];
-    PoolRef01343090 pool; /* +0x8d0 */
+    PoolRef01343090<Pool0147a620> pool; /* +0x8d0 */
     u8 unknown8d8[0x18];
 };
 
@@ -137,7 +157,7 @@ class Object013dc6c0 /* derived name */
     virtual ~Object013dc6c0();
 
     u8 unknown8[0x8c8];
-    PoolRef01343090 pool; /* +0x8d0 */
+    PoolRef01343090<Pool013dc6c0> pool; /* +0x8d0 */
     u8 unknown8d8[0x18];
 };
 
