@@ -5,7 +5,8 @@
  * ("abs" to "tanh", name and function in turn): each pushes the C library's
  * float function of its numbers (luaL_checknumber) and returns one result.
  * "deg", "frexp", "ldexp", "max", "min", "modf", "rad", "random" and
- * "randomseed" lie apart (0xdbf3f0 to 0xdc0190) and are not written here. */
+ * "randomseed" lie apart (0xdbf3f0 to 0xdc0190, leaf_00dbf3f0.cpp and
+ * leaf_00dc0190.cpp). */
 
 /* "abs" */
 int FUN_00de6b60(lua_State *state) /* derived name */

@@ -73,6 +73,10 @@ int vsnprintf(char *s, size_t n, const char *format, va_list args);
 void perror(const char *message);
 int puts(const char *s);
 void srand(unsigned int seed);
+/* NID verified as "rand"; its largest value is 0x3fffffff (the modulus and
+ * the reciprocal 2^-30 of FUN_00dc0020) */
+int rand(void);
+#define RAND_MAX 0x3fffffff
 size_t fread(void *ptr, size_t size, size_t n, FILE *stream);
 size_t fwrite(const void *ptr, size_t size, size_t n, FILE *stream);
 int fseek(FILE *stream, long offset, int whence);
@@ -102,6 +106,11 @@ float tanhf(float x);
  * the SSE4.1 round (`vroundss` modes 2 and 1, FUN_00de7030 and FUN_00de73b0). */
 float ceilf(float x);
 float floorf(float x);
+/* NIDs verified as "frexpf", "ldexpf", "modff" (FUN_00dbf760, FUN_00dbf870,
+ * FUN_00dbfe30). */
+float frexpf(float x, int *exponent);
+float ldexpf(float x, int exponent);
+float modff(float x, float *whole);
 /* Dinkumware's kernels behind the hyperbolic functions and the logarithms
  * (their NIDs verified as "_FCosh", "_FSinh" and "_FLog"): the hyperbolic
  * functions times y, the logarithm in base e for 0 and base 10 for 1. */

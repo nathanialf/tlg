@@ -129,6 +129,47 @@ inline int typeOf(lua_State *state, int argument)
     return type == 9 || type == 10 ? 6 : type;
 }
 
+/* derived name: an argument's string and its length (FUN_00db6b20, its body
+ * not written), null when it holds none */
+const char *FUN_00db6b20(lua_State *state, const HksObject *value, size_t *length);
+
+/* hksi_luaL_checklstring (the name from its assertion message), inlined:
+ * an argument's string and its length; the argument error "string" when the
+ * argument holds none */
+inline const char *hksi_luaL_checklstring(lua_State *s, int argument, size_t *length)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x1a10f3a2, "s != NULL", "hksi_luaL_checklstring",
+               "Parameter 's' must be a valid state pointer", HKS_VM_AUX_FILE, 323);
+        __builtin_trap();
+    }
+    const HksObject *value = s->base + (argument - 1);
+    const char *string = value < s->top ? FUN_00db6b20(s, value, length) : 0;
+    if (!string)
+        FUN_00dd38c0(s, argument, "string");
+    return string;
+}
+
+/* hksi_hksL_checktable (the name from its assertion message), inlined: the
+ * argument error "table/struct" unless the argument is a table (5) or a
+ * struct (12) */
+inline void hksi_hksL_checktable(lua_State *s, int argument)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x1f0924a2, "s != NULL", "hksi_hksL_checktable",
+               "Parameter 's' must be a valid state pointer", HKS_VM_AUX_FILE, 423);
+        __builtin_trap();
+    }
+    /* the type read for each test (`cmp ecx, 5; sete` and `cmp ecx, 0xc;
+     * sete`, each beside the test for 9 and 10 at 0xdeda2d) */
+    if (typeOf(s, argument) != 5 && typeOf(s, argument) != 12)
+        FUN_00dd38c0(s, argument, "table/struct");
+}
+
 /* derived name: an argument's truth: false past the frame's top, for nil
  * (tag 0) and for a false boolean (tag 1), true for any other value (0x46b0d0
  * to 0x46b0fa: the slot made null past the top, `and 0xf; je`, `cmp 1; jne`,
