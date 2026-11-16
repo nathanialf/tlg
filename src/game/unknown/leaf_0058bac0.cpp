@@ -12,7 +12,7 @@ int FUN_0058bac0(Owner583950 *self, void *arg) /* derived name */
     unsigned found;
     if (!self->find(node->target, found))
         return 0;
-    self->current = found;
+    self->cursor.current = found;
     int *value = reinterpret_cast<int *>(self->currentValue());
     if (value)
         *value = self->intValue;

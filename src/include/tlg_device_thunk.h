@@ -62,11 +62,14 @@ struct StateNode583950 {
     u8 flags; /* +0x28 */
 };
 
-/* An entry of the call queue: the function at +0x0 and 0x58 bytes after it.
- * derived names */
+/* An entry of the call queue: the function at +0x0, the node it is given at
+ * +0x10 (FUN_0059d3f0 and its four copies) and 0x58 bytes after the
+ * function. derived names */
 struct Call583950 {
     void (*function)(void *vm);
-    u8 unknown8[0x58];
+    u8 unknown8[8];
+    void *argument; /* +0x10 */
+    u8 unknown18[0x48];
 };
 
 /* A queue of calls: its capacity, its size and the entries from +0x8.
@@ -91,6 +94,22 @@ struct CallFrame583950 {
         return true;
     }
 
+    /* appends a call with the node it is given, the slot's index read once
+     * (FUN_0059d3f0 and its four copies: `mov esi, [rcx+4]`, the function
+     * and the node stored at that index, the queue read again before each
+     * store). derived name */
+    bool push(void (*function)(void *vm), void *argument)
+    {
+        const unsigned size = queue->size;
+        const unsigned next = size + 1;
+        if (next >= queue->capacity)
+            return false;
+        queue->calls[size].function = function;
+        queue->calls[size].argument = argument;
+        queue->size = next;
+        return true;
+    }
+
     /* appends a call one level deeper (FUN_00c0bc10, FUN_00c0bcb0). derived
      * name */
     void pushDeeper(void (*function)(void *vm))
@@ -103,10 +122,12 @@ struct CallFrame583950 {
     CallQueue583950 *queue; /* +0x8 */
 };
 
-struct Owner583950 {
+/* A list of nodes with its current index: the owner has two, at +0x38 and
+ * +0x190 (FUN_00af09d0 and its three copies search both). derived names */
+struct NodeCursor583950 {
     /* finds a node of the list, searched from the current index to the
-     * end, then from the start up to the current index: false when it is not
-     * in the list, else its index in the argument (derived name) */
+     * end, then from the start up to the current index: false when it is
+     * not in the list, else its index in the argument (derived name) */
     bool find(void *node, unsigned &index) const
     {
         const NodeList583950 *nodes = list;
@@ -133,6 +154,18 @@ struct Owner583950 {
         return found;
     }
 
+    unsigned current; /* the index of the current node in the list */
+    u8 unknown4[4];
+    NodeList583950 *list; /* +0x8 */
+};
+
+struct Owner583950 {
+    /* finds a node of the list (derived name) */
+    bool find(void *node, unsigned &index) const
+    {
+        return cursor.find(node, index);
+    }
+
     /* makes a node of the list the current one; nothing changes when the
      * node is not in it (FUN_00583980 and the six handlers of the same
      * body). derived name */
@@ -140,7 +173,7 @@ struct Owner583950 {
     {
         unsigned index;
         if (find(node, index))
-            current = index;
+            cursor.current = index;
     }
 
     /* the storage of the current node: the first node's value is at the
@@ -149,8 +182,10 @@ struct Owner583950 {
      * the same fields). derived name */
     char *currentValue() const
     {
-        const NodeList583950 *nodes = list;
-        const int offset = current != 0 && current < nodes->count ? nodes->offsets[current - 1] : 0;
+        const NodeList583950 *nodes = cursor.list;
+        const int offset = cursor.current != 0 && cursor.current < nodes->count
+                               ? nodes->offsets[cursor.current - 1]
+                               : 0;
         return nodes->values + offset;
     }
 
@@ -158,8 +193,8 @@ struct Owner583950 {
      * list's end. derived name */
     u8 *currentState() const
     {
-        const NodeList583950 *nodes = list;
-        return current < nodes->count ? nodes->states + current : 0;
+        const NodeList583950 *nodes = cursor.list;
+        return cursor.current < nodes->count ? nodes->states + cursor.current : 0;
     }
 
     /* makes a node of the list the current one and returns its state byte;
@@ -169,7 +204,7 @@ struct Owner583950 {
         unsigned index;
         if (!find(node, index))
             return 0;
-        current = index;
+        cursor.current = index;
         return currentState();
     }
 
@@ -187,9 +222,7 @@ struct Owner583950 {
     }
 
     u8 unknown0[0x38];
-    unsigned current; /* +0x38: the index of the current node in the list */
-    u8 unknown3c[4];
-    NodeList583950 *list;    /* +0x40 */
+    NodeCursor583950 cursor; /* +0x38: the current index, the list at +0x40 */
     Handler583950 *handlers; /* +0x48, indexed by a node's kind */
     u8 unknown50[0x88];
     int unknownd8; /* +0xd8: the state FUN_00583bb0 leaves */
@@ -208,7 +241,12 @@ struct Owner583950 {
     int valueType; /* +0x100 */
     u8 unknown104[0xc];
     CallFrame583950 *frame; /* +0x110 */
-    u8 unknown118[0xc0];
+    u8 unknown118[0x78];
+    /* +0x190: a second list of the same nodes with its own current index,
+     * whose state byte FUN_00af09d0 and its three copies set from the
+     * first's. derived name */
+    NodeCursor583950 cursor190;
+    u8 unknown1a0[0x38];
     /* +0x1d8: a flag the handler FUN_00589500 raises from its node's bit
      * while +0x1dc is set, then restores. derived names */
     int unknown1d8;

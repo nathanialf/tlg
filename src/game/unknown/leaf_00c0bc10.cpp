@@ -13,10 +13,10 @@ void FUN_00c09610(void *vm);                    /* derived name */
 // NONMATCHING: waits for FUN_00c09610 (0x365 bytes) defined in the module: the base computes the entry's index (lea rsi, [rsi + rsi*2]) before the function's address, a protected definition's `lea rdi, [rip]`; a declaration's GOT load is scheduled first (a throwaway single-file compile with the declaration protected was equal, 45/45)
 int FUN_00c0bc10(Owner583950 *self, void *arg) /* derived name */
 {
-    const unsigned current = self->current;
+    const unsigned current = self->cursor.current;
     const int depth = self->frame->depth;
     if (FUN_00c1da10(self, arg)) {
-        self->current = current;
+        self->cursor.current = current;
         FUN_00c1da10(self, arg);
         if (self->frame->depth - 2 == depth) {
             self->frame->depth = depth;

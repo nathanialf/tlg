@@ -11,14 +11,14 @@ void FUN_0059ae50(void *vm);                    /* derived name */
  * +0xf4 to -1; returns 0. Handler unknown. */
 int FUN_0059ab60(Owner583950 *self, void *arg) /* derived name */
 {
-    const unsigned current = self->current;
+    const unsigned current = self->cursor.current;
     const int depth = self->frame->depth;
     while (FUN_0059ac10(self, arg)) {
         if (self->frame->depth - 1 == depth) {
             self->frame->depth = depth;
             self->frame->push(FUN_0059ae50);
         }
-        self->current = current;
+        self->cursor.current = current;
     }
     self->vector[1] = -1.0f;
     return 0;

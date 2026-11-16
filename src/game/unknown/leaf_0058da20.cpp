@@ -14,7 +14,7 @@ int FUN_0058da20(Owner583950 *self, void *arg) /* derived name */
     unsigned found;
     if (!self->find(node->target, found))
         return 0;
-    self->current = found;
+    self->cursor.current = found;
     int *value = reinterpret_cast<int *>(self->currentValue());
     if (value && strstr(D_17ac870[node->name].string0, "ratio"))
         *value = self->intValue;
