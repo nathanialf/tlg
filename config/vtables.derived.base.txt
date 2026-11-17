@@ -560,7 +560,7 @@ _ZTV14Object016abdb8 0x16abdb8 Object016abdb8 derived ctor FUN_00617420 # stored
 _ZTV14Object016abe10 0x16abe10 Object016abe10 derived ctor FUN_00617960 # stored by FUN_00617960 FUN_00617af0 FUN_00617c20
 _ZTV14Object016abe68 0x16abe68 Object016abe68 derived ctor FUN_00617f30 # stored by FUN_00617f30 FUN_00618410 FUN_006184b0
 _ZTV14Object016abea0 0x16abea0 Object016abea0 derived ctor FUN_006187d0 # stored by FUN_006187d0 FUN_00618980
-_ZTV14Object016abf70 0x16abf70 Object016abf70 derived ctor FUN_0061c160 # stored by FUN_0061c160 FUN_0061c330
+_ZTV12FollowCamera 0x16abf70 FollowCamera derived ctor FUN_0061c160 # the class its messages name ("FollowCamera(%s)::Init", "::Term"); stored by FUN_0061c160 FUN_0061c330 FUN_0061c400
 _ZTV14Object016abfe8 0x16abfe8 Object016abfe8 derived ctor FUN_006339a0 # stored by FUN_006339a0 FUN_00634720
 _ZTV14Object016ac060 0x16ac060 Object016ac060 derived ctor FUN_0066dcc0 # stored by FUN_0066dcc0 FUN_0066e340
 _ZTV14Object016ac180 0x16ac180 Object016ac180 derived ctor FUN_006743e0 # stored by FUN_006743e0 FUN_00674890

@@ -30,6 +30,44 @@ Name D_581791c(D_1594950, false);
 Name D_5817920(D_1594968, false);
 Name D_5817914(D_1594984, false);
 
+/* derived name: the constructor (tlg_game_object016accb0.h): its base
+ * Object00774560 is built from the name passed on (FUN_00774370), the names
+ * and the references start empty; then the body: the base's float at +0x7c,
+ * the fields from +0xf0 in order, the Name at +0x100 a copy of D_58178ac,
+ * the point at +0x120 a copy of this file's VECTOR_W (0x58178b0, its two
+ * halves loaded first, then stored lane by lane: `mov dword; shr rax, 0x20;
+ * mov dword`). */
+Object016accb0::Object016accb0(const Name &name) : Object00774560(name)
+{
+    unknown7c = 0.2f;
+    unknownf0 = 0.25f;
+    unknownfc = 0.1f;
+    name100 = D_58178ac;
+    unknown104 = 0.5f;
+    unknown108 = 0.5f;
+    unknown10c = -1;
+    unknown110 = -1;
+    unknown114 = 0;
+    unknown120 = Float4Data(reinterpret_cast<const Float4Data &>(VECTOR_W));
+    unknown130 = -1;
+    unknown134[0] = 0.0f;
+    unknown134[1] = 0.0f;
+    unknown134[2] = 3.40282347e+38f;
+    unknown134[3] = 3.40282347e+38f;
+    unknown144 = 0;
+    unknown150 = 1;
+    unknown154[0] = -3.40282347e+38f;
+    unknown154[1] = -3.40282347e+38f;
+    unknown154[2] = -3.40282347e+38f;
+    unknown154[3] = 3.40282347e+38f;
+    unknown164[0] = 0;
+    unknown164[1] = 0x72000;
+    unknown164[2] = -1;
+    unknown164[3] = -1;
+    unknown174 = -1;
+    unknown178 = 1;
+}
+
 /* derived names: slot 7 of the vtable at 0x16accb0, reading this file's
  * VECTOR_W: when slot 22 allows it, the body's state at +0xc00 is set by the
  * body's int at +0x1c18 (40 and 41: zero; 39: the body's bits at +0xb08 less

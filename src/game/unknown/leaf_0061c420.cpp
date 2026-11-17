@@ -1,6 +1,8 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_log.h"
 #include "tlg_game_name.h"
+#include "tlg_game_node.h"
+#include "tlg_game_object00afd410.h"
 
 /* FollowCamera (the class's name from its message "FollowCamera(%s)::Init";
  * derived names otherwise), its vtable at 0x16abf70 (config/
@@ -13,11 +15,15 @@
  * message with the name's string through the variadic FUN_00c831d0, a tail
  * call (its first
  * argument is not read, so rdi is left unset). The name at +0xc is the base's
- * (FixCamera's file). */
-struct FollowCamera {
-    u8 unknown0[0xc];
-    Name unknownC; /* +0xc */
-    u8 unknown10[0xa0 - 0x10];
+ * (tlg_game_object00afd410.h). */
+class FollowCamera : public Object00afd410
+{
+  public:
+    virtual ~FollowCamera();
+
+    u8 unknown10[0x50];
+    Ref00503fb0<Object016b9108> unknown60; /* +0x60: released by the destructor */
+    u8 unknown68[0x38];
     float unknownA0;
     float unknownA4;
     float unknownA8;
@@ -25,6 +31,7 @@ struct FollowCamera {
     int unknownB0;
 };
 
+extern const char D_15898a8[]; /* "FollowCamera(%s)::Term\n" */
 extern const char D_1589864[]; /* "FollowCamera(%s)::Init\n" */
 
 void FUN_00afded0(FollowCamera *self, int unknown, int kind); /* derived name */
@@ -38,4 +45,14 @@ void FUN_0061c420(FollowCamera *self) /* derived name */
     self->unknownAC = 0;
     self->unknownB0 = 0;
     FUN_00c831d0(self, D_1589864, D_17ac870[self->unknownC.index].string0);
+}
+
+/* derived name: the complete destructor: the Term message with the name's
+ * string, then the reference at +0x60 released and the base's destructor
+ * FUN_00afd410 run as a tail call. FUN_0061c400, slot 1, is the deleting
+ * one. The destructor is the class's key function, so this file emits the
+ * vtable. */
+FollowCamera::~FollowCamera()
+{
+    FUN_00c831d0(this, D_15898a8, D_17ac870[unknownC.index].string0);
 }

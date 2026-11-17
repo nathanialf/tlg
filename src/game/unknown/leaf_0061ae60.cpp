@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_log.h"
 #include "tlg_game_name.h"
+#include "tlg_game_object00afd410.h"
 #include "tlg_math.h"
 
 /* FixCamera (the class's name from its messages "FixCamera(%s)::Init" and
@@ -12,15 +13,6 @@
  * destructor is the key function, so this file emits the vtable. Both
  * messages go through the variadic FUN_00c831d0 (tlg_game_log.h), whose
  * first argument is not read, so the calls leave rdi unset (D50 addendum). */
-class Object00afd410 /* derived name */
-{
-  public:
-    virtual ~Object00afd410();
-
-    u8 unknown8[4];
-    Name unknownC; /* +0xc */
-};
-
 class FixCamera : public Object00afd410
 {
   public:

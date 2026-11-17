@@ -8706,7 +8706,7 @@ FUN_002a89e0 src/game/unknown/leaf_002a8ab0.cpp _ZN14Object016a7d48C2ERK4Name
 FUN_0079fb60 src/game/unknown/leaf_0079fc40.cpp _ZN14Object016adb88C2ERK4Name
 FUN_0079fa00 src/game/unknown/leaf_0079fa00.cpp _Z12FUN_0079fa00PvRK4Name
 FUN_00c92e70 src/game/unknown/leaf_00c92e70.cpp _Z12FUN_00c92e70PvRK4Name
-FUN_0076e4a0 src/game/unknown/leaf_0076e620.cpp _ZN14Object016accb0C2ERK4Name
+FUN_0076e4a0 src/game/unknown/func_00773e90.cpp _ZN14Object016accb0C2ERK4Name
 FUN_0076e340 src/game/unknown/leaf_0076e340.cpp _Z12FUN_0076e340PvRK4Name
 FUN_008c1650 src/game/unknown/leaf_008c1650.cpp _Z12FUN_008c1650PvRK4Name
 FUN_008c17c0 src/game/unknown/leaf_008c17c0.cpp _ZN14Object016b01f0D1Ev
@@ -9060,7 +9060,7 @@ FUN_00dde6d0 src/game/unknown/leaf_00dde6d0.cpp _Z12FUN_00dde6d0P9lua_StatePvPm
 FUN_00968870 src/game/unknown/leaf_00967d40.cpp _ZN14Object016b120812FUN_00968870Ev
 FUN_002dc4d0 src/game/unknown/leaf_002dc440.cpp _ZN14Object016a81786slot11Ef
 FUN_0139edd0 src/game/unknown/leaf_01354780.cpp _ZN14Object016caee012FUN_0139edd0ER13Array05943280IiE
-FUN_00cf56b0 src/game/unknown/leaf_013b3380.cpp _ZN14Object016b9a3012FUN_00cf56b0Ev
+FUN_00cf56b0 src/game/unknown/leaf_013b3380.cpp _ZN14Object016b9a305slot8Ev
 FUN_005967c0 src/game/unknown/leaf_005967c0.cpp _Z12FUN_005967c0P11Owner583950Pv
 FUN_00599380 src/game/unknown/leaf_00599380.cpp _Z12FUN_00599380P11Owner583950Pv
 FUN_005999b0 src/game/unknown/leaf_005999b0.cpp _Z12FUN_005999b0P11Owner583950Pv
@@ -9874,3 +9874,16 @@ FUN_0139d420 src/game/unknown/leaf_0139d500.cpp _ZN14Object016d0130D0Ev
 FUN_0139d5a0 src/game/unknown/leaf_0139d500.cpp _ZN14Object016d0108D1Ev
 FUN_0139d680 src/game/unknown/leaf_0139d500.cpp _ZN14Object016d0108D0Ev
 FUN_013d0160 src/game/unknown/func_00f509e0.cpp _Z12FUN_013d0160P17BoneMarks013d0160ih
+FUN_007b2a80 src/game/unknown/leaf_007b2a80.cpp _ZN14Object016adf60D1Ev
+FUN_007b2b40 src/game/unknown/leaf_007b2a80.cpp _ZN14Object016adf60D0Ev
+FUN_0061c330 src/game/unknown/leaf_0061c420.cpp _ZN12FollowCameraD1Ev
+FUN_0061c400 src/game/unknown/leaf_0061c420.cpp _ZN12FollowCameraD0Ev
+FUN_007d9130 src/game/unknown/leaf_007d9130.cpp _ZN14Object016adfe8D1Ev
+FUN_00875120 src/game/unknown/leaf_00875120.cpp _ZN14Object00875120D1Ev
+FUN_00875160 src/game/unknown/leaf_00875120.cpp _ZN14Object00875120D0Ev
+FUN_009f5720 src/game/unknown/leaf_009f5720.cpp _ZN14Object016b19c8D1Ev
+FUN_0090ced0 src/game/unknown/leaf_0090ced0.cpp _ZN14Object016b0be0D1Ev
+FUN_008f5760 src/game/unknown/leaf_008f5760.cpp _ZN14Object016b0968D1Ev
+FUN_008f5830 src/game/unknown/leaf_008f5760.cpp _ZN14Object016b0968D0Ev
+FUN_00b225a0 src/game/unknown/leaf_008f5760.cpp _ZN14Object016cc398D1Ev
+FUN_00b22670 src/game/unknown/leaf_008f5760.cpp _ZN14Object016cc398D0Ev

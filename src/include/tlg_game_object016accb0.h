@@ -6,7 +6,6 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object00774560.h"
-#include "tlg_game_value004af700.h"
 
 /* derived names: the class whose vtable is at 0x16accb0
  * (config/vtables.derived.base.txt, stored by FUN_0076e4a0 FUN_0076e620), derived from
@@ -32,8 +31,8 @@ class Object016accb0 : public Object00774560 /* derived name */
     int unknown110;   /* +0x110: -1 from the constructor; not traced */
     int unknown114;   /* +0x114: zero from the constructor; not traced */
     u8 unknown118[0x8];
-    Value004af700 unknown120; /* +0x120: the value at 0x58178b0 from the constructor; not traced */
-    int unknown130;           /* +0x130: -1 from the constructor; not traced */
+    Float4A unknown120;  /* +0x120: VECTOR_W from the constructor; not traced */
+    int unknown130;      /* +0x130: -1 from the constructor; not traced */
     float unknown134[4]; /* +0x134: (0, 0, FLT_MAX, FLT_MAX) from the constructor; not traced */
     int unknown144;      /* +0x144: zero from the constructor; not traced */
     Name name148;        /* +0x148: released by the destructor (`mov eax, [rbx+0x148]; shl 5`) */

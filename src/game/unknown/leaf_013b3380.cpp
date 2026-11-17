@@ -20,18 +20,15 @@ class Object016b9a30 : public Object013671a0 /* derived name */
 {
   public:
     virtual ~Object016b9a30();
-    virtual void slot2();        /* derived name: 0xcb66f0; not traced */
-    virtual void slot3();        /* derived name: 0x1af750; not traced */
-    virtual void slot4();        /* derived name: 0x1af750; not traced */
-    virtual void slot5();        /* derived name: 0xcf54b0; not traced */
-    virtual void slot6();        /* derived name: 0x1343880; not traced */
-    virtual void slot7();        /* derived name: 0xcf5530; not traced */
-    virtual void FUN_00cf56b0(); /* derived name: slot 8 */
+    /* slot 5: 0xcf54b0; not traced */
+    virtual int FUN_000058a0();
+    /* slot 7: 0xcf5530 (it calls Object00ced570's slot 7 first); not traced */
+    virtual void FUN_001af750();
+    /* slot 8 */
+    virtual void slot8();
 
   private:
-    u8 unknown8[0x20];
-    Node00503fb0 *node28; /* +0x28: the node whose component slot 8 finds */
-    u8 unknown30[0xd0];
+    u8 unknown60[0xa0];
     /* +0x100: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Object016b9108> held100;
@@ -43,13 +40,14 @@ class Object016b9a30 : public Object013671a0 /* derived name */
  * emits the vtable. */
 Object016b9a30::~Object016b9a30() {}
 
-/* derived name: slot 8: the first component of the node at +0x28 whose type
+/* derived name: slot 8: the first component of the node at +0x28 (the
+ * pointer slot 6 of Object01343880 sets) whose type
  * is the one the pointer at 0x5948180 holds or derives from it (the node's
  * reader count not taken): its flag 2 at +0x3a cleared and its int at +0x40
  * set to 1 where it is 0. */
-void Object016b9a30::FUN_00cf56b0() /* derived name */
+void Object016b9a30::slot8()
 {
-    Node00503fb0 *node = node28;
+    Node00503fb0 *node = static_cast<Node00503fb0 *>(unknown28);
     const Type00503fb0 *type = D_5948180;
     Component00503fb0 *found = 0;
     for (unsigned i = 0; i < node->componentCount; ++i) {

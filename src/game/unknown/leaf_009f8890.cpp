@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016b9108.h"
 #include "tlg_types.h"
 
 /* derived names: sets bit 4 of the byte at +0x34, then passes the pointer at
@@ -6,9 +7,10 @@
  * and the object itself to FUN_009f94d0, a tail call; slot 7 of the vtable at
  * 0x16b1a48 (its pointer at 0x16b1a90), stored by FUN_009f6ce0 and
  * FUN_009f88d0. The callee keeps its second argument (a store of rsi in its
- * frame). The classes and the callee's return type are not traced. */
-struct Object009f8890 { /* derived name */
-    u8 unknown0[0x34];
+ * frame; leaf_009f94d0.cpp). The object is of the root class (the callee
+ * takes a counted reference to it). */
+struct Object009f8890 : Object016b9108 { /* derived name */
+    u8 unknown24[0x10];
     u8 unknown34;
 };
 struct Member057c9390_58_18; /* derived name */
@@ -25,7 +27,7 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-void FUN_009f94d0(Member057c9390_58_18 *member, Object009f8890 *object); /* derived name */
+void FUN_009f94d0(Member057c9390_58_18 *member, Object016b9108 *object); /* derived name */
 
 void FUN_009f8890(Object009f8890 *self) /* derived name */
 {
