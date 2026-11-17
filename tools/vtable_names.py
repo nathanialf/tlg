@@ -69,14 +69,164 @@ CALLER_SAVED = {"rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11"}
 NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$")
 
 
-def mangle_vtable(name: str) -> str | None:
+def mangle_vtable(name: str, templates: bool = False) -> str | None:
     """`_ZTV` + the Itanium encoding of a plain or namespace-qualified class
-    name; None for anything else (templates, operators)."""
+    name; None for anything else (operators, and templates unless
+    `templates`). With `templates` (a row of config/vtables.derived.<slug>.txt,
+    base_elf.py _verify_derived) an instantiation of a class template of the
+    tree is mangled as well (mangle_instantiation): `Task0052c710<TargetA0052c710>`.
+    The generated rows never take a template's name (a type-info string the
+    tool cannot mangle stays a `?` line)."""
     if not NAME_RE.match(name):
-        return None
+        return mangle_instantiation(name) if templates else None
     parts = name.split("::")
     enc = "".join(f"{len(p)}{p}" for p in parts)
     return "_ZTV" + (enc if len(parts) == 1 else f"N{enc}E")
+
+
+# The builtin types a template argument may name (Itanium C++ ABI 5.1.5,
+# <builtin-type>); a typedef (u8, s32) is not one and is refused, as are
+# cv-qualifiers, references, function types, literals and the `std`
+# abbreviations, which no derived row needs yet.
+_BUILTIN = {"void": "v", "bool": "b", "char": "c", "short": "s", "int": "i", "long": "l",
+            "float": "f", "double": "d"}
+_TYPEDEFS = {"u8", "s8", "u16", "s16", "u32", "s32", "u64", "s64", "f32", "f64", "size_t", "uintptr_t"}
+_TOKEN_RE = re.compile(r"\s*([A-Za-z_][A-Za-z0-9_]*|::|<|>|,|\*)")
+
+
+def mangle_instantiation(name: str) -> str | None:
+    """`_ZTV` + the Itanium encoding of a class template's instantiation
+    written as C++ (`Task0052c710<TargetA0052c710>`, `ns::Pair<A, A *>`):
+    a class name, plain or qualified, whose components may carry template
+    arguments, each argument a class type of the same form, a builtin type,
+    or a pointer to either. Substitutions (Itanium 5.1.10) are applied: every
+    prefix of a nested name, every template name and every non-builtin type
+    is a candidate in the order it is first met, and a later occurrence is
+    written `S_`, `S0_`, ... (the longest prefix found, for a nested name).
+    None for anything outside that grammar."""
+    toks, i = [], 0
+    while i < len(name):
+        m = _TOKEN_RE.match(name, i)
+        if not m:
+            return None
+        toks.append(m.group(1))
+        i = m.end()
+    pos = [0]
+    subs: list[str] = []          # candidate keys, in order
+
+    def peek():
+        return toks[pos[0]] if pos[0] < len(toks) else None
+
+    def take():
+        t = peek()
+        pos[0] += 1
+        return t
+
+    def sref(key: str) -> str:
+        k = subs.index(key)
+        if k == 0:
+            return "S_"
+        digits, n = "", k - 1
+        while True:
+            digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"[n % 36] + digits
+            n //= 36
+            if not n:
+                break
+        return f"S{digits}_"
+
+    def parse_type():
+        """(key, components or None for a builtin, builtin code, pointer depth)"""
+        t = take()
+        if t is None or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", t) or t in _TYPEDEFS or t == "std":
+            raise ValueError(t)
+        if t in _BUILTIN:
+            comps, code = None, _BUILTIN[t]
+        else:
+            comps, code = [], None
+            while True:
+                args = None
+                if peek() == "<":
+                    take()
+                    args = [parse_type()]
+                    while peek() == ",":
+                        take()
+                        args.append(parse_type())
+                    if take() != ">":
+                        raise ValueError(">")
+                comps.append((t, args))
+                if peek() != "::":
+                    break
+                take()
+                t = take()
+                if t is None or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", t) or t == "std":
+                    raise ValueError(t)
+        depth = 0
+        while peek() == "*":
+            take()
+            depth += 1
+        return comps, code, depth
+
+    def key_of(comps, upto, with_args=True) -> str:
+        out = []
+        for j, (ident, args) in enumerate(comps[:upto]):
+            last = j == upto - 1
+            s = ident
+            if args is not None and (with_args or not last):
+                s += "<" + ",".join(type_key(a) for a in args) + ">"
+            out.append(s)
+        return "::".join(out)
+
+    def type_key(t) -> str:
+        comps, code, depth = t
+        base = key_of(comps, len(comps)) if comps is not None else "$" + code
+        return base + "*" * depth
+
+    def mangle_class(comps) -> str:
+        full = key_of(comps, len(comps))
+        if full in subs:
+            return sref(full)
+        n = len(comps)
+        tn = key_of(comps, n, with_args=False)
+        if comps[-1][1] is not None and tn in subs:   # the template name already a candidate
+            out = sref(tn) + "I" + "".join(mangle_type(a) for a in comps[-1][1]) + "E"
+            subs.append(full)
+            return f"N{out}E" if n > 1 else out
+        k, out = 0, ""
+        for j in range(n - 1, 0, -1):         # the longest prefix already a candidate
+            pk = key_of(comps, j)
+            if pk in subs:
+                k, out = j, sref(pk)
+                break
+        for j in range(k, n):
+            ident, args = comps[j]
+            out += f"{len(ident)}{ident}"
+            if args is not None:
+                subs.append(key_of(comps, j + 1, with_args=False))   # the template name
+                out += "I" + "".join(mangle_type(a) for a in args) + "E"
+            subs.append(key_of(comps, j + 1))
+        return f"N{out}E" if n > 1 else out
+
+    def mangle_type(t) -> str:
+        comps, code, depth = t
+        key = type_key((comps, code, 0))
+        start = next((d for d in range(depth, 0, -1) if key + "*" * d in subs), 0)
+        if start:
+            out = sref(key + "*" * start)
+        else:
+            out = mangle_class(comps) if comps is not None else code
+        for d in range(start + 1, depth + 1):
+            out = "P" + out
+            subs.append(key + "*" * d)
+        return out
+
+    try:
+        t = parse_type()
+    except ValueError:
+        return None
+    comps, _code, depth = t
+    if peek() is not None or comps is None or depth or all(a is None for _i, a in comps):
+        return None
+    return "_ZTV" + mangle_class(comps)
 
 
 def c_string(elf: BaseElf, va: int, limit: int = 256) -> str | None:

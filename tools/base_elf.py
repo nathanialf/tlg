@@ -808,10 +808,17 @@ class BaseElf:
     def _verify_derived(self, sym: str) -> int:
         """A derived vtable row holds when its symbol is the mangling of its
         class name and the constructor it cites stores the vtable's address
-        point into its object (tools/vtable_names.py, D14)."""
+        point into its object (tools/vtable_names.py, D14). The class may be
+        an instantiation of a class template of the tree, written as C++
+        (`Task0052c710<TargetA0052c710>`, tools/vtable_names.py
+        mangle_instantiation): its symbol is the mangling of that name, the
+        compiler's own reference to the instantiation's vtable, and it is
+        proven by the constructor's store as every other row is."""
         addr, cls, ctor = self._derived[sym]
         from vtable_names import mangle_vtable
-        expected = mangle_vtable(cls)
+        expected = mangle_vtable(cls, templates=True)
+        if expected is None:
+            raise ValueError(f"vtables.derived: {sym}: the class name {cls} cannot be mangled")
         # a class of an anonymous namespace: its vtable is the file's own
         # (the base stores the address point with one direct lea)
         anonymous = "_ZTVN12_GLOBAL__N_1" + expected[len("_ZTV"):] + "E"

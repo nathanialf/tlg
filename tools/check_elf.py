@@ -148,7 +148,23 @@ def _resolution(base: BaseElf, sym: str, tls: bool) -> tuple:
             t = ("at", base.tls_got_slot(sym))
         except ValueError as e:
             t = ("refused", str(e))
-    return a, base.got_slots().get(sym), t
+    return a, base.got_slots().get(sym), t, _source_destructor_slots(base, sym)
+
+
+def _source_destructor_slots(base: BaseElf, sym: str) -> tuple | None:
+    """What the proof of a destructor resolved by its vtable pair reads of
+    the SOURCE (base_elf.folded_destructor, source_destructor_slot): the
+    slots of the class's vtable as the object compared emits it, for each
+    spelling of the vtable's name. The row's own bytes and relocations do
+    not change when the source moves the class's destructor to another slot
+    (the vtable is another symbol of the module), so without these in the
+    key a cached pass would be reused for a source the proof refuses."""
+    import re
+    m = re.fullmatch(r"_ZN(.+)D[012]Ev", sym)
+    if not m:
+        return None
+    enc = m.group(1)
+    return tuple((vt, base.source_vtable_slots(vt)) for vt in ("_ZTV" + enc, "_ZTVN" + enc + "E"))
 
 
 ROW_FIELDS = ("score", "equal", "obj_insns", "base_insns", "targets_ok", "bad_targets")
@@ -158,7 +174,8 @@ def compare_row(code: bytes, relocs: list, base_bytes: bytes, addr: int, base: B
     """match_check.compare for one row, through the gate's cache when it is
     on. compare is a function of the object's bytes and relocations, the
     base's bytes and address, and what the base answers for each symbol the
-    relocations name (_resolution); the key is all of them, the symbols'
+    relocations name (_resolution, with the source vtable slots a
+    destructor's pair proof reads); the key is all of them, the symbols'
     resolutions computed afresh every run (a row of config/*.txt the row's
     relocations do not name changes nothing in its key)."""
     from base_elf import _MISS, gate_cache_get, gate_cache_key, gate_cache_on, gate_cache_put

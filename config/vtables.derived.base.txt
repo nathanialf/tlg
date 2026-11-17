@@ -1153,9 +1153,9 @@ _ZTV14Object016cacb8 0x16cacb8 Object016cacb8 derived ctor FUN_00421900 # stored
 _ZTV14Object016cacf0 0x16cacf0 Object016cacf0 derived ctor FUN_00422e90 # stored by FUN_00422e90 FUN_013508a0
 _ZTV14Object016cad28 0x16cad28 Object016cad28 derived ctor FUN_00429840 # stored by FUN_00429840 FUN_013509e0 FUN_01350aa0
 _ZTV14Object016cae48 0x16cae48 Object016cae48 derived ctor FUN_013534f0 # stored by FUN_013534f0 FUN_01353b30
-_ZTV14Object016cafb0 0x16cafb0 Object016cafb0 derived ctor FUN_0052c710 # stored by FUN_0052c710 FUN_01357f40 FUN_01358000
-_ZTV14Object016cafe0 0x16cafe0 Object016cafe0 derived ctor FUN_0052c710 # stored by FUN_0052c710 FUN_01358100 FUN_013581c0
-_ZTV14Object016cb010 0x16cb010 Object016cb010 derived ctor FUN_0052c710 # stored by FUN_0052c710 FUN_01358290 FUN_01358350
+_ZTV12Task0052c710I15TargetA0052c710E 0x16cafb0 Task0052c710<TargetA0052c710> derived ctor FUN_0052c710 # stored by FUN_0052c710 FUN_01357f40 FUN_01358000; an instantiation of the class template Task0052c710 (round 377E): FUN_0052c710 builds one task for each of three objects of its owner's (0x52c83a, 0x52c907 for the first object's class)
+_ZTV12Task0052c710I15TargetB0052c710E 0x16cafe0 Task0052c710<TargetB0052c710> derived ctor FUN_0052c710 # stored by FUN_0052c710 FUN_01358100 FUN_013581c0
+_ZTV12Task0052c710I15TargetC0052c710E 0x16cb010 Task0052c710<TargetC0052c710> derived ctor FUN_0052c710 # stored by FUN_0052c710 FUN_01358290 FUN_01358350
 _ZTV14Object016cb040 0x16cb040 Object016cb040 derived ctor FUN_0052deb0 # stored by FUN_0052deb0 FUN_01358850
 _ZTV14Object016cb108 0x16cb108 Object016cb108 derived ctor FUN_013589f0 # stored by FUN_013589f0 FUN_01358d70
 _ZTV14Object016cb1a0 0x16cb1a0 Object016cb1a0 derived ctor FUN_005b05b0 # stored by FUN_005b05b0 FUN_005b14b0
