@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_block.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_object016a96d0.h"
 
 /* derived names: a script call's argument, 16 bytes: a 32-bit type code at
  * +0x0 and its value at +0x8 (leaf_002dc440.cpp's; type 2 a string) */
@@ -23,36 +24,6 @@ struct ScriptArgument00a2efa0 {
 /* calls the script function its name gives with count arguments, its int
  * result through the last pointer; nonzero on success (FUN_00b10da0). */
 int FUN_00a2efa0(const char *name, int count, const ScriptArgument00a2efa0 *arguments, int *result);
-
-/* derived names: the class whose vtable is at 0x16a96d0
- * (config/vtables.derived.base.txt, stored by FUN_003fbc60 and
- * FUN_003fc620), derived from Object016b9108; slot 19 (FUN_003fcfb0) is FUN_00301db0 of the class at 0x16a8430, byte for byte.
- * Slots 5 to 18 are not traced. */
-class Object016a96d0 : public Object016b9108 /* derived name */
-{
-  public:
-    virtual void slot5();              /* derived name; not traced */
-    virtual void slot6();              /* derived name; not traced */
-    virtual void slot7();              /* derived name; not traced */
-    virtual void slot8();              /* derived name; not traced */
-    virtual void slot9();              /* derived name; not traced */
-    virtual void slot10();             /* derived name; not traced */
-    virtual void slot11();             /* derived name; not traced */
-    virtual void slot12();             /* derived name; not traced */
-    virtual void slot13();             /* derived name; not traced */
-    virtual void slot14();             /* derived name; not traced */
-    virtual void slot15();             /* derived name; not traced */
-    virtual void slot16();             /* derived name; not traced */
-    virtual void slot17();             /* derived name; not traced */
-    virtual void slot18();             /* derived name; not traced */
-    virtual void beforeInterestTick(); /* derived name: slot 19 */
-
-  private:
-    u8 unknown24[0x6c];
-    int state; /* +0x90: 1 skips the script call (derived name) */
-    u8 unknown94[0x7c];
-    Owner05943280 *heap; /* +0x110: the thread's heap while the slot runs (derived name) */
-};
 
 /* derived names: with the calling thread's heap (set on first use to the
  * table's first) replaced by the object's for the call, calls the script
