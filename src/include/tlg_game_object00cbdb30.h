@@ -4,18 +4,18 @@
 #ifndef TLG_GAME_OBJECT00CBDB30_H
 #define TLG_GAME_OBJECT00CBDB30_H
 
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 #include "tlg_game_node.h"
 #include "tlg_game_block.h"
 
 /* derived names: the class whose vtable is at 0x16b9190
  * (config/vtables.derived.base.txt, the class named for its complete
  * destructor 0xcbdb30 as that row names it, D15; stored by FUN_00cbd730 FUN_00cbdb30 FUN_00d00a40), derived from
- * Object00c55550 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
+ * Object016b85e0 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
  * so the bytes below the first member here are the base's or this class's.
  * Its own fields are traced only where its destructor FUN_00cbdb30 tears them
  * down (the counted reference at +0x238, the blocks at +0x290, +0x278, +0x260, +0x248); the rest are not traced. */
-class Object00cbdb30 : public Object00c55550 /* derived name */
+class Object00cbdb30 : public Object016b85e0 /* derived name */
 {
   public:
     virtual ~Object00cbdb30();

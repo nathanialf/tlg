@@ -4,23 +4,23 @@
 #define TLG_GAME_OBJECT016AE9A0_H
 
 #include "tlg_game_node.h"
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the class whose vtable is at 0x16ae9a0
  * (config/vtables.derived.base.txt, stored by FUN_0081af10 FUN_0081b9c0
- * FUN_0081baf0), derived from Object00c55550. 0x260 bytes (`mov edi,
+ * FUN_0081baf0), derived from Object016b85e0. 0x260 bytes (`mov edi,
  * 0x260` before operator new in the creator). Its own fields are traced
  * where its creator FUN_0081af10 sets them and its destructor FUN_0081b9c0
  * tears them down. The destructor is the class's key function
  * (leaf_0081b9c0.cpp), so that unit emits the vtable and the
  * destructors. */
-class Object016ae9a0 : public Object00c55550 /* derived name */
+class Object016ae9a0 : public Object016b85e0 /* derived name */
 {
   public:
     /* inlined in the creator: the base built from the name, the vptr, the 32 bytes at +0x238
      * cleared in one store (`vmovups [r15+0x238], ymm0`: a pointer, the two
      * references and a pointer, a run of zero stores made one memset) */
-    Object016ae9a0(const Name &name) : Object00c55550(name), unknown238(0), unknown250(0) {}
+    Object016ae9a0(const Name &name) : Object016b85e0(name), unknown238(0), unknown250(0) {}
 
     virtual ~Object016ae9a0();
 

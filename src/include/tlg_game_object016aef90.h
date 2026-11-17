@@ -16,6 +16,7 @@
 class Object016aef90 : public Object00818d10 /* derived name */
 {
   public:
+    Object016aef90(const Name &name); /* 0x846c90, its row named after it (D15) */
     virtual ~Object016aef90();
 
   private:

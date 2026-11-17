@@ -4,17 +4,17 @@
 #define TLG_GAME_OBJECT016D24F8_H
 
 #include "tlg_game_node.h"
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the class whose vtable is at 0x16d24f8
  * (config/vtables.derived.base.txt, stored by FUN_00d63f10 FUN_013ba440
- * FUN_013ba530), derived from Object00c55550 (the class whose destructor is
+ * FUN_013ba530), derived from Object016b85e0 (the class whose destructor is
  * 0xc55550): the base's slots and fields are not traced, so the bytes below
  * the first member here are the base's. Its own fields: the Name at +0x238
  * and the counted reference at +0x240, which the constructor FUN_00d63f10
  * sets and the destructor FUN_013ba440 releases. 0x250 bytes (the factory
  * FUN_00d63db0 allocates them). */
-class Object016d24f8 : public Object00c55550 /* derived name */
+class Object016d24f8 : public Object016b85e0 /* derived name */
 {
   public:
     Object016d24f8(const Name &name);

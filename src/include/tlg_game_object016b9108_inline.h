@@ -13,14 +13,33 @@
 #define TLG_GAME_OBJECT016B9108_INLINE_H
 
 #include "tlg_game_object01343880.h"
+#include "tlg_math.h"
 
 /* derived names: the class whose vtable is at 0x16c7700
  * (config/vtables.derived.base.txt, stored by FUN_0036ac20): its slots 2 to
- * 4 are the base's. Its own fields are not traced. */
+ * 4 are the base's. 0x40 bytes (`mov edi, 0x40` before operator new in its
+ * creator). Its fields are traced only where the creator sets them. */
 class Object016c7700 : public Object016b9108 /* derived name */
 {
   public:
+    /* inlined in the creator FUN_0036ac20: the base built from the name, then
+     * zero at +0x24, then six floats (one 16-byte constant and one eight-byte immediate) */
+    Object016c7700(const Name &name)
+        : Object016b9108(name), unknown24(0), unknown28(0.0f), unknown2c(1.0f), unknown30(0.1f),
+          unknown34(0.1f), unknown38(0.1f), unknown3c(0.1f)
+    {
+    }
+
     virtual ~Object016c7700(); /* FUN_01386090; leaf_01386090.cpp */
+
+  private:
+    int unknown24;   /* +0x24: 0 from the constructor */
+    float unknown28; /* +0x28: 0.0 from the constructor */
+    float unknown2c; /* +0x2c: 1.0 from the constructor */
+    float unknown30; /* +0x30: 0.1 from the constructor */
+    float unknown34; /* +0x34: 0.1 from the constructor */
+    float unknown38; /* +0x38: 0.1 from the constructor */
+    float unknown3c; /* +0x3c: 0.1 from the constructor */
 };
 
 /* derived names: the class whose vtable is at 0x16c7738
@@ -34,20 +53,41 @@ class Object016c7738 : public Object016b9108 /* derived name */
 
 /* derived names: the class whose vtable is at 0x16cada8
  * (config/vtables.derived.base.txt, stored by FUN_00474ae0): its slots 2 to
- * 4 are the base's. Its own fields are not traced. */
+ * 4 are the base's. 0x60 bytes (`mov edi, 0x60` before operator new in its
+ * creator). Its fields are traced only where the creator sets them. */
 class Object016cada8 : public Object016b9108 /* derived name */
 {
   public:
+    /* inlined in the creator FUN_00474ae0: the base built from the name, then
+     * (0, 0, 0, 1) at +0x30 and +0x40 (one 32-byte constant), zero at +0x50 */
+    Object016cada8(const Name &name)
+        : Object016b9108(name), unknown30(0.0f, 0.0f, 0.0f, 1.0f),
+          unknown40(0.0f, 0.0f, 0.0f, 1.0f), unknown50(0.0f, 0.0f, 0.0f, 0.0f)
+    {
+    }
+
     virtual ~Object016cada8() {}
+
+  private:
+    u8 unknown24[0xc];
+    Float4A unknown30; /* +0x30: (0, 0, 0, 1) from the constructor; not traced */
+    Float4A unknown40; /* +0x40: (0, 0, 0, 1) from the constructor; not traced */
+    Float4 unknown50;  /* +0x50: zero from the constructor; not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16cb5b8
  * (config/vtables.derived.base.txt, stored by FUN_00690560): its slots 2 to
- * 4 are the base's. Its own fields are not traced. */
+ * 4 are the base's. 0x2e0 bytes (`mov edi, 0x2e0` before operator new in its
+ * creator FUN_00685d90). Its own fields are not traced. */
 class Object016cb5b8 : public Object016b9108 /* derived name */
 {
   public:
+    Object016cb5b8(const Name &name); /* 0x690560, its row named after it (D15) */
+
     virtual ~Object016cb5b8() {}
+
+  private:
+    u8 unknown24[0x2bc];
 };
 
 /* derived names: the class whose vtable is at 0x16cb920

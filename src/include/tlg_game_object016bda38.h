@@ -19,17 +19,17 @@ struct Object05938c40 {
 };
 
 extern Object05938c40 *D_5938c40;
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the class whose vtable is at 0x16bda38
  * (config/vtables.derived.base.txt, stored by FUN_00e5a170 FUN_00e5a350), derived from
- * Object00c55550 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
+ * Object016b85e0 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
  * so the bytes below the first member here are the base's or this class's.
  * Its own fields are traced only where its destructor FUN_00e5a350 tears them
  * down (the counted references at +0x260, +0x258, +0x250), the others where its
  * creator FUN_00e5a170 sets them. 0x2c0 bytes (`mov edi, 0x2c0` before
  * operator new). */
-class Object016bda38 : public Object00c55550 /* derived name */
+class Object016bda38 : public Object016b85e0 /* derived name */
 {
   public:
     /* inlined in the creator FUN_00e5a170: the base built from the name, the
@@ -41,7 +41,7 @@ class Object016bda38 : public Object00c55550 /* derived name */
      * the four pointers from +0x280 cleared (one 32-byte store after the
      * int's) */
     Object016bda38(const Name &name)
-        : Object00c55550(name), unknown238(0), unknown23c(1), unknown240(0), unknown244(64),
+        : Object016b85e0(name), unknown238(0), unknown23c(1), unknown240(0), unknown244(64),
           unknown248(64), held258(D_5938c40->unknown38->unknown30), unknown2a0(0)
     {
         unknown238 |= 9;

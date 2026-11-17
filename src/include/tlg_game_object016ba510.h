@@ -4,7 +4,7 @@
 #define TLG_GAME_OBJECT016BA510_H
 
 #include "tlg_game_node.h"
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 #include "tlg_game_object05945a38.h"
 
 /* derived name: the type of the object the constructor makes and holds at
@@ -24,13 +24,13 @@ struct Value00d48670 : Object016b9108 {
 
 /* derived names: the class whose vtable is at 0x16ba510
  * (config/vtables.derived.base.txt, stored by FUN_00d48670 FUN_013b8f60), derived from
- * Object00c55550 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
+ * Object016b85e0 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
  * so the bytes below the first member here are the base's or this class's.
  * Its own fields are traced where its destructor FUN_013b8f60 tears them
  * down (the counted references at +0x288, +0x260, +0x258, +0x250, +0x248,
  * +0x240) and where the creator FUN_00d48670 inlines its constructor; their
  * meaning is not traced. 0x290 bytes (the creator's `mov edi, 0x290`). */
-class Object016ba510 : public Object00c55550 /* derived name */
+class Object016ba510 : public Object016b85e0 /* derived name */
 {
   public:
     /* inlined in the creator FUN_00d48670: the int at +0x238 and the
@@ -40,7 +40,7 @@ class Object016ba510 : public Object00c55550 /* derived name */
      * (FUN_00cbc5a0, mode 0) and held at +0x288; the two pointers at +0x278
      * are cleared after it (the body: their 16-byte store after the call) */
     Object016ba510(const Name &name)
-        : Object00c55550(name), unknown238(0), unknown26c(0.0f), unknown270(0.0f), unknown274(1.0f),
+        : Object016b85e0(name), unknown238(0), unknown26c(0.0f), unknown270(0.0f), unknown274(1.0f),
           held288(Value00d48670::make())
     {
         unknown278 = 0;

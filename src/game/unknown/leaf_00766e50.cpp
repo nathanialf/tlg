@@ -1,29 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object00774560.h"
-
-/* derived names: the member at +0x100 of the class below, handed to
- * FUN_00216780 while its int at +0x8 is set; the rest is not traced */
-struct Member00216780 { /* derived name */
-    int FUN_00216780(); /* derived name: not traced */
-
-    u8 unknown0[0x8];
-    int unknown8; /* +0x8 */
-};
-
-/* derived names: the class whose vtable is at 0x16acb20
- * (config/vtables.derived.base.txt, stored by its constructor FUN_007658a0
- * and its destructor FUN_007659d0, not written), derived from
- * Object00774560; nothing else of it is traced */
-class Object016acb20 : public Object00774560 /* derived name */
-{
-  public:
-    virtual ~Object016acb20();
-    virtual void slot14(Pose0077bac0 *pose); /* FUN_00766e50 */
-
-  private:
-    u8 unknownfc[0x4];
-    Member00216780 unknown100; /* +0x100 */
-};
+#include "tlg_game_object016acb20.h"
 
 /* derived name: slot 14: when slot 22 says so, the member at +0x100 is run
  * while its int is set, the body put back home (Object00774560::goHome) and

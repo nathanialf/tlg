@@ -5,13 +5,13 @@
  * the vtable at 0x16ba510 (stored by FUN_00d48670), whose slot 7 FUN_00c59010 tests bit 1
  * of the same word. The record is the base whose destructor is FUN_00c55550
  * (which reads and writes the word as an int); class and method unknown. */
-struct Object00c55550 /* derived name */
+struct Object016b85e0 /* derived name */
 {
     unsigned char unknown0[0x24];
     unsigned int flags; /* +0x24 */
 };
 
-void FUN_00d48900(Object00c55550 *self) /* derived name */
+void FUN_00d48900(Object016b85e0 *self) /* derived name */
 {
     self->flags |= 0x40000;
 }

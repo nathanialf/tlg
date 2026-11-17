@@ -1,7 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_object0134f620.h"
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16b4b68 (config/vtables.derived.base.txt): it stores the vtable, runs
@@ -12,7 +12,7 @@
  * not traced. */
 void FUN_00c2a490(Object0134f620 *self); /* derived name */
 
-class Object00c29c00 : public Object00c55550 /* derived name */
+class Object00c29c00 : public Object016b85e0 /* derived name */
 {
   public:
     virtual ~Object00c29c00();

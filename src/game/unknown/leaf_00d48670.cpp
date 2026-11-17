@@ -18,7 +18,7 @@ extern Type059458a8 *D_5948c38;
 // NONMATCHING: whole module, every instruction the base's but one store's place: the five references' clear (+0x240, one
 // memset) comes after the float pair at +0x26c (the clear's scan runs on to the 1.0 at +0x274 and the memset is placed there),
 // so the pair's merged store is scheduled before it; the base stores the pair after +0x260 (round 314A)
-Object00c55550 *FUN_00d48670(void *, const Name &name)
+Object016b85e0 *FUN_00d48670(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016ba510));
     D_59458a4.lock();

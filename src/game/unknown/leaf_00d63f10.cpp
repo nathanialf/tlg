@@ -15,7 +15,7 @@ struct Value00d63f10 : Object016b9108 {};
  * 0x59459e8 is made under the empty name (FUN_00cbc5a0, mode 0) and the
  * reference at +0x240 set to it. The empty name is not released: the module
  * knows the callee only reads it. */
-Object016d24f8::Object016d24f8(const Name &name) : Object00c55550(name)
+Object016d24f8::Object016d24f8(const Name &name) : Object016b85e0(name)
 {
     Value00d63f10 *made =
         static_cast<Value00d63f10 *>(FUN_00cbc5a0(D_5945a38, D_59459e8, Name(), 0));

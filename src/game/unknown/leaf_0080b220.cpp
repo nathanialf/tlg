@@ -1,14 +1,14 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_object00c55550.h"
+#include "tlg_game_object016b85e0.h"
 #include "tlg_game_node.h"
 
 /* derived names: the class whose vtable is at 0x16ae370
  * (config/vtables.derived.base.txt, stored by FUN_0080ab20 FUN_0080b220), derived from
- * Object00c55550 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
+ * Object016b85e0 (the class whose destructor is 0xc55550): the base's slots and fields are not traced,
  * so the bytes below the first member here are the base's or this class's.
  * Its own fields are traced only where its destructor FUN_0080b220 tears them
  * down (the counted references at +0x268, +0x238, the Name at +0x31c); the rest are not traced. */
-class Object016ae370 : public Object00c55550 /* derived name */
+class Object016ae370 : public Object016b85e0 /* derived name */
 {
   public:
     virtual ~Object016ae370();

@@ -30,7 +30,8 @@ class Object016c81c0 : public Object016b9108 /* derived name */
 };
 
 /* derived names: the classes on Object016c81c0 that its creators build, each
- * named by its vtable (config/vtables.base.txt). None has members of its own: the
+ * named by its vtable (config/vtables.base.txt; Object00534610 by
+ * config/vtables.derived.base.txt). None has members of its own: the
  * creator stores only the class's vptr after the base's constructor. The
  * three constants each passes are the creator's (`mov edx`, `mov ecx`,
  * `mov r8d` before the call to 0xd68470). */
@@ -521,6 +522,38 @@ class Object016c6ec8 : public Object016c81c0 /* derived name */
     Object016c6ec8(const Name &name) : Object016c81c0(name, 0xff808000, 13, 368) {}
 
     virtual ~Object016c6ec8();
+};
+
+class Object016c6f10 : public Object016c81c0 /* derived name */
+{
+  public:
+    Object016c6f10(const Name &name) : Object016c81c0(name, 0xff808000, 13, 369) {}
+
+    virtual ~Object016c6f10();
+};
+
+class Object016c6f58 : public Object016c81c0 /* derived name */
+{
+  public:
+    Object016c6f58(const Name &name) : Object016c81c0(name, 0xff808080, 19, 371) {}
+
+    virtual ~Object016c6f58();
+};
+
+class Object016c6fa0 : public Object016c81c0 /* derived name */
+{
+  public:
+    Object016c6fa0(const Name &name) : Object016c81c0(name, 0xff000000, 0, 373) {}
+
+    virtual ~Object016c6fa0();
+};
+
+class Object00534610 : public Object016c81c0 /* derived name */
+{
+  public:
+    Object00534610(const Name &name) : Object016c81c0(name, 0xffffffff, 0, 0) {}
+
+    virtual ~Object00534610();
 };
 
 #endif
