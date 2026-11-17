@@ -21,7 +21,7 @@ class Object016acb20 : public Object00774560 /* derived name */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_00766e50 */
 
   private:
-    u8 unknowne8[0x18];
+    u8 unknownfc[0x4];
     Member00216780 unknown100; /* +0x100 */
 };
 

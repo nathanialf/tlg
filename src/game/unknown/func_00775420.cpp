@@ -28,16 +28,74 @@ Name D_5817a34(D_1594cad, false);
 struct Start00774760 { /* derived name */
     u8 unknown0[0x8];
     float length; /* +0x8 */
+    u8 unknownc[0xd4];
+    Float4A unknowne0; /* +0xe0: a point, copied by FUN_00799ae0 */
 };
 
 struct Object0136b6f0; /* derived name: not traced */
 
 void FUN_0136b6f0(Object0136b6f0 *object); /* derived name */
 
+/* derived names: the body's object at +0xc00 keeps two ints at +0x60 and
+ * +0x64; a change to either sets its flag bit 2 (`or byte [rax+0x20], 4`
+ * only where the value differs: the overrides of slot 6 below) */
+struct State00774760 : public Object016b9108 { /* derived name */
+
+    void setUnknown60(int value) /* derived name */
+    {
+        if (unknown60 != value) {
+            unknown60 = value;
+            flags |= 4;
+        }
+    }
+
+    void setUnknown64(int value) /* derived name */
+    {
+        if (unknown64 != value) {
+            unknown64 = value;
+            flags |= 4;
+        }
+    }
+
+    u8 unknown24[0x3c];
+    int unknown60; /* +0x60 */
+    int unknown64; /* +0x64 */
+};
+
+/* derived names: the body at +0x68 as the overrides of slot 6 read it */
+struct Body00774760 { /* derived name */
+    u8 unknown0[0x678];
+    int unknown678; /* +0x678 */
+    u8 unknown67c[0x48c];
+    int unknownb08; /* +0xb08 */
+    int unknownb0c; /* +0xb0c */
+    u8 unknownb10[0xf0];
+    State00774760 *unknownc00; /* +0xc00 */
+    u8 unknownc08[0x1518];
+    Float4A unknown2120; /* +0x2120 */
+    u8 unknown2130[0x198];
+    int unknown22c8; /* +0x22c8 */
+};
+
+/* derived names: the block at +0x24 slot 6 clears, with the ints the
+ * overrides set after it */
+struct Block00774760 { /* derived name */
+    int unknown0;      /* +0x24 */
+    int unknown4;      /* +0x28 */
+    int unknown8;      /* +0x2c */
+    int unknownc;      /* +0x30 */
+    u8 unknown10[0x10];
+    int unknown20; /* +0x44 */
+    u8 unknown24[0x8];
+    int unknown2c; /* +0x50 */
+    u8 unknown30[0x10];
+};
+
 struct Object00774760 { /* derived name */
     u8 unknown0[0x24];
-    u8 unknown24[0x40];
-    u8 unknown64[0xc];
+    Block00774760 unknown24; /* +0x24 */
+    u8 unknown64[0x4];
+    Body00774760 *unknown68;   /* +0x68 */
     Object0136b6f0 *unknown70; /* +0x70 */
     int unknown78;             /* +0x78 */
     float unknown7c;           /* +0x7c */
@@ -56,7 +114,7 @@ struct Object00774760 { /* derived name */
 
 void FUN_00774760(Object00774760 *self, const Start00774760 *start) /* derived name */
 {
-    memset(self->unknown24, 0, sizeof(self->unknown24));
+    memset(&self->unknown24, 0, sizeof(self->unknown24));
     FUN_0136b6f0(self->unknown70);
     self->unknown78 = 0;
     float length = start->length;
@@ -77,7 +135,7 @@ void FUN_00774760(Object00774760 *self, const Start00774760 *start) /* derived n
 /* FUN_00765630: the same body */
 void FUN_00765630(Object00774760 *self, const Start00774760 *start) /* derived name */
 {
-    memset(self->unknown24, 0, sizeof(self->unknown24));
+    memset(&self->unknown24, 0, sizeof(self->unknown24));
     FUN_0136b6f0(self->unknown70);
     self->unknown78 = 0;
     float length = start->length;
@@ -103,4 +161,82 @@ void Object00774560::slot7()
 {
     unknown68->rotation = Float4Data(reinterpret_cast<const Float4Data &>(VECTOR_W));
     unknown68->position = Float4Data(reinterpret_cast<const Float4Data &>(VECTOR_W));
+}
+
+/* derived names: the overrides of slot 6 in the classes over 0x16acd78 that
+ * read this file's VECTOR_W: each starts with the base's body (FUN_00774760,
+ * inlined), then sets its own fields */
+/* derived name: not traced; the tail of Object016ac990's slot 6 */
+void FUN_007633f0(Object00774760 *self, const Start00774760 *start);
+
+/* FUN_007640a0: slot 6 of the vtable at 0x16ac990 */
+void FUN_007640a0(Object00774760 *self, const Start00774760 *start) /* derived name */
+{
+    FUN_00774760(self, start);
+    self->unknown24.unknown4 = 1;
+    self->unknown24.unknown8 = 1;
+    self->unknown24.unknown2c = 1;
+    self->unknown68->unknownc00->setUnknown60(0);
+    self->unknown68->unknown22c8 = 0;
+    FUN_007633f0(self, start);
+}
+
+/* derived names: Object016acf08's own int at +0x120 */
+struct Object00777fb0 : public Object00774760 { /* derived name */
+    u8 unknownfc[0x24];
+    int unknown120; /* +0x120 */
+};
+
+/* FUN_00777fb0: slot 6 of the vtable at 0x16acf08 */
+void FUN_00777fb0(Object00777fb0 *self, const Start00774760 *start) /* derived name */
+{
+    FUN_00774760(self, start);
+    if (self->unknown120)
+        self->unknown24.unknown2c = 1;
+}
+
+/* FUN_00778f70: slot 6 of the vtable at 0x16ad098 */
+void FUN_00778f70(Object00774760 *self, const Start00774760 *start) /* derived name */
+{
+    FUN_00774760(self, start);
+    self->unknown24.unknownc = 1;
+    self->unknown68->unknownc00->setUnknown60(0);
+    self->unknown68->unknownc00->setUnknown64(self->unknown68->unknownb0c);
+}
+
+/* FUN_007792e0: slot 6 of the vtable at 0x16ad160 */
+void FUN_007792e0(Object00774760 *self, const Start00774760 *start) /* derived name */
+{
+    FUN_00774760(self, start);
+    self->unknown24.unknown0 = 1;
+    self->unknown24.unknownc = 1;
+    self->unknown68->unknownc00->setUnknown60(0);
+    self->unknown68->unknownc00->setUnknown64(self->unknown68->unknownb0c);
+}
+
+/* derived names: Object016ad868's own int at +0x100 and point at +0x110 */
+struct Object00799ae0 : public Object00774760 { /* derived name */
+    u8 unknownfc[0x4];
+    int unknown100; /* +0x100 */
+    u8 unknown104[0xc];
+    Float4A unknown110; /* +0x110 */
+};
+
+/* FUN_00799ae0: slot 6 of the vtable at 0x16ad868: the point at +0x110
+ * the body's at +0x2120 when its int at +0x678 is 2, else the argument's at
+ * +0xe0 */
+void FUN_00799ae0(Object00799ae0 *self, const Start00774760 *start) /* derived name */
+{
+    FUN_00774760(self, start);
+    self->unknown24.unknownc = 1;
+    self->unknown24.unknown2c = 1;
+    self->unknown24.unknown20 = 1;
+    const int value = self->unknown68->unknownb08;
+    self->unknown68->unknownc00->setUnknown60(value);
+    self->unknown68->unknownc00->setUnknown64(self->unknown68->unknownb0c);
+    self->unknown100 = 0;
+    if (self->unknown68->unknown678 == 2)
+        self->unknown110 = self->unknown68->unknown2120;
+    else
+        self->unknown110 = start->unknowne0;
 }

@@ -142,6 +142,77 @@ struct Chooser0079c700 { /* derived name */
 struct Context0079c700 { /* derived name */
     u8 unknown0[0x58];
     Chooser0079c700 *unknown58; /* +0x58 */
+    u8 unknown60[0x70];
+    /* +0xd0, +0xe0: a rotation and a point, turned and moved by the body's
+     * in Object016ad7a0's slot 17 (FUN_00799560), as a pose's */
+    Float4A rotationd0;
+    Float4A pointe0;
+};
+
+/* derived names: the body's tracker at +0x4fe0, the int at +0x68 set by
+ * Object016ad7a0's slot 17, the whole cleared when its first link's held
+ * object has a zero at +0x58 (FUN_00799560) */
+struct alignas(16) TrackerC00799560 { /* derived name */
+
+    void reset() /* derived name */
+    {
+        unknown0 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown10 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown20 = Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        unknown30 = 0;
+        unknown34 = FLT_MAX;
+        unknown38 = FLT_MAX;
+        unknown3c = FLT_MAX;
+        unknown40 = FLT_MAX;
+        unknown44 = 0;
+        unknown48 = -1;
+        unknown4c = 1.0f;
+        unknown50 = 0.0f;
+        unknown54 = 0.0f;
+        unknown58 = 0.0f;
+        unknown5c = 0.0f;
+        unknown60 = FLT_MAX;
+        unknown64 = FLT_MAX;
+        unknown68 = 0;
+    }
+
+    Float4A unknown0;  /* +0x0 */
+    Float4A unknown10; /* +0x10 */
+    Float4A unknown20; /* +0x20 */
+    int unknown30;     /* +0x30 */
+    float unknown34;   /* +0x34 */
+    float unknown38;   /* +0x38 */
+    float unknown3c;   /* +0x3c */
+    float unknown40;   /* +0x40 */
+    int unknown44;     /* +0x44 */
+    int unknown48;     /* +0x48 */
+    float unknown4c;   /* +0x4c */
+    float unknown50;   /* +0x50 */
+    float unknown54;   /* +0x54 */
+    float unknown58;   /* +0x58 */
+    float unknown5c;   /* +0x5c */
+    float unknown60;   /* +0x60 */
+    float unknown64;   /* +0x64 */
+    int unknown68;     /* +0x68 */
+};
+
+/* derived names: a 0x90-byte record of the body's part at +0x4f80: an
+ * object at +0x78 and a value at +0x80, which Object016ad7a0's slot 17
+ * matches against its first link's (FUN_00799560); the rest is not
+ * traced */
+struct Record00799560 { /* derived name */
+    u8 unknown0[0x78];
+    Object016b9108 *object; /* +0x78 */
+    void *value;            /* +0x80 */
+    u8 unknown88[0x8];
+};
+
+/* derived names: the body's part at +0x4f80: its records at +0x38; the
+ * rest is not traced */
+struct Part00799560 { /* derived name */
+    u8 unknown0[0x38];
+    Array05943280<Record00799560> records; /* +0x38 */
+    u8 unknown50[0x10];
 };
 
 /* derived names: what the pointer at +0x68 of the class below holds: a
@@ -170,15 +241,24 @@ struct Body0077bac0 { /* derived name */
     Float4A position;
     u8 unknownbb0[0x780];
     int unknown1330; /* +0x1330: while it is not zero slot 14 leaves the body where it put it back (FUN_0079d4a0) */
-    u8 unknown1334[0x8c];
+    u8 unknown1334[0x5c];
+    /* +0x1390, +0x13a0, +0x13d0, +0x13f0: copied out with +0x1330, +0x13c0
+     * and +0x13e0 by Object016ad480's slot 11 (FUN_0078b710); not traced */
+    Float4A unknown1390;
+    Float4A unknown13a0;
+    u8 unknown13b0[0x10];
     Float4A unknown13c0; /* +0x13c0: the point the body is put back to */
-    u8 unknown13d0[0x10];
+    Float4A unknown13d0;
     Float4A unknown13e0; /* +0x13e0: the rotation the body is put back to */
-    u8 unknown13f0[0x50];
+    Float4A unknown13f0;
+    u8 unknown1400[0x40];
     Vector0077bac0 unknown1440; /* +0x1440: taken off the pose's position by FUN_00799350 */
     u8 unknown144c[0x6c0];
     int unknown1b0c; /* +0x1b0c: copied to +0x3c of the object by FUN_007950a0 */
-    u8 unknown1b10[0x3550];
+    u8 unknown1b10[0x3470];
+    Part00799560 part4f80;     /* +0x4f80 */
+    TrackerC00799560 trackerC; /* +0x4fe0 */
+    u8 unknown5050[0x10];
     Float4A unknown5060; /* +0x5060: a copy of the point FUN_00799350 sets */
     u8 unknown5070[0x70];
     TrackerA00777cb0 trackerA; /* +0x50e0 */
@@ -319,6 +399,18 @@ class Object00774560 : public Object016b9108 /* derived name */
 
   private:
     Name namee4; /* +0xe4: released by the destructor (`mov eax, [rbx+0xe4]; shl 5`) */
+    u8 unknowne8[0x8];
+
+  protected:
+    /* +0xf0: 0.25 from Object016accb0's constructor (FUN_0076e4a0), 0.3
+     * from Object016ad9f8's (FUN_0079c900); not traced */
+    float unknownf0;
+
+  private:
+    /* +0xf4, +0xf8: 1 and 0.0 from slot 6 (FUN_00774760); the derived
+     * classes' own fields start after them, at +0xfc */
+    int unknownf4;
+    float unknownf8;
 };
 
 #endif

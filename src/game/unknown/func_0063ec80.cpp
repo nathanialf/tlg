@@ -1,16 +1,16 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_name.h"
-#include <xmmintrin.h>
+#include "tlg_libc.h"
 
 /* derived names: FUN_0063ec80 tests whether a point is within reach of
  * either of two named points of an object (the names looked up, not
  * interned, kept in a guarded static list 8 bytes above its guard as
  * cookbook 1194, destroyed by the array destructor 0x6422d0). Each point is
  * the position at +0x1c0 of the record FUN_00613440 finds for the name, else
- * the default point D_580f920; the distances are taken by one Newton step of
- * the reciprocal square root estimate (-0.5 and -3 at 0x14d68e4 and
- * 0x14d68e0), zero for a zero length. Within reach, or when the flag at
+ * the default point D_580f920; the distances are sqrtf's (under -ffast-math one
+ * Newton step of the reciprocal square root estimate, -0.5 and -3 at
+ * 0x14d68e4 and 0x14d68e0, zero for a zero length). Within reach, or when the flag at
  * +0x21f8 asks for it once, bit 0x4000 of the flags at +0x2420 is set; when
  * that bit differs from the flags at +0x2424, bit 0x200 of the object's flags
  * follows it. */
@@ -26,10 +26,7 @@ struct Vec3063ec80 { /* derived name */
     float length() const /* derived name */
     {
         float lengthSquared = x * x + z * z + y * y;
-        float estimate = _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(lengthSquared)));
-        float length =
-            estimate * -0.5f * lengthSquared * (lengthSquared * estimate * estimate - 3.0f);
-        return lengthSquared == 0.0f ? 0.0f : length;
+        return sqrtf(lengthSquared);
     }
 };
 
@@ -84,7 +81,9 @@ static Vec3063ec80 pointOf(Object063ec80 *object, const Name &name) /* derived n
 // loaded as 8 and 4 bytes and split by `shr rcx, 0x20`, the record's three
 // fields as three 4-byte loads into ebx, ecx and r12d, moved to xmm by vmovd
 // at each subtraction); this build carries them as <2 x float> and float
-// (vmovsd, vmovshdup) and spills them, 693 bytes against 687. Written inline
+// (vmovsd, vmovshdup) and spills them, 688 bytes against 687 (the length
+// sqrtf's, LLVM's estimate under -ffast-math: 693 bytes with the estimate
+// written out). Written inline
 // in the function the build is further off (742 bytes). The tail matches in
 // shape but for the flag update, which this build selects with cmovne where
 // the base branches.

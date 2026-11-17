@@ -20,9 +20,6 @@ class Object016ad9f8 : public Object00774560 /* derived name */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_0079d4a0 */
 
   private:
-    u8 unknowne8[0x8];
-    float unknownf0; /* +0xf0: 0.3 from the constructor; not traced */
-    u8 unknownf4[0x8];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
     u8 unknown100[0x20];
     float unknown120; /* +0x120: 0.0 from the constructor; not traced */

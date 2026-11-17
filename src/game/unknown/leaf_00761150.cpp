@@ -14,7 +14,7 @@ class Object016ac8c8 : public Object00774560 /* derived name */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_00762b30 */
 
   private:
-    u8 unknowne8[0x28];
+    u8 unknownfc[0x14];
     Vector0077bac0 unknown110; /* +0x110: scaled by +0x174 in slot 14 */
     u8 unknown11c[0x58];
     float unknown174; /* +0x174 */

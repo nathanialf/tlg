@@ -23,7 +23,6 @@ class Object016ad6d8 : public Object00774560 /* derived name */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_007950a0 */
 
   private:
-    u8 unknowne8[0x14];
     Name
         namefc; /* +0xfc: set by the constructor, released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
     /* +0x100: a counted reference, empty from the constructor, released by

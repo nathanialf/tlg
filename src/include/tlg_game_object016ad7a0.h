@@ -17,10 +17,10 @@ class Object016ad7a0 : public Object00774560 /* derived name */
   public:
     Object016ad7a0(const Name &name); /* FUN_007970d0 */
     virtual ~Object016ad7a0();
-    virtual void slot14(Pose0077bac0 *pose); /* FUN_00799350 */
+    virtual void slot14(Pose0077bac0 *pose);       /* FUN_00799350 */
+    virtual void slot17(Context0079c700 *context); /* FUN_00799560 */
 
   private:
-    u8 unknowne8[0x14];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
     /* +0x100, +0x130: two links, each reset by the constructor's body */
     Link0079ab40 link100;
@@ -29,8 +29,8 @@ class Object016ad7a0 : public Object00774560 /* derived name */
     int unknown164;   /* +0x164: zero from the constructor; not traced */
     float unknown168; /* +0x168: 45.0 from the constructor; not traced */
     float unknown16c; /* +0x16c: 0.001 from the constructor; not traced */
-    u8 unknown170[0x4];
-    int unknown174;     /* +0x174: 1 from the constructor; not traced */
+    int unknown170;   /* +0x170: handed to the body's tracker at +0x4fe0 by slot 17 */
+    int unknown174;   /* +0x174: 1 from the constructor; not traced */
     u8 unknown178[0x8]; /* the rest of the 0x180 bytes the creator allocates; not traced */
 };
 

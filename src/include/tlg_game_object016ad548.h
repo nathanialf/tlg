@@ -55,7 +55,6 @@ class Object016ad548 : public Object00774560 /* derived name */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_00790150 */
 
   private:
-    u8 unknowne8[0x14];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
     /* +0x100: a link, reset by the constructor's body */
     Link0078de30 link100;

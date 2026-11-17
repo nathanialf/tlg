@@ -14,6 +14,16 @@
  * tears them down. The destructor is the class's key function
  * (leaf_007631b0.cpp), so that unit emits the vtable and the
  * destructors. */
+/* derived names: the object held at +0x120: a rotation at +0xb90 and a
+ * point at +0xba0, where the body keeps its own; the rest is not traced */
+class Held00764ff0 : public Object016b9108 /* derived name */
+{
+  public:
+    u8 unknown24[0xb6c];
+    Float4A rotation; /* +0xb90 */
+    Float4A position; /* +0xba0 */
+};
+
 class Object016ac990 : public Object00774560 /* derived name */
 {
   public:
@@ -27,10 +37,10 @@ class Object016ac990 : public Object00774560 /* derived name */
     }
 
     virtual ~Object016ac990();
+    virtual void slot14(Pose0077bac0 *pose);       /* FUN_00764ff0 */
     virtual void slot17(Context0079c700 *context); /* FUN_00765280 */
 
   private:
-    u8 unknowne8[0x14];
     Name namefc;  /* +0xfc: empty from the constructor, released by the destructor */
     Name name100; /* +0x100: empty from the constructor, released by the destructor */
     /* +0x104: slot 17 hands the two references below to the body when it
@@ -45,9 +55,14 @@ class Object016ac990 : public Object00774560 /* derived name */
      * the destructor; slot 17 copies it into the body's at +0x62e8 */
     AtomicRef0045c470<Node00503fb0> held118;
     /* +0x120: a counted reference, empty from the constructor, released by
-     * the destructor */
-    Ref00503fb0<Object016b9108> held120;
-    u8 unknown128[0x2c];
+     * the destructor; slot 14 turns and moves the body by it */
+    Ref00503fb0<Held00764ff0> held120;
+    u8 unknown128[0x8];
+    /* +0x130, +0x140: a rotation and an offset slot 14 takes off the held
+     * object's (FUN_00764ff0); not traced */
+    Float4A unknown130;
+    Float4A unknown140;
+    u8 unknown150[0x4];
     int unknown154; /* +0x154: 1 from the constructor; not traced */
     u8 unknown158[0x8];
 };

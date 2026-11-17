@@ -12,10 +12,10 @@
 #include "tlg_game_type.h"
 #include "tlg_game_object016b9108.h"
 
-struct Component00503fb0 { /* derived name */
-    u8 unknown0[0x18];
-    Type00503fb0 *type; /* +0x18 */
-    u8 unknown20[0x1a];
+/* a component is an object of the root class: its type at +0x18, its
+ * count at +0x8 (a counted reference holds one: FUN_0083c7f0) */
+struct Component00503fb0 : public Object016b9108 { /* derived name */
+    u8 unknown24[0x16];
     /* +0x3a: flags; FUN_00cf56b0 clears flag 2 of the component of the
      * type the pointer at 0x5948180 holds */
     u8 flags3a;
@@ -310,6 +310,13 @@ class Node00503fb0 : public Object016b9108 /* derived name */
     Component00503fb0 *componentAt(int index) const /* derived name */
     {
         return components[index];
+    }
+
+    /* the child at a signed index (`movsxd` under an unsigned counter at
+     * 0x83c9c4), read without a reference of its own */
+    Node00503fb0 *childAt(int index) const /* derived name */
+    {
+        return children[index].get();
     }
 
     /* the first component from `next` on whose type is `type` or derives

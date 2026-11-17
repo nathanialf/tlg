@@ -22,9 +22,6 @@ class Object016accb0 : public Object00774560 /* derived name */
     virtual ~Object016accb0();
 
   private:
-    u8 unknowne8[0x8];
-    float unknownf0; /* +0xf0: 0.25 from the constructor; not traced */
-    u8 unknownf4[0x8];
     float unknownfc;  /* +0xfc: 0.1 from the constructor; not traced */
     Name name100;     /* +0x100: released by the destructor (`mov eax, [rbx+0x100]; shl 5`) */
     float unknown104; /* +0x104: 0.5 from the constructor; not traced */

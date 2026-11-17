@@ -14,7 +14,6 @@ class Object016ad3b8 : public Object00774560 /* derived name */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_0077c5a0 */
 
   private:
-    u8 unknowne8[0x14];
     Name namefc; /* +0xfc */
 };
 

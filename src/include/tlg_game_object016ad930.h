@@ -21,7 +21,6 @@ class Object016ad930 : public Object00774560 /* derived name */
     virtual void slot17(Context0079c700 *context); /* FUN_0079c700 */
 
   private:
-    u8 unknowne8[0x14];
     Name namefc; /* +0xfc: released by the destructor (`mov eax, [rbx+0xfc]; shl 5`) */
     /* +0x100, +0x130: two links, each reset by the constructor's body */
     Link0079ab40 link100;
