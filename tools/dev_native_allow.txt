@@ -1,11 +1,14 @@
-# Ruled exceptions to tools/check_dev_native.py: `<path>:<line prefix> <reason>`.
-# A site listed here is reported as ALLOWED on every run, never silent. An
+# Ruled exceptions to tools/check_dev_native.py: `<path> <count> `<line text>` <reason>`.
+# An entry allows the lines of <path> whose stripped text is exactly <line text>,
+# and exactly <count> of them: one more site, or one fewer, fails the check (a
+# new site needs its own ruling; a stale entry is corrected or removed). A site
+# listed here is reported as ALLOWED on every run, never silent. An
 # exception needs the base's own evidence that the construct is the
 # developer's (a volatile the code's logic treats as volatile, an alignment
 # attribute the layout proves); a construct that exists to steer codegen is
 # never allowed here, it is removed.
-src/libs/unknown/func_00184cf0.cpp:__asm__ __volatile__("rdtscp" the base's bytes at 0x184cf0 are rdtscp itself; LLVM 3.3 has no intrinsic or header for it (X86InstrSystem.td:22 empty pattern, no int_x86_rdtscp, no __rdtscp), so inline asm is the developer's only spelling and it emits the function's instruction rather than steering codegen (D9)
+src/libs/unknown/func_00184cf0.cpp 1 `__asm__ __volatile__("rdtscp" : "=a"(low), "=d"(high) : : "rcx");` the base's bytes at 0x184cf0 are rdtscp itself; LLVM 3.3 has no intrinsic or header for it (X86InstrSystem.td:22 empty pattern, no int_x86_rdtscp, no __rdtscp), so inline asm is the developer's only spelling and it emits the function's instruction rather than steering codegen (D9)
 
-src/include/tlg_lib_unknown.h:__asm__ the monitor stream's timers read the time-stamp counter with rdtsc through inline asm (D34): the base keeps each path's rdtsc where LLVM 3.3's tail merge joins the machine instruction of __builtin_readcyclecounter (BranchFolding.cpp:340-346 stops a common tail at an inline asm; 0x142cfd and 0x142d9e against the shared stores at 0x142da0); the asm emits the read itself and steers nothing
+src/include/tlg_lib_unknown.h 1 `__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));` the monitor stream's timers read the time-stamp counter with rdtsc through inline asm (D34): the base keeps each path's rdtsc where LLVM 3.3's tail merge joins the machine instruction of __builtin_readcyclecounter (BranchFolding.cpp:340-346 stops a common tail at an inline asm; 0x142cfd and 0x142d9e against the shared stores at 0x142da0); the asm emits the read itself and steers nothing
 
-src/include/tlg_game_node.h:__asm__ the compiler barrier after the exchange in compareAndSwap(int *, int, int), the one wrapper the creation lock's wait loop uses (the supervisor's ruling, round 280D): 6,415 of the game's 20,959 `lock cmpxchg` are followed by `pushfq; pop rax; push rax; popfq` (0x2188f3), every one a 32-bit exchange with a zero expected value in that loop: the exchange's flags copied across a statement that clobbers them; 35 forms without the statement branch at once (round 256B), and with it FUN_002188b0, FUN_00b0d680 and FUN_00b0c950 are equal and no claimed row changes
+src/include/tlg_game_node.h 1 `__asm__ __volatile__("" ::: "memory");` the compiler barrier after the exchange in compareAndSwap(int *, int, int), the one wrapper the creation lock's wait loop uses (the supervisor's ruling, round 280D): 6,415 of the game's 20,959 `lock cmpxchg` are followed by `pushfq; pop rax; push rax; popfq` (0x2188f3), every one a 32-bit exchange with a zero expected value in that loop: the exchange's flags copied across a statement that clobbers them; 35 forms without the statement branch at once (round 256B), and with it FUN_002188b0, FUN_00b0d680 and FUN_00b0c950 are equal and no claimed row changes

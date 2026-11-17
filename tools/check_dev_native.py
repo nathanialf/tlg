@@ -35,8 +35,12 @@ Allowed and not flagged: alignment (`alignas`, `__attribute__((aligned))`),
 intrinsics headers, `#pragma once`, `#pragma pack` (a layout fact, not a
 codegen steer).
 
-Exceptions live in tools/dev_native_allow.txt as `<path>:<line-text-prefix>
-<reason>`; an allowed site is reported, never silent.
+Exceptions live in tools/dev_native_allow.txt as
+`<path> <count> `<line text>` <reason>`: the entry allows the lines of that
+file whose text (stripped) is exactly the line text, and exactly <count> of
+them. A file holding more matching lines than the count fails (a second site
+needs its own ruling), and so does one holding fewer (a stale entry). An
+allowed site is reported, never silent.
 
     check_dev_native.py              staged sources (pre-commit), else every tracked source
     check_dev_native.py <file>...    these files
@@ -76,16 +80,22 @@ def strip_strings(line: str) -> str:
     return re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', lambda m: " " * len(m.group(0)), line)
 
 
-def load_allow() -> list[tuple[str, str, str]]:
+ALLOW_RE = re.compile(r"^(\S+)\s+(\d+)\s+`([^`]+)`\s+(.+)$")
+
+
+def load_allow(path: Path = ALLOW) -> list[tuple[str, int, str, str]]:
+    """Entries `<path> <count> `<line text>` <reason>`; a malformed entry is an error."""
     out = []
-    if ALLOW.exists():
-        for line in ALLOW.read_text().splitlines():
+    if path.exists():
+        for n, line in enumerate(path.read_text().splitlines(), 1):
             s = line.strip()
             if not s or s.startswith("#"):
                 continue
-            loc, _, reason = s.partition(" ")
-            path, _, prefix = loc.partition(":")
-            out.append((path, prefix, reason))
+            m = ALLOW_RE.match(s)
+            if not m:
+                raise SystemExit(f"check_dev_native: {path.name}:{n}: malformed entry "
+                                 "(want `<path> <count> `<line text>` <reason>`)")
+            out.append((m.group(1), int(m.group(2)), m.group(3).strip(), m.group(4)))
     return out
 
 
@@ -97,6 +107,7 @@ def check_file(path: Path, rel: str, allow) -> list[str]:
         return [f"{rel}: {e}"]
     in_block_comment = False
     prev_had_comment = False
+    used = {}  # entry index -> lines it allowed
     for i, raw in enumerate(lines, 1):
         line = raw
         # drop comments (block comments may span lines)
@@ -130,13 +141,26 @@ def check_file(path: Path, rel: str, allow) -> list[str]:
                 hits.append(name)
         if VOLATILE_RE.search(code) and not (had_comment or prev_had_comment):
             hits.append("volatile without a reason in a comment on this line or the line above")
-        for name in hits:
-            allowed = next((r for p, pre, r in allow if p == rel and raw.strip().startswith(pre)), None)
-            if allowed:
-                print(f"check_dev_native: ALLOWED {rel}:{i}: {name} ({allowed})")
+        if hits:
+            k = next((k for k, (p, _, text, _) in enumerate(allow) if p == rel and raw.strip() == text), None)
+            if k is not None:
+                used.setdefault(k, []).append(i)
+                for name in hits:
+                    print(f"check_dev_native: ALLOWED {rel}:{i}: {name} ({allow[k][3]})")
             else:
-                problems.append(f"{rel}:{i}: {name}: {raw.strip()[:100]}")
+                for name in hits:
+                    problems.append(f"{rel}:{i}: {name}: {raw.strip()[:100]}")
         prev_had_comment = had_comment
+    for k, (p, count, text, _) in enumerate(allow):
+        if p != rel:
+            continue
+        sites = used.get(k, [])
+        if len(sites) > count:
+            problems.append(f"{rel}: {len(sites)} sites of `{text}` (lines {', '.join(map(str, sites))}) "
+                            f"where tools/dev_native_allow.txt allows {count}: a new site needs its own ruling")
+        elif len(sites) < count:
+            problems.append(f"{rel}: {len(sites)} sites of `{text}` where tools/dev_native_allow.txt "
+                            f"allows {count}: a stale entry (correct its count or remove it)")
     return problems
 
 
@@ -196,6 +220,18 @@ def self_test() -> int:
             r = check_file(p, f"src/t/good{i}.cpp", [])
             if r:
                 print(f"self-test: wrongly refused: {text} -> {r}")
+                ok = False
+        # an entry allows its count of exact lines: one site passes, a second
+        # (or none) fails, and a line that only starts with the text is not allowed
+        barrier = '__asm__ __volatile__("" ::: "memory");'
+        entry = [("src/t/a.h", 1, barrier, "ruling")]
+        for text, want_ok in [(barrier, True), (barrier + "\n" + barrier, False), ("int x;", False),
+                              (barrier[:-1] + " // more", False)]:
+            p = Path(d) / "a.h"
+            p.write_text(text + "\n")
+            r = check_file(p, "src/t/a.h", entry)
+            if bool(r) == want_ok:
+                print(f"self-test: allow count wrong for {text!r} -> {r}")
                 ok = False
     print("check_dev_native: self-test", "OK" if ok else "FAILED")
     return 0 if ok else 1
