@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_object014068b0.h"
 
 /* derived names: the constructor of the class whose vtable is at 0x16d7c58
  * (config/vtables.derived.base.txt): its base's constructor FUN_0148c070 (its
@@ -9,17 +9,6 @@
  * (LoopIdiom makes it a memset after TailCallElim has run, so the call is
  * not a tail call). The vtable's first two slots are not destructors.
  * The fields' meaning is not traced. */
-class Object0148c070 /* derived name */
-{
-  public:
-    Object0148c070(int kind);
-    virtual void slot0(); /* derived name; not traced */
-    virtual void slot1(); /* derived name; not traced */
-
-  private:
-    u8 unknown8[0x5c];
-};
-
 class Object0148c2f0 : public Object0148c070 /* derived name */
 {
   public:

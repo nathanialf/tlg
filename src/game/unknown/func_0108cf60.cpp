@@ -53,3 +53,20 @@ void FUN_013fccf0(FramePoser013fccf0 *self) /* derived name */
         previous.unknown10 = current.unknown10;
     }
 }
+
+/* derived name: for each of the five poses, the frame of the frame set and
+ * the vector of the vector set at `frame` take the model's pose: its
+ * position and its rotation turned to w not negative, then its vector at
+ * +0x20; slot 4 of the vtable at 0x16d5670 */
+// NONMATCHING: register assignment and order only (59/97, every instruction the base's
+// operation): the base keeps the counter in rax and the sets' block in rsi where this has
+// rcx and rax, and stores the stack guard before the frame's offsets; an int or unsigned
+// counter and the index read before the frame change nothing
+void FUN_01404660(FramePoser013fccf0 *self, int frame) /* derived name */
+{
+    for (int i = 0; i < 5; ++i) {
+        takePose(self->sets.at(i).frames.at(frame), self->model, self->indices.at(i));
+        self->vectorSets.at(i).vectors.at(frame) =
+            self->model->skeleton.poses[self->indices.at(i)].unknown20;
+    }
+}

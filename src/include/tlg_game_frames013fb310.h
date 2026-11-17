@@ -28,11 +28,18 @@ struct FrameSet013fa8d0 {                /* derived name */
     Array01343a80<Frame016c1128> frames; /* +0x0 */
 };
 
+/* derived names: an array of vectors, one per frame (FUN_01404660 and its
+ * copies: a pose's vector at +0x20 copied into one) */
+struct VectorSet01404660 {          /* derived name */
+    Array01343a80<Vector4> vectors; /* +0x0 */
+};
+
 /* derived names: an object holding a frame set per pose of a model: the
  * model at +0x8, each set's pose index (an array at +0x10), the sets (an
  * array at +0x28) and their count at +0x98 (FUN_013fccf0 and its copies,
  * one per file: an unsigned counter passed to at(int), each element's
- * index sign-extended in the loop) */
+ * index sign-extended in the loop) and a vector set per pose at +0xa0
+ * (FUN_01404660 and its copies) */
 struct FramePoser013fccf0 { /* derived name */
     u8 unknown0[0x8];
     FadeModel013d4610 *model;             /* +0x8 */
@@ -40,6 +47,8 @@ struct FramePoser013fccf0 { /* derived name */
     Array05943280<FrameSet013fa8d0> sets; /* +0x28 */
     u8 unknown40[0x58];
     unsigned count; /* +0x98 */
+    u8 unknown9c[0x4];
+    Array05943280<VectorSet01404660> vectorSets; /* +0xa0 */
 };
 
 #endif

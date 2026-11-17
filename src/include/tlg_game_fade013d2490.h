@@ -62,7 +62,8 @@ struct FadeTarget013d2490 {           /* derived name */
 struct FadePose013d4610 { /* derived name */
     Vector4 position;     /* +0x0 */
     Vector4 rotation;     /* +0x10 */
-    u8 unknown20[0x20];
+    Vector4 unknown20;    /* +0x20: copied out whole by FUN_01404660 */
+    u8 unknown30[0x10];
 };
 
 /* derived names: the model's skeleton at +0x40, whose poses FUN_013ce2d0
