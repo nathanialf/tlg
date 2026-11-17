@@ -1,0 +1,23 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_array.h"
+#include "tlg_game_node.h"
+#include "tlg_game_object016b9108.h"
+#include "tlg_math.h"
+
+/* derived names: the 0x50-byte element FUN_01005270 appends (its callers
+ * FUN_00ff1940, FUN_013e96f0 and FUN_013e9c80): an int, three 16-byte
+ * aligned four-float vectors copied lane by lane, an int at +0x40 and a
+ * counted reference at +0x48, its count raised behind the null test and the
+ * released mark (`cmp dword [rdx+8], 0xdeadc0de; je; lock inc`). The
+ * fields' use and the referenced class are not traced. */
+struct Element01005270 { /* derived name */
+    int unknown0;
+    Float4A unknown10;                 /* +0x10 */
+    Float4A unknown20;                 /* +0x20 */
+    Float4A unknown30;                 /* +0x30 */
+    int unknown40;                     /* +0x40 */
+    Ref00503fb0<Object016b9108> ref48; /* +0x48 */
+};
+
+/* FUN_01005270 */
+template void Array05943280<Element01005270>::push(const Element01005270 &);

@@ -37,7 +37,8 @@ class Object00c1b7f0 : public Object016b9108 /* derived name */
     Name name28;   /* +0x28: released by the destructor (`mov eax, [rbx+0x28]; shl 5`) */
     u8 unknown2c[0x4];
     void *unknown30; /* +0x30: null from the constructor; not traced */
-    u8 unknown38[0x8];
+    /* the data ends at +0x38: the class at 0x16bd6a0 (FUN_00e0de00) keeps
+     * its own Names at +0x38 to +0x44 */
 };
 
 /* derived names: the 0x28-byte element of the array at +0x108 of

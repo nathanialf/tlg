@@ -94,6 +94,18 @@ template <class T> class Array05943280 /* derived name */
         return index;
     }
 
+    /* appends a default element, growing the block first when it is full,
+     * and returns its index (FUN_00ea4bf0: the old count kept in r14d, the
+     * element's constructor's stores in the new slot, `mov eax, r14d`) */
+    unsigned add() /* derived name */
+    {
+        unsigned index = count++;
+        if (count > capacity)
+            grow(count);
+        new (&data[index]) T;
+        return index;
+    }
+
     /* appends a copy of the value unless an element equals it; the block
      * grows through the owner its header names (FUN_00ce22e0: the elements
      * compared first, `cmp [rax+rcx*8], r15; je`, then the count raised and
