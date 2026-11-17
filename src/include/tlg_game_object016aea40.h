@@ -28,10 +28,14 @@ class Object016aea40 : public Object016b85e0 /* derived name */
 
     virtual ~Object016aea40();
 
-  private:
+  protected:
     u8 unknown8[0x68];
     Float4A unknown70; /* +0x70: the base's; not traced */
-    u8 unknown80[0x1c0];
+    u8 unknown80[0x1b8];
+    int unknown238; /* +0x238: not set by the constructor; Object016a8748's sets it (0x3442a0) */
+
+  private:
+    u8 unknown23c[0x4];
     Ref00503fb0<Object016b9108> held240; /* +0x240 */
 };
 

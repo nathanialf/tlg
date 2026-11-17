@@ -15,6 +15,7 @@
 class Object016cd348 : public Object016b9108 /* derived name */
 {
   public:
+    Object016cd348(const Name &name); /* 0x991430, its row named for it (D15) */
     virtual ~Object016cd348();
     virtual void slot5(); /* derived name; FUN_01382dd0, not traced */
 
@@ -22,6 +23,8 @@ class Object016cd348 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: an owned block, released by the destructor (`mov rax, [rbx+0x28]; ... cmp ecx, 0xa`) */
     OwnedBlock05943280 block28;
+    u8 unknown30
+        [0x38]; /* 0x68 bytes in all (`mov edi, 0x68` before operator new in the creator FUN_009912d0); not traced */
 };
 
 #endif

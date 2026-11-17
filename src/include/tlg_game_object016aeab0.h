@@ -18,8 +18,7 @@
  * before the base's destructor, and an int at +0x248, 3 from the constructor:
  * the creator clears 0x238 to 0x258 in one store (`vmovups [r15+0x238],
  * ymm0`), then stores the 3. 0x260 bytes (`mov edi, 0x260` before operator
- * new in the creator); a derived class's first field is at +0x260
- * (leaf_0134d440.cpp). The destructor is not written, so nothing here emits
+ * new in the creator): a derived class's first field is at +0x25c. The destructor is not written, so nothing here emits
  * the vtable. */
 class Object016aeab0 : public Object016b85e0 /* derived name */
 {
@@ -29,6 +28,16 @@ class Object016aeab0 : public Object016b85e0 /* derived name */
     Object016aeab0(const Name &name) : Object016b85e0(name), unknown248(0), unknown24c(0)
     {
         unknown248 = 3;
+    }
+
+    /* the derived classes' constructor: the same, then the int at +0x258
+     * after the 3 (0x670560's Object016ac108 and 0x344670's Object016a87b8:
+     * `mov dword [r15+0x248], 3; mov dword [r15+0x258], -1` before their
+     * vptr; their destructors tail-call 0x822440, so no class lies between) */
+    Object016aeab0(const Name &name, int value) : Object016b85e0(name), unknown248(0), unknown24c(0)
+    {
+        unknown248 = 3;
+        unknown258 = value;
     }
 
     virtual ~Object016aeab0();
@@ -42,7 +51,7 @@ class Object016aeab0 : public Object016b85e0 /* derived name */
     int unknown248;                      /* +0x248: 3 from the constructor */
     int unknown24c; /* +0x24c: 0 from the constructor; slot 12 (0x822740) tests it */
     Ref00503fb0<Object016b9108> held250; /* +0x250 */
-    u8 unknown258[0x8];
+    int unknown258;                      /* +0x258: set only by the derived classes' constructor */
 };
 
 #endif
