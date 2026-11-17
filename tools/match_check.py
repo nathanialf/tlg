@@ -1310,8 +1310,11 @@ def verify_targets(relocs, base_bytes: bytes, base_addr: int, base,
         if r.width != 4 or r.offset + 4 > len(base_bytes):
             unverified += 1
             continue
+        hint = None   # what the base's own PC-relative field encodes (a destructor's vtable pair, base_elf)
+        if r.type in (2, 4):
+            hint = _st.unpack_from("<i", base_bytes, r.offset)[0] + base_addr + r.offset - r.addend
         try:
-            expected = base.address_of(r.symbol) if base is not None else None
+            expected = base.address_of(r.symbol, hint) if base is not None else None
         except ValueError as e:   # a vtable whose evidence fails (a D14 row, an instantiation's slot-0 row)
             where = ""
             if r.symbol.startswith("!") and r.type in (2, 4):   # a refused header static: where the base points

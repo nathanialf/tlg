@@ -512,7 +512,7 @@ def resolve_symbol_address(base: BaseElf, obj: Path, r: mc.Reloc,
     such as pi sits in hundreds of pools) is placed where the base points,
     provided the bytes there are the entry's."""
     try:
-        s = base.address_of(r.symbol)
+        s = base.address_of(r.symbol, hint)
     except ValueError as e:   # a vtable whose evidence fails (a D14 row, an instantiation's slot-0 row)
         return None, str(e)
     if s is not None:

@@ -31,7 +31,7 @@ PT_TLS = 7
 _VPTR_STORES: dict[tuple[str, int], frozenset[int]] = {}
 
 # {(base file, object, its mtime and size, row): "" or the refusal}, for _prove_merge
-_MERGE_PROOFS: dict[tuple, str] = {}
+_MERGE_PROOFS: dict[tuple, object] = {}   # merge refusals and source vtable slots, by object state
 
 
 # --- the gate's cache ----------------------------------------------------------
@@ -537,29 +537,47 @@ class BaseElf:
         other = "2" if m.group(2) == "1" else "1"
         return sym[:m.start(2)] + other + sym[m.end(2):]
 
-    def folded_destructor(self, sym: str) -> int | None:
+    def folded_destructor(self, sym: str, hint: int | None = None) -> int | None:
         """A destructor symbol no row names, resolved by its class's vtable
         (D15): the linker folded the identical destructor bodies of
         different classes into one function, which carries one name, and
         every other class's vtable still points at that body; or the
         destructor is not claimed yet and its row is still FUN_<addr>.
+        The vtable is one the executable names or a ruled derived row.
+
         Slot 0 of the class's primary vtable is its complete destructor
-        (D1, and D2 with it), slot 1 its deleting destructor (D0). The
-        vtable is one the executable names or a ruled derived row, and the
-        slot must hold the first address of a row of the function table,
+        (D1, and D2 with it), slot 1 its deleting destructor (D0), when the
+        slot holds the first address of a row of the function table,
         whatever the row's name: the callee of a claimed function need not
         be claimed for the call to be proven, as a call to FUN_<addr> is
-        proven by FUN_<addr>'s row alone. The address is what the class's
-        vtable says, read from the base every run; every reference is then
-        checked against the base's own field like any other (a deleting
-        destructor's call of its complete destructor must be, in the base,
-        a call of its vtable's slot 0), and the row gets the destructor's
+        proven by FUN_<addr>'s row alone (D82).
+
+        A class whose destructor is not its first virtual (round 373E: the
+        fade rigs, findElement and slot1 before it) resolves by its
+        destructor PAIR wherever it lies, given `hint`, the address the
+        base's own instruction at the reference encodes
+        (`destructor_pair`): the D1/D0 pair is adjacent in every Itanium
+        vtable, so slot k is the complete destructor and k + 1 the deleting
+        one exactly when the base's function at k + 1 calls the one at k
+        (or the body k's five-byte jump enters: the game compiler's D1 of an
+        inline destructor is `jmp D2`, D45). A D1 or D2 reference resolves to
+        the hint when the hint is slot k's entry or that jump's target; a D0
+        reference when the hint is slot k + 1's entry; and the vtable the
+        object compared emits for the class (the game module's, or
+        match_check's single-file module), when it emits one, must hold the
+        class's D1 (or D2) and D0 at the same slots k and k + 1
+        (source_destructor_slot): a source declaring the destructor at
+        another slot is refused. No such pair, or a hint that is not its
+        entry, gives slot 0's (or 1's) address as before, which the
+        reference's field then refuses. The address is
+        what the base says, read every run; the row gets the destructor's
         name when the destructor itself is claimed (D15), not here."""
         import re
         m = re.fullmatch(r"_ZN(.+)D([012])Ev", sym)
         if not m:
             return None
-        enc, slot = m.group(1), (1 if m.group(2) == "0" else 0)
+        enc, kind = m.group(1), m.group(2)
+        slot = 1 if kind == "0" else 0
         for vt in ("_ZTV" + enc, "_ZTVN" + enc + "E"):
             if vt in self._proving:     # the vtable is what is being proven: its slot proves nothing
                 continue
@@ -577,18 +595,128 @@ class BaseElf:
                 return None
             if self._fold_starts is None:
                 self._fold_starts = {a: n for n, (a, _s) in self.func_by_name.items()}
+            if hint is not None and hint != target:
+                pair = self.destructor_pair(addr, hint, kind)
+                if pair is not None and self.source_destructor_slot(vt, enc, pair) == pair:
+                    return hint
             if target in self._fold_starts:
                 return target
         return None
 
-    def address_of(self, name: str) -> int | None:
+    def _jump_target(self, fn: int) -> int | None:
+        """The target of the five-byte `jmp rel32` that is the whole body of
+        the function-table row starting at `fn` (D45's complete destructor
+        of an inline destructor, a jump to the base-object one), or None."""
+        row = self._fold_starts.get(fn)
+        if row is None:
+            return None
+        size = self.func_by_name[row][1]
+        code = self.read(fn, min(size, 5))
+        if len(code) < 5 or code[0] != 0xE9 or (size > 5 and any(self.read(fn + 5, size - 5).strip(b"\x90\xcc"))):
+            return None
+        return fn + 5 + int.from_bytes(code[1:5], "little", signed=True)
+
+    def _calls(self, fn: int) -> set[int]:
+        """Every target of a direct `call rel32` (or tail `jmp rel32`) in the
+        function-table row starting at `fn`, by disassembly of the base."""
+        from capstone import Cs, CS_ARCH_X86, CS_MODE_64
+        row = self._fold_starts.get(fn)
+        if row is None:
+            return set()
+        size = self.func_by_name[row][1]
+        out = set()
+        for ins in Cs(CS_ARCH_X86, CS_MODE_64).disasm(self.read(fn, size), fn):
+            if ins.bytes[0] in (0xE8, 0xE9) and ins.size == 5:
+                out.add(ins.address + 5 + int.from_bytes(ins.bytes[1:5], "little", signed=True))
+        return out
+
+    def source_vtable_slots(self, vt: str) -> tuple | None:
+        """The slots of the vtable `vt` as the object compared defines it
+        (merge_object, else the game module's): each slot's relocation
+        symbol, or None for a slot without one; None when the object does not
+        emit `vt` (undefined, or the module's zero stand-in for a vtable whose
+        key function is not in the tree). Read once per object state."""
+        import match_check as mc
+        obj = self._merge_object()
+        if not obj.exists():
+            return None
+        st = obj.stat()
+        key = ("slots", str(obj), st.st_mtime_ns, st.st_size, vt)
+        if key not in _MERGE_PROOFS:
+            v = mc.object_view(obj)
+            d = next(((s["st_shndx"], s["st_value"], s["st_size"]) for s in v.syms if s.name == vt
+                      and s["st_shndx"] not in ("SHN_UNDEF", "SHN_ABS", "SHN_COMMON")), None)
+            relocs = mc.object_data_relocs(obj, *d)[0] if d is not None and d[2] >= 0x10 and not d[2] % 8 else []
+            # no relocation: not the class's vtable but the module's stand-in
+            # for one the source does not emit (its key function is not in the
+            # tree; game_module.standins), zero bytes in .bss
+            at = {r.offset: r.symbol for r in relocs if r.width == 8 and r.addend == 0}
+            _MERGE_PROOFS[key] = tuple(at.get(o) for o in range(0x10, d[2], 8)) if relocs else None
+        return _MERGE_PROOFS[key]
+
+    def source_destructor_slot(self, vt: str, enc: str, base_slot: int) -> int | None:
+        """The slot k at which the source's vtable `vt` (source_vtable_slots)
+        holds the class's complete destructor (D1, or D2 where the link
+        stage folded them) followed at k + 1 by its deleting destructor (D0),
+        or None when no slot, or more than one, holds the pair. A destructor
+        resolved by its vtable pair (folded_destructor) must sit at the same
+        slot in the source as in the base when the source emits the vtable:
+        a source declaring the destructor elsewhere is refused. When the
+        source does not emit it (its key function is not in the tree) the
+        source has no slot to compare and `base_slot`, the base's proven
+        pair, is the answer: the reference is proven by the base's pair and
+        its own field, as a slot-0 destructor is (D82)."""
+        slots = self.source_vtable_slots(vt)
+        if slots is None:
+            return base_slot
+        found = [k for k in range(len(slots) - 1)
+                 if slots[k] in ("_ZN" + enc + "D1Ev", "_ZN" + enc + "D2Ev")
+                 and slots[k + 1] == "_ZN" + enc + "D0Ev"]
+        return found[0] if len(found) == 1 else None
+
+    def destructor_pair(self, vtable: int, hint: int, kind: str) -> int | None:
+        """The slot k of the class's destructor pair in the base vtable whose
+        address point is `vtable`, proven for a reference of `kind` ("0",
+        "1" or "2": D0, D1, D2) whose base field encodes `hint`, or None.
+        Proven: slots k and k + 1 each hold the first address of a row of
+        the function table; the function at k + 1 (the deleting destructor)
+        calls the function at k or the body that one's five-byte jump enters
+        (the complete destructor, D45's census: 507 deleting destructors call
+        slot 0's body, 248 slot 0's jump target); and the hint is slot
+        k + 1's entry for a D0, slot k's entry or its jump target for a D1 or
+        D2. Exactly one k may be proven; two refuse."""
+        found = []
+        k = 0
+        while True:
+            try:
+                d1 = int.from_bytes(self.read(vtable + 0x10 + 8 * k, 8), "little")
+                d0 = int.from_bytes(self.read(vtable + 0x10 + 8 * (k + 1), 8), "little")
+            except Exception:
+                break
+            if d1 not in self._fold_starts:
+                break                   # the end of the vtable's functions
+            if d0 in self._fold_starts:
+                body = self._jump_target(d1)
+                calls = self._calls(d0)
+                if d1 in calls or (body is not None and body in calls):
+                    ok = (hint == d0) if kind == "0" else (hint == d1 or (body is not None and hint == body))
+                    if ok:
+                        found.append(k)
+            k += 1
+        return found[0] if len(found) == 1 else None
+
+    def address_of(self, name: str, hint: int | None = None) -> int | None:
         """Where the base put `name`: a function of the table (by its mangled
         name or its bare identifier), a `D_<hex>` data label, a vtable the
         executable names (config/vtables.<slug>.txt, tools/vtable_names.py),
         or an import (its PLT stub). A name beginning `!` is a reference the
         gate has already refused (tools/match_check.py with_header_statics: a
         header static whose unit has no row or whose copy is not proven); it
-        raises ValueError with the reason."""
+        raises ValueError with the reason. `hint`, where the caller has it,
+        is the address the base's own field at the reference encodes; only a
+        destructor resolved by its class's vtable pair reads it
+        (folded_destructor), and the field is checked against the answer
+        all the same."""
         if name.startswith("!"):
             raise ValueError(name[1:])
         if name in self.func_by_name:
@@ -596,7 +724,7 @@ class BaseElf:
         alias = self.ctor_alias(name)
         if alias in self.func_by_name:
             return self.func_by_name[alias][0]
-        folded = self.folded_destructor(name)
+        folded = self.folded_destructor(name, hint)
         if folded is not None:
             return folded
         if name.startswith("_ZTV"):
