@@ -200,6 +200,19 @@ inline T *findNamed(const Name &name, const Type00503fb0 *type) /* derived name 
     return 0;
 }
 
+/* the same for an object whose type is `type` itself, its parents not
+ * walked (`cmp [rbx+0x18], r15; je` at 0xa5ec82) */
+template <class T>
+inline T *findNamedOf(const Name &name, const Type00503fb0 *type) /* derived name */
+{
+    if (type) {
+        T *object = static_cast<T *>(D_17ac870[name.index].record18);
+        if (object && ((object->flags16 & 4) || D_16dc098))
+            return object->type == type ? object : 0;
+    }
+    return 0;
+}
+
 /* a counted reference another thread may replace: the pointer is exchanged
  * by compare-and-swap, then the new object gains a reference and the old one
  * loses its own (FUN_0045c470 sets one from a pointer, FUN_013cfaa0 from
