@@ -2,6 +2,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
 #include "tlg_game_name.h"
+#include "tlg_game_object01367090.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
 
@@ -145,4 +146,18 @@ void FUN_014773a0(Object016d6930 *self) /* derived name */
         FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
         takePose(entry.unknown70, self->model, target->unknown28[i]);
     }
+}
+
+/* derived names: the object whose vtable is at 0x16c1dc8: an array of
+ * reference pairs at +0x1a0; its class is not traced */
+struct Object016c1dc8 { /* derived name */
+    u8 unknown0[0x1a0];
+    Array05943280<Object01367090> unknown1a0; /* +0x1a0 */
+};
+
+/* derived name: slot 5 of the vtable at 0x16c1dc8: the array emptied and its
+ * block given back */
+void FUN_01477f00(Object016c1dc8 *self) /* derived name */
+{
+    self->unknown1a0.clear();
 }

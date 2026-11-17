@@ -83,3 +83,69 @@ void FUN_013f9ca0(ParamOwner013f9ca0 *owner, ParamTarget013f9ca0 *target,
         }
     }
 }
+
+/* derived name: the applier this file's copy of FUN_013fa6f0 calls (not
+ * written): the owner, a mode (1 here), a key, the clip's position, the
+ * weight */
+void FUN_013f9e20(ParamOwner013f9ca0 *owner, const int &mode, u64 key,
+                  const ClipPosition013fa6f0 &position, float weight);
+
+// NONMATCHING: 40/120: the build reads the entry's time pointer inside the length test's
+// block (InstCombine sinks it with the float read; the call reloads it) and indexes the
+// entries from +8; the base reads it at the arm's top, after the frame fields, with the
+// null arm's copy for the call (a partially redundant load), entries indexed from +0
+/* derived name: each clip of the list at its time, the time brought into
+ * the clip's span (wrapped when it loops, else held at its ends), handed to
+ * the applier with the weight; a clip without frames is handed as all zero */
+void FUN_013fa6f0(ParamOwner013f9ca0 *owner, const ClipList013fa6f0 *clips,
+                  float weight) /* derived name */
+{
+    const int count = clips->count;
+    for (int i = 0; i < count; ++i) {
+        ClipPosition013fa6f0 position;
+        const ClipEntry013fa6f0 &entry = clips->entries[i];
+        Clip013fa6f0 *clip = entry.clip;
+        if (clip && clip->frames) {
+            ClipFrames013fa6f0 *frames = clip->frames;
+            const int firstSet = clip->first;
+            const int lastFrame = frames->count - 1;
+            const int lastSet = clip->last;
+            const float *at = entry.time;
+            unsigned first = firstSet < 0 ? 0 : firstSet;
+            unsigned last = lastSet < 0 ? lastFrame : lastSet;
+            float length = ((float)last - (float)first) * (1.0f / 30.0f);
+            float time = 0.0f;
+            if (length != 0.0f) {
+                const unsigned loops = clip->flags & 1;
+                const float now = *at;
+                float begin = (float)first * (1.0f / 30.0f);
+                float end = (float)last * (1.0f / 30.0f);
+                if (now < end) {
+                    if (now < begin) {
+                        float before = begin - now;
+                        float cycles = loops ? before / length : 1.0f;
+                        float wrapped = end + (floorf(cycles) * length - before);
+                        time = loops ? wrapped : begin;
+                    } else {
+                        time = now;
+                    }
+                } else {
+                    float after = now - begin;
+                    float cycles = loops ? after / length : 1.0f;
+                    float wrapped = (after - floorf(cycles) * length) + begin;
+                    time = loops ? wrapped : end;
+                }
+            }
+            position.frames = frames;
+            position.unknown8 = clip->unknown120;
+            position.time = time;
+            position.frame = time * 30.0f;
+        } else {
+            position.frames = 0;
+            position.unknown8 = 0;
+            position.time = 0.0f;
+            position.frame = 0.0f;
+        }
+        FUN_013f9e20(owner, 1, (u64)entry.time + (u64)entry.clip, position, weight);
+    }
+}

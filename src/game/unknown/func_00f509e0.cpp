@@ -2,6 +2,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
 #include "tlg_game_name.h"
+#include "tlg_game_object01367090.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
 
@@ -162,4 +163,45 @@ void FUN_013d1440(Object016d3978 *self) /* derived name */
         FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
         takePose(entry.unknown70, self->model, target->unknown28[i]);
     }
+}
+
+/* derived names: the object whose vtable is at 0x16befa8: an array of
+ * reference pairs at +0x1a0; its class is not traced */
+struct Object016befa8 { /* derived name */
+    u8 unknown0[0x1a0];
+    Array05943280<Object01367090> unknown1a0; /* +0x1a0 */
+};
+
+/* derived name: slot 5 of the vtable at 0x16befa8: the array emptied and its
+ * block given back */
+void FUN_013d2700(Object016befa8 *self) /* derived name */
+{
+    self->unknown1a0.clear();
+}
+
+/* derived names: one bone's marks (64 bytes): the byte the marks are or'ed
+ * into, through the pointer at +0x30 */
+struct BoneMark013d0160 { /* derived name */
+    u8 unknown0[0x30];
+    u8 *bits; /* +0x30 */
+    u8 unknown38[0x8];
+};
+
+/* derived names: the marks of a skeleton's bones (the callers pass the one
+ * at +0x160 of theirs): the skeleton's data at +0x0, the marks at +0x10 */
+struct BoneMarks013d0160 {          /* derived name */
+    FadeSkeletonData013ce050 *data; /* +0x0 */
+    u8 unknown8[0x8];
+    BoneMark013d0160 *marks; /* +0x10 */
+};
+
+/* derived name: the bone's bits or'ed into its mark, then 7 into every
+ * bone below it, child by child (127 calls) */
+void FUN_013d0160(BoneMarks013d0160 *self, int index, u8 bits) /* derived name */
+{
+    *self->marks[index].bits |= bits;
+    FadeSkeletonData013ce050 *data = self->data;
+    for (s16 child = data->bones[index]->firstChild; child != -1;
+         child = data->bones[child]->nextSibling)
+        FUN_013d0160(self, child, 7);
 }

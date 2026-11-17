@@ -101,4 +101,51 @@ inline ParamElement013f9ca0 *findParamElement(ParamOwner013f9ca0 *owner, const i
     return 0;
 }
 
+/* derived names: a clip's frames: the count at +0x94 (the clip's last frame
+ * when it names none) */
+struct ClipFrames013fa6f0 { /* derived name */
+    u8 unknown0[0x94];
+    int count; /* +0x94 */
+};
+
+/* derived names: a clip played on a time (FUN_013fa6f0 and its copies): bit 0
+ * of its flags makes it loop, its first and last frames (the last negative:
+ * the frames' last) */
+struct Clip013fa6f0 { /* derived name */
+    u8 unknown0[0x30];
+    unsigned flags; /* +0x30: bit 0 the clip loops */
+    u8 unknown34[0x4];
+    int first; /* +0x38: negative counts as 0 */
+    int last;  /* +0x3c: negative counts as the frames' last */
+    u8 unknown40[0x20];
+    ClipFrames013fa6f0 *frames; /* +0x60 */
+    u8 unknown68[0xb8];
+    u8 unknown120[0x10]; /* +0x120: its address handed on */
+};
+
+/* derived names: one clip and the time it is played at (16 bytes) */
+struct ClipEntry013fa6f0 { /* derived name */
+    const float *time;     /* +0x0: seconds */
+    Clip013fa6f0 *clip;    /* +0x8 */
+};
+
+/* derived names: the clips (an array: data, count) */
+struct ClipList013fa6f0 {       /* derived name */
+    ClipEntry013fa6f0 *entries; /* +0x0 */
+    int count;                  /* +0x8 */
+};
+
+/* derived names: where a clip is, handed to the applier (24 bytes): its
+ * frames, the clip's +0x120, the time in the clip and the frame (the time at
+ * thirty frames a second); the time starts at -1 */
+struct ClipPosition013fa6f0 { /* derived name */
+
+    ClipPosition013fa6f0() : time(-1.0f) {}
+
+    ClipFrames013fa6f0 *frames;
+    u8 *unknown8;
+    float time;
+    float frame;
+};
+
 #endif

@@ -71,7 +71,9 @@ struct FadePose013d4610 { /* derived name */
  * index and the poses) read; the int at +0x130 is not traced */
 struct FadeBone013ce050 { /* derived name */
     u8 unknown0[0x27a];
-    s16 parent; /* +0x27a: the parent's pose index, -1 for a root */
+    s16 parent;      /* +0x27a: the parent's pose index, -1 for a root */
+    s16 firstChild;  /* +0x27c: the first child's pose index, -1 for none */
+    s16 nextSibling; /* +0x27e: the next child of the parent, -1 after the last */
 };
 
 struct FadeSkeletonData013ce050 { /* derived name */
