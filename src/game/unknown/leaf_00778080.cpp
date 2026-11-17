@@ -11,7 +11,7 @@ class Object016acf08 : public Object00774560 /* derived name */
 {
   public:
     virtual ~Object016acf08();
-    virtual void slot7(); /* FUN_00778080 */
+    virtual void slot7(Pose0077bac0 *pose); /* FUN_00778080 */
 
   private:
     u8 unknownfc[0x4];
@@ -23,7 +23,7 @@ class Object016acf08 : public Object00774560 /* derived name */
  * FUN_007196a0, then the waiting point given to the body unless its x, y
  * and z are all zero, and the waiting rotation unless it is the identity,
  * each put back to (0, 0, 0, 1) once given */
-void Object016acf08::slot7()
+void Object016acf08::slot7(Pose0077bac0 *)
 {
     FUN_007196a0(unknown68);
     if (unknown100.x != 0.0f || unknown100.y != 0.0f || unknown100.z != 0.0f) {

@@ -60,9 +60,11 @@ inline Float4A operator+(const Float4A &point, const Vector0077bac0 &v)
  * pointer (the product's slot in rdi, the two operands in rsi and rdx) */
 Float4A FUN_013439c0(const Float4A &first, const Float4A &second);
 
-/* derived name: a point turned by a rotation, the vector returned through
- * the hidden pointer (0x777c36) */
-Vector0077bac0 FUN_01343bb0(const Float4A &point, const Float4A &rotation);
+/* derived name: a point turned by a rotation, returned through the hidden
+ * pointer as a whole point, its w the point's (0x1343bc3: `mov eax, [rsi+0xc]`,
+ * stored at +0xc of the result; 0x773e0b: the result's 16 bytes copied with
+ * `vmovaps`; 0x777c36: the callers that add it read its x, y and z) */
+Float4A FUN_01343bb0(const Float4A &point, const Float4A &rotation);
 
 /* derived names: a tracker of the body's (+0x50e0): its value at +0x30
  * set by slot 17 of the holders, the whole cleared to its start when the
@@ -215,6 +217,33 @@ struct Part00799560 { /* derived name */
     u8 unknown50[0x10];
 };
 
+/* derived names: the body's object at +0xc00 keeps two ints at +0x60 and
+ * +0x64; a change to either sets its flag bit 2 (`or byte [rax+0x20], 4`
+ * only where the value differs: the overrides of slot 6 in func_00775420.cpp,
+ * Object016accb0's slot 7) */
+struct State00774760 : public Object016b9108 { /* derived name */
+
+    void setUnknown60(int value) /* derived name */
+    {
+        if (unknown60 != value) {
+            unknown60 = value;
+            flags |= 4;
+        }
+    }
+
+    void setUnknown64(int value) /* derived name */
+    {
+        if (unknown64 != value) {
+            unknown64 = value;
+            flags |= 4;
+        }
+    }
+
+    u8 unknown24[0x3c];
+    int unknown60; /* +0x60 */
+    int unknown64; /* +0x64 */
+};
+
 /* derived names: what the pointer at +0x68 of the class below holds: a
  * rotation at +0xb90, a point at +0xba0 and where they are put back to
  * (the slot-14 overrides FUN_0077bac0 and on); the rest is not traced */
@@ -234,12 +263,16 @@ struct Body0077bac0 { /* derived name */
         position = position + by;
     }
 
-    u8 unknown0[0xb90];
+    u8 unknown0[0xb08];
+    int unknownb08; /* +0xb08: masked by Object016accb0's int at +0x168 in its slot 7 */
+    u8 unknownb0c[0x84];
     Float4A rotation; /* +0xb90 */
     /* +0xba0: a point; slot 14 moves its x, y and z (follow(), the w left
      * as it is), FUN_0079d4a0 sets it whole from +0x13c0, one aligned copy */
     Float4A position;
-    u8 unknownbb0[0x780];
+    u8 unknownbb0[0x50];
+    State00774760 *unknownc00; /* +0xc00 */
+    u8 unknownc08[0x728];
     int unknown1330; /* +0x1330: while it is not zero slot 14 leaves the body where it put it back (FUN_0079d4a0) */
     u8 unknown1334[0x5c];
     /* +0x1390, +0x13a0, +0x13d0, +0x13f0: copied out with +0x1330, +0x13c0
@@ -255,7 +288,11 @@ struct Body0077bac0 { /* derived name */
     Vector0077bac0 unknown1440; /* +0x1440: taken off the pose's position by FUN_00799350 */
     u8 unknown144c[0x6c0];
     int unknown1b0c; /* +0x1b0c: copied to +0x3c of the object by FUN_007950a0 */
-    u8 unknown1b10[0x3470];
+    u8 unknown1b10[0x108];
+    /* +0x1c18: 39, 40 or 41 choose where Object016accb0's slot 7 takes the
+     * rotation from (FUN_007701b0) */
+    int unknown1c18;
+    u8 unknown1c1c[0x3364];
     Part00799560 part4f80;     /* +0x4f80 */
     TrackerC00799560 trackerC; /* +0x4fe0 */
     u8 unknown5050[0x10];
@@ -291,18 +328,44 @@ struct Group00790150 { /* derived name */
     Array05943280<Member00790150 *> members; /* +0x4dc0 */
 };
 
-/* derived names: the argument of slot 14: its group at +0x38, rotations at
- * +0xd0 and +0x160, a point at +0xe0 and a position at +0x170; the rest is
- * not traced */
+/* derived names: the object at +0x58 of a pose: points at +0xe0 (FUN_00761f10)
+ * and +0x110 (Object016accb0's slot 19), four-byte aligned (`vmovups`); the
+ * rest is not traced */
+struct Held00773d80 { /* derived name */
+    u8 unknown0[0xe0];
+    Float4 unknowne0; /* +0xe0 */
+    u8 unknownf0[0x20];
+    Float4 unknown110; /* +0x110 */
+};
+
+/* derived names: the argument of slots 7, 14 and 19: its group at +0x38, the
+ * object at +0x58 (Object016accb0's slot 19), a
+ * rotation and a point at +0x80 and +0x90 (Object016accb0's slot 7),
+ * rotations at +0xd0 and +0x160, a point at +0xe0 and a position at +0x170
+ * (slot 7 of the class at 0x16ac8c8, FUN_00761f10, reads +0xd0 and +0xe0 of
+ * its argument as slot 14 does); the rest is not traced */
 struct Pose0077bac0 { /* derived name */
     u8 unknown0[0x38];
     Group00790150 *group; /* +0x38 */
-    u8 unknown40[0x90];
+    u8 unknown40[0x18];
+    Held00773d80 *unknown58; /* +0x58 */
+    u8 unknown60[0x20];
+    Float4A rotation80; /* +0x80 */
+    Float4A point90;    /* +0x90 */
+    u8 unknowna0[0x30];
     Float4A rotationd0; /* +0xd0 */
     Float4A pointe0;    /* +0xe0 */
     u8 unknownf0[0x70];
     Float4A rotation;        /* +0x160 */
     Vector0077bac0 position; /* +0x170 */
+};
+
+/* derived names: the object at +0x70 of the class below: handed to
+ * FUN_0136b6f0 by slot 6 (func_00775420.cpp); a point at +0xd0 set by
+ * Object016accb0's slot 19 (FUN_00773d80); the rest is not traced */
+struct Object0136b6f0 { /* derived name */
+    u8 unknown0[0xd0];
+    Float4A unknownd0; /* +0xd0 */
 };
 
 /* derived names: the class whose vtable is at 0x16acd78
@@ -324,13 +387,13 @@ class Object00774560 : public Object016b9108 /* derived name */
     virtual void slot5(); /* derived name; FUN_001af750, not traced */
     virtual void
     slot6(); /* derived name; FUN_00774760 (func_00775420.cpp, a free function there) */
-    virtual void slot7();  /* derived name; FUN_00774820 (func_00775420.cpp) */
-    virtual void slot8();  /* derived name; FUN_00774890, not traced */
-    virtual void slot9();  /* derived name; FUN_007748a0, not traced */
-    virtual void slot10(); /* derived name; FUN_007748b0, not traced */
-    virtual void slot11(); /* derived name; FUN_007748c0, not traced */
-    virtual void slot12(); /* derived name; FUN_007748d0, not traced */
-    virtual void slot13(); /* derived name; FUN_007748e0, not traced */
+    virtual void slot7(Pose0077bac0 *pose); /* derived name; FUN_00774820 (func_00775420.cpp) */
+    virtual void slot8();                   /* derived name; FUN_00774890, not traced */
+    virtual void slot9();                   /* derived name; FUN_007748a0, not traced */
+    virtual void slot10();                  /* derived name; FUN_007748b0, not traced */
+    virtual void slot11();                  /* derived name; FUN_007748c0, not traced */
+    virtual void slot12();                  /* derived name; FUN_007748d0, not traced */
+    virtual void slot13();                  /* derived name; FUN_007748e0, not traced */
     /* FUN_007748f0, empty; the derived classes' FUN_0077bac0 and
      * FUN_0077c5a0 turn the body at +0x68 by the pose and move it */
     virtual void slot14(Pose0077bac0 *pose);       /* derived name */
@@ -338,7 +401,7 @@ class Object00774560 : public Object016b9108 /* derived name */
     virtual void slot16();                         /* derived name; FUN_00774910, not traced */
     virtual void slot17(Context0079c700 *context); /* derived name; FUN_00774920, not traced */
     virtual void slot18();                         /* derived name; FUN_00774930, not traced */
-    virtual void slot19();                         /* derived name; FUN_00774940, not traced */
+    virtual void slot19(Pose0077bac0 *pose);       /* derived name; FUN_00774940, empty */
     virtual void slot20();                         /* derived name; FUN_00774950, not traced */
     virtual void slot21();                         /* derived name; FUN_00774b50, not traced */
     /* FUN_000058a0 returns 1; tested `test eax, eax` before slot 14's work
@@ -384,8 +447,9 @@ class Object00774560 : public Object016b9108 /* derived name */
     int unknown3c;
     int unknown40;
     u8 unknown44[0x24];
-    Body0077bac0 *unknown68; /* +0x68 */
-    u8 unknown70[0xc];
+    Body0077bac0 *unknown68;   /* +0x68 */
+    Object0136b6f0 *unknown70; /* +0x70 */
+    u8 unknown78[0x4];
     /* +0x7c: zero from this constructor, and again in the body of FUN_00763020's
      * (`mov dword [r15+0x7c], 0` last); 0.2 in FUN_00794290's (`mov dword
      * [rbx+0x7c], 0x3e4ccccd`): a float; not traced */

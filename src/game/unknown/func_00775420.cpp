@@ -32,35 +32,7 @@ struct Start00774760 { /* derived name */
     Float4A unknowne0; /* +0xe0: a point, copied by FUN_00799ae0 */
 };
 
-struct Object0136b6f0; /* derived name: not traced */
-
 void FUN_0136b6f0(Object0136b6f0 *object); /* derived name */
-
-/* derived names: the body's object at +0xc00 keeps two ints at +0x60 and
- * +0x64; a change to either sets its flag bit 2 (`or byte [rax+0x20], 4`
- * only where the value differs: the overrides of slot 6 below) */
-struct State00774760 : public Object016b9108 { /* derived name */
-
-    void setUnknown60(int value) /* derived name */
-    {
-        if (unknown60 != value) {
-            unknown60 = value;
-            flags |= 4;
-        }
-    }
-
-    void setUnknown64(int value) /* derived name */
-    {
-        if (unknown64 != value) {
-            unknown64 = value;
-            flags |= 4;
-        }
-    }
-
-    u8 unknown24[0x3c];
-    int unknown60; /* +0x60 */
-    int unknown64; /* +0x64 */
-};
 
 /* derived names: the body at +0x68 as the overrides of slot 6 read it */
 struct Body00774760 { /* derived name */
@@ -84,7 +56,9 @@ struct Block00774760 { /* derived name */
     int unknown4;      /* +0x28 */
     int unknown8;      /* +0x2c */
     int unknownc;      /* +0x30 */
-    u8 unknown10[0x10];
+    u8 unknown10[0x4];
+    int unknown14; /* +0x38 */
+    u8 unknown18[0x8];
     int unknown20; /* +0x44 */
     u8 unknown24[0x8];
     int unknown2c; /* +0x50 */
@@ -153,11 +127,11 @@ void FUN_00765630(Object00774760 *self, const Start00774760 *start) /* derived n
     self->rotation = unit;
 }
 
-/* derived names: slot 7 of the vtable at 0x16acd78: the body's rotation and
- * point both set to this file's VECTOR_W, each a copy of it as plain
+/* derived names: slot 7 of the vtable at 0x16acd78: the pose not read; the
+ * body's rotation and point both set to this file's VECTOR_W, each a copy of it as plain
  * floats taken after the body is read, then stored lane by lane (the body
  * and the constant read again for the second) */
-void Object00774560::slot7()
+void Object00774560::slot7(Pose0077bac0 *)
 {
     unknown68->rotation = Float4Data(reinterpret_cast<const Float4Data &>(VECTOR_W));
     unknown68->position = Float4Data(reinterpret_cast<const Float4Data &>(VECTOR_W));
@@ -239,4 +213,18 @@ void FUN_00799ae0(Object00799ae0 *self, const Start00774760 *start) /* derived n
         self->unknown110 = self->unknown68->unknown2120;
     else
         self->unknown110 = start->unknowne0;
+}
+
+/* FUN_007a09d0: slot 6 of the vtable at 0x16adc50 */
+void FUN_007a09d0(Object00774760 *self, const Start00774760 *start) /* derived name */
+{
+    FUN_00774760(self, start);
+    self->unknown24.unknown0 = 1;
+    self->unknown24.unknown4 = 1;
+    self->unknown24.unknown8 = 1;
+    self->unknown24.unknownc = 1;
+    self->unknown24.unknown14 = 1;
+    const int value = self->unknown68->unknownb08;
+    self->unknown68->unknownc00->setUnknown60(value);
+    self->unknown68->unknownc00->setUnknown64(self->unknown68->unknownb0c);
 }

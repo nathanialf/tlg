@@ -40,8 +40,8 @@ void Object016ace40::slot14(Pose0077bac0 *pose)
     if (slot22()) {
         follow(pose);
         const Float4A turn = FUN_013439c0(pose->rotationd0, unknown68->rotation);
-        unknown120 =
-            pose->pointe0 + Vector0077bac0(unknown68->position) + FUN_01343bb0(unknown150, turn);
+        unknown120 = pose->pointe0 + Vector0077bac0(unknown68->position) +
+                     Vector0077bac0(FUN_01343bb0(unknown150, turn));
     }
 }
 

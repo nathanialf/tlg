@@ -42,7 +42,7 @@ void Object016ad7a0::slot14(Pose0077bac0 *pose)
         }
         const Float4A turn = FUN_013439c0(pose->rotationd0, unknown68->rotation);
         link100.unknown20 = pose->pointe0 + Vector0077bac0(unknown68->position) +
-                            FUN_01343bb0(link130.unknown20, turn);
+                            Vector0077bac0(FUN_01343bb0(link130.unknown20, turn));
         unknown68->unknown5060 = link100.unknown20;
     }
 }

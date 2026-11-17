@@ -3,34 +3,35 @@
 #ifndef TLG_GAME_OBJECT016ACB20_H
 #define TLG_GAME_OBJECT016ACB20_H
 
-#include "tlg_game_object00774560.h"
+#include "tlg_game_collection00214e10.h"
 #include "tlg_game_name.h"
-
-/* derived names: the member at +0x100 of the class below, handed to
- * FUN_00216780 while its int at +0x8 is set; the rest is not traced */
-struct Member00216780 { /* derived name */
-    int FUN_00216780(); /* derived name: not traced */
-
-    u8 unknown0[0x8];
-    int unknown8; /* +0x8 */
-};
+#include "tlg_game_node.h"
+#include "tlg_game_object00774560.h"
 
 /* derived names: the class whose vtable is at 0x16acb20
- * (config/vtables.derived.base.txt, stored by its constructor FUN_007658a0
- * and its destructor FUN_007659d0, not written), derived from
- * Object00774560; nothing else of it is traced */
+ * (config/vtables.derived.base.txt, stored by its constructor FUN_007658a0,
+ * not written, and its destructor FUN_007659d0, leaf_00766e50.cpp), derived
+ * from Object00774560: a Name at +0xfc, an Object00214e10 at +0x100, two
+ * references at +0x3c0 and +0x3c8 and an int at +0x3d0 (the destructor
+ * releases the members last first) */
 class Object016acb20 : public Object00774560 /* derived name */
 {
   public:
     Object016acb20(const Name &name); /* 0x7658a0, its row named after it (D15) */
     virtual ~Object016acb20();
+    virtual void slot9();                    /* FUN_00766c90 */
     virtual void slot14(Pose0077bac0 *pose); /* FUN_00766e50 */
 
   private:
-    u8 unknownfc[0x4];
-    Member00216780 unknown100; /* +0x100 */
-    u8 unknown10c
-        [0x344]; /* to the 0x450 bytes the creator FUN_00765740 allocates (`mov edi, 0x450`) */
+    Name namefc;               /* +0xfc */
+    Object00214e10 unknown100; /* +0x100: run by slot 14, reset by slot 9 */
+    /* +0x3c0, +0x3c8: references slot 9 empties, the second to the body's
+     * kind of state (its int at +0x60 given bit 0 first) */
+    AtomicRef0045c470<Object016b9108> unknown3c0;
+    AtomicRef0045c470<State00774760> unknown3c8;
+    int unknown3d0; /* +0x3d0: zero from slot 9 */
+    u8 unknown3d4
+        [0x7c]; /* to the 0x450 bytes the creator FUN_00765740 allocates (`mov edi, 0x450`) */
 };
 
 #endif

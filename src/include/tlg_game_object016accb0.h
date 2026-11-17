@@ -20,6 +20,8 @@ class Object016accb0 : public Object00774560 /* derived name */
   public:
     Object016accb0(const Name &name); /* FUN_0076e4a0 */
     virtual ~Object016accb0();
+    virtual void slot7(Pose0077bac0 *pose);  /* FUN_007701b0 (func_00773e90.cpp) */
+    virtual void slot19(Pose0077bac0 *pose); /* FUN_00773d80 (func_00773e90.cpp) */
 
   private:
     float unknownfc;  /* +0xfc: 0.1 from the constructor; not traced */
@@ -39,9 +41,11 @@ class Object016accb0 : public Object00774560 /* derived name */
     int unknown150;      /* +0x150: 1 from the constructor; not traced */
     float unknown154
         [4]; /* +0x154: (-FLT_MAX, -FLT_MAX, -FLT_MAX, FLT_MAX) from the constructor; not traced */
-    int unknown164[4]; /* +0x164: (0, 0x72000, -1, -1) from the constructor; not traced */
-    int unknown174;    /* +0x174: -1 from the constructor; not traced */
-    int unknown178;    /* +0x178: 1 from the constructor; not traced */
+    /* +0x164: (0, 0x72000, -1, -1) from the constructor; [1], at +0x168,
+     * the bits slot 7 clears from the body's int at +0xb08 */
+    int unknown164[4];
+    int unknown174; /* +0x174: -1 from the constructor; not traced */
+    int unknown178; /* +0x178: 1 from the constructor; not traced */
     u8 unknown17c[0x4];
     /* +0x180: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */

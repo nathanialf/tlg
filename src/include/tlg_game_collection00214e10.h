@@ -8,14 +8,18 @@
 
 /* derived names: the class whose complete destructor is 0x2150c0 (its row
  * named for it, D15) as leaf_013f9340.cpp declares it; FUN_00214e10 is its
- * reset (leaf_00793ce0.cpp). Not traced. */
+ * reset (leaf_00793ce0.cpp); FUN_00216780 runs it while its int at +0x8 is
+ * set (Object016acb20's slot 14, leaf_00766e50.cpp). Not traced further. */
 class Object00214e10 /* derived name */
 {
   public:
     virtual ~Object00214e10();
+    int FUN_00216780(); /* derived name: not traced */
+
+    int unknown8; /* +0x8 */
 
   private:
-    u8 unknown8[0x2b8];
+    u8 unknownc[0x2b4];
 };
 
 void FUN_00214e10(Object00214e10 *self);
