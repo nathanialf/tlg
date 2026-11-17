@@ -54,6 +54,9 @@ extern "C" {
 int sceFiosFHOpenSync(const SceFiosOpAttr *attr, SceFiosFH *fh, const char *path,
                       const SceFiosOpenParams *params);
 int sceFiosStatSync(const SceFiosOpAttr *attr, const char *path, SceFiosStat *stat);
+/* Whether a file exists at the path (its NID verified as "sceFiosFileExistsSync";
+ * the game's 0xe5dac0 and 0xe5f270 pass a null attribute). */
+bool sceFiosFileExistsSync(const SceFiosOpAttr *attr, const char *path);
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
 SceFiosSize sceFiosFHGetSize(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);

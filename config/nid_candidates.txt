@@ -931,3 +931,8 @@ _FCosh
 _FSinh
 _FLog
 tanhf
+feof
+fileno
+fstat
+mkdir
+__error

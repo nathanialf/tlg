@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_libc.h"
+#include "tlg_sce_fios.h"
 #include "tlg_types.h"
 
 /* derived names: whether a file exists (sceFiosFileExistsSync, its NID
@@ -8,10 +9,6 @@
  * name in lower case, in a 1 KiB buffer cleared first. FUN_00e5dac0 and
  * FUN_00e5f270 are the same body; no direct caller (a virtual function:
  * the class is not traced). */
-struct SceFiosOpAttr; /* derived name: not traced (a null one is passed) */
-
-extern "C" bool sceFiosFileExistsSync(const SceFiosOpAttr *attr, const char *path);
-
 struct Device00e5f270 { /* derived name */
     u8 unknown0[0x1d0];
     char directory[0x40]; /* +0x1d0; its extent not traced */

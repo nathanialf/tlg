@@ -5,6 +5,7 @@
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
 #include "tlg_game_array01343a80.h"
+#include "tlg_math.h"
 
 /* derived names: FUN_00fba4b0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -126,3 +127,20 @@ TreeNode013dfc20::~TreeNode013dfc20() {}
 // yet)
 /* FUN_013dfb60: a copy of a node appended to a node array, its index returned */
 template unsigned Array05943280<TreeNode013dfc20>::add(const TreeNode013dfc20 &);
+
+/* derived name: the element of the arrays FUN_00fbb4b0 copies and
+ * FUN_00fbb590 appends to, 32 bytes: four floats (a unit vector and a
+ * product in its w, built by the caller at 0xfa3dd3), copied lane by lane,
+ * and a word at +0x10 (callers 0xfa3508 to 0xfaa669, this file's) */
+struct Plane00fbb4b0 { /* derived name */
+    Float4A plane;
+    void *unknown10; /* +0x10 */
+};
+
+/* FUN_00fbb4b0 */
+// NONMATCHING: two loads in the other order (the allocator's index read before the block,
+// `mov edx, [rbx+0x10]; mov rsi, [rbx]` at 0xfbb4e8), FUN_003431f0's class
+template void Array05943280<Plane00fbb4b0>::operator=(const Array05943280<Plane00fbb4b0> &);
+
+/* FUN_00fbb590 */
+template void Array05943280<Plane00fbb4b0>::push(const Plane00fbb4b0 &);

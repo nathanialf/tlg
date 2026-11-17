@@ -51,6 +51,14 @@ struct stat {
 /* The mode's directory and regular-file bits (FreeBSD's sys/stat.h). */
 #define S_IFDIR 0040000
 #define S_IFREG 0100000
+/* The owner's read and write bits (FreeBSD's sys/stat.h). */
+#define S_IRUSR 0000400
+#define S_IWUSR 0000200
+
+/* The calling thread's error number (FreeBSD's errno.h: __error()), and the
+ * value of a path that exists already. */
+#define errno (*__error())
+#define EEXIST 17
 
 extern "C" {
 int strcmp(const char *a, const char *b);
@@ -64,6 +72,7 @@ char *strncpy(char *dst, const char *src, size_t n);
 char *strcat(char *dst, const char *src);
 size_t strlen(const char *s);
 char *strchr(const char *s, int c);
+char *strrchr(const char *s, int c);
 char *strstr(const char *s, const char *find);
 time_t time(time_t *t);
 clock_t clock(void);
@@ -84,6 +93,13 @@ long ftell(FILE *stream);
 int fflush(FILE *stream);
 FILE *fopen(const char *path, const char *mode);
 int fclose(FILE *stream);
+/* NIDs verified as "feof", "fileno", "fstat", "mkdir" and "__error"
+ * (LxcEU+ICu8U, Fm-dmyywH9Q, mqQMh1zPPT8, JGMio+21L4c, 9BcDykPmo1I). */
+int feof(FILE *stream);
+int fileno(FILE *stream);
+int fstat(int fd, struct stat *status);
+int mkdir(const char *path, unsigned short mode);
+int *__error(void);
 /* NID verified as "stat" (E6ao34wPw+U). */
 int stat(const char *path, struct stat *status);
 float fabsf(float x);

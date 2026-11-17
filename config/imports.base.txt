@@ -134,7 +134,7 @@ E+tyo3lp5Lw G H func pthread_attr_setdetachstate
 E6ao34wPw+U G H func stat
 EotR8a3ASf4 G H func pthread_self
 HF7lK46xzjY G H func pthread_mutexattr_destroy
-JGMio+21L4c G H func ?
+JGMio+21L4c G H func mkdir
 Jmi+9w9u0E4 G H func pthread_create_name_np
 K-jXhbt2gn4 G H func pthread_mutex_trylock
 NN01qLRhiqU G H func ?
@@ -144,7 +144,7 @@ h9CcP3J0oVM G H func pthread_join
 k+AXqu2-eBc G H func ?
 ltCfaGr2JGE G H func pthread_mutex_destroy
 mDmgMOGVUqg G H func pthread_mutexattr_settype
-mqQMh1zPPT8 G H func ?
+mqQMh1zPPT8 G H func fstat
 n88vx3C5nW8 G H func gettimeofday
 ttHNfU+qDBU G H func pthread_mutex_init
 wtkt-teR1so G H func pthread_attr_init
@@ -173,7 +173,7 @@ zHchY8ft5pk G H func pthread_attr_destroy
 7uhBFWRAS60 U H func sceKernelClearEventFlag
 8+s5BzZjxSg U H func ?
 8mql9OcQnd4 U H func sceKernelDeleteEventFlag
-9BcDykPmo1I U H func ?
+9BcDykPmo1I U H func __error
 9UK1vLZQft4 U H func scePthreadMutexLock
 9lvj5DjHZiA U H func sceKernelPollEventFlag
 BB+kb08Tl9A U H func scePthreadRwlockDestroy
@@ -380,7 +380,7 @@ DDHG1a6+3q0 V V func roundf
 DfivPArhucg V V func memcmp
 EH-x713A99c V V func atan2f
 EMutwaQ34Jo V V func perror
-Fm-dmyywH9Q V V func ?
+Fm-dmyywH9Q V V func fileno
 GAUuLKGhsCw V V func ceilf
 GMpvxPFW924 V V func vprintf
 GZWjF-YIFFk V V func asinf
@@ -391,7 +391,7 @@ KuOuD58hqn4 V V func ?
 LSp+r7-JWwc V V func ?
 LYo3GhIlB38 V V func sceLibcMspaceCalloc
 Ls4tzzhimqQ V V func strcat
-LxcEU+ICu8U V V func ?
+LxcEU+ICu8U V V func feof
 Lyx2DzUL7Lc V V func ?
 MELi-cKqWq0 V V func _ZSt19_Xbad_function_callv
 MLWl90SFWNE V V func _ZdaPv
