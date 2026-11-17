@@ -1770,3 +1770,38 @@ Trigger to revisit. A row lost or a draft moved away that traces to a use list r
 driver of the original's link known to write bitcode between the link's steps.
 
 **D82, addendum (2026-11-16, rounds 350D and 356D): every constant a function reads is compared at the width its instruction reads, in both regions.** The single-function check (tools/match_check.py `constant_reads`) and the gate's layout (tools/layout_link.py `rodata_constant`) compare each merged pool entry (.rodata.cst4/8/16) a function reads with the base's bytes at the address the base's own instruction refers to, over the operand's full width. Before it, a library entry was placed by its run to the first NUL byte and one lane of a 16-byte mask was compared: five library rows (0x523b0, 0x52630, 0x528b0, 0x52b30, 0x52db0) held a sign mask of four -0.0 lanes where the base's has 0 in the fourth. Fault test: the tool change alone fails the gate on exactly those five rows (d356/fault_test.txt). The source is corrected (a three-lane negate, `_mm_setr_ps(-0.0f, -0.0f, -0.0f, 0.0f)`); no row was removed. Over all 9,294 rows: 4,582 constants compared (286 library, 4,296 game), 0 differences; `gate-all --full` OK. Trigger: a read-only constant reached by a form the check does not resolve (it reports the count of symbols not found: 0 today).
+
+## D87. tlsbonus-01 is removed: the fold it forbade is the base's (2026-11-16)
+
+**Question.** D83 adopted two local rules with the two-stage module. One of them, tlsbonus-01, kept SimplifyCFG's
+FoldBranchToCommonDest from taking a load of a thread-local variable as its bonus instruction. It was adopted on three
+functions (0x618b00, 0xb1a200 and the draft 0xcb8240). Its own header recorded the base's census: of 1,158 reads of
+D_16dc098, 909 have the IR folded (903 read `movb; xorb 1; testb 1`) and 200 have it in two blocks. Is the rule right?
+
+**Evidence.**
+- The 200 (round 316B, b316/; round 318B, b318/): with the flag read through a function DEFINED in one unit
+  (`threadMayUse()`), stage 1 sees a call, the link inlines it, and the reader's test is `br i1 (load i1)`, which the
+  stock fold cannot take (its condition is no compare): the base's bytes for that family, with no rule. The base holds
+  no body of such a function because its link discarded unreferenced functions: of the game's 16,223 functions 2 have
+  no reference, against 45 of 95 in the native objects (b318/census.log).
+- The rule is inert (round 322B, b322/rule_off.tsv; round 364C, c364/res/cmp_offoff.tsv): with those readers on the
+  accessor, the module built with the rule off at both stages equals the installed compiler's in every function
+  (0 of 7,776 on 33e617eb).
+- The 903 (round 364C, c364/t1/P_*.tsv, var/P/, variantP.patch): with the test written in place as a plain `if` over
+  the object's flag and the thread flag, and the rule OFF at stage 1, the base's form appears at all eight readers of
+  that shape the tree has: stage 1's InstCombine makes the flag's branch `icmp eq i8, 0`, the STOCK
+  FoldBranchToCommonDest folds it with the thread-local load as its bonus, the link's GlobalOpt shrinks the flag, and
+  `and (icmp eq i16), (xor i1 .b, true)` reaches code generation. With the rule on, never. Sweep: 6,560 game rows the
+  same, 0 lost; 13 drafts toward the base.
+
+**Decision.** The patch is removed; the game line is LLVM 3.7.1 with twelve patches. Installed 2026-11-17 (tools/build_llvm.sh 3.7.1: clang-3.7 sha256 70083202..., opt ec9164d0...). The rule forbade what 903 sites of
+the base show. One local rule of D83 remains (ltopre-01), and lxadd-01 (D84).
+
+**Against.** Variant P is measured on eight readers through two sources, not on the other sites. 0xe70cc0's form
+(`mov al, [rax]; and al, 1; je`) is neither family.
+
+**Lesson recorded.** A rule's census counts the sites it contradicts as well as the ones it fixes; this header's own
+numbers (909 against 200) said the rule was on the wrong side.
+
+**Trigger to revisit.** A reader whose base form needs the load NOT taken as a bonus under a source form that is not
+the accessor's.

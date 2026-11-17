@@ -25,8 +25,8 @@
 #      llvm source root). These only make the old sources build with a
 #      current host toolchain; none changes code generation.
 #   3. Apply the other patches, tools/patches/llvm-<version>-<what>-*.patch
-#      for every other <what>: 3.3's twelve backports and 3.7.1's thirteen
-#      patches (four PS4 items, six forward ports, two local rules of the
+#      for every other <what>: 3.3's twelve backports and 3.7.1's twelve
+#      patches (four PS4 items, six forward ports, one local rule of the
 #      two-stage game module, D83, and lxadd, a scheduling model rule;
 #      each file's header has its
 #      evidence, config/flags.<slug>.txt lists them). These DO change code
