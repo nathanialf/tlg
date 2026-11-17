@@ -4,6 +4,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_array01343a80.h"
 
 /* derived names: FUN_00fba4b0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -97,3 +98,31 @@ void FUN_013e12e0(Object016d4318 *self) /* derived name */
         takePose(entry.unknown70, self->model, target->unknown28[i]);
     }
 }
+
+/* derived names: a 32-byte tree node of this file, its children an array of
+ * nodes at +0x8 (the callers build one on the stack, FUN_00faab20 filling
+ * it, then destroy it). Its int at +0x0
+ * is not traced. */
+class TreeNode013dfc20 /* derived name */
+{
+  public:
+    ~TreeNode013dfc20();
+
+  private:
+    int unknown0;                             /* +0x0: copied with the node */
+    Array01343a80<TreeNode013dfc20> children; /* +0x8 */
+};
+
+/* FUN_013dfc20: each child destroyed first to last, then the children's block
+ * released */
+TreeNode013dfc20::~TreeNode013dfc20() {}
+
+// NONMATCHING: the node's copy constructor (FUN_013e4840 in the base, the
+// children's copy inlined into it and a call to itself per child) is inlined
+// here and calls the children's copy: in stage 1 the inliner takes the call
+// sites of the SCC {node copy, array copy} in the order its DFS pops them (a
+// reading of Inliner.cpp, not compiled), and the base's order needs the SCC
+// entered through the array's copy (a caller of it in this unit, not written
+// yet)
+/* FUN_013dfb60: a copy of a node appended to a node array, its index returned */
+template unsigned Array05943280<TreeNode013dfc20>::add(const TreeNode013dfc20 &);

@@ -81,6 +81,19 @@ template <class T> class Array05943280 /* derived name */
         return &data[index];
     }
 
+    /* appends a copy of the value, growing the block first when it is full,
+     * and returns the new element's index (FUN_013dfb60: the old count kept
+     * in r15d across the growth and the element's out-of-line copy
+     * constructor, then returned) */
+    unsigned add(const T &value) /* derived name */
+    {
+        unsigned index = count++;
+        if (count > capacity)
+            grow(count);
+        new (&data[index]) T(value);
+        return index;
+    }
+
     /* appends a copy of the value unless an element equals it; the block
      * grows through the owner its header names (FUN_00ce22e0: the elements
      * compared first, `cmp [rax+rcx*8], r15; je`, then the count raised and

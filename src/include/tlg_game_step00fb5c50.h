@@ -25,6 +25,13 @@ struct StepContext00fb5c50 {
     StepInput00fb5c50 *input; /* +0x8 */
 };
 
+/* the object a stepper belongs to, whose context its slot 4 steps with
+ * (FUN_013e2e70, FUN_013e2f20). derived name */
+struct StepOwner00fb5c50 {
+    u8 unknown0[0x2f0];
+    StepContext00fb5c50 context; /* +0x2f0 */
+};
+
 class Stepper00fb5c50
 {
   public:
@@ -52,7 +59,8 @@ class Stepper00fb5c50
         }
     }
 
-    u8 unknown8[0x50];
+    StepOwner00fb5c50 *owner; /* +0x8 */
+    u8 unknown10[0x48];
     int state; /* +0x58 */
     u8 unknown5c[4];
     float unknown60; /* +0x60: the level at the last step */

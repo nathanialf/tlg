@@ -2,6 +2,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_object016c1128.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_fadeparam013f9ca0.h"
 
 /* derived names: FUN_01067d40 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -53,4 +54,32 @@ Object016c1128::Object016c1128(const Name &name) : Object00c1b7f0(name), unknown
     registry = 0;
     unknown1f8 = 0;
     unknown200 = 0;
+}
+
+// NONMATCHING: 44/99, 340 bytes against 372: the type-0 cases 2 to 4 share
+// their offset load and store in the build (`mov eax, [rcx+0x50]; jmp`), each
+// keeps its own in the base, and the type-1 cases share only the store there;
+// first difference greedy's (rcx/rax swapped for the group and its index)
+/* derived name: the records of one of the target's groups applied in order,
+ * each into the target itself or into the owner's element it names */
+void FUN_013f9ca0(ParamOwner013f9ca0 *owner, ParamTarget013f9ca0 *target,
+                  int group) /* derived name */
+{
+    const ParamGroup013f9ca0 &records = target->groups[group];
+    const int count = records.count;
+    const ParamRecord013f9ca0 *next = records.records;
+    for (int i = 0; i < count; ++i, ++next) {
+        const ParamRecord013f9ca0 &record = *next;
+        if (record.disabled != 0)
+            continue;
+        if (record.destination == 0) {
+            writeParam(record, reinterpret_cast<char *>(target));
+        } else if (record.destination == 1) {
+            if (record.elementId) {
+                ParamElement013f9ca0 *element = findParamElement(owner, record.elementId);
+                if (element)
+                    writeParam(record, reinterpret_cast<char *>(element));
+            }
+        }
+    }
 }
