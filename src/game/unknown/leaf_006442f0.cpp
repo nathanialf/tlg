@@ -30,3 +30,138 @@ bool FUN_006442f0() /* derived name */
     }
     return false;
 }
+
+/* derived names: whether the int at +0xff8 of the same object is one value
+ * (1 to 25, not 7, 10 or 13: the compared constant of each); the object is
+ * looked up as FUN_006442f0 looks it up */
+bool FUN_00642770() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 1;
+}
+
+bool FUN_00642870() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 2;
+}
+
+bool FUN_00642970() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 3;
+}
+
+bool FUN_00642a70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 4;
+}
+
+bool FUN_00642b70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 5;
+}
+
+bool FUN_00642c70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 6;
+}
+
+bool FUN_00642d70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 8;
+}
+
+bool FUN_00642e70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 9;
+}
+
+bool FUN_00642f70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 11;
+}
+
+bool FUN_00643070() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 12;
+}
+
+bool FUN_00643170() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 14;
+}
+
+bool FUN_00643270() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 15;
+}
+
+bool FUN_00643370() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 16;
+}
+
+bool FUN_00643470() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 17;
+}
+
+bool FUN_00643570() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 18;
+}
+
+bool FUN_00643670() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 19;
+}
+
+bool FUN_00643770() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 20;
+}
+
+bool FUN_00643870() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 21;
+}
+
+bool FUN_00643970() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 22;
+}
+
+bool FUN_00643a70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 23;
+}
+
+bool FUN_00643b70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 24;
+}
+
+bool FUN_00643c70() /* derived name */
+{
+    Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);
+    return object && object->unknownff8 == 25;
+}
