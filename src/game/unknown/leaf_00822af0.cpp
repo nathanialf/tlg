@@ -6,7 +6,7 @@
  * of eight vtables: 0x16a8830 (stored by FUN_00344a60), 0x16a89f8
  * (FUN_0035b770), 0x16aaf60 (FUN_00510130), 0x16ab140 (FUN_00510fa0),
  * 0x16ac180 (FUN_006743e0), 0x16c7608, 0x16c7948 (whose slot 0 is the
- * destructor of Object008227e0) and 0x16cb520. The callee keeps its second
+ * destructor of Object016c7948) and 0x16cb520. The callee keeps its second
  * argument (a store of rsi in its frame). The classes and the callee's return
  * type are not traced. */
 struct Object00822af0;    /* derived name */
