@@ -5,8 +5,9 @@
  * each object a virtual fixup names cleaned up through the type info the
  * load stored in the fixup (its pointer in the fixup's second and third
  * words, high half first), a fixup the load could not resolve skipped. */
-void FUN_0017e860(hkPackfileHeader *header) /* derived name */
+void FUN_0017e860(void *packfileData, int) /* derived name */
 {
+    hkPackfileHeader *header = static_cast<hkPackfileHeader *>(packfileData);
     for (int sectionIndex = 0; sectionIndex < header->numSections; sectionIndex++) {
         const hkPackfileSectionHeader *section = header->getSectionHeader(header, sectionIndex);
         const int sizeofVirtualFixups = section->exportsOffset - section->virtualFixupsOffset;

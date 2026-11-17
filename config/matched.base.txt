@@ -9797,3 +9797,9 @@ FUN_003518e0 src/game/unknown/leaf_003518e0.cpp _Z12FUN_003518e0PvRK4Name
 FUN_003442a0 src/game/unknown/leaf_003442a0.cpp _Z12FUN_003442a0PvRK4Name
 FUN_00379b40 src/game/unknown/leaf_00379b40.cpp _Z12FUN_00379b40PvRK4Name
 FUN_00378fb0 src/game/unknown/leaf_00378fb0.cpp _Z12FUN_00378fb0PvRK4Name
+FUN_00e99c40 src/game/unknown/leaf_00e99c40.cpp _Z12FUN_00e99c40P14Object00e99c40
+FUN_00e9a860 src/game/unknown/leaf_00e9a860.cpp _Z12FUN_00e9a860P14Object00e9a860P16Resource00e9a860P14Buffer00e9a860i
+FUN_0114d2b0 src/game/unknown/leaf_0114d2b0.cpp _Z12FUN_0114d2b0P13Point0114d2b0PKS_fff
+FUN_012eb8e0 src/game/unknown/leaf_012eb8e0.cpp _Z12FUN_012eb8e0P13Point012eb8e0PKS_fff
+FUN_00eead50 src/game/sndx/leaf_00eead50.cpp _Z12FUN_00eead50P14Player00eead50iPK11Key00eead50iPK18Parameters00eead50
+FUN_00ede520 src/game/sndx/leaf_00ede520.cpp _Z12FUN_00ede520P12Node00ede520bf

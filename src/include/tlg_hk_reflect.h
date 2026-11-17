@@ -1765,6 +1765,12 @@ struct hkTransform {
      * read, then a's translation added. */
     void FUN_00010b40(const hkTransform &a, const hkTransform &b);
 
+    /* derived name: set to a transform with its w lanes made clean, the
+     * columns' zero and the translation's one: one body with hkMatrix4's
+     * set from a transform at 0x10a70, which the game calls into a local
+     * transform it then multiplies (0xea114d). */
+    void FUN_00010a70(const hkTransform &t);
+
     /* derived name: set to a times the inverse of b, b being rigid (0x10d10;
      * called at 0x1593fa): the rotations' product with b's transposed,
      * every input read first, and a's translation less b's carried through
@@ -6354,6 +6360,28 @@ inline Vec4 clampedToMaxLength3(const Vec4 &v, const Vec4 &maxLength) /* derived
                                  _mm_sub_ps(three, _mm_mul_ps(lengthSquared, _mm_mul_ps(e, e)))));
     const Vec4 tooLong = _mm_cmplt_ps(maxLength, _mm_mul_ps(lengthSquared, invLength));
     return _mm_blendv_ps(x, _mm_mul_ps(x, _mm_mul_ps(maxLength, invLength)), tooLong);
+}
+
+/* Three floats in memory as a vector with a zero w: x and y read as one
+ * eight-byte double, z alone, the two moved together, then the w lane
+ * cleared (the game's body calls of the world at 0x16be490's slots, 0xea0b26
+ * and 0xea0bd2; 139 game sites load a double for `vunpcklpd`). The base's
+ * optimiser dropped the double's zero upper lane, which the move discards;
+ * LLVM 3.7.1's InstCombine keeps it (SimplifyDemandedVectorElts stops at a
+ * bitcast that changes the element count), and the zero is then shared
+ * with the blend's and scheduled earlier. derived name. */
+inline Vec4 loadXYZ_0(const float *p) /* derived name */
+{
+    const Vec4 xyz = _mm_movelh_ps(_mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double *>(p))),
+                                   _mm_load_ss(p + 2));
+    return _mm_blend_ps(xyz, _mm_setzero_ps(), 8);
+}
+
+/* Four floats in memory with no alignment, read as one unaligned integer
+ * load (`vlddqu`, the game's 0xea0ade). derived name. */
+inline Vec4 loadUnaligned4(const float *p) /* derived name */
+{
+    return _mm_castsi128_ps(_mm_lddqu_si128(reinterpret_cast<const __m128i *>(p)));
 }
 
 /* A vector scaled to unit length over x, y and z by the reciprocal square
@@ -12416,6 +12444,10 @@ struct hknpWorld {
      * (0x5da80; the world's 0x16eca0 and 0x170940 call it). derived name. */
     void FUN_0005da80(int motionId, float factor);
     void FUN_000ce880(int bodyId); /* derived name */
+    /* The world's construction info written back into a record (0x4ab80:
+     * the capacities, the libraries' references taken, the gravity and the
+     * broad phase's box; the game's 0xe99c9e). derived name. */
+    void FUN_0004ab80(struct hknpWorldCinfo &info) const;
 
     /* Two of the step's stages, run by the solve tasks under the timer
      * "Physics" (0x50fd0 by hknpPostSolveTask, 0x509f0 by hknpPreSolveTask).
@@ -12471,6 +12503,10 @@ struct hknpWorld {
     /* Called by the game with one body id, 1 and 2 (0xea121f); its body
      * (0x4f000) is not traced. derived name. */
     void FUN_0004f000(const hknpBodyId *bodyIds, int numBodyIds, int mode);
+    /* Bodies attached to a body's motion (0x4ebd0: the body's motion id
+     * read first, the mode 2 skipping the active test; the game calls it
+     * with one id at 0xea118e); its body is not traced. derived name. */
+    void FUN_0004ebd0(int bodyId, const hknpBodyId *bodyIds, int numBodyIds, int mode);
     /* Constraints destroyed by id (0x4d4b0): for each, the removed signal
      * fired when it is enabled, then the destroyed signal, then its
      * removal from the manager (0x16df30). derived name. */
@@ -24387,6 +24423,11 @@ struct hkPackfileHeader {
     u16 maxpredicate;
     u16 predicateArraySizePlusPadding;
 };
+
+/* derived name: a packfile loaded in place unloaded (0x17e860,
+ * src/libs/unknown/func_0017e860.cpp); the buffer's size is passed (the
+ * game's 0xe9a897 loads it into esi) and not read. */
+void FUN_0017e860(void *packfileData, int packfileSize);
 
 /* The index of a pair of cells, the larger first (derived name): the
  * splitter's pair table (0x605b0) and a solver stage's command list
