@@ -79,4 +79,12 @@ class Object016b9108 /* derived name */
     int flags;
 };
 
+/* the object when its type is `type` or derives from it, else null
+ * (func_00503fb0.cpp; the link inlines it, and the executable keeps no
+ * copy). The walk hands back the object, not a bool: where it is inlined
+ * the found object is set on each edge out of the walk and tested again
+ * after its loop (0x858390: `test r14, r14` at 0x8583ff; 0x6423c0: `mov
+ * rbx, r12` before each compare), where isKindOf's bool is threaded away. */
+Object016b9108 *kindOf(Object016b9108 *object, const Type00503fb0 *type); /* derived name */
+
 #endif

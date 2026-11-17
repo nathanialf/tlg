@@ -29,7 +29,7 @@ extern Type00503fb0 *D_57d4a68; /* derived name: the component's type */
 
 /* the component of the type D_57d4a68 points to on the node the event
  * names, or null */
-static Component057d4a68 *markerComponent(MarkerEvent00ad3090 *event) /* derived name */
+static inline Component057d4a68 *markerComponent(MarkerEvent00ad3090 *event) /* derived name */
 {
     Node00503fb0 *node = findNamed<Node00503fb0>(event->unknown10, D_5939080);
     if (!node)
@@ -37,7 +37,10 @@ static Component057d4a68 *markerComponent(MarkerEvent00ad3090 *event) /* derived
     return static_cast<Component057d4a68 *>(node->findComponent(D_57d4a68));
 }
 
-// NONMATCHING: cookbook 1704/2127 shape B of the thread flag (base `movzx r14d, word [r15+0x16]` above the flag's address, `mov al, [rax]; xor al, 1; test al, 1`; build `test byte [r15+0x16], 4` and `test byte [rax], 1; je`), the same in all eight
+// NONMATCHING: 45/73 (the four that store; the four gaze handlers are equal). The component's
+// search: the base reloads the array at +0x58 in each pass and keeps one release of the readers
+// with the found component (or 0) tested after it; the build hoists the array and releases twice,
+// the not-found path straight to the return (JumpThreading through the release block).
 void FUN_00ad11a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_Allow_Push.enter" */
 {
     if (event) {

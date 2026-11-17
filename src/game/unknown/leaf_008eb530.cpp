@@ -6,19 +6,6 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 
-/* derived names: a node as this function reads it: its Name at +0xc, the
- * flags at +0x16 (read as 16 bits, `movzx r14d, word [rbx+0x16]`), its type
- * at +0x18 and the node above it at +0x38 */
-struct Node008eb530 { /* derived name */
-    u8 unknown0[0xc];
-    Name name; /* +0xc */
-    u8 unknown10[0x6];
-    u16 flags16;              /* +0x16 */
-    const Type00503fb0 *type; /* +0x18 */
-    u8 unknown20[0x18];
-    Node008eb530 *parent; /* +0x38 */
-};
-
 extern Type00503fb0 *D_5939080; /* derived name: the node's type */
 
 /* derived name: the Name its argument's string makes (interned), the
@@ -37,11 +24,9 @@ static inline Name argumentName(lua_State *state, int argument)
  * one derived from it), or one of the nodes above it, has the Name its second
  * argument's string makes, as a boolean; returns 1 (one result). The C
  * function's own name is unknown. */
-// NONMATCHING: 47/135 under --module: the thread flag's shape B (cookbook 1704, 2127): the base
-// loads the node's flags as 16 bits above the flag's address (`movzx r14d, word [rbx+0x16]`, the
-// child's Name spilled to [rbp-0xb8] for it), then `test r14b, 4; jne`, `mov al, [rax]; xor al, 1;
-// test al, 1; jne`; the build takes the flag's address first and tests both in memory (`test byte
-// [rbx+0x16], 4; jne; test byte [rax], 1; je`). The rest follows from the frame (round 352B)
+// NONMATCHING: the reload of the child's Name spilled across the thread flag's address: the base
+// reloads it once where the two found paths meet (the found node tested for null first, its
+// failure joining the lookup's other failures), the build on each path before the test.
 int FUN_008eb530(lua_State *state) /* derived name */
 {
     int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);
@@ -52,7 +37,7 @@ int FUN_008eb530(lua_State *state) /* derived name */
     Name child = argumentName(state, 1);
     Name parent = argumentName(state, 2);
     bool found = false;
-    for (Node008eb530 *node = findNamed<Node008eb530>(child, D_5939080); node;
+    for (Node00503fb0 *node = findNamed<Node00503fb0>(child, D_5939080); node;
          node = node->parent) {
         if (node->name == parent) {
             found = true;

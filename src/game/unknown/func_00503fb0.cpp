@@ -81,6 +81,21 @@ void FUN_00503fb0(Owner00503fb0 *owner) /* derived name */
     FUN_00503fb0_rest(node, component);
 }
 
+/* the object when its type is `type` or derives from it, else null
+ * (tlg_game_object016b9108.h) */
+Object016b9108 *kindOf(Object016b9108 *object, const Type00503fb0 *type) /* derived name */
+{
+    const Type00503fb0 *t = object->type;
+    if (t == type)
+        return object;
+    do {
+        t = t->parent;
+        if (t == type)
+            return object;
+    } while (t);
+    return 0;
+}
+
 /* the type itself or one it derives from (tlg_game_type.h) */
 bool isKindOf(const Type00503fb0 *t, const Type00503fb0 *type) /* derived name */
 {

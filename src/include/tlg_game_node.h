@@ -183,18 +183,21 @@ template <class T> inline bool isUsable(const T *object) /* derived name */
 
 /* the object a name names (the record of its entry in the name table) when
  * this thread may use it and its type at +0x18 is `type` or derives from it,
- * else null; nothing is looked up for a null type. T has the fields
- * `flags16` and `type`. */
+ * else null; nothing is looked up for a null type. T derives from
+ * Object016b9108. The two flags are tested in place, the object's word read
+ * before the thread's flag's address (`movzx r, word [obj+0x16]`, then `mov
+ * al, [rax]; xor al, 1; test al, 1`: 903 sites); the walk is kindOf's, which
+ * hands back the object, so the found object is tested for null again after
+ * the walk's loop (0x858390: `test r14, r14` at 0x8583ff). */
 template <class T>
 inline T *findNamed(const Name &name, const Type00503fb0 *type) /* derived name */
 {
-    T *found = 0;
     if (type) {
         T *object = static_cast<T *>(D_17ac870[name.index].record18);
-        if (object && isUsable(object) && isKindOf(object->type, type))
-            found = object;
+        if (object && ((object->flags16 & 4) || D_16dc098))
+            return static_cast<T *>(kindOf(object, type));
     }
-    return found;
+    return 0;
 }
 
 /* a counted reference another thread may replace: the pointer is exchanged
