@@ -1,13 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016b7670.h"
 #include "tlg_game_shared.h"
-
-/* derived names: the base whose destructor 0xbc3780 the destructors below
- * run as a tail call (as leaf_00b89eb0.cpp's) */
-class Object00bc3780 /* derived name */
-{
-  public:
-    virtual ~Object00bc3780();
-};
 
 /* derived name: a shared object's reference dropped and the pointer
  * cleared, nothing done for a null one (`test rdi, rdi; je` around the
@@ -22,11 +15,11 @@ static inline void dropShared(Shared00901550 *&shared)
 
 /* derived names: the class whose vtable is at 0x16b7108
  * (config/vtables.derived.base.txt; built by FUN_008f4020 and others), over
- * Object00bc3780, holding three shared objects (+0x20, +0x28, +0x30). Its
+ * Object016b7670, holding three shared objects (+0x20, +0x28, +0x30). Its
  * complete destructor (0xb893e0) clears the pointer at +0x38 and the int at
  * +0x40, drops the shared objects at +0x28, +0x30 and +0x20 in that order,
  * then runs the base's. The other fields are not traced. */
-class Object016b7108 : public Object00bc3780 /* derived name */
+class Object016b7108 : public Object016b7670 /* derived name */
 {
   public:
     virtual ~Object016b7108();
@@ -51,11 +44,11 @@ Object016b7108::~Object016b7108()
 
 /* derived names: the class whose vtable is at 0x16b7840
  * (config/vtables.derived.base.txt; built by FUN_00b981a0 and others), over
- * Object00bc3780, holding three shared objects (+0x40, +0x48, +0x50). Its
+ * Object016b7670, holding three shared objects (+0x40, +0x48, +0x50). Its
  * complete destructor (0xbd8540; the deleting one 0xbd8600) clears the int
  * at +0x28, drops the shared objects at +0x48, +0x50 and +0x40 in that
  * order, then runs the base's. The other fields are not traced. */
-class Object016b7840 : public Object00bc3780 /* derived name */
+class Object016b7840 : public Object016b7670 /* derived name */
 {
   public:
     virtual ~Object016b7840();

@@ -6,9 +6,5 @@
  * the mutex at +0x0 and clears both (tlg_game_mutex.h). Class unknown. */
 Mutex013847e0::~Mutex013847e0()
 {
-    if (created) {
-        scePthreadMutexDestroy(&mutex);
-        mutex = 0;
-        created = 0;
-    }
+    destroy();
 }

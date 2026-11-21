@@ -787,7 +787,7 @@ _ZTV14Object016b45a8 0x16b45a8 Object016b45a8 derived ctor FUN_00af95f0 # stored
 _ZTV14Object016b45f0 0x16b45f0 Object016b45f0 derived ctor FUN_00af98d0 # stored by FUN_00af98d0 FUN_00af9a70 FUN_00af9b10
 _ZTV14Object016b4638 0x16b4638 Object016b4638 derived ctor FUN_00af9bb0 # stored by FUN_00af9bb0 FUN_00af9d50 FUN_00af9df0
 _ZTV14Object016b4680 0x16b4680 Object016b4680 derived ctor FUN_00af9e90 # stored by FUN_00af9e90 FUN_00afa030 FUN_00afa0d0
-_ZTV14Object016b46c8 0x16b46c8 Object016b46c8 derived ctor FUN_00afa2f0 # stored by FUN_00afa2f0 FUN_00afa590
+_ZTV15AnimationCamera 0x16b46c8 AnimationCamera derived ctor FUN_00afa2f0 # the class its messages name ("AnimationCamera(%s)::Init", "::Term"); stored by FUN_00afa2f0 FUN_00afa590
 _ZTV14Object016b4c08 0x16b4c08 Object016b4c08 derived ctor FUN_00b0e520 # stored by FUN_00b0e520 FUN_00b0e650 FUN_00b0e770
 _ZTV14Object016b4c60 0x16b4c60 Object016b4c60 derived ctor FUN_00b0ea40 # stored by FUN_00b0ea40 FUN_0138fd60 FUN_0138fe30
 _ZTV14Object016b4ce0 0x16b4ce0 Object016b4ce0 derived ctor FUN_00b12590 # stored by FUN_00b12590 FUN_00b129d0

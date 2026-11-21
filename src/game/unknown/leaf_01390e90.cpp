@@ -11,8 +11,8 @@ Entry016b4ce0 *Object016b4ce0::find(const int &id)
     Entry016b4ce0 *found = static_cast<Entry016b4ce0 *>(found10.get());
     if (found == 0 || found->id310 != id) {
         found = 0;
-        for (Entry016b4ce0 *const *at = entries.begin(); at != entries.end(); ++at) {
-            Entry016b4ce0 *entry = *at;
+        for (const Ref00503fb0<Object016b9108> *at = entries.begin(); at != entries.end(); ++at) {
+            Entry016b4ce0 *entry = static_cast<Entry016b4ce0 *>(at->get());
             if (entry->id310 == id) {
                 found10.set(entry);
                 found = entry;

@@ -14,6 +14,18 @@ class Mutex013847e0 /* derived name */
   public:
     ~Mutex013847e0();
 
+    /* when the mutex was made, destroys it and clears it and the flag
+     * (the destructor's body, leaf_013847e0.cpp; FUN_00bed400 and
+     * FUN_00a43ff0 call it in their destructors' bodies too) */
+    void destroy() /* derived name */
+    {
+        if (created) {
+            scePthreadMutexDestroy(&mutex);
+            mutex = 0;
+            created = 0;
+        }
+    }
+
     /* unless the calling thread already owns it, locks the mutex and
      * becomes the owner; then counts one more level (the file system's
      * handle pool, 0xe5bb5e) */
