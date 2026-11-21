@@ -18,10 +18,14 @@ class Object0082f900 : public Object01343880 /* derived name */
 {
   public:
     virtual ~Object0082f900();
-    virtual void slot9(); /* derived name; FUN_0082fb30, not traced */
+    /* FUN_0082fb30 (leaf_0082f900.cpp): the time at +0x38 run down by the
+     * step, then the work of the mode at +0x34 */
+    virtual void slot9(float step); /* derived name */
 
   private:
-    u8 unknown34[0xc];
+    int mode;   /* +0x34: 0, 1 or 2 (slot 9) */
+    float time; /* +0x38: run down by slot 9 */
+    u8 unknown3c[0x4];
     /* +0x40: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Object016b9108> held40;
