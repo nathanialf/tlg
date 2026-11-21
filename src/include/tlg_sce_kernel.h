@@ -87,6 +87,9 @@ int sceKernelWaitEventFlag(SceKernelEventFlag ef, unsigned long bitPattern, unsi
 /* A direct-memory range given back: its start (an offset, not an address)
  * and its length (0xcffd45). */
 int sceKernelReleaseDirectMemory(long start, unsigned long len);
+/* A flexible-memory range given back: its address and its length (the NID
+ * verified as "sceKernelReleaseFlexibleMemory"; FUN_001b0020). */
+int sceKernelReleaseFlexibleMemory(void *addr, unsigned long len);
 int sceKernelAddHRTimerEvent(SceKernelEqueue eq, int id, SceKernelTimespec *ts, void *udata);
 int sceKernelWaitEqueue(SceKernelEqueue eq, SceKernelEvent *ev, int num, int *out,
                         SceKernelUseconds *timeout);

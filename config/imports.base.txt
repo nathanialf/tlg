@@ -227,7 +227,7 @@ onNY9Byn-W8 U H func scePthreadJoin
 pO96TwzOm5E U H func sceKernelGetDirectMemorySize
 rTXw65xmLIA U H func sceKernelAllocateDirectMemory
 smWEktiyyG0 U H func scePthreadMutexattrDestroy
-teiItL2boFw U H func ?
+teiItL2boFw U H func sceKernelReleaseFlexibleMemory
 tn3VlD0hG60 U H func scePthreadMutexUnlock
 upoVrzMHFeE U H func scePthreadMutexTrylock
 vNe1w4diLCs U H func ?

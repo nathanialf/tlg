@@ -5,6 +5,7 @@
  * out-of-memory stop where a link stage that met it in another unit would
  * have inlined it (its unit already knew it does not return). */
 #include "tlg_libc.h"
+#include "tlg_sce_kernel.h"
 
 void FUN_001b0570(); /* derived name */
 
@@ -13,6 +14,37 @@ void FUN_001b0570(); /* derived name */
  * 0x480000 bytes, the first for larger), then from the other, and stop in
  * FUN_001b00c0 when both fail. */
 extern SceLibcMspace D_57c9120[2]; /* derived name: the large space, then the small */
+
+/* derived names: what the table's first function (FUN_001afe90) sets up:
+ * whether it took the direct memory and the flexible memory, and where each
+ * starts */
+extern bool D_57c9108;  /* derived name: the direct memory taken */
+extern bool D_57c9109;  /* derived name: the flexible memory taken */
+extern long D_57c9110;  /* derived name: the direct memory's start */
+extern void *D_57c9118; /* derived name: the flexible memory's address */
+
+/* derived name: the second function of the table at 0x168c098: the two
+ * spaces destroyed (each one left, and 1 returned, when it cannot be), then
+ * the direct memory (0x69800000 bytes) and the flexible memory (0x11800000
+ * bytes) given back, a length of 0 for memory not taken; 1 when either
+ * fails. */
+// NONMATCHING: the two flags: the base reads each as a byte masked to one bit (`mov al, [0x57c9108];
+// and al, 1; cmovne`), the form of a file static GlobalOpt has shrunk to a bool because every store
+// to it is in this unit (FUN_001afe90 stores 1 to both, `mov byte [0x57c9108], 1`); declared here
+// until that function is written, the build compares the byte (`cmp byte [..], 0; jne`)
+int FUN_001b0020() /* derived name */
+{
+    for (int space = 0; space < 2; ++space) {
+        if (D_57c9120[space]) {
+            if (sceLibcMspaceDestroy(D_57c9120[space]) != 0)
+                return 1;
+            D_57c9120[space] = 0;
+        }
+    }
+    if (sceKernelReleaseDirectMemory(D_57c9110, D_57c9108 ? 0x69800000 : 0) < 0)
+        return 1;
+    return sceKernelReleaseFlexibleMemory(D_57c9118, D_57c9109 ? 0x11800000 : 0) < 0;
+}
 
 /* derived name: the allocator's out-of-memory stop: prints the message with
  * puts, calls FUN_001b0570 and stops on a trap (llvm.trap, then the

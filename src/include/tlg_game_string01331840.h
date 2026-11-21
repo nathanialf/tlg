@@ -1,0 +1,22 @@
+/* src/include/tlg_game_string01331840.h: a text of up to 4095 characters
+ * formatted in place (game region; docs/TARGETS.md). Every name here is
+ * derived. */
+#ifndef TLG_GAME_STRING01331840_H
+#define TLG_GAME_STRING01331840_H
+
+#include "tlg_types.h"
+
+/* derived names: FUN_01331840 formats into the text with vsnprintf at most
+ * 0xfff characters (the last byte cleared first) and stores the length it
+ * gives, 0xfff for an error, at +0x1000; the callers read the text back with
+ * strlen. 0x1008 bytes on the callers' frames (`lea rdi, [rbp-0x1028]` with
+ * the guard at -0x20, FUN_001b0f50), the last four not traced. */
+struct String01331840 { /* derived name */
+    char text[0x1000];
+    int length;      /* +0x1000 */
+    int unknown1004; /* +0x1004: not traced */
+};
+
+void FUN_01331840(String01331840 *string, const char *format, ...); /* derived name */
+
+#endif
