@@ -79,7 +79,8 @@ struct Record00dd1af0 {
 };
 
 struct Element00dd1f20 {
-    u8 unknown0[0x20];
+    int kind; /* +0x0: 5 and 7 to 10 walked by slot 29 */
+    u8 unknown4[0x1c];
 };
 
 struct Array00dd1f20 {
@@ -163,6 +164,29 @@ struct Record00dd1b80 {
     HksObject valueE8; /* +0xe8 */
 };
 
+struct Record00dd2190;
+
+/* derived names: slot 10's record (what slot 89 of the vtable at 0x16bba90
+ * prints as "Method"): two 16-byte parts of slots 23's and 24's kinds, an
+ * array of pointers of slot 25's kind and its record of slot 35's kind (the
+ * source and the name the writer prints) */
+struct Part00dd1510 {
+    u8 unknown0[0x10];
+};
+
+struct Items00dd1510 {
+    u32 count;    /* +0x0 */
+    void **items; /* +0x8 */
+};
+
+struct Record00dd1510 {
+    u8 unknown0[0x18];
+    Part00dd1510 part18;   /* +0x18 */
+    Part00dd1510 part28;   /* +0x28 */
+    Items00dd1510 items;   /* +0x38 */
+    Record00dd2190 *debug; /* +0x48 */
+};
+
 /* derived names: slot 15's record: its first 0x58 bytes of slot 17's kind
  * (the body there empty), a record of slot 18's kind, a table of slot 21's
  * kind (0xdd1dc0), a value, a block of slot 41's kind (an array of
@@ -201,6 +225,50 @@ struct Record00dd1950 {
     void *unknown588; /* +0x588: to FUN_013bfee0 */
 };
 
+/* derived names: a string of the VM, its characters from +0x14 */
+struct String00dd2f70 {
+    u8 unknown0[0x14];
+    char chars[1]; /* +0x14 */
+};
+
+struct Record00dd1950;
+
+/* derived names: slot 3's record (the thread: its global state at +0x10,
+ * its values from +0x48, as FUN_00dd2900 reads them through lua_State), a
+ * range of slot 26's kind, a range of slot 19's kind, a value and pointers
+ * to the object's marks */
+struct Record00dd0ce0 {
+    u8 unknown0[0x10];
+    Record00dd1950 *global;     /* +0x10 */
+    EntryRange00dd1e90 entries; /* +0x18 */
+    u8 unknown30[0x18];
+    ValueRange00dd1cf0 values; /* +0x48 */
+    void *unknown68;           /* +0x68: to FUN_013bf700 */
+    HksObject value70;         /* +0x70 */
+    u8 unknown80[0x28];
+    void *unknownA8; /* +0xa8: to FUN_013bf850 */
+    void *unknownB0; /* +0xb0: to FUN_013bf510 */
+};
+
+/* derived names: slot 6's table: a pointer at +0x10 (its low bit the kind,
+ * as at +0x18 of slot 7's record), the mask of its nodes at +0x1c (all ones
+ * when it has none), the nodes (a value, then its key; a node with a key of
+ * kind 0 is empty) and the array of values with its count */
+struct Node00dd0f90 {
+    HksObject value; /* +0x0 */
+    HksObject key;   /* +0x10 */
+};
+
+struct Table00dd0f90 {
+    u8 unknown0[0x10];
+    u64 unknown10; /* +0x10 */
+    u8 unknown18[0x4];
+    u32 mask;            /* +0x1c */
+    Node00dd0f90 *nodes; /* +0x20 */
+    HksObject *array;    /* +0x28 */
+    u32 arrayCount;      /* +0x30 */
+};
+
 /* derived names: slot 35's record: a 16-byte block (slot 36's kind, the
  * body there empty), an array of pointers (slot 37's kind: the unsigned
  * count, the pointers), a pointer to FUN_013bf850 and an array of slot 38's
@@ -218,9 +286,9 @@ struct Record00dd2190 {
     u8 unknown0[0x8];
     Block00dd2190 block8;          /* +0x8 */
     PointerArray00dd2190 pointers; /* +0x18 */
-    void *unknown28;               /* +0x28: to FUN_013bf850 */
-    u8 unknown30[0x8];
-    Array00dd2500 array38; /* +0x38 */
+    String00dd2f70 *source;        /* +0x28: to FUN_013bf850 */
+    String00dd2f70 *name;          /* +0x30 */
+    Array00dd2500 array38;         /* +0x38 */
 };
 
 /* derived names: what slot 86 of the vtable at 0x16bba90 prints as
@@ -230,27 +298,6 @@ struct UserData00dd2cf0 {
     u64 header; /* +0x0 */
     u8 unknown8[0x8];
     const void *environment; /* +0x10 */
-};
-
-/* derived names: what slot 89 of the vtable at 0x16bba90 prints as
- * "Method": the names of its debug record (strings whose characters start
- * at +0x14) and the pointers it holds */
-struct String00dd2f70 {
-    u8 unknown0[0x14];
-    char chars[1]; /* +0x14 */
-};
-
-struct Debug00dd2f70 {
-    u8 unknown0[0x28];
-    const String00dd2f70 *source; /* +0x28 */
-    const String00dd2f70 *name;   /* +0x30 */
-};
-
-struct Method00dd2f70 {
-    u8 unknown0[0x38];
-    u32 count;                  /* +0x38 */
-    void **items;               /* +0x40 */
-    const Debug00dd2f70 *debug; /* +0x48 */
 };
 
 class Object013c8500 /* derived name */
@@ -270,14 +317,14 @@ class Object013c8500 /* derived name */
      * 0x1af750): a slot the bytes call carries its argument, the others
      * are not traced. The walks of slots 19 and 26 call four slots on each
      * element: three hooks 39 slots apart around the element's own mark */
-    virtual void slot3();
+    virtual void visit00dd0ce0(const Record00dd0ce0 *record); /* 0xdd0ce0 */
     virtual void slot4();
     virtual void slot5();
-    virtual void slot6();
+    virtual void visit00dd0f90(const Table00dd0f90 *table); /* 0xdd0f90 */
     virtual void slot7();
     virtual void visit00dd13d0(const Record00dd13d0 *record); /* 0xdd13d0 */
     virtual void visit00dd1460(const Record00dd1460 *record); /* 0xdd1460 */
-    virtual void slot10();
+    virtual void visit00dd1510(const Record00dd1510 *record); /* 0xdd1510 */
     virtual void markElement00dd1740(const Element00dd1740 *element);
     virtual void visit00dd1740(const Array00dd1740 *array);      /* 0xdd1740 */
     virtual void visit00dd18c0(const ValueArray00dd18c0 *array); /* 0xdd18c0 */
@@ -290,18 +337,18 @@ class Object013c8500 /* derived name */
     virtual void markValue(const HksObject *value);            /* 0xdd1d60 in 0x16bba90 */
     virtual void markTable(const Table00dd1950 *table);
     virtual void markInline(const Inline00dd1460 *value);
-    virtual void slot23();
-    virtual void slot24();
-    virtual void slot25();
+    virtual void markPart23(const Part00dd1510 *part);
+    virtual void markPart24(const Part00dd1510 *part);
+    virtual void markItems(const Items00dd1510 *items);
     virtual void visitEntries(const EntryRange00dd1e90 *range); /* 0xdd1e90 */
     virtual void markEntry(const Entry00dd1e90 *entry);
-    virtual void visit00dd1f20(const Array00dd1f20 *array); /* 0xdd1f20 */
-    virtual void markElement32(const Element00dd1f20 *element);
-    virtual void slot30();
-    virtual void slot31();
-    virtual void slot32();
-    virtual void slot33();
-    virtual void slot34();
+    virtual void visit00dd1f20(const Array00dd1f20 *array);     /* 0xdd1f20 */
+    virtual void visit00dd1fc0(const Element00dd1f20 *element); /* 0xdd1fc0 */
+    virtual void markKind30(const Element00dd1f20 *element);
+    virtual void markKind31(const Element00dd1f20 *element);
+    virtual void markKind32(const Element00dd1f20 *element);
+    virtual void markKind33(const Element00dd1f20 *element);
+    virtual void markKind34(const Element00dd1f20 *element);
     virtual void visit00dd2190(const Record00dd2190 *record); /* 0xdd2190 */
     virtual void markBlock(const Block00dd2190 *block);
     virtual void markPointers(const PointerArray00dd2190 *array);
@@ -321,27 +368,27 @@ class Object013c8500 /* derived name */
     virtual void beforeElement00dd1740(const Element00dd1740 *element);
     virtual void beforeArray00dd1740(const Array00dd1740 *array);
     virtual void beforeValueArray(const ValueArray00dd18c0 *array);
-    virtual void slot54();
+    virtual void beforeRecord00dd1950(const Record00dd1950 *record);
     virtual void slot55();
     virtual void beforeHeader(const Header00dd1950 *header);
     virtual void beforeRecord00dd1b80(const Record00dd1b80 *record);
-    virtual void slot58();
+    virtual void beforeValues(const ValueRange00dd1cf0 *range);
     virtual void beforeValue(const HksObject *value);
     virtual void beforeTable(const Table00dd1950 *table);
     virtual void beforeInline(const Inline00dd1460 *value);
-    virtual void slot62();
-    virtual void slot63();
-    virtual void slot64();
-    virtual void slot65();
+    virtual void beforePart23(const Part00dd1510 *part);
+    virtual void beforePart24(const Part00dd1510 *part);
+    virtual void beforeItems(const Items00dd1510 *items);
+    virtual void beforeEntries(const EntryRange00dd1e90 *range);
     virtual void beforeEntry(const Entry00dd1e90 *entry);
     virtual void beforeArray32(const Array00dd1f20 *array);
     virtual void beforeElement32(const Element00dd1f20 *element);
-    virtual void slot69();
-    virtual void slot70();
-    virtual void slot71();
-    virtual void slot72();
-    virtual void slot73();
-    virtual void slot74();
+    virtual void beforeKind30(const Element00dd1f20 *element);
+    virtual void beforeKind31(const Element00dd1f20 *element);
+    virtual void beforeKind32(const Element00dd1f20 *element);
+    virtual void beforeKind33(const Element00dd1f20 *element);
+    virtual void beforeKind34(const Element00dd1f20 *element);
+    virtual void beforeRecord00dd2190(const Record00dd2190 *record);
     virtual void beforeBlock(const Block00dd2190 *block);
     virtual void beforePointers(const PointerArray00dd2190 *array);
     virtual void beforeArray16(const Array00dd2500 *array);
@@ -356,31 +403,31 @@ class Object013c8500 /* derived name */
     virtual void enterUserData(const UserData00dd2cf0 *userData);
     virtual void enterCFunction(const Record00dd13d0 *function);
     virtual void enterClosure(const Record00dd1460 *closure);
-    virtual void enterMethod(const Method00dd2f70 *method);
+    virtual void enterMethod(const Record00dd1510 *method);
     virtual void enterElement00dd1740(const Element00dd1740 *element);
     virtual void enterArray00dd1740(const Array00dd1740 *array);
     virtual void enterValueArray(const ValueArray00dd18c0 *array);
-    virtual void slot93();
+    virtual void enterRecord00dd1950(const Record00dd1950 *record);
     virtual void slot94();
     virtual void enterHeader(const Header00dd1950 *header);
     virtual void enterRecord00dd1b80(const Record00dd1b80 *record);
-    virtual void slot97();
+    virtual void enterValues(const ValueRange00dd1cf0 *range);
     virtual void enterValue(const HksObject *value);
     virtual void enterTable(const Table00dd1950 *table);
     virtual void enterInline(const Inline00dd1460 *value);
-    virtual void slot101();
-    virtual void slot102();
-    virtual void slot103();
-    virtual void slot104();
+    virtual void enterPart23(const Part00dd1510 *part);
+    virtual void enterPart24(const Part00dd1510 *part);
+    virtual void enterItems(const Items00dd1510 *items);
+    virtual void enterEntries(const EntryRange00dd1e90 *range);
     virtual void enterEntry(const Entry00dd1e90 *entry);
     virtual void enterArray32(const Array00dd1f20 *array);
     virtual void enterElement32(const Element00dd1f20 *element);
-    virtual void slot108();
-    virtual void slot109();
-    virtual void slot110();
-    virtual void slot111();
-    virtual void slot112();
-    virtual void slot113();
+    virtual void enterKind30(const Element00dd1f20 *element);
+    virtual void enterKind31(const Element00dd1f20 *element);
+    virtual void enterKind32(const Element00dd1f20 *element);
+    virtual void enterKind33(const Element00dd1f20 *element);
+    virtual void enterKind34(const Element00dd1f20 *element);
+    virtual void enterRecord00dd2190(const Record00dd2190 *record);
     virtual void enterBlock(const Block00dd2190 *block);
     virtual void enterPointers(const PointerArray00dd2190 *array);
     virtual void enterArray16(const Array00dd2500 *array);
@@ -399,27 +446,27 @@ class Object013c8500 /* derived name */
     virtual void afterElement00dd1740(const Element00dd1740 *element);
     virtual void afterArray00dd1740(const Array00dd1740 *array);
     virtual void afterValueArray(const ValueArray00dd18c0 *array);
-    virtual void slot132();
+    virtual void afterRecord00dd1950(const Record00dd1950 *record);
     virtual void slot133();
     virtual void afterHeader(const Header00dd1950 *header);
     virtual void afterRecord00dd1b80(const Record00dd1b80 *record);
-    virtual void slot136();
+    virtual void afterValues(const ValueRange00dd1cf0 *range);
     virtual void afterValue(const HksObject *value);
     virtual void afterTable(const Table00dd1950 *table);
     virtual void afterInline(const Inline00dd1460 *value);
-    virtual void slot140();
-    virtual void slot141();
-    virtual void slot142();
-    virtual void slot143();
+    virtual void afterPart23(const Part00dd1510 *part);
+    virtual void afterPart24(const Part00dd1510 *part);
+    virtual void afterItems(const Items00dd1510 *items);
+    virtual void afterEntries(const EntryRange00dd1e90 *range);
     virtual void afterEntry(const Entry00dd1e90 *entry);
     virtual void afterArray32(const Array00dd1f20 *array);
     virtual void afterElement32(const Element00dd1f20 *element);
-    virtual void slot147();
-    virtual void slot148();
-    virtual void slot149();
-    virtual void slot150();
-    virtual void slot151();
-    virtual void slot152();
+    virtual void afterKind30(const Element00dd1f20 *element);
+    virtual void afterKind31(const Element00dd1f20 *element);
+    virtual void afterKind32(const Element00dd1f20 *element);
+    virtual void afterKind33(const Element00dd1f20 *element);
+    virtual void afterKind34(const Element00dd1f20 *element);
+    virtual void afterRecord00dd2190(const Record00dd2190 *record);
     virtual void afterBlock(const Block00dd2190 *block);
     virtual void afterPointers(const PointerArray00dd2190 *array);
     virtual void afterArray16(const Array00dd2500 *array);
@@ -450,7 +497,7 @@ class Object013c8500 /* derived name */
     {
         beforeElement32(element);
         enterElement32(element);
-        markElement32(element);
+        visit00dd1fc0(element);
         afterElement32(element);
     }
 
@@ -538,6 +585,66 @@ class Object013c8500 /* derived name */
             markReference(&object);
             afterReference(&object);
         }
+    }
+
+    void visit23(const Part00dd1510 *part)
+    {
+        beforePart23(part);
+        enterPart23(part);
+        markPart23(part);
+        afterPart23(part);
+    }
+
+    void visit24(const Part00dd1510 *part)
+    {
+        beforePart24(part);
+        enterPart24(part);
+        markPart24(part);
+        afterPart24(part);
+    }
+
+    void visit(const Items00dd1510 *items)
+    {
+        beforeItems(items);
+        enterItems(items);
+        markItems(items);
+        afterItems(items);
+    }
+
+    void visit(const Record00dd2190 *record)
+    {
+        beforeRecord00dd2190(record);
+        if (record && firstVisit(record)) {
+            enterRecord00dd2190(record);
+            visit00dd2190(record);
+            afterRecord00dd2190(record);
+        }
+    }
+
+    void visit(const Record00dd1950 *record)
+    {
+        beforeRecord00dd1950(record);
+        if (record && firstVisit(record)) {
+            enterRecord00dd1950(record);
+            visit00dd1950(record);
+            afterRecord00dd1950(record);
+        }
+    }
+
+    void visit(const EntryRange00dd1e90 *range)
+    {
+        beforeEntries(range);
+        enterEntries(range);
+        visitEntries(range);
+        afterEntries(range);
+    }
+
+    void visit(const ValueRange00dd1cf0 *range)
+    {
+        beforeValues(range);
+        enterValues(range);
+        visitValues(range);
+        afterValues(range);
     }
 
     void visit(const Element00dd1740 *element)

@@ -8,6 +8,7 @@
 void FUN_013bf510(Object013c8500 *self, void *value); /* derived name */
 void FUN_013bf700(Object013c8500 *self, void *value); /* derived name */
 void FUN_013bf850(Object013c8500 *self, void *value); /* derived name */
+void FUN_013bf9a0(Object013c8500 *self, void *value); /* derived name */
 void FUN_013bfaf0(Object013c8500 *self, void *value); /* derived name */
 void FUN_013bfc40(Object013c8500 *self, void *value); /* derived name */
 void FUN_013bfd90(Object013c8500 *self, void *value); /* derived name */
@@ -80,7 +81,7 @@ void Object013c8500::visit00dd2190(const Record00dd2190 *record)
 {
     visit(&record->block8);
     visit(&record->pointers);
-    FUN_013bf850(this, record->unknown28);
+    FUN_013bf850(this, record->source);
     visit(&record->array38);
 }
 
@@ -131,4 +132,118 @@ void Object013c8500::visit00dd22f0(const Block00dd1950 *block)
 {
     for (size_t i = 0; i < block->count; ++i)
         visit(block->items[i]);
+}
+
+/* derived names: slot 10: the parts at +0x18 and +0x28 and the array at
+ * +0x38, each through its kind's four slots, then the record at +0x48, when
+ * set, through slot 74 and, when it was not walked before, slots 113, 35 and
+ * 152 */
+void Object013c8500::visit00dd1510(const Record00dd1510 *record)
+{
+    visit23(&record->part18);
+    visit24(&record->part28);
+    visit(&record->items);
+    if (record->debug)
+        visit(record->debug);
+}
+
+/* derived names: slot 3: the global state at +0x10 through slot 54 and,
+ * when it is set and not walked before, slots 93, 15 and 132; the ranges at
+ * +0x18 and +0x48 and the value at +0x70 through their kinds' four slots, the
+ * pointers at +0x68, +0xa8 and +0xb0 to the object's marks */
+void Object013c8500::visit00dd0ce0(const Record00dd0ce0 *record)
+{
+    visit(record->global);
+    visit(&record->entries);
+    visit(&record->values);
+    FUN_013bf700(this, record->unknown68);
+    visit(&record->value70);
+    FUN_013bf850(this, record->unknownA8);
+    FUN_013bf510(this, record->unknownB0);
+}
+
+/* derived names: slot 29: a 32-byte element by its kind, through the four
+ * slots of the kind it is walked as (5 as slot 31's, 7 as 34's, 8 as 30's,
+ * 9 as 32's, 10 as 33's; any other not walked) */
+void Object013c8500::visit00dd1fc0(const Element00dd1f20 *element)
+{
+    switch (element->kind) {
+    case 5:
+        beforeKind31(element);
+        enterKind31(element);
+        markKind31(element);
+        afterKind31(element);
+        break;
+    case 7:
+        beforeKind34(element);
+        enterKind34(element);
+        markKind34(element);
+        afterKind34(element);
+        break;
+    case 8:
+        beforeKind30(element);
+        enterKind30(element);
+        markKind30(element);
+        afterKind30(element);
+        break;
+    case 9:
+        beforeKind32(element);
+        enterKind32(element);
+        markKind32(element);
+        afterKind32(element);
+        break;
+    case 10:
+        beforeKind33(element);
+        enterKind33(element);
+        markKind33(element);
+        afterKind33(element);
+        break;
+    }
+}
+
+/* derived names: slot 6: each set value of the table's array with its key
+ * (the number of its place from 1), each node with a set key (its value,
+ * then its key), each as a copy through its four slots; then the pointer at
+ * +0x10, when set, with its low bit cleared to FUN_013bf9a0 if that bit is
+ * set, else to FUN_013bfaf0 */
+void Object013c8500::visit00dd0f90(const Table00dd0f90 *table)
+{
+    for (u32 i = 0; i < table->arrayCount; ++i) {
+        const HksObject *slot = &table->array[i];
+        if (slot->type & 0xf) {
+            HksObject key;
+            key.value.number = float(i + 1);
+            key.type = 3;
+            const int type = slot->type;
+            void *const pointer = slot->value.pointer;
+            HksObject value;
+            value.type = type;
+            value.value.pointer = pointer;
+            visit(&key);
+            visit(&value);
+        }
+    }
+    for (u32 i = 0; i < table->mask + 1; ++i) {
+        const Node00dd0f90 *node = &table->nodes[i];
+        if (node->key.type & 0xf) {
+            const int valueType = node->value.type;
+            void *const valuePointer = node->value.value.pointer;
+            HksObject value;
+            value.type = valueType;
+            value.value.pointer = valuePointer;
+            const int keyType = node->key.type;
+            void *const keyPointer = node->key.value.pointer;
+            HksObject key;
+            key.type = keyType;
+            key.value.pointer = keyPointer;
+            visit(&value);
+            visit(&key);
+        }
+    }
+    if (u64 pointer = table->unknown10) {
+        if (pointer & 1)
+            FUN_013bf9a0(this, reinterpret_cast<void *>(pointer & ~u64(1)));
+        else
+            FUN_013bfaf0(this, reinterpret_cast<void *>(pointer));
+    }
 }

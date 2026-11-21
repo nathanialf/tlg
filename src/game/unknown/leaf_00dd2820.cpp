@@ -13,16 +13,6 @@ struct FileHandle00de9a50 /* derived name */
     void *user;                                                              /* +0x10 */
 };
 
-/* derived names: the complete destructor of the class whose vtable is at
- * 0x16bba90 (config/vtables.derived.base.txt, stored by its constructor
- * FUN_00dd2650), a writer of the script heap's dump: it writes the closing
- * tag (the string at 0x15bcdaa, "</havokscriptheap>" and a newline) through
- * its own FUN_00dd2590 (variadic: `xor eax, eax` before the call), closes
- * the file of its handle at +0x18 and frees the handle through its
- * allocation function, then runs its base's destructor (tlg_game_object013c8500.h,
- * inlined in the module). FUN_00dd2890, slot 1, is the deleting one. The
- * destructor is the class's key function, so this file emits the vtable. */
-extern const char D_15bcdaa[20];
 extern const char D_15bccf7[35]; /* an object's opening tag: its address and type */
 extern const char D_15bcdf1[12]; /* its closing tag */
 extern const char D_15bcd1a[50]; /* a link: field, destination, weak */
@@ -70,7 +60,7 @@ class Object016bba90 : public Object013c8500 /* derived name */
     virtual void enterUserData(const UserData00dd2cf0 *userData);
     virtual void enterCFunction(const Record00dd13d0 *function);
     virtual void enterClosure(const Record00dd1460 *closure);
-    virtual void enterMethod(const Method00dd2f70 *method);
+    virtual void enterMethod(const Record00dd1510 *method);
 
   private:
     FileHandle00de9a50 *handle18; /* +0x18 */
@@ -86,6 +76,17 @@ void Object016bba90::FUN_00dd2590(const char *format, ...)
     vfprintf(handle18->file, format, args);
     va_end(args);
 }
+
+/* derived names: the complete destructor of the class whose vtable is at
+ * 0x16bba90 (config/vtables.derived.base.txt, stored by its constructor
+ * FUN_00dd2650), a writer of the script heap's dump: it writes the closing
+ * tag (the string at 0x15bcdaa, "</havokscriptheap>" and a newline) through
+ * its own FUN_00dd2590 (variadic: `xor eax, eax` before the call), closes
+ * the file of its handle at +0x18 and frees the handle through its
+ * allocation function, then runs its base's destructor (tlg_game_object013c8500.h,
+ * inlined in the module). FUN_00dd2890, slot 1, is the deleting one. The
+ * destructor is the class's key function, so this file emits the vtable. */
+extern const char D_15bcdaa[20];
 
 Object016bba90::~Object016bba90()
 {
@@ -204,12 +205,12 @@ void Object016bba90::enterClosure(const Record00dd1460 *closure)
 // that print a tail call: the buffer must not escape, so FUN_00db3a90 and
 // FUN_00dd2590 are nocapture in its unit (TailCallElim's alloca tracker);
 // FUN_00db3a90's body is not in this one (the rest equal, 321 bytes for 320)
-void Object016bba90::enterMethod(const Method00dd2f70 *method)
+void Object016bba90::enterMethod(const Record00dd1510 *method)
 {
     FUN_00dd2590(D_15bccf7, method, D_15bce8c);
     const char *source;
     const char *name;
-    if (const Debug00dd2f70 *debug = method->debug) {
+    if (const Record00dd2190 *debug = method->debug) {
         name = debug->name->chars;
         source = debug->source->chars;
     } else {
@@ -222,7 +223,7 @@ void Object016bba90::enterMethod(const Method00dd2f70 *method)
     FUN_00db3a90(buffer, source);
     FUN_00dd2590(buffer);
     FUN_00dd2590(D_15bcea6);
-    for (u32 i = 0; i < method->count; ++i)
-        FUN_00dd2590(D_15bcd1a, i + 3, method->items[i], D_14b31f3);
+    for (u32 i = 0; i < method->items.count; ++i)
+        FUN_00dd2590(D_15bcd1a, i + 3, method->items.items[i], D_14b31f3);
     FUN_00dd2590(D_15bcdf1);
 }
