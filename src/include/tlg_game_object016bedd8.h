@@ -25,13 +25,16 @@ class Object016bedd8 : public Object00c1b7f0, public Object013cd320 /* derived n
   private:
     u8 unknown194
         [0x24]; /* +0x194: in the tail padding of Object013cd320; zero from the constructor; not traced */
+  public:
     AtomicRef0045c470<Object016b9108>
-        owner;       /* +0x1b8: the owner, a counted reference set by compare-and-swap (0xfc5877) */
-    Name name1c0;    /* +0x1c0: released by the destructor */
-    bool unknown1c4; /* +0x1c4: false from the constructor; not traced */
-    s64 unknown1c8;  /* +0x1c8: -1 from the constructor; not traced */
-    int active1d0;   /* +0x1d0: zero from the constructor; not traced */
-    int unknown1d4;  /* +0x1d4: zero from the constructor; not traced */
+        owner; /* +0x1b8: the owner, a counted reference set by compare-and-swap (0xfc5877) */
+
+  private:
+    Name name1c0;               /* +0x1c0: released by the destructor */
+    bool unknown1c4;            /* +0x1c4: false from the constructor; not traced */
+    s64 unknown1c8;             /* +0x1c8: -1 from the constructor; not traced */
+    int active1d0;              /* +0x1d0: zero from the constructor; not traced */
+    int unknown1d4;             /* +0x1d4: zero from the constructor; not traced */
     Registry00f516f0 *registry; /* +0x1d8: the owner's array this object is entered in, or null */
     void *unknown1e0;           /* +0x1e0: set with the array (0xfc578f) */
     AtomicRef0045c470<Object016b9108>

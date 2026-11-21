@@ -21,8 +21,11 @@ class Object016c3040 : public Object00c1b7f0, public Object013cd320 /* derived n
 
   private:
     u8 unknown194[0x24]; /* +0x194: in the tail padding of Object013cd320; not traced */
+  public:
     AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
-    Name name1c0;                            /* +0x1c0: released by the destructor */
+
+  private:
+    Name name1c0; /* +0x1c0: released by the destructor */
     u8 unknown1c4[0x14];
     Registry00f516f0 *registry; /* +0x1d8: the array this object is entered in, or null */
     void *unknown1e0;
