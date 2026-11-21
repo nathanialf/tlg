@@ -11,13 +11,14 @@
 /* derived names: a base with no virtual function, the second base (at +0x60)
  * of Object016d31d8 and Object016d3210: their creators FUN_00e90cb0 and
  * FUN_00e91f20 store it BEFORE the class's vptr (one 32-byte store of two
- * points (0, 0, 0, 1)). 0x20 bytes. */
+ * points (0, 0, 0, 1)). 0x20 bytes, 16-byte aligned: it starts at +0x60,
+ * past the base's 0x58 bytes. */
 struct Base016d31d8 /* derived name */
 {
     Base016d31d8() : unknown0(0.0f, 0.0f, 0.0f, 1.0f), unknown10(0.0f, 0.0f, 0.0f, 1.0f) {}
 
-    Float4 unknown0;  /* +0x0: (0, 0, 0, 1) from the constructor; not traced */
-    Float4 unknown10; /* +0x10: (0, 0, 0, 1) from the constructor; not traced */
+    Float4A unknown0;  /* +0x0: (0, 0, 0, 1) from the constructor; not traced */
+    Float4A unknown10; /* +0x10: (0, 0, 0, 1) from the constructor; not traced */
 };
 
 /* derived names: the class whose vtable is at 0x16d31d8

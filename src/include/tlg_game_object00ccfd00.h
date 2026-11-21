@@ -42,9 +42,11 @@ class Object00ccfd00 : public Object016b9108 /* derived name */
 
     u8 unknown24[0x1c];
     Peer00ccfd00 *peer40; /* +0x40: detached by the destructor */
-    /* 0x60 bytes: the derived classes' second base starts at +0x60
-     * (FUN_00e90cb0, FUN_00e91f20); the fields are not traced */
-    u8 unknown48[0x18];
+    /* 0x58 bytes: the class at 0x16d3248 has its counted reference at +0x58
+     * (FUN_00e93310 allocates 0x68 and clears +0x58 and +0x60 after this
+     * constructor; its destructor 0x13cbe00 releases +0x58 before this
+     * one's); the fields are not traced */
+    u8 unknown48[0x10];
 };
 
 /* derived name: cuts the link from both ends where a holder is attached
