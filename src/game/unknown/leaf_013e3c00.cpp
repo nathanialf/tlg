@@ -42,3 +42,30 @@ void Object016d3f40::slot2()
     Object016d3ef8::slot2();
     array70.clear();
 }
+
+/* derived names: the class whose vtable is at 0x16c00a0
+ * (config/vtables.derived.base.txt; made by FUN_00f9ab50), derived from
+ * Object016d3ef8 with three owned blocks 0x18 bytes apart (+0x78, +0x90,
+ * +0xa8: the blocks of arrays whose elements need no destruction; the
+ * elements and the counts are not traced). Its complete destructor
+ * FUN_013e3f30 releases them last first, then runs the base's destructor,
+ * inlined (this unit defines it); FUN_013e40a0, slot 1, is the deleting
+ * one. The destructor is the class's key function, so this file emits the
+ * vtable. The other members are not traced. */
+class Object016c00a0 : public Object016d3ef8 /* derived name */
+{
+  public:
+    virtual ~Object016c00a0();
+
+  private:
+    u8 unknown34[0x44];
+    OwnedBlock05943280 block78; /* +0x78 */
+    u8 unknown80[0x10];
+    OwnedBlock05943280 block90; /* +0x90 */
+    u8 unknown98[0x10];
+    OwnedBlock05943280 blocka8; /* +0xa8 */
+};
+
+// NONMATCHING: the deleting destructor FUN_013e40a0: the base inlines this complete destructor into it (347 bytes);
+// the build calls it (the class of 0x134dd20: an inline-cost margin on the deleting destructor)
+Object016c00a0::~Object016c00a0() {}
