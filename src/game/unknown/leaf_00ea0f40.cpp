@@ -37,11 +37,12 @@ struct Argument00ea0f40 { /* derived name */
     Velocity00ea0f40 angularVelocity; /* +0x140 */
 };
 
-/* Three floats as a value, built as a temporary (the base's slot for it is
- * the frame's last, outside the stack guard's objects: a temporary has no
- * lifetime markers; its three products computed before it is stored) and
- * loaded as a vector with a zero w. derived names. */
-struct Float3_00ea0f40 { /* derived name */
+/* Three floats as a value aligned to 16 bytes, built as a temporary (the
+ * base's slot for it is the frame's last, outside the stack guard's
+ * objects: a temporary has no lifetime markers; its three products computed
+ * before it is stored; the slot 16-byte aligned, as leaf_00ea0db0.cpp's)
+ * and loaded as a vector with a zero w. derived names. */
+struct alignas(16) Float3_00ea0f40 { /* derived name */
 
     Float3_00ea0f40(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 
@@ -67,7 +68,6 @@ struct Object00ea0f40 { /* derived name */
     float unknown39c;
 };
 
-// NONMATCHING: the scaled temporary's slot is 8-byte aligned (-0x78) where the base's is 16-byte aligned (-0x80), 68 of 71 equal; leaf_00ea0db0.cpp's alignas(16) temporary is the lead. Not the load's zero lane: the same with r248784's change
 void FUN_00ea0f40(Object00ea0f40 *self, Argument00ea0f40 *argument, const float *impulse,
                   const float *position) /* derived name */
 {

@@ -9431,3 +9431,5 @@ FUN_00b7f5f0 src/game/unknown/leaf_00b7fec0.cpp _ZN14Object016b6dc8D1Ev
 FUN_00b7f710 src/game/unknown/leaf_00b7fec0.cpp _ZN14Object016b6dc8D0Ev
 FUN_00abef20 src/game/unknown/leaf_00abef20.cpp _ZN13Table00abef20D1Ev
 FUN_00ad4df0 src/game/unknown/leaf_00ad4df0.cpp _ZN13Table00ad4df0D1Ev
+FUN_00ea0f40 src/game/unknown/leaf_00ea0f40.cpp _Z12FUN_00ea0f40P14Object00ea0f40P16Argument00ea0f40PKfS4_
+FUN_013cc6b0 src/game/unknown/leaf_013cc6b0.cpp _Z12FUN_013cc6b0P14Object013cc6b0PK14Source013cc6b0PvP7hkArrayI14Record013cc6b024hkContainerHeapAllocatorE
