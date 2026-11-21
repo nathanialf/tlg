@@ -52,6 +52,12 @@ struct Object05945a38 { /* derived name */
      * word at +0x1024 is set (0xcb643f, FUN_00cb6310); FUN_00cbd050 marks
      * each with the flag 2 at +0x16 and empties it */
     Array01343a80<Ref00503fb0<Object016b9108>> released;
+
+    /* the object of a type under a name, made when there is none
+     * (FUN_00cbc5a0 with mode 0); the name is made before the type is read
+     * (FUN_005fb120: `mov r14, [0x5945a38]`, the name, then `mov rsi,
+     * [0x580dfe0]`). derived name */
+    inline Object016b9108 *object(const Name &name, Type00503fb0 *type);
 };
 
 extern Object05945a38 *D_5945a38;
@@ -67,6 +73,12 @@ extern Object05945a38 *D_5945a38;
  * that makes nothing. */
 Object016b9108 *FUN_00cbc5a0(Object05945a38 *owner, Type00503fb0 *type, const Name &name,
                              int mode); /* derived name */
+
+inline Object016b9108 *Object05945a38::object(const Name &name, Type00503fb0 *type)
+{
+    return FUN_00cbc5a0(this, type, name, 0);
+}
+
 /* gives the object the name; the result is not read where it is called */
 int FUN_00cbc2d0(Object05945a38 *owner, Object016b9108 *object,
                  const Name &name); /* derived name */

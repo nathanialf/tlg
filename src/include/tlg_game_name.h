@@ -122,6 +122,17 @@ class Name /* derived name */
     unsigned index; /* +0x0 */
 };
 
+/* the name a script argument holds as a hashed string (FUN_00e81bd0), the
+ * string's own storage given up once the name is made (FUN_001b5740: the
+ * copy of the name it hands on takes the string's stack slot). derived
+ * name */
+inline Name nameArgument(lua_State *state, int argument)
+{
+    HashedString string;
+    FUN_00e81bd0(&string, state, argument);
+    return Name(string);
+}
+
 /* derived names: one value of a NamedValueTable: its name, a display colour
  * (three bytes) and the value. 12 bytes. */
 struct NamedValue /* derived name */
