@@ -194,7 +194,7 @@ class Listener016bb0c0 /* derived name */
     virtual void event83(u64 argument);
     virtual void event84();
     virtual void event85();
-    virtual void event86(); /* parameters not traced */
+    virtual void event86(int argument, int argument2);
     virtual void event87();
     virtual void event88();
     virtual void event89();
@@ -208,9 +208,9 @@ class Listener016bb0c0 /* derived name */
     virtual void event97();
     virtual void event98();
     virtual void event99();
-    virtual void event100(); /* parameters not traced */
+    virtual void event100(float argument);
     virtual void event101(u64 argument);
-    virtual void event102(); /* parameters not traced */
+    virtual void event102(u64 argument, int argument2);
     virtual void event103();
     virtual void event104();
     virtual void event105();
@@ -242,14 +242,14 @@ class Listener016bb0c0 /* derived name */
     virtual void event131();
     virtual void event132();
     virtual void event133();
-    virtual void event141(); /* parameters not traced */
-    virtual void event142(); /* parameters not traced */
-    virtual void event143(); /* parameters not traced */
-    virtual void event144(); /* parameters not traced */
+    virtual void event141(u64 argument, u64 argument2);
+    virtual void event142(u64 argument, u64 argument2);
+    virtual void event143(u64 argument, u64 argument2);
+    virtual void event144(u64 argument, u64 argument2);
     virtual void event134(u64 argument);
     virtual void event135();
     virtual void event136(u64 argument);
-    virtual void event137(); /* parameters not traced */
+    virtual void event137(u64 argument, u64 argument2);
     virtual void event138();
     virtual void event139(u64 argument);
     virtual void event140();
@@ -257,10 +257,12 @@ class Listener016bb0c0 /* derived name */
 
 /* derived names: the 0x30-byte event the slots of 0x16bb0c0 from 153 pass
  * by value to FUN_00db5690 (which copies it into its log, its kinds 0x7f
- * and 0x80 handled apart): the event's kind (the slot's number less 153),
+ * and 0x80 handled apart): the event's kind (the slot's number less 153
+ * below slot 287; the slots from 287 record kinds out of that order),
  * the two ints of the source's slots 4 and 6, the current token's type, then
- * its value: the token's value and the event's arguments (one int or one
- * 64-bit value at +0x20 for the 31 slots that pass one on, recordEvent;
+ * its value: the token's value and the event's arguments (from +0x20: an
+ * int, a float, a 64-bit value or two of them for the 39 slots that pass
+ * arguments on, recordEvent;
  * the event without arguments copies all 28 bytes of the value from a
  * local: `vmovups` from [rbp-0x50] and [rbp-0x44]) */
 struct EventValue016bb0c0 {        /* derived name */
@@ -296,6 +298,45 @@ struct Event016bb0c0 {        /* derived name */
     {
         value.tokenValue = tokenValue;
         *reinterpret_cast<u64 *>(value.arguments) = argument;
+    }
+
+    /* derived name: the same with a float argument (`vmovss [rbp-0x40]`) */
+    Event016bb0c0(int kind, int unknown4, int unknown8, int tokenType,
+                  const TokenValue016bb0c0 &tokenValue, float argument)
+        : kind(kind), unknown4(unknown4), unknown8(unknown8), tokenType(tokenType)
+    {
+        value.tokenValue = tokenValue;
+        *reinterpret_cast<float *>(value.arguments) = argument;
+    }
+
+    /* derived name: the same with two int arguments */
+    Event016bb0c0(int kind, int unknown4, int unknown8, int tokenType,
+                  const TokenValue016bb0c0 &tokenValue, int argument, int argument2)
+        : kind(kind), unknown4(unknown4), unknown8(unknown8), tokenType(tokenType)
+    {
+        value.tokenValue = tokenValue;
+        value.arguments[0] = argument;
+        value.arguments[1] = argument2;
+    }
+
+    /* derived name: the same with a 64-bit argument and an int after it */
+    Event016bb0c0(int kind, int unknown4, int unknown8, int tokenType,
+                  const TokenValue016bb0c0 &tokenValue, u64 argument, int argument2)
+        : kind(kind), unknown4(unknown4), unknown8(unknown8), tokenType(tokenType)
+    {
+        value.tokenValue = tokenValue;
+        *reinterpret_cast<u64 *>(value.arguments) = argument;
+        value.arguments[2] = argument2;
+    }
+
+    /* derived name: the same with two 64-bit arguments */
+    Event016bb0c0(int kind, int unknown4, int unknown8, int tokenType,
+                  const TokenValue016bb0c0 &tokenValue, u64 argument, u64 argument2)
+        : kind(kind), unknown4(unknown4), unknown8(unknown8), tokenType(tokenType)
+    {
+        value.tokenValue = tokenValue;
+        *reinterpret_cast<u64 *>(value.arguments) = argument;
+        *reinterpret_cast<u64 *>(value.arguments + 2) = argument2;
     }
 };
 
@@ -346,8 +387,8 @@ int FUN_00db5690(Compiler00da5b20 *self, Event016bb0c0 event);
 
 /* derived name: records the event of a kind with the source's two ints, its
  * current token and one int argument (FUN_00db5690), returning what that
- * returns; defined once (leaf_00da5b20.cpp) for the 31 slots of 0x16bb0c0
- * that pass an argument on. The executable keeps no copy: the link inlines
+ * returns; defined once (leaf_00da5b20.cpp) for the 39 slots of 0x16bb0c0
+ * that pass arguments on. The executable keeps no copy: the link inlines
  * it at every slot, after each slot's own optimisation has marked the
  * listener's call a tail call (the base's `jmp rax`; an event built in the
  * slot itself is passed byval, which TailRecursionElimination counts as an
@@ -355,6 +396,12 @@ int FUN_00db5690(Compiler00da5b20 *self, Event016bb0c0 event);
 int recordEvent(Compiler00da5b20 *self, int kind, int argument);
 int recordEvent(Compiler00da5b20 *self, int kind,
                 u64 argument); /* derived name: the same with a 64-bit argument */
+/* derived names: the same with a float, two ints, a 64-bit value and an int,
+ * or two 64-bit values (the eight slots that pass those on) */
+int recordEvent(Compiler00da5b20 *self, int kind, float argument);
+int recordEvent(Compiler00da5b20 *self, int kind, int argument, int argument2);
+int recordEvent(Compiler00da5b20 *self, int kind, u64 argument, int argument2);
+int recordEvent(Compiler00da5b20 *self, int kind, u64 argument, u64 argument2);
 
 void *FUN_013bd790(void *heap, size_t size, int tag); /* derived name */
 
