@@ -131,7 +131,7 @@ class Listener016bb0c0 /* derived name */
     virtual void event20();
     virtual void event21();
     virtual void event22();
-    virtual void event23(); /* parameters not traced */
+    virtual void event23(int argument);
     virtual void event24();
     virtual void event25(); /* parameters not traced */
     virtual void event26();
