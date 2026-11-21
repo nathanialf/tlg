@@ -110,7 +110,7 @@ class Listener016bb0c0 /* derived name */
     virtual ~Listener016bb0c0();
     virtual void event0();
     virtual void event1();
-    virtual void event2(); /* parameters not traced */
+    virtual void event2(int argument);
     virtual void event3();
     virtual void event4();
     virtual void event5();
@@ -133,7 +133,7 @@ class Listener016bb0c0 /* derived name */
     virtual void event22();
     virtual void event23(int argument);
     virtual void event24();
-    virtual void event25(); /* parameters not traced */
+    virtual void event25(u64 argument);
     virtual void event26();
     virtual void event27();
     virtual void event28();
@@ -145,9 +145,9 @@ class Listener016bb0c0 /* derived name */
     virtual void event34();
     virtual void event35();
     virtual void event36();
-    virtual void event37(); /* parameters not traced */
+    virtual void event37(u64 argument);
     virtual void event38();
-    virtual void event39(); /* parameters not traced */
+    virtual void event39(int argument);
     virtual void event40();
     virtual void event41();
     virtual void event42();
@@ -155,43 +155,43 @@ class Listener016bb0c0 /* derived name */
     virtual void event44();
     virtual void event45();
     virtual void event46();
-    virtual void event47(); /* parameters not traced */
-    virtual void event48(); /* parameters not traced */
-    virtual void event49(); /* parameters not traced */
-    virtual void event50(); /* parameters not traced */
+    virtual void event47(int argument);
+    virtual void event48(u64 argument);
+    virtual void event49(u64 argument);
+    virtual void event50(u64 argument);
     virtual void event51();
     virtual void event52();
-    virtual void event53(); /* parameters not traced */
+    virtual void event53(u64 argument);
     virtual void event54();
     virtual void event55();
     virtual void event56();
     virtual void event57();
     virtual void event58();
     virtual void event59();
-    virtual void event60(); /* parameters not traced */
+    virtual void event60(u64 argument);
     virtual void event61();
     virtual void event62();
     virtual void event63();
-    virtual void event64(); /* parameters not traced */
+    virtual void event64(u64 argument);
     virtual void event65();
-    virtual void event66(); /* parameters not traced */
+    virtual void event66(int argument);
     virtual void event67();
     virtual void event68();
     virtual void event69();
-    virtual void event70(); /* parameters not traced */
+    virtual void event70(int argument);
     virtual void event71();
     virtual void event72();
     virtual void event73();
-    virtual void event74(); /* parameters not traced */
+    virtual void event74(u64 argument);
     virtual void event75();
-    virtual void event76(); /* parameters not traced */
+    virtual void event76(u64 argument);
     virtual void event77();
     virtual void event78();
     virtual void event79();
-    virtual void event80(); /* parameters not traced */
+    virtual void event80(int argument);
     virtual void event81();
     virtual void event82();
-    virtual void event83(); /* parameters not traced */
+    virtual void event83(u64 argument);
     virtual void event84();
     virtual void event85();
     virtual void event86(); /* parameters not traced */
@@ -204,12 +204,12 @@ class Listener016bb0c0 /* derived name */
     virtual void event93();
     virtual void event94();
     virtual void event95();
-    virtual void event96(); /* parameters not traced */
+    virtual void event96(u64 argument);
     virtual void event97();
     virtual void event98();
     virtual void event99();
     virtual void event100(); /* parameters not traced */
-    virtual void event101(); /* parameters not traced */
+    virtual void event101(u64 argument);
     virtual void event102(); /* parameters not traced */
     virtual void event103();
     virtual void event104();
@@ -219,22 +219,22 @@ class Listener016bb0c0 /* derived name */
     virtual void event108();
     virtual void event109();
     virtual void event110();
-    virtual void event111(); /* parameters not traced */
-    virtual void event112(); /* parameters not traced */
-    virtual void event113(); /* parameters not traced */
-    virtual void event114(); /* parameters not traced */
+    virtual void event111(int argument);
+    virtual void event112(int argument);
+    virtual void event113(int argument);
+    virtual void event114(int argument);
     virtual void event115();
     virtual void event116();
     virtual void event117();
     virtual void event118();
     virtual void event119();
-    virtual void event120(); /* parameters not traced */
-    virtual void event121(); /* parameters not traced */
-    virtual void event122(); /* parameters not traced */
+    virtual void event120(u64 argument);
+    virtual void event121(int argument);
+    virtual void event122(int argument);
     virtual void event123();
     virtual void event124();
     virtual void event125();
-    virtual void event126(); /* parameters not traced */
+    virtual void event126(int argument);
     virtual void event127();
     virtual void event128();
     virtual void event129();
@@ -246,12 +246,12 @@ class Listener016bb0c0 /* derived name */
     virtual void event142(); /* parameters not traced */
     virtual void event143(); /* parameters not traced */
     virtual void event144(); /* parameters not traced */
-    virtual void event134(); /* parameters not traced */
+    virtual void event134(u64 argument);
     virtual void event135();
-    virtual void event136(); /* parameters not traced */
+    virtual void event136(u64 argument);
     virtual void event137(); /* parameters not traced */
     virtual void event138();
-    virtual void event139(); /* parameters not traced */
+    virtual void event139(u64 argument);
     virtual void event140();
 };
 
@@ -259,10 +259,10 @@ class Listener016bb0c0 /* derived name */
  * by value to FUN_00db5690 (which copies it into its log, its kinds 0x7f
  * and 0x80 handled apart): the event's kind (the slot's number less 153),
  * the two ints of the source's slots 4 and 6, the current token's type, then
- * its value: the token's value and the event's arguments (an int at +0x20
- * for kind 2, FUN_013c0490), built apart and copied in (the event without
- * arguments copies all 28 bytes of the value from a local: `vmovups` from
- * [rbp-0x50] and [rbp-0x44]) */
+ * its value: the token's value and the event's arguments (one int or one
+ * 64-bit value at +0x20 for the 31 slots that pass one on, recordEvent;
+ * the event without arguments copies all 28 bytes of the value from a
+ * local: `vmovups` from [rbp-0x50] and [rbp-0x44]) */
 struct EventValue016bb0c0 {        /* derived name */
     TokenValue016bb0c0 tokenValue; /* +0x0 */
     int arguments[4];              /* +0xc */
@@ -275,6 +275,28 @@ struct Event016bb0c0 {        /* derived name */
     int unknownc;             /* +0xc: not written by the events seen */
     int tokenType;            /* +0x10 */
     EventValue016bb0c0 value; /* +0x14 */
+
+    Event016bb0c0() {}
+
+    /* derived name: the event of a kind with the source's two ints, the
+     * token's type and value and one int argument */
+    Event016bb0c0(int kind, int unknown4, int unknown8, int tokenType,
+                  const TokenValue016bb0c0 &tokenValue, int argument)
+        : kind(kind), unknown4(unknown4), unknown8(unknown8), tokenType(tokenType)
+    {
+        value.tokenValue = tokenValue;
+        value.arguments[0] = argument;
+    }
+
+    /* derived name: the same with a 64-bit argument over the first two ints
+     * (`mov [rbp-0x40], r14`) */
+    Event016bb0c0(int kind, int unknown4, int unknown8, int tokenType,
+                  const TokenValue016bb0c0 &tokenValue, u64 argument)
+        : kind(kind), unknown4(unknown4), unknown8(unknown8), tokenType(tokenType)
+    {
+        value.tokenValue = tokenValue;
+        *reinterpret_cast<u64 *>(value.arguments) = argument;
+    }
 };
 
 /* derived names: a second stack of the compiler, of 16-byte entries (a
@@ -321,6 +343,18 @@ struct Compiler00da5b20 { /* derived name */
  * 0x16bb0c0 from 153 pass it on to the listener when this returns nonzero
  * (`test eax, eax`) */
 int FUN_00db5690(Compiler00da5b20 *self, Event016bb0c0 event);
+
+/* derived name: records the event of a kind with the source's two ints, its
+ * current token and one int argument (FUN_00db5690), returning what that
+ * returns; defined once (leaf_00da5b20.cpp) for the 31 slots of 0x16bb0c0
+ * that pass an argument on. The executable keeps no copy: the link inlines
+ * it at every slot, after each slot's own optimisation has marked the
+ * listener's call a tail call (the base's `jmp rax`; an event built in the
+ * slot itself is passed byval, which TailRecursionElimination counts as an
+ * escape, and the slots without an argument call) */
+int recordEvent(Compiler00da5b20 *self, int kind, int argument);
+int recordEvent(Compiler00da5b20 *self, int kind,
+                u64 argument); /* derived name: the same with a 64-bit argument */
 
 void *FUN_013bd790(void *heap, size_t size, int tag); /* derived name */
 
