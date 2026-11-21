@@ -5,10 +5,7 @@
  * reference released, then the block given back with no capacity), then the
  * members and the base torn down. The class's key function: this unit emits
  * the vtable and the deleting destructor FUN_00aeb010. */
-// NONMATCHING: the base holds the array's clear(0) inlined (the loop over the references, then the block given
-// back with no capacity: 459 bytes); the build calls the shared Array05943280<Ref00503fb0<Object016b9108>>::clear(unsigned)
-// (157 bytes), and the deleting destructor then inlines this one
 Object016b4148::~Object016b4148()
 {
-    array30.clear(0);
+    array30.clear();
 }

@@ -33,10 +33,10 @@ void FUN_00f27820() /* derived name */
     Array01343a80<Object016b9108 *> objects;
     unsigned count = FUN_00cb8240(D_5ace518.second, &objects);
     for (unsigned i = 0; i < count; ++i) {
-        static_cast<Object012ada80 *>(objects.at(i))->array30.clear();
-        static_cast<Object012ada80 *>(objects.at(i))->array48.clear();
-        static_cast<Object012ada80 *>(objects.at(i))->array60.clear();
-        static_cast<Object012ada80 *>(objects.at(i))->array78.clear();
+        static_cast<Object012ada80 *>(objects.at(i))->array30.clear(0);
+        static_cast<Object012ada80 *>(objects.at(i))->array48.clear(0);
+        static_cast<Object012ada80 *>(objects.at(i))->array60.clear(0);
+        static_cast<Object012ada80 *>(objects.at(i))->array78.clear(0);
     }
     empty(D_5ad0788);
     empty(D_5acff28);

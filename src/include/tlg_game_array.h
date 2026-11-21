@@ -196,10 +196,12 @@ template <class T> class Array05943280 /* derived name */
      * one, the count cleared, then the block reallocated where the capacity
      * differs (FUN_0138c8d0 over counted references: the loop of the
      * destructor, `mov ebx, [rbp-0x2c]; mov [r15+8], 0; cmp [r15+0xc], ebx;
-     * je; mov [r15+0xc], ebx; shl ebx, 3`, the reallocation). Twenty
-     * holders' destructors hold it inlined with 0 (0x57edc0: `mov
-     * [r15+0x58], 0; cmp [r15+0x5c], 0; je; mov [r15+0x5c], 0`); 42 sites
-     * call it with 0 (0xa7b920). */
+     * je; mov [r15+0xc], ebx; shl ebx, 3`, the reallocation). Not inlined
+     * at stage 1 (cost 315 over counted references, threshold 225): about 40
+     * sites call it with 0 (0xa7b920). Where every caller of one
+     * instantiation passes 0, the link folds the 0 in and drops the argument:
+     * FUN_00f2b550, called with no size by seven table functions
+     * (FUN_00f27820). */
     void clear(unsigned size)
     {
         for (unsigned i = 0; i < count; ++i)
@@ -239,8 +241,14 @@ template <class T> class Array05943280 /* derived name */
      * count cleared, then a capacity that is not zero cleared and the block
      * reallocated to no bytes (FUN_00326670 and its copies, one for each
      * element class: `mov [r14+8], 0; cmp [r14+0xc], 0; je; mov [r14+0xc],
-     * 0`, then the reallocation with `xor edx, edx` or `xor esi, esi`) */
-    void clear()
+     * 0`, then the reallocation with `xor edx, edx` or `xor esi, esi`).
+     * Declared inline: with the hint (threshold 325) the body over counted
+     * references (cost 320) is inlined into the twenty holders' destructors
+     * that the base shows with it (0xae7530, 0xaeae40, 0x57edc0: `mov
+     * [r15+0x38], 0; cmp [r15+0x3c], 0; je; mov [r15+0x3c], 0`, 459 bytes),
+     * whose deleting destructors then call them (28 bytes), where clear(0)
+     * stays a call and the deleting destructor inlines the holder's. */
+    inline void clear()
     {
         for (unsigned i = 0; i < count; ++i)
             data[i].~T();
