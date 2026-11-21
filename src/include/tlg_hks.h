@@ -31,7 +31,9 @@ struct lua_State;
  * array of values from +0x208 indexed by a value's type tag plus 27
  * (FUN_00dedab0). derived name. */
 struct HksGlobal {
-    u8 unknown0[0x200];
+    u8 unknown0[0x1d0];
+    void *registry; /* +0x1d0, derived name: linked as "Registry" (FUN_00dd2900) */
+    u8 unknown1d8[0x28];
     lua_State *mainThread;   /* +0x200, derived name */
     HksObject unknown208[1]; /* +0x208, derived name; its extent not traced */
 };
@@ -42,6 +44,10 @@ struct lua_State {
     u8 unknown18[0x30];
     HksObject *top;  /* derived name */
     HksObject *base; /* derived name */
+    u8 unknown58[0x8];
+    HksObject *stack; /* +0x60, derived name: the first value FUN_00dd2900 links */
+    u8 unknown68[0x10];
+    void *globals; /* +0x78, derived name: linked as "Global Table" (FUN_00dd2900) */
 };
 
 /* One entry of a library's table of C functions, a name and its function,
