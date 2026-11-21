@@ -6,12 +6,16 @@
 #include "tlg_types.h"
 #include "tlg_game_name.h"
 #include "tlg_game_array01343a80.h"
+#include "tlg_game_node.h"
 #include "tlg_game_object016b9108kind.h"
 
 /* derived names: the class whose vtable is at 0x16ab810
  * (config/vtables.derived.base.txt, stored by its creator FUN_0057ec00, where
  * its constructor is inlined after Object016b9108Kind's), derived from Object016b9108Kind. 0x68 bytes
- * (`mov edi, 0x68` before operator new in the creator). Its fields are traced only where the creator sets them; its destructor is not written, so nothing here emits the vtable. */
+ * (`mov edi, 0x68` before operator new in the creator). Its fields are traced only where the creator sets them. Its destructor is its
+ * key function (defined out of line, leaf_0057edc0.cpp): the deleting one
+ * FUN_0057ef90 calls it. Its own slots: slot 5 the empty body at 0x1af750, slot
+ * 6 FUN_00c1b350. */
 class Object016ab810 : public Object016b9108Kind /* derived name */
 {
   public:
@@ -28,6 +32,8 @@ class Object016ab810 : public Object016b9108Kind /* derived name */
     }
 
     virtual ~Object016ab810();
+    virtual void slot5(); /* derived name; the empty body at 0x1af750 */
+    virtual void slot6(); /* derived name; FUN_00c1b350, not traced */
 
   private:
     float unknown28; /* +0x28: 0.0 from the constructor */
@@ -40,7 +46,9 @@ class Object016ab810 : public Object016b9108Kind /* derived name */
     int unknown44;   /* +0x44: 1 from the constructor */
     int unknown48;   /* +0x48: 2 from the constructor */
     u8 unknown4c[0x4];
-    Array01343a80<void *> array50; /* +0x50: empty from the constructor; its elements not traced */
+    /* +0x50: an array of references with its lock (the word at +0x64), empty
+     * from the constructor; emptied to no capacity by the destructor, then torn down (`call 0x134f620`) */
+    Array01343a80<Ref00503fb0<Object016b9108>> array50;
 };
 
 #endif

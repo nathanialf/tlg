@@ -6,12 +6,16 @@
 #include "tlg_types.h"
 #include "tlg_game_name.h"
 #include "tlg_game_array01343a80.h"
+#include "tlg_game_node.h"
 #include "tlg_game_object016b9108kind.h"
 
 /* derived names: the class whose vtable is at 0x16ab858
  * (config/vtables.derived.base.txt, stored by its creator FUN_0057efb0, where
  * its constructor is inlined after Object016b9108Kind's), derived from Object016b9108Kind. 0x78 bytes
- * (`mov edi, 0x78` before operator new in the creator). Its fields are traced only where the creator sets them; its destructor is not written, so nothing here emits the vtable. */
+ * (`mov edi, 0x78` before operator new in the creator). Its fields are traced only where the creator sets them. Its destructor is its
+ * key function (defined out of line, leaf_0057f1a0.cpp): the deleting one
+ * FUN_0057f380 calls it. Its own slots: slot 5 the empty body at 0x1af750, slot
+ * 6 FUN_00c1b350. */
 class Object016ab858 : public Object016b9108Kind /* derived name */
 {
   public:
@@ -34,18 +38,24 @@ class Object016ab858 : public Object016b9108Kind /* derived name */
     }
 
     virtual ~Object016ab858();
+    virtual void slot5(); /* derived name; the empty body at 0x1af750 */
+    virtual void slot6(); /* derived name; FUN_00c1b350, not traced */
 
   private:
-    int unknown28;                 /* +0x28: 0 from the constructor */
-    int unknown2c;                 /* +0x2c: 0 from the constructor */
-    int unknown30;                 /* +0x30: 0 from the constructor */
-    float unknown34;               /* +0x34: 1.0 from the constructor */
-    float unknown38;               /* +0x38: 0.0 from the constructor */
-    float unknown3c;               /* +0x3c: 1.0 from the constructor */
-    int unknown40;                 /* +0x40: 1 from the constructor */
-    int unknown44;                 /* +0x44: 0 from the constructor */
-    Array01343a80<void *> array48; /* +0x48: empty from the constructor; its elements not traced */
-    Array01343a80<void *> array60; /* +0x60: empty from the constructor; its elements not traced */
+    int unknown28;   /* +0x28: 0 from the constructor */
+    int unknown2c;   /* +0x2c: 0 from the constructor */
+    int unknown30;   /* +0x30: 0 from the constructor */
+    float unknown34; /* +0x34: 1.0 from the constructor */
+    float unknown38; /* +0x38: 0.0 from the constructor */
+    float unknown3c; /* +0x3c: 1.0 from the constructor */
+    int unknown40;   /* +0x40: 1 from the constructor */
+    int unknown44;   /* +0x44: 0 from the constructor */
+    /* +0x48: an array of references with its lock (the word at +0x5c), empty
+     * from the constructor; torn down by the destructor (`call 0x134f620`) */
+    Array01343a80<Ref00503fb0<Object016b9108>> array48;
+    /* +0x60: an array of references with its lock (the word at +0x74), empty
+     * from the constructor; emptied to no capacity by the destructor, then torn down (`call 0x134f620`) */
+    Array01343a80<Ref00503fb0<Object016b9108>> array60;
 };
 
 #endif

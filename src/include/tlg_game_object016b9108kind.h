@@ -12,13 +12,12 @@
  * after their other fields (FUN_0057ec00: `mov dword [rbx+0x24], 0` before
  * the vptr, `mov dword [rbx+0x24], 0x6a` last; FUN_0057efb0: 0x6b). No
  * vtable or function of its own is known: its constructor is inlined and its
- * vptr store dies. */
+ * vptr store dies; its destructor is implicit (inlined in the derived
+ * classes' destructors, FUN_00ae9400 and the others of its family). */
 class Object016b9108Kind : public Object016b9108 /* derived name */
 {
   public:
     Object016b9108Kind(const Name &name) : Object016b9108(name), kind(0) {}
-
-    virtual ~Object016b9108Kind();
 
   protected:
     int kind; /* +0x24: 0 from the constructor, a derived class's own value after its fields */
