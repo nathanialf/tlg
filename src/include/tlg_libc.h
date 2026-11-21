@@ -20,6 +20,9 @@ typedef struct __sFILE FILE;
 #define SEEK_END 2
 /* Positive infinity as a float, as the C library's math.h spells it. */
 #define HUGE_VALF __builtin_huge_valf()
+/* Memory from the caller's frame, as the C library's stdlib.h spells it
+ * (FreeBSD's `#define alloca(sz) __builtin_alloca(sz)`). */
+#define alloca(size) __builtin_alloca(size)
 
 /* A file's status as stat fills it: FreeBSD 9's amd64 layout, 0x78 bytes
  * (FUN_00e5c830's buffer), the mode a 16-bit word at +0x8. */

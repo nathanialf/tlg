@@ -9827,3 +9827,4 @@ FUN_00ca41c0 src/game/unknown/leaf_00ca41c0.cpp _ZNK13Table00ca41c04findEj
 FUN_00caaf40 src/game/unknown/leaf_00caaf40.cpp _ZN14Object00caaf405setUpEv
 FUN_00e63820 src/game/unknown/leaf_00e63820.cpp _ZN14Object016bde38D1Ev
 FUN_00e63ad0 src/game/unknown/leaf_00e63820.cpp _ZN14Object016bde38D0Ev
+FUN_00efae90 src/game/sndx/leaf_00efae90.cpp _Z12FUN_00efae90Pjj

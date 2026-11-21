@@ -33,8 +33,12 @@ extern SndxRuntime05a8dfa0 *D_5a8dfa0;
  * not running */
 static int countPlayingVoices()
 {
+    /* volatile: the API lock's slots (tlg_sndx_lock.h) */
+    volatile s32 current;
+    /* volatile: the API lock's slots (tlg_sndx_lock.h) */
+    volatile s32 next;
     int result = -3;
-    if (sndxEnter() == 0) {
+    if (sndxEnter(current, next) == 0) {
         int count = 0;
         SndxVoice05a8dfa0 *voice = D_5a8dfa0->voices;
         for (u32 i = 0; i < D_5a8dfa0->voiceCount; ++i, ++voice) {
@@ -44,7 +48,7 @@ static int countPlayingVoices()
             if (playing->unknown1c)
                 ++count;
         }
-        if (sndxLeave() == 0)
+        if (sndxLeave(current, next) == 0)
             result = count;
     }
     return result;
@@ -55,8 +59,11 @@ static int countPlayingVoices()
 struct Object00ebf0f0; /* derived name */
 
 // NONMATCHING: the count: the base keeps `cmp dword [rdi+0x1c], 0; je; inc r9d` where the
-// build folds the increment into `cmp 1; sbb esi, -1` (InstCombine's select into a zext add), and
-// the base's -3 is one register set before the first exchange (`mov esi, -3`) for both failed exchanges
+// build folds the increment into `cmp 1; sbb esi, -1` (InstCombine's FoldSelectIntoOp makes the
+// select a zext add). A branch from a select is CodeGenPrepare's (a compare of a load with one
+// use), so the base's select was made after the last InstCombine, by the link's late
+// CFGSimplification: the increment was not an SSA value in any unit's own pipeline (round 406D
+// probes: a count through a pointer gives two selects, not one)
 int FUN_00ebf0f0(Object00ebf0f0 *self) /* derived name */
 {
     const int count = countPlayingVoices();
