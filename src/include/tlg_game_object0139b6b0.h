@@ -13,6 +13,8 @@
 
 #include "tlg_types.h"
 #include "tlg_game_array.h"
+#include "tlg_game_name.h"
+#include "tlg_math.h"
 #include "tlg_game_node.h"
 
 /* 16 bytes, the reference at +0x8 (0x139b6b0: `shl rax, 4; mov r15,
@@ -24,6 +26,30 @@ struct Entry0139b6b0 /* derived name */
 };
 
 typedef Array05943280<Entry0139b6b0> Object0139b6b0; /* derived name */
+
+/* 16 bytes, a name at +0x0 and the reference at +0x8 (0x13730a0: `shl r13,
+ * 4; mov r15, [r12+r13+8]`, then the name at [r12+r13] released after the
+ * reference; the arrays of FUN_00882f30, FUN_00885840 and FUN_00886300) */
+struct Entry013730a0 /* derived name */
+{
+    Name name0;                           /* +0x0 */
+    Ref00503fb0<Object016b9108> unknown8; /* +0x8 */
+};
+
+typedef Array05943280<Entry013730a0> Object013730a0; /* derived name */
+
+/* 160 bytes, a name at +0x0 and the reference at +0x8, its block aligned to
+ * 16 (0x72bbc0, the array emptied: `lea r13, [rbx+rbx*4]; shl r13, 5`, the
+ * reallocation with 0x10; the arrays of FUN_00729190). The rest is not
+ * traced. */
+struct Entry0072bbc0 /* derived name */
+{
+    Name name0;                           /* +0x0 */
+    Ref00503fb0<Object016b9108> unknown8; /* +0x8 */
+    Float4A unknown10[9];                 /* +0x10 */
+};
+
+typedef Array05943280<Entry0072bbc0> Object0072bbc0; /* derived name */
 
 /* 64 bytes, the reference at +0x38 (0x135f4e0: `shl rax, 6; mov r15,
  * [rcx+rax+0x38]`) */

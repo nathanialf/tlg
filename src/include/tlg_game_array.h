@@ -290,6 +290,18 @@ template <class T> class Array05943280 /* derived name */
         return -1;
     }
 
+    /* the index of the first element equal to `key`, or -1, the elements
+     * indexed unsigned (0x4b6fe0: `cmp [rdx+rcx*8], rbx; je; inc rcx; cmp
+     * ecx, eax; jb`, the index kept in r15d, -1 before the search), where
+     * find() indexes them through at(int) */
+    template <class K> int indexOf(const K &key) const /* derived name */
+    {
+        for (unsigned i = 0; i < count; ++i)
+            if (data[i] == key)
+                return i;
+        return -1;
+    }
+
     /* whether an element equals `key` (the elements indexed unsigned:
      * `cmp [rax+rcx*8], r15; je; inc rcx` at 0xce2320) */
     template <class K> bool contains(const K &key) const /* derived name */
