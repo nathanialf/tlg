@@ -136,11 +136,17 @@ struct World05938c40 { /* derived name */
     pthread_t writer; /* +0x248 */
 };
 
+/* derived name: the script C functions' registry (FUN_00c87e30 registers
+ * one in it, FUN_008191e0) */
+struct ScriptFunctions05938c40; /* derived name */
+
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
- * queue at +0xb0 and the world at +0x108 (handed to FUN_00c55dd0 by
- * FUN_0082de00) */
+ * script functions at +0x40, the queue at +0xb0 and the world at +0x108
+ * (handed to FUN_00c55dd0 by FUN_0082de00) */
 struct Object05938c40 { /* derived name */
-    u8 unknown0[0xb0];
+    u8 unknown0[0x40];
+    ScriptFunctions05938c40 *functions; /* +0x40 */
+    u8 unknown48[0x68];
     CommandQueue05938c40 *queue; /* +0xb0 */
     u8 unknownb8[0x50];
     World05938c40 *world; /* +0x108 */

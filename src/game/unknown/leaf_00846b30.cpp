@@ -15,7 +15,7 @@ extern Type059458a8 *D_581ce88;
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place by its
  * constructor 0x846c90, which is not inlined. */
-Object00818d10 *FUN_00846b30(void *, const Name &name)
+Object016ae7e0 *FUN_00846b30(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016aef90));
     D_59458a4.lock();
