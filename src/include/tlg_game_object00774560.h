@@ -364,7 +364,9 @@ struct Pose0077bac0 { /* derived name */
  * FUN_0136b6f0 by slot 6 (func_00775420.cpp); a point at +0xd0 set by
  * Object016accb0's slot 19 (FUN_00773d80); the rest is not traced */
 struct Object0136b6f0 { /* derived name */
-    u8 unknown0[0xd0];
+    u8 unknown0[0xc8];
+    int unknownc8; /* +0xc8: cleared by Object016ad480's slot 6 (FUN_00785d40) */
+    u8 unknowncc[0x4];
     Float4A unknownd0; /* +0xd0 */
 };
 

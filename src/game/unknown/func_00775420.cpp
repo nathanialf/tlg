@@ -2,6 +2,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
 #include "tlg_game_object00774560.h"
+#include "tlg_game_object00774760.h"
 #include "tlg_math.h"
 #include "tlg_types.h"
 #include "tlg_libc.h"
@@ -25,66 +26,7 @@ Name D_5817a34(D_1594cad, false);
  * +0x7c, and the fields after it reset, the rotation at +0xa0 to VECTOR_W
  * (copied whole as plain floats, then lane by lane). Class and method
  * unknown; the fields' meaning is not traced. */
-struct Start00774760 { /* derived name */
-    u8 unknown0[0x8];
-    float length; /* +0x8 */
-    u8 unknownc[0xd4];
-    Float4A unknowne0; /* +0xe0: a point, copied by FUN_00799ae0 */
-};
-
 void FUN_0136b6f0(Object0136b6f0 *object); /* derived name */
-
-/* derived names: the body at +0x68 as the overrides of slot 6 read it */
-struct Body00774760 { /* derived name */
-    u8 unknown0[0x678];
-    int unknown678; /* +0x678 */
-    u8 unknown67c[0x48c];
-    int unknownb08; /* +0xb08 */
-    int unknownb0c; /* +0xb0c */
-    u8 unknownb10[0xf0];
-    State00774760 *unknownc00; /* +0xc00 */
-    u8 unknownc08[0x1518];
-    Float4A unknown2120; /* +0x2120 */
-    u8 unknown2130[0x198];
-    int unknown22c8; /* +0x22c8 */
-};
-
-/* derived names: the block at +0x24 slot 6 clears, with the ints the
- * overrides set after it */
-struct Block00774760 { /* derived name */
-    int unknown0;      /* +0x24 */
-    int unknown4;      /* +0x28 */
-    int unknown8;      /* +0x2c */
-    int unknownc;      /* +0x30 */
-    u8 unknown10[0x4];
-    int unknown14; /* +0x38 */
-    u8 unknown18[0x8];
-    int unknown20; /* +0x44 */
-    u8 unknown24[0x8];
-    int unknown2c; /* +0x50 */
-    u8 unknown30[0x10];
-};
-
-struct Object00774760 { /* derived name */
-    u8 unknown0[0x24];
-    Block00774760 unknown24; /* +0x24 */
-    u8 unknown64[0x4];
-    Body00774760 *unknown68;   /* +0x68 */
-    Object0136b6f0 *unknown70; /* +0x70 */
-    int unknown78;             /* +0x78 */
-    float unknown7c;           /* +0x7c */
-    float length;              /* +0x80 */
-    float unknown84;           /* +0x84 */
-    float unknown88;           /* +0x88 */
-    int unknown8c;             /* +0x8c */
-    int unknown90;             /* +0x90 */
-    int unknown94;             /* +0x94 */
-    u8 unknown98[0x8];
-    Float4A rotation; /* +0xa0 */
-    u8 unknownb0[0x44];
-    int unknownf4;   /* +0xf4 */
-    float unknownf8; /* +0xf8 */
-};
 
 void FUN_00774760(Object00774760 *self, const Start00774760 *start) /* derived name */
 {
