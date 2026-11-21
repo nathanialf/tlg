@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
+#include "tlg_game_array01343a80.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
 #include "tlg_math.h"
@@ -21,3 +22,8 @@ struct Element01005270 { /* derived name */
 
 /* FUN_01005270 */
 template void Array05943280<Element01005270>::push(const Element01005270 &);
+
+/* FUN_010053b0: a copy of an array of them with its own lock (the lock's word
+ * cleared after the four fields, then the block made and the elements
+ * copied one by one) */
+template Array01343a80<Element01005270>::Array01343a80(const Array01343a80<Element01005270> &);
