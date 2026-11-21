@@ -14,9 +14,6 @@ struct Holder004b6fe0 /* derived name */
     Array05943280<Ref00503fb0<Object016b9108>> objects; /* +0x0 */
 };
 
-// NONMATCHING: greedy's assignment only: the base holds the index in r13 and the removed
-// element in r12 (`mov r13d, r15d; mov r12, [rax + r13*8]`), the build the other way round.
-// 81 of 111 equal under --module.
 void Holder004b6fe0::remove(Object016b9108 *object)
 {
     int index = objects.indexOf(Ref00503fb0<Object016b9108>(object));

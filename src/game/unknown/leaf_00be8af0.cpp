@@ -16,8 +16,6 @@ struct Object00be8af0 /* derived name */
         lists[4]; /* +0x3a40, by kind (3 the largest seen; the count not traced) */
 };
 
-// NONMATCHING: greedy's assignment only, as 0x4b6fe0's: the base holds the index in r12 and the
-// removed element in r13, the build the other way round.
 void Object00be8af0::remove(Object016b9108 *object, unsigned kind)
 {
     Array05943280<Ref00503fb0<Object016b9108>> &list = lists[kind];
