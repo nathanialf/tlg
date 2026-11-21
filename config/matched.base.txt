@@ -9849,3 +9849,4 @@ FUN_00b1ebd0 src/game/unknown/leaf_00b1e900.cpp _ZN14Object016b4ed0D0Ev
 FUN_00be6430 src/game/unknown/leaf_00be6290.cpp _ZN14Object016b7ad8D0Ev
 FUN_00b448e0 src/game/unknown/leaf_00b44650.cpp _ZN14Object016b6020D0Ev
 FUN_00a994a0 src/game/unknown/leaf_00a991f0.cpp _ZN14Object016b2b90D0Ev
+FUN_00d9e3b0 src/game/unknown/leaf_00d9e3b0.cpp _Z12FUN_00d9e3b0P14Buffer00d9e3b0c

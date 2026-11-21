@@ -98,10 +98,26 @@ struct Array00dd2500 {
 };
 
 /* derived names: the allocator of the state at +0x10 of the walker (a
- * block, its old size and its new one; 0 and 0 to allocate) */
+ * block, its old size and its new one; 0 and 0 to allocate), the bytes it
+ * holds at +0x18 and the debugger's link at +0x50 (FUN_00d9e3b0 reports a
+ * freed block to the object at +0x4a0 of the record at +0x10 of it) */
+struct HksDebugger00d9e3b0 {
+    u8 unknown0[0x4a0];
+    void *memoryHook; /* +0x4a0: told of a freed block (FUN_00dcaee0) */
+};
+
+struct HksDebugLink00d9e3b0 {
+    u8 unknown0[0x10];
+    HksDebugger00d9e3b0 *debugger; /* +0x10 */
+};
+
 struct HksAllocator00dd1740 {
     void *(*allocate)(void *user, void *block, size_t oldSize, size_t newSize); /* +0x0 */
     void *user;                                                                 /* +0x8 */
+    u8 unknown10[0x8];
+    size_t used; /* +0x18: the bytes the blocks it gave hold */
+    u8 unknown20[0x30];
+    HksDebugLink00d9e3b0 *debugLink; /* +0x50 */
 };
 
 struct HksState00dd1740 {
@@ -118,12 +134,13 @@ struct VisitedNode00dd1740 {
 };
 
 /* externalAllocate (the name from its assertion message, MemoryManager.h of
- * the VM): a block from the state's allocator, which must be 8-byte
- * aligned */
-inline void *externalAllocate(HksState00dd1740 *state, size_t size)
+ * the VM, line 59): the allocator's function on a block, its old size and
+ * its new one (0 and 0 to allocate, a new size of 0 to free), whose answer
+ * must be 8-byte aligned */
+inline void *externalAllocate(HksAllocator00dd1740 *allocator, void *block, size_t oldSize,
+                              size_t newSize)
 {
-    HksAllocator00dd1740 *allocator = state->allocator;
-    void *allocation = allocator->allocate(allocator->user, 0, 0, size);
+    void *allocation = allocator->allocate(allocator->user, block, oldSize, newSize);
     if (!(((size_t)allocation & 0x7) == 0)) {
         printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
                "%s() : \"%s\"\n\tat %s(%d)\n",
@@ -136,6 +153,28 @@ inline void *externalAllocate(HksState00dd1740 *state, size_t size)
         __builtin_trap();
     }
     return allocation;
+}
+
+/* a block from the state's allocator */
+inline void *externalAllocate(HksState00dd1740 *state, size_t size)
+{
+    return externalAllocate(state->allocator, 0, 0, size);
+}
+
+void FUN_00dcaee0(void *hook, void *block, int tag, size_t size); /* derived name; not traced */
+
+/* derived name: a block of `size` bytes given back to the state's
+ * allocator: the debugger's hook told first when there is one, the
+ * allocator's count of bytes lowered (FUN_00d9e3b0: `sub [r14+0x18], r13`
+ * before the call) */
+inline void externalFree(HksState00dd1740 *state, void *block, size_t size, int tag)
+{
+    HksAllocator00dd1740 *allocator = state->allocator;
+    if (HksDebugLink00d9e3b0 *link = allocator->debugLink)
+        if (void *hook = link->debugger->memoryHook)
+            FUN_00dcaee0(hook, block, tag, size);
+    allocator->used -= size;
+    externalAllocate(allocator, block, size, 0);
 }
 
 /* derived names: slot 12's array: 16-byte elements and their signed count */
@@ -291,6 +330,57 @@ struct Record00dd2190 {
     Array00dd2500 array38;         /* +0x38 */
 };
 
+/* derived names: the record slot 14 walks (0xdd11d0): its values from
+ * +0x10 in groups of 64 bytes, the first eight bytes of each group the
+ * kinds of the group's values (value i's kind in its low four bits at byte
+ * i % 8 of group i / 8: `and edx, 0x7c0; or rax, rdx`), value i the pointer
+ * at +0x10 + 8 * i; the first group holds the layout at +0x18 (value 1) and
+ * the environment at +0x28 (value 3). The layout: the count of its slots
+ * at +0x0, two flags at +0x8 and +0xc, the slots from +0x20, 24 bytes each
+ * (a name, an int at +0xc that keeps a slot from being walked, the index
+ * of its value at +0x11). */
+struct Slot00dd11d0 {
+    void *name; /* +0x0: walked as a value of kind 4 */
+    u8 unknown8[0x4];
+    int unknownC; /* +0xc: a slot with it set is not walked */
+    u8 unknown10;
+    u8 index; /* +0x11: of the slot's value in its record */
+    u8 unknown12[0x6];
+};
+
+struct Layout00dd11d0 {
+    u64 count;    /* +0x0: of the slots */
+    int unknown8; /* +0x8: slot 1's value is walked when it is set */
+    int unknownC; /* +0xc: the record's environment is walked when it is set */
+    u8 unknown10[0x10];
+    Slot00dd11d0 slots[2]; /* +0x20 */
+
+    /* the slot at an 8-bit index (`movzx ecx, r15b` over the walk's
+     * 64-bit counter) */
+    const Slot00dd11d0 &slot(u8 index) const /* derived name */
+    {
+        return slots[index];
+    }
+};
+
+struct Record00dd11d0 {
+    u8 unknown0[0x10];
+    u8 kinds[8];            /* +0x10: the kinds of the first group's values */
+    Layout00dd11d0 *layout; /* +0x18 */
+    void *unknown20;
+    void *environment; /* +0x28: to FUN_013bfaf0 */
+
+    void *value(u64 index) const /* derived name */
+    {
+        return reinterpret_cast<void *const *>(kinds)[index];
+    }
+
+    int kind(u64 index) const /* derived name */
+    {
+        return kinds[index / 8 * 64 + index % 8] & 0xf;
+    }
+};
+
 /* derived names: what slot 86 of the vtable at 0x16bba90 prints as
  * "UserData": its size from the header word's bits 10 and up, less the
  * 0x20-byte block, and its environment at +0x10 */
@@ -328,9 +418,9 @@ class Object013c8500 /* derived name */
     virtual void markElement00dd1740(const Element00dd1740 *element);
     virtual void visit00dd1740(const Array00dd1740 *array);      /* 0xdd1740 */
     virtual void visit00dd18c0(const ValueArray00dd18c0 *array); /* 0xdd18c0 */
-    virtual void slot14();
-    virtual void visit00dd1950(const Record00dd1950 *record); /* 0xdd1950 */
-    virtual void visit00dd1af0(const Record00dd1af0 *record); /* 0xdd1af0 */
+    virtual void visit00dd11d0(const Record00dd11d0 *record);    /* 0xdd11d0 */
+    virtual void visit00dd1950(const Record00dd1950 *record);    /* 0xdd1950 */
+    virtual void visit00dd1af0(const Record00dd1af0 *record);    /* 0xdd1af0 */
     virtual void markHeader(const Header00dd1950 *header);
     virtual void visit00dd1b80(const Record00dd1b80 *record);  /* 0xdd1b80 */
     virtual void visitValues(const ValueRange00dd1cf0 *range); /* 0xdd1cf0 */

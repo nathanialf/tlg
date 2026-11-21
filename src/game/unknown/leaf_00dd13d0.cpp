@@ -49,6 +49,49 @@ void Object013c8500::visit00dd18c0(const ValueArray00dd18c0 *array)
 /* derived names: slot 16: the pointer at +0x0 to FUN_013bf510, the value at
  * +0x8 through its four slots, the pointers at +0x18 and +0x20 to
  * FUN_013bfee0 */
+/* derived name: slot 14 (0xdd11d0): each slot of the record's layout
+ * whose value is set, its name walked as a value of kind 4 and then its
+ * value; then the environment when the layout's flag at +0xc says so, and
+ * slot 1's value when the flag at +0x8 does (a pointer with bit 0 set goes
+ * to FUN_013bf9a0 without it, else to FUN_013bfaf0) */
+// NONMATCHING: the slot's name is read through its address formed apart (`lea rax, [r13+rcx*8+0x20]`, then `mov
+// rax, [rax]` after the arguments are set) where the base folds it into the load (`mov rax, [r13+rcx*8+0x20]`)
+// ahead of them, and the kind's byte index is formed in other registers (rsi and rdx swapped)
+void Object013c8500::visit00dd11d0(const Record00dd11d0 *record)
+{
+    const Layout00dd11d0 *layout = record->layout;
+    for (u64 i = 0; i < layout->count; ++i) {
+        const Slot00dd11d0 &slot = layout->slot(i);
+        if (slot.unknownC == 0) {
+            const u64 index = slot.index;
+            void *const pointer = record->value(index);
+            const int type = record->kind(index);
+            HksObject value;
+            value.type = type;
+            value.value.pointer = pointer;
+            if (type != 0) {
+                void *const name = slot.name;
+                HksObject key;
+                key.value.pointer = name;
+                key.type = 4;
+                visit(&key);
+                visit(&value);
+            }
+        }
+    }
+    if (layout->unknownC && record->environment)
+        FUN_013bfaf0(this, record->environment);
+    if (layout->unknown8) {
+        void *value = record->value(layout->slots[1].index);
+        if (value) {
+            if (reinterpret_cast<u64>(value) & 1)
+                FUN_013bf9a0(this, reinterpret_cast<void *>(reinterpret_cast<u64>(value) & ~1ul));
+            else
+                FUN_013bfaf0(this, value);
+        }
+    }
+}
+
 void Object013c8500::visit00dd1af0(const Record00dd1af0 *record)
 {
     FUN_013bf510(this, record->unknown0);
