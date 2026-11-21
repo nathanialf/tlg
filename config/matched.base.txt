@@ -10108,3 +10108,7 @@ FUN_00cafd10 src/game/unknown/leaf_00cafd10.cpp _ZN14Object016b8f60D1Ev
 FUN_00cb0270 src/game/unknown/leaf_00cafd10.cpp _ZN14Object016b8f60D0Ev
 FUN_00bf9740 src/game/unknown/leaf_00bf8e10.cpp _ZN14Object016b7dd0D0Ev
 FUN_00c1b350 src/game/unknown/leaf_00c1b350.cpp _Z12FUN_00c1b350P14Object016b9108P13Array05943280IS0_E
+FUN_0046d150 src/game/unknown/leaf_0046d150.cpp _Z12FUN_0046d150P9lua_State
+FUN_0046c9a0 src/game/unknown/leaf_0046c9a0.cpp _Z12FUN_0046c9a0P9lua_State
+FUN_0058ddf0 src/game/unknown/leaf_0058ddf0.cpp _Z12FUN_0058ddf0P11Owner583950P10Node583950
+FUN_002b0b70 src/game/unknown/leaf_002b0b70.cpp _Z12FUN_002b0b70P9lua_State
