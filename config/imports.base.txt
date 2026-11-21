@@ -375,7 +375,7 @@ AEuF3F2f8TA V V func ?
 AHxyhN96dy4 V V func ?
 AV6ipCNa4Rw V V func strcasecmp
 Av3zjWi64Kw V V func ?
-CpWcnrEZbLA V V func ?
+CpWcnrEZbLA V V func _Stof
 DDHG1a6+3q0 V V func roundf
 DfivPArhucg V V func memcmp
 EH-x713A99c V V func atan2f

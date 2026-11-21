@@ -176,6 +176,16 @@ void *reallocalign(void *p, size_t size, size_t alignment);
 /* The C library's string-to-unsigned-long conversion (Dinkumware's, behind
  * strtoul; its NID verified as "_Stoul"). */
 unsigned long _Stoul(const char *s, char **endptr, int base);
+/* The C library's string-to-float conversion (Dinkumware's, behind strtof;
+ * its NID verified as "_Stof"): the third argument 0 at its calls
+ * (FUN_004ad530: `xor edx, edx`). */
+float _Stof(const char *s, char **endptr, long exponent);
+
+inline float strtof(const char *s, char **endptr)
+{
+    return _Stof(s, endptr, 0);
+}
+
 /* Sony's C library extension: the usable size of a block from any of its
  * spaces (its NID verified as "sceLibcMspaceMallocUsableSize"). */
 size_t sceLibcMspaceMallocUsableSize(void *ptr);

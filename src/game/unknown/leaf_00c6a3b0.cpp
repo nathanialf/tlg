@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_hash00c6a3b0.h"
 
 /* derived names: Bob Jenkins's lookup3 (hashlittle's word-aligned path, its
  * mix with the rotations 4, 6, 8, 16, 19, 4) over a running state of three
@@ -9,14 +9,6 @@
  * lengths 1 to 11). The one- and two-byte parts are read from the start of
  * the key, not from the words left (the base's `movzbl (%rsi)`, `movzwl
  * 0x4(%rsi)`). The state's owner and callers are not traced. */
-struct HashState00c6a3b0 { /* derived name */
-    u32 a, b, c;
-};
-
-static inline u32 rotate(u32 value, int count) /* derived name */
-{
-    return (value << count) | (value >> (32 - count));
-}
 
 // NONMATCHING: the base sinks the common adds of the words (a += k[0], b += k[1]) into the
 // tails shared by lengths 5 to 7 and 9 to 11 (case 4 inside 8's block), the build only the

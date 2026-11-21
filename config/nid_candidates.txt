@@ -58,6 +58,7 @@ strtoul
 strtoll
 strtoull
 _Stoul
+_Stof
 strtod
 strtof
 atoi
