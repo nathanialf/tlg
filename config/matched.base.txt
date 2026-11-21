@@ -9588,3 +9588,10 @@ FUN_0135f390 src/game/unknown/leaf_0135f390.cpp _Z12FUN_0135f390P14Object0135f39
 FUN_01370af0 src/game/unknown/leaf_01370af0.cpp _Z12FUN_01370af0P14Object01370af0
 FUN_00bf7ad0 src/game/unknown/leaf_00bf7ad0.cpp _ZN14Object016b7d98D1Ev
 FUN_00bf7d50 src/game/unknown/leaf_00bf7ad0.cpp _ZN14Object016b7d98D0Ev
+FUN_006e1cc0 src/game/unknown/leaf_006e1cc0.cpp _Z12FUN_006e1cc0P9lua_State
+FUN_008d67c0 src/game/unknown/leaf_008d6720.cpp _Z12FUN_008d67c0P9lua_State
+FUN_008453f0 src/game/unknown/leaf_008453f0.cpp _Z12FUN_008453f0P9lua_State
+FUN_008f6130 src/game/unknown/leaf_008f6130.cpp _Z12FUN_008f6130P14Object008f6130P13Array05943280I6Float4E
+FUN_0082f550 src/game/unknown/leaf_0082f550.cpp _Z12FUN_0082f550P14Region0082f550Pv
+FUN_007f3190 src/game/unknown/leaf_007f3190.cpp _ZN14Object007f319012FUN_007f3190EPKcz
+FUN_00639e80 src/game/unknown/leaf_00639e80.cpp _Z12FUN_00639e80P14Object00639e80P16Argument00639e80

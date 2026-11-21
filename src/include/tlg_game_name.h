@@ -14,7 +14,8 @@
 struct NameTableEntry017ac870 /* derived name */
 {
     const char *string0; /* +0x0 */
-    u8 unknown8[8];
+    u32 hash8;           /* +0x8: the string's hash, compared before the strings (0x845482) */
+    u8 unknownc[4];
     int references10; /* +0x10 */
     u16 length14;     /* +0x14: the string's length (`movzx` at 0x88171b) */
     u8 unknown16[2];
