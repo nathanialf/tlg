@@ -56,6 +56,18 @@ class Table01343090 /* derived name */
 class Pool01343090 : public Node00503fb0 /* derived name */
 {
   public:
+    /* every entry of the table handed to FUN_002049f0, the table passed to
+     * FUN_01343090, the object to FUN_00c5a160. Declared inline: its
+     * holders' destructors inline it (cost 140, under the hinted 325) */
+    inline void close() /* derived name */
+    {
+        for (int i = 0; i < 0x80; ++i)
+            for (Entry01343090 *entry = table.buckets[i]; entry; entry = entry->next)
+                FUN_002049f0(2, false, entry->unknown0, entry->unknown10);
+        table.FUN_01343090();
+        FUN_00c5a160(this);
+    }
+
     u8 unknown64[0xa4];
     Table01343090 table; /* +0x108 */
 };
@@ -86,11 +98,7 @@ template <class P> class PoolRef01343090 /* derived name */
   private:
     inline void close(P *held) /* derived name */
     {
-        for (int i = 0; i < 0x80; ++i)
-            for (Entry01343090 *entry = held->table.buckets[i]; entry; entry = entry->next)
-                FUN_002049f0(2, false, entry->unknown0, entry->unknown10);
-        held->table.FUN_01343090();
-        FUN_00c5a160(held);
+        held->close();
         pool.clear();
     }
 

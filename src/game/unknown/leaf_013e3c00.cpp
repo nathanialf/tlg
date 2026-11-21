@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
+#include "tlg_game_object016ca768.h"
 #include "tlg_game_object016d3ef8.h"
 #include "tlg_math.h"
 
@@ -69,3 +70,11 @@ class Object016c00a0 : public Object016d3ef8 /* derived name */
 // NONMATCHING: the deleting destructor FUN_013e40a0: the base inlines this complete destructor into it (347 bytes);
 // the build calls it (the class of 0x134dd20: an inline-cost margin on the deleting destructor)
 Object016c00a0::~Object016c00a0() {}
+
+/* the destructor of Object016ca768 (tlg_game_object016ca768.h), its key function: in
+ * the unit of its base's, which it inlines as the base's other derived
+ * classes do */
+Object016ca768::~Object016ca768()
+{
+    pool.shutdown();
+}

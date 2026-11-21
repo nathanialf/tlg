@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
+#include "tlg_game_object016ca768.h"
 #include "tlg_game_object016d6b08.h"
 #include "tlg_math.h"
 
@@ -41,4 +42,12 @@ void Object016d6b50::slot2()
 {
     Object016d6b08::slot2();
     array70.clear();
+}
+
+/* the destructor of Object016cab48 (tlg_game_object016ca768.h), its key function: in
+ * the unit of its base's, which it inlines as the base's other derived
+ * classes do */
+Object016cab48::~Object016cab48()
+{
+    pool.shutdown();
 }
