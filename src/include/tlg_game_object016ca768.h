@@ -1,5 +1,5 @@
-/* src/include/tlg_game_object016ca768.h: two classes of the same form, over
- * Object016d3ef8 and Object016d6b08 (game region; docs/TARGETS.md). Every
+/* src/include/tlg_game_object016ca768.h: three pairs of classes, each pair of
+ * one form over Object016d3ef8 and Object016d6b08 (game region; docs/TARGETS.md). Every
  * name here is derived. */
 #ifndef TLG_GAME_OBJECT016CA768_H
 #define TLG_GAME_OBJECT016CA768_H
@@ -62,6 +62,98 @@ class Object016cab48 : public Object016d6b08 /* derived name */
     u8 unknownc0[0x168];
     PoolRef01343090<Pool016cab48> pool; /* +0x228 */
     Array05943280<u32> values230;       /* +0x230 */
+};
+
+/* derived names: the kinds of pool the classes below refer to; nothing of
+ * them is traced but their base */
+class Pool016ca330 : public Pool01343090 /* derived name */
+{
+};
+
+class Pool016ca568 : public Pool01343090 /* derived name */
+{
+};
+
+class Pool016ca8b0 : public Pool01343090 /* derived name */
+{
+};
+
+class Pool016caa48 : public Pool01343090 /* derived name */
+{
+};
+
+/* derived names: the class whose vtable is at 0x16ca330
+ * (config/vtables.derived.base.txt; stored by FUN_00f9ab50), derived from
+ * Object016d3ef8. Its destructor 0x13e1850 gives up the pool its reference
+ * at +0x70 holds (PoolRef01343090::shutdown()), then the reference and the
+ * base's part inlined. Slot 0 of the vtable is the tail call to it shared
+ * with four derived classes (0x13e44b0, leaf_013e44b0.cpp). The rest is not
+ * traced. */
+class Object016ca330 : public Object016d3ef8 /* derived name */
+{
+  public:
+    virtual ~Object016ca330();
+
+  private:
+    u8 unknown34[0x3c];
+    PoolRef01343090<Pool016ca330> pool; /* +0x70 */
+};
+
+/* derived names: the same form over Object016d6b08, its vtable at 0x16ca8b0
+ * (config/vtables.derived.base.txt; stored by FUN_0122be10), its destructor
+ * 0x147d190 the same bytes as 0x13e1850's but for the addresses, slot 0 the
+ * tail call to it (0x147eee0, leaf_0147eee0.cpp) */
+class Object016ca8b0 : public Object016d6b08 /* derived name */
+{
+  public:
+    virtual ~Object016ca8b0();
+
+  private:
+    u8 unknown34[0x3c];
+    PoolRef01343090<Pool016ca8b0> pool; /* +0x70 */
+};
+
+/* derived names: the class whose vtable is at 0x16ca568
+ * (config/vtables.derived.base.txt; its constructor FUN_013e30b0 stores
+ * it), derived from Object016d3ef8. Its destructor 0x13e1b30 gives up the
+ * pool its reference at +0x238 holds, then the members go last first: the
+ * reference, the blocks of the arrays at +0x220, +0xa8, +0x90 and +0x78, and
+ * the base's part inlined. Slot 0 of the vtable is the tail call to it
+ * shared with eight derived classes (0x13e4980, leaf_013e4980.cpp). The
+ * arrays' elements are not traced (nothing to destroy); the rest is not
+ * traced. */
+class Object016ca568 : public Object016d3ef8 /* derived name */
+{
+  public:
+    virtual ~Object016ca568();
+
+  private:
+    u8 unknown34[0x44];
+    Array05943280<u8> array78; /* +0x78 */
+    Array05943280<u8> array90; /* +0x90 */
+    Array05943280<u8> arraya8; /* +0xa8 */
+    u8 unknownc0[0x160];
+    Array05943280<u8> array220;         /* +0x220 */
+    PoolRef01343090<Pool016ca568> pool; /* +0x238 */
+};
+
+/* derived names: the same form over Object016d6b08, its vtable at 0x16caa48
+ * (config/vtables.derived.base.txt; its constructor FUN_0147ddb0 stores
+ * it), its destructor 0x147d450 the same bytes as 0x13e1b30's but for the
+ * addresses, slot 0 the tail call to it (0x147f050, leaf_0147f050.cpp) */
+class Object016caa48 : public Object016d6b08 /* derived name */
+{
+  public:
+    virtual ~Object016caa48();
+
+  private:
+    u8 unknown34[0x44];
+    Array05943280<u8> array78; /* +0x78 */
+    Array05943280<u8> array90; /* +0x90 */
+    Array05943280<u8> arraya8; /* +0xa8 */
+    u8 unknownc0[0x160];
+    Array05943280<u8> array220;         /* +0x220 */
+    PoolRef01343090<Pool016caa48> pool; /* +0x238 */
 };
 
 #endif

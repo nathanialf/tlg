@@ -128,8 +128,9 @@ class Pool013dc6c0 : public Pool01343090 /* derived name */
  * of the class whose destructor is 0x1216120) and 0x13d3970 (vtable
  * 0x16d39f0; at +0x390 of the one whose destructor is 0xf59820). Each
  * destructor gives up the pool its reference at +0x168 holds
- * (PoolRef01343090::shutdown()). Not written (a definition in the module is
- * inlined into its holder by the link stage, where the base calls it). The
+ * (PoolRef01343090::shutdown()); each is defined in a file of its own
+ * (leaf_014785c0.cpp, leaf_013d3970.cpp) and its holder calls it, as in the
+ * base. FUN_01478d80 and FUN_013d4850, slot 1, are the deleting ones. The
  * rest is not traced. */
 class Object016d6a50 /* derived name */
 {

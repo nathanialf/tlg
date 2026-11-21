@@ -13,9 +13,6 @@ void FUN_00c63060(List059396d0 *list, Ref00503fb0<Object016d1520> object);
  * +0x6c and +0x70 set to 8 and 1, then the object puts itself in the list
  * at 0x59396d0 and sets bit 0 of the root class's flags at +0x20 (`or byte
  * [rbx+0x20], 1`). Its creator FUN_00c5f340 calls it. */
-// NONMATCHING: greedy's assignment: the base keeps the object in rbx and its count's address
-// in r15 (`lea r15, [rbx+8]` at 0xc5fc03), the build the other way round; every store, the
-// call and the release are the base's (321 bytes for 322: the REX prefixes)
 Object016d1520::Object016d1520(const Name &name)
     : Object01343880(name), unknown68(0), unknown6c(8), unknown70(1)
 {

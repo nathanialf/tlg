@@ -9,18 +9,11 @@
  * reference of its own during its call. FUN_0096a170 (leaf_0096a170.cpp) is
  * the same without the object at +0x40. The classes and the slot's meaning
  * are not traced. */
-class Child00b3e130 /* derived name */
+class Child00b3e130 : public Object016b9108 /* derived name */
 {
   public:
-    virtual void unknown0();
-    virtual void unknown1();
-    virtual void destroy(); /* derived name; slot 2 */
-    virtual void unknown3();
-    virtual void unknown4();
     virtual void slot5();            /* derived name */
     virtual int slot6(int argument); /* derived name */
-
-    int references; /* +0x8 */
 };
 
 struct Object00b3e130 { /* derived name */
@@ -37,8 +30,6 @@ struct Object00b3e130 { /* derived name */
         return children[index];
     }
 };
-
-void FUN_00c14bc0(Child00b3e130 *child); /* derived name: releases it later */
 
 int FUN_00b3e130(Object00b3e130 *self, int argument) /* derived name */
 {

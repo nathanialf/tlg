@@ -78,3 +78,16 @@ Object016ca768::~Object016ca768()
 {
     pool.shutdown();
 }
+
+/* the destructors of Object016ca330 and Object016ca568
+ * (tlg_game_object016ca768.h), their key functions: in the unit of their
+ * base's, which they inline */
+Object016ca330::~Object016ca330()
+{
+    pool.shutdown();
+}
+
+Object016ca568::~Object016ca568()
+{
+    pool.shutdown();
+}

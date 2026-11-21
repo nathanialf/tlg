@@ -6,17 +6,10 @@
  * it is set) and of each child (the counted references at +0x68, their count
  * at +0x70 read once), each child held by a reference of its own during its
  * call. The classes and the slot's meaning are not traced. */
-class Part00b41640 /* derived name */
+class Part00b41640 : public Object016b9108 /* derived name */
 {
   public:
-    virtual void unknown0();
-    virtual void unknown1();
-    virtual void destroy(); /* derived name; slot 2 */
-    virtual void unknown3();
-    virtual void unknown4();
     virtual void slot5(); /* derived name */
-
-    int references; /* +0x8 */
 };
 
 struct Object00b41640 { /* derived name */
@@ -35,8 +28,6 @@ struct Object00b41640 { /* derived name */
         return children[index];
     }
 };
-
-void FUN_00c14bc0(Part00b41640 *part); /* derived name: releases it later */
 
 void FUN_00b41640(Object00b41640 *self) /* derived name */
 {

@@ -6,18 +6,11 @@
  * +0x60 read once) returns for the argument; each child is held by a
  * reference of its own during its call. The classes and the slot's meaning
  * are not traced. */
-class Child0096a170 /* derived name */
+class Child0096a170 : public Object016b9108 /* derived name */
 {
   public:
-    virtual void unknown0();
-    virtual void unknown1();
-    virtual void destroy(); /* derived name; slot 2 */
-    virtual void unknown3();
-    virtual void unknown4();
     virtual void slot5();            /* derived name */
     virtual int slot6(int argument); /* derived name */
-
-    int references; /* +0x8 */
 };
 
 struct Object0096a170 { /* derived name */
@@ -32,8 +25,6 @@ struct Object0096a170 { /* derived name */
         return children[index];
     }
 };
-
-void FUN_00c14bc0(Child0096a170 *child); /* derived name: releases it later */
 
 int FUN_0096a170(Object0096a170 *self, int argument) /* derived name */
 {

@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016ca768.h"
 
 /* derived names: the complete destructor of a class derived from the one
  * whose destructor is 0x13e1b30, its own body empty, so the base destructor
@@ -9,16 +10,10 @@
  * (stored by FUN_00fbac70); 0x16d4840 (stored by FUN_00fbaaf0); 0x16d4898
  * (stored by FUN_00fbaaf0), slot 1 (0x13e4990) the deleting destructor
  * calling 0x13e1b30 before operator delete. One body for the 9 vtables. The
- * class form: Object013e4980 derives from Object013e1b30, whose destructor is
- * the one at 0x13e1b30 (its row named for it, D15), and its own destructor is
+ * class form: Object013e4980 derives from Object016ca568, whose destructor is
+ * the one at 0x13e1b30 (the class of the vtable at 0x16ca568, tlg_game_object016ca768.h), and its own destructor is
  * defined empty out of line. */
-class Object013e1b30 /* derived name */
-{
-  public:
-    virtual ~Object013e1b30();
-};
-
-class Object013e4980 : public Object013e1b30 /* derived name */
+class Object013e4980 : public Object016ca568 /* derived name */
 {
   public:
     virtual ~Object013e4980();

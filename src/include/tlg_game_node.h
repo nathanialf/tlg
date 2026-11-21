@@ -158,7 +158,7 @@ template <class T> class Ref00503fb0 /* derived name */
      * else hands it to FUN_00c14bc0 */
     void release() /* derived name */
     {
-        T *released = object;
+        Object016b9108 *released = object;
         if (released) {
             object = 0;
             dropReference(released);
@@ -167,7 +167,7 @@ template <class T> class Ref00503fb0 /* derived name */
 
     T *get() const
     {
-        return object;
+        return static_cast<T *>(object);
     }
 
     bool operator==(const Ref00503fb0 &other) const
@@ -176,7 +176,11 @@ template <class T> class Ref00503fb0 /* derived name */
     }
 
   private:
-    T *object;
+    /* held as the root class, as AtomicRef0045c470 holds it: get() hands it
+     * back as a T, the release reads it as the root class. With it the
+     * constructor 0xc5fb80 (a reference to itself passed by value) takes the
+     * base's registers; no matched function of the module changes */
+    Object016b9108 *object;
 };
 
 /* this thread's flag: set, the thread may use an object a name names
