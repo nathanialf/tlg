@@ -88,6 +88,38 @@ class Kind01398700 : public Object016b9108 /* derived name */
     int level; /* +0x58: 3 and 4 select their own id, below 2 the default */
 };
 
+/* derived names: the nine words the object takes at +0x118 from the
+ * simulation's part at +0x80, held in that part's base at +0x40 (the cast
+ * keeps a null: `lea rcx, [rax+0x40]; test rax, rax; cmove rcx, rax` at
+ * 0x139a202), copied one by one in their order (FUN_0139a1d0) */
+struct Values01398700 { /* derived name */
+    u32 unknown0;
+    u32 unknown4;
+    u32 unknown8;
+    u32 unknownc;
+    u32 unknown10;
+    u32 unknown14;
+    u32 unknown18;
+    u32 unknown1c;
+    u32 unknown20;
+
+    void operator=(const Values01398700 &other)
+    {
+        unknown0 = other.unknown0;
+        unknown4 = other.unknown4;
+        unknown8 = other.unknown8;
+        unknownc = other.unknownc;
+        unknown10 = other.unknown10;
+        unknown14 = other.unknown14;
+        unknown18 = other.unknown18;
+        unknown1c = other.unknown1c;
+        unknown20 = other.unknown20;
+    }
+};
+
+struct Part01398700_80 : ItemHead01398700, Values01398700 { /* derived name */
+};
+
 struct Target01398700 { /* derived name */
     u8 unknown0[0x40];
     Part01398700_40 *unknown40; /* +0x40 */
@@ -97,6 +129,8 @@ struct Target01398700 { /* derived name */
     Part01398700_60 *unknown60; /* +0x60 */
     Item01398700 **items;       /* +0x68 */
     unsigned itemCount;         /* +0x70 */
+    u8 unknown74[0xc];
+    Part01398700_80 *unknown80; /* +0x80 */
 
     Item01398700 *itemAt(int index) const /* derived name */
     {
@@ -116,6 +150,7 @@ struct Object01398700 { /* derived name */
     Target01398700 *unknowna0;  /* +0xa0 */
     u8 unknowna8[0x8];
     ItemSettings01398700 settings[2]; /* +0xb0, +0xe4 */
+    Values01398700 unknown118;        /* +0x118: FUN_0139a1d0 */
 };
 
 #endif

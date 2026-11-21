@@ -10,6 +10,7 @@
 
 #include "tlg_types.h"
 #include "tlg_game_array.h"
+#include "tlg_simd.h"
 
 /* One of the 64-byte records the object at +0x20 keeps: the index lists of
  * its variants, the one at the holder's +0x10 chosen (FUN_01399e90: `lea
@@ -21,12 +22,35 @@ struct Record016cf9f8 /* derived name */
     u8 unknown30[0x10];
 };
 
+/* A 0x360-byte element of the table at +0x18 of the object at +0x18 of the
+ * records (FUN_0137c090: `imul rdi, rdi, 0x360`): a vector at +0x2f0 and
+ * four words from +0x2e0 copied. The rest not traced. */
+struct Entry0137c090 /* derived name */
+{
+    u8 unknown0[0x2e0];
+    float unknown2e0;
+    float unknown2e4;
+    float unknown2e8;
+    u8 unknown2ec[4];
+    Vec4 unknown2f0; /* +0x2f0 */
+    float unknown300;
+    u8 unknown304[0x5c];
+};
+
+/* The object at +0x18 of the records. */
+struct Table0137c090 /* derived name */
+{
+    u8 unknown0[0x18];
+    Entry0137c090 *entries; /* +0x18 */
+};
+
 /* The object at +0x20 (the base at +0x10's +0x10). */
 struct Records016cf9f8 /* derived name */
 {
     u8 unknown0[0x10];
     unsigned variant; /* +0x10: the list each record gives */
-    u8 unknown14[0xc];
+    u8 unknown14[4];
+    Table0137c090 *table;    /* +0x18 (FUN_0137c090) */
     Record016cf9f8 *records; /* +0x20 */
 };
 
