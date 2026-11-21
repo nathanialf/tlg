@@ -1,13 +1,13 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
-#include "tlg_game_object00c298a0.h"
+#include "tlg_game_object016b8450.h"
 
 /* derived names: the class whose vtable is at 0x16adfe8
  * (config/vtables.derived.base.txt, stored by its constructor FUN_007d8f60
- * and its destructor), derived from Object00c298a0 (the destructor tail-calls
+ * and its destructor), derived from Object016b8450 (the destructor tail-calls
  * 0xc298a0): a counted reference held in a block of its own at +0xa8; the
  * rest is not traced. */
-class Object016adfe8 : public Object00c298a0 /* derived name */
+class Object016adfe8 : public Object016b8450 /* derived name */
 {
   public:
     virtual ~Object016adfe8();

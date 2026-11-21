@@ -5,3 +5,9 @@
  * (tlg_game_object016a7620.h), its key function, so this file emits the
  * vtable */
 Object016a7620::~Object016a7620() {}
+
+/* derived names: slot 0 of the vtables at 0x16d1d98 and 0x16d3550, their
+ * deleting destructors 0x13b2790 and 0x13cc880 slot 1 */
+Object016d1d98::~Object016d1d98() {}
+
+Object016d3550::~Object016d3550() {}

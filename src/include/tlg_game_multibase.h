@@ -8,6 +8,7 @@
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
 #include "tlg_game_object0134f620.h"
+#include "tlg_game_object0137bcf0.h"
 
 /* The class whose vtable is at 0x16cc478 (stored by FUN_009232e0,
  * FUN_013755d0 and FUN_01375710): secondary vtables at offsets 0x10, 0x28,
@@ -235,14 +236,24 @@ class Class16b15a0 : public Class137ba70 /* derived name */
     Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
 };
 
-class Class16b5860 : public Class137ba70 /* derived name */
+/* What the class at 0x16b5860 adds to Class137ba70: a base with no virtual
+ * function, so the class's destructor (0x137bac0, slot 0, shared with the
+ * class at 0x16b0c50) stores no vptr of its own: the record at +0x60
+ * destroyed (0x137bcf0), then the base at +0x30's vptr and reference and the
+ * root class's. */
+struct Links16b5860 /* derived name */
 {
-  public:
-    int FUN_00004340(int mask) const;
-
     Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
     Class137ba70 *child48; /* +0x48, derived name: asked when bit 0 is set */
     Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
+    u8 unknown58[0x8];
+    Object0137bcf0 unknown60; /* +0x60 */
+};
+
+class Class16b5860 : public Class137ba70, public Links16b5860 /* derived name */
+{
+  public:
+    int FUN_00004340(int mask) const;
 };
 
 /* The class whose vtable is at 0x16cf260 (stored by FUN_00b3de50,
