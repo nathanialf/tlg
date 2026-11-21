@@ -20,12 +20,15 @@ class Object01397620 /* derived name */ : public Class137ba70
 {
   public:
     virtual ~Object01397620();
-    virtual int slot9(); /* derived name; 0x42d0, not traced */
+    virtual int slot9();              /* derived name; 0x42d0, not traced */
+    int FUN_00004340(int mask) const; /* slot 6, 0xb406d0 */
 
-  private:
-    u8 unknown40[0x58 - 0x40];
-    Ref00503fb0<Object016b9108> unknown58; /* +0x58 */
-    Ref00503fb0<Object016b9108> unknown60; /* +0x60 */
+  protected:
+    Class137ba70 *child40; /* +0x40, derived name: asked when bit 0 is set */
+    Class137ba70 *child48; /* +0x48, derived name: asked when bit 2 is set */
+    u8 unknown50[0x8];
+    Ref00503fb0<Class137ba70> unknown58; /* +0x58 */
+    Ref00503fb0<Class137ba70> unknown60; /* +0x60 */
 };
 
 /* The class whose vtable is at 0x16b5ce8 (config/vtables.derived.base.txt;
@@ -38,10 +41,11 @@ class Object016b5ce8 /* derived name */ : public Object01397620
 {
   public:
     virtual ~Object016b5ce8();
+    int FUN_00004340(int mask) const; /* slot 6, 0xb414a0 */
 
   private:
-    Object0134f620 unknown68;              /* +0x68 */
-    Ref00503fb0<Object016b9108> unknown80; /* +0x80 */
+    Object0134f620 unknown68;            /* +0x68 */
+    Ref00503fb0<Class137ba70> unknown80; /* +0x80 */
 };
 
 #endif
