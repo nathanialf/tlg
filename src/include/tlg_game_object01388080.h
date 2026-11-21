@@ -110,14 +110,40 @@ struct CommandQueue05938c40 { /* derived name */
     u32 capacity; /* +0x394 */
 };
 
+/* derived names: the object at +0x108 of the one below, as far as the lock
+ * its readers take (the script C functions "UpdateWorldTransform" and
+ * "LuaBindings::UpdateTransform", 0xe6d420 and 0xe75e40): a thread that is
+ * not the writer at +0x248 takes a reader's place in the count at +0x23c
+ * (FUN_01331c10) and gives it back with an atomic decrement; the writers'
+ * count is at +0x240 (FUN_00e87a90 releases it). The rest is not traced. */
+struct World05938c40 { /* derived name */
+
+    void lockRead() /* derived name */
+    {
+        if (scePthreadSelf() != writer)
+            FUN_01331c10(&readers);
+    }
+
+    void unlockRead() /* derived name */
+    {
+        if (scePthreadSelf() != writer)
+            __sync_fetch_and_sub(&readers, 1);
+    }
+
+    u8 unknown0[0x23c];
+    int readers;      /* +0x23c */
+    int writers;      /* +0x240 */
+    pthread_t writer; /* +0x248 */
+};
+
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
- * queue at +0xb0 and the pointer at +0x108 (handed to FUN_00c55dd0 by
+ * queue at +0xb0 and the world at +0x108 (handed to FUN_00c55dd0 by
  * FUN_0082de00) */
 struct Object05938c40 { /* derived name */
     u8 unknown0[0xb0];
     CommandQueue05938c40 *queue; /* +0xb0 */
     u8 unknownb8[0x50];
-    void *unknown108; /* +0x108 */
+    World05938c40 *world; /* +0x108 */
 };
 
 extern Object05938c40 *D_5938c40;

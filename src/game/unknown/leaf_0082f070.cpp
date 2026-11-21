@@ -52,5 +52,5 @@ void FUN_0082de00(Node0082f070 *node) /* derived name */
         FUN_0082de00(*child);
     FUN_0082de80(node);
     if (!(node->owner->flags & 1))
-        FUN_00c55dd0(node->owner, D_5938c40->unknown108, 0);
+        FUN_00c55dd0(node->owner, D_5938c40->world, 0);
 }

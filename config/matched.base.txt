@@ -9746,3 +9746,4 @@ FUN_01063f20 src/game/unknown/leaf_01063f20.cpp _Z12FUN_01063f20Pfff
 FUN_00f516f0 src/game/unknown/leaf_00f516f0.cpp _ZN13Array05943280I13Entry00f516f0E4pushERKS0_
 FUN_00f0e0d0 src/game/unknown/leaf_00f0e560.cpp _ZN14Object016beca812FUN_00f0e0d0Ev
 FUN_00f0e430 src/game/unknown/leaf_00f0e560.cpp _ZN14Object016bed9812FUN_00f0e430Ev
+FUN_00e6d420 src/game/unknown/leaf_00e6d420.cpp _Z12FUN_00e6d420P9lua_State
