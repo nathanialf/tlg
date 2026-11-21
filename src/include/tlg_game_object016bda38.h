@@ -54,7 +54,7 @@ class Object016bda38 : public Object016b85e0 /* derived name */
     virtual ~Object016bda38();
 
   private:
-    u8 unknown8[0x230];
+    u8 unknown24[0x214];
     int unknown238; /* +0x238: zero from the constructor, then bits 0 and 3 set; not traced */
     int unknown23c; /* +0x23c: 1 from the constructor; not traced */
     int unknown240; /* +0x240: zero from the constructor; not traced */

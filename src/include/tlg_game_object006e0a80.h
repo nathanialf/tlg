@@ -24,7 +24,7 @@ class Object006e0a80 : public Object016b85e0 /* derived name */
     virtual ~Object006e0a80();
 
   private:
-    u8 unknown8[0x230];
+    u8 unknown24[0x214];
     Array01343a80<Ref00503fb0<Object016b9108>>
         record238; /* +0x238: an array of counted references */
 };

@@ -50,7 +50,7 @@ class Object016ba510 : public Object016b85e0 /* derived name */
     virtual ~Object016ba510();
 
   private:
-    u8 unknown8[0x230];
+    u8 unknown24[0x214];
     int unknown238; /* +0x238: zero from the constructor; not traced */
     u8 unknown23c[0x4];
     /* +0x240: a counted reference, released by the destructor (the pointer

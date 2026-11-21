@@ -54,7 +54,7 @@ class Object016bae90 : public Object016b85e0 /* derived name */
     virtual ~Object016bae90();
 
   private:
-    u8 unknown8[0x248];
+    u8 unknown24[0x22c];
     Array05943280<Ref00503fb0<Element250016bae90>> array250; /* +0x250 */
     Array05943280<Ref00503fb0<Object016b9108>> array268;     /* +0x268 */
     Array05943280<Ref00503fb0<Object016b9108>> array280;     /* +0x280 */

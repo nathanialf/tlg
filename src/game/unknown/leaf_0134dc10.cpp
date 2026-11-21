@@ -16,7 +16,7 @@ class Object016c76a0 : public Object016b85e0 /* derived name */
     virtual ~Object016c76a0();
 
   private:
-    u8 unknown8[0x230];
+    u8 unknown24[0x214];
     Name name238; /* +0x238 */
     u8 unknown23c[0x4];
     Array05943280<Name> names240; /* +0x240 */

@@ -32,7 +32,7 @@ class Object016aea40 : public Object016b85e0 /* derived name */
     void FUN_00822250(); /* derived name */
 
   protected:
-    u8 unknown8[0x68];
+    u8 unknown24[0x4c];
     Float4A unknown70; /* +0x70: the base's; not traced */
     u8 unknown80[0x1b8];
     int unknown238; /* +0x238: not set by the constructor; Object016a8748's sets it (0x3442a0) */

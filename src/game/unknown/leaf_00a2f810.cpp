@@ -24,7 +24,7 @@ class Object016b1d98 : public Object016b85e0 /* derived name */
     virtual ~Object016b1d98();
 
   private:
-    u8 unknown8[0x240];
+    u8 unknown24[0x224];
     PoolRef01343090<Pool016b1d98> pool; /* +0x248 */
     u8 unknown250[0x20];
     Ref00503fb0<Object016b9108> held270; /* +0x270 */

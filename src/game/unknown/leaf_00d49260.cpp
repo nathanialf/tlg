@@ -30,7 +30,7 @@ class Object016ba630 : public Object016b85e0 /* derived name */
     virtual ~Object016ba630();
 
   private:
-    u8 unknown8[0x230];
+    u8 unknown24[0x214];
     Array05943280<Ref00503fb0<Object016b9108>> array238; /* +0x238 */
     void *block250;                                      /* +0x250 */
     u8 unknown258[0x8];

@@ -22,7 +22,7 @@ class Object016b24a0 : public Object016b85e0 /* derived name */
     virtual ~Object016b24a0();
 
   private:
-    u8 unknown8[0x240];
+    u8 unknown24[0x224];
     PoolRef01343090<Pool016b24a0> pool; /* +0x248 */
 };
 

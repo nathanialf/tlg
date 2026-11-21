@@ -23,7 +23,7 @@ class Object016c76a0 : public Object016b85e0 /* derived name */
     virtual ~Object016c76a0();
 
   private:
-    u8 unknown8[0x230];
+    u8 unknown24[0x214];
     int unknown238; /* +0x238: 0 from the constructor */
     u8 unknown23c[0x4];
     Array01343a80<void *>

@@ -24,7 +24,7 @@ class Object016c7948 : public Object016b85e0 /* derived name */
     virtual ~Object016c7948();
 
   protected:
-    u8 unknown8[0x68];
+    u8 unknown24[0x4c];
     Float4A unknown70; /* +0x70: the base's; not traced */
     u8 unknown80[0x218];
 };
