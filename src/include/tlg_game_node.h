@@ -69,12 +69,16 @@ inline int compareAndSwap(int *value, int expected, int replacement) /* derived 
 /* the same for a pointer (`lock cmpxchg qword; cmove rax, rbx` at 0x45c487),
  * without the barrier: a pointer exchanged against a known null branches on
  * the exchange's flags at once (`xor eax, eax; lock cmpxchg qword [r14+0x30],
- * rcx; je` at 0xc91f5c) */
+ * rcx; je` at 0xc91f5c); relaxed, as the counts are: an ordered exchange is a
+ * clobber of every location, and with it 0x5c0fe0 (the reference at +0x50
+ * set) takes other registers and 451 bytes for the base's 453; relaxed, all
+ * of it but the name's release is the base's. No other function of the
+ * module changes */
 template <class T>
 inline T *compareAndSwap(T **value, T *expected, T *replacement) /* derived name */
 {
-    __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_SEQ_CST,
-                                __ATOMIC_SEQ_CST);
+    __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_RELAXED,
+                                __ATOMIC_RELAXED);
     return expected;
 }
 
