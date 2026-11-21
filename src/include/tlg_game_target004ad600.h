@@ -60,9 +60,16 @@ struct Record057c9390_38 { /* derived name */
     Record057c9390_38_900 *unknown900; /* +0x900 */
 };
 
+/* derived name: the record at +0x80 of the object at 0x57c9390: an object of
+ * the class at 0x16b0468 that holds its flag at +0x3c is handed to
+ * FUN_008e1020 by its destructor (FUN_008edf10) */
+struct Manager008e1020; /* derived name */
+
 struct Record057c9390 { /* derived name */
     u8 unknown0[0x38];
     Record057c9390_38 *unknown38; /* +0x38 */
+    u8 unknown40[0x40];
+    Manager008e1020 *unknown80; /* +0x80 */
 };
 
 extern Record057c9390 *D_57c9390;
