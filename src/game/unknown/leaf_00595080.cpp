@@ -22,28 +22,13 @@ struct FlowIndexFilter /* derived name */
  * is not negative is given back to the owner, with its type, before each
  * child of the filter its argument holds at +0x38 is handed on by the kind
  * of the node it holds at +0x38 (Owner583950::dispatchHeld); then, with bit
- * 0 of the filter's +0x28, the message. Returns 0. Handler unknown. */
-// NONMATCHING: the value type's compares: the base tests 0 first, then 4; the build (the chain
-// made a switch) tests 4 first: FUN_0058fc10's and FUN_00594c10's class; the two arms' loops and
-// messages to compare after it
+ * 0 of the filter's +0x28, the message. Returns 0. The float arm is written
+ * first: the switch the chain becomes compares the arm written first last
+ * (the base tests 0, then 4). Handler unknown. */
 int FUN_00595080(ValueOwner583950 *self, Node583950 *arg) /* derived name */
 {
     FlowIndexFilter *node = reinterpret_cast<FlowIndexFilter *>(arg->child38);
-    if (self->valueType == 0) {
-        const int value = self->intValue;
-        if (value >= 0) {
-            Node583950 **end = node->children + node->count;
-            for (Node583950 **it = node->children; it != end; ++it) {
-                Node583950 *child = *it;
-                self->valueType = 0;
-                self->intValue = value;
-                self->dispatchHeld(child);
-            }
-            if (node->debugFlags & 1)
-                FUN_00c831d0(0, "FlowIndexFilter(%s) : (eval, in_value => out) : %d => %d\n",
-                             D_17ac870[node->name.index].string0, value, value);
-        }
-    } else if (self->valueType == 4) {
+    if (self->valueType == 4) {
         const float value = self->floatValue;
         if (value >= 0.0f) {
             Node583950 **end = node->children + node->count;
@@ -55,6 +40,20 @@ int FUN_00595080(ValueOwner583950 *self, Node583950 *arg) /* derived name */
             }
             if (node->debugFlags & 1)
                 FUN_00c831d0(0, "FlowIndexFilter(%s) eval, in_value => out, %f => %f\n",
+                             D_17ac870[node->name.index].string0, value, value);
+        }
+    } else if (self->valueType == 0) {
+        const int value = self->intValue;
+        if (value >= 0) {
+            Node583950 **end = node->children + node->count;
+            for (Node583950 **it = node->children; it != end; ++it) {
+                Node583950 *child = *it;
+                self->valueType = 0;
+                self->intValue = value;
+                self->dispatchHeld(child);
+            }
+            if (node->debugFlags & 1)
+                FUN_00c831d0(0, "FlowIndexFilter(%s) : (eval, in_value => out) : %d => %d\n",
                              D_17ac870[node->name.index].string0, value, value);
         }
     }

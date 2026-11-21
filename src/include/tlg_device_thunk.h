@@ -81,11 +81,16 @@ struct CallArguments583950 {
     void *value; /* +0x8 */
 };
 
+/* A function the call queue holds: given the VM and the arguments it was
+ * queued with (FUN_0059d280 and FUN_005997c0 read the node and the value
+ * through the second argument); returns 0 (FUN_0059d280). derived name */
+typedef int (*CallFunction583950)(void *vm, const CallArguments583950 *arguments);
+
 /* An entry of the call queue: the function at +0x0, the node it is given at
  * +0x10 (FUN_0059d3f0 and its four copies) and 0x58 bytes after the
  * function. derived names */
 struct Call583950 {
-    void (*function)(void *vm);
+    CallFunction583950 function;
     u8 unknown8[8];
     CallArguments583950 arguments; /* +0x10 */
     u8 unknown20[0x40];
@@ -103,7 +108,7 @@ struct CallQueue583950 {
  * FUN_00c0bc10 and FUN_00c0bcb0 append a call to it). derived names */
 struct CallFrame583950 {
     /* appends a call when a slot after it is left (derived name) */
-    bool push(void (*function)(void *vm))
+    bool push(CallFunction583950 function)
     {
         const unsigned next = queue->size + 1;
         if (next >= queue->capacity)
@@ -117,7 +122,7 @@ struct CallFrame583950 {
      * (FUN_0059d3f0 and its four copies: `mov esi, [rcx+4]`, the function
      * and the node stored at that index, the queue read again before each
      * store). derived name */
-    bool push(void (*function)(void *vm), void *argument)
+    bool push(CallFunction583950 function, void *argument)
     {
         const unsigned size = queue->size;
         const unsigned next = size + 1;
@@ -131,7 +136,7 @@ struct CallFrame583950 {
 
     /* appends a call with the node and its value, the same way
      * (FUN_005995c0). derived name */
-    bool push(void (*function)(void *vm), const CallArguments583950 &arguments)
+    bool push(CallFunction583950 function, const CallArguments583950 &arguments)
     {
         const unsigned size = queue->size;
         const unsigned next = size + 1;
@@ -145,7 +150,7 @@ struct CallFrame583950 {
 
     /* appends a call one level deeper (FUN_00c0bc10, FUN_00c0bcb0). derived
      * name */
-    void pushDeeper(void (*function)(void *vm))
+    void pushDeeper(CallFunction583950 function)
     {
         if (push(function))
             ++depth;

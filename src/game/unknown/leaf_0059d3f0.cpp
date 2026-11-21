@@ -11,8 +11,8 @@ struct CallNode0059d3f0 { /* derived name */
     int unknown38;   /* +0x38 */
 };
 
-int FUN_00c0f8b0(Owner583950 *self, void *, int, int, int, int); /* derived name */
-void FUN_0059d4e0(void *vm);                                     /* derived name */
+int FUN_00c0f8b0(Owner583950 *self, void *, int, int, int, int);  /* derived name */
+int FUN_0059d4e0(void *vm, const CallArguments583950 *arguments); /* derived name */
 
 /* derived names: a handler whose address FUN_00525530 takes (lea at
  * 0x52588c): the node made the current one and its state byte read (no

@@ -10,7 +10,7 @@ struct FlagsNode59f910 /* derived name */
     u8 flags30; /* +0x30: bit 0 set, the call is queued */
 };
 
-void FUN_0059fa50(void *vm); /* derived name */
+int FUN_0059fa50(void *vm, const CallArguments583950 *arguments); /* derived name */
 
 /* derived names: a handler whose address FUN_00525530 takes (lea at
  * 0x525677): in the state 0 or 1 of its argument, appends FUN_0059fa50

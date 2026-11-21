@@ -1,8 +1,8 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_device_thunk.h"
 
-int FUN_0059ac10(Owner583950 *self, void *arg); /* derived name */
-void FUN_0059ae50(void *vm);                    /* derived name */
+int FUN_0059ac10(Owner583950 *self, void *arg);                   /* derived name */
+int FUN_0059ae50(void *vm, const CallArguments583950 *arguments); /* derived name */
 
 /* derived names: a handler whose address FUN_00525530 takes (lea at
  * 0x5256ff): runs FUN_0059ac10 on its argument from the same current node for

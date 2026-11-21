@@ -1,7 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_device_thunk.h"
 
-void FUN_005997c0(void *vm); /* derived name */
+int FUN_005997c0(void *vm, const CallArguments583950 *arguments); /* derived name */
 
 /* derived names: a handler whose address FUN_00525530 takes (lea at
  * 0x52587c): the node made the current one, its int value found and its
