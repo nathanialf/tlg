@@ -55,7 +55,9 @@ typedef Array05943280<Entry0072bbc0> Object0072bbc0; /* derived name */
  * [rcx+rax+0x38]`) */
 struct Entry0135f4e0 /* derived name */
 {
-    u8 unknown0[0x38];
+    u8 unknown0[0x20];
+    float unknown20; /* +0x20: a value in [0, 1] FUN_0135f640 picks the least of */
+    u8 unknown24[0x14];
     Ref00503fb0<Object016b9108> unknown38; /* +0x38 */
 };
 

@@ -9818,3 +9818,12 @@ FUN_01372af0 src/game/unknown/leaf_01372af0.cpp _ZN14Record01372af05resetEv
 FUN_013730a0 src/game/unknown/leaf_013730a0.cpp _ZN13Array05943280I13Entry013730a0ED1Ev
 FUN_013a9af0 src/game/unknown/leaf_013a9af0.cpp _ZN14Record013a9af0D1Ev
 FUN_013d9390 src/game/unknown/leaf_013d7400.cpp _ZN14Object016d3e60D0Ev
+FUN_00208a00 src/game/unknown/leaf_00208a00.cpp _ZN13Array05943280I11Ref00503fb0I13Value00208a00EEaSERKS3_
+FUN_00415bb0 src/game/unknown/leaf_00415bb0.cpp _ZN14Object00415bb012clearEntriesEv
+FUN_004afdb0 src/game/unknown/leaf_004afdb0.cpp _ZN14Object004afdb04takeEP14Source004afdb0i
+FUN_006df730 src/game/unknown/leaf_006df730.cpp _ZN15Binding006df730aSERKS_
+FUN_00ad84a0 src/game/unknown/leaf_00ad84a0.cpp _ZN14Object00ad84a05startERK7Float4AR14Params00ad84a0
+FUN_00ca41c0 src/game/unknown/leaf_00ca41c0.cpp _ZNK13Table00ca41c04findEj
+FUN_00caaf40 src/game/unknown/leaf_00caaf40.cpp _ZN14Object00caaf405setUpEv
+FUN_00e63820 src/game/unknown/leaf_00e63820.cpp _ZN14Object016bde38D1Ev
+FUN_00e63ad0 src/game/unknown/leaf_00e63820.cpp _ZN14Object016bde38D0Ev
