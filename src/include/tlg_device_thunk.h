@@ -298,6 +298,18 @@ struct Owner583950 {
         return cursor.selectState(node);
     }
 
+    /* clears the state byte of a node of the list, the current node put
+     * back after it; nothing is stored for a node not in the list
+     * (FUN_00584700, FUN_00584070). derived name */
+    void clearState(void *node)
+    {
+        const unsigned current = cursor.current;
+        if (cursor.select(node)) {
+            cursor.list->states[cursor.current] = 0;
+            cursor.current = current;
+        }
+    }
+
     /* hands a node to the handler of its kind, when it has a kind and the
      * kind a handler; the table is read first (FUN_00583d20 reads it before
      * each of its two nodes is tested). derived name */
@@ -306,6 +318,20 @@ struct Owner583950 {
         Handler583950 *table = handlers;
         if (node && node->kind) {
             Handler583950 handler = table[node->kind];
+            if (handler)
+                handler(this, node);
+        }
+    }
+
+    /* hands a node to the handler of the kind of the node it holds at
+     * +0x38, when that node has a kind and the kind a handler (FUN_00594c10:
+     * the node itself is the handler's argument). derived name */
+    void dispatchHeld(Node583950 *node)
+    {
+        Handler583950 *table = handlers;
+        Node583950 *held = node->child38;
+        if (held && held->kind) {
+            Handler583950 handler = table[held->kind];
             if (handler)
                 handler(this, node);
         }
@@ -347,10 +373,17 @@ struct NodesOwner583950 : DeviceOwner583950 {
     Array05943280<void *> nodes; /* +0xf8 */
 };
 
-/* A node of kind 31 with a list of children at +0x50 (FUN_00594920, FUN_00594a80).
- * derived name */
+/* A node of kind 31 with a list of children at +0x50 (FUN_00594920, FUN_00594a80)
+ * and a value of the kind at +0x2c that FUN_00594c10 hands each child while
+ * bit 0 of +0x28 is set. derived names */
 struct ParentNode583950Kind31 {
-    u8 unknown0[0x50];
+    u8 unknown0[0x28];
+    unsigned flags;   /* +0x28 */
+    int kind;         /* +0x2c: 0 a float, 1 an int, 2 a vector */
+    float floatValue; /* +0x30 */
+    int intValue;     /* +0x34 */
+    u8 unknown38[8];
+    Float4A vector;        /* +0x40 */
     Node583950 **children; /* +0x50 */
     unsigned count;        /* +0x58 */
 };

@@ -210,3 +210,4 @@ D_14d2e60 src/game/unknown/leaf_001a72a0.cpp
 D_1692b40 src/libs/unknown/func_000349b0.cpp
 D_1692bc0 src/libs/unknown/func_000349b0.cpp
 D_1692c10 src/libs/unknown/func_000349b0.cpp
+D_14d2ee0 src/game/unknown/leaf_001a7180.cpp

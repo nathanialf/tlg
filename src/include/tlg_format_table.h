@@ -11,4 +11,11 @@ struct FormatWord001a72a0 { /* derived name */
     u32 bits;               /* derived name */
 };
 
+/* A table of 16 packed 32-bit words, indexed by the number FUN_001a3c50
+ * stores, that FUN_001a7180, FUN_001a71f0, FUN_001a72f0 and FUN_001a7360 read
+ * two-bit fields of (bits 0 to 7 and 8 to 13). derived names throughout. */
+struct FieldWord001a7180 { /* derived name */
+    u32 bits;              /* derived name */
+};
+
 #endif
