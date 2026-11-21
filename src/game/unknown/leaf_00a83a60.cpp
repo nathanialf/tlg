@@ -26,10 +26,9 @@ class Object016b24a0 : public Object016b85e0 /* derived name */
     PoolRef01343090<Pool016b24a0> pool; /* +0x248 */
 };
 
-// NONMATCHING: the deleting destructor inlines this one in stage 1 (the body's cost there is under 225 with
-// shutdown() kept a call: shutdown() costs between 325 and 350 in it, measured with -inline-threshold), so the
-// link stage sees shutdown() called twice and keeps both calls; the base calls this destructor from the deleting
-// one and holds shutdown() inlined (a stage-1 inline-cost margin)
+// NONMATCHING: 108 of 112 instructions: the null test of the pool jumps past the reference's release, the
+// release's reload of the pointer taken as the tested null (stage 1's jump threading, the reload partially
+// redundant); the base reloads it on that path too (`je` to the release, its address formed before the test)
 Object016b24a0::~Object016b24a0()
 {
     pool.shutdown();

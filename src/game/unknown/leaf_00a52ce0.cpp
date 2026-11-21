@@ -38,10 +38,6 @@ class Object016b2060 : public Object016b85e0 /* derived name */
     PoolRef01343090<Pool016b2060> pool; /* +0x250 */
 };
 
-// NONMATCHING: the deleting destructor inlines this one in stage 1 (the body's cost there is under 225 with
-// shutdown() kept a call: shutdown() costs between 325 and 350 in it, measured with -inline-threshold), so the
-// link stage sees shutdown() called twice and keeps both calls; the base calls this destructor from the deleting
-// one and holds shutdown() inlined (a stage-1 inline-cost margin)
 Object016b2060::~Object016b2060()
 {
     pool.shutdown();

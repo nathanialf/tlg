@@ -67,23 +67,33 @@ class Pool01343090 : public Node00503fb0 /* derived name */
  * and 0x13d3970 begin with it; 0x1227c70 and 0xf96800 run it on a member's
  * at +0x8d0 while their object is active). A reference to one kind of pool:
  * each holder's is an instantiation of its own, with one caller, and the
- * base has it inlined at all four. */
+ * base has it inlined at all four, and in 62 functions in all (68 sites:
+ * no out-of-line copy of it is left). The test is shutdown()'s and the rest
+ * close()'s, declared `inline`: one body costs 340 to the stage-1 inliner,
+ * over the 325 a hinted function is allowed, while shutdown() alone costs
+ * 20 and close() 320. close() is kept out of shutdown() (inlining it would
+ * stop shutdown() being inlined into its caller, which costs less: the
+ * inliner's deferral) and inlined into the holder after it, under 325. */
 template <class P> class PoolRef01343090 /* derived name */
 {
   public:
     void shutdown() /* derived name */
     {
-        if (P *held = pool.get()) {
-            for (int i = 0; i < 0x80; ++i)
-                for (Entry01343090 *entry = held->table.buckets[i]; entry; entry = entry->next)
-                    FUN_002049f0(2, false, entry->unknown0, entry->unknown10);
-            held->table.FUN_01343090();
-            FUN_00c5a160(held);
-            pool.clear();
-        }
+        if (P *held = pool.get())
+            close(held);
     }
 
   private:
+    inline void close(P *held) /* derived name */
+    {
+        for (int i = 0; i < 0x80; ++i)
+            for (Entry01343090 *entry = held->table.buckets[i]; entry; entry = entry->next)
+                FUN_002049f0(2, false, entry->unknown0, entry->unknown10);
+        held->table.FUN_01343090();
+        FUN_00c5a160(held);
+        pool.clear();
+    }
+
     AtomicRef0045c470<P> pool;
 };
 
