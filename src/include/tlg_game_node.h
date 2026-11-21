@@ -386,8 +386,10 @@ class Node00503fb0 : public Object016b9108 /* derived name */
     }
 
     int unknown24; /* +0x24: the index of the object's handler in a visitor's table (FUN_00589590) */
-    /* +0x28: FUN_00c5a160 reads it first, and a caller hands it the node
-     * only while it is set (0x7a9ba2) */
+    /* +0x28: the node whose slot 6 takes this one out of it
+     * (Object016b85e0::removeChild, FUN_00c575d0, which tests that this
+     * field is the node it runs on); FUN_00c5a160 reads it first, and a
+     * caller hands it the node only while it is set (0x7a9ba2) */
     void *unknown28;
     int readers;                         /* +0x30 */
     Node00503fb0 *parent;                /* +0x38 */
@@ -398,8 +400,8 @@ class Node00503fb0 : public Object016b9108 /* derived name */
     unsigned componentCount;        /* +0x60 */
 };
 
-/* derived name: not traced; reads the node's +0x28 and calls its slot 6
- * with the node */
+/* derived name: the node taken out of the one at its +0x28 under the
+ * world's write lock (leaf_00c5a160.cpp) */
 void FUN_00c5a160(Node00503fb0 *node);
 
 /* two values exchanged through a copy of the first (0x1391cd0 over two

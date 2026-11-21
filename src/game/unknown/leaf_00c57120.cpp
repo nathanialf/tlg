@@ -1,5 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+/* NONMATCHING FUN_00c57220, FUN_00c572d0, FUN_00c57940: the module tail-calls the registry's mutex unlock (`je` to `jmp 0x14b0568` after the epilogue) where the base calls it and shares the epilogue (`call 0x14b0568; add rsp, 8; pop; ret` at 0xc572b7); everything before it equal. Not the unlock out of line, nor a scoped guard (measured). */
 #include "tlg_game_node.h"
+#include "tlg_game_object01388080.h"
 
 /* derived names: a node taken out of its parent's children. With a parent
  * at +0x38 the node holds a reference to itself for the length of the work
@@ -32,4 +34,37 @@ void FUN_00c57120(Node00c57120 *self) /* derived name */
         self->index = -1;
         dropReference(self);
     }
+}
+
+/* derived name: the node taken out of its parent under the world's write
+ * lock (World05938c40::lockWrite and unlockWrite) */
+void FUN_00c57220(Node00503fb0 *node) /* derived name */
+{
+    D_5938c40->world->lockWrite();
+    FUN_00c57120(static_cast<Node00c57120 *>(node));
+    D_5938c40->world->unlockWrite();
+}
+
+/* derived name: the same for the node's children, the last first (each
+ * through this function, so their own children before them), then for the
+ * node; the index is signed (`dec eax; js`, then `movsxd`) */
+void FUN_00c572d0(Node00c57120 *self) /* derived name */
+{
+    for (int i = self->childCount - 1; i >= 0; --i)
+        FUN_00c572d0(static_cast<Node00c57120 *>(self->childAt(i)));
+    D_5938c40->world->lockWrite();
+    FUN_00c57120(self);
+    D_5938c40->world->unlockWrite();
+}
+
+/* derived name: not traced; the node and an int handed on (`mov esi,
+ * r14d`) */
+void FUN_00c579f0(Node00c57120 *self, int value); /* derived name */
+
+/* derived name: FUN_00c579f0 under the world's write lock */
+void FUN_00c57940(Node00c57120 *self, int value) /* derived name */
+{
+    D_5938c40->world->lockWrite();
+    FUN_00c579f0(self, value);
+    D_5938c40->world->unlockWrite();
 }

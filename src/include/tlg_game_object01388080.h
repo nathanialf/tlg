@@ -115,8 +115,35 @@ struct CommandQueue05938c40 { /* derived name */
  * "LuaBindings::UpdateTransform", 0xe6d420 and 0xe75e40): a thread that is
  * not the writer at +0x248 takes a reader's place in the count at +0x23c
  * (FUN_01331c10) and gives it back with an atomic decrement; the writers'
- * count is at +0x240 (FUN_00e87a90 releases it). The rest is not traced. */
+ * count is at +0x240. A writer takes the registry's recursive lock and then
+ * this one (FUN_00d8f040: the writer exchanged in from null unless it is the
+ * calling thread, one more level in the writers' count, and at the first
+ * level the readers' count exchanged from 0 to 0x10000); the unlock is
+ * inline at every site (0xb452fa, 0xe87b05): the last level clears the
+ * writer and empties the readers' count by compare-and-swap, then the
+ * registry's lock is given back. The rest is not traced. */
+struct World05938c40;
+
+void FUN_00d8f040(World05938c40 *world); /* derived name: lockWrite() */
+
 struct World05938c40 { /* derived name */
+
+    void lockWrite() /* derived name */
+    {
+        FUN_00d8f040(this);
+    }
+
+    void unlockWrite() /* derived name */
+    {
+        if (__sync_fetch_and_sub(&writers, 1) == 1) {
+            writer = 0;
+            int count;
+            do
+                count = readers;
+            while (compareAndSwap(&readers, count, 0) != count);
+        }
+        D_5945a38->lock201028.unlock();
+    }
 
     void lockRead() /* derived name */
     {

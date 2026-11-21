@@ -30,12 +30,16 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     virtual void slot3(); /* derived name; FUN_0134a390 */
     virtual void slot4(); /* derived name; FUN_0134a3a0 */
     /* slots 5 to 9, the class's own (slots 8 and 9 the empty body at
-     * 0x1af750); parameters not traced */
-    virtual void slot5(); /* derived name; FUN_00c573b0 */
-    virtual void slot6(); /* derived name; FUN_00c575d0 */
-    virtual void slot7(); /* derived name; FUN_00c59010 */
-    virtual void slot8(); /* derived name; 0x1af750 */
-    virtual void slot9(); /* derived name; 0x1af750 */
+     * 0x1af750); the parameters of 7 to 9 not traced. Slot 5 adds a child
+     * (FUN_00c573b0: one with no parent at its +0x28, under this object's
+     * lock at +0x30), slot 6 takes one out (FUN_00c575d0: only a child whose
+     * parent is this object); the classes derived from it call both under
+     * the world's write lock (FUN_00b44ec0, FUN_00b45280) */
+    virtual void addChild(Object016b9108 *child);    /* derived name; FUN_00c573b0 */
+    virtual void removeChild(Object016b9108 *child); /* derived name; FUN_00c575d0 */
+    virtual void slot7();                            /* derived name; FUN_00c59010 */
+    virtual void slot8();                            /* derived name; 0x1af750 */
+    virtual void slot9();                            /* derived name; 0x1af750 */
 };
 
 #endif
