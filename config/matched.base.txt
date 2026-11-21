@@ -9433,3 +9433,10 @@ FUN_00abef20 src/game/unknown/leaf_00abef20.cpp _ZN13Table00abef20D1Ev
 FUN_00ad4df0 src/game/unknown/leaf_00ad4df0.cpp _ZN13Table00ad4df0D1Ev
 FUN_00ea0f40 src/game/unknown/leaf_00ea0f40.cpp _Z12FUN_00ea0f40P14Object00ea0f40P16Argument00ea0f40PKfS4_
 FUN_013cc6b0 src/game/unknown/leaf_013cc6b0.cpp _Z12FUN_013cc6b0P14Object013cc6b0PK14Source013cc6b0PvP7hkArrayI14Record013cc6b024hkContainerHeapAllocatorE
+FUN_001b0140 src/game/user_malloc.cpp _Z12FUN_001b0140Pv
+FUN_001b01e0 src/game/user_malloc.cpp _Z12FUN_001b01e0Pvm
+FUN_001b0360 src/game/user_malloc.cpp _Z12FUN_001b0360PPvmm
+FUN_001b03e0 src/game/user_malloc.cpp _Z12FUN_001b03e0Pvmm
+FUN_001b0520 src/game/user_malloc.cpp _Z12FUN_001b0520P24SceLibcMallocManagedSize
+FUN_001b0540 src/game/user_malloc.cpp _Z12FUN_001b0540P24SceLibcMallocManagedSize
+FUN_00e826f0 src/game/unknown/leaf_00e826f0.cpp _ZN14Object00e826f0D1Ev

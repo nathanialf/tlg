@@ -185,6 +185,20 @@ typedef void *SceLibcMspace;
 void *sceLibcMspaceMalloc(SceLibcMspace space, size_t size);
 void *sceLibcMspaceCalloc(SceLibcMspace space, size_t count, size_t size);
 void *sceLibcMspaceMemalign(SceLibcMspace space, size_t boundary, size_t size);
+/* Sony's C library spaces: a block returned to the space it came from (the
+ * NID verified as "sceLibcMspaceFree"). */
+void sceLibcMspaceFree(SceLibcMspace space, void *ptr);
+/* An aligned block by posix_memalign's contract (the NID verified as
+ * "sceLibcMspacePosixMemalign"); a space destroyed (verified as
+ * "sceLibcMspaceDestroy"). */
+int sceLibcMspacePosixMemalign(SceLibcMspace space, void **ptr, size_t boundary, size_t size);
+int sceLibcMspaceDestroy(SceLibcMspace space);
+/* Sony's C library spaces: the statistics of one space (the NIDs verified as
+ * "sceLibcMspaceMallocStats" and "sceLibcMspaceMallocStatsFast"); the record
+ * they fill is not read by the executable's callers traced so far. */
+struct SceLibcMallocManagedSize;
+int sceLibcMspaceMallocStats(SceLibcMspace space, SceLibcMallocManagedSize *stats);
+int sceLibcMspaceMallocStatsFast(SceLibcMspace space, SceLibcMallocManagedSize *stats);
 /* Dinkumware's case-mapping tables of the current locale, indexed by an
  * unsigned char (their NIDs verified as "_Getptolower" and "_Getptoupper";
  * the result is indexed directly, so the table itself, not a pointer to it). */

@@ -40,12 +40,49 @@ void *FUN_001b00e0(size_t size) /* derived name */
     return 0;
 }
 
+/* derived name: the first address of the small space; a block at or above it
+ * is the small space's (FUN_001b0140) */
+extern void *D_57c9100;
+
+/* derived name: the fourth function of the table at 0x168c098: the block
+ * freed into the space that holds it */
+void FUN_001b0140(void *block) /* derived name */
+{
+    sceLibcMspaceFree(D_57c9120[block >= D_57c9100], block);
+}
+
 void *FUN_001b0170(size_t count, size_t size) /* derived name */
 {
     size_t space = size <= 0x480000;
     for (int attempt = 0; attempt < 2; ++attempt, space ^= 1) {
         if (void *block = sceLibcMspaceCalloc(D_57c9120[space], count, size))
             return block;
+    }
+    FUN_001b00c0();
+    return 0;
+}
+
+/* derived name: the sixth function of the table at 0x168c098: the
+ * reallocation: a size of 0 frees the block, no block is an allocation; else
+ * the new block, the old one's usable size or the new size, whichever is
+ * less, copied, and the old block freed */
+void *FUN_001b01e0(void *block, size_t size) /* derived name */
+{
+    if (size == 0) {
+        FUN_001b0140(block);
+        return 0;
+    }
+    if (block) {
+        void *moved = FUN_001b00e0(size);
+        size_t used = sceLibcMspaceMallocUsableSize(block);
+        memcpy(moved, block, used < size ? used : size);
+        FUN_001b0140(block);
+        return moved;
+    }
+    size_t space = size <= 0x480000;
+    for (int attempt = 0; attempt < 2; ++attempt, space ^= 1) {
+        if (void *moved = sceLibcMspaceMalloc(D_57c9120[space], size))
+            return moved;
     }
     FUN_001b00c0();
     return 0;
@@ -60,6 +97,51 @@ void *FUN_001b02f0(size_t boundary, size_t size) /* derived name */
     }
     FUN_001b00c0();
     return 0;
+}
+
+/* derived name: the ninth function of the table at 0x168c098: an aligned
+ * block, by the semantics of posix_memalign, from the space the pointer it
+ * replaces lies in, then from the other */
+int FUN_001b0360(void **block, size_t boundary, size_t size) /* derived name */
+{
+    size_t space = *block >= D_57c9100;
+    for (int attempt = 0; attempt < 2; ++attempt, space ^= 1) {
+        int result = sceLibcMspacePosixMemalign(D_57c9120[space], block, boundary, size);
+        if (*block)
+            return result;
+    }
+    FUN_001b00c0();
+    return 0;
+}
+
+/* derived name: the eighth function of the table at 0x168c098: the
+ * reallocation with an alignment: as FUN_001b01e0, the new block aligned
+ * (no block is a plain allocation) */
+void *FUN_001b03e0(void *block, size_t size, size_t boundary) /* derived name */
+{
+    if (size == 0) {
+        FUN_001b0140(block);
+        return 0;
+    }
+    if (block == 0)
+        return FUN_001b00e0(size);
+    void *moved = FUN_001b02f0(boundary, size);
+    size_t used = sceLibcMspaceMallocUsableSize(block);
+    memcpy(moved, block, used < size ? used : size);
+    FUN_001b0140(block);
+    return moved;
+}
+
+/* derived names: the statistics of the large space, the tenth and eleventh
+ * functions of the table at 0x168c098 */
+int FUN_001b0520(SceLibcMallocManagedSize *stats) /* derived name */
+{
+    return sceLibcMspaceMallocStats(D_57c9120[0], stats);
+}
+
+int FUN_001b0540(SceLibcMallocManagedSize *stats) /* derived name */
+{
+    return sceLibcMspaceMallocStatsFast(D_57c9120[0], stats);
 }
 
 /* derived name: the twelfth and last function of the table at 0x168c098

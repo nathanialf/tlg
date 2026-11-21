@@ -421,8 +421,8 @@ SfQIZcqvvms V V func ?
 St9nbxSoezk V V func ?
 Ujf3KzMvRmI V V func memalign
 VPbJwTCgME0 V V func srand
-Vla-Z+eXlxo V V func ?
-W6SiVSiCDtI V V func ?
+Vla-Z+eXlxo V V func sceLibcMspaceFree
+W6SiVSiCDtI V V func sceLibcMspaceDestroy
 XKRegsFpEpk V V func ?
 Y7aJ1uydPMo V V func realloc
 YQ0navp+YIc V V func puts
@@ -453,7 +453,7 @@ iU0z6SdUNbI V V func ?
 j4ViWNHEgww V V func strlen
 jbz9I9vkqkk V V func vsprintf
 jjjRS7l1MPM V V func _FLog
-k04jLXu3+Ic V V func ?
+k04jLXu3+Ic V V func sceLibcMspaceMallocStatsFast
 kDZvoVssCgQ V V func ?
 kHg45qPC6f0 V V func strncat
 kiZSXIWd9vg V V func strcpy
@@ -463,7 +463,7 @@ lbB+UlZqVG0 V V func fread
 m5wN+SwZOR4 V V func putchar
 mKhVDmYciWA V V func floorf
 mXlxhmLNMPg V V func strtol
-mfHdJTIvhuo V V func ?
+mfHdJTIvhuo V V func sceLibcMspaceMallocStats
 mpcTgMzhUY8 V V func floor
 n7AepwR0s34 V V func ?
 npLpPTaSuHg V V func ?
@@ -474,7 +474,7 @@ pDBDcY6uLSA V V func vfprintf
 pXvbDfchu6k V V func strncasecmp
 q+9E0X3aWpU V V func ?
 q0F6yS-rCms V V func ?
-qWESlyXMI3E V V func ?
+qWESlyXMI3E V V func sceLibcMspacePosixMemalign
 rQFVBXp-Cxg V V func fseek
 rcQCUr0EaRU V V func _Getptoupper
 sUP1hBaouOw V V func ?

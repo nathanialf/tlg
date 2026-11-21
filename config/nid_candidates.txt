@@ -923,6 +923,11 @@ sceLibcMspaceMallocUsableSize
 sceLibcMspaceMalloc
 sceLibcMspaceCalloc
 sceLibcMspaceMemalign
+sceLibcMspaceMallocStats
+sceLibcMspaceMallocStatsFast
+sceLibcMspaceFree
+sceLibcMspacePosixMemalign
+sceLibcMspaceDestroy
 _ZSt11_Xbad_allocv
 stat
 _FSin

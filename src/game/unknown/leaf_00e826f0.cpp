@@ -30,9 +30,6 @@ class Object00e826f0 /* derived name */
     Member00e826f0_10 *unknown10; /* +0x10 */
 };
 
-// NONMATCHING: greedy's assignment, the copy kept: the base loads the pointer at
-// 0x5945a38 into rax after the member and copies it to rdi (`mov rdi, rax`) where
-// this loads it into rdi; the deleting destructor FUN_00e82710 is equal.
 Object00e826f0::~Object00e826f0()
 {
     FUN_00cbb8d0(D_5945a38, unknown10->unknown20);
