@@ -1,10 +1,10 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_block.h"
+#include "tlg_game_object013d2f90.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16c1e40 (config/vtables.derived.base.txt; stored by its constructor
  * FUN_0120fe90), defined empty: its member at +0x10, an Object013d2f90
- * (tlg_game_block.h), is destroyed with its destructor inlined in the module
+ * (tlg_game_object013d2f90.h), is destroyed with its destructor inlined in the module
  * (its vtable stored, its block released, the last call a tail call).
  * FUN_014781e0, slot 1, is the deleting one. The vtable holds no second table,
  * so the Object013d2f90 is a member, not a base. Slots 2 to 6 are the shared

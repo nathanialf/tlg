@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_object058325c8.h"
 
 /* derived names: two conditions FUN_00b10ec0 registers in its table (the
  * function at +0x8 of an entry, 0 beside it at +0x10: lea at 0xb11aef and
@@ -21,13 +21,7 @@ struct Object058325c0 { /* derived name */
     int unknown608;
 };
 
-struct Object058325d8 { /* derived name */
-    u8 unknown0[0x1c18];
-    int unknown1c18;
-};
-
 extern Object058325c0 *D_58325c0;
-extern Object058325d8 *D_58325d8;
 
 static bool D_58325eb;
 

@@ -59,7 +59,7 @@ class Object016bfba8 : public Object00c1b7f0, public Object013cd320 /* derived n
     Name name358; /* +0x358: released by the destructor */
     u8 unknown35c[0x104];
     Object013da160 part460; /* +0x460: a member whose destructor is inlined (FUN_013da160) */
-    u8 unknown480[0x30];
+    u8 unknown490[0x20];
     /* +0x4b0: two members destroyed by FUN_013d6ba0, an array: destroyed last
      * first with the array's start formed before the first destructor (`lea
      * rdi, [r14+0x590]; lea rbx, [r14+0x4b0]; call 0x13d6ba0` at 0xf71817);

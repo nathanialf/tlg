@@ -6,7 +6,11 @@
  * (tlg_game_object013d6840.h): it stores the vtable and releases the block
  * the pointer at +0x18 holds. The destructor is the class's key function, so
  * this file emits the vtable; the deleting one is the compiler's. */
-Object013d6840::~Object013d6840()
+Object013d6840::~Object013d6840() {}
+
+void Object013d6840::reset()
 {
-    releaseBlock(unknown18);
+    values18.resize(72);
+    for (unsigned i = 0; i < values18.size(); ++i)
+        values18[i] = 0;
 }

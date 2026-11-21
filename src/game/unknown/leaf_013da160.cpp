@@ -4,7 +4,11 @@
 /* derived name: the complete destructor (tlg_game_object013da160.h). The
  * destructor is the class's key function, so this file emits the vtable;
  * the deleting one is the compiler's. */
-Object013da160::~Object013da160()
+Object013da160::~Object013da160() {}
+
+void Object013da160::reset()
 {
-    releaseBlock(unknown18);
+    values18.resize(44);
+    for (unsigned i = 0; i < values18.size(); ++i)
+        values18[i] = 0;
 }

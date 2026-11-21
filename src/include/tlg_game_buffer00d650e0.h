@@ -8,12 +8,19 @@
 
 /* derived names: a buffer member: its block at +0x0, a count at +0x8, flags
  * at +0xc (bit 0: the block is not its own; bit 4 survives a reset) and an
- * int at +0x10. Its destructor releases an owned block and resets the rest. Members at +0x50
+ * int at +0x10. Its destructor resets it. Members at +0x50
  * of the class whose destructor is 0xd650e0 and at +0x58 of the one whose
  * destructor is 0xe97590. */
 struct Buffer00d650e0 { /* derived name */
 
     ~Buffer00d650e0()
+    {
+        reset();
+    }
+
+    /* releases an owned block and resets the rest; a holder may reset it
+     * before its destructor runs (0x13b9950: the stores twice) */
+    void reset() /* derived name */
     {
         if (!(flags & 1))
             releaseBlock(block);
