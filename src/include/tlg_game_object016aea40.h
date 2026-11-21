@@ -20,13 +20,16 @@
  * edi, 0x250` before operator new in the creator): the base's 16-byte rows
  * (`vmovaps [rbx+0x70]` in 0xc55320) align the class, so a derived class's
  * first field is at +0x248, in the tail (leaf_00670840.cpp). The destructor
- * is not written, so nothing here emits the vtable. */
+ * (leaf_00822190.cpp) is the key function. */
 class Object016aea40 : public Object016b85e0 /* derived name */
 {
   public:
     Object016aea40(const Name &name) : Object016b85e0(name) {}
 
     virtual ~Object016aea40();
+
+    /* called first by the destructor's body (0x822190); not traced */
+    void FUN_00822250(); /* derived name */
 
   protected:
     u8 unknown8[0x68];

@@ -5,7 +5,9 @@
 #define TLG_GAME_MULTIBASE_H
 
 #include "tlg_types.h"
+#include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_object0134f620.h"
 
 /* The class whose vtable is at 0x16cc478 (stored by FUN_009232e0,
  * FUN_013755d0 and FUN_01375710): secondary vtables at offsets 0x10, 0x28,
@@ -125,29 +127,40 @@ class Class16cc478 /* derived name */
  * and override the three slots of the base at +0x30; slot 6, the one slot of
  * the base at +0x28, returns the int at +0x20 in 0x16b0cf0 (its body folded
  * into the library's FUN_00004340, its thunk 0x13746f0). The primary base
- * is Object016b9108 (tlg_game_object016b9108.h). */
+ * is Object016b9108 (tlg_game_object016b9108.h). No destructor is declared:
+ * the implicit one is inlined whole into each class's complete destructor,
+ * the base at +0x30's (Object016cc450) then the root class's, with no vptr
+ * store of the classes' own (FUN_01397860, the one body of twenty vtables'
+ * slot 0, 0x16b10c8 among them). */
 class Class137ba70Base28 /* derived name */
 {
   public:
     virtual int FUN_00004340(int mask) const = 0; /* derived name; FUN_0137ba60 passes -1 */
 };
 
-class Class137ba70Base30 /* derived name */
+/* derived name: the base at +0x30, whose vtable is at 0x16cc450
+ * (config/vtables.derived.base.txt): its three slots are pure (no destructor
+ * among them) and a counted reference at +0x8 is its member; its destructor
+ * stores its vptr and releases the reference (FUN_01397860: `lea rax,
+ * [0x16cc460]; mov [r15+0x30], rax; mov r14, [r15+0x38]`, before the root
+ * class's names), so it is not trivial and is inlined into the classes'. */
+class Object016cc450 /* derived name */
 {
   public:
     virtual int FUN_0137ba60() const = 0;    /* derived name */
     virtual void FUN_0137ba50() = 0;         /* derived name */
     virtual void FUN_0137ba70(int bits) = 0; /* derived name */
+
+  private:
+    Ref00503fb0<Object016b9108> unknown8; /* +0x8 */
 };
 
 class Class137ba70 /* derived name */
     : public Object016b9108,
       public Class137ba70Base28,
-      public Class137ba70Base30
+      public Object016cc450
 {
   public:
-    virtual ~Class137ba70();
-
     /* In their primary-vtable order, slots 5 to 8. */
     void FUN_0137ba50();
     int FUN_00004340(int mask) const;
@@ -166,7 +179,6 @@ class Class16b57c0 : public Class137ba70 /* derived name */
     void FUN_0137ba50();
     int FUN_00004340(int mask) const;
 
-    u8 unknown38[8];
     Class137ba70
         *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared (FUN_00b38650) */
 };
@@ -180,7 +192,6 @@ class Class16b10c8 : public Class137ba70 /* derived name */
   public:
     int FUN_00004340(int mask) const;
 
-    u8 unknown38[8];
     Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
 };
 
@@ -192,7 +203,6 @@ class Class16b5720 : public Class137ba70 /* derived name */
   public:
     int FUN_00004340(int mask) const;
 
-    u8 unknown38[8];
     Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
 };
 
@@ -204,7 +214,6 @@ class Class16b5900 : public Class137ba70 /* derived name */
   public:
     int FUN_00004340(int mask) const;
 
-    u8 unknown38[8];
     Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
 };
 
@@ -221,7 +230,6 @@ class Class16b15a0 : public Class137ba70 /* derived name */
   public:
     int FUN_00004340(int mask) const;
 
-    u8 unknown38[8];
     Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
     Class137ba70 *child48; /* +0x48, derived name: asked when bit 1 is set */
     Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
@@ -232,7 +240,6 @@ class Class16b5860 : public Class137ba70 /* derived name */
   public:
     int FUN_00004340(int mask) const;
 
-    u8 unknown38[8];
     Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
     Class137ba70 *child48; /* +0x48, derived name: asked when bit 0 is set */
     Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
@@ -419,6 +426,98 @@ class Object016b0fb0 : public Object0095b960 /* derived name */
     virtual void slot15(); /* derived name; not traced */
     virtual void slot16(); /* derived name; not traced */
     int FUN_0137e100();    /* slot 17 */
+};
+
+/* The classes whose vtables are at 0x16b13b8 (stored by FUN_00961a00),
+ * 0x16b1468 (FUN_00969cd0) and 0x16b59a0 (FUN_00b3dc00)
+ * (config/vtables.derived.base.txt), each over Class137ba70 with an array of
+ * counted references of its own (+0x48 in the first, +0x58 in the others),
+ * its secondary vtables at offsets 0x28 and 0x30 (their offsets to top):
+ * slot 5 their own (FUN_009666d0, FUN_0096a290, FUN_00b3e270, the overriders
+ * of FUN_0137ba50, their thunks in the base at +0x30 0x9667c0, 0x96a380 and
+ * 0xb3e360), slot 6 Class137ba70's (0x4340) in the first and its own in the
+ * others (FUN_0096a170, FUN_00b3e130, their thunks in the base at +0x28
+ * 0x96a280 and 0xb3e260), slot 8 Class137ba70's but in 0x16b1468
+ * (FUN_0096a390, its thunk 0x96a480). The destructor is each class's key
+ * function: its complete destructor stores the three vptrs, tears the array
+ * down (`lea rdi, [r15+0x48]; call 0x134f620`), then the bases' (FUN_0137eb00,
+ * FUN_0137faa0, FUN_013967a0; the deleting ones beside them in slot 1). */
+class Object016b13b8 : public Class137ba70 /* derived name */
+{
+  public:
+    virtual ~Object016b13b8();
+    void FUN_0137ba50(); /* FUN_009666d0 */
+    /* Slots 9 to 11: FUN_00967110, FUN_009667d0, FUN_009668e0. */
+    virtual void slot9();  /* derived name; not traced */
+    virtual void slot10(); /* derived name; not traced */
+    virtual void slot11(); /* derived name; not traced */
+
+  private:
+    u8 unknown40[8];
+    Object0134f620 unknown48; /* +0x48 */
+};
+
+class Object016b1468 : public Class137ba70 /* derived name */
+{
+  public:
+    virtual ~Object016b1468();
+    void FUN_0137ba50();              /* FUN_0096a290 */
+    int FUN_00004340(int mask) const; /* FUN_0096a170 */
+    void FUN_0137ba70(int bits);      /* FUN_0096a390 */
+    /* Slot 9: FUN_0096a0a0. */
+    virtual void slot9(); /* derived name; not traced */
+
+  private:
+    u8 unknown40[0x18];
+    Object0134f620 unknown58; /* +0x58 */
+};
+
+class Object016b59a0 : public Class137ba70 /* derived name */
+{
+  public:
+    virtual ~Object016b59a0();
+    void FUN_0137ba50();              /* FUN_00b3e270 */
+    int FUN_00004340(int mask) const; /* FUN_00b3e130 */
+    /* Slot 9: FUN_00b3de50. */
+    virtual void slot9(); /* derived name; not traced */
+
+  private:
+    u8 unknown40[0x18];
+    Object0134f620 unknown58; /* +0x58 */
+};
+
+/* The class whose vtable is at 0x16cd098 (config/vtables.derived.base.txt,
+ * stored by FUN_0096a0a0, the creator of the class over it at 0x16b1508):
+ * three bases, at +0x0 (slot 2 0x69a0, slots 3 and 4 pure), +0x10
+ * (Object016cc450) and +0x20 (one pure slot), their offsets to top in the
+ * vtable. Its destructor is its key function and holds only the base at
+ * +0x10's (FUN_0137fe90: the vptr at +0x10, the reference at +0x18); the
+ * deleting one is FUN_0137ff30. */
+class Base016cd098_0 /* derived name */
+{
+  public:
+    virtual ~Base016cd098_0() {}
+
+    virtual void slot2(); /* derived name; 0x69a0, not traced */
+
+    u8 unknown8[8];
+};
+
+class Base016cd098_20 /* derived name */
+{
+  public:
+    virtual void slot0() = 0; /* derived name; not traced */
+};
+
+class Object016cd098 /* derived name */
+    : public Base016cd098_0,
+      public Object016cc450,
+      public Base016cd098_20
+{
+  public:
+    virtual ~Object016cd098();
+    virtual void slot3() = 0; /* derived name; not traced */
+    virtual void slot4() = 0; /* derived name; not traced */
 };
 
 #endif
