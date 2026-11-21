@@ -27,7 +27,9 @@ struct Record016cf9f8 /* derived name */
  * four words from +0x2e0 copied. The rest not traced. */
 struct Entry0137c090 /* derived name */
 {
-    u8 unknown0[0x2e0];
+    u8 unknown0[0x3c];
+    u32 flags3c; /* +0x3c: bit 2 leaves the entry out (FUN_01399900) */
+    u8 unknown40[0x2a0];
     float unknown2e0;
     float unknown2e4;
     float unknown2e8;

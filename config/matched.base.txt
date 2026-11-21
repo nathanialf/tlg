@@ -10150,3 +10150,6 @@ FUN_01302150 src/game/unknown/leaf_01302150.cpp _Z12FUN_01302150P14Object0130215
 FUN_013e2fd0 src/game/unknown/leaf_013e2fd0.cpp _Z12FUN_013e2fd0P15Stepper00fb5c50
 FUN_013dc9a0 src/game/unknown/leaf_013e4b40.cpp _ZN14Object016d4b7812FUN_013dc9a0Ev
 FUN_013af390 src/game/unknown/leaf_013af390.cpp _Z12FUN_013af390P14Object013af390P13Array05943280I15Element013af390Ej
+FUN_01398620 src/game/unknown/leaf_01398620.cpp _Z12FUN_01398620P14Object01398620
+FUN_0139a0c0 src/game/unknown/leaf_0139a0c0.cpp _Z12FUN_0139a0c0P14Object0139a0c0
+FUN_013e72e0 src/game/unknown/func_00fda5c0.cpp _ZN16FrameSet00fda5c0C1Ev

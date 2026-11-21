@@ -2,6 +2,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
 #include "tlg_game_pose013e58c0.h"
+#include "tlg_game_frames013fb310.h"
 
 /* derived names: FUN_00fda5c0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -13,6 +14,18 @@ extern const char D_15cb5e6[13];
 
 Name D_5acf490(D_15cb5dd, false);
 Name D_5acf494(D_15cb5e6, false);
+
+/* derived name: this file's frame set (tlg_game_frames013fb310.h), its two
+ * frames made with this file's VECTOR_W */
+struct FrameSet00fda5c0 : FrameSet013fa8d0 { /* derived name */
+    FrameSet00fda5c0();
+};
+
+/* FUN_013e72e0 */
+FrameSet00fda5c0::FrameSet00fda5c0()
+{
+    frames.resize(2);
+}
 
 /* derived name: slot 5 of the vtable at 0x16d4ba0: each of the six bones
  * takes its pose from the model, then keeps its frame as the one before */
