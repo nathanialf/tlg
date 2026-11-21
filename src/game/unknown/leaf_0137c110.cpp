@@ -105,7 +105,7 @@ int Object0137c110::FUN_0137bf90()
 // the indices (the registers of the two swapped); the vector stored last, the same.
 void Object0137c110::FUN_0137c010(Output0137c090 *output, int, int record)
 {
-    const Array05943280<unsigned> &list = records->records[record].lists[records->variant];
+    const Array05943280<unsigned> &list = records->records.at(record).lists[records->variant];
     unsigned count = list.size();
     if (!count)
         return;

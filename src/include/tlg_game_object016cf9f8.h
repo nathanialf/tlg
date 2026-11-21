@@ -50,15 +50,18 @@ struct Records016cf9f8 /* derived name */
     u8 unknown0[0x10];
     unsigned variant; /* +0x10: the list each record gives */
     u8 unknown14[4];
-    Table0137c090 *table;    /* +0x18 (FUN_0137c090) */
-    Record016cf9f8 *records; /* +0x20 */
+    Table0137c090 *table;                  /* +0x18 (FUN_0137c090) */
+    Array05943280<Record016cf9f8> records; /* +0x20 (FUN_01399a00: the count at +0x28) */
 };
 
 /* An element of the table at +0x18 of the object at +0x30: 28 bytes, the
- * four floats from +0xc copied (moved as ints, `mov eax, [r9+rdi+0xc]`). */
+ * four floats from +0xc copied (moved as ints, `mov eax, [r9+rdi+0xc]`);
+ * FUN_01399a00 copies the seven words one by one. */
 struct Entry016cf9f8 /* derived name */
 {
-    u8 unknown0[0xc];
+    float unknown0;
+    float unknown4;
+    float unknown8;
     float unknownc;
     float unknown10;
     float unknown14;
@@ -68,8 +71,9 @@ struct Entry016cf9f8 /* derived name */
 /* The object at +0x30 (the base at +0x28's +0x8). */
 struct Table016cf9f8 /* derived name */
 {
-    u8 unknown0[0x18];
-    Entry016cf9f8 *entries; /* +0x18 */
+    u8 unknown0[0x10];
+    const Entry016cf9f8 *source; /* +0x10: the entries FUN_01399a00 copies from */
+    Entry016cf9f8 *entries;      /* +0x18 */
 };
 
 /* A 64-byte element of the output's array at +0x28. */
@@ -162,6 +166,8 @@ class Object016cf9f8 /* derived name */
       public Base016cf9f8_58
 {
   public:
+    /* Slot 9 of the primary vtable (its pointer at 0x16cfa58). */
+    void FUN_01399a00();
     /* Slot 15 of the primary vtable (its pointer at 0x16cfa80). */
     void FUN_01398150(Output016cf9f8 *output, int, int record);
 };

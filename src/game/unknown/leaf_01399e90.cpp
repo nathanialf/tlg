@@ -13,7 +13,7 @@ void Object016cf9f8::FUN_01398150(Output016cf9f8 *output, int, int record)
     Entry016cf9f8 *entries = table->entries;
     if (!entries)
         return;
-    const Array05943280<unsigned> &list = records->records[record].lists[records->variant];
+    const Array05943280<unsigned> &list = records->records.at(record).lists[records->variant];
     unsigned count = list.size();
     if (!count)
         return;
