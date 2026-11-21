@@ -34,9 +34,8 @@ class Object016b2b90 : public Object016b85e0 /* derived name */
     PoolRef01343090<Pool016b2b90> pool;  /* +0x268 */
 };
 
-// NONMATCHING: where the pool is null the base reads the reference again for its destructor (`lea r15, [r14+0x268]`
-// above the test); the module knows it null on that path and skips the release (leaf_00b44650.cpp's residual). The
-// deleting destructor FUN_00a994a0 is equal
+// where the pool is null the reference is read again for its destructor (`lea r15, [r14+0x268]` above the test):
+// the test reads it as the pool, the release as the root class (AtomicRef0045c470)
 Object016b2b90::~Object016b2b90()
 {
     pool.shutdown();

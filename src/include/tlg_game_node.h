@@ -230,7 +230,15 @@ inline T *findNamedOf(const Name &name, const Type00503fb0 *type) /* derived nam
 /* a counted reference another thread may replace: the pointer is exchanged
  * by compare-and-swap, then the new object gains a reference and the old one
  * loses its own (FUN_0045c470 sets one from a pointer, FUN_013cfaa0 from
- * another reference, FUN_0079d400 empties one) */
+ * another reference, FUN_0079d400 empties one). The pointer is held as a
+ * pointer to the root class, which is all the exchange and the release need;
+ * get() hands it back as a T. The typed read and the release so reach it
+ * through different types: a pool's reference tested before its holder's
+ * destructor drops it is read again on the null path (0xa83a85 tests it,
+ * the null edge goes to the release's read at 0xa83b76; a read of the same
+ * type is taken as the tested null), while two releases in a row read it
+ * through the same type and the first one's null edge passes the second
+ * (0x71806f) */
 template <class T> class AtomicRef0045c470 /* derived name */
 {
   public:
@@ -252,18 +260,18 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * argument first, where an argument of T's own type compares second) */
     template <class U> void set(U *replacement) /* derived name */
     {
-        T *old;
+        Object016b9108 *old;
         do
             old = object;
-        while (compareAndSwap(&object, old, static_cast<T *>(replacement)) != old);
-        exchanged(old, replacement);
+        while (compareAndSwap<Object016b9108>(&object, old, static_cast<T *>(replacement)) != old);
+        exchanged(old, static_cast<T *>(replacement));
     }
 
     /* the other reference is read again at each attempt (`mov rcx, [rsi]`
      * inside the loop at 0x13cfab3) */
     AtomicRef0045c470 &operator=(const AtomicRef0045c470 &other)
     {
-        T *old, *replacement;
+        Object016b9108 *old, *replacement;
         do {
             old = object;
             replacement = other.object;
@@ -278,7 +286,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * compare-and-swap; the same at 0x4aca44) */
     ~AtomicRef0045c470()
     {
-        T *released = object;
+        Object016b9108 *released = object;
         if (released) {
             object = 0;
             dropReference(released);
@@ -287,10 +295,10 @@ template <class T> class AtomicRef0045c470 /* derived name */
 
     void clear() /* derived name */
     {
-        T *old;
+        Object016b9108 *old;
         do
             old = object;
-        while (compareAndSwap(&object, old, static_cast<T *>(0)) != old);
+        while (compareAndSwap(&object, old, static_cast<Object016b9108 *>(0)) != old);
         if (old)
             dropReference(old);
     }
@@ -301,7 +309,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * r15; je; mov qword [rcx+rax*8], 0`) */
     void release() /* derived name */
     {
-        T *released = object;
+        Object016b9108 *released = object;
         if (released) {
             object = 0;
             dropReference(released);
@@ -311,12 +319,12 @@ template <class T> class AtomicRef0045c470 /* derived name */
     /* the object as it is now (`cmp qword [rbx+0x38], 0` at 0x4ab651) */
     T *get() const
     {
-        return object;
+        return static_cast<T *>(object);
     }
 
   private:
     /* the counts after an exchange: nothing when the same object went in */
-    static void exchanged(T *old, T *replacement) /* derived name */
+    static void exchanged(Object016b9108 *old, Object016b9108 *replacement) /* derived name */
     {
         if (replacement != old) {
             if (replacement)
@@ -326,7 +334,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
         }
     }
 
-    T *object;
+    Object016b9108 *object;
 };
 
 /* the scene node: the root class's object with its components (+0x58,

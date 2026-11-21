@@ -35,9 +35,6 @@ void FUN_004adde0(Record004816c0 *record);                            /* derived
 void FUN_00c63e20(List059396d0 *list, const Name *name, int unknown); /* derived name */
 void FUN_00c57220(Node00503fb0 *node);                                /* derived name */
 
-// NONMATCHING: 118 of 119: the first exchange's success: the build threads it past clear()'s null
-// test to the count's test (`je` 5 bytes further), the base joins the loop's exit (`test rbx, rbx`
-// at 0x4817f4)
 void FUN_004816c0(Member057c9390_38_900 *self) /* derived name */
 {
     if (!self->active40)

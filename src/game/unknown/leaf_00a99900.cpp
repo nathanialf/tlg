@@ -27,9 +27,8 @@ class Object016b2bf0 : public Object016b85e0 /* derived name */
     PoolRef01343090<Pool016b2bf0> pool; /* +0x240 */
 };
 
-// NONMATCHING: 108 of 112 instructions: the null test of the pool jumps past the reference's release, the
-// release's reload of the pointer taken as the tested null (stage 1's jump threading, the reload partially
-// redundant); the base reloads it on that path too (`je` to the release, its address formed before the test)
+// where the pool is null the reference is read again for its release (`je` to it): the test reads it as the
+// pool, the release as the root class (AtomicRef0045c470)
 Object016b2bf0::~Object016b2bf0()
 {
     pool.shutdown();
