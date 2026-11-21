@@ -1807,3 +1807,30 @@ numbers (909 against 200) said the rule was on the wrong side.
 the accessor's.
 
 **D82, second addendum (2026-11-17, round 373E): a folded destructor is resolved by its vtable PAIR, wherever the pair lies.** The proof of a call to a destructor folded at the link (tools/base_elf.py `folded_destructor`, `destructor_pair`, `source_destructor_slot`) no longer assumes the destructors are a vtable's first two slots: the complete and deleting destructors are the one pair of adjacent slots k, k+1 where the function at k+1 calls the one at k (or the body k's five-byte jump enters, D45); a D1/D2 reference must equal that entry, a D0 slot k+1; exactly one k may qualify; where the compared object emits the class's vtable its own destructors must sit at the same k and k+1. A vtable with no such pair is refused as before. Witness: the fifteen fade rigs (0x13d1730 and copies: destructors at slots 2 and 3, findElement at slot 0). Fault tests, all refused (e373/t0c.log): another class's D2; the class's own D0 named for its D2; slot k+1 not calling k; slot k another class's D1; two pairs; a source vtable with the destructor at slot 0, at slot 1, or D0 before D1. Known gap, to close: tools/check_elf.py's per-row cache key does not include the source vtable's slots (the uncached layout stage resolves by the field's address on every run and still refuses a wrong slot).
+
+## D88. The barrier in compareAndSwap is removed; 473 rows return to drafts (2026-11-21)
+
+**Question.** Since round 280D the wrapper `compareAndSwap(int *, int, int)` in src/include/tlg_game_node.h held an
+empty assembly statement after the exchange (`__asm__ __volatile__("" ::: "memory")`), listed as the one exception in
+tools/dev_native_allow.txt. It reproduced the base's `pushfq; pop rax; push rax; popfq` after a 32-bit `lock cmpxchg`
+with a constant zero expected (6,415 of the game's 20,959 exchanges: the wait loop of the creation spin lock), which 35
+source forms without it did not. Is it the developers' code?
+
+**Decision (the maintainer, 2026-11-21: "no barriers. thats not dev native"; then "remove it").** It is not. A
+statement that emits nothing and exists to steer the compiler fails the project's own test (CLAUDE.md), whatever it
+reproduces. The statement and its allow-list entry are removed. The same ruling refuses the two barriers that would
+have made the reader count's release equal (round 372B, 6 rows gained and none lost: not adopted).
+
+**Cost, measured.** With the statement removed the gate fails on 473 rows of the game region (445 on ad0c2b23, 28 more
+on 17f09879: every claimed function that inlines the lock's wait loop: the creators above all). Each is returned to a
+draft: its line leaves config/matched.base.txt and its file carries a NONMATCHING line naming this decision; no source
+was changed to hide the difference. The gate then passes: 9,418 rows on 17f09879. This is the one case in which rows
+leave the table: by the maintainer's order, because the source they were claimed with was not the developers'.
+
+**What is known of the open shape.** The exchange's flags are copied across something that clobbers them, only where
+the expected value is the constant zero and the exchange is 32 bits wide; with an expected value that is not a constant
+the same wrapper gives `lock cmpxchg; cmove; cmp; jne` and nothing is copied. Forms tried without success: the two
+__sync builtins, the __atomic strong and weak forms, wrappers returning the old value or a bool, 20 lock loops.
+
+**Trigger to revisit.** A source form or a property of the original compiler (a public LLVM change between releases,
+a PS4 driver default) that gives the flags copy: then the 473 return by re-measurement alone.

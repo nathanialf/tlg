@@ -50,24 +50,19 @@ void FUN_00c14bc0(Object016b9108 *object); /* derived name: releases it later */
  * returns the value found (`lock cmpxchg; cmove eax, ecx` at every site: the
  * expected value is returned when the exchange was made).
  *
- * The statement after the exchange is a compiler barrier, and the base's
- * bytes are the evidence that the developers' wrapper held one: 6,415 of the
- * game's 20,959 `lock cmpxchg` are followed by `pushfq; pop rax; push rax;
- * popfq` before the branch (0x2188f3, 0x81a967), every one a 32-bit exchange
- * with a constant zero expected, in the wait loop of a spin lock: the
- * exchange's flags are copied across a statement that clobbers them, and an
- * assembly statement is the only one that does without emitting anything.
- * With an expected value that is not a constant the same wrapper gives the
- * other family's `lock cmpxchg; cmove; cmp; jne` (0xceaf25), where nothing
- * is copied. 35 forms without the statement (the two __sync builtins, the
- * __atomic strong and weak forms, wrappers returning the old value or a
- * bool, 20 lock loops) branch on the exchange's flags at once. This is the
- * one place the barrier is written (tools/dev_native_allow.txt). */
+ * OPEN: 6,415 of the game's 20,959 `lock cmpxchg` are followed by `pushfq;
+ * pop rax; push rax; popfq` before the branch (0x2188f3, 0x81a967), every one
+ * a 32-bit exchange with a constant zero expected, in the wait loop of a spin
+ * lock: the exchange's flags are copied across something that clobbers them.
+ * No source form found gives it (the two __sync builtins, the __atomic strong
+ * and weak forms, wrappers returning the old value or a bool, 20 lock loops:
+ * 35 forms branch on the exchange's flags at once). An empty assembly
+ * statement after the exchange reproduced it and stood here until 2026-11-21;
+ * it is not code a developer wrote and was removed (docs/DECISIONS.md D88). */
 inline int compareAndSwap(int *value, int expected, int replacement) /* derived name */
 {
     __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_SEQ_CST,
                                 __ATOMIC_SEQ_CST);
-    __asm__ __volatile__("" ::: "memory");
     return expected;
 }
 

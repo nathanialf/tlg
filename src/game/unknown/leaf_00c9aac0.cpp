@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+/* NONMATCHING FUN_00c9aac0: the creation lock's wait loop: the base copies the exchange's flags (`pushfq; pop rax; push rax; popfq`) before the branch; no source form gives it and the barrier that did was removed (docs/DECISIONS.md D88). */
 #include "tlg_game_creation.h"
 
 /* derived names: a table of 0x1000 objects by number at 0x593b140 under the
