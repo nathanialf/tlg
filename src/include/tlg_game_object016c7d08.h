@@ -10,7 +10,9 @@
  * (config/vtables.derived.base.txt, stored by its constructor 0xafd2e0, by
  * 0xafd410 and by 0xafd6a0), derived from Object016b9108 (0xafd2e0
  * first calls that class's constructor 0xcb6310). The constructor of each
- * class over it calls 0xafd2e0 first. Neither the constructor nor the
+ * class over it calls 0xafd2e0 first; FixCamera and FollowCamera
+ * (leaf_0061ae60.cpp, leaf_0061c420.cpp) tail-call its destructor
+ * 0xafd410 (its row named for it, D15). Neither the constructor nor the
  * destructor is written; its fields are not traced. */
 class Object016c7d08 : public Object016b9108 /* derived name */
 {

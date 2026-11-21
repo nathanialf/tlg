@@ -28,17 +28,20 @@ class Object016bfb28 : public Object00c1b7f0, public Object013cd320 /* derived n
   private:
     u8 unknown194
         [0x24]; /* +0x194: in the tail padding of Object013cd320; zero from the constructor; not traced */
+  public:
     AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
-    Array01343a80<u8> array1c0;              /* +0x1c0: the elements not traced */
-    int unknown1d8;                          /* +0x1d8: zero from the constructor; not traced */
-    int unknown1dc;                          /* +0x1dc: 1 from the constructor; not traced */
-    float unknown1e0;                        /* +0x1e0: 1.0 from the constructor; not traced */
-    Name name1e4;                            /* +0x1e4: released by the destructor */
-    bool unknown1e8;                         /* +0x1e8: false from the constructor; not traced */
-    int unknown1ec;                          /* +0x1ec: -1 from the constructor; not traced */
-    int unknown1f0;                          /* +0x1f0: -1 from the constructor; not traced */
-    int active1f4;                           /* +0x1f4: cleared by the destructor where it is set */
-    int unknown1f8;                          /* +0x1f8: zero from the constructor; not traced */
+
+  private:
+    Array01343a80<u8> array1c0; /* +0x1c0: the elements not traced */
+    int unknown1d8;             /* +0x1d8: zero from the constructor; not traced */
+    int unknown1dc;             /* +0x1dc: 1 from the constructor; not traced */
+    float unknown1e0;           /* +0x1e0: 1.0 from the constructor; not traced */
+    Name name1e4;               /* +0x1e4: released by the destructor */
+    bool unknown1e8;            /* +0x1e8: false from the constructor; not traced */
+    int unknown1ec;             /* +0x1ec: -1 from the constructor; not traced */
+    int unknown1f0;             /* +0x1f0: -1 from the constructor; not traced */
+    int active1f4;              /* +0x1f4: cleared by the destructor where it is set */
+    int unknown1f8;             /* +0x1f8: zero from the constructor; not traced */
     Registry00f516f0 *registry; /* +0x200: the array this object is entered in, or null */
     void *unknown208;           /* +0x208: not traced */
     AtomicRef0045c470<Object016b9108> held; /* +0x210: a counted reference */

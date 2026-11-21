@@ -3,7 +3,7 @@
 #include "tlg_game_log.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
-#include "tlg_game_object00afd410.h"
+#include "tlg_game_object016c7d08.h"
 
 /* FollowCamera (the class's name from its message "FollowCamera(%s)::Init";
  * derived names otherwise), its vtable at 0x16abf70 (config/
@@ -16,13 +16,13 @@
  * message with the name's string through the variadic FUN_00c831d0, a tail
  * call (its first
  * argument is not read, so rdi is left unset). The name at +0xc is the base's
- * (tlg_game_object00afd410.h). */
-class FollowCamera : public Object00afd410
+ * (the root class's, through Object016c7d08: tlg_game_object016c7d08.h). */
+class FollowCamera : public Object016c7d08
 {
   public:
     virtual ~FollowCamera();
 
-    u8 unknown10[0x50];
+    u8 unknown24[0x3c];
     Ref00503fb0<Object016b9108> unknown60; /* +0x60: released by the destructor */
     u8 unknown68[0x38];
     float unknownA0;
@@ -45,7 +45,7 @@ void FUN_0061c420(FollowCamera *self) /* derived name */
     self->unknownA8 = 180.0f;
     self->unknownAC = 0;
     self->unknownB0 = 0;
-    FUN_00c831d0(self, D_1589864, D_17ac870[self->unknownC.index].string0);
+    FUN_00c831d0(self, D_1589864, D_17ac870[self->name.index].string0);
 }
 
 /* derived name: the complete destructor: the Term message with the name's
@@ -55,5 +55,5 @@ void FUN_0061c420(FollowCamera *self) /* derived name */
  * vtable. */
 FollowCamera::~FollowCamera()
 {
-    FUN_00c831d0(this, D_15898a8, D_17ac870[unknownC.index].string0);
+    FUN_00c831d0(this, D_15898a8, D_17ac870[name.index].string0);
 }

@@ -25,12 +25,15 @@ class Object016c31a0 : public Object00c1b7f0, public Object013cd320 /* derived n
   private:
     u8 unknown194
         [0x24]; /* +0x194: in the tail padding of Object013cd320; zero from the constructor; not traced */
+  public:
     AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
-    Name name1c0;                            /* +0x1c0: released by the destructor */
-    bool unknown1c4;                         /* +0x1c4: false from the constructor; not traced */
-    s64 unknown1c8;                          /* +0x1c8: -1 from the constructor; not traced */
-    int active1d0;                           /* +0x1d0: cleared by the destructor where it is set */
-    int unknown1d4;                          /* +0x1d4: zero from the constructor; not traced */
+
+  private:
+    Name name1c0;               /* +0x1c0: released by the destructor */
+    bool unknown1c4;            /* +0x1c4: false from the constructor; not traced */
+    s64 unknown1c8;             /* +0x1c8: -1 from the constructor; not traced */
+    int active1d0;              /* +0x1d0: cleared by the destructor where it is set */
+    int unknown1d4;             /* +0x1d4: zero from the constructor; not traced */
     Registry00f516f0 *registry; /* +0x1d8: the array this object is entered in, or null */
     void *unknown1e0;           /* +0x1e0: not traced */
     AtomicRef0045c470<Object016b9108> held; /* +0x1e8: a counted reference */
