@@ -9621,3 +9621,10 @@ FUN_00f86100 src/game/unknown/leaf_00f86100.cpp _ZN13Array05943280I13Entry00f861
 FUN_00a1c8e0 src/game/unknown/leaf_00a1c8e0.cpp _ZN14Object00a1c8e012FUN_00a1c8e0Ej
 FUN_004bc390 src/game/unknown/leaf_004bc390.cpp _ZN13Table004bc39012FUN_004bc390Ev
 FUN_01346910 src/game/unknown/leaf_01346910.cpp _ZNK14Object016c725012FUN_01346910ERK14Colour01346910
+FUN_00beba70 src/game/unknown/leaf_00beba70.cpp _ZN14Object016b7c0812FUN_00beba70ERK4Name
+FUN_00e56e40 src/game/unknown/leaf_00e56e40.cpp _ZN14Object016bd8e8D1Ev
+FUN_00e56ef0 src/game/unknown/leaf_00e56e40.cpp _ZN14Object016bd8e8D0Ev
+FUN_00852000 src/game/unknown/leaf_00852000.cpp _Z12FUN_00852000PvPK13Event00852000S_S_
+FUN_00852c50 src/game/unknown/leaf_00852000.cpp _Z12FUN_00852c50PvPK13Event00852000S_S_
+FUN_00852dd0 src/game/unknown/leaf_00852000.cpp _Z12FUN_00852dd0PvPK13Event00852000S_S_
+FUN_00852f70 src/game/unknown/leaf_00852000.cpp _Z12FUN_00852f70PvPK13Event00852000S_S_
