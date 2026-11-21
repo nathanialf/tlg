@@ -300,9 +300,7 @@ struct Entry008ab600 { /* derived name */
 // of 0x16af640 (0x8af940): the base keeps the two copied names' indices in
 // registers across FUN_008ac030; with FUN_008ac030 written this build keeps
 // the second, and reloads the first after the second copy's `lock inc` (the
-// atomics' question at FUN_008ac030). Slots 2 of 0x16af820 and 0x16af8c0 (0x8b0260, 0x8b04b0):
-// the base computes the result before the negated value is stored, list-ilp
-// order. Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
+// atomics' question at FUN_008ac030). Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
 // has an LEA where this build adds or copies (`lea esi, [rsi + rdx]`, `lea
 // esi, [rdx - 1]`): the two-address pass, not identified.
 void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
@@ -670,8 +668,9 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
             Settings057c9390 *settings = D_57c9390->unknown100;
             /* the new choice is the other one: computed before the flip */
             float speed = settings->unknown44;
+            int choice = speed <= 0.0f ? 0 : 1;
             settings->unknown44 = -speed;
-            return speed <= 0.0f ? 0 : 1;
+            return choice;
         });
     FUN_008ac880(
         closure, label, help,
@@ -691,8 +690,9 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
             Settings057c9390 *settings = D_57c9390->unknown100;
             /* the new choice is the other one: computed before the flip */
             float speed = settings->unknown40;
+            int choice = speed <= 0.0f ? 0 : 1;
             settings->unknown40 = -speed;
-            return speed <= 0.0f ? 0 : 1;
+            return choice;
         });
     FUN_008ac270(
         closure, D_581e968,
