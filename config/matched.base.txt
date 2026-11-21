@@ -9516,3 +9516,15 @@ FUN_013e3f30 src/game/unknown/leaf_013e3c00.cpp _ZN14Object016c00a0D1Ev
 FUN_01370c30 src/game/unknown/leaf_01370c30.cpp _ZN14Object016cc130D1Ev
 FUN_01329890 src/game/unknown/leaf_01329890.cpp _ZN14Object016c5590D1Ev
 FUN_01329930 src/game/unknown/leaf_01329890.cpp _ZN14Object016c5590D0Ev
+FUN_00403530 src/game/unknown/leaf_00403530.cpp _ZN14Object016a96d017callPhysicsBgTickEf
+FUN_00402080 src/game/unknown/leaf_00402080.cpp _ZN14Object016a96d06slot20Ef
+FUN_00471ae0 src/game/unknown/leaf_00471ae0.cpp _ZN14Object016a9ba817callPhysicsBgTickEf
+FUN_00471b70 src/game/unknown/leaf_00471b70.cpp _ZN14Object016a9ba86slot29Ef
+FUN_00471a40 src/game/unknown/leaf_00471a40.cpp _ZN14Object016a9ba86slot11Ev
+FUN_0047e3a0 src/game/unknown/leaf_0047e3a0.cpp _Z12FUN_0047e3a0P14Object0047e3a0
+FUN_0047e450 src/game/unknown/leaf_0047e3a0.cpp _Z12FUN_0047e450P14Object0047e3a0
+FUN_004c0fa0 src/game/unknown/leaf_004c0fa0.cpp _ZN14Object004c0fa06slot26Ef
+FUN_004ef5c0 src/game/unknown/leaf_004ef5c0.cpp _ZN14Object004ef5c06slot26Ef
+FUN_004e6d40 src/game/unknown/leaf_004e6d40.cpp _Z12FUN_004e6d40P14Object004e6d40PvP7Float4AS3_
+FUN_004f4cf0 src/game/unknown/leaf_004f4cf0.cpp _ZN14Object004f4cf06slot26Ef
+FUN_00583c40 src/game/unknown/leaf_00583c40.cpp _Z12FUN_00583c40P11Owner583950P15StateNode583950
