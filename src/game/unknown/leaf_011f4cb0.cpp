@@ -23,7 +23,7 @@ void FUN_011f4cb0() /* derived name */
 {
     bool previous = D_16dc088;
     D_16dc088 = true;
-    Array01343a80<Object00cb8240 *> objects;
+    Array01343a80<Object016b9108 *> objects;
     unsigned count = FUN_00cb8240(D_5ad73f0.second, &objects);
     for (unsigned i = 0; i < count; ++i) {
         static_cast<Object012ada80 *>(objects.at(i))->array30.clear();

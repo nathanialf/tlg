@@ -3,7 +3,11 @@
  * throughout. The buckets at +0x60 (their count at +0x68) hold chains of
  * entries (the object at +0x8, the next entry at +0x10); the number of
  * objects is at +0x88, the lock at +0x90 (owner +0x98, depth +0xa0), and at
- * +0x20 the id FUN_00cbb8d0 takes (0x12adb7e). */
+ * +0x20 the id FUN_00cbb8d0 takes (0x12adb7e). The objects are of the root
+ * class: FUN_00cbb990 enters the object a type's function made
+ * (FUN_00cbc5a0) in the table of its type and of each parent (`mov r12,
+ * [r12]` at 0xcbbf5c), the entry's key its name's index, the object at +0x8
+ * (0xcbbf06), the count at +0x88 raised (0xcbbf2d). */
 #ifndef TLG_GAME_REGISTRY00CB8240_H
 #define TLG_GAME_REGISTRY00CB8240_H
 
@@ -31,23 +35,11 @@ class ScopedLock05945a38 /* derived name */
     RecursiveLock05945a38 *lock;
 };
 
-/* an object of the table, as far as the functions that list them read it:
- * the name at +0xc, the flags at +0x16 and the type at +0x18 are the node's
- * (tlg_game_node.h) */
-struct Object00cb8240 { /* derived name */
-    u8 unknown0[0xc];
-    Name name; /* +0xc */
-    u8 unknown10[0x6];
-    u8 flags16; /* +0x16 (`test byte [rax+0x16], 4` at 0xcb838d) */
-    u8 unknown17;
-    const Type00503fb0 *type; /* +0x18 */
-};
-
 struct Registry00cb8240 { /* derived name */
 
     struct Entry {
         u8 unknown0[0x8];
-        Object00cb8240 *object; /* +0x8 */
+        Object016b9108 *object; /* +0x8 */
         Entry *next;            /* +0x10 */
     };
 
@@ -66,7 +58,7 @@ struct Registry00cb8240 { /* derived name */
             return entry == 0;
         }
 
-        Object00cb8240 *next()
+        Object016b9108 *next()
         {
             Entry *current = entry;
             entry = current->next;
@@ -103,7 +95,7 @@ struct Registry00cb8240 { /* derived name */
 
 /* appends the table's usable objects to the array and returns the array's
  * count (leaf_00cb8240.cpp) */
-int FUN_00cb8240(Registry00cb8240 *self, Array05943280<Object00cb8240 *> *objects);
+int FUN_00cb8240(Registry00cb8240 *self, Array05943280<Object016b9108 *> *objects);
 
 /* leaf_00c1ac70.cpp */
 void FUN_00c1ac70(Registry00cb8240 *self);

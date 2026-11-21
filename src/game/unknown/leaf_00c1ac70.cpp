@@ -10,8 +10,8 @@
 struct Member00c1a850; /* derived name */
 struct Member00c1be50; /* derived name */
 
-struct Object00c1ac70 : Object00cb8240 { /* derived name */
-    u8 unknown20[0x8];
+struct Object00c1ac70 : Object016b9108 { /* derived name */
+    u8 unknown24[0x4];
     Member00c1a850 *unknown28; /* +0x28 */
     Member00c1be50 *unknown30; /* +0x30 */
 };
@@ -28,7 +28,7 @@ void FUN_00c1be50(Member00c1be50 *member); /* derived name */
 // keeps the object in rax; every instruction is otherwise the base's
 void FUN_00c1ac70(Registry00cb8240 *self) /* derived name */
 {
-    Array01343a80<Object00cb8240 *> objects;
+    Array01343a80<Object016b9108 *> objects;
     unsigned count = FUN_00cb8240(self, &objects);
     for (unsigned i = 0; i < count; ++i) {
         Object00c1ac70 *object = static_cast<Object00c1ac70 *>(objects.at(i));

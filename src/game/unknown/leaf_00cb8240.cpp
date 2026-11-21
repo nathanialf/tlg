@@ -10,15 +10,15 @@
 // its head (`test r12, r12; je` at 0xcb8327, which both exits of the first bucket scan and every
 // path of the body reach), the build rotates it and threads the first scan past it; the array's
 // address is kept in rdi and at [rbp-0x30] in the base, on the stack only in the build
-int FUN_00cb8240(Registry00cb8240 *self, Array05943280<Object00cb8240 *> *objects)
+int FUN_00cb8240(Registry00cb8240 *self, Array05943280<Object016b9108 *> *objects)
 {
     ScopedLock05945a38 lock(&self->lock);
     objects->reserve(objects->size() + self->count);
     Registry00cb8240::Iterator iterator(self);
     while (!iterator.done()) {
-        Object00cb8240 *object = iterator.next();
-        const Object00cb8240 *record =
-            static_cast<const Object00cb8240 *>(D_17ac870[object->name.index].record18);
+        Object016b9108 *object = iterator.next();
+        const Object016b9108 *record =
+            static_cast<const Object016b9108 *>(D_17ac870[object->name.index].record18);
         if (record && ((record->flags16 & 4) || threadMayUse()))
             objects->push(object);
     }

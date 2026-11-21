@@ -15,8 +15,8 @@ class Value00f2b550 : public Object016b9108 /* derived name */
 {
 };
 
-struct Object012ada80 : Object00cb8240 { /* derived name */
-    u8 unknown20[0x10];
+struct Object012ada80 : Object016b9108 { /* derived name */
+    u8 unknown24[0xc];
     Array05943280<Ref00503fb0<Value00f2b550>> array30; /* +0x30 */
     Array05943280<Ref00503fb0<Value00f2b550>> array48; /* +0x48 */
     Array05943280<Ref00503fb0<Value00f2b550>> array60; /* +0x60 */
