@@ -9706,3 +9706,4 @@ FUN_01342f30 src/game/unknown/leaf_01342f30.cpp _ZN12Text01342f306formatEPKcz
 FUN_0136fd80 src/game/unknown/leaf_0136fd80.cpp _ZN12Text0136fd806formatEPKcz
 FUN_01373bc0 src/game/unknown/leaf_01373bc0.cpp _ZN12Text01373bc06formatEPKcz
 FUN_01389ef0 src/game/unknown/leaf_01389ef0.cpp _ZN12Text01389ef06formatEPKcz
+FUN_01499e20 src/game/unknown/leaf_01499e20.cpp _Z12FUN_01499e20P14Object01499e20PKc
