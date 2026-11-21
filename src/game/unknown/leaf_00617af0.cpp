@@ -39,10 +39,6 @@ class Object016abe10 : public Object016b9108 /* derived name */
     int kind; /* +0x34 */
 };
 
-// NONMATCHING: the removal: the base reads the block before the count and forms the source as
-// its own `lea rsi, [rdx+rcx*8+8]` (the size after both addresses), where removeAt works the size
-// out first and the source comes from the loop's counter (`add rsi, rax`); the deleting destructor
-// FUN_00617c20 the same
 Object016abe10::~Object016abe10()
 {
     if (D_57c9390 && D_57c9390->cameras40) {

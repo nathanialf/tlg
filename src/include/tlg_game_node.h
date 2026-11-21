@@ -78,6 +78,15 @@ inline T *compareAndSwap(T **value, T *expected, T *replacement) /* derived name
     return expected;
 }
 
+/* the same without ordering, for the count of a counted object (the
+ * exchange that marks it released: see dropReference) */
+inline int compareAndSwapRelaxed(int *value, int expected, int replacement) /* derived name */
+{
+    __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_RELAXED,
+                                __ATOMIC_RELAXED);
+    return expected;
+}
+
 /* one more reference to a counted object; the count is left alone once it
  * holds the released mark. The raise is a relaxed add: a caller already
  * holds a reference, so nothing is ordered by it (the base keeps a pointer
@@ -91,15 +100,21 @@ template <class T> inline void addReference(T *object) /* derived name */
 
 /* one reference less: the last one destroys the object at once on a thread
  * whose flag is set (the count swapped for the released mark first), else
- * hands it to FUN_00c14bc0 */
+ * hands it to FUN_00c14bc0. The fall and the exchange are relaxed like the
+ * raise: the base keeps a local array's block in a register across a loop
+ * that drops references (FUN_00f707b0 and its 42 copies: `mov r14, [rbp-0x50]`
+ * once at 0xf7082e, freed from r14 at 0xf70a08), which an ordered fall or
+ * exchange makes it read again at each pass; no other function of the
+ * module changes */
 template <class T> inline void dropReference(T *object) /* derived name */
 {
-    if (object->references != RELEASED && __sync_fetch_and_sub(&object->references, 1) == 1) {
+    if (object->references != RELEASED &&
+        __atomic_fetch_sub(&object->references, 1, __ATOMIC_RELAXED) == 1) {
         if (D_16dc088) {
             int count;
             do
                 count = object->references;
-            while (compareAndSwap(&object->references, count, RELEASED) != count);
+            while (compareAndSwapRelaxed(&object->references, count, RELEASED) != count);
             object->destroy();
         } else {
             FUN_00c14bc0(object);

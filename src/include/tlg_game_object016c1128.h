@@ -43,14 +43,17 @@ class Object016c1128 : public Object00c1b7f0, public Object013cd320 /* derived n
   private:
     u8 unknown194
         [0x24]; /* +0x194: in the tail padding of Object013cd320; zero from the constructor; not traced */
+  public:
     AtomicRef0045c470<Object016b9108> owner; /* +0x1b8: a counted reference */
-    int unknown1c0;                          /* +0x1c0: zero from the constructor; not traced */
-    Name name1c4;                            /* +0x1c4: released by the destructor */
-    bool unknown1c8;                         /* +0x1c8: false from the constructor; not traced */
-    int unknown1cc;                          /* +0x1cc: -1 from the constructor; not traced */
-    int unknown1d0;                          /* +0x1d0: -1 from the constructor; not traced */
-    int active1d4;                           /* +0x1d4: cleared by the destructor where it is set */
-    int unknown1d8;                          /* +0x1d8: zero from the constructor; not traced */
+
+  private:
+    int unknown1c0;             /* +0x1c0: zero from the constructor; not traced */
+    Name name1c4;               /* +0x1c4: released by the destructor */
+    bool unknown1c8;            /* +0x1c8: false from the constructor; not traced */
+    int unknown1cc;             /* +0x1cc: -1 from the constructor; not traced */
+    int unknown1d0;             /* +0x1d0: -1 from the constructor; not traced */
+    int active1d4;              /* +0x1d4: cleared by the destructor where it is set */
+    int unknown1d8;             /* +0x1d8: zero from the constructor; not traced */
     Registry00f516f0 *registry; /* +0x1e0: the array this object is entered in, or null */
     void *unknown1e8;
     AtomicRef0045c470<Object016b9108> held1f0; /* +0x1f0: a counted reference */

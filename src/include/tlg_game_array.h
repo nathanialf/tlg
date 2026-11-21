@@ -300,16 +300,32 @@ template <class T> class Array05943280 /* derived name */
         return false;
     }
 
-    /* the element at `index` destroyed and the ones after it moved down
-     * (0xf1a9ad to 0xf1a9ff: the size in 32 bits, `shl edx, 4; sub edx,
-     * ebx`, and worked out before the two addresses: the source is a `lea`
-     * of its own at 0xf1a9ef) */
+    /* the element at `index` destroyed and the ones after it moved down;
+     * the source is the element's own address plus one (`lea rsi,
+     * [rax+r15*8+8]` at 0xf7093f and 0x617b8f, formed from the 32-bit index
+     * widened, not from index + 1), the block read again after the
+     * destruction and before the count (0xf70934, 0x617b84) */
     void removeAt(unsigned index) /* derived name */
     {
         data[index].~T();
-        const unsigned size = (count - index - 1) * unsigned(sizeof(T));
-        memmove(&data[index], &data[index + 1], size);
+        memmove(&data[index], &data[index] + 1, (count - index - 1) * unsigned(sizeof(T)));
         --count;
+    }
+
+    /* every element whose object is `object` destroyed and the ones after
+     * it moved down, the last first: the index a signed 64-bit count taken
+     * from the int count (`movsxd r14, dword [rbx+0xc8]; test r14, r14;
+     * jle` at 0xf70873), the element read at `[rax+r14*8-8]` and the
+     * removal given the narrowed index (`mov r15d, r12d`); an int index
+     * counted down from count - 1 stays 32-bit in the build. The count is
+     * taken as an int first: the base widens it signed (`movsxd`), where the
+     * unsigned count itself is widened with a plain `mov` */
+    template <class U> void removeEvery(const U *object) /* derived name */
+    {
+        const int references = count;
+        for (s64 i = references; i > 0; --i)
+            if (data[i - 1].get() == object)
+                removeAt(i - 1);
     }
 
     /* the element at `index` replaced by the last one (assigned, unless it

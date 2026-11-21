@@ -27,25 +27,18 @@ class Object016c31d8 : public Base016b4560 /* derived name */
 /* derived name: the complete destructor: every object of Object016c31a0's
  * table is taken out of its owner's array, the owner held meanwhile by a
  * counted reference, every reference to it taken out last first (the count
- * read again after each removal, `dec dword [rbx+0xc8]`), the count
- * taken signed and the element before it compared (`movsxd r14, dword
- * [rbx+0xc8]; test r14, r14; jle`, `cmp [rax+r14*8-8], rcx`); then the base's destructor, inlined. */
-// NONMATCHING: 807 bytes against 808, the owner's loop: the base widens its index signed (`movsxd
-// r14, dword [rbx+0xc8]; test r14, r14; jle`, the element at `[rax+r14*8-8]`, `mov r15d, r12d`
-// for the removal); the build's index is 32-bit (`dec eax; js; movsxd`), and the registers
-// differ from the start (the base keeps this in r15). Written `j > 0` with `at(j - 1)`, the
-// loop widens from the removal's zero extension instead (`zext` of the count, a `movsxd` of
-// j - 1 left in the loop)
+ * read again after each removal, `dec dword [rbx+0xc8]`); the table is
+ * read before the array is made (its load comes before the stores of the
+ * array's index and lock word); then the base's destructor, inlined. */
 Object016c31d8::~Object016c31d8()
 {
+    Registry00cb8240 *registry = D_5ad8da0.first;
     Array01343a80<Object016b9108 *> objects;
-    unsigned count = FUN_00cb8240(D_5ad8da0.first, &objects);
+    unsigned count = FUN_00cb8240(registry, &objects);
     for (unsigned i = 0; i < count; ++i) {
         Object016c31a0 *object = static_cast<Object016c31a0 *>(objects.at(i));
         AtomicRef0045c470<Object016b9108> owner(object->owner);
-        if (Owner00f707b0 *holder = static_cast<Owner00f707b0 *>(owner.get()))
-            for (int j = holder->held.size() - 1; j >= 0; --j)
-                if (holder->held.at(j).get() == object)
-                    holder->held.removeAt(j);
+        if (owner.get())
+            static_cast<Owner00f707b0 *>(owner.get())->held.removeEvery(object);
     }
 }
