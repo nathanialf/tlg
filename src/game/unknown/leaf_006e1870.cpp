@@ -19,6 +19,7 @@ class Object016c7810 : public Object016b9108 /* derived name */
   private:
     u8 unknown24[0x10];
     Name name34; /* +0x34 */
+    u8 unknown38[0x4];
 
   public:
     int index3c; /* +0x3c */

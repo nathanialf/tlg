@@ -31,7 +31,7 @@ struct ArgumentReader00c8c290 { /* derived name */
 class PathGen003cbaf0 : public Object016b9108 /* derived name */
 {
   public:
-    u8 unknown24[0x5e4 - sizeof(Object016b9108)];
+    u8 unknown24[0x5e4 - 0x24];
     int crossInfo5e4;   /* +0x5e4 */
     float crossInfo5e8; /* +0x5e8 */
 };
@@ -45,7 +45,7 @@ class Condor003cbaf0 : public Object016b9108 /* derived name */
         return pathGen6d0;
     }
 
-    u8 unknown24[0x6d0 - sizeof(Object016b9108)];
+    u8 unknown24[0x6d0 - 0x24];
     Ref00503fb0<PathGen003cbaf0> pathGen6d0; /* +0x6d0 */
 };
 
@@ -55,11 +55,6 @@ void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* d
 void FUN_00c8d080(ArgumentReader00c8c290 *reader, long *value);             /* derived name */
 void FUN_00c8d380(ArgumentReader00c8c290 *reader, float *value);            /* derived name */
 
-// NONMATCHING: the generator's register: the base keeps it apart from the condor's reference
-// (r15: 0 on the null edge, the reference's object on every other, `xor r15d, r15d` and `mov
-// r15, r14` on each edge out of the drop) and needs one more callee-saved register (r13 for
-// the count's address, the frame 8 bytes deeper); the build uses the reference's own register
-// after the drop. The calls, the drop and the readers are the base's
 int FUN_003cbaf0(lua_State *state) /* derived name */
 {
     Object016b9108 *object = 0;

@@ -23,7 +23,9 @@ extern const int D_14f01b0[5];
 
 // NONMATCHING: 80 of 83. The compare: the base loads the table's entry and compares the field
 // from memory (`cmp dword [r13+0xff8], eax`), then `mov al, 1`; the build sets al first and folds
-// the field into `cmp ecx, [r13+0xff8]`.
+// the field into `cmp ecx, [r13+0xff8]`. With the operands written the other way
+// (`object->unknownff8 == D_14f01b0[i]`, round 437A) the build loads the field and folds the
+// table's entry instead (`cmp ecx, [rdx+r15*4]`): which load is folded is not the operand order.
 bool FUN_006442f0() /* derived name */
 {
     for (unsigned i = 0; i < 5; i++) {
