@@ -13,9 +13,8 @@
  * FUN_013af7e0), derived from Object016b9108. 0x58 bytes (`mov edi,
  * 0x58` before operator new in the creator). Its own fields are traced
  * where its creator FUN_00cd5ae0 sets them and its destructor FUN_013af6d0
- * tears them down. The destructor is the class's key function
- * (leaf_013af6d0.cpp), so that unit emits the vtable and the
- * destructors. */
+ * tears them down. The destructor is implicit
+ * (see the class). */
 class Object016d1c00 : public Object016b9108 /* derived name */
 {
   public:
@@ -24,7 +23,13 @@ class Object016d1c00 : public Object016b9108 /* derived name */
      * owner index from the thread's heap and its state */
     Object016d1c00(const Name &name) : Object016b9108(name) {}
 
-    virtual ~Object016d1c00();
+    /* no destructor is declared: the complete one FUN_013af6d0 and the deleting
+     * FUN_013af7e0 sit in the stretch of inline functions (from 0x1340000),
+     * away from the creator, so the class has no key function and the unit
+     * that constructs it (leaf_00cd5ae0.cpp) emits the vtable with both. An
+     * implicit destructor carries the inline hint: the deleting one holds
+     * the complete one's body, as the base's does, where a destructor
+     * defined in a unit of its own left a call. */
 
   private:
     /* +0x28 and +0x40: arrays whose elements need no destructor: the

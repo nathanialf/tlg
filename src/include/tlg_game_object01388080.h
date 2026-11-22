@@ -198,4 +198,31 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
+/* derived name: the world's write lock held for a scope: the constructor
+ * takes it (World05938c40::lockWrite) and the destructor gives it back
+ * (unlockWrite), both out of line (func_00d8f040.cpp) and inlined by the
+ * link, which keeps no copy of either. From the bytes: FUN_00c57220,
+ * FUN_00c572d0, FUN_00c57940 and FUN_00c5a160 end in the registry's unlock,
+ * and each calls it and returns (`call 0x14b0568; pop; ret`) where a
+ * sibling call would do. Only the unit's own optimiser marks sibling calls
+ * (TailCallElim; the link's pipeline has none) and it marks none after a
+ * local's address has left the function, so each had a local handed by
+ * address to a function the unit did not see, and the local is gone after
+ * the link: an object with nothing in it.
+ *
+ * OPEN (round 475E): two forms of the lock. The helpers that take a child
+ * out under it inside a destructor (removeLocked of leaf_00b45280.cpp,
+ * leaf_00685840.cpp, leaf_00b554d0.cpp and leaf_00ccd4f0.cpp) call
+ * lockWrite() and unlockWrite() directly: FUN_00b45280 and FUN_00685840
+ * end in a sibling call after the unlock (`jmp 0x83df00`), so no local of
+ * theirs had left the function at the unit stage; with this object in the
+ * helper both lose the jump (measured: 155 of 162 and 96 of 101). Either
+ * the removal under the lock is one out-of-line function of the node in a
+ * unit that does not see this object's members, or those sites lock by
+ * hand. Not decided by the bytes written so far. */
+struct WorldWriteLock05938c40 { /* derived name */
+    WorldWriteLock05938c40();
+    ~WorldWriteLock05938c40();
+};
+
 #endif

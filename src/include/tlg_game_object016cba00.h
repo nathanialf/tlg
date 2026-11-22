@@ -11,15 +11,16 @@
  * FUN_0136bd70), derived from Object016b9108: its five slots are the two
  * destructors and the base's three. Its own fields: the Name at +0x24 and
  * the counted reference at +0x28, which the constructor FUN_007a27a0
- * sets and the destructor FUN_0136bc20 releases. The destructor is the
- * class's key function (leaf_0136bc20.cpp), so that unit emits the vtable: defined
- * inline it stays a function of its own that the two vtable destructors call
- * (326 bytes: over the inliner's threshold). */
+ * sets and the destructor FUN_0136bc20 releases. The destructor is implicit:
+ * FUN_0136bc20 and the deleting FUN_0136bd70 sit in the stretch of inline
+ * functions (from 0x1340000) while the constructor is out of line, so the
+ * class has no key function and the constructor's unit (leaf_007a27a0.cpp)
+ * emits the vtable with both; an implicit destructor carries the inline
+ * hint, so the deleting one holds its body as the base's does. */
 class Object016cba00 : public Object016b9108 /* derived name */
 {
   public:
     Object016cba00(const Name &name);
-    virtual ~Object016cba00();
 
   private:
     Name name24;                              /* +0x24: empty from the constructor */

@@ -45,7 +45,7 @@ class Object016cbca0 : public Object016b9108 /* derived name */
  * slot 1, is the deleting one. Defined here, inline: the destructors of the
  * derived classes hold this body, and with no key function the class's
  * vtable and its two destructors are emitted by a unit that stores the
- * vtable (leaf_0136d760.cpp, the row's unit). */
+ * vtable (leaf_007adf30.cpp, the row's unit). */
 inline Object016cbca0::~Object016cbca0() {}
 
 #endif

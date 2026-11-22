@@ -18,7 +18,13 @@ class Object016cbdb8 : public Object016cbd80 /* derived name */
      * and the empty name at +0x88 */
     Object016cbdb8(const Name &name) : Object016cbd80(name) {}
 
-    virtual ~Object016cbdb8();
+    /* no destructor is declared: the complete one FUN_0136ce80 and the deleting
+     * FUN_0136cfd0 sit in the stretch of inline functions (from 0x1340000),
+     * away from the creator, so the class has no key function and the unit
+     * that constructs it (leaf_007ae760.cpp) emits the vtable with both. An
+     * implicit destructor carries the inline hint: the deleting one holds
+     * the complete one's body, as the base's does, where a destructor
+     * defined in a unit of its own left a call. */
 
   private:
     Name name88; /* +0x88: released by the destructor (`mov eax, [rbx+0x88]; shl 5`) */

@@ -1,5 +1,4 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-/* NONMATCHING FUN_00c57220, FUN_00c572d0, FUN_00c57940: the module tail-calls the registry's mutex unlock (`je` to `jmp 0x14b0568` after the epilogue) where the base calls it and shares the epilogue (`call 0x14b0568; add rsp, 8; pop; ret` at 0xc572b7); everything before it equal. Not the unlock out of line, nor a scoped guard (measured). */
 #include "tlg_game_node.h"
 #include "tlg_game_object01388080.h"
 #include "tlg_game_object016b85e0.h"
@@ -34,12 +33,13 @@ void FUN_00c57120(Object016b85e0 *self) /* derived name */
 }
 
 /* derived name: the node taken out of its parent under the world's write
- * lock (World05938c40::lockWrite and unlockWrite) */
+ * lock, held by a WorldWriteLock05938c40 (tlg_game_object01388080.h): the
+ * registry's unlock at the end is a call the function returns from (`call
+ * 0x14b0568; add rsp, 8; pop rbx; pop rbp; ret` at 0xc572b7), not a jump */
 void FUN_00c57220(Object016b85e0 *node) /* derived name */
 {
-    D_5938c40->world->lockWrite();
+    WorldWriteLock05938c40 lock;
     FUN_00c57120(node);
-    D_5938c40->world->unlockWrite();
 }
 
 /* derived name: the same for the node's children, the last first (each
@@ -49,9 +49,8 @@ void FUN_00c572d0(Object016b85e0 *self) /* derived name */
 {
     for (int i = self->childCount - 1; i >= 0; --i)
         FUN_00c572d0(self->childAt(i));
-    D_5938c40->world->lockWrite();
+    WorldWriteLock05938c40 lock;
     FUN_00c57120(self);
-    D_5938c40->world->unlockWrite();
 }
 
 /* derived name: not traced; the node and an int handed on (`mov esi,
@@ -61,7 +60,6 @@ void FUN_00c579f0(Object016b85e0 *self, int value); /* derived name */
 /* derived name: FUN_00c579f0 under the world's write lock */
 void FUN_00c57940(Object016b85e0 *self, int value) /* derived name */
 {
-    D_5938c40->world->lockWrite();
+    WorldWriteLock05938c40 lock;
     FUN_00c579f0(self, value);
-    D_5938c40->world->unlockWrite();
 }
