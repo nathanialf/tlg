@@ -127,10 +127,12 @@ template <class T> class Array05943280 /* derived name */
      * FUN_01350e40 over vectors: `mov ecx, [r14+8]; mov eax, [r15+8]; add
      * eax, ecx; cmp [r15+0xc], eax; jae`, the reallocation, then `mov rbx,
      * [r14]` and the bytes left counted down, the append inlined). Over
-     * Names and counted references the base keeps the append as a call
-     * (FUN_0134cea0 calling FUN_01344a20, FUN_013a6db0 calling
-     * FUN_0138e360, FUN_0135b4b0 calling FUN_00588100) where the build
-     * inlines it: those three are not claimed. */
+     * Names and counted references the append stays a call (FUN_0134cea0
+     * calling FUN_01344a20, FUN_013a6db0 calling FUN_0138e360): the
+     * reference's copy raises its count out of line (tlg_game_node.h's
+     * raiseReference), which makes the append cost 225 at stage 1, the
+     * threshold; over Names the build still inlines it (cost 200) and
+     * FUN_0134cea0 is not claimed. */
     void append(const Array05943280 &other) /* derived name */
     {
         reserve(count + other.count);

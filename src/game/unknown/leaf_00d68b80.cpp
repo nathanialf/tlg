@@ -10,6 +10,6 @@ void Object00d68b80::add(Object016b9108 *object)
 {
     if (object == 0)
         return;
-    link(Ref00503fb0<Object016b9108>(object));
+    link(AtomicRef0045c470<Object016b9108>(object));
     flags20 |= 1;
 }

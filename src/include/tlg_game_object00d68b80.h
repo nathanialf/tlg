@@ -20,7 +20,7 @@ class Object00d68b80 /* derived name */
     void add(Object016b9108 *object); /* derived name */
 
   private:
-    void link(const Ref00503fb0<Object016b9108> &held) /* derived name */
+    void link(const AtomicRef0045c470<Object016b9108> &held) /* derived name */
     {
         if (!objects.contains(held))
             objects.push(held);
@@ -29,7 +29,7 @@ class Object00d68b80 /* derived name */
     u8 unknown0[0x20];
     u8 flags20; /* +0x20 */
     u8 unknown21[0x7];
-    Array05943280<Ref00503fb0<Object016b9108>> objects; /* +0x28 */
+    Array05943280<AtomicRef0045c470<Object016b9108>> objects; /* +0x28 */
 };
 
 #endif

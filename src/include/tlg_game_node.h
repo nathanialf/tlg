@@ -135,6 +135,12 @@ template <class T> inline void dropReference(T *object) /* derived name */
     }
 }
 
+/* one reference more for a copy of a counted reference: addReference's
+ * body, defined out of line in the root class's unit (leaf_00cb65f0.cpp).
+ * The link inlines it at every call and the executable keeps no copy of
+ * it */
+void raiseReference(Object016b9108 *object); /* derived name */
+
 /* a counted reference to a node: the count at +0x8 of the node is left
  * alone once it holds the released mark */
 template <class T> class Ref00503fb0 /* derived name */
@@ -150,10 +156,21 @@ template <class T> class Ref00503fb0 /* derived name */
             addReference(object);
     }
 
+    /* a copy holds its own reference: the count raised out of line, behind
+     * the null test (raiseReference). The executable's appends of a
+     * reference show it: FUN_0138e360, the array's append over references,
+     * is called at 218 sites of 101 functions, by callers that know it leaves
+     * their reference
+     * alone (FUN_00c29c80 reads the count after the call at the address it
+     * formed before it, `lea rbx, [r12+8]` at 0xc29cb9 and `cmp [rbx],
+     * 0xdeadc0de` at 0xc29cd7), so the append's body was in the caller's
+     * unit and was not inlined there: with the raise a call the append
+     * costs 225 against the threshold of 225, with the raise's two
+     * instructions 210 */
     Ref00503fb0(const Ref00503fb0 &other) : object(other.object)
     {
         if (object)
-            addReference(object);
+            raiseReference(object);
     }
 
     ~Ref00503fb0()
@@ -259,6 +276,16 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * body sets it) */
     AtomicRef0045c470() : object(0) {}
 
+    /* a reference to an object held by pointer, the count raised in line
+     * behind the null test (0xceaec0: `je; cmp dword [rbx+8], 0xdeadc0de;
+     * lea r15, [rbx+8]; je; lock inc dword [r15]`, the reference
+     * Object016d1e20's constructor hands FUN_00ce22e0 by value) */
+    explicit AtomicRef0045c470(T *object) : object(object)
+    {
+        if (object)
+            addReference(object);
+    }
+
     /* a copy holds its own reference (0x1391cd0: the first of two
      * exchanged references copied, `mov r14, [rdi]; test r14, r14; je; cmp
      * dword [r14+8], 0xdeadc0de; je; lea rax, [r14+8]; lock inc dword [rax]`) */
@@ -330,6 +357,11 @@ template <class T> class AtomicRef0045c470 /* derived name */
     }
 
     /* the object as it is now (`cmp qword [rbx+0x38], 0` at 0x4ab651) */
+    bool operator==(const AtomicRef0045c470 &other) const
+    {
+        return object == other.object;
+    }
+
     T *get() const
     {
         return static_cast<T *>(object);
