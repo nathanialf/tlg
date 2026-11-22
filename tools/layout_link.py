@@ -351,6 +351,46 @@ def rip_access(code: bytes, offset: int) -> tuple[int, int, str] | None:
     return None
 
 
+def rodata_table_access(view, code: bytes, r: mc.Reloc) -> tuple[int, int, str] | None:
+    """A table the compiler left in the game module's plain read-only data
+    and a claimed function takes the address of (`lea r, [rip + .rodata +
+    addend]`: SimplifyCFG's lookup tables, `switch.table`, which have no
+    symbol of their own): (bytes from the field to the instruction's end, the
+    table's extent, "lea"). The extent runs from the table's first byte to the
+    next offset of the section any PC-relative relocation of the object
+    reaches (the next table or constant), or to the section's end; the whole
+    of it must then equal the base's bytes where the base's `lea` points, as
+    rodata_constant compares a read. None when the field is not a `lea`'s."""
+    from capstone import CS_ARCH_X86, CS_MODE_64, Cs
+    from capstone.x86 import X86_OP_MEM, X86_REG_RIP
+    md = Cs(CS_ARCH_X86, CS_MODE_64)
+    md.detail = True
+    tail = None
+    for ins in md.disasm(code, 0):
+        if ins.address + ins.size <= r.offset:
+            continue
+        if ins.address > r.offset or ins.mnemonic != "lea" or ins.disp_offset != r.offset - ins.address:
+            return None
+        if any(op.type == X86_OP_MEM and op.mem.base == X86_REG_RIP for op in ins.operands):
+            tail = ins.address + ins.size - r.offset
+        break
+    if tail is None:
+        return None
+    data = view.sections[r.sym_section][0]
+    start = r.sym_value + r.addend + tail
+    starts = set()
+    for _sec, rels in view.relocs.items():
+        for _off, ty, si, addend in rels:
+            s = view.syms[si]
+            if ty in (R_X86_64_PC32, R_X86_64_PLT32) and s["st_shndx"] == r.sym_section:
+                starts.add(s["st_value"] + addend + 4)
+    later = [s for s in starts if s > start]
+    end = min(later) if later else len(data)
+    if end <= start:
+        return None
+    return tail, end - start, "lea"
+
+
 def rodata_constant(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, ver: str):
     """A constant the compiler left in the object's plain read-only data (a
     section that is allocated and nothing else: not writable, not merged, not
@@ -389,6 +429,8 @@ def rodata_constant(base: BaseElf, obj: Path, code: bytes, r: mc.Reloc, P: int, 
     if not merged and (flags & 0x37 != 0x2 or obj != gm.module_object(ver)):
         return None     # plain .rodata: the game module's only (LLVM 3.3 merges every library constant)
     acc = rip_access(code, r.offset)
+    if acc is None and not merged:
+        acc = rodata_table_access(view, code, r)
     if acc is None:
         return None
     tail, width, mnemonic = acc

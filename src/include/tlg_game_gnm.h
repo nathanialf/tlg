@@ -226,8 +226,9 @@ struct RenderTarget0149a070 { /* derived name, from the header's file name */
 
     /* derived names: the bits of an address in 256-byte blocks that the
      * pipe and bank swizzle owns (as the depth target's; the alternate counts
-     * when bit 31 of the format word is set) */
-    u32 swizzleMask() const
+     * when bit 31 of the format word is set; declared inline, as the four
+     * setters and getters each hold its body) */
+    inline u32 swizzleMask() const
     {
         u32 tileMode = attributes & 0x1f;
         bool alternate = (colorInfo & 0x80000000) != 0;
@@ -259,15 +260,93 @@ struct RenderTarget0149a070 { /* derived name, from the header's file name */
         return (attributes & 0x7000) != 0 && FUN_001a44c0((attributes >> 5) & 0x1f);
     }
 
+    /* derived name: the fmask's address in 256-byte blocks without the
+     * swizzle bits (FUN_01329d40) */
+    u32 fmaskAddress() const
+    {
+        u32 address = fmaskAddress256;
+        if (fmaskSwizzled()) {
+            address &= ~swizzleMask();
+        }
+        return address;
+    }
+
+    /* derived names: the fmask's data format for its samples' and
+     * fragments' log2 (bits 12 to 14 and 15 and 16 of the attributes), and
+     * the bits of its address the swizzle owns (one fragment, its tile mode
+     * in bits 5 to 9) */
+    u32 fmaskDataFormat() const
+    {
+        switch (((attributes >> 15) & 3) | ((attributes >> 8) & 0x70)) {
+        case 0x10:
+            return 0x2c;
+        case 0x11:
+            return 0x2f;
+        case 0x20:
+            return 0x2d;
+        case 0x21:
+            return 0x30;
+        case 0x22:
+            return 0x31;
+        case 0x30:
+            return 0x2e;
+        case 0x31:
+            return 0x33;
+        case 0x32:
+            return 0x35;
+        case 0x33:
+            return 0x36;
+        case 0x40:
+            return 0x32;
+        case 0x41:
+            return 0x34;
+        case 0x42:
+            return 0x37;
+        case 0x43:
+            return 0x38;
+        default:
+            return 0;
+        }
+    }
+
+    u32 fmaskSwizzleMask() const
+    {
+        u32 kind = fmaskDataFormat();
+        u32 tileMode = (attributes >> 5) & 0x1f;
+        u32 bitsPerElement = D_15253d0[kind];
+        u32 bits;
+        u32 shift;
+        if (colorInfo & 0x80000000) {
+            FUN_001a72f0(&bits, tileMode, bitsPerElement, 1);
+            shift = 4;
+        } else {
+            FUN_001a7180(&bits, tileMode, bitsPerElement, 1);
+            shift = 3;
+        }
+        return ((1u << (bits + 1)) - 1) << shift;
+    }
+
     u32 baseAddress256; /* +0x0 */
-    u8 unknown4[0xc];
-    u32 colorInfo; /* +0x10: format in bits 2 to 6, channel type 8 to 10, order 11 and 12, the alternate swizzle in 31 */
+    u32 pitch;          /* +0x4: the pitch's tile count in bits 0 to 10, the fmask's in 20 to 30 */
+    u32 slice;          /* +0x8: the slice's tile count in bits 0 to 21 */
+    u8 unknownc[0x4];
+    u32 colorInfo; /* +0x10: format in bits 2 to 6, channel type 8 to 10, order 11 and 12, fast clear 13, compression 14, the alternate swizzle in 31 */
     u32 attributes; /* +0x14: tile mode in bits 0 to 4, the fmask's 5 to 9, fmask samples 12 to 14, the fragments' log2 15 and 16 */
     u8 unknown18[0x4];
     u32 cmaskAddress; /* +0x1c: the cmask address in 256-byte blocks */
     u8 unknown20[0x4];
     u32 fmaskAddress256; /* +0x24 */
+    u32 fmaskSlice;      /* +0x28: the fmask's slice tile count in bits 0 to 21 */
+    u8 unknown2c[0x10];
+    /* +0x3c: the word FUN_012fb8d0 writes in a nop packet after the fourteen
+     * registers */
+    u32 word3c;
 };
+
+/* derived name: sets a render target in a slot of a command buffer
+ * (leaf_012fb8d0.cpp; its buffer the one of tlg_game_commandbuffer.h) */
+struct CommandBuffer01496a80;
+void FUN_012fb8d0(CommandBuffer01496a80 *buffer, u32 slot, const RenderTarget0149a070 *target);
 
 #define TEXTURE_HEADER /* derived name */                                                          \
     "C:\\Program Files (x86)\\SCE\\ORBIS SDKs\\3.500\\target\\include_common\\gnm/texture.h"

@@ -105,7 +105,7 @@ void Object016bba90::enterThread(const lua_State *state)
     FUN_00dd2590(D_15bccf7, state, D_15bcdbe);
     FUN_00dd2590(D_15bcdc8, FUN_00d964f0(state));
     FUN_00dd2590(D_15bcd4c, state->global->registry.value.pointer, D_15bcddb);
-    FUN_00dd2590(D_15bcd4c, state->globals, D_15bcde4);
+    FUN_00dd2590(D_15bcd4c, state->globalTable.value.pointer, D_15bcde4);
     int field = 1;
     for (const HksObject *value = state->stack; value < state->top; ++value) {
         switch (value->type & 0xf) {

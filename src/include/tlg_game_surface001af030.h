@@ -8,12 +8,20 @@
 
 #include "tlg_types.h"
 
+/* its words are words, not bytes: the slots 18 and 19 of the compute
+ * context hold the record below their scalars, as a record with no array in
+ * it lies under the stack protector (leaf_013025c0.cpp) */
 struct Surface001af030 { /* derived name */
-    u8 unknown0[0x8];
+    u32 unknown0;
+    u32 unknown4;
     u32 width;  /* +0x8 */
     u32 height; /* +0xc */
     u32 depth;  /* +0x10 */
-    u8 unknown14[0x14];
+    u32 unknown14;
+    u32 unknown18;
+    u32 unknown1c;
+    u32 unknown20;
+    u32 unknown24;
     int bitsPerElement; /* +0x28 */
     bool compressed;    /* +0x2c */
 };

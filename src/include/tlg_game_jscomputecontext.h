@@ -83,6 +83,12 @@ class JsComputeContext : public Object0130acb0
     virtual void slot16(void *first, void *second, void *third); /* derived name */
     /* slot 17 (0x13026f0): FUN_01302700 */
     virtual void slot17(); /* derived name */
+    /* slots 18 and 19 (0x13025c0, 0x13024a0): a subresource mapped as
+     * AsyncMap maps it (leaf_013025c0.cpp, leaf_013024a0.cpp) */
+    virtual int slot18(Object016c3be0 *resource, u32 subresource, u32 mapType, u32 mapFlags,
+                       JsMappedSubresource *mapped); /* derived name */
+    virtual int slot19(Object016c3be0 *resource, u32 subresource, u32 mapType, u32 mapFlags,
+                       void *unused, JsMappedSubresource *mapped); /* derived name */
     /* slot 20 (0x1303cc0): every shader resource unbound */
     virtual void clearShaderResources(); /* derived name */
     /* slot 23 (0x1303bd0): the packet setting register 0x215 */

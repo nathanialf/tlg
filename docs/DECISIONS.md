@@ -1974,3 +1974,11 @@ across objects); a per-function attribute or noinline (banned, and the bytes sho
 **What would refute it.** A function of [0x1a3a70, 0x1afa60) that only matches inside the game module; a game function
 that holds an inlined body of one of these objects; a row of the range whose data reference needs the module's
 stand-in form (direct to a game object) rather than its own object's definition or the GOT.
+
+### D82 addendum 3 (2026-11-22): a lookup table the compiler leaves in read-only data is compared whole
+
+**Question.** SimplifyCFG turns a switch or a compare against a constant table into a lookup table in the module's plain read-only data, with no symbol of its own; the function reaches it with `lea r, [rip + table]`. The layout step could not place such a function: it searched the base for the constant by its bytes and found a short literal thousands of times (round 462E: FUN_012fd020 and the 61-entry table at 0x15252d0).
+
+**Decision.** `tools/layout_link.py` `rodata_table_access`: for a `lea` of the module's read-only data, the table's extent runs from the address taken to the next offset of that section any PC-relative relocation of the object reaches (or the section's end), and the WHOLE extent must equal the base's bytes where the base's `lea` points; otherwise the row is refused, as `rodata_constant` refuses a read. The comparison is exact: it adds a case the step could not judge and loosens none.
+
+**Evidence.** FUN_012fd020 equal with the table at 0x15252d0 compared in full; the gate passes with every other row unchanged (round 462E, scratch e462/commit1.log).

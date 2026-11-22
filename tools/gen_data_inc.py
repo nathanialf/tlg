@@ -29,7 +29,9 @@ enums, pointers (data or function), arrays of those and instances of a
 class template whose fields are of its parameters (hkFlags<BITS, STORAGE>,
 read with the parameters bound to the arguments), laid out by the x86-64
 System V rules; a pointer may point at a record that holds the pointer's
-own record (hkClassMember's hkClass). Each value is written by its field's type:
+own record (hkClassMember's hkClass). The record type may also be a scalar
+(an integer type, bool, float or double, or a typedef of one: a table of
+counts). Each value is written by its field's type:
 
     integer      decimal
     bool         true or false
@@ -547,7 +549,15 @@ class Headers:
         return out
 
     def record_type(self, name: str) -> T:
+        # a table of scalars (`int`, `u32`, `float`) is written element by
+        # element by the scalar's type
+        if name in BUILTINS or name in ("bool", "float", "double"):
+            return self.base([name], self.root)
         hit = self._find_in([p for p in name.split("::") if p], self.root)
+        if hit is not None and hit[0] == "typedef":
+            ty = self.base([name], self.root)
+            if ty.kind in ("int", "bool", "float"):
+                return ty
         if hit is None or hit[0] != "record":
             fail(f"no record {name} in {', '.join(self.read)}")
         return self.record(hit[1])

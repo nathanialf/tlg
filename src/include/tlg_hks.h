@@ -34,14 +34,28 @@ struct lua_State;
  * array of values from +0x208 indexed by a value's type tag plus 27
  * (FUN_00dedab0). derived name. */
 struct HksGlobal {
-    u8 unknown0[0x1a8];
+    u8 unknown0[0x58];
+    /* +0x58, derived name: what the collector marks a value into
+     * (FUN_00dc6090 takes its address: FUN_00db9c70) */
+    u8 gray[0x60];
+    /* +0xb8, derived name: the collector's phase, 1 while it marks
+     * (FUN_00db9c70) */
+    int gcState;
+    u8 unknownbc[0xdc];
+    /* +0x198, derived name: an object whose +0x8 is compared with a new
+     * userdata, which then takes its place (FUN_00dba890) */
+    struct HksUserdata *unknown198;
+    u8 unknown1a0[0x8];
     /* +0x1a8, derived name: the table of the VM's strings FUN_00db9de0
      * makes a string in (FUN_00dd06f0) */
     u8 strings[0x20];
     /* +0x1c8, derived name: the registry, its table linked as "Registry"
      * (FUN_00dd2900), the value debug.getregistry pushes (FUN_00deb2b0) */
     HksObject registry;
-    u8 unknown1d8[0x28];
+    u8 unknown1d8[0x20];
+    /* +0x1f8, derived name: the list of userdata, each new one linked first
+     * (FUN_00dba890) */
+    struct HksUserdata *userdata;
     lua_State *mainThread;   /* +0x200, derived name */
     HksObject unknown208[1]; /* +0x208, derived name; its extent not traced */
     u8 unknown218[0x280];
@@ -63,7 +77,9 @@ struct HksGlobal {
     u8 unknown4d0[0x18];
     int apiCalls;  /* +0x4e8 */
     int apiCalls2; /* +0x4ec */
-    u8 unknown4f0[0x10];
+    u8 unknown4f0[0x8];
+    int userdataCount; /* +0x4f8, derived name: counted up for each new userdata (FUN_00dba890) */
+    u8 unknown4fc[0x4];
     int unknown500; /* +0x500, derived name: counted up for each string FUN_00db9de0 makes */
     u8 unknown504[0x54];
 
@@ -88,17 +104,46 @@ struct HksDebugger {
     int depth;  /* +0x20 */
 };
 
+/* A call's record as the state keeps them (0x18 bytes, from +0x18 of the
+ * state): the frame's base first (FUN_00db5b50). derived name. */
+struct HksCallInfo {
+    HksObject *base;    /* derived name */
+    const u32 *savedPc; /* +0x8, derived name: the calling function's next instruction */
+    u8 unknown10[0x2];
+    short
+        unknown12; /* +0x12, derived name: counted back from the next record's base with the function's slot (FUN_00ddb700) */
+    u8 unknown14[0x4];
+};
+
 struct lua_State {
     u8 unknown0[0x10];
     HksGlobal *global; /* +0x10, derived name */
-    u8 unknown18[0x30];
+    /* +0x18 and +0x28, derived names: the first call's record and the
+     * running one's (the running call's depth is their difference,
+     * FUN_00dba890, FUN_00db5b50); the first one's address is what
+     * FUN_00dbb2e0 takes */
+    HksCallInfo *callInfos;
+    u8 unknown20[0x8];
+    HksCallInfo *callInfo;
+    /* +0x30 to +0x40, derived names: the running function's next
+     * instruction, another one kept for the call at the depth at +0x40
+     * (FUN_00ddb700) */
+    const u32 *pc;
+    const u32 *unknown38;
+    int unknown40;
+    u8 unknown44[0x4];
     HksObject *top;   /* derived name */
     HksObject *base;  /* derived name */
     HksObject *last;  /* +0x58, derived name: the end of the stack's room */
     HksObject *stack; /* +0x60, derived name: the first value FUN_00dd2900 links */
-    u8 unknown68[0x10];
-    void *globals; /* +0x78, derived name: linked as "Global Table" (FUN_00dd2900) */
-    u8 unknown80[0x18];
+    u8 unknown68[0x8];
+    /* +0x70, derived name: the globals' table, its value linked as "Global
+     * Table" (FUN_00dd2900), the value LUA_GLOBALSINDEX reaches */
+    HksObject globalTable;
+    /* +0x80, derived name: the slot LUA_ENVIRONINDEX sets to the running
+     * function's environment (indexToHksObjectSafe) */
+    HksObject environment;
+    u8 unknown90[0x8];
     /* +0x98, derived name: below 2 a running thread may yield (FUN_00ded070:
      * "attempt to yield across metamethod/C-call boundary" from 2 up) */
     int unknown98;
@@ -191,9 +236,27 @@ struct HksString {
 /* A table and a structure as FUN_00db84e0 reads them: the word each must
  * lack for a raw store (+0x10 of a table, +0x20 of a structure). derived
  * names. */
+struct HksNode;
+
 struct HksTable {
     u8 unknown0[0x10];
     void *unknown10;
+    u8 unknown18[0x4];
+    /* +0x1c to +0x30, derived names: the hash part (its nodes, null
+     * without one, and the mask of their count) and the array part (its
+     * values and their count; FUN_00db9130) */
+    u32 mask;
+    HksNode *nodes;
+    HksObject *array;
+    u32 arraySize;
+};
+
+/* derived names: a node of a table's hash part, its key and value; the
+ * nodes' next links are kept before the nodes, the link of node i at index
+ * ~i (FUN_00db9130) */
+struct HksNode {
+    HksObject key;
+    HksObject value;
 };
 
 /* derived names: a structure's type as far as its name (a string object,
@@ -207,6 +270,7 @@ struct HksStruct {
     u8 unknown0[0x18];
     HksStructType *type; /* +0x18 */
     void *unknown20;
+    HksTable *table; /* +0x28, derived name: its table, null without one (FUN_00d96ff0) */
 };
 
 /* derived names: a table's or a structure's raw store of a value under a
@@ -448,23 +512,61 @@ inline void pushNumber(lua_State *state, float number)
  * not traced), Lua's lua_touserdata: an argument's light userdata (tag 2)
  * as it is, a full userdata's (tag 7) value past its block, else null
  * (null past the frame's top: 0xe7f3e2 to 0xe7f3f9) */
-struct HksUserdata { /* derived name */
-    u8 unknown0[0x10];
+struct HksUserdata {   /* derived name */
+    u64 flags;         /* derived name: the low bit cleared when it is made (FUN_00dba890) */
+    HksUserdata *next; /* +0x8, derived name: the next in the global's list */
     void *environment; /* +0x10, derived name: the table getfenv reads (FUN_00db7b30) */
-    u8 unknown18[0x8];
+    void *unknown18;
 };
 
 /* A script function (tag 9) and a C function (tag 10) as getfenv reads
  * them: each one's environment's table at +0x18 (FUN_00db7b30, a case of
  * its own for each). derived names. */
 struct HksClosure {
-    u8 unknown0[0x18];
-    void *environment; /* derived name */
+    u8 unknown0[0x10];
+    struct HksProto *proto; /* +0x10, derived name: the function's code (FUN_00ddb700) */
+    void *environment;      /* derived name */
+};
+
+/* derived names: a script function's code as FUN_00ddb700 reads it: its
+ * instructions (4 bytes each) from +0x20, its debug information at +0x48
+ * (null without one): the count of its local variables at +0x38 and their
+ * records from +0x40: the name (a string), the first instruction and the
+ * last that see it */
+struct HksLocalVariable {
+    HksString *name;
+    int startPc;
+    int endPc;
+};
+
+struct HksDebugInfo {
+    u8 unknown0[0x38];
+    int localVariableCount;
+    HksLocalVariable *localVariables;
+};
+
+struct HksProto {
+    u8 unknown0[0x20];
+    const u32 *code;
+    u8 unknown28[0x20];
+    HksDebugInfo *debugInfo;
+};
+
+/* Lua's lua_Debug as far as the bytes read it: the depth of the call it
+ * describes at +0x240, and +0x244, which must be 0 to reach its locals
+ * (FUN_00ddb700). */
+struct lua_Debug {
+    u8 unknown0[0x240];
+    int i_ci;
+    int unknown244; /* derived name */
 };
 
 struct HksCClosure {
     u8 unknown0[0x18];
     void *environment; /* derived name */
+    u8 unknown20[0x10];
+    HksObject
+        upvalues[1]; /* +0x30, derived name: the pseudo-indices below LUA_GLOBALSINDEX reach them */
 };
 
 /* derived name: Lua's lua_isuserdata: whether an argument holds a full
@@ -573,7 +675,7 @@ inline void hksi_lua_pop(lua_State *s, int n)
 
 /* derived name: grows the stack's room by n values (FUN_00dbb2e0, its body
  * not written; the first argument is the address of +0x18) */
-void FUN_00dbb2e0(void *unknown18, lua_State *state, int n);
+void FUN_00dbb2e0(HksCallInfo **callInfos, lua_State *state, int n);
 
 /* hksi_lua_checkstack (the name from its assertion message), inlined: room
  * made for n more values */
@@ -587,7 +689,7 @@ inline void hksi_lua_checkstack(lua_State *s, int n)
         __builtin_trap();
     }
     if (s->top + n > s->last)
-        FUN_00dbb2e0(s->unknown18, s, n);
+        FUN_00dbb2e0(&s->callInfos, s, n);
 }
 
 /* derived name: Lua's lua_topointer(state, -1): the stack's top value's
@@ -840,6 +942,99 @@ inline void hksi_lua_insert(lua_State *s, int index)
         *q = q[-1];
     *p = value;
 }
+
+/* derived names: the depth of the running call and the slot that holds
+ * the base of the call at a depth (the state's own for the running call,
+ * else kept in the next call's record) */
+inline int callDepth(lua_State *s)
+{
+    return s->callInfo - s->callInfos;
+}
+
+inline HksObject **frameBaseSlot(lua_State *s, int level)
+{
+    return level == callDepth(s) ? &s->base : &s->callInfos[level + 1].base;
+}
+
+/* derived name: Lua's findlocal (FUN_00ddb700): the name of a call's n-th
+ * local variable, "(*temporary)" for a slot of its frame without one, else
+ * null; it reads and writes nothing else */
+const char *FUN_00ddb700(lua_State *s, const lua_Debug *ar, int n);
+
+/* derived name: Lua's lua_objlen by its arguments: the length of a value
+ * (FUN_00d96ff0) */
+size_t FUN_00d96ff0(lua_State *state, const HksObject *value);
+
+/* The pseudo-indices (Lua 5.1's, by the values the bytes compare with) */
+#define LUA_REGISTRYINDEX (-10000)
+#define LUA_ENVIRONINDEX (-10001)
+#define LUA_GLOBALSINDEX (-10002)
+
+/* indexToHksObjectSafe (the name from its assertion message), inlined:
+ * whether an index reaches a value, and the value: an argument (from 1) or
+ * one from the stack's top (from -1), null and false outside the frame;
+ * the globals, the registry, the running function's environment (set in
+ * the state's slot for it) or one of its upvalues for a pseudo-index */
+inline int indexToHksObjectSafe(lua_State *s, int index, HksObject **object)
+{
+    if (index > LUA_REGISTRYINDEX) {
+        if (index > 0) {
+            HksObject *value = s->base + index - 1;
+            const int outside = !(value < s->top);
+            *object = outside ? 0 : value;
+            return outside;
+        }
+        if (index < 0) {
+            HksObject *value = s->top + index;
+            const int outside = !(value >= s->base);
+            *object = outside ? 0 : value;
+            return outside;
+        }
+        *object = 0;
+        return 1;
+    }
+    if (index == LUA_GLOBALSINDEX) {
+        *object = &s->globalTable;
+    } else if (index == LUA_REGISTRYINDEX) {
+        *object = &s->global->registry;
+    } else {
+        /* the running function, below the frame's base */
+        HksObject *base = s->base;
+        if (index == LUA_ENVIRONINDEX) {
+            if (!(base > s->stack)) {
+                printf(
+                    "Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+                    "%s() : \"%s\"\n\tat %s(%d)\n",
+                    0x47daca3b, "S_API_STACK_BASE(s) > S_API_STACK_BOTTOM(s)",
+                    "indexToHksObjectSafe", "No context for LUA_ENVIRONINDEX", HKS_LUA_IMPL_FILE,
+                    87);
+                __builtin_trap();
+            }
+            s->environment.value.pointer =
+                static_cast<HksCClosure *>(base[-1].value.pointer)->environment;
+            s->environment.type = 5;
+            *object = &s->environment;
+        } else {
+            *object = static_cast<HksCClosure *>(base[-1].value.pointer)->upvalues +
+                      (LUA_GLOBALSINDEX - index - 1);
+        }
+    }
+    return 0;
+}
+
+/* derived name: the tag of the value at an index (its low four bits), -1
+ * (none) outside the frame */
+inline int typeAt(lua_State *s, int index) /* derived name */
+{
+    HksObject *value;
+    if (indexToHksObjectSafe(s, index, &value))
+        return -1;
+    return value->type & 0xf;
+}
+
+/* Lua's lua_isnoneornil, as a macro over lua_isnone and lua_isnil: the
+ * type read twice (the base stores the environment's slot once for each) */
+#define lua_isnoneornil(s, n) (typeAt(s, n) == -1 || typeAt(s, n) == 0)
 
 /* derived name: Lua's lua_pop */
 inline void pop(lua_State *state, int count)

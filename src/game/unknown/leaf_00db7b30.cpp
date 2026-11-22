@@ -13,7 +13,7 @@ void FUN_00db7b30(lua_State *state, const HksObject *object, HksObject *environm
         table = static_cast<HksUserdata *>(object->value.pointer)->environment;
         break;
     case 8:
-        table = static_cast<lua_State *>(object->value.pointer)->globals;
+        table = static_cast<lua_State *>(object->value.pointer)->globalTable.value.pointer;
         break;
     case 9:
         table = static_cast<HksClosure *>(object->value.pointer)->environment;

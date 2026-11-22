@@ -1,10 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_hks.h"
 
-/* derived name: the length of a table value (FUN_00d96ff0, its body not
- * written) */
-int FUN_00d96ff0(lua_State *state, const HksObject *table);
-
 /* The script table library's "getn" (its table at 0x16bd0f0, name and
  * function in turn): the length of its table argument, 0 past the frame's
  * top. */
