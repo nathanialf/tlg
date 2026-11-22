@@ -30,6 +30,10 @@ struct Type00503fb0 {     /* derived name */
     void (*destroy)(Object016b9108 *object);
     TypeListener00cbc5a0 *listener; /* +0x18 */
     Name name; /* +0x20: the type's name (FUN_00e73a30 hands its string to a script) */
+    unsigned char unknown24[8];
+    /* +0x2c: bit 1 set for a type whose objects are not copied (FUN_008a9440
+     * and the script's "Clone", FUN_00e768a0, make none) */
+    unsigned char flags;
 };
 
 /* the type itself or one it derives from: the type is compared first, then

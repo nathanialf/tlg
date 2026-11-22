@@ -44,8 +44,28 @@ struct RecursiveLock05945a38 { /* derived name */
     volatile int depth;       /* +0x10 */
 };
 
+/* derived names: an entry of the types by name: the name's index, the type
+ * and the next entry of its chain (the script's "IsObjTypeOf", FUN_00e73bb0) */
+struct TypeEntry05945a38 {   /* derived name */
+    unsigned name;           /* +0x0 */
+    Type00503fb0 *type;      /* +0x8 */
+    TypeEntry05945a38 *next; /* +0x10 */
+};
+
 struct Object05945a38 { /* derived name */
-    u8 unknown0[0x201028];
+
+    /* the type of a name, null for none: the chain of the name's index's low
+     * nine bits walked to the entry of the index (FUN_00e73bb0) */
+    Type00503fb0 *type(const Name &name) const /* derived name */
+    {
+        for (TypeEntry05945a38 *entry = types[name.index & 0x1ff]; entry; entry = entry->next)
+            if (entry->name == name.index)
+                return entry->type;
+        return 0;
+    }
+
+    TypeEntry05945a38 *types[0x200]; /* +0x0 */
+    u8 unknown1000[0x201028 - 0x1000];
     RecursiveLock05945a38 lock201028; /* +0x201028 */
     /* +0x201040: the objects whose last reference was dropped on a thread
      * that does not destroy them, appended under the list's lock while the
