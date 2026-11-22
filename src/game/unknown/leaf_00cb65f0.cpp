@@ -9,11 +9,10 @@
 Object016b9108::~Object016b9108() {}
 
 /* derived name: one reference more for a copy of a counted reference
- * (tlg_game_node.h's Ref00503fb0), defined beside the class whose count it
- * raises. Its body has no address in the executable: every call was inlined
- * by the link and the copy discarded, as func_00cbb000.cpp's threadMayUse
- * was. */
-void raiseReference(Object016b9108 *object)
+ * (tlg_game_node.h's Ref00503fb0), the count the counted base's. Its body
+ * has no address in the executable: every call was inlined by the link and
+ * the copy discarded, as func_00cbb000.cpp's threadMayUse was. */
+void raiseReference(Counted00c14bc0 *object)
 {
     addReference(object);
 }

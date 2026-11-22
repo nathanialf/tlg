@@ -36,9 +36,6 @@ struct Table009fa910 /* derived name */
 
 /* derived name: the object the entry with the key refers to, null when no
  * entry has it (FUN_00742080 asks three times) */
-// NONMATCHING: copy placement of the returned pointer: the base sets rax from r14 before the
-// `lock inc` and again before the `lock xadd` (its exits return without a move) and compares
-// [r14 + 8] the second time; the build moves r14 at one exit and compares [rbx]. 25 of 64.
 Object016b9108 *FUN_009fa910(const Table009fa910 *table, const void *key)
 {
     int i = table->find(key);

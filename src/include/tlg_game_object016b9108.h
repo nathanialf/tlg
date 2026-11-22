@@ -8,6 +8,39 @@
 #include "tlg_game_name.h"
 #include "tlg_game_type.h"
 
+/* derived names: the base of every counted object of the game, the root
+ * class below among them: a vptr and the count at +0x8, cleared by its own
+ * constructor before the derived class stores its vptr (the root's
+ * constructor: `mov dword [rbx+8], 0` at 0xcb633f, then `mov [rbx], rax` at
+ * 0xcb6346; the same order where a script command is made in place,
+ * 0x3e13c3 and 0x3e13db). Three virtuals: the destructor pair and the
+ * release a counted reference's last drop calls (`call [rax+0x10]`), whose
+ * body here is 0x69a0, `delete this`; the root class overrides it
+ * (FUN_00cb66f0). The class ends at +0xc: a derived class's first member
+ * goes there (the root's name; a command's word 0x80000000). 146 vtables of
+ * the executable keep 0x69a0 in slot 2 (143 of the game's classes; 77 with
+ * these three slots alone) against 1,101 with the root's release: the
+ * counted classes that are not of the root class (round 473E's census).
+ * FUN_00c14bc0, the later release, takes either kind (8,037 call sites),
+ * so the class is named after it. The release is declared and not defined:
+ * its body in the executable is the library's copy at 0x69a0. */
+class Counted00c14bc0 /* derived name */
+{
+  public:
+    Counted00c14bc0() : references(0) {}
+
+    virtual ~Counted00c14bc0() {}
+
+    /* slot 2: the release (the counted reference's last drop calls it,
+     * `call [rax+0x10]` at 0xcb65a7 and 0x3e1529) */
+    virtual void destroy(); /* derived name */
+
+    /* +0x8: the reference count, 0xdeadc0de once the object is released
+     * (FUN_00cb6310: `lock inc` unless dead, the release at the last
+     * reference) */
+    int references;
+};
+
 /* derived names: the class whose vtable is at 0x16b9108
  * (config/vtables.derived.base.txt; no type info or string names it). Its
  * constructor at 0xcb6310 (not written; FUN_00cb6310 in the comments of the
@@ -29,13 +62,12 @@
  * places in the vtable. The classes derived from it put their own members
  * from +0x24 on (tlg_game_object016b85e0.h's Object016b85e0, the scene node;
  * tlg_game_multibase.h's Class137ba70: slots 2 to 4, the int at +0x20). */
-class Object016b9108 /* derived name */
+class Object016b9108 : public Counted00c14bc0 /* derived name */
 {
   public:
     Object016b9108(const Name &name); /* 0xcb6310, its row named after it (D15) */
     virtual ~Object016b9108();
-    /* slot 2, FUN_00cb66f0: the release (the counted reference's last drop
-     * calls it, `call [rax+0x10]` at 0xcb65a7) */
+    /* slot 2, FUN_00cb66f0: the root's own release */
     virtual void destroy(); /* derived name */
     /* Slots 3 and 4 of 0x16b9108: two empty bodies folded onto 0x1af750;
      * parameters not traced. */
@@ -48,11 +80,6 @@ class Object016b9108 /* derived name */
     {
         return ::isKindOf(type, wanted);
     }
-
-    /* +0x8: the reference count, 0xdeadc0de once the object is released
-     * (FUN_00cb6310: `lock inc` unless dead, the release at the last
-     * reference) */
-    int references;
 
     Name name; /* +0xc: assigned from the constructor's argument */
 

@@ -53,7 +53,7 @@ extern __thread bool D_16dc088; /* derived name: the thread destroys released ob
  * its readers are not traced */
 extern __thread bool D_16dc089; /* derived name */
 
-void FUN_00c14bc0(Object016b9108 *object); /* derived name: releases it later */
+void FUN_00c14bc0(Counted00c14bc0 *object); /* derived name: releases it later */
 
 /* the value at `value` replaced by `replacement` when it is `expected`;
  * returns the value found (`lock cmpxchg; cmove eax, ecx` at every site: the
@@ -136,10 +136,18 @@ template <class T> inline void dropReference(T *object) /* derived name */
 }
 
 /* one reference more for a copy of a counted reference: addReference's
- * body, defined out of line in the root class's unit (leaf_00cb65f0.cpp).
- * The link inlines it at every call and the executable keeps no copy of
- * it */
-void raiseReference(Object016b9108 *object); /* derived name */
+ * body, defined out of line (leaf_00cb65f0.cpp). The link inlines it at
+ * every call and the executable keeps no copy of it. Round 473E measured
+ * the whole module with every raise of this header written through it (the
+ * pointer constructors and the exchange too): three functions change, the
+ * rest is equal either way, so only the copies decide: 761 call sites of
+ * the appends (FUN_0138e360 and the 103 copies of FUN_001b59d0's body)
+ * need the copy's raise out of line, and one row, FUN_00ce22e0, needs it
+ * in line (AtomicRef0045c470 below). The root's own constructor calls
+ * FUN_0138e360 (0xcb6310), so the body is not in the root class's unit in
+ * the original; it stays in that file here until the counted base has a
+ * unit of its own */
+void raiseReference(Counted00c14bc0 *object); /* derived name */
 
 /* a counted reference to a node: the count at +0x8 of the node is left
  * alone once it holds the released mark */
@@ -184,7 +192,7 @@ template <class T> class Ref00503fb0 /* derived name */
      * else hands it to FUN_00c14bc0 */
     void release() /* derived name */
     {
-        Object016b9108 *released = object;
+        Counted00c14bc0 *released = object;
         if (released) {
             object = 0;
             dropReference(released);
@@ -202,11 +210,14 @@ template <class T> class Ref00503fb0 /* derived name */
     }
 
   private:
-    /* held as the root class, as AtomicRef0045c470 holds it: get() hands it
-     * back as a T, the release reads it as the root class. With it the
-     * constructor 0xc5fb80 (a reference to itself passed by value) takes the
-     * base's registers; no matched function of the module changes */
-    Object016b9108 *object;
+    /* held as the counted base (tlg_game_object016b9108.h), as
+     * AtomicRef0045c470 holds it: get() hands it back as a T, the release
+     * reads it as the base. With it the constructor 0xc5fb80 (a reference
+     * to itself passed by value) takes the base's registers, and
+     * FUN_009fa910 reads the count at the object after its raise (`cmp
+     * [r14+8]`) where a pointer to the root class read it through the
+     * count's address */
+    Counted00c14bc0 *object;
 };
 
 /* this thread's flag: set, the thread may use an object a name names
@@ -257,11 +268,24 @@ inline T *findNamedOf(const Name &name, const Type00503fb0 *type) /* derived nam
     return 0;
 }
 
-/* a counted reference another thread may replace: the pointer is exchanged
+/* OPEN (round 473E): this class and Ref00503fb0 are one class in the
+ * executable. FUN_00c7aac0 assigns an element of an array by the exchange
+ * below (`lock cmpxchg qword [rdx], rcx` at 0xc7aaf9) and appends to the
+ * same array through FUN_0138e360, the one append over Ref00503fb0<
+ * Object016b9108>; the game has 3,329 such exchanges in 1,214 functions
+ * against 4,280 raises in 1,546. What keeps them two here is the copy:
+ * this one raises in line, which FUN_00ce22e0's row needs (with the raise
+ * out of line the unit stage no longer defers the growth's inline there:
+ * the growth, 150, goes into the member, which then costs 290 and stays a
+ * call), through a growth spelled a second way (tlg_game_block.h's
+ * reallocateOwnedBlock, provisional). To be merged when that function is
+ * explained.
+ *
+ * a counted reference another thread may replace: the pointer is exchanged
  * by compare-and-swap, then the new object gains a reference and the old one
  * loses its own (FUN_0045c470 sets one from a pointer, FUN_013cfaa0 from
  * another reference, FUN_0079d400 empties one). The pointer is held as a
- * pointer to the root class, which is all the exchange and the release need;
+ * pointer to the counted base, which is all the exchange and the release need;
  * get() hands it back as a T. The typed read and the release so reach it
  * through different types: a pool's reference tested before its holder's
  * destructor drops it is read again on the null path (0xa83a85 tests it,
@@ -300,10 +324,10 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * argument first, where an argument of T's own type compares second) */
     template <class U> void set(U *replacement) /* derived name */
     {
-        Object016b9108 *old;
+        Counted00c14bc0 *old;
         do
             old = object;
-        while (compareAndSwap<Object016b9108>(&object, old, static_cast<T *>(replacement)) != old);
+        while (compareAndSwap<Counted00c14bc0>(&object, old, static_cast<T *>(replacement)) != old);
         exchanged(old, static_cast<T *>(replacement));
     }
 
@@ -311,7 +335,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * inside the loop at 0x13cfab3) */
     AtomicRef0045c470 &operator=(const AtomicRef0045c470 &other)
     {
-        Object016b9108 *old, *replacement;
+        Counted00c14bc0 *old, *replacement;
         do {
             old = object;
             replacement = other.object;
@@ -326,7 +350,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * compare-and-swap; the same at 0x4aca44) */
     ~AtomicRef0045c470()
     {
-        Object016b9108 *released = object;
+        Counted00c14bc0 *released = object;
         if (released) {
             object = 0;
             dropReference(released);
@@ -335,10 +359,10 @@ template <class T> class AtomicRef0045c470 /* derived name */
 
     void clear() /* derived name */
     {
-        Object016b9108 *old;
+        Counted00c14bc0 *old;
         do
             old = object;
-        while (compareAndSwap(&object, old, static_cast<Object016b9108 *>(0)) != old);
+        while (compareAndSwap(&object, old, static_cast<Counted00c14bc0 *>(0)) != old);
         if (old)
             dropReference(old);
     }
@@ -349,7 +373,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
      * r15; je; mov qword [rcx+rax*8], 0`) */
     void release() /* derived name */
     {
-        Object016b9108 *released = object;
+        Counted00c14bc0 *released = object;
         if (released) {
             object = 0;
             dropReference(released);
@@ -369,7 +393,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
 
   private:
     /* the counts after an exchange: nothing when the same object went in */
-    static void exchanged(Object016b9108 *old, Object016b9108 *replacement) /* derived name */
+    static void exchanged(Counted00c14bc0 *old, Counted00c14bc0 *replacement) /* derived name */
     {
         if (replacement != old) {
             if (replacement)
@@ -379,7 +403,7 @@ template <class T> class AtomicRef0045c470 /* derived name */
         }
     }
 
-    Object016b9108 *object;
+    Counted00c14bc0 *object;
 };
 
 /* two values exchanged through a copy of the first (0x1391cd0 over two
