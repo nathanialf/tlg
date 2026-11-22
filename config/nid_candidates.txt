@@ -73,6 +73,7 @@ vprintf
 fprintf
 vfprintf
 sscanf
+sscanf_s
 vsscanf
 perror
 puts

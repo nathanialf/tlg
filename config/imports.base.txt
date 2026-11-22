@@ -356,7 +356,7 @@ R9lA82OraNs T U func sceAppContentInitialize
 1Pk0qZQGeWo V V func sscanf
 1TDo-ImqkJc V V obj ?
 1uJgoVq3bQU V V func _Getptolower
-24m4Z4bUaoY V V func ?
+24m4Z4bUaoY V V func sscanf_s
 2sWzhYqFH4E V V obj ?
 3+UPM-9E6xY V V func modff
 3GPpjQdAMTw V V func __cxa_guard_acquire

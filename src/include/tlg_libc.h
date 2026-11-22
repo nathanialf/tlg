@@ -83,6 +83,7 @@ clock_t clock(void);
 int printf(const char *format, ...);
 int sprintf(char *s, const char *format, ...);
 int snprintf(char *s, size_t n, const char *format, ...);
+int sscanf_s(const char *s, const char *format, ...);
 int vsnprintf(char *s, size_t n, const char *format, va_list args);
 int vsprintf(char *s, const char *format, va_list args);
 int vfprintf(FILE *stream, const char *format, va_list args);

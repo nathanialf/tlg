@@ -10469,3 +10469,10 @@ FUN_012fb8d0 src/game/unknown/leaf_012fb8d0.cpp
 FUN_001a3bb0 src/sce/unknown/leaf_001a3bb0.cpp
 FUN_001a3c00 src/sce/unknown/leaf_001a3c00.cpp
 FUN_013025c0 src/game/unknown/leaf_013025c0.cpp _ZN16JsComputeContext6slot18EP14Object016c3be0jjjP19JsMappedSubresource
+FUN_00e72510 src/game/unknown/leaf_00e72510.cpp _Z12FUN_00e72510P9lua_State
+FUN_00e63c90 src/game/unknown/func_00e63c90.cpp _GLOBAL__sub_I_func_00e63c90.cpp
+FUN_00e71080 src/game/unknown/leaf_00e71080.cpp _Z12FUN_00e71080P9lua_State
+FUN_00e711a0 src/game/unknown/leaf_00e71080.cpp _Z12FUN_00e711a0P9lua_State
+FUN_00e71310 src/game/unknown/leaf_00e71080.cpp _Z12FUN_00e71310P9lua_State
+FUN_00e71520 src/game/unknown/leaf_00e71080.cpp _Z12FUN_00e71520P9lua_State
+FUN_00e6b7f0 src/game/unknown/leaf_00e6b7f0.cpp _Z12FUN_00e6b7f0P9lua_State
