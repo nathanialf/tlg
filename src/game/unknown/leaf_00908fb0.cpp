@@ -35,7 +35,9 @@ struct Entry00908fb0 { /* derived name */
 };
 
 struct Pool00908fb0 { /* derived name */
-    u8 unknown0[0x78];
+    u8 unknown0[0x58];
+    int capacity; /* +0x58: the elements in the block */
+    u8 unknown5c[0x1c];
     Element00908fb0 *elements; /* +0x78 */
     Element00908fb0 *free;     /* +0x80 */
     Entry00908fb0 entries[64]; /* +0x88 */
@@ -123,4 +125,31 @@ u32 FUN_00908fb0(Owner00908fb0 *owner, const Point00908fb0 &point, float a,
         }
     }
     return handle;
+}
+
+/* derived names: under the owner's lock, every element of the pool in use
+ * listed with its handle (the entry's word set to 1), while fewer than 64
+ * are listed; an element's handle is 0 when it has none. Called by
+ * FUN_003ebc90 and FUN_00911780. */
+// NONMATCHING: the handle's index: the base keeps the element's distance from the block
+// over 0x68 (`shr rdi, 3; imul edi, 0xc4ec4ec5`), the build folds it to the loop's counter
+// (lead: the handle taken by a getter the base inlined only at the link)
+void FUN_009090d0(Owner00908fb0 *owner) /* derived name */
+{
+    ScopedLock00908fb0 guard(owner->lock);
+    for (int i = 0; i < owner->pool->capacity; ++i) {
+        Element00908fb0 *element = &owner->pool->elements[i];
+        if (!element->used)
+            continue;
+        const u32 handle =
+            element ? u32(element - owner->pool->elements) | element->generation << 16 : 0;
+        if (handle == 0)
+            continue;
+        if (owner->pool->count < 64) {
+            Entry00908fb0 &entry = owner->pool->entries[owner->pool->count++];
+            entry = Entry00908fb0();
+            entry.unknown0 = 1;
+            entry.handle = handle;
+        }
+    }
 }
