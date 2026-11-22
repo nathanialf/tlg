@@ -31,11 +31,28 @@ struct lua_State;
  * array of values from +0x208 indexed by a value's type tag plus 27
  * (FUN_00dedab0). derived name. */
 struct HksGlobal {
-    u8 unknown0[0x1d0];
-    void *registry; /* +0x1d0, derived name: linked as "Registry" (FUN_00dd2900) */
+    u8 unknown0[0x1c8];
+    /* +0x1c8, derived name: the registry, its table linked as "Registry"
+     * (FUN_00dd2900), the value debug.getregistry pushes (FUN_00deb2b0) */
+    HksObject registry;
     u8 unknown1d8[0x28];
     lua_State *mainThread;   /* +0x200, derived name */
     HksObject unknown208[1]; /* +0x208, derived name; its extent not traced */
+    u8 unknown218[0x280];
+    /* +0x498, derived name: the debugger print hands the arguments to
+     * (FUN_00debd90), null without one */
+    struct HksDebugger *debugger;
+};
+
+/* derived names: the debugger as print reaches it: the state it is
+ * printing for (+0x8, set for the outermost print), its user data (+0x18,
+ * handed to FUN_00d91230 first) and the depth of nested prints (+0x20) */
+struct HksDebugger {
+    u8 unknown0[0x8];
+    lua_State *state; /* +0x8 */
+    u8 unknown10[0x8];
+    void *user; /* +0x18 */
+    int depth;  /* +0x20 */
 };
 
 struct lua_State {
@@ -48,6 +65,11 @@ struct lua_State {
     HksObject *stack; /* +0x60, derived name: the first value FUN_00dd2900 links */
     u8 unknown68[0x10];
     void *globals; /* +0x78, derived name: linked as "Global Table" (FUN_00dd2900) */
+    u8 unknown80[0x40];
+    /* +0xc0, derived name: the thread's state as coroutine.status reads it
+     * (FUN_00decef0): 1 suspended unless its frame is empty, 2 normal, 3
+     * suspended, 4 dead */
+    int status;
 };
 
 /* One entry of a library's table of C functions, a name and its function,
@@ -413,6 +435,209 @@ inline void *topPointer(lua_State *state)
     default:
         return 0;
     }
+}
+
+/* hksi_lua_pushvalue (the name from its assertion message) of the
+ * registry's index, inlined: a copy of the registry pushed */
+inline void hksi_lua_pushRegistry(lua_State *s) /* derived name */
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x1238a, "s != NULL", "hksi_lua_pushvalue",
+               "Parameter 's' must be a valid state pointer", HKS_LUA_IMPL_FILE, 837);
+        __builtin_trap();
+    }
+    HksObject *top = s->top;
+    *top = s->global->registry;
+    s->top = top + 1;
+}
+
+/* hksi_luaL_checktype (the name from its assertion message), inlined: the
+ * argument error naming the type expected unless the argument's type (as
+ * typeOf reads it) is `type`; `name` is the type's name, the constant the
+ * base passes */
+inline void hksi_luaL_checktype(lua_State *s, int argument, int type, const char *name)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x1f9924a2, "s != NULL", "hksi_luaL_checktype",
+               "Parameter 's' must be a valid state pointer", HKS_VM_AUX_FILE, 406);
+        __builtin_trap();
+    }
+    if (typeOf(s, argument) != type)
+        FUN_00dd38c0(s, argument, name);
+}
+
+/* derived name: Lua's lua_settop for a count of arguments: nil pushed up to
+ * the frame's base plus `count`, which becomes the top */
+inline void setTop(lua_State *state, int count)
+{
+    HksObject *newTop = state->base + count;
+    for (HksObject *top = state->top; top < newTop; ++top)
+        top->type = 0;
+    state->top = newTop;
+}
+
+/* derived name: Lua's lua_isthread: whether an argument is a thread (tag
+ * 8; false past the frame's top) */
+inline bool isThread(lua_State *state, int argument)
+{
+    const HksObject *value = state->base + (argument - 1);
+    return value < state->top && (value->type & 0xf) == 8;
+}
+
+/* derived name: Lua's lua_tothread: an argument's thread (tag 8), else
+ * null (null past the frame's top) */
+inline lua_State *toThread(lua_State *state, int argument)
+{
+    const HksObject *value = state->base + (argument - 1);
+    if (!(value < state->top))
+        value = 0;
+    if (!value)
+        return 0;
+    if ((value->type & 0xf) == 8)
+        return static_cast<lua_State *>(value->value.pointer);
+    return 0;
+}
+
+/* hksi_lua_remove (the name from its assertion message), inlined: the
+ * value at an index taken out, the ones above it moved down (a positive
+ * index made relative to the top first) */
+inline void hksi_lua_remove(lua_State *s, int index)
+{
+    if (index > 0)
+        index = index - argumentCount(s) - 1;
+    if (!(-index > 0 && -index <= argumentCount(s))) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x111fff22, "-offset > 0 && -offset <= hks::S_API_STACK_FRAMESIZE(s)",
+               "hksi_lua_remove", "Parameter 'index' is invalid", HKS_LUA_IMPL_FILE, 874);
+        __builtin_trap();
+    }
+    HksObject *top = s->top;
+    for (int i = index; i < 0; ++i)
+        top[i] = top[i + 1];
+    s->top = top - 1;
+}
+
+/* derived name: the debugger's print of the stack's values
+ * (FUN_00d91230, its body not written) */
+void FUN_00d91230(void *user, HksDebugger *debugger, int count);
+
+/* The VM's debugger source, as its assertions pass it (`__FILE__` in
+ * vm-debug.cpp). derived name. */
+#define HKS_VM_DEBUG_FILE                                                                          \
+    "D:\\trico\\engine\\anzu\\external\\havok\\HavokScriptVM-2013.3.0\\build/../source/"           \
+    "virtualMachine/Debug/vm-debug.cpp"
+
+/* hksi_hks_debugprint (the name from its assertion message), inlined: the
+ * frame's values handed to the debugger, if there is one, the state set
+ * for the outermost print */
+inline void hksi_hks_debugprint(lua_State *s, int count)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x89716, "s != NULL", "hksi_hks_debugprint",
+               "Parameter 's' must be a valid state pointer", HKS_VM_DEBUG_FILE, 40);
+        __builtin_trap();
+    }
+    HksDebugger *debugger = s->global->debugger;
+    if (debugger) {
+        if (debugger->depth) {
+            ++debugger->depth;
+            FUN_00d91230(debugger->user, debugger, count);
+            --debugger->depth;
+        } else {
+            debugger->state = s;
+            debugger->depth = 1;
+            FUN_00d91230(debugger->user, debugger, count);
+            --debugger->depth;
+            debugger->state = 0;
+        }
+    }
+}
+
+/* luaL_Buffer as the bytes lay it out: the next free character, the count
+ * of pieces pushed, the state and the characters (0x200) */
+struct luaL_Buffer {
+    char *p;
+    int lvl;
+    lua_State *L;
+    char buffer[0x200];
+};
+
+/* derived names: the buffer's text flushed onto the stack (FUN_00ddb460,
+ * Lua's luaL_prepbuffer by its argument) and Lua's lua_concat
+ * (FUN_00d94bc0); their bodies not written */
+char *FUN_00ddb460(luaL_Buffer *b);
+void FUN_00d94bc0(lua_State *state, int n);
+
+/* hksi_luaL_buffinit (the name from its assertion message), inlined */
+inline void hksi_luaL_buffinit(lua_State *s, luaL_Buffer *b)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x12112382, "s != NULL", "hksi_luaL_buffinit",
+               "Parameter 's' must be a valid state pointer", HKS_VM_AUX_FILE, 252);
+        __builtin_trap();
+    }
+    b->L = s;
+    b->lvl = 0;
+    b->p = b->buffer;
+}
+
+/* Lua's luaL_addchar, the buffer flushed when it is full */
+inline void luaL_addchar(luaL_Buffer *b, char c)
+{
+    if (b->p == b->buffer + sizeof b->buffer)
+        FUN_00ddb460(b);
+    *b->p = c;
+    ++b->p;
+}
+
+/* hksi_luaL_addlstring (the name from its assertion messages), inlined:
+ * the characters added piece by piece, the buffer flushed whenever it is
+ * full */
+inline void hksi_luaL_addlstring(luaL_Buffer *buffer, const char *s, size_t len)
+{
+    if (!(buffer != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0xdbc82653, "buffer", "hksi_luaL_addlstring",
+               "Parameter 'buffer' must be a valid luaL_Buffer pointer", HKS_VM_AUX_FILE, 105);
+        __builtin_trap();
+    }
+    if (!(len == 0 || s)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0xdbc82654, "len == 0 || s", "hksi_luaL_addlstring",
+               "Parameter 's' can not be NULL unless 'len' is 0", HKS_VM_AUX_FILE, 106);
+        __builtin_trap();
+    }
+    while (len) {
+        size_t n = buffer->buffer + sizeof buffer->buffer - buffer->p;
+        if (n > len)
+            n = len;
+        if (n == 0) {
+            FUN_00ddb460(buffer);
+            continue;
+        }
+        memcpy(buffer->p, s, n);
+        s += n;
+        buffer->p += n;
+        len -= n;
+    }
+}
+
+/* Lua's luaL_pushresult: the text flushed and its pieces joined */
+inline void luaL_pushresult(luaL_Buffer *b)
+{
+    FUN_00ddb460(b);
+    FUN_00d94bc0(b->L, b->lvl);
 }
 
 /* derived name: Lua's lua_pop */

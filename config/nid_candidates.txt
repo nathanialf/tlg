@@ -943,3 +943,5 @@ fileno
 fstat
 mkdir
 __error
+difftime
+setlocale

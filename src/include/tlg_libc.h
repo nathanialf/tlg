@@ -78,6 +78,7 @@ char *strchr(const char *s, int c);
 char *strrchr(const char *s, int c);
 char *strstr(const char *s, const char *find);
 time_t time(time_t *t);
+double difftime(time_t end, time_t start);
 clock_t clock(void);
 int printf(const char *format, ...);
 int sprintf(char *s, const char *format, ...);
