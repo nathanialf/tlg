@@ -35,8 +35,8 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     virtual ~Object016b85e0();
     /* slots 3 and 4 of 0x16b85e0: FUN_0134a390 and FUN_0134a3a0, in place
      * of the root's empty bodies; parameters not traced */
-    virtual void slot3(); /* derived name; FUN_0134a390 */
-    virtual void slot4(); /* derived name; FUN_0134a3a0 */
+    virtual void slot3(); /* derived name; FUN_0134a390: the count at +0x22c taken */
+    virtual void slot4(); /* derived name; FUN_0134a3a0: the count at +0x22c dropped */
     /* slots 5 to 9, the class's own (slots 8 and 9 the empty body at
      * 0x1af750); the parameters of 7 to 9 not traced. Slot 5 adds a child
      * (FUN_00c573b0: one with no parent at its +0x28, under this object's
@@ -123,7 +123,10 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     }
 
     Float4A unknown70; /* +0x70: the first of the rows; not traced */
-    u8 unknown80[0x70];
+    u8 unknown80[0x30];
+    /* +0xb0: a 4x4 transform, rows of x, y, z and the translation, that
+     * slot 45 of Object016aed28 takes a point through (FUN_0083ff30) */
+    Float4A transformB0[4];
     Float4A position; /* +0xf0 (derived name) */
     u8 unknown100[0x10];
     Float4A rotation;   /* +0x110 (derived name) */
@@ -134,7 +137,11 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     Name name210; /* +0x210: empty from the constructor */
     u8 unknown214[0x4];
     int index; /* +0x218: the node's place in its parent's children, -1 from the constructor */
-    u8 unknown21c[0x1c];
+    u8 unknown21c[0x10];
+    /* +0x22c: a second reader count, taken by slot 3 (FUN_01331c10) and
+     * dropped by slot 4 (an atomic decrement) */
+    int readers22c;
+    u8 unknown230[0x8];
 };
 
 #endif

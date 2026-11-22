@@ -1,31 +1,26 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
-#include "tlg_game_object0134a660.h"
+#include "tlg_game_object016aed28.h"
 
-/* derived names: the setters of the three Names at +0x54c, +0x544 and +0x548
- * (Name's assignment, inlined), each held in 17 vtable slots, the three
- * side by side (the second and third adjacent, the first six before); the
- * field layout of leaf_0134a430.cpp's siblings. Class and methods unknown. */
-void FUN_0134a4c0(Object0134a660 *self, const Name &name) /* derived name */
+/* derived names: slots 25, 26, 32 and 33 of the class at 0x16aed28: a
+ * name assigned (FUN_0134a450: the one at +0x540, the shape marked changed;
+ * FUN_0134a4c0: +0x54c; FUN_0134a580: +0x544; FUN_0134a5f0: +0x548) */
+void Object016aed28::slot26(const Name &name)
 {
-    self->name54c = name;
+    name54c = name;
 }
 
-void FUN_0134a580(Object0134a660 *self, const Name &name) /* derived name */
+void Object016aed28::slot32(const Name &name)
 {
-    self->name544 = name;
+    name544 = name;
 }
 
-void FUN_0134a5f0(Object0134a660 *self, const Name &name) /* derived name */
+void Object016aed28::slot33(const Name &name)
 {
-    self->name548 = name;
+    name548 = name;
 }
 
-/* derived names: the setter of the Name at +0x540, which also sets bit 4 of
- * the byte at +0x20 (as the setters of the words at +0x4f4 to +0x50c do),
- * whether or not the name changed. */
-void FUN_0134a450(Object0134a660 *self, const Name &name) /* derived name */
+void Object016aed28::slot25(const Name &name)
 {
-    self->name540 = name;
-    self->unknown20 |= 0x10;
+    name540 = name;
+    flags |= 0x10;
 }

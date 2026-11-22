@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016aed28.h"
 #include "tlg_types.h"
 #include "tlg_game_name.h"
 
@@ -8,19 +9,13 @@
  * tail-calls its base's destructor (0x83df00). FUN_00b43120, slot 1, is the
  * deleting one. The destructor is the class's key function, so this file
  * emits the vtable. The other members are not traced. */
-class Object0083df00 /* derived name */
-{
-  public:
-    virtual ~Object0083df00();
-};
-
-class Object016b5d88 : public Object0083df00 /* derived name */
+class Object016b5d88 : public Object016aed28 /* derived name */
 {
   public:
     virtual ~Object016b5d88();
 
   private:
-    u8 unknown8[0x57c];
+    u8 unknown580[0x4];
     Name name584; /* +0x584 */
 };
 
