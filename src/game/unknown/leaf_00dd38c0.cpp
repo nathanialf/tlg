@@ -20,14 +20,6 @@ inline const char *hksi_lua_typename(int tp)
     return D_16bbfa0[tp + 1];
 }
 
-/* hksi_lua_type by its arguments (Lua's lua_type), inlined: the type at an
- * index, the two kinds of function (9, 10) read as 6 */
-inline int hksi_lua_type(lua_State *s, int index)
-{
-    const int type = typeAt(s, index);
-    return type == 9 || type == 10 ? 6 : type;
-}
-
 /* hksi_luaL_typerror (the name from its assertion message): the argument
  * error "<type> expected, got <its type>"; the call timed */
 // NONMATCHING: the frame: the base keeps the mark in a 0x18-byte frame (`sub rsp, 0x18`), the build

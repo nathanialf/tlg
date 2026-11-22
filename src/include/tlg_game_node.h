@@ -26,7 +26,11 @@ struct Component00503fb0 : public Object016b9108 { /* derived name */
     u8 flags3a;
     u8 unknown3b[5];
     int unknown40; /* +0x40: set to 1 where it is 0 by FUN_00cf56b0 */
-    u8 unknown44[0x10];
+    u8 unknown44[0x8];
+    /* +0x4c: the index of a name in the class of the type the pointer at
+     * 0x58143e0 holds (FUN_00645500 compares it with a name's) */
+    unsigned nameIndex4c;
+    u8 unknown50[0x4];
     Name name; /* +0x54 */
     /* +0x58: a second name, which the scripts
      * Soldier_SoldierHelmet_TractionInvalidArea_Enter and _Leave assign

@@ -29,7 +29,7 @@ void *FUN_00dba890(lua_State *s, size_t size)
     ++s->global->userdataCount;
     HksUserdata *userdata =
         static_cast<HksUserdata *>(FUN_013bd0a0(s, size + sizeof(HksUserdata), 0x1b));
-    userdata->unknown18 = 0;
+    userdata->metatable = 0;
     void **environment;
     if (static_cast<int>(s->callInfo - s->callInfos) >= 0)
         environment = &static_cast<HksClosure *>(s->base[-1].value.pointer)->environment;

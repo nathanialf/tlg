@@ -9,9 +9,9 @@ void FUN_00db84e0(lua_State *state, HksObject *table, HksObject *key, HksObject 
     HksApiTimer timer(state);
     const HksObject object = *table;
     const int type = object.type & 0xf;
-    if (type == 5 && !object.value.table->unknown10)
+    if (type == 5 && !object.value.table->metatable)
         FUN_00d9c0e0(object.value.table, state, key, value);
-    else if (type == 12 && !object.value.structure->unknown20)
+    else if (type == 12 && !object.value.structure->metatable)
         FUN_013be510(object.value.structure, state, key, value);
     else
         FUN_00dc8b40(state, object, key, value, 0);
