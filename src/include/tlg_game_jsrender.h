@@ -41,7 +41,8 @@ class JsShaderResourceView;
 class JsUnorderedAccessView
 {
   public:
-    u8 unknown0[0x88];
+    u8 unknown0[0x84];
+    u32 counterSlot;  /* derived name; +0x84: the index of its count (JsDeviceContext's slot 16) */
     u32 initialCount; /* derived name; +0x88 */
 };
 

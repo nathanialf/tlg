@@ -16,6 +16,9 @@ struct Object0131b280 { /* derived name */
 // the address's low word (`mov edi, r14d`) before the header store, the base
 // after the select of the mask (`cmova; mov edx, r14d`); the registers follow.
 // Same with the mask as a 64-bit and truncated and with the address a pointer.
+// Round 448E: with the words computed before the cursor is read, as a member of
+// the command buffer or of the context, the order is the base's and the object
+// and the address trade rbx and r14, 28/43.
 void FUN_0131b280(Object0131b280 *self, u64 address) /* derived name */
 {
     CommandBuffer01496a80 &commands = self->commands;

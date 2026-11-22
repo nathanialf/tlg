@@ -1,19 +1,15 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_commandbuffer.h"
 #include "tlg_types.h"
 
-struct Object0131b330 { /* derived name */
-    u8 unknown0[0x47c0];
-    CommandBuffer01496a80 commands; /* +0x47c0 */
-};
+#include "tlg_game_jsdevicecontext.h"
 
 /* derived name: writes the three-word packet 0xc0017602 that sets the
  * register 0x215 to its three fields: the first argument in bits 0 to 9, the
  * second in bits 12 to 15 and the third in bits 16 to 21, when there is room
  * for it; the same body as FUN_01303bd0 with its buffer at +0x60 */
-void FUN_0131b330(Object0131b330 *self, u32 low, u32 middle, u32 high) /* derived name */
+void JsDeviceContext::setRegister215(u32 low, u32 middle, u32 high)
 {
-    CommandBuffer01496a80 &commands = self->commands;
+    CommandBuffer01496a80 &commands = this->commands;
     if (commands.remaining() < 3 && !commands.reserve(&commands, 3, commands.userData))
         return;
     u32 *packet = commands.cursor;

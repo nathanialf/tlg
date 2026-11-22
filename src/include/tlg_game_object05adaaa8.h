@@ -6,10 +6,10 @@
 
 #include "tlg_types.h"
 
+#include "tlg_game_jsvolatilememory.h"
 #include "tlg_game_render_misc.h"
 
-struct Target0131e2d0;       /* derived name */
-struct Member05adaaa8_10238; /* derived name */
+struct Target0131e2d0; /* derived name */
 
 /* derived name: an entry of the device's private data (16 bytes: CreateDevice
  * chains them at that stride), the next free one at +0x4 */
@@ -62,7 +62,9 @@ class Object05adaaa8 /* derived name */
     u8 unknown100c0[0x100e8 - 0x100c0];
     Target0131e2d0 *unknown100e8; /* +0x100e8: FUN_0131e2d0's first argument (FUN_013224a0) */
     u8 unknown100f0[0x10238 - 0x100f0];
-    Member05adaaa8_10238 *unknown10238; /* +0x10238: passed to FUN_01305ce0 by FUN_01499360 */
+    /* +0x10238: the volatile memory the contexts allocate from
+     * (JsDeviceContext's slots 21 and 27) */
+    JsVolatileMemory *volatileMemory; /* derived name */
 };
 
 extern Object05adaaa8 *D_5adaaa8;

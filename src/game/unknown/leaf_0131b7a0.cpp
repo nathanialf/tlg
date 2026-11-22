@@ -17,7 +17,9 @@ struct Object0131b7a0 { /* derived name */
 // base copies the low word to edx before it widens the index byte into ecx
 // and ors the high byte into it (`or ecx, esi`); the build widens the index
 // into esi and ors it into the high byte (`or edx, esi`). Same with the index
-// a masked u32 and with the high byte masked as 64 bits.
+// a masked u32 and with the high byte masked as 64 bits. Round 448E: the words
+// computed before the cursor is read move the difference to the index's
+// register (32/41).
 void FUN_0131b7a0(Object0131b7a0 *self, u8 index, u64 address) /* derived name */
 {
     CommandBuffer01496a80 &commands = self->commands;

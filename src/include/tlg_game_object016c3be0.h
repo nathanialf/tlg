@@ -22,6 +22,17 @@ inline void returnEntry(void *entry) /* derived name */
     }
 }
 
+/* derived name: the same for the list at +0x100e8, its count at +0x100b0
+ * (as leaf_013224a0.cpp's; JsDeviceContext's destructor) */
+inline void returnEntryE8(void *entry) /* derived name */
+{
+    if (entry) {
+        Object05adaaa8 *owner = D_5adaaa8;
+        FUN_0131e2d0(owner->unknown100e8, entry);
+        __sync_fetch_and_add(&owner->unknown100b0, 1);
+    }
+}
+
 /* derived names: the class whose vtable is at 0x16c3be0
  * (config/vtables.derived.base.txt; built by FUN_012ff2f0 and others). Its
  * complete destructor (0x131fdb0, the row named Object0131fdb0's) hands
@@ -35,14 +46,22 @@ class Object016c3be0 : public Object0130acb0 /* derived name */
     virtual ~Object016c3be0();
 
   protected:
-    u8 unknown10[0x20];
+    /* the context's slot 16 reads the descriptor and writes +0x2c */
+    friend class JsDeviceContext;
+
+    u8 unknown10[0x1c];
+    u32 unknown2c; /* +0x2c: the context's stamp at +0x47ac, written by its slot 16 */
     void *entry30; /* +0x30 */
     u8 unknown38[0x8];
     void *entry40; /* +0x40 */
     void *entry48; /* +0x48 */
     u8 unknown50[0x8];
     void *entry58; /* +0x58 */
-    u8 unknown60[0xc4];
+    /* +0x60: the buffer's descriptor; its first word the base address's low
+     * 32 bits, bits 0 to 11 of the second the high ones (JsDeviceContext's
+     * slot 16) */
+    u32 descriptor[4]; /* derived name */
+    u8 unknown70[0xb4];
     int state124; /* +0x124 */
 };
 
