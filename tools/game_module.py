@@ -359,13 +359,13 @@ def once_stores(units: list[Unit], name: str) -> list[tuple[str, str]]:
     """[(unit, stored value)] for every `store` to the global `name` in the
     units' unoptimised IR (a once-stored row: tools/module_boundary.py)."""
     q = re.escape("@" + (name if re.fullmatch(r"[-a-zA-Z$._][-a-zA-Z$._0-9]*", name) else f'"{name}"'))
-    pat = re.compile(r"^\s*store (?:volatile )?(.*), [^,]*\*+ " + q + r"(?:, align \d+)?(?:, !.*)?$")
+    pat = re.compile(r"^\s*store (?:volatile )?(?P<t>.+?) (?P<v>.+), (?P=t)\* " + q + r"(?:, align \d+)?(?:, !.*)?$")
     out = []
     for u in units:
         for line in u.path.read_text().splitlines():
             if line.lstrip().startswith("store ") and re.search(q + r"\b", line):
                 m = pat.match(line)
-                out.append((u.tu, m.group(1) if m else line.strip()))
+                out.append((u.tu, m.group("v") if m else line.strip()))
     return out
 
 

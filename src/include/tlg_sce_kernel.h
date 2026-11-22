@@ -60,6 +60,27 @@ typedef pthread_attr *pthread_attr_t;
 struct pthread_rwlock;
 typedef pthread_rwlock *pthread_rwlock_t;
 
+/* A condition variable of the kernel library: a handle, as FreeBSD's
+ * pthread_cond_t is (the render's condition variable keeps one at +0x0,
+ * 0x139ded0). */
+struct pthread_cond;
+typedef pthread_cond *pthread_cond_t;
+
+/* A thread's scheduling parameter: its priority (CreateDevice passes 0x100,
+ * 0xb8c341). */
+struct SceKernelSchedParam {
+    int sched_priority;
+};
+
+/* FreeBSD's pthread.h: a joinable thread, and the scheduling the attributes
+ * give rather than inherit (CreateDevice passes 0 for both, 0xb8c35b). */
+#define PTHREAD_CREATE_JOINABLE 0
+#define PTHREAD_EXPLICIT_SCHED 0
+
+/* The SDK's success value, which the render's checks compare with by name
+ * ("rc == SCE_OK", 0x15cefe8). */
+#define SCE_OK 0
+
 extern "C" {
 int pthread_mutex_destroy(pthread_mutex_t *mutex);
 int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr);
@@ -97,6 +118,16 @@ int sceKernelUsleep(SceKernelUseconds microseconds);
 int sceKernelWaitSema(SceKernelSema sema, int needCount, unsigned int *timeout);
 int sceKernelSignalSema(SceKernelSema sema, int signalCount);
 int scePthreadMutexDestroy(pthread_mutex_t *mutex);
+int scePthreadCondDestroy(pthread_cond_t *cond);
+int scePthreadAttrInit(pthread_attr_t *attr);
+int scePthreadAttrDestroy(pthread_attr_t *attr);
+int scePthreadAttrSetdetachstate(pthread_attr_t *attr, int detachState);
+int scePthreadAttrSetinheritsched(pthread_attr_t *attr, int inheritSched);
+int scePthreadAttrSetschedparam(pthread_attr_t *attr, const SceKernelSchedParam *param);
+int scePthreadAttrSetstacksize(pthread_attr_t *attr, unsigned long stackSize);
+int scePthreadAttrSetaffinity(pthread_attr_t *attr, unsigned long mask);
+int scePthreadCreate(pthread_t *thread, const pthread_attr_t *attr, void *(*entry)(void *),
+                     void *arg, const char *name);
 int scePthreadMutexLock(pthread_mutex_t *mutex);
 int scePthreadMutexUnlock(pthread_mutex_t *mutex);
 int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);

@@ -9,3 +9,7 @@ D_16dc098
 D_5946608
 D_5943270
 D_16dc089
+# A once-stored pointer (tools/module_boundary.py --local: the base stores it once, with a
+# constant, in <function>, and every other access tests it for null; the module must
+# hold that one store, in <unit>): `<symbol> once <function> <unit>`.
+D_5ace510 once FUN_00b8a480 src/game/unknown/func_00b8a480.cpp
