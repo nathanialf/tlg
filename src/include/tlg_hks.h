@@ -42,6 +42,16 @@ struct HksGlobal {
     /* +0x498, derived name: the debugger print hands the arguments to
      * (FUN_00debd90), null without one */
     struct HksDebugger *debugger;
+    u8 unknown4a0[0xb8];
+
+    /* +0x558, derived name: the compiler's settings loadstring hands to
+     * the loader (FUN_00dbe6c0); compilerSettings sets +0x558 and +0x568
+     * (FUN_00de9e70) */
+    struct HksCompilerSettings {
+        int unknown0;
+        u8 unknown4[0xc];
+        int unknown10;
+    } compilerSettings;
 };
 
 /* derived names: the debugger as print reaches it: the state it is
@@ -638,6 +648,27 @@ inline void luaL_pushresult(luaL_Buffer *b)
 {
     FUN_00ddb460(b);
     FUN_00d94bc0(b->L, b->lvl);
+}
+
+/* hksi_lua_insert (the name from its assertion message), inlined: the
+ * stack's top value moved down to an index, the ones from there up moved
+ * up one (a negative index made relative to the base for the check) */
+inline void hksi_lua_insert(lua_State *s, int index)
+{
+    const int offset = index < 0 ? index + 1 + argumentCount(s) : index;
+    if (!(offset > 0 && offset <= argumentCount(s))) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0x211fff22, "offset > 0 && offset <= hks::S_API_STACK_FRAMESIZE(s)",
+               "hksi_lua_insert", "Parameter 'index' is invalid", HKS_LUA_IMPL_FILE, 912);
+        __builtin_trap();
+    }
+    HksObject *p = index < 0 ? s->top + index : s->base + (index - 1);
+    HksObject *q = s->top - 1;
+    const HksObject value = *q;
+    for (; q != p; --q)
+        *q = q[-1];
+    *p = value;
 }
 
 /* derived name: Lua's lua_pop */
