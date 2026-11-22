@@ -5,6 +5,7 @@
 #define TLG_GAME_FADE013D2490_H
 
 #include "tlg_types.h"
+#include "tlg_game_array.h"
 #include "tlg_game_array01343a80.h"
 #include "tlg_game_frame.h"
 #include "tlg_game_vector.h"
@@ -122,6 +123,28 @@ class FadeSource00f6b880 : public FadeSourceBase00f6b880, public FadeHold00f6b88
     float unknown558; /* +0x558 */
 };
 
+/* derived names: a listener of the model, told of a fading state through
+ * slot 2 or slot 5 (FUN_00f50140 and FUN_00f50740, and their copies in
+ * other units: one of each per unit); the other slots are not traced */
+class FadeListener013d4610 /* derived name */
+{
+  public:
+    virtual void slot0();
+    virtual void slot1();
+    virtual void slot2(void *source); /* derived name */
+    virtual void slot3();
+    virtual void slot4();
+    virtual void slot5(void *source); /* derived name */
+};
+
+/* derived name: an entry of 24 bytes of the model's listeners, the listener
+ * at +0x8 */
+struct FadeListenerEntry013d4610 { /* derived name */
+    u8 unknown0[0x8];
+    FadeListener013d4610 *listener; /* +0x8 */
+    u8 unknown10[0x8];
+};
+
 struct FadeModel013d4610 { /* derived name */
 
     /* the pose of an index, the model read before the index (FUN_013ce050:
@@ -133,7 +156,9 @@ struct FadeModel013d4610 { /* derived name */
 
     u8 unknown0[0x40];
     FadeSkeleton013ce2d0 skeleton; /* +0x40 */
-    u8 unknown148[0x2f0 - 0x40 - sizeof(FadeSkeleton013ce2d0)];
+    u8 unknown148[0x290 - 0x40 - sizeof(FadeSkeleton013ce2d0)];
+    Array05943280<FadeListenerEntry013d4610> listeners; /* +0x290 */
+    u8 unknown2a8[0x2f0 - 0x290 - sizeof(Array05943280<FadeListenerEntry013d4610>)];
     FadeSource00f6b880 *source; /* +0x2f0 */
 };
 

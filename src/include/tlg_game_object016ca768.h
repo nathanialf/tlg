@@ -8,6 +8,7 @@
 #include "tlg_game_object013d35e0.h"
 #include "tlg_game_object016d3ef8.h"
 #include "tlg_game_object016d6b08.h"
+#include "tlg_simd.h"
 
 /* derived names: the kinds of pool the classes below refer to; nothing of
  * them is traced but their base */
@@ -124,6 +125,9 @@ class Object016ca568 : public Object016d3ef8 /* derived name */
 {
   public:
     virtual ~Object016ca568();
+    /* derived name: FUN_013e1e70 (leaf_013e1e70.cpp): the base's slot 2, then the
+     * vectors at +0x240 and +0x250 cleared and the int at +0x260 set to 1 */
+    virtual void slot2();
 
   private:
     u8 unknown70[0x8];
@@ -133,6 +137,9 @@ class Object016ca568 : public Object016d3ef8 /* derived name */
     u8 unknownc0[0x160];
     Array05943280<u8> array220;         /* +0x220 */
     PoolRef01343090<Pool016ca568> pool; /* +0x238 */
+    Vec4 unknown240;                    /* +0x240 */
+    Vec4 unknown250;                    /* +0x250 */
+    int unknown260;                     /* +0x260 */
 };
 
 /* derived names: the same form over Object016d6b08, its vtable at 0x16caa48
@@ -143,6 +150,9 @@ class Object016caa48 : public Object016d6b08 /* derived name */
 {
   public:
     virtual ~Object016caa48();
+    /* derived name: FUN_0147d790 (leaf_0147d790.cpp): the base's slot 2, then the
+     * vectors at +0x240 and +0x250 cleared and the int at +0x260 set to 1 */
+    virtual void slot2();
 
   private:
     u8 unknown70[0x8];
@@ -152,6 +162,9 @@ class Object016caa48 : public Object016d6b08 /* derived name */
     u8 unknownc0[0x160];
     Array05943280<u8> array220;         /* +0x220 */
     PoolRef01343090<Pool016caa48> pool; /* +0x238 */
+    Vec4 unknown240;                    /* +0x240 */
+    Vec4 unknown250;                    /* +0x250 */
+    int unknown260;                     /* +0x260 */
 };
 
 #endif

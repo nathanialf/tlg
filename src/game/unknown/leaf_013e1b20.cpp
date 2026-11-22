@@ -1,17 +1,22 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016d3ef8.h"
 
-/* derived names: a virtual method that passes its arguments on to FUN_013dfda0
- * as a tail call; slot 2 of the vtable at 0x16ca518 (stored by FUN_00f9ab50);
- * slot 2 of the vtable at 0x16ca5b8 (stored by FUN_00fba720 FUN_013e1ea0);
- * slot 2 of the vtable at 0x16d4090 (stored by FUN_00f9ab50); slot 2 of the
- * vtable at 0x16d48f0 (stored by FUN_00fba720); slot 2 of the vtable at
- * 0x16d4948 (stored by FUN_00fba720 FUN_013e49b0 FUN_013e4a20). The record is
- * the one FUN_013dfda0 works on; the return type is not traced. */
-struct Object013dfda0; /* derived name */
-
-void FUN_013dfda0(Object013dfda0 *self); /* derived name */
-
-void FUN_013e1b20(Object013dfda0 *self) /* derived name */
+/* derived names: the class whose vtable is at 0x16ca518
+ * (config/vtables.derived.base.txt), derived from Object016d3ef8: slot 2 is
+ * its own (FUN_013e1b20: the base's slot 2 alone, a tail call), slot 7
+ * FUN_00fac240 (not traced); 0x16d4090 is derived from it, the rest the
+ * base's. The class of 0x16ca5b8 (Object013e4a90's base, leaf_013e4a90.cpp)
+ * and those of 0x16d48f0 and 0x16d4948 derived from it hold the same slot 2:
+ * two bodies of one form the link folded, claimed from the lower vtable. Its
+ * destructor is the implicit one (slots 0 and 1 hold the base's pair): slot 2
+ * is the key function, so this file emits the vtable. */
+class Object016ca518 : public Object016d3ef8 /* derived name */
 {
-    FUN_013dfda0(self);
+  public:
+    virtual void slot2(); /* derived name */
+};
+
+void Object016ca518::slot2()
+{
+    Object016d3ef8::slot2();
 }

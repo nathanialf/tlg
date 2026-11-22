@@ -1,58 +1,30 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_object016d3908.h"
 
-/* derived names: an object whose slot 2 is called with a second object
- * (FUN_00f50140 and its siblings). */
-struct Listener00f50140 /* derived name */
+/* derived names: the class whose vtable is at 0x16bf2e8
+ * (config/vtables.derived.base.txt), derived from Object016d3908: slot 2 is
+ * its own (FUN_00f50140: the base's slot 2, then every listener of the model told
+ * of the object through its slot 2, the count read again after each one,
+ * then the int at +0x70 cleared), slots 3 and 4 FUN_00f501a0 and
+ * FUN_00f501f0 (not traced), the rest the base's; the class of
+ * 0x16bf330's (FUN_00f50740) is its twin through slot 5. Its destructor is the
+ * implicit one (slots 0 and 1 hold the base's pair): slot 2 is the key
+ * function, so this file emits the vtable. */
+class Object016bf2e8 : public Object016d3908 /* derived name */
 {
-    struct Vtable {
-        void *unknown0[2];
-        void (*notify)(Listener00f50140 *self, void *from); /* slot 2 */
-    } *vtable;
+  public:
+    virtual void slot2(); /* derived name */
+
+  private:
+    int unknown70; /* +0x70: cleared after the listeners are told */
 };
 
-/* derived names: one entry of the owner's table, 24 bytes */
-struct Entry00f50140 /* derived name */
+/* the counter is unsigned and the array's index an int: the index is
+ * sign-extended at each use (`movsxd`), not widened */
+void Object016bf2e8::slot2()
 {
-    u8 unknown0[8];
-    Listener00f50140 *listener; /* +0x8 */
-    u8 unknown10[8];
-};
-
-struct Owner00f50140 /* derived name */
-{
-    u8 unknown0[0x290];
-    Entry00f50140 *entries; /* +0x290 */
-    unsigned count;         /* +0x298 */
-
-    Entry00f50140 &at(int index)
-    {
-        return entries[index];
-    } /* derived name */
-};
-
-struct Object00f50140 /* derived name */
-{
-    u8 unknown0[8];
-    Owner00f50140 *owner; /* +0x8 */
-    u8 unknown10[0x60];
-    int unknown70; /* +0x70 */
-};
-
-void FUN_013cf950(Object00f50140 *self); /* derived name */
-
-/* derived names: slot 2 of the vtable at 0x16bf2e8 (stored by
- * FUN_00f2c5d0): runs FUN_013cf950 on the object, hands it to the listener
- * of every entry of its owner's table (slot 2 of each, the table and its
- * count read again after each call), then clears the int at +0x70. */
-/* the counter is unsigned and the table's index an int: the index is sign-extended at each
- * use (`movsxd`), not widened */
-void FUN_00f50140(Object00f50140 *self) /* derived name */
-{
-    FUN_013cf950(self);
-    for (unsigned i = 0; i < self->owner->count; ++i) {
-        Listener00f50140 *listener = self->owner->at(i).listener;
-        listener->vtable->notify(listener, self);
-    }
-    self->unknown70 = 0;
+    Object016d3908::slot2();
+    for (unsigned i = 0; i < model->listeners.size(); ++i)
+        model->listeners.at(i).listener->slot2(this);
+    unknown70 = 0;
 }

@@ -1,24 +1,13 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_object016ca768.h"
 
-#include "tlg_simd.h"
-
-/* derived names: slot 2 of the vtable at 0x16caa48 (and 8 more pointers):
- * FUN_0147bac0 on the object, then the two vectors at +0x240 cleared and the
- * int at +0x260 set to 1. Class and method unknown. */
-struct Object0147d790 { /* derived name */
-    u8 unknown0[0x240];
-    Vec4 unknown240;
-    Vec4 unknown250;
-    int unknown260;
-};
-
-void FUN_0147bac0(Object0147d790 *self); /* derived name */
-
-void FUN_0147d790(Object0147d790 *self) /* derived name */
+/* derived name: slot 2 of Object016caa48 (tlg_game_object016ca768.h), which its
+ * eight derived classes keep: the base's slot 2, then the two vectors at
+ * +0x240 cleared and the int at +0x260 set to 1 */
+void Object016caa48::slot2()
 {
-    FUN_0147bac0(self);
-    self->unknown240 = _mm_setzero_ps();
-    self->unknown250 = _mm_setzero_ps();
-    self->unknown260 = 1;
+    Object016d6b08::slot2();
+    unknown240 = _mm_setzero_ps();
+    unknown250 = _mm_setzero_ps();
+    unknown260 = 1;
 }

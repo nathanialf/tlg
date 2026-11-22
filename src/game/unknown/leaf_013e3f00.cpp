@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object013e4200.h"
 
 /* derived names: the complete destructor of a class derived from the one
  * whose destructor is 0x13e4200, its own body empty, so the base destructor
@@ -7,12 +8,6 @@
  * 0x13e4200 before operator delete. The class form: Object013e3f00 derives
  * from Object013e4200, whose destructor is the one at 0x13e4200 (its row
  * named for it, D15), and its own destructor is defined empty out of line. */
-class Object013e4200 /* derived name */
-{
-  public:
-    virtual ~Object013e4200();
-};
-
 class Object013e3f00 : public Object013e4200 /* derived name */
 {
   public:

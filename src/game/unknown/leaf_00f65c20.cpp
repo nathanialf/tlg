@@ -1,14 +1,19 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016d3ad0.h"
 
-/* derived names: a virtual method that passes its arguments on to FUN_013d4610
- * as a tail call; slot 2 of the vtable at 0x16bf3f8 (stored by no constructor
- * listed). The record is the one FUN_013d4610 works on; the return type is not
- * traced. */
-struct Object013d4610; /* derived name */
-
-void FUN_013d4610(Object013d4610 *self); /* derived name */
-
-void FUN_00f65c20(Object013d4610 *self) /* derived name */
+/* derived names: the class whose vtable is at 0x16bf3f8
+ * (config/vtables.derived.base.txt), derived from Object016d3ad0: slot 2 is
+ * its own (FUN_00f65c20: the base's slot 2 alone, a tail call), slot 4
+ * FUN_00f65c30 (not traced), the rest the base's. Its destructor is the
+ * implicit one (slots 0 and 1 hold the base's pair): slot 2 is the key
+ * function, so this file emits the vtable. */
+class Object016bf3f8 : public Object016d3ad0 /* derived name */
 {
-    FUN_013d4610(self);
+  public:
+    virtual void slot2(); /* derived name */
+};
+
+void Object016bf3f8::slot2()
+{
+    Object016d3ad0::slot2();
 }
