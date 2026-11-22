@@ -98,6 +98,16 @@ template <class P> class PoolRef01343090 /* derived name */
             close(held);
     }
 
+    /* the same, the pool's word at +0x48 reset first: the reference read
+     * again for the rest (0x325f1d: `mov r12, [r15]` after the store) */
+    void resetAndShutdown() /* derived name */
+    {
+        if (pool.get()) {
+            pool.get()->resetUnknown48();
+            close(pool.get());
+        }
+    }
+
   private:
     inline void close(P *held) /* derived name */
     {

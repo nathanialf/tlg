@@ -28,6 +28,15 @@ class Object016ba190 : public Object01343880 /* derived name */
      * +0x100 before they close the pool (0x325f1a) */
     int unknown48;
     u8 unknown4c[0xb4];
+
+    /* derived name: +0x48 made 16 less bit 1 of +0x100 (FUN_00f3dc10,
+     * FUN_00344450 and the pool holders' destructors, 0x325f0f: `bextr ecx,
+     * [rax+0x100], 0x101; sub edx, ecx`) */
+    void resetUnknown48()
+    {
+        unknown48 = 16 - ((unknown100 >> 1) & 1);
+    }
+
     unsigned unknown100; /* +0x100: not set by the constructor */
     u8 unknown104[0x4];
 };
