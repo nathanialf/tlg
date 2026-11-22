@@ -1,9 +1,10 @@
-/* src/include/tlg_game_node.h: a node of the game's scene and its components
- * (game region; docs/TARGETS.md). Every name here is derived. A node's
- * components (+0x58, count +0x60) are scanned under the reader count at +0x30
- * (FUN_01331c10 takes it, an atomic decrement drops it); its children are
- * counted references (+0x40, count +0x48). Written with FUN_00503fb0
- * (func_00503fb0.cpp) and the components' type tests (leaf_009f54b0.cpp). */
+/* src/include/tlg_game_node.h: the counted references and the name lookups
+ * of the game's scene, and the view of a node's components (game region;
+ * docs/TARGETS.md). Every name here is derived. The scene node itself is
+ * Object016b85e0 (tlg_game_object016b85e0.h); a component is an object of
+ * Object01343880's family (tlg_game_object01343880.h: slot 6 stores the node
+ * at its +0x28). Written with FUN_00503fb0 (func_00503fb0.cpp) and the
+ * components' type tests (leaf_009f54b0.cpp). */
 #ifndef TLG_GAME_NODE_H
 #define TLG_GAME_NODE_H
 
@@ -12,8 +13,12 @@
 #include "tlg_game_type.h"
 #include "tlg_game_object016b9108.h"
 
-/* a component is an object of the root class: its type at +0x18, its
- * count at +0x8 (a counted reference holds one: FUN_0083c7f0) */
+/* a component as a node's components array holds it: an object of
+ * Object01343880's family (a node's slot 5 calls its slots 5 and 6 before it
+ * appends it, 0xc573f2 and 0xc574ce), seen here through the fields the type
+ * tests read; its type at +0x18, its count at +0x8 (a counted reference
+ * holds one: FUN_0083c7f0). The fields from +0x3a on are its derived
+ * classes', not traced to a class of their own */
 struct Component00503fb0 : public Object016b9108 { /* derived name */
     u8 unknown24[0x16];
     /* +0x3a: flags; FUN_00cf56b0 clears flag 2 of the component of the
@@ -340,69 +345,6 @@ template <class T> class AtomicRef0045c470 /* derived name */
 
     Object016b9108 *object;
 };
-
-/* the scene node: the root class's object with its components (+0x58,
- * count +0x60) and its children (+0x40, count +0x48), its own members from
- * the root class's end on */
-class Node00503fb0 : public Object016b9108 /* derived name */
-{
-  public:
-    /* the component at a signed index (`movsxd` at each use under an unsigned
-     * counter: 0x9f54b0, 0x5065f0) */
-    Component00503fb0 *componentAt(int index) const /* derived name */
-    {
-        return components[index];
-    }
-
-    /* the child at a signed index (`movsxd` under an unsigned counter at
-     * 0x83c9c4), read without a reference of its own */
-    Node00503fb0 *childAt(int index) const /* derived name */
-    {
-        return children[index].get();
-    }
-
-    /* the first component from `next` on whose type is `type` or derives
-     * from it; `next` is left after it */
-    Component00503fb0 *findComponent(const Type00503fb0 *type, unsigned &next) /* derived name */
-    {
-        FUN_01331c10(&readers);
-        Component00503fb0 *found = 0;
-        for (unsigned i = next; i < componentCount; ++i) {
-            if (::isKindOf(componentAt(i)->type, type)) {
-                found = componentAt(i);
-                next = i + 1;
-                break;
-            }
-        }
-        __sync_fetch_and_sub(&readers, 1);
-        return found;
-    }
-
-    /* the first component whose type is `type` or derives from it */
-    Component00503fb0 *findComponent(const Type00503fb0 *type) /* derived name */
-    {
-        unsigned next = 0;
-        return findComponent(type, next);
-    }
-
-    int unknown24; /* +0x24: the index of the object's handler in a visitor's table (FUN_00589590) */
-    /* +0x28: the node whose slot 6 takes this one out of it
-     * (Object016b85e0::removeChild, FUN_00c575d0, which tests that this
-     * field is the node it runs on); FUN_00c5a160 reads it first, and a
-     * caller hands it the node only while it is set (0x7a9ba2) */
-    void *unknown28;
-    int readers;                         /* +0x30 */
-    Node00503fb0 *parent;                /* +0x38 */
-    Ref00503fb0<Node00503fb0> *children; /* +0x40 */
-    unsigned childCount;                 /* +0x48 */
-    u8 unknown4c[0xc];
-    Component00503fb0 **components; /* +0x58 */
-    unsigned componentCount;        /* +0x60 */
-};
-
-/* derived name: the node taken out of the one at its +0x28 under the
- * world's write lock (leaf_00c5a160.cpp) */
-void FUN_00c5a160(Node00503fb0 *node);
 
 /* two values exchanged through a copy of the first (0x1391cd0 over two
  * references another thread may replace; inlined at 0xa055f0 over two

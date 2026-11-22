@@ -28,10 +28,12 @@ class Target00ca8d20 /* derived name */
     virtual void slot14();                                  /* derived name */
 };
 
-class Object00ca8d20 : public Node00503fb0 /* derived name */
+class Object00ca8d20 : public Object016b9108 /* derived name */
 {
   public:
-    u8 unknown68[0x30];
+    u8 unknown24[0xc];
+    int unknown30; /* +0x30 */
+    u8 unknown34[0x64];
     Target00ca8d20 *unknown98; /* +0x98 */
 };
 
@@ -44,7 +46,7 @@ void FUN_00ca8d20(Array05943280<Object00ca8d20 *> *objects) /* derived name */
     unsigned count = objects->size();
     for (unsigned i = 0; i < count; ++i) {
         Object00ca8d20 *object = objects->at(i);
-        if (object->readers != 0) {
+        if (object->unknown30 != 0) {
             Target00ca8d20 *target = object->unknown98;
             if (target->slot13(Ref00503fb0<Object00ca8d20>(object)))
                 target->slot14();

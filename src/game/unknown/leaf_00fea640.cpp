@@ -3,11 +3,13 @@
 
 /* derived names: lets go of the two objects the owner refers to at +0x1d0
  * and +0x1d8: each one's pointer at +0xa0 (back to the owner, by this use)
- * is cleared first, then the reference emptied. The classes are not traced. */
-class Target00fea640 : public Node00503fb0 /* derived name */
+ * is cleared first, then the reference emptied. The classes are not traced:
+ * the objects are counted objects of the root class, of no class traced
+ * further (their +0xa0 is inside a scene node's rows). */
+class Target00fea640 : public Object016b9108 /* derived name */
 {
   public:
-    u8 unknown68[0x38];
+    u8 unknown24[0x7c];
     void *ownera0; /* +0xa0 */
 };
 

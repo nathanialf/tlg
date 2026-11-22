@@ -2,8 +2,9 @@
 #include "tlg_game_array.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object013d35e0.h"
+#include "tlg_game_object016b85e0.h"
 
-void FUN_00c57220(Node00503fb0 *node); /* derived name */
+void FUN_00c57220(Object016b85e0 *node); /* derived name */
 
 /* derived name: the kind of pool the node below refers to; nothing of it
  * is traced but its base */
@@ -15,10 +16,10 @@ class Pool00822b10 : public Pool01343090 /* derived name */
  * counted references at +0x258 and +0x270 and a reference to a pool at
  * +0x290; called by FUN_00826c90 and FUN_008271e0. The rest is not
  * traced. */
-class Node00822b10 : public Node00503fb0 /* derived name */
+class Node00822b10 : public Object016b85e0 /* derived name */
 {
   public:
-    u8 unknown68[0x1f0];
+    u8 unknown238[0x20];
     Array05943280<Ref00503fb0<Object016b9108>> references258; /* +0x258 */
     Array05943280<Ref00503fb0<Object016b9108>> references270; /* +0x270 */
     u8 unknown288[0x8];

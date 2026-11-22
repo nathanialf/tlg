@@ -5,6 +5,7 @@
 #include "tlg_libc.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 extern Type00503fb0 *D_5939080; /* derived name: the node's type */
 
@@ -37,7 +38,7 @@ int FUN_008eb530(lua_State *state) /* derived name */
     Name child = argumentName(state, 1);
     Name parent = argumentName(state, 2);
     bool found = false;
-    for (Node00503fb0 *node = findNamed<Node00503fb0>(child, D_5939080); node;
+    for (Object016b85e0 *node = findNamed<Object016b85e0>(child, D_5939080); node;
          node = node->parent) {
         if (node->name == parent) {
             found = true;

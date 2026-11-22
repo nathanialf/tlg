@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the Name at +0x60 (FUN_0085de90) or at +0xb4
  * (FUN_0085df80) of the object becomes that of the parent of the node the
@@ -17,14 +18,14 @@ extern const Type00503fb0 *D_5939080; /* derived name: the node's type */
 
 void FUN_0085de90(Object0085de90 *self, const Name &name) /* derived name */
 {
-    Node00503fb0 *node = findNamed<Node00503fb0>(name, D_5939080);
+    Object016b85e0 *node = findNamed<Object016b85e0>(name, D_5939080);
     if (node)
         self->name60 = node->parent->name;
 }
 
 void FUN_0085df80(Object0085de90 *self, const Name &name) /* derived name */
 {
-    Node00503fb0 *node = findNamed<Node00503fb0>(name, D_5939080);
+    Object016b85e0 *node = findNamed<Object016b85e0>(name, D_5939080);
     if (node)
         self->nameb4 = node->parent->name;
 }

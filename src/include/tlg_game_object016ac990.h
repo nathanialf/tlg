@@ -5,6 +5,7 @@
 
 #include "tlg_game_node.h"
 #include "tlg_game_object00774560.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the class whose vtable is at 0x16ac990
  * (config/vtables.derived.base.txt, stored by FUN_00763020 FUN_007631b0
@@ -50,10 +51,10 @@ class Object016ac990 : public Object00774560 /* derived name */
     /* +0x110: a counted reference to a node, empty from the constructor,
      * released by the destructor; slot 17 copies it into the body's at
      * +0x62e0 */
-    AtomicRef0045c470<Node00503fb0> held110;
+    AtomicRef0045c470<Object016b85e0> held110;
     /* +0x118: a counted reference, empty from the constructor, released by
      * the destructor; slot 17 copies it into the body's at +0x62e8 */
-    AtomicRef0045c470<Node00503fb0> held118;
+    AtomicRef0045c470<Object016b85e0> held118;
     /* +0x120: a counted reference, empty from the constructor, released by
      * the destructor; slot 14 turns and moves the body by it */
     Ref00503fb0<Held00764ff0> held120;

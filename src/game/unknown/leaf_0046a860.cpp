@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
 #include "tlg_hks.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the script C function "Soldier_RagdollDownAll"
  * (FUN_002212a0 registers it through FUN_00c89b70, lea at 0x223186): reads
@@ -42,7 +43,7 @@ int FUN_0046a860(lua_State *state) /* derived name */
     FUN_00c8c290(&reader, &object);
     if (object && object->isKindOf(D_5939080)) {
         Component00503fb0 *component =
-            static_cast<Node00503fb0 *>(object)->findComponent(D_57d4a68);
+            static_cast<Object016b85e0 *>(object)->findComponent(D_57d4a68);
         if (component)
             FUN_0043c0c0(component, 0x55);
     }

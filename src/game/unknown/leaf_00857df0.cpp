@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the node the name at +0x14 of the second argument names,
  * when it is of the type D_5939080 points to; each of its components of the
@@ -25,7 +26,7 @@ extern const Type00503fb0 *D_581ce88; /* derived name: the counted components' t
 // past the drop: 29/113, 349 bytes against 395). The `while` form: one copy of findComponent, 300 bytes
 int FUN_00857df0(void *, const Object00857df0 *self) /* derived name */
 {
-    Node00503fb0 *node = findNamed<Node00503fb0>(self->name14, D_5939080);
+    Object016b85e0 *node = findNamed<Object016b85e0>(self->name14, D_5939080);
     if (node) {
         unsigned next = 0;
         for (Component00503fb0 *component = node->findComponent(D_581ce88, next); component;
@@ -38,7 +39,7 @@ int FUN_00857df0(void *, const Object00857df0 *self) /* derived name */
 // NONMATCHING: as FUN_00857df0
 int FUN_00857f80(void *, const Object00857df0 *self) /* derived name */
 {
-    Node00503fb0 *node = findNamed<Node00503fb0>(self->name14, D_5939080);
+    Object016b85e0 *node = findNamed<Object016b85e0>(self->name14, D_5939080);
     if (node) {
         unsigned next = 0;
         for (Component00503fb0 *component = node->findComponent(D_581ce88, next); component;

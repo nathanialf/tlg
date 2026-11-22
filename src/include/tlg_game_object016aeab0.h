@@ -43,9 +43,6 @@ class Object016aeab0 : public Object016b85e0 /* derived name */
     virtual ~Object016aeab0();
 
   private:
-    u8 unknown24[0x4c];
-    Float4A unknown70; /* +0x70: the base's; not traced */
-    u8 unknown80[0x1b8];
     Ref00503fb0<Object016b9108> held238; /* +0x238 */
     Ref00503fb0<Object016b9108> held240; /* +0x240 */
     int unknown248;                      /* +0x248: 3 from the constructor */

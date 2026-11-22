@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: a test FUN_00ad1c10 and FUN_00ad2030 make (calls at 0xad1c38,
  * 0xad2369, 0xad2651): true when the int at +0x4e8 of the object is the one
@@ -44,7 +45,7 @@ bool FUN_004ba970(const Object004ba970 *self) /* derived name */
         return true;
     if (self->name568.index == 0)
         return false;
-    Node00503fb0 *node = findNamed<Node00503fb0>(self->name568, D_5939080);
+    Object016b85e0 *node = findNamed<Object016b85e0>(self->name568, D_5939080);
     if (node && node->findComponent(D_57d4a68) && D_57c9390->world->unknown900->unknowne8 == 0)
         return false;
     return true;

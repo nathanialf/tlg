@@ -4,7 +4,7 @@
 #include "tlg_game_object013d35e0.h"
 #include "tlg_game_object016b85e0.h"
 
-void FUN_00c57220(Node00503fb0 *node); /* derived name */
+void FUN_00c57220(Object016b85e0 *node); /* derived name */
 
 /* derived name: the kind of pool the class below refers to; nothing of it
  * is traced but its base */
@@ -27,10 +27,9 @@ class Object016b56c0 : public Object016b85e0 /* derived name */
     virtual ~Object016b56c0();
 
   private:
-    u8 unknown24[0x214];
-    Name name238;                            /* +0x238 */
-    AtomicRef0045c470<Node00503fb0> node240; /* +0x240 */
-    AtomicRef0045c470<Node00503fb0> node248; /* +0x248 */
+    Name name238;                              /* +0x238 */
+    AtomicRef0045c470<Object016b85e0> node240; /* +0x240 */
+    AtomicRef0045c470<Object016b85e0> node248; /* +0x248 */
     u8 unknown250[0x18];
     AtomicRef0045c470<Pool016b56c0> pool; /* +0x268 */
 };
@@ -38,11 +37,11 @@ class Object016b56c0 : public Object016b85e0 /* derived name */
 /* the destructor is the class's key function: this file emits the vtable */
 Object016b56c0::~Object016b56c0()
 {
-    if (Node00503fb0 *node = node240.get()) {
+    if (Object016b85e0 *node = node240.get()) {
         FUN_00c57220(node);
         node240.clear();
     }
-    if (Node00503fb0 *node = node248.get()) {
+    if (Object016b85e0 *node = node248.get()) {
         FUN_00c57220(node);
         node248.clear();
     }

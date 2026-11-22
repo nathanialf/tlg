@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the handlers of a marker's events "Marker.s_Allow_Push",
  * "Marker.s_AllowExploreSlope", "Marker.s_RequestGazeTarget" and
@@ -31,7 +32,7 @@ extern Type00503fb0 *D_57d4a68; /* derived name: the component's type */
  * names, or null */
 static inline Component057d4a68 *markerComponent(MarkerEvent00ad3090 *event) /* derived name */
 {
-    Node00503fb0 *node = findNamed<Node00503fb0>(event->unknown10, D_5939080);
+    Object016b85e0 *node = findNamed<Object016b85e0>(event->unknown10, D_5939080);
     if (!node)
         return 0;
     return static_cast<Component057d4a68 *>(node->findComponent(D_57d4a68));

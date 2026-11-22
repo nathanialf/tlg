@@ -21,7 +21,6 @@ class Object016d24f8 : public Object016b85e0 /* derived name */
     virtual ~Object016d24f8();
 
   private:
-    u8 unknown24[0x214];
     Name name238; /* +0x238: empty from the constructor */
     u8 unknown23c[0x4];
     AtomicRef0045c470<Object016b9108> held240; /* +0x240 */

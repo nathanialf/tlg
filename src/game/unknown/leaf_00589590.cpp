@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: each counted reference of the array at +0x30 of the
  * second argument is held for one turn of the loop (the count raised, then
@@ -10,7 +11,8 @@
  * [rbx+rax*8]`). Returns 0. The classes are not traced. */
 struct Visitor00589590; /* derived name */
 
-typedef void (*Handler00589590)(Visitor00589590 *visitor, Node00503fb0 *object); /* derived name */
+typedef void (*Handler00589590)(Visitor00589590 *visitor,
+                                Object016b85e0 *object); /* derived name */
 
 struct Visitor00589590 {
     u8 unknown0[0x48];
@@ -19,13 +21,13 @@ struct Visitor00589590 {
 
 struct Object00589590 { /* derived name */
     u8 unknown0[0x30];
-    Array05943280<Ref00503fb0<Node00503fb0>> unknown30; /* +0x30 */
+    Array05943280<Ref00503fb0<Object016b85e0>> unknown30; /* +0x30 */
 };
 
 int FUN_00589590(Visitor00589590 *self, Object00589590 *object) /* derived name */
 {
-    for (Ref00503fb0<Node00503fb0> reference : object->unknown30) {
-        Node00503fb0 *node = reference.get();
+    for (Ref00503fb0<Object016b85e0> reference : object->unknown30) {
+        Object016b85e0 *node = reference.get();
         if (node) {
             int index = node->unknown24;
             if (index) {

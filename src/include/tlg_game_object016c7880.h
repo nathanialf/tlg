@@ -6,13 +6,15 @@
 
 #include "tlg_types.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object01343880.h"
 #include "tlg_game_object016b9108.h"
 
-/* derived names: the node at +0xb0 of the classes below: two counted
- * references another thread may replace, at +0x68 and +0x70; emptying one
- * sets bit 3 of the root class's flags (`or byte [r15+0x20], 8` after each,
- * through the node read before the exchange) */
-class Node016c7880 : public Node00503fb0 /* derived name */
+/* derived names: the component at +0xb0 of the classes below (handed to
+ * FUN_00c5a160 when its node at +0x28 is set): two counted references
+ * another thread may replace, at +0x68 and +0x70; emptying one sets bit 3
+ * of the root class's flags (`or byte [r15+0x20], 8` after each, through
+ * the object read before the exchange) */
+class Node016c7880 : public Object01343880 /* derived name */
 {
   public:
     void clearUnknown68() /* derived name */
@@ -28,7 +30,7 @@ class Node016c7880 : public Node00503fb0 /* derived name */
     }
 
   private:
-    u8 unknown64[0x4];
+    u8 unknown34[0x34];
     AtomicRef0045c470<Object016b9108> unknown68; /* +0x68 */
     AtomicRef0045c470<Object016b9108> unknown70; /* +0x70 */
 };

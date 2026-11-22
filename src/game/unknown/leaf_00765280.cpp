@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_object016ac990.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the component of the type D_57d4a68 points to, as far as
  * slot 17 of Object016ac990 reads it: an int at +0x3e0 */
@@ -24,7 +25,7 @@ void Object016ac990::slot17(Context0079c700 *)
         Body0077bac0 *body = unknown68;
         body->unknown62e0 = held110;
         body->unknown62e8 = held118;
-        if (Node00503fb0 *node = held110.get())
+        if (Object016b85e0 *node = held110.get())
             if (Component00503fb0 *found = node->findComponent(D_57d4a68))
                 body->unknown62d0 = static_cast<Component00765280 *>(found)->unknown3e0;
     }

@@ -16,7 +16,7 @@ class Object016bd8e8 : public Object016b85e0 /* derived name */
     virtual ~Object016bd8e8();
 
   private:
-    u8 unknown24[0x4ac];
+    u8 unknown238[0x298];
     SharedRef00901550<Shared00901550> shared4d0; /* +0x4d0 */
     u8 unknown4d8[0x46c];
     Name names944[16]; /* +0x944 */

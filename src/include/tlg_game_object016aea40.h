@@ -18,7 +18,7 @@
  * the creator, before the derived vptr in its derived classes' creators) and
  * released by the destructor before the base's destructor. 0x250 bytes (`mov
  * edi, 0x250` before operator new in the creator): the base's 16-byte rows
- * (`vmovaps [rbx+0x70]` in 0xc55320) align the class, so a derived class's
+ * (`vmovaps [rbx+0x70]` in 0xc55320, its Float4A at +0x70) align the class, so a derived class's
  * first field is at +0x248, in the tail (leaf_00670840.cpp). The destructor
  * (leaf_00822190.cpp) is the key function. */
 class Object016aea40 : public Object016b85e0 /* derived name */
@@ -32,9 +32,6 @@ class Object016aea40 : public Object016b85e0 /* derived name */
     void FUN_00822250(); /* derived name */
 
   protected:
-    u8 unknown24[0x4c];
-    Float4A unknown70; /* +0x70: the base's; not traced */
-    u8 unknown80[0x1b8];
     int unknown238; /* +0x238: not set by the constructor; Object016a8748's sets it (0x3442a0) */
 
   private:

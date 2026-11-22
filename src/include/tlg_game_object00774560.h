@@ -12,6 +12,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: a three-float vector, added lane by lane into a new value
  * (0x77bb12 to 0x77bb52: the three loads of one operand and the three adds
@@ -309,8 +310,8 @@ struct Body0077bac0 { /* derived name */
     u8 unknown62d4[0xc];
     /* +0x62e0, +0x62e8: counted references another thread may replace,
      * set from Object016ac990's at +0x110 and +0x118 by its slot 17 */
-    AtomicRef0045c470<Node00503fb0> unknown62e0;
-    AtomicRef0045c470<Node00503fb0> unknown62e8;
+    AtomicRef0045c470<Object016b85e0> unknown62e0;
+    AtomicRef0045c470<Object016b85e0> unknown62e8;
 };
 
 /* derived names: a member of a pose's group: a Name at +0x34; the rest is

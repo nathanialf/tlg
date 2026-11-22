@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: slot 5 of the vtables at 0x16b19f0 (FUN_009f6bc0) and at
  * 0x16b1a48 (FUN_009f8a90), one body: true when the node has a component of
@@ -19,13 +20,13 @@ extern const Type00503fb0 *D_5823930; /* derived name */
 // decrement on each exit; this build does the reverse (each exit of the
 // first its own decrement, the second merged): 12/74, 205 bytes against
 // 223. The same in FUN_009f8a90.
-int FUN_009f6bc0(Object016b19f0 *, Node00503fb0 *node) /* derived name */
+int FUN_009f6bc0(Object016b19f0 *, Object016b85e0 *node) /* derived name */
 {
     return !node->findComponent(D_5823928) && !node->findComponent(D_5823930);
 }
 
 /* FUN_009f8a90: the same body */
-int FUN_009f8a90(Object016b1a48 *, Node00503fb0 *node) /* derived name */
+int FUN_009f8a90(Object016b1a48 *, Object016b85e0 *node) /* derived name */
 {
     return !node->findComponent(D_5823928) && !node->findComponent(D_5823930);
 }

@@ -28,7 +28,7 @@ class Object016b2060 : public Object016b85e0 /* derived name */
     virtual void slot9(); /* derived name; FUN_00a53160, not traced */
 
   private:
-    u8 unknown24[0x22c];
+    u8 unknown238[0x18];
     PoolRef01343090<Pool016b2060> pool; /* +0x250 */
 };
 

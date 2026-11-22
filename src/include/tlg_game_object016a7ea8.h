@@ -25,7 +25,7 @@ class Object016a7ea8 : public Object016b85e0 /* derived name */
     virtual ~Object016a7ea8();
 
   private:
-    u8 unknown24[0x3fc];
+    u8 unknown238[0x1e8];
 };
 
 /* derived name: the counted object the array of references of the class

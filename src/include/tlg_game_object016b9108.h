@@ -27,7 +27,7 @@
  * reference's last drop calls it), and two empty slots folded onto 0x1af750,
  * declared here so the derived classes' own slots (5 and on) take their
  * places in the vtable. The classes derived from it put their own members
- * from +0x24 on (tlg_game_node.h's Node00503fb0, the scene node;
+ * from +0x24 on (tlg_game_object016b85e0.h's Object016b85e0, the scene node;
  * tlg_game_multibase.h's Class137ba70: slots 2 to 4, the int at +0x20). */
 class Object016b9108 /* derived name */
 {

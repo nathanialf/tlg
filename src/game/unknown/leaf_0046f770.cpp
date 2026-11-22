@@ -2,6 +2,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_hks.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the script C function
  * "Soldier_SoldierHelmet_TractionInvalidArea_Enter" (FUN_002212a0 registers
@@ -44,7 +45,7 @@ int FUN_0046f770(lua_State *state) /* derived name */
     ArgumentReader00c8c290 reader(state);
     FUN_00c8c290(&reader, &object);
     if (object && object->isKindOf(D_5939080)) {
-        Node00503fb0 *node = static_cast<Node00503fb0 *>(object);
+        Object016b85e0 *node = static_cast<Object016b85e0 *>(object);
         unsigned next = 0;
         for (Component00503fb0 *component = node->findComponent(D_581b510, next); component;
              component = node->findComponent(D_581b510, next)) {

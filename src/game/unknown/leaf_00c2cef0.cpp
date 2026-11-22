@@ -25,7 +25,7 @@ class Object016b84f0 : public Object016b85e0 /* derived name */
     virtual ~Object016b84f0();
 
   private:
-    u8 unknown24[0x224];
+    u8 unknown238[0x10];
     Ref00503fb0<Object016b9108> held248; /* +0x248 */
     Ref00503fb0<Object016b9108> held250; /* +0x250 */
     Ref00503fb0<Object016b9108> held258; /* +0x258 */

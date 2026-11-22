@@ -46,12 +46,19 @@ class Object01343880 : public Object016b9108 /* derived name */
     /* slot 8: FUN_001af750 again */
     virtual void slot8() {} /* derived name */
 
-  protected:
-    void *
-        unknown28; /* +0x28: null from the constructor, set by slot 6; read by a derived class's slot 7 (0xcabe49) */
+    /* +0x28: null from the constructor, set by slot 6; read by a derived
+     * class's slot 7 (0xcabe49): the scene node (Object016b85e0) whose
+     * components hold the object, as the node's slot 5 makes it (0xc573b0:
+     * the object's slot 6 called with the node) and its slot 6 tests it
+     * (0xc575d0) */
+    void *unknown28;
 
   private:
     int unknown30; /* +0x30: zero from the constructor; not traced */
 };
+
+/* derived name: the object taken out of the node at its +0x28, when it
+ * has one, under the world's write lock (leaf_00c5a160.cpp) */
+void FUN_00c5a160(Object01343880 *object);
 
 #endif

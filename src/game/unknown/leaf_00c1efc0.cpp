@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_object016b8268.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the type the node must be of, and the type the class's
  * own objects have (its creator leaves the record at 0x5938310 for the root
@@ -15,7 +16,7 @@ extern const Type00503fb0 *D_5938310;
 // NONMATCHING: the readers' count released on each way out (three `lock dec` in the base, the found component
 // tested after its own; the build has one release block, the test before it) and the count's address kept in
 // a register (`lea r14, [r15+0x30]`) where the base folds it into each `lock dec`
-int FUN_00c1efc0(Object016b8268 *, Node00503fb0 *node) /* derived name */
+int FUN_00c1efc0(Object016b8268 *, Object016b85e0 *node) /* derived name */
 {
     if (!node->isKindOf(D_5938308))
         return 0;

@@ -2,6 +2,7 @@
 /* NONMATCHING FUN_00c57220, FUN_00c572d0, FUN_00c57940: the module tail-calls the registry's mutex unlock (`je` to `jmp 0x14b0568` after the epilogue) where the base calls it and shares the epilogue (`call 0x14b0568; add rsp, 8; pop; ret` at 0xc572b7); everything before it equal. Not the unlock out of line, nor a scoped guard (measured). */
 #include "tlg_game_node.h"
 #include "tlg_game_object01388080.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: a node taken out of its parent's children. With a parent
  * at +0x38 the node holds a reference to itself for the length of the work
@@ -10,26 +11,22 @@
  * set, FUN_01351240 takes the node's index (+0x218) out of the parent's
  * children and, when it moved another child there, that child's index is
  * set; then the node's parent is cleared and its index made -1. The class
- * is a node's (the parent at +0x38, the children at +0x40); its other
- * members are not traced. */
-struct Node00c57120 : Node00503fb0 { /* derived name */
-    u8 unknown64[0x1b4];
-    int index; /* +0x218 */
-};
+ * is the scene node's (the parent at +0x38, the children at +0x40, the
+ * index -1 from its constructor). */
 
-void FUN_00c56780(Node00c57120 *node);                             /* derived name */
-int FUN_01351240(Ref00503fb0<Node00503fb0> **children, int index); /* derived name */
+void FUN_00c56780(Object016b85e0 *node);                             /* derived name */
+int FUN_01351240(Ref00503fb0<Object016b85e0> **children, int index); /* derived name */
 
-void FUN_00c57120(Node00c57120 *self) /* derived name */
+void FUN_00c57120(Object016b85e0 *self) /* derived name */
 {
-    Node00503fb0 *parent = self->parent;
+    Object016b85e0 *parent = self->parent;
     if (parent) {
         addReference(self);
         FUN_00c56780(self);
         parent->flags |= 2;
         int index = self->index;
         if (FUN_01351240(&parent->children, index))
-            static_cast<Node00c57120 *>(parent->children[index].get())->index = index;
+            parent->children[index].get()->index = index;
         self->parent = 0;
         self->index = -1;
         dropReference(self);
@@ -38,20 +35,20 @@ void FUN_00c57120(Node00c57120 *self) /* derived name */
 
 /* derived name: the node taken out of its parent under the world's write
  * lock (World05938c40::lockWrite and unlockWrite) */
-void FUN_00c57220(Node00503fb0 *node) /* derived name */
+void FUN_00c57220(Object016b85e0 *node) /* derived name */
 {
     D_5938c40->world->lockWrite();
-    FUN_00c57120(static_cast<Node00c57120 *>(node));
+    FUN_00c57120(node);
     D_5938c40->world->unlockWrite();
 }
 
 /* derived name: the same for the node's children, the last first (each
  * through this function, so their own children before them), then for the
  * node; the index is signed (`dec eax; js`, then `movsxd`) */
-void FUN_00c572d0(Node00c57120 *self) /* derived name */
+void FUN_00c572d0(Object016b85e0 *self) /* derived name */
 {
     for (int i = self->childCount - 1; i >= 0; --i)
-        FUN_00c572d0(static_cast<Node00c57120 *>(self->childAt(i)));
+        FUN_00c572d0(self->childAt(i));
     D_5938c40->world->lockWrite();
     FUN_00c57120(self);
     D_5938c40->world->unlockWrite();
@@ -59,10 +56,10 @@ void FUN_00c572d0(Node00c57120 *self) /* derived name */
 
 /* derived name: not traced; the node and an int handed on (`mov esi,
  * r14d`) */
-void FUN_00c579f0(Node00c57120 *self, int value); /* derived name */
+void FUN_00c579f0(Object016b85e0 *self, int value); /* derived name */
 
 /* derived name: FUN_00c579f0 under the world's write lock */
-void FUN_00c57940(Node00c57120 *self, int value) /* derived name */
+void FUN_00c57940(Object016b85e0 *self, int value) /* derived name */
 {
     D_5938c40->world->lockWrite();
     FUN_00c579f0(self, value);

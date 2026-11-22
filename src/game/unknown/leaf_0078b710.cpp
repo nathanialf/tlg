@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_collection00214e10.h"
 #include "tlg_game_object00774560.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: what the object at +0x1e8 of Object016ad480 holds: an int
  * at +0x120 and six values from +0x130, copied from the body by slot 11,
@@ -87,7 +88,7 @@ class Object016ad480 : public Object00774560 /* derived name */
     Object00214e10 unknown2e0; /* +0x2e0 */
     Track0078ce00 unknown5a0;  /* +0x5a0 */
     u8 unknown630[0x20];
-    AtomicRef0045c470<Node00503fb0> unknown650; /* +0x650 */
+    AtomicRef0045c470<Object016b85e0> unknown650; /* +0x650 */
 };
 
 /* derived names: slot 11 of the vtable at 0x16ad480: while slot 22 says so,

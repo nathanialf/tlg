@@ -38,7 +38,7 @@ class Object016bdaa8 : public Object016b85e0 /* derived name */
     virtual ~Object016bdaa8();
 
   private:
-    u8 unknown24[0x24c];
+    u8 unknown238[0x38];
     Shared00e5aea0 *shared270; /* +0x270 */
 };
 

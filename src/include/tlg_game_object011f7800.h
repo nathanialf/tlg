@@ -11,11 +11,12 @@
 /* derived names: a node those classes hold four counted references to
  * (from +0x268); while the holder is active its destructor clears the
  * node's pointer at +0xa0 before it empties the reference (0x11f79f1: `mov
- * qword [rax+0xa0], 0`). The rest is not traced. */
-class Node011f7800 : public Node00503fb0 /* derived name */
+ * qword [rax+0xa0], 0`). A counted object of the root class; the rest is
+ * not traced. */
+class Node011f7800 : public Object016b9108 /* derived name */
 {
   public:
-    u8 unknown64[0x3c];
+    u8 unknown24[0x7c];
     void *unknowna0; /* +0xa0 */
 };
 

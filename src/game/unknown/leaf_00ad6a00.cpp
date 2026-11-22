@@ -22,7 +22,6 @@ class Object016b3a88 : public Object016b85e0 /* derived name */
     void FUN_00ad6b20(); /* derived name; not traced */
 
   private:
-    u8 unknown24[0x214];
     Object0134f620 unknown238; /* +0x238 */
     u8 unknown250[0x38];
     Ref00503fb0<Object016b9108> unknown288; /* +0x288 */

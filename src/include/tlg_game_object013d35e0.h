@@ -6,6 +6,7 @@
 
 #include "tlg_types.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object016ba190.h"
 #include "tlg_game_block.h"
 #include "tlg_game_object0134f620.h"
 #include "tlg_game_object0139b6b0.h"
@@ -52,8 +53,11 @@ class Table01343090 /* derived name */
     unsigned count;               /* +0x408 */
 };
 
-/* derived names: a counted object holding that table at +0x108 */
-class Pool01343090 : public Node00503fb0 /* derived name */
+/* derived names: a counted object holding that table at +0x108, right
+ * after its base's 0x108 bytes: a component of a node (its constructor
+ * FUN_00204080 builds the base with `call 0xd23490`; vtable 0x16a76f8, slot
+ * 6 the base's 0x1343880) */
+class Pool01343090 : public Object016ba190 /* derived name */
 {
   public:
     /* every entry of the table handed to FUN_002049f0, the table passed to
@@ -68,7 +72,6 @@ class Pool01343090 : public Node00503fb0 /* derived name */
         FUN_00c5a160(this);
     }
 
-    u8 unknown64[0xa4];
     Table01343090 table; /* +0x108 */
 };
 

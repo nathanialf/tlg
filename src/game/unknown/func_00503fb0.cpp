@@ -3,6 +3,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include <functional>
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: FUN_00503fb0 (0x1440 bytes) searches a tree of nodes with
  * one of two recursive lambdas, each held by a std::function on its frame
@@ -26,12 +27,12 @@ extern Type00503fb0 *D_57d9e90; /* derived name */
 
 struct Owner00503fb0 { /* derived name */
     u8 unknown0[0x28];
-    Node00503fb0 *node; /* +0x28 */
+    Object016b85e0 *node; /* +0x28 */
     u8 unknown30[0x58];
     int kind; /* +0x88 */
 };
 
-void FUN_00503fb0_rest(Node00503fb0 *node,
+void FUN_00503fb0_rest(Object016b85e0 *node,
                        Component00503fb0 *component); /* derived name: the rest, not traced */
 
 // NONMATCHING: not written beyond the lambdas. The first lambda's body
@@ -44,20 +45,20 @@ void FUN_00503fb0_rest(Node00503fb0 *node,
 // follows, which uses the node and the component apart.
 void FUN_00503fb0(Owner00503fb0 *owner) /* derived name */
 {
-    Node00503fb0 *node = owner->node;
+    Object016b85e0 *node = owner->node;
     Component00503fb0 *component = 0;
     if (owner->kind == 3) {
-        std::function<Node00503fb0 *(Node00503fb0 *)> find =
-            [&find](Node00503fb0 *node) -> Node00503fb0 * {
+        std::function<Object016b85e0 *(Object016b85e0 *)> find =
+            [&find](Object016b85e0 *node) -> Object016b85e0 * {
             unsigned next = 0;
             while (Component00503fb0 *component = node->findComponent(D_581b510, next)) {
                 if (component->name == Name("barrelBox", false))
                     return node;
             }
-            Node00503fb0 *found = 0;
-            for (Ref00503fb0<Node00503fb0> *child = node->children;
+            Object016b85e0 *found = 0;
+            for (Ref00503fb0<Object016b85e0> *child = node->children;
                  child != node->children + node->childCount; ++child) {
-                Ref00503fb0<Node00503fb0> held(*child);
+                Ref00503fb0<Object016b85e0> held(*child);
                 found = find(held.get());
                 if (found)
                     break;
@@ -66,13 +67,13 @@ void FUN_00503fb0(Owner00503fb0 *owner) /* derived name */
         };
         node = find(node);
     } else {
-        std::function<Component00503fb0 *(Node00503fb0 *)> find =
-            [&find](Node00503fb0 *node) -> Component00503fb0 * {
+        std::function<Component00503fb0 *(Object016b85e0 *)> find =
+            [&find](Object016b85e0 *node) -> Component00503fb0 * {
             unsigned next = 0;
             Component00503fb0 *component = node->findComponent(D_57d9e90, next);
             if (component && component->kind == 3)
                 return component;
-            if (Node00503fb0 *parent = node->parent)
+            if (Object016b85e0 *parent = node->parent)
                 return find(parent);
             return 0;
         };

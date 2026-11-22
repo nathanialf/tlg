@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_object013671a0.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived names: the class whose vtable is at 0x16b9a30
  * (config/vtables.derived.base.txt, stored by FUN_00cf2bb0 FUN_013b3380 FUN_013b3430), derived from
@@ -47,7 +48,7 @@ Object016b9a30::~Object016b9a30() {}
  * set to 1 where it is 0. */
 void Object016b9a30::slot8()
 {
-    Node00503fb0 *node = static_cast<Node00503fb0 *>(unknown28);
+    Object016b85e0 *node = static_cast<Object016b85e0 *>(unknown28);
     const Type00503fb0 *type = D_5948180;
     Component00503fb0 *found = 0;
     for (unsigned i = 0; i < node->componentCount; ++i) {

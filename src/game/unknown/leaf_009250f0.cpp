@@ -1,17 +1,16 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
+#include "tlg_game_object01343880.h"
+#include "tlg_game_object016b85e0.h"
 
-/* derived names: the node at +0x258 of the class below, as its slots 20,
- * 24 and 26 call it (leaf_00925210.cpp's Member00925210_258 the same
- * object: slots 15 and 16 take an int); handed to FUN_00c5a160 */
-class Member009250f0 : public Node00503fb0 /* derived name */
+/* derived names: the component at +0x258 of the class below, as its slots
+ * 20, 24 and 26 call it (leaf_00925210.cpp's Member00925210_258 the same
+ * object: slots 15 and 16 take an int); handed to FUN_00c5a160. Slots 5 to 8
+ * are Object01343880's. */
+class Member009250f0 : public Object01343880 /* derived name */
 {
   public:
-    virtual void slot5();           /* derived name; not traced */
-    virtual void slot6();           /* derived name; not traced */
-    virtual void slot7();           /* derived name; not traced */
-    virtual void slot8();           /* derived name; not traced */
     virtual void slot9();           /* derived name; not traced */
     virtual void slot10();          /* derived name; not traced */
     virtual void slot11();          /* derived name; not traced */
@@ -59,12 +58,10 @@ extern Name D_5821074;
  * 27 and on flags kept: FUN_00925210, FUN_009251b0, FUN_009253a0), a flag
  * at +0x280 and two values at +0x284 and +0x288. Slots 20, 24 and 26 are
  * written here; the others are declared for their places. */
-class Object016b0d90 : public Node00503fb0 /* derived name */
+class Object016b0d90 : public Object016b85e0 /* derived name */
 {
   public:
-    virtual void slot5();           /* derived name; FUN_00c573b0, not traced */
-    virtual void slot6();           /* derived name; FUN_00c575d0, not traced */
-    virtual void slot7();           /* derived name; FUN_00c59010, not traced */
+    /* slots 5 to 7 are Object016b85e0's (0xc573b0, 0xc575d0, 0xc59010) */
     virtual void slot8();           /* derived name; FUN_0092ac30 */
     virtual void slot9();           /* derived name; FUN_0092ac50 */
     virtual void slot10();          /* derived name; not traced */
@@ -86,7 +83,7 @@ class Object016b0d90 : public Node00503fb0 /* derived name */
     virtual void slot26();          /* FUN_009253e0 */
 
   private:
-    u8 unknown64[0x1f4];
+    u8 unknown238[0x20];
     Member009250f0 *unknown258; /* +0x258 */
     u8 unknown260[0x14];
     unsigned flags274; /* +0x274 */

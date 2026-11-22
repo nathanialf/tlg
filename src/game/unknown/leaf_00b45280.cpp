@@ -45,7 +45,7 @@ class Object016b60b0 : public Object016b85e0 /* derived name */
         D_5938c40->world->unlockWrite();
     }
 
-    u8 unknown24[0x220];
+    u8 unknown238[0xc];
     int unknown244;                             /* +0x244 */
     Name unknown248;                            /* +0x248 */
     AtomicRef0045c470<Object059385b8> child250; /* +0x250 */

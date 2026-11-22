@@ -3,6 +3,7 @@
 #include "tlg_game_node.h"
 #include "tlg_game_type.h"
 #include "tlg_hks_string.h"
+#include "tlg_game_object016b85e0.h"
 
 /* derived name: a script function: called with one argument, the name of
  * the type of the node the argument names, when this thread may use the
@@ -18,7 +19,7 @@ int FUN_00e73a30(lua_State *state) /* derived name */
         HashedString string;
         FUN_00e81bd0(&string, state, 1);
         Name name(string);
-        Node00503fb0 *node = static_cast<Node00503fb0 *>(D_17ac870[name.index].record18);
+        Object016b85e0 *node = static_cast<Object016b85e0 *>(D_17ac870[name.index].record18);
         if (node && ((node->flags16 & 4) || threadMayUse())) {
             pushString(state, D_17ac870[node->type->name.index].string0);
             return 1;

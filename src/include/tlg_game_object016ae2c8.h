@@ -19,7 +19,7 @@ class Object016ae2c8 : public Object016b85e0 /* derived name */
     virtual ~Object016ae2c8();
 
   private:
-    u8 unknown24[0x21c];
+    u8 unknown238[0x8];
 };
 
 #endif

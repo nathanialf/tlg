@@ -23,7 +23,7 @@ class Object016bd9c8 : public Object016b85e0 /* derived name */
     virtual ~Object016bd9c8();
 
   private:
-    u8 unknown24[0x21c];
+    u8 unknown238[0x8];
     Ref00503fb0<Object016b9108> held240; /* +0x240 */
     Ref00503fb0<Object016b9108> held248; /* +0x248 */
     Ref00503fb0<Object016b9108> held250; /* +0x250 */

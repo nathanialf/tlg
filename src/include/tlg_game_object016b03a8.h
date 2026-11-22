@@ -24,7 +24,6 @@ class Object016b03a8 : public Object016b85e0 /* derived name */
     virtual ~Object016b03a8();
 
   private:
-    u8 unknown24[0x214];
     /* +0x238: a counted reference, empty from the constructor, released by
      * the destructor */
     Ref00503fb0<Object016b9108> held238;

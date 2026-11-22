@@ -15,7 +15,7 @@ class Object016b87c8 : public Object016b85e0 /* derived name */
     virtual ~Object016b87c8();
 
   private:
-    u8 unknown24[0x2dc];
+    u8 unknown238[0xc8];
     /* +0x300: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
     Ref00503fb0<Object016b9108> held300;
