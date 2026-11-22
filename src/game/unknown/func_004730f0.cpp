@@ -1,11 +1,15 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
+#include "tlg_game_vector.h"
 
-/* derived names: FUN_004730f0 is this file's static initializer. Among its
- * objects are 1 list of names built from strings, each destroyed by the array
- * destructor the compiler writes for it (0x4749b0, registered with
- * __cxa_atexit in that order). Only the lists are written. */
+/* derived names: FUN_004730f0 is this file's static initializer. It builds
+ * the vector constants of tlg_game_vector.h into the file's own copies
+ * (config/header_statics.base.txt). Then, in declaration order, 2 names from
+ * strings, each registered with Name's destructor (0x1331800), and a list,
+ * destroyed by the array destructor the compiler writes for it (0x4749b0).
+ * What reads them is not traced. */
 
+extern const char D_156c09f[24];
 extern const char D_156c0b7[29];
 extern const char D_156c0d4[36];
 extern const char D_156c0f8[35];
@@ -162,8 +166,9 @@ extern const char D_156d4bd[40];
 extern const char D_156d4e5[39];
 extern const char D_156d50c[40];
 
-// NONMATCHING: the file's initializer (FUN_004730f0): only the lists are
-// written; its other objects are not.
+Name D_57d5fdc;
+Name D_57d5fe0(D_156c09f, false);
+
 static Name D_57d5d70[] = {
     Name(D_156c0b7, false), Name(D_156c0d4, false), Name(D_156c0f8, false), Name(D_156c11b, false),
     Name(D_156c13e, false), Name(D_156c161, false), Name(D_156c186, false), Name(D_156c1ab, false),

@@ -1,10 +1,12 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
+#include "tlg_game_vector.h"
 
-/* derived names: FUN_0036a1b0 is this file's static initializer. Among its
- * objects are 2 lists of names built from strings, each destroyed by the array
- * destructor the compiler writes for it (0x36ab40, 0x36abb0, registered with
- * __cxa_atexit in that order). Only the lists are written. */
+/* derived names: FUN_0036a1b0 is this file's static initializer. It builds
+ * the vector constants of tlg_game_vector.h into the file's own copies
+ * (config/header_statics.base.txt). Then, in declaration order, 2 lists,
+ * each destroyed by the array destructor the compiler writes for it
+ * (0x36ab40, 0x36abb0). What reads them is not traced. */
 
 extern const char D_1566660[13];
 extern const char D_156a424[11];
@@ -58,8 +60,6 @@ extern const char D_15cb1f2[11];
 extern const char D_15cb1fd[12];
 extern const char D_15cb209[13];
 
-// NONMATCHING: the file's initializer (FUN_0036a1b0): only the lists are
-// written; its other objects are not.
 static Name D_57cf800[] = {Name(D_15cb0f3), Name(D_15cb100), Name(D_15cb10b), Name(D_15cb116),
                            Name(D_15cb121), Name(D_15cb12c), Name(D_15cb137), Name(D_15cb142),
                            Name(D_15cb14d), Name(D_15cb158), Name(D_15cb163), Name(D_15cb16e),
@@ -67,6 +67,7 @@ static Name D_57cf800[] = {Name(D_15cb0f3), Name(D_15cb100), Name(D_15cb10b), Na
                            Name(D_15cb1a5), Name(D_15cb1b0), Name(D_15cb1bb), Name(D_15cb1c6),
                            Name(D_15cb1d1), Name(D_15cb1dc), Name(D_15cb1e7), Name(D_15cb1f2),
                            Name(D_15cb1fd), Name(D_15cb209)};
+
 static Name D_57cf870[] = {
     Name(D_1566660), Name(D_156a424), Name(D_156a42f), Name(D_156a43a), Name(D_156a445),
     Name(D_156a450), Name(D_156a45b), Name(D_156a466), Name(D_156a471), Name(D_156a47c),
