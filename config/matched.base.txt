@@ -10447,3 +10447,10 @@ FUN_004dc9e0 src/game/unknown/func_004dc9e0.cpp _GLOBAL__sub_I_func_004dc9e0.cpp
 FUN_004730f0 src/game/unknown/func_004730f0.cpp _GLOBAL__sub_I_func_004730f0.cpp
 FUN_004fe0b0 src/game/unknown/func_004fe0b0.cpp _GLOBAL__sub_I_func_004fe0b0.cpp
 FUN_00500740 src/game/unknown/func_004fe0b0.cpp __cxx_global_array_dtor
+FUN_0042c460 src/game/unknown/func_0042b390.cpp __cxx_global_array_dtor.25
+FUN_0042c560 src/game/unknown/func_0042b390.cpp __cxx_global_array_dtor.27
+FUN_0042c5d0 src/game/unknown/func_0042b390.cpp __cxx_global_array_dtor.29
+FUN_00477650 src/game/unknown/func_004766c0.cpp __cxx_global_array_dtor.23
+FUN_00477870 src/game/unknown/func_004766c0.cpp __cxx_global_array_dtor.25
+FUN_004778e0 src/game/unknown/func_004766c0.cpp __cxx_global_array_dtor.27
+FUN_00477950 src/game/unknown/func_004766c0.cpp __cxx_global_array_dtor.29
