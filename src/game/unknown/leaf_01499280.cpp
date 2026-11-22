@@ -7,16 +7,6 @@
  * a failure through FUN_012fbca0 (file, line, function, format, values) and
  * a debug trap, then packs the base index and the last one into one
  * register word. The records' other words are not traced. */
-#define TEXTURE_HEADER /* derived name */                                                          \
-    "C:\\Program Files (x86)\\SCE\\ORBIS SDKs\\3.500\\target\\include_common\\gnm/texture.h"
-
-struct Texture01499fa0 { /* derived name, from the header's file name */
-    void setArrayView(u32 baseArraySliceIndex, u32 lastArraySliceIndex);
-
-    u8 unknown0[0x14];
-    u32 sliceView; /* +0x14: the base slice in bits 0 to 12, the last in 13 to 25 */
-};
-
 void DepthRenderTarget01499280::setArrayView(u32 baseArraySliceIndex, u32 lastArraySliceIndex)
 {
     if (!(baseArraySliceIndex < 2048)) {

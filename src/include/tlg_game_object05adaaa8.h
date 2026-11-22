@@ -49,7 +49,17 @@ class Object05adaaa8 /* derived name */
     /* volatile: the count other threads take and drop while this one
      * releases (the base reads it again after the decrement) */
     volatile long references; /* +0x8 */
-    u8 unknown10[0x88 - 0x10];
+    u8 unknown10[0x28 - 0x10];
+    /* +0x28 and +0x30: the start and end of an array of objects, each
+     * appended by its constructor (FUN_0131e9d0) and erased by its destructor
+     * (FUN_0131f080), the slot cleared first, the rest moved down with
+     * memmove; +0x48 and +0x50 another (FUN_01326700) */
+    void **objects28;    /* derived name */
+    void **objects28End; /* derived name */
+    u8 unknown38[0x48 - 0x38];
+    void **objects48;    /* derived name */
+    void **objects48End; /* derived name */
+    u8 unknown58[0x88 - 0x58];
     PrivateData01306250 m_privateData[kPrivateDataCountMax]; /* +0x88 */
     PrivateData01306250 *m_freePrivateData;                  /* derived name; +0x10088 */
     /* +0x10090: decremented atomically (`lock dec qword`) by the destructor
