@@ -133,6 +133,7 @@ int scePthreadCreate(pthread_t *thread, const pthread_attr_t *attr, void *(*entr
                      void *arg, const char *name);
 int scePthreadMutexLock(pthread_mutex_t *mutex);
 int scePthreadMutexUnlock(pthread_mutex_t *mutex);
+int scePthreadRwlockDestroy(pthread_rwlock_t *rwlock);
 int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockUnlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockWrlock(pthread_rwlock_t *rwlock);
