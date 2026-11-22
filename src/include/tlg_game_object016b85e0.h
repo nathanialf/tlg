@@ -99,8 +99,38 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     Component00503fb0 **components; /* +0x58 */
     unsigned componentCount;        /* +0x60 */
     u8 unknown64[0xc];
+
+    /* the position and the rotation set from a value that differs (the
+     * three floats of the position, the four of the rotation, compared in
+     * turn), the node marked changed in bit 0 of the root's flags
+     * (FUN_00a12990: `vucomiss; jne` three times, `vmovaps`, `or byte
+     * [rcx+0x20], 1`) */
+    void setPosition(const Float4A &value) /* derived name */
+    {
+        if (position.x != value.x || position.y != value.y || position.z != value.z) {
+            position = value;
+            flags |= 1;
+        }
+    }
+
+    void setRotation(const Float4A &value) /* derived name */
+    {
+        if (rotation.x != value.x || rotation.y != value.y || rotation.z != value.z ||
+            rotation.w != value.w) {
+            rotation = value;
+            flags |= 1;
+        }
+    }
+
     Float4A unknown70; /* +0x70: the first of the rows; not traced */
-    u8 unknown80[0x190];
+    u8 unknown80[0x70];
+    Float4A position; /* +0xf0 (derived name) */
+    u8 unknown100[0x10];
+    Float4A rotation;   /* +0x110 (derived name) */
+    Float4A unknown120; /* +0x120 */
+    u8 unknown130[0x10];
+    Float4A unknown140; /* +0x140 */
+    u8 unknown150[0xc0];
     Name name210; /* +0x210: empty from the constructor */
     u8 unknown214[0x4];
     int index; /* +0x218: the node's place in its parent's children, -1 from the constructor */

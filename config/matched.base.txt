@@ -10237,3 +10237,12 @@ FUN_00ab1160 src/game/unknown/leaf_00ab1160.cpp _Z12FUN_00ab1160P9lua_State
 FUN_00aaf0b0 src/game/unknown/leaf_00aaf0b0.cpp _Z12FUN_00aaf0b0P9lua_State
 FUN_00aae230 src/game/unknown/leaf_00aae230.cpp _Z12FUN_00aae230P9lua_State
 FUN_00a14650 src/game/unknown/leaf_00a14650.cpp _Z12FUN_00a14650P9lua_State
+FUN_00aaef50 src/game/unknown/leaf_00aaef50.cpp _Z12FUN_00aaef50P9lua_State
+FUN_00ab7dc0 src/game/unknown/leaf_00ab7dc0.cpp _Z12FUN_00ab7dc0P9lua_State
+FUN_00ab6db0 src/game/unknown/leaf_00ab6db0.cpp _Z12FUN_00ab6db0P9lua_State
+FUN_00a189b0 src/game/unknown/leaf_00a189b0.cpp _Z12FUN_00a189b0P14Object00a189b0j
+FUN_00a8e010 src/game/unknown/leaf_00a8e010.cpp _ZN14Object016a9ba818beforeInterestTickEv
+FUN_00a12990 src/game/unknown/leaf_00a12990.cpp _Z12FUN_00a12990P9lua_State
+FUN_00b772a0 src/game/unknown/leaf_00b772a0.cpp _ZN14Object016b6c206slot12Ev
+FUN_00ab82c0 src/game/unknown/leaf_00ab82c0.cpp _Z12FUN_00ab82c0P9lua_State
+FUN_00ab87b0 src/game/unknown/leaf_00ab87b0.cpp _Z12FUN_00ab87b0P9lua_State

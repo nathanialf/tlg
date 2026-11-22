@@ -9,6 +9,31 @@
 struct Owner00c57870; /* derived name: leaf_002c4210.cpp's */
 class Object016a9ba8;
 
+/* derived names: what slot 24 reads (FUN_00a8fd10): an entry's kind at
+ * +0x28, the entries of its holder at +0xa8 (the pointer and the count) and
+ * the holder at +0x10 of slot 24's argument */
+struct Entry00a8fd10 { /* derived name */
+    u8 unknown0[0x28];
+    int kind; /* +0x28 */
+};
+
+struct Holder00a8fd10 { /* derived name */
+    u8 unknown0[0xa8];
+    Entry00a8fd10 **entries; /* +0xa8 */
+    unsigned count;          /* +0xb0 */
+
+    /* the first entry, null for none or when there is no entry */
+    Entry00a8fd10 *first() const /* derived name */
+    {
+        return count && entries[0] ? entries[0] : 0;
+    }
+};
+
+struct Source00a8fd10 { /* derived name */
+    u8 unknown0[0x10];
+    Holder00a8fd10 *holder; /* +0x10 */
+};
+
 /* derived names: the state at +0x28 of the object's controller: slot 11
  * reads +0x30 and +0x40 and sets +0x40 */
 struct ControllerState00471a40 {
@@ -70,16 +95,20 @@ class Object016a9ba8 : public Object016b9108 /* derived name */
     virtual void slot16();                      /* derived name; not traced */
     virtual void slot17();                      /* derived name; not traced */
     virtual void slot18();                      /* derived name; not traced */
-    virtual void slot19();                      /* derived name; not traced */
-    virtual void slot20();                      /* derived name; not traced */
-    virtual void slot21(float step);            /* derived name; not traced */
-    virtual void slot22();                      /* derived name; not traced */
-    virtual void slot23();                      /* derived name; not traced */
-    virtual void slot24();                      /* derived name; not traced */
-    virtual void slot25();                      /* derived name; not traced */
-    virtual void slot26();                      /* derived name; not traced */
-    virtual void slot27();                      /* derived name; not traced */
-    virtual void slot28();                      /* derived name; not traced */
+    /* slot 19, FUN_00a8e010: the script function "Ai2.BeforeInterestTick"
+     * with the object's name, unless the int at +0x90 is 1 */
+    virtual void beforeInterestTick(); /* derived name */
+    virtual void slot20();             /* derived name; not traced */
+    virtual void slot21(float step);   /* derived name; not traced */
+    virtual void slot22();             /* derived name; not traced */
+    virtual void slot23();             /* derived name; not traced */
+    /* slot 24, FUN_00a8fd10: the flags at +0x1b0 to +0x1b8 from the
+     * argument's holder, then slot 28 */
+    virtual void slot24(const Source00a8fd10 *source); /* derived name */
+    virtual void slot25();                             /* derived name; not traced */
+    virtual void slot26();                             /* derived name; not traced */
+    virtual void slot27();                             /* derived name; not traced */
+    virtual void slot28();                             /* derived name; not traced */
     /* slot 29, FUN_00471b70: slot 21 between two calls on the record the
      * owner at +0x28 gives */
     virtual void slot29(float step); /* derived name */
@@ -92,7 +121,11 @@ class Object016a9ba8 : public Object016b9108 /* derived name */
     int unknown30; /* +0x30: slot 11 starts the controller only when set */
     u8 unknown34[0x5c];
     int unknown90; /* +0x90: slot 11 starts the controller only when clear */
-    u8 unknown94[0x274];
+    u8 unknown94[0x11c];
+    int unknown1b0; /* +0x1b0: slot 24: the holder's first entry of kind 36 to 38 */
+    int unknown1b4; /* +0x1b4: slot 24: +0x1b0 was set and is no longer */
+    int unknown1b8; /* +0x1b8: slot 24: the holder's first entry of kind 1 */
+    u8 unknown1bc[0x14c];
     void *unknown308;               /* +0x308: slot 29 hands it to the record's two calls, set */
     Controller00471a40 *controller; /* +0x310 (derived name) */
     u8 unknown318[0x134];

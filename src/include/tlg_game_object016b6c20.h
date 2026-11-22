@@ -3,6 +3,7 @@
 #ifndef TLG_GAME_OBJECT016B6C20_H
 #define TLG_GAME_OBJECT016B6C20_H
 
+#include "tlg_math.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object01343880.h"
 
@@ -35,11 +36,17 @@ class Object016b6c20 : public Object01343880 /* derived name */
     virtual void slot9();  /* derived name; FUN_00b77040, not traced */
     virtual void slot10(); /* derived name; FUN_00b77050, not traced */
     virtual void slot11(); /* derived name; FUN_00b77080, not traced */
-    virtual void slot12(); /* derived name; FUN_00b772a0, not traced */
+    /* slot 12, FUN_00b772a0: the component FUN_009f5540 finds in the node
+     * into +0x60, then, when it holds its ints at +0x58 and +0xb0, the two
+     * rows at +0x40 and +0x50 and the node's at +0x120 and +0x140 handed to
+     * FUN_00ce2a80 with it */
+    virtual void slot12(); /* derived name */
 
   private:
     int unknown34; /* +0x34: zero from the constructor; not traced */
-    u8 unknown38[0x28];
+    u8 unknown38[0x8];
+    Float4A unknown40; /* +0x40: slot 12 hands its address on */
+    Float4A unknown50; /* +0x50: slot 12 hands its address on */
     /* +0x60: a counted reference, empty from the constructor, released by
      * the destructor */
     Ref00503fb0<Object016b9108> held60;
