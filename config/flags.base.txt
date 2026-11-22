@@ -165,6 +165,14 @@
 #                                   the base lowers memcpy, memmove and memset
 #                                   as builtins (D11: libs 64 calls, 0 tail
 #                                   jumps; game 1,417 calls, 18 tail jumps)
+#   src/sce/    the Sony SDK objects at the head of the game region,
+#               [0x1a3a70, 0x1afa60): six input objects (one CIE each in
+#               .eh_frame; the game is one CIE from 0x1afa60), their
+#               functions only called from the game, never inlined there,
+#               while one object inlines its own (0x1a7000 in 0x1a6f70):
+#               built by the game compiler at the game line, each unit an
+#               object of its own outside the game module (round 454B)
 src/libs/ cxx=3.3-src -target x86_64-pc-freebsd9 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -ffunction-sections -fPIC -fstack-protector-strong -fno-math-errno -fno-honor-nans -funsafe-math-optimizations -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include -g
 src/game/ cxx=3.7.1-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -ffast-math -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
 src/game/sndx/ cxx=3.7.1-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
+src/sce/ cxx=3.7.1-src --target=x86_64-scei-ps4 -O2 -march=btver2 -mllvm -x86-use-vzeroupper=false -fPIC -fvisibility=protected -ffunction-sections -fstack-protector-strong -fno-math-errno -ffast-math -fno-strict-aliasing -fno-exceptions -fno-rtti -fno-omit-frame-pointer -momit-leaf-frame-pointer -nostdlibinc -nostdinc++ -std=gnu++11 -fshort-wchar -D__ORBIS__ -D__PS4__ -Isrc/include
