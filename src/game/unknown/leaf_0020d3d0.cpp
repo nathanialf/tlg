@@ -9,9 +9,7 @@
  * (the count at +0x8; not traced further): the array's append over it has
  * this one caller, and the link inlines it here, where the append over a
  * class other units append too stays a call (FUN_0138e360). */
-struct Counted0020d3d0 { /* derived name */
-    u8 unknown0[8];
-    int references; /* +0x8 */
+struct Counted0020d3d0 : Counted00c14bc0 { /* derived name */
 };
 
 static Array05943280<Ref00503fb0<Counted0020d3d0>> D_57c9f58;

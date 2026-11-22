@@ -6,9 +6,7 @@
  * count at +0x8, tlg_game_node.h's Ref00503fb0); FUN_0113e390 appends a
  * reference to the array (tlg_game_array.h's push; the growth is the
  * header's); the body is FUN_001b59d0's byte for byte. Called from 5 sites in 2 functions (FUN_01110010, FUN_0112ac60). */
-struct Counted0113e390 {
-    u8 unknown0[8];
-    int references; /* +0x8 */
+struct Counted0113e390 : Counted00c14bc0 { /* derived name */
 };
 
 void FUN_0113e390(Array05943280<Ref00503fb0<Counted0113e390>> *array,

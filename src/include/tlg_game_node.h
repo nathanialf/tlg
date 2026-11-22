@@ -136,7 +136,7 @@ template <class T> inline void dropReference(T *object) /* derived name */
 }
 
 /* one reference more for a copy of a counted reference: addReference's
- * body, defined out of line (leaf_00cb65f0.cpp). The link inlines it at
+ * body, defined out of line (func_00c14bc0.cpp). The link inlines it at
  * every call and the executable keeps no copy of it. Round 473E measured
  * the whole module with every raise of this header written through it (the
  * pointer constructors and the exchange too): three functions change, the
@@ -145,8 +145,8 @@ template <class T> inline void dropReference(T *object) /* derived name */
  * need the copy's raise out of line, and one row, FUN_00ce22e0, needs it
  * in line (AtomicRef0045c470 below). The root's own constructor calls
  * FUN_0138e360 (0xcb6310), so the body is not in the root class's unit in
- * the original; it stays in that file here until the counted base has a
- * unit of its own */
+ * the original: it is in the counted base's own unit here
+ * (func_00c14bc0.cpp) */
 void raiseReference(Counted00c14bc0 *object); /* derived name */
 
 /* a counted reference to a node: the count at +0x8 of the node is left
