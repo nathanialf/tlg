@@ -3118,7 +3118,7 @@ FUN_008b26d0 src/game/unknown/func_0088b4e0.cpp _ZNSt14_Function_implIZ12FUN_008
 FUN_008e45a0 src/game/unknown/leaf_008e45a0.cpp _Z12FUN_008e45a0P14Object008e45a0
 FUN_008f2a30 src/game/unknown/leaf_008f2a30.cpp _Z12FUN_008f2a30P14Object008f2a30
 FUN_008f3b40 src/game/unknown/leaf_008f3b40.cpp _ZN14Object008f3b40D1Ev
-FUN_00912720 src/game/unknown/leaf_00912720.cpp _ZN14Object00912720D1Ev
+FUN_00912720 src/game/unknown/leaf_00912720.cpp _ZN14Object016b0c28D1Ev
 FUN_0092dd90 src/game/unknown/leaf_0092dd90.cpp _ZN14Object0092dd90D1Ev
 FUN_009528e0 src/game/unknown/leaf_009528e0.cpp _ZN14Object009528e0D1Ev
 FUN_00952900 src/game/unknown/leaf_00952900.cpp _ZN14Object00952900D1Ev
@@ -3677,7 +3677,7 @@ FUN_008b2490 src/game/unknown/func_0088b4e0.cpp _ZNKSt14_Function_implIZ12FUN_00
 FUN_008b26e0 src/game/unknown/func_0088b4e0.cpp _ZNSt14_Function_implIZ12FUN_0088b4e0P13Owner0088b4e0E4$_13vJEED0Ev
 FUN_008b26f0 src/game/unknown/func_0088b4e0.cpp _ZNKSt14_Function_implIZ12FUN_0088b4e0P13Owner0088b4e0E4$_13vJEE4_GetEv
 FUN_008f3b50 src/game/unknown/leaf_008f3b40.cpp _ZN14Object008f3b40D0Ev
-FUN_00912730 src/game/unknown/leaf_00912720.cpp _ZN14Object00912720D0Ev
+FUN_00912730 src/game/unknown/leaf_00912720.cpp _ZN14Object016b0c28D0Ev
 FUN_0092dda0 src/game/unknown/leaf_0092dd90.cpp _ZN14Object0092dd90D0Ev
 FUN_009528f0 src/game/unknown/leaf_009528e0.cpp _ZN14Object009528e0D0Ev
 FUN_00952910 src/game/unknown/leaf_00952900.cpp _ZN14Object00952900D0Ev
@@ -10509,3 +10509,7 @@ FUN_00a2f210 src/game/unknown/func_00a2f210.cpp _GLOBAL__sub_I_func_00a2f210.cpp
 FUN_00d6dbf0 src/game/unknown/func_00d6dbf0.cpp _GLOBAL__sub_I_func_00d6dbf0.cpp
 FUN_00205d80 src/game/unknown/func_00205d80.cpp _GLOBAL__sub_I_func_00205d80.cpp
 FUN_00a27fa0 src/game/unknown/func_00a27fa0.cpp _GLOBAL__sub_I_func_00a27fa0.cpp
+FUN_00b1acf0 src/game/unknown/func_00b1acf0.cpp _GLOBAL__sub_I_func_00b1acf0.cpp
+FUN_00a63b80 src/game/unknown/func_00a63b80.cpp _GLOBAL__sub_I_func_00a63b80.cpp
+FUN_00b654e0 src/game/unknown/func_00b654e0.cpp _GLOBAL__sub_I_func_00b654e0.cpp
+FUN_009114c0 src/game/unknown/func_009114c0.cpp _GLOBAL__sub_I_func_009114c0.cpp
