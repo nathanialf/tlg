@@ -1,15 +1,10 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object0130acb0.h"
 #include "tlg_types.h"
 #include "tlg_game_object05adaaa8.h"
 #include "tlg_sce_gnm.h"
 
 void FUN_0131e2d0(Target0131e2d0 *target, void *entry); /* derived name */
-
-class Object0130acb0 /* derived name */
-{
-  public:
-    virtual ~Object0130acb0();
-};
 
 /* derived names: the class whose vtable is at 0x16c5590
  * (config/vtables.derived.base.txt; made by FUN_00b8a480) over the class
@@ -26,7 +21,7 @@ class Object016c5590 : public Object0130acb0 /* derived name */
     virtual ~Object016c5590();
 
   private:
-    u8 unknown8[0x30];
+    u8 unknown10[0x28];
     unsigned queue38; /* +0x38: the compute queue (sceGnmUnmapComputeQueue) */
     u8 unknown3c[0x4c];
     void *entry88; /* +0x88 */

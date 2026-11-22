@@ -197,10 +197,16 @@ class FadeElement016d7b30 /* derived name */
     int id; /* +0x30 */
 };
 
-/* derived names: the class whose vtable is at 0x16d7b30 (its four slots
- * pure; config/vtables.derived.base.txt names it), the base of the fifteen
- * rigs: its constructor is inlined into theirs (FUN_013ce050: the model at
- * +0x8, 0 at +0x10, 0.5f twice from +0x14, the ints from +0x1c and the array
+/* derived names: the class whose vtable is at 0x16d7b30
+ * (config/vtables.derived.base.txt names it), the base of the fifteen rigs.
+ * The vtable has two slots, both the pure-virtual import (R_X86_64_64 at
+ * 0x16d7b40 and 0x16d7b48): the two pure functions and no virtual destructor,
+ * which the rigs declare (their slots 2 and 3, 0x13d15f0 and 0x13d1730 in
+ * 0x16d3988). The link folded other classes' identical two-pure vtables into
+ * it (the bases at +0x28 that 0x13974c0, 0x1397570, 0xb40050 and 0xb42e30
+ * destroy: a counted reference at +0x8 of their own, another layout). Its
+ * constructor is inlined into the rigs' (FUN_013ce050: the model at +0x8,
+ * 0 at +0x10, 0.5f twice from +0x14, the ints from +0x1c and the array
  * cleared as one 28-byte zero, the array's lock word made free at +0x3c), its
  * destructor releases the array's block after its vptr store (FUN_013d1600).
  * The ints at +0x10 and +0x1c to +0x24 are not traced. */
@@ -218,8 +224,11 @@ class Object016d7b30 /* derived name */
     virtual FadeElement016d7b30 *findElement(const int *id) = 0; /* derived name */
     /* the rigs' slot 1 (FUN_013d0450 and its copies) */
     virtual void slot1(void *argument) = 0; /* derived name */
-    virtual ~Object016d7b30() = 0;
 
+  protected:
+    ~Object016d7b30() {}
+
+  public:
     FadeModel013d4610 *model; /* +0x8 */
     int unknown10;
     float unknown14;
@@ -229,8 +238,6 @@ class Object016d7b30 /* derived name */
     int unknown24;
     Array01343a80<FadeElement016d7b30 *> elements; /* +0x28 */
 };
-
-inline Object016d7b30::~Object016d7b30() {}
 
 /* derived names: the layout of the fifteen classes whose slot 1 (FUN_013d0450
  * and its copies) calls FUN_013d1440 or its unit's copy, one class per unit:
@@ -242,6 +249,9 @@ class FadeRig013d1440 : public Object016d7b30 /* derived name */
         : Object016d7b30(model), target(target)
     {
     }
+
+    /* the rigs' slots 2 and 3 (0x13d15f0, 0x13d1730 in 0x16d3988) */
+    virtual ~FadeRig013d1440() {}
 
     FadeTarget013d2490 *target; /* +0x40 */
 };

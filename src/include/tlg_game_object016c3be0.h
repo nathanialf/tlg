@@ -6,6 +6,7 @@
 
 #include "tlg_types.h"
 #include "tlg_game_object05adaaa8.h"
+#include "tlg_game_object0130acb0.h"
 
 void FUN_0131e2d0(Target0131e2d0 *target, void *entry); /* derived name */
 
@@ -21,14 +22,6 @@ inline void returnEntry(void *entry) /* derived name */
     }
 }
 
-/* the base whose destructor 0x130acb0 (its row named for it, D15) the
- * destructors over it run as a tail call */
-class Object0130acb0 /* derived name */
-{
-  public:
-    virtual ~Object0130acb0();
-};
-
 /* derived names: the class whose vtable is at 0x16c3be0
  * (config/vtables.derived.base.txt; built by FUN_012ff2f0 and others). Its
  * complete destructor (0x131fdb0, the row named Object0131fdb0's) hands
@@ -42,7 +35,7 @@ class Object016c3be0 : public Object0130acb0 /* derived name */
     virtual ~Object016c3be0();
 
   protected:
-    u8 unknown8[0x28];
+    u8 unknown10[0x20];
     void *entry30; /* +0x30 */
     u8 unknown38[0x8];
     void *entry40; /* +0x40 */

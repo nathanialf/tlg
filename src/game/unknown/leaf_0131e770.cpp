@@ -1,4 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object0130acb0.h"
 #include "tlg_types.h"
 #include "tlg_game_object05adaaa8.h"
 
@@ -21,19 +22,13 @@ inline void returnEntry(void *entry) /* derived name */
     }
 }
 
-class Object0130acb0 /* derived name */
-{
-  public:
-    virtual ~Object0130acb0();
-};
-
 class Object016c3af0 : public Object0130acb0 /* derived name */
 {
   public:
     virtual ~Object016c3af0();
 
   private:
-    u8 unknown8[0x28];
+    u8 unknown10[0x20];
     void *unknown30; /* +0x30 */
     void *unknown38; /* +0x38 */
 };
