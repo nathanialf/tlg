@@ -10189,3 +10189,4 @@ FUN_00296440 src/game/unknown/leaf_002962e0.cpp _ZN14Object016a79e8D0Ev
 FUN_00ad5e20 src/game/unknown/leaf_00ad5e20.cpp _ZN14Object016b3a20D1Ev
 FUN_00ad5ee0 src/game/unknown/leaf_00ad5e20.cpp _ZN14Object016b3a20D0Ev
 FUN_0076cd70 src/game/unknown/leaf_0076cd70.cpp _ZN14Object016acbe86slot15Ev
+FUN_014715d0 src/game/unknown/leaf_014715d0.cpp _ZN14Object016d7e685slot5Eii
