@@ -1,12 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_list0138c3b0.h"
 #include "tlg_game_object013d35e0.h"
-
-/* derived names: a list FUN_0138c3b0 empties, its first entry at +0x8
- * (`mov r14, [rdi+8]; test r14, r14`); not traced further */
-struct List0138c3b0 { /* derived name */
-    u8 unknown0[0x8];
-    void *first8; /* +0x8 */
-};
 
 struct Registry05938c40_40; /* derived name */
 
@@ -17,7 +11,6 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-void FUN_0138c3b0(List0138c3b0 *list);                              /* derived name: not traced */
 void FUN_00c89a10(Registry05938c40_40 *registry, const char *name); /* derived name */
 
 /* derived name: the kind of pool the object below refers to; nothing of it
@@ -32,7 +25,7 @@ class Pool007ec5a0 : public Pool01343090 /* derived name */
 struct Object007ec5a0 { /* derived name */
     u8 unknown0[0xa0];
     List0138c3b0 lista0; /* +0xa0 */
-    u8 unknownb0[0x2de8];
+    u8 unknownd8[0x2dc0];
     PoolRef01343090<Pool007ec5a0> pool2e98; /* +0x2e98 */
 };
 
