@@ -20,6 +20,23 @@
 #define JS_COMPUTE_CONTEXT_CPP /* derived name */                                                  \
     "D:\\trico\\engine\\anzu\\engine_src\\render\\ps4\\JsComputeContext.cpp"
 
+class Object016c3be0;
+
+/* derived names: a mapped resource's memory and pitches (16 bytes; AsyncMap
+ * fills it) */
+struct JsMappedSubresource {
+    void *pData;
+    u32 RowPitch;
+    u32 DepthPitch;
+};
+
+/* derived names: the dimensions AsyncMap tells apart; the check names the
+ * first */
+enum JsResourceDimension {
+    JS_RESOURCE_DIMENSION_UNKNOWN = 0,
+    JS_RESOURCE_DIMENSION_BUFFER = 1, /* derived name */
+};
+
 /* derived names: the targets slots 4, 12 and 13 forward to (their own
  * slots 3, 4 and 5), the pointers slots 7 and 35 store, the member slot 11
  * hands to FUN_0132f9a0 */
@@ -89,6 +106,8 @@ class JsComputeContext : public Object0130acb0
 
     /* a GPU label yielded on until it reads 0x10 (called directly) */
     static void StallUntilSignaled(volatile u64 *handle);
+    /* a resource's memory and pitches (called directly) */
+    static void AsyncMap(Object016c3be0 *resource, JsMappedSubresource *mapped);
 
   private:
     /* derived names: an entry handed back to the object 0x5adaaa8 points
@@ -112,7 +131,7 @@ class JsComputeContext : public Object0130acb0
         }
     }
 
-    u8 unknown10[0x34 - 0x10];
+    u8 unknown30[0x34 - 0x30];
     int dispatches; /* +0x34 (derived name) */
     u8 unknown38[4];
     u32 groups; /* +0x3c: the groups dispatched (derived name) */

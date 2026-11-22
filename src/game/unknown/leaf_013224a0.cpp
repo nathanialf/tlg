@@ -19,7 +19,6 @@ class Object016c3c08 : public Object0130acb0 /* derived name */
     virtual ~Object016c3c08();
 
   private:
-    u8 unknown10[0x20];
     void *unknown30; /* +0x30 */
 };
 

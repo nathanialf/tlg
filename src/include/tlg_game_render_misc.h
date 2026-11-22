@@ -31,6 +31,16 @@ template <typename T> class OffsetPointer /* derived name */
         }
     }
 
+    /* derived name: offset 0 is the null pointer, any other is taken from
+     * the field's own address, the sum on integers (0x130ad06: `lea
+     * rbx,[r12+rbx+4]`, the offset the base register; cookbook 1218) */
+    T *GetPointer()
+    {
+        if (m_offset == 0)
+            return nullptr;
+        return reinterpret_cast<T *>(m_offset + reinterpret_cast<s64>(this));
+    }
+
   private:
     s32 m_offset;
 };

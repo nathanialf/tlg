@@ -99,7 +99,7 @@ class JsDeviceContext : public Object0130acb0
     Target01499f10 *getUnknown130d0() const;     /* derived name */
 
   private:
-    u8 unknown10[0x278 - 0x10];
+    u8 unknown30[0x278 - 0x30];
     u32 mode; /* +0x278: 0x8000 picks the register 0x528 (slot 28) */
     u8 unknown27c[0x500 - 0x27c];
     /* derived names, each array from the method that fills it */

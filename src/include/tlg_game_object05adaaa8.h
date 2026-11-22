@@ -12,11 +12,14 @@
 struct Target0131e2d0; /* derived name */
 
 /* derived name: an entry of the device's private data (16 bytes: CreateDevice
- * chains them at that stride), the next free one at +0x4 */
+ * chains them at that stride), the next free one at +0x4. An owner's
+ * destructor (0x130acb0) walks its own chain of them through next, freeing
+ * the block at +0x8 of each whose half-word at +0x2 is set. */
 struct PrivateData01306250 {
-    u32 unknown0;
+    u16 unknown0;
+    u16 unknown2;                            /* +0x2: set when the block at +0x8 is the entry's */
     OffsetPointer<PrivateData01306250> next; /* derived name; +0x4 */
-    u8 unknown8[8];
+    void *unknown8;                          /* +0x8: freed with free (0x130ad1f) */
 };
 
 class Object05adaaa8 /* derived name */
@@ -49,7 +52,10 @@ class Object05adaaa8 /* derived name */
     u8 unknown10[0x88 - 0x10];
     PrivateData01306250 m_privateData[kPrivateDataCountMax]; /* +0x88 */
     PrivateData01306250 *m_freePrivateData;                  /* derived name; +0x10088 */
-    u8 unknown10090[0x100a0 - 0x10090];
+    /* +0x10090: decremented atomically (`lock dec qword`) by the destructor
+     * 0x130acb0 after it hands back its private data */
+    long unknown10090;
+    u8 unknown10098[0x100a0 - 0x10098];
     /* +0x100a0: incremented atomically (`lock inc qword`) after each entry
      * FUN_0131e770 hands to FUN_0131e2d0 */
     long unknown100a0;

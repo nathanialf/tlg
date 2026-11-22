@@ -1914,3 +1914,63 @@ whose own row is not at their FUN_ address (overrides of 0x137ba50, 0x4340,
 0x1af750 and others); none referenced by a claimed row, so no claimed row
 passed against a wrong address (no gate hole). They blocked the thunks
 0x9643d0, 0x9667c0, 0x96a480 and 0xb41630.
+
+## D91. The Sony SDK objects at the head of the game region, [0x1a3a70, 0x1afa60), are separate objects outside the game module: src/sce/ (2026-11-22)
+
+**Question.** The base CALLS the 13-byte FUN_001a44c0 (24 sites), FUN_001a6f10 (37 sites), FUN_001af030 (4 sites in
+UpdateSubresource and its siblings) and the 0x1a7180 group (24 sites each for 0x1a7180 and 0x1a72f0) where the tree's
+link stage (D83, inliner at 175, D85) would inline them. Are the functions at the start of the game region separate input
+objects that the game's link stage never saw?
+
+**Evidence (scratch b454/).**
+- .eh_frame, re-walked from the eh_frame_hdr table (eh1.py, step1_runs.txt, step1_funcs.tsv): the single game CIE
+  (0x15ef858, 16,223 FDEs) begins at 0x1afa60. Below it, six CIEs cover [0x1a3a70, 0x1afa10), one object each (D44):
+  0x15ee984 0x1a3a70-0x1a3a9d (2 functions: the GNF container's texture size readers, tlg_sce_gnf.h);
+  0x15ee9c4 0x1a3ac0-0x1a6edd (29: surface tiling, the 0x80d30000 codes; it STRADDLES 0x1a3e00: five of its functions,
+  0x1a3ac0 to 0x1a3c50, lie below the D6 split);
+  0x15eed3c 0x1a6ee0-0x1a705d (11: power-of-two and bits-per-element helpers, table 0x14d2e20);
+  0x15eee34 0x1a7060-0x1a740f (10: the data-format table 0x14d2e60 and the element-size table 0x14d2ee0);
+  0x15eef4c 0x1a7410-0x1af730 (69: tilers/detilers through a table of its own functions, surface copies, 0x80d3000x);
+  0x15ef7bc 0x1af730-0x1afa10 (5: the shader binary reader, messages "Error: shaderBinarySize %u is not equal to
+  Program size %ld", "Error: shaderBinary is NULL.").
+  The error-code family 0x80d3xxxx is Sony's GpuAddress library's (round 451C's reading); 0x80d30000/0x80d30001 occur
+  at 172 sites, all inside these objects, none elsewhere in the executable (immg.py).
+- Never inlined above the boundary (calls.py over every function, callsum.py, refs.py): every use of a range function
+  from the game object is a direct call (45 game callers, 0 with a row); the data the range's functions read (its 22
+  tables) is read by no function outside the range (refs.py: the only shared address is the stack canary's GOT slot);
+  its error codes appear nowhere else. Calls cross between the SDK objects too and stay calls (0x1a6f10 is called from
+  0x15ee9c4 and 0x15eef4c, 37 sites).
+- Inlined inside one object: 0x1a6f70 holds 0x1a7000's body (the same range check `cmp 0xc` and table 0x14d2e20, read
+  by those two functions alone), while 0x1a7000 is called from 9 sites of the OTHER objects: each object was compiled
+  at -O2 as a unit; there was no link-time inlining across objects.
+- The compiler: every one of the 49 rows of the range is equal compiled ALONE by the game line (3.7.1, the src/game/
+  flags, no link stage), and equal with each base object's units linked into one module and optimised once
+  (score_range_{base,grp,alone}.txt: 49/49 each). FUN_001a3a80 (src/libs/, NONMATCHING under the 3.3 line since round 25,
+  "3.6.2 to 3.9.1 compile this file to the base's bytes") is EQUAL under the game line alone; FUN_001a3a70 equal under it
+  too (lib3a/).
+
+**Measurement (build_var.py; control: full/module.o == build/base/game/module.o, 0 functions differ).** The game module
+without the 36 range units (rest/module.o): every function other than the 52 removed is byte-identical (objcmp; the 85
+`__cxx_global_array_dtor.N` bodies identical as a multiset, 6 renumbered); match_check of the other game rows against it:
+7,357 of 7,400 at 1.0 with right targets; the other 43 are compiler-local `__cxx_global_array_dtor` rows that score the same on the baseline module_0.o (the scratch scorer has not the gate's alias proof): 0 rows lost. Rows inside the range: 49/49 equal alone and per object. Drafts: 0x1a3a80 becomes equal (+1 row);
+0x1aac10, 0x1aac50, 0x1af9d0 unchanged (scheduling and LSR residuals, not the module). The witnesses' callers have no
+source in the tree (0x12fd790 group, 0x1307080 etc. were not taken because of the inlining); 0x13121f0's draft (c451)
+needs a header diff that no longer applies to main and was not rebuilt: c451's probe, which keeps FUN_001af030 out of
+line, is the same codegen fact (133/145, a store-order residual of its own).
+
+**Proposed rule.** A prefix `src/sce/` (Sony SDK objects linked into the game executable, built with the game's
+compiler): its own line in config/flags.base.txt, the game line's compiler and flags verbatim; outside tools/game_module.py's
+MODULE_PREFIX, so tools/gen_ninja.py gives each unit its own object as for src/libs/ (no rule in the tools beyond the
+prefix). Membership by the base object: a unit goes there when its functions' FDEs name one of the six CIEs above;
+the range is [0x1a3a70, 0x1afa60). The D6 compiler split is then by object, not 0x1a3e00: the objects of 0x15ee984 and
+0x15ee9c4 move to the game compiler with the rest of the stretch (0x1a3a70 and 0x1a3a80 move from src/libs/unknown/).
+Rows are re-pointed (TU column), never removed. A unit of src/sce/ holds the functions of one base object only; two
+functions of one object that inline each other (0x1a6f70 and 0x1a7000) are one file.
+
+**What it excludes.** A third compiler for the stretch (the game line holds all 51 functions measured); the stretch as
+part of the game's link (four call witnesses at 89 sites, and the 0x1a7000 body inlined within its object but called
+across objects); a per-function attribute or noinline (banned, and the bytes show object boundaries, not attributes).
+
+**What would refute it.** A function of [0x1a3a70, 0x1afa60) that only matches inside the game module; a game function
+that holds an inlined body of one of these objects; a row of the range whose data reference needs the module's
+stand-in form (direct to a game object) rather than its own object's definition or the GOT.

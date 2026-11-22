@@ -16,7 +16,6 @@ class Object0139e050 : public Object0130acb0 /* derived name */
     virtual ~Object0139e050();
 
   private:
-    u8 unknown10[0x20];
     void *unknown30; /* +0x30: freed with free */
     u64 unknown38;   /* +0x38: cleared with it */
 };

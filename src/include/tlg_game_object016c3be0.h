@@ -46,23 +46,29 @@ class Object016c3be0 : public Object0130acb0 /* derived name */
     virtual ~Object016c3be0();
 
   protected:
-    /* the context's slot 16 reads the descriptor and writes +0x2c */
+    /* the context's slot 16 reads the descriptor; AsyncMap reads the
+     * descriptors and the dimension */
     friend class JsDeviceContext;
+    friend class JsComputeContext;
 
-    u8 unknown10[0x1c];
-    u32 unknown2c; /* +0x2c: the context's stamp at +0x47ac, written by its slot 16 */
-    void *entry30; /* +0x30 */
+    void *entry30; /* +0x30: the memory of a texture (AsyncMap adds the surface's offset) */
     u8 unknown38[0x8];
     void *entry40; /* +0x40 */
     void *entry48; /* +0x48 */
     u8 unknown50[0x8];
     void *entry58; /* +0x58 */
     /* +0x60: the buffer's descriptor; its first word the base address's low
-     * 32 bits, bits 0 to 11 of the second the high ones (JsDeviceContext's
-     * slot 16) */
+     * 32 bits, bits 0 to 11 of the second the high ones, the stride in bits
+     * 16 to 29, then the element count (JsDeviceContext's slot 16,
+     * AsyncMap, FUN_01314290) */
     u32 descriptor[4]; /* derived name */
-    u8 unknown70[0xb4];
-    int state124; /* +0x124 */
+    /* +0x70: a texture's descriptor, passed to the surface queries
+     * FUN_001ae8e0 and FUN_001ada10 by AsyncMap */
+    u32 textureRegs70[8];
+    u8 unknown90[0x124 - 0x90];
+    /* +0x124: the resource's dimension (AsyncMap's check names the
+     * unknown one: `dim != JS_RESOURCE_DIMENSION_UNKNOWN`) */
+    int state124;
 };
 
 #endif

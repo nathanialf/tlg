@@ -21,7 +21,7 @@ class Object016c5590 : public Object0130acb0 /* derived name */
     virtual ~Object016c5590();
 
   private:
-    u8 unknown10[0x28];
+    u8 unknown30[0x8];
     unsigned queue38; /* +0x38: the compute queue (sceGnmUnmapComputeQueue) */
     u8 unknown3c[0x4c];
     void *entry88; /* +0x88 */

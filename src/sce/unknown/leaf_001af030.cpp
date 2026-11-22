@@ -1,6 +1,8 @@
 /* src/sce/unknown/: functions of the Sony SDK objects linked at the head of the game region (0x1a3a70 to 0x1afa60, one CIE each in .eh_frame), built by the game compiler and outside the game module, matched before their library is known. */
 #include "tlg_types.h"
 
+#include "tlg_game_surface001af030.h"
+
 /* derived names: two surface copies over the whole surface: refuse a null
  * record with 0x80d30000, build the region from the origin to the record's
  * width, height and depth (+0x8, +0xc, +0x10), measured in blocks when the
@@ -16,16 +18,6 @@ struct SurfaceRegion001af030 { /* derived name */
     u32 width;                 /* +0xc */
     u32 height;                /* +0x10 */
     u32 depth;                 /* +0x14 */
-};
-
-struct Surface001af030 { /* derived name */
-    u8 unknown0[0x8];
-    u32 width;  /* +0x8 */
-    u32 height; /* +0xc */
-    u32 depth;  /* +0x10 */
-    u8 unknown14[0x14];
-    int bitsPerElement; /* +0x28 */
-    bool compressed;    /* +0x2c */
 };
 
 int FUN_001aed80(void *destination, const void *source, const Surface001af030 *surface,

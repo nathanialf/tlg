@@ -10271,6 +10271,9 @@ FUN_00b561a0 src/game/unknown/leaf_00b561a0.cpp _Z12FUN_00b561a0P14Object00b561a
 FUN_00b1b910 src/game/unknown/leaf_00b1b910.cpp _Z12FUN_00b1b910P14Object00b1b910
 FUN_00a12740 src/game/unknown/leaf_00a12740.cpp _Z12FUN_00a12740P13Event00a104a0
 FUN_00b4d190 src/game/unknown/leaf_00b4d190.cpp _Z12FUN_00b4d190P14Object00b4d190PK14Object016b9108
+_ZN14Object0130acb0D1Ev src/game/unknown/leaf_0130acb0.cpp _ZN14Object0130acb0D1Ev
+FUN_0130adf0 src/game/unknown/leaf_0130acb0.cpp _ZN14Object0130acb0D0Ev
+FUN_013038b0 src/game/unknown/leaf_013038b0.cpp _ZN16JsComputeContext8AsyncMapEP14Object016c3be0P19JsMappedSubresource
 FUN_00dadf60 src/game/unknown/leaf_00dadf60.cpp _Z12FUN_00dadf60P15CodeGen016bb0c0i
 FUN_00da93e0 src/game/unknown/leaf_00da93e0.cpp _Z12FUN_00da93e0P15CodeGen016bb0c0
 FUN_00daf030 src/game/unknown/leaf_00daf030.cpp _Z12FUN_00daf030P15CodeGen016bb0c0i

@@ -21,7 +21,6 @@ class JsView : public Object0130acb0
     virtual ~JsView();
 
   private:
-    u8 unknown10[0x20];
     JsUnknown *m_pResource; /* +0x30: the viewed resource, a reference held */
 };
 
