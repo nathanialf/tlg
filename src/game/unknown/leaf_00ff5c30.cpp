@@ -1,7 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_math.h"
 #include "tlg_types.h"
-#include "tlg_game_fade013d2490.h"
+#include "tlg_game_object016d5140.h"
 
 /* derived names: two slots of the class whose vtable is at 0x16c05d8
  * (Object00ff18f0, config/vtables.derived.base.txt), slots 64 (0xff5c30, its
@@ -24,10 +24,12 @@ struct Target00ff5c30 { /* derived name */
     u8 unknown10; /* type not traced; its address is passed */
 };
 
-/* the object (Object00ff18f0) as these slots read it */
+/* the object (Object00ff18f0) as these slots read it; its fade's class is
+ * taken as this stretch's (0xff6950, beside these slots, is Object016d5140's
+ * destructor), not proven */
 struct Object00ff5c30 { /* derived name */
     u8 unknown0[0x10];
-    Fade013d2490 *fade; /* +0x10 */
+    Object016d5140 *fade; /* +0x10 */
 };
 
 const Float4 *FUN_0134b990(void *field, const Float4A *point);             /* derived name */
@@ -37,7 +39,7 @@ void FUN_01353470(Float4Data &axis,
 
 /* derived name: the fade's first target entry, its position and rotation
  * computed from the model's pose on first use */
-static inline FadeTargetEntry013d2490 &rootEntry(Fade013d2490 *fade)
+static inline FadeTargetEntry013d2490 &rootEntry(Object016d5140 *fade)
 {
     FadeTarget013d2490 *target = fade->owner->target;
     FadeTargetEntry013d2490 &entry = target->entries[0];
@@ -52,14 +54,14 @@ static inline FadeTargetEntry013d2490 &rootEntry(Fade013d2490 *fade)
 }
 
 /* derived name: the rotation of the fade's first target entry */
-static inline const Float4A &rootRotation(Fade013d2490 *fade)
+static inline const Float4A &rootRotation(Object016d5140 *fade)
 {
     return reinterpret_cast<const Float4A &>(rootEntry(fade).unknown60);
 }
 
 /* derived name: the position and the rotation of the fade's first target
  * entry, the two vectors from +0x50 */
-static inline const Float4A *rootPose(Fade013d2490 *fade)
+static inline const Float4A *rootPose(Object016d5140 *fade)
 {
     return reinterpret_cast<const Float4A *>(&rootEntry(fade).unknown50);
 }

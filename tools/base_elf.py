@@ -934,9 +934,18 @@ class BaseElf:
         if ws is None:
             return f"{head}: the module's {name}: {why}"
         self._proving.add(sym)
+        imports = self._import_slots((R_X86_64_64,))   # a slot the loader fills with an import (a pure slot)
         try:
             for i, w in enumerate(ws):
                 want = int.from_bytes(self.read(addr + 8 * i, 8), "little")
+                imp = imports.get(addr + 8 * i)
+                if imp is not None:
+                    # the base's word is 0 and its dynamic relocation names the
+                    # import: the module's slot must name the same import
+                    if w[0] is None or self.base_identifier(w[0]) != imp or w[1]:
+                        return (f"{head}: {label(i)} of the module's {name} holds {show(w)}; "
+                                f"the base's vtable takes the import {imp} there")
+                    continue
                 if w[0] is None:
                     got = w[1]
                 else:

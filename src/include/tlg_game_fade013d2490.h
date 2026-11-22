@@ -1,6 +1,6 @@
-/* src/include/tlg_game_fade013d2490.h: the fading state ten classes of the
- * game region share (docs/TARGETS.md), read from the bytes of FUN_013d2490
- * and its nine copies. Every name here is derived. */
+/* src/include/tlg_game_fade013d2490.h: the types the fading state of fifteen
+ * units of the game region reads (docs/TARGETS.md), read from the bytes of
+ * FUN_013d2490 and its fourteen copies. Every name here is derived. */
 #ifndef TLG_GAME_FADE013D2490_H
 #define TLG_GAME_FADE013D2490_H
 
@@ -156,22 +156,13 @@ struct FadeOwner013d2490 { /* derived name */
     FadeTarget013d2490 *target; /* +0x40 */
 };
 
-/* derived names: the object of the ten classes: its state at +0x58 (1
- * fading in, 2 full, 3 fading out, 0 off) and level at +0x5c are stored as
- * one qword when a fade ends (`movabs rax, 0x3f80000000000002`) */
-struct Fade013d2490 { /* derived name */
-    u8 unknown0[0x8];
-    FadeModel013d4610 *model;   /* +0x8 */
-    FadeOwner013d2490 *owner;   /* +0x10 */
-    FadeEntry013d2490 *entries; /* +0x18 */
-    u8 unknown20[0x38];
-    int state;   /* +0x58 */
-    float level; /* +0x5c */
-    u32 unknown60;
-    float fadeIn;  /* +0x64: the fade-in's length */
-    float fadeOut; /* +0x68: the fade-out's length */
-    int unknown6c; /* +0x6c: cleared by the update */
-};
+/* The fading state itself is one class per unit, each with its own vtable
+ * and its own copies of the members (the unit's vector constants differ):
+ * Object016d3908 (tlg_game_object016d3908.h) and the fourteen like it, one
+ * header each. Each holds its unit's entries (FadeEntry013d2490 under the
+ * unit's own element type: the base holds one resize of an array of them
+ * per unit, FUN_013d28a0 and its copies in the linkonce stretch, each
+ * building its elements from its own unit's VECTOR_W). */
 
 /* derived name: a frame takes the model's pose of the index, position then
  * rotation (each read again from the skeleton's poses: a vector stored may
@@ -202,9 +193,10 @@ class FadeElement016d7b30 /* derived name */
  * The vtable has two slots, both the pure-virtual import (R_X86_64_64 at
  * 0x16d7b40 and 0x16d7b48): the two pure functions and no virtual destructor,
  * which the rigs declare (their slots 2 and 3, 0x13d15f0 and 0x13d1730 in
- * 0x16d3988). The link folded other classes' identical two-pure vtables into
- * it (the bases at +0x28 that 0x13974c0, 0x1397570, 0xb40050 and 0xb42e30
- * destroy: a counted reference at +0x8 of their own, another layout). Its
+ * 0x16d3988). The link folded RefHolder013974c0's identical two-pure vtable into
+ * it (tlg_game_object016cc6c0.h: the base at +0x28 that 0x13974c0, 0x1397570,
+ * 0xb40050 and 0xb42e30 destroy, a counted reference at +0x8 of its own;
+ * the `merges` row of config/vtables.derived.base.txt). Its
  * constructor is inlined into the rigs' (FUN_013ce050: the model at +0x8,
  * 0 at +0x10, 0.5f twice from +0x14, the ints from +0x1c and the array
  * cleared as one 28-byte zero, the array's lock word made free at +0x3c), its

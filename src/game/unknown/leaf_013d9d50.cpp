@@ -5,8 +5,8 @@
 /* derived names: the class whose vtable is at 0x16bfc70
  * (config/vtables.derived.base.txt, stored by FUN_00f71bc0 and its two
  * destructors), derived from Object016d3d88: slot 2 is its own
- * (FUN_013d90d0), slot 3 the base's, slots 4 to 6 its own (declared; their
- * bodies are not written here). Its own fields from +0x34 are traced only
+ * (FUN_013d90d0), slot 3 the base's, slot 4 its own (declared; its body is
+ * not written here), slots 5 and 6 the base's. Its own fields from +0x70 are traced only
  * where its destructor tears them down: an array of two Object016d3dd0 at
  * +0x80 (each: its vptr stored, `call 0x13d8be0`, its block at +0x8
  * released; the second first, the first one's address held: `mov r14, rbx;
@@ -17,11 +17,9 @@ class Object016bfc70 : public Object016d3d88 /* derived name */
     virtual ~Object016bfc70();
     virtual void slot2(); /* derived name; FUN_013d90d0, not traced */
     virtual void slot4(); /* derived name; FUN_00f7d610, not traced */
-    virtual void slot5(); /* derived name; FUN_013d8910 (leaf_013d8910.cpp) */
-    virtual void slot6(); /* derived name; FUN_013d89f0, not traced */
 
   private:
-    u8 unknown34[0x4c];
+    u8 unknown70[0x10];
     Object016d3dd0 members80[2]; /* +0x80, +0xa0 */
 };
 

@@ -1,19 +1,16 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_object016d6a90.h"
 
-/* derived name: slot 2 of the base class (0x16d6a90), this file's copy of the
- * fade's update of its entries (func_01225a30.cpp), called on the object
- * directly */
-void FUN_01478b40(Object016d6a90 *self); /* derived name */
-
 /* FUN_01223180: slot 2, the key function: the base's slot 2, then the
  * vector at +0x110 and the int at +0x124 cleared (also slot 2 of the eight
  * classes derived from this one, 0x16c2118 to 0x16c2348). FUN_01222fb0 (D1)
  * and FUN_012230a0 (D0), the implicit destructor, are emitted with it; the
- * base class's inline destructor (FUN_0147a4d0, FUN_0147a570) with them. */
+ * base class's inline destructor (FUN_0147a4d0, FUN_0147a570) is emitted with
+ * the base's vtable, in the unit of its key function (slot 2,
+ * func_01225a30.cpp). */
 void Object016ca810::slot2()
 {
-    FUN_01478b40(this);
+    Object016d6a90::slot2();
     unknown110 = _mm_setzero_ps();
     unknown124 = 0;
 }

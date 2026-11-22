@@ -36,7 +36,7 @@ class Object016ca768 : public Object016d3ef8 /* derived name */
     virtual ~Object016ca768();
 
   private:
-    u8 unknown34[0x44];
+    u8 unknown70[0x8];
     Array05943280<u8> array78; /* +0x78 */
     Array05943280<u8> array90; /* +0x90 */
     Array05943280<u8> arraya8; /* +0xa8 */
@@ -55,7 +55,7 @@ class Object016cab48 : public Object016d6b08 /* derived name */
     virtual ~Object016cab48();
 
   private:
-    u8 unknown34[0x44];
+    u8 unknown70[0x8];
     Array05943280<u8> array78; /* +0x78 */
     Array05943280<u8> array90; /* +0x90 */
     Array05943280<u8> arraya8; /* +0xa8 */
@@ -95,7 +95,6 @@ class Object016ca330 : public Object016d3ef8 /* derived name */
     virtual ~Object016ca330();
 
   private:
-    u8 unknown34[0x3c];
     PoolRef01343090<Pool016ca330> pool; /* +0x70 */
 };
 
@@ -109,7 +108,6 @@ class Object016ca8b0 : public Object016d6b08 /* derived name */
     virtual ~Object016ca8b0();
 
   private:
-    u8 unknown34[0x3c];
     PoolRef01343090<Pool016ca8b0> pool; /* +0x70 */
 };
 
@@ -128,7 +126,7 @@ class Object016ca568 : public Object016d3ef8 /* derived name */
     virtual ~Object016ca568();
 
   private:
-    u8 unknown34[0x44];
+    u8 unknown70[0x8];
     Array05943280<u8> array78; /* +0x78 */
     Array05943280<u8> array90; /* +0x90 */
     Array05943280<u8> arraya8; /* +0xa8 */
@@ -147,7 +145,7 @@ class Object016caa48 : public Object016d6b08 /* derived name */
     virtual ~Object016caa48();
 
   private:
-    u8 unknown34[0x44];
+    u8 unknown70[0x8];
     Array05943280<u8> array78; /* +0x78 */
     Array05943280<u8> array90; /* +0x90 */
     Array05943280<u8> arraya8; /* +0xa8 */

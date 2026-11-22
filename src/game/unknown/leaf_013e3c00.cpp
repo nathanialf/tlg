@@ -13,7 +13,7 @@ Object016d3ef8::~Object016d3ef8() {}
 /* derived names: the class whose vtable is at 0x16d3f40
  * (config/vtables.derived.base.txt, stored by FUN_00f9ab50 and its two
  * destructors), derived from Object016d3ef8: slot 2 is its own
- * (FUN_013e1aa0), slot 3 the base's. Its own fields from +0x34 are traced
+ * (FUN_013e1aa0), slot 3 the base's. Its own fields from +0x70 are traced
  * only where slot 2 and the destructor use them (the array at +0x70). The
  * destructor is the implicit one (inline): slot 2 is the key function, so
  * this file emits the vtable and with it the two destructors, the
@@ -28,7 +28,6 @@ class Object016d3f40 : public Object016d3ef8 /* derived name */
     virtual void slot2(); /* derived name */
 
   private:
-    u8 unknown34[0x3c];
     /* +0x70: an array emptied by slot 2 and released by the destructor;
      * its elements are not traced: 16-byte aligned (the reallocation's
      * alignment 0x10), nothing to destroy */
@@ -59,7 +58,7 @@ class Object016c00a0 : public Object016d3ef8 /* derived name */
     virtual ~Object016c00a0();
 
   private:
-    u8 unknown34[0x44];
+    u8 unknown70[0x8];
     OwnedBlock05943280 block78; /* +0x78 */
     u8 unknown80[0x10];
     OwnedBlock05943280 block90; /* +0x90 */

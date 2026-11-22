@@ -4,25 +4,7 @@
 #include "tlg_game_name.h"
 #include "tlg_game_object0134f620.h"
 #include "tlg_game_object016b9108.h"
-
-/* derived names: the class whose vtable is at 0x16cc130
- * (config/vtables.derived.base.txt, stored by its creators), derived from
- * Object016b9108: its slots 2 to 4 are the base's. Its own fields from
- * +0x24 are traced only where its destructor tears them down (an array of
- * counted references at +0x28, an array of Names at +0x40); the rest are
- * not traced. Slots 0 and 1 of the vtable at 0x16b4ca0 (stored by
- * FUN_00b0eda0, a class derived from this one with no destructor work of
- * its own) are these same two bodies. */
-class Object016cc130 : public Object016b9108 /* derived name */
-{
-  public:
-    virtual ~Object016cc130();
-
-  private:
-    u8 unknown24[0x4];
-    Object0134f620 references28; /* +0x28 */
-    Array05943280<Name> names40; /* +0x40 */
-};
+#include "tlg_game_object016cc130.h"
 
 /* derived names: the complete destructor: the names released and their
  * block, then the references' destructor FUN_0134f620 out of line, then

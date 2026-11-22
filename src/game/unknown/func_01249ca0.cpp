@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
+#include "tlg_game_object016d6b08.h"
 #include "tlg_game_name.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
@@ -23,38 +24,30 @@ Name D_5ad79ac(D_15c99df, false);
 Name D_5ad7ae8(D_15c9a05, false);
 Name D_5ad79f0(D_15c9a16, false);
 
-/* derived name: this file's fade entry (tlg_game_fade013d2490.h): one
- * element type per file, as the base holds one resize of them per file */
-struct FadeEntry01249ca0 : FadeEntry013d2490 { /* derived name */
-};
-
 /* FUN_0147db50 */
 template void Array05943280<FadeEntry01249ca0>::resize(unsigned);
 
 /* derived name: this file's copy of FUN_013d4610 (func_00f6d1a0.cpp) */
-void FUN_0147bac0(Fade013d2490 *self) /* derived name */
+void Object016d6b08::slot2()
 {
-    self->state = 1;
-    FadeTarget013d2490 *target = self->owner->target;
+    state = 1;
+    FadeTarget013d2490 *target = owner->target;
     for (int i = 0; i < target->count; ++i) {
-        FadeEntry013d2490 &entry = self->entries[i];
+        FadeEntry013d2490 &entry = entries.at(i);
         reinterpret_cast<Vector4 &>(entry.unknown50) =
-            self->model->skeleton.poses[target->unknown28[i]].rotation;
+            model->skeleton.poses[target->unknown28[i]].rotation;
         makeWPositive(entry.unknown50);
         setLanes(entry.unknown60, VECTOR_W);
     }
 }
 
-/* derived name: this file's copy of FUN_013d0470 (func_00f509e0.cpp) */
-int FUN_0147bc50(Fade013d2490 *self); /* derived name */
-
 /* derived name: this file's copy of FUN_013d2570 (func_00f509e0.cpp) */
-void FUN_0147d010(Fade013d2490 *self) /* derived name */
+void Object016d6b08::slot6()
 {
-    if (self->state != 0 && self->unknown6c != 0 && FUN_0147bc50(self) != 0) {
-        FadeTarget013d2490 *target = self->owner->target;
+    if (state != 0 && unknown6c != 0 && FUN_0147bc50() != 0) {
+        FadeTarget013d2490 *target = owner->target;
         for (int i = 0; i < target->count; ++i)
-            takePose(target->entries[i].unknown70, self->model, target->unknown28[i]);
+            takePose(target->entries[i].unknown70, model, target->unknown28[i]);
     }
 }
 

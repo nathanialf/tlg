@@ -1,24 +1,16 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_fade013d2490.h"
 #include "tlg_game_object016d3ad0.h"
 
 /* derived names: slot 4 of the classes of the vtables at 0x16bf850 to
  * 0x16bf9e0 (config/vtables.derived.base.txt; made by FUN_00f59e00), the
- * fade's state at +0x58 (tlg_game_fade013d2490.h). They share slots 2 to 6
- * (slot 2 FUN_013d4610); slot 7 is FUN_00f6a330 for 0x16bf850 to 0x16bf940
- * and FUN_00f6b940, with a vector, for 0x16bf990 and 0x16bf9e0. Slots 2 to 6
- * and 7's parameters are not traced further. */
+ * fade's state at +0x58 (tlg_game_object016d3ad0.h). Slots 2, 3, 5 and 6
+ * are Object016d3ad0's (slot 2 FUN_013d4610); slot 7 is FUN_00f6a330 for
+ * 0x16bf850 to 0x16bf940 and FUN_00f6b940, with a vector, for 0x16bf990 and
+ * 0x16bf9e0. Slot 7's parameters are not traced further. */
 class FadeState013d4610 : public Object016d3ad0 /* derived name */
 {
   public:
-    virtual void slot2();
-    virtual void slot3();
     virtual void slot4();
-    virtual void slot5();
-    virtual void slot6();
-
-    u8 unknown34[0x24]; /* from the base's tail on */
-    int state;          /* +0x58: as Fade013d2490's */
 };
 
 class FadeState00f6a330 : public FadeState013d4610 /* derived name */

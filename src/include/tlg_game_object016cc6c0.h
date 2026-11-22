@@ -107,4 +107,25 @@ class Object016cd290 /* derived name */
     Ref00503fb0<Object016b9108> unknowne0; /* +0xe0 */
 };
 
+/* derived names: a base of classes over Object016cc6c0, at +0x28 of them (the
+ * destructors 0x13974c0, 0x1397570, 0xb40050 and 0xb42e30 store its vptr
+ * there and release its counted reference at +0x30): two pure functions and
+ * a counted reference at +0x8, released by its destructor, which is not
+ * virtual (the vtable has only the two slots). Its vtable is the one at
+ * 0x16d7b30: the link merged it with Object016d7b30's (tlg_game_fade013d2490.h),
+ * an identical constant of two pure slots (config/vtables.derived.base.txt,
+ * its `merges` row). */
+class RefHolder013974c0 /* derived name */
+{
+  public:
+    virtual void slot0() = 0; /* derived name; not traced */
+    virtual void slot1() = 0; /* derived name; not traced */
+
+  protected:
+    ~RefHolder013974c0() {}
+
+  private:
+    Ref00503fb0<Object016b9108> held; /* +0x8 */
+};
+
 #endif
