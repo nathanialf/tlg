@@ -10,10 +10,6 @@
  * not traced. The fields' meaning is not traced. */
 extern bool D_583260c;
 
-// NONMATCHING: the flag's test, the base `movzx eax, byte; and eax, 1` (imm32)
-// `; cmp eax, 1`, is D46's form of a static bool GlobalOpt shrank to i1: the flag
-// is a static of the file of its writers FUN_00b10510 and FUN_00b127e0 (unwritten;
-// with this reader alone GlobalOpt folds it to false). Parked with them.
 bool FUN_00b105c0() /* derived name */
 {
     if (D_583260c) {
