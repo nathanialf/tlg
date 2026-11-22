@@ -10405,3 +10405,4 @@ FUN_00dd4020 src/game/unknown/leaf_00dd4020.cpp
 FUN_00db9700 src/game/unknown/leaf_00db9700.cpp
 FUN_00dd5370 src/game/unknown/leaf_00dd5370.cpp
 FUN_00ded070 src/game/unknown/leaf_00ded070.cpp
+FUN_00dedf90 src/game/unknown/leaf_00dedf90.cpp
