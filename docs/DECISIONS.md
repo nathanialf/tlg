@@ -1863,3 +1863,54 @@ a PS4 driver default) that gives the flags copy: then the 473 return by re-measu
 **Decision.** `tools/base_elf.py` `_merge_refusal`: where the base's slot is filled by such a relocation, the module's slot must name the SAME import with no addend; anything else refuses the row with the import's name in the message. Every other slot is compared as before. The comparison is exact: it adds a case the proof could not judge and loosens none it could.
 
 **Evidence.** 0x16d7b30: two slots, both relocated to the pure-virtual import (round 442E, scratch e442/table.txt); the gate passes with the row and refuses a module slot naming any other symbol (round 445B, scratch b445/gate2.log).
+
+## D90. A relocation's target is its row first, its FUN_ name second (2026-11-22)
+
+The tree names a virtual by the address of the first implementation found
+(`virtual void FUN_0137ba50();` on Class137ba70), and C++ makes every
+override carry that name: `Object016b1308::FUN_0137ba50` is a different
+function, at 0x964240, with its own row. `BaseElf.address_of` resolved such a
+symbol by its FUN_ component to 0x137ba50, so a this-adjusting thunk to the
+override (0x9643d0: `add rdi, -0x30; jmp 0x964240`) read as a wrong target.
+
+Rule. A relocation's symbol is placed, in order:
+1. by the function table's own name for it (config/functions.base.txt), as before;
+2. by the row table: the one row of config/matched.base.txt whose symbol
+   column is exactly this mangled name, when one address alone carries it and
+   the name has external linkage (not `_ZL...`, not an anonymous namespace,
+   not a compiler-given name such as `_GLOBAL__I_a` or
+   `__cxx_global_array_dtor.N`, which several units define, each with its row);
+3. by a destructor's vtable pair, a vtable's row, as before (D15, D12, D14);
+4. by the name's FUN_/D_ component, as before.
+What this cannot place stays unplaced and unverified: a symbol with no row
+of its own and no FUN_/D_ component. An override no row carries reads by
+rule 4 as the base virtual's address; the base's own field refuses it
+(thunk 0xb41630: "base refers to 0xb414a0, source to 0x4340") unless the
+override's body was folded onto that address (D15), which is then its address.
+
+Measured and rejected (round 450A, impact.txt): leaving such an override
+unplaced (a member `C::FUN_<x>` whose name and signature a row carries under
+another class). It would unplace six symbols referenced by claimed rows whose
+base field IS the FUN_ address: the D15 folds hkOArchive::FUN_000089f0 (onto
+hkOstream's 0x89f0) and hknpReservedEvent1..3::FUN_00040be0 (onto 0x40be0),
+and the owners' own unclaimed members Object014068b0::FUN_01408960 and
+Object0148c070::FUN_0148d930 called by their derived classes' rows. Rows
+alone cannot tell an override from a fold or from the owner's member; the
+base's field can, and rule 4 leaves the check to it.
+
+Kept by name (census C, 92 symbols, 89 references from claimed rows in the
+game module): a free FUN_<x> spelled with another parameter guess than its
+row's (`_Z12FUN_013dfda0P14Object013e2650` against the row's
+`_Z12FUN_013dfda0P12Fade013d2490`), a member spelling of a free row
+(`Object00cd91f0::FUN_00cef2e0` against `_Z12FUN_00cef2e0P14Object00cef2e0`),
+a free spelling of a destructor row. These name the address and nothing
+else; the signature is a guess (match_check.resolve_symbol) and the ABI is
+the same.
+
+Census (game module, round 450A, scratch-archive/a450/census.txt): 7 member
+symbols named by another class's FUN_ address (6 overrides of 0x137ba50's and
+0x137ba70's slots, and hkTransform::FUN_00010a70, a class guess); 21 symbols
+whose own row is not at their FUN_ address (overrides of 0x137ba50, 0x4340,
+0x1af750 and others); none referenced by a claimed row, so no claimed row
+passed against a wrong address (no gate hole). They blocked the thunks
+0x9643d0, 0x9667c0, 0x96a480 and 0xb41630.
