@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
+#include "tlg_game_block.h"
 #include "tlg_game_mutex.h"
 #include "tlg_game_name.h"
 #include "tlg_libc.h"
@@ -8,7 +9,7 @@
  * 0x16bdb40 (config/vtables.derived.base.txt): it stores the vtable and
  * destroys the mutex member at +0x110, whose destructor (leaf_013847e0.cpp)
  * the module inlines; slot 8, FUN_00e5bc80, opens a handle for its argument
- * through slot 3 (with 0), takes slot 7's answer for it and closes it
+ * through slot 3 (with mode 0, "rb"), takes slot 7's answer for it and closes it
  * through slot 4, null without a handle. A handle holds a C stream
  * (FUN_00de9a00's file handle): slot 7, FUN_00e5bc30, gives its size (the
  * position restored), slot 12, FUN_00e5bd70, opens a handle as slot 8 does
@@ -36,6 +37,21 @@ struct FileHandle00e5b7e0 /* derived name */
  * 0xe5bb40, and slot 3 when its file does not open). */
 struct HandlePool00e5b7e0 /* derived name */
 {
+    /* the first free handle taken off the list, null with none (slot 3) */
+    FileHandle00e5b7e0 *acquire()
+    {
+        lock.lock();
+        if (firstFree == 0xffffffff) {
+            lock.unlock();
+            return 0;
+        }
+        const u32 index = firstFree;
+        firstFree = handles[index].next;
+        ++used;
+        lock.unlock();
+        return &handles[index];
+    }
+
     void release(FileHandle00e5b7e0 *handle)
     {
         lock.lock();
@@ -65,19 +81,19 @@ class Object00e5b7e0 /* derived name */
 {
   public:
     virtual ~Object00e5b7e0();
-    virtual void slot2();                                      /* derived name; not traced */
-    virtual FileHandle00e5b7e0 *slot3(void *key, int unknown); /* derived name; not traced */
-    virtual void slot4(FileHandle00e5b7e0 *handle);            /* derived name */
-    virtual void slot5();                                      /* derived name; not traced */
-    virtual void slot6();                                      /* derived name; not traced */
-    virtual long slot7(FileHandle00e5b7e0 *handle);            /* derived name */
-    virtual long slot8(void *key);                             /* derived name */
+    virtual void *slot2(const char *path, u32 *size);              /* derived name */
+    virtual FileHandle00e5b7e0 *slot3(const char *path, int mode); /* derived name */
+    virtual void slot4(FileHandle00e5b7e0 *handle);                /* derived name */
+    virtual void slot5();                                          /* derived name; not traced */
+    virtual void slot6();                                          /* derived name; not traced */
+    virtual long slot7(FileHandle00e5b7e0 *handle);                /* derived name */
+    virtual long slot8(const char *path);                          /* derived name */
     virtual int slot9(FileHandle00e5b7e0 *handle, Record00e5b7e0 *record); /* derived name */
-    virtual void slot10();                                 /* derived name; not traced */
-    virtual void slot11();                                 /* derived name; not traced */
-    virtual int slot12(void *key, Record00e5b7e0 *record); /* derived name */
-    virtual void slot13();                                 /* derived name; not traced */
-    virtual int slot14(const char *path);                  /* derived name */
+    virtual void slot10();                                        /* derived name; not traced */
+    virtual void slot11();                                        /* derived name; not traced */
+    virtual int slot12(const char *path, Record00e5b7e0 *record); /* derived name */
+    virtual void slot13();                                        /* derived name; not traced */
+    virtual int slot14(const char *path);                         /* derived name */
     virtual int slot15(FileHandle00e5b7e0 *handle, unsigned offset, void *buffer,
                        size_t size);                                 /* derived name */
     virtual void slot16();                                           /* derived name; not traced */
@@ -107,6 +123,54 @@ void Object00e5b7e0::slot4(FileHandle00e5b7e0 *handle)
     handles.release(handle);
 }
 
+/* Slot 2: the whole file at a path read into a block of the thread's heap
+ * (aligned to 32, at least one byte), a 0 stored after its end, its size
+ * stored through size; null when the file does not open or its read falls
+ * short (the block released), the size then kept. */
+void *Object00e5b7e0::slot2(const char *path, u32 *size)
+{
+    FILE *file = fopen(path, "rb");
+    u32 length = 0;
+    char *buffer = 0;
+    if (file) {
+        fseek(file, 0, SEEK_END);
+        length = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        buffer = static_cast<char *>(allocateBlock(length > 1 ? length : 1, 0x20));
+        buffer[length] = 0;
+        if (length && buffer && fread(buffer, length, 1, file) != 1) {
+            releaseBlock(buffer);
+            buffer = 0;
+        }
+        fclose(file);
+    }
+    *size = length;
+    return buffer;
+}
+
+/* derived name: the streams' modes by slot 3's mode: "rb", "wb", "rb+",
+ * "ab+" */
+extern const char *const D_16bdc40[4];
+
+/* Slot 3: a handle for the file at a path opened in one of four modes (the
+ * mode's low two bits), null when no handle is free or the file does not
+ * open (the handle then given back). */
+// NONMATCHING: the inlined release only, slot 4's register assignment (the index's mask in rcx
+// and the free list's head in edx at 0xe5bad9, the build the other way round); 76/80
+FileHandle00e5b7e0 *Object00e5b7e0::slot3(const char *path, int mode)
+{
+    FileHandle00e5b7e0 *handle = handles.acquire();
+    if (!handle)
+        return 0;
+    FILE *file = fopen(path, D_16bdc40[mode & 3]);
+    if (!file) {
+        handles.release(handle);
+        return 0;
+    }
+    handle->file = file;
+    return handle;
+}
+
 long Object00e5b7e0::slot7(FileHandle00e5b7e0 *handle)
 {
     FILE *file = handle->file;
@@ -117,9 +181,9 @@ long Object00e5b7e0::slot7(FileHandle00e5b7e0 *handle)
     return size;
 }
 
-long Object00e5b7e0::slot8(void *key)
+long Object00e5b7e0::slot8(const char *path)
 {
-    FileHandle00e5b7e0 *handle = slot3(key, 0);
+    FileHandle00e5b7e0 *handle = slot3(path, 0);
     if (!handle)
         return 0;
     const long result = slot7(handle);
@@ -146,9 +210,9 @@ int Object00e5b7e0::slot9(FileHandle00e5b7e0 *handle, Record00e5b7e0 *record)
     return 1;
 }
 
-int Object00e5b7e0::slot12(void *key, Record00e5b7e0 *record)
+int Object00e5b7e0::slot12(const char *path, Record00e5b7e0 *record)
 {
-    FileHandle00e5b7e0 *handle = slot3(key, 0);
+    FileHandle00e5b7e0 *handle = slot3(path, 0);
     if (!handle) {
         memset(record, 0, sizeof *record);
         return 0;

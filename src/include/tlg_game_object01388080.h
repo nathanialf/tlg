@@ -171,9 +171,18 @@ struct ScriptFunctions05938c40; /* derived name */
  * out; tlg_game_links00c63970.h) */
 struct Links05938c40;
 
+/* derived names: the flags of the game's content chunks, whether each is
+ * there yet, one byte each from +0x14 (the file system's slot 29, 0xe5f590,
+ * mounts an archive only once its chunk is) */
+struct Chunks05938c40 { /* derived name */
+    u8 unknown0[0x14];
+    bool present[1]; /* +0x14; its extent not traced */
+};
+
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
  * script functions at +0x40, the queue at +0xb0 and the world at +0x108
- * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0 */
+ * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0 and
+ * the content chunks at +0xf58 */
 struct Object05938c40 { /* derived name */
     u8 unknown0[0x40];
     ScriptFunctions05938c40 *functions; /* +0x40 */
@@ -183,6 +192,8 @@ struct Object05938c40 { /* derived name */
     Links05938c40 *links; /* +0xd0 */
     u8 unknownd8[0x30];
     World05938c40 *world; /* +0x108 */
+    u8 unknown110[0xe48];
+    Chunks05938c40 *chunks; /* +0xf58 */
 };
 
 extern Object05938c40 *D_5938c40;

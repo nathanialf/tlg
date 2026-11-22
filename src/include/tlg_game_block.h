@@ -68,6 +68,24 @@ class ThreadHeapScope05943280
     Owner05943280 *saved;
 };
 
+/* derived name: size bytes at the given alignment from the calling thread's
+ * heap (the table's first when the thread has none yet, kept from then on),
+ * through its slot 4 with 1; malloc when there is no heap; null for a size
+ * of 0 (FUN_001afa60's body, inlined in 0xe5d2e0) */
+inline void *allocateBlock(unsigned size, unsigned alignment)
+{
+    if (!size)
+        return 0;
+    Owner05943280 *heap = D_16dc090;
+    if (!heap) {
+        heap = D_5943280[0];
+        D_16dc090 = heap;
+        if (!heap)
+            return malloc(size);
+    }
+    return heap->slot4(size, alignment, 1);
+}
+
 inline void releaseBlock(void *block) /* derived name */
 {
     if (!block)

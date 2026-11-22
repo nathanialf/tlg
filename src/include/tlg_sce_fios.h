@@ -9,17 +9,31 @@ typedef int SceFiosFH;      /* derived name: a 32-bit file handle */
 typedef int SceFiosDH;      /* derived name: a 32-bit directory handle */
 typedef long SceFiosOffset; /* derived name: a 64-bit file offset */
 typedef long SceFiosSize;   /* derived name: a 64-bit byte count */
-struct SceFiosOpAttr;       /* derived name: the operation's attributes, null for the defaults */
-typedef int SceFiosOp;      /* derived name: a 32-bit asynchronous operation */
+
+/* derived names: an operation's attributes, null for the defaults; 0x30
+ * bytes, cleared by the game before it sets the flags at +0x18 (0xe5d2e0) */
+struct SceFiosOpAttr {
+    long deadline;
+    void *callback;
+    void *callbackContext;
+    int priority : 8;
+    unsigned int opFlags : 24;
+    unsigned int userTag;
+    void *userPointer;
+    void *reserved;
+};
+
+typedef int SceFiosOp; /* derived name: a 32-bit asynchronous operation */
 
 /* A path's status (derived names): its size, three dates and its flags,
  * bit 0 of which the file system's slot 9 turns into the entry's kind (read at
- * 0x1bc3a); 0x50 bytes on the caller's stack. */
+ * 0x1bc3a); 0x50 bytes on the caller's stack. The dates are unsigned
+ * nanoseconds (the game's 0xe5dcd0 divides them by 1e9 unsigned). */
 struct SceFiosStat {
     SceFiosOffset fileSize;
-    long accessDate;
-    long modificationDate;
-    long creationDate;
+    unsigned long accessDate;
+    unsigned long modificationDate;
+    unsigned long creationDate;
     unsigned int statFlags;
     unsigned char reserved[0x2c];
 };
@@ -50,6 +64,13 @@ struct SceFiosOpenParams {
     SceFiosSize bufferLength;
 };
 
+/* A buffer by its pointer and length (derived names), passed by value in
+ * two registers (0xe5f590). */
+struct SceFiosBuffer {
+    void *pointer;
+    unsigned long length;
+};
+
 extern "C" {
 int sceFiosFHOpenSync(const SceFiosOpAttr *attr, SceFiosFH *fh, const char *path,
                       const SceFiosOpenParams *params);
@@ -57,6 +78,7 @@ int sceFiosStatSync(const SceFiosOpAttr *attr, const char *path, SceFiosStat *st
 /* Whether a file exists at the path (its NID verified as "sceFiosFileExistsSync";
  * the game's 0xe5dac0 and 0xe5f270 pass a null attribute). */
 bool sceFiosFileExistsSync(const SceFiosOpAttr *attr, const char *path);
+bool sceFiosDirectoryExistsSync(const SceFiosOpAttr *attr, const char *path);
 SceFiosOffset sceFiosFHTell(SceFiosFH fh);
 SceFiosSize sceFiosFHGetSize(SceFiosFH fh);
 SceFiosOffset sceFiosFHSeek(SceFiosFH fh, SceFiosOffset offset, int whence);
@@ -78,6 +100,16 @@ SceFiosSize sceFiosFHReadSync(const SceFiosOpAttr *attr, SceFiosFH fh, void *buf
 SceFiosSize sceFiosFHWriteSync(const SceFiosOpAttr *attr, SceFiosFH fh, const void *buffer,
                                SceFiosSize length);
 int sceFiosFileDeleteSync(const SceFiosOpAttr *attr, const char *path);
+int sceFiosDeleteSync(const SceFiosOpAttr *attr, const char *path);
+SceFiosSize sceFiosArchiveGetMountBufferSizeSync(const SceFiosOpAttr *attr, const char *path,
+                                                 const SceFiosOpenParams *params);
+int sceFiosArchiveMountSync(const SceFiosOpAttr *attr, SceFiosFH *fh, const char *path,
+                            const char *mountPoint, SceFiosBuffer buffer,
+                            const SceFiosOpenParams *params);
+SceFiosSize sceFiosFileReadSync(const SceFiosOpAttr *attr, const char *path, void *buffer,
+                                SceFiosSize length, SceFiosOffset offset);
+SceFiosSize sceFiosFileGetSizeSync(const SceFiosOpAttr *attr, const char *path);
+int sceFiosFHStatSync(const SceFiosOpAttr *attr, SceFiosFH fh, SceFiosStat *stat);
 int sceFiosDirectoryCreate(const SceFiosOpAttr *attr, const char *path);
 /* An error code's text written into a buffer of size bytes (FUN_00e5e6a0). */
 const char *sceFiosDebugDumpError(int err, char *buffer, unsigned long size);
