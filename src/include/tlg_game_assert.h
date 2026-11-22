@@ -11,7 +11,17 @@
  * by FUN_00b8a480 (CreateDevice, func_00b8a480.cpp), and every other access
  * tests it for null: a pointer local to the optimiser and stored once
  * (config/local_data.base.txt, tools/module_boundary.py), whose calls the
- * link's GlobalOpt makes direct and its inliner inlines. */
+ * link's GlobalOpt makes direct and its inliner inlines.
+ *
+ * The report is a function of its own unit (anzu_assert.cpp) that the link
+ * inlines at every site: a call after a check is a tail call in the base
+ * (0x13003d0 and 0x13005d0 `jmp` to memcpy, 0x12ff060 to the base
+ * destructor), which the unit's own pipeline marks only where no local's
+ * address has escaped on a path to it (llvm-3.7.1
+ * TailRecursionElimination.cpp:251-370; the link's pipeline has no such
+ * pass, PassManagerBuilder.cpp:430-527). The report's buffer, written in the
+ * macro, escapes to the handler on every check's path; in the report's own
+ * function, the site's unit holds no buffer. */
 #ifndef TLG_GAME_ASSERT_H
 #define TLG_GAME_ASSERT_H
 
@@ -27,16 +37,14 @@ extern AssertHandler D_5ace510; /* derived name: the report's handler */
  * thread's report object (leaf_00b8a440.cpp) */
 void FUN_00b8a440(const char *message, const char *kind);
 
+/* derived name: the report of a failed check: the 512-byte message, the
+ * handler or puts (anzu_assert.cpp) */
+void AnzuAssertFailed(const char *file, long line, const char *function, const char *condition);
+
 #define ANZU_ASSERT(file, line, condition) /* derived name */                                      \
     do {                                                                                           \
         if (!(condition)) {                                                                        \
-            char message[512];                                                                     \
-            snprintf(message, sizeof(message), "%s(%ld): %s() ASSERT(%s)", file,                   \
-                     static_cast<long>(line), __FUNCTION__, #condition);                           \
-            if (D_5ace510)                                                                         \
-                D_5ace510(message, "ASSERT");                                                      \
-            else                                                                                   \
-                puts(message);                                                                     \
+            AnzuAssertFailed(file, line, __FUNCTION__, #condition);                                \
             __builtin_debugtrap();                                                                 \
         }                                                                                          \
     } while (0)
