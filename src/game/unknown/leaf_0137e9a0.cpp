@@ -12,7 +12,7 @@
 Object016ccdd0::~Object016ccdd0()
 {
     if (block8 != 0) {
-        releaseBlock(block8);
+        FUN_00ebf3f0(block8);
         block8 = 0;
         count14 = 0;
     }

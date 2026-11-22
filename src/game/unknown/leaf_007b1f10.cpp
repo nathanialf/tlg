@@ -22,8 +22,6 @@ class Object016adf38 /* derived name */
     int unknown30;                /* +0x30 */
 };
 
-// NONMATCHING: the deleting destructor 0x7b1fd0 calls this one (28 bytes) where the base inlines it
-// (an inline-cost margin); this complete destructor is equal
 Object016adf38::~Object016adf38()
 {
     unknown18 = 0;

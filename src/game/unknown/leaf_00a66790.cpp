@@ -18,5 +18,5 @@ class Object00a66790 /* derived name */
 
 Object00a66790::~Object00a66790()
 {
-    releaseBlock(unknown40);
+    FUN_00ebf3f0(unknown40);
 }

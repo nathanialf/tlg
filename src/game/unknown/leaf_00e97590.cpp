@@ -31,7 +31,4 @@ class Object016be338 : public Object016b9108 /* derived name */
  * are released, last first, then the base's. FUN_00e977e0, slot 1, is the
  * deleting one. The destructor is the class's key function, so this file
  * emits the vtable. */
-// NONMATCHING: the complete destructor: the buffer's flags tested in memory (`test byte [r15+0x64], 1`) where the
-// base loads them once (`mov eax, [r15+0x64]; test al, 1`) and reloads after the release: the residual of
-// leaf_00d650e0.cpp's buffer, same size
 Object016be338::~Object016be338() {}

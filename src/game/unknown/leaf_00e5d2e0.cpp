@@ -22,7 +22,7 @@ void *Object016bdc60::FUN_00e5d2e0(const char *name, u32 *size) const
                 *size = length;
                 return buffer;
             }
-            releaseBlock(buffer);
+            FUN_00ebf3f0(buffer);
         }
     } else if (length == 0) {
         char *buffer = static_cast<char *>(allocateBlock(0x10, 0x20));

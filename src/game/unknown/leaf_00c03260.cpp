@@ -54,6 +54,6 @@ Object00c03260::~Object00c03260()
 {
     if (Member00c03260 *member = unknown28) {
         FUN_00bebb40(member);
-        releaseBlock(member);
+        FUN_00ebf3f0(member);
     }
 }

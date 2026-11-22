@@ -28,7 +28,7 @@ struct Record59d280 { /* derived name */
     void clear()
     {
         if (block) {
-            releaseBlock(block);
+            FUN_00ebf3f0(block);
             block = 0;
         }
     }
@@ -45,7 +45,7 @@ struct Object59d280 { /* derived name */
     void clearBlock()
     {
         if (block) {
-            releaseBlock(block);
+            FUN_00ebf3f0(block);
             block = 0;
         }
     }

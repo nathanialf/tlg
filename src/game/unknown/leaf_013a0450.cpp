@@ -49,10 +49,6 @@ class Object016d0338 : public Object016d0300 /* derived name */
 /* derived name: the complete destructor: FUN_013a0090 on the object, then
  * the members released, last first, and the base's destructor inlined.
  * FUN_0139f070, slot 1, is the deleting one. */
-// NONMATCHING: the deleting destructor (FUN_0139f070 for this class, and the
-// five below) calls the complete one where the base inlines it (5/94): the
-// destructor wants the inline hint, and nothing in the tree then emits the
-// vtable (its creator FUN_00bfa840 is not written).
 Object016d0338::~Object016d0338()
 {
     FUN_013a0090(this);

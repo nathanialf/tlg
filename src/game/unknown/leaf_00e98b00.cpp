@@ -22,5 +22,5 @@ class Object016be430 : public Object016b85e0 /* derived name */
 
 Object016be430::~Object016be430()
 {
-    releaseBlock(block258);
+    FUN_00ebf3f0(block258);
 }

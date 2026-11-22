@@ -22,5 +22,5 @@ class Object016d5528 /* derived name */
 Object016d5528::~Object016d5528()
 {
     FUN_013f7290();
-    releaseBlock(block8);
+    FUN_00ebf3f0(block8);
 }

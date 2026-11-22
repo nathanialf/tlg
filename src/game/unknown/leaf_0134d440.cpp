@@ -9,5 +9,5 @@
  * the class's key function, so this file emits the vtable. */
 Object016a87b8::~Object016a87b8()
 {
-    releaseBlock(block260);
+    FUN_00ebf3f0(block260);
 }

@@ -139,7 +139,7 @@ void *Object00e5b7e0::slot2(const char *path, u32 *size)
         buffer = static_cast<char *>(allocateBlock(length > 1 ? length : 1, 0x20));
         buffer[length] = 0;
         if (length && buffer && fread(buffer, length, 1, file) != 1) {
-            releaseBlock(buffer);
+            FUN_00ebf3f0(buffer);
             buffer = 0;
         }
         fclose(file);

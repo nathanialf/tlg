@@ -46,5 +46,5 @@ class Object016ba630 : public Object016b85e0 /* derived name */
 Object016ba630::~Object016ba630()
 {
     array238.removeAll();
-    releaseBlock(block250);
+    FUN_00ebf3f0(block250);
 }

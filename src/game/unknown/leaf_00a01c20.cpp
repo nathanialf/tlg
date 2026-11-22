@@ -24,6 +24,4 @@ class Object016b1ac8 /* derived name */
     OwnedBlock05943280 block58; /* +0x58 */
 };
 
-// NONMATCHING: the deleting destructor 0xa01cd0 calls this one (28 bytes) where the base inlines it
-// (an inline-cost margin); this complete destructor is equal
 Object016b1ac8::~Object016b1ac8() {}

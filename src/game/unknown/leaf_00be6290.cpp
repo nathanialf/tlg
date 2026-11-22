@@ -27,7 +27,4 @@ class Object016b7ad8 : public Object016b9108 /* derived name */
     Array05943280<Name> names70; /* +0x70 */
 };
 
-// NONMATCHING: the buffer's flags tested in memory (`test byte [r14+0x34], 1`) where the base loads them
-// once (`mov eax, [r14+0x34]; test al, 1`) and reloads after the release: leaf_00d650e0.cpp's buffer class;
-// the deleting destructor FUN_00be6430 is equal
 Object016b7ad8::~Object016b7ad8() {}

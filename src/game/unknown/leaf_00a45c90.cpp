@@ -24,7 +24,7 @@ int FUN_00a45c90(lua_State *state) /* derived name */
 {
     Object05827b50 *list = D_5827b50;
     list->strings.clear();
-    releaseBlock(list->text);
+    FUN_00ebf3f0(list->text);
     list->text = 0;
     list->cursor = 0;
     list->position = 0;

@@ -17,5 +17,5 @@ class Object0147f7e0 /* derived name */
 
 Object0147f7e0::~Object0147f7e0()
 {
-    releaseBlock(unknown8);
+    FUN_00ebf3f0(unknown8);
 }

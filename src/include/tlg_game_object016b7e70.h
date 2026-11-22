@@ -23,7 +23,7 @@ class Object016b7e70 /* derived name */
     void reset() /* derived name */
     {
         if ((flags8 & 2) && block38) {
-            releaseBlock(block38);
+            FUN_00ebf3f0(block38);
             block38 = 0;
         }
         size20 = 0;

@@ -27,5 +27,5 @@ class Object016d4948 : public Object013e1ea0 /* derived name */
 
 Object016d4948::~Object016d4948()
 {
-    releaseBlock(block110);
+    FUN_00ebf3f0(block110);
 }

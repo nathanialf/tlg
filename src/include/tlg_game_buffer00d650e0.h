@@ -23,7 +23,7 @@ struct Buffer00d650e0 { /* derived name */
     void reset() /* derived name */
     {
         if (!(flags & 1))
-            releaseBlock(block);
+            FUN_00ebf3f0(block);
         block = 0;
         count = 0;
         flags &= 0x10;

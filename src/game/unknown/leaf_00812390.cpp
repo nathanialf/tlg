@@ -31,5 +31,5 @@ class Object016ae5d0 /* derived name */
 Object016ae5d0::~Object016ae5d0()
 {
     FUN_013b2e90(&unknown10);
-    releaseBlock(block28);
+    FUN_00ebf3f0(block28);
 }

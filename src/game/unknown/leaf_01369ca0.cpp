@@ -23,6 +23,4 @@ class Object016cb760 /* derived name */
     OwnedBlock05943280 block48; /* +0x48: owned block */
 };
 
-// NONMATCHING: the deleting destructor 0x1369d50 calls this one (28 bytes) where the base inlines it
-// (an inline-cost margin); this complete destructor is equal
 Object016cb760::~Object016cb760() {}

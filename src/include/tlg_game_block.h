@@ -2,9 +2,9 @@
  * derived names throughout. A block carries a 16-byte header before it: a
  * tag byte, then at +0x2 the index of its owner in the table at 0x5943280. A
  * block tagged 10 whose owner is set goes back through slot 6 of the owner
- * with 1; any other goes to free. The release callback FUN_00ebf3f0
- * (leaf_00ebf3f0.cpp) is this body, and the destructors that own a block
- * inline it. */
+ * with 1; any other goes to free. The release has a copy of its own in the
+ * executable, FUN_00ebf3f0 (leaf_00ebf3f0.cpp), which the destructors that
+ * own a block call (below); the arrays hold the body in line. */
 #ifndef TLG_GAME_BLOCK_H
 #define TLG_GAME_BLOCK_H
 
@@ -143,15 +143,38 @@ inline void *reallocateOwnedBlock(void *block, unsigned size, unsigned alignment
     return first->slot4(size, alignment, 1);
 }
 
+/* derived name: the release as a function of its own, the copy the
+ * executable keeps at 0xebf3f0 (leaf_00ebf3f0.cpp; its address is stored at
+ * 0x57ad998, and no call of it is left: the link inlines it at every site).
+ * The body is releaseBlock's. Every release of a block outside the arrays
+ * goes through it (round 474E, each form measured over the whole module):
+ * the release is then a call at the unit stage, so
+ * - a complete destructor that releases two blocks costs two calls and
+ *   its deleting destructor holds it, as the base's do (0x6e14f0, 0x7b1fd0,
+ *   0xa01cd0, 0xa7ba90, 0x13546c0, 0x1369d50, the six from 0x139f070 to
+ *   0x13a02f0: 149 to 175 bytes each, where the inline body left a 28-byte
+ *   call of the complete destructor; 0xd655d0, 0x13500e0, 0x13b2d70,
+ *   0x13b93a0);
+ * - a field read before the release is read again after it (the buffer's
+ *   flags, `mov eax, [r14+0x34]; test al, 1` and the reload after the
+ *   release: 0xbe6290, 0xd650e0, 0xe97590, 0x13b2c80, 0x13b92b0), and the
+ *   release's own null test stays where the caller already proved the
+ *   block (0x1350030's chain).
+ * The arrays' release (tlg_game_array.h) is the inline body: the same call
+ * there changes 576 symbols and loses 269 rows. The deleting destructor of
+ * a class with nine such members still calls its complete one (0x33cb30,
+ * 28 bytes in the base). */
+void FUN_00ebf3f0(void *block);
+
 /* derived name: a member that owns a block and releases it when its holder
  * is destroyed, after the members declared below it (FUN_013e4b40 releases
- * its block at +0x18 after the destructor of its member at +0x30). */
+ * its block at +0x18 after the destructor of its member at +0x30) */
 class OwnedBlock05943280
 {
   public:
     ~OwnedBlock05943280()
     {
-        releaseBlock(block);
+        FUN_00ebf3f0(block);
     }
 
   private:

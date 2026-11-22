@@ -16,7 +16,7 @@ struct Record00f4dab0 /* derived name */
 {
     ~Record00f4dab0()
     {
-        releaseBlock(block60);
+        FUN_00ebf3f0(block60);
     }
 
     u8 unknown0[8];

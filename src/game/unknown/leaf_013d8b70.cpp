@@ -11,5 +11,5 @@
 Object016d3dd0::~Object016d3dd0()
 {
     FUN_013d8be0();
-    releaseBlock(block8);
+    FUN_00ebf3f0(block8);
 }

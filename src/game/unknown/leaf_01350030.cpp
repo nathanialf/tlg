@@ -33,14 +33,12 @@ class Object016cabc8 /* derived name */
     Chunk01350030 *chunks;   /* +0x420 */
 };
 
-// NONMATCHING: the base keeps the release's null test on each block of the chain (`test rax, rax; je` after the next
-// pointer is read); the build drops it (the loop's own test proves the block not null)
 Object016cabc8::~Object016cabc8()
 {
     FUN_0134fb80(&member10);
     while (chunks) {
         Chunk01350030 *next = chunks->next;
-        releaseBlock(chunks);
+        FUN_00ebf3f0(chunks);
         chunks = next;
     }
 }

@@ -9,5 +9,5 @@
  * is the compiler's. */
 Object0134a810::~Object0134a810()
 {
-    releaseBlock(unknown68);
+    FUN_00ebf3f0(unknown68);
 }

@@ -21,7 +21,6 @@ class Object016baa48 : public Object00d30550 /* derived name */
 
 void FUN_00d65170(Object016baa48 *self); /* derived name */
 
-// NONMATCHING: the base reads the flags into a register for the bit test and joins the skip path to `and eax, 0x10` with it, reloading only after the release (one merged block: a load PRE'd from one unavailable predecessor); the build reaches the join from the release's exits separately and keeps `and dword [rbx+0x5c], 0x10`
 Object016baa48::~Object016baa48()
 {
     FUN_00d65170(this);

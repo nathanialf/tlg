@@ -112,7 +112,7 @@ void Object016bed98::FUN_00f0e430()
         }
         void *block = 0;
         if (FUN_00ebf860(&block) >= 0)
-            releaseBlock(block);
+            FUN_00ebf3f0(block);
         unknown20 = 0;
     }
     FUN_00efc330(unknownc);

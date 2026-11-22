@@ -40,7 +40,7 @@ class Object016cc398 : public Object016b9108 /* derived name */
 inline Object016cc398::~Object016cc398()
 {
     FUN_013b2e90(&unknown38);
-    releaseBlock(block50);
+    FUN_00ebf3f0(block50);
 }
 
 #endif
