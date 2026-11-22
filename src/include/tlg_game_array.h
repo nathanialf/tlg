@@ -106,6 +106,38 @@ template <class T> class Array05943280 /* derived name */
         return index;
     }
 
+    /* appends `number` default elements, growing the block once when it is
+     * too small (FUN_00220c10, over 0x70-byte elements: the old count kept
+     * in ebx, `lea eax, [rbx+r15]` stored as the count, the growth, then
+     * the constructors' loop counted down, the block read again at each
+     * element) */
+    void addDefault(unsigned number) /* derived name */
+    {
+        unsigned index = count;
+        count += number;
+        if (count > capacity)
+            grow(count);
+        for (; number; --number)
+            new (&data[index++]) T;
+    }
+
+    /* appends copies of another array's elements: room made for both
+     * counts first, then each element appended in turn, the other's count
+     * read again and its block once (FUN_0136ae70 over ints and
+     * FUN_01350e40 over vectors: `mov ecx, [r14+8]; mov eax, [r15+8]; add
+     * eax, ecx; cmp [r15+0xc], eax; jae`, the reallocation, then `mov rbx,
+     * [r14]` and the bytes left counted down, the append inlined). Over
+     * Names and counted references the base keeps the append as a call
+     * (FUN_0134cea0 calling FUN_01344a20, FUN_013a6db0 calling
+     * FUN_0138e360, FUN_0135b4b0 calling FUN_00588100) where the build
+     * inlines it: those three are not claimed. */
+    void append(const Array05943280 &other) /* derived name */
+    {
+        reserve(count + other.count);
+        for (const T *value = other.begin(), *last = other.end(); value != last; ++value)
+            add(*value);
+    }
+
     /* appends a copy of the value unless an element equals it; the block
      * grows through the owner its header names (FUN_00ce22e0: the elements
      * compared first, `cmp [rax+rcx*8], r15; je`, then the count raised and
