@@ -535,6 +535,11 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
         if errors:
             raise Refusal("\n".join(errors))
     once = {n: r for n, r in once_rows(ver).items() if n in named}
+    # a module of one file (the pre-screen, `single`) that is not the storing
+    # unit cannot hold the store: the row is left out there, the variable
+    # stays external, and only the gate's whole module measures its readers
+    skipped = [n for n, (_fn, tu) in once.items() if single and tu not in {u.tu for u in units}]
+    once = {n: r for n, r in once.items() if n not in skipped}
     if once:
         oproofs, errors = once_proof(base, once)
         if errors:
@@ -549,6 +554,7 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
                               "alone (tools/module_boundary.py, once-stored pointers)")
         proofs.update(oproofs)
     text, log = standins(units, ver, base, local=set(local), once=set(once))
+    log += [f"ONCE-NOT-IN-THIS-MODULE {n} (its store is in {once_rows(ver)[n][1]})" for n in skipped]
     work = out.parent / (out.name[:-2] if out.name.endswith(".o") else out.name)
     out.parent.mkdir(parents=True, exist_ok=True)
     sl = Path(str(work) + ".standins.ll")
