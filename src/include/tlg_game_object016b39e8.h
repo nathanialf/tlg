@@ -27,10 +27,15 @@ class Object016b39e8 : public Object016b9108 /* derived name */
 
     virtual ~Object016b39e8();
 
+  protected:
+    /* +0x28: a counted reference to an object that holds links
+     * (tlg_game_links00c63970.h): the derived classes' destructors take
+     * them out */
+    AtomicRef0045c470<Object016b9108> held28;
+
   private:
-    AtomicRef0045c470<Object016b9108> held28; /* +0x28: a counted reference */
-    Array01343a80<Name> names30;              /* +0x30 */
-    Array01343a80<Name> names48;              /* +0x48 */
+    Array01343a80<Name> names30; /* +0x30 */
+    Array01343a80<Name> names48; /* +0x48 */
 };
 
 #endif

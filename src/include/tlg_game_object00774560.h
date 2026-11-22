@@ -303,7 +303,9 @@ struct Body0077bac0 { /* derived name */
     u8 unknown5120[0x60];
     TrackerB0079c700 trackerB1; /* +0x5180 */
     TrackerB0079c700 trackerB2; /* +0x51e0 */
-    u8 unknown5240[0x1090];
+    u8 unknown5240[0x58fc - 0x5240];
+    int unknown58fc; /* +0x58fc: cleared by Object016acbe8's slot 15 (FUN_0076cd70) */
+    u8 unknown5900[0x62d0 - 0x5900];
     /* +0x62d0: the int at +0x3e0 of the component Object016ac990's slot 17
      * finds (FUN_00765280) */
     int unknown62d0;

@@ -13,6 +13,16 @@
  * [0x57d7870]; mov rcx, [0x57d7878]`) */
 extern Value004af700 D_57d7870;
 
+/* derived names: a three-float vector, the offset slot 8 adds to the
+ * position at +0x40 (0.2 of it) */
+struct Vec3057d78a0 { /* derived name */
+    float x;
+    float y;
+    float z;
+};
+
+extern Vec3057d78a0 D_57d78a0;
+
 /* derived names: the class whose vtable is at 0x16aa0d0
  * (config/vtables.derived.base.txt, stored by FUN_004af700 FUN_004af8a0 FUN_004b16e0 FUN_004b7d80), derived from
  * Object016b9108: its slots 2 to 4 are the base's, slots 5 to 11 its own (declared; their bodies
@@ -34,15 +44,20 @@ class Object016aa0d0 : public Object016b9108 /* derived name */
     }
 
     virtual ~Object016aa0d0();
-    virtual void slot5();  /* derived name; FUN_004afa60, not traced */
-    virtual void slot6();  /* derived name; FUN_000042d0, not traced */
-    virtual void slot7();  /* derived name; FUN_004b00f0, not traced */
-    virtual void slot8();  /* derived name; FUN_004b00a0, not traced */
-    virtual void slot9();  /* derived name; FUN_004aff80, not traced */
-    virtual void slot10(); /* derived name; FUN_004affa0, not traced */
-    virtual void slot11(); /* derived name; FUN_004affb0, not traced */
+    virtual void slot5(); /* derived name; FUN_004afa60, not traced */
+    virtual void slot6(); /* derived name; FUN_000042d0, not traced */
+    /* slot 7, FUN_004b00f0: a count of points, none here (4 in
+     * Object016aa1b0, 1 in Object016aa320) */
+    virtual int slot7() const; /* derived name */
+    /* slot 8, FUN_004b00a0: the point of an index, here the position at
+     * +0x40 moved by 0.2 of the vector at 0x57d78a0 (its w kept), whatever
+     * the index; returned through the hidden pointer (Float4) */
+    virtual Float4 slot8(int index) const; /* derived name */
+    virtual void slot9();                  /* derived name; FUN_004aff80, not traced */
+    virtual void slot10();                 /* derived name; FUN_004affa0, empty */
+    virtual void slot11();                 /* derived name; FUN_004affb0, not traced */
 
-  private:
+  protected:
     u8 unknown24[0x4];
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
@@ -52,7 +67,7 @@ class Object016aa0d0 : public Object016b9108 /* derived name */
     Ref00503fb0<Object016b9108> held30;
     int unknown38;           /* +0x38: -1 from the constructor; not traced */
     bool unknown3c;          /* +0x3c: false from the constructor; not traced */
-    Float4A unknown40;       /* +0x40: zero from the constructor; not traced */
+    Float4A unknown40;       /* +0x40: zero from the constructor; the position slot 8 moves */
     Value004af700 unknown50; /* +0x50: the value at 0x57d7870 from the constructor; not traced */
 };
 

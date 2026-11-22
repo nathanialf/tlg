@@ -3,6 +3,7 @@
 #ifndef TLG_GAME_OBJECT016ACBE8_H
 #define TLG_GAME_OBJECT016ACBE8_H
 
+#include "tlg_game_links00c63970.h"
 #include "tlg_game_name.h"
 #include "tlg_game_object00774560.h"
 
@@ -17,9 +18,14 @@ class Object016acbe8 : public Object00774560 /* derived name */
   public:
     Object016acbe8(const Name &name); /* 0x767b40, its row named after it (D15) */
     virtual ~Object016acbe8();
+    void slot15(); /* FUN_0076cd70 */
 
   private:
-    u8 unknownfc[0x184];
+    u8 unknownfc[0x210 - 0xfc];
+    /* +0x210: a counted reference to an object that holds links
+     * (tlg_game_links00c63970.h), emptied by slot 15 */
+    AtomicRef0045c470<Object016b9108> held210;
+    u8 unknown218[0x280 - 0x218];
 };
 
 #endif

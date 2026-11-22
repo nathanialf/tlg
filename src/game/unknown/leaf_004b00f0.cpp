@@ -1,11 +1,9 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_object016aa0d0.h"
 
-/* derived names: a virtual method that returns 0, the body behind 3 vtable
- * slots in .data.rel.ro (from 0x16aa118). The return type is not traced; int
- * is the 0 in eax. Class and method unknown. */
-struct Object004b00f0;
-
-int FUN_004b00f0(Object004b00f0 *self) /* derived name */
+/* slot 7 of 0x16aa0d0 (and of 0x16aa140 and 0x16aa290, which keep it): no
+ * points */
+int Object016aa0d0::slot7() const
 {
     return 0;
 }

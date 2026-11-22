@@ -167,15 +167,21 @@ struct World05938c40 { /* derived name */
  * one in it, FUN_008191e0) */
 struct ScriptFunctions05938c40; /* derived name */
 
+/* derived name: the links between objects by name (FUN_00c63970 takes one
+ * out; tlg_game_links00c63970.h) */
+struct Links05938c40;
+
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
  * script functions at +0x40, the queue at +0xb0 and the world at +0x108
- * (handed to FUN_00c55dd0 by FUN_0082de00) */
+ * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0 */
 struct Object05938c40 { /* derived name */
     u8 unknown0[0x40];
     ScriptFunctions05938c40 *functions; /* +0x40 */
     u8 unknown48[0x68];
     CommandQueue05938c40 *queue; /* +0xb0 */
-    u8 unknownb8[0x50];
+    u8 unknownb8[0x18];
+    Links05938c40 *links; /* +0xd0 */
+    u8 unknownd8[0x30];
     World05938c40 *world; /* +0x108 */
 };
 

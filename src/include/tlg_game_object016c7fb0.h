@@ -52,7 +52,13 @@ class Object016c7fb0 : public Object016b9108 /* derived name */
     Array01343a80<u32> array58;
     Array01343a80<u32> array70;
     int unknown88; /* +0x88: zero from the constructor; not traced */
-    int unknown8c; /* +0x8c: zero from the constructor; not traced */
+
+  public:
+    /* +0x8c: zero from the constructor; above zero, Object016b7938's slot 9
+     * leaves the object it holds alone (FUN_00be0c40) */
+    int unknown8c;
+
+  private:
     int unknown90; /* +0x90: zero from the constructor; not traced */
     int unknown94; /* +0x94: zero from the constructor; not traced */
     int unknown98; /* +0x98: zero from the constructor; not traced */

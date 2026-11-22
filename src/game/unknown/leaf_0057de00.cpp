@@ -58,7 +58,7 @@ int Object016ab758::slot9(void *argument)
         return 0;
     Mutex013847e0 &mutex = D_5938c40->unknownb8->mutex;
     mutex.lock();
-    int result = FUN_00be0c40(this, argument);
+    int result = Object016b7938::slot9(argument);
     if (result && !same)
         FUN_0057d360(this);
     mutex.unlock();

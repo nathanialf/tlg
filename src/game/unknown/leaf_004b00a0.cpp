@@ -1,30 +1,15 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_math.h"
-#include "tlg_types.h"
+#include "tlg_game_object016aa0d0.h"
 
-/* derived names: a virtual method (its address at 0x16aa120, 0x16aa190 and
- * 0x16aa2e0 in .data.rel.ro) that returns the position at +0x40 moved by 0.2
- * of the vector at 0x57d78a0 (its fourth component kept), by value through
- * the hidden pointer (Float4, tlg_math.h). Class and method unknown. */
-struct Vec3057d78a0 { /* derived name */
-    float x;
-    float y;
-    float z;
-};
-
-extern Vec3057d78a0 D_57d78a0;
-
-struct Object004b00a0 { /* derived name */
-    u8 unknown0[0x40];
-    Float4 position; /* +0x40, derived name */
-};
-
-Float4 FUN_004b00a0(const Object004b00a0 *self) /* derived name */
+/* slot 8 of 0x16aa0d0 (and of 0x16aa140 and 0x16aa290, which keep it): the
+ * position at +0x40 moved by 0.2 of the vector at 0x57d78a0, its fourth
+ * component kept, whatever the index */
+Float4 Object016aa0d0::slot8(int) const
 {
-    const float w = self->position.w;
-    const float x = self->position.x + D_57d78a0.x * 0.2f;
-    const float y = self->position.y + D_57d78a0.y * 0.2f;
-    const float z = self->position.z + D_57d78a0.z * 0.2f;
+    const float w = unknown40.w;
+    const float x = unknown40.x + D_57d78a0.x * 0.2f;
+    const float y = unknown40.y + D_57d78a0.y * 0.2f;
+    const float z = unknown40.z + D_57d78a0.z * 0.2f;
     Float4 result;
     result.x = x;
     result.y = y;

@@ -6,34 +6,35 @@
 #include "tlg_game_array01343a80.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
-#include "tlg_game_object016b9108.h"
+#include "tlg_game_task003ec770.h"
 
 /* derived names: the class whose vtable is at 0x16a9328
  * (config/vtables.derived.base.txt, stored by FUN_003ebf60 FUN_003ec8f0
- * FUN_003ec990), derived from Object016b9108: slots 5 to 9 are its own
- * (FUN_003eca30, FUN_003eca70, FUN_003ecac0, FUN_003ecb10, FUN_003ecb60; declared, not traced). 0x40 bytes (`mov edi,
+ * FUN_003ec990), derived from Task003ec770: slots 5 to 9 are its overrides
+ * (FUN_003eca30, FUN_003eca70, FUN_003ecac0, FUN_003ecb10, FUN_003ecb60), each calling the same slot of every child. 0x40 bytes (`mov edi,
  * 0x40` before operator new in the creator). Its own fields are traced
  * where its creator FUN_003ebf60 sets them and its destructor FUN_003ec8f0
  * tears them down. The destructor is the class's key function
  * (leaf_003ec8f0.cpp), so that unit emits the vtable: defined inline it stays a
  * function of its own that the vtable's two destructors call. */
-class Object016a9328 : public Object016b9108 /* derived name */
+class Object016a9328 : public Task003ec770 /* derived name */
 {
   public:
     /* inlined in the creator: the base built from the name, the vptr, the array cleared
      * (`vmovdqu [r15+0x28], xmm0`), its owner index from the thread's heap and
      * its state */
-    Object016a9328(const Name &name) : Object016b9108(name) {}
+    Object016a9328(const Name &name) : Task003ec770(name) {}
 
     virtual ~Object016a9328();
-    virtual void slot5(); /* derived name; FUN_003eca30, not traced */
-    virtual void slot6(); /* derived name; FUN_003eca70, not traced */
-    virtual void slot7(); /* derived name; FUN_003ecac0, not traced */
-    virtual void slot8(); /* derived name; FUN_003ecb10, not traced */
-    virtual void slot9(); /* derived name; FUN_003ecb60, not traced */
+    void slot5();               /* FUN_003eca30 */
+    int slot6(void *argument);  /* FUN_003eca70 */
+    int slot7(void *argument);  /* FUN_003ecac0 */
+    int slot8(void *argument);  /* FUN_003ecb10 */
+    void slot9(void *argument); /* FUN_003ecb60 */
 
   private:
-    Array01343a80<Ref00503fb0<Object016b9108>> record28; /* +0x28: an array of counted references */
+    Array01343a80<Ref00503fb0<Task003ec770>>
+        children; /* +0x28: counted references to the children */
 };
 
 #endif
