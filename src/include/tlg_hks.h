@@ -42,9 +42,9 @@ struct lua_State {
     u8 unknown0[0x10];
     HksGlobal *global; /* +0x10, derived name */
     u8 unknown18[0x30];
-    HksObject *top;  /* derived name */
-    HksObject *base; /* derived name */
-    u8 unknown58[0x8];
+    HksObject *top;   /* derived name */
+    HksObject *base;  /* derived name */
+    HksObject *last;  /* +0x58, derived name: the end of the stack's room */
     HksObject *stack; /* +0x60, derived name: the first value FUN_00dd2900 links */
     u8 unknown68[0x10];
     void *globals; /* +0x78, derived name: linked as "Global Table" (FUN_00dd2900) */
@@ -347,6 +347,72 @@ inline bool topIsCFunction(lua_State *state)
     if (!(value >= state->base))
         return false;
     return (value->type & 0xf) == 10;
+}
+
+/* The VM's API source, as its assertions pass it (`__FILE__` in the
+ * file that includes lua_impl.inl). derived name. */
+#define HKS_LUA_IMPL_FILE                                                                          \
+    "D:\\trico\\engine\\anzu\\external\\havok\\HavokScriptVM-2013.3.0\\build/../source/"           \
+    "Debugger/../Platform/String/../../virtualMachine/Kernel/../../virtualMachine/lua_impl.inl"
+
+/* hksi_lua_pop (the name from its assertion message), inlined: n values
+ * popped from the stack's top */
+inline void hksi_lua_pop(lua_State *s, int n)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0xa238a, "s != NULL", "hksi_lua_pop", "Parameter 's' must be a valid state pointer",
+               HKS_LUA_IMPL_FILE, 822);
+        __builtin_trap();
+    }
+    s->top -= n;
+}
+
+/* derived name: grows the stack's room by n values (FUN_00dbb2e0, its body
+ * not written; the first argument is the address of +0x18) */
+void FUN_00dbb2e0(void *unknown18, lua_State *state, int n);
+
+/* hksi_lua_checkstack (the name from its assertion message), inlined: room
+ * made for n more values */
+inline void hksi_lua_checkstack(lua_State *s, int n)
+{
+    if (!(s != 0)) {
+        printf("Havok Script Assertion [r 14332] 0x%08X failed:\n\tAssertion (%s) failed\n\tin "
+               "%s() : \"%s\"\n\tat %s(%d)\n",
+               0xc238a, "s != NULL", "hksi_lua_checkstack",
+               "Parameter 's' must be a valid state pointer", HKS_LUA_IMPL_FILE, 1124);
+        __builtin_trap();
+    }
+    if (s->top + n > s->last)
+        FUN_00dbb2e0(s->unknown18, s, n);
+}
+
+/* derived name: Lua's lua_topointer(state, -1): the stack's top value's
+ * object for a table (5), a thread (8), a function (9, 10) or a structure's
+ * object (12), a light userdata (2) as it is, a full userdata's (7) value
+ * past its block, else null (null for an empty frame) */
+inline void *topPointer(lua_State *state)
+{
+    const HksObject *value = state->top - 1;
+    if (!(value >= state->base))
+        value = 0;
+    if (!value)
+        return 0;
+    switch (value->type & 0xf) {
+    case 5:
+    case 8:
+    case 9:
+    case 10:
+    case 12:
+        return value->value.pointer;
+    case 2:
+        return value->value.pointer;
+    case 7:
+        return static_cast<HksUserdata *>(value->value.pointer) + 1;
+    default:
+        return 0;
+    }
 }
 
 /* derived name: Lua's lua_pop */

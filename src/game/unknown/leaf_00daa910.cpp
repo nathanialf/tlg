@@ -19,6 +19,6 @@ void FUN_00daa910(CodeGen016bb0c0 *self, ScriptString016bb0c0 *name) /* derived 
                      structure->name->chars);
         self->lexer->error(message);
     }
-    Expression016bb0c0 *e = self->function->expressions.top;
+    Expression016bb0c0 *e = self->functions.top->expressions.top;
     initExpression(e, 4, stringConstant(self, name), 4);
 }

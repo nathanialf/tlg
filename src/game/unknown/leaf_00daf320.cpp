@@ -26,7 +26,7 @@ int stringConstant(CodeGen016bb0c0 *self, void *string)
 
 void FUN_00daf320(CodeGen016bb0c0 *self) /* derived name */
 {
-    codeABx(self, 0x19, self->function->freeRegister, numberConstant(self, 1.0f));
+    codeABx(self, 0x19, self->functions.top->freeRegister, numberConstant(self, 1.0f));
     reserveRegisters(self, 1);
-    self->function->loops.top->hidden = 1;
+    self->functions.top->loops.top->hidden = 1;
 }

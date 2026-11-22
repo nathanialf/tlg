@@ -15,13 +15,13 @@ void FUN_00db3520(CodeGen016bb0c0 *self, Name016bb0c0 *name,
     int type = -1;
     Structure016bb0c0 *structure;
     FUN_00db3300(self, typeName, &type, &structure);
-    FUN_00daba60(self, name, self->function->unknown17b0, type, structure);
-    Slot016bb0c0 *slot = self->function->slots.push();
+    FUN_00daba60(self, name, self->functions.top->unknown17b0, type, structure);
+    Slot016bb0c0 *slot = self->functions.top->slots.push();
     if (type == 12)
-        slot->unknown8 = structure;
+        slot->structure = structure;
     else
-        slot->unknown8 = 0;
-    slot->unknown0 = type;
+        slot->structure = 0;
+    slot->type = type;
     slot->unknown10 = 1;
-    ++self->function->unknown17b0;
+    ++self->functions.top->unknown17b0;
 }

@@ -7,6 +7,6 @@
  * SETARG_C(getcode(fs, e), 1) expands it */
 void FUN_00da5c00(CodeGen016bb0c0 *self) /* derived name */
 {
-    ScriptFunction016bb0c0 *fs = self->function;
+    ScriptFunction016bb0c0 *fs = self->functions.top;
     SCRIPT_SET_C(SCRIPT_CODE(fs, fs->expressions.top), 1);
 }

@@ -16,5 +16,5 @@ void FUN_00daa5b0(CodeGen016bb0c0 *self) /* derived name */
                      structure->name->chars);
         self->lexer->error(message);
     }
-    self->function->expressions.push();
+    self->functions.top->expressions.push();
 }

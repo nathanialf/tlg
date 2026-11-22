@@ -7,10 +7,10 @@
  * again */
 void FUN_00dadf60(CodeGen016bb0c0 *self, int value) /* derived name */
 {
-    ScriptFunction016bb0c0 *fs = self->function;
+    ScriptFunction016bb0c0 *fs = self->functions.top;
     Expression016bb0c0 *popped = fs->expressions.top;
     FUN_013bdca0(&fs->expressions);
-    FUN_00da61c0(self, self->function->expressions.top, popped);
-    *self->function->unknownc20 = value;
-    FUN_013bdca0(&self->function->expressions);
+    FUN_00da61c0(self, self->functions.top->expressions.top, popped);
+    *self->functions.top->unknownc20 = value;
+    FUN_013bdca0(&self->functions.top->expressions);
 }

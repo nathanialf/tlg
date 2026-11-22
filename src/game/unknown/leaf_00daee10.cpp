@@ -7,7 +7,7 @@
  * expression and an empty record on the stack at +0x17c0 pushed */
 void FUN_00daee10(CodeGen016bb0c0 *self) /* derived name */
 {
-    self->function->loops.top->unknown4 = self->lexer->slot4();
-    self->function->expressions.push();
-    new (self->function->pending.push()) Pending016bb0c0(self->state);
+    self->functions.top->loops.top->unknown4 = self->lexer->slot4();
+    self->functions.top->expressions.push();
+    new (self->functions.top->pending.push()) Pending016bb0c0(self->state);
 }

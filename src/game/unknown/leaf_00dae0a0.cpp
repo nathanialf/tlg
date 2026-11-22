@@ -11,7 +11,7 @@ void FUN_00dae0a0(CodeGen016bb0c0 *self, void *name) /* derived name */
     Entry016bb0c0 *entry = self->entries.push();
     entry->value = name;
     entry->unknown8 = 1;
-    Expression016bb0c0 *top = self->function->expressions.top;
+    Expression016bb0c0 *top = self->functions.top->expressions.top;
     FUN_00da8700(self, top);
     Expression016bb0c0 key;
     initExpression(&key, 4, stringConstant(self, name), 4);

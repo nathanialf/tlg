@@ -6,10 +6,10 @@
  * then pushes an empty record on the stack at +0x1d68 */
 void FUN_00dad260(CodeGen016bb0c0 *self, Name016bb0c0 *name) /* derived name */
 {
-    FUN_00daba60(self, name, self->function->unknown17b0, -1, 0);
-    ++self->function->unknown17b0;
-    Slot016bb0c0 *slot = self->function->slots.push();
-    slot->unknown0 = -1;
-    slot->unknown8 = 0;
+    FUN_00daba60(self, name, self->functions.top->unknown17b0, -1, 0);
+    ++self->functions.top->unknown17b0;
+    Slot016bb0c0 *slot = self->functions.top->slots.push();
+    slot->type = -1;
+    slot->structure = 0;
     slot->unknown10 = 0;
 }

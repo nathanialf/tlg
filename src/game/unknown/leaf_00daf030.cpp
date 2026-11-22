@@ -10,9 +10,9 @@ void FUN_00daf030(CodeGen016bb0c0 *self, int count) /* derived name */
 {
     FUN_00da7410(self, 3, count);
     checkStack(self, 3);
-    self->function->loops.top->hidden -= 3;
-    FUN_013bdca0(&self->function->expressions);
-    ScriptFunction016bb0c0 *fs = self->function;
+    self->functions.top->loops.top->hidden -= 3;
+    FUN_013bdca0(&self->functions.top->expressions);
+    ScriptFunction016bb0c0 *fs = self->functions.top;
     Pending016bb0c0 *pending = fs->pending.top;
     FUN_013bdfe0(&fs->pending);
     FUN_013be1a0(pending);

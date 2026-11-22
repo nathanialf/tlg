@@ -5,5 +5,5 @@
  * the expression on top put in the next free register */
 void FUN_00dac960(CodeGen016bb0c0 *self) /* derived name */
 {
-    toNextRegister(self, self->function->expressions.top);
+    toNextRegister(self, self->functions.top->expressions.top);
 }

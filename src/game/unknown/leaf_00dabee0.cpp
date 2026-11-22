@@ -6,7 +6,8 @@
  * active, their count less an "arg" parameter, their registers taken */
 void FUN_00dabee0(CodeGen016bb0c0 *self) /* derived name */
 {
-    activateLocals(self, self->function->parameterCount);
-    self->function->parameterCount = self->function->activeCount - (self->function->vararg & 1);
-    reserveRegisters(self, self->function->activeCount);
+    activateLocals(self, self->functions.top->parameterCount);
+    self->functions.top->parameterCount =
+        self->functions.top->activeCount - (self->functions.top->vararg & 1);
+    reserveRegisters(self, self->functions.top->activeCount);
 }

@@ -13,10 +13,10 @@
 // line's reload from its spill slot, the build after
 void FUN_00dac2d0(CodeGen016bb0c0 *self, int line) /* derived name */
 {
-    ScriptFunction016bb0c0 *fs = self->function;
+    ScriptFunction016bb0c0 *fs = self->functions.top;
     Expression016bb0c0 *args = fs->expressions.top;
     FUN_013bdca0(&fs->expressions);
-    Expression016bb0c0 *f = self->function->expressions.top;
+    Expression016bb0c0 *f = self->functions.top->expressions.top;
     u32 base = f->info;
     int count;
     if ((args->kind & ~1) == 14) {
@@ -24,7 +24,7 @@ void FUN_00dac2d0(CodeGen016bb0c0 *self, int line) /* derived name */
     } else {
         if (args->kind != 0)
             toNextRegister(self, args);
-        count = self->function->freeRegister - (base + 1);
+        count = self->functions.top->freeRegister - (base + 1);
     }
     int pc;
     if (f->type == 9)
@@ -34,6 +34,6 @@ void FUN_00dac2d0(CodeGen016bb0c0 *self, int line) /* derived name */
     else
         pc = code(self, SCRIPT_ABC(0x1e, base, count + 1, 2));
     initExpression(f, 14, pc, -1);
-    *self->function->unknownc20 = line;
-    self->function->freeRegister = base + 1;
+    *self->functions.top->unknownc20 = line;
+    self->functions.top->freeRegister = base + 1;
 }

@@ -8,9 +8,9 @@
  * flag for the implicit "arg" is cleared */
 void FUN_00da93e0(CodeGen016bb0c0 *self) /* derived name */
 {
-    if (!self->function->vararg)
+    if (!self->functions.top->vararg)
         self->lexer->error("cannot use '...' outside a vararg function");
-    Expression016bb0c0 *e = self->function->expressions.top;
+    Expression016bb0c0 *e = self->functions.top->expressions.top;
     initExpression(e, 15, code(self, SCRIPT_ABC(0x43, 0, 1, 0)), -1);
-    self->function->vararg &= ~4;
+    self->functions.top->vararg &= ~4;
 }

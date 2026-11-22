@@ -24,6 +24,6 @@ void FUN_00da9020(CodeGen016bb0c0 *self, u64 value, int token) /* derived name *
             self->lexer->error("int literals not enabled in compiler options");
         self->lexer->error("60-bit literal not supported without HKS_UI64API");
     }
-    Expression016bb0c0 *e = self->function->expressions.top;
+    Expression016bb0c0 *e = self->functions.top->expressions.top;
     initExpression(e, 4, FUN_00da9130(self, &constant), type);
 }

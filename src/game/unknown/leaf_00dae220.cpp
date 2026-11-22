@@ -8,7 +8,7 @@ void FUN_00dae220(CodeGen016bb0c0 *self, void *name) /* derived name */
     Entry016bb0c0 *entry = self->entries.push();
     entry->value = name;
     entry->unknown8 = 2;
-    Expression016bb0c0 *top = self->function->expressions.top;
+    Expression016bb0c0 *top = self->functions.top->expressions.top;
     FUN_00da8700(self, top);
     Expression016bb0c0 key;
     initExpression(&key, 4, stringConstant(self, name), 4);

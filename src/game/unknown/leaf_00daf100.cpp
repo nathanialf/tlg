@@ -8,10 +8,10 @@
  * the names are facts) */
 void FUN_00daf100(CodeGen016bb0c0 *self, int line) /* derived name */
 {
-    Loop016bb0c0 *loop = self->function->loops.push();
+    Loop016bb0c0 *loop = self->functions.top->loops.push();
     loop->kind = 0;
     loop->unknown14 = -1;
-    loop->unknownc = self->function->freeRegister;
+    loop->unknownc = self->functions.top->freeRegister;
     loop->unknown4 = line;
     loop->unknown10 = 1;
     declareLocal(self, "(for index)", 11, 0, 3);

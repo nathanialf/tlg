@@ -6,7 +6,7 @@
  * are facts), counted by the loop record from 1 */
 void FUN_00daece0(CodeGen016bb0c0 *self) /* derived name */
 {
-    Loop016bb0c0 *loop = self->function->loops.top;
+    Loop016bb0c0 *loop = self->functions.top->loops.top;
     loop->hidden = 1;
     declareLocal(self, "(for generator)", 15, 0, -1);
     declareLocal(self, "(for state)", 11, loop->hidden++, -1);

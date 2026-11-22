@@ -7,11 +7,11 @@
  * active local live from the current pc, the expression under it popped */
 void FUN_00dadce0(CodeGen016bb0c0 *self) /* derived name */
 {
-    ScriptFunction016bb0c0 *fs = self->function;
+    ScriptFunction016bb0c0 *fs = self->functions.top;
     Expression016bb0c0 *popped = fs->expressions.top;
     FUN_013bdca0(&fs->expressions);
-    FUN_00da61c0(self, self->function->expressions.top, popped);
-    fs = self->function;
+    FUN_00da61c0(self, self->functions.top->expressions.top, popped);
+    fs = self->functions.top;
     localVariable(fs, fs->activeCount - 1).startPc = fs->code.count;
-    FUN_013bdca0(&self->function->expressions);
+    FUN_013bdca0(&self->functions.top->expressions);
 }

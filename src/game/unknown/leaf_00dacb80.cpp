@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_chunkstack.h"
 #include "tlg_libc.h"
+#include "tlg_types.h"
 
 /* derived names: the jump-list code of the script compiler whose object the
  * vtable at 0x16bb0c0 is (stored by FUN_00da4250 and FUN_00ddbb60; home
@@ -34,12 +35,29 @@ struct CodePage00dacb80 { /* derived name */
     CodePage00dacb80 *next; /* derived name */
 };
 
+/* derived names: the loop's record: the line it began at or the jump list
+ * of its condition at +0x4, its start, its base register, the count of its
+ * hidden variables, whether it is a numeric for at +0x10 and its exit list
+ * at +0x14 */
 struct Block00dacb80 { /* derived name */
     u8 unknown0[4];
     int unknown4;
     int unknown8;
-    u8 unknownc[8];
-    int unknown14;
+    u16 base;      /* +0xc */
+    u16 hidden;    /* +0xe */
+    int numeric;   /* +0x10 */
+    int unknown14; /* +0x14 */
+};
+
+/* derived names: a block's record (as Lua's BlockCnt): its list of breaks,
+ * whether a local of it is an upvalue, whether it can be broken out of and
+ * the count of active locals when it began */
+struct Scope00dacb80 { /* derived name */
+    int breaks;
+    int upvalues;
+    int breakable;
+    u16 activeLocals;
+    u8 unknowne[2];
 };
 
 struct Expression00dacb80 { /* derived name */
@@ -52,7 +70,9 @@ struct Expression00dacb80 { /* derived name */
 };
 
 struct FuncState00dacb80 { /* derived name */
-    u8 unknown0[0x7c8];
+    u8 unknown0[0x260];
+    ChunkStack<Scope00dacb80, 16> scopes; /* +0x260 */
+    u8 unknown3a8[0x420];
     CodePage00dacb80 *firstPage;   /* derived name */
     CodePage00dacb80 *currentPage; /* derived name */
     u8 unknown7d8[0x10];
@@ -73,8 +93,86 @@ struct FuncState00dacb80 { /* derived name */
     Block00dacb80 *unknown1798;
 };
 
-struct Compiler00dacb80 { /* derived name */
-    u8 unknown0[0x18];
+/* derived names: the compiler; its slot 73 is the break statement
+ * (FUN_00daca10), the slots before it not traced */
+class Compiler00dacb80 /* derived name */
+{
+  public:
+    virtual ~Compiler00dacb80();
+    virtual void slot2();          /* derived name; not traced */
+    virtual void slot3();          /* derived name; not traced */
+    virtual void slot4();          /* derived name; not traced */
+    virtual void slot5();          /* derived name; not traced */
+    virtual void slot6();          /* derived name; not traced */
+    virtual void slot7();          /* derived name; not traced */
+    virtual void slot8();          /* derived name; not traced */
+    virtual void slot9();          /* derived name; not traced */
+    virtual void slot10();         /* derived name; not traced */
+    virtual void slot11();         /* derived name; not traced */
+    virtual void slot12();         /* derived name; not traced */
+    virtual void slot13();         /* derived name; not traced */
+    virtual void slot14();         /* derived name; not traced */
+    virtual void slot15();         /* derived name; not traced */
+    virtual void slot16();         /* derived name; not traced */
+    virtual void slot17();         /* derived name; not traced */
+    virtual void slot18();         /* derived name; not traced */
+    virtual void slot19();         /* derived name; not traced */
+    virtual void slot20();         /* derived name; not traced */
+    virtual void slot21();         /* derived name; not traced */
+    virtual void slot22();         /* derived name; not traced */
+    virtual void slot23();         /* derived name; not traced */
+    virtual void slot24();         /* derived name; not traced */
+    virtual void slot25();         /* derived name; not traced */
+    virtual void slot26();         /* derived name; not traced */
+    virtual void slot27();         /* derived name; not traced */
+    virtual void slot28();         /* derived name; not traced */
+    virtual void slot29();         /* derived name; not traced */
+    virtual void slot30();         /* derived name; not traced */
+    virtual void slot31();         /* derived name; not traced */
+    virtual void slot32();         /* derived name; not traced */
+    virtual void slot33();         /* derived name; not traced */
+    virtual void slot34();         /* derived name; not traced */
+    virtual void slot35();         /* derived name; not traced */
+    virtual void slot36();         /* derived name; not traced */
+    virtual void slot37();         /* derived name; not traced */
+    virtual void slot38();         /* derived name; not traced */
+    virtual void slot39();         /* derived name; not traced */
+    virtual void slot40();         /* derived name; not traced */
+    virtual void slot41();         /* derived name; not traced */
+    virtual void slot42();         /* derived name; not traced */
+    virtual void slot43();         /* derived name; not traced */
+    virtual void slot44();         /* derived name; not traced */
+    virtual void slot45();         /* derived name; not traced */
+    virtual void slot46();         /* derived name; not traced */
+    virtual void slot47();         /* derived name; not traced */
+    virtual void slot48();         /* derived name; not traced */
+    virtual void slot49();         /* derived name; not traced */
+    virtual void slot50();         /* derived name; not traced */
+    virtual void slot51();         /* derived name; not traced */
+    virtual void slot52();         /* derived name; not traced */
+    virtual void slot53();         /* derived name; not traced */
+    virtual void slot54();         /* derived name; not traced */
+    virtual void slot55();         /* derived name; not traced */
+    virtual void slot56();         /* derived name; not traced */
+    virtual void slot57();         /* derived name; not traced */
+    virtual void slot58();         /* derived name; not traced */
+    virtual void slot59();         /* derived name; not traced */
+    virtual void slot60();         /* derived name; not traced */
+    virtual void slot61();         /* derived name; not traced */
+    virtual void slot62();         /* derived name; not traced */
+    virtual void slot63();         /* derived name; not traced */
+    virtual void slot64();         /* derived name; not traced */
+    virtual void slot65();         /* derived name; not traced */
+    virtual void slot66();         /* derived name; not traced */
+    virtual void slot67();         /* derived name; not traced */
+    virtual void slot68();         /* derived name; not traced */
+    virtual void slot69();         /* derived name; not traced */
+    virtual void slot70();         /* derived name; not traced */
+    virtual void slot71();         /* derived name; not traced */
+    virtual void slot72();         /* derived name; not traced */
+    virtual void breakStatement(); /* derived name */
+
+    u8 unknown8[0x10];
     Reporter00dacb80 *reporter; /* derived name */
     u8 unknown20[0x7da8];
     FuncState00dacb80 *funcState; /* derived name; +0x7dc8 */
@@ -309,4 +407,36 @@ void FUN_00dafcd0(Compiler00dacb80 *self) /* derived name */
     int jump = codeJump(self);
     patchList(self, jump, self->funcState->unknown1798->unknown8);
     *self->funcState->unknownc20 = self->funcState->unknown1798->unknown4;
+}
+
+/* derived name: patches a jump list to the current pc, the pending list
+ * (Lua's luaK_patchtohere) */
+static inline void patchToHere(Compiler00dacb80 *self, int list)
+{
+    FuncState00dacb80 *fs = self->funcState;
+    fs->lastTarget = fs->pc;
+    FUN_00dacb80(self, &self->funcState->jumpList, list);
+}
+
+/* derived name: slot 43 of the vtable at 0x16bb0c0 (its pointer at
+ * 0x16bb228): a repeat loop's end (Lua's repeatstat after the condition):
+ * with no upvalue in the block, the block left and the condition's exits
+ * (+0x14 of the loop) patched to the loop's start (+0x4); with one, a break
+ * when the condition holds (slot 73), the exits patched here, the block
+ * left and a jump patched to the start; then the loop's block left and the
+ * loop popped */
+void FUN_00dae680(Compiler00dacb80 *self) /* derived name */
+{
+    if (self->funcState->scopes.top->upvalues) {
+        self->breakStatement();
+        patchToHere(self, self->funcState->unknown1798->unknown14);
+        FUN_00dae7e0(self);
+        patchList(self, codeJump(self), self->funcState->unknown1798->unknown4);
+    } else {
+        FUN_00dae7e0(self);
+        Block00dacb80 *loop = self->funcState->unknown1798;
+        patchList(self, loop->unknown14, loop->unknown4);
+    }
+    FUN_00dae7e0(self);
+    FUN_013bde50(&self->funcState->unknown1708);
 }

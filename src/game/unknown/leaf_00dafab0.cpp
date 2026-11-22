@@ -5,7 +5,7 @@
  * pushes a loop record of kind 1 with no jump at +0x14 */
 void FUN_00dafab0(CodeGen016bb0c0 *self) /* derived name */
 {
-    Loop016bb0c0 *loop = self->function->loops.push();
+    Loop016bb0c0 *loop = self->functions.top->loops.push();
     loop->kind = 1;
     loop->unknown14 = -1;
 }

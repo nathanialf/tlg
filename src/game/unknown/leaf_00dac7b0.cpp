@@ -6,5 +6,5 @@
  * pushes an empty record on the stack at +0x17c0 (FUN_00da6eb0's body) */
 void FUN_00dac7b0(CodeGen016bb0c0 *self) /* derived name */
 {
-    new (self->function->pending.push()) Pending016bb0c0(self->state);
+    new (self->functions.top->pending.push()) Pending016bb0c0(self->state);
 }

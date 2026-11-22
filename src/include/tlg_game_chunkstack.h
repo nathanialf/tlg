@@ -82,6 +82,14 @@ template <class T, int N> struct ChunkStack {
         return element;
     }
 
+    /* derived name: pushes a copy of a value: the value copied into the
+     * next free element before it is pushed */
+    void push(const T &value)
+    {
+        *free = value;
+        push();
+    }
+
     /* derived name: the element at an index, found in the chunk in use when
      * the index falls in the chunk the count falls in, else by walking from
      * the first chunk */

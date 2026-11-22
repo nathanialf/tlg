@@ -7,6 +7,6 @@
  * +0x17c0 */
 void FUN_00daccf0(CodeGen016bb0c0 *self) /* derived name */
 {
-    self->function->expressions.push();
-    new (self->function->pending.push()) Pending016bb0c0(self->state);
+    self->functions.top->expressions.push();
+    new (self->functions.top->pending.push()) Pending016bb0c0(self->state);
 }

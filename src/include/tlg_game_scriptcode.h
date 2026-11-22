@@ -55,10 +55,12 @@ struct ExpressionText016bb0c0 { /* derived name */
     }
 };
 
+struct Structure016bb0c0;
+
 /* derived names: an expression of 0x70 bytes: its kind (13 a value in a
  * register, as Lua's VNONRELOC), its info (the register, constant or
  * instruction), the jump lists to patch when true and when false, its text
- * and a type word at +0x60 */
+ * and its declared type at +0x60 (12 a structure, with its structure) */
 struct Expression016bb0c0 { /* derived name */
     int kind;               /* +0x0 */
     u8 unknown4[4];
@@ -69,7 +71,7 @@ struct Expression016bb0c0 { /* derived name */
     ExpressionText016bb0c0 text; /* +0x40 */
     int type;                    /* +0x60 */
     u8 unknown64[4];
-    void *unknown68; /* +0x68 */
+    Structure016bb0c0 *structure; /* +0x68: the structure of type 12 */
 };
 
 /* derived name: the expression set to a kind, its info and its type with
@@ -81,7 +83,7 @@ static inline void initExpression(Expression016bb0c0 *e, int kind, int info, int
     e->trueJumps = -1;
     e->falseJumps = -1;
     e->text.clear();
-    e->unknown68 = 0;
+    e->structure = 0;
     e->type = type;
     e->info = info;
 }
@@ -136,28 +138,34 @@ struct Loop016bb0c0 { /* derived name */
     int unknown14;    /* +0x14 */
 };
 
-/* derived names: the 0x158-byte records of the stack at +0x17c0: two stacks
- * of 24-byte items over the script state's heap and an int between them;
- * handed to FUN_013be1a0 when popped (the items are not traced) */
-struct PendingItem016bb0c0 { /* derived name */
-    u8 unknown0[0x18];
+/* derived names: the 24-byte records of a declared type: the type (-1 and 0
+ * none, 12 a structure), the structure of type 12, and a word at +0x10 (the
+ * stacks at +0xf70, the parameters, and at +0x1d68, the typed locals) */
+struct Structure016bb0c0;
+
+struct Slot016bb0c0 { /* derived name */
+    int type;         /* +0x0 */
+    u8 unknown4[4];
+    Structure016bb0c0 *structure; /* +0x8 */
+    int unknown10;                /* +0x10 */
+    u8 unknown14[4];
+
+    Slot016bb0c0(int type, Structure016bb0c0 *structure, int unknown10)
+        : type(type), structure(structure), unknown10(unknown10)
+    {
+    }
 };
 
-struct Pending016bb0c0 {                       /* derived name */
-    ChunkStack<PendingItem016bb0c0, 4> first;  /* +0x0 */
-    int unknowna8;                             /* +0xa8 */
-    ChunkStack<PendingItem016bb0c0, 4> second; /* +0xb0 */
+/* derived names: the 0x158-byte records of the stack at +0x17c0: two stacks
+ * of declared types over the script state's heap (the first the types of
+ * the values an expression list leaves) and an int between them; handed to
+ * FUN_013be1a0 when popped */
+struct Pending016bb0c0 {                /* derived name */
+    ChunkStack<Slot016bb0c0, 4> first;  /* +0x0 */
+    int unknowna8;                      /* +0xa8 */
+    ChunkStack<Slot016bb0c0, 4> second; /* +0xb0 */
 
     explicit Pending016bb0c0(HksState00dd1740 *heap) : first(heap), unknowna8(0), second(heap) {}
-};
-
-/* derived names: the 24-byte records of the stack at +0x1d68 */
-struct Slot016bb0c0 { /* derived name */
-    int unknown0;     /* +0x0 */
-    u8 unknown4[4];
-    void *unknown8; /* +0x8 */
-    int unknown10;  /* +0x10 */
-    u8 unknown14[4];
 };
 
 /* derived names: the function being compiled (0x1e10 bytes, as Lua's
@@ -166,8 +174,13 @@ struct Slot016bb0c0 { /* derived name */
  * indexes, the pending jumps to the next instruction, the free register
  * and the high mark of registers, the vararg flags, the last target of a
  * jump, the stacks of expressions, of loops and two more */
+struct lua_State;
+
 struct ScriptFunction016bb0c0 { /* derived name */
-    u8 unknown0[0x260];
+    lua_State *state;           /* +0x0: the script state, a table pushed on it while compiling */
+    void *unknown8;             /* +0x8 */
+    void *unknown10;            /* +0x10: the table's object */
+    u8 unknown18[0x248];
     ChunkStack<BlockScope016bb0c0, 16> scopes; /* +0x260 */
     ChunkStack<u32, 256> code;                 /* +0x3a8: its count the pc */
     u8 unknown7f0[0x430];
@@ -186,8 +199,9 @@ struct ScriptFunction016bb0c0 { /* derived name */
     int lineDefined;    /* +0xf5c: 0 for the main function */
     u32 parameterCount; /* +0xf60 */
     u8 unknownf64[8];
-    int lastTarget; /* +0xf6c */
-    u8 unknownf70[0x3d0];
+    int lastTarget;                                /* +0xf6c */
+    ChunkStack<Slot016bb0c0, 16> parameterTypes;   /* +0xf70 */
+    ChunkStack<Expression016bb0c0, 4> targets;     /* +0x1138: an assignment's variables */
     ChunkStack<Expression016bb0c0, 8> expressions; /* +0x1340 */
     ChunkStack<Loop016bb0c0, 4> loops;             /* +0x1708 */
     int unknown17b0;                               /* +0x17b0 */
@@ -195,6 +209,13 @@ struct ScriptFunction016bb0c0 { /* derived name */
     ChunkStack<Pending016bb0c0, 4> pending; /* +0x17c0 */
     ChunkStack<Slot016bb0c0, 4> slots;      /* +0x1d68 */
 };
+
+/* derived name: whether an expression is a variable: a local, an upvalue,
+ * a global, an indexed value or a structure's slot (the kinds 6 to 10) */
+static inline bool isVariable(const Expression016bb0c0 *e)
+{
+    return e->kind >= 6 && e->kind <= 10;
+}
 
 /* derived names: the table of names of the state's global part (+0x1a8 of
  * it, tlg_game_object013c8500.h), and a name made in it */
@@ -219,7 +240,9 @@ struct Structure016bb0c0 { /* derived name */
     u64 slotCount;         /* +0x0 */
     u8 unknown8[4];
     int open; /* +0xc */
-    u8 unknown10[8];
+    u8 unknown10[4];
+    u16 id; /* +0x14: coded in a typed register's check */
+    u8 unknown16[2];
     ScriptString016bb0c0 *name;     /* +0x18 */
     StructureSlot016bb0c0 slots[1]; /* +0x20: slotCount of them */
 };
@@ -313,26 +336,34 @@ struct Entry016bb0c0 { /* derived name */
 /* derived names: the compiler, the class whose vtable is at 0x16bb0c0 as its
  * code generation slots read it: the script state at +0x8, the reporter at +0x18,
  * whether structures are enabled at +0x20, the options at +0x3c (bit 0 int
- * literals, bit 1 60-bit ones), the stacks of table constructors and of
- * entries and the function on top of its stack of functions at +0x558 */
+ * literals, bit 1 60-bit ones), the stacks of table constructors, of
+ * entries and of the functions being compiled (one inside another) at +0x558 */
 struct CodeGen016bb0c0 { /* derived name */
     u8 unknown0[8];
     HksState00dd1740 *state; /* +0x8 */
     u8 unknown10[8];
     Lexer016bb0c0 *lexer; /* +0x18 */
     int structures;       /* +0x20 */
-    u8 unknown24[0x18];
+    u8 unknown24[0x10];
+    int unknown34; /* +0x34: when set, a function's start and its typed parameters code 0x12020000 */
+    u8 unknown38[4];
     u8 options; /* +0x3c */
     u8 unknown3d[0xb];
     ChunkStack<Constructor016bb0c0, 4> constructors; /* +0x48 */
     ChunkStack<Entry016bb0c0, 4> entries;            /* +0x4d0 */
-    u8 unknown558[0x7870];
-    ScriptFunction016bb0c0 *function; /* +0x7dc8 */
-    u8 unknown7dd0[0x1540];
+    ChunkStack<ScriptFunction016bb0c0, 4> functions; /* +0x558: the one compiled on top */
+    u8 unknown7de0[8];
+    void *unknown7de8; /* +0x7de8: what the function closed last left at +0x8 */
+    u8 unknown7df0[0x1520];
     Structure016bb0c0 *structure; /* +0x9310: the structure referenced last */
 };
 
 /* derived names: the callees, not written */
+void FUN_013bdae0(ChunkStack<ScriptFunction016bb0c0, 4> *stack); /* derived name: pops */
+void FUN_00da3790(ScriptFunction016bb0c0 *fs); /* derived name: destroys a function's state */
+void FUN_00da47f0(CodeGen016bb0c0 *self);      /* derived name: ends the function on top */
+void FUN_00da3370(ScriptFunction016bb0c0 *fs, HksState00dd1740 *state, CodeGen016bb0c0 *self,
+                  Name016bb0c0 *name); /* derived name: makes a function's state */
 void FUN_013bdca0(ChunkStack<Expression016bb0c0, 8> *stack);               /* derived name: pops */
 void FUN_013bdfe0(ChunkStack<Pending016bb0c0, 4> *stack);                  /* derived name: pops */
 void FUN_013be1a0(Pending016bb0c0 *record);                                /* derived name */
@@ -352,6 +383,7 @@ void FUN_00daba60(CodeGen016bb0c0 *self, Name016bb0c0 *name, int index, int type
                   void *structure);           /* derived name: declares a local */
 int FUN_00db26b0(ScriptString016bb0c0 *name); /* derived name: the built-in type of a name */
 void FUN_00da8700(CodeGen016bb0c0 *self, Expression016bb0c0 *e); /* derived name */
+void FUN_00da9860(CodeGen016bb0c0 *self, Expression016bb0c0 *e); /* derived name */
 /* derived name: formats into a buffer (vsprintf: the size is not used) */
 int FUN_00d95b60(char *buffer, size_t size, const char *format, ...);
 
@@ -371,11 +403,11 @@ int FUN_00d95b60(char *buffer, size_t size, const char *format, ...);
  * raised (an error reported at 200); returns the registers then in use */
 static inline u32 checkStack(CodeGen016bb0c0 *self, u32 n)
 {
-    u32 needed = self->function->freeRegister + n;
-    if (needed > self->function->maxStack) {
+    u32 needed = self->functions.top->freeRegister + n;
+    if (needed > self->functions.top->maxStack) {
         if (needed >= 200)
             self->lexer->error("Function or expression requires too many registers (too complex).");
-        self->function->maxStack = needed;
+        self->functions.top->maxStack = needed;
     }
     return needed;
 }
@@ -384,15 +416,15 @@ static inline u32 checkStack(CodeGen016bb0c0 *self, u32 n)
 static inline u32 reserveRegisters(CodeGen016bb0c0 *self, u32 n)
 {
     u32 needed = checkStack(self, n);
-    self->function->freeRegister = needed;
+    self->functions.top->freeRegister = needed;
     return needed - n;
 }
 
 /* derived name: gives back the register a temporary value is in */
 static inline void freeExpression(CodeGen016bb0c0 *self, Expression016bb0c0 *e)
 {
-    if (e->kind == 13 && !(e->info & 0x100) && self->function->activeCount <= (u32)e->info)
-        --self->function->freeRegister;
+    if (e->kind == 13 && !(e->info & 0x100) && self->functions.top->activeCount <= (u32)e->info)
+        --self->functions.top->freeRegister;
 }
 
 /* derived name: puts an expression in the next free register (Lua's
@@ -434,7 +466,7 @@ static inline LocalVariable016bb0c0 &localVariable(ScriptFunction016bb0c0 *fs, u
  * adjustlocalvars) */
 static inline void activateLocals(CodeGen016bb0c0 *self, u32 n)
 {
-    ScriptFunction016bb0c0 *fs = self->function;
+    ScriptFunction016bb0c0 *fs = self->functions.top;
     int pc = fs->code.count;
     for (u32 i = 0; i < n; ++i)
         localVariable(fs, fs->activeCount + i).startPc = pc;
@@ -444,7 +476,8 @@ static inline void activateLocals(CodeGen016bb0c0 *self, u32 n)
 /* derived name: begins a block (Lua's enterblock) */
 static inline void enterBlock(CodeGen016bb0c0 *self, int breakable)
 {
-    *self->function->scopes.push() = BlockScope016bb0c0(breakable, self->function->activeCount);
+    *self->functions.top->scopes.push() =
+        BlockScope016bb0c0(breakable, self->functions.top->activeCount);
 }
 
 /* derived name: declares a local of a name given with its length */
@@ -461,7 +494,7 @@ static inline void checkLimit(CodeGen016bb0c0 *self, u32 value, u32 limit, const
 {
     if (value > limit) {
         char message[0x100];
-        ScriptFunction016bb0c0 *fs = self->function;
+        ScriptFunction016bb0c0 *fs = self->functions.top;
         if (fs->lineDefined)
             FUN_00d95b60(message, sizeof(message), "Function at line %i has more than %i %s",
                          fs->lineDefined, limit, what);
