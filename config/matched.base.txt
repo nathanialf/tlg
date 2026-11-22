@@ -10300,3 +10300,4 @@ FUN_00daccf0 src/game/unknown/leaf_00daccf0.cpp _Z12FUN_00daccf0P15CodeGen016bb0
 FUN_00daee10 src/game/unknown/leaf_00daee10.cpp _Z12FUN_00daee10P15CodeGen016bb0c0
 FUN_00daa910 src/game/unknown/leaf_00daa910.cpp _Z12FUN_00daa910P15CodeGen016bb0c0P20ScriptString016bb0c0
 FUN_00dafcd0 src/game/unknown/leaf_00dacb80.cpp _Z12FUN_00dafcd0P16Compiler00dacb80
+FUN_00db3710 src/game/unknown/leaf_00db3710.cpp _Z12FUN_00db3710P15CodeGen016bb0c0P12Name016bb0c0P20ScriptString016bb0c0

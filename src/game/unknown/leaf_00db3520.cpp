@@ -7,17 +7,20 @@
  * the next index of +0x17b0 with them, a record of the type (and the
  * structure for type 12, a structure) pushed on the stack at +0x1d68, the
  * index raised */
-// NONMATCHING: the base reads the type and the structure once after FUN_00db3300 and keeps them
-// across FUN_00daba60 and the push (its out-parameters not captured: FUN_00db3300 not written);
-// the build reads them again after each call
-void FUN_00db3520(CodeGen016bb0c0 *self, Name016bb0c0 *name, void *typeName) /* derived name */
+// NONMATCHING: one instruction: the base stores 12 as the type in the structure's arm (`mov r14d,
+// 0xc` before the join), the build the type read from the call
+void FUN_00db3520(CodeGen016bb0c0 *self, Name016bb0c0 *name,
+                  ScriptString016bb0c0 *typeName) /* derived name */
 {
     int type = -1;
-    void *structure;
+    Structure016bb0c0 *structure;
     FUN_00db3300(self, typeName, &type, &structure);
     FUN_00daba60(self, name, self->function->unknown17b0, type, structure);
     Slot016bb0c0 *slot = self->function->slots.push();
-    slot->unknown8 = type == 12 ? structure : 0;
+    if (type == 12)
+        slot->unknown8 = structure;
+    else
+        slot->unknown8 = 0;
     slot->unknown0 = type;
     slot->unknown10 = 1;
     ++self->function->unknown17b0;

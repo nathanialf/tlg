@@ -224,6 +224,11 @@ struct Structure016bb0c0 { /* derived name */
     StructureSlot016bb0c0 slots[1]; /* +0x20: slotCount of them */
 };
 
+/* derived name: resolves a type declaration's name (leaf_00db3300.cpp) */
+struct CodeGen016bb0c0;
+void FUN_00db3300(CodeGen016bb0c0 *self, ScriptString016bb0c0 *name, int *type,
+                  Structure016bb0c0 **structure);
+
 /* derived name: whether a structure declares a slot of the name */
 static inline bool hasSlot(const Structure016bb0c0 *structure, const ScriptString016bb0c0 *name)
 {
@@ -258,20 +263,24 @@ struct HksTable016bb0c0 { /* derived name */
 /* derived name: the nil value a lookup gives when the key is not there */
 extern const HksValue016bb0c0 D_1557370;
 
-/* derived name: the value of a string key, nil when not there */
-static inline const HksValue016bb0c0 *findString(const HksTable016bb0c0 *table,
-                                                 const ScriptString016bb0c0 *key)
+/* derived name: the value of a string key, nil when not there, copied into
+ * the value given (the copies in two arms whose loads the compiler sinks
+ * into one: the base's two pointers, to the type and to the value) */
+static inline void findString(const HksTable016bb0c0 *table, const ScriptString016bb0c0 *key,
+                              HksValue016bb0c0 &value)
 {
     if (HksNode016bb0c0 *nodes = table->nodes) {
         u64 k = reinterpret_cast<u64>(key);
-        HksNode016bb0c0 *node = &nodes[(k ^ (k >> 5) ^ (k >> 8)) & table->mask];
+        HksNode016bb0c0 *node = &nodes[table->mask & (k ^ (k >> 5) ^ (k >> 8))];
         do {
-            if (node->key.value == key && (node->key.type & 0xf) == 4)
-                return &node->value;
+            if (node->key.value == key && (node->key.type & 0xf) == 4) {
+                value = node->value;
+                return;
+            }
             node = reinterpret_cast<HksNode016bb0c0 **>(nodes)[~(node - nodes)];
         } while (node);
     }
-    return &D_1557370;
+    value = D_1557370;
 }
 
 /* derived names: the object a structure's value points to: the structure
@@ -340,9 +349,8 @@ void FUN_00da9f90(CodeGen016bb0c0 *self, int base, int items, int toStore); /* d
 Name016bb0c0 *FUN_00dd0a60(NameTable016bb0c0 **names, HksState00dd1740 *state, const char *name,
                            size_t length); /* derived name */
 void FUN_00daba60(CodeGen016bb0c0 *self, Name016bb0c0 *name, int index, int type,
-                  void *structure); /* derived name: declares a local */
-void FUN_00db3300(CodeGen016bb0c0 *self, void *typeName, int *type,
-                  void **structure);                             /* derived name */
+                  void *structure);           /* derived name: declares a local */
+int FUN_00db26b0(ScriptString016bb0c0 *name); /* derived name: the built-in type of a name */
 void FUN_00da8700(CodeGen016bb0c0 *self, Expression016bb0c0 *e); /* derived name */
 /* derived name: formats into a buffer (vsprintf: the size is not used) */
 int FUN_00d95b60(char *buffer, size_t size, const char *format, ...);
