@@ -1,18 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_hks.h"
 
-/* derived names: a struct's type as far as its name (a string object, at
- * +0x18), and the struct, its type at +0x18 */
-struct HksStructType {
-    u8 unknown0[0x18];
-    void *name; /* +0x18 */
-};
-
-struct HksStruct {
-    u8 unknown0[0x18];
-    HksStructType *type; /* +0x18 */
-};
-
 /* derived name: the structure library's "name" (its entry in the table at
  * 0x16bd0d0): the first argument, a struct, replaced by its type's name */
 int FUN_00de0a90(lua_State *state)

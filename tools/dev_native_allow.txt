@@ -11,3 +11,5 @@ src/libs/unknown/func_00184cf0.cpp 1 `__asm__ __volatile__("rdtscp" : "=a"(low),
 
 src/include/tlg_lib_unknown.h 1 `__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));` the monitor stream's timers read the time-stamp counter with rdtsc through inline asm (D34): the base keeps each path's rdtsc where LLVM 3.3's tail merge joins the machine instruction of __builtin_readcyclecounter (BranchFolding.cpp:340-346 stops a common tail at an inline asm; 0x142cfd and 0x142d9e against the shared stores at 0x142da0); the asm emits the read itself and steers nothing
 
+
+src/include/tlg_hks.h 1 `__asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));` the script VM's API timer reads the time-stamp counter with rdtsc through inline asm (D34's form in the game region): the base joins the halves as `mov eax, eax; shl rdx, 32; or rdx, rax` at every site (0xd918af, 0xd9195d), the low half widened from 32 bits, which 3.7.1's lowering of __builtin_readcyclecounter does not emit (X86ISelLowering.cpp:15977, 64-bit copies of rax and rdx; FUN_00d91880 measured: `shl rdx, 32; or rdx, rax` without the widening); the asm emits the read itself and steers nothing

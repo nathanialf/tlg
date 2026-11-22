@@ -11,13 +11,16 @@
  * derived name. */
 struct HksObject {
     int type; /* derived name */
-    u32 pad4; /* derived name; never written */
+    /* +0x4 is padding: a value passed by value hands its type in a 32-bit
+     * register (FUN_00db84e0's `mov esi, [rcx]`) */
 
     union {
-        int boolean;   /* derived name */
-        float number;  /* derived name */
-        void *pointer; /* derived name */
-    } value;           /* derived name */
+        int boolean;                 /* derived name */
+        float number;                /* derived name */
+        void *pointer;               /* derived name */
+        struct HksTable *table;      /* derived name: tag 5 */
+        struct HksStruct *structure; /* derived name: tag 12 */
+    } value;                         /* derived name */
 };
 
 /* The VM's state as far as the bytes read it: the stack top at +0x48, the
@@ -31,7 +34,10 @@ struct lua_State;
  * array of values from +0x208 indexed by a value's type tag plus 27
  * (FUN_00dedab0). derived name. */
 struct HksGlobal {
-    u8 unknown0[0x1c8];
+    u8 unknown0[0x1a8];
+    /* +0x1a8, derived name: the table of the VM's strings FUN_00db9de0
+     * makes a string in (FUN_00dd06f0) */
+    u8 strings[0x20];
     /* +0x1c8, derived name: the registry, its table linked as "Registry"
      * (FUN_00dd2900), the value debug.getregistry pushes (FUN_00deb2b0) */
     HksObject registry;
@@ -42,7 +48,24 @@ struct HksGlobal {
     /* +0x498, derived name: the debugger print hands the arguments to
      * (FUN_00debd90), null without one */
     struct HksDebugger *debugger;
-    u8 unknown4a0[0xb8];
+    u8 unknown4a0[0x8];
+    /* +0x4a8 to +0x4ec, derived names: the API timer's state (HksApiTimer
+     * below, from the entry and exit of every timed API function, the
+     * first of them FUN_00d91880): two signed counters, the second set to
+     * 0 for the call and its value put back at the end; the counter read
+     * last; the cycles and the calls counted for each counter while it is
+     * negative */
+    s64 apiCounter;   /* +0x4a8, decremented for each call, incremented at its end */
+    s64 apiCounter2;  /* +0x4b0 */
+    u64 apiLastCycle; /* +0x4b8 */
+    s64 apiCycles;    /* +0x4c0 */
+    s64 apiCycles2;   /* +0x4c8 */
+    u8 unknown4d0[0x18];
+    int apiCalls;  /* +0x4e8 */
+    int apiCalls2; /* +0x4ec */
+    u8 unknown4f0[0x10];
+    int unknown500; /* +0x500, derived name: counted up for each string FUN_00db9de0 makes */
+    u8 unknown504[0x54];
 
     /* +0x558, derived name: the compiler's settings loadstring hands to
      * the loader (FUN_00dbe6c0); compilerSettings sets +0x558 and +0x568
@@ -75,12 +98,127 @@ struct lua_State {
     HksObject *stack; /* +0x60, derived name: the first value FUN_00dd2900 links */
     u8 unknown68[0x10];
     void *globals; /* +0x78, derived name: linked as "Global Table" (FUN_00dd2900) */
-    u8 unknown80[0x40];
+    u8 unknown80[0x18];
+    /* +0x98, derived name: below 2 a running thread may yield (FUN_00ded070:
+     * "attempt to yield across metamethod/C-call boundary" from 2 up) */
+    int unknown98;
+    u8 unknown9c[0xc];
+    struct HksString
+        *name; /* +0xa8, derived name: the state's name (hksi_hks_getname, FUN_00d964f0) */
+    u8 unknownb0[0x10];
     /* +0xc0, derived name: the thread's state as coroutine.status reads it
      * (FUN_00decef0): 1 suspended unless its frame is empty, 2 normal, 3
      * suspended, 4 dead */
     int status;
+    /* +0xc4, derived name: the API timer's mark (HksApiTimer below): 0
+     * through a timed call, put back at its end unless it reads -500 then */
+    int apiTimerMark;
 };
+
+/* The time-stamp counter, read through inline assembly as the script VM's
+ * API timer reads it (the base joins the halves as `mov eax, eax; shl rdx,
+ * 32; or`, the low half widened from its 32 bits, at every site of
+ * FUN_00d91880's family; the compiler's __rdtsc() joins its 64-bit copies
+ * of rax and rdx without that widening; docs/DECISIONS.md D34; the asm
+ * emits the read itself and steers nothing). derived name. */
+inline u64 hksReadTimeStampCounter()
+{
+    u32 low;
+    u32 high;
+    __asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));
+    return low | (static_cast<u64>(high) << 32);
+}
+
+/* The VM's timer of an API call, a scope from just after the call's
+ * argument checks to its return (FUN_00d91880, FUN_00db6f40,
+ * FUN_00db84e0): at the start the cycles since the counter's last read
+ * counted for each of the global's two counters that is negative, the
+ * first counter decremented, the second and the state's mark set to 0; at
+ * the end, unless the mark reads -500, the cycles counted for the first,
+ * the first counter incremented and the second counter and the mark put
+ * back. derived name. */
+class HksApiTimer
+{
+  public:
+    explicit HksApiTimer(lua_State *s)
+        : state(s), global(s->global), savedCounter2(global->apiCounter2),
+          savedMark(s->apiTimerMark)
+    {
+        const u64 now = hksReadTimeStampCounter();
+        const s64 mask = global->apiCounter >> 63;
+        const s64 mask2 = global->apiCounter2 >> 63;
+        const s64 elapsed = now - global->apiLastCycle;
+        global->apiCycles += elapsed & mask;
+        global->apiCycles2 += elapsed & mask2;
+        global->apiCalls += mask & 1;
+        global->apiCalls2 += mask2 & 1;
+        --global->apiCounter;
+        global->apiCounter2 = 0;
+        global->apiLastCycle = now;
+        state->apiTimerMark = 0;
+    }
+
+    ~HksApiTimer()
+    {
+        if (state->apiTimerMark == -500)
+            return;
+        const u64 now = hksReadTimeStampCounter();
+        global->apiCycles += now - global->apiLastCycle;
+        ++global->apiCalls;
+        ++global->apiCounter;
+        global->apiCounter2 = savedCounter2;
+        global->apiLastCycle = now;
+        state->apiTimerMark = savedMark;
+    }
+
+  private:
+    lua_State *state;
+    HksGlobal *global;
+    s64 savedCounter2;
+    int savedMark;
+};
+
+/* A string as the VM holds it: its length in the low 62 bits of the word
+ * at +0x8 (the top two bits are not the length), its characters from +0x14
+ * (FUN_00db6f40). derived name. */
+struct HksString {
+    u8 unknown0[0x8];
+    u64 lengthAndFlags; /* derived name */
+    u32 unknown10;
+    char data[1]; /* +0x14, derived name */
+};
+
+/* A table and a structure as FUN_00db84e0 reads them: the word each must
+ * lack for a raw store (+0x10 of a table, +0x20 of a structure). derived
+ * names. */
+struct HksTable {
+    u8 unknown0[0x10];
+    void *unknown10;
+};
+
+/* derived names: a structure's type as far as its name (a string object,
+ * at +0x18; FUN_00de0a90), and the structure, its type at +0x18 */
+struct HksStructType {
+    u8 unknown0[0x18];
+    void *name; /* +0x18 */
+};
+
+struct HksStruct {
+    u8 unknown0[0x18];
+    HksStructType *type; /* +0x18 */
+    void *unknown20;
+};
+
+/* derived names: a table's or a structure's raw store of a value under a
+ * key (FUN_00d9c0e0 for a table, FUN_013be510 for a structure) and the
+ * store through the metamethods (FUN_00dc8b40, the table passed by
+ * value: FUN_00db84e0 hands its words in rsi and rdx); their bodies not
+ * written */
+void FUN_00d9c0e0(HksTable *table, lua_State *state, const HksObject *key, const HksObject *value);
+void FUN_013be510(HksStruct *structure, lua_State *state, const HksObject *key,
+                  const HksObject *value);
+void FUN_00dc8b40(lua_State *state, HksObject table, const HksObject *key, const HksObject *value,
+                  int unknown);
 
 /* One entry of a library's table of C functions, a name and its function,
  * the table ending in a null entry (the tables at 0x16bc8b0 to 0x16bd100 that
@@ -110,6 +248,23 @@ inline bool isNumber(lua_State *state, int argument)
     const HksObject *value = state->base + (argument - 1);
     return value < state->top && FUN_00db70c0(state, value);
 }
+
+/* The VM's core source, as its assertions pass it (`__FILE__` in
+ * vm-core.cpp, which defines hksi_lua_createtable: FUN_00d91880). derived
+ * name. */
+#define HKS_VM_CORE_FILE                                                                           \
+    "D:\\trico\\engine\\anzu\\external\\havok\\HavokScriptVM-2013.3.0\\build/../source/"           \
+    "virtualMachine/vm-core.cpp"
+
+/* The VM's object source and its call's inline file, as their assertions
+ * pass them (`__FILE__` in hksObject.cpp: hks_obj_rawset, FUN_00db8af0;
+ * in vm-core.inl: vm_call, FUN_00d95e60). derived names. */
+#define HKS_OBJECT_FILE                                                                            \
+    "D:\\trico\\engine\\anzu\\external\\havok\\HavokScriptVM-2013.3.0\\build/../source/"           \
+    "virtualMachine/hksObject.cpp"
+#define HKS_VM_CORE_INL_FILE                                                                       \
+    "D:\\trico\\engine\\anzu\\external\\havok\\HavokScriptVM-2013.3.0\\build/../source/"           \
+    "virtualMachine/Compiler/../vm-core.inl"
 
 /* The VM's source file, as its assertions pass it (`__FILE__` in
  * vm-aux.cpp, which defines luaL_checknumber). derived name. */
@@ -294,7 +449,22 @@ inline void pushNumber(lua_State *state, float number)
  * as it is, a full userdata's (tag 7) value past its block, else null
  * (null past the frame's top: 0xe7f3e2 to 0xe7f3f9) */
 struct HksUserdata { /* derived name */
-    u8 unknown0[0x20];
+    u8 unknown0[0x10];
+    void *environment; /* +0x10, derived name: the table getfenv reads (FUN_00db7b30) */
+    u8 unknown18[0x8];
+};
+
+/* A script function (tag 9) and a C function (tag 10) as getfenv reads
+ * them: each one's environment's table at +0x18 (FUN_00db7b30, a case of
+ * its own for each). derived names. */
+struct HksClosure {
+    u8 unknown0[0x18];
+    void *environment; /* derived name */
+};
+
+struct HksCClosure {
+    u8 unknown0[0x18];
+    void *environment; /* derived name */
 };
 
 /* derived name: Lua's lua_isuserdata: whether an argument holds a full
