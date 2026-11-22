@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-// NONMATCHING (FUN_00b414a0 and its thunk 0xb41630 only): greedy's assignment: the base keeps the mask in ebx until the loop and spills it there (`mov [rbp-0x3c], ebx`), the build spills it at entry (`mov [rbp-0x30], esi`); the thunk's jump target is not resolved by its method name.
+// NONMATCHING (FUN_00b414a0 and its thunk 0xb41630 only): greedy's assignment: the base keeps the mask in ebx until the loop and spills it there (`mov [rbp-0x3c], ebx`), the build spills it at entry (`mov [rbp-0x30], esi`); the thunk (equal bytes) jumps to FUN_00b414a0, which the gate places only by its row, so the thunk waits on it.
 #include "tlg_game_object01397620.h"
 
 /* derived names: slot 6 of the vtable at 0x16b5c48 and, through the thunk
