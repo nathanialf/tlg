@@ -4,7 +4,10 @@
 #define TLG_GAME_CHUNKSTACK_H
 
 #include "tlg_game_object013c8500.h"
+#include "tlg_libc.h"
 #include "tlg_types.h"
+
+void *FUN_013bd790(void *heap, size_t size, int tag); /* derived name */
 
 /* derived names: a stack of elements in chunks of N, the first chunk inside
  * the stack and the others from its heap (tag 0x21), linked after it: each
@@ -25,6 +28,8 @@ template <class T, int N> struct ChunkStack {
         T *start;
         Chunk *next;
         Chunk *prev;
+
+        Chunk() : start(reinterpret_cast<T *>(elements)), next(0), prev(0) {}
     };
 
     HksState00dd1740 *heap; /* +0x0 */
@@ -35,6 +40,62 @@ template <class T, int N> struct ChunkStack {
     T *free;
     u32 count;
     u32 capacity;
+
+    /* derived name: an empty stack over a heap: every field cleared in
+     * order, then the first chunk made the one in use (FUN_00db4100 is an
+     * instance kept out of line) */
+    explicit ChunkStack(HksState00dd1740 *heap)
+        : heap(heap), first(0), current(0), top(0), free(0), count(0), capacity(0)
+    {
+        first = &chunk0;
+        current = &chunk0;
+        free = chunk0.start;
+        capacity = N;
+    }
+
+    /* derived name: pushes an element, the next free one moving to the next
+     * chunk (allocated and linked after the one in use when there is none)
+     * when the chunk is full; returns the element pushed (the script
+     * compiler's pushes, tlg_game_scriptcode.h) */
+    T *push()
+    {
+        T *element = free;
+        top = element;
+        free = element + 1;
+        Chunk *chunk = current;
+        if (free >= chunk->start + N) {
+            if (chunk->next) {
+                current = chunk->next;
+            } else {
+                Chunk *added = static_cast<Chunk *>(FUN_013bd790(heap, sizeof(Chunk), 0x21));
+                Chunk *last = current;
+                added->start = reinterpret_cast<T *>(added->elements);
+                added->next = 0;
+                added->prev = last;
+                last->next = added;
+                current = added;
+                capacity += N;
+            }
+            free = current->start;
+        }
+        ++count;
+        return element;
+    }
+
+    /* derived name: the element at an index, found in the chunk in use when
+     * the index falls in the chunk the count falls in, else by walking from
+     * the first chunk */
+    T &at(u32 index)
+    {
+        u32 chunkIndex = index / N;
+        u32 slot = index % N;
+        if (count / N == chunkIndex)
+            return current->start[slot];
+        Chunk *chunk = first;
+        for (u32 i = 0; i < chunkIndex; ++i)
+            chunk = chunk->next;
+        return chunk->start[slot];
+    }
 
     ~ChunkStack()
     {

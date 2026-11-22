@@ -111,6 +111,12 @@ struct HksDebugLink00d9e3b0 {
     HksDebugger00d9e3b0 *debugger; /* +0x10 */
 };
 
+struct NameTable016bb0c0; /* derived name: tlg_game_scriptcode.h */
+struct HksTable016bb0c0;  /* derived name: tlg_game_scriptcode.h */
+
+/* derived names: also the script compiler's view of it (the slots of
+ * 0x16bb0c0): the table names are made in at +0x1a8, the table of
+ * structures by name at +0x1e8 */
 struct HksAllocator00dd1740 {
     void *(*allocate)(void *user, void *block, size_t oldSize, size_t newSize); /* +0x0 */
     void *user;                                                                 /* +0x8 */
@@ -118,6 +124,10 @@ struct HksAllocator00dd1740 {
     size_t used; /* +0x18: the bytes the blocks it gave hold */
     u8 unknown20[0x30];
     HksDebugLink00d9e3b0 *debugLink; /* +0x50 */
+    u8 unknown58[0x150];
+    NameTable016bb0c0 *names; /* +0x1a8: its address is passed */
+    u8 unknown1b0[0x38];
+    HksTable016bb0c0 *structures; /* +0x1e8 */
 };
 
 struct HksState00dd1740 {

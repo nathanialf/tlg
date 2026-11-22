@@ -57,7 +57,9 @@ struct FuncState00dacb80 { /* derived name */
     CodePage00dacb80 *currentPage; /* derived name */
     u8 unknown7d8[0x10];
     u32 pc; /* derived name */
-    u8 unknown7ec[0x454];
+    u8 unknown7ec[0x434];
+    int *unknownc20; /* +0xc20 */
+    u8 unknownc28[0x18];
     int jumpList; /* derived name; +0xc40 */
     u8 unknownc44[0x328];
     int lastTarget; /* derived name; +0xf6c */
@@ -84,6 +86,8 @@ void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression); /* de
 void FUN_00dae7e0(Compiler00dacb80 *self);                                 /* derived name */
 void FUN_00da7fc0(Compiler00dacb80 *self, Expression00dacb80 *expression); /* derived name */
 int FUN_00db1aa0(Compiler00dacb80 *self, u32 word, int line);              /* derived name */
+void FUN_00db1710(Compiler00dacb80 *self, int list, int target, int reg,
+                  int defaultTarget); /* derived name */
 int FUN_00db1f70(Compiler00dacb80 *self, Expression00dacb80 *expression,
                  int condition);                  /* derived name */
 u8 *FUN_00db1e60(Compiler00dacb80 *self, int pc); /* derived name */
@@ -269,4 +273,40 @@ void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression) /* der
     fs->lastTarget = fs->pc;
     FUN_00dacb80(self, &self->funcState->jumpList, list);
     expression->unknown38 = -1;
+}
+
+/* derived name: codes a jump with the pending jump list joined to it (Lua's
+ * luaK_jump) */
+static inline int codeJump(Compiler00dacb80 *self)
+{
+    FuncState00dacb80 *fs = self->funcState;
+    int pending = fs->jumpList;
+    fs->jumpList = -1;
+    int jump = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
+    FUN_00dacb80(self, &jump, pending);
+    return jump;
+}
+
+/* derived name: patches a jump list to a target: to the pending list when
+ * the target is the current pc, else FUN_00db1710 with no register (Lua's
+ * luaK_patchlist) */
+static inline void patchList(Compiler00dacb80 *self, int list, int target)
+{
+    FuncState00dacb80 *fs = self->funcState;
+    if (fs->pc == (u32)target) {
+        fs->lastTarget = fs->pc;
+        FUN_00dacb80(self, &self->funcState->jumpList, list);
+    } else {
+        FUN_00db1710(self, list, target, 0xff, target);
+    }
+}
+
+/* derived name: slot 19 of the vtable at 0x16bb0c0 (its pointer at
+ * 0x16bb168): a jump patched to the start at +0x8 of the record, the exits
+ * at +0x4 of the record stored where the pointer at +0xc20 points */
+void FUN_00dafcd0(Compiler00dacb80 *self) /* derived name */
+{
+    int jump = codeJump(self);
+    patchList(self, jump, self->funcState->unknown1798->unknown8);
+    *self->funcState->unknownc20 = self->funcState->unknown1798->unknown4;
 }
