@@ -100,7 +100,68 @@ register is read as the address only on a path where it still holds it. A
 function that does not decode whole from its first byte is read in text
 order from the site, as before.
 
+Once-stored pointers (a row `<symbol> once <function> <unit>` of the same
+file): a game pointer variable that was local to the optimiser and stored
+once with a constant. GlobalOpt, for a variable with local linkage
+(ProcessGlobal, lib/Transforms/IPO/GlobalOpt.cpp:1706 of 3.7.1) that
+GlobalStatus finds "stored once" (lib/Transforms/Utils/GlobalStatus.cpp:
+78-123: every store is of the initial value, of a value loaded from the
+variable, or of one other value; a store OF its address, a call taking it,
+or any other user that is not a load, store, cast, GEP, select, PHI or
+compare is a refusal, :79-81, :153-158), with a null initial value and a
+constant stored (ProcessInternalGlobal's StoredOnce branch, :1807-1835;
+OptimizeOnceStoredGlobal, :1555-1588), rewrites every use of a loaded value
+that would trap if it were null to the constant
+(OptimizeAwayTrappingUsesOfLoads, :738-800, and
+OptimizeAwayTrappingUsesOfValue, :677-736): a call through the loaded
+pointer becomes a direct call to the stored function (which the inliner may
+then inline), a load or store through it a direct access; a compare with
+null is not rewritten (OptimizeAwayTrappingUsesOfValue has no case for it),
+so every null test stays. `once_proof` reads every
+access of the variable's eight bytes in the WHOLE executable's code (the
+library's, the game's and the CRT's RIP-relative operands, item 1) and every
+dynamic relocation whose addend falls in them, and refuses the row unless
+the base shows:
+
+    - exactly one store, a whole-width `mov qword [var], reg` whose register
+      was last written, in text order before it and with no call, jump or
+      `ret` between, by `lea reg, [rip+X]` (the stored value is the
+      constant X, not null), inside the row's <function>;
+    - every other access a whole-width load whose value is only compared
+      with null: `cmp qword [var], 0`, or `mov reg, qword [var]` whose first
+      use on every path within WINDOW instructions is `test reg, reg` or
+      `cmp reg, 0`;
+    - at least one such load (a variable never loaded is deleted, not
+      rewritten);
+    - no load called through (`call qword [var]`, or the loaded register
+      called): the form of a variable the optimiser did not see as stored
+      once with local linkage, since it would have made the call direct;
+      no load used any other way (passed, stored, dereferenced: a use the
+      rewrite would or would not touch, which this proof does not judge);
+      no `lea` of it, no access of another width or at another offset, no
+      relocation naming it (the address taken).
+
+tools/game_module.py gives a proven row's variable internal linkage in the
+linked module, as for a one-bit row, and refuses the module unless exactly
+one store to the variable is in its units' unoptimised IR, in <unit>, of a
+constant (`@...`): the store the compiler sees is the module's own, in the
+unit of the base's one store; no writer is generated for it. What this can
+still miss, and so cannot refuse: an access through an address formed any
+other way than a RIP-relative operand or a relocation (none is known: the
+code is position-independent); a stored register written by an instruction
+the backward reading does not see (it reads the text, not the paths: a
+register set on another path into a join is read as the nearer writer); a
+use of the loaded value beyond WINDOW instructions, behind an indirect jump,
+or after it was copied to another register or to memory (read as `used`,
+which refuses: it does not accept what it cannot see); that the source
+called through the pointer at all (the null test alone is what a source that
+never calls it gives too: the direct call or inlined body after the test is
+the module's to reproduce, measured by the rows, not by this proof); a
+second store a unit not yet written will add (the base has one, so the
+written source can have only that one).
+
     module_boundary.py --local    prove every row of config/local_data.<slug>.txt, exit 1 on a refusal
+    module_boundary.py --self-test   the once-stored proof on the base's rows and on refused shapes
 """
 from __future__ import annotations
 
@@ -433,7 +494,25 @@ def local_rows(ver: str) -> list[str]:
     p = config_path(REPO_ROOT, ver, "local_data", "txt")
     if not p.exists():
         return []
-    return [l.split()[0] for l in p.read_text().splitlines() if l.strip() and not l.startswith("#")]
+    return [l.split()[0] for l in p.read_text().splitlines()
+            if l.strip() and not l.startswith("#") and len(l.split()) == 1]
+
+
+def once_rows(ver: str) -> dict[str, tuple[str, str]]:
+    """The once-stored rows of config/local_data.<slug>.txt: {symbol: (the
+    storing function, its unit)}. A row of another shape is a refusal."""
+    p = config_path(REPO_ROOT, ver, "local_data", "txt")
+    out = {}
+    if not p.exists():
+        return out
+    for l in p.read_text().splitlines():
+        s = l.split()
+        if not s or l.startswith("#") or len(s) == 1:
+            continue
+        if len(s) != 4 or s[1] != "once":
+            raise ValueError(f"{p.name}: `{l}` is neither `<symbol>` nor `<symbol> once <function> <unit>`")
+        out[s[0]] = (s[2], s[3])
+    return out
 
 
 def local_proof(base: BaseElf, names: list[str]) -> tuple[dict[str, str], list[str]]:
@@ -469,6 +548,284 @@ def local_proof(base: BaseElf, names: list[str]) -> tuple[dict[str, str], list[s
         else:
             proofs[n] = line
     return proofs, errors
+
+
+ONCE_KINDS = ("null_test", "store_const", "store_other", "called", "used", "address", "other")
+
+
+def _rip_target(addr: int, size: int, operand: str) -> int | None:
+    r = RIP.search(operand)
+    return addr + size + int(r.group(2), 16) * (1 if r.group(1) == "+" else -1) if r else None
+
+
+def _once_access(insns, index, i, var: int) -> tuple[str, str] | None:
+    """What instruction i does to the pointer variable at `var` (eight bytes):
+    (kind of ONCE_KINDS, text), or None when no operand names those bytes.
+    `index` as _walk takes it."""
+    addr, size, mn, ops = insns[i]
+    parts = ops.split(", ") if ops else []
+    hit = [(k, _rip_target(addr, size, o)) for k, o in enumerate(parts) if RIP.search(o)]
+    hit = [(k, t) for k, t in hit if t is not None and var - 7 <= t < var + 8]
+    if not hit:
+        return None
+    k, t = hit[0]
+    text = f"0x{addr:x}: {mn} {ops}"
+    if mn == "lea":
+        return "address", text
+    m = MEM.match(parts[k])
+    if t != var or not m or m.group(1) != "qword":
+        return "other", text + " (another width or offset)"
+    if mn == "call" and len(parts) == 1:
+        return "called", text
+    if len(parts) != 2:
+        return "other", text
+    other = parts[1 - k]
+    if k == 0:
+        if mn == "cmp" and other == "0":
+            return "null_test", text
+        if mn != "mov":
+            return "other", text
+        if other not in FAMILY or not other.startswith("r"):
+            return "store_other", text
+        for j in range(i - 1, max(-1, i - 1 - WINDOW), -1):     # the stored register's writer, in text order
+            a2, s2, mn2, ops2 = insns[j]
+            p2 = ops2.split(", ") if ops2 else []
+            if mn2 in ("call", "ret") or mn2.startswith("j"):
+                break
+            if p2 and FAMILY.get(p2[0]) == FAMILY[other] and not mn2.startswith(NO_DEST):
+                v = _rip_target(a2, s2, p2[1]) if mn2 == "lea" and len(p2) == 2 and p2[0] == other else None
+                if v:
+                    return "store_const", text + f" ; 0x{a2:x}: {mn2} {ops2} (0x{v:x})"
+                break
+        return "store_other", text
+    if mn != "mov" or other not in REG64:
+        return "other", text
+    # a load: its first use on each path must be a compare with null
+    uses = set()
+    walk = _walk(insns, index, i, WINDOW)
+    j = next(walk, None)
+    while j is not None:
+        _a2, _s2, mn2, ops2 = insns[j]
+        go = True
+        if mn2 == "nop" or not any(FAMILY.get(x) == other for x in re.findall(r"[a-z][a-z0-9]+", ops2)):
+            go = mn2 not in ("call", "ret")
+            if not go and mn2 == "call" and other not in CALLEE_SAVED:
+                uses.add("used")        # the register is lost to the call: not seen, not accepted
+        else:
+            go = False
+            p2 = ops2.split(", ") if ops2 else []
+            if len(p2) == 2 and p2[0] == other and ((mn2 == "test" and p2[1] == other)
+                                                   or (mn2 == "cmp" and p2[1] == "0")):
+                uses.add("null_test")
+            elif mn2 == "call" and ops2 == other:
+                uses.add("called")
+            else:
+                uses.add("used")
+        try:
+            j = walk.send(go)
+        except StopIteration:
+            j = None
+    if "called" in uses:
+        return "called", text
+    if uses == {"null_test"}:
+        return "null_test", text
+    return "used", text + (" (no use seen)" if not uses else "")
+
+
+def once_census(base: BaseElf, variables: dict[str, int], refs=None) -> dict[str, dict]:
+    """{symbol: {kind: [text]}, "sites", "relocations", "stores_in"} for each
+    pointer variable (symbol -> address in the base): every access of its
+    eight bytes the code of the whole executable makes (census's operands:
+    library, game and CRT), every dynamic relocation whose addend names them,
+    and the function holding each store."""
+    from capstone import CS_ARCH_X86, CS_MODE_64, Cs
+    md = Cs(CS_ARCH_X86, CS_MODE_64)
+    if refs is None:
+        refs, _facts = census(base)
+    text = base.text
+    lo_text = text["vaddr"]
+    tdata = base.data[text["offset"]:text["offset"] + text["filesz"]]
+    funcs = sorted((a, a + s, n) for a, s, n in base.functions)
+    starts = [f[0] for f in funcs]
+    by_byte = {a + d: n for n, a in variables.items() for d in range(8)}
+    out = {n: {**{k: [] for k in ONCE_KINDS}, "sites": 0, "relocations": [], "stores_in": []} for n in variables}
+    decoded: dict[int, tuple] = {}
+    for site, t, _region in refs:
+        names = {by_byte[b] for b in range(t, t + 8) if b in by_byte}
+        for name in names:
+            var = variables[name]
+            rec = out[name]
+            rec["sites"] += 1
+            i = bisect.bisect_right(starts, site) - 1
+            if i < 0 or site >= funcs[i][1]:     # CRT code: read alone
+                insns = list(md.disasm_lite(tdata[site - lo_text:site - lo_text + 16], site))[:1]
+                index, k, fname = None, 0, "crt"
+            else:
+                lo, hi, fname = funcs[i]
+                if lo not in decoded:
+                    fi = list(md.disasm_lite(tdata[lo - lo_text:hi - lo_text], lo))
+                    decoded[lo] = (fi, {x[0]: n for n, x in enumerate(fi)})
+                insns, index = decoded[lo]
+                k = index.get(site)
+                if not (insns and insns[-1][0] + insns[-1][1] == hi):
+                    index = None
+                if k is None:
+                    rec["other"].append(f"0x{site:x}: not on an instruction boundary of {fname}")
+                    continue
+            c = _once_access(insns, index, k, var) or ("other", f"0x{site:x}: not read as an operand")
+            rec[c[0]].append(c[1])
+            if c[0].startswith("store"):
+                rec["stores_in"].append(fname)
+    for r_off, _ty, _sym, add in base._dynamic()[1]:
+        if add in by_byte:
+            out[by_byte[add]]["relocations"].append(f"0x{r_off:x}")
+    return out
+
+
+def _once_reasons(rec: dict, fn: str) -> list[str]:
+    """Why the census `rec` of a variable (once_census's record) does not
+    show a pointer stored once, in `fn`, with a constant and local to the
+    optimiser: [] when it does."""
+    c = {k: len(rec[k]) for k in ONCE_KINDS}
+    stores = rec["store_const"] + rec["store_other"]
+    why = []
+    if len(stores) != 1:
+        why.append(f"{len(stores)} stores, not one" + (f" (first {stores[0]}, second {stores[1]})"
+                                                      if len(stores) > 1 else ""))
+    elif not rec["store_const"]:
+        why.append(f"the one store is not of a constant address ({stores[0]})")
+    elif rec["stores_in"][0] != fn:
+        why.append(f"the one store is in {rec['stores_in'][0]}, not the row's {fn}")
+    if c["called"]:
+        why.append(f"{c['called']} load(s) called through, the form of a variable not stored once with local "
+                   f"linkage, whose call would be direct (first {rec['called'][0]})")
+    if c["used"]:
+        why.append(f"{c['used']} load(s) used otherwise than compared with null (first {rec['used'][0]})")
+    if c["address"]:
+        why.append(f"its address is taken (first {rec['address'][0]})")
+    if c["other"]:
+        why.append(f"{c['other']} access(es) are not a whole-width load or store (first {rec['other'][0]})")
+    if rec["relocations"]:
+        why.append(f"a relocation names it (its address in data: {', '.join(rec['relocations'][:4])})")
+    if not c["null_test"] + c["called"] + c["used"]:
+        why.append("no load: a variable never loaded is deleted, not rewritten")
+    return why
+
+
+def once_proof(base: BaseElf, rows: dict[str, tuple[str, str]], refs=None) -> tuple[dict[str, str], list[str]]:
+    """({symbol: the proof's one line}, [refusal]) for the once-stored rows
+    {symbol: (function, unit)} (the module docstring's conditions)."""
+    variables, errors = {}, []
+    tls = next(p for p in base.phdrs if p["type"] == PT_TLS)
+    for n in rows:
+        a = base.address_of(n) if re.fullmatch(r"D_[0-9a-f]+", n) else None
+        if a is None:
+            errors.append(f"local data row {n}: not a D_<hex> data label of the base")
+        elif tls["vaddr"] <= a < tls["vaddr"] + tls["memsz"]:
+            errors.append(f"local data row {n}: a thread-local; the once-stored proof reads ordinary variables")
+        else:
+            variables[n] = a
+    proofs = {}
+    for n, rec in once_census(base, variables, refs).items():
+        fn = rows[n][0]
+        c = {k: len(rec[k]) for k in ONCE_KINDS}
+        stores = rec["store_const"] + rec["store_other"]
+        line = (f"{n} once {fn} sites={rec['sites']} " + " ".join(f"{k}={c[k]}" for k in ONCE_KINDS)
+                + f" relocations={len(rec['relocations'])}"
+                + (f" store {rec['store_const'][0]}" if len(stores) == 1 and rec["store_const"] else ""))
+        why = _once_reasons(rec, fn)
+        if why:
+            errors.append(f"local data row {n} is refused, the base's code does not show a pointer stored once and "
+                          f"local to the optimiser: " + "; ".join(why) + f" [{line}]")
+        else:
+            proofs[n] = line
+    return proofs, errors
+
+
+def self_test() -> int:
+    """The once-stored proof: the base's two variables accepted, a variable
+    called through refused (the base's 0x57ad998), and made-up functions for
+    the shapes the base may not hold: two stores, the address taken, a read
+    at another width, a value stored that is not a constant, a load passed
+    on. Each refusal must name its reason."""
+    ver = detect_version(REPO_ROOT)
+    base = BaseElf(REPO_ROOT, ver)
+    refs, _facts = census(base)
+    ok = True
+
+    def expect(rows, want):
+        nonlocal ok
+        proofs, errors = once_proof(base, rows, refs)
+        for n in rows:
+            e = next((x for x in errors if x.startswith(f"local data row {n} ")), None)
+            if want[n] is None and e:
+                print(f"self-test: {n} wrongly refused: {e}")
+                ok = False
+            elif want[n] is not None and (not e or want[n] not in e):
+                print(f"self-test: {n} not refused for `{want[n]}`: {e or proofs.get(n)}")
+                ok = False
+            else:
+                print(f"self-test: {n}: " + (f"accepted: {proofs[n]}" if want[n] is None else f"refused: {e}"))
+
+    expect({"D_5ace510": ("FUN_00b8a480", "-"), "D_593a588": ("FUN_001bd010", "-"),
+            "D_57ad998": ("FUN_00eb45d0", "-")},
+           {"D_5ace510": None, "D_593a588": None, "D_57ad998": "called through"})
+    expect({"D_5ace510": ("FUN_00b8a440", "-")}, {"D_5ace510": "not the row's FUN_00b8a440"})
+
+    # made-up code over a variable at 0x40000000: each function's instructions
+    # as the decoder gives them, the RIP displacement written to reach it
+    var = 0x40000000
+
+    def fn(*lines):
+        insns, a = [], 0x100000
+        for mn, ops in lines:
+            size = 7
+            if "{v" in ops:
+                off = int(re.search(r"\{v([+-]\d+)?\}", ops).group(1) or 0)
+                d = var + off - (a + size)
+                ops = re.sub(r"\{v([+-]\d+)?\}", f"rip + 0x{d:x}", ops)
+            elif "{c}" in ops:
+                ops = ops.replace("{c}", "rip + 0x1000")
+            insns.append((a, size, mn, ops))
+            a += size
+        return insns
+
+    store = [("lea", "rax, [{c}]"), ("mov", "qword ptr [{v}], rax")]
+    load_test = [("mov", "rax, qword ptr [{v}]"), ("test", "rax, rax"), ("ret", "")]
+    shapes = {
+        "accepted": (store + [("cmp", "qword ptr [{v}], 0"), ("ret", "")], None),
+        "two stores": (store + store + load_test, "2 stores, not one"),
+        "address taken": (store + [("lea", "rdi, [{v}]"), ("ret", "")] + load_test, "its address is taken"),
+        "another width": (store + [("mov", "eax, dword ptr [{v}]"), ("ret", "")] + load_test,
+                          "not a whole-width load or store"),
+        "another offset": (store + [("mov", "rax, qword ptr [{v+4}]"), ("ret", "")] + load_test,
+                           "not a whole-width load or store"),
+        "value stored": ([("mov", "rax, qword ptr [rdi]"), ("mov", "qword ptr [{v}], rax")] + load_test,
+                         "not of a constant address"),
+        "loaded and called": (store + [("mov", "rax, qword ptr [{v}]"), ("call", "rax"), ("ret", "")],
+                              "called through"),
+        "loaded and passed": (store + [("mov", "rdi, qword ptr [{v}]"), ("mov", "rsi, rdi"), ("ret", "")],
+                              "used otherwise than compared with null"),
+        "never loaded": (store + [("ret", "")], "no load"),
+    }
+    for what, (lines, want) in shapes.items():
+        insns = fn(*lines)
+        index = {x[0]: k for k, x in enumerate(insns)}
+        rec = {**{k: [] for k in ONCE_KINDS}, "relocations": [], "stores_in": []}
+        for k in range(len(insns)):
+            c = _once_access(insns, index, k, var)
+            if c:
+                rec[c[0]].append(c[1])
+                if c[0].startswith("store"):
+                    rec["stores_in"].append("FUN_made_up")
+        got = _once_reasons(rec, "FUN_made_up")
+        if (want is None) != (not got) or (want is not None and not any(want in g for g in got)):
+            print(f"self-test: made-up `{what}`: want {want or 'accepted'}, got {got or 'accepted'}")
+            ok = False
+        else:
+            print(f"self-test: made-up `{what}`: " + ("accepted" if not got else f"refused: {'; '.join(got)}"))
+    print("module_boundary: self-test", "OK" if ok else "FAILED")
+    return 0 if ok else 1
 
 
 def hx(v: int) -> str:
@@ -661,11 +1018,17 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true", help="exit 1 if config/modules.<slug>.txt is not what the base gives")
     ap.add_argument("--local", action="store_true", help="prove the rows of config/local_data.<slug>.txt")
+    ap.add_argument("--self-test", action="store_true", help="the once-stored proof on known accepted and refused shapes")
     a = ap.parse_args(argv)
+    if a.self_test:
+        return self_test()
     ver = detect_version(REPO_ROOT)
     base = BaseElf(REPO_ROOT, ver)
     if a.local:
         proofs, errors = local_proof(base, local_rows(ver))
+        once_p, once_e = once_proof(base, once_rows(ver)) if once_rows(ver) else ({}, [])
+        proofs.update(once_p)
+        errors += once_e
         for line in proofs.values():
             print(f"module_boundary: local {line}")
         for e in errors:

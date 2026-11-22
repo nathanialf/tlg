@@ -790,6 +790,21 @@ def _local_proof(base: BaseElf, rows: list[str]) -> tuple[dict[str, str], list[s
     return v
 
 
+def _once_proof(base: BaseElf, rows: dict[str, tuple[str, str]]) -> tuple[dict[str, str], list[str]]:
+    """module_boundary.once_proof, through the gate's cache as _local_proof."""
+    from module_boundary import once_proof
+    from base_elf import _MISS, base_digest, gate_cache_get, gate_cache_key, gate_cache_on, gate_cache_put
+    if not gate_cache_on():
+        return once_proof(base, rows)
+    ck = gate_cache_key("once", (base_digest(base), tuple(base.functions), tuple(sorted(rows.items()))))
+    v = gate_cache_get("once", ck)
+    if v is not _MISS:
+        return v
+    v = once_proof(base, rows)
+    gate_cache_put("once", ck, v)
+    return v
+
+
 def build_image(ver: str, log=print) -> dict:
     base = BaseElf(REPO_ROOT, ver)
     segs = []
@@ -1021,6 +1036,16 @@ def build_image(ver: str, log=print) -> dict:
         for n in sorted(proofs):
             log(f"local data: {proofs[n]}")
         for e in refusals:      # "local data row <symbol> ..."
+            report["errors"]["local data row " + e.split()[3].rstrip(":")] = e
+    # and every once-stored row (module_boundary.once_proof): a pointer the base
+    # stores once with a constant and only tests for null
+    from module_boundary import once_rows
+    rows_once = once_rows(ver)
+    if rows_once:
+        proofs, refusals = _once_proof(base, rows_once)
+        for n in sorted(proofs):
+            log(f"local data: {proofs[n]}")
+        for e in refusals:
             report["errors"]["local data row " + e.split()[3].rstrip(":")] = e
 
     # --- compare ------------------------------------------------------------------

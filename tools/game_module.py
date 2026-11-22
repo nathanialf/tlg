@@ -56,6 +56,13 @@ builds it the same way:
          may not, and a local variable nothing sets is folded to its initial
          value. The writer is the gate's, like the stand-in, and goes when a
          file defines the variable.
+       - The once-stored pointers (rows `<symbol> once <function> <unit>`
+         of the same file): a pointer the base stores once, with a
+         constant, and only tests for null (GlobalOpt's once-stored
+         rewrite, which needs local linkage; tools/module_boundary.py
+         once_proof). Each row the module names is proven, and the module
+         is refused unless its units' unoptimised IR stores the variable
+         exactly once, of a constant, in <unit>; no writer is generated.
        - The used inline definitions: a linkonce_odr or weak_odr definition
          (an inline function, a template's instantiation, a class's inline
          vtable) that another definition of the module names. Once every
@@ -348,10 +355,25 @@ class TypeTable:
         return TYPE_REF.sub(lambda m: self.name(u, m.group(0)), text)
 
 
-def standins(units: list[Unit], ver: str, base=None, table=None, local=()) -> tuple[str, list[str]]:
+def once_stores(units: list[Unit], name: str) -> list[tuple[str, str]]:
+    """[(unit, stored value)] for every `store` to the global `name` in the
+    units' unoptimised IR (a once-stored row: tools/module_boundary.py)."""
+    q = re.escape("@" + (name if re.fullmatch(r"[-a-zA-Z$._][-a-zA-Z$._0-9]*", name) else f'"{name}"'))
+    pat = re.compile(r"^\s*store (?:volatile )?(.*), [^,]*\*+ " + q + r"(?:, align \d+)?(?:, !.*)?$")
+    out = []
+    for u in units:
+        for line in u.path.read_text().splitlines():
+            if line.lstrip().startswith("store ") and re.search(q + r"\b", line):
+                m = pat.match(line)
+                out.append((u.tu, m.group(1) if m else line.strip()))
+    return out
+
+
+def standins(units: list[Unit], ver: str, base=None, table=None, local=(), once=()) -> tuple[str, list[str]]:
     """(the stand-in module's text, a log line per declaration considered).
     `local`: the rows of config/local_data.<slug>.txt; a stand-in for one
-    carries its writer."""
+    carries its writer. `once`: its once-stored rows; a stand-in for one is
+    a pointer, null, and carries no writer (the store is the module's)."""
     from base_elf import BaseElf
     from module_boundary import load, owner_of
     base = base or BaseElf(REPO_ROOT, ver)
@@ -389,6 +411,8 @@ def standins(units: list[Unit], ver: str, base=None, table=None, local=()) -> tu
             out.append(f"define protected void @{STANDIN_WRITER}{name}() {{\n  store i8 1, i8* @{q}, align 1\n"
                        f"  ret void\n}}")
             log.append(f"WRITER {name}")
+        if name in once and not ty.endswith("*"):
+            raise Refusal(f"local data row {name}: declared as {ty}, not a pointer")
     for name in sorted({n for u in units for n in u.avail} - defined):
         log.append(f"AVAILABLE_EXTERNALLY {name} (kept: no file defines it)")
     for o in types.opaque:
@@ -500,16 +524,31 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
     units = [Unit(p.with_suffix(".ll"), tu_of(p, ver)) for p in bcs]
     lines, renamed = check_units(units)
     from base_elf import BaseElf
-    from module_boundary import local_proof, local_rows
+    from module_boundary import local_proof, local_rows, once_proof, once_rows
     base = base or BaseElf(REPO_ROOT, ver)
     rows = local_rows(ver)
     named = {n for u in units for n in list(u.defs) + list(u.decls)}
     local = [n for n in rows if n in named]
+    proofs = {}
     if local:
         proofs, errors = local_proof(base, local)
         if errors:
             raise Refusal("\n".join(errors))
-    text, log = standins(units, ver, base, local=set(local))
+    once = {n: r for n, r in once_rows(ver).items() if n in named}
+    if once:
+        oproofs, errors = once_proof(base, once)
+        if errors:
+            raise Refusal("\n".join(errors))
+        for n, (fn, tu) in once.items():
+            stores = once_stores(units, n)
+            bad = [f"{t}: {v}" for t, v in stores if "@" not in v or "%" in v]
+            if bad or [t for t, _v in stores] != [tu]:
+                raise Refusal(f"local data row {n} (stored once by {fn} in {tu}): the module's units store it "
+                              + (", ".join(f"in {t} ({v})" for t, v in stores) or "nowhere")
+                              + f"; the base has one store of a constant, and the module must hold it in {tu} "
+                              "alone (tools/module_boundary.py, once-stored pointers)")
+        proofs.update(oproofs)
+    text, log = standins(units, ver, base, local=set(local), once=set(once))
     work = out.parent / (out.name[:-2] if out.name.endswith(".o") else out.name)
     out.parent.mkdir(parents=True, exist_ok=True)
     sl = Path(str(work) + ".standins.ll")
@@ -530,7 +569,7 @@ def build(bcs: list[Path], out: Path, ver: str, single: bool = False, base=None)
     run([str(REPO_ROOT / LLVM_LINK), "-o", str(bc), f"@{s1rsp}"], "llvm-link")
     defined = {n for u in units for n, (linkage, _t) in u.defs.items() if linkage not in LOCAL}
     defined |= {x.split()[1] for x in log if x.startswith("DEF ")}
-    local = [n for n in local if n in defined]
+    local = [n for n in local if n in defined] + [n for n in once if n in defined]
     odr = used_odr(bc)
     if local or odr:
         make_local(bc, local + odr)
