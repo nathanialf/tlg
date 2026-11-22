@@ -521,6 +521,30 @@ class BaseElf:
                 return last
         return sym
 
+    def _row_symbols(self) -> dict[str, int]:
+        """The row table by symbol (round 450A): every mangled name a row
+        carries (config/matched.<slug>.txt's symbol column,
+        config/functions.<slug>.txt's mangled names) -> the row's address,
+        for a name one address alone carries and of external linkage. A
+        `_ZL` static, an anonymous namespace's member and a compiler-given
+        name (`_GLOBAL__I_a`, `__cxx_global_array_dtor.N`, not mangled) are
+        one unit's, and several units may each have one with its own row."""
+        if getattr(self, "_rowsyms", None) is None:
+            seen: dict[str, set[int]] = {}
+            for a, _s, n in self.functions:
+                if n.startswith("_Z"):
+                    seen.setdefault(n, set()).add(a)
+            p = config_path(self.root, self.version, "matched", "txt")
+            if p.exists():
+                for line in p.read_text().splitlines():
+                    s = line.split("#", 1)[0].split()
+                    if len(s) >= 3 and s[0] in self.func_by_name:
+                        seen.setdefault(s[2], set()).add(self.func_by_name[s[0]][0])
+            self._rowsyms = {sym: next(iter(addrs)) for sym, addrs in seen.items()
+                             if len(addrs) == 1 and sym.startswith("_Z") and not sym.startswith("_ZL")
+                             and "_GLOBAL__N" not in sym and "." not in sym}
+        return self._rowsyms
+
     @staticmethod
     def ctor_alias(sym: str) -> str | None:
         """The other spelling of a constructor or destructor the compiler
@@ -716,11 +740,24 @@ class BaseElf:
         is the address the base's own field at the reference encodes; only a
         destructor resolved by its class's vtable pair reads it
         (folded_destructor), and the field is checked against the answer
-        all the same."""
+        all the same.
+
+        A mangled name a row carries exactly is placed at that row
+        (`_row_symbols`) before its FUN_ component is read: an override
+        carries its base virtual's FUN_ name (the tree names a virtual by the
+        first implementation's address) and lives at its own row. A name no
+        row carries is placed by its FUN_ component as before: a callee's
+        signature or class guessed (match_check.resolve_symbol), a body the
+        linker folded onto that address (D15), the owner's own member; an
+        override no row carries then reads as the base virtual's address,
+        which the base's field refuses unless the override was folded there."""
         if name.startswith("!"):
             raise ValueError(name[1:])
         if name in self.func_by_name:
             return self.func_by_name[name][0]
+        rows = self._row_symbols()
+        if name in rows:
+            return rows[name]
         alias = self.ctor_alias(name)
         if alias in self.func_by_name:
             return self.func_by_name[alias][0]
@@ -1138,3 +1175,60 @@ class BaseElf:
                 hits.append(p["vaddr"] + i)
                 i = seg.find(blob, i + 1)
         return hits
+
+
+def self_test() -> int:
+    """Symbol resolution by the row table first (round 450A): an override
+    carries its base virtual's FUN_ name and is placed at its own row; an
+    override no row carries is never a pass (its name reads as the base
+    virtual's address, which the base's own field refuses); a free
+    FUN_<addr>, a callee's signature or class guessed otherwise than its
+    row's, a body folded onto the address (D15) and the owner's own member
+    resolve by name as before. Reads the user's base and the claimed rows."""
+    import match_check as mc
+    root = Path(__file__).resolve().parent.parent
+    base = BaseElf(root)
+    ok = True
+    cases = [
+        # the thunks' targets: overrides of 0x137ba50's, 0x137ba70's and 0x4340's slots
+        ("_ZN14Object016b130812FUN_0137ba50Ev", 0x964240),     # thunk 0x9643d0
+        ("_ZN14Object016b13b812FUN_0137ba50Ev", 0x9666d0),     # thunk 0x9667c0
+        ("_ZN14Object016b146812FUN_0137ba70Ei", 0x96a390),     # thunk 0x96a480
+        ("_ZNK14Object0139762012FUN_00004340Ei", 0xb406d0),    # thunk 0xb40760
+        # by name as before
+        ("_ZN12Class137ba7012FUN_0137ba50Ev", 0x137ba50),      # the owner's own member
+        ("FUN_0137ba50", 0x137ba50),                           # the bare row name
+        ("_Z12FUN_013dfda0P14Object013e2650", 0x13dfda0),      # a free function, another parameter guess
+        ("_ZN14Object00cd91f012FUN_00cef2e0Ev", 0xcef2e0),     # a member spelling of a free row
+        ("_ZNK18hknpReservedEvent112FUN_00040be0EP9hknpWorldR9hkOstream", 0x40be0),   # folded (D15)
+        ("_ZN14Object014068b012FUN_01408960Ev", 0x1408960),    # the owner's member, unclaimed, beside an override's row
+    ]
+    for sym, want in cases:
+        got = base.address_of(sym)
+        good = got == want
+        ok &= good
+        print(f"self-test: {sym} -> {hex(got) if got is not None else 'unplaced'}"
+              + ("" if good else f"  WRONG, want {hex(want)}"))
+    # an override no row carries (0xb414a0, the target of thunk 0xb41630, is
+    # not claimed): the thunk's jump is refused, not passed
+    thunk = bytes.fromhex("4883c7d8e900000000")
+    r = mc.Reloc(5, 4, 2, "_ZNK14Object016b5ce812FUN_00004340Ei", -4, 0, 0, 0)
+    bad, _unv = mc.verify_targets([r], base.read(0xb41630, 9), 0xb41630, base)
+    good = len(bad) == 1 and "0xb414a0" in bad[0] and base.read(0xb41630, 5) == thunk[:5]
+    ok &= good
+    print(f"self-test: thunk 0xb41630 to an override no row carries: {bad}" + ("" if good else "  WRONG, want refused"))
+    # a name several rows carry (one per unit) is not placed by the row table
+    rows = base._row_symbols()
+    for sym in ("_GLOBAL__I_a", "__cxx_global_array_dtor"):
+        if sym in rows:
+            print(f"self-test: {sym} placed by the row table  WRONG")
+            ok = False
+    print("base_elf: self-test", "OK" if ok else "FAILED")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["--self-test"]:
+        sys.exit(self_test())
+    print("usage: base_elf.py --self-test", file=sys.stderr)
+    sys.exit(2)
