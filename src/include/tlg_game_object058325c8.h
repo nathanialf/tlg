@@ -15,8 +15,8 @@ struct Object058325c8 { /* derived name */
     int unknown18a4; /* +0x18a4: tested against zero (0xb10bbf) */
     u8 unknown18a8[0x7f8];
     int unknown20a0; /* +0x20a0 */
-    u8 unknown20a4;  /* +0x20a4: bits 6 and 7 tested (FUN_00b105c0) */
-    u8 unknown20a5[0x853];
+    int unknown20a4; /* +0x20a4: bits 0 to 2, 6 and 7 tested (FUN_00b10510: `mov eax, [rax+0x20a4]; test al, 7`) */
+    u8 unknown20a8[0x850];
     /* +0x28f8: names the callbacks look their own up in (the block at
      * +0x28f8, the count at +0x2900: `mov eax, [rbx+0x2900]; mov rcx,
      * [rbx+0x28f8]; cmp edx, [rcx+rsi*4]` at 0xb10ab8) */
