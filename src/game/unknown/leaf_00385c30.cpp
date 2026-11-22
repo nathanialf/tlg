@@ -1,0 +1,17 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_array.h"
+#include "tlg_math.h"
+#include "tlg_simd.h"
+
+/* derived names: the element of an array appended to by FUN_003806f0 (0x38377b):
+ * two 16-byte aligned points copied lane by lane, then a vector and an int copied together (the int first, then one aligned vector move); the fields are not traced */
+struct Record00385c30 { /* derived name */
+    Float4A unknown0;   /* +0x0 */
+    Float4A unknown10;  /* +0x10 */
+    Vec4 unknown20;     /* +0x20 */
+    int unknown30;      /* +0x30 */
+};
+
+/* FUN_00385c30: the append (the count raised, the block grown when it is
+ * full, then the element's copy) */
+template void Array05943280<Record00385c30>::push(const Record00385c30 &);
