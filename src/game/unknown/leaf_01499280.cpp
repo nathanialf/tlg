@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_gnm.h"
 
 /* The graphics library's setArrayView of a depth target and of a texture
  * (the name and the header paths from their assertion messages), emitted out
@@ -7,20 +7,8 @@
  * a failure through FUN_012fbca0 (file, line, function, format, values) and
  * a debug trap, then packs the base index and the last one into one
  * register word. The records' other words are not traced. */
-int FUN_012fbca0(const char *file, int line, const char *function, const char *format,
-                 ...); /* derived name */
-
-#define DEPTH_TARGET_HEADER /* derived name */                                                     \
-    "C:\\Program Files (x86)\\SCE\\ORBIS SDKs\\3.500\\target\\include_common\\gnm/depthrendertarget.h"
 #define TEXTURE_HEADER /* derived name */                                                          \
     "C:\\Program Files (x86)\\SCE\\ORBIS SDKs\\3.500\\target\\include_common\\gnm/texture.h"
-
-struct DepthRenderTarget01499280 { /* derived name, from the header's file name */
-    void setArrayView(u32 baseArraySliceIndex, u32 lastArraySliceIndex);
-
-    u8 unknown0[0x20];
-    u32 sliceView; /* +0x20: the base slice in bits 0 to 10, the last in 13 to 23 */
-};
 
 struct Texture01499fa0 { /* derived name, from the header's file name */
     void setArrayView(u32 baseArraySliceIndex, u32 lastArraySliceIndex);

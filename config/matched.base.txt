@@ -10161,3 +10161,6 @@ FUN_00ccd920 src/game/unknown/leaf_00ccd4f0.cpp _ZN14Object016b92a0D0Ev
 FUN_00e769e0 src/game/unknown/leaf_00e778e0.cpp _Z12FUN_00e769e0P9lua_State
 FUN_00e76100 src/game/unknown/leaf_00e778e0.cpp _Z12FUN_00e76100P9lua_State
 FUN_00e768a0 src/game/unknown/leaf_00e778e0.cpp _Z12FUN_00e768a0P9lua_State
+FUN_01314290 src/game/unknown/leaf_01314290.cpp _Z12FUN_01314290P19DrawContext01314290PK19IndexBuffer01314290
+FUN_013198b0 src/game/unknown/leaf_013198b0.cpp _ZN19DrawContext0131429017DrawIndexedCommonEjjjb
+FUN_01319a00 src/game/unknown/leaf_01319a00.cpp _ZN19DrawContext0131429020DrawIndexedInstancedEjjjj

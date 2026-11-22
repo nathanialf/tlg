@@ -1,5 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_gnm.h"
 
 /* The graphics library's render target taking its three addresses (the
  * header path and the three setter names from their assertion messages),
@@ -9,9 +9,6 @@
  * trap; the base address goes on in 256-byte blocks to FUN_012fbf40, the
  * cmask address is stored in blocks at +0x1c, the fmask address goes on in
  * blocks to FUN_012fc330. The record's other words are not traced. */
-int FUN_012fbca0(const char *file, int line, const char *function, const char *format,
-                 ...); /* derived name */
-
 #define RENDER_TARGET_HEADER /* derived name */                                                    \
     "C:\\Program Files (x86)\\SCE\\ORBIS SDKs\\3.500\\target\\include_common\\gnm/rendertarget.h"
 
