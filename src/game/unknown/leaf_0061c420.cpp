@@ -22,7 +22,6 @@ class FollowCamera : public Object016c7d08
   public:
     virtual ~FollowCamera();
 
-    u8 unknown24[0x3c];
     Ref00503fb0<Object016b9108> unknown60; /* +0x60: released by the destructor */
     u8 unknown68[0x38];
     float unknownA0;

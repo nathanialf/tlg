@@ -5,14 +5,6 @@
 #include "tlg_game_object016c7d08.h"
 #include "tlg_game_object05945a38.h"
 
-/* derived name: the record the pointer at +0x50 of PointingCamera names;
- * only the int at +0x4 is traced (0x400 from Init) */
-struct Settings006910d0 /* derived name */
-{
-    u8 unknown0[0x4];
-    int unknown4; /* +0x4 */
-};
-
 /* PointingCamera (the class's name from its message
  * "PointingCamera(%s)::Init"; derived names otherwise), its vtable at
  * 0x16ac538 (config/vtables.derived.base.txt). Slot 5 of the vtable (its
@@ -28,9 +20,6 @@ class PointingCamera : public Object016c7d08
   public:
     virtual ~PointingCamera();
 
-    u8 unknown24[0x2c];
-    Settings006910d0 *unknown50; /* +0x50 */
-    u8 unknown58[0x8];
     AtomicRef0045c470<Object016b9108> held60; /* +0x60 */
 };
 

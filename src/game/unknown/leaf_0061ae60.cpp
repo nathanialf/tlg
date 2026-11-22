@@ -19,7 +19,6 @@ class FixCamera : public Object016c7d08
   public:
     virtual ~FixCamera();
 
-    u8 unknown24[0x3c];
     Float4A unknown60; /* +0x60: FUN_0061aeb0 */
     Float4A unknown70; /* +0x70: FUN_0061aeb0 */
 };

@@ -23,7 +23,7 @@ class AnimationCamera : public Object016c7d08
   public:
     virtual ~AnimationCamera();
 
-    u8 unknown24[0x128];
+    u8 unknown60[0xec];
     Name name14c; /* +0x14c */
     Name name150; /* +0x150 */
     u8 unknown154[0x4];
