@@ -37,6 +37,19 @@ struct CommandBufferHolder0132e330 {
  * The parameter names are derived. */
 extern "C" int sceGnmDrawIndexOffset(unsigned *commands, unsigned dwords, unsigned indexOffset,
                                      unsigned indexCount, unsigned flags);
+/* likewise: a draw of indexCount generated indices into `dwords` words */
+extern "C" int sceGnmDrawIndexAuto(unsigned *commands, unsigned dwords, unsigned indexCount,
+                                   unsigned flags);
+
+/* the vertex shader as Draw's check reads it (JsVertexShader.cpp): the
+ * compute-and-vertex part's shader, which a plain draw must not have */
+struct JsVertexShader {
+    u8 unknown0[0x420];
+
+    struct {
+        void *m_pGnmShader; /* +0x420 */
+    } m_gnmShaderCsVs;
+};
 
 struct DrawContext01314290; /* derived name */
 
@@ -56,7 +69,9 @@ struct DrawContext01314290 { /* derived name */
     u8 unknown27c[0x41f4];
     u64 indexAddress; /* +0x4470 */
     u32 indexCount;   /* +0x4478 */
-    u8 unknown447c[0x2a8];
+    u8 unknown447c[0x4698 - 0x447c];
+    JsVertexShader *m_pCurrentVertexShader; /* +0x4698 */
+    u8 unknown46a0[0x4724 - 0x46a0];
     u32 instanceCount; /* +0x4724 */
     u8 unknown4728[0x74];
     u32 unknown479c; /* +0x479c */
@@ -72,6 +87,7 @@ struct DrawContext01314290 { /* derived name */
     u8 markerFlags;  /* +0x13005: bit 0, a marker packet is owed */
     u8 unknown13006; /* +0x13006 */
 
+    void Draw(u32 VertexCount, u32 StartVertexLocation);
     void DrawIndexedCommon(u32 indexCount, u32 indexOffset, u32 value479c, bool indexed);
     void DrawIndexedInstanced(u32 indexCount, u32 instances, u32 indexOffset, u32 value479c);
 
@@ -108,6 +124,16 @@ struct DrawContext01314290 { /* derived name */
         if (sceGnmDrawIndexOffset(commands.cursor, 9, indexOffset, indexCount, unknown47e8 & 1) ==
             0)
             commands.cursor += 9;
+    }
+
+    /* the auto-index draw, written by the library (sceGnmDrawIndexAuto)
+     * into seven words; kept only when it succeeds */
+    void drawIndexAuto(u32 indexCount)
+    {
+        if (commands.remaining() < 7 && !commands.reserve(&commands, 7, commands.userData))
+            return;
+        if (sceGnmDrawIndexAuto(commands.cursor, 7, indexCount, unknown47e8 & 1) == 0)
+            commands.cursor += 7;
     }
 };
 

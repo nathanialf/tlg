@@ -10207,3 +10207,5 @@ FUN_00b91220 src/game/unknown/leaf_00b91220.cpp _Z12FUN_00b91220Pv
 FUN_00b96ef0 src/game/unknown/leaf_00b96ef0.cpp _Z12FUN_00b96ef0v
 FUN_013bb3f0 src/game/unknown/leaf_013bb3f0.cpp _Z12FUN_013bb3f0P14Object013bb3f0
 FUN_013baf50 src/game/unknown/leaf_013baf50.cpp _Z12FUN_013baf50P14Object013bb3f0
+FUN_01303110 src/game/unknown/leaf_01303110.cpp _ZN16JsComputeContext18StallUntilSignaledEPVm
+FUN_01312480 src/game/unknown/leaf_01312480.cpp _ZN19DrawContext013142904DrawEjj

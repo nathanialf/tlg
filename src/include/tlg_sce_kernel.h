@@ -137,6 +137,7 @@ int scePthreadRwlockRdlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockUnlock(pthread_rwlock_t *rwlock);
 int scePthreadRwlockWrlock(pthread_rwlock_t *rwlock);
 void scePthreadYield(void);
+unsigned long sceKernelGetProcessTime(void); /* microseconds since the process began */
 pthread_t scePthreadSelf(void); /* the calling thread (0x69d42f compares it with a lock's owner) */
 }
 

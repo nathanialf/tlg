@@ -31,6 +31,8 @@ class JsComputeContext
     void CSSetUnorderedAccessViews(u32 StartSlot, u32 NumUAVs,
                                    JsUnorderedAccessView *const *ppUnorderedAccessViews,
                                    const u32 *pUAVInitialCounts);
+    /* a GPU label yielded on until it reads 0x10 (called directly) */
+    static void StallUntilSignaled(volatile u64 *handle);
     /* slot 30 (0x16c3900): occlusion queries are not supported here; the
      * check fails unconditionally (JsComputeContext.cpp:754) */
     void BeginOcclusion();

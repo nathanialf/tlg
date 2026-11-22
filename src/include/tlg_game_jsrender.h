@@ -8,6 +8,9 @@
 
 #include "tlg_types.h"
 
+/* The render's boolean, as a check's condition spells it (0x1303110). */
+#define FALSE 0
+
 /* The binding counts the checks compare against (each from its `cmp`). */
 enum {
     JS_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT = 15, /* 0x13003f6 */
