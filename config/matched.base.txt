@@ -10974,3 +10974,4 @@ FUN_01352f40 src/game/unknown/leaf_01352f40.cpp _ZN14Record01352f40D1Ev
 FUN_008e4880 src/game/unknown/leaf_008e45b0.cpp _ZN14Object016b0448D1Ev
 FUN_008e4cb0 src/game/unknown/leaf_008e45b0.cpp _ZN14Object016b0448D0Ev
 FUN_008e7ec0 src/game/unknown/leaf_008e7ec0.cpp
+FUN_00d2fa60 src/game/unknown/leaf_00d2fa60.cpp _Z12FUN_00d2fa60P13Owner00d2fa60RK4NameiiPvRK12Held00d2fa60RK12Pair00d2fa60i

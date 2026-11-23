@@ -1,14 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
 #include "tlg_math.h"
-
-/* derived names: the element of an array appended to by FUN_00faab20 and
- * FUN_0123d660: two 16-byte aligned points, each copied lane by lane; the
- * fields are not traced */
-struct Record00fbd1d0 { /* derived name */
-    Float4A unknown0;   /* +0x0 */
-    Float4A unknown10;  /* +0x10 */
-};
+#include "tlg_game_record00fbd1d0.h"
 
 /* FUN_00fbd1d0: the append (the count raised, the block grown when it is
  * full, then the element's copy) */

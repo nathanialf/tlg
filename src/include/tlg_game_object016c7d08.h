@@ -35,8 +35,11 @@ struct Owner057c9390 { /* derived name */
     Mutex013847e0 mutexa0; /* +0xa0 */
 };
 
+struct World057c9390; /* derived name: the object at +0x38 (leaf_002e1b30.cpp) */
+
 struct Game057c9390 { /* derived name */
-    u8 unknown0[0x40];
+    u8 unknown0[0x38];
+    World057c9390 *world38;     /* +0x38 */
     Cameras057c9390 *cameras40; /* +0x40 */
     u8 unknown48[0x30];
     Owner057c9390 *unknown78; /* +0x78 */
