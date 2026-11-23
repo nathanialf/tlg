@@ -12,12 +12,16 @@
  * (config/vtables.derived.base.txt, stored by FUN_00c24000 FUN_013a2770 FUN_013a2840), derived from
  * Object016b9108: its slots 2 to 4 are the base's. Its own fields
  * from +0x24 are traced only where its destructor FUN_013a2770 tears them down
- * (the Name at +0x24, the records at +0x50, +0x38); the rest are not traced. */
+ * (the Name at +0x24, the records at +0x50, +0x38); the rest are not traced.
+ * The destructor is implicit: FUN_013a2770 and the deleting
+ * FUN_013a2840 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00c23ea0.cpp) emits the vtable
+ * with both. */
 class Object016d06d0 : public Object016b9108 /* derived name */
 {
   public:
     Object016d06d0(const Name &name); /* FUN_00c24000 */
-    virtual ~Object016d06d0();
 
   private:
     Name name24;   /* +0x24: released by the destructor (`mov eax, [rbx+0x24]; shl 5`) */

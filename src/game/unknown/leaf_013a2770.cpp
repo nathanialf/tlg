@@ -15,9 +15,3 @@ Object016d06d0::Object016d06d0(const Name &name) : Object016b9108(name)
     array50.clear(0);
     unknown68 = 0;
 }
-
-/* derived name: the complete destructor: the body is empty; the members are released, last first, then the base's destructor
- * is inlined (its vptr store, then the two names). FUN_013a2840, slot 1, is
- * the deleting one. The destructor is the class's key function, so this file
- * emits the vtable. */
-Object016d06d0::~Object016d06d0() {}

@@ -11,9 +11,12 @@
  * FUN_013af510), derived from Object00ced570. 0x70 bytes (`mov edi,
  * 0x70` before operator new in the creator). Its own fields are traced
  * where its creator FUN_00cd6540 sets them and its destructor FUN_013af460
- * tears them down. The destructor is the class's key function
- * (leaf_013af460.cpp), so that unit emits the vtable and the
- * destructors. */
+ * tears them down.
+ * The destructor is implicit: FUN_013af460 and the deleting
+ * FUN_013af510 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00cd6540.cpp) emits the vtable
+ * with both. */
 class Object016d1ca0 : public Object00ced570 /* derived name */
 {
   public:
@@ -29,8 +32,6 @@ class Object016d1ca0 : public Object00ced570 /* derived name */
         unknown5c = 32;
         unknown60 = 1;
     }
-
-    virtual ~Object016d1ca0();
 
   private:
     int unknown60; /* +0x60: 1 from the constructor; not traced */

@@ -8,6 +8,11 @@
 #include "tlg_game_object01343880.h"
 #include "tlg_game_array01343a80.h"
 
+/* The destructor is implicit: FUN_013a9670 and the deleting
+ * FUN_013a9790 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00c5fb80.cpp) emits the vtable
+ * with both. */
 class Object016d1520;
 
 /* derived names: the link of an object in the list at 0x59396d0
@@ -35,7 +40,6 @@ class Object016d1520 : public Object01343880, public Link00c63060 /* derived nam
 {
   public:
     Object016d1520(const Name &name); /* FUN_00c5fb80 */
-    virtual ~Object016d1520();
 
   private:
     /* +0x48: a counted reference, released by the destructor (the pointer

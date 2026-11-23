@@ -12,7 +12,12 @@
  * Object016b9108: its slots 2 to 4 are the base's. Its own fields from +0x24
  * are traced where its creator FUN_00d10e60 sets them and its destructor FUN_013b5680
  * tears them down. 0xb0 bytes (`mov edi, 0xb0` before operator new). The
- * same fields from +0x30 as Object016ab9a0. */
+ * same fields from +0x30 as Object016ab9a0.
+ * The destructor is implicit: FUN_013b5680 and the deleting
+ * FUN_013b5740 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00d10e60.cpp) emits the vtable
+ * with both. */
 class Object016d21d8 : public Object016b9108 /* derived name */
 {
   public:
@@ -28,8 +33,6 @@ class Object016d21d8 : public Object016b9108 /* derived name */
           unknown88(1.0f), unknown90(0.0f, 0.0f, 0.0f, 1.0f), unknowna0(0.0f, 0.0f, 0.0f, 1.0f)
     {
     }
-
-    virtual ~Object016d21d8();
 
   private:
     int unknown24; /* +0x24: zero from the constructor; not traced */

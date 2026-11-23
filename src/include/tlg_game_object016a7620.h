@@ -14,9 +14,14 @@
  * stored, `mov dword [rbx+8], 0` before the vptr store at 0x9480c1; slot 2
  * of the vtable the base's release, 0x69a0) with three Names at +0xc, +0x10
  * and +0x14 (the dispatcher FUN_00c644d0 reads the first two). Its complete
- * destructor 0x13cd140 (leaf_013cd140.cpp, the key function) releases
+ * destructor 0x13cd140 releases
  * +0x14, then +0x10, then +0xc, and calls no base; the deleting one
- * 0x13cd1f0 is the compiler's. */
+ * 0x13cd1f0 is the compiler's.
+ * The destructor is implicit: FUN_013cd140 and the deleting
+ * FUN_013cd1f0 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00948040.cpp) emits the vtable
+ * with both. */
 class Object016a7620 : public Counted00c14bc0 /* derived name */
 {
   public:
@@ -24,8 +29,6 @@ class Object016a7620 : public Counted00c14bc0 /* derived name */
         : unknownc(a), unknown10(b), unknown14(c)
     {
     }
-
-    virtual ~Object016a7620();
 
   private:
     Name unknownc;  /* +0xc */

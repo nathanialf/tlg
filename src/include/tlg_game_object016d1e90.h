@@ -11,17 +11,18 @@
  * FUN_013b2bd0), derived from Object00ced570. 0x68 bytes (`mov edi,
  * 0x68` before operator new in the creator). Its own fields are traced
  * where its creator FUN_00ceea00 sets them and its destructor FUN_013b2b20
- * tears them down. The destructor is the class's key function
- * (leaf_013b2b20.cpp), so that unit emits the vtable and the
- * destructors. */
+ * tears them down.
+ * The destructor is implicit: FUN_013b2b20 and the deleting
+ * FUN_013b2bd0 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00ceea00.cpp) emits the vtable
+ * with both. */
 class Object016d1e90 : public Object00ced570 /* derived name */
 {
   public:
     /* inlined in the creator: the base built from the name, the vptr, `mov qword [r15+0x60], 0`
      * (the reference); the base's fields set before the vptr store */
     Object016d1e90(const Name &name) : Object00ced570(name) {}
-
-    virtual ~Object016d1e90();
 
   private:
     /* +0x60: a counted reference, empty from the constructor, released by

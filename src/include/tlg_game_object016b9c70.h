@@ -11,15 +11,18 @@
  * Object00cf7fb0 (the class whose destructor is 0xcf7fb0): the base's slots and fields are not traced,
  * so the bytes below the first member here are the base's or this class's.
  * Its own fields are traced only where its destructor FUN_013b3740 tears them
- * down (the counted reference at +0xc8); the rest are not traced. */
+ * down (the counted reference at +0xc8); the rest are not traced.
+ * The destructor is implicit: FUN_013b3740 and the deleting
+ * FUN_013b37f0 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00cfc3e0.cpp) emits the vtable
+ * with both. */
 class Object016b9c70 : public Object00cf7fb0 /* derived name */
 {
   public:
     /* inlined in the creator FUN_00cfc3e0: Object00cf7fb0's constructor with 6, the
      * vptr, the members empty */
     Object016b9c70(const Name &name) : Object00cf7fb0(name, 6), unknownd0(0), unknownd4(0) {}
-
-    virtual ~Object016b9c70();
 
   private:
     /* +0xc8: a counted reference, released by the destructor (the pointer

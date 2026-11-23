@@ -12,12 +12,16 @@
  * (config/vtables.derived.base.txt, stored by FUN_00d48470 FUN_013b8d30 FUN_013b8e50), derived from
  * Object016b9108: its slots 2 to 4 are the base's.
  * Its own fields are traced only where its destructor FUN_013b8d30 tears them
- * down (the counted reference at +0x30); the rest are not traced. */
+ * down (the counted reference at +0x30); the rest are not traced.
+ * The destructor is implicit: FUN_013b8d30 and the deleting
+ * FUN_013b8e50 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00d48310.cpp) emits the vtable
+ * with both. */
 class Object016d22b8 : public Object016b9108 /* derived name */
 {
   public:
     Object016d22b8(const Name &name); /* FUN_00d48470 */
-    virtual ~Object016d22b8();
 
   private:
     float unknown24;        /* +0x24: 0.5 from the constructor; not traced */

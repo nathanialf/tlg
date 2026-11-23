@@ -27,7 +27,12 @@ struct Base016d31d8 /* derived name */
  * so the bytes below the first member here are the base's or this class's.
  * Its own fields are traced only where its destructor FUN_013cbb40 tears them
  * down (the counted reference at +0x80), the others where its creator
- * FUN_00e90cb0 sets them. 0xe0 bytes (`mov edi, 0xe0` before operator new). */
+ * FUN_00e90cb0 sets them. 0xe0 bytes (`mov edi, 0xe0` before operator new).
+ * The destructor is implicit: FUN_013cbb40 and the deleting
+ * FUN_013cbbf0 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00e90cb0.cpp) emits the vtable
+ * with both. */
 class Object016d31d8 : public Object00ccfd00, public Base016d31d8 /* derived name */
 {
   public:
@@ -52,8 +57,6 @@ class Object016d31d8 : public Object00ccfd00, public Base016d31d8 /* derived nam
         unknownc8 = 0.0f;
         unknowncc = 0.0f;
     }
-
-    virtual ~Object016d31d8();
 
   private:
     /* +0x80: a counted reference, released by the destructor (the pointer

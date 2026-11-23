@@ -12,9 +12,12 @@
  * FUN_0138f2b0), derived from Object016b9108. 0x48 bytes (`mov edi,
  * 0x48` before operator new in the creator). Its own fields are traced
  * where its creator FUN_00b008e0 sets them and its destructor FUN_0138f190
- * tears them down. The destructor is the class's key function
- * (leaf_0138f190.cpp), so that unit emits the vtable: defined inline it stays a
- * function of its own that the vtable's two destructors call. */
+ * tears them down.
+ * The destructor is implicit: FUN_0138f190 and the deleting
+ * FUN_0138f2b0 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_00b008e0.cpp) emits the vtable
+ * with both. */
 class Object016cebb0 : public Object016b9108 /* derived name */
 {
   public:
@@ -22,8 +25,6 @@ class Object016cebb0 : public Object016b9108 /* derived name */
      * array cleared (`vmovdqu [r15+0x28], xmm0; mov qword [r15+0x38], 0`), the
      * array's owner index from the thread's heap and its state */
     Object016cebb0(const Name &name) : Object016b9108(name) {}
-
-    virtual ~Object016cebb0();
 
   private:
     /* +0x28: a counted reference, empty from the constructor, released by

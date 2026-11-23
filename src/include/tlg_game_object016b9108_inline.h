@@ -6,9 +6,9 @@
  * inline destructor of each class, the copies folded by the linker into one
  * body (docs/DECISIONS.md D15: one name per address), the pair is claimed
  * once, from the class whose storer has the lowest address,
- * Object016c7700 (leaf_01386090.cpp, where its destructor is defined out
- * of line); the others' destructors are inline, so no unit of the tree
- * emits them until their constructors are written. */
+ * Object016c7700 (its implicit destructor, emitted by the unit of its
+ * creator, leaf_0036ac20.cpp); the others' destructors are inline, so no
+ * unit of the tree emits them until their constructors are written. */
 #ifndef TLG_GAME_OBJECT016B9108_INLINE_H
 #define TLG_GAME_OBJECT016B9108_INLINE_H
 
@@ -34,7 +34,12 @@ extern Value004af700 D_58224c0;
 /* derived names: the class whose vtable is at 0x16c7700
  * (config/vtables.derived.base.txt, stored by FUN_0036ac20): its slots 2 to
  * 4 are the base's. 0x40 bytes (`mov edi, 0x40` before operator new in its
- * creator). Its fields are traced only where the creator sets them. */
+ * creator). Its fields are traced only where the creator sets them.
+ * The destructor is implicit: FUN_01386090 and the deleting
+ * FUN_01386110 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_0036ac20.cpp) emits the vtable
+ * with both. */
 class Object016c7700 : public Object016b9108 /* derived name */
 {
   public:
@@ -45,8 +50,6 @@ class Object016c7700 : public Object016b9108 /* derived name */
           unknown34(0.1f), unknown38(0.1f), unknown3c(0.1f)
     {
     }
-
-    virtual ~Object016c7700(); /* FUN_01386090; leaf_01386090.cpp */
 
   private:
     int unknown24;   /* +0x24: 0 from the constructor */

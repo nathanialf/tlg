@@ -12,14 +12,17 @@
  * Object016b9108: its slots 2 to 4 are the base's; Base016cbbf8 (tlg_game_base016cbbf8.h) is its
  * second base, at +0x24. Its own fields
  * from +0x24 are traced only where its destructor FUN_0136df20 tears them down
- * (the Name at +0x40); the rest are not traced. */
+ * (the Name at +0x40); the rest are not traced.
+ * The destructor is implicit: FUN_0136df20 and the deleting
+ * FUN_0136dfe0 sit in the stretch of inline functions (from 0x1340000)
+ * while the constructor is out of line, so the class has no key function
+ * and the unit that constructs it (leaf_007adaa0.cpp) emits the vtable
+ * with both. */
 class Object016cbbf8 : public Object016b9108, public Base016cbbf8 /* derived name */
 {
   public:
     /* inlined in the creator FUN_007adaa0: the bases (Base016cbbf8's fields before the vptr), the vptr, the empty name */
     Object016cbbf8(const Name &name) : Object016b9108(name) {}
-
-    virtual ~Object016cbbf8();
 
   private:
     Name name40;       /* +0x40: released by the destructor (`mov eax, [rbx+0x40]; shl 5`) */
