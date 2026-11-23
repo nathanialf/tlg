@@ -5,6 +5,7 @@
 #define TLG_GAME_LINKS00C63970_H
 
 #include "tlg_game_array01343a80.h"
+#include "tlg_game_dispatcher00c644d0.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object01388080.h"
@@ -33,12 +34,12 @@ class Linked00c63970 : public Object016b9108 /* derived name */
 /* derived name: takes one link of the pair out of the object the reference
  * holds (1,186 bytes, not written: it reads the reference's object and its
  * count at +0x30 first) */
-void FUN_00c63970(Links05938c40 *links, const Name *first, const Name *second,
+void FUN_00c63970(Dispatcher00c644d0 *links, const Name *first, const Name *second,
                   AtomicRef0045c470<Object016b9108> *reference);
 
 /* derived name: the list of links the pointer at 0x59396d0 holds
  * (Object016acbe8's slot 15 takes its object's links out of it) */
-extern Links05938c40 *D_59396d0;
+extern Dispatcher00c644d0 *D_59396d0;
 
 /* derived name: every link of the object a reference holds taken out, last
  * first, each as many times as it is counted: the links at +0xd0 of the
@@ -51,7 +52,7 @@ inline void unlinkAll(AtomicRef0045c470<Object016b9108> &reference) /* derived n
 {
     const Linked00c63970 *linked = static_cast<const Linked00c63970 *>(reference.get());
     if (linked && linked->links.size() != 0) {
-        Links05938c40 *links = D_5938c40->links;
+        Dispatcher00c644d0 *links = D_5938c40->links;
         for (int i = linked->links.size() - 1; i >= 0; --i) {
             const Link00c63970 &link =
                 static_cast<const Linked00c63970 *>(reference.get())->links.at(i);
@@ -59,6 +60,16 @@ inline void unlinkAll(AtomicRef0045c470<Object016b9108> &reference) /* derived n
                 FUN_00c63970(links, &link.first, &link.second, &reference);
         }
     }
+}
+
+/* derived name: three names posted to the dispatcher at +0xd0 of the object
+ * at 0x5938c40, taken by value: the names are copied first, then the
+ * dispatcher read, then the message made (0x4a6c0e to 0x4a6c54: the three
+ * `lock inc`, the load of 0x5938c40 and +0xd0, the message's operator new;
+ * Dispatcher00c644d0::post reads the dispatcher before the copies) */
+inline void postMessage(Name a, Name b, Name c) /* derived name */
+{
+    D_5938c40->links->send(a, b, c);
 }
 
 #endif

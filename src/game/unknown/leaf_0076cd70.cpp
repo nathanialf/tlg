@@ -9,7 +9,7 @@ void Object016acbe8::slot15()
 {
     if (const Linked00c63970 *linked = static_cast<const Linked00c63970 *>(held210.get())) {
         if (linked->links.size() != 0) {
-            Links05938c40 *links = D_59396d0;
+            Dispatcher00c644d0 *links = D_59396d0;
             for (int i = linked->links.size() - 1; i >= 0; --i) {
                 const Link00c63970 &link =
                     static_cast<const Linked00c63970 *>(held210.get())->links.at(i);

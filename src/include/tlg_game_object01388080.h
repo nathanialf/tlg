@@ -167,9 +167,11 @@ struct World05938c40 { /* derived name */
  * one in it, FUN_008191e0) */
 struct ScriptFunctions05938c40; /* derived name */
 
-/* derived name: the links between objects by name (FUN_00c63970 takes one
- * out; tlg_game_links00c63970.h) */
-struct Links05938c40;
+/* derived name: the links between objects by name, the dispatcher of
+ * three-name messages (FUN_00c63970 takes a link out, tlg_game_links00c63970.h;
+ * FUN_00c644d0 hands a message to the receivers of its first two names,
+ * tlg_game_dispatcher00c644d0.h; the pointer at 0x59396d0 holds one too) */
+class Dispatcher00c644d0;
 
 /* derived names: the flags of the game's content chunks, whether each is
  * there yet, one byte each from +0x14 (the file system's slot 29, 0xe5f590,
@@ -213,7 +215,7 @@ struct Object05938c40 { /* derived name */
     u8 unknown48[0x68];
     CommandQueue05938c40 *queue; /* +0xb0 */
     u8 unknownb8[0x18];
-    Links05938c40 *links; /* +0xd0 */
+    Dispatcher00c644d0 *links; /* +0xd0 */
     u8 unknownd8[0x30];
     World05938c40 *world; /* +0x108 */
     u8 unknown110[0x7c];

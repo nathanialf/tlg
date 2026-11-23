@@ -6,7 +6,8 @@
 /* derived names: three slots of 0x28 bytes, each 32 bytes of data and two
  * names, then 0x18 bytes (FUN_0136f080 makes the names empty, clears the set
  * and releases each slot's first name; FUN_007f1630, FUN_007f4cd0 and
- * FUN_007f9b40 clear it). The data's meaning is not traced. */
+ * FUN_007f9b40 clear it; FUN_007f41d0 and FUN_007f48c0 destroy the one at
+ * +0x90 of their object). The data's meaning is not traced. */
 struct Slot0136efa0 { /* derived name */
     u8 unknown0[0x20];
     Name name20; /* +0x20 */
@@ -14,6 +15,8 @@ struct Slot0136efa0 { /* derived name */
 };
 
 struct Slots0136efa0 { /* derived name */
+    ~Slots0136efa0();
+
     void clear();
 
     Slot0136efa0 slots[3]; /* +0x0 */
@@ -33,3 +36,7 @@ void Slots0136efa0::clear()
         unknown78[i] = 0;
     unknown88 = 0;
 }
+
+/* FUN_0136f150: the slots' names released, the last slot first, each
+ * slot's second name before its first */
+Slots0136efa0::~Slots0136efa0() {}

@@ -39,6 +39,13 @@ class Dispatcher00c644d0 /* derived name */
   public:
     void post(Name a, Name b, Name c) /* derived name */
     {
+        send(a, b, c);
+    }
+
+    /* the message made of the three names, handed on and destroyed when
+     * no receiver kept it */
+    void send(const Name &a, const Name &b, const Name &c) /* derived name */
+    {
         Object016a7620 *message = new Object016a7620(a, b, c);
         FUN_00c644d0(this, message);
         if (message->references == 0 || message->references == RELEASED)
