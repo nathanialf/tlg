@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
 #include "tlg_game_name.h"
+#include "tlg_libc.h"
 
 /* derived names: a handler FUN_00a104a0 stores after its name's hash (lea at
  * 0xa1089e, the record at 0x5826c10; the event as leaf_00a11860.cpp's):
@@ -39,6 +40,33 @@ struct Object057c9390 { /* derived name */
 };
 
 extern Object057c9390 *D_57c9390;
+extern const char D_15a2be0[11]; /* derived name: the format of two numbers apart */
+
+/* derived name: a handler FUN_00a104a0 stores beside FUN_00a12740: reads two
+ * numbers from the event's name at +0x14 (each -1 when absent) and, unless
+ * both are negative, appends an entry of that name with their squares */
+// NONMATCHING: 45/124, 439 bytes against 465: the base's growth looks the block's owner up with a
+// null default (`movzx edx, byte [rsi-0x10]; xor edi, edi; cmp edx, 0xa`: reallocateOwnedBlock's
+// form, tlg_game_block.h; with push() growing through it, as a diagnostic, 84/124), and the
+// entry's name is released at an address formed again in the release's block (`shl rcx, 5;
+// lock xadd [rcx+r12+0x10]`) where the build shares the copy's (`lea rax`); seven functions of
+// the base have that release (0x301ea0, 0x370c20, 0x48b520, 0x4b5960, 0x4bbcf0, this one,
+// 0xa4a4e0), no matched row
+void FUN_00a12560(Event00a104a0 *event) /* derived name */
+{
+    Holder00a12740 *holder = D_57c9390->unknown58->unknown18;
+    float first = -1.0f;
+    float second = -1.0f;
+    sscanf(event->unknown14.string(), D_15a2be0, &first, &second);
+    if (first < 0.0f && second < 0.0f)
+        return;
+    Entry00a12740 entry;
+    entry.name = event->unknown14;
+    entry.unknown4 = first * first;
+    entry.unknown8 = second * second;
+    entry.unknownc = false;
+    holder->entries.push(entry);
+}
 
 void FUN_00a12740(Event00a104a0 *event) /* derived name */
 {

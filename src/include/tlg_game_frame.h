@@ -16,6 +16,14 @@ struct Frame016c1128 { /* derived name */
 
     Frame016c1128() : unknown0(_mm_setzero_ps()), unknown10(VECTOR_W.v) {}
 
+    /* back to what the constructor makes, stored in the same order, the
+     * unit's VECTOR_W read after the zero is stored (FUN_01353240) */
+    void reset() /* derived name */
+    {
+        unknown0 = _mm_setzero_ps();
+        unknown10 = VECTOR_W.v;
+    }
+
     Vec4 unknown0;  /* +0x0: zero from the constructor */
     Vec4 unknown10; /* +0x10: VECTOR_W from the constructor */
 };

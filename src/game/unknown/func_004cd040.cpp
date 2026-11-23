@@ -1,4 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_array.h"
+#include "tlg_game_frame.h"
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
 #include "tlg_math.h"
@@ -110,4 +112,65 @@ void FUN_013533f0(Float4 *axis, const Float4A &rotation) /* derived name */
     const float yz = y * z, zz = z * z, wz = w * z;
     *axis = Float4(lane(VECTOR_Y.v, 0) + 2.0f * (xy - wz), lane(VECTOR_Y.v, 1) + 2.0f * (-xx - zz),
                    lane(VECTOR_Y.v, 2) + 2.0f * (yz + wx), lane(VECTOR_Y.v, 3));
+}
+
+/* derived names: a record of the class whose vtable FUN_004bf730 stores, at
+ * its +0x260 (that constructor builds the members, then calls reset); 0x140
+ * bytes. Its fields' meanings are not traced. */
+struct Record01353240 { /* derived name */
+    void reset();       /* derived name */
+
+    Frame016c1128 frame0;  /* +0x0 */
+    Frame016c1128 frame20; /* +0x20 */
+    Frame016c1128 frame40; /* +0x40 */
+    float unknown60;       /* +0x60 */
+    float unknown64;       /* +0x64 */
+    float unknown68;       /* +0x68 */
+    float unknown6c;       /* +0x6c */
+    float unknown70;       /* +0x70 */
+    float unknown74;       /* +0x74 */
+    float unknown78;       /* +0x78 */
+    float unknown7c;       /* +0x7c: 90 from reset */
+    Name name80;           /* +0x80 */
+    Name name84;           /* +0x84 */
+    u8 unknown88[0x8];
+    float unknown90; /* +0x90: a float or an int: the base stores it apart from +0x94 */
+    int unknown94;   /* +0x94 */
+    Array05943280<Vector4> vectors98; /* +0x98 */
+    Vector4 unknownb0;                /* +0xb0: VECTOR_W from reset */
+    Vector4 unknownc0[4];             /* +0xc0 */
+    int unknown100;                   /* +0x100 */
+    Vector4 unknown110;               /* +0x110: VECTOR_W from reset */
+    Vector4 unknown120;               /* +0x120 */
+    bool unknown130;                  /* +0x130 */
+};
+
+/* FUN_01353240: every field back to its first value (the frames as their
+ * constructor makes them, 90 at +0x7c, the names released and the vectors
+ * given back) */
+void Record01353240::reset()
+{
+    frame0.reset();
+    frame40.reset();
+    frame20.reset();
+    unknown7c = 90.0f;
+    unknown90 = 0.0f;
+    unknown94 = 0;
+    unknown60 = 0.0f;
+    unknown64 = 0.0f;
+    unknown68 = 0.0f;
+    unknown6c = 0.0f;
+    unknown70 = 0.0f;
+    unknown74 = 0.0f;
+    unknown78 = 0.0f;
+    vectors98.clear();
+    unknownb0 = VECTOR_W;
+    name80.release();
+    name84.release();
+    for (int i = 0; i < 4; ++i)
+        unknownc0[i] = Vector4();
+    unknown100 = 0;
+    unknown110 = VECTOR_W;
+    unknown120 = Vector4();
+    unknown130 = false;
 }
