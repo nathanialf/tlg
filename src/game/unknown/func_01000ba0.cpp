@@ -129,8 +129,8 @@ void Object016d5140::slot2()
 }
 
 /* derived name: slot 2 of a vtable of this file (jointFrame; its copies
- * 0x13eb510, 0x13eb6f0 here and 0x1480ed0, 0x1481320, 0x1481470 in
- * func_0126c7f0.cpp wait on it) */
+ * 0x13eb510 and 0x13eb6f0 below and 0x1480ed0, 0x1481320, 0x1481470 in
+ * func_0126c7f0.cpp) */
 JointFrame013eb0a0 FUN_013eb0a0(void *self, const Joint013eb0a0 *joint) /* derived name */
 {
     return jointFrame(joint);
@@ -140,6 +140,18 @@ JointFrame013eb0a0 FUN_013eb0a0(void *self, const Joint013eb0a0 *joint) /* deriv
 JointFrame013eb0a0 FUN_013eb210(const Placed013eb210 *self) /* derived name */
 {
     return nodeFrame(self);
+}
+
+/* derived name: slot 2 of another vtable of this file (jointFrame) */
+JointFrame013eb0a0 FUN_013eb510(void *self, const Joint013eb0a0 *joint) /* derived name */
+{
+    return jointFrame(joint);
+}
+
+/* derived name: slot 2 of another vtable of this file (jointFrame) */
+JointFrame013eb0a0 FUN_013eb6f0(void *self, const Joint013eb0a0 *joint) /* derived name */
+{
+    return jointFrame(joint);
 }
 
 /* derived name: this file's copy of FUN_013d2570 (func_00f509e0.cpp) */

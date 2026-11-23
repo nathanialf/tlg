@@ -50,12 +50,14 @@ class Object016bdc60 /* derived name */
     virtual ~Object016bdc60();
 
     void *FUN_00e5d2e0(const char *name, u32 *size) const;
+    s64 FUN_00e5d580(const char *name, unsigned mode) const;
     void FUN_00e5d9a0(const char *name);
     int FUN_00e5dac0(const char *name) const;
     SceFiosSize FUN_00e5dbc0(const char *name) const;
     int FUN_00e5dcd0(SceFiosFH fh, FileInfo016bdc60 *info) const;
     int FUN_00e5ddc0(const char *name, FileInfo016bdc60 *info) const;
     int FUN_00e5df70(const char *name) const;
+    int FUN_00e5f050(const char *name, int flags) const;
     int FUN_00e5f270(const char *name) const;
 
   private:

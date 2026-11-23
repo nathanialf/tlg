@@ -111,6 +111,7 @@ SceFiosSize sceFiosFileReadSync(const SceFiosOpAttr *attr, const char *path, voi
 SceFiosSize sceFiosFileGetSizeSync(const SceFiosOpAttr *attr, const char *path);
 int sceFiosFHStatSync(const SceFiosOpAttr *attr, SceFiosFH fh, SceFiosStat *stat);
 int sceFiosDirectoryCreate(const SceFiosOpAttr *attr, const char *path);
+int sceFiosDirectoryCreateSync(const SceFiosOpAttr *attr, const char *path);
 /* An error code's text written into a buffer of size bytes (FUN_00e5e6a0). */
 const char *sceFiosDebugDumpError(int err, char *buffer, unsigned long size);
 }

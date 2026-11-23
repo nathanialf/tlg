@@ -10949,3 +10949,8 @@ _ZN14Object016b8d40D1Ev src/game/unknown/leaf_00ca38f0.cpp
 FUN_00ca39b0 src/game/unknown/leaf_00ca38f0.cpp _ZN14Object016b8d40D0Ev
 FUN_00acdc60 src/game/unknown/leaf_00acdb40.cpp _Z12FUN_00acdc60PK14Source00acdb40P14Target00acdb40f
 FUN_01353240 src/game/unknown/func_004cd040.cpp _ZN14Record013532405resetEv
+FUN_013eb510 src/game/unknown/func_01000ba0.cpp _Z12FUN_013eb510PvPK13Joint013eb0a0
+FUN_013eb6f0 src/game/unknown/func_01000ba0.cpp _Z12FUN_013eb6f0PvPK13Joint013eb0a0
+FUN_01480ed0 src/game/unknown/func_0126c7f0.cpp _Z12FUN_01480ed0PvPK13Joint013eb0a0
+FUN_01481320 src/game/unknown/func_0126c7f0.cpp _Z12FUN_01481320PvPK13Joint013eb0a0
+FUN_01481470 src/game/unknown/func_0126c7f0.cpp _Z12FUN_01481470PvPK13Joint013eb0a0

@@ -125,6 +125,27 @@ void Object016d7840::slot2()
     }
 }
 
+/* derived name: slot 2 of a vtable of this file (jointFrame, as FUN_013eb0a0
+ * in func_01000ba0.cpp) */
+JointFrame013eb0a0 FUN_01480ed0(void *self, const Joint013eb0a0 *joint) /* derived name */
+{
+    return jointFrame(joint);
+}
+
+/* derived name: slot 2 of a vtable of this file (jointFrame, as FUN_013eb0a0
+ * in func_01000ba0.cpp) */
+JointFrame013eb0a0 FUN_01481320(void *self, const Joint013eb0a0 *joint) /* derived name */
+{
+    return jointFrame(joint);
+}
+
+/* derived name: slot 2 of a vtable of this file (jointFrame, as FUN_013eb0a0
+ * in func_01000ba0.cpp) */
+JointFrame013eb0a0 FUN_01481470(void *self, const Joint013eb0a0 *joint) /* derived name */
+{
+    return jointFrame(joint);
+}
+
 /* derived name: a virtual method of this file (nodeFrame) */
 JointFrame013eb0a0 FUN_01481020(const Placed013eb210 *self) /* derived name */
 {
