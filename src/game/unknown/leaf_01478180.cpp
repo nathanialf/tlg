@@ -11,7 +11,17 @@
  * empty body 0x1af750, slots 7 and 8 FUN_0120ffb0 and FUN_0120ffc0, declared here
  * untraced. The destructor is the class's key function, so this file emits
  * the vtable. */
-class Object016c1e40 /* derived name */
+/* derived name: the owner kept at +0x8, a non-polymorphic base of
+ * Object016c1e40: FUN_0120fe90 stores it before the class's vptr, so it is constructed
+ * first */
+struct Owner016c1e40 /* derived name */
+{
+    explicit Owner016c1e40(void *owner) : unknown8(owner) {}
+
+    void *unknown8; /* +0x8: the constructor's argument; not traced */
+};
+
+class Object016c1e40 : public Owner016c1e40 /* derived name */
 {
   public:
     explicit Object016c1e40(void *owner);
@@ -32,16 +42,13 @@ class Object016c1e40 /* derived name */
     virtual void slot8(); /* derived name; FUN_0120ffc0, not traced */
 
   private:
-    void *unknown8;           /* +0x8: the constructor's argument; not traced */
     Object013d2f90 unknown10; /* +0x10 */
 };
 
 /* FUN_0120fe90: the constructor: the argument kept at +0x8, the member at +0x10
  * built with its constructor in line (tlg_game_object013d2f90.h) */
-// NONMATCHING: two store orders and one merge: the base stores +0x8 before the vptr and the
-// member's +0x18 and +0x20 before its vptr (each the field of a base class constructed first,
-// the stores kept in the IR's order), and keeps the four ints at +0x40 to +0x4c one store each
-// (0, 0, -1, 1) where the build merges them into one vector constant.
-Object016c1e40::Object016c1e40(void *owner) : unknown8(owner) {}
+// The owner (+0x8) and the member's +0x18 and +0x20 are fields of non-polymorphic bases, stored
+// before each vptr; the member's +0x30 is a float, so its constant stores stay one per field.
+Object016c1e40::Object016c1e40(void *owner) : Owner016c1e40(owner) {}
 
 Object016c1e40::~Object016c1e40() {}

@@ -14,8 +14,8 @@ struct Record00777cb0 { /* derived name */
     u8 unknown50e4[0xc];
     Vector4 unknown50f0; /* +0x50f0 */
     float unknown5100;   /* +0x5100 */
-    int unknown5104;     /* +0x5104 */
-    int unknown5108;     /* +0x5108 */
+    float unknown5104;   /* +0x5104: a float (vmovss at 0x73a069) */
+    float unknown5108;   /* +0x5108: a float (vmovss at 0x73a0cb) */
     int unknown510c;     /* +0x510c */
     int unknown5110;     /* +0x5110 */
 };
@@ -34,14 +34,13 @@ struct Object00777cb0 { /* derived name */
     int unknown160; /* +0x160 */
 };
 
-// NONMATCHING: store merging: the base keeps the four dword stores of +0x5104 to +0x5110 (0, 0,
-// -1, 0) apart, the build merges them into one 16-byte `vmovups` of a constant; and the record
-// pointer is loaded before +0x160 in the base, after it here (with `self->record->unknown5110 =`
-// the order is the base's but the pointer is loaded again for the block)
-// Measured (round 284A, single unit): with +0x5104, +0x5108, +0x5110 each an int or a float (eight
-// forms) a pair is always merged (the -1 at +0x510c with a neighbour: `mov qword [rax + 0x5108],
-// rcx` for float, int, int; all four for int, int, int); -1 as two 16-bit stores stays two word
-// stores. The base's four stores are not consecutive stores of one type on one chain.
+// NONMATCHING: store merging: the base keeps the stores of +0x5104 to +0x5110 (0.0, 0.0, -1, 0)
+// one dword each; the build merges -1 and 0 at +0x510c into one qword (`mov ecx, -1` first), as the
+// base itself does at 0x7190b8. Uses: +0x5104 and +0x5108 are floats (vmovss at 0x73a069, 0x73a0cb),
+// which ends the four-int vector store (round 524E); +0x510c an index (movsxd at 0x776408); 0x6db539
+// copies +0x5100 to +0x510f as one 16-byte vmovaps and +0x5110 apart. In the base's 0x708e11 run the
+// pair stays apart because a qword store follows it (MergeConsecutiveStores starts only at the end of a
+// run, 3.7.1 DAGCombiner.cpp:10873); here nothing follows.
 void FUN_00777cb0(Object00777cb0 *self) /* derived name */
 {
     Record00777cb0 *record = self->record;
@@ -50,8 +49,8 @@ void FUN_00777cb0(Object00777cb0 *self) /* derived name */
         record->unknown50e0 = 0;
         record->unknown50f0 = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
         record->unknown5100 = 3.40282347e+38f;
-        record->unknown5104 = 0;
-        record->unknown5108 = 0;
+        record->unknown5104 = 0.0f;
+        record->unknown5108 = 0.0f;
         record->unknown510c = -1;
         record->unknown5110 = 0;
     }

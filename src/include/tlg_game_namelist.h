@@ -26,6 +26,10 @@ struct NamedValue013883d0 /* derived name */
 template <unsigned N>
 struct NamedValueList013883d0 /* derived name */
 {
+    /* empty: the count cleared and every name made the empty one (0xa01aad,
+     * then the loop at 0xa01bf0, stepping 8 bytes) */
+    NamedValueList013883d0() : count(0) {}
+
     unsigned count;                /* +0x0 */
     NamedValue013883d0 entries[N]; /* +0x4 */
 };

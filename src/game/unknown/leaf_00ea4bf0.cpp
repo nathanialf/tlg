@@ -12,10 +12,19 @@
  * +0x50. The fields' use is not traced. */
 struct Element00ea4bf0 { /* derived name */
 
+    /* the fields set in the base's order, in the body (+0x0 after +0x10,
+     * +0x68 before the float and the int at +0x60) */
     Element00ea4bf0()
-        : unknown0(0), unknown8(-1), unknownc(0), unknown10(0), unknown18(false), unknown20(0),
-          unknown60(0.001f), unknown64(0), unknown68(0)
     {
+        unknown8 = -1;
+        unknownc = 0;
+        unknown10 = 0;
+        unknown0 = 0;
+        unknown18 = false;
+        unknown20 = 0;
+        unknown68 = 0;
+        unknown60 = 0.001f;
+        unknown64 = 0;
     }
 
     void *unknown0;
@@ -34,8 +43,7 @@ struct Element00ea4bf0 { /* derived name */
 };
 
 /* FUN_00ea4bf0 */
-// NONMATCHING: the stores' order and width: the base clears +0x0 after +0x10 and writes +0x60 and
-// +0x64 as one 64-bit constant after +0x68 (`mov qword [..+0x60], 0x3a83126f`); this build stores
-// in member order, the float and the int apart (two 32-bit pairs at +0x0 and +0x60 measured: the
-// same, 3.7.1 merges no constant stores)
+// The constructor's body sets the fields in the base's order: the float and the int at +0x60 come
+// last, so the int's store ends the run and the two are merged into one qword (`mov qword
+// [..+0x60], 0x3a83126f`); the qword at +0x68 before them ends nothing.
 template unsigned Array05943280<Element00ea4bf0>::add();
