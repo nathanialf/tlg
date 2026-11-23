@@ -64,4 +64,17 @@ template <class T> class SharedRef00901550 /* derived name */
     T *object;
 };
 
+/* derived name: a reference held by a plain pointer dropped and the pointer
+ * cleared (0xbc3b4a: `test rdi, rdi; je` around the release, then `mov
+ * qword [rbx+0x50], 0`), for a holder whose destructor does not drop it
+ * (FUN_00bc3b10 hands the object to FUN_00bc3b40 and drops nothing itself).
+ * T has release(). */
+template <class T> inline void releaseAndClear(T *&object)
+{
+    if (object) {
+        object->release();
+        object = 0;
+    }
+}
+
 #endif
