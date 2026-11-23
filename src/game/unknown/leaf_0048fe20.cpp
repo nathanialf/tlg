@@ -5,6 +5,9 @@
  * Name at +0x210 is `name`, the children searched from the last, each one's
  * own name tested before its subtree; null when none (callers hold the
  * world's reader count: FUN_0048fd50, FUN_00454c70) */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: the link never
+ * inlines it (cost=never): one signature changes no row) */
 Object016b85e0 *FUN_0048fe20(const Name &name, Object016b85e0 *node)
 {
     if (!node)

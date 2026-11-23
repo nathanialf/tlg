@@ -52,6 +52,9 @@ void FUN_00cf18e0(Object00cf14d0 *self) /* derived name */
     }
 }
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 280 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00cf1630(Object00cf14d0 *self) /* derived name */
 {
     if (self->unknown48) {

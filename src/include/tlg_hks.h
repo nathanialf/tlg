@@ -616,8 +616,8 @@ struct HksDebugInfo {
      * and the names (FUN_00d96220) */
     int upvalueNameCount;
     HksString **upvalueNames;
-    u8 unknown28[0x8];
-    HksString *name; /* +0x30, derived name: what hksi_hks_setfname sets (FUN_00db6800) */
+    HksString *source; /* +0x28, derived name: a string the collector marks (FUN_00dc57d0) */
+    HksString *name;   /* +0x30, derived name: what hksi_hks_setfname sets (FUN_00db6800) */
     int localVariableCount;
     HksLocalVariable *localVariables;
 };
@@ -627,7 +627,12 @@ struct HksProto {
     u16 upvalueCount; /* +0x10, derived name (FUN_00d96220) */
     u8 unknown12[0xe];
     const u32 *code;
-    u8 unknown28[0x20];
+    /* +0x28 to +0x40, derived names: its constants (16-byte values) and the
+     * functions defined in it, each count first (FUN_00dc57d0) */
+    int constantCount;
+    HksObject *constants;
+    int protoCount;
+    HksProto **protos;
     HksDebugInfo *debugInfo;
 };
 

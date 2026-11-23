@@ -71,6 +71,9 @@ Record002a45c0 *FUN_002a45c0(Owner002a45c0 *owner, const Name *key,
                              int unknown2);                                  /* derived name */
 void FUN_004a6bf0(const Name &first, const Name &second, const Name &third); /* derived name */
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 230 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00accd20(Object00accd20 *self) /* derived name */
 {
     (*self->unknown8)->unknown4a1 = false;

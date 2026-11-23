@@ -3,6 +3,9 @@
 
 /* hksi_hks_getname (the name from its assertion message): the state's
  * name, its characters; the call timed */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 320 at the
+ * link, over its threshold of 175: one signature changes no row) */
 const char *FUN_00d964f0(lua_State *s)
 {
     if (!(s != 0)) {

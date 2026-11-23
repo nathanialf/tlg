@@ -56,6 +56,9 @@ void FUN_00dca5c0(Writer00dcaee0 *writer, int unknown); /* derived name */
 // each swap after its test), the schedule not: the base copies the value four times, then
 // shifts, masks and ors each as a group (0xff000000 held in r8d for both swaps); the low
 // half's operand first in the source gave 58/98 with the copies in the base's other order
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: not measured;
+ * the declared parameters cannot be cast to the definition's, so the link's call stays indirect) */
 void FUN_00dcaee0(Writer00dcaee0 *writer, u64 first, u8 kind, u64 second) /* derived name */
 {
     FUN_013bcc20(writer, 9);

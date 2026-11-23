@@ -26,6 +26,9 @@ struct Object009f5a00 { /* derived name */
 // raise's address (`cmp [rbx], 0xdeadc0de`): two GEPs of the count survive the link (the reference's
 // reload folded by the link's one GVN, the phi left for InstCombine), so the near `je` and the loop's
 // padding follow. The append in this unit is inlined at stage 1 (225), so it is not one unit.
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 415 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_009f5a00(Object009f5a00 *holder, Counted009f5bc0 *object)
 {
     holder->array28.lock.lock();

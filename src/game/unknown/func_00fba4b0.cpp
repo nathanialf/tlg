@@ -80,6 +80,9 @@ Object016d4318::~Object016d4318()
 }
 
 /* derived name: this file's copy of FUN_013d1440 (func_00f509e0.cpp) */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 360 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_013e12e0(Object016d4318 *self) /* derived name */
 {
     FadeTarget013d2490 *target = self->target;

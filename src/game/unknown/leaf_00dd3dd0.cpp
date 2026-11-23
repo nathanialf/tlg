@@ -47,6 +47,9 @@ inline void *userdataAt(lua_State *state, int index)
 // NONMATCHING: the base keeps the argument's slot as a select of null before the type load (`cmp;
 // cmovb; mov eax, [rax]`) after its own top test, and joins the two stack tests of the raw compare as
 // one `or` of flags; the build folds the select into the load
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 440 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void *FUN_00dd3dd0(lua_State *s, const char *name)
 {
     if (!(s != 0)) {

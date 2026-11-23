@@ -19,6 +19,9 @@ struct Object00fea640 { /* derived name */
     AtomicRef0045c470<Target00fea640> second; /* +0x1d8 */
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 355 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00fea640(Object00fea640 *self) /* derived name */
 {
     if (self->first.get()) {

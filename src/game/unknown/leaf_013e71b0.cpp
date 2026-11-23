@@ -9,4 +9,6 @@
  * array's own member, instantiated here until a caller of it is written:
  * the constructors of the track classes (FUN_013ef390, FUN_014397e0,
  * FUN_01495350 and seventeen more). */
+/* OPEN (FINISHING rule 6), checked in round 513D: its callers in the tree declare it under this
+ * signature, and the link keeps every call (cost 210, over the link's threshold of 175) */
 template void Array05943280<FrameSet00fda5c0>::resize(unsigned);

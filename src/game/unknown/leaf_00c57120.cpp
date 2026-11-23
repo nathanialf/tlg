@@ -36,6 +36,9 @@ void FUN_00c57120(Object016b85e0 *self) /* derived name */
  * lock, held by a WorldWriteLock05938c40 (tlg_game_object01388080.h): the
  * registry's unlock at the end is a call the function returns from (`call
  * 0x14b0568; add rsp, 8; pop rbx; pop rbp; ret` at 0xc572b7), not a jump */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 185 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00c57220(Object016b85e0 *node) /* derived name */
 {
     WorldWriteLock05938c40 lock;
@@ -58,6 +61,9 @@ void FUN_00c572d0(Object016b85e0 *self) /* derived name */
 void FUN_00c579f0(Object016b85e0 *self, int value); /* derived name */
 
 /* derived name: FUN_00c579f0 under the world's write lock */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 185 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00c57940(Object016b85e0 *self, int value) /* derived name */
 {
     WorldWriteLock05938c40 lock;

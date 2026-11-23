@@ -10,6 +10,9 @@ struct Object00a1c810 { /* derived name */
     Array05943280<int> values; /* +0x98 */
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 200 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00a1c810(Object00a1c810 *self, unsigned count) /* derived name */
 {
     if (self->values.size() == count)

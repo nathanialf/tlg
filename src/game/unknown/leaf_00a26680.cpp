@@ -16,6 +16,9 @@ struct Object00a26680 { /* derived name */
 int FUN_00a26280(Object00a26680 *self, Source00a26280 *source, int unknown,
                  int flags); /* derived name */
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 235 at the
+ * link, over its threshold of 175: one signature changes no row) */
 int FUN_00a26680(Object00a26680 *self, Source00a26280 *source) /* derived name */
 {
     self->lock.lock();

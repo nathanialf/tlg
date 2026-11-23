@@ -9,6 +9,9 @@ const char *FUN_00dd44b0(lua_State *s, const char *format, va_list arguments);
  * formatted and pushed; the call timed */
 // NONMATCHING: register assignment only: the base keeps the mark in r12d and reads the stack guard's
 // address again at the end (0xd967ca); the compile keeps the guard's address in r12 and spills the mark
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 375 at the
+ * link, over its threshold of 175: one signature changes no row) */
 const char *FUN_00d96630(lua_State *s, const char *format, ...)
 {
     if (!(s != 0)) {

@@ -8,6 +8,8 @@
  * index sign-extended at each pass); then the state of the model's layer (the
  * set's element of the skeleton's id, or the set's own) set from the rig's
  * mode: 1 for the modes 1 and 2, 0 for mode 0, 2 for mode 3 */
+/* OPEN (FINISHING rule 6), checked in round 513D: no caller in the tree declares it yet, so one
+ * signature changes no row; a caller written with this signature is measured then */
 void FUN_013d5f10(Object016d7b30 *self) /* derived name */
 {
     for (unsigned i = 0; i < self->elements.size(); ++i) {

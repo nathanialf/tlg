@@ -12,6 +12,10 @@ struct Object0020d740; /* derived name */
 
 void FUN_0020d740(Object0020d740 *self, float x, float y, float z); /* derived name */
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 3 rowed callers where the base calls it (round 513D: cause not found;
+ * not its address range, its callers' count, its cost or its unit: a single block, cost 0 under
+ * the link's threshold of 262 with its bonuses, and with it outside the module every row holds) */
 void FUN_0020c3b0(Object0020d740 *self, float x, float y, float z) /* derived name */
 {
     FUN_0020d740(self, x, y, z);

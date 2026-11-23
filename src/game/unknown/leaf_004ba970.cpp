@@ -39,6 +39,9 @@ extern const Type00503fb0 *D_57d4a68; /* derived name: the component's type */
 // NONMATCHING: block layout: the base places the return block after the walk's loop (0x4ba9ff) and
 // keeps a third release of the reader count for an empty component list; the build places the
 // return last and merges the two not-found releases
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 325 at the
+ * link, over its threshold of 175: one signature changes no row) */
 bool FUN_004ba970(const Object004ba970 *self) /* derived name */
 {
     if (self->unknown4e8 == D_57d85a4)

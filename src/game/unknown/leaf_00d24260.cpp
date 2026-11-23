@@ -17,6 +17,9 @@ struct Object00d24260 { /* derived name */
 /* derived name: the array emptied to no capacity (FUN_0138c8d0 with 0), the
  * two pointers cleared (one 16-byte store), then the reference emptied by
  * compare-and-swap */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 185 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00d24260(Object00d24260 *self)
 {
     self->unknown68.clear(0);

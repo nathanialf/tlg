@@ -2,6 +2,9 @@
 /* derived names: returns 0 when its first argument is less than its second,
  * else the second (vcmpltss, vandnps); FUN_01015bb0 passes its address (lea at
  * 0x1015bb0) to FUN_01015bd0 with 0.0 in xmm1. */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: not measured;
+ * the declared parameters cannot be cast to the definition's, so the link's call stays indirect) */
 float FUN_01016220(float value, float limit) /* derived name */
 {
     return value < limit ? 0.0f : limit;

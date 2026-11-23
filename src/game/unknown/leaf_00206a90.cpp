@@ -13,6 +13,11 @@ static const float EPSILON = 1e-5f; /* derived name */
 // NONMATCHING: the build spills x, y and z across the two _FSin calls and multiplies by the scale
 // after them; the base multiplies first and spills the three products (an operation sunk past the
 // calls; not resolved)
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 1 rowed caller where the base calls it (round 513D: cause not found;
+ * not its address range, its callers' count, its cost or its unit: a single block, cost 185
+ * under the link's threshold of 306 with its bonuses, and with it outside the module every row
+ * holds) */
 void FUN_00206a90(Float4A *rotation, float x, float y, float z, float degrees) /* derived name */
 {
     float lengthSquared = x * x + y * y + z * z;

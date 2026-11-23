@@ -14,6 +14,9 @@ struct Object006182f0 { /* derived name */
     PoolRef01343090<Pool006182f0> pool28; /* +0x28 */
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 335 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_006182f0(Object006182f0 *self) /* derived name */
 {
     self->pool28.shutdown();

@@ -46,6 +46,8 @@ static inline void unlockBucket(int *bucket, unsigned first) /* derived name */
  * with the last, its string (when the arena holds it) and the entry are
  * given back, the entry taken out of the bucket's chain and the count of
  * freed entries raised */
+/* OPEN (FINISHING rule 6), checked in round 513D: its callers in the tree declare it under this
+ * signature, and the link keeps every call (cost 440, over the link's threshold of 175) */
 void FUN_00d66e30(unsigned index) /* derived name */
 {
     NameTableEntry017ac870 &entry = D_17ac870[index];

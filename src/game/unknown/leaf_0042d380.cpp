@@ -11,6 +11,9 @@ struct Object0042d380 { /* derived name */
     AtomicRef0045c470<Object016b9108> unknownc0; /* +0xc0 */
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 315 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_0042d380(Object0042d380 *self) /* derived name */
 {
     self->unknownb8.clear();

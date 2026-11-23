@@ -9,6 +9,8 @@
 #include "tlg_game_node.h"
 #include "tlg_game_object00ca38f0.h"
 #include "tlg_game_object016b85e0.h"
+#include "tlg_game_array.h"
+#include "tlg_game_mutex.h"
 
 /* derived names: the class whose vtable is at 0x16b8fd0
  * (config/vtables.derived.base.txt, stored by its creator FUN_00cb2fb0),
@@ -52,13 +54,23 @@ class Object016b8fd0 : public Object00ca38f0 /* derived name */
     Ref00503fb0<Object016b9108> unknownb8; /* +0xb8 */
 };
 
-/* derived name: the object at 0x593a938 that FUN_00c822d0 is called on with
- * an Object016b8828 being destroyed; not traced */
-struct Registry0593a938; /* derived name */
+class Object016b8828;
+
+/* derived names: the object at 0x593a938 that FUN_00c822d0 is called on with
+ * an Object016b8828 being destroyed: under its recursive mutex at +0x28, the
+ * objects it holds (+0x40) and two lists of them, each list's count after
+ * the two (+0x58 to +0x6c, indexed by the list: `[r15+rcx*8+0x58]`,
+ * `[r15+rcx*4+0x68]`); the other fields are not traced */
+struct Registry0593a938 { /* derived name */
+    u8 unknown0[0x28];
+    Mutex013847e0 mutex;                     /* +0x28 */
+    Array05943280<Object016b8828 *> objects; /* +0x40 */
+    Object016b8828 **lists[2];               /* +0x58 */
+    unsigned listCounts[2];                  /* +0x68 */
+};
 
 extern Registry0593a938 *D_593a938; /* derived name */
 
-class Object016b8828;
 void FUN_00c822d0(Registry0593a938 *registry, Object016b8828 *object); /* derived name */
 
 /* derived names: the class whose vtable is at 0x16b8828
@@ -74,8 +86,14 @@ class Object016b8828 : public Object016b85e0 /* derived name */
     virtual ~Object016b8828();
 
   private:
+    friend void FUN_00c822d0(Registry0593a938 *registry, Object016b8828 *object);
+
     u8 unknown238[0x48];
     Ref00503fb0<Object016b9108> unknown280; /* +0x280 */
+    u8 unknown288[0x48];
+    /* +0x2d0: its place in the registry's list that holds it, -1 when in
+     * none (FUN_00c822d0) */
+    int slot;
 };
 
 #endif

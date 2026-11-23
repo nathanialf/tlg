@@ -5,6 +5,9 @@
  * of a userdata, a thread (its globals), a script function or a C function
  * set to a table, the collector's barrier passed for the object; 0 for any
  * other value; the call timed */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 440 at the
+ * link, over its threshold of 175: one signature changes no row) */
 int FUN_00db7c80(lua_State *s, const HksObject *object, const HksObject *env)
 {
     HksApiTimer timer(s);

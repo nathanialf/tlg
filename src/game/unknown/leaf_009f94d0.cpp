@@ -50,6 +50,9 @@ void FUN_009f94d0(Member057c9390_58_18 *member, Object016b9108 *object) /* deriv
 // NONMATCHING: 115 of 120 equal in the whole module (466 bytes, the entry's reload forwarded across
 // the append): the release compares the count at `[r14+8]` where the base reuses the raise's
 // address (`cmp [rbx], 0xdeadc0de`), then the near `je`s; leaf_009f5a00.cpp's open class.
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 420 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_009f96b0(Member057c9390_58_18 *member, Object016b9108 *object) /* derived name */
 {
     member->entries88.lock.lock();
@@ -70,6 +73,9 @@ void FUN_009f9890(Member057c9390_58_18 *member, Object016b9108 *object) /* deriv
 // NONMATCHING: 115 of 120 equal in the whole module (466 bytes, the entry's reload forwarded across
 // the append): the release compares the count at `[r14+8]` where the base reuses the raise's
 // address (`cmp [rbx], 0xdeadc0de`), then the near `je`s; leaf_009f5a00.cpp's open class.
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 420 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_009f9a70(Member057c9390_58_18 *member, Object016b9108 *object) /* derived name */
 {
     member->entriesA0.lock.lock();

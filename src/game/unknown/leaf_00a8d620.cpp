@@ -45,6 +45,9 @@ void FUN_00a8d620(Object00a8d620 *self) /* derived name */
 }
 
 // NONMATCHING: as FUN_00a8d620
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 215 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00a8d6f0(Object00a8d620 *self) /* derived name */
 {
     releaseTarget(self);

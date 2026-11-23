@@ -26,6 +26,9 @@ void FUN_004b6d00(Target00481890 *target, Value00481890 *value); /* derived name
 // the object again and passes null in a branch of its own (`test r15, r15;
 // je; mov rsi, r15; jmp; xor esi, esi`), where the build passes it as it is:
 // a select of the pointer and null kept as a branch (the parked class).
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 220 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00481890(Object00481890 *self, Value00481890 *value) /* derived name */
 {
     self->unknown8.set(value);

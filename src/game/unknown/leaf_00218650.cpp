@@ -27,6 +27,9 @@ struct Object00218650 /* derived name */
 
 void FUN_002178a0(Object00218650 *self); /* derived name */
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: not measured;
+ * the declared parameters cannot be cast to the definition's, so the link's call stays indirect) */
 int FUN_00218650(Object00218650 *self, const int *id) /* derived name */
 {
     if (self->indexOf(*id) >= 0) {

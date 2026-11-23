@@ -11,6 +11,11 @@
 // (ww - zz and xx - yy for the first two, -xx - yy then zz + ww for the third, zz + ww also
 // in the squared length), the doubled sums (A + p * d) + A as the base; the schedule differs
 // from the first product on (the base: zx, wx, yx, wy, zy, wz), FUN_01343890's open class
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 6 rowed callers where the base calls it (round 513D: cause not found;
+ * not its address range, its callers' count, its cost or its unit: a single block, cost 195 to
+ * 235 under the link's threshold of 262 with its bonuses, and with it outside the module every
+ * row holds) */
 void FUN_01343bb0(Float4A *out, const Float4A &point, const Float4A &q) /* derived name */
 {
     float xx = q.x * q.x;

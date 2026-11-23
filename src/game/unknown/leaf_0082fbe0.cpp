@@ -23,6 +23,9 @@ class Object0082fbe0 /* derived name */
     int unknown30;
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: not measured;
+ * the declared parameters cannot be cast to the definition's, so the link's call stays indirect) */
 int FUN_0082fbe0(Object0082fbe0 *self, const float *value) /* derived name */
 {
     if (self->unknown30) {

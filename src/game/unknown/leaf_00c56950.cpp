@@ -22,6 +22,9 @@ class Node00c56950 /* derived name */
     u32 unknown48;            /* +0x48: the count of +0x40 */
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: the link never
+ * inlines it (cost=never): one signature changes no row) */
 int FUN_00c56950(Node00c56950 *node) /* derived name */
 {
     int total = node->slot7();

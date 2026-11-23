@@ -6,6 +6,11 @@
  * stored back whole with `vmovaps` and the rotation returned. Called and
  * never inlined in the base: defined over its own parameter types,
  * leaf_01403320.cpp's declaration is of another name. */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it, and 1 draft (round 513D:
+ * cause not found; not its address range, its callers' count, its cost or its unit: a single
+ * block, cost 165 under the link's threshold of 393 with its bonuses, and with it outside the
+ * module every row holds) */
 Float4A *FUN_013cf1d0(Float4A *self, const Float4 &turn) /* derived name */
 {
     Float4A &rotation = *self;

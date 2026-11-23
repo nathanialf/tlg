@@ -6,6 +6,11 @@
  * meaning of the value is not traced. */
 struct Object00cef2e0;
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 1 rowed caller where the base calls it (round 513D: cause not found;
+ * not its address range, its callers' count, its cost or its unit: a single block, cost -35
+ * under the link's threshold of 262 with its bonuses, and with it outside the module every row
+ * holds) */
 int FUN_00cef2e0(Object00cef2e0 *self) /* derived name */
 {
     return 1;

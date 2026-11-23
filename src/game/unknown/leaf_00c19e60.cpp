@@ -35,6 +35,9 @@ void FUN_00c1b410(Holder00c19e60 *holder, Machine00c19e60 *machine,
 void FUN_00c1b520(Holder00c19e60 *holder, Machine00c19e60 *machine,
                   Slot00c19e60 *slot); /* derived name */
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 195 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00c19e60(Machine00c19e60 *machine, Holder00c19e60 *holder) /* derived name */
 {
     if (!holder->unknown30)

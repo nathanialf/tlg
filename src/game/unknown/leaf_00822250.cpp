@@ -30,12 +30,18 @@ struct Object00822600 : Object00c57220 { /* derived name */
     PoolRef01343090<Pool00822600> pool250; /* +0x250 */
 };
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 370 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00822250(Object00822250 *self) /* derived name */
 {
     self->pool240.shutdown();
     FUN_00c57220(self);
 }
 
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 370 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00822600(Object00822600 *self) /* derived name */
 {
     self->pool250.shutdown();

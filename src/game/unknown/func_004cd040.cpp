@@ -84,6 +84,11 @@ Name D_57d8cc4(D_1570079);
 // first gives the operands and moves the registers further (10/26); read in the expression
 // itself (y and z first) 5/26, and as products of the doubled y and z 1/26 (the doubling
 // then stays in the products)
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it, and 1 draft (round 513D:
+ * cause not found; not its address range, its callers' count, its cost or its unit: a single
+ * block, cost 80 under the link's threshold of 262 with its bonuses, and with it outside the
+ * module every row holds) */
 void FUN_01353470(Float4 *axis, const Float4A &rotation) /* derived name */
 {
     const float x = rotation.x, y = rotation.y, w = rotation.w, z = rotation.z;
@@ -94,6 +99,10 @@ void FUN_01353470(Float4 *axis, const Float4A &rotation) /* derived name */
 }
 
 // NONMATCHING: 19/26: as FUN_01353470 (the base's `y * x`, `y * z` take y first)
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 6 rowed callers where the base calls it (round 513D: cause not found;
+ * not its address range, its callers' count, its cost or its unit: a single block, cost 80 under
+ * the link's threshold of 262 with its bonuses, and with it outside the module every row holds) */
 void FUN_013533f0(Float4 *axis, const Float4A &rotation) /* derived name */
 {
     const float x = rotation.x, y = rotation.y, w = rotation.w, z = rotation.z;

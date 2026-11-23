@@ -10,6 +10,11 @@
  * second's z come last and the vectorizer packs them into one vector
  * product, an add and a subtract blended. The store is unaligned: the
  * product is a Float4, not a Float4A. */
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 13 rowed callers where the base calls it, and 2 drafts (round 513D:
+ * cause not found; not its address range, its callers' count, its cost or its unit: a single
+ * block, cost 135 to 175 under the link's threshold of 393 with its bonuses, and with it outside
+ * the module every row holds) */
 void FUN_013439c0(Float4 *product, const Float4 *first, const Float4 *second) /* derived name */
 {
     const Float4 &a = *first;

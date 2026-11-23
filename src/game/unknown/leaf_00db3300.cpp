@@ -9,6 +9,9 @@
  * called by 0xdb3520, 0xdb3710 and two more */
 // NONMATCHING: register assignment: the base keeps the name in r13 and reloads the stack guard's
 // address at the end; the build keeps the guard's address in a register
+/* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
+ * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 280 at the
+ * link, over its threshold of 175: one signature changes no row) */
 void FUN_00db3300(CodeGen016bb0c0 *self, ScriptString016bb0c0 *name, int *type,
                   Structure016bb0c0 **structure) /* derived name */
 {
