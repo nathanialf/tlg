@@ -205,8 +205,8 @@ class FileSystem05938c40 /* derived name */
 
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
  * file system at +0x28, the script functions at +0x40, the queue at +0xb0 and the world at +0x108
- * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0 and
- * the content chunks at +0xf58 */
+ * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0,
+ * the content chunks at +0xf58 and a word at +0xf80 */
 struct Object05938c40 { /* derived name */
     u8 unknown0[0x28];
     FileSystem05938c40 *fileSystem; /* +0x28 */
@@ -223,6 +223,8 @@ struct Object05938c40 { /* derived name */
         unknown18c; /* +0x18c: a time, by its use (FUN_00822740 takes the sine of five times it) */
     u8 unknown190[0xdc8];
     Chunks05938c40 *chunks; /* +0xf58 */
+    u8 unknownf60[0x20];
+    int unknownf80; /* +0xf80: set to 1 by FUN_00afcf70 */
 };
 
 extern Object05938c40 *D_5938c40;
