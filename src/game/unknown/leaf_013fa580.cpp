@@ -9,13 +9,14 @@
  * was dropped this step at +0x28 and the length at +0x2c */
 struct Blend013fa580 { /* derived name */
 
-    /* derived name: everything cleared, the handles none and the rate one
-     * over the length (zero for none) */
+    /* derived name: everything cleared, the current value and handle and
+     * then the previous ones, the handles none and the rate one over the
+     * length (zero for none) */
     void reset()
     {
         value = 0.0f;
-        previous = 0.0f;
         handle = -1;
+        previous = 0.0f;
         previousHandle = -1;
         time = 0.0f;
         changed = 0;
@@ -45,16 +46,12 @@ template <class T> static inline const T &clamp013fa580(const T &value, const T 
  * value is the previous one and the current one mixed by the time; the
  * value is given back and kept as the one before. Its callers are
  * FUN_013f9e20, FUN_01474cc0, FUN_01489ca0, FUN_0148ac70 and FUN_0148b730. */
-// NONMATCHING: 373 bytes against 359 (47/87). Equal: the handles read once
-// after the flag's clear, the dropped test without a branch, the step stored
-// before the clamp (the clamp by reference over the time and two
-// temporaries, as the base's `cmovb`/`cmovae`), the mix's order. Left: the
-// time's test against 1 branches to the copy in the base (`jbe; jmp`) and
-// to the step here (`ja; jmp`); reset() stores the value and the one before
-// as two dwords and the handles as one 16-byte -1 in the base (here one
-// qword of zero and two qwords through a register holding &handle); the
-// copy's first read of the value is PRE'd into the step's path here, a load
-// in the copy in the base.
+// NONMATCHING: 82/84 at the base's 359 bytes: the two copies into the
+// step's phis on the handle's change (`vxorps xmm1; mov ecx, 1` in the base,
+// the other order here). The time set to 1 skips the step's test (its own
+// edge into the copy, so the copy's loads are not PRE'd), and reset()
+// stores the current value and handle, then the previous ones (the two
+// handles one 16-byte store, the values two dwords).
 void FUN_013fa580(Blend013fa580 *self, float step, float *out) /* derived name */
 {
     self->changed = 0;
@@ -67,18 +64,20 @@ void FUN_013fa580(Blend013fa580 *self, float step, float *out) /* derived name *
     }
     if (previousHandle == -1 && !self->keep)
         self->time = 1.0f;
-    else if (previousHandle != handle) {
-        self->time = 0.0f;
-        self->changed = 1;
-    }
-    if (self->time < 1.0f) {
-        if (self->rate == 0.0f)
-            self->time = 1.0f;
-        else if (!self->changed) {
-            self->time += self->rate * step;
-            self->time = clamp013fa580(self->time, 0.0f, 1.0f);
+    else {
+        if (previousHandle != handle) {
+            self->time = 0.0f;
+            self->changed = 1;
         }
-        self->value = self->previous * (1.0f - self->time) + self->value * self->time;
+        if (self->time < 1.0f) {
+            if (self->rate == 0.0f)
+                self->time = 1.0f;
+            else if (!self->changed) {
+                self->time += self->rate * step;
+                self->time = clamp013fa580(self->time, 0.0f, 1.0f);
+            }
+            self->value = self->previous * (1.0f - self->time) + self->value * self->time;
+        }
     }
     *out = self->value;
     self->previous = self->value;

@@ -10915,3 +10915,6 @@ FUN_0045b4e0 src/game/unknown/leaf_0045b4e0.cpp _Z12FUN_0045b4e0PK14Object016b91
 FUN_00a01a80 src/game/unknown/func_00a01a80.cpp _GLOBAL__sub_I_func_00a01a80.cpp
 FUN_00c18b70 src/game/unknown/func_00c18b70.cpp _GLOBAL__sub_I_func_00c18b70.cpp
 FUN_00c15880 src/game/unknown/func_00c15880.cpp _GLOBAL__sub_I_func_00c15880.cpp
+FUN_00c87210 src/game/unknown/leaf_00c87210.cpp _Z12FUN_00c87210P9lua_State
+FUN_00596a00 src/game/unknown/leaf_00596a00.cpp _Z12FUN_00596a00P11Owner583950P17SpeedNode00596a00
+FUN_001b0680 src/game/unknown/leaf_001b0680.cpp _Z12FUN_001b0680P9lua_State

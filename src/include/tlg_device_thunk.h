@@ -46,6 +46,10 @@ struct Node583950 {
     Node583950 *child58; /* +0x58 */
 };
 
+/* derived name: runs the given children under the owner, the mode at the
+ * fourth argument (zero or not); the last two are not traced */
+int FUN_00c0f8b0(Owner583950 *self, Node583950 **children, unsigned count, int mode, int, void *);
+
 /* A node of the kind FUN_0058da20 and its two copies are given: the index of
  * its Name at +0x2c (the name table, tlg_game_name.h) and the node of the
  * list it refers to at +0x38. derived names. */
@@ -304,6 +308,14 @@ struct Owner583950 {
           unknown18(unknown18_), unknown28(unknown28_), unknown30(0), cursor(list), handlers(table),
           unknownd8(0)
     {
+    }
+
+    /* runs a node's children in a mode (FUN_00c0f8b0): the mode is read
+     * before the children (`mov ecx, [rbx+0x2c]; mov rsi, [rbx+0x30]; mov
+     * edx, [rbx+0x38]` at all 14 callers). derived name */
+    int runChildren(int mode, Node583950 **children, unsigned count)
+    {
+        return FUN_00c0f8b0(this, children, count, mode, 0, 0);
     }
 
     /* finds a node of the list (derived name) */
