@@ -1,19 +1,5 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_game_node.h"
-
-/* derived names: the object the source below holds at +0x28; not traced */
-struct Value004afdb0 : Object016b9108 /* derived name */
-{};
-
-/* derived names: the counted object FUN_004afdb0 takes on: the object it
- * holds at +0x28 and its kind at +0x58 */
-struct Source004afdb0 : Object016b9108 /* derived name */
-{
-    u8 unknown24[0x4];
-    AtomicRef0045c470<Value004afdb0> held28; /* +0x28 */
-    u8 unknown30[0x28];
-    int kind58; /* +0x58 */
-};
+#include "tlg_game_source004afdb0.h"
 
 /* derived names: the table at 0x57d6b00 of a value for each kind, ended by
  * kind 0 (0x4aff2b: the first kind read at +0x4, the next at +0xc) */

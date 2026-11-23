@@ -28,4 +28,11 @@ inline Name::Name(const String01331840 &text)
 {
 }
 
+/* derived names: the same text of up to 0x7f characters, its length at
+ * +0x80 (FUN_013709f0 appends to it; FUN_00847550 formats with it) */
+struct String013709f0 { /* derived name */
+    char text[0x80];
+    int length; /* +0x80 */
+};
+
 #endif

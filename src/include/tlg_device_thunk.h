@@ -135,8 +135,10 @@ struct CallFrame583950 {
     }
 
     /* appends a call with the node and its value, the same way
-     * (FUN_005995c0). derived name */
-    bool push(CallFunction583950 function, const CallArguments583950 &arguments)
+     * (FUN_005995c0); the arguments are a copy, read before the queue is
+     * written (FUN_00c0e720 takes them from its node: `vmovups xmm0,
+     * [rbx+0x28]` ahead of the function's store). derived name */
+    bool push(CallFunction583950 function, CallArguments583950 arguments)
     {
         const unsigned size = queue->size;
         const unsigned next = size + 1;
@@ -376,6 +378,36 @@ struct DeviceOwner583950 : Owner583950 {
  * searched, then appended to). derived name */
 struct NodesOwner583950 : DeviceOwner583950 {
     Array05943280<void *> nodes; /* +0xf8 */
+};
+
+/* A node of kind 17, FlowAbs by its message (FUN_00c65c00, the handler of
+ * the 'XFIT' owners' default table): its Name at +0xc, bit 0 of +0x28
+ * writes the message, the children at +0x30 (FUN_00c65750, FUN_00c65330).
+ * derived names */
+struct ParentNode583950Kind17 {
+    u8 unknown0[0xc];
+    Name name; /* +0xc */
+    u8 unknown10[0x18];
+    unsigned debugFlags; /* +0x28 */
+    u8 unknown2c[4];
+    Node583950 **children; /* +0x30 */
+    unsigned count;        /* +0x38 */
+};
+
+/* A node of kind 18, FlowEase by its message (FUN_00c65ce0), with a list
+ * of children at +0x50 (FUN_00c658e0, FUN_00c65490). derived name */
+struct ParentNode583950Kind18 {
+    u8 unknown0[0x50];
+    Node583950 **children; /* +0x50 */
+    unsigned count;        /* +0x58 */
+};
+
+/* A node of kind 19, FlowNormalize by its message (FUN_00c65ff0), with a
+ * list of children at +0x30 (FUN_00c65a70, FUN_00c655f0). derived name */
+struct ParentNode583950Kind19 {
+    u8 unknown0[0x30];
+    Node583950 **children; /* +0x30 */
+    unsigned count;        /* +0x38 */
 };
 
 /* A node of kind 31 with a list of children at +0x50 (FUN_00594920, FUN_00594a80)

@@ -8,6 +8,7 @@
 #include "tlg_game_node.h"
 #include "tlg_math.h"
 #include "tlg_game_value004af700.h"
+#include "tlg_game_source004afdb0.h"
 
 /* derived name: the value the constructor copies to +0x50 (`mov rax,
  * [0x57d7870]; mov rcx, [0x57d7878]`) */
@@ -44,8 +45,12 @@ class Object016aa0d0 : public Object016b9108 /* derived name */
     }
 
     virtual ~Object016aa0d0();
-    virtual void slot5(); /* derived name; FUN_004afa60, not traced */
-    virtual void slot6(); /* derived name; FUN_000042d0, not traced */
+    /* slot 5, FUN_004afa60: whether the object held at +0x28 has bit 0 of
+     * its flags without bit 7 (and, with bit 6, a non-zero int at +0x48)
+     * and the source held at +0x30 has bit 0 of its byte at +0x5c clear and
+     * a non-zero int at +0x30 */
+    virtual bool slot5() const; /* derived name */
+    virtual void slot6();       /* derived name; FUN_000042d0, not traced */
     /* slot 7, FUN_004b00f0: a count of points, none here (4 in
      * Object016aa1b0, 1 in Object016aa320) */
     virtual int slot7() const; /* derived name */
@@ -61,10 +66,10 @@ class Object016aa0d0 : public Object016b9108 /* derived name */
     u8 unknown24[0x4];
     /* +0x28: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Object016b9108> held28;
+    Ref00503fb0<Value004afdb0> held28;
     /* +0x30: a counted reference, released by the destructor (the pointer
      * cleared, `cmp dword [r+8], 0xdeadc0de`, the count dropped) */
-    Ref00503fb0<Object016b9108> held30;
+    Ref00503fb0<Source004afdb0> held30;
     int unknown38;           /* +0x38: -1 from the constructor; not traced */
     bool unknown3c;          /* +0x3c: false from the constructor; not traced */
     Float4A unknown40;       /* +0x40: zero from the constructor; the position slot 8 moves */

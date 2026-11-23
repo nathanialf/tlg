@@ -1,0 +1,20 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_device_thunk.h"
+
+/* derived names: a handler whose address FUN_00525530 takes (lea at
+ * 0x526276): finds the node its argument refers to in the owner's list (from
+ * the current index to the end, then from the start), makes it the current
+ * one and stores the owner's int value in that node's value when it has
+ * one; returns 0. Handler unknown. */
+int FUN_00584df0(ValueOwner583950 *self, void *arg) /* derived name */
+{
+    NamedNode583950 *node = static_cast<NamedNode583950 *>(arg);
+    unsigned found;
+    if (!self->find(node->target, found))
+        return 0;
+    self->cursor.current = found;
+    int *value = reinterpret_cast<int *>(self->currentValue());
+    if (value)
+        *value = self->intValue;
+    return 0;
+}
