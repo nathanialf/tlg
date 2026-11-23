@@ -82,6 +82,8 @@ struct FadeSkeletonData013ce050 { /* derived name */
     FadeBone013ce050 **bones; /* +0x238: one per pose */
 };
 
+struct ParamElementSet013f9ca0; /* derived name (tlg_game_fadeparam013f9ca0.h) */
+
 struct FadeSkeleton013ce2d0 { /* derived name */
 
     const FadeBone013ce050 *bone(int index) const /* derived name */
@@ -90,7 +92,10 @@ struct FadeSkeleton013ce2d0 { /* derived name */
     }
 
     FadeSkeletonData013ce050 *data; /* +0x0 (the rigs' constructors) */
-    u8 unknown8[0xf8];
+    u8 unknown8[0x20];
+    ParamElementSet013f9ca0 *layers; /* +0x28: the model's +0x68 (FUN_013d5f10) */
+    int layerId;                     /* +0x30: the id of the model's layer among them */
+    u8 unknown34[0xcc];
     FadePose013d4610 *poses; /* +0x100 (the model's +0x140) */
 };
 
@@ -208,6 +213,13 @@ class FadeElement016d7b30 /* derived name */
 {
   public:
     virtual ~FadeElement016d7b30();
+    virtual void slot2(); /* derived name */
+    virtual void slot3(); /* derived name */
+    /* slots 4 to 6, called in this order each update with the element's
+     * index given to slot 5 (FUN_013d5f10) */
+    virtual void slot4();          /* derived name */
+    virtual void slot5(int index); /* derived name */
+    virtual void slot6();          /* derived name */
 
     u8 unknown8[0x28];
     int id; /* +0x30 */

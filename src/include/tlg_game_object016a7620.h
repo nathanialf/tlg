@@ -30,6 +30,18 @@ class Object016a7620 : public Counted00c14bc0 /* derived name */
     {
     }
 
+    /* the first two names, which select the message's receivers
+     * (FUN_00c644d0) */
+    const Name &first() const /* derived name */
+    {
+        return unknownc;
+    }
+
+    const Name &second() const /* derived name */
+    {
+        return unknown10;
+    }
+
   private:
     Name unknownc;  /* +0xc */
     Name unknown10; /* +0x10 */

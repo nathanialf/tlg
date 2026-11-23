@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
+#include "tlg_math.h"
 
 /* derived names: FUN_004cd040 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -68,3 +69,36 @@ Name D_57d8b20(D_156f5da);
 Name D_57d8b58(D_156f5e8);
 Name D_57d8b24(D_156f5f5);
 Name D_57d8cc4(D_1570079);
+
+/* derived names: the x and the y axes of a rotation (the first two columns
+ * of its matrix), each this file's VECTOR_X or VECTOR_Y with the rotation's
+ * part added: twice the products, the axis's own lane less twice the other
+ * two squares; w the constant's own. Called directly by the joint chains
+ * (FUN_013fd580 and its copies read the y axis); called and never inlined
+ * in the base, so each is defined over its own parameter types and the
+ * callers' declarations (tlg_game_joint_chain.h, leaf_01403320.cpp) stay
+ * declarations of another name. */
+// NONMATCHING: 18/26: the arithmetic and the order are the base's; the products' operands are
+// commuted (the base's `x * y`, `x * z` take x first: by Reassociate's ranks y and z are read
+// before x and w there) and the registers differ (w in xmm4, x * y in xmm2); reading y and z
+// first gives the operands and moves the registers further (10/26); read in the expression
+// itself (y and z first) 5/26, and as products of the doubled y and z 1/26 (the doubling
+// then stays in the products)
+void FUN_01353470(Float4 *axis, const Float4A &rotation) /* derived name */
+{
+    const float x = rotation.x, y = rotation.y, w = rotation.w, z = rotation.z;
+    const float xy = x * y, wy = w * y, yy = y * y;
+    const float xz = x * z, wz = w * z, zz = z * z;
+    *axis = Float4(lane(VECTOR_X.v, 0) + 2.0f * (-yy - zz), lane(VECTOR_X.v, 1) + 2.0f * (xy + wz),
+                   lane(VECTOR_X.v, 2) + 2.0f * (xz - wy), lane(VECTOR_X.v, 3));
+}
+
+// NONMATCHING: 19/26: as FUN_01353470 (the base's `y * x`, `y * z` take y first)
+void FUN_013533f0(Float4 *axis, const Float4A &rotation) /* derived name */
+{
+    const float x = rotation.x, y = rotation.y, w = rotation.w, z = rotation.z;
+    const float xy = x * y, wx = w * x, xx = x * x;
+    const float yz = y * z, zz = z * z, wz = w * z;
+    *axis = Float4(lane(VECTOR_Y.v, 0) + 2.0f * (xy - wz), lane(VECTOR_Y.v, 1) + 2.0f * (-xx - zz),
+                   lane(VECTOR_Y.v, 2) + 2.0f * (yz + wx), lane(VECTOR_Y.v, 3));
+}

@@ -28,6 +28,14 @@ struct FrameSet013fa8d0 {                /* derived name */
     Array01343a80<Frame016c1128> frames; /* +0x0 */
 };
 
+/* derived name: the frame set of func_00fda5c0.cpp, its two frames made
+ * with that file's VECTOR_W by its constructor (FUN_013e72e0, out of line
+ * there); the lists of the track classes' constructors (FUN_013ef390 and
+ * nineteen more) are an array of it, sized by FUN_013e71b0 */
+struct FrameSet00fda5c0 : FrameSet013fa8d0 { /* derived name */
+    FrameSet00fda5c0();
+};
+
 /* derived names: an array of vectors, one per frame (FUN_01404660 and its
  * copies: a pose's vector at +0x20 copied into one) */
 struct VectorSet01404660 { /* derived name */

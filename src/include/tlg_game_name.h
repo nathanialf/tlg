@@ -14,12 +14,13 @@
 struct NameTableEntry017ac870 /* derived name */
 {
     const char *string0; /* +0x0 */
-    u32 hash8;           /* +0x8: the string's hash, compared before the strings (0x845482) */
-    u8 unknownc[4];
-    int references10; /* +0x10 */
-    u16 length14;     /* +0x14: the string's length (`movzx` at 0x88171b) */
-    u8 unknown16[2];
-    void *record18; /* +0x18: a record of the name's, null for none (FUN_00618b00) */
+    u32 hash8;           /* +0x8: the string's hash, compared before the strings (0x845482);
+                            its low 16 bits pick the entry's bucket (FUN_00d66e30) */
+    u32 nextc;           /* +0xc: the index of the next entry of the bucket's chain */
+    int references10;    /* +0x10 */
+    u16 length14;        /* +0x14: the string's length (`movzx` at 0x88171b) */
+    u16 holds16;         /* +0x16: dropped under the bucket's lock, the entry freed with the last */
+    void *record18;      /* +0x18: a record of the name's, null for none (FUN_00618b00) */
 };
 
 extern NameTableEntry017ac870 D_17ac870[];

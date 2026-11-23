@@ -50,13 +50,34 @@ struct ParamTarget013f9ca0 { /* derived name */
 
 /* derived names: an element a record can name, by its id at +0x1c */
 struct ParamElement013f9ca0 { /* derived name */
-    u8 unknown0[0x1c];
+    u8 unknown0[0x4];
+    int state; /* +0x4: 0, 1 or 2 from a rig's mode (FUN_013d5f10) */
+    u8 unknown8[0x14];
     int id; /* +0x1c */
 };
 
 /* derived names: the elements an owner holds at its +0x28 */
 struct ParamElementSet013f9ca0 { /* derived name */
-    u8 unknown0[0x170];
+
+    /* the element of the id, or the set's own when none has it (the
+     * search's result tested once after the loop; the id read through its
+     * pointer, after the elements, as findParamElement takes it:
+     * FUN_013d5f10) */
+    ParamElement013f9ca0 *elementOrOwn(const int *id) /* derived name */
+    {
+        ParamElement013f9ca0 *found = 0;
+        for (int i = 0; i < count; ++i) {
+            if (elements[i]->id == *id) {
+                found = elements[i];
+                break;
+            }
+        }
+        return found ? found : &own;
+    }
+
+    u8 unknown0[0x148];
+    ParamElement013f9ca0 own; /* +0x148 */
+    u8 unknown168[0x8];
     ParamElement013f9ca0 **elements; /* +0x170 */
     int count;                       /* +0x178 */
 };

@@ -234,10 +234,12 @@ template <class T> class Array05943280 /* derived name */
         }
     }
 
-    /* sets the count: the array is emptied, the capacity made the count
-     * exactly (the block reallocated when it differs) and, for a count that
-     * is not zero, the count stored and the elements default-constructed
-     * one by one. FUN_013fb000 (0x70-byte elements): `mov [rbx+8], 0; cmp
+    /* sets the count: the array is emptied (its elements destroyed first
+     * to last, as clear(size) does: FUN_013e71b0's lists each give their
+     * block back in line before `mov [r15+8], 0`), the capacity made the
+     * count exactly (the block reallocated when it differs) and, for a
+     * count that is not zero, the count stored and the elements
+     * default-constructed one by one. FUN_013fb000 (0x70-byte elements): `mov [rbx+8], 0; cmp
      * [rbx+0xc], r14d; je`, the reallocation, `test r14d, r14d; je`, then
      * `mov [rbx+8], r14d` and the constructors' loop up to the count read
      * again. Over ints the loop is nothing and the caller clears them itself
@@ -248,6 +250,8 @@ template <class T> class Array05943280 /* derived name */
      * owner's index read before the block at 0x13d28c8 and 0x13fb338). */
     void resize(unsigned size)
     {
+        for (unsigned i = 0; i < count; ++i)
+            data[i].~T();
         count = 0;
         if (capacity != size) {
             capacity = size;

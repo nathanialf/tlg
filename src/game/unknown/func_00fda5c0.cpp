@@ -15,12 +15,6 @@ extern const char D_15cb5e6[13];
 Name D_5acf490(D_15cb5dd, false);
 Name D_5acf494(D_15cb5e6, false);
 
-/* derived name: this file's frame set (tlg_game_frames013fb310.h), its two
- * frames made with this file's VECTOR_W */
-struct FrameSet00fda5c0 : FrameSet013fa8d0 { /* derived name */
-    FrameSet00fda5c0();
-};
-
 /* FUN_013e72e0 */
 FrameSet00fda5c0::FrameSet00fda5c0()
 {

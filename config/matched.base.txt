@@ -10821,3 +10821,12 @@ FUN_00d43e50 src/game/unknown/leaf_00d43e50.cpp
 FUN_00d10a20 src/game/unknown/leaf_00d10a20.cpp
 FUN_00d10b60 src/game/unknown/leaf_00d10b60.cpp
 FUN_00c682d0 src/game/unknown/leaf_00c682d0.cpp
+FUN_013439c0 src/game/unknown/leaf_013439c0.cpp _Z12FUN_013439c0P6Float4PKS_S2_
+FUN_013e71b0 src/game/unknown/leaf_013e71b0.cpp _ZN13Array05943280I16FrameSet00fda5c0E6resizeEj
+FUN_013cf1d0 src/game/unknown/leaf_013cf1d0.cpp _Z12FUN_013cf1d0P7Float4ARK6Float4
+FUN_0134b990 src/game/unknown/leaf_0134b990.cpp _Z12FUN_0134b990PK6Float4P7Float4A
+FUN_0135b050 src/game/unknown/leaf_0135b050.cpp _Z12FUN_0135b050PK7Float4APS_
+FUN_00d66e30 src/game/unknown/leaf_00d66e30.cpp _Z12FUN_00d66e30j
+FUN_00616e70 src/game/unknown/leaf_00616e70.cpp _Z12FUN_00616e70P10QuaternionPKS_
+FUN_00c644d0 src/game/unknown/leaf_00c644d0.cpp _Z12FUN_00c644d0P18Dispatcher00c644d0P14Object016a7620
+FUN_013d5f10 src/game/unknown/leaf_013d5f10.cpp _Z12FUN_013d5f10P14Object016d7b30
