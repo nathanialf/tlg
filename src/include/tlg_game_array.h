@@ -6,7 +6,18 @@
  * step and 0x1fffffff elements in all (the 64-byte arrays step by 0x10000,
  * the 8-byte ones by 0x80000: 0x342e4c and 0x1b59fb), the block reallocated
  * by its own owner or first allocated by the array's. 103 appends of
- * counted references are this body (FUN_001b59d0 and its copies). */
+ * counted references are this body (FUN_001b59d0 and its copies).
+ * OPEN: the form of the block's release by site. Where the holder's
+ * destructor is measured, 37 arrays need the release as a call (the
+ * out-of-line FUN_00ebf3f0, tlg_game_block.h) and 2 hold its body in line
+ * (Object016cd3c0 +0xc0, Object016d2558 +0x48). No property tested splits
+ * them: the element's destructor (Object016d2558's Record00d64dd0 is plain,
+ * round 492C), reflection, exact sizing, a count-only clear, an out-of-line
+ * constructor, the allocator (round 493C), and growth by an append: six of
+ * the call side's arrays are appended to through this growth,
+ * Object016a7db8's +0x68, +0x80 and +0x138 (16-byte elements) and +0x98,
+ * +0xb0 and +0x120 (4-byte) in FUN_002b7410 (0x2b94e5 to 0x2ba5c2), as
+ * Object016d2558's +0x48 is on the inline side (FUN_00d64dd0). */
 #ifndef TLG_GAME_ARRAY_H
 #define TLG_GAME_ARRAY_H
 

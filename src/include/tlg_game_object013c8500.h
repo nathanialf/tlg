@@ -8,8 +8,6 @@
 #include "tlg_hks.h"
 #include "tlg_types.h"
 
-void FUN_013bf660(void *a, void *b); /* derived name */
-
 /* derived names: the values a walk visits from `first` up to `last`
  * (0xdd1cf0: `mov rbx, [r14+0x18]`, `cmp [r14], rbx` at each step) */
 struct ValueRange00dd1cf0 {
@@ -172,6 +170,21 @@ inline void *externalAllocate(HksState00dd1740 *state, size_t size)
 }
 
 void FUN_00dcaee0(void *hook, void *block, int tag, size_t size); /* derived name; not traced */
+
+/* derived name: a tree of visited nodes given back to the state's
+ * allocator, each subtree first (its link cleared after), then the node */
+inline void FUN_013bf660(VisitedNode00dd1740 *node, HksState00dd1740 *state)
+{
+    if (node->left) {
+        FUN_013bf660(node->left, state);
+        node->left = 0;
+    }
+    if (node->right) {
+        FUN_013bf660(node->right, state);
+        node->right = 0;
+    }
+    externalAllocate(state->allocator, node, sizeof(VisitedNode00dd1740), 0);
+}
 
 /* derived name: a block of `size` bytes given back to the state's
  * allocator: the debugger's hook told first when there is one, the

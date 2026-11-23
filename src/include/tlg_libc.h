@@ -87,6 +87,7 @@ int sscanf_s(const char *s, const char *format, ...);
 int vsnprintf(char *s, size_t n, const char *format, va_list args);
 int vsprintf(char *s, const char *format, va_list args);
 int vfprintf(FILE *stream, const char *format, va_list args);
+int vprintf(const char *format, va_list args); /* NID verified as "vprintf" */
 void perror(const char *message);
 int puts(const char *s);
 void srand(unsigned int seed);

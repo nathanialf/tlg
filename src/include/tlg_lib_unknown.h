@@ -5118,6 +5118,13 @@ struct ThreadBuffer /* derived name */
         }
     }
 
+    /* Allocated from the router's heap (FUN_014aff00: slot 2 of +0x60 with
+     * the stream's size). */
+    static void *operator new(unsigned long numBytes)
+    {
+        return D_16dc070->allocator60->blockAlloc(static_cast<int>(numBytes));
+    }
+
     /* The stream given a buffer of a size (0xeb90; a pool's worker sizes
      * its thread's stream with it, 0x7201). derived name. */
     void FUN_0000eb90(int size);

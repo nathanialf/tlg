@@ -162,6 +162,12 @@ class Class137ba70 /* derived name */
       public Object016cc450
 {
   public:
+    /* inlined in the creators (0x953b3d, 0x96aa1d): the root's constructor
+     * a call, then the vptrs at +0x0, +0x28 and +0x30 and the reference at
+     * +0x38 cleared; the vptr stores of this class itself are dead under
+     * those of the class built on it */
+    Class137ba70(const Name &name) : Object016b9108(name) {}
+
     /* In their primary-vtable order, slots 5 to 8. */
     void FUN_0137ba50();
     int FUN_00004340(int mask) const;
@@ -184,16 +190,45 @@ class Class16b57c0 : public Class137ba70 /* derived name */
         *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared (FUN_00b38650) */
 };
 
-/* The class whose vtable is at 0x16b10c8 (stored by FUN_00953850; the vtable
- * at 0x16b1168, stored by FUN_00953a30, holds the same slot 6): the slots of
- * Class137ba70 but slot 6, its own (FUN_00961140, its thunk in the base at
- * +0x28). */
-class Class16b10c8 : public Class137ba70 /* derived name */
+/* The class whose vtable is at 0x16ccce8 (config/vtables.derived.base.txt;
+ * stored by FUN_00953850 and FUN_00953a30 after the root's constructor):
+ * the slots of Class137ba70, none of its own; its members follow its vptr
+ * stores in both creators: two pointers at +0x40 cleared in one 16-byte
+ * store, then seven ints, 2 the fourth (`mov dword [rbx+0x5c], 2`); 0x78
+ * bytes with what is built on it (FUN_00953850: `mov edi, 0x78`). */
+class Object016ccce8 : public Class137ba70 /* derived name */
 {
   public:
-    int FUN_00004340(int mask) const;
+    Object016ccce8(const Name &name)
+        : Class137ba70(name), linked(0), unknown48(0), unknown50(0), unknown54(0), unknown58(0),
+          unknown5c(2), unknown60(0), unknown64(0), unknown68(0)
+    {
+    }
 
-    Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
+    Class137ba70
+        *linked; /* +0x40, derived name: slot 6 of the class below asks it with the bit cleared */
+    void *unknown48; /* +0x48 */
+    int unknown50;   /* +0x50 */
+    int unknown54;   /* +0x54 */
+    int unknown58;   /* +0x58 */
+    int unknown5c;   /* +0x5c: 2 from the constructor */
+    int unknown60;   /* +0x60 */
+    int unknown64;   /* +0x64 */
+    int unknown68;   /* +0x68 */
+    u8 unknown6c[0xc];
+};
+
+/* The class whose vtable is at 0x16b10c8 (stored by FUN_00953850; the vtable
+ * at 0x16b1168, stored by FUN_00953a30, holds the same slot 6): the slots of
+ * Object016ccce8 but slot 6, its own (FUN_00961140, its thunk in the base at
+ * +0x28), and slot 9, 0x42d0's `return 0` (not declared). No members of its
+ * own. */
+class Class16b10c8 : public Object016ccce8 /* derived name */
+{
+  public:
+    Class16b10c8(const Name &name) : Object016ccce8(name) {}
+
+    int FUN_00004340(int mask) const;
 };
 
 /* The class whose vtable is at 0x16b5720 (stored by FUN_00b37fd0): the slots
@@ -218,6 +253,34 @@ class Class16b5900 : public Class137ba70 /* derived name */
     Class137ba70 *linked; /* +0x40, derived name: its slot 6 asked with the bit cleared */
 };
 
+/* The class whose vtable is at 0x16cd110 (config/vtables.derived.base.txt;
+ * stored by FUN_0096a720 and FUN_0096a910 after the root's constructor),
+ * the same slots as 0x16ccce8: its members follow its vptr stores, three
+ * pointers at +0x40 cleared (a 16-byte store and a quad), then seven ints,
+ * 2 the fourth (`mov dword [rbx+0x64], 2`); 0x78 bytes with the class
+ * below (FUN_0096a720: `mov edi, 0x78`). */
+class Object016cd110 : public Class137ba70 /* derived name */
+{
+  public:
+    Object016cd110(const Name &name)
+        : Class137ba70(name), child40(0), child48(0), child50(0), unknown58(0), unknown5c(0),
+          unknown60(0), unknown64(2), unknown68(0), unknown6c(0), unknown70(0)
+    {
+    }
+
+    Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
+    Class137ba70 *child48; /* +0x48, derived name: asked when bit 1 is set */
+    Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
+    int unknown58;         /* +0x58 */
+    int unknown5c;         /* +0x5c */
+    int unknown60;         /* +0x60 */
+    int unknown64;         /* +0x64: 2 from the constructor */
+    int unknown68;         /* +0x68 */
+    int unknown6c;         /* +0x6c */
+    int unknown70;         /* +0x70 */
+    u8 unknown74[0x4];
+};
+
 /* The classes whose vtables are at 0x16b15a0 (stored by FUN_0096a720 and
  * FUN_0096a910; the class at 0x16b1640, built by FUN_0096a910, keeps this
  * slot 6) and 0x16b5860 (stored by FUN_00b386f0; the class at 0x16b0c50,
@@ -226,14 +289,12 @@ class Class16b5900 : public Class137ba70 /* derived name */
  * mask in the first, bits 0 and 2 in the second; their thunks in the base
  * at +0x28 FUN_0096e6a0 and FUN_00b3d650), and slot 9, 0x42d0's
  * `return 0`. */
-class Class16b15a0 : public Class137ba70 /* derived name */
+class Class16b15a0 : public Object016cd110 /* derived name */
 {
   public:
-    int FUN_00004340(int mask) const;
+    Class16b15a0(const Name &name) : Object016cd110(name) {}
 
-    Class137ba70 *child40; /* +0x40, derived name: asked with the whole mask */
-    Class137ba70 *child48; /* +0x48, derived name: asked when bit 1 is set */
-    Class137ba70 *child50; /* +0x50, derived name: asked when bit 2 is set */
+    int FUN_00004340(int mask) const;
 };
 
 /* What the class at 0x16b5860 adds to Class137ba70: a base with no virtual
