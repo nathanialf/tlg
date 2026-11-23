@@ -483,9 +483,19 @@ template <class T> class Array05943280 /* derived name */
             data[i].~T();
     }
 
+    T *begin()
+    {
+        return data;
+    }
+
     const T *begin() const
     {
         return data;
+    }
+
+    T *end()
+    {
+        return data + count;
     }
 
     const T *end() const

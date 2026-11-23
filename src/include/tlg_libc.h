@@ -69,6 +69,7 @@ int strncmp(const char *a, const char *b, size_t n);
 int memcmp(const void *a, const void *b, size_t n);
 void *memcpy(void *dst, const void *src, size_t n);
 void *memmove(void *dst, const void *src, size_t n);
+void qsort(void *base, size_t count, size_t size, int (*compare)(const void *, const void *));
 void *memset(void *dst, int c, size_t n);
 char *strcpy(char *dst, const char *src);
 char *strncpy(char *dst, const char *src, size_t n);
@@ -86,6 +87,8 @@ int snprintf(char *s, size_t n, const char *format, ...);
 int sscanf_s(const char *s, const char *format, ...);
 int vsnprintf(char *s, size_t n, const char *format, va_list args);
 int vsprintf(char *s, const char *format, va_list args);
+int vsprintf_s(char *s, size_t n, const char *format,
+               va_list args); /* NID verified as "vsprintf_s" */
 int vfprintf(FILE *stream, const char *format, va_list args);
 int vprintf(const char *format, va_list args); /* NID verified as "vprintf" */
 void perror(const char *message);
@@ -195,6 +198,16 @@ inline float strtof(const char *s, char **endptr)
     return _Stof(s, endptr, 0);
 }
 
+/* The C library's string-to-double conversion (Dinkumware's, behind strtod;
+ * its NID verified as "_Stod"): the third argument 0 (FUN_00d9f310: `xor
+ * edx, edx`). */
+double _Stod(const char *s, char **endptr, long exponent);
+
+inline double strtod(const char *s, char **endptr)
+{
+    return _Stod(s, endptr, 0);
+}
+
 /* Sony's C library extension: the usable size of a block from any of its
  * spaces (its NID verified as "sceLibcMspaceMallocUsableSize"). */
 size_t sceLibcMspaceMallocUsableSize(void *ptr);
@@ -223,6 +236,18 @@ int sceLibcMspaceMallocStatsFast(SceLibcMspace space, SceLibcMallocManagedSize *
  * the result is indexed directly, so the table itself, not a pointer to it). */
 const short *_Getptolower(void);
 const short *_Getptoupper(void);
+/* Dinkumware's character class table of the current locale, indexed by an
+ * unsigned char (its NID verified as "_Getpctype") */
+const short *_Getpctype(void);
+}
+
+/* derived name: the C library's isspace as the units inline it: the class
+ * table's entry tested against the space classes, the table fetched at each
+ * test (FUN_00d9f310: `call _Getpctype; movzx eax, word [rax+rbx*2]; test
+ * ax, 0x144`) */
+inline int isspace(int c)
+{
+    return _Getpctype()[c] & 0x144;
 }
 
 /* derived name: the C library's tolower as the units inline it: EOF kept,

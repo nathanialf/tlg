@@ -105,3 +105,39 @@ void FUN_00cf65a0(Resource00cf6380 *resource) /* derived name */
     resource->count90 = 0;
     resource->view = View00cf6380();
 }
+
+/* derived names: a 64-byte entry of the third table of a resource's view,
+ * its id at +0x20; the rest is not traced */
+struct Entry00cfe210 { /* derived name */
+    u8 unknown0[0x20];
+    int id; /* +0x20 */
+    u8 unknown24[0x1c];
+};
+
+/* derived names: an object over a resource, the id it looks for and the
+ * index of the entry found */
+struct Object00cfe210 { /* derived name */
+    u8 unknown0[0xc8];
+    Resource00cf6380 *resource; /* +0xc8 */
+    int id;                     /* +0xd0 */
+    unsigned index;             /* +0xd4: the count when the id is not there */
+};
+
+/* derived name: sets the object's resource up (FUN_00cf6380) and finds the
+ * entry with the object's id in its view's third table (no direct caller;
+ * the first argument is not read) */
+void FUN_00cfe210(void *owner, Object00cfe210 *object) /* derived name */
+{
+    Resource00cf6380 *resource = object->resource;
+    FUN_00cf6380(owner, resource);
+    const unsigned count = resource->view.count20;
+    const Entry00cfe210 *entries =
+        reinterpret_cast<const Entry00cfe210 *>(resource->view.pointer10);
+    object->index = count;
+    for (unsigned i = 0; i < count; ++i) {
+        if (entries[i].id == object->id) {
+            object->index = i;
+            return;
+        }
+    }
+}

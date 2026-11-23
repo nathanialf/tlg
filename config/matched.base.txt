@@ -10830,3 +10830,10 @@ FUN_00d66e30 src/game/unknown/leaf_00d66e30.cpp _Z12FUN_00d66e30j
 FUN_00616e70 src/game/unknown/leaf_00616e70.cpp _Z12FUN_00616e70P10QuaternionPKS_
 FUN_00c644d0 src/game/unknown/leaf_00c644d0.cpp _Z12FUN_00c644d0P18Dispatcher00c644d0P14Object016a7620
 FUN_013d5f10 src/game/unknown/leaf_013d5f10.cpp _Z12FUN_013d5f10P14Object016d7b30
+FUN_00f1a460 src/game/unknown/leaf_00f1a460.cpp _Z12FUN_00f1a460PKcz
+FUN_00d11230 src/game/unknown/leaf_00d11230.cpp _Z12FUN_00d11230PK19ParamSource00d11230P16ParamSet00d11230
+FUN_00d9f310 src/game/unknown/leaf_00d9f310.cpp _Z12FUN_00d9f310PKcmPf
+FUN_00c68be0 src/game/unknown/leaf_00c68cd0.cpp _Z12FUN_00c68be0P14Sorter00c68be0Pvj
+FUN_0140b510 src/game/unknown/leaf_0140b510.cpp _ZN14Record0140b510C2Ej
+FUN_00385b30 src/game/unknown/leaf_00385b30.cpp _ZN14Record00385b30C2Ev
+FUN_00cfe210 src/game/unknown/leaf_00cf6380.cpp _Z12FUN_00cfe210PvP14Object00cfe210

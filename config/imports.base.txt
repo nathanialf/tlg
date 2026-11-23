@@ -347,7 +347,7 @@ q7U6tEAQf7c S T func sceNpTrophyCreateHandle
 99b82IKXpH4 T U func sceAppContentAppParamGetInt
 R9lA82OraNs T U func sceAppContentInitialize
 +P6FRGH4LfA V V func memmove
-+qitMEbkSWk V V func ?
++qitMEbkSWk V V func vsprintf_s
 -LFO7jhD5CE V V func ?
 -VVn74ZyhEs V V func difftime
 -hn1tcVHq5Q V V func ?
@@ -431,7 +431,7 @@ ZtjspkJQ+vw V V func _FSin
 aaDMGGkXFxo V V func frexpf
 aesyjrHVWy4 V V func strncmp
 bzQExy189ZI V V func ?
-c41UEHVtiEA V V func ?
+c41UEHVtiEA V V func _Stod
 cpCOXWMgha0 V V func rand
 eLdDw6l0-bU V V func snprintf
 eT2UsmTewbU V V func _ZSt11_Xbad_allocv
@@ -477,7 +477,7 @@ q0F6yS-rCms V V func ?
 qWESlyXMI3E V V func sceLibcMspacePosixMemalign
 rQFVBXp-Cxg V V func fseek
 rcQCUr0EaRU V V func _Getptoupper
-sUP1hBaouOw V V func ?
+sUP1hBaouOw V V func _Getpctype
 tIhsqj0qsFE V V func free
 tQIo+GIPklo V V func _ZSt14_Xlength_errorPKc
 tcVi5SivF7Q V V func sprintf

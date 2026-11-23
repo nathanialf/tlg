@@ -58,6 +58,8 @@ strtoul
 strtoll
 strtoull
 _Stoul
+_Stod
+_Getpctype
 _Stof
 strtod
 strtof
@@ -68,6 +70,7 @@ sprintf
 snprintf
 vsprintf
 vsnprintf
+vsprintf_s
 printf
 vprintf
 fprintf

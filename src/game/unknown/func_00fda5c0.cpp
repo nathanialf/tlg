@@ -48,3 +48,24 @@ void FUN_013e5b20(Poser013e58c0 *self) /* derived name */
         self->bones[i].frames->keep();
     }
 }
+
+/* derived name: makes every frame set of a poser (tlg_game_frames013fb310.h)
+ * `count` frames long, the array's resize in line with this file's VECTOR_W
+ * (FUN_010ef6e0's body with the count an argument; called by FUN_013e5550,
+ * FUN_013e7a30, FUN_013e7a50 and FUN_00fd65c0); the same body, each with
+ * its file's VECTOR_W, is FUN_013fae50, FUN_0141ce50, FUN_0143d9c0,
+ * FUN_01449480 and FUN_014677a0 (func_0108cf60.cpp, func_0113d440.cpp,
+ * func_01165170.cpp, func_011908c0.cpp, func_011c9570.cpp), not written */
+// NONMATCHING: the base's outer loop is unswitched on `count == 0` (425
+// bytes against 288): `shl eax, 5` hoisted before the test and the zero
+// copy's reallocation passing the spilled byte count, the shape of a
+// non-trivial LoopUnswitch after LICM; the 3.7.1 unit pipeline at -O2 builds
+// the pass with OptimizeForSize (PassManagerBuilder.cpp:247) and
+// UnswitchIfProfitable refuses every non-trivial condition
+// (LoopUnswitch.cpp:691); the size budget is not the cause (a diagnostic
+// -loop-unswitch-threshold=100000 changes nothing)
+void FUN_013e5560(FramePoser013fccf0 *self, int count) /* derived name */
+{
+    for (unsigned i = 0; i < self->count; ++i)
+        self->sets.at(i).frames.resize(count);
+}
