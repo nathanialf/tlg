@@ -10,7 +10,5 @@ Object013d2f90::~Object013d2f90() {}
 
 void Object013d2f90::reset()
 {
-    values18.resize(36);
-    for (unsigned i = 0; i < values18.size(); ++i)
-        values18[i] = 0;
+    zeroValues();
 }

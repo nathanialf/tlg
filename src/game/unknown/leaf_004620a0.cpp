@@ -16,6 +16,10 @@ struct Entry004620a0 { /* derived name */
 // NONMATCHING: register assignment only: the base holds the block in rdx and the entry's
 // Name index in rcx inside the loop, the build the other way round (same instructions and
 // size; 0x4aaa20, the same body over 8-byte entries, is equal)
+// Round 507D: the block (from its load) and the Name index (from its load) are global ranges of
+// equal size (176 slots) here, so the lower virtual register, the block, is assigned first and
+// takes rcx; the base's order assigns the index first, as it would with the block loaded after the
+// offset's lea and shl (a shorter range).
 /* FUN_004620a0: the array emptied and its block given back: each entry's
  * Name released (the array and the count read again at each one), the
  * count cleared, then a capacity that is not zero cleared and the block

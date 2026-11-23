@@ -21,6 +21,8 @@ static inline int posrelat(int pos, size_t len)
  * 0x16bcfe0): the characters of the first argument from the second
  * position to the third (the string's end by default) */
 // NONMATCHING: register assignment only: the base takes the start's sign in edi and the length plus one in esi
+// Round 507D: the start's sign copy is defined before l + 1 here (the DAG's order: the select's
+// and-of-sar first) and takes esi; the base defines l + 1 first.
 int FUN_00de14d0(lua_State *state)
 {
     size_t l = 0;

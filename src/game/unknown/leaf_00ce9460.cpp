@@ -7,6 +7,9 @@
 // NONMATCHING: 38/40, register assignment only: the base loads the object's vptr into rax (`mov rax, [rdi]; call
 // [rax+0x30]`), this build into rcx; FUN_00ce94d0 and FUN_00ce61d0, the same loop with the argument's member, are
 // equal (round 484D: the value read into a local first moves the loop's registers away)
+// Round 507D: the vptr's load is defined while the argument's pointer (rax) is live, its value
+// read after it (clang forms the virtual callee before the arguments, CGExprCXX.cpp); the base
+// reads the value before the vptr, so rax is free for it.
 void FUN_00ce9460(Task00ce9460 *task)
 {
     const unsigned end = task->end;

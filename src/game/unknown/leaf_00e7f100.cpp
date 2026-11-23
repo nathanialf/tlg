@@ -11,6 +11,10 @@ namespace LuaBindings
 
 // NONMATCHING: register assignment only: the base loads the fourth float into edx
 // (`mov edx, [rax + 0x2c]`), the build into eax; 58/60.
+// Round 507D: the fourth float's load (a local range) is defined at the first vector's last use
+// and so reuses rax; the base's edx means the first vector's pointer is still live there: in the
+// base's order the w load comes before a.z's (the DAG puts it after the third max here, as the
+// source's order has it).
 int VectorMax3(lua_State *state)
 {
     int count = state->top - state->base;

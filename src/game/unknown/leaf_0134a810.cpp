@@ -4,10 +4,8 @@
 
 /* derived name: the complete destructor of the class whose vtable is at
  * 0x16c7328 (tlg_game_object0134a810.h): it stores the vtable and releases
- * the block the pointer at +0x68 holds (tlg_game_block.h). The destructor is
+ * the block of its array at +0x68 (the array's destructor, FUN_00ebf3f0 in
+ * line), defined empty. The destructor is
  * the class's key function, so this file emits the vtable; the deleting one
  * is the compiler's. */
-Object0134a810::~Object0134a810()
-{
-    FUN_00ebf3f0(unknown68);
-}
+Object0134a810::~Object0134a810() {}

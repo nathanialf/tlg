@@ -27,6 +27,9 @@ struct Object00eadb10 { /* derived name */
 // NONMATCHING: register assignment only: the base keeps the argument in r14 and the object in
 // rbx (the world in rax, the shifted id in rcx); here the reverse (24 instructions, the same
 // order)
+// Round 507D: both arguments are local ranges of the one block, assigned in order: the copy of rsi
+// comes first here (the DAG's order of the two CopyFromReg nodes) and takes rbx; the base's copy
+// of rdi comes first.
 void FUN_00eadb10(Object00eadb10 *self, const Argument00eadb10 *argument) /* derived name */
 {
     self->world->FUN_0004fcf0(argument->constraintId);

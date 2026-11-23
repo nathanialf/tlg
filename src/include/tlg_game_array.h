@@ -180,19 +180,23 @@ template <class T> class Array05943280 /* derived name */
     }
 
     /* appends a copy of the value unless an element equals it, growing the
-     * block first when it is full (FUN_002db990 and FUN_005a42c0 over
-     * counted references: the elements compared first, `cmp [rcx+rsi*8],
+     * block first when it is full (FUN_002db990, FUN_005a42c0 and three more
+     * over counted references: the elements compared first, `cmp [rcx+rsi*8],
      * rdx; je` with the value read once, then the count raised, the growth
-     * and the value read again for the copy; the new slot is where the
-     * search stopped: `xor r15d, r15d` before the search and `mov r15d,
-     * eax` after it) */
+     * and the value read again for the copy). The new slot is the count read
+     * after the search, the append's body written out here: the read is the
+     * loop's own test of the count, which the rotated loop carries out as
+     * one value from its guard and one from its latch, and the guard's,
+     * known to be 0, becomes 0 (`xor r15d, r15d` before the search, `mov
+     * r15d, eax` after it). Through a call of push() the append over
+     * references is not inlined in the unit and the count is read once
+     * (`test rbx, rbx`). */
     void addUnique(const T &value) /* derived name */
     {
-        unsigned index = 0;
-        for (; index < count; ++index)
-            if (data[index] == value)
+        for (unsigned i = 0; i < count; ++i)
+            if (data[i] == value)
                 return;
-        count = index + 1;
+        unsigned index = count++;
         if (count > capacity)
             grow(count);
         new (&data[index]) T(value);

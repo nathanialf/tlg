@@ -8,9 +8,8 @@ extern const char
 /* derived name: a cubic curve from 0 to 1 through two control values */
 static inline float easeCurve(float t, float first, float second)
 {
-    const float s = 1.0f - t;
     const float t2 = t * t;
-    return t2 * t + (t2 * second + s * t * first) * (s * 3.0f);
+    return t2 * t + (t2 * second + (1.0f - t) * t * first) * ((1.0f - t) * 3.0f);
 }
 
 /* derived names: the handler of node kind 18 in the 'XFIT' owners' default
@@ -21,9 +20,10 @@ static inline float easeCurve(float t, float first, float second)
  * current value. Each child of the node then dispatches the node it holds
  * at +0x38 with the eased value as the owner's value (type 4), and a
  * message is written when the node asks for one. Returns 0. */
-// NONMATCHING: 177/212 in the module: the first curve's three values in a rotated register
-// assignment (1 - u, u * u and u * u * u in xmm3, xmm4, xmm6 where the base has xmm6, xmm3,
-// xmm4), then the message's loads not folded into vcvtss2sd
+// NONMATCHING: the message's loads are not folded into vcvtss2sd (the base zeroes xmm4 and
+// converts each from memory) and the nops before the loops; the curves' registers are the base's
+// with 1 - t written where it is used, after t * t * second (round 507D: greedy assigns the
+// block's ranges in order, so u * u and its cube take xmm3 and xmm4 first and 1 - u xmm6)
 int FUN_00c65ce0(ValueOwner583950 *self, void *arg) /* derived name */
 {
     ParentNode583950Kind18 *node =

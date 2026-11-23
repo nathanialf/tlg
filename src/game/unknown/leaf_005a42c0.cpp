@@ -11,10 +11,5 @@ class Value005a42c0 : public Object016b9108 /* derived name */
 {
 };
 
-// NONMATCHING: the new slot's index: the base keeps the count it read as a value of its own
-// after the search (`xor r15d, r15d` before it, `mov r15d, eax` on the not-found exit: 0 when
-// the array is empty, else the count); the build stores at the search's own counter (this
-// form) or reuses the count's register (contains() then the count raised: `test rbx, rbx`,
-// pushUnique's shape, 0xce22e0). Three forms tried.
 template void
 Array05943280<Ref00503fb0<Value005a42c0>>::addUnique(const Ref00503fb0<Value005a42c0> &);

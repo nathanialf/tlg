@@ -57,3 +57,12 @@ FrameSet010ef520::FrameSet010ef520()
 {
     frames.resize(4);
 }
+
+/* derived name: FUN_010ef6e0 makes every frame set of a poser (tlg_game_frames013fb310.h)
+ * 3 frames long, the array's resize in line with this file's VECTOR_W (its
+ * callers FUN_010d9730 and FUN_010dbbd0 are not written) */
+void FUN_010ef6e0(FramePoser013fccf0 *self) /* derived name */
+{
+    for (unsigned i = 0; i < self->count; ++i)
+        self->sets.at(i).frames.resize(3);
+}

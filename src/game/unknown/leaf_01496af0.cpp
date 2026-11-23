@@ -27,6 +27,8 @@ struct DepthTarget01496af0 { /* derived name */
 };
 
 // NONMATCHING: register assignment only: the surface pointer takes rcx and the count rax in the base, the reverse here (three source forms measured: ==, its operands swapped, the early return as a block)
+// Round 507D: the surface is a global range (used after the test) and takes rax before the local
+// count; in the base the count takes rax first.
 void DepthTarget01496af0::update() /* derived name */
 {
     if (count != surface->count) {

@@ -50,6 +50,8 @@ void FUN_00a13970(ForceField00a12870 *field, lua_State *state, int unknown2); /*
 // object and rcx for the side's offset where the base takes rcx and rdx, and
 // clears edx for the first call before the field's `lea` (greedy's
 // assignment); everything else equal
+// Round 507D: the two index copies (both hinted, so assigned before the other locals) come before
+// the load of D_57c9390 here and take rcx; the base gives the load rcx first.
 int FUN_00a12870(lua_State *state) /* derived name */
 {
     if (argumentCount(state) == 3 && isTable(state, 1) && isNumber(state, 2) &&

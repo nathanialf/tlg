@@ -14,6 +14,8 @@
 class Object016c1e40 /* derived name */
 {
   public:
+    explicit Object016c1e40(void *owner);
+
     virtual ~Object016c1e40();
 
     virtual void slot2() {} /* derived name */
@@ -30,8 +32,16 @@ class Object016c1e40 /* derived name */
     virtual void slot8(); /* derived name; FUN_0120ffc0, not traced */
 
   private:
-    u8 unknown8[0x8];
+    void *unknown8;           /* +0x8: the constructor's argument; not traced */
     Object013d2f90 unknown10; /* +0x10 */
 };
+
+/* FUN_0120fe90: the constructor: the argument kept at +0x8, the member at +0x10
+ * built with its constructor in line (tlg_game_object013d2f90.h) */
+// NONMATCHING: two store orders and one merge: the base stores +0x8 before the vptr and the
+// member's +0x18 and +0x20 before its vptr (each the field of a base class constructed first,
+// the stores kept in the IR's order), and keeps the four ints at +0x40 to +0x4c one store each
+// (0, 0, -1, 1) where the build merges them into one vector constant.
+Object016c1e40::Object016c1e40(void *owner) : unknown8(owner) {}
 
 Object016c1e40::~Object016c1e40() {}
