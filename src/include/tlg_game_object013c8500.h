@@ -430,14 +430,14 @@ class Object013c8500 /* derived name */
      * 0x1af750): a slot the bytes call carries its argument, the others
      * are not traced. The walks of slots 19 and 26 call four slots on each
      * element: three hooks 39 slots apart around the element's own mark */
-    virtual void visit00dd0ce0(const Record00dd0ce0 *record); /* 0xdd0ce0 */
-    virtual void slot4();
-    virtual void slot5();
-    virtual void visit00dd0f90(const Table00dd0f90 *table); /* 0xdd0f90 */
-    virtual void slot7();
-    virtual void visit00dd13d0(const Record00dd13d0 *record); /* 0xdd13d0 */
-    virtual void visit00dd1460(const Record00dd1460 *record); /* 0xdd1460 */
-    virtual void visit00dd1510(const Record00dd1510 *record); /* 0xdd1510 */
+    virtual void visit00dd0ce0(const Record00dd0ce0 *record);    /* 0xdd0ce0 */
+    virtual void markUpvalue(const Upvalue00dd2e60 *upvalue);    /* 0xdd0f20 */
+    virtual void markString(const String00dd2f70 *string);       /* 0xdd0f80 */
+    virtual void visit00dd0f90(const Table00dd0f90 *table);      /* 0xdd0f90 */
+    virtual void markUserData(const UserData00dd2cf0 *userData); /* 0xdd1380 */
+    virtual void visit00dd13d0(const Record00dd13d0 *record);    /* 0xdd13d0 */
+    virtual void visit00dd1460(const Record00dd1460 *record);    /* 0xdd1460 */
+    virtual void visit00dd1510(const Record00dd1510 *record);    /* 0xdd1510 */
     virtual void markElement00dd1740(const Element00dd1740 *element);
     virtual void visit00dd1740(const Array00dd1740 *array);      /* 0xdd1740 */
     virtual void visit00dd18c0(const ValueArray00dd18c0 *array); /* 0xdd18c0 */
@@ -470,19 +470,19 @@ class Object013c8500 /* derived name */
     virtual void markReference(Collected00dd22f0 *const *reference);
     virtual void visit00dd22f0(const Block00dd1950 *block); /* 0xdd22f0 */
     virtual void slot42();
-    virtual void slot43();
-    virtual void slot44();
-    virtual void slot45();
-    virtual void slot46();
-    virtual void slot47();
-    virtual void slot48();
-    virtual void slot49();
-    virtual void slot50();
+    virtual void beforeUpvalue(const Upvalue00dd2e60 *upvalue);
+    virtual void beforeString(const String00dd2f70 *string);
+    virtual void beforeTable00dd0f90(const Table00dd0f90 *table);
+    virtual void beforeRecord00dd11d0(const Record00dd11d0 *record);
+    virtual void beforeUserData(const UserData00dd2cf0 *userData);
+    virtual void beforeCFunction(const Record00dd13d0 *function);
+    virtual void beforeClosure(const Record00dd1460 *closure);
+    virtual void beforeMethod(const Record00dd1510 *method);
     virtual void beforeElement00dd1740(const Element00dd1740 *element);
     virtual void beforeArray00dd1740(const Array00dd1740 *array);
     virtual void beforeValueArray(const ValueArray00dd18c0 *array);
     virtual void beforeRecord00dd1950(const Record00dd1950 *record);
-    virtual void slot55();
+    virtual void beforeRecord00dd1af0(const Record00dd1af0 *record);
     virtual void beforeHeader(const Header00dd1950 *header);
     virtual void beforeRecord00dd1b80(const Record00dd1b80 *record);
     virtual void beforeValues(const ValueRange00dd1cf0 *range);
@@ -509,10 +509,10 @@ class Object013c8500 /* derived name */
     virtual void beforeReference(Collected00dd22f0 *const *reference);
     virtual void beforeBlock1d8(const Block00dd1950 *block);
     virtual void enterThread(const lua_State *state);
-    virtual void slot82();
-    virtual void slot83();
-    virtual void slot84();
-    virtual void slot85();
+    virtual void enterUpvalue(const Upvalue00dd2e60 *upvalue);
+    virtual void enterString(const String00dd2f70 *string);
+    virtual void enterTable00dd0f90(const Table00dd0f90 *table);
+    virtual void enterRecord00dd11d0(const Record00dd11d0 *record);
     virtual void enterUserData(const UserData00dd2cf0 *userData);
     virtual void enterCFunction(const Record00dd13d0 *function);
     virtual void enterClosure(const Record00dd1460 *closure);
@@ -521,7 +521,7 @@ class Object013c8500 /* derived name */
     virtual void enterArray00dd1740(const Array00dd1740 *array);
     virtual void enterValueArray(const ValueArray00dd18c0 *array);
     virtual void enterRecord00dd1950(const Record00dd1950 *record);
-    virtual void slot94();
+    virtual void enterRecord00dd1af0(const Record00dd1af0 *record);
     virtual void enterHeader(const Header00dd1950 *header);
     virtual void enterRecord00dd1b80(const Record00dd1b80 *record);
     virtual void enterValues(const ValueRange00dd1cf0 *range);
@@ -548,19 +548,19 @@ class Object013c8500 /* derived name */
     virtual void enterReference(Collected00dd22f0 *const *reference);
     virtual void enterBlock1d8(const Block00dd1950 *block);
     virtual void slot120();
-    virtual void slot121();
-    virtual void slot122();
-    virtual void slot123();
-    virtual void slot124();
-    virtual void slot125();
-    virtual void slot126();
-    virtual void slot127();
-    virtual void slot128();
+    virtual void afterUpvalue(const Upvalue00dd2e60 *upvalue);
+    virtual void afterString(const String00dd2f70 *string);
+    virtual void afterTable00dd0f90(const Table00dd0f90 *table);
+    virtual void afterRecord00dd11d0(const Record00dd11d0 *record);
+    virtual void afterUserData(const UserData00dd2cf0 *userData);
+    virtual void afterCFunction(const Record00dd13d0 *function);
+    virtual void afterClosure(const Record00dd1460 *closure);
+    virtual void afterMethod(const Record00dd1510 *method);
     virtual void afterElement00dd1740(const Element00dd1740 *element);
     virtual void afterArray00dd1740(const Array00dd1740 *array);
     virtual void afterValueArray(const ValueArray00dd18c0 *array);
     virtual void afterRecord00dd1950(const Record00dd1950 *record);
-    virtual void slot133();
+    virtual void afterRecord00dd1af0(const Record00dd1af0 *record);
     virtual void afterHeader(const Header00dd1950 *header);
     virtual void afterRecord00dd1b80(const Record00dd1b80 *record);
     virtual void afterValues(const ValueRange00dd1cf0 *range);
@@ -723,6 +723,23 @@ class Object013c8500 /* derived name */
         markItems(items);
         afterItems(items);
     }
+
+    /* derived names: the walks of an object the tree records (before, then
+     * for a first visit enter, mark and after), each in a unit of its own:
+     * an upvalue (FUN_013bf700), a string (FUN_013bf850, kind 4 of a
+     * value), a table (FUN_013bfaf0, kind 5), slot 14's record
+     * (FUN_013bf9a0, kind 12), a method (FUN_013bfd90), slot 16's record
+     * (FUN_013bfee0), a user data (FUN_013bfc40, kind 7), a C function
+     * (FUN_013c0180, kind 10) and a closure (FUN_013c0030, kind 9) */
+    void visit(const Upvalue00dd2e60 *upvalue);
+    void visit(const String00dd2f70 *string);
+    void visit(const Table00dd0f90 *table);
+    void visit(const Record00dd11d0 *record);
+    void visit(const Record00dd1510 *method);
+    void visit(const Record00dd1af0 *record);
+    void visit(const UserData00dd2cf0 *userData);
+    void visit(const Record00dd13d0 *function);
+    void visit(const Record00dd1460 *closure);
 
     void visit(const Record00dd2190 *record)
     {
