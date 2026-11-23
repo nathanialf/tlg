@@ -10764,3 +10764,12 @@ FUN_014163d0 src/game/unknown/leaf_014163d0.cpp _ZN14Object016d5c40D1Ev
 FUN_01416600 src/game/unknown/leaf_01416600.cpp _ZN14Object016d5bf0D1Ev
 FUN_0141d4f0 src/game/unknown/leaf_0141d4f0.cpp _ZN14Object016d5dc0D1Ev
 FUN_0141d720 src/game/unknown/leaf_0141d720.cpp _ZN14Object016d5d70D1Ev
+FUN_01342e50 src/game/unknown/leaf_01342e50.cpp _ZN14String01342e506formatEPKcz
+FUN_00eb6130 src/game/unknown/leaf_00eb6130.cpp _Z12FUN_00eb6130P16Requests00eb6130
+FUN_00d9c4a0 src/game/unknown/leaf_00d9c4a0.cpp _Z12FUN_00d9c4a0P12HksDumpStatePK9HksString
+FUN_012fe750 src/game/unknown/leaf_012fe750.cpp _Z12FUN_012fe750P16Gomalloc012fe750P21GomallocSizes012fe750
+FUN_0134bb20 src/game/unknown/leaf_0134bb20.cpp _Z12FUN_0134bb20RK7Float4ARS_
+FUN_00d6db10 src/game/unknown/leaf_00d6db10.cpp _Z12FUN_00d6db10P19ThreadStart00d6db10
+FUN_00d9eb40 src/game/unknown/leaf_00d9eb40.cpp _Z12FUN_00d9eb40P16LexState00d9eb40h
+FUN_0045e2c0 src/game/unknown/leaf_0045e2c0.cpp _Z12FUN_0045e2c0R6Float4PK14Object0045e2c0
+FUN_011e52f0 src/game/unknown/leaf_011e52f0.cpp _Z12FUN_011e52f0f

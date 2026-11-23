@@ -140,6 +140,11 @@ int scePthreadRwlockWrlock(pthread_rwlock_t *rwlock);
 void scePthreadYield(void);
 unsigned long sceKernelGetProcessTime(void); /* microseconds since the process began */
 pthread_t scePthreadSelf(void); /* the calling thread (0x69d42f compares it with a lock's owner) */
+/* A thread's event queue made and destroyed, and the calling thread ended
+ * (FUN_00d6db10, the entry of the game's threads). */
+int sceKernelCreateEqueue(SceKernelEqueue *eq, const char *name);
+int sceKernelDeleteEqueue(SceKernelEqueue eq);
+[[noreturn]] void scePthreadExit(void *value);
 }
 
 #endif

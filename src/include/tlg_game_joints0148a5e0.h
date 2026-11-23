@@ -7,11 +7,15 @@
 #include "tlg_types.h"
 #include "tlg_game_array.h"
 #include "tlg_game_name.h"
+#include "tlg_math.h"
 
-/* derived names: a joint of a model, its name's index at +0x210 (as
- * leaf_001b5840.cpp's nodes) */
+/* derived names: a joint of a model, its position at +0x120 (copied by
+ * FUN_0045e2c0) and its name's index at +0x210 (as leaf_001b5840.cpp's
+ * nodes) */
 struct Joint0148a5e0 { /* derived name */
-    u8 unknown0[0x210];
+    u8 unknown0[0x120];
+    Float4 position; /* +0x120 */
+    u8 unknown130[0xe0];
     u32 name210; /* +0x210 */
 };
 

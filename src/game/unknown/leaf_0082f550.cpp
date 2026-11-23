@@ -5,6 +5,7 @@
 #include "tlg_game_object016b9108.h"
 #include "tlg_game_node.h"
 #include "tlg_game_array.h"
+#include "tlg_game_string01342e50.h"
 
 /* derived names: a script call's argument, 16 bytes: a 32-bit type code at
  * +0x0 and its value at +0x8 (leaf_00b10e30.cpp's and leaf_00301db0.cpp's;
@@ -34,16 +35,6 @@ struct ScriptArgument00a2efa0 {
 /* calls the script function its name gives with count arguments, its int
  * result through the last pointer; nonzero on success (FUN_00b10da0). */
 int FUN_00a2efa0(const char *name, int count, const ScriptArgument00a2efa0 *arguments, int *result);
-
-/* derived names: a string of at most 255 characters and its length at
- * +0x100; FUN_01342e50 formats into it (vsnprintf with 0x100, the length
- * the result or 255 when it is negative) */
-struct String01342e50 { /* derived name */
-    void FUN_01342e50(const char *format, ...);
-
-    char text[0x100];
-    int length; /* +0x100 */
-};
 
 /* derived names: an entry of the list the pointer at 0x581bd00 holds: its
  * state at +0x24, its name at +0x2c, two arrays of the names of objects at
@@ -83,7 +74,7 @@ int FUN_0082f550(Region0082f550 *region, void *) /* derived name */
         arguments[1].set(2, D_17ac870[region->unknown118->name.index].string0);
         arguments[2].set(2, D_17ac870[region->name.index].string0);
         String01342e50 function;
-        function.FUN_01342e50("RegionSetting.%s.OnConnect", D_17ac870[region->name.index].string0);
+        function.format("RegionSetting.%s.OnConnect", D_17ac870[region->name.index].string0);
         FUN_00a2efa0(function.text, 3, arguments, 0);
     }
     return 1;
@@ -130,8 +121,7 @@ int FUN_0082f340(Region0082f550 *region, void *) /* derived name */
     region->unknownfc = 0;
     if (region->unknown24 == 3) {
         String01342e50 function;
-        function.FUN_01342e50("RegionSetting.%s.OnDisconnect",
-                              D_17ac870[region->name.index].string0);
+        function.format("RegionSetting.%s.OnDisconnect", D_17ac870[region->name.index].string0);
         FUN_00a2efa0(function.text, 0, 0, 0);
         const unsigned count = region->names50.size();
         for (unsigned i = 0; i < count; ++i) {

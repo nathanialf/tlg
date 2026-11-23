@@ -212,3 +212,5 @@ D_1692bc0 src/libs/unknown/func_000349b0.cpp
 D_1692c10 src/libs/unknown/func_000349b0.cpp
 D_14d2ee0 src/sce/unknown/leaf_001a7180.cpp
 D_15252d0 src/game/unknown/leaf_012fd020.cpp
+D_1524870 src/game/unknown/leaf_011e52f0.cpp
+D_15248a0 src/game/unknown/leaf_011e52f0.cpp
