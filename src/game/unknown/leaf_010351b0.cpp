@@ -64,8 +64,6 @@ class Object016c0ed8 : public Object00c1b7f0, public Object013cd320 /* derived n
  * FUN_00c1b7f0 runs as a tail call. FUN_01035b80, slot 1, is the deleting one.
  * The destructor is the class's key function, so this file emits the
  * vtable. */
-// NONMATCHING: the complete destructor: 2497 bytes in the base, 1371 here: the components' destructors are called
-// where the base inlines them
 Object016c0ed8::~Object016c0ed8()
 {
     if (registry)

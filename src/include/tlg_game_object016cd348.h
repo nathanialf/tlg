@@ -5,26 +5,73 @@
 #define TLG_GAME_OBJECT016CD348_H
 
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_array.h"
 #include "tlg_game_block.h"
 
 /* derived names: the class whose vtable is at 0x16cd348
- * (config/vtables.derived.base.txt, stored by FUN_00991430 FUN_00991560 FUN_00991670 and 3 more), derived from
- * Object016b9108: its slots 2 to 4 are the base's, slot 5 its own (declared; its body is not written here). Its own fields
- * from +0x24 are traced only where its destructor FUN_01382c30 tears them down
- * (the block at +0x28); the rest are not traced. */
+ * (config/vtables.derived.base.txt, stored by FUN_00991430 FUN_00991560
+ * FUN_00991670 and 3 more), derived from Object016b9108: its slots 2 to 4
+ * are the base's, slot 5 its own. 0x48
+ * bytes (`mov edi, 0x48` before operator new in its creator FUN_00e5b650,
+ * which inlines the constructor). Every function of the class lies in the
+ * stretch of inline functions (from 0x1340000: the complete and the
+ * deleting destructor FUN_01382c30 and FUN_01382d00, slot 5), so it has no
+ * key function and declares no destructor: the units that construct it
+ * emit the vtable and both destructors, and the destructor of a class over
+ * it holds its body (FUN_00991560). The rest is not traced. */
 class Object016cd348 : public Object016b9108 /* derived name */
 {
   public:
-    Object016cd348(const Name &name); /* 0x991430, its row named for it (D15) */
-    virtual ~Object016cd348();
-    virtual void slot5(); /* derived name; FUN_01382dd0, not traced */
+    /* the base's constructor, then the array made empty and the pointer at
+     * +0x40 cleared (0xe5b758 to 0xe5b7a4) */
+    Object016cd348(const Name &name) : Object016b9108(name), unknown40(0) {}
+
+    /* slot 5, FUN_01382dd0: the array's address */
+    virtual Array05943280<u32> *values() /* derived name */
+    {
+        return &values28;
+    }
 
   private:
     u8 unknown24[0x4];
-    /* +0x28: an owned block, released by the destructor (`mov rax, [rbx+0x28]; ... cmp ecx, 0xa`) */
-    OwnedBlock05943280 block28;
-    u8 unknown30
-        [0x38]; /* 0x68 bytes in all (`mov edi, 0x68` before operator new in the creator FUN_009912d0); not traced */
+    /* +0x28: an array, released by the destructor (`mov rax, [rbx+0x28];
+     * ... cmp ecx, 0xa`); 32-bit elements, as the class over it makes 64
+     * of (0x991430) */
+    Array05943280<u32> values28;
+    void *unknown40; /* +0x40: not traced */
+};
+
+/* derived names: the class whose vtable is at 0x16b1738
+ * (config/vtables.derived.base.txt, stored by FUN_00991430 FUN_00991560
+ * FUN_00991670), derived from Object016cd348: slot 5 is its own, the
+ * others the base's. 0x68 bytes (`mov
+ * edi, 0x68` before operator new in its creator FUN_009912d0). Its
+ * constructor 0x991430 is out of line (stores both vtables; the functions
+ * table names it for Object016cd348) and not written; its destructor is
+ * FUN_00991560 (leaf_00991560.cpp). The rest is not traced. */
+class Object016b1738 : public Object016cd348 /* derived name */
+{
+  public:
+    Object016b1738(const Name &name);
+    virtual ~Object016b1738();
+    /* slot 5: its own array's address (FUN_00038120, a body the
+     * executable keeps once for every class whose slot returns the address
+     * at +0x50) */
+    virtual Array05943280<u32> *values(); /* derived name */
+
+  private:
+    u8 unknown48[0x8];
+    /* +0x50: the block of 64 values made 0 by the constructor (0x991430:
+     * an array's fields, the capacity made 64 exactly, then each element
+     * cleared), released by the destructor (`mov rax, [rbx+0x50]; ... cmp
+     * ecx, 0xa`). Slot 5 returns its address as the base's returns its
+     * array's, so it is an array of the same type by its use; written as
+     * the array template, its inline release makes the complete destructor
+     * cost more than the deleting one takes in (FUN_00991670 then calls
+     * FUN_00991560, measured), so the block is the member that releases it
+     * through FUN_00ebf3f0 (tlg_game_block.h). OPEN: which list type the
+     * original has here. */
+    OwnedBlock05943280 block50;
 };
 
 #endif

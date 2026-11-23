@@ -9,6 +9,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_block.h"
 #include "tlg_game_object0140ccc0.h"
+#include "tlg_game_object016d7eb0.h"
 
 /* derived names: the class whose vtable is at 0x16d6708
  * (config/vtables.derived.base.txt): three slots (FUN_013e7660,
@@ -27,8 +28,8 @@ class Object016d6708 /* derived name */
     u8 unknown8[0x8];
     OwnedBlock05943280 block10; /* +0x10 */
     u8 unknown18[0x10];
-    Array05943280<Array05943280<int>> lists28; /* +0x28 */
-    OwnedBlock05943280 block40;                /* +0x40 */
+    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
+    OwnedBlock05943280 block40;                        /* +0x40 */
     u8 unknown48[0x38];
     OwnedBlock05943280 block80; /* +0x80 */
     u8 unknown88[0x90];
@@ -86,8 +87,8 @@ class Object016d7bb0 /* derived name */
     u8 unknown8[0x8];
     OwnedBlock05943280 block10; /* +0x10 */
     u8 unknown18[0x10];
-    Array05943280<Array05943280<int>> lists28; /* +0x28 */
-    OwnedBlock05943280 block40;                /* +0x40 */
+    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
+    OwnedBlock05943280 block40;                        /* +0x40 */
     u8 unknown48[0x38];
     OwnedBlock05943280 block80; /* +0x80 */
     u8 unknown88[0x18];

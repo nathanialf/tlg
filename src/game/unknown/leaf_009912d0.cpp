@@ -10,15 +10,15 @@
  * constructor's call) */
 extern Type059458a8 *D_5822188;
 
-/* derived name: the creator of Object016cd348, of FUN_002188b0's shape and
+/* derived name: the creator of Object016b1738, of FUN_002188b0's shape and
  * signature (the first argument is not used): the object's 0x68 bytes are
  * allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place by its
  * constructor 0x991430, which is not inlined. */
 Object016b9108 *FUN_009912d0(void *, const Name &name)
 {
-    void *memory = operator new(sizeof(Object016cd348));
+    void *memory = operator new(sizeof(Object016b1738));
     D_59458a4.lock();
     D_59458a8 = D_5822188;
-    return new (memory) Object016cd348(name);
+    return new (memory) Object016b1738(name);
 }

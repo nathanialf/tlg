@@ -1,17 +1,19 @@
 /* src/include/tlg_game_object0143e060.h: four classes of the shape of
  * Object016d5e90 (tlg_game_object01439e30.h), each the part of two
  * 0x150-byte classes whose destructors are of 0x1439e30's shape (game
- * region; docs/TARGETS.md). Every name here is derived. */
+ * region; docs/TARGETS.md). Every name here is derived. Each part has
+ * the fields of Object016d52c8 (tlg_game_object016d7a28.h): blocks at
+ * +0x10, +0x40 and +0x80 and at +0x28 the lists of pairs (List013e72e0,
+ * whose constructor FUN_014397e0's resize FUN_013e71b0 calls for each).
+ * Each block then goes back through FUN_00ebf3f0 at the unit stage and the
+ * part's implicit destructor is cheap enough to be inlined into both
+ * wholes over it, as the base holds it (FUN_0143e060 to FUN_01468170);
+ * with the array template's inline release it stayed a call there. */
 #ifndef TLG_GAME_OBJECT0143E060_H
 #define TLG_GAME_OBJECT0143E060_H
 
 #include "tlg_game_object01439e30.h"
-
-/* derived name: the element of Object016d5fb0's array at +0x28, its own type
- * as Element01491e40 is (one instantiation of the array's destructor for
- * the class) */
-struct Element016d5fb0 : Element01439e30 { /* derived name */
-};
+#include "tlg_game_object016d7eb0.h"
 
 /* derived names: the class whose vtable is at 0x16d5fb0 (the row of
  * config/vtables.derived.base.txt names it; stored by FUN_0114db30), the part of
@@ -26,12 +28,13 @@ class Object016d5fb0 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    Array05943280<int> array10;             /* +0x10 */
-    Array05943280<Element016d5fb0> array28; /* +0x28 */
-    Array05943280<Element01439a20> array40; /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<int> array80; /* +0x80 */
-    u8 unknown98[0x8];
+    OwnedBlock05943280 block10; /* +0x10 */
+    u8 unknown18[0x10];
+    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
+    OwnedBlock05943280 block40;                        /* +0x40 */
+    u8 unknown48[0x38];
+    OwnedBlock05943280 block80; /* +0x80 */
+    u8 unknown88[0x18];
 };
 
 /* derived names: the class whose vtable is at 0x16d6060 (the row of
@@ -78,12 +81,6 @@ class Object016d6010 : public Object016d5fb0 /* derived name */
     u8 unknown108[0x48];
 };
 
-/* derived name: the element of Object016d6270's array at +0x28, its own type
- * as Element01491e40 is (one instantiation of the array's destructor for
- * the class) */
-struct Element016d6270 : Element01439e30 { /* derived name */
-};
-
 /* derived names: the class whose vtable is at 0x16d6270 (the row of
  * config/vtables.derived.base.txt names it; stored by FUN_01175460), the part of
  * Object016d62e8 and Object016d6298 that their destructors destroy after storing this vtable,
@@ -97,12 +94,13 @@ class Object016d6270 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    Array05943280<int> array10;             /* +0x10 */
-    Array05943280<Element016d6270> array28; /* +0x28 */
-    Array05943280<Element01439a20> array40; /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<int> array80; /* +0x80 */
-    u8 unknown98[0x8];
+    OwnedBlock05943280 block10; /* +0x10 */
+    u8 unknown18[0x10];
+    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
+    OwnedBlock05943280 block40;                        /* +0x40 */
+    u8 unknown48[0x38];
+    OwnedBlock05943280 block80; /* +0x80 */
+    u8 unknown88[0x18];
 };
 
 /* derived names: the class whose vtable is at 0x16d62e8 (the row of
@@ -149,12 +147,6 @@ class Object016d6298 : public Object016d6270 /* derived name */
     u8 unknown108[0x48];
 };
 
-/* derived name: the element of Object016d6408's array at +0x28, its own type
- * as Element01491e40 is (one instantiation of the array's destructor for
- * the class) */
-struct Element016d6408 : Element01439e30 { /* derived name */
-};
-
 /* derived names: the class whose vtable is at 0x16d6408 (the row of
  * config/vtables.derived.base.txt names it; stored by FUN_01197560), the part of
  * Object016d6468 and Object016d64d8 that their destructors destroy after storing this vtable,
@@ -168,12 +160,13 @@ class Object016d6408 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    Array05943280<int> array10;             /* +0x10 */
-    Array05943280<Element016d6408> array28; /* +0x28 */
-    Array05943280<Element01439a20> array40; /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<int> array80; /* +0x80 */
-    u8 unknown98[0x8];
+    OwnedBlock05943280 block10; /* +0x10 */
+    u8 unknown18[0x10];
+    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
+    OwnedBlock05943280 block40;                        /* +0x40 */
+    u8 unknown48[0x38];
+    OwnedBlock05943280 block80; /* +0x80 */
+    u8 unknown88[0x18];
 };
 
 /* derived names: the class whose vtable is at 0x16d6468 (the row of
@@ -220,12 +213,6 @@ class Object016d64d8 : public Object016d6408 /* derived name */
     u8 unknown108[0x48];
 };
 
-/* derived name: the element of Object016d65f0's array at +0x28, its own type
- * as Element01491e40 is (one instantiation of the array's destructor for
- * the class) */
-struct Element016d65f0 : Element01439e30 { /* derived name */
-};
-
 /* derived names: the class whose vtable is at 0x16d65f0 (the row of
  * config/vtables.derived.base.txt names it; stored by FUN_011bd1d0), the part of
  * Object016d6668 and Object016d6618 that their destructors destroy after storing this vtable,
@@ -239,12 +226,13 @@ class Object016d65f0 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    Array05943280<int> array10;             /* +0x10 */
-    Array05943280<Element016d65f0> array28; /* +0x28 */
-    Array05943280<Element01439a20> array40; /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<int> array80; /* +0x80 */
-    u8 unknown98[0x8];
+    OwnedBlock05943280 block10; /* +0x10 */
+    u8 unknown18[0x10];
+    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
+    OwnedBlock05943280 block40;                        /* +0x40 */
+    u8 unknown48[0x38];
+    OwnedBlock05943280 block80; /* +0x80 */
+    u8 unknown88[0x18];
 };
 
 /* derived names: the class whose vtable is at 0x16d6668 (the row of

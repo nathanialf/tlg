@@ -33,6 +33,43 @@ struct Pair014715d0 { /* derived name */
     Float4A second;
 };
 
+/* derived names: the lists at +0x28 and at +0xa0: a list made with two
+ * elements, its capacity made 2 exactly and both default-constructed: the
+ * constructors FUN_013e72e0 (pairs, a 0x40-byte block: the zero vector and
+ * the vector at 0x5acf2c0) and FUN_013fcc20 (vectors, a 0x20-byte block:
+ * zero), of the same shape, out of line in the stretch of inline functions,
+ * called for each list by the outer arrays' resize (FUN_013e71b0,
+ * FUN_0108d540). Not the array template: that one starts empty. The list
+ * gives its block back through FUN_00ebf3f0, a block's release outside the
+ * arrays (tlg_game_block.h); its elements need no destructor. With it the
+ * destructors of the classes that hold these lists are inlined whole where
+ * the base has them (FUN_01016ab0, FUN_010351b0, FUN_01281820); with the
+ * array template's inline release they stay calls. The slot 1 copies
+ * (FUN_013f0120 and five of the same bytes) store the pairs at a stride of
+ * 32 (`shl rcx, 5`) in lists 24 bytes apart. The constructors are not
+ * written. */
+template <class T> class List013e72e0 /* derived name */
+{
+  public:
+    List013e72e0();
+
+    ~List013e72e0()
+    {
+        FUN_00ebf3f0(items);
+    }
+
+    T &at(int index)
+    {
+        return items[index];
+    }
+
+  private:
+    T *items;           /* +0x0 */
+    unsigned count;     /* +0x8 */
+    unsigned capacity;  /* +0xc */
+    unsigned allocator; /* +0x10 */
+};
+
 class Object016d7eb0 /* derived name */
 {
   public:
@@ -46,7 +83,7 @@ class Object016d7eb0 /* derived name */
     u8 unknown18[0x10];
     /* +0x28: five lists (at least: slot 5 of 0x16d7e68 copies within five),
      * each a block; their elements are 32 bytes */
-    Array05943280<Array05943280<Pair014715d0>> lists28;
+    Array05943280<List013e72e0<Pair014715d0>> lists28;
     OwnedBlock05943280 block40; /* +0x40 */
     u8 unknown48[0x38];
     OwnedBlock05943280 block80; /* +0x80 */
@@ -71,7 +108,7 @@ class Object016d7e68 : public Object016d7eb0 /* derived name */
 
   private:
     /* +0xa0: five lists (at least) whose elements are 16 bytes */
-    Array05943280<Array05943280<Float4A>> listsa0;
+    Array05943280<List013e72e0<Float4A>> listsa0;
     OwnedBlock05943280 blockb8; /* +0xb8 */
     u8 unknownc0[0xb0];
 };
