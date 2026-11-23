@@ -131,10 +131,6 @@ void Object016d5140::slot2()
 /* derived name: slot 2 of a vtable of this file (jointFrame; its copies
  * 0x13eb510, 0x13eb6f0 here and 0x1480ed0, 0x1481320, 0x1481470 in
  * func_0126c7f0.cpp wait on it) */
-// NONMATCHING: every instruction but the registers: the base forms the
-// negation's address (`lea r15, [rbp-0x40]`) before the call and holds it in
-// a saved register (r12 pushed, `sub rsp, 0x30`); the build forms it after
-// the call (75/79 by position)
 JointFrame013eb0a0 FUN_013eb0a0(void *self, const Joint013eb0a0 *joint) /* derived name */
 {
     return jointFrame(joint);

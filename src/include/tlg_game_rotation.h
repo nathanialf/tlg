@@ -37,6 +37,29 @@ inline void makeWPositive(Vec4 &q) /* derived name */
         lane(q, k) = lane(r, k);
 }
 
+/* derived name: the same for a rotation held as four floats (Float4A): the
+ * negation is a plain record of four floats, written whole (one aligned
+ * vector store once the lanes are vectorised, which also gives the record
+ * its vector type and leaves its address made once at the function's
+ * entry), and each lane is read from the record picked, the negation or the
+ * rotation (FUN_010c25d0, FUN_013eb0a0 and their copies) */
+inline void makeWPositive(Float4A &q) /* derived name */
+{
+    const Float4Data &value = reinterpret_cast<const Float4Data &>(q);
+    const Float4Data v = {value.x, value.y, value.z, value.w};
+    const float w = v.w;
+    bool below[4];
+    for (int k = 0; k < 4; ++k)
+        below[k] = w < lane(VECTOR_ZERO.v, k);
+    Float4Data neg;
+    for (int k = 0; k < 4; ++k)
+        (&neg.x)[k] = -(&v.x)[k];
+    Float4Data r;
+    for (int k = 0; k < 4; ++k)
+        (&r.x)[k] = (&(below[k] ? neg : value).x)[k];
+    q = r;
+}
+
 /* derived name: a vector set lane by lane from a constant copied whole as
  * four plain floats (two 64-bit loads, then four 32-bit stores: the copy
  * reaches the lanes as integers) */

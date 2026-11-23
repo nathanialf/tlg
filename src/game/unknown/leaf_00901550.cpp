@@ -54,14 +54,9 @@ class Object016b0a98 : public Object016cc398 /* derived name */
 {
   public:
     virtual ~Object016b0a98();
-    /* slots 5 to 11: Object016cc398's vtable has them too (0x40b0 and
-     * empty bodies); declared here */
+    /* slots 5, 6 and 11 (Object016cc398's); 7 to 10 are its empty bodies */
     virtual bool slot5();  /* FUN_009016e0 */
-    virtual void slot6();  /* derived name; FUN_00901750, not traced */
-    virtual void slot7();  /* derived name; empty */
-    virtual void slot8();  /* derived name; empty */
-    virtual void slot9();  /* derived name; empty */
-    virtual void slot10(); /* derived name; empty */
+    virtual void slot6();  /* FUN_00901750, not traced */
     virtual void slot11(); /* FUN_00903790 */
 
   private:

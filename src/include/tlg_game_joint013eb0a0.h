@@ -100,7 +100,7 @@ inline JointFrame013eb0a0 jointFrame(const Joint013eb0a0 *joint) /* derived name
     Float4A product;
     FUN_013439c0(&product, &joint->rotation, &node->rotation);
     frame.rotation = product;
-    makeWPositive(reinterpret_cast<Vec4 &>(frame.rotation));
+    makeWPositive(frame.rotation);
     return frame;
 }
 

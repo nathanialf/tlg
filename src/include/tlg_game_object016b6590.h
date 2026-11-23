@@ -27,17 +27,23 @@ class Object016b6590 : public Base016b64a0 /* derived name */
      * (the name and 1.0); the two pointers at +0x38 are the base's, cleared
      * before the vptr store */
     Object016b6590(const Name &name)
-        : Base016b64a0(name), unknown48(0), unknown58(0), unknown7c(1.0f)
+        : Base016b64a0(name), unknown48(0), unknown4c(0), unknown58(0), unknown5c(0),
+          unknown7c(1.0f)
     {
     }
 
     virtual ~Object016b6590();
 
+    /* slot 8, FUN_00b4c750 (leaf_00b4bf60.cpp) */
+    virtual void slot8(); /* derived name */
+
   private:
-    void *unknown48;             /* +0x48: null from the constructor; not traced */
-    Name name50;                 /* +0x50: empty from the constructor, released by the destructor */
-    Name name54;                 /* +0x54: empty from the constructor, released by the destructor */
-    void *unknown58;             /* +0x58: null from the constructor; not traced */
+    int unknown48; /* +0x48: zero from the constructor; cleared by slot 8 (`mov dword`) */
+    int unknown4c; /* +0x4c: zero from the constructor; not traced */
+    Name name50;   /* +0x50: empty from the constructor, released by the destructor */
+    Name name54;   /* +0x54: empty from the constructor, released by the destructor */
+    int unknown58; /* +0x58: zero from the constructor; slot 8 tests it (`cmp dword`) */
+    int unknown5c; /* +0x5c: zero from the constructor; not traced */
     Array01343a80<Name> names60; /* +0x60: an array of Names, each released by the destructor */
     Name name78;                 /* +0x78: empty from the constructor, released by the destructor */
     float unknown7c;             /* +0x7c: 1.0 from the constructor; not traced */

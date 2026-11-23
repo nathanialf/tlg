@@ -21,16 +21,15 @@ Name D_5ad18e4(D_15cb5e6, false);
  * bone), w made positive, or the identity when the points meet, then turned
  * about its x axis by the aim's angle. FUN_012ce440 is its bytes in
  * func_012cef10.cpp (that unit's VECTOR_ZERO and VECTOR_W), not written. */
-// NONMATCHING: 84/213 (1094 bytes, base 1139; the frame, the lerp, the clamp, the offset's
-// sums, the look-at and sine/cosine tail equal). Left: (a) the aim's up.z (+0x118) is read
-// again in both arms of the +0xc4 test in the base, up.x and up.y come from the first arms:
-// the link stage's MergedLoadStoreMotion hoists only the first two of the three loads out of
-// the +0xc4 diamond there (here all three), mechanism not found (not the 250 compile-time cap
-// at these block sizes, not the arms' order); the arms' registers follow. (b) &neg is made
-// before FUN_013cee80's call and kept in r13 in the base (an exported cast of the negation's
-// slot in the rotation helper's entry); here a lea per lane. (c) the entry: the pose pointer
-// is read after the limit's floats in the base, `this` in r12 (r13 here, the guard pointer
-// kept in r12; the base reloads it at the end).
+// NONMATCHING: 133/213 (1136 bytes, base 1139; the frame, the lerp, the clamp, the offset's
+// sums, the look-at, the rotation's w made positive (makeWPositive(Float4A &): the negation's
+// address made once and kept in r13 across FUN_013cee80's call) and the sine/cosine tail
+// equal). Left: (a) the aim's up.z (+0x118) is read again in both arms of the +0xc4 test in the
+// base, up.x and up.y come from the first arms, and the sway's operand orders differ (base:
+// sway * up.x, sway * up.y, up.z * sway; the sums term + x, y + term, z + term); the registers
+// of the two diamonds follow. (c) the entry: the zero for the lift's test is made in the
+// entry here (xmm12), before the clamp in the base (xmm2), and the pose pointer is read before
+// the limit's floats.
 void Aimer010c25d0::aimFirst()
 {
     const Bone010c25d0 &original = source->bones[1];

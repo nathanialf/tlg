@@ -203,6 +203,8 @@ class FileSystem05938c40 /* derived name */
     virtual void read(void *file, void *buffer, u64 size); /* slot 14 */
 };
 
+struct Table00ca41c0; /* tlg_game_table00ca41c0.h */
+
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
  * file system at +0x28, the script functions at +0x40, the queue at +0xb0 and the world at +0x108
  * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0,
@@ -216,7 +218,9 @@ struct Object05938c40 { /* derived name */
     CommandQueue05938c40 *queue; /* +0xb0 */
     u8 unknownb8[0x18];
     Dispatcher00c644d0 *links; /* +0xd0 */
-    u8 unknownd8[0x30];
+    u8 unknownd8[0x20];
+    Table00ca41c0 *objects; /* +0xf8: the counted objects by name (derived name) */
+    u8 unknown100[0x8];
     World05938c40 *world; /* +0x108 */
     u8 unknown110[0x7c];
     float

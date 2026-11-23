@@ -80,7 +80,7 @@ inline void Matrix010c25d0::getRotation(Float4A &rotation) const
 {
     Float4A q;
     FUN_013cee80(&q, this);
-    makeWPositive(reinterpret_cast<Vec4 &>(q));
+    makeWPositive(q);
     rotation = q;
 }
 

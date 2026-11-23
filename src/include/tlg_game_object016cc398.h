@@ -24,10 +24,25 @@ void FUN_013b2e90(Object013b2e90 *self); /* derived name */
  * so a unit that stores its vtable emits the vtable and both destructors
  * (0xb225a0, 0xb22670), and the classes derived from it with an empty
  * destructor hold its body (0x8f5760). */
+class Object016b8d40;
+
 class Object016cc398 : public Object016b9108 /* derived name */
 {
   public:
     virtual ~Object016cc398();
+    /* slots 5 to 11: 0x40b0 (true) and empty bodies (0x1af750) in this
+     * class's vtable; the classes derived from it override some */
+    virtual bool slot5(); /* derived name */
+    virtual void slot6(); /* derived name; not traced */
+    /* slots 7 and 8: an Object016b8d40 of this object's type name added to
+     * and taken from the list at +0x38 (0xca34c0 calls slot 7 with the new
+     * object in rsi after linking it; 0xca38f0 calls slot 8 with the object
+     * being destroyed) */
+    virtual void slot7(Object016b8d40 *object); /* derived name */
+    virtual void slot8(Object016b8d40 *object); /* derived name */
+    virtual void slot9();                       /* derived name */
+    virtual void slot10();                      /* derived name */
+    virtual void slot11();                      /* derived name; not traced */
 
   private:
     u8 unknown24[0x14];

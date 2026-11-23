@@ -5,6 +5,7 @@
 #define TLG_GAME_OBJECT016B54B8_H
 
 #include "tlg_types.h"
+#include "tlg_game_object016b8d40.h"
 
 /* derived names: the record at +0xc0 of Object016b54b8, which FUN_01392bf0
  * tears down, and the one it owns through +0x108, deleted by its destructor
@@ -22,14 +23,6 @@ struct Object01392d50 /* derived name */
 
 void FUN_01392bf0(Object01392bf0 *self); /* derived name */
 
-/* derived name: the base whose destructor is FUN_00ca38f0 (its row named
- * for it, D15) */
-class Object016b8d40 /* derived name */
-{
-  public:
-    virtual ~Object016b8d40();
-};
-
 /* derived names: the class whose vtable is at 0x16b54b8
  * (config/vtables.derived.base.txt), stored by its constructor
  * FUN_00b20380 and by FUN_008ef2f0 and FUN_008ef5c0, which build the
@@ -41,7 +34,7 @@ class Object016b54b8 : public Object016b8d40 /* derived name */
     virtual ~Object016b54b8();
 
   private:
-    u8 unknown8[0xb8];
+    u8 unknown54[0x6c];
     Object01392bf0 unknownc0; /* +0xc0 */
     Object01392d50 *owned108; /* +0x108 */
 };

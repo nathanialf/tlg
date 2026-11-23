@@ -16,7 +16,7 @@ class Base016b64a0 : public Object01343880 /* derived name */
   public:
     Base016b64a0(const Name &name) : Object01343880(name), unknown38(0), unknown40(0) {}
 
-  private:
+  protected:
     void *unknown38; /* +0x38: null from the constructor; not traced */
     void *unknown40; /* +0x40: null from the constructor; not traced */
 };

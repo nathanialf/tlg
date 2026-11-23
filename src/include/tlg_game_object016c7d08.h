@@ -5,6 +5,7 @@
 #define TLG_GAME_OBJECT016C7D08_H
 
 #include "tlg_game_entry00c8b0d0.h"
+#include "tlg_game_mutex.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b9108.h"
 
@@ -26,9 +27,19 @@ struct Cameras057c9390 { /* derived name */
     AtomicRef0045c470<Object016b9108> cameras[1]; /* +0x1a0 */
 };
 
+/* derived names: the object at +0x78 of the one the pointer at 0x57c9390
+ * holds: a recursive mutex at +0xa0 (Object016b6590's slot 8 takes it and
+ * gives it back at once, to wait for its holder); not traced */
+struct Owner057c9390 { /* derived name */
+    u8 unknown0[0xa0];
+    Mutex013847e0 mutexa0; /* +0xa0 */
+};
+
 struct Game057c9390 { /* derived name */
     u8 unknown0[0x40];
     Cameras057c9390 *cameras40; /* +0x40 */
+    u8 unknown48[0x30];
+    Owner057c9390 *unknown78; /* +0x78 */
 };
 
 extern Game057c9390 *D_57c9390;
