@@ -15,6 +15,14 @@ class Value002db990 : public Object016b9108 /* derived name */
 // after the search (`xor r15d, r15d` before it, `mov r15d, eax` on the not-found exit: 0 when
 // the array is empty, else the count); the build stores at the search's own counter (this
 // form) or reuses the count's register (contains() then the count raised: `test rbx, rbx`,
-// pushUnique's shape, 0xce22e0). Three forms tried.
+// pushUnique's shape, 0xce22e0). Three forms tried. Round 500C: the base's
+// value is phi(0, count): the loop's exit value rewritten to the count, which
+// IndVarSimplify does only with a computable backedge-taken count
+// (ScalarEvolution::computeSCEVAtScope), not over this loop's early return;
+// the search written `index != count` gives the phi through GVN's equality on
+// the exit edge, but its exit test is `cmp eax, esi; jne` over a 64-bit guard
+// (`test rax, rax`) where the base has `cmp esi, eax; jb`; with a `break` and
+// `if (index != count) return;` the empty path is threaded apart. The same
+// body is FUN_00871630, FUN_008e3410 and FUN_00d6dd50.
 template void
 Array05943280<Ref00503fb0<Value002db990>>::addUnique(const Ref00503fb0<Value002db990> &);

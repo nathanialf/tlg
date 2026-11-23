@@ -37,7 +37,11 @@ template <class T> static inline T minimum(T a, T b)
  * given). Returns 0. Handler unknown. */
 // NONMATCHING: the search's counter: the base raises it before the bound tests (`mov esi, 1` on
 // the first range's arm, `inc esi` on the others'), the build at the loop's end; everything
-// before the loop and the children's loop equal
+// before the loop and the children's loop equal. The base's loop has two increments, one in
+// each arm before its lower bound's test (the latch's value 1 from the first range's arm, i + 1
+// from the others: that IR, edited by hand into the build's, gives the base's loop exactly);
+// a single increment at the loop's end is never split. The source form that has two is not
+// found (a while loop with the arms raising the counter before their tests gives it)
 int FUN_00595c80(ValueOwner583950 *self, Node583950 *arg) /* derived name */
 {
     FlowValueFilter *node = reinterpret_cast<FlowValueFilter *>(arg->child38);

@@ -37,7 +37,15 @@ FrameSet0108cf60::FrameSet0108cf60()
  * then each set's second frame takes its first, position and rotation */
 // NONMATCHING: instruction order only, the first loop's head: the base loads
 // the sets' block first (`mov rdx, [rdi+0x28]; movsxd rax, ecx`), the build
-// the model first (`mov r10, [rdi+8]`); the IR's order is the base's
+// the model first (`mov r10, [rdi+8]`); the IR's order is the base's.
+// Round 500C: the machine scheduler's output is the base's order too (the
+// sets' block, the list's data, the model, the indices, the index, the
+// table); the order is lost after it, by the registers: the base gives the
+// model the sets' block's rdx (dead after the list's load) and the table r10,
+// this build the model r10 and the table rbx (the indices' register), and the
+// post-RA scheduler then moves the loads. Not traced: what makes the greedy
+// allocator take r10 for the model (the 12 copies of this function, 0x13fce60
+// to 0x1492ad0, wait on it)
 void FUN_013fccf0(FramePoser013fccf0 *self) /* derived name */
 {
     for (unsigned i = 0; i < self->count; ++i) {
