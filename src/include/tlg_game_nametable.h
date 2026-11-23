@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 
+#include "new"
+#include "tlg_game_name.h"
 #include "tlg_types.h"
 
 /* derived names: the layout of Table01352a50 (tlg_game_table01352a50.h)
@@ -13,9 +15,10 @@
  * entry type E with its next entry in `next`: the buckets at +0x0, the
  * list of blocks of entries after them, the free entries' list 8 bytes
  * later and the number of entries 0x18 bytes after the buckets. A block
- * links the next at +0x8. */
-struct NameTableBlock { /* derived name */
-    u8 unknown0[0x8];
+ * holds its first entry at +0x0, links the next block at +0x8 and its
+ * entries follow it (allocate()). */
+struct NameTableBlock {   /* derived name */
+    void *first;          /* +0x0 */
     NameTableBlock *next; /* +0x8 */
 };
 
@@ -72,7 +75,55 @@ template <class E, size_t N> class NameTable /* derived name */
         return 0;
     }
 
+    /* the value of a name set: its entry's when the hash and the name are
+     * there (the name's index read once, before the bucket's walk), else a
+     * new entry made with the name and the value and put at the head of its
+     * bucket (FUN_0057fa50, FUN_00d10ca0, FUN_00c7abc0) */
+    template <class V> void set(const Name &name, unsigned hash, V value)
+    {
+        for (E *entry = buckets[hash % N]; entry; entry = entry->next)
+            if (entry->hash == hash && entry->name.index == name.index) {
+                entry->value = value;
+                return;
+            }
+        E *entry = allocate();
+        entry->hash = hash;
+        entry->name = name;
+        entry->value = value;
+        entry->next = buckets[hash % N];
+        buckets[hash % N] = entry;
+        ++count;
+    }
+
   private:
+    /* an empty entry: the head of the free list, or the first of a new
+     * block of bucketCount entries of entrySize bytes, each linked to the
+     * one after it (offsets in 32 bits: `lea edx, [r13+rdx]`), the rest put
+     * on the free list. The block's memory is fresh, so the free list read
+     * through a block of no entries is undefined. */
+    E *allocate()
+    {
+        if (E *entry = freeList) {
+            freeList = entry->next;
+            return new (entry) E;
+        }
+        unsigned n = bucketCount;
+        unsigned size = entrySize;
+        NameTableBlock *block = (NameTableBlock *)malloc(n * size + sizeof(NameTableBlock));
+        E *first = (E *)(block + 1);
+        block->next = blocks;
+        blocks = block;
+        block->first = first;
+        if (n) {
+            u8 *bytes = (u8 *)first;
+            for (unsigned i = 0; i < n - 1; ++i)
+                ((E *)(bytes + i * size))->next = (E *)(bytes + (i + 1) * size);
+            first[n - 1].next = 0;
+        }
+        freeList = first->next;
+        return new (first) E;
+    }
+
     E *buckets[N];
     NameTableBlock *blocks; /* +N*8 */
     E *freeList;            /* +N*8 + 0x8 */
