@@ -1,5 +1,4 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-/* NONMATCHING FUN_00a01a80: the constructor's three dword stores at +0x8, +0xc and +0x10 (0, 4, 0) stay three in the base (0xa01a99 to 0xa01aad); the build joins the first two into one 8-byte store (DAGCombiner MergeConsecutiveStores), the class of stores to a global noted in round 523D. */
 #include "tlg_game_object016cdff0.h"
 #include "tlg_game_vector.h"
 
