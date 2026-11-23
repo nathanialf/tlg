@@ -108,6 +108,11 @@ template <class P> class PoolRef01343090 /* derived name */
         }
     }
 
+    P *get() const
+    {
+        return pool.get();
+    }
+
   private:
     inline void close(P *held) /* derived name */
     {

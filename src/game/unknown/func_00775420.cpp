@@ -170,3 +170,17 @@ void FUN_007a09d0(Object00774760 *self, const Start00774760 *start) /* derived n
     self->unknown68->unknownc00->setUnknown60(value);
     self->unknown68->unknownc00->setUnknown64(self->unknown68->unknownb0c);
 }
+
+/* Slot 21: slot 20 given a copy of this file's VECTOR_W (as plain floats,
+ * lane by lane) and the offset (0, lift, 0, 1), the lift the source's
+ * +0x94 when below zero plus its +0x104, times the body's scale */
+// NONMATCHING: the schedule of the constant's second half only: the base
+// loads VECTOR_W+8 into rsi early (0x774b8c, among the offset's arithmetic)
+// and forms the temporary's address last; the build forms the address early
+// and loads both halves after the vtable's slot (37/43, same size)
+int Object00774560::slot21(const Source00774b50 *source, void *target, int flag)
+{
+    const float below = 0.0f < source->unknown94 ? 0.0f : source->unknown94;
+    const Float4A offset(0.0f, (below + source->unknown104) * unknown68->unknownd0, 0.0f, 1.0f);
+    return slot20(Float4A(reinterpret_cast<const Float4Data &>(VECTOR_W)), target, offset, 1, flag);
+}

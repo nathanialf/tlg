@@ -248,6 +248,15 @@ struct State00774760 : public Object016b9108 { /* derived name */
 /* derived names: what the pointer at +0x68 of the class below holds: a
  * rotation at +0xb90, a point at +0xba0 and where they are put back to
  * (the slot-14 overrides FUN_0077bac0 and on); the rest is not traced */
+/* derived names: what slot 21 is given (FUN_00774b50): two floats; not
+ * traced further */
+struct Source00774b50 { /* derived name */
+    u8 unknown0[0x94];
+    float unknown94; /* +0x94: counted only when below zero */
+    u8 unknown98[0x6c];
+    float unknown104; /* +0x104 */
+};
+
 struct Body0077bac0 { /* derived name */
 
     /* the rotation turned by another (the other's address formed before
@@ -264,7 +273,9 @@ struct Body0077bac0 { /* derived name */
         position = position + by;
     }
 
-    u8 unknown0[0xb08];
+    u8 unknown0[0xd0];
+    float unknownd0; /* +0xd0: a scale, by slot 21's use (FUN_00774b50) */
+    u8 unknownd4[0xa34];
     int unknownb08; /* +0xb08: masked by Object016accb0's int at +0x168 in its slot 7 */
     u8 unknownb0c[0x84];
     Float4A rotation; /* +0xb90 */
@@ -407,8 +418,15 @@ class Object00774560 : public Object016b9108 /* derived name */
     virtual void slot17(Context0079c700 *context); /* derived name; FUN_00774920, not traced */
     virtual void slot18();                         /* derived name; FUN_00774930, not traced */
     virtual void slot19(Pose0077bac0 *pose);       /* derived name; FUN_00774940, empty */
-    virtual void slot20();                         /* derived name; FUN_00774950, not traced */
-    virtual void slot21();                         /* derived name; FUN_00774b50, not traced */
+    /* FUN_00774950, not written: given a rotation, the third argument of
+     * slot 21, an offset and two ints (slot 21 passes 1 and its own) */
+    virtual int slot20(const Float4A &rotation, void *target, const Float4A &offset, int unknown,
+                       int flag); /* derived name */
+    /* FUN_00774b50 (func_00775420.cpp): slot 20 with this file's VECTOR_W
+     * and an offset up by the source's lift (+0x94, when below zero, and
+     * +0x104) times the body's scale at +0xd0, slot 20's answer returned
+     * (rax kept over the stack check) */
+    virtual int slot21(const Source00774b50 *source, void *target, int flag); /* derived name */
     /* FUN_000058a0 returns 1; tested `test eax, eax` before slot 14's work
      * (FUN_00777b10) */
     virtual int slot22(); /* derived name */

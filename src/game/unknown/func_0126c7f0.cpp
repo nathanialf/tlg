@@ -3,6 +3,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_fade013d2490.h"
 #include "tlg_game_object016d7840.h"
+#include "tlg_game_object016d7510.h"
 #include "tlg_game_joint013eb0a0.h"
 #include "tlg_game_name.h"
 #include "tlg_game_rotation.h"
@@ -126,6 +127,19 @@ void Object016d7840::slot2()
 JointFrame013eb0a0 FUN_01481020(const Placed013eb210 *self) /* derived name */
 {
     return nodeFrame(self);
+}
+
+/* Slot 2 of Object016d7510: the subject's target's position and the node's
+ * rotation, or zero and this file's VECTOR_W without a target */
+JointFrame013eb0a0 Object016d7510::slot2(const Subject01480e70 *subject)
+{
+    if (subject->target) {
+        JointFrame013eb0a0 frame;
+        frame.position = subject->target->position;
+        frame.rotation = node.get()->unknown140;
+        return frame;
+    }
+    return JointFrame013eb0a0::identity();
 }
 
 /* derived name: this file's copy of FUN_013d2570 (func_00f509e0.cpp) */

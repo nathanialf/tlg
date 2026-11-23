@@ -16,19 +16,17 @@ class Value00c06790 /* derived name */
     NodeList583950 *list; /* +0x20 */
 };
 
-/* derived names: the 'XAER' owner: 0x108 bytes on the walker's stack (the
- * frame of FUN_00c06790); what follows the device is not traced */
+/* derived names: the 'XAER' owner: 0x100 bytes on the walker's stack (the
+ * frame of FUN_00c06790, 16-byte aligned) */
 struct ErOwner00c06790 : DeviceOwner583950 { /* derived name */
 
     /* an owner built from another to walk the given list with its
      * handlers and its device (derived name) */
     ErOwner00c06790(const DeviceOwner583950 &builder, NodeList583950 *list)
         : DeviceOwner583950(fourCharCode('X', 'A', 'E', 'R'), builder.parentCode, list,
-                            builder.unknown18, 0, builder.handlers, builder.device)
+                            builder.unknown18, builder.handlers, 0, builder.device)
     {
     }
-
-    u8 unknownf8[0x10];
 };
 
 /* derived names: a handler of the table FUN_00aec5d0 builds: a node found

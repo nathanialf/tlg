@@ -9,6 +9,14 @@
 #include "tlg_game_node.h"
 #include "tlg_game_object016b85e0.h"
 
+/* derived names: the objects the class below holds at +0x238 and +0x240:
+ * scene nodes with an int of bits at +0x238 */
+class Marked00822740 : public Object016b85e0 /* derived name */
+{
+  public:
+    int flags238; /* +0x238: bit 1 set by FUN_00822740 */
+};
+
 /* derived names: the class whose vtable is at 0x16aeab0
  * (config/vtables.derived.base.txt, stored by its creator FUN_00822000, where
  * its constructor is inlined, and by its complete destructor 0x822440, its row
@@ -41,10 +49,17 @@ class Object016aeab0 : public Object016b85e0 /* derived name */
     }
 
     virtual ~Object016aeab0();
+    /* slot 10 (FUN_00822740, leaf_00822740.cpp): the two objects marked
+     * (bit 1 of their +0x238) when the record the game keeps at
+     * 0x57c9390's +0x68 has a current object and the int at +0x24c is set
+     * or either object has its name; the int argument is not read */
+    virtual void slot10(int flag); /* derived name */
+    virtual void slot11();         /* derived name; FUN_01354770, not traced */
+    virtual void slot12();         /* derived name; FUN_001af750 (an empty body), not traced */
 
   private:
-    Ref00503fb0<Object016b9108> held238; /* +0x238 */
-    Ref00503fb0<Object016b9108> held240; /* +0x240 */
+    Ref00503fb0<Marked00822740> held238; /* +0x238 */
+    Ref00503fb0<Marked00822740> held240; /* +0x240 */
     int unknown248;                      /* +0x248: 3 from the constructor */
     int unknown24c; /* +0x24c: 0 from the constructor; slot 12 (0x822740) tests it */
     Ref00503fb0<Object016b9108> held250; /* +0x250 */

@@ -29,7 +29,7 @@ struct Joint013eb0a0 { /* derived name */
 };
 
 /* derived names: the frame returned for a joint: a position and a
- * rotation. Built empty it is zero and the including unit's VECTOR_W, the
+ * rotation. Built as the identity it is zero and the including unit's VECTOR_W, the
  * constant copied whole before the position is set (both 64-bit loads
  * before the zero's store, FUN_013eb210); built from two values it copies
  * each whole (16-byte moves). Its lanes are floats of a 16-byte aligned struct, so the
@@ -37,11 +37,17 @@ struct Joint013eb0a0 { /* derived name */
  * rotation's lanes are read back with an unaligned load (`vmovups`). */
 struct JointFrame013eb0a0 { /* derived name */
 
-    JointFrame013eb0a0()
+    /* the lanes left unset, as Float4A's own (slot 2 of Object016d7510,
+     * FUN_01480e70, stores the position before it reads the node) */
+    JointFrame013eb0a0() {}
+
+    static JointFrame013eb0a0 identity() /* derived name */
     {
+        JointFrame013eb0a0 frame;
         const Float4Data unit = reinterpret_cast<const Float4Data &>(VECTOR_W);
-        position.set(0.0f, 0.0f, 0.0f, 0.0f);
-        rotation = unit;
+        frame.position.set(0.0f, 0.0f, 0.0f, 0.0f);
+        frame.rotation = unit;
+        return frame;
     }
 
     JointFrame013eb0a0(const Float4A &position_, const Float4A &rotation_)
@@ -69,7 +75,7 @@ inline JointFrame013eb0a0 nodeFrame(const Placed013eb210 *self) /* derived name 
     if (node)
         return JointFrame013eb0a0(reinterpret_cast<const Float4A &>(node->position),
                                   node->rotation);
-    return JointFrame013eb0a0();
+    return JointFrame013eb0a0::identity();
 }
 
 /* derived name: the joint's frame: the node's position moved by the offset

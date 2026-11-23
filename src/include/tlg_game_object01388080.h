@@ -216,7 +216,10 @@ struct Object05938c40 { /* derived name */
     Links05938c40 *links; /* +0xd0 */
     u8 unknownd8[0x30];
     World05938c40 *world; /* +0x108 */
-    u8 unknown110[0xe48];
+    u8 unknown110[0x7c];
+    float
+        unknown18c; /* +0x18c: a time, by its use (FUN_00822740 takes the sine of five times it) */
+    u8 unknown190[0xdc8];
     Chunks05938c40 *chunks; /* +0xf58 */
 };
 

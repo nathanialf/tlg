@@ -5,6 +5,7 @@
 #define TLG_GAME_OBJECT016B8FD0_H
 
 #include "tlg_types.h"
+#include "tlg_math.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object00ca38f0.h"
 #include "tlg_game_object016b85e0.h"
@@ -19,11 +20,35 @@ class Object016b8fd0 : public Object00ca38f0 /* derived name */
 {
   public:
     virtual ~Object016b8fd0();
+    /* slots 2 to 9 of 0x16b8fd0, not traced: 0xcb66f0, the empty body
+     * 0x1af750 twice, 0x58a0, 0x1343880, 0x1af750 twice, 0xcb35c0 */
+    virtual void slot2(); /* derived name */
+    virtual void slot3(); /* derived name */
+    virtual void slot4(); /* derived name */
+    virtual void slot5(); /* derived name */
+    virtual void slot6(); /* derived name */
+    virtual void slot7(); /* derived name */
+    virtual void slot8(); /* derived name */
+    virtual void slot9(); /* derived name */
+    /* slot 10, FUN_00cb3b00 (leaf_00cb32e0.cpp): with the grid on (+0x50),
+     * its pairs cleared, its cells set to 0xff80ff80 and the four floats
+     * at +0xa8 set; 1, else 0 */
+    virtual int slot10(); /* derived name */
 
-    void FUN_00cb33a0(); /* derived name; not traced */
+    void FUN_00cb33a0(); /* derived name; slot 11, called directly by the destructor; not traced */
 
   private:
-    u8 unknown8[0xb0];
+    u8 unknown8[0x48];
+    int unknown50; /* +0x50: slot 10 does nothing while it is clear */
+    u8 unknown54[0x2c];
+    float unknown80; /* +0x80: the w slot 10 gives +0xa8 (copied through a general register) */
+    u8 unknown84[0x4];
+    unsigned width;  /* +0x88 (derived name) */
+    unsigned height; /* +0x8c (derived name) */
+    float *pairs;    /* +0x90: two floats a cell, cleared by slot 10 */
+    u8 unknown98[0x8];
+    u32 *cells;                            /* +0xa0: a word a cell, 0xff80ff80 from slot 10 */
+    Float4 unknowna8;                      /* +0xa8: (0, 1, 0, the float at +0x80) from slot 10 */
     Ref00503fb0<Object016b9108> unknownb8; /* +0xb8 */
 };
 
