@@ -41,10 +41,13 @@ class JsUnknown
 
     /* derived name: a reference dropped (JsView's destructor, 0x1326bd6): the
      * count taken down atomically, slot 2 called for the last one, the count
-     * returned read again after the decrement (as the device's release) */
+     * returned read again after the decrement (as the device's release).
+     * Relaxed: where the object's type is known (0x130a930) the vptr stored
+     * before the decrement is forwarded past it and slot 2 called directly
+     * (the only direct call of 0x130af40 in the base) */
     long Release()
     {
-        if (__sync_fetch_and_sub(&m_referenceCount, 1) == 1)
+        if (__atomic_fetch_sub(&m_referenceCount, 1, __ATOMIC_RELAXED) == 1)
             Destroy();
         return m_referenceCount;
     }

@@ -179,12 +179,36 @@ struct Chunks05938c40 { /* derived name */
     bool present[1]; /* +0x14; its extent not traced */
 };
 
+/* derived names: the file system the game reads through (+0x28): its
+ * slots as CreateBlob (0xb98790) calls them */
+class FileSystem05938c40 /* derived name */
+{
+  public:
+    virtual void slot0();                                  /* not traced */
+    virtual void slot1();                                  /* not traced */
+    virtual void slot2();                                  /* not traced */
+    virtual void *open(const char *name, int mode);        /* slot 3 */
+    virtual void close(void *file);                        /* slot 4 */
+    virtual void slot5();                                  /* not traced */
+    virtual void slot6();                                  /* not traced */
+    virtual u32 size(void *file);                          /* slot 7 */
+    virtual void slot8();                                  /* not traced */
+    virtual void slot9();                                  /* not traced */
+    virtual void slot10();                                 /* not traced */
+    virtual void slot11();                                 /* not traced */
+    virtual void slot12();                                 /* not traced */
+    virtual void slot13();                                 /* not traced */
+    virtual void read(void *file, void *buffer, u64 size); /* slot 14 */
+};
+
 /* derived names: the object the pointer at 0x5938c40 holds, as far as the
- * script functions at +0x40, the queue at +0xb0 and the world at +0x108
+ * file system at +0x28, the script functions at +0x40, the queue at +0xb0 and the world at +0x108
  * (handed to FUN_00c55dd0 by FUN_0082de00), with the links at +0xd0 and
  * the content chunks at +0xf58 */
 struct Object05938c40 { /* derived name */
-    u8 unknown0[0x40];
+    u8 unknown0[0x28];
+    FileSystem05938c40 *fileSystem; /* +0x28 */
+    u8 unknown30[0x10];
     ScriptFunctions05938c40 *functions; /* +0x40 */
     u8 unknown48[0x68];
     CommandQueue05938c40 *queue; /* +0xb0 */

@@ -62,7 +62,7 @@ class Object016c3c80 : public Object0130acb0 /* derived name */
 
 Object016c3c80::~Object016c3c80()
 {
-    Object05adaaa8 *owner = D_5adaaa8;
+    JsDevice *owner = D_5adaaa8;
     void **object = owner->objects48;
     while (object != owner->objects48End && *object != this) {
         ++object;

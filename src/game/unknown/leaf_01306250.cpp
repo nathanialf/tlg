@@ -11,7 +11,7 @@
 /* DeallocatePrivateData (the report's name for the function): the entry
  * checked to be one of the device's, then put at the head of the free
  * list, its next the old head. */
-void Object05adaaa8::DeallocatePrivateData(PrivateData01306250 *ptr)
+void JsDevice::DeallocatePrivateData(PrivateData01306250 *ptr)
 {
     // clang-format off: the report spells the condition with spaces inside the parentheses
     ANZU_ASSERT(JS_DEVICE_CPP, 940, ( ptr - m_privateData ) < kPrivateDataCountMax);

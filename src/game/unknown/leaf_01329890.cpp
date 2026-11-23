@@ -31,7 +31,7 @@ class Object016c5590 : public Object0130acb0 /* derived name */
 /* derived name: an entry handed back to the owner's list, counted */
 static void giveBack(void *entry)
 {
-    Object05adaaa8 *owner = D_5adaaa8;
+    JsDevice *owner = D_5adaaa8;
     if (entry) {
         FUN_0131e2d0(owner->unknown100e8, entry);
         __sync_fetch_and_add(&owner->unknown100b0, 1);

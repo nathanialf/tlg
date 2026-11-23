@@ -6,8 +6,8 @@
 /* CreateRasterizerState (its report, JsRasterizerState.cpp:18): the out
  * pointer checked, then a new state made from the description, or the
  * device's default state handed out with a reference taken. */
-void Object05adaaa8::CreateRasterizerState(const JsRasterizerDesc *pRasterizerDesc,
-                                           Object016d7fd0 **ppRasterizerState)
+void JsDevice::CreateRasterizerState(const JsRasterizerDesc *pRasterizerDesc,
+                                     Object016d7fd0 **ppRasterizerState)
 {
     /* the condition as the report spells it (0x15cda5a) */
     // clang-format off

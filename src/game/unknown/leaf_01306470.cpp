@@ -16,7 +16,7 @@ void FUN_012fdf60(Target0131e2d0 *heap, int value);                /* derived na
  * when the heap has none, both heaps are dumped (FUN_012fdf60 with 1, the
  * garlic one at +0x100b8 first, each after its banner) and the check
  * fails. */
-void *Object05adaaa8::AllocateOnionMemory(u32 size, u32 alignment)
+void *JsDevice::AllocateOnionMemory(u32 size, u32 alignment, u32 label)
 {
     void *p = FUN_0131e0c0(unknown100e8, size, alignment);
     __sync_fetch_and_add(&onionAllocations, 1);

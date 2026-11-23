@@ -16,4 +16,8 @@ struct Format012fd300 /* derived name */
     u32 unknown8 : 24;
 };
 
+/* derived name: the kind's width in bytes, from the table at 0x15253d0, 0
+ * for a kind above 60 (leaf_012fd390.cpp) */
+unsigned FUN_012fd390(const Format012fd300 *format);
+
 #endif

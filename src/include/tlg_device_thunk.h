@@ -263,8 +263,9 @@ struct Owner583950 {
      * 'XFIT' owners of FUN_00588200 and FUN_005890d0). derived name */
     Owner583950(unsigned code_, unsigned parentCode_, NodeList583950 *list, void *unknown18_,
                 void *unknown28_, Handler583950 *table)
-        : code(code_), parentCode(parentCode_), unknown8(-1), unknown10(0), unknown18(unknown18_),
-          unknown28(unknown28_), unknown30(0), cursor(list), handlers(table), unknownd8(0)
+        : code(code_), parentCode(parentCode_), unknown8(-1), timeStep(0), unknown10(0),
+          unknown18(unknown18_), unknown28(unknown28_), unknown30(0), cursor(list), handlers(table),
+          unknownd8(0)
     {
     }
 
@@ -349,9 +350,10 @@ struct Owner583950 {
     unsigned code;
     unsigned parentCode; /* +0x4 */
     int unknown8;        /* +0x8: -1 when built */
-    int unknownc;        /* +0xc: the builder's */
-    void *unknown10;     /* +0x10: 0 when built */
-    void *unknown18;     /* +0x18: the builder's */
+    float
+        timeStep; /* +0xc: the builder's; the time the ease of FUN_00c65ce0 and FUN_00590420 advances by (derived name) */
+    void *unknown10; /* +0x10: 0 when built */
+    void *unknown18; /* +0x18: the builder's */
     u8 unknown20[8];
     void *unknown28;         /* +0x28: the builder's */
     void *unknown30;         /* +0x30: 0 when built */
@@ -369,6 +371,14 @@ struct Owner583950 {
 struct FrameOwner583950;
 
 struct DeviceOwner583950 : Owner583950 {
+    /* an owner of the given codes over a list, with its handlers and the
+     * device (the 'XAER' owner FUN_00c06790 builds). derived name */
+    DeviceOwner583950(unsigned code_, unsigned parentCode_, NodeList583950 *list, void *unknown18_,
+                      void *unknown28_, Handler583950 *table, Device583950 *device_)
+        : Owner583950(code_, parentCode_, list, unknown18_, unknown28_, table), device(device_)
+    {
+    }
+
     Device583950 *device; /* +0xf0 */
 };
 
@@ -395,11 +405,34 @@ struct ParentNode583950Kind17 {
 };
 
 /* A node of kind 18, FlowEase by its message (FUN_00c65ce0), with a list
- * of children at +0x50 (FUN_00c658e0, FUN_00c65490). derived name */
+ * of children at +0x50 (FUN_00c658e0, FUN_00c65490): the owner's value
+ * eased from where it was to where it goes over a duration along a cubic
+ * curve through (0, 0), the two control points and (1, 1); a jump larger
+ * than the threshold starts a new ease. derived names */
 struct ParentNode583950Kind18 {
-    u8 unknown0[0x50];
+    u8 unknown0[0xc];
+    Name name; /* +0xc */
+    u8 unknown10[0x18];
+    unsigned debugFlags; /* +0x28: bit 0 writes the message */
+    unsigned flags;      /* +0x2c: bit 0 the first ease starts from the initial value */
+    float initialValue;  /* +0x30 */
+    float duration;      /* +0x34 */
+    float threshold;     /* +0x38 */
+    u8 unknown3c[4];
+    float control[4];      /* +0x40: the two control points, x and y of each */
     Node583950 **children; /* +0x50 */
     unsigned count;        /* +0x58 */
+};
+
+/* The value a node of kind 18 keeps in the owner's list: the eased value,
+ * where the ease starts and where it goes, and the time into it
+ * (FUN_00c65ce0). derived names */
+struct EaseValue583950 {
+    u8 unknown0[4];
+    float value;  /* +0x4 */
+    float target; /* +0x8 */
+    float source; /* +0xc */
+    float time;   /* +0x10 */
 };
 
 /* A node of kind 19, FlowNormalize by its message (FUN_00c65ff0), with a
@@ -682,7 +715,7 @@ inline ValueOwner583950::ValueOwner583950(const FrameOwner583950 &builder, Handl
                   builder.cursor.list, builder.unknown18, builder.unknown28, table),
       unknown118(0), depth(depth_)
 {
-    unknownc = builder.unknownc;
+    timeStep = builder.timeStep;
     unknown108 = builder.unknown100;
     unknown110 = builder.unknown120;
     unknown120 = builder.unknown180;

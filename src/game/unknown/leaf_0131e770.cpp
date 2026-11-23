@@ -16,7 +16,7 @@ void FUN_0131e2d0(Target0131e2d0 *target, void *entry); /* derived name */
 inline void returnEntry(void *entry) /* derived name */
 {
     if (entry) {
-        Object05adaaa8 *owner = D_5adaaa8;
+        JsDevice *owner = D_5adaaa8;
         FUN_0131e2d0(owner->unknown100b8, entry);
         __sync_fetch_and_add(&owner->unknown100a0, 1);
     }

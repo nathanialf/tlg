@@ -24,3 +24,12 @@ Object0130acb0::~Object0130acb0()
     privateData20 = nullptr;
     __sync_fetch_and_sub(&D_5adaaa8->unknown10090, 1);
 }
+
+void Object0130acb0::Destroy()
+{
+    JsDevice *device = D_5adaaa8;
+    device->m_mutex.Lock();
+    if (m_referenceCount == 0)
+        D_5adaaa8->AddDelayDeleteObject(this);
+    device->m_mutex.Unlock();
+}

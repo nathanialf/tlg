@@ -25,7 +25,7 @@ class Object016c3c08 : public Object0130acb0 /* derived name */
 Object016c3c08::~Object016c3c08()
 {
     if (unknown30) {
-        Object05adaaa8 *owner = D_5adaaa8;
+        JsDevice *owner = D_5adaaa8;
         FUN_0131e2d0(owner->unknown100e8, unknown30);
         __sync_fetch_and_add(&owner->unknown100b0, 1);
     }

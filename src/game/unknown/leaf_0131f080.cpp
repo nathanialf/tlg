@@ -22,7 +22,7 @@ class Object016c3b18 : public Object0130acb0 /* derived name */
 // NONMATCHING: the pointer at 0x5adaaa8 the erase reads is kept in r14 and reused for the entry at +0xb8 in the base (no reload after the cleared slot and the memmove); here it is read again (`mov r14, [rip]`, 211 bytes against 204), the store of a null pointer and the memmove may alias it; the loop, the erase and the rest are the base's
 Object016c3b18::~Object016c3b18()
 {
-    Object05adaaa8 *owner = D_5adaaa8;
+    JsDevice *owner = D_5adaaa8;
     void **object = owner->objects28;
     while (object != owner->objects28End && *object != this) {
         ++object;

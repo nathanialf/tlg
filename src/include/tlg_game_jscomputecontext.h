@@ -121,7 +121,7 @@ class JsComputeContext : public Object0130acb0
      * or +0x100b8) */
     static void returnEntryE8(void *entry)
     {
-        Object05adaaa8 *owner = D_5adaaa8;
+        JsDevice *owner = D_5adaaa8;
         if (entry) {
             FUN_0131e2d0(owner->unknown100e8, entry);
             __sync_fetch_and_add(&owner->unknown100b0, 1);
@@ -130,7 +130,7 @@ class JsComputeContext : public Object0130acb0
 
     static void returnEntryB8(void *entry)
     {
-        Object05adaaa8 *owner = D_5adaaa8;
+        JsDevice *owner = D_5adaaa8;
         if (entry) {
             FUN_0131e2d0(owner->unknown100b8, entry);
             __sync_fetch_and_add(&owner->unknown100a0, 1);

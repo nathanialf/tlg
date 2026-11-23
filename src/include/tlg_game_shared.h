@@ -10,7 +10,7 @@
  * down atomically (`lock xadd qword [rdi+8], rax` with -1); the holder of
  * the last reference calls slot 2 to destroy it. release() returns the
  * count read again after the decrement (as leaf_00e5aea0.cpp's
- * Shared00e5aea0 and Object05adaaa8 do). */
+ * Shared00e5aea0 and JsDevice do). */
 class Shared00901550 /* derived name */
 {
   public:

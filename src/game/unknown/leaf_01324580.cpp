@@ -22,7 +22,7 @@ class Object016c3c30 : public Object016c3be0 /* derived name */
 Object016c3c30::~Object016c3c30()
 {
     if (entry30) {
-        Object05adaaa8 *owner = D_5adaaa8;
+        JsDevice *owner = D_5adaaa8;
         if (state19c == 3) {
             FUN_0131e2d0(owner->unknown100e8, entry30);
             __sync_fetch_and_add(&owner->unknown100b0, 1);

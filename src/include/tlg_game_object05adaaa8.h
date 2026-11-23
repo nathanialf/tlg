@@ -1,16 +1,36 @@
-/* src/include/tlg_game_object05adaaa8.h: the object the pointer at 0x5adaaa8
- * holds. derived names throughout; only the fields the matched functions
- * read are typed, each with the function that shows it. */
+/* src/include/tlg_game_object05adaaa8.h: the render's device, the object the
+ * pointer at 0x5adaaa8 holds (render/ps4/JsDevice.cpp and JsDevice.h). The
+ * class name is its inline AddDelayDeleteObject's report
+ * ("m_deleteObjectCount < JsDevice::kDeleteObjectMax", 0x15cc886, at
+ * 0x130b0ef, over the object 0x5adaaa8 points at); the names the reports
+ * spell are facts, the rest derived, and only the fields the matched
+ * functions read are typed, each with the function that shows it. */
 #ifndef TLG_GAME_OBJECT05ADAAA8_H
 #define TLG_GAME_OBJECT05ADAAA8_H
 
 #include "tlg_types.h"
 
+/* The render library's utilities as JsDevice.h includes them (0x15cefab),
+ * unless the including unit gives its own path first. */
+#ifndef RENDER_UTIL_DIR
+#define RENDER_UTIL_DIR /* derived name */ "D:\\trico\\engine\\anzu\\engine_src\\render\\ps4/util/"
+#endif
+
+/* The device's header, as AddDelayDeleteObject's report names it
+ * (0x15cc8b7). */
+#define JS_DEVICE_H /* derived name */ "D:\\trico\\engine\\anzu\\engine_src\\render\\ps4/JsDevice.h"
+
+#include "tlg_game_assert.h"
 #include "tlg_game_jsvolatilememory.h"
+#include "tlg_game_render_mutex.h"
 #include "tlg_game_render_misc.h"
 
 struct Target0131e2d0; /* derived name */
-class Object016d7fd0;  /* tlg_game_jsrasterizerstate.h */
+class JsUnknown;       /* tlg_game_jsunknown.h */
+class Object0130acb0;  /* tlg_game_object0130acb0.h */
+class Object016c3b40;  /* tlg_game_object01499f30.h */
+struct QueryDesc01499f30;
+class Object016d7fd0; /* tlg_game_jsrasterizerstate.h */
 struct JsRasterizerDesc;
 
 /* derived name: an entry of the device's private data (16 bytes: CreateDevice
@@ -24,18 +44,30 @@ struct PrivateData01306250 {
     void *unknown8;                          /* +0x8: freed with free (0x130ad1f) */
 };
 
-class Object05adaaa8 /* derived name */
+class JsDevice
 {
   public:
     virtual void slot0();   /* derived name; not traced */
     virtual void slot1();   /* derived name; not traced */
     virtual void destroy(); /* derived name; slot 2 (FUN_013224a0) */
 
-    void *AllocateOnionMemory(u32 size, u32 alignment);   /* leaf_01306470.cpp */
+    /* leaf_01306470.cpp: the label (6 for a query's block, 0x130ab59; 5 from
+     * 0x13255c9) is not read */
+    void *AllocateOnionMemory(u32 size, u32 alignment, u32 label);
     void DeallocatePrivateData(PrivateData01306250 *ptr); /* leaf_01306250.cpp */
     /* leaf_0131f450.cpp */
     void CreateRasterizerState(const JsRasterizerDesc *pRasterizerDesc,
                                Object016d7fd0 **ppRasterizerState);
+    /* leaf_0130a930.cpp: 0, or -2 for no description or an unknown kind */
+    int CreateQuery(const QueryDesc01499f30 *pDesc, Object016c3b40 **ppQuery); /* derived name */
+
+    /* the objects whose last reference went, deleted later (0x130af40) */
+    static const int kDeleteObjectMax = 0x4000;
+
+    /* JsDevice.h:294 (its report): the object's delay set, the object
+     * added once, the report when the list is full; defined after
+     * Object0130acb0 (tlg_game_object0130acb0.h) */
+    inline void AddDelayDeleteObject(Object0130acb0 *object);
 
     /* the private data's entries, as DeallocatePrivateData's check names
      * the count (0x10000 bytes of 16-byte entries from +0x88) */
@@ -86,12 +118,20 @@ class Object05adaaa8 /* derived name */
     /* +0x10238: the volatile memory the contexts allocate from
      * (JsDeviceContext's slots 21 and 27) */
     JsVolatileMemory *volatileMemory; /* derived name */
-    u8 unknown10240[0x30278 - 0x10240];
+    /* +0x10240: the frame an object's stamp is compared with (0x130b0a7) */
+    s64 frame;                                    /* derived name */
+    u32 m_deleteObjectCount;                      /* +0x10248 */
+    JsUnknown *m_deleteObjects[kDeleteObjectMax]; /* derived name; +0x10250 */
+    u8 unknown30250[0x30278 - 0x30250];
     /* +0x30278: the state CreateRasterizerState hands out for no
      * description, a reference taken */
     Object016d7fd0 *defaultRasterizerState; /* derived name */
+    u8 unknown30280[0x302b8 - 0x30280];
+    /* +0x302b8: held while queries are made and objects handed back
+     * (0x130a930, 0x130af40) */
+    Mutex m_mutex; /* derived name */
 };
 
-extern Object05adaaa8 *D_5adaaa8;
+extern JsDevice *D_5adaaa8;
 
 #endif
