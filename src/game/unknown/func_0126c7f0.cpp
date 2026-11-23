@@ -8,6 +8,8 @@
 #include "tlg_game_name.h"
 #include "tlg_game_rotation.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_axes01000aa0.h"
+#include "tlg_game_object01481650.h"
 
 /* derived names: FUN_0126c7f0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -224,4 +226,13 @@ void FUN_01482a60(Object016d7888 *self) /* derived name */
         FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
         takePose(entry.unknown70, self->model, target->unknown28[i]);
     }
+}
+
+/* FUN_0126c6f0: slot 2 of the class, with this file's axes */
+// NONMATCHING: 17/60 at the base's 60 instructions: the same stores in order, the axes' halves
+// in other registers (the base loads x into rax and rdx and y's second half after the clearing,
+// here all four halves before it)
+Axes01000aa0 Object01481650::slot2() const
+{
+    return Axes01000aa0::make();
 }

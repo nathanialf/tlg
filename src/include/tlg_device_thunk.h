@@ -436,6 +436,16 @@ struct DeviceOwner583950 : Owner583950 {
     Device583950 *device; /* +0xf0 */
 };
 
+/* derived names: the 'XAER' owner: 0x100 bytes on the walker's stack (the
+ * frames of FUN_00c06790 and FUN_00c06460, 16-byte aligned) */
+struct ErOwner00c06790 : DeviceOwner583950 { /* derived name */
+
+    /* an owner built from another to walk the given list with its
+     * handlers and its device, in a unit of its own (er_owner583950.cpp;
+     * derived name) */
+    ErOwner00c06790(const DeviceOwner583950 &builder, NodeList583950 *list);
+};
+
 /* An owner that keeps the nodes it has handed on, each once: the handlers
  * of the tables at +0x17a0 and +0x1ba0 of FUN_00525530's object
  * (FUN_00595220, FUN_00590910 and their siblings: the list at +0xf8
