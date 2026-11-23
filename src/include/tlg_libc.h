@@ -66,6 +66,7 @@ struct stat {
 extern "C" {
 int strcmp(const char *a, const char *b);
 int strncmp(const char *a, const char *b, size_t n);
+int strcasecmp(const char *a, const char *b);
 int memcmp(const void *a, const void *b, size_t n);
 void *memcpy(void *dst, const void *src, size_t n);
 void *memmove(void *dst, const void *src, size_t n);

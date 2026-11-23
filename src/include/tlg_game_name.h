@@ -87,6 +87,13 @@ class Name /* derived name */
      * 0x4aa8ee, `movl $0` to 0x57d7338) */
     Name() : index(0) {}
 
+    /* the name's string, from its entry of the table (FUN_00d0cf80 compares
+     * a prefix of a text with it) */
+    const char *string() const /* derived name */
+    {
+        return D_17ac870[index].string0;
+    }
+
     /* a copy holds its own reference: the count at +0x10 of the entry raised
      * before the index is taken (0x8aefb0, 0x8af269) */
     Name(const Name &other)
