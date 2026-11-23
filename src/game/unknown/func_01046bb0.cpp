@@ -3,6 +3,7 @@
 #include "tlg_game_vector.h"
 #include "tlg_game_frames013fb310.h"
 #include "tlg_game_pose013e58c0.h"
+#include "tlg_game_object016d7a28.h"
 
 /* derived names: FUN_01046bb0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -37,4 +38,19 @@ FrameRecord01046bb0::FrameRecord01046bb0()
 {
     vectors.resize(2);
     frames.resize(2);
+}
+
+/* FUN_013f3ee0: FUN_013ef390's body (func_0101dcc0.cpp) with this file's VECTOR_W */
+Object016d5498::Object016d5498(unsigned count) : model(0), count(count)
+{
+    values10.resize(count);
+    sets28.resize(count);
+    frames40.resize(count);
+    values80.resize(count);
+    for (u8 key = 0; key < count; ++key) {
+        values10[key] = 0;
+        values80[key] = 0;
+        frames40[key].unknown0 = _mm_setzero_ps();
+        frames40[key].resetSecond();
+    }
 }

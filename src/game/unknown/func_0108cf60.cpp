@@ -2,6 +2,7 @@
 #include "tlg_game_frames013fb310.h"
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_object016d4d28.h"
 
 /* derived names: FUN_0108cf60 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -76,5 +77,20 @@ void FUN_01404660(FramePoser013fccf0 *self, int frame) /* derived name */
         takePose(self->sets.at(i).frames.at(frame), self->model, self->indices.at(i));
         self->vectorSets.at(i).vectors.at(frame) =
             self->model->skeleton.poses[self->indices.at(i)].unknown20;
+    }
+}
+
+/* FUN_01400e60: FUN_013ef390's body (func_0101dcc0.cpp) with this file's VECTOR_W */
+Object016d56e8::Object016d56e8(unsigned count) : model(0), count(count)
+{
+    values10.resize(count);
+    sets28.resize(count);
+    frames40.resize(count);
+    values80.resize(count);
+    for (u8 key = 0; key < count; ++key) {
+        values10[key] = 0;
+        values80[key] = 0;
+        frames40[key].unknown0 = _mm_setzero_ps();
+        frames40[key].resetSecond();
     }
 }

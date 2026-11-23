@@ -5,6 +5,7 @@
 #define TLG_GAME_FRAME_H
 
 #include "tlg_simd.h"
+#include "tlg_math.h"
 #include "tlg_game_vector.h"
 
 /* derived names: the constructor stores the cleared register, then the
@@ -22,6 +23,17 @@ struct Frame016c1128 { /* derived name */
     {
         unknown0 = _mm_setzero_ps();
         unknown10 = VECTOR_W.v;
+    }
+
+    /* the second vector back to the unit's VECTOR_W, its lanes copied one
+     * by one from a copy of it: two 64-bit loads of VECTOR_W and four 32-bit
+     * stores (the last loop of FUN_013ef390 and its copies, after
+     * the zero is stored through the array's element again, which reads
+     * the array's block again; cookbook 3300) */
+    void resetSecond() /* derived name */
+    {
+        reinterpret_cast<Float4A &>(unknown10) =
+            Float4Data(reinterpret_cast<const Float4Data &>(VECTOR_W));
     }
 
     Vec4 unknown0;  /* +0x0: zero from the constructor */

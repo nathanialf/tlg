@@ -9,6 +9,7 @@
 #include "tlg_types.h"
 #include "tlg_game_array.h"
 #include "tlg_game_block.h"
+#include "tlg_game_frames013fb310.h"
 #include "tlg_game_object016d7eb0.h"
 
 /* derived names: the class whose vtable is at 0x16d5a48 (three slots; the row
@@ -19,18 +20,23 @@
 class Object016d5a48 /* derived name */
 {
   public:
+    /* FUN_01411be0: each array made one element for each key, then every key
+     * cleared (the file's own VECTOR_W) */
+    explicit Object016d5a48(unsigned count);
+
     virtual void slot0(); /* derived name; not traced */
     virtual void slot1(); /* derived name; not traced */
     virtual void slot2(); /* derived name; not traced */
 
   private:
-    u8 unknown8[0x8];
-    Array05943280<u32> values10;                       /* +0x10: 4-byte values */
-    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    Array05943280<Pair014715d0> pairs40;               /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<u32> values80; /* +0x80: 4-byte values */
-    u8 unknown98[0x8];
+    FadeModel013d4610 *model;               /* +0x8: null from the constructor */
+    Array01343a80<u32> values10;            /* +0x10: one for each key, cleared */
+    Array01343a80<FrameSet00fda5c0> sets28; /* +0x28: one for each key (FUN_013e71b0) */
+    Array01343a80<Frame016c1128> frames40;  /* +0x40: one for each key */
+    u8 unknown58[0x8];
+    Frame016c1128 frame60;       /* +0x60 */
+    Array01343a80<u32> values80; /* +0x80: one for each key, cleared */
+    unsigned count;              /* +0x98: the number of keys */
 };
 
 /* derived names: the class whose vtable is at 0x16d5a70 (stored by FUN_010d9730), over
@@ -87,18 +93,23 @@ class Object016d5ac0 : public Object016d5a48 /* derived name */
 class Object016d5bc8 /* derived name */
 {
   public:
+    /* FUN_014195f0: each array made one element for each key, then every key
+     * cleared (the file's own VECTOR_W) */
+    explicit Object016d5bc8(unsigned count);
+
     virtual void slot0(); /* derived name; not traced */
     virtual void slot1(); /* derived name; not traced */
     virtual void slot2(); /* derived name; not traced */
 
   private:
-    u8 unknown8[0x8];
-    Array05943280<u32> values10;                       /* +0x10: 4-byte values */
-    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    Array05943280<Pair014715d0> pairs40;               /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<u32> values80; /* +0x80: 4-byte values */
-    u8 unknown98[0x8];
+    FadeModel013d4610 *model;               /* +0x8: null from the constructor */
+    Array01343a80<u32> values10;            /* +0x10: one for each key, cleared */
+    Array01343a80<FrameSet00fda5c0> sets28; /* +0x28: one for each key (FUN_013e71b0) */
+    Array01343a80<Frame016c1128> frames40;  /* +0x40: one for each key */
+    u8 unknown58[0x8];
+    Frame016c1128 frame60;       /* +0x60 */
+    Array01343a80<u32> values80; /* +0x80: one for each key, cleared */
+    unsigned count;              /* +0x98: the number of keys */
 };
 
 /* derived names: the class whose vtable is at 0x16d5c40 (stored by FUN_010f2e40), over
@@ -155,18 +166,23 @@ class Object016d5bf0 : public Object016d5bc8 /* derived name */
 class Object016d5ce0 /* derived name */
 {
   public:
+    /* FUN_01431750: each array made one element for each key, then every key
+     * cleared (the file's own VECTOR_W) */
+    explicit Object016d5ce0(unsigned count);
+
     virtual void slot0(); /* derived name; not traced */
     virtual void slot1(); /* derived name; not traced */
     virtual void slot2(); /* derived name; not traced */
 
   private:
-    u8 unknown8[0x8];
-    Array05943280<u32> values10;                       /* +0x10: 4-byte values */
-    Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    Array05943280<Pair014715d0> pairs40;               /* +0x40 */
-    u8 unknown58[0x28];
-    Array05943280<u32> values80; /* +0x80: 4-byte values */
-    u8 unknown98[0x8];
+    FadeModel013d4610 *model;               /* +0x8: null from the constructor */
+    Array01343a80<u32> values10;            /* +0x10: one for each key, cleared */
+    Array01343a80<FrameSet00fda5c0> sets28; /* +0x28: one for each key (FUN_013e71b0) */
+    Array01343a80<Frame016c1128> frames40;  /* +0x40: one for each key */
+    u8 unknown58[0x8];
+    Frame016c1128 frame60;       /* +0x60 */
+    Array01343a80<u32> values80; /* +0x80: one for each key, cleared */
+    unsigned count;              /* +0x98: the number of keys */
 };
 
 /* derived names: the class whose vtable is at 0x16d5dc0 (stored by FUN_0110cc00), over

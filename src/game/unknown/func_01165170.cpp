@@ -3,6 +3,7 @@
 #include "tlg_game_frames013fb310.h"
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_object0143e060.h"
 
 /* derived names: FUN_01165170 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -57,4 +58,19 @@ struct FrameSet01165170 : FrameSet013fa8d0 { /* derived name */
 FrameSet01165170::FrameSet01165170()
 {
     frames.resize(4);
+}
+
+/* FUN_01442270: FUN_013ef390's body (func_0101dcc0.cpp) with this file's VECTOR_W */
+Object016d5fb0::Object016d5fb0(unsigned count) : model(0), count(count)
+{
+    values10.resize(count);
+    sets28.resize(count);
+    frames40.resize(count);
+    values80.resize(count);
+    for (u8 key = 0; key < count; ++key) {
+        values10[key] = 0;
+        values80[key] = 0;
+        frames40[key].unknown0 = _mm_setzero_ps();
+        frames40[key].resetSecond();
+    }
 }
