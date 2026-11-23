@@ -22,6 +22,14 @@ struct NameTableBlock { /* derived name */
 template <class E, size_t N> class NameTable /* derived name */
 {
   public:
+    /* empty: the buckets and the two lists cleared (one memset with them),
+     * then the number of buckets and the entry's size (`mov dword
+     * [rbx+0xb8], 0x10; mov dword [rbx+0xbc], 0x30` at 0xae64c1 for 16
+     * buckets of 0x30-byte entries) and the count */
+    NameTable() : buckets(), blocks(0), freeList(0), bucketCount(N), entrySize(sizeof(E)), count(0)
+    {
+    }
+
     /* with entries left they are emptied, then every block freed */
     ~NameTable()
     {
@@ -57,8 +65,9 @@ template <class E, size_t N> class NameTable /* derived name */
     E *buckets[N];
     NameTableBlock *blocks; /* +N*8 */
     E *freeList;            /* +N*8 + 0x8 */
-    u8 unknownEnd10[0x8];
-    u32 count; /* +N*8 + 0x18 */
+    u32 bucketCount;        /* +N*8 + 0x10: N */
+    u32 entrySize;          /* +N*8 + 0x14: sizeof(E) */
+    u32 count;              /* +N*8 + 0x18 */
 };
 
 #endif
