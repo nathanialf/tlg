@@ -17,9 +17,9 @@ class Object016b7e70 /* derived name */
   public:
     virtual ~Object016b7e70();
 
-  private:
     /* the fields emptied (0xc13c84 to 0xc13cee): the own block given back
-     * first, then the sizes, the flags and the three words from +0x40 */
+     * first, then the sizes, the flags and the three words from +0x40; the
+     * pair FUN_0059d8f0 destroys empties both of its objects first */
     void reset() /* derived name */
     {
         if ((flags8 & 2) && block38) {
@@ -34,6 +34,7 @@ class Object016b7e70 /* derived name */
         unknown50 = 0;
     }
 
+  private:
     unsigned flags8;                    /* +0x8 */
     Ref00503fb0<Object016b9108> held10; /* +0x10 */
     OwnedBlock05943280 block18;         /* +0x18 */

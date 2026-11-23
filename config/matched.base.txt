@@ -10787,3 +10787,10 @@ FUN_013fcc20 src/game/unknown/leaf_013fcc20.cpp _ZN17VectorSet01404660C1Ev
 FUN_01372c50 src/game/unknown/leaf_01372c50.cpp _ZN14Record01372c505resetEv
 FUN_0052c500 src/game/unknown/leaf_0052c500.cpp _Z12FUN_0052c500PK14Values0052c500RK4NamejPiS5_
 FUN_004bc460 src/game/unknown/leaf_004bc460.cpp _Z12FUN_004bc460P21MotionHistory004bc460fRK7Float4A
+FUN_0140d9d0 src/game/unknown/leaf_0140d9d0.cpp _ZN14Object016d5ac0D1Ev
+FUN_00fdaa20 src/game/unknown/leaf_00fdaa20.cpp _Z12FUN_00fdaa20P11Vector4LoopS0_RKS_ff
+FUN_010304c0 src/game/unknown/leaf_010304c0.cpp _Z12FUN_010304c0P11Vector4LoopS0_RKS_ff
+FUN_0113f910 src/game/unknown/leaf_0113f910.cpp _Z12FUN_0113f910P11Vector4LoopS0_RKS_ff
+FUN_01190b90 src/game/unknown/leaf_01190b90.cpp _Z12FUN_01190b90P11Vector4LoopS0_RKS_ff
+FUN_011b1510 src/game/unknown/leaf_011b1510.cpp _Z12FUN_011b1510P11Vector4LoopS0_RKS_ff
+FUN_01280bb0 src/game/unknown/leaf_01280bb0.cpp _Z12FUN_01280bb0P11Vector4LoopS0_RKS_ff

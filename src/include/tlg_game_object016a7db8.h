@@ -26,14 +26,14 @@ class Object016a7db8 : public Object016b9108 /* derived name */
     Float4A unknown50; /* +0x50: (0, 0, 0, 1) from the constructor; not traced */
     int unknown60;     /* +0x60: zero from the constructor; not traced */
     u8 unknown64[0x4];
-    Array01343a80<u32>
-        array68; /* +0x68: an array whose elements need no destructor, emptied by the constructor */
-    Array01343a80<u32>
-        array80; /* +0x80: an array whose elements need no destructor, emptied by the constructor */
-    Array01343a80<u32>
-        array98; /* +0x98: an array whose elements need no destructor, emptied by the constructor */
-    Array01343a80<u32>
-        arrayb0; /* +0xb0: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<Float4A>
+        array68; /* +0x68: 16-byte aligned points, emptied by the constructor (FUN_002b7410 appends to it) */
+    Array01343a80<Float4A>
+        array80; /* +0x80: 16-byte aligned points, emptied by the constructor (FUN_002b7410 appends to it) */
+    Array01343a80<float>
+        array98; /* +0x98: floats, emptied by the constructor (FUN_002b7410 appends to it) */
+    Array01343a80<float>
+        arrayb0; /* +0xb0: floats, emptied by the constructor (FUN_002b7410 appends to it) */
     Array01343a80<u32>
         arrayc8; /* +0xc8: an array whose elements need no destructor, emptied by the constructor */
     int unknowne0; /* +0xe0: zero from the constructor; not traced */
@@ -47,10 +47,10 @@ class Object016a7db8 : public Object016b9108 /* derived name */
     int unknown114;    /* +0x114: zero from the constructor; not traced */
     int unknown118;    /* +0x118: zero from the constructor; not traced */
     float unknown11c;  /* +0x11c: 1.0 from the constructor; not traced */
-    Array01343a80<u32>
-        array120; /* +0x120: an array whose elements need no destructor, emptied by the constructor */
-    Array01343a80<u32>
-        array138; /* +0x138: an array whose elements need no destructor, emptied by the constructor */
+    Array01343a80<float>
+        array120; /* +0x120: floats, emptied by the constructor (FUN_002b7410 appends to it) */
+    Array01343a80<Float4A>
+        array138; /* +0x138: 16-byte aligned points, emptied by the constructor (FUN_002b7410 appends to it) */
 };
 
 #endif

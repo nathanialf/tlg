@@ -5,9 +5,7 @@ extern const float D_1524a00[16]; /* the factors by time (leaf_00fdadf0.cpp) */
 
 /* derived names: a copy of FUN_00fdaa20 (leaf_00fdaa20.cpp, where the step
  * over a vector and the order of its operations are described) over its own
- * unit's constants (15, 1 and 13, the same values). Called from 1 site in 1 function (FUN_01277e50).
- * NONMATCHING: FUN_00fdaa20's residual, registers only (the change since
- * the previous step and the fourth lane's sum in each other's registers). */
+ * unit's constants (15, 1 and 13, the same values). Called from 1 site in 1 function (FUN_01277e50). */
 void FUN_01280bb0(Vector4Loop *value, Vector4Loop *previous, const Vector4Loop &target, float time,
                   float rate) /* derived name */
 {
@@ -19,9 +17,9 @@ void FUN_01280bb0(Vector4Loop *value, Vector4Loop *previous, const Vector4Loop &
         index = 14;
     float fraction = clamped - (float)index;
     float factor = D_1524a00[index] * (1.0f - fraction) + D_1524a00[index + 1] * fraction;
+    float stiffness = rate * rate;
     Vector4Loop current = *value;
     Vector4Loop delta = current - *previous;
-    *value =
-        factor * (rate * rate * ((target - current - delta) * (13.0f / rate)) + delta) + current;
+    *value = factor * (stiffness * ((target - current - delta) * (13.0f / rate)) + delta) + current;
     *previous = current;
 }

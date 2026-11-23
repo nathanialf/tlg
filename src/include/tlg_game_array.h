@@ -433,6 +433,15 @@ template <class T> class Array05943280 /* derived name */
         return moved;
     }
 
+    /* the last `number` elements destroyed and the count lowered by it
+     * (FUN_00c0a9f0, over floats: `sub ecx, eax` into the count) */
+    void removeLast(unsigned number) /* derived name */
+    {
+        for (unsigned i = 0; i < number; ++i)
+            data[count - 1 - i].~T();
+        count -= number;
+    }
+
     /* every element destroyed and the count cleared, the block and the
      * capacity kept (0x1343a80, 0x13544e0) */
     void removeAll() /* derived name */
