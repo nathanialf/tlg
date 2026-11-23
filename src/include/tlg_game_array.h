@@ -7,17 +7,16 @@
  * the 8-byte ones by 0x80000: 0x342e4c and 0x1b59fb), the block reallocated
  * by its own owner or first allocated by the array's. 103 appends of
  * counted references are this body (FUN_001b59d0 and its copies).
- * OPEN: the form of the block's release by site. Where the holder's
- * destructor is measured, 37 arrays need the release as a call (the
- * out-of-line FUN_00ebf3f0, tlg_game_block.h) and 2 hold its body in line
- * (Object016cd3c0 +0xc0, Object016d2558 +0x48). No property tested splits
- * them: the element's destructor (Object016d2558's Record00d64dd0 is plain,
- * round 492C), reflection, exact sizing, a count-only clear, an out-of-line
- * constructor, the allocator (round 493C), and growth by an append: six of
- * the call side's arrays are appended to through this growth,
- * Object016a7db8's +0x68, +0x80 and +0x138 (16-byte elements) and +0x98,
- * +0xb0 and +0x120 (4-byte) in FUN_002b7410 (0x2b94e5 to 0x2ba5c2), as
- * Object016d2558's +0x48 is on the inline side (FUN_00d64dd0). */
+ * The block's release by site: an array of elements with no destructor
+ * gives its block back through the release's own copy, FUN_00ebf3f0
+ * (tlg_game_block.h; the destructor below). Its two exceptions found by
+ * round 492C were the holders, not the arrays: Object016cd3c0 (+0xc0) and
+ * Object016d2558 (+0x48) cost 300 and 280 at the unit stage with the call,
+ * between the limits of 225 and 325, and the base's `jmp D2` rules the
+ * hint out: each declares its destructor in its body (round 497C). The
+ * base's base-object destructors (0x1382f90, 0x13ba2b0) hold exactly the
+ * members the classes model.
+ */
 #ifndef TLG_GAME_ARRAY_H
 #define TLG_GAME_ARRAY_H
 
@@ -42,9 +41,23 @@ template <class T> class Array05943280 /* derived name */
      * again at each one, then the block released (0x1373420, an array of
      * Names at +0x28 of its holder: `mov r12, [r14+0x28]; mov ebx, ebx;
      * mov ecx, [r12+rbx*4]` ... `inc ebx; cmp ebx, eax; jb`, then the
-     * release of the block at +0x28) */
+     * release of the block at +0x28). An array of elements with no
+     * destructor gives its block back through the release's own copy,
+     * FUN_00ebf3f0 (tlg_game_block.h), the trait the game's ChunkStack
+     * tests too (tlg_game_chunkstack.h): at the unit stage that is a call,
+     * so its holders' complete destructors stay cheap enough for their
+     * deleting destructors to hold them (0x2a9970, 0x2a9fc0, 0x472110,
+     * 0xbf0290, 0x13e40a0, 0x13ef0d0: arrays of 32-bit values and of
+     * vectors); the link inlines the copy. Measured over the whole module
+     * (round 485C): this form changes those six deleting destructors and no
+     * matched row, where the call for the arrays of elements with a
+     * destructor loses 275 matched rows: those hold the release in line. */
     ~Array05943280()
     {
+        if (__has_trivial_destructor(T)) {
+            FUN_00ebf3f0(data);
+            return;
+        }
         for (unsigned i = 0; i < count; ++i)
             data[i].~T();
         releaseBlock(data);

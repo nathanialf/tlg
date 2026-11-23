@@ -21,6 +21,4 @@ class Object016c0bc0 : public Object016d51e0 /* derived name */
     Name unknown70; /* +0x70 */
 };
 
-// NONMATCHING: the deleting destructor FUN_013ef0d0: the base inlines this complete destructor into it (205 bytes);
-// the build calls it (the class of 0x134dd20: an inline-cost margin on the deleting destructor)
 Object016c0bc0::~Object016c0bc0() {}

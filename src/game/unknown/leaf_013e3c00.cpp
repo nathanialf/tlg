@@ -66,8 +66,6 @@ class Object016c00a0 : public Object016d3ef8 /* derived name */
     OwnedBlock05943280 blocka8; /* +0xa8 */
 };
 
-// NONMATCHING: the deleting destructor FUN_013e40a0: the base inlines this complete destructor into it (347 bytes);
-// the build calls it (the class of 0x134dd20: an inline-cost margin on the deleting destructor)
 Object016c00a0::~Object016c00a0() {}
 
 /* the destructor of Object016ca768 (tlg_game_object016ca768.h), its key function: in

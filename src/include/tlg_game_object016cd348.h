@@ -46,8 +46,8 @@ class Object016cd348 : public Object016b9108 /* derived name */
  * FUN_00991670), derived from Object016cd348: slot 5 is its own, the
  * others the base's. 0x68 bytes (`mov
  * edi, 0x68` before operator new in its creator FUN_009912d0). Its
- * constructor 0x991430 is out of line (stores both vtables; the functions
- * table names it for Object016cd348) and not written; its destructor is
+ * constructor 0x991430 is out of line (stores both vtables) and not
+ * written; its destructor is
  * FUN_00991560 (leaf_00991560.cpp). The rest is not traced. */
 class Object016b1738 : public Object016cd348 /* derived name */
 {
@@ -61,17 +61,14 @@ class Object016b1738 : public Object016cd348 /* derived name */
 
   private:
     u8 unknown48[0x8];
-    /* +0x50: the block of 64 values made 0 by the constructor (0x991430:
+    /* +0x50: an array of 64 values made 0 by the constructor (0x991430:
      * an array's fields, the capacity made 64 exactly, then each element
      * cleared), released by the destructor (`mov rax, [rbx+0x50]; ... cmp
      * ecx, 0xa`). Slot 5 returns its address as the base's returns its
-     * array's, so it is an array of the same type by its use; written as
-     * the array template, its inline release makes the complete destructor
-     * cost more than the deleting one takes in (FUN_00991670 then calls
-     * FUN_00991560, measured), so the block is the member that releases it
-     * through FUN_00ebf3f0 (tlg_game_block.h). OPEN: which list type the
-     * original has here. */
-    OwnedBlock05943280 block50;
+     * array's. Its elements have no destructor, so its block goes back
+     * through FUN_00ebf3f0 at the unit stage (tlg_game_array.h) and the
+     * deleting destructor FUN_00991670 holds the complete one. */
+    Array05943280<u32> values50;
 };
 
 #endif

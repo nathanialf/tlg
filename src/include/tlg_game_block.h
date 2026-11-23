@@ -4,7 +4,9 @@
  * block tagged 10 whose owner is set goes back through slot 6 of the owner
  * with 1; any other goes to free. The release has a copy of its own in the
  * executable, FUN_00ebf3f0 (leaf_00ebf3f0.cpp), which the destructors that
- * own a block call (below); the arrays hold the body in line. */
+ * own a block call (below), as do the arrays of elements with no
+ * destructor; the arrays of elements with one hold the body in line
+ * (tlg_game_array.h). */
 #ifndef TLG_GAME_BLOCK_H
 #define TLG_GAME_BLOCK_H
 
@@ -160,8 +162,9 @@ inline void *reallocateOwnedBlock(void *block, unsigned size, unsigned alignment
  *   release: 0xbe6290, 0xd650e0, 0xe97590, 0x13b2c80, 0x13b92b0), and the
  *   release's own null test stays where the caller already proved the
  *   block (0x1350030's chain).
- * The arrays' release (tlg_game_array.h) is the inline body: the same call
- * there changes 576 symbols and loses 269 rows. The deleting destructor of
+ * The release of an array of elements with a destructor (tlg_game_array.h)
+ * is the inline body: the same call there loses 275 rows (round 485C); an
+ * array of elements with none calls this. The deleting destructor of
  * a class with nine such members still calls its complete one (0x33cb30,
  * 28 bytes in the base). */
 void FUN_00ebf3f0(void *block);

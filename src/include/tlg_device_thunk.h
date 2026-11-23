@@ -397,11 +397,21 @@ struct Owner583950 {
     NodeCursor583950 cursor; /* +0x38: the current index, the list at +0x40 */
     Handler583950 *handlers; /* +0x48, indexed by a node's kind */
     u8 unknown50[0x10];
-    /* +0x60: a member of 16-byte alignment: the owners lie 16-byte aligned
-     * on every stack (FUN_00c06790's at -0x130 under its guard at -0x28,
-     * FUN_0058c560's 8 bytes under its guard, FUN_00c01cc0's `vmovaps` at
-     * +0x100); its type and its place within +0x50..+0xd8 are not traced.
-     * derived name */
+    /* OPEN: the owner is 16-byte aligned, and the member that makes it so
+     * lies in +0x50..+0xd8, which no code of the base shown so far touches:
+     * the builders (FUN_005269a0's five owners, FUN_00c06790, FUN_00c020e0,
+     * FUN_00c01cc0) store +0x48 and then +0xd8, and none of the 292 handlers
+     * the tables of FUN_00525530, FUN_00be6da0, FUN_005269a0, FUN_00aec5d0,
+     * FUN_005f2b90 and FUN_0058c760 hold reads or writes the owner between
+     * them. The alignment itself is the bytes': `vmovaps [rbp-0x1c0]` at
+     * 0xc01e98 (+0x100 of FUN_00c01cc0's owner), `vmovaps [rsp+0x4240]` at
+     * 0x528251 and `vmovdqa [rsp+0x42a0]` at 0x527e53 (+0x100 and +0x160 of
+     * FUN_005269a0's 'XAIT' owner at +0x4140), and the places FUN_00c06790
+     * (-0x130 under its guard at -0x28) and FUN_0058c560 (8 bytes under its
+     * guard) give their owners, which an 8-byte owner does not take
+     * (measured: with these 16 bytes as u8, FUN_00c06790 and FUN_00c01cc0
+     * are no longer equal). Its type and place are not traced; a 16-byte
+     * aligned member at +0x60 stands for it. derived name */
     Float4A unknown60;
     u8 unknown70[0x68];
     int unknownd8; /* +0xd8: the state FUN_00583bb0 leaves */

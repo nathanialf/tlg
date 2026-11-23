@@ -13,9 +13,15 @@
  * (config/vtables.derived.base.txt): three slots (FUN_013e7660,
  * FUN_01495b90, FUN_001af750), no destructor among them. Its destructor,
  * inlined in FUN_012ec7e0 (the vtable kept in r13), stores the vtable and
- * releases the blocks at +0x80 and +0x40, the array at +0x28 (24-byte
- * elements, each a block) and the block at +0x10. The slots are not
- * written; the rest is not traced. */
+ * releases the arrays at +0x80 and +0x40, the array of lists at +0x28
+ * (24-byte elements, each a list) and the array at +0x10. Its constructor
+ * FUN_013ef390 (out of line, not written) takes the number of keys, stores
+ * it at +0x98 and makes each array that many elements exactly: 4-byte
+ * values at +0x10 and +0x80, pairs at +0x40 (a zero vector and the vector
+ * at 0x5acf2c0), lists at +0x28 (FUN_013e71b0). The elements of +0x10,
+ * +0x40 and +0x80 have no destructor, so the arrays give their blocks back
+ * through FUN_00ebf3f0 (tlg_game_array.h). The slots are not written; the
+ * rest is not traced. */
 /* derived names: an element of the lists at +0x28: two aligned four-float
  * values (32 bytes), assigned one value at a time (two `vmovaps` pairs from
  * one source address, 0x14715f3; the implicit assignment is one 32-byte
@@ -39,35 +45,19 @@ struct Pair014715d0 { /* derived name */
  * the vector at 0x5acf2c0) and FUN_013fcc20 (vectors, a 0x20-byte block:
  * zero), of the same shape, out of line in the stretch of inline functions,
  * called for each list by the outer arrays' resize (FUN_013e71b0,
- * FUN_0108d540). Not the array template: that one starts empty. The list
- * gives its block back through FUN_00ebf3f0, a block's release outside the
- * arrays (tlg_game_block.h); its elements need no destructor. With it the
- * destructors of the classes that hold these lists are inlined whole where
- * the base has them (FUN_01016ab0, FUN_010351b0, FUN_01281820); with the
- * array template's inline release they stay calls. The slot 1 copies
+ * FUN_0108d540). An array whose own constructor makes two elements (the
+ * array template's starts empty). Its elements need no destructor, so it
+ * gives its block back through FUN_00ebf3f0 (tlg_game_array.h); with that
+ * the destructors of the classes that hold these lists are inlined whole
+ * where the base has them (FUN_01016ab0, FUN_010351b0, FUN_01281820); with
+ * the inline release they stay calls. The slot 1 copies
  * (FUN_013f0120 and five of the same bytes) store the pairs at a stride of
  * 32 (`shl rcx, 5`) in lists 24 bytes apart. The constructors are not
  * written. */
-template <class T> class List013e72e0 /* derived name */
+template <class T> class List013e72e0 : public Array05943280<T> /* derived name */
 {
   public:
     List013e72e0();
-
-    ~List013e72e0()
-    {
-        FUN_00ebf3f0(items);
-    }
-
-    T &at(int index)
-    {
-        return items[index];
-    }
-
-  private:
-    T *items;           /* +0x0 */
-    unsigned count;     /* +0x8 */
-    unsigned capacity;  /* +0xc */
-    unsigned allocator; /* +0x10 */
 };
 
 class Object016d7eb0 /* derived name */
@@ -79,15 +69,15 @@ class Object016d7eb0 /* derived name */
 
   protected:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     /* +0x28: five lists (at least: slot 5 of 0x16d7e68 copies within five),
-     * each a block; their elements are 32 bytes */
+     * one for each key; their elements are 32 bytes */
     Array05943280<List013e72e0<Pair014715d0>> lists28;
-    OwnedBlock05943280 block40; /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40; /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class over it whose vtable is at 0x16d7e68

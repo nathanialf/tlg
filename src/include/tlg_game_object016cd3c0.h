@@ -16,13 +16,16 @@
  * three. 0xd8 bytes: 0 at +0x24 and +0x28, five locked arrays of counted
  * references from +0x30, an empty Name at +0xa8, 0 at +0xac and +0xb0, 8
  * bytes of zero at +0xb8 and a locked array at +0xc0 (its elements have
- * no destructor; not traced), all from the constructor. The destructor is
- * implicit: the complete one, FUN_01382f80, is a jump to the base-object
- * one, FUN_01382f90 (the last array's block, the Name, the five arrays
- * last to first through their destructor FUN_0134f620, then the root's
- * destructor in line), and the deleting one, FUN_013830d0, calls it: its
- * cost is over the inline limit of 325 (the inline hint). The class has
- * no key function, so the creator's unit emits the vtable with them. */
+ * no destructor; not traced), all from the constructor. The complete
+ * destructor, FUN_01382f80, is a jump to the base-object one, FUN_01382f90
+ * (the last array's block, the Name, the five arrays last to first through
+ * their destructor FUN_0134f620, then the root's destructor in line), and
+ * the deleting one, FUN_013830d0, calls it. The base-object destructor
+ * costs 300 at the unit stage (the last array's block given back through
+ * FUN_00ebf3f0, tlg_game_array.h): implicit, it would carry the inline
+ * hint (limit 325) and be inlined into both, so the destructor is declared
+ * in the class body, which carries none (limit 225). The class has no key
+ * function, so the creator's unit emits the vtable with them. */
 class Object016cd3c0 : public Object016b9108 /* derived name */
 {
   public:
@@ -30,6 +33,8 @@ class Object016cd3c0 : public Object016b9108 /* derived name */
         : Object016b9108(name), unknown24(0), unknown28(0), unknownac(0), unknownb0(0), unknownb8(0)
     {
     }
+
+    virtual ~Object016cd3c0() {}
 
   private:
     int unknown24; /* +0x24: 0 from the constructor */

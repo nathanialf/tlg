@@ -7166,7 +7166,9 @@ FUN_002a8ab0 src/game/unknown/leaf_002a8ab0.cpp _ZN14Object016a7d48D1Ev
 FUN_002a8e10 src/game/unknown/leaf_002a8e10.cpp _ZN14Object016a7d80D1Ev
 FUN_002a8eb0 src/game/unknown/leaf_002a8e10.cpp _ZN14Object016a7d80D0Ev
 FUN_002a9720 src/game/unknown/leaf_002a9720.cpp _ZN14Object016a7db8D1Ev
+FUN_002a9970 src/game/unknown/leaf_002a9720.cpp _ZN14Object016a7db8D0Ev
 FUN_002a9e40 src/game/unknown/leaf_002a9e40.cpp _ZN14Object016a7df0D1Ev
+FUN_002a9fc0 src/game/unknown/leaf_002a9e40.cpp _ZN14Object016a7df0D0Ev
 FUN_002bfaa0 src/game/unknown/leaf_002bfaa0.cpp _ZN14Object016a8030D1Ev
 FUN_002bfb60 src/game/unknown/leaf_002bfaa0.cpp _ZN14Object016a8030D0Ev
 FUN_00324f50 src/game/unknown/leaf_00324dd0.cpp _ZN14Object016a85a8D1Ev
@@ -7189,6 +7191,7 @@ FUN_00429be0 src/game/unknown/leaf_00429b20.cpp _ZN14Object016a9920D0Ev
 FUN_00471350 src/game/unknown/leaf_00471350.cpp _ZN14Object016a9b50D1Ev
 FUN_004714a0 src/game/unknown/leaf_00471350.cpp _ZN14Object016a9b50D0Ev
 FUN_00471fd0 src/game/unknown/leaf_00471fd0.cpp _ZN14Object016a9ca8D1Ev
+FUN_00472110 src/game/unknown/leaf_00471fd0.cpp _ZN14Object016a9ca8D0Ev
 FUN_00472d70 src/game/unknown/leaf_00472d70.cpp _ZN14Object016a9d18D1Ev
 FUN_00472e10 src/game/unknown/leaf_00472d70.cpp _ZN14Object016a9d18D0Ev
 FUN_005aac20 src/game/unknown/leaf_005a81d0.cpp _ZN14Object016ab968D1Ev
@@ -7258,6 +7261,7 @@ FUN_00b88500 src/game/unknown/leaf_00b87da0.cpp _ZN14Object016b70b0D1Ev
 FUN_00b885c0 src/game/unknown/leaf_00b87da0.cpp _ZN14Object016b70b0D0Ev
 FUN_00beec30 src/game/unknown/leaf_00bedb40.cpp _ZN14Object016b7c98D1Ev
 FUN_00bf0180 src/game/unknown/leaf_00bf0180.cpp _ZN14Object016b7cd0D1Ev
+FUN_00bf0290 src/game/unknown/leaf_00bf0180.cpp _ZN14Object016b7cd0D0Ev
 FUN_013a2440 src/game/unknown/leaf_00c1df90.cpp _ZN14Object016b8268D1Ev
 FUN_00c236c0 src/game/unknown/leaf_00c236c0.cpp _ZN14Object016b8300D1Ev
 FUN_00c23760 src/game/unknown/leaf_00c236c0.cpp _ZN14Object016b8300D0Ev
@@ -9520,7 +9524,9 @@ FUN_00674890 src/game/unknown/leaf_00674890.cpp _ZN14Object016ac180D1Ev
 FUN_006749a0 src/game/unknown/leaf_00674890.cpp _ZN14Object016ac180D0Ev
 FUN_013f6fd0 src/game/unknown/leaf_013f9a30.cpp _ZN14Object013f9a305resetEv
 FUN_013eeff0 src/game/unknown/leaf_013ef1a0.cpp _ZN14Object016c0bc0D1Ev
+FUN_013ef0d0 src/game/unknown/leaf_013ef1a0.cpp _ZN14Object016c0bc0D0Ev
 FUN_013e3f30 src/game/unknown/leaf_013e3c00.cpp _ZN14Object016c00a0D1Ev
+FUN_013e40a0 src/game/unknown/leaf_013e3c00.cpp _ZN14Object016c00a0D0Ev
 FUN_01370c30 src/game/unknown/leaf_01370c30.cpp _ZN14Object016cc130D1Ev
 FUN_01329890 src/game/unknown/leaf_01329890.cpp _ZN14Object016c5590D1Ev
 FUN_01329930 src/game/unknown/leaf_01329890.cpp _ZN14Object016c5590D0Ev
@@ -9567,7 +9573,9 @@ FUN_00c1cfd0 src/game/unknown/leaf_00c1cfd0.cpp _ZN14Object016b8188D1Ev
 FUN_00c1d150 src/game/unknown/leaf_00c1cfd0.cpp _ZN14Object016b8188D0Ev
 FUN_00e0e680 src/game/unknown/leaf_00e0e680.cpp _ZN14Object016bd720D1Ev
 FUN_00e0e800 src/game/unknown/leaf_00e0e680.cpp _ZN14Object016bd720D0Ev
-FUN_01345c70 src/game/unknown/leaf_01345c70.cpp _ZN14Object016c70d0D1Ev
+FUN_01345c70 src/game/unknown/leaf_0082fd70.cpp _ZN14Object016c70d0D1Ev
+FUN_01345d90 src/game/unknown/leaf_0082fd70.cpp _ZN14Object016c70d0D0Ev
+FUN_0082fd70 src/game/unknown/leaf_0082fd70.cpp _ZN14Object016aec40C2Ev
 FUN_00ff8a40 src/game/unknown/leaf_00ff8a40.cpp _Z12FUN_00ff8a40P14Object00ff8a40
 FUN_01265110 src/game/unknown/leaf_01265110.cpp _Z12FUN_01265110P14Object01265110
 FUN_0037aac0 src/game/unknown/leaf_0037aac0.cpp _ZN14Object016a8db0D1Ev
@@ -10724,3 +10732,5 @@ FUN_013bf660 src/game/unknown/leaf_013c84c0.cpp _Z12FUN_013bf660P19VisitedNode00
 FUN_00d48850 src/game/unknown/leaf_00d48850.cpp _Z12FUN_00d48850PvP14Object00d48850
 FUN_00cf6380 src/game/unknown/leaf_00cf6380.cpp _Z12FUN_00cf6380PvP16Resource00cf6380
 FUN_00dde610 src/game/unknown/leaf_00dde610.cpp _Z12FUN_00dde610P9lua_StatePvPm
+FUN_00581490 src/game/unknown/leaf_00581490.cpp _Z12FUN_00581490P17DeviceOwner583950P10Node583950
+FUN_005a00c0 src/game/unknown/leaf_005a00c0.cpp _Z12FUN_005a00c0P17DeviceOwner583950Pv

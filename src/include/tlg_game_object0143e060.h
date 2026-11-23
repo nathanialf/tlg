@@ -2,13 +2,14 @@
  * Object016d5e90 (tlg_game_object01439e30.h), each the part of two
  * 0x150-byte classes whose destructors are of 0x1439e30's shape (game
  * region; docs/TARGETS.md). Every name here is derived. Each part has
- * the fields of Object016d52c8 (tlg_game_object016d7a28.h): blocks at
- * +0x10, +0x40 and +0x80 and at +0x28 the lists of pairs (List013e72e0,
- * whose constructor FUN_014397e0's resize FUN_013e71b0 calls for each).
- * Each block then goes back through FUN_00ebf3f0 at the unit stage and the
- * part's implicit destructor is cheap enough to be inlined into both
- * wholes over it, as the base holds it (FUN_0143e060 to FUN_01468170);
- * with the array template's inline release it stayed a call there. */
+ * the fields of Object016d52c8 (tlg_game_object016d7a28.h): arrays at
+ * +0x10, +0x40 and +0x80 of elements with no destructor and at +0x28 the
+ * lists of pairs (List013e72e0, whose constructor FUN_014397e0's resize
+ * FUN_013e71b0 calls for each). Each of their blocks then goes back through
+ * FUN_00ebf3f0 at the unit stage (tlg_game_array.h) and the part's implicit
+ * destructor is cheap enough to be inlined into both wholes over it, as the
+ * base holds it (FUN_0143e060 to FUN_01468170); with the inline release it
+ * stayed a call there. */
 #ifndef TLG_GAME_OBJECT0143E060_H
 #define TLG_GAME_OBJECT0143E060_H
 
@@ -28,13 +29,13 @@ class Object016d5fb0 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class whose vtable is at 0x16d6060 (the row of
@@ -94,13 +95,13 @@ class Object016d6270 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class whose vtable is at 0x16d62e8 (the row of
@@ -160,13 +161,13 @@ class Object016d6408 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class whose vtable is at 0x16d6468 (the row of
@@ -226,13 +227,13 @@ class Object016d65f0 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class whose vtable is at 0x16d6668 (the row of

@@ -37,13 +37,13 @@ class Object016d7a28 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class over it whose vtable is at 0x16d7a50
@@ -97,13 +97,13 @@ class Object016d5498 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class over it whose vtable is at 0x16d54c0
@@ -157,13 +157,13 @@ class Object016d52c8 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class over it whose vtable is at 0x16d52f0

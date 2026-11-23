@@ -15,7 +15,7 @@
 /* derived names: the class whose vtable is at 0x16d5e90 (three slots; the
  * row of config/vtables.derived.base.txt names it), the part of
  * Object016d5eb8 that FUN_01439e30 destroys after storing this vtable
- * (0x01439e30 + 0x99): four arrays, at +0x10 and +0x80 of ints (the
+ * (0x01439e30 + 0x99): four arrays, at +0x10 and +0x80 of 4-byte values (the
  * constructor FUN_014397e0 sizes them 0x14 bytes for five, aligned 4), at
  * +0x28 of lists of pairs (List013e72e0: the constructor sizes it by
  * FUN_013e71b0) and at +0x40 of 32-byte pairs (0x1439a2c: `vmovaps
@@ -31,13 +31,13 @@ class Object016d5e90 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class whose vtable is at 0x16d5eb8 (eight slots), over
@@ -69,7 +69,7 @@ class Object016d5eb8 : public Object016d5e90 /* derived name */
 /* derived names: the class whose vtable is at 0x16d7dc0 (three slots; the
  * row of config/vtables.derived.base.txt names it), the part of
  * Object016d7de8 that FUN_01491e40 destroys after storing this vtable
- * (0x01491e40 + 0x99): four arrays, at +0x10 and +0x80 of ints (the
+ * (0x01491e40 + 0x99): four arrays, at +0x10 and +0x80 of 4-byte values (the
  * constructor FUN_014917f0 sizes them 0x14 bytes for five, aligned 4), at
  * +0x28 of lists of pairs (List013e72e0: the constructor sizes it by
  * FUN_013e71b0) and at +0x40 of 32-byte pairs (0x1439a2c: `vmovaps
@@ -85,13 +85,13 @@ class Object016d7dc0 /* derived name */
 
   private:
     u8 unknown8[0x8];
-    OwnedBlock05943280 block10; /* +0x10 */
-    u8 unknown18[0x10];
+    Array05943280<u32>
+        values10; /* +0x10: 4-byte values, made one for each key (the count at +0x98) */
     Array05943280<List013e72e0<Pair014715d0>> lists28; /* +0x28: tlg_game_object016d7eb0.h */
-    OwnedBlock05943280 block40;                        /* +0x40 */
-    u8 unknown48[0x38];
-    OwnedBlock05943280 block80; /* +0x80 */
-    u8 unknown88[0x18];
+    Array05943280<Pair014715d0> pairs40;               /* +0x40: made one for each key */
+    u8 unknown58[0x28];
+    Array05943280<u32> values80; /* +0x80: 4-byte values, made one for each key */
+    u8 unknown98[0x8];
 };
 
 /* derived names: the class whose vtable is at 0x16d7de8 (eight slots), over
