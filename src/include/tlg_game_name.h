@@ -54,6 +54,8 @@ void FUN_00e81bd0(HashedString *string, lua_State *state, int argument); /* deri
  * a string array its length is the array's (the callers pass a constant,
  * `mov edx, 5` for "FALSE" in FUN_00a653b0); the destructor drops the
  * entry's reference, inlined in the array destructors FUN_00a660b0 and on. */
+struct String01331840; /* tlg_game_string01331840.h */
+
 class Name /* derived name */
 {
   public:
@@ -72,6 +74,12 @@ class Name /* derived name */
         : index(FUN_013baad0(string.string, string.hash, string.length, string.unknownE))
     {
     }
+
+    /* the name of a formatted text (tlg_game_string01331840.h, where it is
+     * defined): looked up without interning (add false), the empty name for
+     * an empty text; the index is stored once, after the text's test
+     * (0x823a79: `mov [rbp-0x1040], ebx`, ebx cleared before the test) */
+    explicit Name(const String01331840 &text);
 
     /* the empty name, index 0, which release() leaves alone (a file's name
      * cleared by its initializer before its destructor is registered:

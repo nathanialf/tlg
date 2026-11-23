@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_block.h"
+#include "tlg_game_object016b9108.h"
 
 /* derived names: the member at +0x10, 0x410 bytes, not traced */
 struct Member0134fb80 { /* derived name */
@@ -22,13 +23,13 @@ struct Chunk01350030 { /* derived name */
  * blocks first to last, the head stored after each; FUN_013500e0, slot 1,
  * is the deleting one. The destructor is the class's key function, so this
  * file emits the vtable. */
-class Object016cabc8 /* derived name */
+class Object016cabc8 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object016cabc8();
 
   private:
-    u8 unknown8[0x8];
+    u8 unknownc[0x4];
     Member0134fb80 member10; /* +0x10: emptied by FUN_0134fb80 */
     Chunk01350030 *chunks;   /* +0x420 */
 };

@@ -10,6 +10,8 @@
 #include "tlg_game_render_misc.h"
 
 struct Target0131e2d0; /* derived name */
+class Object016d7fd0;  /* tlg_game_jsrasterizerstate.h */
+struct JsRasterizerDesc;
 
 /* derived name: an entry of the device's private data (16 bytes: CreateDevice
  * chains them at that stride), the next free one at +0x4. An owner's
@@ -31,6 +33,9 @@ class Object05adaaa8 /* derived name */
 
     void *AllocateOnionMemory(u32 size, u32 alignment);   /* leaf_01306470.cpp */
     void DeallocatePrivateData(PrivateData01306250 *ptr); /* leaf_01306250.cpp */
+    /* leaf_0131f450.cpp */
+    void CreateRasterizerState(const JsRasterizerDesc *pRasterizerDesc,
+                               Object016d7fd0 **ppRasterizerState);
 
     /* the private data's entries, as DeallocatePrivateData's check names
      * the count (0x10000 bytes of 16-byte entries from +0x88) */
@@ -81,6 +86,10 @@ class Object05adaaa8 /* derived name */
     /* +0x10238: the volatile memory the contexts allocate from
      * (JsDeviceContext's slots 21 and 27) */
     JsVolatileMemory *volatileMemory; /* derived name */
+    u8 unknown10240[0x30278 - 0x10240];
+    /* +0x30278: the state CreateRasterizerState hands out for no
+     * description, a reference taken */
+    Object016d7fd0 *defaultRasterizerState; /* derived name */
 };
 
 extern Object05adaaa8 *D_5adaaa8;

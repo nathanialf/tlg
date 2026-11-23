@@ -8,13 +8,13 @@
  * +0x70 and +0x88, torn down after its destructor's body has called
  * FUN_00d42320 on the object. FUN_00d42860, slot 1, is the deleting
  * destructor. The other fields are not traced. */
-class Object016ba2a0 /* derived name */
+class Object016ba2a0 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object016ba2a0();
 
   private:
-    u8 unknown8[0x58];
+    u8 unknownc[0x54];
     Ref00503fb0<Object016b9108> held60; /* +0x60 */
     Ref00503fb0<Object016b9108> held68; /* +0x68 */
     Object0134f620 unknown70;           /* +0x70 */

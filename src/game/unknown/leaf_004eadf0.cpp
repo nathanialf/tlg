@@ -34,33 +34,25 @@ void FUN_00502bc0(Object004eadf0 *self); /* derived name */
 void FUN_00c633b0(Events00c633b0 *events, const Name &event, const Name &object,
                   void *unknown); /* derived name */
 
-/* derived name: the name of a string, the empty name for an empty one
- * (FUN_013baad0 with add false) */
-static inline Name nameOf(const char *string) /* derived name */
-{
-    Name name;
-    name.index = string[0] ? FUN_013baad0(string, FUN_013bad90(string), strlen(string), false) : 0;
-    return name;
-}
-
 /* derived names: slot 27 of the vtable at 0x16aa6e0 (its pointer at
  * 0x16aa7c8): the base's slot 27 (FUN_00502bc0), then the events
  * "GameObject.%s.enterVolume" and "GameObject.%s.leaveVolume" posted with
  * the class's name. Class and method unknown. */
-// NONMATCHING: the event's name: the base keeps its index in ebx across FUN_00c633b0 and
-// releases it from the register (`test ebx, ebx; ... mov edi, ebx`), storing it once after the
-// string's test; the build stores 0 first (the Name's constructor) and reloads it after the call
-// (the callee's readonly argument, inferable once its body is in the module, as 0x46fb90's).
-// The frame is the base's: the two texts are locals of the function, the names temporaries
+// NONMATCHING: the event's name (63 of 121, 25 before the name of a text was a
+// constructor): the base keeps its index in ebx across FUN_00c633b0 and releases it from the
+// register (`test ebx, ebx; ... mov edi, ebx`); the build reloads it after the call (the
+// callee's readonly argument, inferable once its body is in the module, as 0x46fb90's), and
+// its frame is 0x10 bytes larger. The two texts are locals of the function, the names
+// temporaries
 void FUN_004eadf0(Object004eadf0 *self) /* derived name */
 {
     FUN_00502bc0(self);
     Events00c633b0 *events = D_5938c40->unknownd0;
     String01331840 enter;
     FUN_01331840(&enter, "GameObject.%s.enterVolume", D_17ac870[D_57d94ec.index].string0);
-    FUN_00c633b0(events, nameOf(enter.text), self->unknown28->name, self->unknown120);
+    FUN_00c633b0(events, Name(enter), self->unknown28->name, self->unknown120);
     events = D_5938c40->unknownd0;
     String01331840 leave;
     FUN_01331840(&leave, "GameObject.%s.leaveVolume", D_17ac870[D_57d94ec.index].string0);
-    FUN_00c633b0(events, nameOf(leave.text), self->unknown28->name, self->unknown120);
+    FUN_00c633b0(events, Name(leave), self->unknown28->name, self->unknown120);
 }

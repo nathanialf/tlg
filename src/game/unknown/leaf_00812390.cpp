@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_block.h"
+#include "tlg_game_object016b9108.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16ae5d0 (config/vtables.derived.base.txt, stored by its constructor
@@ -17,13 +18,13 @@ struct Object013b2e90 /* derived name */
 
 void FUN_013b2e90(Object013b2e90 *self); /* derived name */
 
-class Object016ae5d0 /* derived name */
+class Object016ae5d0 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object016ae5d0();
 
   private:
-    u8 unknown8[0x8];
+    u8 unknownc[0x4];
     Object013b2e90 unknown10; /* +0x10 */
     void *block28;            /* +0x28 */
 };

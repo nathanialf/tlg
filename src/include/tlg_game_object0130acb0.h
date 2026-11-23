@@ -16,15 +16,25 @@
 class Object0130acb0 : public JsUnknown /* derived name */
 {
   public:
+    /* derived name: the constructor every Create* inlines (0x131f450): no
+     * private data, +0x28 and +0x2c 0 and -1, the device's count at +0x10090
+     * taken up */
+    explicit Object0130acb0(u32 kind) : JsUnknown(kind)
+    {
+        privateData20 = nullptr;
+        unknown28 = 0;
+        unknown2c = -1;
+        __sync_fetch_and_add(&D_5adaaa8->unknown10090, 1);
+    }
+
     /* leaf_0130acb0.cpp: the private data handed back, then JsUnknown's */
     virtual ~Object0130acb0();
 
   private:
-    u8 unknown10[0x10];
     /* +0x20: the object's chain of the device's private data, linked
      * through their next pointers */
     PrivateData01306250 *privateData20;
-    u8 unknown28[0x4];
+    u32 unknown28; /* +0x28 */
 
   public:
     /* +0x2c: the device context's stamp at +0x47ac, written into a buffer

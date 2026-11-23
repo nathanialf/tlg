@@ -82,9 +82,11 @@ class Object016b9108 : public Counted00c14bc0 /* derived name */
     }
 
     Name name; /* +0xc: assigned from the constructor's argument */
+    /* +0x10: zero in the constructor; the name FUN_00d47a90 gives its made
+     * object when the first holds a '#' */
+    Name name10;
 
   private:
-    Name name10;   /* +0x10: zero in the constructor */
     u16 unknown14; /* +0x14: zero in the constructor */
 
   public:

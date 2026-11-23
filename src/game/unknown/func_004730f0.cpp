@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
+#include "tlg_game_counted00474a20.h"
 #include "tlg_game_vector.h"
 
 /* derived names: FUN_004730f0 is this file's static initializer. It builds
@@ -209,3 +210,25 @@ static Name D_57d5d70[] = {
     Name(D_156d37e, false), Name(D_156d3a7, false), Name(D_156d3cf, false), Name(D_156d3f8, false),
     Name(D_156d41f, false), Name(D_156d447, false), Name(D_156d46e, false), Name(D_156d496, false),
     Name(D_156d4bd, false), Name(D_156d4e5, false), Name(D_156d50c, false)};
+
+/* FUN_00466970: the holder named by D_57d5fe0 (of the type at 0x5814dd0)
+ * gets an object of the type at 0x5814dc8 for each of the 155 names of the
+ * list it does not hold yet, made under the name (FUN_00cbc5a0, mode 0) and
+ * a reference to it appended to its array at +0x238 (FUN_00474a20, an
+ * empty reference for null); nothing is made when the holder already holds
+ * the first name. Answers 0. Its callers are not traced. */
+int FUN_00466970() /* derived name */
+{
+    Holder00466970 *holder = findNamed<Holder00466970>(D_57d5fe0, D_5814dd0);
+    if (!holder)
+        return 0;
+    for (int i = 0; i < 155; ++i) {
+        const Name &name = D_57d5d70[i];
+        if (i == 0 && holder->find(name) != -1)
+            return 0;
+        if (holder->find(name) == -1)
+            holder->objects238.push(Ref00503fb0<Counted00474a20>(
+                static_cast<Counted00474a20 *>(FUN_00cbc5a0(D_5945a38, D_5814dc8, name, 0))));
+    }
+    return 0;
+}

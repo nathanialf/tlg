@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_block.h"
+#include "tlg_game_object016b9108.h"
 
 /* derived names: the class of the vtable at 0x16ac780
  * (config/vtables.derived.base.txt; made by FUN_001bd010): owned blocks at
@@ -8,13 +9,12 @@
  * both ints, then releases the block at +0x28 and the one at +0x10, and
  * calls no base; the deleting one 0x6e14f0 is the compiler's. The other
  * members are not traced. */
-class Object016ac780 /* derived name */
+class Object016ac780 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object016ac780();
 
   private:
-    u8 unknown8[0x8];
     OwnedBlock05943280 unknown10; /* +0x10 */
     int unknown18;                /* +0x18 */
     u8 unknown1c[0xc];

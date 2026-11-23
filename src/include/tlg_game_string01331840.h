@@ -5,6 +5,8 @@
 #define TLG_GAME_STRING01331840_H
 
 #include "tlg_types.h"
+#include "tlg_libc.h"
+#include "tlg_game_name.h"
 
 /* derived names: FUN_01331840 formats into the text with vsnprintf at most
  * 0xfff characters (the last byte cleared first) and stores the length it
@@ -18,5 +20,12 @@ struct String01331840 { /* derived name */
 };
 
 void FUN_01331840(String01331840 *string, const char *format, ...); /* derived name */
+
+inline Name::Name(const String01331840 &text)
+    : index(text.text[0]
+                ? FUN_013baad0(text.text, FUN_013bad90(text.text), strlen(text.text), false)
+                : 0)
+{
+}
 
 #endif

@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_object016b9108.h"
 
 /* derived names: the complete destructor of the class whose vtable is at
  * 0x16be108 (config/vtables.derived.base.txt; stored by the constructor
@@ -20,13 +21,12 @@ struct Member00e826f0_10 /* derived name */
     int unknown20; /* +0x20 */
 };
 
-class Object00e826f0 /* derived name */
+class Object00e826f0 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object00e826f0();
 
   private:
-    u8 unknown8[8];
     Member00e826f0_10 *unknown10; /* +0x10 */
 };
 

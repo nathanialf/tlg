@@ -2,6 +2,7 @@
 #include "tlg_types.h"
 #include "tlg_game_object0139b6b0.h"
 #include "tlg_game_object0134f620.h"
+#include "tlg_game_object016b9108.h"
 
 /* derived names: the complete destructor of a class whose vtable is at
  * 0x16b6160 (config/vtables.derived.base.txt; stored by FUN_001bd010 FUN_00b46660 FUN_00b467e0),
@@ -10,14 +11,13 @@
  * each an array of tlg_game_object0139b6b0.h. FUN_00b467e0, slot 1, is the deleting one. The
  * destructor is the class's key function, so this file emits the vtable. */
 
-class Object00b46660 /* derived name */
+class Object00b46660 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object00b46660();
     void FUN_00b466a0(); /* derived name */
 
   private:
-    u8 unknown8[0x8];
     Object0134f620 unknown10; /* +0x10 */
     Object0139b6b0 unknown28; /* +0x28 */
 };

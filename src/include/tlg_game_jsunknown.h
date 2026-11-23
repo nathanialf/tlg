@@ -12,13 +12,32 @@
 #define JS_UNKNOWN_CPP /* derived name */                                                          \
     "D:\\trico\\engine\\anzu\\engine_src\\render\\ps4\\JsUnknown.cpp"
 
+/* derived name: the counter the objects' serials are taken from */
+extern long D_179f2a8;
+
 class JsUnknown
 {
   public:
+    /* derived name: the constructor every Create* inlines (0x131f450): the
+     * count 1, the kind, then the serial from the counter 0x179f2a8, taken
+     * atomically (`lock xadd`) */
+    explicit JsUnknown(u32 kind) : m_referenceCount(1)
+    {
+        m_kind = kind;
+        m_serial = __sync_fetch_and_add(&D_179f2a8, 1);
+    }
+
     /* slots 0 and 1 (0x13246a0, 0x1324770) */
     virtual ~JsUnknown();
     /* slot 2 (0x1324850): the object deleted through its deleting destructor */
     virtual void Destroy(); /* derived name */
+
+    /* derived name: a reference taken (`lock inc`, CreateRasterizerState's
+     * default state) */
+    void AddRef()
+    {
+        __sync_fetch_and_add(&m_referenceCount, 1);
+    }
 
     /* derived name: a reference dropped (JsView's destructor, 0x1326bd6): the
      * count taken down atomically, slot 2 called for the last one, the count
@@ -35,6 +54,8 @@ class JsUnknown
      * threads take and drop while this one releases (read again after the
      * decrement) */
     volatile long m_referenceCount;
+    long m_serial; /* +0x10 (derived name) */
+    u32 m_kind;    /* +0x18: 7 for a rasterizer state (derived name) */
 };
 
 #endif

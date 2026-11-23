@@ -2,19 +2,19 @@
 #include "tlg_game_array01343a80.h"
 #include "tlg_game_object0134f620.h"
 #include "tlg_game_object01387dd0.h"
+#include "tlg_game_object016b9108.h"
 
 /* derived names: the class whose vtable is at 0x16b19c8
  * (config/vtables.derived.base.txt, stored by its constructor FUN_001bd010
  * and its destructors), with no base class: a locked array of Object01387dd0
  * at +0x10 (its lock word at +0x24, taken by FUN_009f57c0) and a record at
  * +0x28; the rest is not traced */
-class Object016b19c8 /* derived name */
+class Object016b19c8 : public Counted00c14bc0 /* derived name */
 {
   public:
     virtual ~Object016b19c8();
 
   private:
-    u8 unknown8[0x8];
     Array01343a80<Object01387dd0> array10; /* +0x10 */
     Object0134f620 record28;               /* +0x28 */
 
