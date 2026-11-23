@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_buffer00d650e0.h"
 
 /* derived names: no direct caller; the first argument is not read. A
  * resource not yet set up (the byte at +0x94) has its view of the data at
@@ -8,7 +9,10 @@
  * at +0x4, +0xc and +0x14, a fourth pointer from +0x18 with its count at
  * +0x1c; the resource is handed to slot 5 of the object at +0xb0 of the
  * object the pointer at 0x5938c40 holds, and marked set up. FUN_00cf65a0
- * undoes it (slot 6 with the fourth pointer and its count). */
+ * undoes it: the mark cleared, slot 6 with the resource, the fourth pointer
+ * and its count, then the data's buffer reset (its block released unless
+ * it is not its own: tlg_game_buffer00d650e0.h, the flags read again after
+ * the release) and the view cleared. */
 struct Header00cf6380 { /* derived name */
     u32 offset0;        /* +0x0 */
     int count4;         /* +0x4 */
@@ -41,9 +45,15 @@ struct View00cf6380 {
 };
 
 struct Resource00cf6380 { /* derived name */
+
+    const Header00cf6380 *header() const
+    {
+        return static_cast<const Header00cf6380 *>(data.block);
+    }
+
     u8 unknown0[0x28];
-    const Header00cf6380 *header; /* +0x28 */
-    u8 unknown30[0x30];
+    Buffer00d650e0 data; /* +0x28: the block is the header */
+    u8 unknown40[0x20];
     View00cf6380 view;   /* +0x60 */
     const u8 *pointer88; /* +0x88 */
     int count90;         /* +0x90 */
@@ -59,6 +69,7 @@ class Device05938c40_b0 /* derived name */
     virtual void slot3(); /* derived name; not traced */
     virtual void slot4(); /* derived name; not traced */
     virtual void slot5(Resource00cf6380 *resource, const u8 *data, int count); /* derived name */
+    virtual void slot6(Resource00cf6380 *resource, const u8 *data, int count); /* derived name */
 };
 
 struct Object05938c40 { /* derived name */
@@ -75,7 +86,7 @@ void FUN_00cf6380(void *, Resource00cf6380 *resource) /* derived name */
     resource->pointer88 = 0;
     resource->count90 = 0;
     resource->view = View00cf6380();
-    if (const Header00cf6380 *header = resource->header) {
+    if (const Header00cf6380 *header = resource->header()) {
         resource->view = View00cf6380(header);
         resource->pointer88 =
             reinterpret_cast<const u8 *>(reinterpret_cast<u64>(header) + header->offset18);
@@ -83,4 +94,14 @@ void FUN_00cf6380(void *, Resource00cf6380 *resource) /* derived name */
         D_5938c40->unknownb0->slot5(resource, resource->pointer88, resource->count90);
         resource->setUp = true;
     }
+}
+
+void FUN_00cf65a0(Resource00cf6380 *resource) /* derived name */
+{
+    resource->setUp = false;
+    D_5938c40->unknownb0->slot6(resource, resource->pointer88, resource->count90);
+    resource->data.reset();
+    resource->pointer88 = 0;
+    resource->count90 = 0;
+    resource->view = View00cf6380();
 }

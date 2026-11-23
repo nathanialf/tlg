@@ -24,6 +24,10 @@
 class Vector4 /* derived name */
 {
   public:
+    /* zero (the elements of the vector sets, FUN_013fcc20: `vxorps xmm0,
+     * xmm0, xmm0` stored into each) */
+    Vector4() : v(_mm_setzero_ps()) {}
+
     Vector4(float x, float y, float z, float w) : v(_mm_setr_ps(x, y, z, w)) {}
 
     Vector4(unsigned x, unsigned y, unsigned z, unsigned w)

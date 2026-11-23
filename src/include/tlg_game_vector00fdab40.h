@@ -48,6 +48,14 @@ inline Vector4Loop operator*(float s, const Vector4Loop &a)
     return r;
 }
 
+inline Vector4Loop operator*(const Vector4Loop &a, float s)
+{
+    Vector4Loop r;
+    for (int i = 0; i < 4; ++i)
+        r.v[i] = a.v[i] * s;
+    return r;
+}
+
 inline Vector4Loop operator/(const Vector4Loop &a, float s)
 {
     const float inv = 1.0f / s;

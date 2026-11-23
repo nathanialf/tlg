@@ -206,7 +206,12 @@ template <class T> class Array05943280 /* derived name */
      * [rbx+8], r15d; xor ecx, ecx; mov rax, [r14]`, then the loop up to the
      * count read again). The emptying is clear(size): over Names the
      * elements are released first, by the out-of-line FUN_01344d90
-     * (FUN_00464d20, FUN_004bb5f0). */
+     * (FUN_00464d20, FUN_004bb5f0). Elements with a trivial copy go over
+     * in one memcpy of the other's count as read first, the byte count
+     * 32-bit (FUN_00cfa640, 12-byte elements: `shl r15d, 2; lea edx,
+     * [r15+r15*2]`; FUN_00d417d0: `shl r14d, 2; mov rdx, r14`), the other's
+     * block read before the array's own (`mov rsi, [r14]; mov rdi, [rbx +
+     * 0xc8]`), the trait the destructor tests. */
     void operator=(const Array05943280 &other)
     {
         if (this == &other)
@@ -216,6 +221,10 @@ template <class T> class Array05943280 /* derived name */
         if (size) {
             count = size;
             const T *values = other.data;
+            if (__has_trivial_copy(T)) {
+                memcpy(data, values, size * unsigned(sizeof(T)));
+                return;
+            }
             for (unsigned i = 0; i < count; ++i)
                 new (&data[i]) T(values[i]);
         }

@@ -8,10 +8,16 @@ extern const float D_1524a00[16];
  * (leaf_00fdadf0.cpp) over a vector: the factor read from the table at the
  * time clamped to [0, 15], the value's change since the previous step kept,
  * the new value and the previous one written back.
- * NONMATCHING: the base multiplies each lane by rate * rate and then by
- * 13 / rate (13 folded into the reciprocal); here 13 joins rate * rate
- * (Reassociate) and the reciprocal is 1 / rate: six source orders give the
- * same IR. Structure otherwise equal (58 instructions). */
+ * The pull is the target's difference scaled by 13 / rate, one division
+ * placed after the target's lanes are read (Reassociate ranks a division by
+ * its place in the block: 13 / rate then outranks the first three lanes'
+ * sums, and each lane is (sum * rate * rate) * (13 / rate) with rate * rate
+ * evaluated first, as the base has it; a division by rate before the scale
+ * by 13 leaves 13 with rate * rate, and 13 / rate evaluated before the
+ * target merges it with rate * rate into one scalar).
+ * NONMATCHING: 47/58, registers only: the base keeps the change since the
+ * previous step in xmm4 and the fourth lane's sum in xmm3, here the reverse
+ * (the same instruction order; not traced). */
 void FUN_00fdaa20(Vector4Loop *value, Vector4Loop *previous, const Vector4Loop &target, float time,
                   float rate) /* derived name */
 {
@@ -25,7 +31,7 @@ void FUN_00fdaa20(Vector4Loop *value, Vector4Loop *previous, const Vector4Loop &
     float factor = D_1524a00[index] * (1.0f - fraction) + D_1524a00[index + 1] * fraction;
     Vector4Loop current = *value;
     Vector4Loop delta = current - *previous;
-    Vector4Loop pull = (target - current - delta) / rate;
-    *value = factor * (rate * rate * 13.0f * pull + delta) + current;
+    *value =
+        factor * (rate * rate * ((target - current - delta) * (13.0f / rate)) + delta) + current;
     *previous = current;
 }

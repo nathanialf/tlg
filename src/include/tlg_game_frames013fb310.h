@@ -30,7 +30,12 @@ struct FrameSet013fa8d0 {                /* derived name */
 
 /* derived names: an array of vectors, one per frame (FUN_01404660 and its
  * copies: a pose's vector at +0x20 copied into one) */
-struct VectorSet01404660 {          /* derived name */
+struct VectorSet01404660 { /* derived name */
+    /* two zero vectors, the capacity made 2 exactly (FUN_013fcc20, out of
+     * line: the outer arrays' resize calls it for each set, FUN_0108d540;
+     * leaf_013fcc20.cpp) */
+    VectorSet01404660();
+
     Array01343a80<Vector4> vectors; /* +0x0 */
 };
 

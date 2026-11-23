@@ -61,6 +61,17 @@ template <class E, size_t N> class NameTable /* derived name */
         count = 0;
     }
 
+    /* the entry of a name whose hash is its index (the bucket by the index's
+     * low bits, the hash then the name compared: FUN_0052c500), null for
+     * none */
+    E *find(unsigned index) const
+    {
+        for (E *entry = buckets[index % N]; entry; entry = entry->next)
+            if (entry->hash == index && entry->name.index == index)
+                return entry;
+        return 0;
+    }
+
   private:
     E *buckets[N];
     NameTableBlock *blocks; /* +N*8 */

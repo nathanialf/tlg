@@ -28,13 +28,20 @@ template <class T> class Array01343a80 : public Array05943280<T> /* derived name
      * is read, as resize() does: `mov eax, [rbx+0xc]; mov edx, [rbx+0x10];
      * mov rsi, [rbx]`; the count read again after it and at each element,
      * the other's block read once: `cmp dword [rbx+8], 0; je; mov rcx,
-     * [r14]`) */
+     * [r14]`). Elements with a trivial copy go over in one memcpy of the
+     * count read again, the byte count 32-bit (0x13dfd61: `mov edx,
+     * [rbx+0x10]; mov rsi, [r12]; shl edx, 2`), the trait the destructor
+     * tests (tlg_game_array.h). */
     Array01343a80(const Array01343a80 &other) : Array05943280<T>(other)
     {
         if (this->count) {
             const unsigned bytes = this->capacity * sizeof(T);
             Owner05943280 *first = D_5943280[this->allocator];
             this->data = static_cast<T *>(reallocateBlock(this->data, bytes, alignof(T), first));
+            if (__has_trivial_copy(T)) {
+                memcpy(this->data, other.data, this->count * unsigned(sizeof(T)));
+                return;
+            }
             const T *values = other.data;
             for (unsigned i = 0; i < this->count; ++i)
                 new (&this->data[i]) T(values[i]);

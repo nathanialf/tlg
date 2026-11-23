@@ -52,8 +52,11 @@ struct Pair014715d0 { /* derived name */
  * where the base has them (FUN_01016ab0, FUN_010351b0, FUN_01281820); with
  * the inline release they stay calls. The slot 1 copies
  * (FUN_013f0120 and five of the same bytes) store the pairs at a stride of
- * 32 (`shl rcx, 5`) in lists 24 bytes apart. The constructors are not
- * written. */
+ * 32 (`shl rcx, 5`) in lists 24 bytes apart. Both constructors are
+ * written over the frame records' classes of tlg_game_frames013fb310.h, the
+ * lists' arrays with their locks: FUN_013e72e0 as FrameSet00fda5c0's
+ * (func_00fda5c0.cpp), FUN_013fcc20 as VectorSet01404660's
+ * (leaf_013fcc20.cpp). */
 template <class T> class List013e72e0 : public Array05943280<T> /* derived name */
 {
   public:

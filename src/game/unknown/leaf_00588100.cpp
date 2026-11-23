@@ -15,3 +15,11 @@ struct Entry00588100 {                  /* derived name */
 /* FUN_00588100: this unit's copy of the array's append over the entries (the
  * block grown by half the count plus one, at most 0x40000 elements a step) */
 template void Array05943280<Entry00588100>::push(const Entry00588100 &value);
+
+/* FUN_0135b4b0: the append of another array of the entries (room made for
+ * both counts, then each entry appended through FUN_00588100), out of line
+ * until its caller FUN_005897a0 is written */
+// NONMATCHING: the callee: the base appends each entry through FUN_00588100, this unit's push
+// (no index returned), where tlg_game_array.h's append() calls add(), whose out-of-line copy
+// over the entries is a function of its own; the rest is the base's shape.
+template void Array05943280<Entry00588100>::append(const Array05943280<Entry00588100> &);
