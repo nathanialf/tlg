@@ -24,10 +24,12 @@ Name D_5ad18e4(D_15cb5e6, false);
 // NONMATCHING: 133/213 (1136 bytes, base 1139; the frame, the lerp, the clamp, the offset's
 // sums, the look-at, the rotation's w made positive (makeWPositive(Float4A &): the negation's
 // address made once and kept in r13 across FUN_013cee80's call) and the sine/cosine tail
-// equal). Left: (a) the aim's up.z (+0x118) is read again in both arms of the +0xc4 test in the
-// base, up.x and up.y come from the first arms, and the sway's operand orders differ (base:
-// sway * up.x, sway * up.y, up.z * sway; the sums term + x, y + term, z + term); the registers
-// of the two diamonds follow. (c) the entry: the zero for the lift's test is made in the
+// equal; the sway's absolute value is a compare and select, which the selection DAG folds to the
+// base's vandps, so its products are the base's: sway * up.x, sway * up.y, up.z * sway). Left:
+// (a) the aim's up.z (+0x118) is read again in both arms of the +0xc4 test in the base, up.x and
+// up.y come from the first arms, and the sway's x sum is term + x in the base (here x + term;
+// y + term and z + term equal); the registers of the two diamonds follow. (c) the entry: the
+// zero for the lift's test is made in the
 // entry here (xmm12), before the clamp in the base (xmm2), and the pose pointer is read before
 // the limit's floats.
 void Aimer010c25d0::aimFirst()
@@ -70,7 +72,7 @@ void Aimer010c25d0::aimFirst()
         y += aim.up.y * scale;
         z += aim.up.z * scale;
     }
-    const float sway = fabsf(unknownc0) * 0.15f;
+    const float sway = (unknownc0 < 0.0f ? -unknownc0 : unknownc0) * 0.15f;
     x += aim.up.x * sway;
     y += aim.up.y * sway;
     z += aim.up.z * sway;

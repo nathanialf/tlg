@@ -3,7 +3,7 @@
 
 #include "tlg_hks.h"
 #include "tlg_libc.h"
-#include "tlg_game_object0581f740.h"
+#include "tlg_game_object016b0448.h"
 void FUN_008db510(Object0581f4b8 *object); /* derived name */
 
 /* derived names: the script C function named "MSC_SetFlagGameover" by its
@@ -30,7 +30,7 @@ int FUN_008e63a0(lua_State *state) /* derived name */
         if (type == 1)
             gameover = value->value.boolean != 0;
     }
-    Object0581f740 *object = D_581f740;
+    Object016b0448 *object = D_581f740;
     object->flagGameover = gameover;
     if (gameover)
         FUN_008db510(object->unknown8);

@@ -4,7 +4,7 @@
 #include "tlg_hks.h"
 #include "tlg_hks_string.h"
 #include "tlg_libc.h"
-#include "tlg_game_object0581f740.h"
+#include "tlg_game_object016b0448.h"
 
 /* derived names: the script C function named "MSC_GetCurrentStage" by its
  * parameter-count message: with any argument it formats that message into a

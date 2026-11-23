@@ -4,7 +4,7 @@
 #include "tlg_hks.h"
 #include "tlg_libc.h"
 #include "tlg_game_name.h"
-#include "tlg_game_object0581f740.h"
+#include "tlg_game_object016b0448.h"
 
 /* derived name: the Name its argument's string makes (interned), the
  * string read through FUN_00e81bd0 */

@@ -3,7 +3,7 @@
 
 #include "tlg_hks.h"
 #include "tlg_libc.h"
-#include "tlg_game_object0581f740.h"
+#include "tlg_game_object016b0448.h"
 
 /* derived names: the script C function named "MSC_SetCondorStart" by its
  * parameter-count message (with the wrong count it formats that message into

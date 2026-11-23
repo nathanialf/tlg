@@ -4,7 +4,7 @@
 #include "tlg_hks.h"
 #include "tlg_libc.h"
 #include "tlg_game_name.h"
-#include "tlg_game_object0581f740.h"
+#include "tlg_game_object016b0448.h"
 
 /* derived name: the Name its argument's string makes (interned), the
  * string read through FUN_00e81bd0 */
@@ -46,7 +46,7 @@ int FUN_008e8310(lua_State *state) /* derived name */
         if (type == 1)
             loop = value->value.boolean != 0;
     }
-    Object0581f740 *object = D_581f740;
+    Object016b0448 *object = D_581f740;
     for (unsigned i = 0; i < object->timers.size(); ++i) {
         if (object->timers.at(i).name == name) {
             object->timers.at(i).time = time;

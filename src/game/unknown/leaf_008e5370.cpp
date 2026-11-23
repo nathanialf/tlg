@@ -3,7 +3,7 @@
 
 #include "tlg_hks.h"
 #include "tlg_libc.h"
-#include "tlg_game_object0581f740.h"
+#include "tlg_game_object016b0448.h"
 
 /* derived names: the script C function registered under "MSC_GetFadeIn" (through
  * FUN_00c87e30 with the description "MSC_GetFadeIn()"): with any argument it formats
