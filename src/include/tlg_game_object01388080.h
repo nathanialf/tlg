@@ -208,7 +208,9 @@ extern Object05938c40 *D_5938c40;
  * (TailCallElim; the link's pipeline has none) and it marks none after a
  * local's address has left the function, so each had a local handed by
  * address to a function the unit did not see, and the local is gone after
- * the link: an object with nothing in it.
+ * the link: an object with nothing in it. FUN_00516350 and FUN_00e87a90,
+ * written with it from the first, are equal (the latter holds
+ * FUN_00c5a160's body, its unlock a call before a jump to the end).
  *
  * OPEN (round 475E): two forms of the lock. The helpers that take a child
  * out under it inside a destructor (removeLocked of leaf_00b45280.cpp,
