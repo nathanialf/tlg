@@ -35,16 +35,6 @@ struct Object0143f360 { /* derived name */
     int flag200; /* +0x200 */
 };
 
-/* derived name: the smooth step, 0 below 0 and 1 above 1 */
-static inline float easeSmooth(float x) /* derived name */
-{
-    if (x < 0.0f)
-        return 0.0f;
-    if (x > 1.0f)
-        return 1.0f;
-    return x * x * (3.0f - 2.0f * x);
-}
-
 /* derived names: slot 3 of the vtable at 0x16d5f68: a fade whose direction
  * is whether the object's flag at +0x200 and the owner's state at +0x778 are
  * set with either the owner's +0x780 or the object's +0x84: then the time

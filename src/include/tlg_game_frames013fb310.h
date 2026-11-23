@@ -36,6 +36,31 @@ struct FrameSet00fda5c0 : FrameSet013fa8d0 { /* derived name */
     FrameSet00fda5c0();
 };
 
+/* derived name: a vector its constructor makes zero (the elements of the
+ * first set of FrameRecord013ef6b0) */
+struct ZeroVector013ef6b0 { /* derived name */
+
+    ZeroVector013ef6b0() : v(_mm_setzero_ps()) {}
+
+    Vec4 v;
+};
+
+/* derived names: 0x70 bytes, a frame, an array of vectors and an array of
+ * frames, each made two long by the constructor of each file's copy, then
+ * two vectors made zero (FUN_013ef6b0, FUN_013f3d10 and FUN_01485320, one
+ * per file: the frames built from the file's own VECTOR_W; FUN_01016390
+ * makes two at +0x7b0 and +0x820). The frames are an array of the record's
+ * own, not a FrameSet013fa8d0: through the set's member the second array's
+ * address is folded into its store, where the base keeps it in r14 from
+ * before the first array's loop. */
+struct FrameRecord013ef6b0 {                   /* derived name */
+    Frame016c1128 frame;                       /* +0x0 */
+    Array01343a80<ZeroVector013ef6b0> vectors; /* +0x20 */
+    Array01343a80<Frame016c1128> frames;       /* +0x38 */
+    ZeroVector013ef6b0 unknown50;              /* +0x50 */
+    ZeroVector013ef6b0 unknown60;              /* +0x60 */
+};
+
 /* derived names: an array of vectors, one per frame (FUN_01404660 and its
  * copies: a pose's vector at +0x20 copied into one) */
 struct VectorSet01404660 { /* derived name */

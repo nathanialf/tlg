@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_frames013fb310.h"
 #include "tlg_game_pose013e58c0.h"
 
 /* derived names: FUN_01046bb0 is this file's static initializer. It builds
@@ -23,4 +24,17 @@ void FUN_013f4370(Poser013e58c0 *self) /* derived name */
         takePose(self->bones[i].frames->current, self->model, self->indices[i]);
         self->bones[i].frames->keep();
     }
+}
+
+/* derived name: this file's frame record (tlg_game_frames013fb310.h), its
+ * frames made with this file's VECTOR_W */
+struct FrameRecord01046bb0 : FrameRecord013ef6b0 { /* derived name */
+    FrameRecord01046bb0();
+};
+
+/* FUN_013f3d10 */
+FrameRecord01046bb0::FrameRecord01046bb0()
+{
+    vectors.resize(2);
+    frames.resize(2);
 }

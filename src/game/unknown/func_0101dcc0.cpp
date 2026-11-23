@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_name.h"
 #include "tlg_game_vector.h"
+#include "tlg_game_frames013fb310.h"
 
 /* derived names: FUN_0101dcc0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -12,3 +13,16 @@ extern const char D_15cb5e6[13];
 
 Name D_5acfdb0(D_15cb5dd, false);
 Name D_5acfdb4(D_15cb5e6, false);
+
+/* derived name: this file's frame record (tlg_game_frames013fb310.h), its
+ * frames made with this file's VECTOR_W */
+struct FrameRecord0101dcc0 : FrameRecord013ef6b0 { /* derived name */
+    FrameRecord0101dcc0();
+};
+
+/* FUN_013ef6b0 */
+FrameRecord0101dcc0::FrameRecord0101dcc0()
+{
+    vectors.resize(2);
+    frames.resize(2);
+}

@@ -59,6 +59,24 @@ struct Object01407460 { /* derived name */
     int restarted;  /* +0x6c */
 };
 
+/* derived names: two objects the owners of some fading tracks hold side by
+ * side (+0x300 and +0x308 of FUN_0145a4d0's, +0x218 and +0x220 of
+ * FUN_0144b3e0's): flags at +0x130 and +0x5e0 of the first, a state at +0x4
+ * and a flag at +0x1c of the second. The rest is not traced. */
+struct OwnerStatus0145a4d0 { /* derived name */
+    u8 unknown0[0x130];
+    int flag130; /* +0x130 */
+    u8 unknown134[0x4ac];
+    int flag5e0; /* +0x5e0 */
+};
+
+struct OwnerControl0145a4d0 { /* derived name */
+    u8 unknown0[0x4];
+    int state; /* +0x4 */
+    u8 unknown8[0x14];
+    int flag1c; /* +0x1c */
+};
+
 namespace fade013e7030
 { /* derived name */
 
@@ -89,6 +107,16 @@ inline float easeOutSine(float x) /* derived name */
     if (x >= 1.0f)
         return 1.0f;
     return sin(x * 1.57079637f);
+}
+
+/* derived name: the smooth step, 0 below 0 and 1 above 1 */
+inline float easeSmooth(float x) /* derived name */
+{
+    if (x < 0.0f)
+        return 0.0f;
+    if (x > 1.0f)
+        return 1.0f;
+    return x * x * (3.0f - 2.0f * x);
 }
 
 } // namespace fade013e7030

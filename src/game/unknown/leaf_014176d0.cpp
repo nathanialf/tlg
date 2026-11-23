@@ -20,14 +20,16 @@ struct Object014176d0 { /* derived name */
  * FUN_013e7030 (leaf_013e7030.cpp) rising only while the flag at +0x70 is
  * set, the time stepped only while it is within [0, 1], then clamped. The
  * class is not traced. */
-// NONMATCHING: the direction and the clamp's registers (408 bytes, base
-// 412): the base compares the direction before the flag's test and keeps a
-// branch (`sete cl; cmp [rbx+0x70], 0; je; movzx r14d, cl`, an int phi);
-// here the two are one `and` of bytes (SimplifyCFG's select of the two
-// entries, then InstCombine), and the clamp's zero is shared where the base
-// clears xmm2 again. Lead: what keeps the phi of the zero-extended compare
-// from being folded into a select (FoldTwoEntryPHINode's conditions) with
-// the compare above the branch.
+// NONMATCHING: the direction only (408 bytes, base 412; round 525C): the base
+// compares the direction before the flag's test and keeps a branch (`sete
+// cl; cmp [rbx+0x70], 0; je; movzx r14d, cl`, an int phi); here the two are
+// one `and` of bytes (SimplifyCFG's select of the two entries, then
+// InstCombine). The time's guard and clamp are the base's since round 525C:
+// out of range the time is set to the bound, else stepped and clamped, from
+// a local (FUN_0141e7f0's form: JumpThreading factors the two zero paths
+// into one block). Lead: what keeps the phi of the zero-extended compare
+// from being folded into a select (FoldTwoEntryPHINode refuses when an arm
+// holds an instruction it cannot hoist) with the compare above the branch.
 void FUN_014176d0(Object014176d0 *self) /* derived name */
 {
     if (self->control->restart) {
@@ -40,18 +42,19 @@ void FUN_014176d0(Object014176d0 *self) /* derived name */
         rising = 0;
     self->restarted = self->control->state == 0 && rising ? 1 : self->restarted;
     float time = self->time;
-    if (time >= 0.0f && time <= 1.0f) {
+    if (time < 0.0f)
+        time = 0.0f;
+    else if (time > 1.0f)
+        time = 1.0f;
+    else {
         const float step = self->control->step / self->duration;
-        time = time + (rising ? step : -step);
+        time = clamp(time + (rising ? step : -step), 0.0f, 1.0f);
     }
-    self->time = clamp(time, 0.0f, 1.0f);
+    self->time = time;
     const float t = self->time;
     if (t < 0.5f)
         self->value = easeInSine(t * 2.0f) * 0.5f;
     else
         self->value = easeOutSine((t - 0.5f) * 2.0f) * 0.5f + 0.5f;
-    if (rising)
-        self->control->state = 1;
-    else
-        self->control->state = self->value > 1e-8f ? 2 : 0;
+    self->control->state = rising ? 1 : self->value > 1e-8f ? 2 : 0;
 }
