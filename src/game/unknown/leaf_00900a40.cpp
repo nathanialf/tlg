@@ -14,7 +14,7 @@ extern Type059458a8 *D_581fc40;
  * signature (the first argument is not used): the object's 0x68 bytes
  * are allocated, the creation lock taken, the type's record left for
  * Object016b9108's constructor, and the object constructed in place. */
-Object00ca38f0 *FUN_00900a40(void *, const Name &name)
+Object016b8d40 *FUN_00900a40(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016b0a20));
     D_59458a4.lock();

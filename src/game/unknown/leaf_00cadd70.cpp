@@ -1,7 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_game_array.h"
 #include "tlg_game_node.h"
-#include "tlg_game_object00ca38f0.h"
+#include "tlg_game_object016b8d40.h"
 #include "tlg_game_object0134f620.h"
 #include "tlg_game_object016b9108.h"
 #include "tlg_game_shared.h"
@@ -55,7 +55,7 @@ struct Element00cadd70 {
 
 /* derived names: the class whose vtable is at 0x16b8ea0
  * (config/vtables.derived.base.txt, stored by its constructor FUN_00cabe60
- * and its destructor FUN_00cadd70), derived from Object00ca38f0 (the class
+ * and its destructor FUN_00cadd70), derived from Object016b8d40 (the class
  * whose destructor is 0xca38f0): the base's slots and fields are not
  * traced, so the bytes below the first member here are the base's or this
  * class's. Its own fields are traced where the destructor reads them or
@@ -63,7 +63,7 @@ struct Element00cadd70 {
  * the two lists of D_59455b8 at +0xf8 and +0xfc (none when negative), the
  * owned object at +0x100, a reference at +0x108 and two arrays at +0x110
  * and +0x128. */
-class Object016b8ea0 : public Object00ca38f0 /* derived name */
+class Object016b8ea0 : public Object016b8d40 /* derived name */
 {
   public:
     virtual ~Object016b8ea0();

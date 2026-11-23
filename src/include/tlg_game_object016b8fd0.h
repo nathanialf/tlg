@@ -7,18 +7,18 @@
 #include "tlg_types.h"
 #include "tlg_math.h"
 #include "tlg_game_node.h"
-#include "tlg_game_object00ca38f0.h"
+#include "tlg_game_object016b8d40.h"
 #include "tlg_game_object016b85e0.h"
 #include "tlg_game_array.h"
 #include "tlg_game_mutex.h"
 
 /* derived names: the class whose vtable is at 0x16b8fd0
  * (config/vtables.derived.base.txt, stored by its creator FUN_00cb2fb0),
- * derived from Object00ca38f0. Its destructor (its key function) calls
+ * derived from Object016b8d40. Its destructor (its key function) calls
  * FUN_00cb33a0 on the object, then the counted reference at +0xb8 is
  * released and the base's destructor tail-called (FUN_00cb32e0; FUN_00cb3500
  * the deleting one). The other fields are not traced. */
-class Object016b8fd0 : public Object00ca38f0 /* derived name */
+class Object016b8fd0 : public Object016b8d40 /* derived name */
 {
   public:
     virtual ~Object016b8fd0();

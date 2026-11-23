@@ -158,18 +158,55 @@ void FUN_013d1440(Object016d3978 *self) /* derived name */
     }
 }
 
-/* derived names: the object whose vtable is at 0x16befa8: an array of
- * reference pairs at +0x1a0; its class is not traced */
-struct Object016befa8 { /* derived name */
-    u8 unknown0[0x1a0];
+/* derived names: the class of the vtable at 0x16befa8; its destructors
+ * (0xf47fa0, 0xf48130) and slots 7 and 8 (0xf48270, 0xf48730) are not written. Slot 2
+ * resets it: the int at +0x10, then the 12 and 13 words at +0x160 and +0xa0
+ * cleared, the pairs at +0x1a0 emptied with their block given back, and four
+ * more ints cleared. What the cleared fields hold is not traced. */
+class Object016befa8 /* derived name */
+{
+  public:
+    virtual ~Object016befa8();
+    virtual void reset(); /* slot 2, FUN_00f48150 */
+    virtual void slot3(); /* derived name; 0x1af750 */
+    virtual void slot4(); /* derived name; 0x1af750 */
+    /* slot 5, FUN_013d2700: the pairs emptied and their block given back */
+    virtual void clearPairs(); /* derived name */
+
+  private:
+    u8 unknown8[0x8];
+    int unknown10; /* +0x10 */
+    u8 unknown14[0x8c];
+    u32 unknowna0[13]; /* +0xa0 */
+    u8 unknownd4[0x8c];
+    u32 unknown160[12];                       /* +0x160 */
+    u8 unknown190[0x10];                      /* +0x190 */
     Array05943280<Object01367090> unknown1a0; /* +0x1a0 */
+    u8 unknown1b8[0x8];
+    int unknown1c0; /* +0x1c0 */
+    u8 unknown1c4[0x10];
+    int unknown1d4; /* +0x1d4 */
+    u8 unknown1d8[0x48];
+    int unknown220; /* +0x220 */
+    u8 unknown224[0x4c];
+    int unknown270; /* +0x270 */
 };
 
-/* derived name: slot 5 of the vtable at 0x16befa8: the array emptied and its
- * block given back */
-void FUN_013d2700(Object016befa8 *self) /* derived name */
+void Object016befa8::reset()
 {
-    self->unknown1a0.clear();
+    unknown10 = 0;
+    memset(unknown160, 0, sizeof(unknown160));
+    memset(unknowna0, 0, sizeof(unknowna0));
+    unknown1a0.clear();
+    unknown1c0 = 0;
+    unknown1d4 = 0;
+    unknown220 = 0;
+    unknown270 = 0;
+}
+
+void Object016befa8::clearPairs()
+{
+    unknown1a0.clear();
 }
 
 /* derived names: one bone's marks (64 bytes): the byte the marks are or'ed

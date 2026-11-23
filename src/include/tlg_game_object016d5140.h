@@ -54,4 +54,25 @@ class Object016d5140 /* derived name */
     int unknown6c; /* +0x6c: cleared by the update */
 };
 
+/* derived names: the class whose vtable is at 0x16c0710
+ * (config/vtables.derived.base.txt), derived from Object016d5140: slot 2 is
+ * its own (FUN_00ff8a20: the base's slot 2, then +0x80 set to 1), slot 3
+ * FUN_00ff8a40 and slot 4 FUN_00ffaab0 (not traced), the rest the base's. Its
+ * destructor FUN_00ff8880 (slot 0) is the class's key function, defined in
+ * leaf_00ff6950.cpp with the base's, which it holds in line, so that file
+ * emits the vtable; the deleting one FUN_00ff8a00 is the compiler's.
+ * The names at +0x78 are an array the object owns, deleted by the
+ * destructor. */
+class Object016c0710 : public Object016d5140 /* derived name */
+{
+  public:
+    virtual ~Object016c0710();
+    virtual void slot2(); /* derived name */
+
+  private:
+    u8 unknown70[0x8];
+    Array01343a80<Name> *names78; /* +0x78: owned (derived name) */
+    int unknown80;                /* +0x80 */
+};
+
 #endif

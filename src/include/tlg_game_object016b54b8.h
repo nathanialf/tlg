@@ -24,10 +24,10 @@ void FUN_01392bf0(Object01392bf0 *self); /* derived name */
 
 /* derived name: the base whose destructor is FUN_00ca38f0 (its row named
  * for it, D15) */
-class Object00ca38f0 /* derived name */
+class Object016b8d40 /* derived name */
 {
   public:
-    virtual ~Object00ca38f0();
+    virtual ~Object016b8d40();
 };
 
 /* derived names: the class whose vtable is at 0x16b54b8
@@ -35,7 +35,7 @@ class Object00ca38f0 /* derived name */
  * FUN_00b20380 and by FUN_008ef2f0 and FUN_008ef5c0, which build the
  * classes derived from it (0x16b0788, 0x16b0808). Its destructor is
  * FUN_00b20610 (leaf_00b20610.cpp). The other members are not traced. */
-class Object016b54b8 : public Object00ca38f0 /* derived name */
+class Object016b54b8 : public Object016b8d40 /* derived name */
 {
   public:
     virtual ~Object016b54b8();

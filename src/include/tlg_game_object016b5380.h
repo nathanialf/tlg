@@ -4,24 +4,24 @@
 #define TLG_GAME_OBJECT016B5380_H
 
 #include "tlg_game_node.h"
-#include "tlg_game_object00ca38f0.h"
+#include "tlg_game_object016b8d40.h"
 
 /* derived names: the class whose vtable is at 0x16b5380
  * (config/vtables.derived.base.txt, stored by FUN_00b1f270 FUN_00b1f3e0
- * FUN_00b1f510), derived from Object00ca38f0. 0x88 bytes (`mov edi,
+ * FUN_00b1f510), derived from Object016b8d40. 0x88 bytes (`mov edi,
  * 0x88` before operator new in the creator). Its own fields are traced
  * where its creator FUN_00b1f270 sets them and its destructor FUN_00b1f3e0
  * tears them down. The destructor is the class's key function
  * (leaf_00b1f3e0.cpp), so that unit emits the vtable and the
  * destructors. */
-class Object016b5380 : public Object00ca38f0 /* derived name */
+class Object016b5380 : public Object016b8d40 /* derived name */
 {
   public:
     /* inlined in the creator: the base built from the name, the vptr, the two references cleared in
      * one store (`vmovdqu [r15+0x58], xmm0`), the eight floats at +0x68 from the
      * constants at 0x14e5960 (3, 3, 0.467, 1.5, -0.8, 1, -3.2, 1) in one store */
     Object016b5380(const Name &name)
-        : Object00ca38f0(name), unknown68(3.0f), unknown6c(3.0f), unknown70(0.467f),
+        : Object016b8d40(name), unknown68(3.0f), unknown6c(3.0f), unknown70(0.467f),
           unknown74(1.5f), unknown78(-0.8f), unknown7c(1.0f), unknown80(-3.2f), unknown84(1.0f)
     {
     }
