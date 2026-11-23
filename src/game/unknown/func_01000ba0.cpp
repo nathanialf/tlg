@@ -9,6 +9,7 @@
 #include "tlg_game_vector.h"
 #include "tlg_game_axes01000aa0.h"
 #include "tlg_game_object013eb8d0.h"
+#include "tlg_game_object016d4e10.h"
 
 /* derived names: FUN_01000ba0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -248,4 +249,17 @@ void FUN_013ecce0(Object016d5188 *self) /* derived name */
 Axes01000aa0 Object013eb8d0::slot2() const
 {
     return Axes01000aa0::make();
+}
+
+/* Slot 2 of Object016d4e10: the subject's target's position and the node's
+ * rotation, or zero and this file's VECTOR_W without a target */
+JointFrame013eb0a0 Object016d4e10::slot2(const Subject01480e70 *subject)
+{
+    if (subject->target) {
+        JointFrame013eb0a0 frame;
+        frame.position = subject->target->position;
+        frame.rotation = node.get()->unknown140;
+        return frame;
+    }
+    return JointFrame013eb0a0::identity();
 }

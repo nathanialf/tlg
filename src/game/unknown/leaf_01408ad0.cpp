@@ -11,7 +11,9 @@
  * the array at +0x30, as many as the unsigned int at +0x60 counts (an
  * unsigned counter, the arrays' accessor taking an int index: sign-extended
  * each pass; both pointers reloaded each pass). The arrays' other fields are
- * not traced. Class and method unknown. */
+ * not traced. Class and method unknown. Slot 0 (FUN_0140b680) first sets
+ * each entry at +0x48 from the pose of its index (the pose's +0x20, then its
+ * rotation) and copies it to +0x30. */
 struct Entry01408ad0 /* derived name */
 {
     Vec4 unknown0;  /* +0x0 */
@@ -25,22 +27,58 @@ struct Entry01408ad0 /* derived name */
     }
 };
 
+template <class T>
 struct Array01408ad0 /* derived name */
 {
-    Entry01408ad0 *data; /* derived name */
+    T *data; /* derived name */
 
-    Entry01408ad0 &operator[](int index) const
+    T &operator[](int index) const
     {
         return data[index];
     }
 };
 
+/* derived names: a pose of the skeleton, 0x40 bytes: a rotation at +0x10
+ * and a vector at +0x20 */
+struct Pose0140b680 { /* derived name */
+    u8 unknown0[0x10];
+    Vec4 rotation;  /* +0x10 */
+    Vec4 unknown20; /* +0x20 */
+    u8 unknown30[0x10];
+};
+
+struct Skeleton0140b680 { /* derived name */
+    u8 unknown0[0x250];
+    Pose0140b680 *poses; /* +0x250 */
+};
+
+/* derived names: the model of the object's owner: its skeleton at +0x40,
+ * read again for each pose (a vector stored may alias it) */
+struct Model0140b680 { /* derived name */
+
+    const Pose0140b680 &pose(int index) const /* derived name */
+    {
+        return skeleton->poses[index];
+    }
+
+    u8 unknown0[0x40];
+    Skeleton0140b680 *skeleton; /* +0x40 */
+};
+
+struct Owner0140b680 { /* derived name */
+    u8 unknown0[0x8];
+    Model0140b680 *model; /* +0x8 */
+};
+
 struct Object01408ad0 /* derived name */
 {
-    u8 unknown0[0x30];
-    Array01408ad0 unknown30; /* +0x30 */
+    u8 unknown0[0x10];
+    Owner0140b680 *owner;       /* +0x10 */
+    Array01408ad0<int> indices; /* +0x18: a pose index for each entry */
+    u8 unknown20[0x10];
+    Array01408ad0<Entry01408ad0> unknown30; /* +0x30 */
     u8 unknown38[0x10];
-    Array01408ad0 unknown48; /* +0x48 */
+    Array01408ad0<Entry01408ad0> unknown48; /* +0x48 */
     u8 unknown50[0x10];
     unsigned unknown60; /* +0x60: the count */
 };
@@ -52,4 +90,26 @@ void FUN_01408ad0(Object01408ad0 *self) /* derived name */
 {
     for (unsigned i = 0; i < self->unknown60; i++)
         self->unknown30[i] = self->unknown48[i];
+}
+
+/* derived name: slot 0 of the same vtables: each entry of the array at +0x48
+ * takes the vector at +0x20 and the rotation of the pose of its index, then
+ * is copied to the array at +0x30 */
+// NONMATCHING: the head's load order: the same loads and stores, 135 bytes as
+// the base's; the base loads the skeleton and its poses before the entry's pose
+// index (`mov rsi, [rcx+0x40]; mov r10, [rsi+0x250]; movsxd rsi, [r8+rax*4]`),
+// this the index first; the registers follow. With the index read before the
+// poses pointer (the helper for both reads) the entry's offset `shl rdx, 5`
+// also comes after the model's load.
+void FUN_0140b680(Object01408ad0 *self) /* derived name */
+{
+    for (unsigned i = 0; i < self->unknown60; i++) {
+        Entry01408ad0 &entry = self->unknown48[i];
+        const Model0140b680 *model = self->owner->model;
+        const Pose0140b680 *poses = model->skeleton->poses;
+        const int index = self->indices[i];
+        entry.unknown10 = poses[index].unknown20;
+        entry.unknown0 = model->pose(index).rotation;
+        self->unknown30[i] = self->unknown48[i];
+    }
 }

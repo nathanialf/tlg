@@ -10966,3 +10966,5 @@ FUN_01452f10 src/game/unknown/func_011908c0.cpp _ZN14Object016d6270C1Ej
 FUN_0145f630 src/game/unknown/func_011af640.cpp _ZN14Object016d6408C1Ej
 FUN_0146dae0 src/game/unknown/func_011c9570.cpp _ZN14Object016d65f0C1Ej
 FUN_014854f0 src/game/unknown/func_0128dc30.cpp _ZN14Object016d7a28C1Ej
+FUN_013eafb0 src/game/unknown/func_01000ba0.cpp _ZN14Object016d4e105slot2EPK15Subject01480e70
+FUN_013eb670 src/game/unknown/leaf_013ed250.cpp _ZN14Object016d50505slot2EPK15Subject01480e70

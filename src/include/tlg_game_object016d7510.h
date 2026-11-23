@@ -10,10 +10,16 @@
 #include "tlg_game_object016b85e0.h"
 
 /* derived names: what slot 2 is given: an object whose +0x108 points to one
- * holding a position at +0x2120 (FUN_01480e70); neither class is traced */
+ * holding a position at +0x2120 (FUN_01480e70) and, at +0x2630, a node
+ * whose frame Object016d5050's slot 2 takes while the int at +0x25c0 is
+ * set (FUN_013eb670); neither class is traced further */
 struct Target01480e70 { /* derived name */
     u8 unknown0[0x2120];
     Float4A position; /* +0x2120 */
+    u8 unknown2130[0x490];
+    int unknown25c0; /* +0x25c0 */
+    u8 unknown25c4[0x6c];
+    const Object016b85e0 *node2630; /* +0x2630 */
 };
 
 struct Subject01480e70 { /* derived name */
