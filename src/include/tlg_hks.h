@@ -37,7 +37,28 @@ struct HksGlobal {
     u8 unknown0[0x58];
     /* +0x58, derived name: what the collector marks a value into
      * (FUN_00dc6090 takes its address: FUN_00db9c70) */
-    u8 gray[0x60];
+    u8 gray[0xc];
+
+    /* +0x64, derived name: the collector's weights, twelve ints that
+     * getgcweights copies out (FUN_00dea130) and setgcweights copies back
+     * (FUN_00de9ef0); their names are the strings of the table at
+     * 0x16bba30, in the same order */
+    struct HksGcWeights {
+        int removeString;
+        int finalizeUserdataNoMM;
+        int finalizeUserdataGcMM;
+        int cleanCoroutine;
+        int removeWeak;
+        int markObject;
+        int traverseString;
+        int traverseUserdata;
+        int traverseCoroutine;
+        int traverseWeakTable;
+        int freeChunk;
+        int sweepTraverse;
+    } gcWeights;
+
+    u8 unknown94[0x24];
     /* +0xb8, derived name: the collector's phase, 1 while it marks
      * (FUN_00db9c70) */
     int gcState;

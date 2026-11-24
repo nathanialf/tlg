@@ -12,7 +12,9 @@
 struct Object013bb3f0 {                  /* derived name */
     ConditionVariable conditionVariable; /* +0x0 */
     Mutex mutex;                         /* +0x10 */
-    int count;                           /* +0x20: taken down atomically */
+    /* +0x20: taken down atomically by other threads; volatile: the
+     * destructor of Object016c81c0 spins on it (0xd687e0) */
+    volatile int count;
 };
 
 void FUN_013baf50(Object013bb3f0 *self); /* derived name */

@@ -29,15 +29,19 @@ static inline void waitBriefly() /* derived name */
 // keeps the condition variable's address in r14 (`lea r14, [rbx+0x58]` after the join, `mov rdi, r14`
 // at the first Destory and at the member's destructor after the mutex's), the build makes it again at
 // each (`lea rdi, [rbx+0x58]`). Round 571E: everything else is the base's (the mode and the spinning
-// count read volatile, the report and the base's destructor inlined by the link). Next: the IR of the
-// two condition-variable sites (one value or two) against the greedy allocator's rematerialization.
+// count read volatile, the report and the base's destructor inlined by the link). Round 574E: the
+// count is a volatile field (tlg_game_object013bb3f0.h; no function of the module changes). The link
+// IR forms the address once per user, in the Destory's block and in ~ConditionVariable's (two GEPs
+// of %this, 4, 0, 0, neither dominating the other), where the base's lea is in the join block
+// before the flag's branch (0xd688eb): the base's IR has one address at the join. Next: what keeps
+// one GEP at the join (a model, not compiled: a common pointer in the source is merged by
+// InstCombine into each user's GEP, so it needs a use at the join itself).
 Object016c81c0::~Object016c81c0()
 {
     if (mode == 3) {
-        /* volatile: other threads take the count down while this spins
-         * (`mov eax, [rbx+0x78]; cmp eax, 2`; FUN_013baf50 reads it plainly
-         * under the mutex) */
-        while (*static_cast<volatile int *>(&waiter.count) > 1)
+        /* other threads take the count down while this spins (`mov eax,
+         * [rbx+0x78]; cmp eax, 2`) */
+        while (waiter.count > 1)
             waitBriefly();
     } else {
         FUN_013baf50(&waiter);

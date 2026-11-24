@@ -95,6 +95,48 @@ template <class E, size_t N> class NameTable /* derived name */
         ++count;
     }
 
+    /* the number of entries (FUN_008edad0 makes a script table with room
+     * for them) */
+    u32 size() const /* derived name */
+    {
+        return count;
+    }
+
+    /* derived names: a walk over every entry, bucket by bucket from the
+     * first: next() answers the entry it stands on, null at the end, and
+     * moves on first, to the entry's next or the first of the buckets after
+     * it (FUN_008edad0) */
+    class Iterator
+    {
+      public:
+        explicit Iterator(const NameTable &table) : table(table), bucket(0), entry(0)
+        {
+            nextBucket();
+        }
+
+        E *next()
+        {
+            E *current = entry;
+            if (current) {
+                entry = current->next;
+                if (!entry)
+                    nextBucket();
+            }
+            return current;
+        }
+
+      private:
+        void nextBucket()
+        {
+            while (!entry && bucket < N)
+                entry = table.buckets[bucket++];
+        }
+
+        const NameTable &table;
+        unsigned bucket;
+        E *entry;
+    };
+
   private:
     /* an empty entry: the head of the free list, or the first of a new
      * block of bucketCount entries of entrySize bytes, each linked to the
