@@ -8,6 +8,7 @@
 #include "tlg_game_array.h"
 #include "tlg_game_array01343a80.h"
 #include "tlg_game_frame.h"
+#include "tlg_game_name.h"
 #include "tlg_game_vector.h"
 #include "tlg_game_rotation.h"
 
@@ -84,6 +85,19 @@ struct FadeSkeletonData013ce050 { /* derived name */
 
 struct ParamElementSet013f9ca0; /* derived name (tlg_game_fadeparam013f9ca0.h) */
 
+/* derived names: the object at +0x28 of the skeleton's owner holds the
+ * name at +0xc that FUN_013e8d20 posts (`mov rax, [r15+0x58]; mov rsi,
+ * [rax+0x28]; add rsi, 0xc`); neither is traced further */
+struct FadeNamed013e8d20 { /* derived name */
+    u8 unknown0[0xc];
+    Name name; /* +0xc */
+};
+
+struct FadeOwner013e8d20 { /* derived name */
+    u8 unknown0[0x28];
+    FadeNamed013e8d20 *named; /* +0x28 */
+};
+
 struct FadeSkeleton013ce2d0 { /* derived name */
 
     const FadeBone013ce050 *bone(int index) const /* derived name */
@@ -92,7 +106,9 @@ struct FadeSkeleton013ce2d0 { /* derived name */
     }
 
     FadeSkeletonData013ce050 *data; /* +0x0 (the rigs' constructors) */
-    u8 unknown8[0x20];
+    u8 unknown8[0x10];
+    FadeOwner013e8d20 *owner; /* +0x18: the model's +0x58, whose name FUN_013e8d20 posts */
+    u8 unknown20[0x8];
     ParamElementSet013f9ca0 *layers; /* +0x28: the model's +0x68 (FUN_013d5f10) */
     int layerId;                     /* +0x30: the id of the model's layer among them */
     u8 unknown34[0xcc];
@@ -150,6 +166,8 @@ struct FadeListenerEntry013d4610 { /* derived name */
     u8 unknown10[0x8];
 };
 
+struct FadeState013e8d20; /* derived name (tlg_game_foot013e8d20.h) */
+
 struct FadeModel013d4610 { /* derived name */
 
     /* the pose of an index, the model read before the index (FUN_013ce050:
@@ -161,7 +179,9 @@ struct FadeModel013d4610 { /* derived name */
 
     u8 unknown0[0x40];
     FadeSkeleton013ce2d0 skeleton; /* +0x40 */
-    u8 unknown148[0x290 - 0x40 - sizeof(FadeSkeleton013ce2d0)];
+    u8 unknown148[0x210 - 0x40 - sizeof(FadeSkeleton013ce2d0)];
+    FadeState013e8d20 *state; /* +0x210: the feet's velocities (FUN_013e8d20) and contacts */
+    u8 unknown218[0x290 - 0x218];
     Array05943280<FadeListenerEntry013d4610> listeners; /* +0x290 */
     u8 unknown2a8[0x2f0 - 0x290 - sizeof(Array05943280<FadeListenerEntry013d4610>)];
     FadeSource00f6b880 *source; /* +0x2f0 */
