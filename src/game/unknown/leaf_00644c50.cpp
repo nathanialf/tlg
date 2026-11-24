@@ -34,7 +34,7 @@ extern const char D_15a8fba[5]; /* "Fall" */
 /* derived names: a condition FUN_00640dc0 registers under "IsBoy_Fall" (lea
  * at 0x641817, its function stored at 0x5810e58): false without the record
  * or its object; true when the object's name is the one "Fall" looks up
- * (not interned: `xor ecx, ecx`), else when its flag is clear and the
+ * (interned as a copy: `xor ecx, ecx`), else when its flag is clear and the
  * pointer at +0x230 is null or not the one at +0x1f0 */
 // NONMATCHING: the last compare: the base branches to its own false block (`cmp rcx, [rbx+0x1f0];
 // je`, then `mov bl, 1` shared with the other true edges), the build forms `setne` (181 bytes, base

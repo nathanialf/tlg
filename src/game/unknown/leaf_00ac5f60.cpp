@@ -6,7 +6,7 @@
  * 0x582b910: the int there holds the result of FUN_013baad0 for the string
  * "AIMODE_SOL_Helmet" (its hash from FUN_013bad90), stored by the file's
  * initializer at 0xac6136, which registers Name's destructor (0x1331800) for it
- * with __cxa_atexit: a Name (tlg_game_name.h), looked up without interning
+ * with __cxa_atexit: a Name (tlg_game_name.h), interned as a copy
  * (`xor ecx, ecx`). Declared extern: the initializer's direct store makes it
  * the file's own (D17), and that initializer is not written. Class and method
  * unknown. */

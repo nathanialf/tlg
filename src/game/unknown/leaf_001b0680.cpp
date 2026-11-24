@@ -7,11 +7,11 @@
  * (FUN_001bd010 registers it): sets one of the four game speeds at +0x140
  * of the game's record to its first argument's number, kept between 0 and
  * 1; the speed is the third ("TailSupport", the function's static name at
- * 0x57c9130, looked up without interning it) when the second argument names
+ * 0x57c9130, interned as a copy) when the second argument names
  * it, else the first. The speed at +0x1b8 of the object D_5938c40 points to
  * becomes the first of the four that is not 1, or 1. Returns 0. */
 /* derived name: the name of the third speed, "TailSupport", made on first
- * use without interning it (the static at 0x57c9130) */
+ * use as a copy (the static at 0x57c9130) */
 static inline const Name &tailSupportName()
 {
     static Name D_57c9130("TailSupport", false);

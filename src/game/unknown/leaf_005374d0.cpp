@@ -6,7 +6,7 @@
 /* derived names: the two callbacks FUN_00535xxx hands FUN_01358440 (at
  * 0x53595b and 0x53599b) to walk a node's tree: each sets the counted
  * reference it is given to the node whose name at +0x210 is one wing
- * shoulder joint (the name looked up, not interned). The callback takes the
+ * shoulder joint (the name interned as a copy). The callback takes the
  * joint's own class: the reference compares the converted pointer first
  * (`cmp r14, rbx` at 0x537554), as a pointer of a class over the
  * reference's: the scene node's. */

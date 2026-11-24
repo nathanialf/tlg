@@ -6,8 +6,8 @@
 /* derived names: the script C functions "SetScreenShotPath" and
  * "SetScreenShotFileName" (FUN_001db8b0 registers them through
  * FUN_00c87e30, lea at 0x1db3bc and 0x1db3d9): with an argument, its string
- * (none for an argument that holds none) is looked up as a name, without
- * interning it, and assigned to the screenshot's path at +0x290 or file name
+ * (none for an argument that holds none) is interned as a name, as a
+ * copy, and assigned to the screenshot's path at +0x290 or file name
  * at +0x294 of the member at +0x48 of the object the pointer at 0x5938c40
  * holds (the member read before the name is made); return 0 (no results). */
 struct Member05938c40_48 /* derived name */

@@ -2,7 +2,7 @@
 #include "tlg_game_name.h"
 
 /* derived names: FUN_008a4490 (0x3e57 bytes) builds seventeen names from
- * strings (looked up, not interned) and hands eight of the lists it makes of
+ * strings (interned as a copy) and hands eight of the lists it makes of
  * them out as guarded function-local statics, each destroyed by the array
  * destructor the compiler writes for it (0x8ad9f0, 0x8ada40, 0x8adb40,
  * 0x8adb90, 0x8adc10, 0x8adc60, 0x8adce0, 0x8add30, registered with

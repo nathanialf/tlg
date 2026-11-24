@@ -18,7 +18,7 @@ struct Object002c06a0 /* derived name */
 };
 
 /* derived names: the entry of the object's list whose name is the string
- * (looked up without interning it; the empty name for no string or an empty
+ * (interned as a copy; the empty name for no string or an empty
  * one), else the first entry, null for an empty list; called by
  * FUN_00307100 and FUN_00334620 (call sites 0x3071a5, 0x3349ea). */
 Entry002c06a0 *FUN_002c06a0(Object002c06a0 *self, const char *string) /* derived name */

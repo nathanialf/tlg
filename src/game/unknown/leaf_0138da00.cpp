@@ -3,7 +3,7 @@
 
 /* slot 6 of the nine tables (0x16ce490 to 0x16ce6d0, folded on one body,
  * tlg_game_name.h): the index of the entry whose name is the string's, or
- * -1. The string is looked up without being interned (`xor ecx, ecx`), and
+ * -1. The string is interned as a copy (`xor ecx, ecx`), and
  * a null or empty string is the empty name. */
 int Object016ce490::find(const char *string) const
 {

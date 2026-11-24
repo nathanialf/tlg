@@ -5,8 +5,8 @@
 
 /* derived names: the script C function FUN_001bd010 registers (lea at
  * 0x1db382) under the script name "CombineSceneRoot": with at least one
- * argument, the object the first argument's string names (looked up, not
- * interned: the last argument of FUN_013baad0 0), of the type D_5948b00
+ * argument, the object the first argument's string names (interned as a
+ * copy: the last argument of FUN_013baad0 0), of the type D_5948b00
  * points to (usable by this thread), is handed to FUN_0081e8d0; returns 0
  * (no results). A null or empty string names nothing. The C function's own
  * name is unknown; the class is not traced. */

@@ -8,7 +8,7 @@
  * "AIMODE_SOL_Stagger" (its hash from FUN_013bad90), stored by the file's
  * initializer FUN_00acd770 (the store at 0xacd8dc), which registers Name's
  * destructor (0x1331800) for it with __cxa_atexit: a Name (tlg_game_name.h)
- * looked up without interning (`xor ecx, ecx`, length 0x12). The
+ * interned as a copy (`xor ecx, ecx`, length 0x12). The
  * initializer then builds the Name at 0x582c380 ("s_Cling_Start", length
  * 0xd) and registers it the same way. Class and method unknown. */
 

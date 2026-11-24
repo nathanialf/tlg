@@ -18,7 +18,7 @@ struct Other008f0900 { /* derived name */
 
 /* derived name: a copy of the name "VERTEX_MODIFIER" when the pointer at
  * +0x40 is set (a static of the function at 0x581fac0, its guard at
- * 0x581fab8, looked up once without interning it: FUN_013baad0's last
+ * 0x581fab8, interned once as a copy: FUN_013baad0's last
  * argument 0, destroyed at exit with Name's destructor), else a copy of the
  * other object's name */
 Name FUN_008f0900(const Object008f0900 *self, const Other008f0900 *other) /* derived name */

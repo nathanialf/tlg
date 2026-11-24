@@ -140,6 +140,21 @@ class Name /* derived name */
         }
     }
 
+    /* the index of a C string's name as a script hands it over, interned
+     * as a copy (literal false) with its reference taken, or 0, the empty
+     * name's, for a null or empty string (FUN_00875410) */
+    static unsigned intern(const char *string) /* derived name */
+    {
+        return string && *string ? FUN_013baad0(string, FUN_013bad90(string), strlen(string), false)
+                                 : 0;
+    }
+
+    /* a name over an index whose reference is already taken (intern()'s):
+     * the index worked out before the name is made is stored once, the
+     * empty name's 0 made on each path into the store (0x87546f to
+     * 0x87547c; `xor ebx, ebx` at 0x875424 and 0x875439) */
+    explicit Name(unsigned interned) : index(interned) {}
+
     unsigned index; /* +0x0 */
 };
 

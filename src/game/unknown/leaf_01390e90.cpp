@@ -6,15 +6,17 @@
 // NONMATCHING: the result's copies: the base gives each exit of the exchange's release its own
 // `mov rax, rbx; jmp` and the last found's exit its own block (314 bytes); the build joins them
 // in one block (290 bytes). The loop and the exchange are the base's. Seven forms tried.
-Entry016b4ce0 *Object016b4ce0::find(const int &id)
+Entry016b4ce0 *FUN_01390e90(Object016b4ce0 *self, const Name &name) /* derived name */
 {
-    Entry016b4ce0 *found = static_cast<Entry016b4ce0 *>(found10.get());
-    if (found == 0 || found->id310 != id) {
+    Entry016b4ce0 *found = Entry016b4ce0::of(self->found10.get());
+    if (found == 0 || found->name310 != name.index) {
         found = 0;
-        for (const Ref00503fb0<Object016b9108> *at = entries.begin(); at != entries.end(); ++at) {
-            Entry016b4ce0 *entry = static_cast<Entry016b4ce0 *>(at->get());
-            if (entry->id310 == id) {
-                found10.set(entry);
+        for (const Ref00503fb0<Object016b9108> *at = self->entries.begin();
+             at != self->entries.end(); ++at) {
+            Object016b9108 *object = at->get();
+            Entry016b4ce0 *entry = Entry016b4ce0::of(object);
+            if (entry->name310 == name.index) {
+                self->found10.set(object);
                 found = entry;
                 break;
             }

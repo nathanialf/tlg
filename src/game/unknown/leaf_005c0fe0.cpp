@@ -5,7 +5,7 @@
  * (tlg_game_object016abc00.h): the base built from the name, the vptr, the
  * array cleared (`vmovups [r15+0x38], xmm0`, its owner index from the
  * thread's heap, its state), `mov qword [r15+0x50], 0`; then the object
- * named "_swing_common_param" (looked up, not interned: `xor ecx, ecx` at
+ * named "_swing_common_param" (interned as a copy: `xor ecx, ecx` at
  * 0x5c107c; 19 characters, `mov edx, 0x13`) of the type at 0x598a628 is
  * taken from the registry (FUN_00cbc5a0, mode 0) and the reference at +0x50
  * set to it; the name is released after the exchange (0x5c1154). */

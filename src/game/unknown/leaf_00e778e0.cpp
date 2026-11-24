@@ -213,7 +213,7 @@ static inline bool isString(lua_State *state, int argument)
     return type == 4 || type == 3;
 }
 
-/* derived name: the name of a string looked up without interning it, the
+/* derived name: the name of a string interned as a copy, the
  * empty name for an empty string (as leaf_004eadf0.cpp's) */
 static inline Name nameOf(const char *string)
 {

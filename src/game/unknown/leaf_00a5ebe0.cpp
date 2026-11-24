@@ -6,7 +6,7 @@
 /* derived names: the script C function FUN_00a5d530 registers (lea at
  * 0xa5e136) under the script name "Spell_SetupParameterTable": the counted
  * reference at 0x5827ee8 set to the object the first argument's string names
- * (looked up, not interned: the last argument of FUN_013baad0 0) when it is
+ * (interned as a copy: the last argument of FUN_013baad0 0) when it is
  * usable by this thread and its type is the one D_5827ed0 points to (that
  * type itself: no walk to the parents), else emptied; returns 0 (no
  * results). A null or empty string names nothing. The C function's own name

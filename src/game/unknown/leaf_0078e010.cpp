@@ -4,7 +4,7 @@
 /* derived name: the constructor (tlg_game_object016ad548.h): its base
  * Object00774560 is built from the name passed on (FUN_00774370), the Names
  * and the link cleared; then the body: the base's float at +0x7c, the Name
- * at +0xfc set to "jt_ProxySamplingA", looked up without interning it (`xor
+ * at +0xfc set to "jt_ProxySamplingA", interned as a copy (`xor
  * ecx, ecx`), and the link reset. */
 Object016ad548::Object016ad548(const Name &name) : Object00774560(name)
 {

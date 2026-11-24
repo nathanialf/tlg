@@ -31,7 +31,7 @@ extern const char D_158acee[9]; /* "GameOver" */
 
 /* derived names: a condition FUN_00640dc0 registers under "IsGameOver" (lea
  * at 0x641bbe, as leaf_00645980.cpp's): whether the state's name is the one
- * "GameOver" looks up (not interned: `xor ecx, ecx`); the two names
+ * "GameOver" looks up (interned as a copy: `xor ecx, ecx`); the two names
  * released before the compare's result is formed */
 bool FUN_006459b0() /* derived name */
 {

@@ -32,8 +32,8 @@ bool FUN_00b108d0() /* derived name */
  * 0xb12987) touch: the program stores only 0 and 1 to them, so GlobalOpt
  * shrinks each to a bool (`movzx eax, byte; and eax, 1; cmp eax, 1`). Each
  * condition looks a name up in the names at +0x28f8 of the object at
- * 0x58325c8; the names are statics of the functions, looked up once (not
- * interned: the last argument of FUN_013baad0 0), each 8 bytes above its
+ * 0x58325c8; the names are statics of the functions, interned once (as a
+ * copy: the last argument of FUN_013baad0 0), each 8 bytes above its
  * guard. The states compared and the names' meaning are not traced. */
 static bool D_583265c; /* derived name: FUN_00b10a30's name was seen in state 5 */
 static bool D_583266c; /* derived name: FUN_00b10a30's second name was seen */

@@ -7,8 +7,8 @@
  * 0xe7da43, through FUN_00dd6ba0) under the script name
  * "SoundSetCurrentListener": with at least one argument, the listener at
  * +0x160 of the record at +0x100 of the object the pointer at 0x5938c40
- * holds becomes the object the first argument's string names (looked up,
- * not interned: the last argument of FUN_013baad0 0), of the type D_5949500
+ * holds becomes the object the first argument's string names (interned
+ * as a copy: the last argument of FUN_013baad0 0), of the type D_5949500
  * points to (usable by this thread), or null; returns 0 (no results). A
  * null or empty string names nothing. The C function's own name is unknown;
  * the classes are not traced. */

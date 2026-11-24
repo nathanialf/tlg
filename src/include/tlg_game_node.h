@@ -20,8 +20,14 @@
  * tests read; its type at +0x18, its count at +0x8 (a counted reference
  * holds one: FUN_0083c7f0). The fields from +0x3a on are its derived
  * classes', not traced to a class of their own */
+class Object016b85e0; /* tlg_game_object016b85e0.h */
+
 struct Component00503fb0 : public Object016b9108 { /* derived name */
-    u8 unknown24[0x16];
+    u8 unknown24[0x4];
+    /* +0x28: the node that holds it (slot 6 of Object01343880's family
+     * stores it; the marker events read it: FUN_00ad1960, FUN_00ace7a0) */
+    Object016b85e0 *node;
+    u8 unknown30[0xa];
     /* +0x3a: flags; FUN_00cf56b0 clears flag 2 of the component of the
      * type the pointer at 0x5948180 holds */
     u8 flags3a;

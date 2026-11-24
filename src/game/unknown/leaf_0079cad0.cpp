@@ -4,8 +4,8 @@
 /* derived name: the constructor (tlg_game_object016ad9f8.h): its base
  * Object00774560 is built from the name passed on (FUN_00774370), the Name,
  * the two ints and the reference cleared; then the body: the base's float
- * at +0x7c and two of its own, the Name set to "jt_ProxySamplingA", looked up
- * without interning it (`xor ecx, ecx`), eight floats in one store, the reference emptied again by an
+ * at +0x7c and two of its own, the Name set to "jt_ProxySamplingA", interned
+ * as a copy (`xor ecx, ecx`), eight floats in one store, the reference emptied again by an
  * exchange, -1.0 at +0x160. */
 Object016ad9f8::Object016ad9f8(const Name &name)
     : Object00774560(name), unknown144(0), unknown148(0)

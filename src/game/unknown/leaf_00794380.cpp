@@ -4,8 +4,8 @@
 /* derived name: the constructor (tlg_game_object016ad6d8.h): its base
  * Object00774560 is built from the name passed on (FUN_00774370), the Name at
  * +0xfc and the reference at +0x100 start empty, the base's float at +0x7c is
- * set to 0.2 and the Name at +0xfc to "jt_AttachA", looked up without
- * interning it (`xor ecx, ecx`). */
+ * set to 0.2 and the Name at +0xfc to "jt_AttachA", interned as a
+ * copy (`xor ecx, ecx`). */
 Object016ad6d8::Object016ad6d8(const Name &name) : Object00774560(name)
 {
     unknown7c = 0.2f;

@@ -4,7 +4,7 @@
 /* derived names: the counted reference at +0x1d8 of the object (FUN_00958ef0
  * calls it at 0x95934a) set to the object the name at 0x15b48d0 names, of
  * the type D_593a048 points to (usable by this thread), or emptied. The
- * name is a static of the function (at 0x5945a78), looked up once (not interned: the last
+ * name is a static of the function (at 0x5945a78), interned once (as a copy: the last
  * argument of FUN_013baad0 0) and destroyed at exit with Name's destructor.
  * The classes are not traced. */
 struct Owner00cca7c0 { /* derived name */

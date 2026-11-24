@@ -5,7 +5,7 @@
 /* derived names: FUN_00bebe90 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
  * (0x58b65f0 to 0x58b6710, config/header_statics.base.txt), then two names
- * looked up without interning (`xor ecx, ecx`), "markers" and
+ * interned as a copy (`xor ecx, ecx`), "markers" and
  * "layerMarkers", each registered with Name's destructor (0x1331800). */
 
 extern const char D_15b8035[8];

@@ -5,8 +5,8 @@
  * constructor; slots 0 and 1 are FUN_00b1b570 and FUN_00b1b580): the first
  * time (the int at +0x34 still 0, then set to 1) hands the object to
  * FUN_0081a930 with the object at +0x48 of the one the pointer at 0x57c9390
- * holds; then makes its name at +0x54 the name "EatenBarrelName", looked up
- * without interning it, and hands its member at +0x58 to FUN_00b1b5a0 with
+ * holds; then makes its name at +0x54 the name "EatenBarrelName", interned
+ * as a copy, and hands its member at +0x58 to FUN_00b1b5a0 with
  * the object at +0x38 of its owner at +0x28, a tail call. The fields'
  * meanings are not traced. */
 struct Member057c9390_48; /* derived name */

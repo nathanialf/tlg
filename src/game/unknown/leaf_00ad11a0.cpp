@@ -1,4 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_libc.h"
+#include "tlg_math.h"
+#include "tlg_game_array.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b85e0.h"
@@ -20,20 +23,79 @@
 struct MarkerEvent00ad3090 { /* derived name */
     u8 unknown0[0x10];
     Name unknown10; /* +0x10: the object the event is about */
+    Name
+        unknown14; /* +0x14: a second name (0xad06d0 adds it to the component's, through FUN_01344a20) */
+};
+
+/* the part at +0x348 of the component (FUN_00ace8e0, FUN_00acf290) */
+struct Part057d4a68_348 { /* derived name */
+    u8 unknown0[0x40];
+    int unknown40; /* +0x40: 1 and 0 (FUN_00ace8e0, FUN_00ace9e0) */
+    u8 unknown44[0x24];
+    int unknown68;     /* +0x68 */
+    Float4A unknown70; /* +0x70: zero with the int at +0x68 (FUN_00acf290) */
+};
+
+/* the object at +0x238 of the part at +0xd68: its node at +0x38 */
+struct Holder057d4a68_d68_238 { /* derived name */
+    u8 unknown0[0x38];
+    Object016b85e0 *node; /* +0x38 */
+};
+
+struct Part057d4a68_d68 { /* derived name */
+    u8 unknown0[0x238];
+    Holder057d4a68_d68_238 *unknown238; /* +0x238 */
 };
 
 struct Component057d4a68 : Component00503fb0 /* derived name */
 {
-    u8 unknown8c[0x3e0];
+    u8 unknown8c[0x4c];
+    Array05943280<Name> namesd8; /* +0xd8: 0xad06d0 adds the event's second name */
+    u8 unknownf0[0x258];
+    Part057d4a68_348 *part348; /* +0x348 */
+    u8 unknown350[0x11c];
     /* +0x46c: bit 0 inside a capture volume, bit 1 an up one, bit 2 a down
      * one (the s_CaptureVolume, s_CaptureUpVolume and s_CaptureDownVolume
      * events: `or byte` and `and byte` at 0xace281 to 0xace781) */
     u8 captureVolumes; /* derived name */
-    u8 unknown46d[0x1a];
-    bool pickup; /* derived name: +0x487, the s_Pickup events */
-    u8 unknown488[0x5e8];
+    u8 unknown46d[0x13];
+    int unknown480; /* +0x480: FUN_00ace7a0 acts for 1 to 5 */
+    u8 unknown484[0x3];
+    bool pickup;   /* derived name: +0x487, the s_Pickup events */
+    u8 unknown488; /* +0x488: cleared by FUN_00acfd10 */
+    u8 unknown489[0x4b];
+    float unknown4d4; /* +0x4d4: a time (FUN_00ad0020, FUN_00ad0150) */
+    u8 unknown4d8[0x570];
+    int unknowna48;        /* +0xa48 */
+    float unknowna4c;      /* +0xa4c */
+    int unknowna50;        /* +0xa50 */
+    int unknowna54;        /* +0xa54 */
+    int unknowna58;        /* +0xa58 */
+    int unknowna5c;        /* +0xa5c */
+    int unknowna60;        /* +0xa60 */
+    int unknowna64;        /* +0xa64 */
+    int unknowna68;        /* +0xa68 */
+    int unknowna6c;        /* +0xa6c */
     int allowExploreSlope; /* derived name: +0xa70 */
     int allowPush;         /* derived name: +0xa74 */
+    u8 unknowna78[0x2f0];
+    Part057d4a68_d68 *partd68; /* +0xd68 */
+
+    /* the values from +0xa48 on reset (FUN_00ad1050: the four ints from
+     * +0xa64 stored as one 16-byte zero) */
+    void resetA48() /* derived name */
+    {
+        unknowna48 = 0;
+        unknowna50 = -1;
+        unknowna4c = -HUGE_VALF;
+        unknowna54 = -1;
+        unknowna58 = -1;
+        unknowna60 = -1;
+        unknowna64 = 0;
+        unknowna68 = 0;
+        unknowna6c = 0;
+        allowExploreSlope = 0;
+    }
 };
 
 extern Type00503fb0 *D_5939080; /* derived name: the node's type */
@@ -191,8 +253,22 @@ struct Member057c9390_108 { /* derived name */
     Counts00ad2cf0 *counts; /* +0x30, derived name */
 };
 
+/* the record at +0x900 of the record at +0x38: the time at +0x44
+ * (FUN_00ad0020, FUN_00ad0150) */
+struct Member057c9390_38_900 { /* derived name */
+    u8 unknown0[0x44];
+    float unknown44; /* +0x44 */
+};
+
+struct Member057c9390_38 { /* derived name */
+    u8 unknown0[0x900];
+    Member057c9390_38_900 *unknown900; /* +0x900 */
+};
+
 struct Object057c9390 { /* derived name */
-    u8 unknown0[0x108];
+    u8 unknown0[0x38];
+    Member057c9390_38 *unknown38; /* +0x38 */
+    u8 unknown40[0xc8];
     Member057c9390_108 *unknown108;
 };
 
@@ -236,4 +312,143 @@ void FUN_00ad2d70(MarkerEvent00ad3090 *) /* derived name */
         FUN_00cb5f90(D_5938c40->unknownf68, "TROPHY_Pulse_Soldier_Defeat");
     FUN_00a1cd10("TROPHY_Pulse_Soldier_Defeat", counts->pulseDefeats);
     FUN_00a26130(D_57c9390->unknown108);
+}
+
+/* derived names: the handlers of the same table found by their shape (the
+ * component of the type D_57d4a68 points to on the node the event names);
+ * their events' names are not traced. */
+struct
+    Value00ad1960 { /* derived name: the int at +0x44 of the component of the type D_57d5968 points to */
+    u8 unknown0[0x44];
+    int unknown44;
+};
+
+/* the component of the type D_5945fa0 points to: an int at +0x58 whose
+ * change is marked in bit 0 of the flags at +0x20 */
+struct Value00acfd10 { /* derived name */
+    u8 unknown0[0x20];
+    int flags; /* +0x20 */
+    u8 unknown24[0x34];
+    int unknown58; /* +0x58 */
+
+    void set58(int value) /* derived name */
+    {
+        unknown58 = value;
+        flags |= 1;
+    }
+};
+
+extern Type00503fb0 *D_57d5968; /* derived name */
+extern Type00503fb0 *D_5945fa0; /* derived name */
+extern const Name D_57d6b9c;    /* derived name */
+extern const Name D_57d6b8c;    /* derived name */
+
+void FUN_004a6bf0(const Name &first, const Name &second, const Name &third); /* derived name */
+
+void FUN_00ace8e0(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->part348->unknown40 = 1;
+    }
+}
+
+void FUN_00ace9e0(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->part348->unknown40 = 0;
+    }
+}
+
+void FUN_00acf290(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event)) {
+            Part057d4a68_348 *part = static_cast<Component057d4a68 *>(component)->part348;
+            part->unknown68 = 0;
+            part->unknown70.set(0, 0, 0, 0);
+        }
+    }
+}
+
+void FUN_00ad1960(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event)) {
+            if (Object016b85e0 *node = component->node) {
+                if (Component00503fb0 *other = node->component(D_57d5968))
+                    reinterpret_cast<Value00ad1960 *>(other)->unknown44 = 0;
+            }
+        }
+    }
+}
+
+// NONMATCHING: the second search's registers: the base finds into rcx with the counter in edx
+// (0xacfe3c), this build rdx and ecx; casting before the null test changes nothing (round 573D)
+void FUN_00acfd10(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *found = markerComponent(event)) {
+            Component057d4a68 *component = static_cast<Component057d4a68 *>(found);
+            Object016b85e0 *node = component->partd68->unknown238->node;
+            if (Value00acfd10 *other =
+                    reinterpret_cast<Value00acfd10 *>(node->component(D_5945fa0)))
+                other->set58(1);
+            component->unknown488 = 0;
+        }
+    }
+}
+
+// NONMATCHING: FUN_00acfd10's residual (the second search's registers)
+void FUN_00acfea0(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *found = markerComponent(event)) {
+            Component057d4a68 *component = static_cast<Component057d4a68 *>(found);
+            Object016b85e0 *node = component->partd68->unknown238->node;
+            if (Value00acfd10 *other =
+                    reinterpret_cast<Value00acfd10 *>(node->component(D_5945fa0)))
+                other->set58(0);
+        }
+    }
+}
+
+void FUN_00ace7a0(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *found = markerComponent(event)) {
+            Component057d4a68 *component = static_cast<Component057d4a68 *>(found);
+            if (unsigned(component->unknown480 - 1) <= 4) {
+                if (Object016b85e0 *node = component->node)
+                    FUN_004a6bf0(D_57d6b9c, D_57d6b8c, node->name);
+            }
+        }
+    }
+}
+
+void FUN_00ad1050(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->resetA48();
+    }
+}
+
+void FUN_00ad0020(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->unknown4d4 =
+                D_57c9390->unknown38->unknown900->unknown44 + 4.0f;
+    }
+}
+
+void FUN_00ad0150(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->unknown4d4 =
+                D_57c9390->unknown38->unknown900->unknown44 + 4.0f;
+    }
 }
