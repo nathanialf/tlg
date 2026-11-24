@@ -17,9 +17,9 @@ extern Object057c9390 *D_57c9390;
  * the object at 0x57c9390 set, or cleared when a second argument is false;
  * any other string changes nothing. The status is read before the names
  * are compared. Returns no results. The C function's own name is unknown. */
-// NONMATCHING: the second argument's truth, as FUN_00a46970's and FUN_0046b050's: the base keeps
-// the slot a select of null past the top (`cmovae rax, rcx; jae`) and reads the tag through it,
-// the build folds the select into the branch; then r12 and r15 exchanged (the state, the flag)
+// NONMATCHING: register assignment (module, 215 bytes against 221): the truth is the base's (its select
+// kept, toBoolean in tlg_hks.h); r12 and r15 exchanged (the state and the object at 0x57c9390 in r12,
+// the flag in r15d in the base)
 int FUN_001b10f0(lua_State *state) /* derived name */
 {
     int count = argumentCount(state);

@@ -24,7 +24,10 @@ namespace LuaBindings
 // FUN_00e7e520.
 // NONMATCHING: the base folds each float's load into `vcvtss2sd` (memory form) after a
 // `vxorps` of the pass-through register; the build loads with `vmovss` and converts registers
-// (the conversions' undefined pass-through operand, NOTES round 260A item 1: region-wide)
+// (the conversions' undefined pass-through operand, NOTES round 260A item 1: region-wide).
+// Round 575E: no source form; 3.7.1's peephole drops the load's fold at the IMPLICIT_DEF of the
+// extending load's pattern (PeepholeOptimizer.cpp:1102), r244577 (3.8) folds it; the vxorps
+// and the pass-through's register are round 260A's
 int VectorToString(lua_State *state)
 {
     int count = state->top - state->base;

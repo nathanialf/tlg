@@ -27,7 +27,8 @@ extern const Type00503fb0 *D_5949500; /* derived name: the listener's type */
 
 // NONMATCHING: the found object's copies: the base moves the object into rcx before each of the
 // walk's compares (`mov rcx, r12`) and keeps the flags word in r13d; the build splits the walk's
-// exit edges for the copies and spills the flags word (`mov [rbp-0x2c], eax`)
+// exit edges for the copies and spills the flags word (`mov [rbp-0x2c], eax`). The name is made from
+// its index (Name::intern), as FUN_00875410's: its part, to the store of +0x160, is unchanged by it
 int FUN_00e7d1a0(lua_State *state) /* derived name */
 {
     int count = state->top - state->base;
@@ -35,9 +36,8 @@ int FUN_00e7d1a0(lua_State *state) /* derived name */
         const char *string = 0;
         if (state->base < state->top)
             string = FUN_00db6b20(state, state->base, 0);
-        Name name;
-        if (string && *string)
-            name.index = FUN_013baad0(string, FUN_013bad90(string), strlen(string), false);
+        const unsigned interned = Name::intern(string);
+        Name name(interned);
         Sound00e7d1a0 *sound = D_5938c40->sound;
         if (name.index != 0)
             sound->listener = findNamed<Object016b9108>(name, D_5949500);

@@ -8,6 +8,8 @@
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 
+struct lua_State; /* tlg_hks.h */
+
 /* derived names: a fade of a value from one end to the other, 24 bytes:
  * started on a difference, it runs 0.3 from the start (time 0); with none
  * it stands finished (time and length 1). Stored in that order (0xb168ed to
@@ -115,6 +117,11 @@ class Object016b4ce0 /* derived name */
     /* 0xb16a90: the name taken out of the names at +0xc0 (every copy, or the
      * last one only), unless it is held at +0xd8 */
     void remove(const Name &name, bool every); /* derived name */
+
+    /* 0xb16bd0: Guide_SetIgnoreFade(keycode, isIgnore): the name added to
+     * the names at +0xd8 and taken out of the names at +0xc0, or taken out
+     * of the names at +0xd8 */
+    void setIgnoreFade(lua_State *state); /* derived name */
 
   private:
     u8 unknown8[0x8];

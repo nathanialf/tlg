@@ -37,9 +37,6 @@ int FUN_00c87690(lua_State *state) /* derived name */
  * arguments, the first's number as an int selects the pad record as above
  * and the second's truth goes to the pad library with the record's handle;
  * they return 0. */
-// NONMATCHING: the second argument's truth, as leaf_0046b050.cpp's: the base keeps the slot a
-// select of null past the top (`cmovae rsi, rdx; jae`) and reads the tag through it, the build
-// folds the select into the branch (`lea rdx, [rsi + 0x10]; cmp; jae`)
 int FUN_00c876e0(lua_State *state) /* derived name */
 {
     int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);
@@ -51,9 +48,6 @@ int FUN_00c876e0(lua_State *state) /* derived name */
     return 0;
 }
 
-// NONMATCHING: the second argument's truth, as leaf_0046b050.cpp's: the base keeps the slot a
-// select of null past the top (`cmovae rsi, rdx; jae`) and reads the tag through it, the build
-// folds the select into the branch (`lea rdx, [rsi + 0x10]; cmp; jae`)
 int FUN_00c87770(lua_State *state) /* derived name */
 {
     int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);

@@ -36,6 +36,8 @@ extern const int D_57d85a4;           /* derived name */
 extern const Type00503fb0 *D_5939080; /* derived name: the node's type */
 extern const Type00503fb0 *D_57d4a68; /* derived name: the component's type */
 
+// Round 576D: equal when BranchFolding's tail merge leaves alone an atomic read-modify-write with an
+// unused result (the rule leaf_00857df0.cpp describes; that half alone is enough here).
 // NONMATCHING: block layout: the base places the return block after the walk's loop (0x4ba9ff) and
 // keeps a third release of the reader count for an empty component list; the build places the
 // return last and merges the two not-found releases

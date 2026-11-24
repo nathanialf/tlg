@@ -14,10 +14,7 @@
  * return type is not traced. */
 extern Object016b4ce0 *D_581e3a8;
 
-// NONMATCHING: toBoolean (module, 37/83, 264 bytes as the base): the base keeps the argument's select
-// (`cmovae rax, rcx` at 0x875575, then `jae` on the same flags and the tag read through rax, the false made
-// once, `xor ecx, ecx` at 0x875567); the build threads the select into the branch and reads [base+0x28]. The
-// name is the base's (made once, its index kept in r14d) now that remove (FUN_00b16a90) is written.
+// The argument's truth keeps its select (`cmovae rax, rcx; jae` at 0x875575, toBoolean in tlg_hks.h).
 // The base keeps the name's index in r14d across FUN_00b16a90 and the release's `lock xadd`
 // by the memory dependence rule (tools/patches/llvm-3.7.1-atomic-01-ordered-rmw-uncaptured-local.patch).
 int FUN_008754f0(lua_State *state) /* derived name */

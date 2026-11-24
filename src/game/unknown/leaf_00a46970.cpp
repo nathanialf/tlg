@@ -23,9 +23,6 @@ static inline Name argumentName(lua_State *state, int argument)
     return Name(string);
 }
 
-// NONMATCHING: the second argument's truth, as FUN_0046b050's: the base keeps the slot a select of
-// null past the top (`cmovae rax, r12; jae`) and reads the tag and the boolean through it, the
-// build folds the select into the branch (`lea rcx, [rax+0x10]`)
 int FUN_00a46970(lua_State *state) /* derived name */
 {
     Name name = argumentName(state, 1);

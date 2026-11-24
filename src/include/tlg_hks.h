@@ -511,20 +511,24 @@ inline void hksi_hksL_checktable(lua_State *s, int argument)
 /* derived name: an argument's truth: false past the frame's top, for nil
  * (tag 0) and for a false boolean (tag 1), true for any other value (0x46b0d0
  * to 0x46b0fa: the slot made null past the top, `and 0xf; je`, `cmp 1; jne`,
- * `cmp [rcx+8], 0; setne`) */
+ * `cmp [rcx+8], 0; setne`). The slot is a select of null past the top and
+ * the type is read under the same test, so the branch is on the frame's
+ * test and the select stays for the loads (`cmovae; jae` on one compare,
+ * 19 sites of the base, FUN_00a44f20's form); with the slot made null in a
+ * branch and tested for null, the test is threaded and the type read from
+ * the frame (`jae` alone) */
 inline bool toBoolean(lua_State *state, int argument)
 {
-    const HksObject *value = state->base + (argument - 1);
-    if (!(value < state->top))
-        value = 0;
-    if (!value)
-        return false;
-    const int type = value->type & 0xf;
-    if (type == 0)
-        return false;
-    if (type == 1)
-        return value->value.boolean != 0;
-    return true;
+    const HksObject *slot = state->base + (argument - 1);
+    const HksObject *value = slot < state->top ? slot : 0;
+    const int type = slot < state->top ? value->type & 0xf : 0;
+    bool truth = false;
+    if (type != 0) {
+        truth = true;
+        if (type == 1)
+            truth = value->value.boolean != 0;
+    }
+    return truth;
 }
 
 /* derived name: the count of the running function's arguments (the frame's

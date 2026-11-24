@@ -44,9 +44,6 @@ extern Type00503fb0 *D_5939080; /* derived name: the object's type */
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
 void FUN_0048af30(Object016b9108 *object, bool on, int unknown);            /* derived name */
 
-// NONMATCHING: the second argument's truth: the base keeps the slot a select of null past the
-// top (`cmovae rcx, rax; jae`) and reads the tag and the boolean through it, the build folds
-// the select into the branch and reads off the base (`[rax+0x18]`); the rest is the base's
 int FUN_0046b050(lua_State *state) /* derived name */
 {
     Object016b9108 *object = 0;
