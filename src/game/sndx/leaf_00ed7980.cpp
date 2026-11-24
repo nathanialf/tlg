@@ -93,7 +93,10 @@ void FUN_00ed7980(u32 handle, u32 *flags) /* derived name */
  * 0x40000000 for +0xfb, 0x20000000 when it is the block's instance at
  * +0x158), 0 when there is none, -3 when the runtime is not running */
 // NONMATCHING: order only: the build loads D_5a8e008 first in the block that reads +0xfb and the
-// handle, the base after them (105 of 108 instructions equal)
+// handle, the base after them (105 of 108 instructions equal). Round 555C (the module's machine
+// dumps): the order before allocation is the base's (+0xfb, the lea, the handle, the global) and
+// every register is; the post-RA top-down list scheduler lifts the global's load (a chain of two
+// loads, the greater height) to the block's top, where the base's keeps it third
 int FUN_00ed8100(u32 handle) /* derived name */
 {
     SndxInstance05a8e008 *instance;

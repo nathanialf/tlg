@@ -33,6 +33,9 @@ struct Total00c11e60 { /* derived name */
 // NONMATCHING: in the whole module the same instructions but for two registers: the base walks the
 // list in r12 and keeps its end in r15, this build the other way round (the index form and the end
 // formed first measured, round 484D)
+// Round 552C, module dump: all four are global; greedy queues them by size, objects (from the
+// entry copy) the longest, so it takes the earlier callee-saved register; the base gives end the
+// earlier one.
 void FUN_00c11e60(Total00c11e60 *self, Object00c11e60 **objects, unsigned count)
 {
     const Type00503fb0 *counted = D_598c670;

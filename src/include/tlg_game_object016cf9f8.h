@@ -18,6 +18,16 @@
  * traced. */
 struct Record016cf9f8 /* derived name */
 {
+    /* the index list of a variant: the record is reached before the variant
+     * is read (the base's order in the five readers of one given record,
+     * FUN_01399e90, FUN_01399900, FUN_0139af80, FUN_00b3f5a0, FUN_0137c010;
+     * the loops over every record, FUN_01399a00, FUN_0139a0c0, FUN_00b3f420,
+     * read the variant first: `lists[variant]`) */
+    const Array05943280<unsigned> &list(unsigned variant) const /* derived name */
+    {
+        return lists[variant];
+    }
+
     Array05943280<unsigned> lists[2]; /* +0x0 */
     u8 unknown30[0x10];
 };

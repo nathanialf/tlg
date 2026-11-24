@@ -15,6 +15,10 @@ namespace LuaBindings
 // and so reuses rax; the base's edx means the first vector's pointer is still live there: in the
 // base's order the w load comes before a.z's (the DAG puts it after the third min here, as the
 // source's order has it).
+// Round 552C, module dump: the pre-RA order is a.x, a.y, min x, min y, a.z, min z, a.w, so the w
+// load is a's last use and takes rax; the base's edx needs a still live at w's definition (w
+// loaded before one of a's floats before allocation; the post-RA scheduler gives x, y, z, w in
+// both). The DAG's order of independent loads.
 int VectorMin3(lua_State *state)
 {
     int count = state->top - state->base;

@@ -14,6 +14,13 @@ struct ForceField00a12870 { /* derived name */
 };
 
 struct ForceFields00a12870 { /* derived name */
+
+    /* the field of a slot and a side (derived name) */
+    ForceField00a12870 *field(unsigned slot, unsigned side)
+    {
+        return &fields[slot][side];
+    }
+
     u8 unknown0[0x120];
     ForceField00a12870 fields[4][2]; /* +0x120 */
 };
@@ -46,12 +53,9 @@ void FUN_00a12cb0(ForceField00a12870 *field, lua_State *state, int unknown2); /*
 void FUN_00a13410(ForceField00a12870 *field, lua_State *state, int unknown2); /* derived name */
 void FUN_00a13970(ForceField00a12870 *field, lua_State *state, int unknown2); /* derived name */
 
-// NONMATCHING: register assignment only: the build takes rdx for the game
-// object and rcx for the side's offset where the base takes rcx and rdx, and
-// clears edx for the first call before the field's `lea` (greedy's
-// assignment); everything else equal
-// Round 507D: the two index copies (both hinted, so assigned before the other locals) come before
-// the load of D_57c9390 here and take rcx; the base gives the load rcx first.
+/* The field through field(slot, side): the indexes are extended in its
+ * body, after the global and its chain are loaded (a subscript emits its
+ * indexes first), so the global takes rcx and the side's offset rdx. */
 int FUN_00a12870(lua_State *state) /* derived name */
 {
     if (argumentCount(state) == 3 && isTable(state, 1) && isNumber(state, 2) &&
@@ -62,7 +66,7 @@ int FUN_00a12870(lua_State *state) /* derived name */
         const unsigned slot = int(toNumber(state, 3)) - 1;
         if (slot > 3)
             return 0;
-        ForceField00a12870 *field = &D_57c9390->unknown38->unknown8c8->fields[slot][side];
+        ForceField00a12870 *field = D_57c9390->unknown38->unknown8c8->field(slot, side);
         FUN_00a12cb0(field, state, 0);
         FUN_00a13410(field, state, 0);
         FUN_00a13970(field, state, 0);

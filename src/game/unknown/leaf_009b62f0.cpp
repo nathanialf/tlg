@@ -15,6 +15,9 @@ extern Type059458a8 *D_5822428;
  * Object016b9108's constructor, and the object constructed in place: the
  * base's constructor 0xcb6310 is called out of line, the rest inlined. */
 // NONMATCHING: register assignment only: the two halves of D_5822b10 split into rcx/rdx where the base has rdx/rcx (greedy's assignment)
+// Round 552C, module dump: the two i64 halves (set()'s by-value argument) are loaded together
+// before the first half's shr copy, first rax, second rcx, copy rdx; the base's second rdx and
+// copy rcx need the second load after the copy. The DAG's order of two independent loads.
 Object016b9108 *FUN_009b62f0(void *, const Name &name)
 {
     void *memory = operator new(sizeof(Object016cdd18));

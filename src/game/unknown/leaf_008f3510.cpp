@@ -35,6 +35,10 @@ void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* d
 // NONMATCHING: register assignment only: the base keeps the result in r14d (zeroed at entry
 // and after the first read, held across the second call) and the guard in r15, the build
 // zeroes eax on each path
+// Round 552C, module dump: the result is three phis, one per scope end (the readers' lifetime.end
+// blocks), each 0 its own MOV32r0 (entry, after call 1, after call 2). MachineCSE merges two zeros
+// only when one PHI uses both (MachineCSE.cpp:365-428), so the base had the two calls' failure
+// zeros in one phi and the argument count's in another; target's scope separates them here.
 int FUN_008f3510(lua_State *state) /* derived name */
 {
     int results = 0;

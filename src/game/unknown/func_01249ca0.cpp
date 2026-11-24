@@ -131,15 +131,15 @@ const Float4 *FUN_0135b050(const Float4A *rotation, const Float4A *point); /* de
 /* derived names: the fade's target entry of a joint, its position (+0x50)
  * and rotation (+0x60) computed from the model's pose on first use, the
  * entry's int at +0x90 set */
-static inline FadeTargetEntry013d2490 &joint(Object016d6b08 *fade, int i) /* derived name */
+static inline FadeTargetEntry013d2490 &joint(Object016d6b08 *fade, const int &i) /* derived name */
 {
     FadeTarget013d2490 *target = fade->owner->target;
     FadeTargetEntry013d2490 &entry = target->entries[i];
     if (!entry.unknown90) {
+        FadeSkeleton013ce2d0 &skeleton = fade->model->skeleton;
         const int index = target->unknown28[i];
-        FadeModel013d4610 *model = fade->model;
-        FUN_013ce2d0(&model->skeleton, &entry.unknown50, index, model->skeleton.poses);
-        FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
+        FUN_013ce2d0(&skeleton, &entry.unknown50, index, skeleton.poses);
+        FUN_013ce660(&skeleton, &entry.unknown60, index, skeleton.poses);
         entry.unknown90 = 1;
     }
     return entry;
@@ -168,7 +168,7 @@ static inline Float4A inverseRotated(Float4A point, const Vec4 &rotation) /* der
 
 /* derived name: a joint's position from the root joint's, in the root's frame */
 static inline Float4A fromRoot(Object016d6b08 *fade, const FadeTargetEntry013d2490 &root,
-                               int i) /* derived name */
+                               const int &i) /* derived name */
 {
     return inverseRotated(offset(joint(fade, i).unknown50, root.unknown50), root.unknown60);
 }
@@ -179,10 +179,9 @@ static inline Float4A fromRoot(Object016d6b08 *fade, const FadeTargetEntry013d24
  * +0x10 whose +0x40 is the target), taken as Object016d6b08. The append is
  * out of line only while it has two callers (this one and FUN_00faab20, its
  * copy in func_00fba4b0.cpp: cost 250 at stage 1, 175 at the link). */
-// NONMATCHING: 152/183 at the base's 796 bytes, the vector work, the copy-out and the loop equal; left:
-// the root's arm keeps &skeleton in r13 and spills the index where the base keeps the index in r13d
-// and spills &skeleton ([rbp-0x78]); the parent's arm has the two spill slots swapped; after the
-// first point the target's and the index's registers (rax, rcx) are swapped
+/* joint() names the skeleton before it reads the index (the index, defined later, is the heavier
+ * range and keeps r13d; &skeleton is spilled), and takes the index by reference (the node's index
+ * is read after the fade's target) */
 void FUN_0123d660(Object016d6b08 *fade, Array01343a80<Record00fbd1d0> &segments,
                   const TreeNode0147ba30 &node, const TreeNode0147ba30 &parent) /* derived name */
 {

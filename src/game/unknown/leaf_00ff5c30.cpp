@@ -38,16 +38,19 @@ void FUN_01353470(Float4Data &axis,
                   const Float4A &rotation); /* derived name: the rotation's axis */
 
 /* derived name: the fade's first target entry, its position and rotation
- * computed from the model's pose on first use */
+ * computed from the model's pose on first use. The skeleton is named before
+ * the index is read, as joint() in func_00fba4b0.cpp and the model in the
+ * other units' lazy poses: the index, defined later, is the heavier range and
+ * keeps r13d across the pose calls, the skeleton's address spilled. */
 static inline FadeTargetEntry013d2490 &rootEntry(Object016d5140 *fade)
 {
     FadeTarget013d2490 *target = fade->owner->target;
     FadeTargetEntry013d2490 &entry = target->entries[0];
     if (!entry.unknown90) {
+        FadeSkeleton013ce2d0 &skeleton = fade->model->skeleton;
         const int index = target->unknown28[0];
-        FadeModel013d4610 *model = fade->model;
-        FUN_013ce2d0(&model->skeleton, &entry.unknown50, index, model->skeleton.poses);
-        FUN_013ce660(&model->skeleton, &entry.unknown60, index, model->skeleton.poses);
+        FUN_013ce2d0(&skeleton, &entry.unknown50, index, skeleton.poses);
+        FUN_013ce660(&skeleton, &entry.unknown60, index, skeleton.poses);
         entry.unknown90 = 1;
     }
     return entry;
@@ -74,10 +77,6 @@ static inline const Float4 &lookup(Target00ff5c30 *target, const Float4 &positio
     return *FUN_0134b990(&target->unknown10, &point);
 }
 
-// NONMATCHING: register assignment only (frame and size the base's, 14/68 by position): the
-// base keeps the second argument in r15 from the entry and spills the skeleton's address and the
-// index across the first pose call; the build keeps the canary guard in r15 and spills the
-// argument
 int FUN_00ff5c30(Object00ff5c30 *self, const Source00ff5c30 *source, void *,
                  Target00ff5c30 *target) /* derived name */
 {
@@ -87,8 +86,8 @@ int FUN_00ff5c30(Object00ff5c30 *self, const Source00ff5c30 *source, void *,
     return FUN_0135b050(&rotation, &point)->x <= 0.5f;
 }
 
-// NONMATCHING: register assignment and one sum (58/75): the base keeps the index in r13 and
-// spills the skeleton's address across the pose calls, the build the reverse; the dot product is
+// NONMATCHING: one sum (69/75; the registers the base's since rootEntry names the skeleton
+// first, round 555C): the dot product is
 // (y + x) + z in the link's IR, kept so by the base and rewritten (x + z) + y here by the machine
 // combiner (its root's only use the compare with the folded constant, cookbook 3265). The
 // rotation read through the pose's second vector is the base's: an address formed apart from the

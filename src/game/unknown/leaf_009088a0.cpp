@@ -21,6 +21,9 @@ struct Heap009088a0 {         /* derived name */
 // NONMATCHING: register assignment only (the base carries the hole in eax and gives the
 // early exit its own `xor ecx, ecx`, the build carries it in r10d and zeroes it twice);
 // lead: the three callers may pass a hole index of 0 the link propagated (std::__adjust_heap)
+// Round 552C, module dump: the hole's zero is made in the entry for the early exit's phi and again
+// before the loop (MachineCSE heuristic #3 refuses the second); the base's entry zero is the
+// loop's hole and the early exit has its own in a split edge.
 void FUN_009088a0(Heap009088a0 *heap, HeapNode009088a0 *node)
 {
     int hole = 0;

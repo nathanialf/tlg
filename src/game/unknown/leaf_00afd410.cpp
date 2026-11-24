@@ -1,12 +1,15 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-/* NONMATCHING FUN_00afd2e0: 71/75, register assignment: the base sign-extends the index into rcx and loads the record into rax (`lea rcx, [rax+rcx*8+0x1a0]`); the build the other way. */
+/* FUN_00afd2e0: the camera's reference is reached through camera(index): the
+ * index is extended in its body, after the global and its cameras are
+ * loaded (a subscript emits its index first), which gives the base's rax for
+ * the cameras and rcx for the index. */
 #include "tlg_game_object016c7d08.h"
 
 Object016c7d08::Object016c7d08(const Name &name, int index)
     : Object016b9108(name), cameras28(0), index30(index), unknown34(2), entries48(0), unknown50(0),
       unknown58(-1), unknown5c(1)
 {
-    D_57c9390->cameras40->cameras[index].set(this);
+    D_57c9390->cameras40->camera(index).set(this);
     cameras28 = D_57c9390->cameras40;
     unknown38 = 0;
 }
@@ -16,7 +19,7 @@ Object016c7d08::~Object016c7d08()
 {
     freeEntries();
     if (D_57c9390 && D_57c9390->cameras40)
-        D_57c9390->cameras40->cameras[index30].clear();
+        D_57c9390->cameras40->camera(index30).clear();
 }
 
 /* the 0xb0-byte entries at +0x48 (an array new's count 8 bytes before the

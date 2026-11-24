@@ -7,15 +7,12 @@
  * the entry each index of the record's chosen list names, one vertex per
  * index: the entry's point with w 0 and seven of its words, the short at
  * +0x0 widened (as FUN_01398150 does for the class at 0x16cf9f8). */
-// NONMATCHING: greedy's assignment, as FUN_01398150's: the variant at +0x10 is loaded into
-// r8d where the base reuses ecx (the record's register, dead after the movsxd); the thunk
-// 0xb3f650 is equal but waits for its target's row.
 void Object016b5ae8::FUN_00b3f5a0(Output016b5ae8 *output, int, int record)
 {
     Entry016b5ae8 *entries = table->entries;
     if (!entries)
         return;
-    const Array05943280<unsigned> &list = records->records.at(record).lists[records->variant];
+    const Array05943280<unsigned> &list = records->records.at(record).list(records->variant);
     unsigned count = list.size();
     if (!count)
         return;

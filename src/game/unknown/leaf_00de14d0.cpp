@@ -23,6 +23,8 @@ static inline int posrelat(int pos, size_t len)
 // NONMATCHING: register assignment only: the base takes the start's sign in edi and the length plus one in esi
 // Round 507D: the start's sign copy is defined before l + 1 here (the DAG's order: the select's
 // and-of-sar first) and takes esi; the base defines l + 1 first.
+// Round 552C, module dump: the start's sign (sar) is defined before l + 1 (lea), both from the
+// DAG's combine of the select; the base defines l + 1 first.
 int FUN_00de14d0(lua_State *state)
 {
     size_t l = 0;

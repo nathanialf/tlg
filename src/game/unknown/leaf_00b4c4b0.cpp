@@ -24,14 +24,13 @@ struct Object00b4c4b0 { /* derived name */
     int *ids; /* +0x60, derived name */
 };
 
-// NONMATCHING: register assignment only: the node's id is loaded into esi (the index's register,
-// free after its copy to r14d), the table into rcx and the index into rax; the build takes eax,
-// rsi and rcx (the compare written the other way gives rcx and rax with the id loaded last)
-// Round 507D: the locals are assigned in order: the id, the index's sign extension, the table
-// here; the base's registers are the order index, table, id.
+/* The id looked for is read first, then the node's: the index is extended
+ * and the table loaded before the node's id (the id in esi, the table in rcx,
+ * the index in rax), and the compare folds the table's entry. */
 Node00b4c4b0 *FUN_00b4c4b0(Object00b4c4b0 *self, int index, Node00b4c4b0 *node) /* derived name */
 {
-    if (node->id == self->ids[index])
+    const int id = self->ids[index]; /* derived name */
+    if (node->id == id)
         return node;
     for (unsigned i = 0; i < node->childCount; i++) {
         if (Node00b4c4b0 *found = FUN_00b4c4b0(self, index, node->childAt(i)))

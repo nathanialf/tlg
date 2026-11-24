@@ -25,10 +25,10 @@ struct HashTable009087d0 {      /* derived name */
     int used;                   /* +0x20 */
 };
 
-// NONMATCHING: list-ilp order (the base loads the head count first and the heads only at
-// their use, the build the heads first) and `lea` against `mov; inc` both ways (the base
-// `mov eax, edx; inc eax` for the count, `lea rax, [rdx + rcx]` for the entry; the build
-// `lea eax, [rdx + 1]` and `add rax, rdx`); the stores and the rest in the base's order
+// NONMATCHING: `lea` against `mov; inc` both ways (the base `mov eax, edx; inc eax` for the
+// count, `lea rax, [rdx + rcx]` for the entry; the build `lea eax, [rdx + 1]` and `add rax,
+// rdx`), 58 against 59 instructions; the stores and the rest in the base's order (round 555C,
+// the module's codegen: the head count and heads' order is the base's now)
 HashEntry009087d0 *FUN_009087d0(HashTable009087d0 *table, u32 key) /* derived name */
 {
     u32 hash = key;

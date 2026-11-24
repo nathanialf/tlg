@@ -6,14 +6,12 @@
  * inlined into it), slot 0 of the base at +0x58: when the table has its
  * entries, copies four floats of the entry each index of the record's
  * chosen list names into the output's vertices, one vertex per index. */
-// NONMATCHING: greedy's assignment: the variant at +0x10 is loaded into r8d where the base
-// reuses ecx (the record's register, dead after the movsxd); the same in the thunk 0x1398150.
 void Object016cf9f8::FUN_01398150(Output016cf9f8 *output, int, int record)
 {
     Entry016cf9f8 *entries = table->entries;
     if (!entries)
         return;
-    const Array05943280<unsigned> &list = records->records.at(record).lists[records->variant];
+    const Array05943280<unsigned> &list = records->records.at(record).list(records->variant);
     unsigned count = list.size();
     if (!count)
         return;

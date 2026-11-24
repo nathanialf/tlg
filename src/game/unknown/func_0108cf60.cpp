@@ -46,7 +46,10 @@ FrameSet0108cf60::FrameSet0108cf60()
 // this build the model r10 and the table rbx (the indices' register), and the
 // post-RA scheduler then moves the loads. Not traced: what makes the greedy
 // allocator take r10 for the model (the 12 copies of this function, 0x13fce60
-// to 0x1492ad0, wait on it)
+// to 0x1492ad0, wait on it). Round 555C: the index's order is the base's (not the
+// subscript class); the model is local to the loop's block (432 to 576 before
+// allocation) and the sets' block's RDX is dead from 416; which range keeps the model
+// from it is not traced
 void FUN_013fccf0(FramePoser013fccf0 *self) /* derived name */
 {
     for (unsigned i = 0; i < self->count; ++i) {

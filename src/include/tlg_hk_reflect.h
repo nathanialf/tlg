@@ -12273,6 +12273,12 @@ struct hknpConstraintManager /* derived name */
      * the user's, then the members destroyed. */
     ~hknpConstraintManager();
 
+    /* A constraint by its id (derived name). */
+    const hknpConstraint &getConstraint(u32 constraintId) const
+    {
+        return constraints[constraintId];
+    }
+
     hknpWorld *world;            /* derived name */
     hknpConstraint *constraints; /* derived name */
     int capacity;                /* derived name */

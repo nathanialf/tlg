@@ -15,6 +15,8 @@ namespace LuaBindings
 // and so reuses rax; the base's edx means the first vector's pointer is still live there: in the
 // base's order the w load comes before a.z's (the DAG puts it after the third max here, as the
 // source's order has it).
+// Round 552C, module dump: as VectorMin3's (leaf_00e7f030.cpp): w is a's last use before
+// allocation and takes rax; the base's edx needs a live past it.
 int VectorMax3(lua_State *state)
 {
     int count = state->top - state->base;

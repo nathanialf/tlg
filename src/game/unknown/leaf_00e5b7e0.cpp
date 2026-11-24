@@ -114,7 +114,11 @@ class Object00e5b7e0 /* derived name */
 Object00e5b7e0::~Object00e5b7e0() {}
 
 // NONMATCHING: register assignment only: the base holds the index's mask in rcx and the
-// free list's head in edx (0xe5bb92, 0xe5bb9c), the build the other way round
+// free list's head in edx (0xe5bb92, 0xe5bb9c), the build the other way round. Round 555C:
+// a scalar assignment emits its right side first (clang CGExprScalar.cpp:3028, VisitBinAssign),
+// so release()'s head is loaded before the entry's address; the link-stage IR with the head's
+// load moved after the address gives the base's bytes (codegen alone). The forms that do it
+// (the entry named in a statement before, or a setter on the handle) have no second site.
 void Object00e5b7e0::slot4(FileHandle00e5b7e0 *handle)
 {
     if (!handle)
@@ -156,7 +160,8 @@ extern const char *const D_16bdc40[4];
  * mode's low two bits), null when no handle is free or the file does not
  * open (the handle then given back). */
 // NONMATCHING: the inlined release only, slot 4's register assignment (the index's mask in rcx
-// and the free list's head in edx at 0xe5bad9, the build the other way round); 76/80
+// and the free list's head in edx at 0xe5bad9, the build the other way round); 76/80; slot 4's
+// note has the mechanism (round 555C)
 FileHandle00e5b7e0 *Object00e5b7e0::slot3(const char *path, int mode)
 {
     FileHandle00e5b7e0 *handle = handles.acquire();

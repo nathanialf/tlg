@@ -27,6 +27,10 @@ void FUN_00a11860(Event00a104a0 *event) /* derived name */
 // NONMATCHING: register assignment only (42 of 50): the base gives the type r14 and the event
 // r15 here (the other way in FUN_00a11860, FUN_00a11f90, FUN_00a12040, whose bodies differ only
 // in the two constants); the build gives this one the others' assignment.
+// Round 552C, module dumps of this one and FUN_00a11860: the two machine functions are the same
+// instructions, differing only in vreg numbers (one fewer: the shared constant) and the last
+// block's slots; both allocate the same way. The base's split by equal constants comes from an
+// eviction cascade the bytes do not show.
 void FUN_00a11ee0(Event00a104a0 *event) /* derived name */
 {
     FUN_00a11900(findNamed<Object016b85e0>(event->unknown10, D_5939080), &event->unknown14, 1, 1);

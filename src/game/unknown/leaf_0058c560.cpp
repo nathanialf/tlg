@@ -5,6 +5,9 @@
  * a node: an owner like this one over the value's list and with its +0x28
  * dispatches it. Returns 0. Handler unknown. */
 // NONMATCHING: 109/113 in the module, the same size: unknown18 and the handlers are loaded into r10 and r9 where the base has r9 and r10 (one register pair, the instruction stream equal)
+// Round 552C, module dump: in linear order the +0x18 load would take rax (free after the cmov) and
+// the two would take r9 then r10, the base's assignment; this build assigns them before the
+// earlier +0x4 load (which takes ebx) and out of order: evictions.
 int FUN_0058c560(FrameOwnerBase583950 *self, Node583950 *node) /* derived name */
 {
     WalkValue583950 *value =

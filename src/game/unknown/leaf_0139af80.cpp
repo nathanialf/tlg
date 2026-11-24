@@ -93,15 +93,13 @@ inline void copySecond(Vertex0139af80 &vertex, const Entry0139af80 &entry) /* de
 }
 
 /* the third argument is not read */
-// NONMATCHING: greedy's assignment, FUN_01398150's: the variant at +0x10 is loaded into r8d where
-// the base reuses ecx (the record's register, dead after the movsxd); the rest equal.
 void FUN_0139af80(Object0139af80 *self, Output0139af80 *output, int, int record) /* derived name */
 {
     Entry0139af80 *entries = self->table->entries;
     if (!entries)
         return;
     const Array05943280<unsigned> &list =
-        self->records->records.at(record).lists[self->records->variant];
+        self->records->records.at(record).list(self->records->variant);
     unsigned count = list.size();
     if (!count)
         return;

@@ -52,15 +52,13 @@ struct Object01399900 { /* derived name */
 };
 
 /* the third argument is not read */
-// NONMATCHING: greedy's assignment, FUN_01398150's: the variant at +0x10 is loaded into r8d where
-// the base reuses ecx (the record's register, dead after the movsxd); the rest equal.
 void FUN_01399900(Object01399900 *self, float *output, int, int record) /* derived name */
 {
     Entry01399900 *entries = self->table->entries;
     if (!entries)
         return;
     Records016cf9f8 *records = self->records;
-    const Array05943280<unsigned> &list = records->records.at(record).lists[records->variant];
+    const Array05943280<unsigned> &list = records->records.at(record).list(records->variant);
     unsigned count = list.size();
     if (!count)
         return;

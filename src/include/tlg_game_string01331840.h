@@ -35,4 +35,26 @@ struct String013709f0 { /* derived name */
     int length; /* +0x80 */
 };
 
+/* derived names: a text of at most 127 characters in a 128-byte buffer and
+ * its length at +0x80, made empty (the first and last bytes and the length
+ * cleared: 0x489c8c to 0x489c9a); FUN_004a6d50 formats into it */
+struct Text004a6d50 { /* derived name */
+
+    Text004a6d50() : length(0)
+    {
+        text[0] = 0;
+        text[sizeof text - 1] = 0;
+    }
+
+    char text[0x80];
+    int length; /* +0x80 */
+};
+
+inline Name::Name(const Text004a6d50 &text)
+    : index(text.text[0]
+                ? FUN_013baad0(text.text, FUN_013bad90(text.text), strlen(text.text), false)
+                : 0)
+{
+}
+
 #endif

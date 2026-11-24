@@ -7,6 +7,7 @@
  * an int, then the nodes at +0x28 and +0x30 dispatched. Returns 0. Handler unknown. */
 // NONMATCHING: 167/172 in the module: the second list's search counter in edx where the base
 // reuses edi (register assignment only)
+// Round 552C: the same as FUN_0058b880's (leaf_0058b880.cpp), whose source this is.
 int FUN_00c040f0(FrameOwner583950 *self, Node583950 *node) /* derived name */
 {
     int *from = self->cursor.select(node) ? reinterpret_cast<int *>(self->cursor.value()) : 0;

@@ -23,6 +23,13 @@ struct Settings006910d0 /* derived name */
  * constructor and emptied by its destructor (both by compare-and-swap); as
  * many as there are indices, not traced */
 struct Cameras057c9390 { /* derived name */
+
+    /* the reference of a camera index (derived name) */
+    AtomicRef0045c470<Object016b9108> &camera(int index)
+    {
+        return cameras[index];
+    }
+
     u8 unknown0[0x1a0];
     AtomicRef0045c470<Object016b9108> cameras[1]; /* +0x1a0 */
 };
