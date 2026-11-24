@@ -11013,3 +11013,7 @@ FUN_01471260 src/game/unknown/func_011c9570.cpp _Z12FUN_01471260P19VectorPoser01
 FUN_013d3b20 src/game/unknown/leaf_013d3b20.cpp _Z12FUN_013d3b20P14Object013d3b20
 FUN_004bbeb0 src/game/unknown/leaf_004bbeb0.cpp _Z12FUN_004bbeb0P15Records004bbeb0
 FUN_005a79c0 src/game/unknown/leaf_005a79c0.cpp _Z12FUN_005a79c0P14Holder005a79c0
+FUN_00489c30 src/game/unknown/leaf_004a6d50.cpp _Z12FUN_00489c30PKcP13Owner002a45c0
+FUN_005fb120 src/game/unknown/leaf_005fb120.cpp _Z12FUN_005fb120v
+FUN_008af940 src/game/unknown/func_0088b4e0.cpp _ZNSt14_Function_implIZ12FUN_0088b4e0P13Owner0088b4e0E4$_23iJiEE5_CallEOi
+_ZN14Object016abc00C2ERK4Name src/game/unknown/leaf_005c0fe0.cpp

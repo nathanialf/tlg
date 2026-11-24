@@ -296,11 +296,7 @@ struct Entry008ab600 { /* derived name */
 // text's index in a register across FUN_008ab9e0, which reads its Name
 // argument only (the attribute the compiler infers when FUN_008ab9e0 is
 // defined in the module); not written yet. Slot 2 of 0x16af780 (0x8affc0):
-// the sign compare scheduled before the add, registers renumbered. Slot 2
-// of 0x16af640 (0x8af940): the base keeps the two copied names' indices in
-// registers across FUN_008ac030; with FUN_008ac030 written this build keeps
-// the second, and reloads the first after the second copy's `lock inc` (the
-// atomics' question at FUN_008ac030). Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
+// the sign compare scheduled before the add, registers renumbered. Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
 // has an LEA where this build adds or copies (`lea esi, [rsi + rdx]`, `lea
 // esi, [rdx - 1]`): the two-address pass, not identified.
 void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
@@ -644,6 +640,9 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
     Name choiceA(""), choiceB("");
     FUN_008ac270(
         closure, self->unknown130, [self]() { return self->unknown140; },
+        // 0x8af940 (slot 2 of 0x16af640): the base keeps both copied names' indices in
+        // registers across their `lock xadd`s by the memory dependence rule
+        // (tools/patches/llvm-3.7.1-atomic-01-ordered-rmw-uncaptured-local.patch).
         [self, &refresh, &choiceA, &choiceB](int step) {
             Owner0088b4e0 *menu = self;
             menu->unknown140 = (step + menu->unknown140 + 2) % 2;

@@ -1,0 +1,171 @@
+llvm-3.7.1 local rule: an ordered atomic read-modify-write does not modify
+a frame object that nothing before it captured or was handed to write
+(no upstream state)
+
+This patch CHANGES MEMORY DEPENDENCE ONLY (AliasAnalysis::
+callCapturesBefore, which MemoryDependenceAnalysis asks as its fallback for
+an instruction that getModRefInfo calls ModRef, MemoryDependenceAnalysis.cpp
+:619-621). One change, nothing else:
+  AliasAnalysis.cpp, callCapturesBefore: for an atomicrmw or a cmpxchg (ModRef
+    for any ordering above monotonic, AliasAnalysis.cpp:335-346 and the
+    cmpxchg form above it) the answer is NoModRef when the queried location's
+    underlying object is an identified local object, it is not captured
+    before the atomic (PointerMayBeCapturedBefore, the call's own test), no
+    call that may reach the atomic is given a pointer based on it for an
+    argument it may write through (a call other than an intrinsic whose
+    parameter is neither readonly nor readnone and that is not
+    onlyReadsMemory), and the atomic's own pointer is NoAlias with the
+    object; ModRef otherwise.
+Unchanged: every answer for a call (the existing path); getModRefInfo of an
+atomic itself (a client that asks it directly, such as LICM's alias sets,
+sees the ordered atomic as before; memory dependence's users, GVN and DSE,
+take the rule); a monotonic or relaxed atomic (already answered by alias
+alone); fences. The library line (3.3) is another
+compiler. src/sce/ and src/game/sndx/ are built by this compiler and take the
+rule.
+
+Question (rounds 549E, 551E, 553E, 554E, 557E): the base keeps a frame
+Name's index in a register across the Name's own seq_cst `lock xadd` where
+3.7.1 reloads it for the free (FUN_00489c30's one divergence: `mov edi,
+r14d` in the base, `mov edi, [rbp-0xb8]` in the build), and still reloads at
+other sites. Base census (scratch e553/relscan4.txt): 2,878 sites in 314
+functions keep the index across a call taking the slot's address and then
+across the xadd; 1,675 sites in 158 functions reload after both; no site
+keeps across one and reloads across the other. The opt of every release
+from 3.7.1 to 9.0.0 keeps the reload (round 553E).
+
+Evidence (scratch e554/, e557/, e561/). The module built in both stages with
+the line's patches and this one, against a control built by the same script
+with the installed compiler (equal to the tree's module in every symbol):
+  14 symbols change, 0 matched rows change (0 rows lost); 4 drafts equal
+    (FUN_00489c30, FUN_005fb120, FUN_008af940, Object016abc00's C2), 1
+    closer (FUN_008acb00 0.07 to 0.69); the five setText lambdas of
+    FUN_0088b4e0 lose their reload after the xadd as in the base and score
+    lower on register names and the decrement's place.
+  Reload sites: all 103 direct-call and memory-indirect sites read (e557
+    s1/step1_table.txt): 103 of 103 predicted. In each the slot is written
+    by a call taking its address that the base reloads after, or the
+    address is stored.
+  Keep sites: a sample of 60, one per function, evenly over the 314 (e557
+    s1/K60b.txt, K60c.txt): 59 of 59 predicted (one is a Name held in a
+    register, not a slot). In each the value got into the slot by the
+    caller's own store and every later call taking the address is one the
+    base keeps across.
+  Keep sites with an earlier capturing use of the same frame slot: 406
+    (174 in a loop with it). Read (e561/ka.txt; by hand a sample of
+    thirty over the five large functions and ten others, and the nine
+    takers of the 83): every one is a different object, 323 an earlier
+    Name temporary passed to a virtual call and released, its slot zeroed,
+    right after it, before the kept Name is built; 83 of another type (a
+    std::function's buffer, a bool captured by a lambda, 16-byte vectors
+    and a record); 0 against.
+  The rule without its second clause (round 554E's atomic-01): FUN_00ed7980
+    (sndx, a spill reused across a cmpxchg) moves away, and 0x5f2490 and
+    0x1348360 (FUN_00c91140 writes the index through a nocapture
+    out-parameter) and 0x614fb0 are against it. 0x885840 and 0x886300,
+    counted against it in round 557E, are for both forms: the frame element
+    pushed there has its counted reference exchanged in place (`lock
+    cmpxchg qword [r14]`, r14 = rbp-0x58, at 0x885aa7 and 0x886567), and
+    3.7.1's CaptureTracking takes a cmpxchg's pointer as a capture (its
+    default case), so the element is captured before the Name's xadd in
+    every iteration (e561/probe: the reload kept under this rule). The push
+    itself, FUN_008a9550 (a matched row), only loads through its argument.
+
+Source forms the bytes exclude (rounds 551E, 553E): the drop relaxed (110
+to 1,253 rows lost); release() reading the index once (the rowed
+Name::~Name at 0x1331800 reloads `this->index`); the Name passed by value
+(the caller's IR is the same under the Itanium ABI: no change); the index
+copied to a second slot (the base has one slot, its address passed and
+zeroed after the release).
+
+NO upstream state. Every release from 3.7.1 to 9.0.0 answers ModRef for an
+ordered atomic here. Sony authorship of this is not shown.
+
+Refuted by: a matched row, or a base site read in full, where a frame object
+reaches an ordered atomic on another address having been passed only to
+calls the base keeps it across, and is reloaded after the atomic; or one
+kept across the atomic after a call the base reloads it after.
+
+--- a/lib/Analysis/AliasAnalysis.cpp	2026-11-24 02:10:04.553408057 +0000
++++ b/lib/Analysis/AliasAnalysis.cpp	2026-11-24 02:10:33.995609923 +0000
+@@ -25,6 +25,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "llvm/Analysis/AliasAnalysis.h"
++#include "llvm/ADT/SmallPtrSet.h"
+ #include "llvm/Analysis/CFG.h"
+ #include "llvm/Analysis/CaptureTracking.h"
+ #include "llvm/Analysis/TargetLibraryInfo.h"
+@@ -346,6 +347,43 @@
+   return ModRef;
+ }
+ 
++// Whether a pointer based on Object is passed, by a call that may reach I, as
++// an argument the call may write through: any call other than an intrinsic
++// whose argument is not read only.
++static bool passedToWriterBefore(const Value *Object, const Instruction *I,
++                                 const DominatorTree *DT) {
++  SmallVector<const Value *, 8> Worklist;
++  SmallPtrSet<const Value *, 8> Visited;
++  Worklist.push_back(Object);
++  Visited.insert(Object);
++  while (!Worklist.empty()) {
++    const Value *V = Worklist.pop_back_val();
++    for (const Use &U : V->uses()) {
++      const Instruction *User = dyn_cast<Instruction>(U.getUser());
++      if (!User || User == I)
++        continue;
++      if (isa<BitCastInst>(User) || isa<GetElementPtrInst>(User) ||
++          isa<PHINode>(User) || isa<SelectInst>(User) ||
++          isa<AddrSpaceCastInst>(User)) {
++        if (Visited.insert(User).second)
++          Worklist.push_back(User);
++        continue;
++      }
++      ImmutableCallSite UCS(User);
++      if (!UCS.getInstruction() || isa<IntrinsicInst>(User))
++        continue;
++      if (&U < UCS.arg_begin() || &U >= UCS.arg_end())
++        continue;
++      unsigned ArgNo = UCS.getArgumentNo(&U);
++      if (UCS.onlyReadsMemory() || UCS.onlyReadsMemory(ArgNo))
++        continue;
++      if (isPotentiallyReachable(User, I, DT))
++        return true;
++    }
++  }
++  return false;
++}
++
+ // FIXME: this is really just shoring-up a deficiency in alias analysis.
+ // BasicAA isn't willing to spend linear time determining whether an alloca
+ // was captured before or after this particular call, while we are. However,
+@@ -361,7 +399,27 @@
+     return AliasAnalysis::ModRef;
+ 
+   ImmutableCallSite CS(I);
+-  if (!CS.getInstruction() || CS.getInstruction() == Object)
++  if (!CS.getInstruction()) {
++    // An ordered atomic read-modify-write is treated as a call that takes
++    // only its own pointer: it does not modify an object that has not been
++    // captured before it, nor passed before it to a call that may write
++    // through it, unless its pointer may alias the object.
++    const Value *AtomicPtr = nullptr;
++    if (const AtomicRMWInst *RMW = dyn_cast<AtomicRMWInst>(I))
++      AtomicPtr = RMW->getPointerOperand();
++    else if (const AtomicCmpXchgInst *CX = dyn_cast<AtomicCmpXchgInst>(I))
++      AtomicPtr = CX->getPointerOperand();
++    if (!AtomicPtr ||
++        llvm::PointerMayBeCapturedBefore(Object, /* ReturnCaptures */ true,
++                                         /* StoreCaptures */ true, I, DT,
++                                         /* include Object */ true) ||
++        passedToWriterBefore(Object, I, DT))
++      return AliasAnalysis::ModRef;
++    if (isNoAlias(MemoryLocation(AtomicPtr), MemoryLocation(Object)))
++      return AliasAnalysis::NoModRef;
++    return AliasAnalysis::ModRef;
++  }
++  if (CS.getInstruction() == Object)
+     return AliasAnalysis::ModRef;
+ 
+   if (llvm::PointerMayBeCapturedBefore(Object, /* ReturnCaptures */ true,

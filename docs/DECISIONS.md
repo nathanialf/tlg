@@ -2080,3 +2080,125 @@ exclusions, with the gate rerun.
 of round 548D replaced it under two running workers and one landing, which failed in the hook mid-rebuild; nothing was
 committed wrongly, and the workers rebuilt their controls. A compiler rebuild is run with no other worker and no
 landing in flight, or into a scratch prefix (round 554E's way) until the gate has passed.
+
+## D93. An ordered atomic does not modify a frame object that nothing before it captured or was handed to write: atomic-01 (2026-11-24)
+
+**Question.** The base keeps a frame Name's index in a register across the Name's own seq_cst `lock xadd`, where
+3.7.1 reloads it for the free: FUN_00489c30's one divergence (`mov edi, r14d` in the base, `mov edi, [rbp-0xb8]` in
+the build; rounds 549E, 553E). The base also reloads at other sites. Which state of the compiler gives both?
+
+**Evidence (scratch e553/, e554/, e557/, e561/).**
+- Base census (e553/relscan4.txt): 2,878 sites in 314 functions keep the index across a call taking the slot's
+  address and then across the xadd; 1,675 sites in 158 functions reload after the call and after the xadd (1,572
+  after an indirect call, 97 after a direct one, 6 after a call through memory). No site keeps across one and
+  reloads across the other.
+- Mechanism (llvm-3.7.1.src, read): AliasAnalysis.cpp:335-346 answers ModRef for an atomicrmw ordered above
+  monotonic (the cmpxchg form likewise, above it); MemoryDependenceAnalysis.cpp:619-621 then asks
+  callCapturesBefore, which answers ModRef for anything that is not a call. Cut from the module (e553/f0.ll), the
+  one load after the xadd replaced by the stored value gives the base's 73 instructions; the opt of every release
+  from 3.7.1 to 9.0.0 keeps the load (round 553E).
+- All 103 direct and memory reload sites read (round 557E, e557/s1/step1_table.txt): in 101 the value got into the
+  slot through a call taking its address that the base reloads after (an out-parameter writer such as FUN_00c91140,
+  or a call the base treats as writing it); in 2 (0x4c1050) by the caller's store, the address stored to memory.
+  Every one loads the slot between that write and the xadd (the index for the table's address), so the reload after
+  the xadd is never a first load.
+- A sample of 60 keep sites, one function each, evenly over the 314 (e557/s1/K60b.txt, K60c.txt): 59 are the
+  Name's own slot (one is a Name held in a register). In all 59 the value got into the slot by the caller's own
+  store (57 of a lookup's result, 2 of a load), never by a callee; every later call taking the address is one the
+  base keeps across (FUN_00d0c810, FUN_00cbc5a0, FUN_008ab9e0, ...). Kept across the Name's own xadd only at 54,
+  across other objects' atomics too at 5 (counted pointers' releases with their calls).
+- The property that separates them with none against: a reload follows a call the base reloads after (or a
+  capture), a keep only calls the base keeps across. Forms that do not separate them: store-to-load only (MemDep's
+  non-local scan has no place to carry "the definition is a store" across blocks); only the Name's own atomic
+  (against at 5 of the 59 keeps); no call at all between the store and the atomic (against at 4 of the 59).
+- Keep sites with an earlier capturing use of the same frame slot (round 561E, e561/ka.py, ka.txt, ksample.txt):
+  406 of the 2,878 (174 in a text-level loop with it; 0xe10cd0 93, 0x88b4e0 77, 0x5ccd60 56, 0x2370b0 43,
+  0x1bd010 37, sixteen other functions 100). Each one's latest earlier capture belongs to a different object: in
+  323 it is an earlier Name temporary passed to a virtual call (`call r15` or `call rbx`, the slot's address in rsi),
+  released and its slot zeroed right after that call (the `lock xadd` 0x1d or 0x1e bytes after it, `mov dword
+  [rbp-slot], 0` 0x33 or 0x34 bytes after it), before the kept Name is built from another lookup (one statement's
+  temporary after another: e.g. 0x86104f, 0x86106d, 0x861083, then 0x862987); in 83 the slot holds another type
+  when it is captured: 77 in 0x88b4e0 (a std::function's buffer at rbp-0x170, its vtable pointer stored there at
+  0x8906d4 and its address at rbp-0x150, 0x8906e1, 40 sites; a bool at rbp-0x170 or rbp-0x1a0 captured by
+  reference into a lambda's heap closure, 0x898855, 0x897f7c, 0x89503e, 37 sites), 16-byte vectors whose addresses
+  go into a record (0xa4a635, 0xa4a639), a 16-byte record passed to a virtual call (0xc73acc, 2 sites) and a
+  pointer to a 16-byte vector spilled (0xffcc77, 0x1269347). A sample of thirty (four from each of the five large
+  functions, one from each of ten others) and the nine takers of the 83 read by hand: none the same object.
+  Different objects are different allocas, which CaptureTracking does not join;
+  stack colouring shares their slot after the IR passes. 0 against.
+- Array05943280<Element008a9550>::push (FUN_008a9550, a matched row) and its callers FUN_00885840 and
+  FUN_00886300 (round 561E): the base's push only loads through its argument (`[r14]` twice, `[r14+4]`,
+  `[r14+8]`; no store through it, the pointer neither stored nor passed on), so the build's nocapture readonly is
+  the base body's, and the tree's push is not a source difference. The reload after it comes from the caller: the
+  frame element's counted reference is exchanged in place by the reference's CAS loop (`lea r14, [rbp-0x58]` at
+  0x88585e, `lock cmpxchg qword ptr [r14], rcx` at 0x885aa7; 0x88631e and 0x886567 in the twin), and 3.7.1's
+  CaptureTracking takes a cmpxchg's pointer as a capture (CaptureTracking.cpp, the default case, "be conservative
+  and say it is captured"), so the element is captured before the Name's xadd in every iteration. A probe of the
+  loop's shape (e561/probe/p885.cpp: {Name, int, AtomicRef0045c470} filled in place, the reference set(), push
+  out of line) compiled with the rule reloads the index after the xadd (`mov edi, [rbp-0x40]`), as the base at
+  0x885ca3, and equals the installed compiler's object. The base's reloads of the reference's slot after each store
+  through the reference (0x885bd5 to 0x885beb) show the same escaped element. These two sites and 0x885a37 (a
+  just-stored 0 reloaded across another Name's `lock inc`), counted against the rule's first form in rounds 554E
+  and 557E, are for both forms.
+- The rule built (e557/: the installed line, its host patch and thirteen patches, plus this one, both stages; the control, the same script
+  with the installed compiler, equal to the tree's module in every symbol): 14 symbols change, 0 matched rows
+  change (none lost); FUN_00489c30, FUN_005fb120, FUN_008af940 and Object016abc00's C2 become equal; FUN_008acb00
+  0.07 to 0.69. The five setText lambdas of FUN_0088b4e0 lose their reload after the xadd as in the base and score
+  lower on register names and the counter's decrement. Every symbol is as under round 554E's first form except
+  FUN_00ed7980 (sndx, a spill reused across a cmpxchg), which stays as the control.
+
+**The rule.** `tools/patches/llvm-3.7.1-atomic-01-ordered-rmw-uncaptured-local.patch`, the fourteenth patch of the
+game line: in AliasAnalysis::callCapturesBefore, an atomicrmw or cmpxchg answers NoModRef for an identified local
+object when it is not captured before the atomic (PointerMayBeCapturedBefore, the call's own test), no call that may
+reach the atomic is given a pointer based on it for an argument it may write through (not an intrinsic, the
+parameter neither readonly nor readnone, the call not onlyReadsMemory), and the atomic's own pointer is NoAlias with
+the object. Unchanged: every answer for a call; getModRefInfo of an atomic itself (a client that asks it directly, such as
+LICM's alias sets, sees the ordered atomic as before; memory dependence's users, GVN and DSE, take the rule); a
+monotonic atomic; fences; the library line (3.3). src/sce/ and src/game/sndx/ are built by this compiler and take
+it.
+
+**Sites for and against.** For: 103 of 103 reload sites read, 59 of 59 sampled keeps, 406 of 406 keeps with an
+earlier capture of the slot (all different objects), the 4 drafts made equal and the one moved. Against: none. The
+second clause (a call that may write through the object) rests on three reload sites: 0x5f2490 and 0x1348360
+(FUN_00c91140 writes the index through a nocapture out-parameter) and 0x614fb0; FUN_00ed7980 moves away without
+it.
+
+**Source forms the bytes exclude (rounds 551E, 553E).** The drop relaxed (110 to 1,253 rows lost); release()
+reading the index once (the rowed Name::~Name at 0x1331800 reloads `this->index`, 13/21); the Name passed by value
+(the caller's IR is the same under the Itanium ABI: no change); the index copied to a second slot (the base has one
+slot, its address passed and zeroed after the release).
+
+**No public state.** Every release from 3.7.1 to 9.0.0 answers ModRef for an ordered atomic at this query and keeps
+the reload (round 553E). The rule is a local rule like ltopre-01, lxadd-01 and unswitch-01; Sony's authorship of it
+is not shown.
+
+**What it predicts.** A frame Name whose index the caller stored and whose address went only to calls the base keeps
+it across is held in a register across its release's xadd; one captured (a stored address, an indirect call, a
+cmpxchg on any of its fields, a compare of its address) or handed to a call that may write it is reloaded.
+
+**Against.** The rule has two clauses with no public state, and the second rests on three sites. The 2,878 keeps
+are checked at 59 sampled sites and at the 406 with an earlier capture, not one by one; the 1,572 reloads after an
+indirect call are taken as captures without reading each.
+
+**Trigger to revisit.** A matched row, or a base site read in full, where a frame object reaches an ordered atomic
+on another address having been passed only to calls the base keeps it across, and is reloaded after the atomic; or
+one kept across the atomic after a call the base reloads it after (refutes); a frame object kept across an ordered
+atomic after a cmpxchg on one of its fields (CaptureTracking's default case would then be too wide in the base).
+
+**The decision and its bar.** Adopted on rounds 553E, 554E and 557E's evidence and round 561E's two open points
+(406 of 406 different objects; push's reload explained by the caller's capture), UNDER THE CONDITION that the whole
+gate passes with every existing row equal after the compiler is rebuilt with it. The patch and the two lists are in
+the tree from round 561E; the install (tools/build_llvm.sh 3.7.1, the shared directory every worktree uses) is run
+in a round of its own with no other worker and no landing in flight, and the four drafts are claimed after its gate.
+
+**What would refute it.** As the trigger above: one site either way. Either removes the rule or narrows it, with the
+gate rerun.
+
+**The condition met (round 562E).** The game line's compiler was rebuilt with the fourteen patches and the host patch
+(`tools/build_llvm.sh 3.7.1`; clang-3.7 sha256 4d0a07ca... to 8fcbd02a..., opt 87f8d8ff... to d495267e..., llvm-link
+eede060a... to c4639283...), with no other worker running and no landing in flight. `tools/build.sh gate-all` under
+it: 11,009 claimed functions equal, the whole tree rebuilt, .text .relro .data identical to the base. Old install
+against new over the whole module: 14 symbols change, no matched row among them. Four rows claimed (FUN_00489c30,
+FUN_005fb120, FUN_008af940, Object016abc00's C2); the gate again and the hook's gate: OK, 11,013. Seven drafts change
+score without becoming equal (two better, five worse by position: the five lose their reload as the base does and
+differ elsewhere). Like D92 it is adopted without a public form, on the footing of the line's other local rules.

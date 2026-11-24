@@ -34,13 +34,9 @@ void FUN_004a6bf0(const Name &first, const Name &second, const Name &third); /* 
 /* derived names: when the owner holds a record of the key at 0x57d6d38,
  * posts "AttackHitCondor_<part>", the name at 0x57d6b88 and the record's
  * name at +0x58 through FUN_004a6bf0 */
-// NONMATCHING: 68/73 in the whole module, 293 bytes against 290: the base keeps the name's index in r14 across
-// FUN_004a6bf0 and across the release's own `lock xadd` (`mov edi, r14d` for FUN_00d66e30); this build forwards it
-// across the call (the callee's argument is nocapture readonly at the link) but reloads [rbp-0xb8] after the
-// seq_cst xadd (AliasAnalysis.cpp:339-340 in 3.7.1: ModRef for any ordering above monotonic), and the index and the
-// part swap r14 and r15. The Name atomics' fact (b) of docs/NOTES.md round 167A, left there for the supervisor;
-// the same shape (a frame Name passed by reference, released from a register) is at 2,667 call sites of unwritten
-// functions and in no matched one (the one rowed hit, 0x1b5740, frees another name; scratch e549/relscan3.py).
+// The base keeps the name's index in r14 across FUN_004a6bf0 and across the release's own `lock xadd`
+// (`mov edi, r14d` for FUN_00d66e30) by the memory dependence rule
+// (tools/patches/llvm-3.7.1-atomic-01-ordered-rmw-uncaptured-local.patch).
 void FUN_00489c30(const char *part, Owner002a45c0 *owner) /* derived name */
 {
     if (!owner)
