@@ -33,9 +33,9 @@ extern Type00503fb0 *D_57d4a68; /* derived name: the component's type */
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
 void FUN_0043c0c0(Component00503fb0 *component, int code);                  /* derived name */
 
-// NONMATCHING: findComponent's exit: the base keeps one block for the reader count's drop that
-// both outcomes reach (`mov edi, 0` on the way out, `lock dec` once, then `test rdi, rdi`), the
-// build threads the null outcome past the test with its own `lock dec` (as leaf_0046f770.cpp)
+// findComponent's exit: the base keeps one block for the reader count's drop that both outcomes
+// reach (`mov edi, 0` on the way out, `lock dec` once, then `test rdi, rdi`) by the JumpThreading
+// rule (tools/patches/llvm-3.7.1-jumpthread-01-atomic-block-not-duplicated.patch).
 int FUN_0046a860(lua_State *state) /* derived name */
 {
     Object016b9108 *object = 0;

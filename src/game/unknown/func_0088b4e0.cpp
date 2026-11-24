@@ -16,11 +16,11 @@
  * before its step (the step's `lea` comes first where the getter is stored
  * in place): 0x16af5f0, 0x16af640, 0x16afbe0, 0x16af7d0, 0x16af820,
  * 0x16afc30, 0x16af870, 0x16af8c0, 0x16afc80, 0x16afcd0, 0x16afd20,
- * 0x16afd70. setText, clearText and clearTitle are the creating function's
- * closures at rbp-0x9c0, rbp-0x9e8 and rbp-0x9d8, which the callbacks call
- * through (inlined there); clearList is the one the later lists' callbacks
- * call (its count read once, `test; je` then `dec; jne` on a 32-bit
- * register and the array pointer stepped by 4: a count-down loop). The object the
+ * 0x16afd70. setText and clearTitle are the creating function's closures
+ * at rbp-0x9c0 and rbp-0x9d8, which the callbacks call through (inlined
+ * there); clearList is the one the callbacks clear a list of entries
+ * through (the list and its count read once, `test; je` then `dec; jne` on
+ * a 32-bit register and the array pointer stepped by 4: a count-down loop). The object the
  * callbacks change (r12 in the base, kept at rbp-0x998) has an int state at
  * +0x110 and the list FUN_008ab9e0 searches at +0x148 (count +0x150). The
  * other members are not traced. */
@@ -145,8 +145,9 @@ struct Object057c9390 { /* derived name */
 extern Object057c9390 *D_57c9390;
 
 /* the entry of `self`'s list whose id is `id` (+0x28 of the item at +0x8 of
- * each 0x30-byte element) is given `text` */
-void FUN_008ab9e0(Owner0088b4e0 *self, unsigned id, Name text) /* derived name */
+ * each 0x30-byte element) is given `text` (the entry's setter copies it,
+ * 0x8aba47; the caller's copy is setText's parameter) */
+void FUN_008ab9e0(Owner0088b4e0 *self, unsigned id, const Name &text) /* derived name */
 {
     self->entry(self->indexOf(id))->setText(text);
 }
@@ -179,11 +180,13 @@ void FUN_008ac270(void *closure, const Name *label, std::function<int()> current
 extern Name D_581e80c; /* derived name: the text an entry is cleared to */
 
 /* the creating function's setText as the refresh closure sees it: the
- * reference to the owner it captures (three loads to the owner, 0x8ac063) */
+ * reference to the owner it captures (three loads to the owner, 0x8ac063);
+ * both names taken by value, so the text is copied before the owner is read
+ * (0x8ac07e, then 0x8ac09b) */
 struct SetText008ac030 { /* derived name */
     Owner0088b4e0 **owner;
 
-    void operator()(Name id, const Name &text) const
+    void operator()(Name id, Name text) const
     {
         FUN_008ab9e0(*owner, id.index, text);
     }
@@ -220,7 +223,10 @@ struct Show008acb00 { /* derived name */
  * the label of the choice, then either side of it by the label's width */
 // NONMATCHING: the base keeps the position's y in a register across the four
 // calls to FUN_0087a660 and its x across the third (the callee only reads its
-// position: FUN_0087a660 not written); the Name temporaries as FUN_008ac030.
+// position, [r14] and [r14+4]: the attribute the compiler infers when
+// FUN_0087a660 is defined in the module; not written); the first text's
+// copy: the base spills the labels and the choice after its `lock inc`
+// (0x8acb53), this build before it (the same at 0x8ac083).
 void FUN_008acb00(Show008acb00 *closure, const Name *labels, Name a, Name b, /* derived name */
                   int choice)
 {
@@ -255,12 +261,10 @@ struct Refresh008ac030 { /* derived name */
     Show008acb00 *show;
 };
 
-// NONMATCHING: the base keeps each Name temporary's index in a register across
-// the later copies' `lock inc` and its own `lock xadd` (`mov edi, ebx`), where
-// this build reloads it: a sequentially consistent read-modify-write clobbers
-// every location for the optimizer (AAResults::getModRefInfo(AtomicRMW)), and
-// the base still reloads the source's index after each copy's increment
-// (0x8ac076): no ordering of the builtins gives both; then the registers differ.
+// NONMATCHING: the base keeps the closure in r12 for the whole function and
+// makes the name table's address again before each release (`lea rdx` at
+// 0x8ac0b3); this build keeps the table in r13 and spills the closure
+// (frame 0x48 against 0x38): greedy's choice between the two, not traced.
 void FUN_008ac030(Refresh008ac030 *closure, const Name *label, Name a, Name b, /* derived name */
                   int choice)
 {
@@ -285,17 +289,18 @@ struct Entry008ab600 { /* derived name */
 };
 
 // NONMATCHING: not written beyond the lambdas. Slots 2 not matched: 0x8af240
-// and 0x8b1090 (the base's frame is 0x20 bytes larger, two more spills),
+// (the selected copy's index: edi in the base, spilled on the changed path
+// only at 0x8af368; r14d in this build, every later register following),
 // 0x8b0700 and 0x8b0eb0 (the base keeps each arm's step and state stores,
 // where this build sinks them into one block: the sinkcond question, D54).
 // Slots 0 and 1 not matched where the closure is copied tail first
 // (0x16af550, 0x16af910, 0x16af960, 0x16afaf0, 0x16afe10, 0x16afeb0,
 // 0x16af6e0, 0x16af730; round 153A's residual). Slot 2 of 0x16af6e0
-// (0x8afc90): the sinkcond question as 0x8b0700. Slots 2 that call through
-// setText (0x8b1d60, 0x8b2020, 0x8b2280, 0x8b2540): the base keeps the
-// text's index in a register across FUN_008ab9e0, which reads its Name
-// argument only (the attribute the compiler infers when FUN_008ab9e0 is
-// defined in the module); not written yet. Slot 2 of 0x16af780 (0x8affc0):
+// (0x8afc90): the sinkcond question as 0x8b0700. Slots 2 that clear a list
+// (0x8b1d60, 0x8b2020, 0x8b2280, 0x8b2540, 0x8b1090): each loop's first five
+// instructions, the base reloading clearList's closure from its spill before
+// reading the entry's index (0x8b2090), this build after it: the post-RA
+// scheduler's first pick, the instructions before it the base's. Slot 2 of 0x16af780 (0x8affc0):
 // the sign compare scheduled before the add, registers renumbered. Slots 2 of 0x16afcd0 and 0x16afd70 (0x8b19a0, 0x8b1c10): the base
 // has an LEA where this build adds or copies (`lea esi, [rsi + rdx]`, `lea
 // esi, [rdx - 1]`): the two-address pass, not identified.
@@ -373,12 +378,13 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
                                a1,    b1,   a2,    b2,    a3,   b3,   a4,    b4,   a5,   a6,
                                b6,    a7,   yes,   no,    yes2, no2,  label, help, yes3, yes4,
                                yes5,  no3,  title, a1,    b1,   a2,   b2,    a3,   b3};
-    auto setText = [&owner](Name id, const Name &text) { FUN_008ab9e0(owner, id.index, text); };
-    auto clearText = [&setText](const Name &id) { setText(id, D_581e81c); };
+    auto setText = [&owner](Name id, Name text) { FUN_008ab9e0(owner, id.index, text); };
     auto clearTitle = [&setText, &title]() { setText(title, D_581e81c); };
-    auto clearList = [&setText](const Name *ids, unsigned count) {
-        while (count--)
-            setText(*ids++, D_581ee20);
+    /* the list and its count taken by value: each read once (0x8af42a,
+     * 0x8b10d5), the count stepped down after each entry (0x8b2126) */
+    auto clearList = [&setText](const Name *ids, unsigned count, const Name &text) {
+        for (; count; --count)
+            setText(*ids++, text);
     };
 
     // NONMATCHING: the base builds these two (rbp-0x170, rbp-0x1a0) before
@@ -388,41 +394,41 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
     FUN_008abb70(
         closure, names, count, unknown,
         [&a1, &b1, owner, &changed, &a2, &b2, &a3, &b3, &a4, &b4, &a5, &a6, &b6, &a7, &setText,
-         &title, &clearText, &names, &count, &clearTitle](Name selected) {
-            if (selected == a1 || selected == b1) {
-                owner->unknown110 = 300;
+         &title, &clearList, &names, &count, &clearTitle](Name selected) {
+            Owner0088b4e0 *menu = owner;
+            if (a1 == selected || b1 == selected) {
+                menu->unknown110 = 300;
                 changed = true;
             }
-            if (selected == a2 || selected == b2) {
-                owner->unknown110 = 400;
+            if (a2 == selected || b2 == selected) {
+                menu->unknown110 = 400;
                 changed = true;
             }
-            if (selected == a3 || selected == b3) {
-                owner->unknown110 = 500;
+            if (a3 == selected || b3 == selected) {
+                menu->unknown110 = 500;
                 changed = true;
             }
-            if (selected == a4 || selected == b4) {
-                owner->unknown110 = 600;
+            if (a4 == selected || b4 == selected) {
+                menu->unknown110 = 600;
                 changed = true;
             }
-            if (selected == a5) {
-                owner->unknown110 = 700;
+            if (a5 == selected) {
+                menu->unknown110 = 700;
                 changed = true;
             }
-            if (selected == a6 || selected == b6) {
-                owner->unknown110 = 800;
+            if (a6 == selected || b6 == selected) {
+                menu->unknown110 = 800;
                 changed = true;
             }
-            if (selected == a7) {
-                owner->unknown110 = 900;
+            if (a7 == selected) {
+                menu->unknown110 = 900;
                 changed = true;
             }
             if (changed) {
-                if (owner->unknown110 != 300)
+                if (menu->unknown110 != 300)
                     FUN_0088b2b0("decide");
                 setText(title, D_581e81c);
-                for (unsigned i = 0; i < count; i++)
-                    clearText(names[i]);
+                clearList(names, count, D_581e81c);
                 clearTitle();
             }
         },
@@ -492,16 +498,13 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
                 changed = true;
             }
         },
-        [self, &busy, &clearText, &countA, &countB, &countC, &changed]() {
+        [self, &busy, &clearList, &countA, &countB, &countC, &changed]() {
             Owner0088b4e0 *menu = self;
             FUN_0088b2b0("cansel");
             busy = true;
-            for (unsigned i = 0; i < countA; i++)
-                clearText(D_581e940[i]);
-            for (unsigned i = 0; i < countB; i++)
-                clearText(D_581e968[i]);
-            for (unsigned i = 0; i < countC; i++)
-                clearText(D_581e980[i]);
+            clearList(D_581e940, countA, D_581ee20);
+            clearList(D_581e968, countB, D_581ee20);
+            clearList(D_581e980, countC, D_581ee20);
             menu->unknown110++;
             menu->unknown124 = -1;
             changed = true;
@@ -531,7 +534,7 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
             if (yes3 == selected) {
                 FUN_0088b2b0("decide");
                 busy = true;
-                clearList(D_581ea80, count3);
+                clearList(D_581ea80, count3, D_581ee20);
                 menu->unknown110++;
                 done = true;
             }
@@ -540,7 +543,7 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
             Owner0088b4e0 *menu = self;
             FUN_0088b2b0("cansel");
             busy = true;
-            clearList(D_581ea80, count3);
+            clearList(D_581ea80, count3, D_581ee20);
             menu->unknown110++;
             done = true;
         },
@@ -554,7 +557,7 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
             if (yes4 == selected) {
                 FUN_0088b2b0("decide");
                 busy = true;
-                clearList(D_581eaa0, count4);
+                clearList(D_581eaa0, count4, D_581ee20);
                 menu->unknown110++;
                 done = true;
             }
@@ -563,7 +566,7 @@ void FUN_0088b4e0(Owner0088b4e0 *self) /* derived name */
             Owner0088b4e0 *menu = self;
             FUN_0088b2b0("cansel");
             busy = true;
-            clearList(D_581eaa0, count4);
+            clearList(D_581eaa0, count4, D_581ee20);
             menu->unknown110++;
             done = true;
         },

@@ -5,21 +5,16 @@
 /* derived names: a script C function (its address is not stored where a
  * table was found): looks up the object named "CustomWaterTool_DebugMesh" of
  * the class the pointer at 0x59385b8 holds in the registry the pointer at
- * 0x5945a38 holds (FUN_00cbc5a0, a last argument 0) and pushes it through
- * FUN_00c89360; returns 1. The class pointer is a const object of another
- * unit, set once by its initializer (one store in the executable, at its
- * dynamic initialization): its read is scheduled after the Name is built. */
-extern Type00503fb0 *const D_59385b8;
+ * 0x5945a38 holds (the registry's object(), FUN_00cbc5a0 with mode 0: the
+ * name is made before the class is read, 0x8f348b) and pushes it through
+ * FUN_00c89360; returns 1. */
+extern Type00503fb0 *D_59385b8; /* the debug mesh's class */
 
 void FUN_00c89360(lua_State *state, Object016b9108 *object); /* derived name */
 
-// NONMATCHING: the frame: the build saves r13 and a 0x18-byte area (the class pointer read before
-// the Name is built is held across the calls); the base reads it after them. The const
-// declaration, meant to free the load, does not move it
 int FUN_008f3440(lua_State *state) /* derived name */
 {
-    Object016b9108 *object =
-        FUN_00cbc5a0(D_5945a38, D_59385b8, Name("CustomWaterTool_DebugMesh"), 0);
+    Object016b9108 *object = D_5945a38->object(Name("CustomWaterTool_DebugMesh"), D_59385b8);
     FUN_00c89360(state, object);
     return 1;
 }

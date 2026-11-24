@@ -1,0 +1,96 @@
+llvm-3.7.1 local rule: JumpThreading does not duplicate a block that holds
+an atomic read-modify-write or a compare-exchange
+(no upstream state)
+
+This patch CHANGES JUMPTHREADING ONLY (getJumpThreadDuplicationCost, the
+cost both of its duplications ask: ThreadEdge, JumpThreading.cpp:1383, and
+DuplicateCondBranchOnPHIIntoPred, :1526). One change, nothing else:
+  JumpThreading.cpp, getJumpThreadDuplicationCost: a block holding an
+    atomicrmw or a cmpxchg costs ~0U, as a block holding a call that cannot
+    be duplicated does (:271-274), so it is never duplicated.
+Unchanged: every other cost and the threshold (6); SimplifyCFG's
+FoldCondBranchOnPHI (SimplifyCFG.cpp:1680), which still copies such a block
+per predecessor when the branch is on an i1 phi of the block with one use
+and no value of the block is used outside it; fences and atomic loads and
+stores. The pass's own rule: the unit pipeline's two runs and the link's
+two take it. The library line (3.3) is another compiler. src/sce/ and
+src/game/sndx/ are built by this compiler and take the rule.
+
+Question (rounds 372B, 426C, 429C, 430C, 566D): the base leaves the reader
+count's release (`lock dec` of the count FUN_01331c10 took) as one block
+before a branch on the pointer a search found, where 3.7.1 copies it into
+each predecessor that brings a constant null (the release block {phi,
+atomicrmw sub, icmp, br} costs 2 of 6). Base census (scratch d566/sites.txt,
+step1_table.txt): 1,579 release sites in 673 functions; 832 in 441
+functions are followed by a branch on the found pointer with one or more
+predecessors bringing a constant and are not copied. 8 functions copy their
+release (0x4ba970, 0x7b2d50, 0x9f6bc0, 0x9f8a90, 0xb88680, 0xc1efc0,
+0xc8b960, 0xcefda0), each with one signature: the copy left tests the
+pointer and never uses it, an i1 phi with one use that SimplifyCFG's
+FoldCondBranchOnPHI copies one predecessor at a time (0x9f6bc0's second
+search: three releases, 0x9f6c73, 0x9f6c7e, 0x9f6c8b, where ThreadEdge
+would factor the predecessors of one value into one copy, :1177-1198).
+
+Evidence (scratch d566/). JumpThreading.cpp with switches linked into a
+copy of the installed opt (its own objects; control: 6,580 of 6,580 unit
+bitcode files and the link stage's module byte-identical to the tree's, 0
+functions differ). The whole game module with this rule at both stages:
+  22 symbols change, 0 matched rows change (0 rows lost); 1 draft equal
+    (FUN_0046a860), 11 closer (FUN_00ad11a0 and its three copies 0.62 to
+    0.89, FUN_0046f770 and FUN_0046f980 0.20 to 0.39, FUN_00857df0 and
+    FUN_00857f80 0.26 to 0.46, FUN_005065f0 0.07 to 0.42, FUN_008b1d60 and
+    FUN_008b2280 0.06 to 0.12), 1 lower by score only (FUN_00765280: now the
+    base's structure, one release, the test after it, the loop rotated; its
+    registers shift by the count's address kept, a separate residual).
+  A second kind of site: FUN_0133fb30's unlock cmpxchg before a `test dl,
+    dl` (block cost 1) is copied into both arms by 3.7.1 and is one block
+    in the base (0x133fc4c); the rule gives the base's one.
+  At stage 1 only, the link's JumpThreading copies all but 3 again: the
+    rule is the pass's, at both stages.
+  The 8 copying functions are unchanged (SimplifyCFG copies them).
+  The first search of 0x9f6bc0, 0x9f8a90 and 0xb88680 (and 0xa2fca0's last)
+    keeps its bool (`test rdi, rdi; sete al` before one release, `test al,
+    al` after it): the same release block. A probe of 0x9f6bc0 (scratch
+    d567/probe/) with the bool held in a variable the return reads (`bool r
+    = !node->findComponent(A); if (r) ...; return r;`) gives the base's
+    first search instruction for instruction under this rule but for the
+    release's address operand, and copies it under 3.7.1 (two releases: the
+    phi has two uses, so only JumpThreading can copy it).
+
+Source forms and rules the bytes exclude: seventeen source forms of the
+release and its branch (rounds 372B and 426C to 430C, among them the found
+pointer carried in the loop's condition, the release written on each
+return, a scoped guard, the release defined once out of line, a release
+ordering for the fall) and the release written as asm (430C, four operand
+forms) all give the copy; a cost charged for each atomic
+(+5: FUN_0133fb30's block costs 6 and is still copied); a compare of a phi
+evaluated per predecessor only when the phi has one use (229 rows lost);
+the rule at stage 1 only (the link copies again). Whether a fence or an
+atomic load or store is refused too, or only an atomic whose result is
+unused, the module cannot tell (all three give the same functions); the
+rule takes the read-modify-write and the compare-exchange, the two the
+sites show.
+
+NO upstream state. No release of JumpThreading from 3.3 to 4.0.0 refuses an
+atomic: only a call that cannot be duplicated (and, from 4.0.0, a
+convergent one). Sony authorship of this is not shown.
+
+Refuted by: one base site where a block holding an atomicrmw or a cmpxchg
+is duplicated by a jump thread (a branch on a pointer, an integer compare or
+a phi with other uses, the predecessors of one value factored into one
+copy), not by SimplifyCFG's fold of an i1 phi with one use.
+
+--- a/lib/Transforms/Scalar/JumpThreading.cpp
++++ b/lib/Transforms/Scalar/JumpThreading.cpp
+@@ -249,6 +249,11 @@
+   unsigned Size = 0;
+   for (; !isa<TerminatorInst>(I); ++I) {
+ 
++    // Local rule (jumpthread-01): a block that holds an atomic
++    // read-modify-write is never duplicated, as a call that cannot be.
++    if (isa<AtomicRMWInst>(I) || isa<AtomicCmpXchgInst>(I))
++      return ~0U;
++
+     // Stop scanning the block if we've reached the threshold.
+     if (Size > Threshold)
+       return Size;

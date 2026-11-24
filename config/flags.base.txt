@@ -36,7 +36,7 @@
 #               under the prebuilt 3.8.1 holds 4,893 of 5,497 game rows
 #               where 3.7.1 holds 5,302 with the PS4 items alone). Built
 #               from source (cxx=3.7.1-src, tools/build_llvm.sh 3.7.1) with
-#               fourteen patches (tools/patches/llvm-3.7.1-*.patch, each with
+#               fifteen patches (tools/patches/llvm-3.7.1-*.patch, each with
 #               its evidence and its sweep in its header). Four PS4 items:
 #               one nop after the stack check's failure call (sspnop, D26);
 #               a thread-local with local linkage kept general-dynamic
@@ -67,7 +67,9 @@
 #               rule of memory dependence, no upstream state: an ordered
 #               atomic read-modify-write does not modify a frame object
 #               that nothing before it captured or was handed to write
-#               (atomic).
+#               (atomic). One local rule of JumpThreading, no upstream
+#               state: a block that holds an atomic read-modify-write or
+#               a compare-exchange is not duplicated (jumpthread).
 #               5,980 of its 16,344 functions load a stack canary, those that
 #               take a local's address or hold an array (tools/fingerprint.py
 #               --range 0x1a3e00:, D20): the Orbis default

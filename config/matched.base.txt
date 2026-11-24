@@ -11020,3 +11020,5 @@ _ZN14Object016abc00C2ERK4Name src/game/unknown/leaf_005c0fe0.cpp
 FUN_007dfb90 src/game/unknown/leaf_007dfb90.cpp
 FUN_00a319f0 src/game/unknown/leaf_00a319f0.cpp
 FUN_0046c870 src/game/unknown/leaf_0046c870.cpp
+FUN_008f3440 src/game/unknown/leaf_008f3440.cpp _Z12FUN_008f3440P9lua_State
+FUN_0046a860 src/game/unknown/leaf_0046a860.cpp

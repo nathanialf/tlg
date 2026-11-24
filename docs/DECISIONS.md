@@ -2202,3 +2202,114 @@ against new over the whole module: 14 symbols change, no matched row among them.
 FUN_005fb120, FUN_008af940, Object016abc00's C2); the gate again and the hook's gate: OK, 11,013. Seven drafts change
 score without becoming equal (two better, five worse by position: the five lose their reload as the base does and
 differ elsewhere). Like D92 it is adopted without a public form, on the footing of the line's other local rules.
+
+## D94. JumpThreading does not duplicate a block that holds an atomic read-modify-write: jumpthread-01 (2026-11-24)
+
+**Question.** The base leaves the reader count's release (the `lock dec` of the count FUN_01331c10 took) as one block
+before a branch on the pointer a search found, where 3.7.1 copies it into each predecessor that brings a constant null:
+the release block {phi, atomicrmw sub, icmp, br} costs 2 against JumpThreading's threshold of 6
+(JumpThreading.cpp:239, :1383). Rounds 372B and 426C to 430C found no source form that keeps it whole (FUN_0046f3d0
+20/91, FUN_0061bf20 2/45 in the tree), and a global threshold is excluded by matched rows (round 426C: below 2, three
+rows change at the link). Which state of the pass did the base's compiler have?
+
+**Evidence (scratch d566/, d567/).**
+- Base census (d566/sites.py, sites.txt, step1_table.txt): 1,579 release sites in 673 functions. 832 sites in 441
+  functions are followed by a branch on the found pointer with one or more predecessors bringing a constant and are
+  not copied. 8 functions copy their release (0x4ba970, 0x7b2d50, 0x9f6bc0, 0x9f8a90, 0xb88680, 0xc1efc0, 0xc8b960,
+  0xcefda0), all with one signature: the copy left tests the pointer and never uses it, an i1 phi with one use, which
+  SimplifyCFG's FoldCondBranchOnPHI (SimplifyCFG.cpp:1680) copies one predecessor at a time. 0x9f6bc0's second search
+  shows it: three releases (0x9f6c73, 0x9f6c7e, 0x9f6c8b) for three predecessors, where ThreadEdge factors the
+  predecessors of one value into one copy (JumpThreading.cpp:1177-1198, :1397).
+- Mechanism (llvm-3.7.1.src, read): getJumpThreadDuplicationCost charges an atomicrmw 1 like any instruction and
+  refuses only a call that cannot be duplicated (:271-274); the X and Y release blocks are the same block in the tree's
+  stage-1 IR, and only what reaches the branch differs (a pointer phi with other uses, which only JumpThreading can
+  thread, against an i1 phi with one use, which SimplifyCFG threads too).
+- Method (d566 step3_variants.txt): the tree's JumpThreading.cpp with switches linked into a copy of the installed
+  opt from its own objects (a loadable pass cannot reproduce -std-link-opts: ltopre-01's link GVN has no option);
+  control: 6,580 of 6,580 unit bitcode files and the link stage's module byte-identical to the tree's, 0 functions
+  differ.
+- The rule at both stages (variant a1): 22 symbols change, 0 matched rows change; FUN_0046a860 equal; 11 closer
+  (FUN_00ad11a0 and its three copies 0.62 to 0.89, FUN_0046f770 and FUN_0046f980 0.20 to 0.39, FUN_00857df0 and
+  FUN_00857f80 0.26 to 0.46, FUN_005065f0 0.07 to 0.42, FUN_008b1d60 and FUN_008b2280 0.06 to 0.12); FUN_00765280
+  lower by score only (0.78 to 0.72: now the base's structure, one release, the test after it, the loop rotated; its
+  registers shift by the count's address kept in a register, round 429C's class (c)). Six lower by alignment below
+  0.21 (FUN_0083c7f0 x3, FUN_00905ee0, FUN_009060e0, FUN_00645500), each now with the base's count of releases.
+  Single drafts (d566 step 2): 0x61bf20 is the base from the count's load on but for that address; 0x46f3d0 20/91 to
+  68/88 at the base's 308 bytes.
+- A second kind of site: FUN_0133fb30's unlock cmpxchg before a `test dl, dl` (block cost 1) is copied into both arms
+  by 3.7.1 and is one block in the base (0x133fc4c); the rule gives the base's one.
+- The rule at stage 1 only (variant s1): the link's JumpThreading copies all but 3 functions again. The rule is the
+  pass's own, at the unit pipeline's two runs and the link's two (PassManagerBuilder.cpp:477, :524).
+- The 8 copying functions are unchanged under the rule (SimplifyCFG copies them).
+- The first search of 0x9f6bc0, 0x9f8a90 and 0xb88680, and the last of 0xa2fca0's four (round 567D): each keeps
+  the search's bool (`test rdi, rdi; sete al` in the found block, `mov al, 1` on the others, one `lock dec` of the
+  same reader count, `test al, al` after it; 0xa2fca0 at 0xa302b5 to 0xa302c4 with `xor ecx, ecx` before the
+  release for the counter's store). The block holds the same atomicrmw as the 832, no other kind, so the rule refuses
+  JumpThreading there. What keeps SimplifyCFG off is the bool's second use: a probe of 0x9f6bc0 (d567/probe/
+  p9f6bc0.cpp, the module of the unit and func_00503fb0.cpp, both stages) with the bool held in a variable the return
+  also reads (`bool r = !node->findComponent(A); if (r) ...; return r;`) gives the base's first search instruction for
+  instruction under the rule but for the release's address operand (`[r14]` for `[r15+0x30]`, class (c)), and copies
+  it under 3.7.1 (two releases: a phi with two uses, which FoldCondBranchOnPHI refuses, SimplifyCFG.cpp:1686, and
+  JumpThreading threads). The tree's form, `!find(A) && !find(B)`, and eight close forms (an if per search, `!(a || b)`, a
+  bool return, ...) give the reverse of the base under both compilers (the first search copied by SimplifyCFG, the second merged). No form of the twenty tried
+  gives both of the base's searches at once (the second's three copies); that is the function's source, not the rule.
+
+**The rule.** `tools/patches/llvm-3.7.1-jumpthread-01-atomic-block-not-duplicated.patch`, the fifteenth patch of the
+game line: in JumpThreading's getJumpThreadDuplicationCost a block that holds an atomicrmw or a cmpxchg costs ~0U, as a
+block holding a call that cannot be duplicated does, so ThreadEdge and DuplicateCondBranchOnPHIIntoPred never copy it.
+Unchanged: every other cost and the threshold (6); SimplifyCFG's FoldCondBranchOnPHI, which still copies such a block
+per predecessor on an i1 phi with one use; fences and atomic loads and stores; the library line (3.3). src/sce/ and
+src/game/sndx/ are built by this compiler and take it.
+
+**Sites for and against.** For: 832 of 832 uncopied releases before a pointer branch, the 8 copying functions (by
+SimplifyCFG), FUN_0133fb30's unlock, the first searches of 0x9f6bc0, 0x9f8a90, 0xb88680 and 0xa2fca0 (the probe), the
+draft made equal and the 11 moved. Against: none.
+
+**Source forms the bytes exclude (rounds 372B, 426C to 430C).** Seventeen source forms of the release and its branch
+(among them the found pointer carried in the loop's condition, the release written on each return, a scoped guard,
+the release defined once out of line, a release ordering for the fall) and the release written as asm in four operand
+forms (430C): each gives the copy.
+
+**Rules the bytes exclude (round 566D).** A cost for each atomic (+5): FUN_0133fb30's block costs 6 and is still
+copied, against any cost form at or below the threshold. A compare of a phi evaluated per predecessor only when the
+phi has one use: 229 rows lost. The rule at stage 1 only: the link copies again.
+
+**Not settled by the bytes.** Whether a fence and an atomic load or store are refused too, or only an atomic whose
+result is unused: all three give the same functions over the module. The rule takes the two the sites show.
+
+**No public state.** No release of JumpThreading from 3.3 to 4.0.0 refuses an atomic: only a call that cannot be
+duplicated (and, from 4.0.0, a convergent one) (d566 STATE.txt, read). The rule is a local rule like ltopre-01,
+lxadd-01, unswitch-01 and atomic-01; Sony's authorship of it is not shown.
+
+**What it predicts.** A release (or any atomic read-modify-write) before a branch on a value that reaches it as a
+constant from some predecessors stays one block, unless the branch is on an i1 phi with one use and the block's
+values are not used after it, where it is copied once per constant predecessor. A search whose bool the source also
+returns keeps it in a register across one release.
+
+**Against.** The rule has no public form, and the 832 sites are read by a scanner over the base (656 of them with the
+pointer's use found within eight instructions, the rest sampled), not one by one. The second kind (a cmpxchg) rests on
+one function. The scope (fences, atomic loads and stores) is not settled by the module. 0x9f6bc0's second search is
+not given by any source form tried.
+
+**Trigger to revisit.** A base site where a block holding an atomicrmw or a cmpxchg is copied by a jump thread (a
+branch on a pointer, an integer compare or a phi with other uses, the predecessors of one value factored into one
+copy), not by SimplifyCFG's fold of an i1 phi with one use (refutes); a base site where a fence or an atomic load or
+store is or is not copied (settles the scope).
+
+**The decision and its bar.** Adopted on round 566D's evidence and round 567D's open point (the four first searches
+hold the same release and are kept whole by the rule together with a source that also returns the bool), UNDER THE
+CONDITION that the whole gate passes with every existing row equal after the compiler is rebuilt with it. The patch
+and the two lists are in the tree from round 567D; the install (tools/build_llvm.sh 3.7.1, the shared directory
+every worktree uses) is run in a round of its own with no other worker and no landing in flight, and FUN_0046a860 is
+claimed after its gate.
+
+**What would refute it.** As the trigger above: one site. It removes the rule or narrows it, with the gate rerun.
+
+**The condition met (round 568D).** The game line's compiler was rebuilt with the fifteen patches and the host patch
+(`tools/build_llvm.sh 3.7.1`; clang-3.7 sha256 8fcbd02a... to 721d5f4c..., opt d495267e... to 017f91f0..., llvm-link
+c4639283... to 814947d1...), with no other worker running and no landing in flight. `tools/build.sh gate-all` under
+it: 11,017 claimed functions equal, .text .relro .data identical to the base. Old install against new over the whole
+module: 22 symbols change, no matched row among them, as round 566D's variant predicted. One row claimed
+(FUN_0046a860); the gate again and the hook's gate: OK, 11,018. Sixty-eight draft pairs whose notes name the reader
+count were measured: eleven move closer by more than 0.05, one away by position (FUN_00765280, its structure now the
+base's). Like D92 and D93 it is adopted without a public form, on the footing of the line's other local rules.
