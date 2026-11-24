@@ -8,6 +8,9 @@
 // NONMATCHING: registers only (12/101 counted, the streams one instruction apart from the
 // ninth): the base keeps mode in r14 and rematerialises the path's address for memset and
 // strncpy; here the address stays in r14 and mode is spilled
+// Round 560C: the build spills mode as a 64-bit register (`mov [rbp-0x4a0], rdx`, the jump table's
+// widened index) where the base keeps the 32-bit copy (`mov r14d, edx`, `and r14d, 3` at the
+// switch); the class of the spilled value, not the order of two definitions (9850). Not compiled.
 s64 Object016bdc60::FUN_00e5d580(const char *name, unsigned mode) const
 {
     char path[0x400];

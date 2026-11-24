@@ -125,3 +125,35 @@ Object016d56e8::Object016d56e8(unsigned count) : model(0), count(count)
         frames40[key].resetSecond();
     }
 }
+
+/* derived names: the class whose vtable is at 0x16d5668 (seven slots: slot 3
+ * is FUN_01404480 and slot 4 FUN_01404660, VectorPoser01404660's view of it
+ * in tlg_game_frames013fb310.h), over Object016d56e8, ending with a vector
+ * set per pose, five zero vectors, a vector of ones and four frames. The
+ * slots are not traced. */
+class Object016d5668 : public Object016d56e8 /* derived name */
+{
+  public:
+    Object016d5668();
+
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
+    virtual void slot5(); /* derived name; not traced */
+    virtual void slot6(); /* derived name; not traced */
+
+  private:
+    int unknown9c;                               /* +0x9c: in the base's tail padding */
+    Array01343a80<VectorSet01404660> vectorSets; /* +0xa0: five */
+    Array01343a80<ZeroVector013ef6b0> vectorsb8; /* +0xb8: five */
+    Vec4 unknownd0;                              /* +0xd0: ones */
+    Frame016c1128 framese0[4];                   /* +0xe0 */
+};
+
+/* FUN_013fb410: the vector sets' array made five long through its resize
+ * (FUN_0108d540, called by the four classes of this shape), the zero
+ * vectors' in line */
+Object016d5668::Object016d5668() : Object016d56e8(5), unknown9c(0), unknownd0(_mm_set1_ps(1.0f))
+{
+    vectorSets.resize(5);
+    vectorsb8.resize(5);
+}

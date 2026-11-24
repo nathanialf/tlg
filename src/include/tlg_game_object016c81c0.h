@@ -7,6 +7,17 @@
 #include "tlg_types.h"
 #include "tlg_game_name.h"
 #include "tlg_game_object016b9108.h"
+#include "tlg_game_object0134f620.h"
+
+/* The render library's utilities as the props units include them (0x15b8147,
+ * 0x15b8188: the destructor's reports), unless the including unit gives its
+ * own path first. */
+#ifndef RENDER_UTIL_DIR
+#define RENDER_UTIL_DIR /* derived name */                                                         \
+    "D:\\trico\\engine\\anzu\\engine_src\\props\\..\\render/ps4/util/"
+#endif
+
+#include "tlg_game_object013bb3f0.h"
 
 /* derived names: the class whose vtable is at 0x16c81c0
  * (config/vtables.derived.base.txt, stored by its constructor 0xd68470 and
@@ -16,8 +27,8 @@
  * class stores only its vptr. The constructor takes, after the name, a
  * colour (ARGB: 0xff87ceeb, 0xff1e90ff), a group (0 to 0x13) and an id
  * (290 up, one per class); it passes the name on to 0xcb6310 and its body
- * does not read the other three. Neither function is written; the fields
- * from +0x24 are not traced. */
+ * does not read the other three. The constructor is not written; the
+ * destructor (0xd687e0, leaf_00d687e0.cpp) names the fields from +0x28. */
 class Object016c81c0 : public Object016b9108 /* derived name */
 {
   public:
@@ -26,7 +37,16 @@ class Object016c81c0 : public Object016b9108 /* derived name */
     virtual ~Object016c81c0(); /* 0xd687e0 */
 
   private:
-    u8 unknown24[0x74];
+    u8 unknown24[0x4];
+    Object0134f620 array28; /* +0x28 */
+    Object0134f620 array40; /* +0x40 */
+    Object013bb3f0 waiter;  /* +0x58: a count waited on under a mutex */
+    /* +0x80: at 3 the destructor spins until one count is left; volatile:
+     * read while other threads run on the object (the base loads it before
+     * the compare, `mov eax, [rbx+0x80]; cmp eax, 3`, where a plain int is
+     * compared in memory) */
+    volatile int mode;
+    u8 unknown84[0x14];
 };
 
 /* derived names: the classes on Object016c81c0 that its creators build, each

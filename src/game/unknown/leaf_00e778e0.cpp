@@ -105,6 +105,9 @@ int FUN_00e769e0(lua_State *state) /* derived name */
 
 // NONMATCHING: instruction order only (60/62): the base reads the type (`mov rdi, [rdx+0x18]`)
 // before the counter's increment `mov r8d, 1`; the build after it
+// Round 560C, link-stage IR: the type's load is before the atomic add there (the arguments in
+// order); the DAG schedules the add's constant (`mov r8d, 1`, no chain) above the load. Not
+// compiled.
 int FUN_00e76ae0(lua_State *state) /* derived name */
 {
     int count = ((char *)state->top - (char *)state->base) / sizeof(HksObject);

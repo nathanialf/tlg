@@ -91,3 +91,32 @@ void FUN_01471260(VectorPoser01404660 *self, FadeModel013d4610 *model, int value
             self->vectorSets.at(i).vectors.at(k) = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
+
+/* derived names: the class whose vtable is at 0x16d65a8 (seven slots: slot 3
+ * is FUN_01471260 and slot 4 FUN_01471440), over Object016d65f0: this file's
+ * Object016d5668 (func_0108cf60.cpp). The slots are not traced. */
+class Object016d65a8 : public Object016d65f0 /* derived name */
+{
+  public:
+    Object016d65a8();
+
+    virtual void slot3(); /* derived name; not traced */
+    virtual void slot4(); /* derived name; not traced */
+    virtual void slot5(); /* derived name; not traced */
+    virtual void slot6(); /* derived name; not traced */
+
+  private:
+    int unknown9c;                               /* +0x9c: in the base's tail padding */
+    Array01343a80<VectorSet01404660> vectorSets; /* +0xa0: five */
+    Array01343a80<ZeroVector013ef6b0> vectorsb8; /* +0xb8: five */
+    Vec4 unknownd0;                              /* +0xd0: ones */
+    Frame016c1128 framese0[4];                   /* +0xe0 */
+};
+
+/* FUN_01467d60: the vector sets' array made five long through its resize
+ * (FUN_0108d540), the zero vectors' in line */
+Object016d65a8::Object016d65a8() : Object016d65f0(5), unknown9c(0), unknownd0(_mm_set1_ps(1.0f))
+{
+    vectorSets.resize(5);
+    vectorsb8.resize(5);
+}

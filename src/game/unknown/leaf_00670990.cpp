@@ -31,6 +31,9 @@ void FUN_00822740(Object00670990 *self, int flag);                         /* de
 // sets the 0 before the first test in a callee-saved register kept across the
 // call, where the base sets it in one block both null tests reach (`xor esi, esi`
 // before the tail call); a ternary spelling gives the same.
+// Round 560C, link-stage IR cut and compiled alone: the IR with both null tests branching to one
+// block of 0 before the call compiles to the same bytes as now (CodeGenPrepare removes the empty
+// block); the base's block is the D48 placement class, not a phi shape.
 void FUN_00670990(Object00670990 *self) /* derived name */
 {
     int flag = 0;

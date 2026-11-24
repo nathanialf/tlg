@@ -30,6 +30,11 @@ extern const char D_1585aa2[17]; /* "GestureGazeTrico" */
 // (`mov eax, 1` before the compare, `xor eax, eax` in the block every failing path joins);
 // returning bool gives that block structure with `mov al, 1`; returning int (1 and 0, or a
 // bool local) folds the two null tests' zeros into the return (`xor eax, eax` before them).
+// Round 560C, link-stage IR cut and compiled alone: the same IR returning i32 makes the entry's 0
+// (the int form above); returning i32 with every failure (both null tests and the compare)
+// branching to one block of 0, the return's phi [0, that block], [1, the compare], is equal. The
+// unit's JumpThreading threads the null tests' edges past that block (`.thread`, `.thread4`); a
+// source form that keeps it is not found.
 bool FUN_005b0500(void *) /* derived name */
 {
     if (Holder005b0500 *holder = D_57c9390->unknown40) {

@@ -66,6 +66,9 @@ int FUN_002c2580(Owner00aba610 *owner, void *node, void *item); /* derived name 
 // and tests the node for null again after its reference is dropped (`test r13, r13` at 0xaba6d8);
 // the build returns from each arm and folds the second test into the first. The early-return form
 // and the result-variable form give the same bytes.
+// Round 560C: the base's result is an int phi (`mov eax, r15d` at the return), the same class as
+// FUN_005b0500's (one block of 0 every failure joins), with the node's re-test after the release on
+// top; not compiled.
 bool FUN_00aba610(const Object00aba610 *self) /* derived name */
 {
     bool found = false;

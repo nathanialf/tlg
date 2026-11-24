@@ -11,6 +11,9 @@
 // r13 and spills the text's pointer ([rbp-0x30]), the build keeps the text
 // in r13 and spills start; the blocks, the tests and the growth loop are the
 // base's
+// Round 560C: the base copies the arguments in another order (`mov rdi, rcx; mov ebx, edx` first,
+// start into r13d after the text's spill, 138 instructions against 142); no order of one block, not
+// compiled.
 void FUN_0139eb00(char *buffer, int start, int end, const char *text) /* derived name */
 {
     int length = strlen(text);

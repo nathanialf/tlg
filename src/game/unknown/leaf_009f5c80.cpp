@@ -13,6 +13,8 @@ struct Object009f5c80 : Object016b9108 { /* derived name */
 // NONMATCHING: instruction order (list-ilp), 76/78 in the module: the name's
 // index (`mov esi, r15d`) is taken before the base's vptr store
 // (`mov [rdx+rax], rdi`), after it in the base (leaf_007aa0a0.cpp's residual)
+// Round 560C, link-stage IR: the vptr store is before the index's zext there; the DAG schedules the
+// zext (a register value, no chain) above the store. Not an order of the source.
 void FUN_009f5c80(Object009f5c80 *self, Object009f5c80 *other) /* derived name */
 {
     if (!self->unknown28)

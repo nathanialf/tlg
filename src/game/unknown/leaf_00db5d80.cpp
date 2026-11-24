@@ -9,6 +9,11 @@
 // NONMATCHING: the base reads the popped value's two words before it stores the stack's top and
 // stores the tag first (a copy split into its words); the build stores the top first, and the C
 // function's barrier reads the popped slot again where the base keeps its address
+// Round 560C, link-stage IR cut and compiled alone: case 9 is the base's with top - 1's type and
+// value loaded first, then the upvalue and its value pointer, the top stored, the type and then the
+// value stored (0.931 to 0.956); case 10's barrier is left (the base reads the type through r14 =
+// top - 1, the build at [rax-16], a sunk address). The popped value copied whole into a local keeps
+// it on the stack (as FUN_00db5b50): reverted.
 const char *FUN_00db5d80(lua_State *s, int funcindex, int n)
 {
     if (!(s != 0)) {

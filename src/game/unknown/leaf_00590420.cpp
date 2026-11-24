@@ -32,6 +32,11 @@ struct SpringValue590420 { /* derived name */
 // where the base has `vmulss xmm0, xmm4, xmm0`: Reassociate makes stiffness * (in - position)
 // part of the tree and puts the shared stiffness * step last; the base keeps that product a
 // leaf, ranked with it)
+// Round 560C, link-stage IR: the products are the base's ((stiffness * d) * kt); X86's
+// MachineCombiner reassociates them into stiffness * (d * kt). With the combiner off the build
+// differs from the base only in the last product's operand order (`vmulss xmm0, xmm0, xmm4` against
+// the base's xmm4, xmm0): the base's IR has kt first, so its ranks differ (Reassociate) and its
+// combiner did not fire. Not compiled.
 int FUN_00590420(ValueOwner583950 *self, void *arg) /* derived name */
 {
     SpringNode590420 *node =

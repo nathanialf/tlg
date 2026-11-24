@@ -101,6 +101,10 @@ void FUN_01408ad0(Object01408ad0 *self) /* derived name */
 // this the index first; the registers follow. With the index read before the
 // poses pointer (the helper for both reads) the entry's offset `shl rdx, 5`
 // also comes after the model's load.
+// Round 560C, link-stage IR cut and compiled alone: the IR already reads the model, the skeleton
+// and the poses before the index (the source's order); moving the index chain first (0.26), the
+// entries' pointer after the poses (0.36) or both pointers first (0.39) is not the base: the
+// selection DAG's order of independent loads, not the subscript's.
 void FUN_0140b680(Object01408ad0 *self) /* derived name */
 {
     for (unsigned i = 0; i < self->unknown60; i++) {

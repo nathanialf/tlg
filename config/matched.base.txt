@@ -11038,3 +11038,7 @@ FUN_00acef90 src/game/unknown/leaf_00ad11a0.cpp _Z12FUN_00acef90P19MarkerEvent00
 FUN_00acf090 src/game/unknown/leaf_00ad11a0.cpp _Z12FUN_00acf090P19MarkerEvent00ad3090
 FUN_00a12360 src/game/unknown/leaf_00a12360.cpp _Z12FUN_00a12360P19MarkerEvent00a104a0
 FUN_00a12460 src/game/unknown/leaf_00a12360.cpp _Z12FUN_00a12460P19MarkerEvent00a104a0
+FUN_013aacc0 src/game/unknown/leaf_013aacc0.cpp
+FUN_0108d540 src/game/unknown/func_0108cf60.cpp _ZN13Array05943280I17VectorSet01404660E6resizeEj
+FUN_013fb410 src/game/unknown/func_0108cf60.cpp _ZN14Object016d5668C2Ev
+FUN_01467d60 src/game/unknown/func_011c9570.cpp _ZN14Object016d65a8C2Ev

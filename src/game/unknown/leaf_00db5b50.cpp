@@ -7,6 +7,11 @@
  * with an empty frame); the call timed */
 // NONMATCHING: the base loads the popped value's type and value before it stores the new top; the
 // build stores the top first
+// Round 560C, link-stage IR cut and compiled alone: with the popped value's type and value loaded
+// before the top's store and the slot's two stores after it, the function is equal (127/127, the
+// entry's registers too). Compiled in the module, `const HksObject value = s->top[-1]; --s->top;
+// *slot = value;` keeps the copy on the stack (a canary and a 0x38 frame; 135 instructions):
+// reverted.
 const char *FUN_00db5b50(lua_State *s, const lua_Debug *ar, int n)
 {
     if (!(s != 0)) {
