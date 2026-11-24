@@ -34,6 +34,16 @@ FrameSet0108cf60::FrameSet0108cf60()
     frames.resize(4);
 }
 
+/* FUN_013fae50: FUN_013e5560's body (func_00fda5c0.cpp) with this file's
+ * VECTOR_W, slot 3 of the vtable at 0x16d57d0 calling it (leaf_01404cc0.cpp) */
+// The base's loop is split on the frame count being 0 by the unit pipeline's
+// LoopUnswitch (tools/patches/llvm-3.7.1-unswitch-01-whole-invariant-branch.patch).
+void FUN_013fae50(FramePoser013fccf0 *self, int count)
+{
+    for (unsigned i = 0; i < self->count; ++i)
+        self->sets.at(i).frames.resize(count);
+}
+
 /* derived name: each frame set's first frame takes the model's pose for it,
  * then each set's second frame takes its first, position and rotation */
 // NONMATCHING: instruction order only, the first loop's head: the base loads

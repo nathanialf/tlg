@@ -89,4 +89,9 @@ struct FramePoser013fccf0 { /* derived name */
     Array05943280<VectorSet01404660> vectorSets; /* +0xa0 */
 };
 
+/* derived name: every frame set of the poser made `count` frames long, with
+ * func_0108cf60.cpp's VECTOR_W (FUN_013e5560's body in that file; the tail
+ * call of FUN_01404cc0) */
+void FUN_013fae50(FramePoser013fccf0 *self, int count); /* derived name */
+
 #endif

@@ -6,10 +6,13 @@
  * eleven-entry table D_15251c0 (called by FUN_01114f30 and FUN_01124b60) */
 extern const float D_15251c0[11]; /* derived: the rates by speed */
 
-// NONMATCHING: the count's test only: the base tests it once before the
-// whole steps' loop (`test eax, eax; je` to the return, after `jle`), the
-// build at the head of each step (the inner loop's guard inside the outer
-// loop); every other instruction is the base's
+// The base's steps loop is split on the count being 0 by the unit pipeline's
+// LoopUnswitch (tools/patches/llvm-3.7.1-unswitch-01-whole-invariant-branch.patch).
+// The steps are counted down by a for loop: its latch (`cmp r9d, 1; jg`) is
+// the decrement's own block, laid out before the rows' loop; written as
+// `while (whole-- > 0)` the latch is the rows' loop's exit, laid out just
+// before the next step's entry, and its branch is inverted at selection
+// (`cmp r9d, 2; jge`).
 void FUN_0113f570(Array05943280<float> *values, const Array05943280<float> *targets, float speed,
                   float step) /* derived name */
 {
@@ -23,7 +26,7 @@ void FUN_0113f570(Array05943280<float> *values, const Array05943280<float> *targ
     float frames = step * 59.999996f;
     int whole = (int)frames;
     float fraction = frames - (float)whole;
-    while (whole-- > 0)
+    for (; whole > 0; --whole)
         for (unsigned i = 0; i < count; ++i)
             values->at(i) = (targets->at(i) - values->at(i)) * rate + values->at(i);
     for (unsigned i = 0; i < count; ++i)

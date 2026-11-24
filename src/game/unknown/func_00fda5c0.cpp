@@ -55,9 +55,7 @@ void FUN_013e5b20(Poser013e58c0 *self) /* derived name */
  * FUN_013e7a30, FUN_013e7a50 and FUN_00fd65c0); the same body, each with
  * its file's VECTOR_W, is FUN_013fae50, FUN_0141ce50, FUN_0143d9c0,
  * FUN_01449480 and FUN_014677a0 (func_0108cf60.cpp, func_0113d440.cpp,
- * func_01165170.cpp, func_011908c0.cpp, func_011c9570.cpp); FUN_013fae50
- * is not written: leaf_01404cc0.cpp declares it over its caller's object,
- * and one signature would change the matched row FUN_01404cc0's */
+ * func_01165170.cpp, func_011908c0.cpp, func_011c9570.cpp) */
 // The base's loop is split on the frame count being 0 by the unit pipeline's
 // LoopUnswitch (tools/patches/llvm-3.7.1-unswitch-01-whole-invariant-branch.patch).
 void FUN_013e5560(FramePoser013fccf0 *self, int count) /* derived name */

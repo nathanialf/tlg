@@ -41,20 +41,19 @@ static inline bool isAsked(Ids00abbfd0 ids, int id) /* derived name */
     return false;
 }
 
-// NONMATCHING: the indices are the base's now (17 of 64: unsigned counters over an int index,
-// `movsxd` at each use). Left: the base loads the stack's pointer and its depth at the entry,
-// before the test of the last parameter, and in both of its arms tests the count of ids asked
-// for before the depth (`test edx, edx; je; test r8d, r8d; jle`), the build the depth first
+// NONMATCHING: one walk down the stack that stops after the top entry unless the whole stack
+// is asked for: the base's two arms are this loop unswitched (the latch `cmp r10, 1; jg` and the
+// count of ids tested before the depth in each arm come out of it). Left: the base unswitches on
+// the last parameter first and on the count of ids in each copy (`test ecx, ecx` first, then
+// `test edx, edx` in both arms), the build on the count first (`test edx, edx` at the entry), its
+// test the earlier block of the loop; and the base loads the stack's pointer at the entry
 int FUN_00abbfd0(IdHolder00abbfd0 *holder, Ids00abbfd0 ids, int wholeStack) /* derived name */
 {
-    if (wholeStack) {
-        for (int i = holder->depth - 1; i >= 0; i--) {
-            if (isAsked(ids, holder->stack[i]))
-                return 1;
-        }
-    } else if (holder->depth > 0) {
-        if (isAsked(ids, holder->stack[holder->depth - 1]))
+    for (int i = holder->depth - 1; i >= 0; i--) {
+        if (isAsked(ids, holder->stack[i]))
             return 1;
+        if (!wholeStack)
+            break;
     }
     for (u32 i = 0; i < holder->count; i++) {
         if (isAsked(ids, holder->listAt(i)))
