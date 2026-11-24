@@ -11022,3 +11022,4 @@ FUN_00a319f0 src/game/unknown/leaf_00a319f0.cpp
 FUN_0046c870 src/game/unknown/leaf_0046c870.cpp
 FUN_008f3440 src/game/unknown/leaf_008f3440.cpp _Z12FUN_008f3440P9lua_State
 FUN_0046a860 src/game/unknown/leaf_0046a860.cpp
+FUN_013bad90 src/game/unknown/leaf_013bad90.cpp

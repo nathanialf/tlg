@@ -26,13 +26,16 @@ struct NameTableEntry017ac870 /* derived name */
 extern NameTableEntry017ac870 D_17ac870[];
 
 /* derived names: FUN_013bad90 hashes a string (it takes its length itself,
- * strlen at 0x13bad9a), FUN_013baad0 interns it under that hash and its
- * length (the last argument 1) and returns its index, FUN_00d66e30 frees the
- * entry of an index whose last reference is gone. */
+ * strlen at 0x13bad9a; leaf_013bad90.cpp), FUN_013baad0 interns it under
+ * that hash and its length and returns its index (leaf_013baad0.cpp): a new
+ * entry keeps the caller's pointer when literal is true and a copy of the
+ * string otherwise (0x13bac84: `test al, al`, the copy's block from the
+ * arena and strncpy); FUN_00d66e30 frees the entry of an index whose last
+ * reference is gone. */
 unsigned FUN_013bad90(const char *string); /* derived name */
 unsigned FUN_013baad0(const char *string, unsigned hash, size_t length,
-                      bool add);   /* derived name */
-void FUN_00d66e30(unsigned index); /* derived name */
+                      bool literal); /* derived name */
+void FUN_00d66e30(unsigned index);   /* derived name */
 
 struct lua_State;
 
@@ -61,11 +64,11 @@ struct Text004a6d50;   /* tlg_game_string01331840.h */
 class Name /* derived name */
 {
   public:
-    /* add false looks the string up without interning it (0x5066c5:
-     * `xor ecx, ecx`) */
+    /* literal false has the table copy the string (0x5066c5: `xor ecx,
+     * ecx`) */
     template <size_t N>
-    Name(const char (&string)[N], bool add = true)
-        : index(FUN_013baad0(string, FUN_013bad90(string), N - 1, add))
+    Name(const char (&string)[N], bool literal = true)
+        : index(FUN_013baad0(string, FUN_013bad90(string), N - 1, literal))
     {
     }
 
@@ -78,7 +81,7 @@ class Name /* derived name */
     }
 
     /* the name of a formatted text (tlg_game_string01331840.h, where it is
-     * defined): looked up without interning (add false), the empty name for
+     * defined): the text copied into the table (literal false), the empty name for
      * an empty text; the index is stored once, after the text's test
      * (0x823a79: `mov [rbp-0x1040], ebx`, ebx cleared before the test) */
     explicit Name(const String01331840 &text);
