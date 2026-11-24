@@ -11002,3 +11002,8 @@ FUN_00b3f650 src/game/unknown/leaf_00b3f5a0.cpp _ZThn88_N14Object016b5ae812FUN_0
 FUN_00ff5c30 src/game/unknown/leaf_00ff5c30.cpp _Z12FUN_00ff5c30P14Object00ff5c30PK14Source00ff5c30PvP14Target00ff5c30
 FUN_013fae50 src/game/unknown/func_0108cf60.cpp _Z12FUN_013fae50P18FramePoser013fccf0i
 FUN_0113f570 src/game/unknown/leaf_0113f570.cpp
+FUN_00e75b70 src/game/unknown/leaf_00e778e0.cpp _Z12FUN_00e75b70P9lua_State
+FUN_00e776b0 src/game/unknown/leaf_00e778e0.cpp _ZN11LuaBindings14ObjectToStringEP9lua_State
+FUN_00e77960 src/game/unknown/leaf_00e778e0.cpp _ZN11LuaBindings14ObjectGetClassEP9lua_State
+FUN_00a15c40 src/game/unknown/leaf_00a15c40.cpp _Z12FUN_00a15c40P9lua_State
+FUN_00e7d530 src/game/unknown/leaf_00e7d320.cpp _Z12FUN_00e7d530P9lua_State

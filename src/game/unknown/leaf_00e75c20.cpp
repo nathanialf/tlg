@@ -44,7 +44,6 @@ class Proxy00e75c20 : public Object016b9108 /* derived name */
 };
 
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
-void FUN_00c89360(lua_State *state, Object016b9108 *object);                /* derived name */
 
 // NONMATCHING: the second walk: the base walks the type it read for the first (`cmp rcx, rax` at
 // 0xe75ccc on both edges in), the build reads the object's type again on the edge from the clear
@@ -59,12 +58,8 @@ int FUN_00e75c20(lua_State *state) /* derived name */
         if (object &&
             ((object->isKindOf(D_5939080) &&
               (static_cast<Node00e75c20 *>(object)->unknown24 & 1)) ||
-             (object->isKindOf(D_59391e0) &&
-              static_cast<Proxy00e75c20 *>(object)->unknown30 != 0)) &&
-            !(object->flags16 & 0x20)) {
-            FUN_00c89360(state, object);
-            return 1;
-        }
+             (object->isKindOf(D_59391e0) && static_cast<Proxy00e75c20 *>(object)->unknown30 != 0)))
+            return pushUnlessHidden(state, object);
     }
     return 0;
 }

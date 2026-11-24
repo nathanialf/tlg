@@ -74,7 +74,11 @@ static inline float length3(const Float4A &v) /* derived name */
  * NONMATCHING: instruction order and register assignment in the loop only
  * (71 instructions both): the base reads the holder, the channel's array,
  * the holder's entries and then the source index; here the source index
- * comes second (the statement order does not move it). */
+ * comes second (the statement order does not move it). Round 558C: the
+ * link's IR with the index's load moved after the entries' pointer gives
+ * the base, with it between the holder and the entries not; a subscript
+ * emits its index first (EmitArraySubscriptExpr), so `elements[k]` reads k
+ * ahead of the pointer, and the base reads the pointer twice but k once. */
 void FUN_00fda8d0(Object00fda8d0 *self) /* derived name */
 {
     const int index = self->index;

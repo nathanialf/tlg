@@ -91,7 +91,9 @@ int FUN_00ff5c30(Object00ff5c30 *self, const Source00ff5c30 *source, void *,
 // (y + x) + z in the link's IR, kept so by the base and rewritten (x + z) + y here by the machine
 // combiner (its root's only use the compare with the folded constant, cookbook 3265). The
 // rotation read through the pose's second vector is the base's: an address formed apart from the
-// slow path's `&entry.unknown60` (not merged by GVN's PRE into the cached arm)
+// slow path's `&entry.unknown60` (not merged by GVN's PRE into the cached arm). Round 558C: the
+// link's IR with the three products before both sums, or the first sum after the third product,
+// keeps the rewrite (the base also folds the compare's constant)
 int FUN_00ff5d30(Object00ff5c30 *self, const Source00ff5c30 *source, void *,
                  Target00ff5c30 *target) /* derived name */
 {

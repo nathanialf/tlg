@@ -116,4 +116,23 @@ class Object016b9108 : public Counted00c14bc0 /* derived name */
  * rbx, r12` before each compare), where isKindOf's bool is threaded away. */
 Object016b9108 *kindOf(Object016b9108 *object, const Type00503fb0 *type); /* derived name */
 
+struct lua_State;
+
+/* pushes the object to the script stack (its body not written) */
+void FUN_00c89360(lua_State *state, Object016b9108 *object); /* derived name */
+
+/* derived names: the object pushed unless its flag 0x20 at +0x16 is set, and
+ * the count of results answered, 1 or 0. The script functions FindObject
+ * (FUN_00e75b70) and FindObjectW (FUN_00e75c20) return it for the object
+ * their argument holds: the base merges its two answers before their
+ * scopes end, the flag's block making its own 0 (`xor r14d, r14d` at
+ * 0xe75bde and 0xe75cf5) where the null object's 0 is the entry's. */
+inline int pushUnlessHidden(lua_State *state, Object016b9108 *object)
+{
+    if (object->flags16 & 0x20)
+        return 0;
+    FUN_00c89360(state, object);
+    return 1;
+}
+
 #endif

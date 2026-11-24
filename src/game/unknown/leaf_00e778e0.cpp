@@ -15,7 +15,10 @@
  * leaf_0046f770.cpp's and leaf_00e7ff00.cpp's). ToString pushes the string
  * of the object's name (nil for none) and returns 1, Release does nothing
  * else and returns 0 (no results), GetClass pushes the object's type
- * (FUN_00c8ae90) and returns 1; both return 0 for no object. Equal pushes
+ * (FUN_00c8ae90) and returns 1; both return 0 for no object. Both count their
+ * results in a local returned once: the base makes the null object's 0 after
+ * the reader's call apart from the entry's (`xor eax, eax` before the null
+ * test). Equal pushes
  * whether its two arguments hold the same object and returns 1. The rows
  * keep their FUN_ names until a ruling, as leaf_00e7e520.cpp's. derived
  * names otherwise. */
@@ -37,7 +40,6 @@ struct ArgumentReader00e778e0 { /* derived name */
 
 void FUN_00c8c290(ArgumentReader00e778e0 *reader, Object016b9108 **object); /* derived name */
 void FUN_00c8ae90(lua_State *state, const Type00503fb0 *type);              /* derived name */
-void FUN_00c89360(lua_State *state, Object016b9108 *object);                /* derived name */
 
 /* derived names: the script C functions "Exists" and "FindObject" of the
  * same registration (lea at 0xe77fc5 and 0xe7831f, the VM's names for
@@ -59,9 +61,6 @@ int FUN_00e74400(lua_State *state) /* derived name */
     return 1;
 }
 
-// NONMATCHING: register assignment: the base materialises the 0 it returns again after the
-// reader's call (`xor eax, eax` before the null test) and holds the guard's address in r14; the
-// build keeps one 0 in r14 across the call (the guard in r15, a frame 8 bytes larger)
 int FUN_00e75b70(lua_State *state) /* derived name */
 {
     int count = state->top - state->base;
@@ -69,10 +68,8 @@ int FUN_00e75b70(lua_State *state) /* derived name */
         ArgumentReader00e778e0 reader(state, 0);
         Object016b9108 *object = 0;
         FUN_00c8c290(&reader, &object);
-        if (object && !(object->flags16 & 0x20)) {
-            FUN_00c89360(state, object);
-            return 1;
-        }
+        if (object)
+            return pushUnlessHidden(state, object);
     }
     return 0;
 }
@@ -252,11 +249,9 @@ int FUN_00e73bb0(lua_State *state) /* derived name */
 namespace LuaBindings
 {
 
-// NONMATCHING: register assignment: the base materialises the 0 it returns again after the
-// reader's call (`xor eax, eax` before the null test) and holds the guard's address in r14; the
-// build keeps one 0 in r14 across the call (the guard in r15, a frame 8 bytes larger)
 int ObjectToString(lua_State *state)
 {
+    int results = 0;
     int count = state->top - state->base;
     if (count > 0) {
         ArgumentReader00e778e0 reader(state, 0);
@@ -264,10 +259,10 @@ int ObjectToString(lua_State *state)
         FUN_00c8c290(&reader, &object);
         if (object) {
             pushString(state, D_17ac870[object->name.index].string0);
-            return 1;
+            results = 1;
         }
     }
-    return 0;
+    return results;
 }
 
 int ObjectRelease(lua_State *state)
@@ -281,11 +276,9 @@ int ObjectRelease(lua_State *state)
     return 0;
 }
 
-// NONMATCHING: register assignment: the base materialises the 0 it returns again after the
-// reader's call (`xor eax, eax` before the null test) and holds the guard's address in r14; the
-// build keeps one 0 in r14 across the call (the guard in r15, a frame 8 bytes larger)
 int ObjectGetClass(lua_State *state)
 {
+    int results = 0;
     int count = state->top - state->base;
     if (count > 0) {
         ArgumentReader00e778e0 reader(state, 0);
@@ -293,10 +286,10 @@ int ObjectGetClass(lua_State *state)
         FUN_00c8c290(&reader, &object);
         if (object) {
             FUN_00c8ae90(state, object->type);
-            return 1;
+            results = 1;
         }
     }
-    return 0;
+    return results;
 }
 
 int ObjectEqual(lua_State *state)

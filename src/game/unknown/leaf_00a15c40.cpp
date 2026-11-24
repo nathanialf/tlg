@@ -30,12 +30,8 @@ struct Object057c9390 { /* derived name */
 
 extern Object057c9390 *D_57c9390;
 
-// NONMATCHING: greedy's assignment, as FUN_001b1010's: the base gives the object at 0x57c9390's chain or the spell a different register from the stack top than the build does (rax and rcx, or rax and rcx with rdx, swapped); the instructions are the base's but the order of the result's mov
 int FUN_00a15c40(lua_State *state) /* derived name */
 {
-    HksObject *top = state->top;
-    top->value.number = D_57c9390->unknown108->unknown38->unknown68->unknown158;
-    top->type = 3;
-    state->top = top + 1;
+    pushInteger(state, D_57c9390->unknown108->unknown38->unknown68->unknown158);
     return 1;
 }

@@ -138,16 +138,13 @@ int FUN_00e7d0b0(lua_State *state) /* derived name */
     return 1;
 }
 
-// NONMATCHING: greedy's assignment: the base holds the top in rcx and the count in rax (the build
-// the other way), and loads the top before the `vcvtsi2ss` (the build after it); the rest is the
-// base's, the 0 stored in its own arm
 int FUN_00e7d530(lua_State *state) /* derived name */
 {
     int count = state->top - state->base;
     if (count >= 0)
-        pushNumber(state, D_5938c40->unknown100->activeInstanceCount());
+        pushInteger(state, D_5938c40->unknown100->activeInstanceCount());
     else
-        pushNumber(state, 0);
+        pushInteger(state, 0);
     return 1;
 }
 
