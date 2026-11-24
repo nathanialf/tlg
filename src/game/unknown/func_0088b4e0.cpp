@@ -1,6 +1,7 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
 #include "tlg_game_name.h"
+#include "tlg_game_readlock.h"
 #include "tlg_libc.h"
 #include <functional>
 
@@ -50,12 +51,10 @@ struct Widget008ab9e0 { /* derived name */
     }
 };
 
-void FUN_01331c10(int *readers); /* derived name */
-
 /* the item's widgets, read under the lock at +0x30 */
 struct Panel008ab9e0 { /* derived name */
     u8 unknown0[0x30];
-    int readers; /* +0x30, derived name */
+    ReadLock01331c10 readers; /* +0x30, derived name */
     u8 unknown34[0x24];
     Widget008ab9e0 **widgets; /* +0x58, derived name */
     unsigned widgetCount;     /* +0x60, derived name */
@@ -70,7 +69,7 @@ struct Panel008ab9e0 { /* derived name */
                 break;
             }
         }
-        __sync_fetch_and_sub(&readers, 1);
+        __sync_fetch_and_sub(&readers.count, 1);
         return found;
     }
 };

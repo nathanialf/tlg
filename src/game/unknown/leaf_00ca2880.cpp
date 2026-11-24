@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_readlock.h"
 
 #include "tlg_sce_kernel.h"
 
@@ -9,11 +10,10 @@
  * at +0x23c taken by FUN_01331c10 and dropped atomically, both skipped when
  * the calling thread is the lock's writer (+0x248). The object itself is not
  * read. Classes and methods unknown. */
-void FUN_01331c10(int *readers); /* derived name */
 
 struct Lock00ca2880 { /* derived name */
     u8 unknown0[0x23c];
-    int readers; /* +0x23c */
+    ReadLock01331c10 readers; /* +0x23c */
     u8 unknown240[0x8];
     pthread_t writer; /* +0x248 */
 };
@@ -33,7 +33,7 @@ struct Object05938c40 { /* derived name */
     {
         Lock00ca2880 *lock = this->lock;
         if (scePthreadSelf() != lock->writer)
-            __sync_fetch_and_sub(&lock->readers, 1);
+            __sync_fetch_and_sub(&lock->readers.count, 1);
     }
 };
 

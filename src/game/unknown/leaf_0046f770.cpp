@@ -35,10 +35,9 @@ extern Name D_57d583c;          /* derived name */
 
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
 
-// NONMATCHING: the component walk: the base keeps one block for the reader count's drop that
-// both outcomes of each findComponent reach (`xor r13d, r13d; mov ebx, 0` on the way out, `lock
-// dec` once, then `test rbx, rbx`), the build threads the test and drops the count on each arm;
-// the same with findComponent defined out of line (round 342A)
+// NONMATCHING: 54/140, 482 bytes against 513: FUN_00857df0's residual (leaf_00857df0.cpp): the two
+// finds' drops merged by the post-RA Control Flow Optimizer where the base keeps them apart
+// (0x46f862 `lock dec; jmp`, 0x46f870 `lock dec` falling into `test rbx, rbx`) (round 569D)
 int FUN_0046f770(lua_State *state) /* derived name */
 {
     Object016b9108 *object = 0;

@@ -10,6 +10,7 @@
 
 #include "tlg_types.h"
 #include "tlg_game_name.h"
+#include "tlg_game_readlock.h"
 #include "tlg_game_type.h"
 #include "tlg_game_object016b9108.h"
 
@@ -39,8 +40,6 @@ struct Component00503fb0 : public Object016b9108 { /* derived name */
     u8 unknown5c[0x2c];
     int kind; /* +0x88 */
 };
-
-void FUN_01331c10(int *readers); /* derived name */
 
 /* the released mark of a counted object: set when its last reference is
  * dropped on a thread that destroys it at once */

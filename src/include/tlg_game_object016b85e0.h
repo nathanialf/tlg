@@ -63,8 +63,46 @@ class Object016b85e0 : public Object016b9108 /* derived name */
         return children[index].get();
     }
 
+    /* the reader lock taken and given back through the node: the drop
+     * forms the count's address from the node again (tlg_game_readlock.h) */
+    void lockRead() /* derived name */
+    {
+        FUN_01331c10(&readers);
+    }
+
+    void unlockRead() /* derived name */
+    {
+        __sync_fetch_and_sub(&readers.count, 1);
+    }
+
+    /* the first component whose type is `type` or derives from it, the
+     * caller holding lockRead */
+    Component00503fb0 *componentLocked(const Type00503fb0 *type) /* derived name */
+    {
+        Component00503fb0 *found = 0;
+        for (unsigned i = 0; i < componentCount; ++i) {
+            if (::isKindOf(componentAt(i)->type, type)) {
+                found = componentAt(i);
+                break;
+            }
+        }
+        return found;
+    }
+
+    /* the same under lockRead and unlockRead (0x61bf20, 0xff0ab0, 0x644f70:
+     * the drop's address folded) */
+    Component00503fb0 *component(const Type00503fb0 *type) /* derived name */
+    {
+        lockRead();
+        Component00503fb0 *found = componentLocked(type);
+        unlockRead();
+        return found;
+    }
+
     /* the first component from `next` on whose type is `type` or derives
-     * from it; `next` is left after it */
+     * from it; `next` is left after it. The count is taken and dropped
+     * here by hand, through one address (the script functions and the
+     * marker events: 0x46a860, 0xad11a0, `lock dec dword ptr [r14]`) */
     Component00503fb0 *findComponent(const Type00503fb0 *type, unsigned &next) /* derived name */
     {
         FUN_01331c10(&readers);
@@ -76,7 +114,7 @@ class Object016b85e0 : public Object016b9108 /* derived name */
                 break;
             }
         }
-        __sync_fetch_and_sub(&readers, 1);
+        __sync_fetch_and_sub(&readers.count, 1);
         return found;
     }
 
@@ -91,7 +129,7 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     u8 unknown28[0x8];
     /* +0x30: the reader count (FUN_01331c10 takes it, an atomic decrement
      * drops it); a writer holds 0x10000 (slots 5 and 6, the destructor) */
-    int readers;
+    ReadLock01331c10 readers;
     Object016b85e0 *parent;                /* +0x38 */
     Ref00503fb0<Object016b85e0> *children; /* +0x40 */
     unsigned childCount;                   /* +0x48 */
@@ -140,7 +178,7 @@ class Object016b85e0 : public Object016b9108 /* derived name */
     u8 unknown21c[0x10];
     /* +0x22c: a second reader count, taken by slot 3 (FUN_01331c10) and
      * dropped by slot 4 (an atomic decrement) */
-    int readers22c;
+    ReadLock01331c10 readers22c;
     u8 unknown230[0x8];
 };
 

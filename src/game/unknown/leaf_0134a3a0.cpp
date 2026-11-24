@@ -5,5 +5,5 @@
  * dropped */
 void Object016b85e0::slot4()
 {
-    __sync_fetch_and_sub(&readers22c, 1);
+    __sync_fetch_and_sub(&readers22c.count, 1);
 }

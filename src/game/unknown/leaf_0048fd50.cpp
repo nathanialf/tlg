@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_readlock.h"
 #include "tlg_sce_kernel.h"
 
 /* derived names: under the reader count at +0x23c of the record at +0x108 of
@@ -33,7 +34,7 @@ struct Object0048fd50 { /* derived name */
 
 struct Lock0048fd50 { /* derived name */
     u8 unknown0[0x23c];
-    int readers; /* +0x23c */
+    ReadLock01331c10 readers; /* +0x23c */
     u8 unknown240[8];
     pthread_t owner; /* +0x248 */
 };
@@ -49,7 +50,6 @@ extern Object05938c40 *D_5938c40;
 extern Table057d6fe8 D_57d6fe8;
 extern const Class0048fd50 *D_593a6c0; /* derived name: the class of the objects whose bit is set */
 
-void FUN_01331c10(int *readers);                                     /* derived name */
 Object0048fd50 *FUN_0048fe20(Table057d6fe8 *table, const void *key); /* derived name */
 
 // NONMATCHING: the class walk: the base tests each parent against the class before the null
@@ -65,7 +65,7 @@ void FUN_0048fd50(const void *key, int clear) /* derived name */
     Object0048fd50 *found = FUN_0048fe20(&D_57d6fe8, key);
     lock = D_5938c40->unknown108;
     if (scePthreadSelf() != lock->owner)
-        __sync_fetch_and_sub(&lock->readers, 1);
+        __sync_fetch_and_sub(&lock->readers.count, 1);
     if (found && found->isKindOf(D_593a6c0)) {
         if (clear)
             found->flags &= ~1u;

@@ -12,7 +12,11 @@
  * one derived from it), the node's first component of the type D_57d4a68
  * points to is looked up and its flag at +0xa74 (Allow_Push) or +0xa70
  * (AllowExploreSlope) set on enter and cleared on leave; the gaze target
- * handlers look the component up and change nothing. */
+ * handlers look the component up and change nothing. The same table's
+ * s_CaptureVolume, s_CaptureUpVolume and s_CaptureDownVolume handlers set
+ * and clear bits 0 to 2 of the byte at +0x46c, the s_Pickup ones the bool
+ * at +0x487 (stored at 0xad3826 to 0xad3aca, each after the next event's
+ * name). */
 struct MarkerEvent00ad3090 { /* derived name */
     u8 unknown0[0x10];
     Name unknown10; /* +0x10: the object the event is about */
@@ -20,7 +24,14 @@ struct MarkerEvent00ad3090 { /* derived name */
 
 struct Component057d4a68 : Component00503fb0 /* derived name */
 {
-    u8 unknown8c[0x9e4];
+    u8 unknown8c[0x3e0];
+    /* +0x46c: bit 0 inside a capture volume, bit 1 an up one, bit 2 a down
+     * one (the s_CaptureVolume, s_CaptureUpVolume and s_CaptureDownVolume
+     * events: `or byte` and `and byte` at 0xace281 to 0xace781) */
+    u8 captureVolumes; /* derived name */
+    u8 unknown46d[0x1a];
+    bool pickup; /* derived name: +0x487, the s_Pickup events */
+    u8 unknown488[0x5e8];
     int allowExploreSlope; /* derived name: +0xa70 */
     int allowPush;         /* derived name: +0xa74 */
 };
@@ -29,48 +40,46 @@ extern Type00503fb0 *D_5939080; /* derived name: the node's type */
 extern Type00503fb0 *D_57d4a68; /* derived name: the component's type */
 
 /* the component of the type D_57d4a68 points to on the node the event
- * names, or null */
-static inline Component057d4a68 *markerComponent(MarkerEvent00ad3090 *event) /* derived name */
+ * names, or null; a handler that stores tests it before its cast (the
+ * found component's register: round 569D). The type is read here, after
+ * the node's lookup (a parameter loads it before: round 569D) */
+static inline Component00503fb0 *markerComponent(MarkerEvent00ad3090 *event) /* derived name */
 {
     Object016b85e0 *node = findNamed<Object016b85e0>(event->unknown10, D_5939080);
     if (!node)
         return 0;
-    return static_cast<Component057d4a68 *>(node->findComponent(D_57d4a68));
+    return node->findComponent(D_57d4a68);
 }
 
-// NONMATCHING: 45/73 (the four that store; the four gaze handlers are equal). The component's
-// search: the base reloads the array at +0x58 in each pass and keeps one release of the readers
-// with the found component (or 0) tested after it; the build hoists the array and releases twice,
-// the not-found path straight to the return (JumpThreading through the release block).
 void FUN_00ad11a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_Allow_Push.enter" */
 {
     if (event) {
-        if (Component057d4a68 *component = markerComponent(event))
-            component->allowPush = 1;
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->allowPush = 1;
     }
 }
 
 void FUN_00ad12a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_Allow_Push.leave" */
 {
     if (event) {
-        if (Component057d4a68 *component = markerComponent(event))
-            component->allowPush = 0;
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->allowPush = 0;
     }
 }
 
 void FUN_00ad13a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_AllowExploreSlope.enter" */
 {
     if (event) {
-        if (Component057d4a68 *component = markerComponent(event))
-            component->allowExploreSlope = 1;
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->allowExploreSlope = 1;
     }
 }
 
 void FUN_00ad14a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_AllowExploreSlope.leave" */
 {
     if (event) {
-        if (Component057d4a68 *component = markerComponent(event))
-            component->allowExploreSlope = 0;
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->allowExploreSlope = 0;
     }
 }
 
@@ -98,6 +107,70 @@ void FUN_00ad1870(
 {
     if (event)
         markerComponent(event);
+}
+
+void FUN_00ace1a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_CaptureVolume.enter" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->captureVolumes |= 1;
+    }
+}
+
+void FUN_00ace2a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_CaptureVolume.leave" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->captureVolumes &= ~1;
+    }
+}
+
+void FUN_00ace3a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_CaptureUpVolume.enter" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->captureVolumes |= 2;
+    }
+}
+
+void FUN_00ace4a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_CaptureUpVolume.leave" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->captureVolumes &= ~2;
+    }
+}
+
+void FUN_00ace5a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_CaptureDownVolume.enter" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->captureVolumes |= 4;
+    }
+}
+
+void FUN_00ace6a0(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_CaptureDownVolume.leave" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->captureVolumes &= ~4;
+    }
+}
+
+void FUN_00acef90(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_Pickup.enter" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->pickup = true;
+    }
+}
+
+void FUN_00acf090(MarkerEvent00ad3090 *event) /* derived name: "Marker.s_Pickup.leave" */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->pickup = false;
+    }
 }
 
 /* derived names: the trophy counters of the same table (lea at 0xad43c8 and

@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 #include "tlg_types.h"
+#include "tlg_game_readlock.h"
 #include "tlg_sce_kernel.h"
 
 /* derived names: finds the node whose id (+0x210, 0 for none) is the key's
@@ -21,7 +22,7 @@ struct Node0075f2c0 { /* derived name */
 
 struct Lock0075f2c0 { /* derived name */
     u8 unknown0[0x23c];
-    int readers; /* +0x23c */
+    ReadLock01331c10 readers; /* +0x23c */
     u8 unknown240[8];
     pthread_t owner; /* +0x248 */
 };
@@ -32,8 +33,6 @@ struct Object05938c40 { /* derived name */
 };
 
 extern Object05938c40 *D_5938c40;
-
-void FUN_01331c10(int *readers); /* derived name */
 
 struct ReadScope0075f2c0 { /* derived name */
     bool active;
@@ -49,7 +48,7 @@ struct ReadScope0075f2c0 { /* derived name */
     {
         Lock0075f2c0 *lock = D_5938c40->unknown108;
         if (scePthreadSelf() != lock->owner)
-            __sync_fetch_and_sub(&lock->readers, 1);
+            __sync_fetch_and_sub(&lock->readers.count, 1);
     }
 };
 

@@ -7,6 +7,7 @@
 #include <new>
 
 #include "tlg_game_name.h"
+#include "tlg_game_readlock.h"
 #include "tlg_game_object05945a38.h"
 #include "tlg_types.h"
 
@@ -139,8 +140,8 @@ struct World05938c40 { /* derived name */
             writer = 0;
             int count;
             do
-                count = readers;
-            while (compareAndSwap(&readers, count, 0) != count);
+                count = readers.count;
+            while (compareAndSwap(&readers.count, count, 0) != count);
         }
         D_5945a38->lock201028.unlock();
     }
@@ -154,13 +155,13 @@ struct World05938c40 { /* derived name */
     void unlockRead() /* derived name */
     {
         if (scePthreadSelf() != writer)
-            __sync_fetch_and_sub(&readers, 1);
+            __sync_fetch_and_sub(&readers.count, 1);
     }
 
     u8 unknown0[0x23c];
-    int readers;      /* +0x23c */
-    int writers;      /* +0x240 */
-    pthread_t writer; /* +0x248 */
+    ReadLock01331c10 readers; /* +0x23c */
+    int writers;              /* +0x240 */
+    pthread_t writer;         /* +0x248 */
 };
 
 /* derived name: the script C functions' registry (FUN_00c87e30 registers
