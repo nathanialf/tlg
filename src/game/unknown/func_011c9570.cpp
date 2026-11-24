@@ -73,3 +73,21 @@ void FUN_014677a0(FramePoser013fccf0 *self, int count) /* derived name */
     for (unsigned i = 0; i < self->count; ++i)
         self->sets.at(i).frames.resize(count);
 }
+
+/* derived name: slot 3 of the vtable at 0x16d65a8: the model kept at +0x8
+ * and the int at +0x9c, every frame set made `count` frames long (FUN_014677a0),
+ * then each of the five vector sets made `count` vectors long, zero, and
+ * every vector set to one (the base splits the five sets' loop on count
+ * being 0, docs/DECISIONS.md D92) */
+void FUN_01471260(VectorPoser01404660 *self, FadeModel013d4610 *model, int value,
+                  unsigned count) /* derived name */
+{
+    self->model = model;
+    self->unknown9c = value;
+    FUN_014677a0(self, count);
+    for (int i = 0; i < 5; ++i) {
+        self->vectorSets.at(i).vectors.resize(count);
+        for (unsigned k = 0; k < count; ++k)
+            self->vectorSets.at(i).vectors.at(k) = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+}

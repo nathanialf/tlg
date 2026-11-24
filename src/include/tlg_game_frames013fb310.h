@@ -76,8 +76,9 @@ struct VectorSet01404660 { /* derived name */
  * model at +0x8, each set's pose index (an array at +0x10), the sets (an
  * array at +0x28) and their count at +0x98 (FUN_013fccf0 and its copies,
  * one per file: an unsigned counter passed to at(int), each element's
- * index sign-extended in the loop) and a vector set per pose at +0xa0
- * (FUN_01404660 and its copies) */
+ * index sign-extended in the loop) and an int at +0x9c that the slot 3
+ * functions store (FUN_013e7a30, FUN_013e7a50); the classes built on it
+ * add their own fields from +0xa0 */
 struct FramePoser013fccf0 { /* derived name */
     u8 unknown0[0x8];
     FadeModel013d4610 *model;             /* +0x8 */
@@ -85,13 +86,23 @@ struct FramePoser013fccf0 { /* derived name */
     Array05943280<FrameSet013fa8d0> sets; /* +0x28 */
     u8 unknown40[0x58];
     unsigned count; /* +0x98 */
-    u8 unknown9c[0x4];
-    Array05943280<VectorSet01404660> vectorSets; /* +0xa0 */
+    int unknown9c;  /* +0x9c */
+};
+
+/* derived name: a poser with a vector set per pose at +0xa0 (FUN_01404660
+ * and its copies) */
+struct VectorPoser01404660 : FramePoser013fccf0 { /* derived name */
+    Array05943280<VectorSet01404660> vectorSets;  /* +0xa0 */
 };
 
 /* derived name: every frame set of the poser made `count` frames long, with
  * func_0108cf60.cpp's VECTOR_W (FUN_013e5560's body in that file; the tail
  * call of FUN_01404cc0) */
 void FUN_013fae50(FramePoser013fccf0 *self, int count); /* derived name */
+
+/* derived name: the same with func_00fda5c0.cpp's VECTOR_W (its definition
+ * there); the slot 3 functions of the classes built on the poser end with it
+ * (FUN_013e5550, FUN_013e7a30, FUN_013e7a50) */
+void FUN_013e5560(FramePoser013fccf0 *self, int count); /* derived name */
 
 #endif

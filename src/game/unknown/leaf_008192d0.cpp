@@ -133,10 +133,12 @@ int FUN_00819b40(lua_State *state); /* derived name: "GetNumGameObject" */
 
 /* derived name: the creator: the object built (operator new without a
  * test), then its two script functions registered.
- * NONMATCHING: the table's bucket count and entry size (+0x838, +0x83c) are
- * one merged `movabs` store here; the base keeps the four stores of +0x838
- * to +0x848 apart (the shape of a dozen table creators, 0x47e690 among
- * them). */
+ * NONMATCHING: 43/47 at 227 bytes as the base: the order of the last
+ * call's first two address arguments (`lea rsi` then `lea rdx` in the base,
+ * the other order here). The four stores of +0x838 to +0x848 stay apart as
+ * the base's since the lock word is volatile (round 559D,
+ * tlg_game_creation.h); before, the bucket count and entry size were one
+ * merged `movabs` store. */
 Object016ae890 *FUN_008191e0() /* derived name */
 {
     Object016ae890 *objects = new Object016ae890;

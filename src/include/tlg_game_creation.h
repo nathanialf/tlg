@@ -21,15 +21,17 @@ extern __thread SceKernelEqueue D_16dc0a8;
 class Lock059458a4 /* derived name */
 {
   public:
-    /* made free by the lock's release, an atomic store, not a plain one:
-     * where a class holds two arrays with a lock each, the first's word stays
-     * a store of its own before the second's fields are cleared (0x995609:
-     * `mov dword [r15+0x3c], 0` then `vmovdqu [r15+0x40], xmm0`); a plain
-     * zero store there joins the zero stores after it in one 20-byte clear */
-    Lock059458a4()
-    {
-        __sync_lock_release(&locked);
-    }
+    /* made free: a store to the volatile word, never merged with the stores
+     * around it: where a class holds two arrays with a lock each, the first's
+     * word stays a store of its own before the second's fields are cleared
+     * (0x995609: `mov dword [r15+0x3c], 0` then `vmovdqu [r15+0x40], xmm0`;
+     * a plain zero store there joins the zero stores after it in one 20-byte
+     * clear), and the lock of a local array whose other fields live in
+     * registers is still stored (FUN_00c14850: `mov dword [rbp-0x34], 0`,
+     * the array's block in r15; an atomic release store to a local is
+     * promoted away by SROA, PromoteMemoryToRegister.cpp:68 of 3.7.1, a
+     * volatile one is not) */
+    Lock059458a4() : locked(0) {}
 
     /* takes the lock: while another thread holds it, a 100000 ns timer on
      * the thread's queue and a wait for one event with a timeout of 1, or,
@@ -60,7 +62,9 @@ class Lock059458a4 /* derived name */
     }
 
   private:
-    int locked; /* +0x0: 1 while a thread holds it */
+    /* +0x0: 1 while a thread holds it; volatile: other threads take it and
+     * give it back */
+    volatile int locked;
 };
 
 extern Lock059458a4 D_59458a4;

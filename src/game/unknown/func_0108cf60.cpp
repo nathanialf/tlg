@@ -84,12 +84,30 @@ void FUN_013fccf0(FramePoser013fccf0 *self) /* derived name */
 // operation): the base keeps the counter in rax and the sets' block in rsi where this has
 // rcx and rax, and stores the stack guard before the frame's offsets; an int or unsigned
 // counter and the index read before the frame change nothing
-void FUN_01404660(FramePoser013fccf0 *self, int frame) /* derived name */
+void FUN_01404660(VectorPoser01404660 *self, int frame) /* derived name */
 {
     for (int i = 0; i < 5; ++i) {
         takePose(self->sets.at(i).frames.at(frame), self->model, self->indices.at(i));
         self->vectorSets.at(i).vectors.at(frame) =
             self->model->skeleton.poses[self->indices.at(i)].unknown20;
+    }
+}
+
+/* derived name: slot 3 of the vtable at 0x16d5668 (FUN_01404660 is its slot 4): the model kept at +0x8
+ * and the int at +0x9c, every frame set made `count` frames long (FUN_013fae50),
+ * then each of the five vector sets made `count` vectors long, zero, and
+ * every vector set to one (the base splits the five sets' loop on count
+ * being 0, docs/DECISIONS.md D92) */
+void FUN_01404480(VectorPoser01404660 *self, FadeModel013d4610 *model, int value,
+                  unsigned count) /* derived name */
+{
+    self->model = model;
+    self->unknown9c = value;
+    FUN_013fae50(self, count);
+    for (int i = 0; i < 5; ++i) {
+        self->vectorSets.at(i).vectors.resize(count);
+        for (unsigned k = 0; k < count; ++k)
+            self->vectorSets.at(i).vectors.at(k) = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
 

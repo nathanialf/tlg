@@ -68,7 +68,7 @@ void FUN_00c14bc0(Counted00c14bc0 *object); /* derived name: releases it later *
  * 35 forms branch on the exchange's flags at once). An empty assembly
  * statement after the exchange reproduced it and stood here until 2026-11-21;
  * it is not code a developer wrote and was removed (docs/DECISIONS.md D88). */
-inline int compareAndSwap(int *value, int expected, int replacement) /* derived name */
+inline int compareAndSwap(volatile int *value, int expected, int replacement) /* derived name */
 {
     __atomic_compare_exchange_n(value, &expected, replacement, false, __ATOMIC_SEQ_CST,
                                 __ATOMIC_SEQ_CST);
