@@ -1,0 +1,96 @@
+llvm-3.7.1 local rule: at -O2 the unit pipeline's LoopUnswitch unswitches a
+loop non-trivially on a branch whose whole condition is loop-invariant
+(no upstream state)
+
+This patch CHANGES THE UNIT PIPELINE ONLY (PassManagerBuilder::
+populateModulePassManager). Two changes, nothing else:
+  PassManagerBuilder.cpp:247: the pass is built with OptimizeForSize only
+    under a size level or below -O2 (3.7.1: below -O3), so at -O2 it may
+    unswitch non-trivially, as -O3 builds it; nothing else of -O3 (not the
+    275 inliner, not ArgumentPromotion);
+  LoopUnswitch.cpp, UnswitchIfProfitable, before the size refusal: a
+    non-trivial unswitch is refused unless the candidate is a conditional
+    branch and the invariant found is its whole condition. A switch, a select
+    and an invariant part of an and/or keep the refusal the size flag gave
+    them.
+Unchanged: trivial unswitches (done at every level, as before); the cost
+test (CostAllowsUnswitching, -loop-unswitch-threshold 100); the link stage,
+which has no LoopUnswitch (addLTOOptimizationPasses); the second instance
+under -extra-vectorizer-passes (off). The library line (3.3) is another
+compiler. At -O3 the refusal of switches, selects and parts applies too
+(nothing in the tree is built at -O3 with this compiler).
+
+Question (rounds 514E, 544D, 547D): the base splits loops on a count being
+0 (group R: FUN_013e5560 and five copies, `frames.resize(n)` over each key's
+frame set: the shift hoisted by LICM above the test, the zero copy
+specialised by GVN after the clone). 3.7.1's -O2 builds the pass with
+OptimizeForSize, which refuses every non-trivial unswitch (LoopUnswitch.cpp
+:691, after the cost test at :681); the game's unit pipeline today performs
+no unswitch of any kind (round 544D, variant notriv: 0 of 6,568 units
+change with trivial unswitching off as well).
+
+Evidence (scratch d544/, d547/). Stage 1 of every unit run by the line's own
+opt with clang's exact -O2 pass list and a loadable copy of this
+LoopUnswitch.cpp; controls equal to the tree's build in every unit (6,568
+and 6,569 bitcode files byte-identical, 0 functions differ).
+  The stock -O3 argument alone: 5 rows lost (0x968550, 0x9685a0, 0x9685f0: a
+    select on a bool argument, `if (enable) f |= 4; else f &= ~4` in a loop,
+    the base keeps `test sil, sil; cmove` inside it; 0xed1fc0: a switch,
+    sndx; 0xefae90: the invariant part of `ids && i < idCount`, sndx).
+  No loop-size threshold separates them (the lost loops measure 9 to 12,
+    the won 17 to 58).
+  This rule (branch on a whole invariant condition, every prefix): 0 rows
+    lost; 12 functions equal, group R x6 (0x13e5560, 0x13fae50, 0x141ce50,
+    0x143d9c0, 0x1449480, 0x14677a0: 288 to 425 bytes, the base's), the
+    slot 3 resizes x3 (0x13f0770, 0x13f5e70, 0x14873b0, 441 bytes) and the
+    same with a third value x3 (0x13f0fa0, 0x13f66a0, 0x1487be0, 457);
+    3 toward the base (0x113f570 0.35 to 0.97, 0xa70ec0 0.11 to 0.31,
+    0xabbfd0 to the base's structure).
+  Sites against: none among the 14 base functions with two loop copies
+    whose drafts the rule does not give (d547 step4_fourteen.txt: each a
+    developer's two loops over different data).
+
+Source forms the bytes exclude: the loop unswitched by hand (group R: 440
+bytes against the base's 425, round 514E); the plain loop under the stock
+pass (288 and 304 bytes against 425, 441 and 457).
+
+NO upstream state. Every release from 3.3 to 4.0.0 takes branches,
+switches, selects and and/or parts alike and builds the -O2 pass with
+OptimizeForSize (d547 step1_public_form.txt). Sony authorship of this is not
+shown.
+
+Refuted by: ONE matched row whose base bytes keep a branch on a whole
+loop-invariant condition inside a loop that the cost test would allow (a
+loop of at most 100 instructions, not a copy of an unswitched one).
+
+diff -ru a/lib/Transforms/IPO/PassManagerBuilder.cpp b/lib/Transforms/IPO/PassManagerBuilder.cpp
+--- a/lib/Transforms/IPO/PassManagerBuilder.cpp
++++ b/lib/Transforms/IPO/PassManagerBuilder.cpp
+@@ -244,7 +244,10 @@
+   // Rotate Loop - disable header duplication at -Oz
+   MPM.add(createLoopRotatePass(SizeLevel == 2 ? 0 : -1));
+   MPM.add(createLICMPass());                  // Hoist loop invariants
+-  MPM.add(createLoopUnswitchPass(SizeLevel || OptLevel < 3));
++  // Local rule (unswitch-01): from -O2 the pass is built without
++  // OptimizeForSize; it refuses every non-trivial condition but a branch's
++  // whole one (LoopUnswitch.cpp, UnswitchIfProfitable).
++  MPM.add(createLoopUnswitchPass(SizeLevel || OptLevel < 2));
+   MPM.add(createInstructionCombiningPass());
+   MPM.add(createIndVarSimplifyPass());        // Canonicalize indvars
+   MPM.add(createLoopIdiomPass());             // Recognize idioms like memset.
+diff -ru a/lib/Transforms/Scalar/LoopUnswitch.cpp b/lib/Transforms/Scalar/LoopUnswitch.cpp
+--- a/lib/Transforms/Scalar/LoopUnswitch.cpp
++++ b/lib/Transforms/Scalar/LoopUnswitch.cpp
+@@ -687,6 +687,12 @@
+     return false;
+   }
+ 
++  // Local rule (unswitch-01): a non-trivial unswitch only on a conditional
++  // branch whose whole condition is loop-invariant. A switch, a select (both
++  // come without TI) and an invariant part of an and/or are refused.
++  if (!TI || LoopCond != cast<BranchInst>(TI)->getCondition())
++    return false;
++
+   // Do not do non-trivial unswitch while optimizing for size.
+   if (OptimizeForSize || F->hasFnAttribute(Attribute::OptimizeForSize))
+     return false;

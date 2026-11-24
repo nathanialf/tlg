@@ -1982,3 +1982,101 @@ stand-in form (direct to a game object) rather than its own object's definition 
 **Decision.** `tools/layout_link.py` `rodata_table_access`: for a `lea` of the module's read-only data, the table's extent runs from the address taken to the next offset of that section any PC-relative relocation of the object reaches (or the section's end), and the WHOLE extent must equal the base's bytes where the base's `lea` points; otherwise the row is refused, as `rodata_constant` refuses a read. The comparison is exact: it adds a case the step could not judge and loosens none.
 
 **Evidence.** FUN_012fd020 equal with the table at 0x15252d0 compared in full; the gate passes with every other row unchanged (round 462E, scratch e462/commit1.log).
+
+## D92. The unit pipeline's LoopUnswitch unswitches a loop on a branch whose whole condition is invariant: unswitch-01 (2026-11-24)
+
+**Question.** The base splits loops on a count being 0 in a form only a non-trivial LoopUnswitch gives: group R
+(FUN_013e5560 and five copies, `sets.at(i).frames.resize(count)` over each key's frame set) has the resize's shift
+hoisted above the test (LICM before the clone) and the zero copy specialised (GVN after it), 425 bytes where the plain
+loop gives 288; the slot 3 resizes of the track classes (441 and 457 bytes against 304) are the same. LLVM 3.7.1's -O2
+builds the unit pipeline's LoopUnswitch with OptimizeForSize (PassManagerBuilder.cpp:247,
+`createLoopUnswitchPass(SizeLevel || OptLevel < 3)`), and UnswitchIfProfitable refuses every non-trivial condition under
+it (LoopUnswitch.cpp:691, after the cost test at :681). Today the game's unit pipeline performs no unswitch of any kind
+(round 544D, variant notriv: with trivial unswitching off too, 0 of 6,568 units change). Which state of the pass did
+the base's compiler have?
+
+**Evidence (scratch d544/, d547/, d548/).**
+- Mechanism (d544 step1_mechanism.txt): the link pipeline (addLTOOptimizationPasses) has no LoopUnswitch; the order the
+  bytes show (LICM before, GVN after) is the unit pipeline's (:246, :247, :263). The function attribute optsize is never
+  set in the game (no -Os, no cold attribute).
+- Method (d544 step3_variants.txt): stage 1 of every unit by the line's own opt with clang's exact -O2 pass list
+  (`-mllvm -debug-pass=Arguments`), the pass replaced by a loadable copy of 3.7.1's LoopUnswitch.cpp with switches for
+  each candidate kind; the module by the gate's own two-stage form. Controls: 6,568 (d544) and 6,569 (d547) unit
+  bitcode files byte-identical to the tree's, 0 functions differ.
+- The stock -O3 argument alone (the -O2 pass without OptimizeForSize): 5 rows lost, each a candidate kind:
+  0x968550, 0x9685a0, 0x9685f0 (a select on a bool argument: `if (enable) f |= 4; else f &= ~4` in a loop; stage 1's
+  SimplifyCFG has made it a select; the base keeps `test sil, sil; cmove` inside the loop, 0x96857c); 0xed1fc0 (a
+  switch, sndx); 0xefae90 (the invariant part of `ids && i < idCount`, sndx).
+- No loop-size threshold separates them: the per-unit sweep (d544 sweep_un.txt) puts the lost loops at sizes 9 to 12
+  and the won ones at 17 to 58; the base unswitched larger loops than it refused.
+- The rule (a branch on a whole invariant condition only, every prefix): 0 rows lost; 12 functions equal: group R x6
+  (0x13e5560, 0x13fae50, 0x141ce50, 0x143d9c0, 0x1449480, 0x14677a0, 425 bytes), the slot 3 resizes x3 (0x13f0770,
+  0x13f5e70, 0x14873b0, 441) and the same with a third value x3 (0x13f0fa0, 0x13f66a0, 0x1487be0, 457); 3 toward the
+  base: 0x113f570 0.35 to 0.97 (last difference the latch's predicate form, `cmp r9d, 2; jge` against `cmp r9d, 1;
+  jg`), 0xa70ec0 0.11 to 0.31 (the base's empty copy appears; not in the tree), 0xabbfd0 0.27 to 0.05 (the count test
+  hoisted as the base; the entry's load order differs).
+- Installed and gated (round 548D, d548/): tools/build_llvm.sh 3.7.1 with the patch (clang-3.7 sha256 4d0a07ca..., opt
+  87f8d8ff...; before: 70083202..., ec9164d0...). `tools/build.sh gate-all` on 638fa731 with the new compiler (gate1.log):
+  OK, 10,945 claimed functions equal, every row computed (cache 0 reused), .text .relro .data identical to the base.
+  Merged with origin/main e926f2c5, the 11 functions equal in the merged module (match_check --obj), the 11 rows
+  claimed (0 symbols change in the module from removing the notes); gate-all (gate2.log) and the hook's gate: OK,
+  10,982 functions. Commit 11a642a5.
+
+**The rule.** `tools/patches/llvm-3.7.1-unswitch-01-whole-invariant-branch.patch`, the thirteenth patch of the game line:
+1. PassManagerBuilder.cpp:247: `createLoopUnswitchPass(SizeLevel || OptLevel < 2)`: from -O2 the pass is built without
+   OptimizeForSize (nothing else of -O3: not the 275 inliner, not ArgumentPromotion).
+2. LoopUnswitch.cpp, UnswitchIfProfitable, before the size refusal: a non-trivial unswitch is refused unless the
+   candidate is a conditional branch (TI given) and the invariant found is its whole condition.
+Unchanged: trivial unswitches, the cost test and its threshold (100), the second instance under
+-extra-vectorizer-passes (off), the link stage. -O1 keeps the size flag; at -O3 the refusal of switches, selects and parts applies too (nothing is built at -O3
+with this compiler). The library line (3.3) is another compiler. src/sce/ and src/game/sndx/
+are built by this compiler at -O2 and take the rule: every src/sce/ and sndx row equal in both gates.
+
+**Sites for and against.** For: the 12 equal and the 3 moved above. Against: none among the 14 base functions with two
+loop copies whose drafts the rule does not give (d547 step4_fourteen.txt: each a developer's two loops over different
+data, fields, strides or callees, or one helper called twice; seven of them are not drafts). The three exclusions rest
+on matched rows: the select on 0x968550 x3, the switch on 0xed1fc0, the and-part on 0xefae90.
+
+**Source forms the bytes exclude.** The loop unswitched by hand (group R: 440 bytes against the base's 425, round
+514E); the plain loop under the stock pass (288 and 304 bytes against 425, 441 and 457).
+
+**No public state.** Every release from 3.3 to 4.0.0 takes branches, switches, selects and and/or parts alike and builds
+the -O2 pass with OptimizeForSize (d547 step1_public_form.txt; 4.0.0 moves the size refusal into processCurrentLoop).
+The rule is a local rule like ltopre-01 and lxadd-01; Sony's authorship of it is not shown.
+
+**What would refute it.** One matched row whose base bytes keep a branch on a whole loop-invariant condition inside a
+loop that the cost test would allow (at most 100 instructions in 3.7.1's measure, not a copy of an unswitched loop).
+
+**What it predicts.** Base functions whose loop is split on a value defined before it, the two copies sharing every
+operand and one specialised by the folded test, come out of the plain loop with no source change. The two-copy census
+(d544 step2_census.txt, detect.py) cannot count them: it finds 1,689 unwritten game functions with two similar loop
+copies and a choosing test, an upper bound, since 435 matched rows hold the same shape from their source with no
+unswitch (variant notriv) and the 14 drafts examined in d547 were all developer splits. The census's similarity does
+not separate the families either (group R's copies score 0.63, 0x113f570 0.80, against 1.00 for 391 of the rows),
+because GVN specialises the zero copy. The prediction is therefore per function: a loop over a count with an invariant
+`if` inside that the base shows split is written as the plain loop.
+
+**Against.** Two exclusions (switch, and-part) rest on one sndx row each, the select on one family of three. The rule
+has three parts with no public state, where the evidence for each part is the row it saves. The cost threshold is the
+stock 100 and the base's own budget is not measured beyond the sweep's window (lost 9 to 12, won 17 to 58).
+
+**Trigger to revisit.** A matched row as above (refutes); a base loop unswitched on a select, a switch or a part of an
+and/or (the exclusions are then too wide: narrow them to what the rows show); a base unswitch above the threshold's
+reach.
+
+**The decision and its bar.** Adopted. The bar set for it when it was held (round 544D) was ten functions equal with
+none against AND a public form of the rule. The first leg is met (12 equal, 3 moved, 0 against, 0 rows lost in three
+full gates); the second is not, and cannot be: no release in the tree has this state of the pass. It is adopted on the
+first leg alone, on the footing of the line's other local rules (D83, D86, D87): the developers' compiler was a public
+release with private changes, and the record of a local rule is its evidence, the source forms the bytes exclude and
+the test that would refute it.
+
+**What would refute it.** One matched row whose base bytes show a conditional branch on a whole loop-invariant
+condition left INSIDE a loop that the cost test (threshold 100) would allow to be unswitched; or a second kind of
+candidate (a select, a switch, an invariant part) shown unswitched in the base. Either removes the rule or changes its
+exclusions, with the gate rerun.
+
+**A cost of the method, recorded.** The line's compiler install is one directory shared by every worktree. The rebuild
+of round 548D replaced it under two running workers and one landing, which failed in the hook mid-rebuild; nothing was
+committed wrongly, and the workers rebuilt their controls. A compiler rebuild is run with no other worker and no
+landing in flight, or into a scratch prefix (round 554E's way) until the gate has passed.

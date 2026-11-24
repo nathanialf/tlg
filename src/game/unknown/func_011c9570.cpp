@@ -63,3 +63,13 @@ Object016d65f0::Object016d65f0(unsigned count) : model(0), count(count)
         frames40[key].resetSecond();
     }
 }
+
+/* derived name: FUN_013e5560's body (func_00fda5c0.cpp) with this file's
+ * VECTOR_W: every frame set of the poser made `count` frames long */
+// The base's loop is split on the frame count being 0 by the unit pipeline's
+// LoopUnswitch (tools/patches/llvm-3.7.1-unswitch-01-whole-invariant-branch.patch).
+void FUN_014677a0(FramePoser013fccf0 *self, int count) /* derived name */
+{
+    for (unsigned i = 0; i < self->count; ++i)
+        self->sets.at(i).frames.resize(count);
+}

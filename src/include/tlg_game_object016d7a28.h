@@ -40,8 +40,8 @@ class Object016d7a28 /* derived name */
     virtual void FUN_01486d60(); /* slot 1; not traced */
     virtual void FUN_001af750(); /* slot 2; not traced */
 
-  private:
-    FadeModel013d4610 *model;               /* +0x8: null from the constructor */
+  protected:
+    FadeModel013d4610 *model;               /* +0x8: null from the constructor, set by slot 3 */
     Array01343a80<u32> values10;            /* +0x10: one for each key, cleared */
     Array01343a80<FrameSet00fda5c0> sets28; /* +0x28: one for each key (FUN_013e71b0) */
     Array01343a80<Frame016c1128> frames40;  /* +0x40: one for each key */
@@ -49,6 +49,7 @@ class Object016d7a28 /* derived name */
     Frame016c1128 frame60;       /* +0x60 */
     Array01343a80<u32> values80; /* +0x80: one for each key, cleared */
     unsigned count;              /* +0x98: the number of keys */
+    int unknown9c;               /* +0x9c: set by slot 3 */
 };
 
 /* derived names: the class over it whose vtable is at 0x16d7a50
@@ -60,10 +61,14 @@ class Object016d7a50 : public Object016d7a28 /* derived name */
 {
   public:
     virtual void FUN_01486d60(); /* derived name: slot 1, FUN_01487000 here; not traced */
-    virtual void FUN_014873b0(); /* slot 3; not traced */
+    /* slot 3: the model and two values kept, then each key's frame set
+     * made `frames` frames long (func_0128dc30.cpp, the unit of the VECTOR_W
+     * its frames are built from) */
+    virtual void FUN_014873b0(FadeModel013d4610 *model, unsigned frames, int value9c, int valuea0);
 
   private:
-    u8 unknowna0[0x8];
+    int unknowna0; /* +0xa0: set by slot 3 */
+    u8 unknowna4[0x4];
     OwnedBlock05943280 blocka8; /* +0xa8 */
 };
 
@@ -104,8 +109,8 @@ class Object016d5498 /* derived name */
     virtual void FUN_013f5820(); /* slot 1; not traced */
     virtual void FUN_001af750(); /* slot 2; not traced */
 
-  private:
-    FadeModel013d4610 *model;               /* +0x8: null from the constructor */
+  protected:
+    FadeModel013d4610 *model;               /* +0x8: null from the constructor, set by slot 3 */
     Array01343a80<u32> values10;            /* +0x10: one for each key, cleared */
     Array01343a80<FrameSet00fda5c0> sets28; /* +0x28: one for each key (FUN_013e71b0) */
     Array01343a80<Frame016c1128> frames40;  /* +0x40: one for each key */
@@ -113,6 +118,7 @@ class Object016d5498 /* derived name */
     Frame016c1128 frame60;       /* +0x60 */
     Array01343a80<u32> values80; /* +0x80: one for each key, cleared */
     unsigned count;              /* +0x98: the number of keys */
+    int unknown9c;               /* +0x9c: set by slot 3 */
 };
 
 /* derived names: the class over it whose vtable is at 0x16d54c0
@@ -124,10 +130,14 @@ class Object016d54c0 : public Object016d5498 /* derived name */
 {
   public:
     virtual void FUN_013f5820(); /* derived name: slot 1, FUN_013f5ac0 here; not traced */
-    virtual void FUN_013f5e70(); /* slot 3; not traced */
+    /* slot 3: the model and two values kept, then each key's frame set
+     * made `frames` frames long (func_01046bb0.cpp, the unit of the VECTOR_W
+     * its frames are built from) */
+    virtual void FUN_013f5e70(FadeModel013d4610 *model, unsigned frames, int value9c, int valuea0);
 
   private:
-    u8 unknowna0[0x8];
+    int unknowna0; /* +0xa0: set by slot 3 */
+    u8 unknowna4[0x4];
     OwnedBlock05943280 blocka8; /* +0xa8 */
 };
 
@@ -168,8 +178,8 @@ class Object016d52c8 /* derived name */
     virtual void FUN_013f0120(); /* slot 1; not traced */
     virtual void FUN_001af750(); /* slot 2; not traced */
 
-  private:
-    FadeModel013d4610 *model;               /* +0x8: null from the constructor */
+  protected:
+    FadeModel013d4610 *model;               /* +0x8: null from the constructor, set by slot 3 */
     Array01343a80<u32> values10;            /* +0x10: one for each key, cleared */
     Array01343a80<FrameSet00fda5c0> sets28; /* +0x28: one for each key (FUN_013e71b0) */
     Array01343a80<Frame016c1128> frames40;  /* +0x40: one for each key */
@@ -177,6 +187,7 @@ class Object016d52c8 /* derived name */
     Frame016c1128 frame60;       /* +0x60 */
     Array01343a80<u32> values80; /* +0x80: one for each key, cleared */
     unsigned count;              /* +0x98: the number of keys */
+    int unknown9c;               /* +0x9c: set by slot 3 */
 };
 
 /* derived names: the class over it whose vtable is at 0x16d52f0
@@ -188,11 +199,66 @@ class Object016d52f0 : public Object016d52c8 /* derived name */
 {
   public:
     virtual void FUN_013f0120(); /* derived name: slot 1, FUN_013f03c0 here; not traced */
-    virtual void FUN_013f0770(); /* slot 3; not traced */
+    /* slot 3: the model and two values kept, then each key's frame set
+     * made `frames` frames long (func_0101dcc0.cpp, the unit of the VECTOR_W
+     * its frames are built from) */
+    virtual void FUN_013f0770(FadeModel013d4610 *model, unsigned frames, int value9c, int valuea0);
 
   private:
-    u8 unknowna0[0x8];
+    int unknowna0; /* +0xa0: set by slot 3 */
+    u8 unknowna4[0x4];
     OwnedBlock05943280 blocka8; /* +0xa8 */
+};
+
+/* derived names: the class over Object016d52c8 whose vtable is at 0x16d5288
+ * (config/vtables.derived.base.txt): slot 1 its base's, slot 3 its own
+ * (FUN_013f0fa0). The rest is not traced. */
+class Object016d5288 : public Object016d52c8 /* derived name */
+{
+  public:
+    /* slot 3: the model and three values kept, then each key's frame set
+     * made `frames` frames long (func_0101dcc0.cpp, the unit of the VECTOR_W its
+     * frames are built from) */
+    virtual void FUN_013f0fa0(FadeModel013d4610 *model, int value9c, unsigned frames, int valuea0,
+                              int valuea4);
+
+  private:
+    int unknowna0; /* +0xa0: set by slot 3 */
+    int unknowna4; /* +0xa4: set by slot 3 */
+};
+
+/* derived names: the class over Object016d5498 whose vtable is at 0x16d5458
+ * (config/vtables.derived.base.txt): slot 1 its base's, slot 3 its own
+ * (FUN_013f66a0). The rest is not traced. */
+class Object016d5458 : public Object016d5498 /* derived name */
+{
+  public:
+    /* slot 3: the model and three values kept, then each key's frame set
+     * made `frames` frames long (func_01046bb0.cpp, the unit of the VECTOR_W its
+     * frames are built from) */
+    virtual void FUN_013f66a0(FadeModel013d4610 *model, int value9c, unsigned frames, int valuea0,
+                              int valuea4);
+
+  private:
+    int unknowna0; /* +0xa0: set by slot 3 */
+    int unknowna4; /* +0xa4: set by slot 3 */
+};
+
+/* derived names: the class over Object016d7a28 whose vtable is at 0x16d79e8
+ * (config/vtables.derived.base.txt): slot 1 its base's, slot 3 its own
+ * (FUN_01487be0). The rest is not traced. */
+class Object016d79e8 : public Object016d7a28 /* derived name */
+{
+  public:
+    /* slot 3: the model and three values kept, then each key's frame set
+     * made `frames` frames long (func_0128dc30.cpp, the unit of the VECTOR_W its
+     * frames are built from) */
+    virtual void FUN_01487be0(FadeModel013d4610 *model, int value9c, unsigned frames, int valuea0,
+                              int valuea4);
+
+  private:
+    int unknowna0; /* +0xa0: set by slot 3 */
+    int unknowna4; /* +0xa4: set by slot 3 */
 };
 
 #endif

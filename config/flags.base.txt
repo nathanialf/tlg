@@ -36,7 +36,7 @@
 #               under the prebuilt 3.8.1 holds 4,893 of 5,497 game rows
 #               where 3.7.1 holds 5,302 with the PS4 items alone). Built
 #               from source (cxx=3.7.1-src, tools/build_llvm.sh 3.7.1) with
-#               twelve patches (tools/patches/llvm-3.7.1-*.patch, each with
+#               thirteen patches (tools/patches/llvm-3.7.1-*.patch, each with
 #               its evidence and its sweep in its header). Four PS4 items:
 #               one nop after the stack check's failure call (sspnop, D26);
 #               a thread-local with local linkage kept general-dynamic
@@ -59,7 +59,11 @@
 #               a second one, tlsbonus, was removed by D87: the stock
 #               fold it forbade is what the base shows). One local
 #               rule of the btver2 scheduling model, no upstream state: a
-#               locked exchange-add is one micro-op (lxadd).
+#               locked exchange-add is one micro-op (lxadd). One local
+#               rule of the unit pipeline, no upstream state: at -O2
+#               LoopUnswitch unswitches non-trivially on a branch whose
+#               whole condition is loop-invariant, and on no switch,
+#               select or part of an and/or (unswitch).
 #               5,980 of its 16,344 functions load a stack canary, those that
 #               take a local's address or hold an array (tools/fingerprint.py
 #               --range 0x1a3e00:, D20): the Orbis default
