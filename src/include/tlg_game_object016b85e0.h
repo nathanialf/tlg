@@ -99,6 +99,19 @@ class Object016b85e0 : public Object016b9108 /* derived name */
         return found;
     }
 
+    /* whether the node has a component whose type is `type` or derives from
+     * it, the answer taken under lockRead and unlockRead: a caller that
+     * branches on it gets the release copied into each way out of the
+     * search, the found pointer tested after its own (SimplifyCFG's
+     * FoldCondBranchOnPHI on the answer's phi; 0xc1efc0, 0xcefda0) */
+    bool hasComponent(const Type00503fb0 *type) /* derived name */
+    {
+        lockRead();
+        bool has = componentLocked(type) != 0;
+        unlockRead();
+        return has;
+    }
+
     /* the first component from `next` on whose type is `type` or derives
      * from it; `next` is left after it. The count is taken and dropped
      * here by hand, through one address (the script functions and the
@@ -115,6 +128,25 @@ class Object016b85e0 : public Object016b9108 /* derived name */
             }
         }
         __sync_fetch_and_sub(&readers.count, 1);
+        return found;
+    }
+
+    /* the same search under lockRead and unlockRead: the drop forms the
+     * count's address from the node again, so the first drop of a scan
+     * folds it (`lock dec dword ptr [r14+0x30]`) and a later one shares the
+     * register the address was kept in (0x503785, 0x503805) */
+    Component00503fb0 *nextComponent(const Type00503fb0 *type, unsigned &next) /* derived name */
+    {
+        lockRead();
+        Component00503fb0 *found = 0;
+        for (unsigned i = next; i < componentCount; ++i) {
+            if (::isKindOf(componentAt(i)->type, type)) {
+                found = componentAt(i);
+                next = i + 1;
+                break;
+            }
+        }
+        unlockRead();
         return found;
     }
 

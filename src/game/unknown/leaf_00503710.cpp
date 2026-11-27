@@ -12,19 +12,18 @@ extern Type00503fb0 *D_581b510; /* derived name */
 
 typedef void (*Visit00503710)(Component00503fb0 *component, int unknown); /* derived name */
 
-// NONMATCHING: 78/98, 328 bytes against 314, the same under the rule of
-// tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch (the two drops are apart in
-// both builds). Two residuals of known classes: the first find's drop through the call's kept
-// address (`lock dec [r15]`) where the base forms it again (`lock dec [r14 + 0x30]` at 0x503785,
-// FUN_01331c10's class in tlg_game_readlock.h), and the children's index widened to 64 bits
-// (`inc rbx`) where the base sign-extends the int at each use (`movsxd rbx, ebx` at 0x503824, the
-// parked IndVarSimplify class of func_00503fb0.cpp) (round 579D)
+// NONMATCHING: 96/98, 314 bytes as the base. The first drop folds its address (nextComponent's
+// unlockRead) and the children's index is sign-extended at each use (childAt under an unsigned
+// counter), as the base. Left: the visit pointer's move to r13 for the loop (`mov r13, rbx`, a copy
+// the greedy allocator's split puts at the drop block's last split point) comes after the first
+// `lock dec` where the base has it before (0x503782); the post-RA list scheduler moves it only
+// above the test (round 587C)
 void FUN_00503710(Object016b85e0 *node, Visit00503710 visit) /* derived name */
 {
     unsigned next = 0;
-    for (Component00503fb0 *component = node->findComponent(D_581b510, next); component;
-         component = node->findComponent(D_581b510, next))
+    for (Component00503fb0 *component = node->nextComponent(D_581b510, next); component;
+         component = node->nextComponent(D_581b510, next))
         visit(component, 0);
-    for (int i = 0; i < node->childCount; ++i)
-        FUN_00503710(node->children[i].get(), visit);
+    for (unsigned i = 0; i < node->childCount; ++i)
+        FUN_00503710(node->childAt(i), visit);
 }
