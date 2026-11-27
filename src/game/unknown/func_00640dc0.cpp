@@ -1,9 +1,11 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_array.h"
 #include "tlg_game_name.h"
 #include "tlg_game_node.h"
 #include "tlg_game_object016b85e0.h"
 #include "tlg_libc.h"
 #include "tlg_game_vector.h"
+#include "tlg_hks.h"
 
 /* derived names: FUN_00640dc0 is this file's static initializer. It builds
  * the vector constants of tlg_game_vector.h into the file's own copies
@@ -263,7 +265,9 @@ bool FUN_00644570() /* derived name */
  * D_57d35a8 points to, at +0x40 a record with a settings record at +0x1a0
  * and an object at +0x1e8 whose components are searched */
 struct Settings00640dc0 { /* derived name */
-    u8 unknown0[0x5038];
+    u8 unknown0[0x68];
+    Name name68; /* +0x68: the name FUN_00641e40 compares */
+    u8 unknown6c[0x4fcc];
     int unknown5038; /* +0x5038 */
     int unknown503c; /* +0x503c */
 };
@@ -273,6 +277,8 @@ struct Member00640dc0 { /* derived name */
     Settings00640dc0 *unknown1a0; /* +0x1a0 */
     u8 unknown1a8[0x40];
     Object016b85e0 *unknown1e8; /* +0x1e8 */
+    u8 unknown1f0[0x1020];
+    Array05943280<Name> names1210; /* +0x1210: the names FUN_00641f20 searches */
 };
 
 struct List00640dc0 { /* derived name */
@@ -373,4 +379,85 @@ bool FUN_00645010() /* derived name */
         settings->unknown503c = hasFlag(8);
     }
     return settings->unknown5038 != 0;
+}
+
+/* derived names: a reader of the frame's first argument for FUN_00c91140
+ * (as leaf_003e7260.cpp's). */
+struct ArgumentReader00c8c290 { /* derived name */
+
+    explicit ArgumentReader00c8c290(lua_State *state_)
+        : state(state_), unknown8(0), unknown14(0), unknown18(0)
+    {
+        index =
+            -(int)((unsigned long)((char *)state_->top - (char *)state_->base) / sizeof(HksObject));
+    }
+
+    lua_State *state; /* +0x0 */
+    void *unknown8;   /* +0x8 */
+    int index;        /* +0x10 */
+    int unknown14;    /* +0x14 */
+    int unknown18;    /* +0x18 */
+};
+
+void FUN_00c91140(ArgumentReader00c8c290 *reader, Name *name); /* derived name */
+
+/* derived names: a script C function: reads its first argument as a Name
+ * (FUN_00c91140), runs the handler of every entry of the table that has
+ * that name (the last one's answer kept) and pushes whether it answered
+ * true; returns 1 */
+int FUN_00641d30(lua_State *state) /* derived name */
+{
+    Name name;
+    ArgumentReader00c8c290 reader(state);
+    FUN_00c91140(&reader, &name);
+    int result = 0;
+    for (unsigned i = 0; i < sizeof D_5810c30 / sizeof D_5810c30[0]; i++) {
+        if (name == D_5810c30[i].name && D_5810c30[i].handler)
+            result = D_5810c30[i].handler();
+    }
+    pushBoolean(state, result);
+    return 1;
+}
+
+/* derived names: a script C function: reads its first argument as a Name
+ * (FUN_00c91140) and pushes whether the settings record at +0x1a0 is there
+ * and holds that name at +0x68; returns 1 */
+int FUN_00641e40(lua_State *state) /* derived name */
+{
+    Name name;
+    ArgumentReader00c8c290 reader(state);
+    FUN_00c91140(&reader, &name);
+    Settings00640dc0 *settings = D_57c9390->unknown40->unknown1a0;
+    pushBoolean(state, settings && settings->name68 == name);
+    return 1;
+}
+
+/* derived name: whether the name is one of the record's names at +0x1210
+ * (the name taken by value: its copy's reference raised before the record
+ * is read, dropped after the search) */
+static inline bool isListed(Name name)
+{
+    const Array05943280<Name> &names = D_57c9390->unknown40->names1210;
+    for (unsigned i = 0; i < names.size(); i++) {
+        if (names.at(i) == name)
+            return true;
+    }
+    return false;
+}
+
+/* derived names: a script C function: reads its first argument as a Name
+ * (FUN_00c91140) and pushes whether it is one of the record's names;
+ * returns 1 */
+// NONMATCHING: 45/89, 331 bytes against 323 (round 604D). Left: the base joins the two tests of
+// the name's index (the copy's release, then the name's) in one flag (`mov al, 1; sete r15b; je`,
+// then `test al, al; jne` after the push) where the build threads the empty name's path and copies
+// the push; the guard's pointer then not kept in r15 (the base loads it again at the end)
+int FUN_00641f20(lua_State *state) /* derived name */
+{
+    Name name;
+    ArgumentReader00c8c290 reader(state);
+    FUN_00c91140(&reader, &name);
+    bool listed = isListed(name);
+    pushBoolean(state, listed);
+    return 1;
 }

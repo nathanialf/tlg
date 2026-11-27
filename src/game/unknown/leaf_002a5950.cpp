@@ -45,15 +45,15 @@ void FUN_00c91140(ArgumentReader00c8c290 *reader, Name *name); /* derived name *
  * body as FUN_002a5810): reads its first argument as a
  * Name (FUN_00c91140) and pushes whether the object at 0x5827190 is there
  * and holds it; returns 1. */
-// NONMATCHING: the Name's index (0x3e7260's class): the base loads it once after FUN_00c91140
-// (`mov ebx, [rbp-0x50]`) and keeps it through the copy, the atomics and the release (the reader
-// known not to keep the Name's address: FUN_00c91140 is not in the module); the build reloads
-// it after each atomic and pushes in two arms (326 bytes of 310)
+// NONMATCHING: 87/91, 310 bytes as the base (round 604D: FUN_00c91140 defined, the Name's index
+// kept; the result a statement of its own, so the copy is released before the push). Left: the
+// array's object in rcx where the base has rdi (`mov rdi, [D_5827190]`, the loop's index then in edi)
 int FUN_002a5950(lua_State *state) /* derived name */
 {
     Name name;
     ArgumentReader00c8c290 reader(state);
     FUN_00c91140(&reader, &name);
-    pushBoolean(state, D_5827190 && D_5827190->has(name));
+    bool held = D_5827190 && D_5827190->has(name);
+    pushBoolean(state, held);
     return 1;
 }

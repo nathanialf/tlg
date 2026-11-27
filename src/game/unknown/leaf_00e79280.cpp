@@ -5,10 +5,11 @@
  * is read twice into one handle (FUN_00c91760, a reader made for each read)
  * and whether the handle holds no property name is pushed; returns 1, or 0
  * with fewer arguments. */
-// NONMATCHING: 39/75, the handle's end as FUN_00e66e40's: the base tests the index it read once
-// (`mov edi, [rbp-0x70]`) for the push and the release; the build reloads it after the empty name's raise
-// Round 596D: with atomic-01's write clause dropped (tools/patches/proposed/llvm-3.7.1-atomic-02-*) the build keeps it
-// too, 69/72, the `lock inc` then scheduled above its `lea` and `mov edx`
+// NONMATCHING: 69/72, 287 bytes as the base; one difference, at the handle's end: the schedulers' order at the empty
+// name's raise: the build takes the `lock inc` before the `lea` of the table and the `mov edx, -1` that the base
+// places above it; decided after the IR (with -post-RA-scheduler=false the pre-RA order is `lock inc; lea; mov rcx`,
+// and the post-RA pass lifts only the `mov rcx`): D97's two rules for `lock dec`, not `lock inc` (round 600D,
+// scratch d600/lockinc_drafts.txt)
 int FUN_00e79280(lua_State *state) /* derived name */
 {
     if (argumentCount(state) < 2)

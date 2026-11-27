@@ -293,9 +293,13 @@ void FUN_00da7a00(Compiler00dacb80 *self) /* derived name */
  * (the code 0x38fffe00 and slot 6 of the reporter) with the pending jump
  * list (+0xc40, left empty) joined to it, the jump joined to the record's
  * list at +0x4, then FUN_00db00e0's body over the jump at +0x8 */
-// NONMATCHING: list-ilp order: the base adds 4 to the record (the exit list's address) right
-// after the vptr load, the build after the jump list's store; the tail's pc in esi against edi
-// (greedy's assignment)
+// NONMATCHING: the base's last join is a sibling call (`jmp`, after the canary check); the
+// build's is a `tail` call that code generation keeps as a call, because the local's
+// llvm.lifetime.end follows it (isInTailCallPosition, CodeGen/Analysis.cpp:507-520). With that
+// one marker removed from the linked module the whole function is equal, its list-ilp order and
+// register assignment with it (round 603E, scratch e603/lt.ll). So the local's lifetime ends
+// before the last call: a helper's own local, as Lua 5.1's luaK_jump returns `j`, inlined here.
+// Not TailCallElim at the link (that loses 22 rows, e603/notes.md)
 void FUN_00daff40(Compiler00dacb80 *self) /* derived name */
 {
     FuncState00dacb80 *fs = self->funcState;

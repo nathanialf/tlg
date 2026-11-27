@@ -20,8 +20,11 @@ ArgumentReader00c91760::ArgumentReader00c91760(lua_State *state_, const Property
  * left as it is. Anything else leaves the handle alone. The handle is not
  * kept: its callers' handles stay their own (0xe66fd3: the name's index
  * read once around the empty name's raise) */
-// NONMATCHING: 68/219, 795 bytes against 813 (registers from instruction 8, not worked); written so the
-// module has its body for its callers (FUN_00e66e40 and its siblings): both parameters nocapture
+// NONMATCHING: 136/219, 822 bytes against 813 (round 600D: the string's case first, the thread's flag through
+// threadMayUse()). Left: the unit stage's JumpThreading copies the store of the handle's object for the null record
+// (`.thread7`: `mov qword [r14], 0` on its own before the release) where the base keeps one store of a phi (r13
+// zeroed before the record's test, 0xc918f3) in the release's block; the guard pointer's register (rbx, reloaded
+// after the xadd at 0xc91943) follows from it. Both parameters nocapture in the module, for its callers
 void FUN_00c91760(ArgumentReader00c91760 *reader, PropertyHandle00c91760 *handle)
 {
     HksObject *value;
@@ -30,7 +33,16 @@ void FUN_00c91760(ArgumentReader00c91760 *reader, PropertyHandle00c91760 *handle
     int type = value->type & 0xf;
     if (type == 9 || type == 10)
         type = 6;
-    if (type == 7) {
+    if (type == 4) {
+        Name name = nameArgument(reader->state, reader->index);
+        if (name.index) {
+            Object016b9108 *record = static_cast<Object016b9108 *>(D_17ac870[name.index].record18);
+            Object016b9108 *object = 0;
+            if (record && ((record->flags16 & 4) || threadMayUse()))
+                object = record;
+            handle->object = object;
+        }
+    } else if (type == 7) {
         if (indexToHksObjectUnchecked(reader->state, reader->index, &value))
             return;
         const PropertyHandle00c91760 *pair;
@@ -49,11 +61,5 @@ void FUN_00c91760(ArgumentReader00c91760 *reader, PropertyHandle00c91760 *handle
         }
         handle->object = pair->object;
         handle->name = pair->name;
-    } else if (type == 4) {
-        Name name = nameArgument(reader->state, reader->index);
-        if (name.index) {
-            Object016b9108 *object = static_cast<Object016b9108 *>(D_17ac870[name.index].record18);
-            handle->object = object && isUsable(object) ? object : 0;
-        }
     }
 }

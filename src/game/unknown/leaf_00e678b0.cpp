@@ -7,23 +7,26 @@
  * object's type has the property (FUN_00cb7e20), the third is stored in
  * the element the second counts from 1 (FUN_013ca090, mode 1). Returns 0
  * (no results). */
-// NONMATCHING: 98/137, the handle's end as FUN_00e66e40's (leaf_00e66e40.cpp): the base keeps the name's
-// index across the empty name's `lock inc`; the build reloads it and merges the two ends
-// Round 596D: under proposed atomic-02 (no write clause) the build keeps it too, 103/137; the two ends stay merged
+// NONMATCHING: 131/137, 577 bytes as the base; one difference, at both copies of the handle's end: the schedulers'
+// order at the empty name's raise: the build takes the `lock inc` before the `lea` of the table and the `mov edx,
+// -1` that the base places above it; decided after the IR (with -post-RA-scheduler=false the pre-RA order is `lock
+// inc; lea; mov rcx`, and the post-RA pass lifts only the `mov rcx`): D97's two rules for `lock dec`, not `lock inc`
+// (round 600D, scratch d600/lockinc_drafts.txt) (the early return for no object, the type's test inside the scope:
+// round 600D)
 int FUN_00e678b0(lua_State *state) /* derived name */
 {
     if (argumentCount(state) >= 3) {
         PropertyHandle00c91760 handle;
         ArgumentReader00c91760 reader(state);
         FUN_00c91760(&reader, &handle);
-        if (Object016b9108 *object = handle.object) {
-            if (typeOf(state, 2) == 3) {
-                Property00e78f90 property;
-                if (FUN_00cb7e20(object->type, &handle.name, &property)) {
-                    ArgumentReader00c91760 value(state, &property, 3, 1,
-                                                 (int)toNumber(state, 2) - 1);
-                    FUN_013ca090(&property, object, &value, 1);
-                }
+        Object016b9108 *object = handle.object;
+        if (!object)
+            return 0;
+        if (typeOf(state, 2) == 3) {
+            Property00e78f90 property;
+            if (FUN_00cb7e20(object->type, &handle.name, &property)) {
+                ArgumentReader00c91760 value(state, &property, 3, 1, (int)toNumber(state, 2) - 1);
+                FUN_013ca090(&property, object, &value, 1);
             }
         }
     }

@@ -202,12 +202,15 @@ void Object016bba90::enterClosure(const Record00dd1460 *closure)
  * written into a buffer first, a link (numbered from 3) to each pointer it
  * holds, the closing tag */
 // NONMATCHING: the base checks the canary before its last print and makes
-// that print a tail call: the buffer must not escape, so FUN_00db3a90 and
-// FUN_00dd2590 are nocapture in its unit (TailCallElim's alloca tracker);
-// FUN_00db3a90's body is not in this one (the rest equal, 321 bytes for 320).
-// With FUN_00db3a90 defined (leaf_00db3a90.cpp) the link's FunctionAttrs makes
-// both nocapture, but TailCallElim runs only in the unit's pipeline
-// (PassManagerBuilder.cpp:241; none in the link's, :433-560): round 601E
+// that print a sibling call. Two things stop it here (round 603E, scratch
+// e603/lt.ll: with both changed in the linked module the function is equal):
+// the print is not marked `tail` (the unit's TailCallElim sees the buffer
+// escape into FUN_00db3a90, defined in another unit), and the buffer's
+// llvm.lifetime.end follows it, which code generation will not move past
+// (isInTailCallPosition, CodeGen/Analysis.cpp:507-520). So the buffer is not
+// this function's local in the unit: a helper's, which the unit does not
+// inline and the link does. TailCallElim at the link is not the base's (22
+// rows lost, e603/notes.md)
 void Object016bba90::enterMethod(const Record00dd1510 *method)
 {
     FUN_00dd2590(D_15bccf7, method, D_15bce8c);
