@@ -38,6 +38,6 @@ void FUN_00c8af90(lua_State *state, const Property00e78f90 *property) /* derived
     }
     setTable(state);
     PUSH_KNOWN_STRING(state, D_15c07ba);
-    pushBoolean(state, property->flags & 1);
+    pushBoolean(state, property->isArray);
     setTable(state);
 }

@@ -63,6 +63,11 @@ Object016c36b8::~Object016c36b8()
 // for the base's r12/r13); compiled once with -enable-misched=false as a diagnostic only, every
 // register and the size are the base's and only the lea's place stays (after the store at +0x670,
 // the post-RA scheduler's). The drop as a monotonic atomic changes nothing (edited IR, compiled once).
+// Round 590D (scratch d590/notes.md): the move is the scheduler's issue-width hazard, lxadd-01's class
+// (MachineScheduler.cpp:1702 of 3.7.1): bottom-up, after the one-micro-op store at +0x670 the
+// two-micro-op `lock dec` (btver2 [WriteALULd, WriteRMW], IssueWidth 2) goes pending and the lea is the
+// only choice. LOCK_DEC with one micro-op (scratch switch, the whole module): only these seven change,
+// every register the base's, 0 rows lost; the lea's place after the store is the post-RA list scheduler's.
 void Object016c36b8::slot5(Context016b4560 *context)
 {
     context->group668 = unknown28;

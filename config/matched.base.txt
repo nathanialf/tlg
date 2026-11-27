@@ -11104,3 +11104,7 @@ FUN_00802d40 src/game/unknown/leaf_00802d40.cpp _Z12FUN_00802d40P12Ring00802d40
 FUN_0020e440 src/game/unknown/leaf_0020e440.cpp _Z12FUN_0020e440P9lua_State
 FUN_00d96ff0 src/game/unknown/leaf_00d96ff0.cpp _Z12FUN_00d96ff0P9lua_StatePK9HksObject
 FUN_00db9aa0 src/game/unknown/leaf_00db9aa0.cpp _Z12FUN_00db9aa0P8HksTable
+FUN_00cb7e20 src/game/unknown/leaf_00cb7e20.cpp _Z12FUN_00cb7e20PK12Type00503fb0PK4NameP16Property00e78f90
+FUN_0063d130 src/game/unknown/leaf_0063d130.cpp _Z12FUN_0063d130P14Camera0063d130PKcS2_S2_
+FUN_00e774f0 src/game/unknown/leaf_00e774f0.cpp _Z12FUN_00e774f0P9lua_State
+FUN_00dbdc20 src/game/unknown/leaf_00dbdc20.cpp _Z12FUN_00dbdc20P8HksTableP9HksObject

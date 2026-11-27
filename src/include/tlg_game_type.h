@@ -34,6 +34,12 @@ struct Type00503fb0 {     /* derived name */
     /* +0x2c: bit 1 set for a type whose objects are not copied (FUN_008a9440
      * and the script's "Clone", FUN_00e768a0, make none) */
     unsigned char flags;
+    unsigned char unknown2d[0xb];
+    /* +0x38: the type's own properties, a table of chains by the name's
+     * index modulo the count of chains at +0x40 (FUN_00cb7e20: `div esi`;
+     * no table for a count of 0), a parent's looked up after */
+    struct PropertyNode00cb7e20 **properties;
+    unsigned propertyChains; /* +0x40 */
 };
 
 /* the type itself or one it derives from: the type is compared first, then
