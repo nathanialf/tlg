@@ -2,17 +2,11 @@
 #include "tlg_game_scriptcode.h"
 #include "tlg_hks.h"
 
-/* derived name: the length of a table (FUN_00db9aa0, its body not written) */
-unsigned FUN_00db9aa0(HksTable *table);
-
 /* derived name: Lua's lua_objlen by its arguments: the length of a number's
  * text, of a string, a table, a userdata's block (its size from bit 10 of
  * its head, less the head) or a structure's table, else 0; the call timed */
-// NONMATCHING: the number's text: the base converts from memory after a vxorps (the recorded
-// memory-form vcvtss2sd residual, docs/NOTES.md round 260A) and duplicates the exit's mark test into that
-// case
-// Round 578E: its conversions are the base's under cvtzero-01 (not installed: tools/patches/
-// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
+/* (the mark is tested again only after the number's formatting: the table's
+ * length, FUN_00db9aa0, only reads, so the mark's 0 is known after it) */
 size_t FUN_00d96ff0(lua_State *s, const HksObject *value)
 {
     HksApiTimer timer(s);

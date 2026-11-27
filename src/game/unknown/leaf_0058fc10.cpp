@@ -26,12 +26,11 @@ template <class T> static inline T minimum(T a, T b)
  * message written when the node asks for one, and each child of the node
  * dispatches the node it holds at +0x38 with the sum as the owner's value.
  * Returns 0. Handler unknown. */
-// NONMATCHING: the switches' compare order: the base tests the value type 0, then 7, then 4
-// and the node's kind 2, 1, 0; the build tests 7, 4, 0 (an if-chain in the base's order gives
-// the same: SimplifyCFG makes it a switch); then the node held in r13 where the build uses r12,
-// and the float message's `vcvtss2sd` from memory (round 260A's class) still to compare
-// Round 578E: its conversions are the base's under cvtzero-01 (not installed: tools/patches/
-// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
+// NONMATCHING: 1,256 bytes against 1,304. The value type's tests are the base's (0, 7, 4: case 4
+// written first, its block the switch's next one, SelectionDAGBuilder.cpp:7938-7948 swaps it to
+// the end; round 589E). Then the state's tests: the base tests 0 first, then 1 (0x58fd49,
+// 0x58fd6c), this build 1 first (the two ifs made one switch whose case 0 block follows it);
+// and the node held in r13 where the build uses r12.
 int FUN_0058fc10(ValueOwner583950 *self, NamedNode583950 *arg) /* derived name */
 {
     ParentNode583950Kind32 *node = static_cast<ParentNode583950Kind32 *>(arg->target);
@@ -46,11 +45,11 @@ int FUN_0058fc10(ValueOwner583950 *self, NamedNode583950 *arg) /* derived name *
     float inY = 0.0f;
     float inZ = 0.0f;
     switch (self->valueType) {
-    case 0:
-        inInt = self->intValue;
-        break;
     case 4:
         inFloat = self->floatValue;
+        break;
+    case 0:
+        inInt = self->intValue;
         break;
     case 7:
         inX = self->vector.x;

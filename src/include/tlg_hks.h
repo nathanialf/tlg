@@ -295,6 +295,9 @@ struct HksNode {
     HksObject value;
 };
 
+/* derived name: Lua's luaH_getn, the length of a table (leaf_00db9aa0.cpp) */
+unsigned FUN_00db9aa0(HksTable *table);
+
 /* derived names: a structure's type: its name (a string object, at +0x18;
  * FUN_00de0a90) and its named slots from +0x20, their count first: each
  * slot's name and its index among the structure's words (FUN_00db8650) */

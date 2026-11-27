@@ -16,10 +16,16 @@ struct Target0042dbe0 /* derived name */
 };
 
 struct Position0042dbe0 { /* derived name */
-    int x;                /* copied whole */
-    float y;              /* raised by 0.5 for the debug text */
-    int z;                /* copied whole */
-    int w;                /* copied whole */
+    Position0042dbe0() = default;
+
+    /* the fields as given: the debug texts build their raised copy with it
+     * (FUN_004eafd0: every field read before the first is stored) */
+    Position0042dbe0(int x, float y, int z, int w) : x(x), y(y), z(z), w(w) {}
+
+    int x;   /* copied whole */
+    float y; /* raised by 0.5 for the debug text */
+    int z;   /* copied whole */
+    int w;   /* copied whole */
 };
 
 struct Object0042dbe0 /* derived name */

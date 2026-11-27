@@ -22,15 +22,17 @@ void FUN_0042dbe0(Object0042dbe0 *self) /* derived name */
  * a line of debug text "JumpSpeed: %f" with the float at +0x1dc drawn half a
  * unit above the position at +0x50 (FUN_00205720: the position, a colour
  * 0xc080a0ff and a scale of 1, a flag 0, the format and its value) */
-// NONMATCHING: greedy's assignment: the base holds the object in rbx and the slot's address in
-// r14, the build the other way; the operations the same
-// Round 578E: its conversion is the base's under cvtzero-01 (not installed: tools/patches/
-// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
+// NONMATCHING: 195 bytes as the base, the order of the copy's stores only: the base stores x, the
+// style, y, then z and w (0x4eb059, 0x4eb05c), this build z and w before the style and y. The
+// copy is field by field in the base (every field read first, z and w not merged into one 8-byte
+// store); a 16-byte copy gives one vector move, a raised field in the constructor merges z and w
+// (DAGCombiner's walk up the chain stops at the float store of y). Round 589E
 void FUN_004eafd0(Object0042dbe0 *self) /* derived name */
 {
     FUN_0042dbe0(self);
     if (self->unknown108) {
-        Position0042dbe0 position = self->position;
+        const Position0042dbe0 &at = self->position;
+        Position0042dbe0 position(at.x, at.y, at.z, at.w);
         position.y += 0.5f;
         TextStyle0042dbe0 style(0xc080a0ff, 1.0f);
         FUN_00205720(position, style, 0, "JumpSpeed: %f", self->jumpSpeed);
