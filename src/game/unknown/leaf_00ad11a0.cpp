@@ -63,7 +63,11 @@ struct Component057d4a68 : Component00503fb0 /* derived name */
     u8 unknown484[0x3];
     bool pickup;   /* derived name: +0x487, the s_Pickup events */
     u8 unknown488; /* +0x488: cleared by FUN_00acfd10 */
-    u8 unknown489[0x4b];
+    u8 unknown489[0x1b];
+    /* +0x4a4: a time, the clock plus 25 less up to 14.99 at random
+     * (FUN_00acee30; FUN_00ac0160 stores the same at its owner's +0x4a4) */
+    float unknown4a4;
+    u8 unknown4a8[0x2c];
     float unknown4d4; /* +0x4d4: a time (FUN_00ad0020, FUN_00ad0150) */
     u8 unknown4d8[0x570];
     int unknowna48;        /* +0xa48 */
@@ -450,5 +454,24 @@ void FUN_00ad0150(MarkerEvent00ad3090 *event) /* derived name */
         if (Component00503fb0 *component = markerComponent(event))
             static_cast<Component057d4a68 *>(component)->unknown4d4 =
                 D_57c9390->unknown38->unknown900->unknown44 + 4.0f;
+    }
+}
+
+/* derived names: a handler of the same table found by its shape (its
+ * event's name is not traced): the component's time at +0x4a4 set to the
+ * clock plus 25 less up to 14.99 at random, as FUN_00ac0160 sets it (the
+ * one constant -14.99f / 2^30 at 0x14d8dd8: RAND_MAX is 0x3fffffff) */
+// NONMATCHING: 347 against 346 bytes, every instruction the base's but two registers: the node the
+// name names and the component found trade r12 and r15 (the base's node r12, component r15, so the
+// store is `[r15+0x4a4]` and the node's operands carry no SIB byte). The sibling handlers store with
+// no call after the search; here rand() keeps the component live across a call. Casting before the
+// test gives the same bytes (round 586C)
+void FUN_00acee30(MarkerEvent00ad3090 *event) /* derived name */
+{
+    if (event) {
+        if (Component00503fb0 *component = markerComponent(event))
+            static_cast<Component057d4a68 *>(component)->unknown4a4 =
+                D_57c9390->unknown38->unknown900->unknown44 +
+                (25.0f - 14.99f * (rand() / (float)RAND_MAX));
     }
 }

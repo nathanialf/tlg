@@ -14,7 +14,8 @@ class Node00b4cb70 : public Object016b85e0 /* derived name */
 {
   public:
     u8 unknown238[0x348];
-    u8 flags580; /* +0x580: bit 0 cleared here */
+    unsigned
+        flags580; /* +0x580: bit 0 set by FUN_00b4ca50, cleared here (a word: 0xb4ca5c reads it whole) */
 };
 
 struct Value00b4cb70 { /* derived name: the component's int at +0x5c */
@@ -31,5 +32,25 @@ void FUN_00b4cb70(Node00b4cb70 *self) /* derived name */
             view->value = 0x80000000;
             component->flags |= 4;
         }
+    }
+}
+
+/* derived names: the same class's switch of bit 0 of +0x580: set, the
+ * component's int at +0x5c is cleared where it is not 0 (bit 2 of its flags
+ * set with it); cleared, FUN_00b4cb70 (inlined: the flags' word read once
+ * before the test, `mov eax, [r14+0x580]`) */
+void FUN_00b4ca50(Node00b4cb70 *self, int on) /* derived name */
+{
+    if (on) {
+        self->flags580 |= 1;
+        if (Component00503fb0 *component = self->component(D_5946a58)) {
+            Value00b4cb70 *view = reinterpret_cast<Value00b4cb70 *>(component);
+            if (view->value != 0) {
+                view->value = 0;
+                component->flags |= 4;
+            }
+        }
+    } else {
+        FUN_00b4cb70(self);
     }
 }
