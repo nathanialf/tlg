@@ -7,12 +7,9 @@
  * block at +0x20, then the array, its destructor a tail call). The
  * destructor is the class's key function, so this file emits the vtable
  * and the deleting destructor (0x13d9390). */
-// NONMATCHING: instruction order only: the base spills the array's address (`mov [rbp - 0x30],
-// rdx`) before the int's store at +0x28, the build after it. 95 of 97 equal under --module.
 Object016d3e60::~Object016d3e60()
 {
-    unknown28 = 0;
-    entries.removeAll();
+    records.clear();
     if (link48)
         link48->detach();
     if (owned50)

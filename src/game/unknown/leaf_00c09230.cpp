@@ -6,6 +6,24 @@
 Float4A FUN_0134ab60(const Float4A &rotation);                   /* derived name */
 void FUN_0020c3b0(Float4A *rotation, float x, float y, float z); /* derived name */
 
+/* derived names: the same rotation returned, and the product of two
+ * rotations returned (FUN_013439c0): each a temporary of the statement that
+ * takes it (the base gives each its own frame slot, -0x80 and -0x90: no
+ * lifetime markers on a temporary) */
+inline Float4A rotationFromAngles(float x, float y, float z) /* derived name */
+{
+    Float4A made;
+    FUN_0020c3b0(&made, x, y, z);
+    return made;
+}
+
+inline Float4A rotationProduct(const Float4A &first, const Float4A &second) /* derived name */
+{
+    Float4A product;
+    FUN_013439c0(&product, &first, &second);
+    return product;
+}
+
 /* derived names: the four modes FUN_00c09230 reads where a call's
  * arguments are (FUN_00c0e720 appends them from its node's +0x28) */
 struct Modes00c09230 {
@@ -23,10 +41,11 @@ struct Modes00c09230 {
  * transform's rotation by the third against the reference's at +0xf0 (mode
  * 4 keeps the turn from it on its own stack), the angles cut by the fourth
  * and pushed again as a rotation (FUN_0020c3b0). Returns 0. */
-// NONMATCHING: first draft, 18/209 in the module, 886 bytes against 937: the frame is 0x58
-// bytes against 0x78 (the base keeps the seven 16-byte locals apart: the angles at -0x40, -0x60
-// and -0x70, the rotations at -0x50 and -0x80, the change at -0x90, its inverse at -0xa0);
-// the position's three zero stores are one dword and one qword here
+// NONMATCHING: 205/206 in the module, the base's frame (0x78: the turn's angles, the made
+// rotation, the change and its inverse are temporaries of their statements, unmarked and so each
+// in a slot of its own; the made rotation reuses the popped one, -0x50): the zeroed position of
+// modes 1 and 5 is stored as a dword and a qword (y and z merged by the DAG's
+// MergeConsecutiveStores) where the base keeps three dwords
 int FUN_00c09230(void *vm, const CallArguments583950 *arguments) /* derived name */
 {
     Stacks00c09610 *self = static_cast<Stacks00c09610 *>(vm);
@@ -80,28 +99,25 @@ int FUN_00c09230(void *vm, const CallArguments583950 *arguments) /* derived name
 
     Reference00c09610 *reference = self->reference;
     const Float4A referenceAngles = FUN_0134ab60(reference->rotation);
-    const Float4A rotation = self->popRotation();
+    Float4A rotation = self->popRotation();
     Float4A angles = FUN_0134ab60(rotation);
     switch (modes->rotation) {
     case 1:
         transform->rotation = reference->rotation;
         break;
     case 2: {
-        const Float4A own = FUN_0134ab60(transform->rotation);
-        Float4A turned;
-        FUN_0020c3b0(&turned, own.x, referenceAngles.y, own.z);
-        transform->rotation = turned;
-        angles = Float4A(0.0f, angles.y, 0.0f, 1.0f);
+        const Float4A &own = FUN_0134ab60(transform->rotation);
+        transform->rotation = rotationFromAngles(own.x, referenceAngles.y, own.z);
+        angles.x = 0.0f;
+        angles.z = 0.0f;
+        angles.w = 1.0f;
         break;
     }
     case 3:
         break;
     case 4: {
         const Float4A &to = reference->rotation;
-        const Float4A inverse(-to.x, -to.y, -to.z, to.w);
-        Float4A change;
-        FUN_013439c0(&change, &transform->rotation, &inverse);
-        self->pushChange(change);
+        self->pushChange(rotationProduct(transform->rotation, Float4A(-to.x, -to.y, -to.z, to.w)));
         transform->rotation = to;
         break;
     }
@@ -114,11 +130,11 @@ int FUN_00c09230(void *vm, const CallArguments583950 *arguments) /* derived name
         angles = Float4A(0.0f, 0.0f, 0.0f, 0.0f);
         break;
     case 2:
-        angles = Float4A(angles.x, 0.0f, angles.z, 1.0f);
+        angles.y = 0.0f;
+        angles.w = 1.0f;
         break;
     }
-    Float4A result;
-    FUN_0020c3b0(&result, angles.x, angles.y, angles.z);
-    self->pushRotation(result);
+    FUN_0020c3b0(&rotation, angles.x, angles.y, angles.z);
+    self->pushRotation(rotation);
     return 0;
 }

@@ -16,7 +16,8 @@ struct Object007aa0a0 { /* derived name */
  * [rax+0xb0]` before `mov rax, [rdi+0xb0]`) */
 // NONMATCHING: instruction order (list-ilp), 71/73 in the module: the name's
 // index (`mov esi, r15d`) is taken before the base's vptr store
-// (`mov [rdx+rax], rdi`), after it in the base; 0x7abb80 and 0x7ac330 the same
+// (`mov [rdx+rax], rdi`), after it in the base; 0x7abb80 and 0x7ac330 the same. Round
+// 599C: the Post RA top-down list latency scheduler's (leaf_009f5c80.cpp's note)
 void FUN_007aa0a0(Object007aa0a0 *self) /* derived name */
 {
     CommandQueue05938c40 *queue = D_5938c40->queue;

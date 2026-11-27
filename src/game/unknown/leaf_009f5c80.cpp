@@ -10,11 +10,13 @@ struct Object009f5c80 : Object016b9108 { /* derived name */
 /* derived name: when the object has its pointer, queues the command of kind
  * 9 with its name under the queue's lock, if the other object has its
  * pointer too; else marks the object with the flags 0x12. */
-// NONMATCHING: instruction order (list-ilp), 76/78 in the module: the name's
+// NONMATCHING: instruction order (post-RA scheduler), 76/78 in the module: the name's
 // index (`mov esi, r15d`) is taken before the base's vptr store
 // (`mov [rdx+rax], rdi`), after it in the base (leaf_007aa0a0.cpp's residual)
-// Round 560C, link-stage IR: the vptr store is before the index's zext there; the DAG schedules the
-// zext (a register value, no chain) above the store. Not an order of the source.
+// Round 599C, link-stage IR cut and compiled alone: the order is the base's up to the Virtual
+// Register Rewriter (also with -pre-RA-sched=source; the zext moved earlier in the IR is worse);
+// the Post RA top-down list latency scheduler lifts the copy that feeds `shl; lock inc` above the
+// store. Decided after the IR.
 void FUN_009f5c80(Object009f5c80 *self, Object009f5c80 *other) /* derived name */
 {
     if (!self->unknown28)

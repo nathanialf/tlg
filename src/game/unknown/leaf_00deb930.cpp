@@ -9,6 +9,9 @@ void FUN_00d971b0(lua_State *state, const HksObject *object, const HksObject *me
  * at 0x16bc940): the first argument's metatable set to the second, nil, a
  * table or a struct; pushes true */
 // NONMATCHING: after settop's loop the base stores the top before it reads the base again (`mov [rbx+0x48], rcx; mov rsi, [rbx+0x50]`); here GVN PRE puts the load first
+// Round 599C, link-stage IR: GVN's load PRE puts the reload of the base in the loop's exit and
+// JumpThreading then clones the join's store of the top after it; the store moved before the
+// reload in that IR gives the base. setTop (tlg_hks.h) is shared with matched rows: not changed.
 int FUN_00deb930(lua_State *state)
 {
     luaL_checkany(state, 1);

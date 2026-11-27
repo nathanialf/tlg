@@ -204,7 +204,10 @@ void Object016bba90::enterClosure(const Record00dd1460 *closure)
 // NONMATCHING: the base checks the canary before its last print and makes
 // that print a tail call: the buffer must not escape, so FUN_00db3a90 and
 // FUN_00dd2590 are nocapture in its unit (TailCallElim's alloca tracker);
-// FUN_00db3a90's body is not in this one (the rest equal, 321 bytes for 320)
+// FUN_00db3a90's body is not in this one (the rest equal, 321 bytes for 320).
+// With FUN_00db3a90 defined (leaf_00db3a90.cpp) the link's FunctionAttrs makes
+// both nocapture, but TailCallElim runs only in the unit's pipeline
+// (PassManagerBuilder.cpp:241; none in the link's, :433-560): round 601E
 void Object016bba90::enterMethod(const Record00dd1510 *method)
 {
     FUN_00dd2590(D_15bccf7, method, D_15bce8c);

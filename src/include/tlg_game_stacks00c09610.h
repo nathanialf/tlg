@@ -11,6 +11,9 @@
 #include "tlg_math.h"
 #include "tlg_types.h"
 
+class Object016b85e0; /* tlg_game_object016b85e0.h */
+struct Body0059d4e0;  /* tlg_game_mover0059d4e0.h */
+
 /* derived names: an object of the first stack: a block of the game's heaps
  * (released through FUN_00ebf3f0) with a position at +0x10 and a rotation at
  * +0x20 */
@@ -89,6 +92,15 @@ struct Stacks00c09610 {
             vectors[++vectorTop] = vector;
     }
 
+    /* the rotation at the top, the identity when there is none
+     * (FUN_005a5b90, FUN_005a6110) */
+    Float4A topRotation() const
+    {
+        if (rotationTop < 0)
+            return Float4A(0.0f, 0.0f, 0.0f, 1.0f);
+        return rotations[rotationTop];
+    }
+
     Float4A popRotation()
     {
         Float4A rotation(0.0f, 0.0f, 0.0f, 1.0f);
@@ -117,7 +129,11 @@ struct Stacks00c09610 {
             changes[++changeTop] = change;
     }
 
-    u8 unknown0[0xf0];
+    u8 unknown0[0xc];
+    float step; /* +0xc: the time a call's step takes (FUN_0059d4e0 and its siblings) */
+    u8 unknown10[0x18];
+    Object016b85e0 *node; /* +0x28: the node the machine runs for */
+    u8 unknown30[0xc0];
     Reference00c09610 *reference; /* +0xf0 */
     u8 unknownf8[0x10];
     Transform00c09610 *transforms[DEPTH]; /* +0x108 */
@@ -132,6 +148,8 @@ struct Stacks00c09610 {
     int rotationTop;                      /* +0x61c */
     int positionTop;                      /* +0x620 */
     int changeTop;                        /* +0x624 */
+    u8 unknown628[0x38];
+    Body0059d4e0 *body; /* +0x660: what FUN_0059d4e0 and its siblings move */
 };
 
 #endif

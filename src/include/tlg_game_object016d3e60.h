@@ -33,22 +33,38 @@ class Owned016d3e60 /* derived name */
     virtual ~Owned016d3e60();
 };
 
+/* derived names: the records of the class at 0x16d3e60 with the block at
+ * +0x18 and an int at +0x20, cleared together: the int zeroed through the
+ * table's own address (the complete destructor computes +0x8 before it
+ * stores +0x28, `lea rdx, [r15+8]` ahead of `mov dword [r15+0x28], 0`),
+ * then every record dropped */
+struct RecordTable016d3e60 /* derived name */
+{
+    void clear() /* derived name */
+    {
+        unknown20 = 0;
+        entries.removeAll();
+    }
+
+    Array05943280<Entry0139b6b0> entries; /* +0x0 */
+    OwnedBlock05943280 block18;           /* +0x18 */
+    int unknown20;                        /* +0x20: zero before the entries go */
+};
+
 /* derived names: the class whose vtable is at 0x16d3e60 (two slots: the
  * complete destructor 0x13d7400 and the deleting one 0x13d9390). Its fields
- * are traced only where the destructor reads them: an array of 16-byte
+ * are traced only where the destructor reads them: a table of 16-byte
  * records with a counted reference each at +0x8 (its destructor
- * 0x139b6b0 out of line), a block at +0x20, an int at +0x28, an object told
- * at +0x48 and one owned at +0x50. */
+ * 0x139b6b0 out of line), with a block at +0x20 and an int at +0x28, an
+ * object told at +0x48 and one owned at +0x50. */
 class Object016d3e60 /* derived name */
 {
   public:
     virtual ~Object016d3e60();
 
   private:
-    Array05943280<Entry0139b6b0> entries; /* +0x8 */
-    OwnedBlock05943280 block20;           /* +0x20 */
-    int unknown28;                        /* +0x28: zero before the entries go */
-    u8 unknown2c[0x1c];
+    RecordTable016d3e60 records; /* +0x8 */
+    u8 unknown30[0x18];
     Link016d3e60 *link48;   /* +0x48 */
     Owned016d3e60 *owned50; /* +0x50 */
 };

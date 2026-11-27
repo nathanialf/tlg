@@ -39,6 +39,10 @@ class Object016beae0 : public Object00f0e560 /* derived name */
 // that order (also 0xeb6e4d, 0xeb7095, 0xebd6a7), but as four bytes in the constructor (0xeb6d81);
 // four byte stores here become one 32-bit store, and this memset puts the byte at +0x37 before the
 // word. The deleting destructor FUN_00ebf580 differs at the same place only.
+// Round 599C, link-stage IR compiled alone: the memset and a single i24 store give the same
+// (byte first, also with -pre-RA-sched=source): the two stores of one TokenFactor; 0xebd6a7 has
+// an unrelated store between the base's word and byte, so the base is that form too. Chained
+// i16 then i8 stores give the base's order. Decided in SelectionDAG, after the IR.
 Object016beae0::~Object016beae0()
 {
     if (unknownc >= 0) {
