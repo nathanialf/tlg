@@ -20,8 +20,8 @@ class Object016c31d8 : public Base016b4560 /* derived name */
     Object016c31d8(const Name &name) : Base016b4560(name) {}
 
     virtual ~Object016c31d8();
-    virtual void slot5(); /* derived name; FUN_012a81e0, not traced */
-    virtual void slot6(); /* derived name; FUN_00c1b350, not traced */
+    virtual void slot5(Context016b4560 *context); /* derived name; FUN_012a81e0, not traced */
+    virtual void slot6();                         /* derived name; FUN_00c1b350, not traced */
 };
 
 /* derived name: the complete destructor: every object of Object016c31a0's

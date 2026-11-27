@@ -107,9 +107,10 @@ class Object016b4ce0 /* derived name */
     /* 0x1390e90: the entry whose name at +0x310 is `name` (its index
      * compared): the last one found when it is, else the first of the array,
      * kept as the last found; null when none is (its callers pass the
-     * pointer at 0x581e3a8, FUN_00b16780 its own argument: `mov rsi` kept);
+     * pointer at 0x581e3a8, FUN_00b16780 its own argument: `mov rsi` kept),
+     * returned as the arrays hold it (the callers cast it to the entry);
      * not written equal, so it keeps its address's name */
-    friend Entry016b4ce0 *FUN_01390e90(Object016b4ce0 *self, const Name &name);
+    friend Object016b9108 *FUN_01390e90(Object016b4ce0 *self, const Name &name);
 
     /* 0xb16780: the entry of the name counted down and shown again */
     void countDown(const Name &name); /* derived name */

@@ -8,7 +8,7 @@
  * no count left, or to 155 and up by the share of the count left. */
 void Object016b4ce0::countDown(const Name &name)
 {
-    Entry016b4ce0 *entry = FUN_01390e90(this, name);
+    Entry016b4ce0 *entry = Entry016b4ce0::of(FUN_01390e90(this, name));
     if (!entry)
         return;
     const int previous = entry->countC8;

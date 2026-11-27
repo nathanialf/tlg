@@ -24,6 +24,9 @@ static inline float easeCurve(float t, float first, float second)
 // converts each from memory) and the nops before the loops; the curves' registers are the base's
 // with 1 - t written where it is used, after t * t * second (round 507D: greedy assigns the
 // block's ranges in order, so u * u and its cube take xmm3 and xmm4 first and 1 - u xmm6)
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 int FUN_00c65ce0(ValueOwner583950 *self, void *arg) /* derived name */
 {
     ParentNode583950Kind18 *node =

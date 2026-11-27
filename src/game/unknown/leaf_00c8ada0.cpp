@@ -10,6 +10,9 @@
 // NONMATCHING: the base converts each float from memory after one vxorps of the
 // pass-through register (`vcvtss2sd xmm0, xmm8, [rsi]`); the build loads each with
 // vmovss and converts the register (NOTES round 260A item 1, region-wide)
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 void FUN_00c8ada0(lua_State *state, const Matrix01343890 *matrix) /* derived name */
 {
     String01331840 text;

@@ -30,8 +30,8 @@ class Object016b4340 : public Base016b4340 /* derived name */
     }
 
     virtual ~Object016b4340();
-    virtual void slot5(); /* derived name; FUN_001af750, not traced */
-    virtual void slot6(); /* derived name; FUN_00c1b350, not traced */
+    virtual void slot5(Context016b4560 *context); /* derived name; FUN_001af750, not traced */
+    virtual void slot6();                         /* derived name; FUN_00c1b350, not traced */
 
   private:
     int unknown2c; /* +0x2c: zero from the constructor; not traced */

@@ -30,6 +30,8 @@ template <class T> static inline T minimum(T a, T b)
 // and the node's kind 2, 1, 0; the build tests 7, 4, 0 (an if-chain in the base's order gives
 // the same: SimplifyCFG makes it a switch); then the node held in r13 where the build uses r12,
 // and the float message's `vcvtss2sd` from memory (round 260A's class) still to compare
+// Round 578E: its conversions are the base's under cvtzero-01 (not installed: tools/patches/
+// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
 int FUN_0058fc10(ValueOwner583950 *self, NamedNode583950 *arg) /* derived name */
 {
     ParentNode583950Kind32 *node = static_cast<ParentNode583950Kind32 *>(arg->target);

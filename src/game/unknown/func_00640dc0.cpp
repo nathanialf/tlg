@@ -353,6 +353,8 @@ bool FUN_00645500() /* derived name */
  * +0x503c both set once flag 8 is set and +0x503c is clear; otherwise
  * +0x5038 cleared and +0x503c set to flag 8; whether +0x5038 is set */
 // NONMATCHING: 61 of 215: not worked past the first difference.
+// Round 578E: its conversion is the base's under cvtzero-01 (not installed: tools/patches/
+// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
 bool FUN_00645010() /* derived name */
 {
     Named006442f0 *object = findNamed<Named006442f0>(Name(D_15aba40), D_5814678);

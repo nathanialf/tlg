@@ -18,6 +18,9 @@ struct Object00201b70 { /* derived name */
 // `vxorps xmm0, xmm0, xmm0` (`vcvtss2sd xmm0, xmm0, [rbx+0x194]`); the build loads it
 // (`vmovss`) and converts the register. The game region holds 252 memory forms and 219
 // register forms, none in a claimed function: the region's question, as the library's.
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 void FUN_00201b70(Object00201b70 *self) /* derived name */
 {
     puts("<DEBUG_PRINT_FPS>");

@@ -27,7 +27,8 @@ struct Component00503fb0 : public Object016b9108 { /* derived name */
     /* +0x28: the node that holds it (slot 6 of Object01343880's family
      * stores it; the marker events read it: FUN_00ad1960, FUN_00ace7a0) */
     Object016b85e0 *node;
-    u8 unknown30[0xa];
+    int unknown30; /* +0x30: tested non-zero by FUN_01003640 and FUN_0126eb60 */
+    u8 unknown34[0x6];
     /* +0x3a: flags; FUN_00cf56b0 clears flag 2 of the component of the
      * type the pointer at 0x5948180 holds */
     u8 flags3a;
@@ -43,7 +44,10 @@ struct Component00503fb0 : public Object016b9108 { /* derived name */
      * Soldier_SoldierHelmet_TractionInvalidArea_Enter and _Leave assign
      * (FUN_0046f770, FUN_0046f980) */
     Name name58;
-    u8 unknown5c[0x2c];
+    /* +0x5c: flags; a component with bit 1 set is passed over by FUN_01003640
+     * and FUN_0126eb60 */
+    u8 flags5c;
+    u8 unknown5d[0x2b];
     int kind; /* +0x88 */
 };
 

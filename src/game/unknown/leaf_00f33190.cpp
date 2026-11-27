@@ -22,8 +22,8 @@ class Object016beee8 : public Base016b4560 /* derived name */
     Object016beee8(const Name &name) : Base016b4560(name) {}
 
     virtual ~Object016beee8();
-    virtual void slot5(); /* derived name; FUN_00f320c0, not traced */
-    virtual void slot6(); /* derived name; FUN_00c1b350, not traced */
+    virtual void slot5(Context016b4560 *context); /* derived name; FUN_00f320c0, not traced */
+    virtual void slot6();                         /* derived name; FUN_00c1b350, not traced */
 
   private:
     Ref00503fb0<Object016b9108>

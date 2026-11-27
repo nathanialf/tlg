@@ -28,6 +28,9 @@ namespace LuaBindings
 // Round 575E: no source form; 3.7.1's peephole drops the load's fold at the IMPLICIT_DEF of the
 // extending load's pattern (PeepholeOptimizer.cpp:1102), r244577 (3.8) folds it; the vxorps
 // and the pass-through's register are round 260A's
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 int VectorToString(lua_State *state)
 {
     int count = state->top - state->base;
@@ -46,6 +49,9 @@ int VectorToString(lua_State *state)
 // NONMATCHING: the base folds each float's load into `vcvtss2sd` (memory form) after a
 // `vxorps` of the pass-through register; the build loads with `vmovss` and converts registers
 // (the conversions' undefined pass-through operand, NOTES round 260A item 1: region-wide)
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 int VectorToString2(lua_State *state)
 {
     int count = state->top - state->base;
@@ -62,6 +68,9 @@ int VectorToString2(lua_State *state)
 
 // FUN_00e804a0, registered as "LuaBindings::VectorV3" under "V3" (0xe8143d).
 // NONMATCHING: VectorToString's residual (the memory-form vcvtss2sd)
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 int VectorV3(lua_State *state)
 {
     int count = state->top - state->base;
@@ -78,6 +87,9 @@ int VectorV3(lua_State *state)
 
 // FUN_00e803e0, registered as "LuaBindings::QuatToString" under "__tostring" (0xe81747).
 // NONMATCHING: VectorToString's residual (the memory-form vcvtss2sd)
+// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
+// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
+// a zero of the block made at selection.
 int QuatToString(lua_State *state)
 {
     int count = state->top - state->base;

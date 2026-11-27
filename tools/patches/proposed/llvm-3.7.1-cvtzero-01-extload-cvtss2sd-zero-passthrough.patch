@@ -1,0 +1,103 @@
+llvm-3.7.1 local rule: a float loaded and converted to double is selected
+as the memory form of vcvtss2sd over a zero
+(no upstream state)
+
+Placed under tools/patches/proposed/ so that tools/build_llvm.sh, which applies
+every tools/patches/llvm-3.7.1-*.patch (:143), does not take it: to install,
+the supervisor moves it up one directory in a round of its own.
+
+This patch CHANGES INSTRUCTION SELECTION ONLY (X86InstrSSE.td, the AVX
+pattern of an extending float load under OptForSpeed, X86InstrSSE.td:1908).
+One change, nothing else:
+  `(extloadf32 addr)` is selected as `VCVTSS2SDrm (FsFLD0SS), addr`, where
+  3.7.1 selects `VCVTSS2SDrr (IMPLICIT_DEF), (VMOVSSrm addr)`: the load is
+  folded and the pass-through operand is a zero (FsFLD0SS,
+  X86InstrSSE.td:457, `vxorps x, x, x` after expansion) instead of an
+  undefined register.
+Unchanged: the register form `(fextend FR32)` (`VCVTSS2SDrr src, src`,
+:1900), the OptForSize pattern and `(fextend (loadf32))` (both still an
+IMPLICIT_DEF, :1902-1907), the SSE forms, every other conversion
+(vcvtsi2ss/sd keep their undefined pass-through and ExecutionDepsFix's
+clearance), the library line (3.3).
+
+Question (rounds 260A, 575E, 578E): the base converts a loaded float with
+`vcvtss2sd x, z, [mem]` at 258 sites in 55 functions of the game region
+(13 written in the tree, all drafts; none a matched row), where 3.7.1 gives
+`vmovss y, [mem]; vcvtss2sd x, u, y`. Its 218 register-form sites are all
+`vcvtss2sd x, y, y` (:1900), the same as 3.7.1.
+
+Base census (scratch e578/census.py, census.txt, groups.py, groups.txt):
+  258 of 258 memory-form sites have, as the last write of the pass-through
+    register before them, a zeroing xor of it (vxorps, or vxorpd where the
+    execution domain pass turned it), in the same straight run: no branch
+    target and no call between, and nothing but conversions reads it.
+  122 xors feed the 258: 81 one conversion each, 41 two to eighteen
+    (0x731bf7: one `vxorpd xmm0` for eighteen conversions, 0x2ee06b: one
+    `vxorps xmm5` for six); in 110 of the 122 groups the last conversion
+    writes the zero's register (the end of its live range); the xor stands
+    1 to 11 instructions before its first conversion (82 at 1) and is made
+    again after each call (0x201b70: three calls, three xors).
+  That is a value with a live range at register allocation: a zero made at
+  selection, one per block (the DAG's CSE), rematerialized by the
+  allocator across a call (FsFLD0SS is rematerializable and as cheap as a
+  move). An undefined pass-through (3.7.1's IMPLICIT_DEF, made an undef
+  read by ProcessImplicitDefs) has an empty live interval and takes the
+  first register of the order, xmm0, whatever is live (the base's 3,279
+  vcvtsi2ss/sd all pass xmm0, round 260A); ExecutionDepsFix breaks such a
+  read only when the register was written in the last 16 instructions
+  (X86InstrInfo.cpp:5188-5201, ExecutionDepsFix.cpp:373 and :474-497) and
+  inserts the xor directly before each instruction (:551-580,
+  breakPartialRegDependency): neither a shared register other than xmm0
+  nor a xor away from the conversion.
+
+No public state: the prebuilt 3.8.1, 3.9.1 and 4.0.0 give the memory form
+of VectorToString2's bitcode (upstream r244577, D11591, lets the peephole
+fold the load across the IMPLICIT_DEF) with an undefined pass-through and
+no xor; 5.0.2 to 9.0.0 with the function optsize give the same (scratch
+e578/oracle/). No release from 3.7.1 to 9.0.0 selects a zero there.
+
+Evidence (scratch e578/). The td file with this change, tblgen'd and
+X86ISelDAGToDAG.cpp compiled with build-3.7.1's own command, the member
+replaced in a copy of libLLVMX86CodeGen.a, clang linked by build.ninja's
+command (sc/vB; control sc/v0, the unchanged td: X86GenDAGISel.inc
+identical to the build's and clang-3.7 byte-identical to the installed
+721d5f4c). Code generation of the game module's link-stage bitcode
+(module.lto.bc of 4b8ec52b): under v0 0 functions differ from the build's
+module.o; under this rule 13 functions change, the 13 written functions
+holding the memory form, 0 matched rows (0 rows lost):
+  equal: FUN_00201b70, FUN_006423c0, FUN_006424c0, FUN_00c65ce0,
+    FUN_00c8ada0, LuaBindings::VectorToString (0xe7e520),
+    VectorToString2 (0xe7e670), QuatToString (0xe803e0), VectorV3 (0xe804a0);
+  each conversion the base's, with residuals of their own: FUN_00d96ff0
+    (0.436 to 0.491), FUN_004eafd0, FUN_0058fc10, FUN_00645010 (level).
+  The same 13 functions as r244577's IMPLICIT_DEF part alone (round 575E);
+  with both, the same bytes as this rule alone (sc/vBc): r244577 is not
+  needed once the pass-through is not an IMPLICIT_DEF.
+  Selecting `VCVTSS2SDrr (FsFLD0SS), (VMOVSSrm addr)` instead (sc/vA) gives
+  the same module function for function: 3.7.1's peephole folds the load
+  when no IMPLICIT_DEF stands between (PeepholeOptimizer.cpp:1102). The
+  bytes do not choose between the two; this form is the one line.
+
+Source forms the bytes exclude (rounds 260A, 575E): a float loaded in the
+conversion's block with one use is always made an extending load
+(DAGCombiner.cpp:8741-8755) and selected as load plus register form at -O2;
+a float with another use or from another block gives `vcvtss2sd x, y, y`
+(the base's 218 register sites); optsize on the function gives the memory
+form with an undefined pass-through and no xor; no form gives a zero.
+
+Trigger to revisit: a base memory-form vcvtss2sd whose pass-through is not
+a zero of its block (refutes); a base vcvtss2sd whose zero is shared with a
+float constant 0.0 of the same block (the zero would then be the constant's
+node: consistent, settles that it is FsFLD0SS).
+
+--- a/lib/Target/X86/X86InstrSSE.td
++++ b/lib/Target/X86/X86InstrSSE.td
+@@ -1906,7 +1906,7 @@
+     (VCVTSS2SDrm (f32 (IMPLICIT_DEF)), addr:$src)>,
+     Requires<[UseAVX, OptForSize]>;
+ def : Pat<(extloadf32 addr:$src),
+-    (VCVTSS2SDrr (f32 (IMPLICIT_DEF)), (VMOVSSrm addr:$src))>,
++    (VCVTSS2SDrm (f32 (FsFLD0SS)), addr:$src)>,
+     Requires<[UseAVX, OptForSpeed]>;
+
+ def CVTSS2SDrr : I<0x5A, MRMSrcReg, (outs FR64:$dst), (ins FR32:$src),

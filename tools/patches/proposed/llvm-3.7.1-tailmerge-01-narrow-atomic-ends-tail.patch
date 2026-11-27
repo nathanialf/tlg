@@ -1,0 +1,169 @@
+llvm-3.7.1 local rule: an atomic read-modify-write of 32 bits or less ends
+a common tail in BranchFolding, and a block holding one is not
+tail-duplicated
+(no upstream state)
+
+This patch CHANGES BRANCHFOLDING'S TAIL MERGE AND TAILDUPLICATION ONLY. Two
+changes, nothing else:
+  BranchFolding.cpp, ComputeCommonTailLength (:319-365): the comparison
+    stops at an instruction that loads and stores through a volatile memory
+    operand of at most 4 bytes, as it stops at inline asm (the FIXME at
+    :354-360). SelectionDAG marks every atomic's memory operand volatile
+    (SelectionDAG::getAtomic), so on x86 these are `lock` xadd, cmpxchg,
+    inc, dec, add, sub, or and and of a dword (or narrower). Instructions
+    after it in the tail still merge (0x52d3e0: the test and branch after
+    two releases are one block).
+  TailDuplication.cpp, shouldTailDuplicate (:551-605): a block holding such
+    an instruction is not duplicated (both runs, early and late).
+Unchanged: every other instruction, the tail-merge size (3) and the
+fall-through and adjacent-block rules (:567-581), a qword atomic (merged as
+in 3.7.1), JumpThreading's own rule (jumpthread-01) and SimplifyCFG. No
+other patch of the list touches these two files; it applies to the 3.7.1
+tarball's and after the others in any order.
+
+Question (rounds 372B, 569D, 576D, 579D): the base keeps two identical
+atomic read-modify-writes apart before one successor where 3.7.1 merges
+them: 0x857df0's two reader-count drops (`lock dec dword ptr [r15]`, one
+falling into the loop's test, one jumping to it), 0x52d3e0's and 0xd8feb0's
+two Name releases (`lock xadd dword`, result read by the shared `test eax,
+eax`), while it merges a whole arm holding a `lock xadd qword` whose result
+is read (0xccadb0, ~Object016b9280: the arms of `test al, 0x10` merged, the
+test left with no branch at 0xccaeb2).
+
+Evidence (scratch d579/). The installed tree's BranchFolding.cpp and
+TailDuplication.cpp (equal to the 3.7.1 tarball's) with switches, linked
+ahead of the installed build's archives (control: switches off, the whole
+game module byte-identical to the build's, 0 symbols differ), and the
+patch's own two files built the same way (byte-identical to the switch
+build over the whole module).
+  Base census, game region (tails3.py): 675 pairs of predecessors of one
+    block whose common tail holds a lock instruction, in 127 functions, ALL
+    dword: xadd 199, cmpxchg 395, dec 70, inc 11 (481 that 3.7.1's own
+    profitability rules would merge: a fall-through predecessor, or a tail
+    of 2 or more with both branches stripped); 0 qword pairs (qword lock instructions in the
+    region: cmpxchg 3329, xadd 869, inc 362, dec 4). Merged sites read from
+    a flag test left without its branch: 0xccadb0 and 0xbb7bc0, both
+    `lock xadd qword` releases of a 64-bit count; no dword one.
+  Module census (-tail-merge-log): 3.7.1 merges 12 tails holding an atomic
+    in the game module; one is a matched row (~Object016b9280, LXADD64,
+    the base's merge); the other eleven are drafts: ten merge a dword one
+    (LOCK_DEC32m, LOCK_INC32m, LXADD32) or a plain volatile DEC32m, and one
+    an LCMPXCHG64 (Object016b4ce0::find, FUN_01390e90: its compare-exchange
+    loop is one block in the base, as 3.7.1 and the rule give).
+  The rule over the whole module: 10 symbols change, 0 matched rows change
+    (0 rows lost); 7 drafts equal: FUN_0046f770, FUN_0046f980,
+    FUN_004ba970, FUN_0052d3e0, FUN_00857df0, FUN_00857f80, FUN_00d8feb0.
+    Lower by score only, each explained by the base's bytes: FUN_002e1b30
+    (now the base's four `lock inc` and two `lock xadd`, 3.7.1 gave three
+    incs; its registers differ), FUN_00e5c690 (the draft's volatile counter
+    decrement, a plain `dec dword ptr`, has no counterpart in the base),
+    FUN_00e70cc0 (the draft holds a Name release after its call that the
+    base does not have; 3.7.1 merged its two copies).
+  The merge rule alone: 3 drafts equal (0x4ba970, 0x52d3e0, 0xd8feb0);
+    0x857df0's class stays at 0.64 (the pre-RA TailDuplicate copies the
+    second find's one-instruction drop block into its two exits). The
+    duplication rule's width cannot be told by the module (any atomic, or
+    only one whose result is unused, gives the same objects); it takes the
+    merge rule's.
+
+Rules the bytes exclude: an atomic ends a tail whatever its width (round
+576D v2/v3: loses 0xccadb0); only an atomic whose result is unused (v5:
+0x52d3e0 and 0xd8feb0 stay merged, their xadd's result is read); only as
+the tail's last instruction (0x3fd0a0 keeps {lock dec; mov dword store; jmp}
+apart, and 61 cmpxchg pairs keep {cmpxchg; pushfq; pop} apart); unless the
+tail holds a conditional branch (at BranchFolding 0x52d3e0's and 0x857df0's
+tails are {atomic; test; jcc}, three or more with the branch, and the base
+keeps them apart; measured with the duplication rule, this rule and the
+last-only one each make only FUN_004ba970 equal); the pseudo's kind
+(LOCK_DEC against LXADD: 0x52d3e0's LXADD32 apart, 0xccadb0's LXADD64
+merged); a stop at any volatile memory
+operand (round 576D v1: 9 rows lost); whole blocks only (0x857df0's two
+drop blocks are whole).
+
+Source forms the bytes exclude: the base's two drops are one machine
+instruction (`lock dec dword ptr [r15]`, both through the call's kept
+address), and MachineInstr::isIdenticalTo compares only opcode and
+operands (MachineInstr.cpp:211-219), so any source that gives the base's
+bytes gives two identical instructions at BranchFolding, and a
+one-instruction tail with a fall-through predecessor is merged (:567-573)
+or made one by OptimizeBlock's move of a jmp-ended block before its
+successor (:1508-1524). Compiled (round 569D): the loop rotated (u85),
+unrotated (v85) and with the test last (w85): each merged; the `while`
+form gives one find (300 bytes against the base's two). A source that
+differs at the instruction (a folded drop for one find) gives a byte the
+base does not have.
+
+NO upstream state. No release of BranchFolding or TailDuplication from 3.3
+to 4.0.0 stops at an atomic or a memory width. Sony authorship of this is
+not shown; the width is what the sites separate, not a mechanism: the only
+merged atomic sites are one 64-bit count (SharedRef00901550's, volatile in
+the tree's source, the dword counts are not).
+
+Refuted by: one base site where two identical dword atomic
+read-modify-writes are merged by a tail merge (a dword lock instruction in
+a block that a flag test left without its branch, or a draft whose
+3.7.1-merged dword atomic is one block in the base with no other
+difference), or one where two identical qword ones are kept apart before
+one successor.
+
+--- a/lib/CodeGen/BranchFolding.cpp
++++ b/lib/CodeGen/BranchFolding.cpp
+@@ -313,6 +313,21 @@
+   return HashMachineInstr(I);
+ }
+ 
++/// Local rule (tailmerge-01): an atomic read-modify-write of 32 bits or less
++/// ends a common tail, as inline asm does. SelectionDAG marks the memory
++/// operand of every atomic volatile (SelectionDAG::getAtomic), so the test is
++/// an instruction that loads and stores through a volatile memory operand of
++/// at most 4 bytes.
++static bool isNarrowAtomicRMW(const MachineInstr *MI) {
++  if (!MI->mayLoad() || !MI->mayStore())
++    return false;
++  for (MachineInstr::mmo_iterator I = MI->memoperands_begin(),
++       E = MI->memoperands_end(); I != E; ++I)
++    if ((*I)->isVolatile() && (*I)->getSize() <= 4)
++      return true;
++  return false;
++}
++
+ /// ComputeCommonTailLength - Given two machine basic blocks, compute the number
+ /// of instructions they actually have in common together at their end.  Return
+ /// iterators for the first shared instruction in each block.
+@@ -357,7 +372,9 @@
+         // relative order. This is untenable because normal compiler
+         // optimizations (like this one) may reorder and/or merge these
+         // directives.
+-        I1->isInlineAsm()) {
++        I1->isInlineAsm() ||
++        // Local rule (tailmerge-01).
++        isNarrowAtomicRMW(I1)) {
+       ++I1; ++I2;
+       break;
+     }
+--- a/lib/CodeGen/TailDuplication.cpp
++++ b/lib/CodeGen/TailDuplication.cpp
+@@ -20,6 +20,7 @@
+ #include "llvm/CodeGen/MachineBranchProbabilityInfo.h"
+ #include "llvm/CodeGen/MachineFunctionPass.h"
+ #include "llvm/CodeGen/MachineInstrBuilder.h"
++#include "llvm/CodeGen/MachineMemOperand.h"
+ #include "llvm/CodeGen/MachineModuleInfo.h"
+ #include "llvm/CodeGen/MachineRegisterInfo.h"
+ #include "llvm/CodeGen/MachineSSAUpdater.h"
+@@ -589,6 +590,15 @@
+     if (I->isNotDuplicable())
+       return false;
+ 
++    // Local rule (tailmerge-01): a block holding an atomic read-modify-write
++    // of 32 bits or less (a load and store through a volatile memory operand
++    // of at most 4 bytes) is not duplicated.
++    if (I->mayLoad() && I->mayStore())
++      for (MachineInstr::mmo_iterator M = I->memoperands_begin(),
++           ME = I->memoperands_end(); M != ME; ++M)
++        if ((*M)->isVolatile() && (*M)->getSize() <= 4)
++          return false;
++
+     // Do not duplicate 'return' instructions if this is a pre-regalloc run.
+     // A return may expand into a lot more instructions (e.g. reload of callee
+     // saved registers) after PEI.

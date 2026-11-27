@@ -1,0 +1,52 @@
+llvm-3.7.1 backport, part: an IMPLICIT_DEF no longer discards the
+peephole's load-fold candidates
+(upstream r244577, D11591, Michael Kuperstein, 2015-08-11, "Allow
+PeepholeOptimizer to fold a few more cases", first released in 3.8.0)
+
+Placed under tools/patches/proposed/ so that tools/build_llvm.sh, which applies
+every tools/patches/llvm-3.7.1-*.patch (:143), does not take it: to install,
+the supervisor moves it up one directory in a round of its own.
+
+NOT NEEDED BY THE BYTES (round 578E): with cvtzero-01 there is no
+IMPLICIT_DEF between the float's load and its conversion, and this patch on
+top of it changes no function of the game module. Written for the
+supervisor's record; not to be installed alone (see below).
+
+This patch CHANGES THE PEEPHOLE OPTIMIZER ONLY (PeepholeOptimizer.cpp, the
+loop of optimizeLoadInstr's candidates, :1099-1106). One change, nothing
+else: an IMPLICIT_DEF is skipped (`continue`) instead of clearing
+FoldAsLoadDefCandidates. In 4.0.0 a position label, a PHI, an IMPLICIT_DEF
+and a KILL are all skipped (PeepholeOptimizer.cpp:1543, :1575) and only a
+load-fold barrier clears the candidates (:1682); only the IMPLICIT_DEF is
+taken here.
+
+Question (round 575E): 3.7.1 selects a one-use float load converted to
+double as VMOVSSrm, IMPLICIT_DEF, VCVTSS2SDrr (X86InstrSSE.td:1908-1910) and
+the IMPLICIT_DEF between load and conversion stops the fold
+(PeepholeOptimizer.cpp:1102); the prebuilt 3.8.1, 3.9.1 and 4.0.0 fold it
+(the memory form) on VectorToString2's bitcode.
+
+Evidence (scratch e575/sc, e578/sc). Over the game module's link-stage
+bitcode (4b8ec52b): this patch alone changes 13 functions, the 13 written
+functions with the base's memory-form vcvtss2sd, 0 matched rows, none made
+equal: the fold gives `vcvtss2sd x, u, [mem]` with an undefined
+pass-through (xmm0 or the destination, no xor) where the base has a zero of
+the block (258 of 258 sites). With cvtzero-01 (sc/vB) 9 of the 13 are
+equal; this patch added to it (sc/vBc) changes 0 functions: the zero is not
+an IMPLICIT_DEF and 3.7.1's own peephole folds the load across it (the
+selection `VCVTSS2SDrr (FsFLD0SS), (VMOVSSrm)`, sc/vA, gives the same
+module). The bytes give no site for this patch.
+
+--- a/lib/CodeGen/PeepholeOptimizer.cpp
++++ b/lib/CodeGen/PeepholeOptimizer.cpp
+@@ -1099,7 +1099,9 @@
+
+       // If there exists an instruction which belongs to the following
+       // categories, we will discard the load candidates.
+-      if (MI->isPosition() || MI->isPHI() || MI->isImplicitDef() ||
++      if (MI->isImplicitDef())
++        continue;
++      if (MI->isPosition() || MI->isPHI() ||
+           MI->isKill() || MI->isInlineAsm() ||
+           MI->hasUnmodeledSideEffects()) {
+         FoldAsLoadDefCandidates.clear();

@@ -24,6 +24,8 @@ void FUN_0042dbe0(Object0042dbe0 *self) /* derived name */
  * 0xc080a0ff and a scale of 1, a flag 0, the format and its value) */
 // NONMATCHING: greedy's assignment: the base holds the object in rbx and the slot's address in
 // r14, the build the other way; the operations the same
+// Round 578E: its conversion is the base's under cvtzero-01 (not installed: tools/patches/
+// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
 void FUN_004eafd0(Object0042dbe0 *self) /* derived name */
 {
     FUN_0042dbe0(self);

@@ -11,6 +11,8 @@ unsigned FUN_00db9aa0(HksTable *table);
 // NONMATCHING: the number's text: the base converts from memory after a vxorps (the recorded
 // memory-form vcvtss2sd residual, docs/NOTES.md round 260A) and duplicates the exit's mark test into that
 // case
+// Round 578E: its conversions are the base's under cvtzero-01 (not installed: tools/patches/
+// proposed/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch); the rest stands.
 size_t FUN_00d96ff0(lua_State *s, const HksObject *value)
 {
     HksApiTimer timer(s);
