@@ -1,0 +1,107 @@
+REPLACES atomic-01 (round 596D; moved here and atomic-01 removed in round 598C, NOT YET INSTALLED: the shared
+install holds atomic-01 until it is rebuilt with this list). It applies to the pristine sources in atomic-01's place
+in the list's order (after the host patch, before cvtzero-01; every later patch of the list applies clean on it,
+scratch d596/applied.txt and c598/applied.txt).
+llvm-3.7.1 local rule: an ordered atomic read-modify-write does not modify
+a frame object that nothing before it captured
+(no upstream state)
+
+This patch CHANGES MEMORY DEPENDENCE ONLY (AliasAnalysis::
+callCapturesBefore, which MemoryDependenceAnalysis asks as its fallback for
+an instruction that getModRefInfo calls ModRef, MemoryDependenceAnalysis.cpp
+:619-621). One change, nothing else:
+  AliasAnalysis.cpp, callCapturesBefore: for an atomicrmw or a cmpxchg (ModRef
+    for any ordering above monotonic, AliasAnalysis.cpp:335-346 and the
+    cmpxchg form above it) the answer is NoModRef when the queried location's
+    underlying object is an identified local object, it is not captured
+    before the atomic (PointerMayBeCapturedBefore, the call's own test), and
+    the atomic's own pointer is NoAlias with the object; ModRef otherwise.
+It is atomic-01 without its second clause (a call that may write through the
+object, passedToWriterBefore): a call given the object for a nocapture
+argument leaves no pointer behind for the atomic to reach, whether it writes
+through it or not.
+Unchanged: every answer for a call (the existing path); getModRefInfo of an
+atomic itself (LICM's alias sets see the ordered atomic as before; memory
+dependence's users, GVN and DSE, take the rule); a monotonic atomic; fences.
+The library line (3.3) is another compiler.
+
+Why the clause goes (round 596D, scratch d596/notes.md). The base keeps a
+frame object written by a nocapture callee across ordered atomics:
+  FUN_00c91760's 13 callers: 20 of 20 raises of the empty name on a
+    property handle's name keep the index across the `lock inc` and the
+    release's `lock xadd` (the handle passed only to FUN_00c91760, which
+    writes the kept field, `mov [r14+8], eax` at 0xc91a6b, and to
+    FUN_00cb7e20, nocapture readonly).
+  FUN_00c91140, the clause's own writer (D93: 0x5f2490, 0x1348360): of 70
+    releases of a slot it wrote, 67 keep the index across the xadd (e.g.
+    0x293f30, 0x2948ac..0x2948dc); the 3 that reload also pass the slot to
+    another call (0xbe0220, 0x13493e0) or compare it (0x654ad0). 0x1348360
+    holds both: path A (FUN_00c91140, then FUN_013493e0) reloads at
+    0x1348549; path B (FUN_00c91140, then Array<Name>::add, nocapture
+    readonly) keeps at 0x13486a1, same slot, same writer.
+  FUN_00ed7980: FUN_00ed88e0 writes `instance` through a nocapture
+    out-parameter; the base reads it once (rbx, 0xed7a04) across five
+    cmpxchg loops and an import call.
+The write separates nothing; capture does. 20 of D93's reload sites sampled
+(every fifth of e557/s1/R103.txt): 20 of 20 captured (a capturing callee, an
+indirect call, the element's cmpxchg, an escape).
+
+Evidence (scratch d596/). The game module built in both stages with the
+line's patches and this one in atomic-01's place, against a control built by
+the same script with the installed compiler (equal to the tree's module in
+every symbol):
+  6 symbols change, 0 matched rows among them (0 rows lost): FUN_00e66e40,
+    FUN_00e67070 0.68 to 0.72, FUN_00e678b0 0.72 to 0.75, FUN_00e79280 0.52
+    to 0.96 (one difference left, the `lock inc` scheduled above its `lea`
+    and `mov edx`), FUN_00e77790 0.26 to 0.04 (the kept index takes a fifth
+    callee-saved register), FUN_00ed7980 0.43 to 0.22 (one reload of
+    `instance` gone as in the base; the one after the spin lock's volatile
+    store stays): every one keeps where the base keeps. No draft equal.
+  The 103 reload sites of D93: 9 in the module (8 functions, 5 rows), every
+    one in a symbol that does not change; the others captured by the base's
+    bytes (D93, e557/s1/step1_table.txt), 0x5f2490, 0x1348360 and 0x614fb0
+    by the other taker, which the module does not define or declares without
+    nocapture (FUN_00be0220, FUN_013493e0, FUN_00613910).
+
+Open: why the base treats FUN_00be0220, FUN_013493e0 and FUN_00613910 as
+capturing: their bytes only read through the pointer. Not needed by any
+function of the module now; it is the question when one of them is defined.
+
+NO upstream state. Every release from 3.7.1 to 9.0.0 answers ModRef for an
+ordered atomic here (round 553E). Sony authorship of this is not shown.
+
+Refuted by: a frame object passed only to nocapture calls, reaching an
+ordered atomic on another address, and reloaded after it with no other
+cause (MemDep's scan limit, a volatile access); or one kept after a capture.
+
+--- a/lib/Analysis/AliasAnalysis.cpp	2015-07-11 04:39:00.000000000 +0000
++++ b/lib/Analysis/AliasAnalysis.cpp	2026-11-27 16:29:27.290784050 +0000
+@@ -361,7 +361,27 @@
+     return AliasAnalysis::ModRef;
+ 
+   ImmutableCallSite CS(I);
+-  if (!CS.getInstruction() || CS.getInstruction() == Object)
++  if (!CS.getInstruction()) {
++    // An ordered atomic read-modify-write is treated as a call that takes
++    // only its own pointer: it does not modify an object that has not been
++    // captured before it (a call given the object for a nocapture argument,
++    // one that writes through it included, leaves no pointer behind), unless
++    // its pointer may alias the object.
++    const Value *AtomicPtr = nullptr;
++    if (const AtomicRMWInst *RMW = dyn_cast<AtomicRMWInst>(I))
++      AtomicPtr = RMW->getPointerOperand();
++    else if (const AtomicCmpXchgInst *CX = dyn_cast<AtomicCmpXchgInst>(I))
++      AtomicPtr = CX->getPointerOperand();
++    if (!AtomicPtr ||
++        llvm::PointerMayBeCapturedBefore(Object, /* ReturnCaptures */ true,
++                                         /* StoreCaptures */ true, I, DT,
++                                         /* include Object */ true))
++      return AliasAnalysis::ModRef;
++    if (isNoAlias(MemoryLocation(AtomicPtr), MemoryLocation(Object)))
++      return AliasAnalysis::NoModRef;
++    return AliasAnalysis::ModRef;
++  }
++  if (CS.getInstruction() == Object)
+     return AliasAnalysis::ModRef;
+ 
+   if (llvm::PointerMayBeCapturedBefore(Object, /* ReturnCaptures */ true,

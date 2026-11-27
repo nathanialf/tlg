@@ -1,0 +1,146 @@
+llvm-3.7.1 local rule: the post-RA list scheduler takes a locked decrement
+after every other available node
+(no upstream state)
+
+Adopted with lockdec-01 (docs/DECISIONS.md D97, round 598C), the tenth of the
+line's nineteen in the glob's order (after lockdec-01, before ltopre-01). The
+shared install under tools/cc is rebuilt with it in a round of its own; until
+then the installed compiler does not hold it.
+
+This patch CHANGES THE POST-RA LIST SCHEDULER'S PRIORITY ONLY.
+LatencyPriorityQueue.cpp's latency_sort, after the isScheduleHigh test: a
+node whose instruction is an x86 LOCK_DEC (8 to 64 bits) sorts below every
+node that is not; between two such nodes, or two others, 3.7.1's order
+(height, nodes solely blocked, NodeNum). Unchanged: the DAG, every latency
+and edge, the region cuts, the anti-dependence breaker, every other locked
+instruction (inc, xadd, cmpxchg, add, sub, and, or, xor), the pre-RA
+scheduler. latency_sort serves the post-RA list scheduler and the VLIW
+SelectionDAG scheduler (ScheduleDAGVLIW.cpp, not used by x86; its SUnits
+have no MachineInstr and are left as they were). No other patch of the list
+touches this file.
+
+Question (rounds 569D, 587C, 590D, 592C): the base places free register
+moves and extensions before a `lock dec` that 3.7.1 places after it: the
+eleven 0x9f54b0 twins (`movzx eax, al; lock dec dword ptr [r14 + 0x30]`),
+0x503710 (`mov r13, rbx` before the first drop), 0x7b2d50 (`mov rdi, r14`,
+`mov rsi, r15; mov rdx, r13`), and, with lockdec-01, the seven 0xf1ae60
+twins (the lea after the store).
+
+Census (round 592C, c592/census.py; a region cut as PostRASchedulerList.cpp
+:323-344 cuts it; a move FREE when no register, flags or memory path joins
+it with the lock). The game region holds 110,443 locked instructions. Over
+the drafts the base and the build disagree only at `lock dec`: the base has
+25 free moves before a `lock dec` and 0 after, the build 0 before and 17
+after (13 movzx, 4 mov); under this rule with lockdec-01 the build has 17
+before and 0 after (round 598C, c598/census_drafts_rule.txt). Matched rows:
+no free move next to a `lock dec`, either side. Of the base's 24 free moves
+after a `lock dec dword` in the whole region, the nine read each read a
+register made just before by a pending instruction, so the drop was the
+only ready node.
+
+Mechanism (llvm-3.7.1.src, read). The pass runs for btver2
+(X86ScheduleBtVer2.td:24, PostRAScheduler = 1; PostRASchedulerList.cpp
+:253-262), top-down by latency_sort (LatencyPriorityQueue.cpp:23-51: height,
+then nodes solely blocked, then the lower NodeNum), with no active hazard
+recognizer (no itinerary). A LOCK_DEC32m with no successor gets a live-out
+edge to ExitSU of its latency less one (ScheduleDAGInstrs.cpp:853-858: 3,
+WriteALULd's 4 on btver2) and a copy or extension none, so the drop is taken
+first in any input order. A model alone cannot reverse it (round 598C, the
+cut of 0x9f54b0's twin traced, c598/tw_m1.trace): at latency 1 or 0 the
+live-out edge goes and the drop's height is 0, equal to the movzx's; the
+tie falls to the nodes solely blocked (0 and 0) and then to the lower
+NodeNum, the drop's (n0 against n1), because the instruction order that
+reaches the pass, the IR's, has the atomicrmw before the zext. A height
+cannot go below 0, so no latency of the model ranks the drop after a free
+move of height 0; only the priority can.
+
+Evidence (scratch c592/, c598/). The rule as a switch in a copy of the
+installed compiler (c592/msx, c598/x; control, switch off: the whole game
+module byte-identical, 0 symbols) and, with lockdec-01, built from the
+pristine sources with every patch (c598/install, D97). Over the whole
+module: alone 21 symbols, 0 matched rows lost, 13 drafts equal; with
+lockdec-01 28 symbols, 0 rows lost, 20 drafts equal (FUN_00503710,
+FUN_007b2d50, FUN_009f54b0 and its ten twins, the seven 0xf1ae60 twins),
+none lower; FUN_0046f3d0 0.773 to 0.795. With lockdec-01, any width and 4
+bytes or less give the same module byte for byte (alone, both 13 equal,
+round 592C): the width is not told, and the rule takes lockdec-01's.
+
+Candidates excluded, rows lost over the whole module (round 592C):
+  the pass off (-post-RA-scheduler=false, -disable-post-ra): 3,417;
+  -misched-postra: 2,908; -break-anti-dependencies none / all: 549 / 1,018;
+  a locked instruction a region boundary: 129; 4 bytes or less: 87;
+  latency_sort's NodeNum tie reversed: 3,697;
+  no live-out edge for a lock: 4 lost, 1 equal; with its chain latency 0:
+    11 lost, 1 equal;
+  every locked instruction ranked last: 12 lost (ten dword `lock xadd`
+    destructors of the 0xf33190 family, 0x13224a0 and 0x1322510, JsDevice::
+    AllocateOnionMemory); only one with dead results: 1; only 4 bytes or
+    less: 9;
+  dead results and 4 bytes or less: 0 lost, 20 equal, but FUN_00cb5f90
+    (0.959 to 0.949) and FUN_010f17f0 (0.214 to 0.179) move away: the base
+    has `lock inc` first before a free lea or `mov r8d, imm`, so a `lock
+    inc` keeps 3.7.1's rank and the kind is what the sites separate;
+  a model alone (lockdec-01's header, m1 to m5): at most 1 equal.
+
+Site against: 0x3ff7b3, in the unwritten FUN_003fd0a0. Its region (the block
+from 0x3ff7a9 to the call at 0x3ff7c2) is `mov r15, rdx; mov r13, [rbp -
+0x598]; lock dec dword ptr [r13]; mov rdi, r13; mov rbx, [rip + GOT];
+call`. The move and the drop both wait on the load of r13 and the GOT load
+on nothing, yet both come after the drop. The rule would place the move (and
+the GOT load) before it; 3.7.1 would take the GOT load, free from the start
+and with a live-out edge of its own, before the drop too. Neither gives the
+region, so it does not separate the rule from 3.7.1; a written function
+there would decide it.
+
+Source forms excluded: none gives the order. The post-RA pass reverses the
+IR order: the cut of 0x9f54b0's twin with the zext moved before the
+atomicrmw in the IR (c592/twz.ll) has the base's order before the pass and
+`lock dec; movzx` after it. 0x503710's and 0x7b2d50's moves are register
+allocator copies with no source counterpart.
+
+NO upstream state: no release from 3.3 to 4.0.0 ranks a locked instruction
+in latency_sort or PostRASchedulerList. Sony authorship is not shown.
+
+Trigger to revisit: a base region where a free move or extension ready with
+a `lock dec` comes after it with a written function to show the input
+order, or a matched row lost on a rebuild with the rule.
+
+--- a/lib/CodeGen/LatencyPriorityQueue.cpp
++++ b/lib/CodeGen/LatencyPriorityQueue.cpp
+@@ -14,12 +14,24 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "llvm/CodeGen/LatencyPriorityQueue.h"
++#include "llvm/CodeGen/MachineFunction.h"
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/raw_ostream.h"
++#include "llvm/Target/TargetInstrInfo.h"
++#include "llvm/Target/TargetSubtargetInfo.h"
+ using namespace llvm;
+ 
+ #define DEBUG_TYPE "scheduler"
+ 
++// An x86 LOCK_DEC (8 to 64 bits): a locked decrement whose value is unused.
++static bool isLockedDec(const SUnit *SU) {
++  if (!SU->isInstr())
++    return false;
++  const MachineInstr *MI = SU->getInstr();
++  const TargetInstrInfo *TII = MI->getParent()->getParent()->getSubtarget().getInstrInfo();
++  return StringRef(TII->getName(MI->getOpcode())).startswith("LOCK_DEC");
++}
++
+ bool latency_sort::operator()(const SUnit *LHS, const SUnit *RHS) const {
+   // The isScheduleHigh flag allows nodes with wraparound dependencies that
+   // cannot easily be modeled as edges with latencies to be scheduled as
+@@ -29,6 +41,11 @@
+   if (!LHS->isScheduleHigh && RHS->isScheduleHigh)
+     return true;
+ 
++  // A locked decrement is taken after every other available node.
++  bool LHSDec = isLockedDec(LHS), RHSDec = isLockedDec(RHS);
++  if (LHSDec != RHSDec)
++    return LHSDec;
++
+   unsigned LHSNum = LHS->NodeNum;
+   unsigned RHSNum = RHS->NodeNum;
+ 

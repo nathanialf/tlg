@@ -69,13 +69,10 @@ extern const Type00503fb0 *D_57d9d20; /* derived name */
 /* derived name: slot 11 of the vtable at 0x16adf60: for an amount of
  * 0.00001 or more, the two vectors of the node's source component kept and
  * handed with the amount to the target component's slot 23 */
-// NONMATCHING: 122/127, 484 bytes as the base (round 587C). Every search, drop and copy is the
-// base's (the second search's three drops are SimplifyCFG's copies of hasComponent's answer, the
-// D94 signature). Left: two register moves the base has before a `lock dec` and this build after
-// it: `mov rdi, r14` (the next search's argument) before the first drop at 0x7b2e08, and
-// `mov rsi, r15; mov rdx, r13` (slot 23's arguments) before the last at 0x7b2efe. The moves are
-// placed by the post-RA list scheduler, which here hoists them up to the drop and not above it
-// (FUN_00503710's residual, the same class)
+// The second search's three drops are SimplifyCFG's copies of hasComponent's answer (the D94 signature).
+// The moves before the drops (`mov rdi, r14` at 0x7b2e08, `mov rsi, r15; mov rdx, r13` at 0x7b2efe) are
+// the post-RA rule's for a locked decrement
+// (tools/patches/llvm-3.7.1-lockdec-02-postra-locked-dec-last.patch, D97).
 void FUN_007b2d50(Object007b2d50 *self, float amount) /* derived name */
 {
     if (self->unknown30 == 0 || fabsf(amount) < 0.00001f || self->unknowne0 != 0)

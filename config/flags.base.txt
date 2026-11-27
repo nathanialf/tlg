@@ -36,7 +36,7 @@
 #               under the prebuilt 3.8.1 holds 4,893 of 5,497 game rows
 #               where 3.7.1 holds 5,302 with the PS4 items alone). Built
 #               from source (cxx=3.7.1-src, tools/build_llvm.sh 3.7.1) with
-#               seventeen patches (tools/patches/llvm-3.7.1-*.patch, each with
+#               nineteen patches (tools/patches/llvm-3.7.1-*.patch, each with
 #               its evidence and its sweep in its header). Four PS4 items:
 #               one nop after the stack check's failure call (sspnop, D26);
 #               a thread-local with local linkage kept general-dynamic
@@ -66,8 +66,10 @@
 #               select or part of an and/or (unswitch). One local
 #               rule of memory dependence, no upstream state: an ordered
 #               atomic read-modify-write does not modify a frame object
-#               that nothing before it captured or was handed to write
-#               (atomic). One local rule of JumpThreading, no upstream
+#               that nothing before it captured (atomic-02, D93's
+#               addendum: it replaces atomic-01, whose clause for a
+#               frame object handed to a writer is removed; NOT YET
+#               INSTALLED). One local rule of JumpThreading, no upstream
 #               state: a block that holds an atomic read-modify-write or
 #               a compare-exchange is not duplicated (jumpthread). One
 #               local rule of instruction selection, no upstream state: a
@@ -76,10 +78,17 @@
 #               local rule of the tail merge, no upstream state: an
 #               atomic read-modify-write of 32 bits or less ends a common
 #               tail and its block is not tail-duplicated (tailmerge,
-#               D96). In the order they apply (the glob's): atomic,
-#               cvtzero, fieldalign, fpstore, initattrs, inlinecall,
-#               jumpthread, lcssa, ltopre, lxadd, selsink, sspnop,
-#               structor, tailmerge, tlsprot, trap, unswitch.
+#               D96). One local rule of the scheduler, in two patches, no
+#               upstream state: a locked decrement is one micro-op on
+#               btver2 (lockdec-01) and the post-RA list scheduler takes it
+#               after every other available node (lockdec-02, D97; NOT YET
+#               INSTALLED: the shared install holds the other seventeen
+#               until it is rebuilt, with atomic-01 in atomic-02's
+#               place). In the order they apply (the glob's): atomic-02,
+#               cvtzero, fieldalign, fpstore, initattrs,
+#               inlinecall, jumpthread, lcssa, lockdec-01, lockdec-02,
+#               ltopre, lxadd, selsink, sspnop, structor, tailmerge,
+#               tlsprot, trap, unswitch.
 #               5,980 of its 16,344 functions load a stack canary, those that
 #               take a local's address or hold an array (tools/fingerprint.py
 #               --range 0x1a3e00:, D20): the Orbis default

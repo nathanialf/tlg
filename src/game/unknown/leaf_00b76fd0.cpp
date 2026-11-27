@@ -9,10 +9,9 @@ struct Object00b76fd0; /* derived name */
 
 extern Type00503fb0 *D_5835760; /* derived name */
 
-// NONMATCHING: 35 of 37: the result's `movzx eax, al` after the count's drop, where the base
-// extends it before (`movzx eax, al; lock dec dword ptr [r14 + 0x30]`); the int made under the
-// lock (componentLocked between lockRead and unlockRead) loads the type after the lock's call
-// and still extends after the drop (round 569D)
+// The result is extended before the count's drop (`movzx eax, al; lock dec dword ptr [r14 + 0x30]`)
+// by the post-RA rule for a locked decrement
+// (tools/patches/llvm-3.7.1-lockdec-02-postra-locked-dec-last.patch, D97).
 int FUN_00b76fd0(Object00b76fd0 *, Object016b85e0 *node) /* derived name */
 {
     return node->component(D_5835760) == 0;

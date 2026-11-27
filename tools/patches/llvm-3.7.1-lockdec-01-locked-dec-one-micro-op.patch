@@ -1,0 +1,74 @@
+llvm-3.7.1 local rule: a locked decrement is one micro-op on btver2
+(no upstream state)
+
+Adopted with lockdec-02 (docs/DECISIONS.md D97, round 598C), the ninth of the
+line's nineteen in the glob's order (after lcssa-01, before lockdec-02 and
+ltopre-01). The shared install under tools/cc is rebuilt with it in a round
+of its own; until then the installed compiler does not hold it.
+
+This patch CHANGES THE BTVER2 SCHEDULING MODEL ONLY. One InstRW in
+X86ScheduleBtVer2.td gives LOCK_DEC8m, LOCK_DEC16m, LOCK_DEC32m and
+LOCK_DEC64m (X86InstrCompiler.td:641-642, [WriteALULd, WriteRMW]) one
+micro-op: [WriteALULd, a store write of zero micro-ops], lxadd-01's form for
+the locked exchange-add. The latency (4) and the resources are unchanged.
+Nothing else in the model changes. lxadd-01 applies after it with an offset
+of 3 lines.
+
+Mechanism (round 590D, d590/tw.trace.txt): btver2's IssueWidth is 2. In the
+pre-RA machine scheduler (bottom-up, GenericScheduler over BtVer2Model),
+after a one-micro-op store the two-micro-op `lock dec` is a hazard
+(SchedBoundary::checkHazard, MachineScheduler.cpp:1701-1702: 1 + 2 > 2), goes
+pending, and the `lea` beside it is scheduled as the only available node,
+below the drop. In the seven slot-5 twins (0xf1ae60, 0x1068bc0, 0x11ee4d0,
+0x129a9e0, 0x12aa6c0, 0x12b4950, 0x12f61e0) the base keeps the `lea r15,
+[ctx+0x668]` above the reader count's `lock dec dword [node+0x30]`, and the
+node and the context exchange registers (r12/r13 against r15/r12).
+
+Evidence (scratch c598/, d590/; round 598C's scratch compiler: the installed
+compiler's objects with X86InstrInfo, X86Subtarget, X86MCTargetDesc and
+X86Disassembler built over tables regenerated from the .td files; control,
+the unchanged .td: the whole game module byte-identical, 0 symbols).
+  Alone, over the whole module: 7 symbols change, exactly the seven twins,
+    each 0.634 to 0.968 with every register the base's; 0 matched rows; no
+    draft lower. Their last difference is the post-RA order (lockdec-02).
+  With lockdec-02: 28 symbols, 0 matched rows lost, 20 drafts equal
+    (D97), none lower.
+
+Candidates measured over the whole module (round 598C):
+  (m1) one SchedWrite of one micro-op and latency 1: 16 symbols, 0 rows
+    lost, 1 draft equal (FUN_00503710); the eleven 0x9f54b0 twins and
+    0x7b2d50 unchanged (the post-RA tie, lockdec-02's header);
+  (m2) the same with latency 0: the module byte-identical to m1 (the
+    live-out edge needs a latency over 1, ScheduleDAGInstrs.cpp:853-858;
+    the chain latency is not the model's, :868);
+  (m3) this patch, the micro-op count alone: 7 symbols, the seven twins;
+  (m4) m1 for LOCK_DEC32m alone: the module byte-identical to m1 (the
+    module holds no other width that changes; the width is not told);
+  (m5) m1 extended to LOCK_INC: 33 symbols, 3 matched rows lost
+    (JsDevice::AllocateOnionMemory 0x1306470, 0x131e5d0, CreateBlob
+    0xb98790), 12 drafts lower (FUN_008acb00 0.789 to 0.320, as round
+    590D's lock inc micro-op): `lock inc` keeps two micro-ops.
+  With lockdec-02, m1 and m3 give the same module byte for byte: the
+  latency is told by nothing once the post-RA rank holds, and the patch
+  takes the smaller change, the micro-op count lxadd-01 already sets.
+
+NO upstream state. The nearest is r343671 (8.0.0), which sets WriteRMW to
+zero micro-ops for every read-modify-write; the base keeps two for `cmp
+[mem]`, `lock cmpxchg` and `lock inc` (lxadd-01, D84). Sony authorship is
+not shown.
+
+Trigger to revisit: a base block where a `lock dec` with an independent
+one-micro-op neighbour is scheduled as two micro-ops.
+
+--- a/lib/Target/X86/X86ScheduleBtVer2.td
++++ b/lib/Target/X86/X86ScheduleBtVer2.td
+@@ -102,6 +102,9 @@
+ 
+ // A folded store needs a cycle on the SAGU for the store data.
+ def : WriteRes<WriteRMW, [JSAGU]>;
++// LOCK DEC: the store data needs no micro-op of its own.
++def JWriteLockDecRMW : SchedWriteRes<[JSAGU]> { let NumMicroOps = 0; }
++def : InstRW<[WriteALULd, JWriteLockDecRMW], (instregex "LOCK_DEC(8|16|32|64)m$")>;
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ // Arithmetic.

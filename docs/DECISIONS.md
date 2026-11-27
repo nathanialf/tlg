@@ -2203,6 +2203,25 @@ FUN_005fb120, FUN_008af940, Object016abc00's C2); the gate again and the hook's 
 score without becoming equal (two better, five worse by position: the five lose their reload as the base does and
 differ elsewhere). Like D92 it is adopted without a public form, on the footing of the line's other local rules.
 
+**The second clause dropped (round 596D, scratch d596/).** The clause (a call that may write through the object) is
+refuted by the base: FUN_00c91760's 13 callers keep the property handle's name index across the empty name's
+`lock inc` and its release at 20 of 20 raises, the handle passed only to FUN_00c91760 (nocapture, writing the kept
+field at 0xc91a6b) and FUN_00cb7e20 (nocapture readonly); FUN_00c91140, the clause's own writer, is followed by a
+keep at 67 of 70 releases of the slot it wrote (0x293f30: 0x2948ac..0x2948dc); 0x1348360 reloads on the path that
+also passes the slot to FUN_013493e0 (0x1348549) and keeps on the path that passes it to Array<Name>::add instead
+(0x13486a1), same slot and writer; FUN_00ed7980 keeps `instance` after FUN_00ed88e0 wrote it. The separating fact
+is capture: 20 of 20 sampled reload sites captured, 20 of 20 keeps not. The clause's three sites (0x5f2490,
+0x1348360, 0x614fb0) are explained by their other taker (FUN_00be0220, FUN_013493e0, FUN_00613910), which the base
+treats as capturing although its bytes only read through the pointer (open). The rule without it
+(tools/patches/llvm-3.7.1-atomic-02-ordered-rmw-uncaptured-local-no-writer-clause.patch, replacing
+atomic-01 in the list from round 598C) over the whole module against a control equal to the tree's: 6 symbols change, 0 matched rows, no draft
+equal; the five readers and FUN_00ed7980 keep where the base keeps (FUN_00e79280 0.52 to 0.96, one scheduling
+difference left; FUN_00e77790 and FUN_00ed7980 lower by position); the 103 reload sites: the 9 in the module
+unchanged, the others captured or passed to a call the module does not mark nocapture. The rule as adopted reads:
+NoModRef for an identified local object not captured before the atomic, the atomic's pointer NoAlias with it.
+Built with D97's two patches from the pristine sources in round 598C (one install, one measure: D97's evidence,
+c598/rows_at_install.txt). INSTALLED: pending.
+
 ## D94. JumpThreading does not duplicate a block that holds an atomic read-modify-write: jumpthread-01 (2026-11-24)
 
 **Question.** The base leaves the reader count's release (the `lock dec` of the count FUN_01331c10 took) as one block
@@ -2518,3 +2537,120 @@ equal after the compiler is rebuilt with it. The two lists name it from round 58
 gate (d585/rows_at_install.txt).
 
 INSTALLED: 2026-11-27 (round 585D's build, swapped into the shared install by the supervisor with no worker running; clang-3.7 8aa9824e..., opt 8f280da4..., llvm-link a93b6461...; the gate in full under it: OK; the previous binaries in scratch d585/backup).
+
+## D97. A locked decrement is one micro-op on btver2 and the post-RA list scheduler takes it after every other available node: lockdec-01, lockdec-02 (2026-11-27)
+
+**Question.** The base places free register moves, extensions and an address before a `lock dec` that 3.7.1 places
+after it: the eleven 0x9f54b0 twins (`movzx eax, al; lock dec dword ptr [r14 + 0x30]`, 35/37), 0x503710 (`mov r13,
+rbx` before the first drop, 96/98), 0x7b2d50 (`mov rdi, r14`, `mov rsi, r15; mov rdx, r13`, 122/127), and the seven
+slot-5 twins of 0xf1ae60 (`lea r15, [ctx+0x668]` above the reader count's drop and the store at +0x670, 59/93, the
+node and the context in other registers). Round 590D found the twins' first difference in the pre-RA scheduler
+(lock dec two micro-ops), round 592C the rest in the post-RA list scheduler (the drop ranked first by height). Both
+say "the scheduler thinks a lock dec is cheap": is it one cause in the CPU's scheduling model (rounds 569D, 587C,
+590D, 592C, 598C)?
+
+**Evidence (scratch d590/, c592/, c598/).**
+- Pre-RA (round 590D, trace d590/tw.trace.txt): bottom-up GenericScheduler over BtVer2Model; after the one-micro-op
+  store, LOCK_DEC32m ([WriteALULd, WriteRMW], X86InstrCompiler.td:641-642, two micro-ops) is an issue-width hazard
+  (MachineScheduler.cpp:1701-1702, 1 + 2 > 2), goes pending, and the lea is the only available node: lxadd-01's
+  mechanism (D84).
+- Post-RA (round 592C): the pass runs for btver2 (X86ScheduleBtVer2.td:24; PostRASchedulerList.cpp:253-262), top-down
+  by latency_sort (LatencyPriorityQueue.cpp:23-51: height, nodes solely blocked, the lower NodeNum), no active hazard
+  recognizer. A LOCK_DEC32m with no successor gets a live-out edge of its latency less one (ScheduleDAGInstrs.cpp:
+  853-858: 3) and a copy or extension none, so the drop is taken first in any input order (the cut of 0x9f54b0's twin
+  with the zext moved before the atomicrmw in the IR: the base's order before the pass, reversed by it). The pass runs
+  in the base (off: 3,417 rows lost; 0x7b2d50's load order after the drop is the pass's).
+- Census (c592/census.py, regions as PostRASchedulerList.cpp:323-344 cuts them; a move free when no register, flags or
+  memory path joins it with the lock): 110,443 locked instructions in the game region. Over the drafts the base and
+  the build disagree only at `lock dec`: base 25 free moves before and 0 after, build 0 before and 17 after; under the
+  two patches the build has 17 before and 0 after (c598/census_drafts_rule.txt). Matched rows: no free move next to a
+  `lock dec`, either side.
+- One mechanism, the model alone (round 598C, scratch c598/x: the installed compiler's objects with the X86 tables
+  regenerated from the .td files; control, the unchanged .td: the module byte-identical). Over the whole module:
+
+  | candidate | symbols | rows lost | drafts equal | drafts lower |
+  |---|---|---|---|---|
+  | (m1) LOCK_DEC one SchedWrite, one micro-op, latency 1 | 16 | 0 | 1 (FUN_00503710) | 0 |
+  | (m2) the same, latency 0 | m1's module byte for byte | | | |
+  | (m3) the micro-op count alone (lockdec-01) | 7 | 0 | 0 (the seven twins 0.634 to 0.968) | 0 |
+  | (m4) m1 for LOCK_DEC32m alone | m1's module byte for byte | | | |
+  | (m5) m1 with LOCK_INC | 33 | 3 | 1 | 12 (FUN_008acb00 0.789 to 0.320) |
+  | m3 + the post-RA rank (lockdec-01 + lockdec-02) | 28 | 0 | 20 | 0 |
+  | m1 + the post-RA rank | m3 + rank's module byte for byte | | | |
+  | the post-RA rank alone | 21 | 0 | 13 | 0 |
+
+  No model-only form gives the result. The cut of 0x9f54b0's twin under m1, traced (c598/tw_m1.trace): with a latency
+  of 1 or 0 the live-out edge goes (it needs a latency over 1) and the drop's height is 0, the movzx's too; the tie
+  goes to the nodes solely blocked (0 and 0) and then to the lower NodeNum, the drop's (n0 against n1), because the
+  order that reaches the pass, the IR's, has the atomicrmw first. A height cannot go below 0, so no latency in the
+  model ranks the drop after a free node of height 0; only the priority can. The chain latency after the drop is the
+  DAG builder's (TrueMemOrderLatency, :868), not the model's. Two mechanisms, two patches.
+- The rule built from the pristine sources with the host patch and all nineteen patches, with atomic-02 (D93's
+  addendum) in atomic-01's place (round 598C, c598/build_cc.sh, prefix c598/install: clang-3.7 1a22b652..., opt
+  3be5498f..., llvm-link 8903262a...; each patch applies clean in the glob's order, lxadd-01 with an offset of 3 lines
+  and structor-01 of 1), the whole game module from source (c598/var598.py; control, the installed compiler through
+  the same script: 0 symbols differ from the tree's module). 34 symbols change, 0 matched rows among them: ROWS LOST
+  0. The 28 of D97 are those of the scratch switch build (lockdec-02's LatencyPriorityQueue.cpp linked over the m3
+  model gives the switch's module byte for byte); the other 6 are atomic-02's (round 596D's six). Drafts equal 20,
+  all D97's (c598/rows_at_install.txt, each 1.0 in the module): FUN_00503710, FUN_007b2d50, FUN_009f54b0,
+  FUN_00a035f0, FUN_00a07310, FUN_00b76fd0, FUN_00b7cbf0, FUN_00b7f820, FUN_00b83aa0, FUN_00b86870, FUN_00cf54b0,
+  FUN_00d5f760, FUN_00e90330, FUN_00f1ae60, FUN_01068bc0, FUN_011ee4d0, FUN_0129a9e0, FUN_012aa6c0, FUN_012b4950,
+  FUN_012f61e0. Closer: FUN_0046f3d0 0.773 to 0.795 (D97); FUN_00e79280 0.52 to 0.96, FUN_00e66e40 and FUN_00e67070
+  0.68 to 0.72, FUN_00e678b0 0.72 to 0.75 (atomic-02). Lower: FUN_00e77790 0.26 to 0.04 and FUN_00ed7980 0.43 to
+  0.22, atomic-02's two by position as round 596D measured; none by D97.
+
+**The rule.** Two patches, ninth and tenth of the game line in the glob's order (after lcssa-01, before ltopre-01):
+`tools/patches/llvm-3.7.1-lockdec-01-locked-dec-one-micro-op.patch`: one InstRW in X86ScheduleBtVer2.td gives
+LOCK_DEC8m to LOCK_DEC64m [WriteALULd, a store write of zero micro-ops], lxadd-01's form (latency and resources
+unchanged; lxadd-01 applies after it with an offset of 3 lines). `tools/patches/llvm-3.7.1-lockdec-02-postra-locked-
+dec-last.patch`: in latency_sort, after the isScheduleHigh test, a node whose instruction is an x86 LOCK_DEC sorts
+below every node that is not; between two such nodes, or two others, 3.7.1's order. Unchanged: the DAG, every latency
+and edge, the region cuts, the anti-dependence breaker, every other locked instruction (inc, xadd, cmpxchg, add, sub,
+and, or, xor), the library line (3.3). src/sce/ and src/game/sndx/ take it.
+
+**Sites for and against.** For: the twenty drafts; the census's `lock dec` columns (base 25 before, 0 after). Against:
+0x3ff7b3, in the unwritten FUN_003fd0a0: its region (0x3ff7a9 to the call at 0x3ff7c2) is `mov r15, rdx; mov r13,
+[rbp - 0x598]; lock dec dword ptr [r13]; mov rdi, r13; mov rbx, [rip + GOT]; call`. The move and the drop both wait
+on the load of r13 and the GOT load on nothing, and both come after the drop. The rule would place them before it;
+3.7.1 would take the GOT load, free from the start with a live-out edge of its own, before the drop too. Neither
+gives the region, so it does not separate the two; a written function there would.
+
+**Source forms the bytes exclude.** None gives the order: the post-RA pass reverses the IR order (c592/twz.ll, the
+zext before the atomicrmw: `lock dec; movzx` after the pass); 0x503710's and 0x7b2d50's moves are register allocator
+copies with no source counterpart; the twins' lea is MachineSink's.
+
+**Rules the bytes exclude.** Each over the whole module (c592 runs.log, runs3.log, runs4.log; c598 runs_m.log):
+- the post-RA pass off (-post-RA-scheduler=false, -disable-post-ra): 3,417 rows lost; -misched-postra: 2,908;
+  -break-anti-dependencies none / all: 549 / 1,018;
+- a locked instruction a region boundary: 129 rows lost; 4 bytes or less: 87;
+- latency_sort's NodeNum tie reversed: 3,697;
+- no live-out edge for a lock: 4 lost, 1 equal; with its chain latency 0: 11 lost, 1 equal;
+- every locked instruction ranked last: 12 lost (ten dword `lock xadd` destructors of the 0xf33190 family, 0x13224a0,
+  0x1322510, JsDevice::AllocateOnionMemory); only one with dead results: 1; only 4 bytes or less: 9;
+- dead results and 4 bytes or less: 0 lost, 20 equal, but FUN_00cb5f90 (0.959 to 0.949) and FUN_010f17f0 (0.214 to
+  0.179) move away: the base has a `lock inc` first before a free lea or `mov r8d, imm`; the kind is what the sites
+  separate;
+- `lock inc` one micro-op too (m5): 3 rows lost, 12 drafts lower;
+- a model-only form (m1 to m4): at most one draft equal, for the reason above.
+
+**No public state.** No release from 3.3 to 4.0.0 ranks a locked instruction in latency_sort or PostRASchedulerList,
+or gives LOCK_DEC one micro-op; upstream r343671 (8.0.0) sets WriteRMW to zero micro-ops for every read-modify-write,
+which loses rows (D84). Sony's authorship of either rule is not shown.
+
+**Against.** The two patches are local rules with no public form, and their single theme (a lock dec treated as
+cheaper than 3.7.1's model says, in two passes) is shown by the bytes, not by a model the developers are known to
+have had. The widths are not told by the module (no qword or narrow `lock dec` changes); they take LOCK_DEC's four.
+The dec-against-inc split rests on the drafts FUN_008acb00, FUN_00cb5f90 and FUN_010f17f0 and three rows, not on a
+known mechanism. 0x3ff7b3 is explained by neither 3.7.1 nor the rule.
+
+**What would refute it.** A base region where a free move or extension ready with a `lock dec` comes after it, with a
+written function to show the input order (0x3ff7b3 is the one candidate found); a base block where a `lock dec` with
+an independent one-micro-op neighbour is scheduled as two micro-ops; or a matched row lost on a rebuild with the
+rules. Any of them removes the rule or narrows it, with the gate rerun.
+
+**The decision and its bar.** Adopted by the supervisor after rounds 590D and 592C, prepared and measured in round
+598C, UNDER THE CONDITION that the whole gate passes with every existing row equal after the compiler is rebuilt with
+it. The rows the rules make equal are claimed after that gate (c598/rows_at_install.txt, with
+c598/notes_at_install.patch for their notes).
+
+INSTALLED: 2026-11-27 (round 598C's build, swapped into the shared install by the supervisor with no worker running; clang-3.7 1a22b652..., opt 3be5498f..., llvm-link 8903262a...; the gate in full under it: OK; the previous binaries in scratch c598/backup).

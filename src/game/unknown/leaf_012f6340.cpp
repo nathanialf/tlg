@@ -57,17 +57,9 @@ Object016c36b8::~Object016c36b8()
  * the arrays at +0x48 and +0x60 (mode 2) or at +0x78 run with it, the pass
  * set to the array's number before each array that holds any; then the
  * pass is -1 and the pair cleared (one 16-byte store). */
-// NONMATCHING: 59/93, 345 bytes against 344: one class, the address of the pair at +0x668 (`lea r15,
-// [ctx+0x668]`, sunk by MachineSink to the top of the block after the search) is moved below the
-// reader's drop by the pre-RA MachineScheduler, so the node and the context trade registers (r15/r12
-// for the base's r12/r13); compiled once with -enable-misched=false as a diagnostic only, every
-// register and the size are the base's and only the lea's place stays (after the store at +0x670,
-// the post-RA scheduler's). The drop as a monotonic atomic changes nothing (edited IR, compiled once).
-// Round 590D (scratch d590/notes.md): the move is the scheduler's issue-width hazard, lxadd-01's class
-// (MachineScheduler.cpp:1702 of 3.7.1): bottom-up, after the one-micro-op store at +0x670 the
-// two-micro-op `lock dec` (btver2 [WriteALULd, WriteRMW], IssueWidth 2) goes pending and the lea is the
-// only choice. LOCK_DEC with one micro-op (scratch switch, the whole module): only these seven change,
-// every register the base's, 0 rows lost; the lea's place after the store is the post-RA list scheduler's.
+// The pair's address (`lea r15, [ctx+0x668]`) stays above the reader's drop and the store at +0x670 by
+// the scheduler rule for a locked decrement
+// (tools/patches/llvm-3.7.1-lockdec-01-locked-dec-one-micro-op.patch and lockdec-02, D97).
 void Object016c36b8::slot5(Context016b4560 *context)
 {
     context->group668 = unknown28;

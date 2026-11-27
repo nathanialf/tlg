@@ -11,6 +11,7 @@
 // object's null test's and the loop's); the build reloads it after the raise (atomic-01's rule answers
 // ModRef: FUN_00c91760 is handed the handle and writes through it) and merges the two ends. Everything
 // before it is the base's (the frame, the store of the count from 1, the registers)
+// Round 596D: under proposed atomic-02 (no write clause) the build keeps it too, 90/125; the two ends stay merged
 int FUN_00e66e40(lua_State *state) /* derived name */
 {
     const int count = argumentCount(state);
@@ -37,6 +38,7 @@ int FUN_00e66e40(lua_State *state) /* derived name */
 // object's null test's and the loop's); the build reloads it after the raise (atomic-01's rule answers
 // ModRef: FUN_00c91760 is handed the handle and writes through it) and merges the two ends. Everything
 // before it is the base's (the frame, the store of the count from 1, the registers)
+// Round 596D: under proposed atomic-02 (no write clause) the build keeps it too, 90/125; the two ends stay merged
 int FUN_00e67070(lua_State *state) /* derived name */
 {
     const int count = argumentCount(state);

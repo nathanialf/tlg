@@ -9,6 +9,7 @@
  * (no results). */
 // NONMATCHING: 98/137, the handle's end as FUN_00e66e40's (leaf_00e66e40.cpp): the base keeps the name's
 // index across the empty name's `lock inc`; the build reloads it and merges the two ends
+// Round 596D: under proposed atomic-02 (no write clause) the build keeps it too, 103/137; the two ends stay merged
 int FUN_00e678b0(lua_State *state) /* derived name */
 {
     if (argumentCount(state) >= 3) {

@@ -12,12 +12,10 @@ extern Type00503fb0 *D_581b510; /* derived name */
 
 typedef void (*Visit00503710)(Component00503fb0 *component, int unknown); /* derived name */
 
-// NONMATCHING: 96/98, 314 bytes as the base. The first drop folds its address (nextComponent's
-// unlockRead) and the children's index is sign-extended at each use (childAt under an unsigned
-// counter), as the base. Left: the visit pointer's move to r13 for the loop (`mov r13, rbx`, a copy
-// the greedy allocator's split puts at the drop block's last split point) comes after the first
-// `lock dec` where the base has it before (0x503782); the post-RA list scheduler moves it only
-// above the test (round 587C)
+// The first drop folds its address (nextComponent's unlockRead) and the children's index is sign-extended
+// at each use (childAt under an unsigned counter), as the base. The visit pointer's copy to r13 comes before
+// the first `lock dec` (0x503782) by the post-RA rule for a locked decrement
+// (tools/patches/llvm-3.7.1-lockdec-02-postra-locked-dec-last.patch, D97).
 void FUN_00503710(Object016b85e0 *node, Visit00503710 visit) /* derived name */
 {
     unsigned next = 0;

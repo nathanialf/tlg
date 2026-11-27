@@ -7,6 +7,8 @@
  * with fewer arguments. */
 // NONMATCHING: 39/75, the handle's end as FUN_00e66e40's: the base tests the index it read once
 // (`mov edi, [rbp-0x70]`) for the push and the release; the build reloads it after the empty name's raise
+// Round 596D: with atomic-01's write clause dropped (tools/patches/proposed/llvm-3.7.1-atomic-02-*) the build keeps it
+// too, 69/72, the `lock inc` then scheduled above its `lea` and `mov edx`
 int FUN_00e79280(lua_State *state) /* derived name */
 {
     if (argumentCount(state) < 2)

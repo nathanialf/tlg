@@ -6,6 +6,8 @@
  * string is pushed (nil for none) and 1 returned, else 0. */
 // NONMATCHING: 25/97, the class of FUN_00e66e40's handle end: the base reads the name's index once after
 // FUN_00c91760 (`mov r14d, [rbp-0x58]`) and keeps it through the push and the release; the build reloads it
+// Round 596D: under proposed atomic-02 (no write clause) the build keeps it too, in a fifth callee-saved register
+// (push r13, frame 0x48) where the base has four: 4/93 by position
 int FUN_00e77790(lua_State *state) /* derived name */
 {
     if (argumentCount(state) > 0) {
