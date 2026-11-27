@@ -32,7 +32,7 @@ void FUN_004eafd0(Object0042dbe0 *self) /* derived name */
     if (self->unknown108) {
         Position0042dbe0 position = self->position;
         position.y += 0.5f;
-        TextStyle0042dbe0 style = {0xc080a0ff, 1.0f};
-        FUN_00205720(&position, &style, 0, "JumpSpeed: %f", self->jumpSpeed);
+        TextStyle0042dbe0 style(0xc080a0ff, 1.0f);
+        FUN_00205720(position, style, 0, "JumpSpeed: %f", self->jumpSpeed);
     }
 }

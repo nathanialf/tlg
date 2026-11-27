@@ -45,11 +45,16 @@ void FUN_0042dbe0(Object0042dbe0 *self); /* derived name */
 
 /* derived names: a debug text's colour and scale (FUN_00205720) */
 struct TextStyle0042dbe0 { /* derived name */
+
+    TextStyle0042dbe0(u32 colour, float scale) : colour(colour), scale(scale) {}
+
     u32 colour;
     float scale;
 };
 
-void FUN_00205720(const Position0042dbe0 *position, const TextStyle0042dbe0 *style, int flag,
+/* both taken by reference: FUN_003deb20 passes each call its own temporary
+ * style (four slots on its frame, none shared) */
+void FUN_00205720(const Position0042dbe0 &position, const TextStyle0042dbe0 &style, int flag,
                   const char *format, ...); /* derived name */
 
 #endif

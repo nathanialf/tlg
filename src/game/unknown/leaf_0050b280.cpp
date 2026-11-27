@@ -17,7 +17,7 @@ void FUN_0050b280(Object0042dbe0 *self) /* derived name */
     if (self->unknown108 && self->unknown134 && self->animation.index) {
         Position0042dbe0 position = self->position;
         position.y += 0.5f;
-        TextStyle0042dbe0 style = {0xc080a0ff, 1.0f};
-        FUN_00205720(&position, &style, 0, "Anim: %s", D_17ac870[self->animation.index].string0);
+        TextStyle0042dbe0 style(0xc080a0ff, 1.0f);
+        FUN_00205720(position, style, 0, "Anim: %s", D_17ac870[self->animation.index].string0);
     }
 }

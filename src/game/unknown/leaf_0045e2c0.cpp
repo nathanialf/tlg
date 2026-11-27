@@ -25,10 +25,10 @@ void FUN_0045e2c0(Float4 &position, const Object0045e2c0 *object) /* derived nam
 {
     if (object->node28) {
         position = object->node28->position;
-        if (object->joints.model) {
-            const s16 index = object->joints.jointIndex(D_57d5368);
+        if (object->joints.skeleton.model) {
+            const s16 index = object->joints.skeleton.jointIndex(D_57d5368);
             if (index >= 0) {
-                if (const Joint0148a5e0 *joint = object->joints.model->joints.at(index)) {
+                if (const Joint0148a5e0 *joint = object->joints.skeleton.model->joints.at(index)) {
                     Float4 raised = joint->position;
                     raised.y += 0.255f;
                     position = raised;

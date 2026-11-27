@@ -1,0 +1,22 @@
+/* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
+#include "tlg_game_format01327490.h"
+#include "tlg_libc.h"
+
+/* derived names: its pointer at 0x16c9518 is in the table of conversions
+ * at 0x16c94b0 (FUN_01327490's): packs four floats as biased values of the
+ * widths in bits the format gives: each clamped to the smallest and the
+ * largest signed value of its width, rounded to nearest, the smallest
+ * subtracted and the result masked to the width */
+// NONMATCHING: the two pointers' registers swapped (the base holds the input in r12 and the
+// format in r15, this build the other way) and with them the schedule, under the installed
+// compiler and under cvtzero-01 (round 578E) alike; the operations, the calls to fmin and fmax
+// and the frame the base's. Round 581E
+void FUN_013280e0(u32 *out, const float *in, const Format01327490 *format) /* derived name */
+{
+    for (int i = 0; i < 4; ++i) {
+        u32 largest = (1ull << (format->bits[i] - 1)) - 1;
+        int smallest = ~largest;
+        out[i] = ((int)floor(fmax(smallest, fmin(largest, in[i])) + 0.5) - smallest) &
+                 (u32)((1ull << format->bits[i]) - 1);
+    }
+}

@@ -3,7 +3,7 @@
  * caller (tlg_game_joints0148a5e0.h). The file's name is derived. */
 #include "tlg_game_joints0148a5e0.h"
 
-s16 Owner0148a5e0::jointIndex(const Name &name) const
+s16 Skeleton0148a5e0::jointIndex(const Name &name) const
 {
     const Model0148a5e0 *joints = model;
     if (joints->hashed) {

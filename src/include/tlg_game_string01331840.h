@@ -20,6 +20,8 @@ struct String01331840 { /* derived name */
 };
 
 void FUN_01331840(String01331840 *string, const char *format, ...); /* derived name */
+/* the arguments formatted after the text (leaf_01346a00.cpp) */
+void FUN_01346a00(String01331840 *string, const char *format, ...); /* derived name */
 
 inline Name::Name(const String01331840 &text)
     : index(text.text[0]

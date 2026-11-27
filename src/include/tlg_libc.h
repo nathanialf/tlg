@@ -71,6 +71,8 @@ int memcmp(const void *a, const void *b, size_t n);
 void *memcpy(void *dst, const void *src, size_t n);
 void *memmove(void *dst, const void *src, size_t n);
 void qsort(void *base, size_t count, size_t size, int (*compare)(const void *, const void *));
+void *bsearch(const void *key, const void *base, size_t count, size_t size,
+              int (*compare)(const void *, const void *));
 void *memset(void *dst, int c, size_t n);
 char *strcpy(char *dst, const char *src);
 char *strncpy(char *dst, const char *src, size_t n);
@@ -136,6 +138,11 @@ float tanhf(float x);
  * the SSE4.1 round (`vroundss` modes 2 and 1, FUN_00de7030 and FUN_00de73b0). */
 float ceilf(float x);
 float floorf(float x);
+double floor(double x);
+/* NIDs verified as "fmin" and "fmax" (FUN_01327170): the base calls them,
+ * and the game line's build keeps the calls (leaf_01327170.cpp). */
+double fmin(double x, double y);
+double fmax(double x, double y);
 /* NIDs verified as "frexpf", "ldexpf", "modff" (FUN_00dbf760, FUN_00dbf870,
  * FUN_00dbfe30). */
 float frexpf(float x, int *exponent);

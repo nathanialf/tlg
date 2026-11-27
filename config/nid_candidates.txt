@@ -949,3 +949,5 @@ mkdir
 __error
 difftime
 setlocale
+fmin
+fmax

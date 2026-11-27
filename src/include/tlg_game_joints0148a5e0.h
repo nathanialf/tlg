@@ -40,9 +40,12 @@ struct Model0148a5e0 { /* derived name */
     int hashed; /* +0x478 */
 };
 
-struct Owner0148a5e0 { /* derived name */
-    u8 unknown0[0x40];
-    Model0148a5e0 *model; /* +0x40 */
+/* derived names: the member at +0x40 of a model's owner that holds the
+ * model: the lookups of joints by name are its own (FUN_013cde10 is given
+ * its address, `lea rdi, [r13+0x40]` at 0xf301eb, and reads the model at
+ * +0x0 of it) */
+struct Skeleton0148a5e0 { /* derived name */
+    Model0148a5e0 *model; /* +0x0 */
 
     /* the index of the joint with the name, -1 without one: through the
      * table when the model has it, else each joint in turn. Out of line
@@ -53,6 +56,16 @@ struct Owner0148a5e0 { /* derived name */
      * not a sibling call (FUN_0148a5e0: `call 0xd66e30` before the
      * epilogue; TailCallElim runs in the unit's pipeline only). */
     s16 jointIndex(const Name &name) const; /* derived name */
+
+    /* FUN_013cde10 (leaf_013cde10.cpp): the joints' indices of a list of
+     * names */
+    int findJoints(Array05943280<int> &indices, const char *const *names,
+                   int count) const; /* derived name */
+};
+
+struct Owner0148a5e0 { /* derived name */
+    u8 unknown0[0x40];
+    Skeleton0148a5e0 skeleton; /* +0x40 */
 };
 
 #endif

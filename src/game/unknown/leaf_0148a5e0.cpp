@@ -16,5 +16,5 @@ void FUN_013e8390(Object0148a5e0 *object); /* derived name */
 void FUN_0148a5e0(Object0148a5e0 *self) /* derived name */
 {
     FUN_013e8390(self);
-    self->rotAxis = self->owner->jointIndex(Name("jt_RotAxis"));
+    self->rotAxis = self->owner->skeleton.jointIndex(Name("jt_RotAxis"));
 }

@@ -1,14 +1,10 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
-#include "tlg_types.h"
+#include "tlg_game_format01327490.h"
 
 /* derived names: clamps four unsigned values to the widths in bits the
  * format gives for them (its bytes at +0x6 to +0x9), each limited to the
  * largest value of its width and masked to it. Its callers and the format's
  * other fields are not traced. */
-struct Format01327490 { /* derived name */
-    u8 unknown0[6];
-    u8 bits[4]; /* +0x6 */
-};
 
 /* The output and the input do not overlap (restrict): the base reads the
  * fourth value above the third store (`mov eax, [rsi+0xc]; mov [rdi+8], ecx`),
