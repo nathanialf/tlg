@@ -119,6 +119,7 @@ class Object016b0448 /* derived name */
     int unknownd4;                         /* +0xd4: 1 from the constructor */
 };
 
-extern Object016b0448 *D_581f740;
+/* The pointer at 0x581f740 to the one object is the static of the unit that holds the class
+ * (src/game/unknown/func_008ed750.cpp, round 605E). */
 
 #endif

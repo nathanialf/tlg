@@ -288,47 +288,46 @@ void FUN_00da7a00(Compiler00dacb80 *self) /* derived name */
     self->funcState->unknown1798->unknown14 = expression->unknown3c;
 }
 
-/* derived name: slots 10 and 11 of the vtable at 0x16bb0c0 (their pointers
- * at 0x16bb120 and 0x16bb128), one body: a jump emitted by FUN_00db1aa0
- * (the code 0x38fffe00 and slot 6 of the reporter) with the pending jump
- * list (+0xc40, left empty) joined to it, the jump joined to the record's
- * list at +0x4, then FUN_00db00e0's body over the jump at +0x8 */
-// NONMATCHING: the base's last join is a sibling call (`jmp`, after the canary check); the
-// build's is a `tail` call that code generation keeps as a call, because the local's
-// llvm.lifetime.end follows it (isInTailCallPosition, CodeGen/Analysis.cpp:507-520). With that
-// one marker removed from the linked module the whole function is equal, its list-ilp order and
-// register assignment with it (round 603E, scratch e603/lt.ll). So the local's lifetime ends
-// before the last call: a helper's own local, as Lua 5.1's luaK_jump returns `j`, inlined here.
-// Not TailCallElim at the link (that loses 22 rows, e603/notes.md)
-void FUN_00daff40(Compiler00dacb80 *self) /* derived name */
+/* derived name: codes a jump with the pending jump list joined to it (Lua's
+ * luaK_jump) */
+static inline int codeJump(Compiler00dacb80 *self)
 {
     FuncState00dacb80 *fs = self->funcState;
-    int *exits = &fs->unknown1798->unknown4;
     int pending = fs->jumpList;
     fs->jumpList = -1;
     int jump = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
     FUN_00dacb80(self, &jump, pending);
-    FUN_00dacb80(self, exits, jump);
-    fs = self->funcState;
-    int target = fs->unknown1798->unknown8;
-    fs->lastTarget = fs->pc;
-    FUN_00dacb80(self, &self->funcState->jumpList, target);
+    return jump;
 }
 
-// NONMATCHING: as FUN_00daff40, one body
-void FUN_00db0010(Compiler00dacb80 *self) /* derived name */
+/* derived name: patches a jump list to the current pc, the pending list
+ * (Lua's luaK_patchtohere) */
+static inline void patchToHere(Compiler00dacb80 *self, int list)
 {
     FuncState00dacb80 *fs = self->funcState;
-    int *exits = &fs->unknown1798->unknown4;
-    int pending = fs->jumpList;
-    fs->jumpList = -1;
-    int jump = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
-    FUN_00dacb80(self, &jump, pending);
-    FUN_00dacb80(self, exits, jump);
-    fs = self->funcState;
-    int target = fs->unknown1798->unknown8;
     fs->lastTarget = fs->pc;
-    FUN_00dacb80(self, &self->funcState->jumpList, target);
+    FUN_00dacb80(self, &self->funcState->jumpList, list);
+}
+
+/* derived name: slots 10 and 11 of the vtable at 0x16bb0c0 (their pointers
+ * at 0x16bb120 and 0x16bb128), one body: a jump coded (codeJump: FUN_00db1aa0
+ * with the code 0x38fffe00 and slot 6 of the reporter, the pending list at
+ * +0xc40 joined to it and left empty) and joined to the record's list at
+ * +0x4, then the jump at +0x8 patched to here (FUN_00db00e0's body). The
+ * jump's local is codeJump's, as Lua 5.1's luaK_jump returns `j`: its
+ * lifetime ends inside the inlined helper, so nothing follows the last join
+ * and code generation makes it a sibling call (CodeGen/Analysis.cpp:507-520;
+ * round 605E) */
+void FUN_00daff40(Compiler00dacb80 *self) /* derived name */
+{
+    FUN_00dacb80(self, &self->funcState->unknown1798->unknown4, codeJump(self));
+    patchToHere(self, self->funcState->unknown1798->unknown8);
+}
+
+void FUN_00db0010(Compiler00dacb80 *self) /* derived name */
+{
+    FUN_00dacb80(self, &self->funcState->unknown1798->unknown4, codeJump(self));
+    patchToHere(self, self->funcState->unknown1798->unknown8);
 }
 
 /* derived name: as Lua 5.1's luaK_goiftrue: FUN_00da7fc0 first (as
@@ -377,18 +376,6 @@ void FUN_00da7a60(Compiler00dacb80 *self, Expression00dacb80 *expression) /* der
     expression->unknown38 = -1;
 }
 
-/* derived name: codes a jump with the pending jump list joined to it (Lua's
- * luaK_jump) */
-static inline int codeJump(Compiler00dacb80 *self)
-{
-    FuncState00dacb80 *fs = self->funcState;
-    int pending = fs->jumpList;
-    fs->jumpList = -1;
-    int jump = FUN_00db1aa0(self, 0x38fffe00, self->reporter->slot6());
-    FUN_00dacb80(self, &jump, pending);
-    return jump;
-}
-
 /* derived name: patches a jump list to a target: to the pending list when
  * the target is the current pc, else FUN_00db1710 with no register (Lua's
  * luaK_patchlist) */
@@ -411,15 +398,6 @@ void FUN_00dafcd0(Compiler00dacb80 *self) /* derived name */
     int jump = codeJump(self);
     patchList(self, jump, self->funcState->unknown1798->unknown8);
     *self->funcState->unknownc20 = self->funcState->unknown1798->unknown4;
-}
-
-/* derived name: patches a jump list to the current pc, the pending list
- * (Lua's luaK_patchtohere) */
-static inline void patchToHere(Compiler00dacb80 *self, int list)
-{
-    FuncState00dacb80 *fs = self->funcState;
-    fs->lastTarget = fs->pc;
-    FUN_00dacb80(self, &self->funcState->jumpList, list);
 }
 
 /* derived name: slot 43 of the vtable at 0x16bb0c0 (its pointer at

@@ -210,7 +210,15 @@ void Object016bba90::enterClosure(const Record00dd1460 *closure)
 // (isInTailCallPosition, CodeGen/Analysis.cpp:507-520). So the buffer is not
 // this function's local in the unit: a helper's, which the unit does not
 // inline and the link does. TailCallElim at the link is not the base's (22
-// rows lost, e603/notes.md)
+// rows lost, e603/notes.md). Round 605E, read, not compiled: a helper of this
+// unit holding the buffer is inlined here before this function's TailCallElim
+// runs (static: the last-call credit; external: its cost is far under 225),
+// and the declared FUN_00db3a90 is then an escape point
+// (TailRecursionElimination.cpp:233-244, 296-338); the base has no such helper
+// out of line (0xdb3a90's callers are 0xd908f0, 0xdb3930 and this). What is
+// left: FUN_00db3a90's buffer known nocapture in this unit, which needs it and
+// FUN_00d95b60 (its print, to the import at 0x14b1bb8) defined here: one
+// script unit from 0xd95b60 to here, not shown
 void Object016bba90::enterMethod(const Record00dd1510 *method)
 {
     FUN_00dd2590(D_15bccf7, method, D_15bce8c);
