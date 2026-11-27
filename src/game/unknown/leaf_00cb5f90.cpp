@@ -61,19 +61,35 @@ struct Trophies00cb5f90 { /* derived name */
 
 int FUN_00cb5f80(const void *a, const void *b); /* derived name */
 
+/* derived names: the three names of a message, each a copy of its own: made
+ * from the names first, then handed to the links (the base copies the event,
+ * the sender and the name, `lock inc` at 0xcb6190, 0xcb61a6 and 0xcb61bc,
+ * before it reads the links at 0xcb61e1); released in reverse after the
+ * message is handed on */
+struct Message00cb5f90 { /* derived name */
+
+    Message00cb5f90(const Name &event, const Name &sender, const Name &argument)
+        : event(event), sender(sender), argument(argument)
+    {
+    }
+
+    Name event;
+    Name sender;
+    Name argument;
+};
+
 /* derived names: the trophy the name names unlocked: looked up by name
  * (bsearch over the table), and unless its id is out of range or already
  * unlocked, queued when the trophies are queueing (the first free slot of
  * 80 unless it is there) and "Trophy.Unlock" posted from "TrophySystem"
  * with the trophy's name (interned as a copy) through the links at +0xd0 of
  * the record the pointer at 0x5938c40 holds */
-// NONMATCHING: 840 against 882 bytes; to the post the base's but for the queue loop's alignment
-// (the base pads before `mov ecx, [rbx+rax*4+4]`). The post: the base interns the name first
-// (0xcb614d), copies the two statics and the name (`lock inc` three times), releases the name
-// (0xcb61c6) and only then reads the links at +0xd0 and makes the message; the three copies are
-// released last, the name's first. The build reads the links first and the name has no copy of its
-// own. Lead: the three names copied into a value of their own before the post (its members' copies
-// in order, the made name a temporary that dies with that statement), then handed to the links
+// NONMATCHING: 208/217 at the base's 882 bytes. The three names are copied into a value of their own
+// before the links are read (the base's order: intern, three copies, the made name released, then
+// the links). Two scheduling classes left: after the message's operator new the build forms the
+// event's entry offset (`mov r15, r13; shl r15, 5`) before the message's count and vptr stores
+// where the base copies rdx and rbx first and shifts after the stores (0xcb61fd to 0xcb6222); and
+// the argument's release loads its slot (`mov rcx, [rbp-0x60]`) before `mov eax, -1` (0xcb6277)
 void FUN_00cb5f90(Trophies00cb5f90 *self, const char *name) /* derived name */
 {
     const TrophyTable00cb5f90 *table = self->table180;
@@ -86,7 +102,7 @@ void FUN_00cb5f90(Trophies00cb5f90 *self, const char *name) /* derived name */
     if (!trophy)
         return;
     const int id = trophy->id;
-    if (id < 0 || id >= self->count188)
+    if (id < 0 || self->count188 <= id)
         return;
     if (self->unlocked14c[id >> 5] & (1u << (id & 31)))
         return;
@@ -104,5 +120,6 @@ void FUN_00cb5f90(Trophies00cb5f90 *self, const char *name) /* derived name */
     }
     static Name D_5945890(D_15b42f6, false);
     static Name D_59458a0(D_15b4304, false);
-    D_5938c40->links->post(D_5945890, D_59458a0, Name(Name::intern(name)));
+    const Message00cb5f90 message(D_5945890, D_59458a0, Name(Name::intern(name)));
+    D_5938c40->links->send(message.event, message.sender, message.argument);
 }

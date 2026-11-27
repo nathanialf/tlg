@@ -41,7 +41,7 @@ struct lua_State;
 
 /* derived names: a string as the script VM hands an argument over: the
  * string, its hash and length, and a mark set when the argument held no
- * string (the string then null). FUN_00e81bd0 fills one from an argument of
+ * string (the string then the empty one). FUN_00e81bd0 fills one from an argument of
  * a state (the string at +0x14 of the VM's string object, the hash at +0x10,
  * the length at +0x8). 16 bytes. */
 struct HashedString /* derived name */

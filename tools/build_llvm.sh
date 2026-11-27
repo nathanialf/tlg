@@ -25,12 +25,17 @@
 #      llvm source root). These only make the old sources build with a
 #      current host toolchain; none changes code generation.
 #   3. Apply the other patches, tools/patches/llvm-<version>-<what>-*.patch
-#      for every other <what>: 3.3's twelve backports and 3.7.1's fifteen
+#      for every other <what>: 3.3's twelve backports and 3.7.1's seventeen
 #      patches (four PS4 items, six forward ports, one local rule of the
 #      two-stage game module, D83, lxadd, a scheduling model rule,
 #      unswitch, a rule of the unit pipeline's LoopUnswitch, atomic, a
-#      rule of memory dependence across an ordered atomic, and jumpthread,
-#      a rule of JumpThreading for a block that holds an atomic;
+#      rule of memory dependence across an ordered atomic, jumpthread,
+#      a rule of JumpThreading for a block that holds an atomic, cvtzero,
+#      a rule of instruction selection for a loaded float converted to
+#      double, D95, and tailmerge, a rule of the tail merge and tail
+#      duplication for a narrow atomic, D96; in the glob's order cvtzero
+#      applies second, after atomic, and tailmerge fourteenth, after
+#      structor and before tlsprot; tools/patches/proposed/ is not read;
 #      each file's header has its
 #      evidence, config/flags.<slug>.txt lists them). These DO change code
 #      generation, so --verify is the check of a build made with the host

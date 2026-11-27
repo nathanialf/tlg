@@ -19,10 +19,8 @@ struct PathView00315bf0 /* derived name */
 /* derived names: FUN_00315bf0 calls it for each point of the path: with
  * flag 1 the two widths drawn at their edges in one colour, with flag 2 in
  * another */
-// NONMATCHING: equal under cvtzero-01 (round 578E): under the installed compiler only its four
-// conversions differ (`vcvtss2sd xmm0, xmm0, [rbx+0x10]` with no zero before it; the base's
-// vxorps xmm0 two to nine instructions ahead): tools/patches/proposed/
-// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch, not installed
+// The floats are converted from memory over a zero of the block (`vxorps`, then `vcvtss2sd x, z, [mem]`)
+// by the selection rule (tools/patches/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch, D95).
 void PathView00315bf0::drawWidths(const PathPoint *point)
 {
     if (debugFlags & 1) {

@@ -20,13 +20,10 @@ static inline float easeCurve(float t, float first, float second)
  * current value. Each child of the node then dispatches the node it holds
  * at +0x38 with the eased value as the owner's value (type 4), and a
  * message is written when the node asks for one. Returns 0. */
-// NONMATCHING: the message's loads are not folded into vcvtss2sd (the base zeroes xmm4 and
-// converts each from memory) and the nops before the loops; the curves' registers are the base's
-// with 1 - t written where it is used, after t * t * second (round 507D: greedy assigns the
-// block's ranges in order, so u * u and its cube take xmm3 and xmm4 first and 1 - u xmm6)
-// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
-// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
-// a zero of the block made at selection.
+// The floats are converted from memory over a zero of the block (`vxorps`, then `vcvtss2sd x, z, [mem]`)
+// by the selection rule (tools/patches/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch, D95).
+// The curves' registers follow from 1 - t written where it is used, after t * t * second (round 507D:
+// greedy assigns the block's ranges in order, so u * u and its cube take xmm3 and xmm4 first and 1 - u xmm6).
 int FUN_00c65ce0(ValueOwner583950 *self, void *arg) /* derived name */
 {
     ParentNode583950Kind18 *node =

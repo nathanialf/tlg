@@ -24,10 +24,8 @@ struct Job00d8feb0 { /* derived name */
     int *total;         /* +0x30 */
 };
 
-// NONMATCHING: tail merging: the base keeps the counter's fetch (`mov eax, -1; mov rcx,
-// [r14 + 0x18]; lock xadd`) in the entry and again at the latch, both reaching one test;
-// the build merges the two into one block the entry jumps to (also written as an
-// explicit rotation: the same IR)
+// The take (`mov eax, -1; lock xadd dword`) stays in the entry and at the latch, both reaching one test, by
+// the tail-merge rule (tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch, D96).
 void FUN_00d8feb0(Job00d8feb0 *job) /* derived name */
 {
     __sync_fetch_and_add(job->started, 1);

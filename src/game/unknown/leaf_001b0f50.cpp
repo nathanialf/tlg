@@ -9,7 +9,7 @@
  * function's own name is unknown. */
 int FUN_001b0f50(lua_State *state) /* derived name */
 {
-    const HksObject *value = state->base;
+    HksObject *value = state->base;
     const char *string = value < state->top ? FUN_00db6b20(state, value, 0) : 0;
     u32 hash = 0x811c9dc5;
     u32 length = strlen(string);

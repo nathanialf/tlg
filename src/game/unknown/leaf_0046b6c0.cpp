@@ -35,7 +35,7 @@ static inline const char *skipBlanks(const char *text)
 // as the base, every call, test and branch arm in the base's order)
 int FUN_0046b6c0(lua_State *state) /* derived name */
 {
-    const HksObject *value = state->base;
+    HksObject *value = state->base;
     const char *text = value < state->top ? FUN_00db6b20(state, value, 0) : 0;
     if (!text)
         return 0;

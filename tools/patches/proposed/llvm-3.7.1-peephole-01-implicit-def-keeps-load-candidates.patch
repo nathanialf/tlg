@@ -1,3 +1,4 @@
+NOT NEEDED (round 585D): cvtzero-01 (D95) gives the base's bytes without it; it stays proposed and is not installed.
 llvm-3.7.1 backport, part: an IMPLICIT_DEF no longer discards the
 peephole's load-fold candidates
 (upstream r244577, D11591, Michael Kuperstein, 2015-08-11, "Allow

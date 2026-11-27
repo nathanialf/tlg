@@ -56,8 +56,11 @@ void *FUN_00db9de0(lua_State *state, const char *text, size_t length, u32 hash);
  * characters from the high byte down (lookup3's hashbig); the empty string's
  * is the seed (0xdd41f0 passes 0x6b6f7265, 0xde9960 "file (closed)"'s
  * 0x377b9582). Inlined by the VM's string pushes (0x13aacc0, 0x13aa820,
- * 0xd94bc0, 0xdb6b20 and others). */
-inline u32 hashString(const char *text, size_t length)
+ * 0xd94bc0, 0xdb6b20 and others). Static: each unit has its own copy, so
+ * a unit that hashes once has it inlined as the only call of a local
+ * function (InlineCost.cpp:1110-1117, LastCallToStaticBonus) at any size; a shared
+ * inline of its size is kept out of line from the second caller written. */
+static inline u32 hashString(const char *text, size_t length)
 {
     u32 a, b, c;
     a = b = c = 0x6b6f7265 + u32(length);

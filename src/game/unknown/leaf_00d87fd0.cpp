@@ -18,6 +18,10 @@
 // through threadMayUse() the tests are the base's branches (`test byte [r15+0x16], 4; jne`); the
 // body is otherwise the base's in order. Lead: the twin at 0xc2edd0 is the same bytes in another
 // unit, which suggests a helper shared through a header; what of it is a call at the unit stage
+// Round 586C compiled the lookup (intern, the record, the usable test, the release) as a function of
+// its own in another unit: the link does not inline it (the twin 238 bytes with the call; a cost
+// over the link's 175 with three calls in it), so a unit-stage call explains the base only if its
+// body is cheaper than that
 void FUN_00d87fd0(char *name, const char *path, const char *suffix) /* derived name */
 {
     const Object016b9108 *object;

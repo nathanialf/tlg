@@ -20,6 +20,8 @@ struct String01331840 { /* derived name */
 };
 
 void FUN_01331840(String01331840 *string, const char *format, ...); /* derived name */
+/* the same without the last byte cleared first (leaf_00317070.cpp) */
+void FUN_00317070(String01331840 *string, const char *format, ...); /* derived name */
 /* the arguments formatted after the text (leaf_01346a00.cpp) */
 void FUN_01346a00(String01331840 *string, const char *format, ...); /* derived name */
 

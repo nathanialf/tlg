@@ -11,7 +11,7 @@ void FUN_00db6800(lua_State *state, const char *name);
 int FUN_00deb840(lua_State *state)
 {
     hksi_luaL_checktype(state, 1, 6, "function");
-    const HksObject *value = state->base + 1;
+    HksObject *value = state->base + 1;
     const char *name = value < state->top ? FUN_00db6b20(state, value, 0) : 0;
     if (!name)
         FUN_00dd38c0(state, 2, "string");

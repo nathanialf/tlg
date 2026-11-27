@@ -36,6 +36,10 @@ int FUN_00a2efa0(const char *name, int count, const ScriptArgument00a2efa0 *argu
 // release (`test r14, r14; sete al` kept to 0x1390a8d), where Ref00503fb0(T *) tests it at both and
 // the build threads the second test away: the base's temporary comes from a construction that does
 // not test (a reference made from an entry known to exist)
+// Round 586C, the module: the raise is already the base's (`cmp [r14+8], 0xdeadc0de` with no null
+// test, the entry dereferenced first), so (2) is the release's kept test alone. (1) in the module:
+// the build sets bl 1 on the match edge and clears it after the loop, the base sets bl 1 in the
+// latch and clears it on the match (0x139091d, 0x1390a12): the phi carries "not found"
 void FUN_013907f0(Object016b4ce0 *self, Entry016b4ce0 *entry, bool shown) /* derived name */
 {
     if (self->holdingF0) {

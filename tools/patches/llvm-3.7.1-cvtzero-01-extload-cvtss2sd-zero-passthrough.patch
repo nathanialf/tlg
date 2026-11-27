@@ -2,9 +2,10 @@ llvm-3.7.1 local rule: a float loaded and converted to double is selected
 as the memory form of vcvtss2sd over a zero
 (no upstream state)
 
-Placed under tools/patches/proposed/ so that tools/build_llvm.sh, which applies
-every tools/patches/llvm-3.7.1-*.patch (:143), does not take it: to install,
-the supervisor moves it up one directory in a round of its own.
+Adopted (docs/DECISIONS.md D95, round 585D): moved from tools/patches/proposed/
+into tools/patches/, the second of the line's seventeen in the glob's order
+(after atomic-01). The shared install under tools/cc is rebuilt with it in a
+round of its own; until then the installed compiler does not hold it.
 
 This patch CHANGES INSTRUCTION SELECTION ONLY (X86InstrSSE.td, the AVX
 pattern of an extending float load under OptForSpeed, X86InstrSSE.td:1908).

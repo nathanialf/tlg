@@ -16,7 +16,7 @@ int FUN_00ded3d0(lua_State *state)
         thread = toThread(state, 1);
         hksi_lua_remove(state, 1);
     }
-    const HksObject *value = state->top - 1;
+    HksObject *value = state->top - 1;
     const char *name = value >= state->base ? FUN_00db6b20(state, value, 0) : 0;
     if (!name)
         FUN_00dd38c0(state, -1, "string");

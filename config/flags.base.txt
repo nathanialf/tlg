@@ -36,7 +36,7 @@
 #               under the prebuilt 3.8.1 holds 4,893 of 5,497 game rows
 #               where 3.7.1 holds 5,302 with the PS4 items alone). Built
 #               from source (cxx=3.7.1-src, tools/build_llvm.sh 3.7.1) with
-#               fifteen patches (tools/patches/llvm-3.7.1-*.patch, each with
+#               seventeen patches (tools/patches/llvm-3.7.1-*.patch, each with
 #               its evidence and its sweep in its header). Four PS4 items:
 #               one nop after the stack check's failure call (sspnop, D26);
 #               a thread-local with local linkage kept general-dynamic
@@ -69,7 +69,17 @@
 #               that nothing before it captured or was handed to write
 #               (atomic). One local rule of JumpThreading, no upstream
 #               state: a block that holds an atomic read-modify-write or
-#               a compare-exchange is not duplicated (jumpthread).
+#               a compare-exchange is not duplicated (jumpthread). One
+#               local rule of instruction selection, no upstream state: a
+#               one-use float load converted to double is the memory form
+#               of vcvtss2sd over a zero of the block (cvtzero, D95). One
+#               local rule of the tail merge, no upstream state: an
+#               atomic read-modify-write of 32 bits or less ends a common
+#               tail and its block is not tail-duplicated (tailmerge,
+#               D96). In the order they apply (the glob's): atomic,
+#               cvtzero, fieldalign, fpstore, initattrs, inlinecall,
+#               jumpthread, lcssa, ltopre, lxadd, selsink, sspnop,
+#               structor, tailmerge, tlsprot, trap, unswitch.
 #               5,980 of its 16,344 functions load a stack canary, those that
 #               take a local's address or hold an array (tools/fingerprint.py
 #               --range 0x1a3e00:, D20): the Orbis default

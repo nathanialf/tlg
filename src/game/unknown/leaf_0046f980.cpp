@@ -35,10 +35,8 @@ extern Name D_57d5840;          /* derived name */
 
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
 
-// NONMATCHING: the component walk: the base keeps one block for the reader count's drop that
-// both outcomes of each findComponent reach (`xor r13d, r13d; mov ebx, 0` on the way out, `lock
-// dec` once, then `test rbx, rbx`), the build threads the test and drops the count on each arm;
-// the same with findComponent defined out of line (round 342A)
+// The reader count's drops stay apart before their successor (`lock dec dword`, one jumping, one falling
+// in) by the tail-merge rule (tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch, D96).
 int FUN_0046f980(lua_State *state) /* derived name */
 {
     Object016b9108 *object = 0;

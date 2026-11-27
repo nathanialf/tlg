@@ -247,14 +247,26 @@ class HksApiTimer
 };
 
 /* A string as the VM holds it: its length in the low 62 bits of the word
- * at +0x8 (the top two bits are not the length), its characters from +0x14
- * (FUN_00db6f40). derived name. */
+ * at +0x8 (the top two bits are not the length), its hash (hashString in
+ * tlg_hks_string.h, read back by FUN_00e81bd0) at +0x10, its characters from
+ * +0x14 (FUN_00db6f40). derived name. */
 struct HksString {
     u8 unknown0[0x8];
     u64 lengthAndFlags; /* derived name */
-    u32 unknown10;
-    char data[1]; /* +0x14, derived name */
+    u32 hash;           /* +0x10, derived name */
+    char data[1];       /* +0x14, derived name */
+
+    /* derived name: the length, the word's low 62 bits */
+    size_t length() const
+    {
+        return lengthAndFlags & 0x3fffffffffffffff;
+    }
 };
+
+/* derived name: a string made in the VM's table of strings (FUN_00dd06f0,
+ * its body not written), found there when it is in it already */
+void *FUN_00dd06f0(void *strings, lua_State *state, int unknown, const char *text, size_t length,
+                   u32 hash);
 
 /* A table and a structure as FUN_00db84e0 reads them: the metatable each
  * must lack for a raw store (+0x10 of a table, +0x20 of a structure; the
@@ -467,9 +479,10 @@ inline int typeOf(lua_State *state, int argument)
     return type == 9 || type == 10 ? 6 : type;
 }
 
-/* derived name: an argument's string and its length (FUN_00db6b20, its body
- * not written), null when it holds none */
-const char *FUN_00db6b20(lua_State *state, const HksObject *value, size_t *length);
+/* derived name: Lua's lua_tolstring by its value: the string a value reads
+ * as and its length, a number made a string in its slot (FUN_00db6b20,
+ * leaf_00db6b20.cpp); null and the length 0 for any other value */
+const char *FUN_00db6b20(lua_State *state, HksObject *value, size_t *length);
 
 /* hksi_luaL_checklstring (the name from its assertion message), inlined:
  * an argument's string and its length; the argument error "string" when the
@@ -483,7 +496,7 @@ inline const char *hksi_luaL_checklstring(lua_State *s, int argument, size_t *le
                "Parameter 's' must be a valid state pointer", HKS_VM_AUX_FILE, 323);
         __builtin_trap();
     }
-    const HksObject *value = s->base + (argument - 1);
+    HksObject *value = s->base + (argument - 1);
     const char *string = value < s->top ? FUN_00db6b20(s, value, length) : 0;
     if (!string)
         FUN_00dd38c0(s, argument, "string");
@@ -764,14 +777,11 @@ inline void *toUserdata(lua_State *state, int argument) /* derived name */
     return 0;
 }
 
-/* derived name: Lua's lua_tolstring by its arguments: the string a value
- * reads as (FUN_00db6b20; a null value for an argument past the frame's
- * top, `cmovae rsi, rbx` at 0xe7f2eb) */
-const char *FUN_00db6b20(lua_State *state, const HksObject *value, size_t *length);
-
+/* derived name: an argument's string (FUN_00db6b20; a null value for an
+ * argument past the frame's top, `cmovae rsi, rbx` at 0xe7f2eb) */
 inline const char *stringOf(lua_State *state, int argument) /* derived name */
 {
-    const HksObject *value = state->base + (argument - 1);
+    HksObject *value = state->base + (argument - 1);
     if (!(value < state->top))
         value = 0;
     return FUN_00db6b20(state, value, 0);
@@ -1175,6 +1185,50 @@ inline int indexToHksObjectSafe(lua_State *s, int index, HksObject **object)
                     87);
                 __builtin_trap();
             }
+            s->environment.value.pointer =
+                static_cast<HksCClosure *>(base[-1].value.pointer)->environment;
+            s->environment.type = 5;
+            *object = &s->environment;
+        } else {
+            *object = static_cast<HksCClosure *>(base[-1].value.pointer)->upvalues +
+                      (LUA_GLOBALSINDEX - index - 1);
+        }
+    }
+    return 0;
+}
+
+/* derived name: indexToHksObjectSafe without its assertion, as the game's
+ * own script functions resolve an index (FUN_00e81bd0: the environment's
+ * pseudo-index reads the running function below the frame's base with no
+ * test of the stack's bottom), the registry tested before the globals as
+ * in indexToHksObjectFast (the base compares -10002 first: the case
+ * written first is tested last) */
+inline int indexToHksObjectUnchecked(lua_State *s, int index, HksObject **object)
+{
+    if (index > LUA_REGISTRYINDEX) {
+        if (index > 0) {
+            HksObject *value = s->base + index - 1;
+            const int outside = !(value < s->top);
+            *object = outside ? 0 : value;
+            return outside;
+        }
+        if (index < 0) {
+            HksObject *value = s->top + index;
+            const int outside = !(value >= s->base);
+            *object = outside ? 0 : value;
+            return outside;
+        }
+        *object = 0;
+        return 1;
+    }
+    if (index == LUA_REGISTRYINDEX) {
+        *object = &s->global->registry;
+    } else if (index == LUA_GLOBALSINDEX) {
+        *object = &s->globalTable;
+    } else {
+        /* the running function, below the frame's base */
+        HksObject *base = s->base;
+        if (index == LUA_ENVIRONINDEX) {
             s->environment.value.pointer =
                 static_cast<HksCClosure *>(base[-1].value.pointer)->environment;
             s->environment.type = 5;

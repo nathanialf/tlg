@@ -31,7 +31,7 @@ void FUN_00c67ff0(Gui00c67ff0 *gui, unsigned colour, float x, float y, float wid
 /* derived name: an argument's string, null past the frame's top */
 static inline const char *toString(lua_State *state, int argument)
 {
-    const HksObject *value = state->base + (argument - 1);
+    HksObject *value = state->base + (argument - 1);
     return value < state->top ? FUN_00db6b20(state, value, 0) : 0;
 }
 

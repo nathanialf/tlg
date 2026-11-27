@@ -1,5 +1,6 @@
 /* src/game/unknown/: game-region functions (0x1a3e00 and up; docs/TARGETS.md) matched before their translation unit is known. */
 /* NONMATCHING FUN_002c0420: the creation lock's wait loop: the base copies the exchange's flags (`pushfq; pop rax; push rax; popfq`) before the branch; no source form gives it and the barrier that did was removed (docs/DECISIONS.md D88). */
+/* Round 582D (scratch d582): an exchange written as an inline function whose body is `lock cmpxchg` (eax out, or its own sete) gives no pushfq anywhere in the module: the flags copied are a compiler exchange's. */
 /* NONMATCHING FUN_002c0550: the creation lock's wait loop: the base copies the exchange's flags (`pushfq; pop rax; push rax; popfq`) before the branch; no source form gives it and the barrier that did was removed (docs/DECISIONS.md D88). */
 #include "tlg_game_array01343a80.h"
 

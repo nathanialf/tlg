@@ -24,7 +24,7 @@ int FUN_001b10f0(lua_State *state) /* derived name */
 {
     int count = argumentCount(state);
     if (count > 0) {
-        const HksObject *value = state->base;
+        HksObject *value = state->base;
         const char *name = value < state->top ? FUN_00db6b20(state, value, 0) : 0;
         int set = 1;
         if (count >= 2)

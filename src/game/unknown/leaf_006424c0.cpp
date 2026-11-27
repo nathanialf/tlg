@@ -15,11 +15,8 @@ struct Named006424c0 : Object016b9108 /* derived name */
 extern const char D_15aba40[18];
 extern const Type00503fb0 *D_5814678;
 
-// NONMATCHING: 74 of 76. The float at +0x1b4 is converted from memory after a `vxorps` (round
-// 260A's class: the memory-form vcvtss2sd); the build loads it with vmovss and converts the register.
-// Round 578E: equal under cvtzero-01 (not installed: tools/patches/proposed/
-// llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch): the base's pass-through is
-// a zero of the block made at selection.
+// The floats are converted from memory over a zero of the block (`vxorps`, then `vcvtss2sd x, z, [mem]`)
+// by the selection rule (tools/patches/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch, D95).
 bool FUN_006424c0() /* derived name */
 {
     Named006424c0 *object = findNamed<Named006424c0>(Name(D_15aba40), D_5814678);

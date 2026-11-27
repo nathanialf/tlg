@@ -62,13 +62,10 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-const char *FUN_00db6b20(lua_State *state, const HksObject *value,
-                         size_t *length); /* derived name */
-
 /* derived name: an argument's string, null past the frame's top */
 static inline const char *toString(lua_State *state, int argument)
 {
-    const HksObject *value = state->base + (argument - 1);
+    HksObject *value = state->base + (argument - 1);
     return value < state->top ? FUN_00db6b20(state, value, 0) : 0;
 }
 

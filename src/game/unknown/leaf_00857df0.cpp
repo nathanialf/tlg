@@ -21,15 +21,8 @@ struct Object00857df0 { /* derived name */
 extern const Type00503fb0 *D_5939080; /* derived name: the node's type */
 extern const Type00503fb0 *D_581ce88; /* derived name: the counted components' type */
 
-// NONMATCHING: 52/113, 364 bytes against 395. Both finds' drops are in the IR (two atomicrmw, the
-// loop rotated or not); the post-RA Control Flow Optimizer merges them with the tail that follows
-// (one `lock dec; test; je`), where the base keeps each find's drop and found block apart
-// (0x857ee2 `lock dec; jmp`, 0x857ef0 `lock dec` falling into the test). The `while` form: one copy
-// of findComponent, 300 bytes (round 569D). Round 576D: BranchFolding's tail merge compares the two
-// drops as identical instructions (ComputeCommonTailLength stops only at a difference or inline asm),
-// and the pre-RA tail duplication copies the second drop into both exits of its search; a build whose
-// two passes leave alone an atomic read-modify-write with an unused result gives this function, its
-// twin and FUN_0046f770/FUN_0046f980 equal with no matched row changed (a region question, not a form)
+// The reader count's drops stay apart before their successor (`lock dec dword`, one jumping, one falling
+// in) by the tail-merge rule (tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch, D96).
 int FUN_00857df0(void *, const Object00857df0 *self) /* derived name */
 {
     Object016b85e0 *node = findNamed<Object016b85e0>(self->name14, D_5939080);
@@ -42,7 +35,6 @@ int FUN_00857df0(void *, const Object00857df0 *self) /* derived name */
     return 1;
 }
 
-// NONMATCHING: as FUN_00857df0
 int FUN_00857f80(void *, const Object00857df0 *self) /* derived name */
 {
     Object016b85e0 *node = findNamed<Object016b85e0>(self->name14, D_5939080);

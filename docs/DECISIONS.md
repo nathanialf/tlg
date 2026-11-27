@@ -2313,3 +2313,208 @@ module: 22 symbols change, no matched row among them, as round 566D's variant pr
 (FUN_0046a860); the gate again and the hook's gate: OK, 11,018. Sixty-eight draft pairs whose notes name the reader
 count were measured: eleven move closer by more than 0.05, one away by position (FUN_00765280, its structure now the
 base's). Like D92 and D93 it is adopted without a public form, on the footing of the line's other local rules.
+
+## D95. A one-use float load converted to double is the memory form of vcvtss2sd over a zero of the block: cvtzero-01 (2026-11-27)
+
+**Question.** The base converts a loaded float to double with `vcvtss2sd x, z, [mem]` after a `vxorps z, z, z` at 258
+sites in 55 functions of the game region, where 3.7.1 gives `vmovss y, [mem]; vcvtss2sd x, u, y` with an undefined
+pass-through u (rounds 260A, 575E, 578E). No matched row holds the form; 13 written functions do, all drafts. Which
+state of the compiler gives the base's zero?
+
+**Evidence (scratch e575/, e578/, d585/).**
+- Mechanism (llvm-3.7.1.src, read): DAGCombiner::visitFP_EXTEND makes a one-use float load an extending load
+  (DAGCombiner.cpp:8741-8755); X86InstrSSE.td:1908-1910 (UseAVX, OptForSpeed) selects VMOVSSrm, IMPLICIT_DEF,
+  VCVTSS2SDrr. ProcessImplicitDefs makes the IMPLICIT_DEF an undef read with an empty live interval, which the
+  allocator gives the first register of the order (xmm0) whatever is live. ExecutionDepsFix breaks an undef read only
+  when the register was written in the last 16 instructions (X86InstrInfo.cpp:5118-5201, ExecutionDepsFix.cpp:373 and
+  :474-497) and puts its xor directly before the instruction (:551-580). Neither gives a shared register other than
+  xmm0 nor a xor away from its conversion.
+- Base census (e578 census.py, groups.py): 258 of 258 memory-form sites have as the pass-through's last write a
+  zeroing xor of it in the same straight run (no call, no branch target, no other reader); 122 xors feed them (81
+  one conversion, 41 two to eighteen: 0x731bf7 one `vxorpd xmm0` for eighteen, 0x2ee06b one `vxorps xmm5` for six);
+  in 110 of the 122 groups the last conversion writes the zero's register; the xor stands 1 to 11 instructions before
+  its first conversion (82 at 1) and is made again after every call (0x201b70: three calls, three xors). That is a
+  value with a live range at allocation: a zero made at selection, one per block (the DAG's CSE), rematerialised
+  across a call. The 218 register-form sites are all `vcvtss2sd x, y, y` (:1900), 3.7.1's form; 36 of them follow a
+  one-use vmovss whose value comes from a stack slot stored earlier or another block. The base's 3,279 vcvtsi2ss/sd
+  keep 3.7.1's undefined pass-through and ExecutionDepsFix's clearance (round 260A): the base's ExecutionDepsFix is
+  not what differs.
+- The rule built into a copy of the installed compiler's X86 selection (e578 sc/vB; control sc/v0, the unchanged td:
+  clang byte-identical to the installed 721d5f4c, 0 functions of the module differ): 13 functions change, the 13
+  written functions with the memory form, 0 matched rows; 9 equal.
+- The two install candidates built together from the pristine 3.7.1 sources with the host patch and all seventeen
+  patches (round 585D, d585/build_cc.sh, prefix d585/install: clang-3.7 8aa9824e..., opt 8f280da4..., llvm-link
+  a93b6461...; each patch applies clean in the glob's order), the whole game module from source (d585/var585.py;
+  control: the installed compiler through the same script equals the tree's module, 0 symbols): 30 symbols change,
+  0 matched rows among them, all 8,143 module rows measured (the 60 `__cxx_global_array_dtor` rows that the
+  measurement script cannot pair measure the same under the installed module, bytes unchanged). Equal by this rule:
+  FUN_00201b70, FUN_003deb20, FUN_006423c0, FUN_006424c0, FUN_00c65ce0, FUN_00c8ada0, VectorToString (0xe7e520),
+  VectorToString2 (0xe7e670), QuatToString (0xe803e0), VectorV3 (0xe804a0): ten. Closer: FUN_00d96ff0 0.436 to
+  0.491, FUN_01327170 0.12 to 0.18. Level or lower with every conversion the base's: FUN_004eafd0, FUN_0058fc10,
+  FUN_00645010, FUN_013272c0, FUN_013280e0, FUN_00d0cc60 (0.14 to 0.11: its loop setup and frame differ, round 581E).
+  Module conversions (e578, objdump of 4b8ec52b's module): installed 0 memory form and 63 register form; under the rule 42 memory form over a
+  zero and 21 register form, all `x, y, y`: no shape the base lacks.
+
+**The rule.** `tools/patches/llvm-3.7.1-cvtzero-01-extload-cvtss2sd-zero-passthrough.patch`, the second patch of the
+game line in the glob's order: X86InstrSSE.td's AVX pattern of `(extloadf32 addr)` under OptForSpeed selects
+`VCVTSS2SDrm (FsFLD0SS), addr` where 3.7.1 selects `VCVTSS2SDrr (IMPLICIT_DEF), (VMOVSSrm addr)`. Unchanged: the
+register form `(fextend FR32)`, the OptForSize pattern and `(fextend (loadf32))`, the SSE forms, every other
+conversion (vcvtsi2ss/sd), the library line (3.3). src/sce/ and src/game/sndx/ are built by this compiler and take it.
+
+**Sites for and against.** For: 258 of 258 memory-form sites (the pass-through a zero of the block), 218 of 218
+register-form sites (`x, y, y`, the rule leaves them), the ten drafts made equal, the two moved closer. Against: none
+found (the 36 one-use vmovss register sites read by the linear scan, four by eye: 0x594873, 0x52b7a8, 0xbb47eb,
+0x36603a: each a value from a stack slot or another block, which the extending load does not reach).
+
+**Source forms the bytes exclude (rounds 260A, 575E).** A one-use float load in the conversion's block is always
+made an extending load at -O2 (DAGCombiner.cpp:8741) and selected as load plus register form; a float with another
+use or from another block gives `x, y, y`; optsize on the function gives the memory form with an undefined
+pass-through and no xor. No source form gives a zero.
+
+**Rules the bytes exclude.** r244577 (D11591, 3.8.0: the peephole folds a load across an IMPLICIT_DEF;
+tools/patches/proposed/llvm-3.7.1-peephole-01-implicit-def-keeps-load-candidates.patch): alone it changes the same
+13 functions and makes none equal (the folded form keeps the undefined pass-through, xmm0 or the destination, no
+xor); added to this rule it changes 0 functions (e578 sc/vBc). It is not needed and is not installed. Selecting
+`VCVTSS2SDrr (FsFLD0SS), (VMOVSSrm addr)` instead (sc/vA) gives the same module function for function (3.7.1's
+peephole folds the load when no IMPLICIT_DEF stands between, PeepholeOptimizer.cpp:1102): the bytes do not choose
+between the two; the rule takes the one-line form.
+
+**No public state.** The prebuilt 3.8.1, 3.9.1 and 4.0.0 give the memory form of VectorToString2's bitcode with an
+undefined pass-through and no xor (4.0.0 re-points it to the destination, r278321); 5.0.2 to 9.0.0 the register form,
+and with optsize the memory form, no xor (e578 oracle/). No release from 3.7.1 to 9.0.0 selects a zero there: there
+is no public revision to bisect to, and Sony's authorship of the rule is not shown.
+
+**Against.** The rule has no public form in 3.8.1 to 9.0.0. It rests on one pattern and on the census's reading of
+a live range (the shared zero, its rematerialisation after calls), not on a source the developers' compiler is known
+to have had. Eight written functions that hold the form stay unequal for residuals of their own.
+
+**What would refute it.** A base memory-form vcvtss2sd whose pass-through is not a zero of its block (an undefined
+register, a zero from another block, or a xor directly before each conversion when another conversion of the block
+reads the same register); or a base register-form `vcvtss2sd x, y, y` after a one-use vmovss of the same block with
+no other use of the loaded value. Either removes the rule or narrows it, with the gate rerun. A zero shared with a
+float constant 0.0 of the same block would be consistent (it would settle that the zero is FsFLD0SS).
+
+**The decision and its bar.** Adopted by the supervisor after round 582D, prepared and measured with D96 in round
+585D, UNDER THE CONDITION that the whole gate passes with every existing row equal after the compiler is rebuilt
+with it. The two lists name it from round 585D; the rows the rule makes equal are claimed after that gate
+(d585/rows_at_install.txt, with d585/notes_at_install.patch for their notes).
+
+INSTALLED: 2026-11-27 (round 585D's build, swapped into the shared install by the supervisor with no worker running; clang-3.7 8aa9824e..., opt 8f280da4..., llvm-link a93b6461...; the gate in full under it: OK; the previous binaries in scratch d585/backup).
+
+## D96. An atomic read-modify-write of 32 bits or less ends a common tail and is not tail-duplicated: tailmerge-01 (2026-11-27)
+
+**Question.** The base keeps two identical dword atomic read-modify-writes apart before one successor where 3.7.1's
+BranchFolding merges them: 0x857df0's two reader-count drops (`lock dec dword ptr [r15]`, one falling into the
+loop's test, one jumping to it), 0x52d3e0's and 0xd8feb0's two takes (`lock xadd dword`, the result read by the
+shared `test eax, eax`); while it merges a whole arm holding a `lock xadd qword` whose result is read (0xccadb0,
+~Object016b9280, a matched row: the arms of `test al, 0x10` merged, the test left with no branch at 0xccaeb2). Which
+state of the code generator gives both (rounds 372B, 569D, 576D, 579D)?
+
+**Evidence (scratch d579/, d582/, d585/).**
+- Mechanism (llvm-3.7.1.src, read): ComputeCommonTailLength stops only at a difference or inline asm
+  (BranchFolding.cpp:319-365, the FIXME at :354-360); MachineInstr::isIdenticalTo compares opcode and operands only
+  (MachineInstr.cpp:211-219); a one-instruction tail with a fall-through predecessor is merged (:567-573) or made one
+  by OptimizeBlock (:1508-1524); the pre-RA TailDuplication copies 0x857df0's second drop block into both exits of
+  its search (:551-605).
+- Base census, game region (d579 tails3.py, census.txt): 675 pairs of predecessors of one block whose common tail
+  holds a lock instruction, in 127 functions, ALL dword: xadd 199 (56 functions), cmpxchg 395 (41), dec 70 (32), inc
+  11 (7); 481 of them pairs 3.7.1's own profitability would merge as laid out. 0 qword pairs (qword lock instructions
+  in the region: cmpxchg 3,329, xadd 869, inc 362, dec 4; at a block's end only 223 qword inc, against 4,835 dword
+  ends). Merged sites read from the one signature a merge leaves (a flag test whose branch was removed when both
+  successors merged): 2 with a lock instruction, 0xccadb0 and 0xbb7bc0, both `lock xadd qword` releases of the same
+  64-bit count (SharedRef00901550's); no dword one. No matched row holds an APART pair.
+- Module census (d579 -tail-merge-log): 3.7.1 merges 12 tails holding an atomic in the game module: one matched row
+  (~Object016b9280, LXADD64, the base's merge) and eleven drafts (ten dword or a plain volatile DEC32m, one
+  LCMPXCHG64, Object016b4ce0::find, whose loop is one block in the base too).
+- The rule in a copy of the installed compiler (d579 pf/, the patch's two files; control with the switches off: the
+  module byte-identical, 0 symbols): 10 symbols change, 0 matched rows; 7 drafts equal.
+- Built from the pristine sources with all seventeen patches (round 585D, as D95; the same module measure, 0 rows
+  lost): equal by this rule: FUN_0046f770, FUN_0046f980, FUN_004ba970, FUN_0052d3e0, FUN_00857df0, FUN_00857f80,
+  FUN_00d8feb0: seven. Lower by score only, each explained by the base's bytes: FUN_002e1b30 0.070 to 0.059 (now the
+  base's four `lock inc` and two `lock xadd`; its registers differ), FUN_00e5c690 0.048 to 0.038 (the draft's plain
+  volatile `dec dword` has no counterpart in the base), FUN_00e70cc0 0.418 to 0.343 (the draft holds a Name release
+  after its call that the base lacks; 3.7.1 merged its two copies), FUN_01003640 and FUN_0126eb60 0.037 to 0.036.
+  The seven other drafts whose base bytes hold an APART pair do not change (their atomics are not merged by 3.7.1
+  either).
+
+**The rule.** `tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch`, the fourteenth patch of the
+game line in the glob's order (after structor-01, before tlsprot-01), two changes: in BranchFolding's
+ComputeCommonTailLength the comparison stops at an instruction that loads and stores through a volatile memory
+operand of at most 4 bytes, as it stops at inline asm (SelectionDAG::getAtomic marks every atomic's memory operand
+volatile, so on x86 these are the locked xadd, cmpxchg, inc, dec, add, sub, or and and of a dword or narrower);
+instructions after it in the tail still merge (0x52d3e0's test and branch after two takes are one block). In
+TailDuplication's shouldTailDuplicate a block holding such an instruction is not duplicated (both runs). Unchanged:
+every other instruction, the tail-merge size (3), the fall-through and adjacent-block rules, a qword atomic (merged as
+in 3.7.1), JumpThreading's rule (D94), SimplifyCFG, the library line (3.3). src/sce/ and src/game/sndx/ take it.
+
+**Sites for and against.** For: 675 of 675 APART pairs (all dword), the 2 merged sites (both qword), the module's
+twelve merges (the qword row kept merged, the dword drafts made apart), the seven drafts made equal. Against: none.
+
+**Source forms the bytes exclude (rounds 569D, 576D).** The base's two drops are one machine instruction (`lock dec
+dword ptr [r15]`, both through the call's kept address), so any source that gives the base's bytes gives two
+identical instructions at BranchFolding, which 3.7.1 merges. Compiled: the loop rotated (u85), unrotated (v85) and
+with the test last (w85): each merged; the `while` form gives one find (300 bytes against the base's 395). A source
+that differs at the instruction (a folded drop for one find) gives a byte the base does not have.
+
+**Rules the bytes exclude.** Each candidate with its failing site (d579 STATE.txt, notes.md):
+- an atomic ends a tail whatever its width (round 576D v2/v3): loses 0xccadb0, the qword row;
+- only an atomic whose result is unused (v5): 0x52d3e0 and 0xd8feb0 stay merged (their xadd's result is read);
+- the atomic as the tail's only common instruction: 0xd8feb0 (the base keeps {mov eax, -1; mov rcx; lock xadd}
+  apart, three common) and 0x3fd0a0 ({lock dec; mov dword store; jmp} twice, apart);
+- only as the tail's last instruction (mode 4): 0x3fd0a0, and the 61 {cmpxchg; pushfq; pop rax} pairs kept apart;
+  measured with the duplication rule, only FUN_004ba970 equal;
+- unless the tail holds a branch (mode 5): at BranchFolding 0x52d3e0's and the 0x857df0 class's tails are {atomic;
+  test; jcc}, kept apart by the base; only FUN_004ba970 equal;
+- the pseudo's kind (LOCK_DEC against LXADD): 0x52d3e0's LXADD32 apart against 0xccadb0's LXADD64 merged;
+- a stop at any volatile memory operand (round 576D v1): 9 matched rows lost; on IR volatility: only the nine i64
+  subs of SharedRef00901550's count are `atomicrmw volatile`, the merged one, so the rule would be the inverse of a
+  natural one;
+- the implicit EFLAGS definition live: dead in both 0xccadb0's and 0x52d3e0's xadd;
+- the merge rule alone, without the duplication rule: 3 drafts equal (0x4ba970, 0x52d3e0, 0xd8feb0), the 0x857df0
+  class stays at 0.64 (TailDuplication copies the second find's drop).
+- The 32-bit atomics as inline asm primitives, the FreeBSD-style headers' form (round 582D, d582/: 55 sites of 41
+  sources rewritten to one asm body each, four operand forms, the whole module from source under the compiler before
+  D93 and D94). Score in the module (1.000 equal; m0 the installed tree, B0 the baseline compiler, F1 to F4 the forms):
+
+  | function | m0 | B0 | F1/F4 | F2 | F3 |
+  |---|---|---|---|---|---|
+  | FUN_00489c30 (D93) | 1.000 | 0.932 | 1.000 | 0.676 | 1.000 |
+  | FUN_005fb120 (D93) | 1.000 | 0.940 | 1.000 | 0.569 | 1.000 |
+  | FUN_008af940 (D93) | 1.000 | 0.051 | 1.000 | 0.341 | 1.000 |
+  | Object016abc00 C2 (D93) | 1.000 | 0.991 | 0.500 | 0.810 | 0.491 |
+  | FUN_00caaf40 (reload row) | 1.000 | 1.000 | 0.531 | 0.520 | 0.520 |
+  | FUN_0046a860 (D94) | 1.000 | 0.722 | 0.722 | 0.722 | 0.722 |
+  | FUN_0046f770/0046f980 | 0.386 | 0.200 | 0.200 | 0.220 | 0.200 |
+  | FUN_004ba970 | 0.345 | 0.345 | 0.345 | 0.345 | 0.345 |
+  | FUN_0052d3e0 | 0.488 | 0.488 | 1.000 | 1.000 | 1.000 |
+  | FUN_00857df0/00857f80 | 0.460 | 0.257 | 0.257 | 0.257 | 0.257 |
+  | FUN_00d8feb0 | 0.226 | 0.226 | 1.000 | 1.000 | 1.000 |
+  | FUN_00ccadb0 (qword row) | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+  | FUN_00882dd0 (wait loop) | 0.141 | 0.141 | 0.026 | 0.128 | 0.026 |
+
+  Matched rows lost against m0: F1 1,073 (the best form; 758 by the inliner's cost of an asm call,
+  InlineCost.cpp:813-819, five per argument where an atomicrmw costs five in all), F2 1,796, F3 1,073, F4 1,073. The
+  asm bodies give the two xadd tails and nothing of D94, the base's `cmove` after an exchange (11,917 sites), its two
+  address forms (folded for the Name table, formed in a register for a counted reference) or the wait loop's flags
+  copy (`lock cmpxchg; pushfq`: 0 in every variant). The base's atomics are compiler-generated; the hypothesis is
+  refuted, and the tail rule is the code generator's.
+
+**No public state.** No release of BranchFolding or TailDuplication from 3.3 to 4.0.0 stops at an atomic or at a
+memory width. Sony's authorship of the rule is not shown.
+
+**Against.** The qword side rests on one count type (SharedRef00901550's 64-bit count) and two sites (0xccadb0,
+0xbb7bc0), and on the absence of qword APART pairs where qword atomics rarely end a block (223 qword ends against
+4,835 dword). The width is what the sites separate, not a known mechanism. The duplication rule's width is not told
+by the module (any atomic, or only one with an unused result, gives the same objects); it takes the merge rule's.
+
+**What would refute it.** One base site where two identical dword atomic read-modify-writes are merged by a tail
+merge (a dword lock instruction in a block that a flag test left without its branch, or a draft whose 3.7.1-merged
+dword atomic is one block in the base with no other difference), or one where two identical qword ones are kept apart
+before one successor. Either removes the rule or changes its width, with the gate rerun.
+
+**The decision and its bar.** Adopted by the supervisor after round 582D refuted the asm-primitives hypothesis,
+prepared and measured with D95 in round 585D, UNDER THE CONDITION that the whole gate passes with every existing row
+equal after the compiler is rebuilt with it. The two lists name it from round 585D; the rows are claimed after that
+gate (d585/rows_at_install.txt).
+
+INSTALLED: 2026-11-27 (round 585D's build, swapped into the shared install by the supervisor with no worker running; clang-3.7 8aa9824e..., opt 8f280da4..., llvm-link a93b6461...; the gate in full under it: OK; the previous binaries in scratch d585/backup).

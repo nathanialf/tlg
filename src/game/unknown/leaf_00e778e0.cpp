@@ -173,7 +173,7 @@ static inline Object016b9108 *objectArgument(lua_State *state, int first)
  * leaf_00e7d320.cpp's) */
 static inline const char *toString(lua_State *state, int argument)
 {
-    const HksObject *value = state->base + (argument - 1);
+    HksObject *value = state->base + (argument - 1);
     return value < state->top ? FUN_00db6b20(state, value, 0) : 0;
 }
 

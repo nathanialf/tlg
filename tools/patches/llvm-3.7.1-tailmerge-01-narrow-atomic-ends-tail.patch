@@ -3,6 +3,12 @@ a common tail in BranchFolding, and a block holding one is not
 tail-duplicated
 (no upstream state)
 
+Adopted (docs/DECISIONS.md D96, round 585D): moved from tools/patches/proposed/
+into tools/patches/, the fourteenth of the line's seventeen in the glob's order
+(after structor-01, before tlsprot-01). The shared install under tools/cc is
+rebuilt with it in a round of its own; until then the installed compiler does
+not hold it.
+
 This patch CHANGES BRANCHFOLDING'S TAIL MERGE AND TAILDUPLICATION ONLY. Two
 changes, nothing else:
   BranchFolding.cpp, ComputeCommonTailLength (:319-365): the comparison

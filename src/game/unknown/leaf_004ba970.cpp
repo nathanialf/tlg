@@ -38,9 +38,8 @@ extern const Type00503fb0 *D_57d4a68; /* derived name: the component's type */
 
 // Round 576D: equal when BranchFolding's tail merge leaves alone an atomic read-modify-write with an
 // unused result (the rule leaf_00857df0.cpp describes; that half alone is enough here).
-// NONMATCHING: block layout: the base places the return block after the walk's loop (0x4ba9ff) and
-// keeps a third release of the reader count for an empty component list; the build places the
-// return last and merges the two not-found releases
+// The return block follows the walk's loop and the empty list keeps its own release of the reader count
+// by the tail-merge rule (tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch, D96).
 /* OPEN (FINISHING rule 6): its callers declare it under another signature; with one signature
  * the link inlines it into 0 rowed callers where the base calls it (round 513D: cost 325 at the
  * link, over its threshold of 175: one signature changes no row) */

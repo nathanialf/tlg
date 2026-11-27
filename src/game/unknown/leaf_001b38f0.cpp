@@ -19,8 +19,7 @@ struct Object05938c40 { /* derived name */
 
 extern Object05938c40 *D_5938c40;
 
-const char *FUN_00db6b20(lua_State *state, const HksObject *value, int); /* derived name */
-void FUN_00cb5f90(Member05938c40_f68 *member, const char *name);         /* derived name */
+void FUN_00cb5f90(Member05938c40_f68 *member, const char *name); /* derived name */
 
 int FUN_001b38f0(lua_State *state) /* derived name */
 {

@@ -12,8 +12,12 @@
 // NONMATCHING: 825 against 1022 bytes: every instruction to the fade's start is the base's, but
 // the build holds one copy of setCount()'s fade (from `je` on the full mark, 0xb164e1 and 0xb16583)
 // where the base keeps one for each of the two calls (0xb16596 and 0xb16663, the same bytes). The
-// unit keeps both inlined copies (two calls of FUN_013907f0 in its IR); the merge is later, the
-// post-RA tail merge or the link's IR
+// unit keeps both inlined copies, and so does the link stage: -print-after-all over the link's
+// pipeline on this unit's module shows two fdiv and two calls of FUN_013907f0 after every pass; in
+// code generation both copies last to Expand ISel Pseudo-instructions and become one in Control
+// Flow Optimizer (BranchFolder's tail merge, the first post-RA pass that changes their count).
+// The base's two copies are byte-identical and share the exit, so at its tail merge they were not
+// identical machine instructions or were refused as candidates: not traced further (round 586C)
 void FUN_00b16380(Object016b4ce0 *self, lua_State *state) /* derived name */
 {
     const char *string = 0;

@@ -36,9 +36,8 @@ extern Name D_57d583c;          /* derived name */
 void FUN_00c8c290(ArgumentReader00c8c290 *reader, Object016b9108 **object); /* derived name */
 
 // Round 576D: equal under the tail merge and duplication rule leaf_00857df0.cpp describes.
-// NONMATCHING: 54/140, 482 bytes against 513: FUN_00857df0's residual (leaf_00857df0.cpp): the two
-// finds' drops merged by the post-RA Control Flow Optimizer where the base keeps them apart
-// (0x46f862 `lock dec; jmp`, 0x46f870 `lock dec` falling into `test rbx, rbx`) (round 569D)
+// The reader count's drops stay apart before their successor (`lock dec dword`, one jumping, one falling
+// in) by the tail-merge rule (tools/patches/llvm-3.7.1-tailmerge-01-narrow-atomic-ends-tail.patch, D96).
 int FUN_0046f770(lua_State *state) /* derived name */
 {
     Object016b9108 *object = 0;
