@@ -12,5 +12,6 @@ Object016cc130::~Object016cc130() {}
 
 // NONMATCHING: the base inlines Object016cc130's destructor (307 bytes, this unit's) into this one, FUN_01371ea0,
 // and keeps the deleting one FUN_01372010 a call; the build calls it (both equal with the destructors implicit:
-// the header's OPEN note)
+// the header's OPEN note). In the module the build's deleting one inlines this destructor (73 bytes against
+// the base's 28, round 595E); round 594E's census paired FUN_01372010 with Object016cc130's D0, not this class's
 Object016af178::~Object016af178() {}

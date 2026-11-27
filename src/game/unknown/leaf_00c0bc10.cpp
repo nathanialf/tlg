@@ -10,7 +10,9 @@ int FUN_00c09610(void *vm, const CallArguments583950 *arguments); /* derived nam
  * restores the depth and appends FUN_00c09610 to the frame's calls (one
  * deeper when appended). Sets the float at +0xf4 to -1; returns 0. Handler
  * unknown. */
-// NONMATCHING: waits for FUN_00c09610 (0x365 bytes) defined in the module: the base computes the entry's index (lea rsi, [rsi + rsi*2]) before the function's address, a protected definition's `lea rdi, [rip]`; a declaration's GOT load is scheduled first (a throwaway single-file compile with the declaration protected was equal, 45/45)
+/* The entry's index is formed before the function's address (`lea rsi, [rsi+rsi*2]` above
+ * `lea rdi`): FUN_00c09610 is defined in the module (leaf_00c09610.cpp), so its address is a
+ * protected definition's `lea`; a declaration's GOT load is scheduled first. */
 int FUN_00c0bc10(FrameOwner583950 *self, void *arg) /* derived name */
 {
     const unsigned current = self->cursor.current;

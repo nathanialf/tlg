@@ -12,6 +12,17 @@
  * argument (1,442 calls) */
 void FUN_013439c0(Float4A *product, const Float4A *first, const Float4A *second); /* derived name */
 
+/* derived name: a rotation followed by another in place: the product made in
+ * a local of the helper's own and copied back (FUN_00c09610: the inlined
+ * local's slot is the frame's first, `lea rdi, [rbp-0x30]` above the
+ * operands' -0x40 and -0x50, and `vmovaps` copies it back before the push) */
+inline void rotateBy(Float4A &rotation, const Float4A &by)
+{
+    Float4A product;
+    FUN_013439c0(&product, &rotation, &by);
+    rotation = product;
+}
+
 /* derived name: the rotation turned to the half where w is not negative,
  * lane by lane against the including unit's VECTOR_ZERO: the lanes read
  * once into a plain copy (one unaligned vector load, w its lane 3 by

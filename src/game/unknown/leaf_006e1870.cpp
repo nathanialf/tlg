@@ -49,12 +49,14 @@ template <class T> struct Owner006e1870 { /* derived name */
 
 /* derived names: the entry taken out of each list it is in: the last entry
  * of the list told its new place (unless the list holds one entry, or the
- * entry's place equals the count), the entry replaced by the last
- * (Array05943280::removeSwap, the place read again) and its place cleared */
-// NONMATCHING: instruction order only (round 365B, single unit, 49/51, same size; FUN_007b2350
-// the same): after the last entry is told its place in the second list, the base reads the count
-// again before the place (`mov ecx, [rdi+0x30]; mov eax, [rsi+0x40]`), the build the place
-// first; the first list's two reads are in the build's order in the base too
+ * entry's place equals the count), the entry replaced by the last and its
+ * place cleared. The first list goes through Array05943280::removeSwap (the
+ * place passed, so read before the count); the second is written out with
+ * the last index taken first (`mov ecx, [rdi+0x30]; mov eax, [rsi+0x40]`
+ * after the store: GVN's load PRE puts each reload at the end of the block
+ * that stored, in the order the join reads them, GVN.cpp:1672 and :2398),
+ * the test `last > place` (`cmp edx, eax; jbe`) and the last dropped by
+ * removeLast(1) */
 void FUN_006e1870(Owner006e1870<Object016c7810> *owner, Object016c7810 *entry) /* derived name */
 {
     if (entry->index3c >= 0) {
@@ -68,7 +70,10 @@ void FUN_006e1870(Owner006e1870<Object016c7810> *owner, Object016c7810 *entry) /
         const int count = owner->second.size();
         if (count > 1 && count != entry->index40)
             owner->second.at(count - 1)->index40 = entry->index40;
-        owner->second.removeSwap(entry->index40);
+        const unsigned last = owner->second.size() - 1;
+        if (last > unsigned(entry->index40))
+            owner->second[entry->index40] = owner->second[last];
+        owner->second.removeLast(1);
         entry->index40 = -1;
     }
 }
@@ -87,7 +92,10 @@ void FUN_007b2350(Owner006e1870<Object016c78d0> *owner, Object016c78d0 *entry) /
         const int count = owner->second.size();
         if (count > 1 && count != entry->index3c)
             owner->second.at(count - 1)->index3c = entry->index3c;
-        owner->second.removeSwap(entry->index3c);
+        const unsigned last = owner->second.size() - 1;
+        if (last > unsigned(entry->index3c))
+            owner->second[entry->index3c] = owner->second[last];
+        owner->second.removeLast(1);
         entry->index3c = -1;
     }
 }

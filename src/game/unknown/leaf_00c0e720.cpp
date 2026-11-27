@@ -18,8 +18,8 @@ struct Node00c0e720 { /* derived name */
  * when it had one, a call of FUN_00c09230 with the node's arguments is
  * appended to the frame and the state takes the byte the owner leaves at
  * +0xd8. Returns 0. Handler unknown. */
-// NONMATCHING: equal but for the address of FUN_00c09230 (not written): the module takes an
-// undefined function's address through the GOT where the base forms it with `lea` (round 484D)
+/* FUN_00c09230's address is a `lea`: the function is defined in the module (leaf_00c09230.cpp);
+ * an undefined one's address goes through the GOT (round 484D). */
 int FUN_00c0e720(FrameOwner583950 *self, Node00c0e720 *node) /* derived name */
 {
     u8 *state = self->selectState(node);
